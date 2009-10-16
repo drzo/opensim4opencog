@@ -65,7 +65,7 @@ namespace cogbot
             get
             {
                 if (_Type != null) return _Type;
-                if (Value is NullType) return ((NullType) Value).Type;
+                if (Value is NullType) return ((NullType) Value).Type.DeclaringType;
                 return Value.GetType();
             }
         }

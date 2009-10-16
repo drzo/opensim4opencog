@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using cogbot.Listeners;
 using cogbot.ScriptEngines;
 using OpenMetaverse;
@@ -38,13 +39,26 @@ namespace cogbot.TheOpenSims
     {
     }
 
-    public class NullType
-    {
-        public NullType(Type type)
+    public struct NullType
+    {       
+        public override int GetHashCode()
         {
+            return Type.GetHashCode() ^ Inst.GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            return "(" + Type.Name + ")null";
+        }
+
+        public NullType(Object inst, MemberInfo type)
+        {
+            Inst = inst;
             Type = type;
         }
-        public Type Type { get; set; }
+
+        public Object Inst;
+        public MemberInfo Type;// { get; set; }
     }
 
     public class SimObjectEvent : BotMentalAspect
@@ -341,7 +355,7 @@ namespace cogbot.TheOpenSims
         static Type GetType(object o)
         {
             if (o is NamedParam) o = ((NamedParam)o).Value;
-            if (o is NullType) return ((NullType)o).Type;
+            if (o is NullType) return ((NullType)o).Type.DeclaringType;
             if (o != null) return o.GetType();
             return typeof(NullType);
         }

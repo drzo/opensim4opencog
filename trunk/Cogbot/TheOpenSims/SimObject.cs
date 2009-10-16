@@ -8,12 +8,25 @@ using cogbot.Utilities;
 using OpenMetaverse;
 using PathSystem3D.Mesher;
 using PathSystem3D.Navigation;
+using System.Reflection;
 
 namespace cogbot.TheOpenSims
 {
     //TheSims-like object
     public class SimObjectImpl : SimPosition, BotMentalAspect, SimMover, SimObject, MeshableObject
     {
+        public static implicit operator Primitive(SimObjectImpl m)
+        {            
+            Primitive p = m.Prim;
+            p.GetType();
+            return p;
+        }
+
+        public static implicit operator SimObjectImpl(Primitive m)
+        {
+            return (SimObjectImpl) WorldObjects.GridMaster.GetSimObject(m);
+        }
+
         public float ZHeading
         {
             get
@@ -399,11 +412,11 @@ namespace cogbot.TheOpenSims
             return _infoMap;
         }
 
-        public void SetInfoMap(string key, Type type, object value)
+        public void SetInfoMap(string key, MemberInfo type, object value)
         {
             if (!WorldObjects.MaintainSimObjectInfoMap) return;
-            if (value == null) value = new NullType(type);
-            AddInfoMap(new NamedParam(key, type, value));
+            if (value == null) value = new NullType(this, type);
+            AddInfoMap(new NamedParam(type, key, GetType(), value));
         }
 
         public void AddInfoMap(NamedParam ad)
@@ -897,7 +910,7 @@ namespace cogbot.TheOpenSims
             set
             {
                 if (value == _Parent) return;
-                SetInfoMap("Parent", GetType(), value);
+                SetInfoMap("Parent", GetType().GetProperty("Parent"), value);
                 if (value == null)
                 {
                     _Parent.Children.Remove(this);
@@ -1351,10 +1364,14 @@ namespace cogbot.TheOpenSims
             get
             {
                 if (WasKilled) return false;
-                if (!HasPrim) return false;
-                if (_Prim0.RegionHandle == 0)
+                lock (HasPrimLock)
                 {
-                    return false;
+
+                    if (!HasPrim) return false;
+                    if (_Prim0.RegionHandle == 0)
+                    {
+                        return false;
+                    }
                 }
                 if (IsRoot) return true;
                 if (_Parent == null)
@@ -1380,7 +1397,7 @@ namespace cogbot.TheOpenSims
                 }
                 lock (HasPrimLock)
                 {
-                    return _Parent == this || (_Parent != null && _Parent.IsRegionAttached);                    
+                    return _Parent == this || (_Parent != null && _Parent.IsRegionAttached);
                 }
             }
         }
@@ -1640,6 +1657,7 @@ namespace cogbot.TheOpenSims
             foreach (SimObject obj in Children)
             {
                 Primitive cp = obj.Prim;
+                if (cp==null) continue;
                 fx = cp.Scale.X;
                 if (fx > size) size = fx;
                 fy = cp.Scale.Y;

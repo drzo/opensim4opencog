@@ -17,11 +17,12 @@ namespace cogbot.Actions
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
-            List<SimObject> objs = WorldSystem.GetAllSimObjects(string.Join(" ", args));
+            int argsUsed;
+            List<Primitive> objs = WorldSystem.GetPrimitives(args, out argsUsed);
             int detatched = 0;
             int orphans = 0;
             int missingSculpties = 0;
-            foreach (SimObject o in objs)
+            foreach (SimObjectImpl o in objs)
             {
                 if (!o.IsRoot)
                 {
