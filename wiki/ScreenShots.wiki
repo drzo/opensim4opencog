@@ -1,6 +1,10 @@
 #summary Some Screenshots
 
 As you scroll down you will go back in time 
+* http://logicmoo.ath.cx/manual/root/development/PathFindingDemo/Driver0.JPG
+Driver0.JPG 16-Oct-2009 1:15 AM 519K
+The bot is driving a vehical arround trying to run me down!
+
 
 * 
  http://logicmoo.ath.cx/manual/root/development/PathFindingDemo/beanbowl2.JPG
