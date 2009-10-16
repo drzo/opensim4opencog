@@ -1046,7 +1046,8 @@ namespace cogbot.TheOpenSims
 
                 SimAnimation.ClassifyAnims();
 
-                lock (SimAssets) foreach (SimAsset A in SimAssets)
+                //lock (SimAssets) 
+                    foreach (SimAsset A in SimAssets)
                     {
                         if (A.IsIncomplete()) WriteLine("Incomplete Asset: " + A.ToString());
                     }
@@ -1185,7 +1186,8 @@ namespace cogbot.TheOpenSims
         {
             FillAssetNames();
             List<String> names = new List<String>();
-            lock (SimAssets) foreach (var list in SimAssets)
+            //lock (SimAssets) 
+                foreach (var list in SimAssets)
                 {
                     if (list.AssetType==types) names.Add(list.Name);
                 }
@@ -1277,7 +1279,8 @@ namespace cogbot.TheOpenSims
         public static List<UUID> Matches(String name)
         {
             List<UUID> matches = new List<UUID>();
-            lock (SimAssets) foreach (var A in SimAssets)
+            //lock (SimAssets) 
+                foreach (var A in SimAssets)
                 {
                     if (A.Matches(name))
                     {
@@ -1397,13 +1400,13 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        internal readonly static List<SimAsset> SimAssets = new List<SimAsset>();
+        internal readonly static ListAsSet<SimAsset> SimAssets = new ListAsSet<SimAsset>();
         internal readonly static Dictionary<string, string> nameNameMap = new Dictionary<string, string>();
         static private bool FilledInAssets;
 
         public static ICollection<SimAsset> GetAssets(AssetType assetType)
         {
-            return SimAssets;
+            return SimAssets.CopyOf();
         }
 
         public static bool SameAsset(SimAsset animation, SimAsset simAnimation)
