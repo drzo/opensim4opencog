@@ -47,11 +47,11 @@ namespace cogbot.TheOpenSims
                             c.Assets.RequestAsset(AssetID, AssetType, true, On_AssetDownloaded);
                         }
                         else
-                        {
+                        {              
                            // PullServerAsset = false;
                             Store.taskQueue.Enqueue(() =>
                                                         {
-                                                            Thread.Sleep(1000);
+                                                            Thread.Sleep(10);                                                       
                                                             var v = ServerAsset;
                                                         });
                         }
@@ -90,14 +90,16 @@ namespace cogbot.TheOpenSims
         {
             AssetID = anim;
             Name = name;
-            lock (SimAssetStore.SimAssets) SimAssetStore.SimAssets.Add(this);
+            //lock (SimAssetStore.SimAssets)
+                SimAssetStore.SimAssets.Add(this);
         }
         public SimAsset(UUID anim, String name, AssetType type)
         {
             AssetID = anim;
             Name = name;
             AssetType = type;
-            lock (SimAssetStore.SimAssets) SimAssetStore.SimAssets.Add(this);
+            //lock (SimAssetStore.SimAssets) 
+                SimAssetStore.SimAssets.Add(this);
         }
 
         public bool Matches(String s)
@@ -202,7 +204,8 @@ namespace cogbot.TheOpenSims
             set
             {
                 if (value == UUID.Zero) return;
-                lock (SimAssetStore.uuidAsset) SimAssetStore.uuidAsset[value] = this;
+                //lock (SimAssetStore.uuidAsset)
+                    SimAssetStore.uuidAsset[value] = this;
                 lock (AssetIDs)
                 {
                     if (AssetIDs.Contains(value)) return;

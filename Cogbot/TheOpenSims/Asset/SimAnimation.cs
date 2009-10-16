@@ -210,7 +210,8 @@ namespace cogbot.TheOpenSims
         {
             if (!HasData()) return;
             BinBVHAnimationReader r = _reader;
-            lock (SimAssetStore.SimAssets) foreach (SimAsset animation in SimAssetStore.SimAssets)
+            //lock (SimAssetStore.SimAssets) 
+                foreach (SimAsset animation in SimAssetStore.SimAssets)
                 {
                     if (animation == this) continue;
                     if (!animation.HasData()) continue;
