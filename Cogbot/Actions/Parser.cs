@@ -29,7 +29,7 @@ namespace cogbot.Actions
                         withinQuote = !withinQuote;
                     }
                 }
-                else if (c == ' ' || c == '\t')
+                else if (c == ' ' || c == '\t' || c == ',')
                 {
                     if (escaped || withinQuote)
                     {
@@ -37,7 +37,7 @@ namespace cogbot.Actions
                         escaped = false;
                     }
                     else
-                    {
+                    {      
                         trimmed = current.Trim();
                         if (trimmed.StartsWith("\"") && trimmed.EndsWith("\""))
                         {
@@ -48,6 +48,7 @@ namespace cogbot.Actions
                         if (trimmed.Length > 0)
                             list.Add(trimmed);
                         current = String.Empty;
+                        if (c == ',') list.Add(",");
                     }
                 }
                 else if (c == '\\')
