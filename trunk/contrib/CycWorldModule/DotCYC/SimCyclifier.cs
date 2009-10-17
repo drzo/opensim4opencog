@@ -779,6 +779,12 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
              return simObj.ToString();
          }
 
+         public object FindOrCreateCycFort(SimAssetStore simObj)
+         {
+             //Trace();
+             return LockToFort(simObj);
+         }
+
         public CycFort FindOrCreateCycFort(SimObjectType simObj)
         {
             lock (cycTerms)
@@ -1721,7 +1727,12 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
 
         public CycObject FindOrCreateCycFort(NullType region)
         {
-            return new CycVariable("NULL-" + region.Type.Name + "-" + (nullCount++));
+            string regionTypeName = region.Type.Name;
+            if (regionTypeName.Contains(".") || regionTypeName.Contains("<"))
+            {
+                Trace();
+            }
+            return new CycVariable("NULL-" + regionTypeName  + "-" + (nullCount++));
         }
 
         // TODO confirm this will work
