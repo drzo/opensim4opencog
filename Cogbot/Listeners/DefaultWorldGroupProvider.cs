@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using cogbot.ScriptEngines;
 using cogbot.TheOpenSims;
+using OpenMetaverse;
 
 namespace cogbot.Listeners
 {
@@ -12,6 +13,21 @@ namespace cogbot.Listeners
         {
             AddObjectGroup("selected", avatar.GetSelectedObjects);
             AddObjectGroup("avatars", () => WorldObjects.SimAvatars.CopyOf());
+            AddObjectGroup("master", () =>
+                                         {
+                                             var v = new List<object>();
+                                             if (objects.client.MasterKey != UUID.Zero)
+                                             {
+                                                 v.Add(objects.CreateSimAvatar(objects.client.MasterKey, objects, null));
+
+                                             }
+                                             else
+                                             {
+                                                 v.Add(objects.client.MasterName);
+                                             }
+                                             return v;
+                                         });
+            AddObjectGroup("self", () => { var v = new List<SimObject> { avatar }; return v; });
             AddObjectGroup("all", () => WorldObjects.SimObjects.CopyOf());
             AddObjectGroup("known", avatar.GetKnownObjects);
         }

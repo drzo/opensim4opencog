@@ -548,6 +548,7 @@ namespace cogbot.Listeners
             //else
             //    verb = "sitting";
             //WriteLine(avatar.Name + " is " + verb + " in " + avatar.CurrentSim.Name + ".");
+            if (avatar == null) return "NULL avatar";
             string s = String.Empty;
             s += (avatar.Name + " is " + TheSimAvatar.DistanceVectorString(GetSimObject(avatar)) + " distant.");
             if (avatar.ProfileProperties.BornOn != null)

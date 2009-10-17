@@ -15,6 +15,7 @@ namespace cogbot.TheOpenSims
     //TheSims-like object
     public class SimObjectImpl : SimPosition, BotMentalAspect, SimMover, SimObject, MeshableObject
     {
+        
         public static implicit operator Primitive(SimObjectImpl m)
         {            
             Primitive p = m.Prim;
@@ -387,6 +388,19 @@ namespace cogbot.TheOpenSims
         public Box3Fill OuterBox
         {
             get { return _Mesh.OuterBox; }
+        }
+
+        public uint LocalID
+        {
+            get
+            {
+                return Prim.LocalID;
+            }
+        }
+
+        public uint ParentID
+        {
+            get { return Prim.ParentID; }
         }
 
         public virtual bool KilledPrim(Primitive primitive, Simulator simulator)
@@ -2336,6 +2350,8 @@ namespace cogbot.TheOpenSims
         UUID ID { get; }
         Primitive.ObjectProperties Properties { get; set; }
         bool HasPrim { get; }
+        uint LocalID { get; }
+        uint ParentID { get;}
         bool KilledPrim(Primitive primitive, Simulator simulator);
 
         ICollection<NamedParam> GetInfoMap();

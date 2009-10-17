@@ -21,7 +21,7 @@ namespace cogbot.Actions
                 return ShowUsage();// " objectinventory [objectID]";
 
             int argsUsed;
-            List<Primitive> PS = WorldSystem.GetPrimitives(args, out argsUsed);
+            List<SimObject> PS = WorldSystem.GetPrimitives(args, out argsUsed);
             if (IsEmpty(PS)) return Failure("Cannot find objects from " + string.Join(" ", args));
             foreach (var found in PS)
             {

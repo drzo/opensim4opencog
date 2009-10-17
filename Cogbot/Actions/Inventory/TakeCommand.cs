@@ -23,12 +23,12 @@ namespace cogbot.Actions
                 return ShowUsage();
             }
             int argsUsed;
-            List<Primitive> PS = WorldSystem.GetPrimitives(args, out argsUsed);
+            List<SimObject> PS = WorldSystem.GetPrimitives(args, out argsUsed);
             if (IsEmpty(PS)) return Failure("Cannot find objects from " + string.Join(" ", args));
             GridClient client = TheBotClient;
             foreach (var currentPrim in PS)
             {
-                Success(Name + " on " + WorldSystem.GetSimObject(currentPrim));
+                Success(Name + " on " + currentPrim);
                 client.Inventory.RequestDeRezToInventory(currentPrim.LocalID, DeRezDestination.AgentInventoryTake,
                                                          client.Inventory.FindFolderForType(AssetType.Object), UUID.Zero);
             }

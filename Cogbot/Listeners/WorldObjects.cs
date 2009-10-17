@@ -943,9 +943,9 @@ namespace cogbot.Listeners
         public Primitive GetPrimitive(String str)
         {
             int argsUsed;
-            List<Primitive> primitives = GetPrimitives(new [] {str}, out argsUsed);
+            List<SimObject> primitives = GetPrimitives(new[] { str }, out argsUsed);
             if (primitives.Count==0) return null;
-            return primitives[0];
+            return primitives[0].Prim;
         }
 
         public Primitive GetPrimitive(uint id, Simulator simulator)
@@ -1358,7 +1358,7 @@ namespace cogbot.Listeners
             client.Objects.SelectObject(sim, P.LocalID);
         }
 
-        private SimAvatarImpl CreateSimAvatar(UUID uuid, WorldObjects objects, Simulator simulator)
+        internal SimAvatarImpl CreateSimAvatar(UUID uuid, WorldObjects objects, Simulator simulator)
         {
             if (uuid == UUID.Zero)
             {
@@ -1392,7 +1392,7 @@ namespace cogbot.Listeners
             }
         }
 
-        private SimObject CreateSimObject(UUID uuid, WorldObjects WO, Simulator simulator)
+        internal SimObject CreateSimObject(UUID uuid, WorldObjects WO, Simulator simulator)
         {
             if (uuid == UUID.Zero)
             {

@@ -26,7 +26,9 @@ namespace cogbot.Actions
             int argsUsed;
             List<string> searchArgs = new List<string> {"family"};
             searchArgs.AddRange(args);
-            List<Primitive> PS = WorldSystem.GetPrimitives(searchArgs.ToArray(), out argsUsed);
+            List<SimObject> PSO = WorldSystem.GetPrimitives(searchArgs.ToArray(), out argsUsed);
+            List<Primitive> PS = new List<Primitive>();
+            WorldSystem.AsPrimitives(PS,PSO);
             if (IsEmpty(PS)) return Failure("Cannot find objects from " + string.Join(" ", args));
             TheBotClient.Invoke(() =>
                                     {

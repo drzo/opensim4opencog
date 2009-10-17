@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using cogbot.TheOpenSims;
 using OpenMetaverse;
 
 namespace cogbot.Actions
@@ -51,7 +52,7 @@ namespace cogbot.Actions
                     return ShowUsage(); //"Usage prim-uuid [copy] [mod] [xfer]";
 
                 int argsUsed;
-                List<Primitive> PS = WorldSystem.GetPrimitives(args, out argsUsed);
+                List<SimObject> PS = WorldSystem.GetPrimitives(args, out argsUsed);
                 if (IsEmpty(PS)) return Failure("Cannot find objects from " + string.Join(" ", args));
 
                 for (int i = argsUsed; i < args.Length; i++)
@@ -78,7 +79,7 @@ namespace cogbot.Actions
 
                 foreach (var rPrim in PS)
                 {
-                    Primitive rootPrim = rPrim;
+                    Primitive rootPrim = rPrim.Prim;
 
                     Simulator curSim = WorldSystem.GetSimulator(rootPrim);
 

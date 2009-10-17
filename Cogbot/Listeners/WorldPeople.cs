@@ -762,6 +762,71 @@ namespace cogbot.Listeners
             return AA.GetName();
         }
 
+        void InformMaster(string masterName)
+        {
+            UUID resolvedMasterKey = UUID.Zero;
+            ManualResetEvent keyResolution = new ManualResetEvent(false);
+            UUID query = UUID.Zero;
+            BotClient Client = client;
+            UUID masterUUID;
+            if (UUID.TryParse(masterName, out masterUUID))
+            {
+                Client.MasterKey = masterUUID;
+                if (String.IsNullOrEmpty(Client.MasterName))
+                {
+                    Client.MasterName = GetUserName(masterUUID);
+                }
+                Client.Self.InstantMessage(
+                    Client.MasterKey, "You are now my master.  IM me with \"help\" for a command list.");
+                WriteLine("Set master UUID with name = " + Client.MasterName);
+            }
+            masterUUID = GetUserID(masterName);
+            //if (String.IsNullOrEmpty(Client.MasterName))                 
+            Client.MasterName = masterName;
+            if (masterUUID != UUID.Zero)
+            {
+                Client.MasterName = masterName;
+                Client.MasterKey = masterUUID;
+                Client.Self.InstantMessage(
+                    Client.MasterKey, "You are now my master.  IM me with \"help\" for a command list.");
+
+                WriteLine("Set master UUID with name = " + Client.MasterName);
+            }
+
+            EventHandler<DirPeopleReplyEventArgs> callback = delegate(object sender, DirPeopleReplyEventArgs e)
+                                                                 {
+                                                                     if (query != e.QueryID)
+                                                                         return;
+
+                                                                     resolvedMasterKey = e.MatchedPeople[0].AgentID;
+                                                                     keyResolution.Set();
+                                                                     query = UUID.Zero;
+                                                                 };
+            Client.Directory.DirPeopleReply += callback;
+
+            query = Client.Directory.StartPeopleSearch(masterName, 0);
+
+            if (keyResolution.WaitOne(TimeSpan.FromMinutes(1), false))
+            {
+                Client.MasterKey = resolvedMasterKey;
+                Client.MasterName = masterName;
+                keyResolution.Reset();
+                Client.Directory.DirPeopleReply -= callback;
+            }
+            else
+            {
+                keyResolution.Reset();
+                Client.Directory.DirPeopleReply -= callback;
+                WriteLine("Unable to obtain UUID for \"" + masterName + "\". Master unchanged.");
+                return;
+            }
+
+            // Send an Online-only IM to the new master
+            Client.Self.InstantMessage(
+                Client.MasterKey, "You are now my master.  IM me with \"help\" for a command list.");
+
+        }
+
         private void AgentGroupDataUpdateHandler(string capskey, IMessage message, Simulator simulator)
         {
             //throw new NotImplementedException();

@@ -28,15 +28,13 @@ namespace cogbot.TheOpenSims
 
         public override Asset ServerAsset
         {
-            get { return _ServerAsset; }
+          //  get { return base.ServerAsset; }
             set
             {
-                _ServerAsset = value;
-                GetParts();
+                base.ServerAsset = value;
                 if (value != null)
                 {
-                    AssetType = value.AssetType;
-                    AssetID = value.AssetID;
+                    GetParts();
                 }
             }
         }

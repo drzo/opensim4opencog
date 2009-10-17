@@ -22,11 +22,11 @@ namespace cogbot.Actions
                 return Success("ResetSelectedObjects");
             }
             int used;
-            List<Primitive> PS = WorldSystem.GetPrimitives(args, out used);
+            List<SimObject> PS = WorldSystem.GetPrimitives(args, out used);
             if (IsEmpty(PS)) return Failure("Cannot find objects from " + string.Join(" ", args));
             foreach (var P in PS)
             {               
-                WorldSystem.ReSelectObject(P);                
+                WorldSystem.ReSelectObject(P.Prim);                
             }
             return Success("objects selected " + PS.Count);
         }

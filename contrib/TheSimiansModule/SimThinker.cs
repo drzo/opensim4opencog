@@ -425,7 +425,7 @@ namespace TheSimiansModule
 
         public List<BotAction> GetPossibleActions(double maxXYDistance, double maxZDist)
         {
-            List<SimObject> KnownObjects = Actor.GetKnownObjects();
+            List<SimObject> KnownObjects = Actor.GetKnownObjects().CopyOf();
             double myZ = Actor.GlobalPosition.Z;
             List<SimObject> useObjects = new List<SimObject>();
             foreach (SimObject O in KnownObjects)

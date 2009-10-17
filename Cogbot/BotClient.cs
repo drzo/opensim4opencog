@@ -125,13 +125,74 @@ namespace cogbot
         ///public Dictionary<string, Command> Commands = new Dictionary<string, Command>();
         public bool Running = true;
         public bool GroupCommands = true;
-        public string MasterName = String.Empty;
-        public UUID MasterKey = UUID.Zero;
+        private string _masterName = string.Empty;
+        public string MasterName
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_masterName) && UUID.Zero != _masterKey)
+                {
+                    MasterName = WorldSystem.GetUserName(_masterKey);
+                }
+                return _masterName;
+            } 
+            set
+            {
+                if (!string.IsNullOrEmpty(value))
+                {
+                    UUID found;
+                    if (UUID.TryParse(value, out found))
+                    {
+                        MasterKey = found;
+                        return;
+                    }
+                    _masterName = value;
+                    found = WorldSystem.GetUserID(value);
+                    if (found != UUID.Zero)
+                    {
+                        MasterKey = found;
+                    }
+                }
+            }
+        }
+
+        // permissions "NextOwner" means banned "Wait until they are an owner before doing anything!"
+        public Dictionary<UUID, BotPermissions> SecurityLevels = new Dictionary<UUID,BotPermissions>();
+
+        private UUID _masterKey = UUID.Zero;
+        public UUID MasterKey
+        {
+            get
+            {
+                if (UUID.Zero == _masterKey && !string.IsNullOrEmpty(_masterName))
+                {
+                    UUID found = WorldSystem.GetUserID(_masterName);
+                    if (found != UUID.Zero)
+                    {
+                        MasterKey = found;
+                    }
+                }
+                return _masterKey;
+            }
+            set
+            {
+                if (UUID.Zero != value)
+                {
+                    _masterKey = value;
+                    if (string.IsNullOrEmpty(_masterName))
+                    {
+                        string maybe = WorldSystem.GetUserName(value);
+                        if (!string.IsNullOrEmpty(maybe)) MasterName = maybe;
+                    }
+                    SecurityLevels[value] = BotPermissions.Owner;
+                }
+            }
+        }
         public bool AllowObjectMaster
         {
             get
             {
-                return MasterKey != UUID.Zero;
+                return _masterKey != UUID.Zero;
             }
         }
 
@@ -561,7 +622,7 @@ namespace cogbot
 
             if (im.Message.Length > 0 && im.Dialog == InstantMessageDialog.GroupInvitation)
             {
-                if (im.FromAgentID == MasterKey || im.FromAgentName == MasterName)
+                if (im.FromAgentID == _masterKey || im.FromAgentName == MasterName)
                 {
                     string groupName = im.Message;
                     int found = groupName.IndexOf("Group:");
@@ -581,7 +642,7 @@ namespace cogbot
 
             bool groupIM = im.GroupIM && GroupMembers != null && GroupMembers.ContainsKey(im.FromAgentID) ? true : false;
 
-            if (im.FromAgentID == MasterKey || (GroupCommands && groupIM) || im.FromAgentName == MasterName)
+            if (im.FromAgentID == _masterKey || (GroupCommands && groupIM) || im.FromAgentName == MasterName)
             {
                 // Received an IM from someone that is authenticated
                 WriteLine(String.Format("<{0} ({1})> {2}: {3} (@{4}:{5})", im.GroupIM ? "GroupIM" : "IM", im.Dialog,
@@ -634,9 +695,9 @@ namespace cogbot
                                                          UUID objectID, bool fromTask)
         {
             if (true) return true; // accept everything
-            if (MasterKey != UUID.Zero)
+            if (_masterKey != UUID.Zero)
             {
-                if (offer.FromAgentID != MasterKey)
+                if (offer.FromAgentID != _masterKey)
                     return false;
             }
             else if (GroupMembers != null && !GroupMembers.ContainsKey(offer.FromAgentID))
@@ -1688,6 +1749,31 @@ namespace cogbot
                 TheRadegastInstance.MainForm.Invoke(o); 
             } else o();
         }
+
+        public BotPermissions GetSecurityLevel(UUID uuid)
+        {
+            BotPermissions bp;
+            if (SecurityLevels.TryGetValue(uuid,out bp))
+            {
+                return bp;
+            }
+            return BotPermissions.Base;
+        }
     }
 
+    /// <summary>
+    ///  
+    /// </summary>
+    [Flags]
+    public enum BotPermissions : byte
+    {
+        /// <summary>Recognise</summary>
+        Base = 0x01,
+        /// <summary>Execute owner commands</summary>
+        Owner = 0x02,
+        /// <summary>Execute group level perms</summary>
+        Group = 0x04,
+        /// <summary>Ignore like for bots and users we dont chat with</summary>
+        Ignore = 0x80
+    }
 }
