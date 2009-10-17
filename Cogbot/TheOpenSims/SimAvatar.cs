@@ -335,7 +335,8 @@ namespace cogbot.TheOpenSims
         public ListAsSet<SimObject> GetKnownObjects()
         {
             ScanNewObjects(3, SightRange, false);
-            lock (KnownSimObjects) SortByDistance(KnownSimObjects);
+            //lock (KnownSimObjects) 
+                SortByDistance(KnownSimObjects);
             return KnownSimObjects;
         }
 
@@ -695,7 +696,7 @@ namespace cogbot.TheOpenSims
                     if (obj != this)
                         if (obj.IsRoot || obj.IsTyped)
                         {
-                            lock (KnownSimObjects)
+                            //lock (KnownSimObjects)
                                 if (!KnownSimObjects.Contains(obj))
                                 {
                                     KnownSimObjects.Add(obj);
@@ -724,7 +725,8 @@ namespace cogbot.TheOpenSims
             base.ResetRegion(regionHandle);
             if (changed)
             {
-                lock (KnownSimObjects) KnownSimObjects.Clear();
+                //lock (KnownSimObjects) 
+                KnownSimObjects.Clear();
                 GetKnownObjects();
             }
         }
@@ -1725,7 +1727,7 @@ namespace cogbot.TheOpenSims
             bool changed = false;
             AgentManager.AgentMovement ClientMovement = Client.Self.Movement;
 
-            if (true)
+            if (!IsDrivingVehical)
             {
                 bool prev = Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK;
                 try
@@ -1774,7 +1776,8 @@ namespace cogbot.TheOpenSims
                 bool needsTurn = true;
                 while (needsTurn && tries-- > 0)
                 {
-                    //                    ClientMovement.ResetControlFlags();
+                    
+                   // ClientMovement.ResetControlFlags();
                     double ZDir = ZHeading;
                     Vector3 dif = target - lp;
                     double Wanted = (Math.Atan2(-dif.X, -dif.Y) + Math.PI); // 2Pi= N, 1/2Pi = E
@@ -1787,7 +1790,7 @@ namespace cogbot.TheOpenSims
                         ClientMovement.TurnRight = true;
                         ClientMovement.YawNeg = true;
                         ClientMovement.SendUpdate(true);
-                        Thread.Sleep(200);
+                        Thread.Sleep(800);
                         ClientMovement.TurnRight = false;
                         ClientMovement.YawNeg = false;
                         ClientMovement.SendUpdate(true);
@@ -1807,7 +1810,7 @@ namespace cogbot.TheOpenSims
                         ClientMovement.YawPos = true;
                         ClientMovement.TurnLeft = true;
                         ClientMovement.SendUpdate(true);
-                        Thread.Sleep(200);
+                        Thread.Sleep(800);
                         ClientMovement.YawPos = false;
                         ClientMovement.TurnLeft = false;
                         ClientMovement.SendUpdate(true);
@@ -1825,9 +1828,11 @@ namespace cogbot.TheOpenSims
                     {
                         needsTurn = false;
                     }
+
+                    // use reverse?
                     if (lr < -170 || lr > 170)
                     {
-                        if (false && IsDrivingVehical)
+                        if (IsDrivingVehical)
                         {
                             bool atPos = ClientMovement.AtPos;
                             bool nudgeAtPos = ClientMovement.NudgeAtPos;
@@ -1837,7 +1842,7 @@ namespace cogbot.TheOpenSims
                             ClientMovement.NudgeAtPos = false;
                             ClientMovement.AtNeg = true;
                             ClientMovement.SendUpdate(true);
-                            Thread.Sleep(200);
+                            Thread.Sleep(800);
                             ClientMovement.AtNeg = false;
                             ClientMovement.SendUpdate(true);
 

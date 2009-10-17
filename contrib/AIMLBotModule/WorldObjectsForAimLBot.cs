@@ -5,6 +5,7 @@ using System.IO;
 using System.Reflection;
 using System.Threading;
 using cogbot.Listeners;
+using cogbot.ScriptEngines;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
 using RTParser;
@@ -17,7 +18,7 @@ using Thread=System.Threading.Thread;
 
 namespace AIMLBotModule
 {
-    public class WorldObjectsForAimLBot : WorldObjectsModule
+    public class WorldObjectsForAimLBot : WorldObjectsModule, ICollectionProvider
     {
         private static int _DefaultMaxRespondToChatPerMinute = 20;
         public static int DefaultMaxRespondToChatPerMinute
@@ -44,7 +45,7 @@ namespace AIMLBotModule
         /// <summary>
         /// Respond to personal IM chat
         /// </summary>
-        public static bool RespondToIM = false;
+        public static bool RespondToIM = true;
         /// <summary>
         /// Accept all friendship requests
         /// </summary>
@@ -267,8 +268,12 @@ namespace AIMLBotModule
             MyBot.GlobalSettings.addSetting("name", String.Format("{0}", myName));
             MyBot.GlobalSettings.addSetting("firstname", sname[0]);
             MyBot.GlobalSettings.addSetting("lastname", sname[1]);
+            MyBot.GlobalSettings.addSetting("master", client.MasterName);
             client.WorldSystem.TheSimAvatar["AIMLBotModule"] = this;
             client.WorldSystem.TheSimAvatar["MyBot"] = MyBot;
+            client.WorldSystem.AddGroupProvider(this);
+           
+
             LoadPersonalConfig();
 
         }
@@ -352,6 +357,8 @@ namespace AIMLBotModule
                 user.RespondToChat = RespondToChatByDefaultAllUsers;
             }
             user.MaxRespondToChatPerMinute = DefaultMaxRespondToChatPerMinute;
+            user.Predicates.addSetting("me", fromname);
+
             return user;
         }
 
@@ -362,44 +369,53 @@ namespace AIMLBotModule
 
         public void AIML_OnInstantMessage(InstantMessage im, Simulator simulator)
         {
+            Console.WriteLine("InstantMessage=" + im.Dialog);
+            Console.WriteLine("FromAgentID=" + WorldSystem.GetObject(im.FromAgentID));
+            object toObject = WorldSystem.GetObject(im.ToAgentID);
+            if (toObject!=null) Console.WriteLine("ToAgentID=" + toObject.GetType());
+            object sessionObject = WorldSystem.GetObject(im.IMSessionID);
+            if (sessionObject != null) Console.WriteLine("SessionID=" + sessionObject.GetType());
+
+            
             if (im.Dialog == InstantMessageDialog.StartTyping || im.Dialog == InstantMessageDialog.StopTyping)
             {
                 return;
             }
-            if (im.FromAgentName == GetName()) return;
             if (im.FromAgentName == "System" || im.FromAgentName == "Second Life") return;
-            if (im.FromAgentID==UUID.Zero)
+            if (im.FromAgentID == UUID.Zero || im.FromAgentID == client.Self.AgentID)
             {
                 return;
             }
+            //if (!im.GroupIM)if (im.FromAgentName == GetName()) return;
+
             User myUser = GetMyUser(im.FromAgentName);
             myUser.Predicates.addSetting("host", im.FromAgentID.ToString());
             // myUser.Predicates.addObjectFields(im);
-
+            if (im.Dialog == InstantMessageDialog.GroupNotice || im.Dialog==InstantMessageDialog.SessionSend)
+            {
+                im.GroupIM = true;
+            }
             bool UseThrottle = im.GroupIM;
             string groupName = null;
             if (im.Dialog != InstantMessageDialog.MessageFromObject &&
-                im.Dialog != InstantMessageDialog.MessageFromAgent && 
+                im.Dialog != InstantMessageDialog.MessageFromAgent &&
                 im.Dialog != InstantMessageDialog.MessageBox &&
-                im.Dialog != InstantMessageDialog.GroupNotice)
+                im.Dialog != InstantMessageDialog.GroupNotice &&
+                im.Dialog != InstantMessageDialog.SessionSend
+                )
             {
                 im.Message = String.Format("{0} {1}", im.Dialog, im.Message);
             }
             UUID groupID = UUID.Zero;
             if (im.GroupIM)
             {
-                Group group;
-                client.Groups.GroupName2KeyCache.ForEach(delegate(KeyValuePair<UUID, string> kv)
-                                                             {
-                                                                 if (im.FromAgentID == kv.Key)
-                                                                 {
-                                                                     groupName = kv.Value;
-                                                                     groupID = kv.Key;
-                                                                 }
-                                                             });
-
+                SimGroup g = sessionObject as SimGroup;
+                if (g!=null)
+                {
+                    groupName = g.Group.Name;                    
+                }
                 WriteLine("Group IM {0}", groupName);
-                if (!myUser.RespondToChat && !RespondToChatByDefaultAllUsers) return;
+                if (!myUser.RespondToChat) return;
             }
 
             //UpdateQueue.Enqueue(() => SendNewEvent("on-instantmessage", , im.Message, im.ToAgentID,
@@ -410,8 +426,15 @@ namespace AIMLBotModule
             string message = im.Message;
             if (string.IsNullOrEmpty(message)) return;
             if (message == "typing") return;
+            HandleIM(im, myUser, groupName, message, UseThrottle);
+
+        }
+
+        private void HandleIM(InstantMessage im, User myUser, string groupName, string message, bool UseThrottle)
+        {
             RunTask(() => // this can be long running
                         {
+                            UUID toSession = im.ToAgentID ^ im.IMSessionID;
                             string resp = AIMLInterp(message, myUser);
                             // if (im.Offline == InstantMessageOnline.Offline) return;
                             if (String.IsNullOrEmpty(resp)) return;
@@ -475,7 +498,6 @@ namespace AIMLBotModule
                             }
                             myUser.LastResponseGivenTime = Environment.TickCount;
                         }, "AIML_OnInstantMessage: " + myUser + ": " + message);
-
         }
 
         List<Thread> ThreadList
@@ -802,6 +824,8 @@ namespace AIMLBotModule
 
         public Unifiable AIMLInterp(string input, User myUser)
         {
+            // set a global
+            MyUser = myUser;
             if (input == null) return Unifiable.Empty;
             input = input.Trim().Replace("  ", " ");
             if (string.IsNullOrEmpty(input)) return Unifiable.Empty;
@@ -860,6 +884,24 @@ namespace AIMLBotModule
         {
             writeLock.Dispose();
             //todo throw new NotImplementedException();
+        }
+
+        public ICollection GetGroup(string name)
+        {
+            Unifiable v = MyUser.Predicates.grabSetting(name);
+            if (v == null)
+            {
+                v = MyBot.GlobalSettings.grabSetting(name);
+                if (v == null) return null;
+            }
+            if (v.IsEmpty) return null;
+            if (name.ToString() == v.ToString())
+            {
+                return null;
+            }
+            var list = new List<string>();
+            list.Add(v);
+            return list;
         }
     }
 }
