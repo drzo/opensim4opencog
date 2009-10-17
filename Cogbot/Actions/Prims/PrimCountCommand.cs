@@ -1,4 +1,5 @@
 using System;
+using cogbot.Listeners;
 using OpenMetaverse;
 
 namespace cogbot.Actions
@@ -32,7 +33,7 @@ namespace cogbot.Actions
                 }
             }
             WriteLine("{0} (Avatars: {1} Primitives: {2})",
-                        "WorldSystem", WorldSystem.numAvatars(), cogbot.Listeners.WorldObjects.SimObjects.Count);
+                        "WorldSystem", WorldObjects.SimAvatars.Count, WorldObjects.SimObjects.Count);
 
             return Success("Tracking a total of " + count + " objects");
 		}
