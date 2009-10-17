@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using cogbot.TheOpenSims;
 using OpenMetaverse;
 
 namespace cogbot.Actions
@@ -21,7 +22,7 @@ namespace cogbot.Actions
 
 
             int argsUsed;
-            List<Primitive> PS = WorldSystem.GetPrimitives(args, out argsUsed);
+            List<SimObject> PS = WorldSystem.GetPrimitives(args, out argsUsed);
             if (IsEmpty(PS)) return Failure("Cannot find objects from " + string.Join(" ", args));
 
             foreach (var found in PS)

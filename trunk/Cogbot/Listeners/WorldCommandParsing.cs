@@ -86,8 +86,8 @@ namespace cogbot.Listeners
 
             prim = null;
             argsUsed = 0;
-            return false;
-            //return GetPrimMatches(splitted, name, out prim, pickNum, out argsUsed);
+            //.resolvreturn false;
+            return GetPrimMatches(splitted, name, out prim, pickNum, out argsUsed);
         }
 
 
@@ -181,10 +181,10 @@ namespace cogbot.Listeners
 
         public SimObject GetSimObjectS(string[] args, out int argsUsed)
         {
-            List<Primitive> primitives = GetPrimitives(args, out argsUsed);
+            List<SimObject> primitives = GetPrimitives(args, out argsUsed);
             if (primitives.Count != 1) return null;
-            Primitive prim = primitives[0];
-            if (prim != null) return GetSimObject(prim);
+            SimObject prim = primitives[0];
+            if (prim != null) return prim;
             foreach (SimAvatar avatar in SimAvatars)
             {
                 if (avatar.DebugInfo().Contains(args[0]))
@@ -224,11 +224,13 @@ namespace cogbot.Listeners
             return name;
         }
 
-        public List<SimObject> GetRelations(List<SimObject> re)
+        public List<SimObject> GetRelations(ICollection re)
         {
             ListAsSet<SimObject> more = new ListAsSet<SimObject>();
-            foreach (var O in re)
+            foreach (var OP in re)
             {
+                SimObject O = AsSimObject(OP);
+                if (O == null) continue;
                 more.Add(O);
                 AsPrimitives(more, O.Children);
                 SimObject P = O.Parent;
@@ -240,11 +242,13 @@ namespace cogbot.Listeners
             return more;
         }
 
-        private List<SimObject> GetParents(List<SimObject> primitives)
+        private List<SimObject> GetParents(ICollection primitives)
         {
             ListAsSet<SimObject> more = new ListAsSet<SimObject>();
-            foreach (var O in primitives)
+            foreach (var OP in primitives)
             {
+                SimObject O = AsSimObject(OP);
+                if (O == null) continue;
                 SimObject P = O.Parent;
                 if (P != O)
                 {
@@ -254,17 +258,52 @@ namespace cogbot.Listeners
             return more;
         }
 
-        private List<SimObject> GetChildren(List<SimObject> primitives)
+        private List<SimObject> GetChildren(ICollection primitives)
         {
             ListAsSet<SimObject> more = new ListAsSet<SimObject>();
-            foreach (var O in primitives)
+            foreach (var OP in primitives)
             {
+                SimObject O = AsSimObject(OP);
+                if (O == null) continue;
                 AsPrimitives(more, O.Children);
             }
             return more;
         }
 
-        public void AsPrimitives(List<Primitive> prims, IEnumerable positions)
+        private SimObject AsSimObject(object ov)
+        {
+            Object o = ov;
+            SimObject oo = o as SimObject;
+            if (oo != null)
+            {
+                return oo;
+            }
+            Primitive p = o as Primitive;
+            if (p != null)
+            {
+                return GetSimObject(p);
+            }
+
+            if (o is UUID)
+            {
+                oo = GetSimObjectFromUUID((UUID) o);
+                if (oo != null) return oo;
+                o = o.ToString();
+            }
+            string s = o as string;
+            if (!string.IsNullOrEmpty(s))
+            {
+                Primitive prim;
+                int argsUsed;
+                if (tryGetPrim(new string[]{s}, out prim, out argsUsed))
+                {
+                    return GetSimObject(prim);
+                }
+            }
+            return null;
+        }
+
+        public void AsPrimitives(ICollection<Primitive> prims, IEnumerable positions)
         {
             foreach (var o in positions)
             {
@@ -274,64 +313,44 @@ namespace cogbot.Listeners
                     prims.Add(p);
                     continue;
                 }
-                SimObject oo = o as SimObject;
-                if (oo != null)
-                {
-                    p = oo.Prim;
-                    if (p != null) prims.Add(p);
-                }
+                SimObject oo = AsSimObject(o);
+                if (oo == null) continue;
+                p = oo.Prim;
+                if (p != null) prims.Add(p);
             }
         }
-        public void AsPrimitives(List<SimObject> prims, IEnumerable positions)
+        public void AsPrimitives(ICollection<SimObject> prims, IEnumerable positions)
         {
-            foreach (var ov in positions)
+            foreach (var o in positions)
             {
-                Object o = ov;
-                Primitive p = o as Primitive;
-                if (p != null)
-                {
-                    prims.Add(GetSimObject(p));
-                    continue;
-                }
-                SimObject oo = o as SimObject;
-                if (oo != null)
-                {
-                    prims.Add(oo);
-                    continue;
-                }
-                if (o is UUID)
-                {
-                    o = o.ToString();
-                }
-                string s = o as string;
-                if (!string.IsNullOrEmpty(s))
-                {
-                    int argsUsed;
-                    List<Primitive> getPrimitives1 = GetPrimitives(new[] { s }, out argsUsed);
-                    AsPrimitives(prims, getPrimitives1);
-                    continue;
-                }
+                SimObject oo = AsSimObject(o);
+                if (oo == null) continue;
+                prims.Add(oo);
             }
         }
 
-        public List<Primitive> GetPrimitives(string[] args, out int argsUsed)
+        public List<SimObject> GetPrimitives(string[] args, out int argsUsed)
         {
-            List<Primitive> prims = new List<Primitive>();
+            List<SimObject> prims = new List<SimObject>();
             if (args.Length == 0)
             {
                 argsUsed = 0;
                 return prims;
             }
-            List<SimObject> filterSimObjects = FilterSimObjects(args, out argsUsed, SimObjects.CopyOf());
+            ICollection filterSimObjects = FilterSimObjects(args, out argsUsed, SimObjects.CopyOf());
 
             AsPrimitives(prims, filterSimObjects);
 
             if (argsUsed >= args.Length) return prims;
             String arg0Lower = args[argsUsed].ToLower();
 
-            if (arg0Lower == "AND")
+            if (arg0Lower == "and" || arg0Lower == ",")
             {
-
+                argsUsed++;
+                int moreUsed;
+                var more = GetPrimitives(Parser.SplitOff(args, argsUsed), out moreUsed);
+                argsUsed += moreUsed;
+                AsPrimitives(prims, more);
             }
             return prims;
         }
@@ -350,7 +369,6 @@ namespace cogbot.Listeners
                 simGroupProviders.Add(bot);
             }
         }
-
 
         public ICollection ResolveCollection(string arg0Lower, out int argsUsed, ICollectionProvider skip)
         {
@@ -538,10 +556,10 @@ namespace cogbot.Listeners
                 }
                 else
                 {
-                    string nth = args[0].ToLower();
+                    return new List<SimObject>();
                     prims = FilterSimObjects(Parser.SplitOff(args, 1), out argsUsed, prims);
                     argsUsed += 1;
-                    prims.RemoveAll(p => !SMatches(p, nth));
+                    prims.RemoveAll(p => !SMatches(p, arg0Lower));
                 }
             }
             return prims;

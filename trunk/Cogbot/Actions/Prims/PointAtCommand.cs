@@ -35,16 +35,15 @@ namespace cogbot.Actions
                 TheSimAvatar.SelectedBeam = !TheSimAvatar.SelectedBeam;
                 return Success("SelectedBeam = " + TheSimAvatar.SelectedBeam);
             }
-            List<Primitive> PS = WorldSystem.GetPrimitives(args, out used);
+            List<SimObject> PS = WorldSystem.GetPrimitives(args, out used);
             if (PS.Count==0) return Failure(string.Format("Cant find {0}", string.Join(" ", args)));
             GridClient grc = TheBotClient;
-            foreach (var currentPrim in PS)
-            {
-                SimObject o = WorldSystem.GetSimObject(currentPrim);
+            foreach (var o in PS)
+            {             
                 EffectBeamInfo info = new EffectBeamInfo(grc);
                 info.SetPointing(o, 3);
                 BeamInfos.AddTo(info);
-                instance.State.SetPointing(currentPrim, 3);                
+                instance.State.SetPointing(o.Prim, 3);                
             }
             return Success(Name + " on " + PS.Count);
         }

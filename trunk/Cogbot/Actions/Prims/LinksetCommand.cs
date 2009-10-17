@@ -30,9 +30,9 @@ namespace cogbot.Actions
                 return ShowUsage();
             }
             int argsUsed;
-            List<Primitive> PS = WorldSystem.GetPrimitives(args, out argsUsed);
+            List<SimObject> PS = WorldSystem.GetPrimitives(args, out argsUsed);
             if (PS.Count != 1) return Failure("Cannot find single object from " + string.Join(" ", args));
-            Primitive rootPrim = PS[0];
+            Primitive rootPrim = PS[0].Prim;
             Simulator worldSystemGetSimulator = WorldSystem.GetSimulator(rootPrim);
             if (rootPrim.ParentID != 0)
                 return
@@ -42,7 +42,7 @@ namespace cogbot.Actions
             PS = WorldSystem.GetPrimitives(Parser.SplitOff(args, argsUsed), out argsUsed);
             try
             {
-                PS.Remove(rootPrim);
+                PS.Remove(PS[0]);
                 List<uint> linkSet = new List<uint>();
                 PS.ForEach(o => linkSet.Add(o.LocalID));
                 linkSet.Add(rootPrim.LocalID);

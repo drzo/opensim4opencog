@@ -21,7 +21,7 @@ namespace cogbot.Actions
                 return ShowUsage();// " Rotateprim prim [x y [z]]";
 
             int used;
-            List<Primitive> PS = WorldSystem.GetPrimitives(args, out used);
+            List<SimObject> PS = WorldSystem.GetPrimitives(args, out used);
             if (IsEmpty(PS)) return Failure("Cannot find prim: " + string.Join(" ", args));
             string[] to = Parser.SplitOff(args, used);
 
@@ -31,9 +31,8 @@ namespace cogbot.Actions
                 return Failure("Cannot find position: " + string.Join(" ", to));
             }
             List<SimObject> TODO = new List<SimObject>();
-            foreach (var P in PS)
+            foreach (var O in PS)
             {
-                SimObject O = WorldSystem.GetSimObject(P);
                 if (!O.IsRegionAttached) return Failure("!IsRegionAttached: " + O);
                 TODO.Add(O);
             }

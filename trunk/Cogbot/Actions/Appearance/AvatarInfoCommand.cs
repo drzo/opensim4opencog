@@ -34,10 +34,11 @@ namespace cogbot.Actions.Appearance
             string targetName = String.Join(" ", args);
 
             int argsUsed;
-            List<Primitive> PS = WorldSystem.GetPrimitives(args, out argsUsed);
+            List<SimObject> PS = WorldSystem.GetPrimitives(args, out argsUsed);
             if (IsEmpty(PS)) return Failure("Cannot find objects from " + string.Join(" ", args));
-            foreach (var foundAv in PS)
+            foreach (var O in PS)
             {
+                Primitive foundAv = O.Prim;
                 StringBuilder output = new StringBuilder();
                 targetName = String.Join(" ", args, 0, argsUsed);
                 output.AppendFormat("{0} ({1})", targetName, foundAv.ID);

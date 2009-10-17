@@ -24,11 +24,11 @@ namespace cogbot.Actions
             }
 
             int argsUsed;
-            List<Primitive> PS = WorldSystem.GetPrimitives(args, out argsUsed);
+            List<SimObject> PS = WorldSystem.GetPrimitives(args, out argsUsed);
             if (IsEmpty(PS)) return Failure("Cannot find objects from " + string.Join(" ", args));
             foreach (var target in PS)
             {
-                WorldSystem.DeletePrim(target);
+                WorldSystem.DeletePrim(target.Prim);
                 WriteLine("\n {0}", target);
                 Success("Done.");
             }

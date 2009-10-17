@@ -20,14 +20,13 @@ namespace cogbot.Actions
         {
             if (Client.Network.CurrentSim == null) return Failure("not yet connected");
             int argsUsed;
-            List<Primitive> OS = WorldSystem.GetPrimitives(args, out argsUsed);
+            List<SimObject> OS = WorldSystem.GetPrimitives(args, out argsUsed);
             if (OS.Count == 0)
             {
-                OS.Add(TheSimAvatar.theAvatar);
+                OS.Add(TheSimAvatar);
             }
-            foreach (var P in OS)
+            foreach (var O in OS)
             {
-                SimObject O = WorldSystem.GetSimObject(P);
                 WriteLine("Attachments for " + O);
                 int count = O.Children.Count;
                 foreach (var s in O.Children)

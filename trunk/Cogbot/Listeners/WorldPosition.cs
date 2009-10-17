@@ -320,8 +320,8 @@ namespace cogbot.Listeners
                 }
             }
 
-            List<Primitive> prim = GetPrimitives(args, out argsUsed);
-            if (prim.Count==1) return GetSimObject(prim[0]);
+            List<SimObject> prim = GetPrimitives(args, out argsUsed);
+            if (prim.Count==1) return prim[0];
 
 
             argsUsed = 0;

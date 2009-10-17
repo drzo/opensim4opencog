@@ -92,17 +92,22 @@ namespace cogbot.Actions
                     {
                         int found = 0;
                         int argsUsed;
-                        List<Primitive> PS = WorldSystem.GetPrimitives(args.tokens, out argsUsed);
+                        List<SimObject> PS = WorldSystem.GetPrimitives(args.tokens, out argsUsed);
                         bool detailed = true;
                         if (PS.Count > 1) detailed = false;
                         if (!IsEmpty(PS)) 
                         foreach (var prim in PS)
                         {
                             found++;
-                            if (prim is Avatar)
-                                WriteLine(WorldSystem.describeAvatar((Avatar) prim));
+                            if (!prim.HasPrim)
+                            {
+                                WriteLine("" + prim);
+                                continue;
+                            }
+                            if (prim is SimAvatar)
+                                WriteLine(WorldSystem.describeAvatar((Avatar) prim.Prim));
                             else
-                                WriteLine(WorldSystem.describePrim(prim, detailed));
+                                WriteLine(WorldSystem.describePrim(prim.Prim, detailed));
                             if (found > 30) break;
                         }
                         else

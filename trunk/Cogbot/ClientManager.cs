@@ -668,44 +668,45 @@ namespace cogbot
             BotClient client = new BotClient(this, gc, loginParams);
             BotByName[string.Format("{0} {1}", account.FirstName, account.LastName)] = client;
             client.GroupCommands = account.GroupCommands;
-            client.MasterName = account.MasterName;
-            client.MasterKey = account.MasterKey;
+            if (!string.IsNullOrEmpty(account.MasterName)) client.MasterName = account.MasterName;
+            if (account.MasterKey != UUID.Zero) client.MasterKey = account.MasterKey;
             //client.AllowObjectMaster = client.MasterKey != UUID.Zero; // Require UUID for object master.
 
-            if (client.Network.Login(loginParams))
-            {
-                if (client.MasterKey == UUID.Zero && !string.IsNullOrEmpty(client.MasterName))
-                {
-                    UUID query = UUID.Zero;
-                    EventHandler<DirPeopleReplyEventArgs> peopleDirCallback =
-                       delegate(object sender, DirPeopleReplyEventArgs e)
-                        {
-                            if (e.QueryID == query)
-                            {
-                                if (e.MatchedPeople.Count != 1)
-                                {
-                                    Logger.Log("Unable to resolve master key from " + client.MasterName,
-                                               Helpers.LogLevel.Warning);
-                                }
-                                else
-                                {
-                                    client.MasterKey = e.MatchedPeople[0].AgentID;
-                                    Logger.Log("Master key resolved to " + client.MasterKey, Helpers.LogLevel.Info);
-                                }
-                            }
-                        };
+            // TODO confirm the set/get of the Master system does what it needs
+            //if (client.Network.Login(loginParams))
+            //{
+            //    if (client.MasterKey == UUID.Zero && !string.IsNullOrEmpty(client.MasterName))
+            //    {
+            //        UUID query = UUID.Zero;
+            //        EventHandler<DirPeopleReplyEventArgs> peopleDirCallback =
+            //           delegate(object sender, DirPeopleReplyEventArgs e)
+            //            {
+            //                if (e.QueryID == query)
+            //                {
+            //                    if (e.MatchedPeople.Count != 1)
+            //                    {
+            //                        Logger.Log("Unable to resolve master key from " + client.MasterName,
+            //                                   Helpers.LogLevel.Warning);
+            //                    }
+            //                    else
+            //                    {
+            //                        client.MasterKey = e.MatchedPeople[0].AgentID;
+            //                        Logger.Log("Master key resolved to " + client.MasterKey, Helpers.LogLevel.Info);
+            //                    }
+            //                }
+            //            };
 
-                    client.Directory.DirPeopleReply += peopleDirCallback;
-                    client.Directory.StartPeopleSearch(client.MasterName, 0);
-                }
+            //        client.Directory.DirPeopleReply += peopleDirCallback;
+            //        client.Directory.StartPeopleSearch(client.MasterName, 0);
+            //    }
 
-                Logger.Log("Logged in " + client.ToString(), Helpers.LogLevel.Info);
-            }
-            else
-            {
-                Logger.Log("Failed to login " + account.FirstName + " " + account.LastName + ": " +
-                    client.Network.LoginMessage, Helpers.LogLevel.Warning);
-            }
+            //    Logger.Log("Logged in " + client.ToString(), Helpers.LogLevel.Info);
+            //}
+            //else
+            //{
+            //    Logger.Log("Failed to login " + account.FirstName + " " + account.LastName + ": " +
+            //        client.Network.LoginMessage, Helpers.LogLevel.Warning);
+            //}
 
             return client;
         }

@@ -18,7 +18,7 @@ namespace cogbot.Actions
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             int argsUsed;
-            List<Primitive> objs = WorldSystem.GetPrimitives(args, out argsUsed);
+            List<SimObject> objs = WorldSystem.GetPrimitives(args, out argsUsed);
             int detatched = 0;
             int orphans = 0;
             int missingSculpties = 0;

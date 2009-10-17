@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using cogbot.TheOpenSims;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
 using OpenMetaverse.StructuredData;
@@ -62,12 +63,12 @@ namespace cogbot.Actions
                 id = SelectedObject;
             }
 
-            List<Primitive> PS = WorldSystem.GetPrimitives(args, out argsUsed);
+            List<SimObject> PS = WorldSystem.GetPrimitives(args, out argsUsed);
             if (IsEmpty(PS)) return Failure("Cannot find objects from " + string.Join(" ", args));
 
             foreach (var exportPrim in PS)
             {
-                Simulator CurSim = WorldSystem.GetSimulator(exportPrim);
+                Simulator CurSim = exportPrim.GetSimulator();
 
                 if (exportPrim.ParentID != 0)
                     localid = exportPrim.ParentID;

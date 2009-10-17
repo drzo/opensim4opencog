@@ -24,10 +24,11 @@ namespace cogbot.Actions
 
 
             int argsUsed;
-            List<Primitive> PS = WorldSystem.GetPrimitives(args, out argsUsed);
+            List<SimObject> PS = WorldSystem.GetPrimitives(args, out argsUsed);
             if (IsEmpty(PS)) return Failure("Cannot find objects from " + string.Join(" ", args));
-            foreach (var exportPrim in PS)
+            foreach (var o in PS)
             {
+                Primitive exportPrim = o.Prim;
                 if (exportPrim.ParticleSys.CRC != 0)
                 {
                     StringBuilder lsl = new StringBuilder();

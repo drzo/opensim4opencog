@@ -59,10 +59,9 @@ namespace cogbot.Actions
                         continue;
                     }
                     args[0] = s;
-                    List<Primitive> PS = WorldSystem.GetPrimitives(args, out used);
-                    foreach (var primitive in PS)
+                    List<SimObject> PS = WorldSystem.GetPrimitives(args, out used);
+                    foreach (var P in PS)
                     {
-                        SimObject P = WorldSystem.GetSimObject(primitive);
                         if (P == null)
                         {
                             WriteLine("Cannot find " + s);

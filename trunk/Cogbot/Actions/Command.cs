@@ -296,7 +296,7 @@ namespace cogbot.Actions
                 argsUsed = 1;
                 return true;
             }
-            List<Primitive> OS = WorldSystem.GetPrimitives(args, out argsUsed);
+            List<SimObject> OS = WorldSystem.GetPrimitives(args, out argsUsed);
             if (OS.Count == 1)
             {
                 target = OS[0].ID;
@@ -316,12 +316,14 @@ namespace cogbot.Actions
         protected CmdResult Failure(string usage)
         {
             failure++;
+            WriteLine(usage);
             return Result(usage, false);
         }
 
         protected CmdResult Success(string usage)
         {
             success++;
+            WriteLine(usage);
             return Result(usage, true);
         }
 
@@ -352,31 +354,48 @@ namespace cogbot.Actions
             return Failure(Usage);
         }
 
-        protected object EnumParse(Type type, string name)
+        protected object EnumParse(Type type, string[] names, int argStart, out int argsUsed)
         {
-            Object e = Enum.Parse(type, name);
-            if (e != null) return e;
-            e = Enum.Parse(type, name, true);
-            Enum firstEnum = (Enum) Enum.GetValues(type).GetValue(0);
-            if (e != null) return e;
+            ulong d = 0;
+            argsUsed = 0;
+            for (int i = argStart; i < names.Length; i++)
+            {
+                var name = names[i];
+                Object e = Enum.Parse(type, name);
+                if (e != null)
+                {
+                    d += (ulong) e.GetHashCode();
+                    argsUsed++;
+                    continue;
+                }
+                e = Enum.Parse(type, name, true);
+                if (e != null)
+                {
+                    d += (ulong) e.GetHashCode();
+                    argsUsed++;
+                    continue;
+                }
+                ulong numd;
+                if (ulong.TryParse(name, out numd))
+                {
+                    d += numd;
+                    argsUsed++;
+                    continue;
+                }
+                break;
+            }
+            if (argsUsed == 0) return null;
             Type etype = Enum.GetUnderlyingType(type);
-            ulong num;
-            int firstInt = firstEnum.GetHashCode();
-            if (UInt64.TryParse(name,out num))
+            if (typeof (IConvertible).IsAssignableFrom(etype))
             {
-               
+                MethodInfo mi = etype.GetMethod("Parse",new Type[]{typeof(string)});
+                object o = mi.Invoke(null, new object[] {d.ToString()});               
+                return o;
             }
-            if (typeof(IConvertible).IsAssignableFrom(etype))
-            {
-            }
-            foreach (var f in type.GetFields(BindingFlags.Static))
-            {
-                
-            }
-            return e;
+            return d;
         }
 
-        static public bool IsEmpty(IList enumerable)
+        static public bool IsEmpty(ICollection enumerable)
         {
             return enumerable == null || enumerable.Count == 0;
         }

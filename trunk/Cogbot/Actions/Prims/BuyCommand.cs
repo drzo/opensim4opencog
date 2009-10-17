@@ -23,11 +23,11 @@ namespace cogbot.Actions
             }
             int used;
             int argsUsed;
-            List<Primitive> PS = WorldSystem.GetPrimitives(args, out argsUsed);
+            List<SimObject> PS = WorldSystem.GetPrimitives(args, out argsUsed);
             if (IsEmpty(PS)) return Failure("Cannot find objects from " + string.Join(" ", args));
-            foreach (var currentPrim in PS)
+            foreach (var o in PS)
             {
-                SimObject o = WorldSystem.GetSimObject(currentPrim);
+                //SimObject o = WorldSystem.GetSimObject(currentPrim);
                 Primitive.ObjectProperties Properties = o.Properties;
                 if (Properties == null)
                 {
@@ -35,7 +35,7 @@ namespace cogbot.Actions
                     continue;
                 }
                 GridClient client = TheBotClient;
-                client.Objects.BuyObject(o.GetSimulator(), currentPrim.LocalID, Properties.SaleType,
+                client.Objects.BuyObject(o.GetSimulator(), o.LocalID, Properties.SaleType,
                                          Properties.SalePrice, client.Self.ActiveGroup,
                                          client.Inventory.FindFolderForType(AssetType.Object));
                 Success(Name + " on " + o);
