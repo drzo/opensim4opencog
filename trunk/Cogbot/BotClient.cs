@@ -544,6 +544,10 @@ namespace cogbot
 
         private void Self_OnInstantMessage(InstantMessage im, Simulator simulator)
         {
+            if (im.Dialog == InstantMessageDialog.GroupNotice)
+            {
+                im.GroupIM = true;
+            }
             if (im.FromAgentName == GetName()) return;
             if (im.FromAgentName == "System") return;
             if (im.Message.Length > 0 && im.Dialog == InstantMessageDialog.MessageFromAgent)

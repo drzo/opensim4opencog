@@ -140,6 +140,7 @@ namespace cogbot.TheOpenSims
             AssetGesture gestureAsset = GetGesture();
             //            StringBuilder sb = new StringBuilder();
             //sb.Append("2\n");
+            if (gestureAsset == null) return null;
             Name  = gestureAsset.Trigger;
             //sb.Append(TriggerKey + "\n");
             //sb.Append(TriggerKeyMask + "\n");

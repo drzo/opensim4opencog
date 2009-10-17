@@ -24,8 +24,9 @@ namespace cogbot.Listeners
             }
             Type t = properties.GetType();
             HashSet<string> lowerProps = new HashSet<string>();
+            BindingFlags flags = BindingFlags.Instance | BindingFlags.Public; //BindingFlags.NonPublic
             foreach (
-                PropertyInfo o in t.GetProperties(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public))
+                PropertyInfo o in t.GetProperties(flags))
             {
                 if (o.CanRead)
                 {
@@ -34,6 +35,10 @@ namespace cogbot.Listeners
                         if (o.Name.StartsWith("_")) continue;
                         if (o.DeclaringType == typeof (Object)) continue;
                         if (!lowerProps.Add(o.Name.ToLower())) continue;
+                        if (o.GetIndexParameters().Length > 0)
+                        {
+                            continue;
+                        }
                         var v = o.GetValue(properties, null);
                         if (v == null) v = new NullType(properties, o);
                         dict.Add(new NamedParam(o, prefix + o.Name, o.PropertyType, v));
@@ -44,7 +49,7 @@ namespace cogbot.Listeners
                     }
                 }
             }
-            foreach (FieldInfo o in t.GetFields(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public))
+            foreach (FieldInfo o in t.GetFields(flags))
             {
                 try
                 {

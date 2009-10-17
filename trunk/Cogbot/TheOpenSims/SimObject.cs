@@ -569,9 +569,14 @@ namespace cogbot.TheOpenSims
             get
             {
                 if (MadePhantom) return true;
-                if (IsRoot || true) return (Prim.Flags & PrimFlags.Phantom) == PrimFlags.Phantom;
+                if (IsRoot || true)
+                {
+                    Primitive Prim = this.Prim;
+                    if (Prim == null) return true;
+                    return (Prim.Flags & PrimFlags.Phantom) == PrimFlags.Phantom;
+                }
                 if (!IsRoot && IsRegionAttached) return Parent.IsPhantom;
-                if (Parent == null) return true;
+                if (_Parent == null) return true;
                 return Parent.IsPhantom;
             }
             set
@@ -580,6 +585,12 @@ namespace cogbot.TheOpenSims
                 if (!WorldObjects.CanPhantomize)
                 {
                     Debug("Wont set IsPhantom because WorldObjects.CanPhantomize=false");
+                    return;
+                }
+                Primitive Prim = this.Prim;
+                if (Prim==null)
+                {
+                    Debug("Wont set IsPhantom because Prim==null");
                     return;
                 }
                 if (value)
