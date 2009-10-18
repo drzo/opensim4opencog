@@ -37,8 +37,7 @@ namespace cogbot.Utilities
             EventQueueHandler.Start();
             //if (DebugQueue)
             {
-                EventQueuePing = new Thread(EventQueue_Ping) { Name = str + " debug" };
-                EventQueueHandler.Priority = ThreadPriority.Lowest;
+                EventQueuePing = new Thread(EventQueue_Ping) {Name = str + " debug", Priority = ThreadPriority.Lowest};
                 EventQueuePing.Start();
             }
         }
