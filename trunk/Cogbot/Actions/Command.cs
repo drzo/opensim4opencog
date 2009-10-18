@@ -324,7 +324,7 @@ namespace cogbot.Actions
         {
             success++;
             WriteLine(usage);
-            return Result(usage, true);
+            return Result("Success " + Name, true);
         }
 
         protected CmdResult Result(string usage, bool tf)
