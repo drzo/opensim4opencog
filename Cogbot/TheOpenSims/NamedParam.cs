@@ -29,6 +29,7 @@ namespace cogbot
 
         private void checkKey(object o)
         {
+            return;
             if (o!=null) if (o.ToString().Contains("offsetU"))
             {
                 
