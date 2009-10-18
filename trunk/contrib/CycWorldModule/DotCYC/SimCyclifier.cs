@@ -452,16 +452,16 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
 
         public void FunctionToCollection(string fn, string col, string comment)
         {
-            simFort[fn] = createIndividual(fn, comment, "SimVocabMt", "UnaryFunction");
-            assertIsa(simFort[fn], C("CollectionDenotingFunction"));
-            assertIsa(simFort[fn], C("ReifiableFunction"));
-            simFort[col] = createCollection(col, comment, "SimVocabMt", "Collection", null);
-            assertIsa(simFort[col], C("PartiallyTangibleTypeByPhysicalFeature"));
+            CycFort fortFn = simFort[fn] = createIndividual(fn, comment, "SimVocabMt", "UnaryFunction");
+            assertIsa(fortFn, C("CollectionDenotingFunction"));
+            assertIsa(fortFn, C("ReifiableFunction"));
+            CycFort fortCol = simFort[col] = createCollection(col, comment, "SimVocabMt", "Collection", null);
+            assertIsa(fortCol, C("PartiallyTangibleTypeByPhysicalFeature"));
             //not true assertIsa(simFort[fn], C("SubcollectionDenotingFunction"));
             //not true assertIsa(simFort[fn], C("TotalFunction"));
-            assertGafNow(C("resultIsa"), simFort[fn], C("PartiallyTangibleTypeByPhysicalFeature"));
-            assertGafNow(C("resultIsa"), simFort[fn], C("FirstOrderCollection"));
-            assertGafNow(C("resultGenl"), simFort[fn], simFort[col]);
+            assertGafNow(C("resultIsa"), fortFn, C("PartiallyTangibleTypeByPhysicalFeature"));
+            assertGafNow(C("resultIsa"), fortFn, C("FirstOrderCollection"));
+            assertGafNow(C("resultGenl"), fortFn, fortCol);
         }
 
         private CycFort createCollection(string col, string comment, string simvocabmt, string isa, string genls)
@@ -476,14 +476,14 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
 
         public void FunctionToIndividual(string fn, string col, string comment)
         {
-            simFort[fn] = createIndividual(fn, comment, "SimVocabMt", "UnaryFunction");
-            assertIsa(simFort[fn], C("IndividualDenotingFunction"));
-            assertIsa(simFort[fn], C("ReifiableFunction"));
+            CycFort fort = simFort[fn] = createIndividual(fn, comment, "SimVocabMt", "UnaryFunction");
+            assertIsa(fort, C("IndividualDenotingFunction"));
+            assertIsa(fort, C("ReifiableFunction"));
             CycFort fcol = C(col);
             assertIsa(fcol, CycAccess.collection);
             assertGaf(CycAccess.comment, fcol, comment);
             // simFort[col] = createIndividual(col, comment, "SimVocabMt", "Collection");
-            assertGafNow(C("resultIsa"), simFort[fn], simFort[col]);
+            assertGafNow(C("resultIsa"), fort, fcol);
         }
 
         public CycFort createIndividual(string term, string comment, string mt, string type)
@@ -759,6 +759,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
         public CycFort FindOrCreateCycFort(SimAsset simObj)
         {
             CycFort constant;
+            if (cycTerms.TryGetValue(simObj, out constant)) return constant;
             lock (cycTerms)
             {
                 if (cycTerms.TryGetValue(simObj, out constant)) return constant;
@@ -1445,10 +1446,11 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
             }
             else
             {
+                string nv = name + "-" + typename;
+                if (cycTerms.TryGetValue(nv, out indv)) return indv;
                 lock (cycTerms)
                 {
                     {
-                        string nv = name + "-" + typename;
                         if (cycTerms.TryGetValue(nv, out indv)) return indv;
                         indv = new CycNart(CycList.list(fn, name));
                         cycTerms[nv] = indv;
@@ -1477,10 +1479,11 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
                 indv = new CycNart(CycList.list(fn, name));
             }
             else
-                lock (cycTerms)
                 {
+                    string nv = name + "-" + typename;
+                    if (cycTerms.TryGetValue(nv, out indv)) return indv;
+                    lock (cycTerms)
                     {
-                        string nv = name + "-" + typename;
                         if (cycTerms.TryGetValue(nv, out indv)) return indv;
                         indv = new CycNart(CycList.list(fn, name));
                         cycTerms[nv] = indv;
@@ -1631,7 +1634,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
             int len = args.GetLength(0);
             if (len>100)
             {
-                Trace();
+               // Trace();
                 return LockToFort(args);
             }
             return CreateCycNartEnumerable("TheList", args);
@@ -2083,11 +2086,13 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
 
         public CycFort FindOrCreateCycFort(BotSocialAction botSocialAction)
         {
+            Trace();
             throw new NotImplementedException();
         }
 
         public CycFort FindOrCreateCycFort(BotObjectAction botObjectAction)
         {
+            Trace();
             throw new NotImplementedException();
         }
 
@@ -2113,16 +2118,19 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
 
         public CycFort FindOrCreateCycFort(SimTypeUsage simTypeUsage)
         {
+            Trace();
             throw new NotImplementedException();
         }
 
         public CycFort FindOrCreateCycFort(SimObjectUsage simObjectUsage)
         {
+            Trace();
             throw new NotImplementedException();
         }
 
         public CycFort FindOrCreateCycFort(MoveToLocation moveToLocation)
         {
+            Trace();
             throw new NotImplementedException();
         }
 
@@ -2260,7 +2268,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
         }
 
         // just used for a breakpoint in debugger
-        private static void Trace()        
+        internal static void Trace()        
         {
 
         }
@@ -2274,9 +2282,26 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
             if (Object.ReferenceEquals(x, y)) return true;
             try
             {
+                if (x is System.IConvertible && y is System.IConvertible)
+                {
+                    if (!Object.Equals(x, y))
+                    {
+                        //SimCyclifier.Trace();
+                        return false;
+                    }
+                    return true;
+                }
                 Type tx = x.GetType();
                 Type ty = y.GetType();
-                if (!tx.IsValueType || !ty.IsValueType || tx != ty) return false;
+                if (tx != ty) return false;
+                if (!tx.IsValueType)
+                {
+                    if (Object.Equals(x, y))
+                    {
+                        SimCyclifier.Trace();
+                    }
+                    return false;
+                }
                 if (tx == typeof(NullType))
                 {
                     return ((NullType)x).Type == ((NullType)y).Type && ((NullType)x).Inst == ((NullType)y).Inst;

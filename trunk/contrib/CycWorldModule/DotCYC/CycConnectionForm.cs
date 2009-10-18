@@ -86,6 +86,7 @@ namespace CycWorldModule.DotCYC
             catch (Exception ee)
             {
                 Console.WriteLine(""+ee);
+                SimCyclifier.Trace();
                 txtCycOutput.Text = ee.ToString();
             }
             wasConnected = IsConnected();
