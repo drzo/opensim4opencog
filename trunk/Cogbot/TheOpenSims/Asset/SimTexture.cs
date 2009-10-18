@@ -64,7 +64,7 @@ namespace cogbot.TheOpenSims
             get { return 2; }
         }
 
-        public override bool IsLoop
+        public override bool IsContinuousEffect
         {
             get { return true; }
         }

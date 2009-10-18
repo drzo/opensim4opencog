@@ -196,7 +196,7 @@ namespace cogbot.TheOpenSims
             return _reader != null;
         }
 
-        public override bool IsLoop
+        public override bool IsContinuousEffect
         {
             get
             {

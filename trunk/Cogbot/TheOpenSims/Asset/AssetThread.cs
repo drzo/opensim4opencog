@@ -14,7 +14,7 @@ namespace cogbot.TheOpenSims
         public AssetThread(AgentManager c, SimAsset amin0)
         {
             ClientSelf = c; //.Self;
-            repeat = !amin0.IsLoop;
+            repeat = !amin0.IsContinuousEffect;
             asset = amin0;
         }
 
@@ -55,7 +55,7 @@ namespace cogbot.TheOpenSims
             get
             {
                 if (repeat) return true;
-                if (!asset.IsLoop) return true;
+                if (!asset.IsContinuousEffect) return true;
                 return false;
             }
         }

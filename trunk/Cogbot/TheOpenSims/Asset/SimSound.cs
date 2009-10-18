@@ -68,11 +68,11 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        public override bool IsLoop
+        public override bool IsContinuousEffect
         {
             get
             {
-                AssetSound S = (AssetSound)ServerAsset;
+                AssetSound S = (AssetSound)ServerAsset;                
                 WriteLine("Notimplemented " + MethodInfo.GetCurrentMethod());
                 return false;
             }
