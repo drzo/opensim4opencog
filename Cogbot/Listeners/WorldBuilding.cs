@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using DotLisp;
-using LitJson;
 using OpenMetaverse.StructuredData;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
@@ -14,6 +13,50 @@ namespace cogbot.Listeners
 
     public partial class WorldObjects
     {
+        static Dictionary<Type, KeyValuePair<List<PropertyInfo>, List<FieldInfo>>> PropForTypes = new Dictionary<Type, KeyValuePair<List<PropertyInfo>, List<FieldInfo>>>();
+
+        private static KeyValuePair<List<PropertyInfo>, List<FieldInfo>> GetPropsForTypes(Type t)
+        {
+            KeyValuePair<List<PropertyInfo>, List<FieldInfo>> kv;
+
+            if (PropForTypes.TryGetValue(t, out kv)) return kv;
+
+            lock (PropForTypes)
+            {
+                if (!PropForTypes.TryGetValue(t, out kv))
+                {
+                    kv = new KeyValuePair<List<PropertyInfo>, List<FieldInfo>>(new List<PropertyInfo>(),
+                                                                               new List<FieldInfo>());
+                    HashSet<string> lowerProps = new HashSet<string>();
+                    BindingFlags flags = BindingFlags.Instance | BindingFlags.Public; //BindingFlags.NonPublic
+                    foreach (
+                        PropertyInfo o in t.GetProperties(flags))
+                    {
+                        if (o.CanRead)
+                        {
+
+                            if (o.Name.StartsWith("_")) continue;
+                            if (o.DeclaringType == typeof(Object)) continue;
+                            if (!lowerProps.Add(o.Name.ToLower())) continue;
+                            if (o.GetIndexParameters().Length > 0)
+                            {
+                                continue;
+                            }
+                            kv.Key.Add(o);
+
+                        }
+                    }
+                    foreach (FieldInfo o in t.GetFields(flags))
+                    {
+                        if (o.Name.StartsWith("_")) continue;
+                        if (o.DeclaringType == typeof(Object)) continue;
+                        if (!lowerProps.Add(o.Name.ToLower())) continue;
+                        kv.Value.Add(o);
+                    }
+                }
+                return kv;
+            }
+        }
 
         public static List<NamedParam> GetMemberValues(string prefix, Object properties)
         {
@@ -23,24 +66,24 @@ namespace cogbot.Listeners
                 return dict;
             }
             Type t = properties.GetType();
+            KeyValuePair<List<PropertyInfo>, List<FieldInfo>> vvv = GetPropsForTypes(t);
             HashSet<string> lowerProps = new HashSet<string>();
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public; //BindingFlags.NonPublic
             foreach (
-                PropertyInfo o in t.GetProperties(flags))
+                PropertyInfo o in vvv.Key)
             {
-                if (o.CanRead)
                 {
                     try
                     {
-                        if (o.Name.StartsWith("_")) continue;
-                        if (o.DeclaringType == typeof (Object)) continue;
-                        if (!lowerProps.Add(o.Name.ToLower())) continue;
-                        if (o.GetIndexParameters().Length > 0)
-                        {
-                            continue;
-                        }
                         var v = o.GetValue(properties, null);
-                        if (v == null) v = new NullType(properties, o);
+                        if (v == null)
+                        {
+                            v = new NullType(properties, o);
+                        }
+                        else if (o.PropertyType == typeof(UUID))
+                        {
+                            GetUUIDType(o, (UUID)v);
+                        }
                         dict.Add(new NamedParam(o, prefix + o.Name, o.PropertyType, v));
                     }
                     catch (Exception e)
@@ -49,15 +92,19 @@ namespace cogbot.Listeners
                     }
                 }
             }
-            foreach (FieldInfo o in t.GetFields(flags))
+            foreach (FieldInfo o in vvv.Value)
             {
                 try
                 {
-                    if (o.Name.StartsWith("_")) continue;
-                    if (o.DeclaringType == typeof (Object)) continue;
-                    if (!lowerProps.Add(o.Name.ToLower())) continue;
                     var v = o.GetValue(properties);
-                    if (v == null) v = new NullType(properties, o);
+                    if (v == null)
+                    {
+                        v = new NullType(properties, o);
+                    }
+                    else if (o.FieldType == typeof (UUID))
+                    {
+                        GetUUIDType(o, (UUID) v);
+                    }
                     dict.Add(new NamedParam(o, prefix + o.Name, o.FieldType, v));
                 }
                 catch (Exception e)
@@ -65,91 +112,82 @@ namespace cogbot.Listeners
                     Console.WriteLine("" + e);
                 }
             }
-            foreach (NamedParam list in dict)
-            {
-                if (list.Value is UUID)
-                {
-                    UUID id = (UUID) list.Value;
-                    if (id != UUID.Zero)
-                    {
-                        GetUUIDType(list.info.Name, id);
-                    }
-                }
-            }
             return dict;
         }
 
-        private static Dictionary<string, Action<UUID>> UUID2Type = new Dictionary<string, Action<UUID>>();
-        static void GetUUIDType(string p, UUID id)
+        private static Dictionary<string, Action<UUID>> UUID2Memeber = new Dictionary<string, Action<UUID>>();
+        private static void GetUUIDType(MemberInfo info, UUID o)
         {
-            if (id == UUID.Zero) return;
-            lock (UUID2Type) if (UUID2Type.Count == 0)
-            {
-                Action<UUID> texture = ((UUID obj) => { SimAssetStore.FindOrCreateAsset(obj, AssetType.Texture); });
-                Action<UUID> avatar = ((UUID obj) => { GridMaster.CreateSimAvatar(obj, GridMaster, null); });
-                Action<UUID> nothing = ((UUID obj) => { });
-                Action<UUID> role = ((UUID obj) =>  DeclareGeneric("GroupRole", obj));
-                UUID2Type[""] = nothing;
-                UUID2Type["ID"] = nothing;
-                UUID2Type["Sound"] = ((UUID obj) => { SimAssetStore.FindOrCreateAsset(obj, AssetType.Sound); });
-                UUID2Type["Image"]
-                    = UUID2Type["SculptTexture"]
-                      = UUID2Type["Photo"]
-                      = UUID2Type["Insignia"]
-                        = UUID2Type["Picture"]
-                          = UUID2Type["Texture"]
-                            = UUID2Type["Sculpt"]
-                              = UUID2Type["ProfileImage"] = texture;
-                UUID2Type["Partner"] = UUID2Type["Creator"] = UUID2Type["Founder"] = avatar;
-                UUID2Type["Group"] = ((UUID obj) => { GridMaster.DeclareGroup(obj); });
-                UUID2Type["Object"] = ((UUID obj) => { GridMaster.CreateSimObject(obj, GridMaster, null); });
-                // todo inventory item 
-                UUID2Type["OwnerRole"] = role;
-                UUID2Type["ItemID"] = nothing;
-                UUID2Type["OwnerID"] = nothing;
-                UUID2Type["Owner"] = nothing;
-                // ussualyl objects but need to confirm: The Key of the specified target object or avatar particles will follow" 
-                UUID2Type["Target"] = nothing;
-                UUID2Type["Asset"] = nothing;
-            }
+            if (o == UUID.Zero) return;
+            Action<UUID> act = GetUUIDType(info.Name);
+            act(o);
+        }
+
+        private static Dictionary<string, Action<UUID>> UUID2Type = new Dictionary<string, Action<UUID>>();
+        static Action<UUID> GetUUIDType(string p)
+        {
+
+            lock (UUID2Type)
+                if (UUID2Type.Count == 0)
+                {
+                    Action<UUID> texture = ((UUID obj) => { SimAssetStore.FindOrCreateAsset(obj, AssetType.Texture); });
+                    Action<UUID> avatar = ((UUID obj) => { GridMaster.CreateSimAvatar(obj, GridMaster, null); });
+                    Action<UUID> nothing = ((UUID obj) => { });
+                    Action<UUID> role = ((UUID obj) => DeclareGeneric("GroupRole", obj));
+                    UUID2Type[""] = nothing;
+                    UUID2Type["ID"] = nothing;
+                    UUID2Type["Sound"] = ((UUID obj) => { SimAssetStore.FindOrCreateAsset(obj, AssetType.Sound); });
+                    UUID2Type["Image"]
+                        = UUID2Type["SculptTexture"]
+                          = UUID2Type["Photo"]
+                            = UUID2Type["Insignia"]
+                              = UUID2Type["Picture"]
+                                = UUID2Type["Texture"]
+                                  = UUID2Type["Sculpt"]
+                                    = UUID2Type["ProfileImage"] = texture;
+                    UUID2Type["Partner"] = UUID2Type["Creator"] = UUID2Type["Founder"] = avatar;
+                    UUID2Type["Group"] = ((UUID obj) => { GridMaster.DeclareGroup(obj); });
+                    UUID2Type["Object"] = ((UUID obj) => { GridMaster.CreateSimObject(obj, GridMaster, null); });
+                    // todo inventory item 
+                    UUID2Type["OwnerRole"] = role;
+                    UUID2Type["ItemID"] = nothing;
+                    UUID2Type["OwnerID"] = nothing;
+                    UUID2Type["Owner"] = nothing;
+                    // ussualyl objects but need to confirm: The Key of the specified target object or avatar particles will follow" 
+                    UUID2Type["Target"] = nothing;
+                    UUID2Type["Asset"] = nothing;
+                }
             Action<UUID> o;
-            if (!UUID2Type.TryGetValue(p, out o))
+            lock (UUID2Type)
             {
+                if (UUID2Type.TryGetValue(p, out o)) return o;
+
                 if (p.StartsWith("Next"))
                 {
-                    GetUUIDType(p.Substring(4), id);
-                    return;
+                    return UUID2Type[p] = GetUUIDType(p.Substring(4));
                 }
                 if (p.StartsWith("Last"))
                 {
-                    GetUUIDType(p.Substring(4), id);
-                    return;
+                    return UUID2Type[p] = GetUUIDType(p.Substring(4));
                 }
                 if (p.StartsWith("Life"))
                 {
-                    GetUUIDType(p.Substring(4), id);
-                    return;
+                    return UUID2Type[p] = GetUUIDType(p.Substring(4));
                 }
                 if (p.StartsWith("First"))
                 {
-                    GetUUIDType(p.Substring(5), id);
-                    return;
+                    return UUID2Type[p] = GetUUIDType(p.Substring(5));
                 }
                 if (p.StartsWith("Second"))
                 {
-                    GetUUIDType(p.Substring(6), id);
-                    return;
+                    return UUID2Type[p] = GetUUIDType(p.Substring(6));
                 }
                 if (p.EndsWith("ID"))
                 {
-                    GetUUIDType(p.Substring(0, p.Length - 2), id);
-                    return;
+                    return UUID2Type[p] = GetUUIDType(p.Substring(0, p.Length - 2));
                 }
                 Debug("Dont know what UUID means in " + p);
-            }
-            else
-            {
-                o(id);
+                return UUID2Type[p] = SkipUUID;
             }
         }
 
