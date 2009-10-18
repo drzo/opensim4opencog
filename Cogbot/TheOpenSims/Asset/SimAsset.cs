@@ -18,7 +18,7 @@ namespace cogbot.TheOpenSims
         //     public abstract bool SameAsset(SimAsset animation);
         //    public abstract bool HasData();
         //     public abstract float Length { get; }
-        //   public abstract bool IsLoop { get; }
+        //   public abstract bool IsContinuousEffect { get; }
         protected Asset _ServerAsset;
 
         public SimAssetStore Store
@@ -349,12 +349,12 @@ namespace cogbot.TheOpenSims
 
         public virtual float Length
         {
-            get { throw new NotImplementedException(); }
+            get { return 3;  }
         }
 
-        public virtual bool IsLoop
+        public virtual bool IsContinuousEffect
         {
-            get { throw new NotImplementedException(); }
+            get { return true; }
         }
 
         public virtual bool HasData()
