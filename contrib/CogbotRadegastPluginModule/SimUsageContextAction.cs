@@ -109,8 +109,9 @@ namespace CogbotRadegastPluginModule
             List<ToolStripMenuItem> lst = new List<ToolStripMenuItem>();
             SimObject O = GetSimObject(target);
             if (O == null) return lst;
-            foreach (var c in O.GetTypeUsages())
+            foreach (var cl in O.GetTypeUsages())
             {
+                var c = cl;
                 string name = "Do " + c;
                 lst.Add(new ToolStripMenuItem(name, null, (sender, e) => InvokeThis(c, sender, e, O, target, type))
                             {
