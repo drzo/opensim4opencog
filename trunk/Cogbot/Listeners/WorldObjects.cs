@@ -1018,8 +1018,9 @@ namespace cogbot.Listeners
             string str = string.Empty;
             if (simObject != null)
             {
-                str += simObject.ToString();
-                str += String.Format(" {0}", TheSimAvatar.DistanceVectorString(simObject));
+                if (detailed) str += simObject.DebugInfo();
+                else str += simObject.ToString();
+                str += String.Format("\n {0}", TheSimAvatar.DistanceVectorString(simObject));
                 if (target is Avatar)
                 {
                     str += String.Format(" {0}", target);
