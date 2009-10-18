@@ -255,7 +255,7 @@ namespace cogbot.TheOpenSims
         public override string DebugInfo()
         {
 
-            string s = String.Format("{0} {1} {2}", GetName(), ID, GetHeading());
+            string s = String.Format("{0} {1} {2}", GetName(), ID, GetHeading()) + "\n " + base.ToString();
             lock (ActionEventQueue) foreach (SimObjectEvent s1 in ActionEventQueue)
                 {
                     s += "\n " + s1;
@@ -534,13 +534,21 @@ namespace cogbot.TheOpenSims
         {
             get
             {
-                if (Client == null) return false;
+                BotClient Client = GetGridClient();
+                if (Client == null)
+                {
+                    return false;
+                }
                 AgentManager ClientSelf = Client.Self;
                 lock (HasPrimLock)
                 {
-                    if (!base.HasPrim) return false;
-                    return ClientSelf.AgentID == theAvatar.ID;
+                    if (!base.HasPrim)
+                    {
+                       // return false;
+                    }
+                
                 } //|| ClientSelf.LocalID == theAvatar.LocalID;
+                return ClientSelf.AgentID == ID;
             }
         }
 
