@@ -29,7 +29,6 @@ namespace cogbot.Listeners
         private readonly ListAsSet<ulong> MasteringRegions = new ListAsSet<ulong>();
         private bool RequestParcelObjects;
 
-
         internal static IEnumerable<Simulator> AllSimulators
         {
             get
@@ -64,7 +63,20 @@ namespace cogbot.Listeners
 
         public bool IsMaster(Simulator simulator)
         {
-            lock (MasteringRegions) return MasteringRegions.Contains(simulator.Handle);
+            lock (MasteringRegions)
+            {
+                if (MasteringRegions.Contains(simulator.Handle)) return true;
+                lock (SimMaster)
+                {
+                    if (!SimMaster.ContainsKey(simulator.Handle))
+                    {
+                        SimMaster[simulator.Handle] = this;
+                        MasteringRegions.AddTo(simulator.Handle);
+                        return true;
+                    }
+                }
+                return false;
+            }
         }
 
         public bool IsRegionMaster
@@ -80,6 +92,7 @@ namespace cogbot.Listeners
         public override void Parcels_OnSimParcelsDownloaded(Simulator simulator,
                                                             InternalDictionary<int, Parcel> simParcels, int[,] parcelMap)
         {
+            EnsureSimulator(simulator);
             //base.Parcels_OnSimParcelsDownloaded(simulator, simParcels, parcelMap);
         }
 
@@ -132,6 +145,7 @@ namespace cogbot.Listeners
                 {
                     Debug("---SIMMASTER---------" + client + " region: " + simulator);
                     SetWorldMaster(true);
+                    SimMaster[simulator.Handle] = this;
                     //client.Grid.RequestMapRegion(simulator.Name, GridLayerType.Objects);
                     client.Grid.RequestMapRegion(simulator.Name, GridLayerType.Terrain);
                     //client.Grid.RequestMapRegion(simulator.Name, GridLayerType.LandForSale);
@@ -195,22 +209,11 @@ namespace cogbot.Listeners
 
         public override void Network_OnCurrentSimChanged(Simulator PreviousSimulator)
         {
-            base.Network_OnCurrentSimChanged(PreviousSimulator);
             if (TheSimAvatar.GetSimulator() == PreviousSimulator)
             {
                 Debug("TheSimAvatar._CurrentRegion.TheSimulator == PreviousSimulator " + PreviousSimulator);
             }
-
-            if (PreviousSimulator != null)
-            {
-                LeaveSimulator(PreviousSimulator);
-              //  new Thread(() => client.Appearance.SetPreviousAppearance(false)).Start();
-            }
-            else
-            {
-//                new Thread(() => client.Appearance.WearOutfit(new string[] { "Clothing", "Default", "IRobot" })).Start();
-            }
-            EnsureSimulator(client.Network.CurrentSim);
+            On_ChangeSims(PreviousSimulator, client.Network.CurrentSim);
         }
 
         private void LeaveSimulator(Simulator simulator)
@@ -270,14 +273,31 @@ namespace cogbot.Listeners
             Debug("UHT OH, No client is Mastering for region " + R);
         }
 
+        public override void Self_OnTeleport(string message, TeleportStatus status, TeleportFlags flags)
+        {
+            base.Self_OnTeleport(message, status, flags);
+        }
+
         public override void Self_OnRegionCrossed(Simulator oldSim, Simulator newSim)
         {
-            EnsureSimulator(newSim);
-            if (oldSim != null)
-            {
-               LeaveSimulator(oldSim);
-            }
+            On_ChangeSims(oldSim, newSim);
             base.Self_OnRegionCrossed(oldSim, newSim);
+        }
+
+        private void On_ChangeSims(Simulator PreviousSimulator, Simulator newSim)
+        {
+
+            if (PreviousSimulator != null)
+            {
+                LeaveSimulator(PreviousSimulator);
+                //  new Thread(() => client.Appearance.SetPreviousAppearance(false)).Start();
+            }
+            else
+            {
+                //                new Thread(() => client.Appearance.WearOutfit(new string[] { "Clothing", "Default", "IRobot" })).Start();
+            }
+            EnsureSimulator(newSim);
+            TheSimAvatar.ResetRegion(newSim.Handle);
         }
 
         public override void Network_OnSimDisconnected(Simulator simulator, NetworkManager.DisconnectType reason)
@@ -529,11 +549,22 @@ namespace cogbot.Listeners
                 else UnregisterAll();
             }
         }
-
         public void EnsureSimulator(Simulator simulator)
         {
             if (simulator == null) return;
-            if (!Monitor.TryEnter(_AllSimulators)) return;
+            if (!Monitor.TryEnter(_AllSimulators,10000))
+            {
+                WriteLine("Cant lock _AllSimulators");
+                return;
+            }
+            lock (SimMaster)
+            {
+                if (!SimMaster.ContainsKey(simulator.Handle))
+                {
+                    SimMaster[simulator.Handle] = this;
+                    MasteringRegions.AddTo(simulator.Handle);
+                }
+            }
             try
             {
                 {
