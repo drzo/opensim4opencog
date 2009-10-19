@@ -1595,7 +1595,7 @@ namespace cogbot.TheOpenSims
             if (someObject == null) return SitOnGround();
 
             AgentManager ClientSelf = Client.Self;
-            uint local = someObject.Prim.LocalID;
+            uint local = someObject.LocalID;
 
             //already sitting on 
             Avatar theAvatar = this.theAvatar;
