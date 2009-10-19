@@ -218,15 +218,26 @@ namespace cogbot.Listeners
                 }
                 else
                 {
-                    //AV = GetSimObject(av, simulator);
+                    if (av.ID==client.Self.AgentID)                    
+                        AV = GetSimObject(av, simulator);
+                   
                 }            
             if (AV != null)
             {
+ 
+                if (AV==m_TheSimAvatar)
+                {
+                    
+                }
+                Primitive prev = AV.Prim;
+                if (prev==null)
+                {
+                    AV.SetFirstPrim(av);
+                }
                 if (av.ParentID == 0 && !SimRegion.OutOfRegion(av.Position))
                 {
                     AV.ResetPrim(av, client, simulator);
                 }
-                Primitive prev = AV.Prim;
                 if (prev!=null)
                 {
                     // parent changed?
@@ -235,6 +246,7 @@ namespace cogbot.Listeners
                         AV.Parent = null;
                     }
                 }
+
                 if (av.ParentID == 0 && !SimRegion.OutOfRegion(update.Position))
                 {
                     if (update.Avatar)
