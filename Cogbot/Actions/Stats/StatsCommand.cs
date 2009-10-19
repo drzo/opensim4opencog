@@ -6,7 +6,7 @@ using OpenMetaverse.Packets;
 
 namespace cogbot.Actions
 {
-    public class StatsCommand : Command
+    public class StatsCommand : Command, RegionMasterCommand
     {
         public StatsCommand(BotClient testClient)
         {

@@ -6,7 +6,7 @@ using PathSystem3D.Navigation;
 
 namespace CycWorldModule
 {
-    public class CycShowCommand : Command
+    public class CycShowCommand : Command, GridMasterCommand
     {
         public CycShowCommand(BotClient Client)
             : base(Client)

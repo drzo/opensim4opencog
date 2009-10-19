@@ -6,7 +6,7 @@ using System.Threading; //using libsecondlife;
 
 namespace cogbot.Actions
 {
-    class Fly : Command
+    class Fly : Command, BotPersonalCommand
     {
         public Fly(BotClient Client)
             : base(Client)

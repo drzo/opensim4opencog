@@ -7,7 +7,7 @@ using PathSystem3D.Navigation;
 
 namespace cogbot.Actions
 {
-    public class SelectCommand : cogbot.Actions.Command
+    public class SelectCommand : cogbot.Actions.Command, BotPersonalCommand
     {
         public SelectCommand(BotClient client)
         {

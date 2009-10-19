@@ -5,7 +5,7 @@ using OpenMetaverse.Packets;
 
 namespace cogbot.Actions
 {
-    public class DebugCommand : Command
+    public class DebugCommand : Command, SystemApplicationCommand
     {
         public DebugCommand(BotClient testClient)
         {

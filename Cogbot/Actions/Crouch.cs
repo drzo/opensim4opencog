@@ -5,7 +5,7 @@ using OpenMetaverse; //using libsecondlife;
 
 namespace cogbot.Actions
 {
-    class Crouch : Command
+    class Crouch : Command, BotPersonalCommand
     {
        // bool isCrouching = false;
 

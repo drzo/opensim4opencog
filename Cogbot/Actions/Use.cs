@@ -7,7 +7,7 @@ using PathSystem3D.Navigation;
 
 namespace cogbot.Actions
 {
-    class Use : Command
+    class Use : Command, BotPersonalCommand
     {
         public Use(BotClient Client)
             : base(Client)
@@ -31,10 +31,9 @@ namespace cogbot.Actions
                return Failure("$bot don't know what object to use.");
            }
            if (to_op == "") {
-               Primitive prim;
-               if (WorldSystem.tryGetPrim(objname, out prim))
+               SimObject objToUse;
+               if (WorldSystem.tryGetPrim(objname, out objToUse))
                {
-                   SimObject objToUse = WorldSystem.GetSimObject(prim);
                    if ((BotNeeds)TheSimAvatar["CurrentNeeds"]==null)
                    {
                        TheSimAvatar["CurrentNeeds"] = new BotNeeds(90.0f);

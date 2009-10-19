@@ -5,7 +5,7 @@ using OpenMetaverse;
 
 namespace cogbot.Actions
 {
-    class SearchEventsCommand : Command
+    class SearchEventsCommand : Command, GridMasterCommand
     {
         System.Threading.AutoResetEvent waitQuery = new System.Threading.AutoResetEvent(false);
         int resultCount;

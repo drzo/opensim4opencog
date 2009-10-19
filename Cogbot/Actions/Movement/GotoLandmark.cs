@@ -7,7 +7,7 @@ using PathSystem3D.Navigation;
 
 namespace cogbot.Actions
 {
-    public class GotoLandmarkCommand : Command
+    public class GotoLandmarkCommand : Command, BotPersonalCommand
     {
         public GotoLandmarkCommand(BotClient testClient)
         {

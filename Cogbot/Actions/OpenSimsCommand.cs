@@ -9,7 +9,7 @@ using cogbot.Listeners; //using libsecondlife;
 namespace cogbot.Actions
 {
 
-    class DoCommand : Command
+    class DoCommand : Command, BotPersonalCommand
     {
         public DoCommand(BotClient Client)
         {

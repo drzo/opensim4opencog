@@ -7,7 +7,7 @@ using cogbot.TheOpenSims;
 
 namespace cogbot.Actions.Appearance
 {
-    public class AvatarInfoCommand : Command
+    public class AvatarInfoCommand : Command, RegionMasterCommand
     {
         public AvatarInfoCommand(BotClient testClient)
         {

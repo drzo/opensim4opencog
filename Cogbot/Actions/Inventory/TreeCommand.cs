@@ -6,7 +6,7 @@ using OpenMetaverse.Packets;
 
 namespace cogbot.Actions
 {
-    public class TreeCommand: Command
+    public class TreeCommand: Command, RegionMasterCommand
     {
         public TreeCommand(BotClient testClient)
 		{

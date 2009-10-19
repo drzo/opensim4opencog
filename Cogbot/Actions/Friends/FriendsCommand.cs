@@ -11,7 +11,7 @@ namespace cogbot.Actions
     /// <summary>
     /// Shows a list of friends
     /// </summary>
-    public class FriendsCommand : Command
+    public class FriendsCommand : Command, BotPersonalCommand
     {        
         /// <summary>
         /// Constructor for FriendsCommand class

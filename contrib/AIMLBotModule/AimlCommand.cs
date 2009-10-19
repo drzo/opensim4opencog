@@ -10,7 +10,7 @@ using OpenMetaverse;
 
 namespace AIMLBotModule
 {
-    public class AimlCommand : cogbot.Actions.Command
+    public class AimlCommand : cogbot.Actions.Command, BotPersonalCommand
     {
 
         public AimlCommand(BotClient testClient)

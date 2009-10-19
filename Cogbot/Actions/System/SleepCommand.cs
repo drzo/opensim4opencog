@@ -4,7 +4,7 @@ using OpenMetaverse.Packets;
 
 namespace cogbot.Actions
 {
-    public class SleepCommand : Command
+    public class SleepCommand : Command, BotSystemCommand
     {
         uint sleepSerialNum = 1;
 

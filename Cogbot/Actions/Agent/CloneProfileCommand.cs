@@ -7,7 +7,7 @@ using OpenMetaverse.Packets;
 
 namespace cogbot.Actions
 {
-    public class CloneProfileCommand : Command
+    public class CloneProfileCommand : Command, BotPersonalCommand
     {
         Avatar.AvatarProperties Properties;
         Avatar.Interests Interests;

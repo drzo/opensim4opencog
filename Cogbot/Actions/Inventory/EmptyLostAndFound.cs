@@ -5,7 +5,7 @@ using OpenMetaverse.Packets;
 
 namespace cogbot.Actions
 {
-    public class EmptyLostAndCommand : Command
+    public class EmptyLostAndCommand : Command, BotPersonalCommand
     {
         /// <summary>
         /// TestClient command to download and display a notecard asset

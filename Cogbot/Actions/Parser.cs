@@ -14,6 +14,7 @@ namespace cogbot.Actions
             bool withinQuote = false;
             bool escaped = false;
 
+
             foreach (char c in str)
             {
                 if (c == '"')

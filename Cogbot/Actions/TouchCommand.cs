@@ -5,7 +5,7 @@ using OpenMetaverse;
 
 namespace cogbot.Actions
 {
-    public class TouchCommand: Command
+    public class TouchCommand: Command, BotPersonalCommand
     {
         public TouchCommand(BotClient testClient)
 		{

@@ -7,7 +7,7 @@ using OpenMetaverse;
 
 namespace cogbot.Actions
 {
-    public class FindObjectsCommand : Command
+    public class FindObjectsCommand : Command, BotPersonalCommand
     {
         Dictionary<UUID, Primitive> PrimsWaiting = new Dictionary<UUID, Primitive>();
         AutoResetEvent AllPropertiesReceived = new AutoResetEvent(false);

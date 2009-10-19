@@ -5,7 +5,7 @@ using PathSystem3D.Navigation;
 
 namespace cogbot.Actions
 {
-    public class WindCommand : Command
+    public class WindCommand : Command, RegionMasterCommand
     {
         public WindCommand(BotClient testClient)
         {

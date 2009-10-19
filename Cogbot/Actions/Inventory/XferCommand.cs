@@ -10,7 +10,7 @@ using OpenMetaverse.StructuredData;
 
 namespace cogbot.Actions
 {
-    public class XferCommand : Command
+    public class XferCommand : Command, GridMasterCommand
     {
         const int FETCH_ASSET_TIMEOUT = 1000 * 10;
 

@@ -5,7 +5,7 @@ using OpenMetaverse;
 
 namespace cogbot.Actions
 {
-    public class OrphanCommand : cogbot.Actions.Command
+    public class OrphanCommand : cogbot.Actions.Command, RegionMasterCommand
     {
         public OrphanCommand(BotClient client)
         {

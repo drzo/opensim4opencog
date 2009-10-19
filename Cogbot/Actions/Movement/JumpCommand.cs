@@ -3,7 +3,7 @@ using OpenMetaverse;
 
 namespace cogbot.Actions
 {
-    public class JumpCommand: Command
+    public class JumpCommand : Command, BotPersonalCommand
     {
         public JumpCommand(BotClient testClient)
 		{

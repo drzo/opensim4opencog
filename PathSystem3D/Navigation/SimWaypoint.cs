@@ -22,8 +22,8 @@ namespace PathSystem3D.Navigation
         {
             Vector3 loc = pos.SimPosition;
             SimPathStore R = pos.PathStore;
-            return String.Format("{0:0.00}m ", Vector3d.Distance(GlobalPosition, pos.GlobalPosition))
-               + String.Format("{0}/{1:0.00}/{2:0.00}/{3:0.00}", R.RegionName, loc.X, loc.Y, loc.Z);
+            return String.Format("{0:0.0#}m ", Vector3d.Distance(GlobalPosition, pos.GlobalPosition))
+               + String.Format("{0}/{1:0.0#}/{2:0.0#}/{3:0.0#}", R.RegionName, loc.X, loc.Y, loc.Z);
         }
 
         public double Distance(SimPosition other)

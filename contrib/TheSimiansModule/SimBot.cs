@@ -5,7 +5,7 @@ using OpenMetaverse;
 
 namespace TheSimiansModule
 {
-    class SimBot : Command
+    class SimBot : Command, BotPersonalCommand
     {
         //BotRegionModel BRM;
 

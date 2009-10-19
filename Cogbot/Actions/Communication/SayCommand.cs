@@ -5,12 +5,12 @@ using OpenMetaverse;
 
 namespace cogbot.Actions
 {
-    public class SayCommand: Command
+    public class SayCommand : Command, BotPersonalCommand
     {
         public SayCommand(BotClient testClient)
 		{
 			Name = "say";
-			Description = "Say something.  (usage: say (optional channel) whatever)";
+			Description = "Say something.  Usage: say (optional channel) whatever)";
             Category = CommandCategory.Communication;
 		}
 
@@ -23,9 +23,9 @@ namespace cogbot.Actions
             {
                 return ShowUsage();// " say (optional channel) whatever";
             }
-            else if (args.Length > 1)
+            else if (args.Length > 1 && (args[0].StartsWith("/") || args[0].StartsWith("#")))
             {
-                if (Int32.TryParse(args[0], out channel))
+                if (Int32.TryParse(args[0].Substring(1), out channel))
 					startIndex = 1;
             }
 

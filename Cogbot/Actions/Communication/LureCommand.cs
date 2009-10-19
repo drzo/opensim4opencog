@@ -6,14 +6,14 @@ using OpenMetaverse;
 
 namespace cogbot.Actions.Communication
 {
-    class LureCommand    :Command
+    class LureCommand : Command, BotPersonalCommand
     {
         public LureCommand(BotClient testClient)
         {
             Name = "lure";
             Description = "Send a lure to a user. Usage: lure FirstName LastName";
             Category = CommandCategory.Communication;
-            Parameters = new[] {  new NamedParam(typeof(SimAvatar), typeof(UUID)) };
+            Parameters = new[] { new NamedParam(typeof(SimAvatar), typeof(UUID)) };
         }
 
 
@@ -21,7 +21,7 @@ namespace cogbot.Actions.Communication
         {
             string user = string.Join(" ", args);
             UUID id = WorldSystem.GetUserID(user);
-            if (id==UUID.Zero) return Failure("Cannot find " + user);
+            if (id == UUID.Zero) return Failure("Cannot find " + user);
             Client.Self.SendTeleportLure(id);
             return Success("teleport Lure sent to " + user);
         }

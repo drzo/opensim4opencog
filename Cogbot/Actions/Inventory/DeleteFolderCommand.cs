@@ -12,7 +12,7 @@ namespace cogbot.Actions
     /// <summary>
     /// Inventory Example, Moves a folder to the Trash folder
     /// </summary>
-    public class DeleteFolderCommand : Command
+    public class DeleteFolderCommand : Command, BotPersonalCommand
     {
         public DeleteFolderCommand(BotClient testClient)
         {

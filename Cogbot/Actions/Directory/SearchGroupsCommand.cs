@@ -6,7 +6,7 @@ using OpenMetaverse;
 // the Namespace used for all BotClient commands
 namespace cogbot.Actions
 {
-    class SearchGroupsCommand : Command
+    class SearchGroupsCommand : Command, GridMasterCommand
     {
         System.Threading.AutoResetEvent waitQuery = new System.Threading.AutoResetEvent(false);
         int resultCount = 0;

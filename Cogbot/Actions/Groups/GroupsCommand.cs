@@ -7,7 +7,7 @@ using System.Text;
 
 namespace cogbot.Actions
 {
-    public class GroupsCommand : Command
+    public class GroupsCommand : Command, BotPersonalCommand
     {        
         public GroupsCommand(BotClient testClient)
         {

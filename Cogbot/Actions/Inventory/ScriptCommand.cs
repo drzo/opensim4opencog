@@ -4,7 +4,7 @@ using OpenMetaverse;
 
 namespace cogbot.Actions
 {
-    public class ScriptCommand : Command
+    public class ScriptCommand : Command, BotPersonalCommand
     {
         public ScriptCommand(BotClient testClient)
         {

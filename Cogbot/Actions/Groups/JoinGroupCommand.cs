@@ -7,7 +7,7 @@ using System.Text;
 
 namespace cogbot.Actions
 {
-    public class JoinGroupCommand : Command
+    public class JoinGroupCommand : Command, BotPersonalCommand
     {
         ManualResetEvent GetGroupsSearchEvent = new ManualResetEvent(false);
         private UUID queryID = UUID.Zero;

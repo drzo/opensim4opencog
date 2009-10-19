@@ -6,7 +6,7 @@ using cogbot.TheOpenSims;
 
 namespace cogbot.Actions
 {
-    public class GestureCommand : Command
+    public class GestureCommand : Command, BotPersonalCommand
     {
         public GestureCommand(BotClient testClient)
         {

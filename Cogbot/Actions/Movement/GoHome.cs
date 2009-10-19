@@ -3,7 +3,7 @@ using OpenMetaverse;
 
 namespace cogbot.Actions
 {
-    public class GoHomeCommand : Command
+    public class GoHomeCommand : Command, BotPersonalCommand
     {
         public GoHomeCommand(BotClient testClient)
         {

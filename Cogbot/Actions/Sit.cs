@@ -7,7 +7,7 @@ using OpenMetaverse; //using libsecondlife;
 
 namespace cogbot.Actions
 {
-    class Sit : Command
+    class Sit : Command, BotPersonalCommand
     {
         public bool sittingOnGround = false;
 
@@ -71,10 +71,9 @@ namespace cogbot.Actions
             {
                 on = String.Join(" ", args.tokens);
             }
-            Primitive prim;
-            if (WorldSystem.tryGetPrim(on, out prim))
+            SimObject obj;
+            if (WorldSystem.tryGetPrim(on, out obj))
             {
-                SimObject obj = WorldSystem.GetSimObject(prim);
                 WriteLine("Trying to sit on {0}.", obj);
                 if (!WorldSystem.TheSimAvatar.SitOn(obj))
                 {

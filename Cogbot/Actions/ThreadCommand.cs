@@ -7,7 +7,7 @@ using OpenMetaverse.Packets;
 
 namespace cogbot.Actions
 {
-    public class ThreadCommand : Command
+    public class ThreadCommand : Command, BotSystemCommand
     {
         public ThreadCommand(BotClient testClient)
         {

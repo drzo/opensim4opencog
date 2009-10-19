@@ -4,7 +4,7 @@ using OpenMetaverse;
 
 namespace cogbot.Actions
 {
-    public class QuietlyCommand : Command
+    public class QuietlyCommand : Command, BotSystemCommand
     {
         public QuietlyCommand(BotClient testClient)
         {

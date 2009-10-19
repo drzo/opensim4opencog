@@ -7,7 +7,7 @@ using OpenMetaverse.Packets;
 
 namespace cogbot.Actions
 {
-    public class SitOnCommand : Command
+    public class SitOnCommand : Command, BotPersonalCommand
     {
         public SitOnCommand(BotClient testClient)
         {

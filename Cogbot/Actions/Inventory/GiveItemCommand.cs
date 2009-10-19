@@ -5,7 +5,7 @@ using OpenMetaverse;
 
 namespace cogbot.Actions.Inventory.Shell
 {
-    class GiveItemCommand : Command
+    class GiveItemCommand : Command, BotPersonalCommand
     {
 
         const string nl = "\n";

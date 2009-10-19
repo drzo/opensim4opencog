@@ -5,7 +5,7 @@ using OpenMetaverse;
 
 namespace cogbot.Actions
 {
-    class Help : Command
+    class Help : Command, SystemApplicationCommand
     {
         public Help(BotClient Client)
             : base(Client)

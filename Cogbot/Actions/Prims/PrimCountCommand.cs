@@ -4,7 +4,7 @@ using OpenMetaverse;
 
 namespace cogbot.Actions
 {
-    public class PrimCountCommand: Command
+    public class PrimCountCommand : Command, RegionMasterCommand
     {
         public PrimCountCommand(BotClient testClient)
 		{

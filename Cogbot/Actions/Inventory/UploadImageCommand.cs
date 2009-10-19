@@ -9,7 +9,7 @@ using OpenMetaverse.Imaging;
 
 namespace cogbot.Actions
 {
-    public class UploadImageCommand : Command
+    public class UploadImageCommand : Command, BotPersonalCommand
     {
         AutoResetEvent UploadCompleteEvent = new AutoResetEvent(false);
         UUID TextureID = UUID.Zero;

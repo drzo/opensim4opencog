@@ -6,7 +6,7 @@ using OpenMetaverse; //using libsecondlife;
 
 namespace cogbot.Actions
 {
-    class Mute : Command
+    class Mute : Command, BotPersonalCommand
     {
         public Mute(BotClient Client)
             : base(Client)
@@ -21,7 +21,7 @@ namespace cogbot.Actions
         {
             // base.acceptInput(verb, args);
 
-            Avatar avatar;
+            SimAvatar avatar;
 
             BotClient chat = TheBotClient;//.WorldSystem;
 
@@ -34,15 +34,15 @@ namespace cogbot.Actions
             else if ((WorldSystem).tryGetAvatar(args.str, out avatar))
             {
                 // Listeners.Chat chat = (Listeners.Chat)Client.registrationTypes["chat"];
-                if (chat.muteList.Contains(avatar.Name))
+                if (chat.muteList.Contains(avatar.GetName()))
                 {
-                    chat.muteList.Remove(avatar.Name);
-                    return Success("Unmuted " + avatar.Name + ".");
+                    chat.muteList.Remove(avatar.GetName());
+                    return Success("Unmuted " + avatar.GetName() + ".");
                 }
                 else
                 {
-                    chat.muteList.Add(avatar.Name);
-                    return Success("Muted " + avatar.Name + ".");
+                    chat.muteList.Add(avatar.GetName());
+                    return Success("Muted " + avatar.GetName() + ".");
                 }
             }
             else

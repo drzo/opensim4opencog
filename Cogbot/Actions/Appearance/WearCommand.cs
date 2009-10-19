@@ -4,7 +4,7 @@ using OpenMetaverse;
 
 namespace cogbot.Actions
 {
-    public class WearCommand : Command
+    public class WearCommand : Command, BotPersonalCommand
     {
         public WearCommand(BotClient testClient)
         {

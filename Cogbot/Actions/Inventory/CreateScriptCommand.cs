@@ -5,7 +5,7 @@ using System.Diagnostics;
 
 namespace cogbot.Actions
 {
-    public class CreateScriptCommand : Command
+    public class CreateScriptCommand : Command, BotPersonalCommand
     {
         public CreateScriptCommand(BotClient testClient)
         {

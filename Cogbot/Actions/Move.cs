@@ -8,7 +8,7 @@ using OpenMetaverse.Packets;
 
 namespace cogbot.Actions
 {
-    class Move : Command
+    class Move : Command, BotPersonalCommand
     {
         Vector3 PrevPosition;
         float moveDist = 0;
@@ -42,8 +42,8 @@ namespace cogbot.Actions
             }
             {
                 Vector3 moveVec, TurnTo;
-                Primitive prim;
-                Avatar avatar;
+                SimObject prim;
+                SimAvatar avatar;
                 moveDist = 5;
                 PrevPosition = GetSimPosition();
 
@@ -89,14 +89,14 @@ namespace cogbot.Actions
                 {
                     if ((WorldSystem).tryGetAvatar(args.prepPhrases["to"], out avatar))
                     {
-                        WriteLine("Moving to person " + avatar.Name + ".");
-                        AutoPilot(avatar.Position, WriteLine);
+                        WriteLine("Moving to person " + avatar.GetName() + ".");
+                        AutoPilot(avatar.SimPosition, WriteLine);
                         return;
                     }
                     else if ((WorldSystem).tryGetPrim(args.prepPhrases["to"], out prim))
                     {
                         WriteLine("Moving to object " + prim.Properties.Name + ".");
-                        AutoPilot(prim.Position, WriteLine);
+                        AutoPilot(prim.SimPosition, WriteLine);
                         return;
                     }
                     else
