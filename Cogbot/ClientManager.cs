@@ -272,7 +272,8 @@ namespace cogbot
                     }
                     if (string.IsNullOrEmpty(text)) return res;
 
-                    string verb = text.Split(null)[0];
+                    string verb = Parser.ParseArguments(text)[0];
+                    verb = verb.ToLower();
                     if (groupActions.ContainsKey(verb))
                     {
                         if (text.Length > verb.Length)
