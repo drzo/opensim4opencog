@@ -426,6 +426,13 @@ namespace AIMLBotModule
             string message = im.Message;
             if (string.IsNullOrEmpty(message)) return;
             if (message == "typing") return;
+            // Message is not group IM (sessionID == groupID) 
+            if (!(sessionObject is SimGroup) && im.BinaryBucket.Length > 1)
+            {
+                // Session is ad-hoc friends conference                 
+                groupName = Utils.BytesToString(im.BinaryBucket);
+                im.GroupIM = true;
+            }
             HandleIM(im, myUser, groupName, message, UseThrottle);
 
         }
@@ -464,7 +471,7 @@ namespace AIMLBotModule
                                               RespondToGroup, im.FromAgentName + "/" + groupName, im.FromAgentID,
                                               ting.Trim());
                                     if (!RespondToGroup) return;
-                                    client.Self.InstantMessageGroup(GetName(), im.FromAgentID, tsing);
+                                    client.Self.InstantMessageGroup(GetName(), im.IMSessionID, tsing);
                                 }
                                 else
                                 {
