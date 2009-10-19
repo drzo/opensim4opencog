@@ -326,7 +326,7 @@ namespace cogbot.TheOpenSims
         {
             get
             {
-                if (_PathStore != null && PathStore.RegionName == null)
+                if (_PathStore != null)
                 {
                     Simulator sim = TheSimulator;
                     if (sim != null && !String.IsNullOrEmpty(sim.Name))
