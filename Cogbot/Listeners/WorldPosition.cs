@@ -246,8 +246,87 @@ namespace cogbot.Listeners
         }
 
 
+        private SimPosition GetPolarRelative(SimPosition offset, string first, out int argsUsed)
+        {
+            Vector3 rel = offset.SimPosition;
+            int star = first.IndexOf("*");
+            if (star < 0)
+            {
+                argsUsed = 0;
+                return offset;
+            }
+
+            // -180*5 == *-5
+            // -180*5
+            // +90*5
+            // +180* == -180* == -0*-1 
+            // +0*5 == -0*5 == *5 
+            // 
+            bool relative;
+            double rotate;
+            double dist = 1.0;
+            if (star == 0)
+            {
+                relative = true;
+                rotate = 0.0;
+                float f;
+                if (RelTryParse(first.Substring(1), out f, 0))
+                {
+                    dist = f;
+                }
+            }
+            else
+            {
+                string arg = first.Substring(0, star);
+                relative = true;
+                if (arg.StartsWith("A"))
+                {
+                    relative = false;
+                    arg = arg.Substring(1);
+                }
+
+                float f;
+                float offsetZ = (float) (GetZHeading(offset.SimRotation)*180/Math.PI);
+                if (!RelTryParse(arg, out f, offsetZ))
+                {
+                    argsUsed = 0;
+                    return offset;
+                }
+                rotate = f;
+                string firstSubstring = first.Substring(star + 1);
+                if (firstSubstring.Length == 0)
+                {
+                    dist = 1.0;
+                }
+                else if (RelTryParse(firstSubstring, out f, 0))
+                {
+                    dist = f;
+                }
+                else
+                {
+                    argsUsed = 0;
+                    return offset;
+                }
+            }
+
+            Vector3 v3 = Vector3.Transform(Vector3.UnitX, Matrix4.CreateFromQuaternion(offset.SimRotation));
+
+            v3.X = (float) (Math.Sin(rotate*(Math.PI/180))*dist) + rel.X;
+            v3.Y = (float) (Math.Cos(rotate*(Math.PI/180))*dist) + rel.Y;
+            v3.Z = rel.Z;
+            argsUsed = 1;
+            return SimWaypointImpl.CreateLocal(v3, offset.PathStore);
+        }
+
         private SimPosition GetSimV(string[] tokens, int start, out int argsUsed, SimPosition offset)
         {
+            // not enough args
+            if (tokens.Length < start)
+            {
+                argsUsed = 0;
+                return offset;
+            }
+
             int maxArgs = 0;
             bool relative = false;
             for (int st = start; st < tokens.Length; st++)
@@ -266,7 +345,12 @@ namespace cogbot.Listeners
             }
             Vector3 rel = offset.SimPosition;
             Vector3 target;
-            if (RelTryParse(tokens[start], out target.X, rel.X) &&
+
+            string first = tokens[start];
+            // Polar coords 
+            if (first.Contains("*")) return GetPolarRelative(offset, first, out argsUsed);
+
+            if (RelTryParse(first, out target.X, rel.X) &&
                 RelTryParse(tokens[start + 1], out target.Y, rel.Y))
             {
                 argsUsed = 2;
@@ -303,7 +387,7 @@ namespace cogbot.Listeners
         {
             argsUsed = 0;
             if (args.Length == 0) return TheSimAvatar;
-            if (args.Length >= 2)
+            //if (args.Length >= 2)
             {
                 SimPosition R = GetSimV(args, 0, out argsUsed, offset);
                 if (R != null) return R;
@@ -408,5 +492,19 @@ namespace cogbot.Listeners
                 return (float)0.01;
         }
 
+        /// <summary>
+        /// Convert a Quaternion to a Rotation around a Z-axis
+        /// 2*PI = North
+        /// 1/2*Pi = East
+        /// PI = South
+        /// 3/2*PI = West
+        /// </summary>
+        /// <param name="simRotation">Radians</param>
+        /// <returns></returns>
+        public static double GetZHeading(Quaternion simRotation)
+        {
+            Vector3 v3 = Vector3.Transform(Vector3.UnitX, Matrix4.CreateFromQuaternion(simRotation));
+            return (Math.Atan2(-v3.X, -v3.Y) + Math.PI);
+        }
     }
 }
