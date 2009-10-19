@@ -105,6 +105,7 @@ namespace cogbot
             //}
             try
             {
+                //SetLoginOptionsFromRadegast();
                 Network.Login(BotLoginParams.FirstName, BotLoginParams.LastName,
                               BotLoginParams.Password, "OnRez", BotLoginParams.Start, "UNR");
             }
@@ -738,6 +739,7 @@ namespace cogbot
                 {
                     sims.AddRange(Network.Simulators);
                 }
+                return;
                 ExpectConnected = false;
                 foreach (var s in sims)
                 {
@@ -799,12 +801,13 @@ namespace cogbot
         void Network_OnSimConnected(Simulator simulator)
         {
             ExpectConnected = true;
-            if (!Settings.SEND_AGENT_APPEARANCE)
+            if (simulator == Network.CurrentSim)
             {
-                if (simulator==Network.CurrentSim)
+                if (!Settings.SEND_AGENT_APPEARANCE)
                 {
                     Appearance.RequestAgentWearables();
                 }
+                Self.RequestMuteList();
             }
             SendNetworkEvent("On-Simulator-Connected", simulator);
             //            SendNewEvent("on-simulator-connected",simulator);
@@ -1302,6 +1305,7 @@ namespace cogbot
             }
             else if (login == LoginStatus.Success)
             {
+                SetLoginOptionsFromRadegast();
                 LoginRetries = 0;
                 WriteLine("Logged in successfully");
                 SendNetworkEvent("On-Login-Success", login, message);
@@ -1500,6 +1504,7 @@ namespace cogbot
                 //            Settings.LOG_LEVEL = Helpers.LogLevel.Debug;
                 //text = text.Replace("\"", "");
                 string verb = cogbot.Actions.Parser.ParseArgs(text)[0];
+                verb = verb.ToLower();
                 if (Commands != null && Commands.ContainsKey(verb))
                 {
                     Command act = Commands[verb];
@@ -1704,15 +1709,50 @@ namespace cogbot
 
         public void SetRadegastLoginOptions()
         {
-            TheRadegastInstance.Netcom.LoginOptions.FirstName = BotLoginParams.FirstName;
-            TheRadegastInstance.Netcom.LoginOptions.LastName = BotLoginParams.LastName;
-            TheRadegastInstance.Netcom.LoginOptions.Password = BotLoginParams.Password;
-            TheRadegastInstance.Netcom.LoginOptions.Grid = LoginGrid.Custom;
-            TheRadegastInstance.Netcom.LoginOptions.GridCustomLoginUri = BotLoginParams.URI;
-            TheRadegastInstance.Netcom.LoginOptions.StartLocation = StartLocationType.Custom;
-            TheRadegastInstance.Netcom.LoginOptions.StartLocationCustom = BotLoginParams.Start;
-            TheRadegastInstance.Netcom.LoginOptions.Author = BotLoginParams.Author;
-            TheRadegastInstance.Netcom.LoginOptions.UserAgent = BotLoginParams.UserAgent;
+            var to= TheRadegastInstance.Netcom.LoginOptions;
+            to.FirstName = BotLoginParams.FirstName;
+            to.LastName = BotLoginParams.LastName;
+            to.Password = BotLoginParams.Password;
+            to.Grid = LoginGrid.Custom;
+            to.GridCustomLoginUri = BotLoginParams.URI;
+            to.StartLocation = StartLocationType.Custom;
+            to.StartLocationCustom = BotLoginParams.Start;
+            to.Author = BotLoginParams.Author;
+            to.UserAgent = BotLoginParams.UserAgent;
+        }
+
+        public void SetLoginOptionsFromRadegast()
+        {
+            var from = TheRadegastInstance.Netcom.LoginOptions;
+            BotLoginParams.FirstName = from.FirstName;
+            BotLoginParams.LastName = from.LastName;
+            BotLoginParams.Password = from.Password;
+            switch (from.Grid)
+            {
+                case LoginGrid.BetaGrid:
+                    BotLoginParams.URI = OpenMetaverse.Settings.ADITI_LOGIN_SERVER;
+                    break;
+                case LoginGrid.MainGrid:
+                    BotLoginParams.URI = OpenMetaverse.Settings.AGNI_LOGIN_SERVER;
+                    break;
+                default:
+                    BotLoginParams.URI = from.GridCustomLoginUri;
+                    break;
+            }
+            switch (from.StartLocation)
+            {
+                case StartLocationType.Last:
+                    BotLoginParams.Start = "last";
+                    break;
+                case StartLocationType.Home:
+                    BotLoginParams.Start = "home";
+                    break;
+                default:
+                    BotLoginParams.Start = from.StartLocationCustom;
+                    break;
+            }
+            BotLoginParams.Author = from.Author;
+            BotLoginParams.UserAgent = from.UserAgent;
         }
 
         public void ShowTab(string name)
