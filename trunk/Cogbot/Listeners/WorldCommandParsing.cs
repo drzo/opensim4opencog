@@ -18,24 +18,24 @@ namespace cogbot.Listeners
 
         public BotMentalAspect GetObject(string name)
         {
-            Primitive prim;
+            SimObject prim;
             string[] splitted = Parser.ParseArguments(name);
             int argsUsed;
             if (tryGetPrim(splitted, out prim, out argsUsed))
             {
-                return GetSimObject(prim);
+                return prim;
             }
             return null;
         }
 
-        public bool tryGetPrim(string str, out Primitive prim)
+        public bool tryGetPrim(string str, out SimObject prim)
         {
             int argsUsed;
 
             return tryGetPrim(Parser.ParseArguments(str), out prim, out argsUsed);
         }
 
-        public bool tryGetPrim(string[] splitted, out Primitive prim, out int argsUsed)
+        public bool tryGetPrim(string[] splitted, out SimObject prim, out int argsUsed)
         {
             if (splitted == null || splitted.Length == 0)
             {
@@ -48,7 +48,7 @@ namespace cogbot.Listeners
             UUID uuid;
             if (name.Contains("-") && UUID.TryParse(name, out uuid))
             {
-                prim = GetPrimitive(uuid, null);
+                prim = GetSimObjectFromUUID(uuid);
                 argsUsed = 1;
                 return prim != null;
             }
@@ -73,7 +73,7 @@ namespace cogbot.Listeners
                     String s = name.Substring(6);
                     if (uint.TryParse(s, out pickNum))
                     {
-                        prim = GetPrimitive(pickNum, null);
+                        prim = GetSimObject(pickNum, null);
                         if (prim != null)
                         {
                             argsUsed = 1;
@@ -83,6 +83,32 @@ namespace cogbot.Listeners
                     pickNum = 0;
                 }
             }
+            if (name.StartsWith("@"))
+            {
+                int splitOffset = 0;
+                name = name.Substring(1);
+                if (name.Length == 0)
+                {
+                    splitOffset = 1;
+                    splitted = Parser.SplitOff(splitted, 1);
+                }
+                else
+                {
+                    splitted[0] = name;
+                }
+                int argsUsed0;
+                SimPosition position = GetVector(splitted, out argsUsed0);
+                if (argsUsed0 == 0)
+                {
+                    argsUsed = splitOffset;
+                    prim = null;
+                    return false;
+                }
+                double dist;
+                prim = GetSimObjectFromVector(position.GlobalPosition, out dist);
+                argsUsed = argsUsed0 + splitOffset;
+                return prim != null && (dist < 2);
+            }
 
             prim = null;
             argsUsed = 0;
@@ -91,7 +117,7 @@ namespace cogbot.Listeners
         }
 
 
-        private bool GetPrimMatches(string[] splitted, string name, out Primitive prim, uint pickNum, out int argsUsed)
+        private bool GetPrimMatches(string[] splitted, string name, out SimObject prim, uint pickNum, out int argsUsed)
         {
             if (splitted.Length >= 2)
             {
@@ -144,7 +170,7 @@ namespace cogbot.Listeners
                 {
                     argsUsed = 2;
                 }
-                prim = matches[0].Prim;
+                prim = matches[0];
                 return pickNum == 1 && prim != null;
             }
             bool retVal = false;
@@ -153,7 +179,7 @@ namespace cogbot.Listeners
             if (pickNum != 0)
             {
                 argsUsed = 2;
-                prim = pickNum <= matches.Count ? matches[(int)pickNum - 1].Prim : null;
+                prim = pickNum <= matches.Count ? matches[(int)pickNum - 1] : null;
                 return prim != null;
             }
             WriteLine("Found " + matches.Count + " matches: ");
@@ -166,7 +192,7 @@ namespace cogbot.Listeners
                     WriteLine(" " + num + ": " + obj + " " + TheSimAvatar.DistanceVectorString(obj));
                 if (num == pickNum)
                 {
-                    prim = obj.Prim;
+                    prim = obj;
                     retVal = true;
                 }
             }
@@ -200,16 +226,16 @@ namespace cogbot.Listeners
                 numberedAvatars.Add(avatars[i].Name);
         }
 
-        public bool tryGetAvatar(string name, out Avatar avatar)
+        public bool tryGetAvatar(string name, out SimAvatar avatar)
         {
             avatar = null;
-            Primitive prim;
+            SimObject prim;
             string[] splitted = Parser.ParseArguments(name);
             int argsUsed;
             if (!tryGetPrim(splitted, out prim, out argsUsed)) return false;
-            if (prim is Avatar)
+            if (prim is SimAvatar)
             {
-                avatar = (Avatar)prim;
+                avatar = (SimAvatar)prim;
                 return true;
             }
             return false;
@@ -293,11 +319,11 @@ namespace cogbot.Listeners
             string s = o as string;
             if (!string.IsNullOrEmpty(s))
             {
-                Primitive prim;
+                SimObject prim;
                 int argsUsed;
                 if (tryGetPrim(new string[]{s}, out prim, out argsUsed))
                 {
-                    return GetSimObject(prim);
+                    return prim;
                 }
             }
             return null;
@@ -549,10 +575,10 @@ namespace cogbot.Listeners
             }
             else
             {
-                Primitive prim;
+                SimObject prim;
                 if (tryGetPrim(args, out prim, out argsUsed))
                 {
-                    return new List<SimObject> { GetSimObject(prim) };
+                    return new List<SimObject> {prim};
                 }
                 else
                 {
