@@ -32,8 +32,7 @@ namespace cogbot.TheOpenSims
         {
             get
             {
-                Vector3 v3 = Vector3.Transform(Vector3.UnitX, Matrix4.CreateFromQuaternion(SimRotation));
-                return (float)(Math.Atan2(-v3.X, -v3.Y) + Math.PI); // 2Pi= N, 1/2Pi = E
+                return (float) (double) WorldObjects.GetZHeading(SimRotation);
             }
         }
 
@@ -1443,12 +1442,18 @@ namespace cogbot.TheOpenSims
         {
             get
             {
-                Quaternion transValue = Prim.Rotation;
-                Primitive thisPrim = Prim;
+
+                Primitive thisPrim = this.Prim;
+                if (thisPrim==null)
+                {
+                    Error("GetSimRotation Prim==null: " + this);
+                    return Quaternion.Identity;
+                }
+                Quaternion transValue = thisPrim.Rotation;
                 if (!IsRegionAttached)
                 {
-                    WorldSystem.ReSelectObject(Prim);
-                    if (Prim.ParentID == 0)
+                    WorldSystem.ReSelectObject(thisPrim);
+                    if (thisPrim.ParentID == 0)
                     {
                         return transValue;
                     }
