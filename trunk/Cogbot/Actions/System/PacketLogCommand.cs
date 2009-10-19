@@ -3,7 +3,7 @@ using OpenMetaverse;
 
 namespace cogbot.Actions
 {
-    public class PacketLogCommand : Command
+    public class PacketLogCommand : Command, BotSystemCommand
     {
         public PacketLogCommand(BotClient testClient)
         {

@@ -4,7 +4,7 @@ using PathSystem3D.Navigation;
 
 namespace cogbot.Actions.Movement
 {
-    class FlyToCommand : Command
+    class FlyToCommand : Command, BotPersonalCommand
     {
 
         Vector3 myPos = new Vector3();
@@ -29,20 +29,21 @@ namespace cogbot.Actions.Movement
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
-            if (args.Length > 4 || args.Length < 3)
+            if (args.Length < 1)
                 return ShowUsage();// " FlyTo x y z [seconds]";
-
-            if (!float.TryParse(args[0], out target.X) ||
-                !float.TryParse(args[1], out target.Y) ||
-                !float.TryParse(args[2], out target.Z))
+            int argsUsed;
+            SimPosition position = WorldSystem.GetVector(args, out argsUsed);
+            if (position==null)
             {
                 return ShowUsage();// " FlyTo x y z [seconds]";
             }
+            target = position.SimPosition;
             target0.X = target.X;
             target0.Y = target.Y;
 
-            if (args.Length == 4 && Int32.TryParse(args[3], out duration))
-                duration *= 1000;
+            if (argsUsed < args.Length)
+                if (Int32.TryParse(args[argsUsed], out duration))
+                    duration *= 1000;
 
             Client.Objects.OnObjectUpdated += callback;
             startTime = Environment.TickCount;

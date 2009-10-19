@@ -10,7 +10,7 @@ namespace cogbot.Actions
     /// <summary>
     /// dumps group roles to console
     /// </summary>
-    public class GroupRolesCommand : Command
+    public class GroupRolesCommand : Command, GridMasterCommand
     {
             private ManualResetEvent GroupsEvent = new ManualResetEvent(false);
         private string GroupName;

@@ -6,7 +6,7 @@ using cogbot.TheOpenSims; //using libsecondlife;
 
 namespace cogbot.Actions
 {
-    class Describe : Command
+    class Describe : Command, BotPersonalCommand
     {
         public Describe(BotClient Client)
             : base(Client)

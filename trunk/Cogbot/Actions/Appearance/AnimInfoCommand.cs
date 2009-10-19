@@ -6,7 +6,7 @@ using cogbot.TheOpenSims;
 
 namespace cogbot.Actions
 {
-    public class AnimInfoCommand : Command
+    public class AnimInfoCommand : Command, GridMasterCommand
     {
         public AnimInfoCommand(BotClient testClient)
         {

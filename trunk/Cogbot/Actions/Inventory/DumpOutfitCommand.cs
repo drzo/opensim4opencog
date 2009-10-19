@@ -9,7 +9,7 @@ using OpenMetaverse.Imaging;
 
 namespace cogbot.Actions
 {
-    public class DumpOutfitCommand : Command
+    public class DumpOutfitCommand : Command, BotPersonalCommand
     {
         List<UUID> OutfitAssets = new List<UUID>();
 

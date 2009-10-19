@@ -9,7 +9,7 @@ using OpenMetaverse.Assets;
 
 namespace cogbot.Actions
 {
-    public class DownloadCommand : Command
+    public class DownloadCommand : Command, GridMasterCommand
     {
 
         public DownloadCommand(BotClient testClient)

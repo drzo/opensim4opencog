@@ -7,7 +7,7 @@ using OpenMetaverse.Packets;
 
 namespace cogbot.Actions
 {
-    public class CloneCommand : Command
+    public class CloneCommand : Command, BotPersonalCommand
     {
         uint SerialNum = 2;
 

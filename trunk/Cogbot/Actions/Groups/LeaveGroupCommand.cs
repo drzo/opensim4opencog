@@ -7,7 +7,7 @@ using System.Text;
 
 namespace cogbot.Actions
 {
-    public class LeaveGroupCommand : Command
+    public class LeaveGroupCommand : Command, BotPersonalCommand
     {
         ManualResetEvent GroupsEvent = new ManualResetEvent(false);
         private bool leftGroup;

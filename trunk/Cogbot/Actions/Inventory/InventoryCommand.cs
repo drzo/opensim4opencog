@@ -10,7 +10,7 @@ using OpenMetaverse.Packets;
 
 namespace cogbot.Actions
 {
-    public class InventoryCommand : Command
+    public class InventoryCommand : Command, BotPersonalCommand
     {
         private OpenMetaverse.Inventory Inventory;
         private InventoryManager Manager;

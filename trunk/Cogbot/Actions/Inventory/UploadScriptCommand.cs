@@ -8,7 +8,7 @@ namespace cogbot.Actions
     /// <summary>
     /// Example of how to put a new script in your inventory
     /// </summary>
-    public class UploadScriptCommand : Command
+    public class UploadScriptCommand : Command, BotPersonalCommand
     {
         /// <summary>
         ///  The default constructor for TestClient commands

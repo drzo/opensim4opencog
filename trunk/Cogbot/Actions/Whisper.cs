@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using OpenMetaverse; //using libsecondlife;
+using OpenMetaverse;
+using cogbot.TheOpenSims; //using libsecondlife;
 
 namespace cogbot.Actions
 {
-    class Whisper : Command
+    class Whisper : Command, BotPersonalCommand
     {
         public UUID currentAvatar;
         public UUID currentSession;
@@ -27,7 +28,7 @@ namespace cogbot.Actions
             string to = args.prepPhrases["to"];
 
             if (to.Length > 0) {
-                Avatar avatar;
+                SimAvatar avatar;
                 if (!WorldSystem.tryGetAvatar(to, out avatar))
                 {
                     return Failure("I don't know who " + to + "is.");

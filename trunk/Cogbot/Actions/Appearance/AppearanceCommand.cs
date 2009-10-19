@@ -7,7 +7,7 @@ namespace cogbot.Actions
     /// <summary>
     /// Set avatars current appearance to appearance last stored on simulator
     /// </summary>
-    public class AppearanceCommand : Command
+    public class AppearanceCommand : Command, BotPersonalCommand
     {
 		public AppearanceCommand(BotClient testClient)
         {

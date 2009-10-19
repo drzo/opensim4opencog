@@ -8,7 +8,7 @@ using System.Text;
 
 namespace cogbot.Actions
 {
-    public class MapFriendCommand : Command
+    public class MapFriendCommand : Command, BotPersonalCommand
     {
         ManualResetEvent WaitforFriend = new ManualResetEvent(false);
 

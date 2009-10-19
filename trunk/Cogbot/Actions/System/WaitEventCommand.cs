@@ -4,7 +4,7 @@ using OpenMetaverse;
 
 namespace cogbot.Actions
 {
-    public class WaitEventCommand : Command
+    public class WaitEventCommand : Command, BotPersonalCommand
     {
         public WaitEventCommand(BotClient testClient)
         {

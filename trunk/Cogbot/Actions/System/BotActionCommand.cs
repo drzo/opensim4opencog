@@ -4,7 +4,7 @@ using OpenMetaverse;
 
 namespace cogbot.Actions
 {
-    public class BotActionCommand : Command
+    public class BotActionCommand : Command, BotPersonalCommand
     {
         public BotActionCommand(BotClient testClient)
         {

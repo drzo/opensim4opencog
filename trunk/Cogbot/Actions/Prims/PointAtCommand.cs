@@ -8,7 +8,7 @@ using PathSystem3D.Navigation;
 
 namespace cogbot.Actions
 {
-    public class PointAtCommand : cogbot.Actions.Command, RegionMasterCommand
+    public class PointAtCommand : cogbot.Actions.Command, BotSystemCommand
     {
         public PointAtCommand(BotClient client)
         {

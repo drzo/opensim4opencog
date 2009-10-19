@@ -9,7 +9,7 @@ namespace cogbot.Actions
     /// <summary>
     /// 
     /// </summary>
-    public class SearchLandCommand : Command
+    public class SearchLandCommand : Command, GridMasterCommand
     {
         private System.Threading.AutoResetEvent waitQuery = new System.Threading.AutoResetEvent(false);
         private StringBuilder result = new StringBuilder();

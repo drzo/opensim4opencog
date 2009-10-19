@@ -7,7 +7,7 @@ using cogbot.Listeners;
 
 namespace cogbot.Actions
 {
-    public class UUIDTypeCommand : Command
+    public class UUIDTypeCommand : Command, GridMasterCommand
     {
         public UUIDTypeCommand(BotClient testClient)
         {

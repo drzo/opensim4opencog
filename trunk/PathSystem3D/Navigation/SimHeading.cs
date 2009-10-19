@@ -65,7 +65,7 @@ namespace PathSystem3D.Navigation
             {
                 Vector3 loc = obj.SimPosition;
                 SimPathStore R = obj.PathStore;
-                return String.Format("unknown relative {0}/{1:0.00}/{2:0.00}/{3:0.00}",
+                return String.Format("unknown relative {0}/{1:0.0#}/{2:0.0#}/{3:0.0#}",
                                      R.RegionName, loc.X, loc.Y, loc.Z);
             }
             return DistanceVectorString(obj.GlobalPosition);
@@ -75,15 +75,15 @@ namespace PathSystem3D.Navigation
         {
             Vector3 loc = SimPathStore.GlobalToLocal(loc3d);
             SimPathStore R = SimPathStore.GetPathStore(loc3d);
-            return String.Format("{0:0.00}m ", Vector3d.Distance(GlobalPosition, loc3d))
-                   + String.Format("{0}/{1:0.00}/{2:0.00}/{3:0.00}", R.RegionName, loc.X, loc.Y, loc.Z);
+            return String.Format("{0:0.0#}m ", Vector3d.Distance(GlobalPosition, loc3d))
+                   + String.Format("{0}/{1:0.0#}/{2:0.0#}/{3:0.0#}", R.RegionName, loc.X, loc.Y, loc.Z);
         }
 
         public string DistanceVectorString(Vector3 loc)
         {
             SimPathStore R = reg;
-            return String.Format("{0:0.00}m ", Vector3.Distance(SimPosition, loc))
-                   + String.Format("{0}/{1:0.00}/{2:0.00}/{3:0.00}", R.RegionName, loc.X, loc.Y, loc.Z);
+            return String.Format("{0:0.0#}m ", Vector3.Distance(SimPosition, loc))
+                   + String.Format("{0}/{1:0.0#}/{2:0.0#}/{3:0.0#}", R.RegionName, loc.X, loc.Y, loc.Z);
         }
 
         public Vector3 SimPosition

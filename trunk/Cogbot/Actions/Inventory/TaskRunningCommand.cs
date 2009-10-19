@@ -6,7 +6,7 @@ using OpenMetaverse;
 
 namespace cogbot.Actions
 {
-    public class TaskRunningCommand : Command
+    public class TaskRunningCommand : Command, RegionMasterCommand
     {
         public TaskRunningCommand(BotClient testClient)
         {

@@ -6,7 +6,7 @@ using OpenMetaverse.Packets;
 
 namespace cogbot.Actions
 {
-    public class ShoutCommand : Command
+    public class ShoutCommand : Command, BotPersonalCommand
     {
         public ShoutCommand(BotClient testClient)
         {
@@ -24,17 +24,10 @@ namespace cogbot.Actions
             {
                 return ShowUsage();// " shout (optional channel) whatever";
             }
-            else if (args.Length > 1)
+            else if (args.Length > 1 && (args[0].StartsWith("/") || args[0].StartsWith("#")))
             {
-                try
-                {
-                    channel = Convert.ToInt32(args[0]);
+                if (Int32.TryParse(args[0].Substring(1), out channel))
                     startIndex = 1;
-                }
-                catch (FormatException)
-                {
-                    channel = 0;
-                }
             }
 
             for (int i = startIndex; i < args.Length; i++)

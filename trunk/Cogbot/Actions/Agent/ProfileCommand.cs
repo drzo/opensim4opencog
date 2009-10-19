@@ -7,7 +7,7 @@ using OpenMetaverse.Packets;
 
 namespace cogbot.Actions
 {
-    public class ProfileCommand : Command
+    public class ProfileCommand : Command, GridMasterCommand
     {
 
         public ProfileCommand(BotClient testClient)

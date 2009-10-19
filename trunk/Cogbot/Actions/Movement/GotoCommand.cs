@@ -8,7 +8,7 @@ using PathSystem3D.Navigation;
 
 namespace cogbot.Actions
 {
-    public class GotoCommand: Command
+    public class GotoCommand : Command, BotPersonalCommand
     {
         public GotoCommand(BotClient testClient)
 		{

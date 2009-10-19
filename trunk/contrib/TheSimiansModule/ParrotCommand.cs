@@ -13,7 +13,7 @@ using OpenMetaverse;
 
 namespace TheSimiansModule
 {
-    class ParrotCommand : Command
+    class ParrotCommand : Command, BotPersonalCommand
     {
         private SimParrotActor _thinker;
         private SimAvatar observed;

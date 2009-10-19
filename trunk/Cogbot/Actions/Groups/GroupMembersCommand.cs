@@ -10,7 +10,7 @@ namespace cogbot.Actions
     /// <summary>
     /// dumps group members to console
     /// </summary>
-    public class GroupMembersCommand : Command
+    public class GroupMembersCommand : Command, GridMasterCommand
     {
             private ManualResetEvent GroupsEvent = new ManualResetEvent(false);
         private string GroupName;

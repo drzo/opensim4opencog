@@ -5,7 +5,7 @@ using OpenMetaverse;
 
 namespace cogbot.Actions
 {
-    public class WaitForLoginCommand : Command
+    public class WaitForLoginCommand : Command, BotSystemCommand
     {
         public WaitForLoginCommand(BotClient testClient)
         {

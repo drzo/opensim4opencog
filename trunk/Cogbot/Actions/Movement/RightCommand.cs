@@ -6,7 +6,7 @@ using OpenMetaverse;
 
 namespace cogbot.Actions.Movement
 {
-    class RightCommand : Command
+    class RightCommand : Command, BotPersonalCommand
     {
         public RightCommand(BotClient client)
         {

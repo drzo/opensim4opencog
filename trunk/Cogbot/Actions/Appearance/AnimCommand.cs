@@ -6,7 +6,7 @@ using cogbot.TheOpenSims;
 
 namespace cogbot.Actions
 {
-    public class AnimCommand : Command
+    public class AnimCommand : Command, BotPersonalCommand
     {
         public AnimCommand(BotClient testClient)
         {

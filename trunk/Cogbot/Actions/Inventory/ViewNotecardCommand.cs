@@ -6,7 +6,7 @@ using OpenMetaverse.Assets;
 
 namespace cogbot.Actions
 {
-    public class ViewNotecardCommand : Command
+    public class ViewNotecardCommand : Command, BotPersonalCommand
     {
         /// <summary>
         /// TestClient command to download and display a notecard asset

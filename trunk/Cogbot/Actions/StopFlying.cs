@@ -5,7 +5,7 @@ using OpenMetaverse;
 
 namespace cogbot.Actions
 {
-    class StopFlying : Command
+    class StopFlying : Command, BotPersonalCommand
     {
         public StopFlying(BotClient Client)
             : base(Client)

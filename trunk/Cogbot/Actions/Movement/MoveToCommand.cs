@@ -4,7 +4,7 @@ using PathSystem3D.Navigation;
 
 namespace cogbot.Actions.Movement
 {
-    class MovetoCommand : Command
+    class MovetoCommand : Command, BotPersonalCommand
     {
         public MovetoCommand(BotClient client)
         {

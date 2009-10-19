@@ -6,7 +6,7 @@ using OpenMetaverse.Packets;
 
 namespace cogbot.Actions
 {
-    public class SetHomeCommand : Command
+    public class SetHomeCommand : Command, BotPersonalCommand
     {
 		public SetHomeCommand(BotClient testClient)
         {

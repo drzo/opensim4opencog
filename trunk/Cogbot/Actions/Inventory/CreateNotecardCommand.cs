@@ -8,7 +8,7 @@ using OpenMetaverse.Assets;
 
 namespace cogbot.Actions
 {
-    public class CreateNotecardCommand : Command
+    public class CreateNotecardCommand : Command, BotPersonalCommand
     {
         const int NOTECARD_CREATE_TIMEOUT = 1000 * 10;
         const int NOTECARD_FETCH_TIMEOUT = 1000 * 10;

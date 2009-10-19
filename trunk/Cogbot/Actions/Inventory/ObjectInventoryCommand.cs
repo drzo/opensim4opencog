@@ -5,7 +5,7 @@ using OpenMetaverse;
 
 namespace cogbot.Actions
 {
-    public class ObjectInventoryCommand : Command
+    public class ObjectInventoryCommand : Command, RegionMasterCommand
     {
         public ObjectInventoryCommand(BotClient testClient)
         {

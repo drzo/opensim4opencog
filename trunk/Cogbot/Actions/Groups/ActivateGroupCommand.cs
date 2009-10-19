@@ -10,7 +10,7 @@ namespace cogbot.Actions
     /// <summary>
     /// Changes Avatars currently active group
     /// </summary>
-    public class ActivateGroupCommand : Command
+    public class ActivateGroupCommand : Command, BotPersonalCommand
     {
         private ManualResetEvent GroupsEvent = new ManualResetEvent(false);
         string activeGroup;

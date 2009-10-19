@@ -32,21 +32,22 @@ namespace cogbot.Actions
     /// Such as terrain uploads and simulator info (10 bots doing the command at once will create problems)
     /// Non region master bots are thinner clients and usually not fit for object tracking
     /// </summary>
-    public interface RegionMasterCommand
+    public interface RegionMasterCommand : BotCommand
     {
     }
     /// <summary>
     /// An interface for commands is only invoked on Grid mastering bots
     /// Such as Directory info requests (10 bots doing the command at once will create problems)   
     /// </summary>
-    public interface GridMasterCommand
+    public interface GridMasterCommand : BotCommand
     {
     }
     /// <summary>
     /// An interface for commands that do not target any specific bots
     ///  Such as pathsystem maintainance or application commands
+    ///  The gridClient used though will be GridMaster
     /// </summary>
-    public interface SystemApplicationCommand
+    public interface SystemApplicationCommand : BotCommand
     {
     }
 
@@ -54,7 +55,19 @@ namespace cogbot.Actions
     /// An interface for commands that do not require a connected grid client
     /// such as Login or settings but still targets each bot individually
     /// </summary>
-    public interface BotSystemCommand
+    public interface BotSystemCommand : BotCommand
+    {
+    }
+
+    /// <summary>
+    /// An interface for commands that DO REQUIRE a connected grid client
+    /// such as say,jump,movement
+    /// </summary>
+    public interface BotPersonalCommand : BotCommand
+    {
+    }
+
+    public interface BotCommand
     {
     }
 
@@ -89,6 +102,10 @@ namespace cogbot.Actions
         {
             Name = GetType().Name.Replace("Command", "");
             _mClient = bc;
+            if (!(this is BotCommand))
+            {
+                Console.WriteLine("" + this + " is not a BotCommand?!");
+            }
         } // constructor
 
 

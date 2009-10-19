@@ -5,7 +5,7 @@ using OpenMetaverse;
 
 namespace cogbot.Actions
 {
-    class ShowEventDetailsCommand : Command
+    class ShowEventDetailsCommand : Command, GridMasterCommand
     {
         public ShowEventDetailsCommand(BotClient testClient)
         {

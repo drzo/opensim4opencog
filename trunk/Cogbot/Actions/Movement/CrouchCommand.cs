@@ -3,7 +3,7 @@ using OpenMetaverse;
 
 namespace cogbot.Actions
 {
-    public class CrouchCommand : Command
+    public class CrouchCommand : Command, BotPersonalCommand
     {
         public CrouchCommand(BotClient testClient)
         {

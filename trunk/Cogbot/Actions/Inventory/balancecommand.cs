@@ -5,7 +5,7 @@ using OpenMetaverse.Packets;
 
 namespace cogbot.Actions
 {
-    public class BalanceCommand: Command
+    public class BalanceCommand : Command, BotPersonalCommand
     {
         public BalanceCommand(BotClient testClient)
 		{

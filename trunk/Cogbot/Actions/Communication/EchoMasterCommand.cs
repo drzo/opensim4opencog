@@ -6,7 +6,7 @@ using OpenMetaverse.Packets;
 
 namespace cogbot.Actions
 {
-    public class EchoMasterCommand: Command
+    public class EchoMasterCommand: Command, BotPersonalCommand
     {
         public EchoMasterCommand(BotClient testClient)
 		{

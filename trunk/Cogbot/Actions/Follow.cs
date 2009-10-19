@@ -9,7 +9,7 @@ using PathSystem3D.Navigation;
 
 namespace cogbot.Actions
 {
-    class Follow : Command
+    class Follow : Command, BotPersonalCommand
     {
 
 

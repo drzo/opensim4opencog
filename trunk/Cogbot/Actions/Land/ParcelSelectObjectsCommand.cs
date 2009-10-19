@@ -6,7 +6,7 @@ using OpenMetaverse;
 
 namespace cogbot.Actions
 {
-    public class ParcelSelectObjectsCommand : Command
+    public class ParcelSelectObjectsCommand : Command, RegionMasterCommand
     {
         public ParcelSelectObjectsCommand(BotClient testClient)
         {

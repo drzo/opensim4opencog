@@ -5,7 +5,7 @@ using OpenMetaverse;
 
 namespace cogbot.Actions
 {
-    public class SelectObjectCommand : cogbot.Actions.Command
+    public class SelectObjectCommand : cogbot.Actions.Command, RegionMasterCommand
     {
         public SelectObjectCommand(BotClient client)
         {

@@ -6,7 +6,7 @@ using OpenMetaverse.Packets;
 
 namespace cogbot.Actions
 {
-    public class DilationCommand : Command
+    public class DilationCommand : Command, RegionMasterCommand
     {
 		public DilationCommand(BotClient testClient)
         {

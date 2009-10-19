@@ -5,7 +5,7 @@ using cogbot.Listeners;
 namespace cogbot.Actions.Movement
 {
 
-    class RotateCommand : Command
+    class RotateCommand : Command, BotPersonalCommand
     {
         public RotateCommand(BotClient client)
         {

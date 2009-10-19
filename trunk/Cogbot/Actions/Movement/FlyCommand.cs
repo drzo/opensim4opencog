@@ -3,7 +3,7 @@ using OpenMetaverse;
 
 namespace cogbot.Actions
 {
-    public class FlyCommand : Command
+    public class FlyCommand : Command, BotPersonalCommand
     {
         public FlyCommand(BotClient testClient)
         {

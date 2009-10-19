@@ -6,7 +6,7 @@ using OpenMetaverse.Packets;
 
 namespace cogbot.Actions
 {
-    public class UptimeCommand : Command
+    public class UptimeCommand : Command, BotSystemCommand
     {
         public DateTime Created = DateTime.Now;
 

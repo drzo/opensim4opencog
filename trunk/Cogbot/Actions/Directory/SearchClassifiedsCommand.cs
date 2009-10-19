@@ -6,7 +6,7 @@ using OpenMetaverse;
 // the Namespace used for all BotClient commands
 namespace cogbot.Actions
 {
-    class SearchClassifiedsCommand : Command
+    class SearchClassifiedsCommand : Command, GridMasterCommand
     {
         System.Threading.AutoResetEvent waitQuery = new System.Threading.AutoResetEvent(false);
         int resultCount;
@@ -49,7 +49,7 @@ namespace cogbot.Actions
 
             Client.Directory.DirClassifiedsReply += callback;
 
-            UUID searchID = Client.Directory.StartClassifiedSearch(searchText, DirectoryManager.ClassifiedCategories.Any,  DirectoryManager.ClassifiedQueryFlags.Mature | DirectoryManager.ClassifiedQueryFlags.PG);
+            UUID searchID = Client.Directory.StartClassifiedSearch(searchText, DirectoryManager.ClassifiedCategories.Any, DirectoryManager.ClassifiedQueryFlags.Mature | DirectoryManager.ClassifiedQueryFlags.PG);
 
             if (!waitQuery.WaitOne(20000, false) && Client.Network.Connected)
             {
@@ -58,7 +58,7 @@ namespace cogbot.Actions
 
             Client.Directory.DirClassifiedsReply -= callback;
 
-            return Success(result.ToString());;
+            return Success(result.ToString()); ;
         }
     }
 }

@@ -5,7 +5,7 @@ using OpenMetaverse;
 
 namespace cogbot.Actions
 {
-    public class MeCommand: Command
+    public class MeCommand : Command, BotPersonalCommand
     {
         public MeCommand(BotClient testClient)
 		{

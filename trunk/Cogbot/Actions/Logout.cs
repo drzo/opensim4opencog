@@ -4,7 +4,7 @@ using System.Text;
 
 namespace cogbot.Actions
 {
-    class Logout : Command
+    class Logout : Command, BotSystemCommand
     {
         public Logout(BotClient Client)
             : base(Client)

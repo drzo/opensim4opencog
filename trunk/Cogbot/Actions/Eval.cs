@@ -5,13 +5,13 @@ using System.Text;
 
 namespace cogbot.Actions
 {
-    class Eval : Command
+    class Eval : Command, BotSystemCommand
     {
        public Eval(BotClient Client)
             : base(Client)
         {
             Name = "eval";
-            Description = " eval: Enqueue a lisp task. Eval <lisp expression>";
+            Description = "Enqueue a lisp task on a bot. Usage: Eval <lisp expression>";
         }
        public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
        {

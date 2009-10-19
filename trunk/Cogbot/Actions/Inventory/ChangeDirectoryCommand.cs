@@ -5,7 +5,7 @@ using OpenMetaverse;
 
 namespace cogbot.Actions.Inventory.Shell
 {
-    public class ChangeDirectoryCommand : Command
+    public class ChangeDirectoryCommand : Command, BotPersonalCommand
     {
         private InventoryManager Manager;
         private OpenMetaverse.Inventory Inventory;
