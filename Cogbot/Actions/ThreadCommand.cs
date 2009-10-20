@@ -12,7 +12,7 @@ namespace cogbot.Actions
         public ThreadCommand(BotClient testClient)
         {
             Name = "thread";
-            Description = "executes a command in its own thread. Type \"thread\" for usage.";
+            Description = "executes a command in its own thread. Usage: thread anim 30 crouch";
             Category = CommandCategory.Other;
         }
 
@@ -21,50 +21,51 @@ namespace cogbot.Actions
             //BotClient Client = TheBotClient;
             if (args.Length < 1)
             {
-                return ShowUsage();// " thread anim 30 crouch";
+                return ShowUsage();// " ";
             }
-            if (args.Length == 1 && args[0]=="list")
+            if (args.Length == 1 && args[0] == "list")
             {
                 int n = 0;
-                String s="";
-                lock (Client.botCommandThreads)  foreach (Thread t in Client.botCommandThreads)
+                lock (Client.botCommandThreads)
                 {
-                    n++;
-                    //System.Threading.ThreadStateException: Thread is dead; state cannot be accessed.
-                    //  at System.Threading.Thread.IsBackgroundNative()
-                    s+=""+ n + ": " + t.Name + " alive=" + t.IsAlive;
+                    foreach (Thread t in Client.botCommandThreads)
+                    {
+                        n++;
+                        //System.Threading.ThreadStateException: Thread is dead; state cannot be accessed.
+                        //  at System.Threading.Thread.IsBackgroundNative()
+                        WriteLine("" + n + ": " + t.Name + " alive=" + t.IsAlive);
+                    }
                 }
-                return Success(s);
+                return Success("Total threads: " + n);
             }
             String cmd = String.Join(" ", args);
-            Thread thread = new Thread(new ThreadStart(delegate()
-            {
-                try
-                {
-                    WriteLine(Client.ExecuteCommand(cmd, WriteLine));
-                }
-                catch (OutOfMemoryException) { }
-                catch (StackOverflowException) { }
-                catch (Exception) { }
-                try
-                {
-                    WriteLine("done with " + cmd);
-                }
-                catch (OutOfMemoryException) { }
-                catch (StackOverflowException) { }
-                catch (Exception) { }
-                try
-                {
-                    lock (Client.botCommandThreads)
-                        TheBotClient.botCommandThreads.Remove(Thread.CurrentThread);
-                }
-                catch (OutOfMemoryException) { }
-                catch (StackOverflowException) { }
-                catch (Exception) { }
-            }));
+            Thread thread = new Thread(() =>
+                                           {
+                                               try
+                                               {
+                                                   try
+                                                   {
+                                                       WriteLine(Client.ExecuteCommand(cmd, WriteLine));
+                                                   }
+                                                   catch (Exception e)
+                                                   {
+                                                       WriteLine("Problem with " + cmd + " " + e);
+                                                   }
+                                               }
+                                               finally
+                                               {
+                                                   try
+                                                   {
+                                                       lock (Client.botCommandThreads)
+                                                           TheBotClient.botCommandThreads.Remove(Thread.CurrentThread);
+                                                   }
+                                                   catch (OutOfMemoryException){}catch (StackOverflowException){}catch (Exception){}
+                                                   WriteLine("done with " + cmd);
+                                               }
+                                           });
             thread.Name = "ThreadCommnand for " + cmd;
-            thread.Start();
             lock (Client.botCommandThreads) Client.botCommandThreads.Add(thread);
+            thread.Start();
             return Success(thread.Name);
         }
     }
