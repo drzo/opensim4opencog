@@ -1891,7 +1891,12 @@ namespace cogbot.TheOpenSims
 
         protected bool IsDrivingVehical
         {
-            get { return Prim.ParentID != 0; }
+            get
+            {
+                Primitive Prim = this.Prim;
+                if (Prim == null) return false;
+                return Prim.ParentID != 0;
+            }
         }
 
         public override bool UpdateOccupied()
