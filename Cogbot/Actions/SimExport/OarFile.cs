@@ -221,7 +221,7 @@ namespace cogbot.Actions.SimExport
             WriteVector(writer, "SitTargetPositionLL", Vector3.Zero);
             WriteQuaternion(writer, "SitTargetOrientationLL", new Quaternion(0f, 0f, 1f, 0f));
             writer.WriteElementString("ParentID", prim.ParentID.ToString());
-            writer.WriteElementString("CreationDate", ((int)Utils.DateTimeToUnixTime(prim.Properties.CreationDate.GetValueOrDefault())).ToString());
+            writer.WriteElementString("CreationDate", ((int)Utils.DateTimeToUnixTime(prim.Properties.CreationDate)).ToString());
             writer.WriteElementString("Category", ((int)prim.Properties.Category).ToString());
             writer.WriteElementString("SalePrice", prim.Properties.SalePrice.ToString());
             writer.WriteElementString("ObjectSaleType", ((int)prim.Properties.SaleType).ToString());
