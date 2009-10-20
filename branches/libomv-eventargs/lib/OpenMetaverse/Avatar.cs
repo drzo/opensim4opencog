@@ -169,7 +169,7 @@ namespace OpenMetaverse
 
             #endregion Properties
         }
-        
+
         /// <summary>
         /// Avatar interests including spoken languages, skills, and "want to"
         /// choices
@@ -244,7 +244,7 @@ namespace OpenMetaverse
                 return String.Empty;
             }
         }
-        
+
         /// <summary>Full name</summary>
         public string Name
         {
@@ -298,14 +298,14 @@ namespace OpenMetaverse
                 }
                 else
                 {
+                    if (NameValues == null || NameValues.Length == 0)
                     {
-                        if (NameValues == null || NameValues.Length == 0)
+                        return String.Empty;
+                    }
+                    else
+                    {
+                        lock (NameValues)
                         {
-                            return String.Empty;
-                        }
-                        else
-                        {
-                            lock (NameValues)
                             for (int i = 0; i < NameValues.Length; i++)
                             {
                                 if (NameValues[i].Name == "Title" && NameValues[i].Type == NameValue.ValueType.String)
@@ -314,9 +314,8 @@ namespace OpenMetaverse
                                     return groupName;
                                 }
                             }
-
-                            return String.Empty;
                         }
+                        return String.Empty;
                     }
                 }
             }

@@ -696,7 +696,7 @@ namespace OpenMetaverse
                 else agentControls &= ~((uint)flag);
             }
 
-            public void ResetControlFlags()
+            private void ResetControlFlags()
             {
                 // Reset all of the flags except for persistent settings like
                 // away, fly, mouselook, and crouching

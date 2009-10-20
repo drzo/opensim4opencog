@@ -26,8 +26,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Reflection;
-using System.Threading;
 
 namespace OpenMetaverse
 {
@@ -45,7 +43,7 @@ namespace OpenMetaverse
         /// <summary>Internal dictionary that this class wraps around. Do not
         /// modify or enumerate the contents of this dictionary without locking
         /// on this member</summary>
-        public Dictionary<TKey, TValue> Dictionary;
+        internal Dictionary<TKey, TValue> Dictionary;
 
         /// <summary>
         /// Gets the number of Key/Value pairs contained in the <seealso cref="T:InternalDictionary"/>
@@ -127,7 +125,6 @@ namespace OpenMetaverse
         /// </example>
         public bool TryGetValue(TKey key, out TValue value)
         {
-            ConfirmOuterModifierIsLocking();
             lock (Dictionary)
             {
                 return Dictionary.TryGetValue(key, out value);
@@ -277,7 +274,6 @@ namespace OpenMetaverse
         /// <returns><see langword="true"/> if found, <see langword="false"/> otherwise</returns>
         public bool ContainsKey(TKey key)
         {
-            ConfirmOuterModifierIsLocking();
             return Dictionary.ContainsKey(key);
         }
 
@@ -286,7 +282,6 @@ namespace OpenMetaverse
         /// <returns><see langword="true"/> if found, <see langword="false"/> otherwise</returns>
         public bool ContainsValue(TValue value)
         {
-            ConfirmOuterModifierIsLocking();
             return Dictionary.ContainsValue(value);
         }
 
@@ -298,7 +293,6 @@ namespace OpenMetaverse
         /// <param name="value">The value</param>
         internal void Add(TKey key, TValue value)
         {
-            ConfirmOuterModifierIsLocking();
             lock (Dictionary)
                 Dictionary.Add(key, value);
         }
@@ -310,7 +304,6 @@ namespace OpenMetaverse
         /// <returns><see langword="true"/> if successful, <see langword="false"/> otherwise</returns>
         internal bool Remove(TKey key)
         {
-            ConfirmOuterModifierIsLocking();
             lock (Dictionary)
                 return Dictionary.Remove(key);
         }
@@ -324,45 +317,14 @@ namespace OpenMetaverse
         {
             get
             {
-                ConfirmOuterModifierIsLocking();
                 lock (Dictionary)
                     return Dictionary[key];
             }
             internal set
             {
-                ConfirmOuterModifierIsLocking();
                 lock (Dictionary)
                     Dictionary[key] = value;
             }
         }
-        private void ConfirmOuterModifierIsLocking()
-        {
-            return;
-            System.Diagnostics.StackTrace st = new System.Diagnostics.StackTrace(2);
-            System.Diagnostics.StackFrame sf = st.GetFrame(0);
-            MethodBase mb = sf.GetMethod();
-            if (!mb.DeclaringType.Namespace.StartsWith("OpenMetaverse")) return;
-
-            bool badGuy = false;
-            Thread t = new Thread(() =>
-                                      {
-                                          if (!Monitor.TryEnter(Dictionary))
-                                          {
-                                              //all is good!
-                                          }
-                                          else
-                                          {
-                                              Monitor.Exit(Dictionary);
-                                              //throw badGuy;
-                                              badGuy = true;
-                                          }
-                                      });
-            t.Start();
-            t.Join();
-            if (!badGuy) return;
-            throw new Exception(string.Format("{0}.{1} forgot to lock!", mb.DeclaringType.FullName, mb.Name));
-        }
-
-
     }
 }

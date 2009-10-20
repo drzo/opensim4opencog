@@ -97,32 +97,11 @@ namespace OpenMetaverse.Http
                 downloadProgressCallback, completedCallback);
 
             // Start the request for a stream to upload to
-            IAsyncResult result = BeginGetRequestStream(request,OpenWrite, state);
+            IAsyncResult result = request.BeginGetRequestStream(OpenWrite, state);
             // Register a timeout for the request
             ThreadPool.RegisterWaitForSingleObject(result.AsyncWaitHandle, TimeoutCallback, state, millisecondsTimeout, true);
 
             return request;
-        }
-
-        private static IAsyncResult BeginGetRequestStream(HttpWebRequest request, System.AsyncCallback write, RequestState state)
-        {
-            try
-            {
-                return request.BeginGetRequestStream(write, state);
-            } catch(Exception e)
-            {
-                Console.WriteLine("" + e);
-                Thread.Sleep(1000);
-                try
-                {
-                    return request.BeginGetRequestStream(write, state);
-                }
-                catch (Exception)
-                {
-                    throw;
-                }
-            }
-
         }
 
         public static HttpWebRequest DownloadStringAsync(Uri address, X509Certificate2 clientCert, int millisecondsTimeout,

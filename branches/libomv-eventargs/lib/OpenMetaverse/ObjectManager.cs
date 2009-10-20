@@ -2436,7 +2436,7 @@ namespace OpenMetaverse
                 props.AggregatePermTexturesOwner = objectData.AggregatePermTexturesOwner;
                 props.Permissions = new Permissions(objectData.BaseMask, objectData.EveryoneMask, objectData.GroupMask,
                     objectData.NextOwnerMask, objectData.OwnerMask);
-                props.Category = (ObjectCategory)objectData.Category;
+                props.Category = (ObjectCategory)objectData.Category;                                    
                 props.CreationDate = Utils.UnixTimeToDateTime((uint)objectData.CreationDate);
                 props.CreatorID = objectData.CreatorID;
                 props.Description = Utils.BytesToString(objectData.Description);
@@ -2645,7 +2645,7 @@ namespace OpenMetaverse
             }
             
             av.ParentID = localid;
-
+            
 
             if (OnAvatarSitChanged != null && oldSeatID != localid)
             {
@@ -3002,7 +3002,7 @@ namespace OpenMetaverse
             int delay = Math.Max(50, Settings.INTERPOLATION_INTERVAL - elapsed);
             if (InterpolationTimer != null)
             {
-            InterpolationTimer.Change(delay, Timeout.Infinite);
+                InterpolationTimer.Change(delay, Timeout.Infinite);
             }
         }
     }
