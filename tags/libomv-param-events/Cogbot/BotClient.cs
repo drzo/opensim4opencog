@@ -1,0 +1,1819 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Reflection;
+using System.Windows.Forms;
+using System.Xml;
+using cogbot.Utilities;
+using OpenMetaverse;
+using OpenMetaverse.Packets;
+using OpenMetaverse.Utilities;
+using cogbot.Actions;
+using System.Threading;
+using System.Collections;
+using cogbot.ScriptEngines;
+using System.IO;
+using cogbot.Listeners;
+using Radegast;
+using Radegast.Netcom;
+using cogbot.TheOpenSims;
+using System.Drawing;
+using Settings=OpenMetaverse.Settings;
+//using RadegastTab = Radegast.SleekTab;
+
+// older LibOMV
+//using TeleportFlags = OpenMetaverse.AgentManager.TeleportFlags;
+//using TeleportStatus = OpenMetaverse.AgentManager.TeleportStatus;
+
+namespace cogbot
+{
+    public class BotClient: SimEventSubscriber,IDisposable
+    {
+
+        public static implicit operator GridClient(BotClient m)
+        {
+            return m.gridClient;
+        }
+
+        /// <summary>Networking subsystem</summary>
+        public NetworkManager Network { get { return gridClient.Network; } }
+        /// <summary>Settings class including constant values and changeable
+        /// parameters for everything</summary>
+        public Settings Settings { get { return gridClient.Settings; } }
+        /// <summary>Parcel (subdivided simulator lots) subsystem</summary>
+        public ParcelManager Parcels { get { return gridClient.Parcels; } }
+        /// <summary>Our own avatars subsystem</summary>
+        public AgentManager Self { get { return gridClient.Self; } }
+        /// <summary>Other avatars subsystem</summary>
+        public AvatarManager Avatars { get { return gridClient.Avatars; } }
+        /// <summary>Friends list subsystem</summary>
+        public FriendsManager Friends { get { return gridClient.Friends; } }
+        /// <summary>Grid (aka simulator group) subsystem</summary>
+        public GridManager Grid { get { return gridClient.Grid; } }
+        /// <summary>Object subsystem</summary>
+        public ObjectManager Objects { get { return gridClient.Objects; } }
+        /// <summary>Group subsystem</summary>
+        public GroupManager Groups { get { return gridClient.Groups; } }
+        /// <summary>Asset subsystem</summary>
+        public AssetManager Assets { get { return gridClient.Assets; } }
+        /// <summary>Asset subsystem</summary>
+        public EstateTools Estate { get { return gridClient.Estate; } }
+        /// <summary>Appearance subsystem</summary>
+        public AppearanceManager Appearance { get { return gridClient.Appearance; } }
+        /// <summary>Inventory subsystem</summary>
+        public InventoryManager Inventory { get { return gridClient.Inventory; } }
+        /// <summary>Directory searches including classifieds, people, land 
+        /// sales, etc</summary>
+        public DirectoryManager Directory { get { return gridClient.Directory; } }
+        /// <summary>Handles land, wind, and cloud heightmaps</summary>
+        public TerrainManager Terrain { get { return gridClient.Terrain; } }
+        /// <summary>Handles sound-related networking</summary>
+        public SoundManager Sound { get { return gridClient.Sound; } }
+        /// <summary>Throttling total bandwidth usage, or allocating bandwidth
+        /// for specific data stream types</summary>
+        public AgentThrottle Throttle { get { return gridClient.Throttle; } }
+
+        readonly public GridClient gridClient;
+        // TODO's
+        // Play Animations
+        // private static UUID type_anim_uuid = new UUID("c541c47f-e0c0-058b-ad1a-d6ae3a4584d9");
+        // Client.Self.AnimationStart(type_anim_uuid,false);
+        // Client.Self.AnimationStop(type_anim_uuid,false);
+
+        // animationFolder = Client.Inventory.FindFolderForType(AssetType.Animation);
+        // animationUUID = Client.Inventory.FindObjectByPath(animationFolder, Client.Self.AgentID, AnimationPath, 500);
+        // Client.Self.AnimationStart(animationLLUUID,false);
+        // Client.Self.AnimationStop(animationLLUUID,false);
+
+
+        // Reflect events into lisp
+        //        
+        int LoginRetries = 2; // for the times we are "already logged in"
+        public bool ExpectConnected;
+        public void Login()
+        {
+            if (ExpectConnected) return;
+            if (Network.CurrentSim!=null)
+            {
+                if (Network.CurrentSim.Connected) return;
+            }
+            //if (ClientManager.simulator.periscopeClient == null)
+            //{
+            //    ClientManager.simulator.periscopeClient = this;
+            //    ClientManager.simulator.Start();
+            //    Settings.LOG_LEVEL = Helpers.LogLevel.Info;
+            //}
+            try
+            {
+                //SetLoginOptionsFromRadegast();
+                Network.Login(BotLoginParams.FirstName, BotLoginParams.LastName,
+                              BotLoginParams.Password, "OnRez", BotLoginParams.Start, "UNR");
+            }
+            catch (Exception e)
+            {
+
+            }
+
+        }
+
+        readonly int thisTcpPort;
+        public OpenMetaverse.LoginParams BotLoginParams;// = null;
+        private readonly SimEventPublisher botPipeline;
+        public List<Thread> botCommandThreads = new ListAsSet<Thread>();
+        public UUID GroupID = UUID.Zero;
+        public Dictionary<UUID, GroupMember> GroupMembers = null; // intialized from a callback
+        public Dictionary<UUID, AvatarAppearancePacket> Appearances = new Dictionary<UUID, AvatarAppearancePacket>();
+        ///public Dictionary<string, Command> Commands = new Dictionary<string, Command>();
+        public bool Running = true;
+        public bool GroupCommands = true;
+        private string _masterName = string.Empty;
+        public string MasterName
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_masterName) && UUID.Zero != _masterKey)
+                {
+                    MasterName = WorldSystem.GetUserName(_masterKey);
+                }
+                return _masterName;
+            } 
+            set
+            {
+                if (!string.IsNullOrEmpty(value))
+                {
+                    UUID found;
+                    if (UUID.TryParse(value, out found))
+                    {
+                        MasterKey = found;
+                        return;
+                    }
+                    _masterName = value;
+                    found = WorldSystem.GetUserID(value);
+                    if (found != UUID.Zero)
+                    {
+                        MasterKey = found;
+                    }
+                }
+            }
+        }
+
+        // permissions "NextOwner" means banned "Wait until they are an owner before doing anything!"
+        public Dictionary<UUID, BotPermissions> SecurityLevels = new Dictionary<UUID,BotPermissions>();
+
+        private UUID _masterKey = UUID.Zero;
+        public UUID MasterKey
+        {
+            get
+            {
+                if (UUID.Zero == _masterKey && !string.IsNullOrEmpty(_masterName))
+                {
+                    UUID found = WorldSystem.GetUserID(_masterName);
+                    if (found != UUID.Zero)
+                    {
+                        MasterKey = found;
+                    }
+                }
+                return _masterKey;
+            }
+            set
+            {
+                if (UUID.Zero != value)
+                {
+                    _masterKey = value;
+                    if (string.IsNullOrEmpty(_masterName))
+                    {
+                        string maybe = WorldSystem.GetUserName(value);
+                        if (!string.IsNullOrEmpty(maybe)) MasterName = maybe;
+                    }
+                    SecurityLevels[value] = BotPermissions.Owner;
+                }
+            }
+        }
+        public bool AllowObjectMaster
+        {
+            get
+            {
+                return _masterKey != UUID.Zero;
+            }
+        }
+
+        public bool IsRegionMaster
+        {
+            get { return WorldSystem.IsRegionMaster; }
+        }
+
+        public Radegast.RadegastInstance TheRadegastInstance
+        {
+            get;
+            set;
+        }
+
+        public VoiceManager VoiceManager;
+        // Shell-like inventory commands need to be aware of the 'current' inventory folder.
+        public InventoryFolder CurrentDirectory = null;
+
+        private Quaternion bodyRotation = Quaternion.Identity;
+        private Vector3 forward = new Vector3(0, 0.9999f, 0);
+        private Vector3 left = new Vector3(0.9999f, 0, 0);
+        private Vector3 up = new Vector3(0, 0, 0.9999f);
+        readonly private System.Timers.Timer updateTimer;
+
+        public Listeners.WorldObjects WorldSystem;
+        //   static public ClientManager SingleInstance = null;
+        public static int debugLevel = 2;
+        public bool GetTextures = cogbot.ClientManager.DownloadTextures;
+
+        //  public cogbot.ClientManager ClientManager;
+        //  public VoiceManager VoiceManager;
+        // Shell-like inventory commands need to be aware of the 'current' inventory folder.
+
+        //  public GridClient this = null;
+        //  public OutputDelegate outputDelegate;
+        ///public DotCYC.CycConnectionForm cycConnection;
+        public Dictionary<string, DescribeDelegate> describers;
+
+        readonly public Dictionary<string, Listeners.Listener> listeners;
+        public SortedDictionary<string, Command> Commands;
+        public Dictionary<string, Tutorials.Tutorial> tutorials;
+        //public Utilities.BotTcpServer UtilitiesTcpServer;
+
+        public bool describeNext;
+        private int describePos;
+        private string currTutorial;
+
+        public int BoringNamesCount = 0;
+        public int GoodNamesCount = 0;
+        public int RunningMode = (int)Modes.normal;
+        public UUID AnimationFolder = UUID.Zero;
+
+        BotInventoryEval searcher = null; // new InventoryEval(this);
+        //public Inventory Inventory;
+        //public InventoryManager Manager;
+        // public Configuration config;
+        public String taskInterperterType = "DotLispInterpreter";// DotLispInterpreter,CycInterpreter or ABCLInterpreter
+        ScriptEventListener scriptEventListener = null;        
+        readonly public ClientManager ClientManager;
+
+        public List<string> muteList;
+        public bool muted = false;
+
+        private UUID GroupMembersRequestID;
+        public Dictionary<UUID, Group> GroupsCache = null;
+        private ManualResetEvent GroupsEvent = new ManualResetEvent(false);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public BotClient(ClientManager manager, GridClient g, LoginParams lp )
+        {
+            ClientManager = manager;
+            gridClient = g;
+            BotLoginParams = lp;
+            manager.LastBotClient = this;
+            updateTimer = new System.Timers.Timer(500);
+            updateTimer.Elapsed += new System.Timers.ElapsedEventHandler(updateTimer_Elapsed);
+
+            //            manager.AddTextFormCommands(this);
+            //          RegisterAllCommands(Assembly.GetExecutingAssembly());
+
+            Settings.USE_INTERPOLATION_TIMER = false;
+            Settings.LOG_LEVEL = Helpers.LogLevel.None;
+
+            //   Settings.LOG_RESENDS = false;
+            //   Settings.ALWAYS_DECODE_OBJECTS = true;
+            //   Settings.ALWAYS_REQUEST_OBJECTS = true;
+            //   Settings.SEND_AGENT_UPDATES = true;
+            ////   Settings.SYNC_PACKETCALLBACKS = true;
+            //   Settings.OBJECT_TRACKING = true;
+            //   //Settings.STORE_LAND_PATCHES = true;
+            //   //Settings.USE_TEXTURE_CACHE = true;
+            //   //Settings.PARCEL_TRACKING = true;
+            //   //Settings.FETCH_MISSING_INVENTORY = true;
+            //   // Optimize the throttle
+            //   Throttle.Wind = 0;
+            //   Throttle.Cloud = 0;
+            //   Throttle.Land = 1000000;
+            //   Throttle.Task = 1000000;
+            ////Throttle.Total = 250000;
+            // Settings.CAPS_TIMEOUT = 6 * 1000;
+            Settings.RESEND_TIMEOUT = 40 * 1000;
+            Settings.MAX_RESEND_COUNT = 10;
+            Settings.LOGIN_TIMEOUT = 120 * 1000;
+            //Settings.LOGOUT_TIMEOUT = 120 * 1000;
+            Settings.SIMULATOR_TIMEOUT = int.MaxValue;
+            Settings.SEND_PINGS = true;
+            Settings.SEND_AGENT_APPEARANCE = true;
+            //Settings.USE_LLSD_LOGIN = true;
+            ////Settings.MULTIPLE_SIMS = false;
+
+            VoiceManager = new VoiceManager(gridClient);
+            //manager.AddBotClientToTextForm(this);
+
+            botPipeline = new SimEventMulticastPipeline(GetName());
+            botPipeline.AddSubscriber(new SimEventTextSubscriber(WriteLine, this));
+            // SingleInstance = this;
+            ///this = this;// new GridClient();
+
+
+            Settings.ALWAYS_DECODE_OBJECTS = true;
+            Settings.ALWAYS_REQUEST_OBJECTS = true;
+            Settings.OBJECT_TRACKING = true;
+            Settings.AVATAR_TRACKING = true;
+            Settings.STORE_LAND_PATCHES = true;
+
+
+            //  Manager = Inventory;
+            //Inventory = Manager.Store;
+
+            // config = new Configuration();
+            // config.loadConfig();
+            /// Settings.LOGIN_SERVER = config.simURL;
+            // Opensim recommends 250k total
+
+            //Settings.ENABLE_CAPS = true;
+            Self.Movement.Camera.Far = 512f;
+            //Settings.LOG_ALL_CAPS_ERRORS = true;
+            //Settings.FETCH_MISSING_INVENTORY = true;
+            //Settings.SEND_AGENT_THROTTLE = false;
+
+            muteList = new List<string>();
+
+            // outputDelegate = new OutputDelegate(doOutput);
+
+            describers = new Dictionary<string, DescribeDelegate>();
+            describers["location"] = new DescribeDelegate(describeLocation);
+            describers["people"] = new DescribeDelegate(describePeople);
+            describers["objects"] = new DescribeDelegate(describeObjects);
+            describers["buildings"] = new DescribeDelegate(describeBuildings);
+
+            describePos = 0;
+
+            listeners = new Dictionary<string, cogbot.Listeners.Listener>();
+            //registrationTypes["avatars"] = new Listeners.Avatars(this);
+            //registrationTypes["chat"] = new Listeners.Chat(this);
+            WorldSystem = new Listeners.WorldObjects(this);
+            //registrationTypes["teleport"] = new Listeners.Teleport(this);
+            //registrationTypes["whisper"] = new Listeners.Whisper(this);
+            //ObjectSystem = new Listeners.Objects(this);
+            //registrationTypes["bump"] = new Listeners.Bump(this);
+            //registrationTypes["sound"] = new Listeners.Sound(this);
+            //registrationTypes["sound"] = new Listeners.Objects(this);
+
+            Commands = new SortedDictionary<string, Command>();
+            Commands["login"] = new Actions.Login(this);
+            Commands["logout"] = new Actions.Logout(this);
+            Commands["stop"] = new Actions.Stop(this);
+            Commands["teleport"] = new Actions.Teleport(this);
+            Command desc = new Actions.Describe(this);
+            Commands["describe"] = desc;
+            Commands["look"] = desc;
+            Commands["say"] = new Actions.Say(this);
+            Commands["whisper"] = new Actions.Whisper(this);
+            Commands["help"] = new Actions.Help(this);
+            Commands["sit"] = new Actions.Sit(this);
+            Commands["stand"] = new Actions.Stand(this);
+            Commands["jump"] = new Actions.Jump(this);
+            Commands["crouch"] = new Actions.Crouch(this);
+            Commands["mute"] = new Actions.Mute(this);
+            Commands["move"] = new Actions.Move(this);
+            Commands["use"] = new Actions.Use(this);
+            Commands["eval"] = new Actions.Eval(this);
+
+            Commands["fly"] = new Actions.Fly(this);
+            Commands["stop-flying"] = new Actions.StopFlying(this);
+            Commands["locate"] = Commands["location"] = Commands["where"] = new Actions.LocationCommand(this);
+            Actions.Follow follow = new Actions.Follow(this);
+            Commands["follow"] = follow;
+            Commands["wear"] = new Actions.Wear(this);
+            Commands["stop following"] = follow;
+            Commands["stop-following"] = follow;
+
+            tutorials = new Dictionary<string, cogbot.Tutorials.Tutorial>();
+            tutorials["tutorial1"] = new Tutorials.Tutorial1(manager, this);
+
+
+            describeNext = true;
+
+            LoadTaskInterpreter();
+
+            // Start the server
+            lock (ClientManager.config)
+            {
+                thisTcpPort = ClientManager.nextTcpPort;
+                ClientManager.nextTcpPort += ClientManager.config.tcpPortOffset;
+                Utilities.BotTcpServer UtilitiesTcpServer = new Utilities.BotTcpServer(thisTcpPort, this);
+                UtilitiesTcpServer.startSocketListener();
+            }
+
+            Network.RegisterCallback(PacketType.AgentDataUpdate, new NetworkManager.PacketCallback(AgentDataUpdateHandler));
+            Network.RegisterCallback(PacketType.AlertMessage, new NetworkManager.PacketCallback(AlertMessageHandler));
+            Network.RegisterCallback(PacketType.AvatarAppearance, new NetworkManager.PacketCallback(AvatarAppearanceHandler));
+
+            //Move to effects Appearance.OnAppearanceUpdated += new AppearanceManager.AppearanceUpdatedCallback(Appearance_OnAppearanceUpdated);
+
+            Inventory.OnObjectOffered += new InventoryManager.ObjectOfferedCallback(Inventory_OnInventoryObjectReceived);
+            Groups.OnGroupMembers += new GroupManager.GroupMembersCallback(GroupMembersHandler);
+            Logger.OnLogMessage += new Logger.LogCallback(client_OnLogMessage);
+            Network.OnEventQueueRunning += new NetworkManager.EventQueueRunningCallback(Network_OnEventQueueRunning);
+            Network.OnLogin += new NetworkManager.LoginCallback(Network_OnLogin);
+            Network.OnLogoutReply += new NetworkManager.LogoutCallback(Network_OnLogoutReply);
+            Network.OnSimConnected += new NetworkManager.SimConnectedCallback(Network_OnSimConnected);
+            Network.OnSimDisconnected += new NetworkManager.SimDisconnectedCallback(Network_OnSimDisconnected);
+            Network.OnConnected += new NetworkManager.ConnectedCallback(Network_OnConnected);
+            Network.OnDisconnected += new NetworkManager.DisconnectedCallback(Network_OnDisconnected);
+            Self.OnInstantMessage += new AgentManager.InstantMessageCallback(Self_OnInstantMessage);
+            //Self.OnScriptDialog += new AgentManager.ScriptDialogCallback(Self_OnScriptDialog);
+            //Self.OnScriptQuestion += new AgentManager.ScriptQuestionCallback(Self_OnScriptQuestion);
+            Self.OnTeleport += new AgentManager.TeleportCallback(Self_OnTeleport);
+            Self.OnChat += new AgentManager.ChatCallback(Self_OnChat);
+            GroupManager.CurrentGroupsCallback callback =
+                    new GroupManager.CurrentGroupsCallback(Groups_OnCurrentGroups);
+            Groups.OnCurrentGroups += callback;
+
+            updateTimer.Start();
+            searcher = new BotInventoryEval(this);
+
+            lispEventProducer = new LispEventProducer(this, LispTaskInterperter);
+
+        }
+
+        private void LoadTaskInterpreter()
+        {
+            lock (LispTaskInterperterLock)
+                try
+                {
+                    if (LispTaskInterperter != null) return;
+                    //WriteLine("Start Loading TaskInterperter ... '" + TaskInterperterType + "' \n");
+                    LispTaskInterperter = ScriptEngines.ScriptManager.LoadScriptInterpreter(taskInterperterType);
+                    LispTaskInterperter.LoadFile("boot.lisp");
+                    LispTaskInterperter.LoadFile("extra.lisp");
+                    LispTaskInterperter.LoadFile("cogbot.lisp");
+                    LispTaskInterperter.Intern("clientManager", ClientManager);
+                    scriptEventListener = new ScriptEventListener(LispTaskInterperter, this);
+                    botPipeline.AddSubscriber(scriptEventListener);
+
+                    //  WriteLine("Completed Loading TaskInterperter '" + TaskInterperterType + "'\n");
+                    // load the initialization string
+                }
+                catch (Exception e)
+                {
+                    WriteLine("!Exception: " + e.GetBaseException().Message);
+                    WriteLine("error occured: " + e.Message);
+                    WriteLine("        Stack: " + e.StackTrace.ToString());
+                }
+        }
+
+        private LispEventProducer lispEventProducer;
+
+        public void StartupClientLisp()
+        {
+            if (ClientManager.config.startupClientLisp.Length > 1)
+            {
+                try
+                {
+                    evalLispString("(progn " + ClientManager.config.startupClientLisp + ")");
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log(GetName() + " exception " + ex, Helpers.LogLevel.Error, ex);
+                }
+            }
+        }
+   
+        //breaks up large responses to deal with the max IM size
+        private void SendResponseIM(GridClient client, UUID fromAgentID, OutputDelegate WriteLine, string data)
+        {
+            for (int i = 0; i < data.Length; i += 1024)
+            {
+                int y;
+                if ((i + 1023) > data.Length)
+                {
+                    y = data.Length - i;
+                }
+                else
+                {
+                    y = 1023;
+                }
+                string message = data.Substring(i, y);
+                client.Self.InstantMessage(fromAgentID, message);
+            }
+        }
+
+        private void updateTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            List<Command> actions = new List<Command>();
+            lock (Commands)
+            {
+                actions.AddRange(Commands.Values);   
+            }
+            foreach (var c in actions)
+                if (c.Active)
+                    c.Think();
+        }
+
+        private void AgentDataUpdateHandler(Packet packet, Simulator sim)
+        {
+            AgentDataUpdatePacket p = (AgentDataUpdatePacket)packet;
+            if (p.AgentData.AgentID == sim.Client.Self.AgentID)
+            {
+              //TODO MAKE DEBUG MESSAGE  WriteLine(String.Format("Got the group ID for {0}, requesting group members...", sim.Client));
+                GroupID = p.AgentData.ActiveGroupID;
+
+                sim.Client.Groups.RequestGroupMembers(GroupID);
+            }
+        }
+
+        private void GroupMembersHandler(UUID requestID, UUID groupID, Dictionary<UUID, GroupMember> members)
+        {
+            //TODO MAKE DEBUG MESSAGE  WriteLine(String.Format("Got {0} group members.", members.Count));
+            GroupMembers = members;
+        }
+
+        private void AvatarAppearanceHandler(Packet packet, Simulator simulator)
+        {
+            AvatarAppearancePacket appearance = (AvatarAppearancePacket)packet;
+
+            lock (Appearances) Appearances[appearance.Sender.ID] = appearance;
+        }
+
+        private void AlertMessageHandler(Packet packet, Simulator simulator)
+        {
+            AlertMessagePacket message = (AlertMessagePacket)packet;
+            WriteLine("[AlertMessage] " + Utils.BytesToString(message.AlertData.Message));
+        }
+
+        public void ReloadGroupsCache()
+        {
+            GroupManager.CurrentGroupsCallback callback =
+                    new GroupManager.CurrentGroupsCallback(Groups_OnCurrentGroups);
+            Groups.OnCurrentGroups += callback;
+            Groups.RequestCurrentGroups();
+            GroupsEvent.WaitOne(10000, false);
+            Groups.OnCurrentGroups -= callback;
+            GroupsEvent.Reset();
+        }
+
+        public UUID GroupName2UUID(String groupName)
+        {
+            UUID tryUUID;
+            if (UUID.TryParse(groupName, out tryUUID))
+                return tryUUID;
+            if (null == GroupsCache)
+            {
+                ReloadGroupsCache();
+                if (null == GroupsCache)
+                    return UUID.Zero;
+            }
+            lock (GroupsCache)
+            {
+                if (GroupsCache.Count > 0)
+                {
+                    foreach (Group currentGroup in GroupsCache.Values)
+                        if (currentGroup.Name.ToLower() == groupName.ToLower())
+                            return currentGroup.ID;
+                }
+            }
+            return UUID.Zero;
+        }
+
+        private void Groups_OnCurrentGroups(Dictionary<UUID, Group> pGroups)
+        {
+            if (null == GroupsCache)
+                GroupsCache = pGroups;
+            else
+                lock (GroupsCache) { GroupsCache = pGroups; }
+            GroupsEvent.Set();
+        }
+
+
+        void Self_OnTeleport(string message, TeleportStatus status, TeleportFlags flags)
+        {
+            if (status == TeleportStatus.Finished || status == TeleportStatus.Failed || status == TeleportStatus.Cancelled)
+            {
+                WriteLine("Teleport " + status);
+                describeSituation(WriteLine);
+            }
+        }
+
+
+        void Self_OnChat(string message, ChatAudibleLevel audible, ChatType type, ChatSourceType sourceType, string fromName, UUID id, UUID ownerid, Vector3 position)
+        {
+            if (message.Length > 0 && sourceType == ChatSourceType.Agent && !muteList.Contains(fromName))
+            {
+                WriteLine(String.Format("{0} says, \"{1}\".", fromName, message));
+            }
+        }
+
+        private void Self_OnInstantMessage(InstantMessage im, Simulator simulator)
+        {
+            if (im.Dialog == InstantMessageDialog.GroupNotice)
+            {
+                im.GroupIM = true;
+            }
+            if (im.FromAgentName == GetName()) return;
+            if (im.FromAgentName == "System") return;
+            if (im.Message.Length > 0 && im.Dialog == InstantMessageDialog.MessageFromAgent)
+            {
+                WriteLine(String.Format("{0} whispers, \"{1}\".", im.FromAgentName, im.Message));
+
+                Actions.Whisper whisper = (Actions.Whisper)Commands["whisper"];
+                whisper.currentAvatar = im.FromAgentID;
+                whisper.currentSession = im.IMSessionID;
+            }
+
+            if (im.Message.Length > 0 && im.Dialog == InstantMessageDialog.GroupInvitation)
+            {
+                if (im.FromAgentID == _masterKey || im.FromAgentName == MasterName)
+                {
+                    string groupName = im.Message;
+                    int found = groupName.IndexOf("Group:");
+                    if (found > 0) groupName = groupName.Substring(found + 6);
+                    Self.InstantMessage(Self.Name, im.FromAgentID, string.Empty, im.IMSessionID,
+                            InstantMessageDialog.GroupInvitationAccept, InstantMessageOnline.Offline, Self.SimPosition,
+                            UUID.Zero, new byte[0]);
+                    found = groupName.IndexOf(":");
+                    if (found > 0)
+                    {
+                        groupName = groupName.Substring(0, found).Trim();
+                        ExecuteCommand("joingroup " + groupName);
+                    }
+
+                }
+            }
+
+            bool groupIM = im.GroupIM && GroupMembers != null && GroupMembers.ContainsKey(im.FromAgentID) ? true : false;
+
+            if (im.FromAgentID == _masterKey || (GroupCommands && groupIM) || im.FromAgentName == MasterName)
+            {
+                // Received an IM from someone that is authenticated
+                WriteLine(String.Format("<{0} ({1})> {2}: {3} (@{4}:{5})", im.GroupIM ? "GroupIM" : "IM", im.Dialog,
+                                        im.FromAgentName, im.Message, im.RegionID, im.Position));
+
+                if (im.Dialog == InstantMessageDialog.RequestTeleport)
+                {
+                    if (im.RegionID != UUID.Zero)
+                    {
+                        DisplayNoticeInChat("TP to Lure from " + im.FromAgentName);
+                        SimRegion R = SimRegion.GetRegion(im.RegionID,gridClient);
+                        if (R != null)
+                        {
+                            Self.Teleport(R.RegionHandle, im.Position);
+                            return;
+                        }
+                    }
+                    DisplayNoticeInChat("Accepting TP Lure from " + im.FromAgentName);
+                    Self.TeleportLureRespond(im.FromAgentID, true);
+                }
+                else if (im.Dialog == InstantMessageDialog.FriendshipOffered)
+                {
+                    DisplayNoticeInChat("Accepting Friendship from " + im.FromAgentName);
+                    Friends.AcceptFriendship(im.FromAgentID, im.IMSessionID);
+                }
+                else if (im.Dialog == InstantMessageDialog.MessageFromAgent ||
+                    im.Dialog == InstantMessageDialog.MessageFromObject)
+                {
+                    //   ClientManager.DoCommandAll(im.Message, im.FromAgentID, WriteLine);
+                }
+                return;
+            }            
+            {
+                // Received an IM from someone that is not the bot's master, ignore
+                DisplayNoticeInChat(String.Format("UNTRUSTED <{0} ({1})> {2} (not master): {3} (@{4}:{5})", im.GroupIM ? "GroupIM" : "IM",
+                                        im.Dialog, im.FromAgentName, im.Message,
+                                        im.RegionID, im.Position));
+                return;
+            }
+        }
+
+        private void DisplayNoticeInChat(string str)
+        {
+            WriteLine(str);
+            TheRadegastInstance.TabConsole.DisplayNotificationInChat(str);
+        }
+
+
+        private bool Inventory_OnInventoryObjectReceived(InstantMessage offer, AssetType type,
+                                                         UUID objectID, bool fromTask)
+        {
+            if (true) return true; // accept everything
+            if (_masterKey != UUID.Zero)
+            {
+                if (offer.FromAgentID != _masterKey)
+                    return false;
+            }
+            else if (GroupMembers != null && !GroupMembers.ContainsKey(offer.FromAgentID))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        // EVENT CALLBACK SECTION
+        void Network_OnDisconnected(NetworkManager.DisconnectType reason, string message)
+        {
+            try
+            {
+                if (message.Length > 0)
+                    WriteLine("Disconnected from server. Reason is " + message + ". " + reason);
+                else
+                    WriteLine("Disconnected from server. " + reason);
+
+                SendNetworkEvent("On-Network-Disconnected", reason, message);
+
+                WriteLine("Bad Names: " + BoringNamesCount);
+                WriteLine("Good Names: " + GoodNamesCount);
+            }
+            catch (Exception e)
+            {
+            }
+            EnsureConnectedCheck(reason);
+        }
+
+        private void EnsureConnectedCheck(NetworkManager.DisconnectType reason)
+        {
+            if (ExpectConnected && reason != NetworkManager.DisconnectType.ClientInitiated)
+            {
+                List<Simulator> sims = new List<Simulator>();
+                lock (Network.Simulators)
+                {
+                    sims.AddRange(Network.Simulators);
+                }
+                return;
+                ExpectConnected = false;
+                foreach (var s in sims)
+                {
+                    //lock (s)
+                    {
+                        if (s.Connected) s.Disconnect(true);
+                    }
+
+                }
+                //gridClient = new GridClient();
+                Settings.USE_LLSD_LOGIN = true;
+                new Thread(() =>
+                {
+                    Thread.Sleep(10000);
+                    Login();
+                }).Start();
+            }
+        }
+
+        void Network_OnConnected(object sender)
+        {
+            try
+            {
+
+                //System.Threading.Thread.Sleep(3000);
+
+                //  describeAll();
+                //  describeSituation();
+                SendNetworkEvent("On-Network-Connected");
+                ExpectConnected = true;
+            }
+            catch (Exception e)
+            {
+            }
+        }
+
+
+        void Network_OnSimDisconnected(Simulator simulator, NetworkManager.DisconnectType reason)
+        {
+            SendNetworkEvent("On-Sim-Disconnected", this, simulator, reason);
+            if (simulator == Network.CurrentSim)
+            {
+                EnsureConnectedCheck(reason);
+            }
+        }
+
+        void client_OnLogMessage(object message, Helpers.LogLevel level)
+        {
+           // if (!WorldSystem.IsGridMaster) return;
+
+            if (WorldSystem.IsGridMaster) SendNetworkEvent("On-Log-Message", message, level);
+        }
+
+        void Network_OnEventQueueRunning(Simulator simulator)
+        {
+            SendNetworkEvent("On-Event-Queue-Running", simulator);
+        }
+
+        void Network_OnSimConnected(Simulator simulator)
+        {
+            ExpectConnected = true;
+            if (simulator == Network.CurrentSim)
+            {
+                if (!Settings.SEND_AGENT_APPEARANCE)
+                {
+                    Appearance.RequestAgentWearables();
+                }
+                Self.RequestMuteList();
+            }
+            SendNetworkEvent("On-Simulator-Connected", simulator);
+            //            SendNewEvent("on-simulator-connected",simulator);
+        }
+
+        bool Network_OnSimConnecting(Simulator simulator)
+        {
+            SendNetworkEvent("On-Simulator-Connecing", simulator);
+            return true;
+        }
+
+        void Network_OnLogoutReply(List<UUID> inventoryItems)
+        {
+            SendNetworkEvent("On-Logout-Reply", inventoryItems);
+        }
+
+        //=====================
+        // 
+        // Notes:
+        //   1. When requesting folder contents Opensim/libomv may react differently than SL/libomv
+        //       in particular the boolean for 'folder' may not respond as expected
+        //       one option is to set it to 'false' and expect folders as 'items,type folder' than
+        //       as seperate folder fields.
+
+        /// <summary>
+        /// UseInventoryItem("wear","Pink Dress");
+        /// UseInventoryItem("attach","Torch!");
+        /// UseInventoryItem("animationStart","Dance Loop");
+        /// </summary>
+        /// <param name="usage"></param>
+        /// <param name="Item"></param>
+        public void UseInventoryItem(string usage, string itemName)
+        {
+
+            if (Inventory != null && Inventory.Store != null)
+            {
+
+                InventoryFolder rootFolder = Inventory.Store.RootFolder;
+                //InventoryEval searcher = new InventoryEval(this);
+                searcher.evalOnFolders(rootFolder, usage, itemName);
+            }
+            else
+            {
+                WriteLine("UseInventoryItem " + usage + " " + itemName + " is not yet ready");
+
+            }
+        }
+
+        public void ListObjectsFolder()
+        {
+            // should be just the objects folder 
+            InventoryFolder rootFolder = Inventory.Store.RootFolder;
+            //InventoryEval searcher = new InventoryEval(this);
+            searcher.evalOnFolders(rootFolder, "print", "");
+        }
+
+        public void wearFolder(string folderName)
+        {
+            // what we simply want
+            //    Client.Appearance.WearOutfit(folderName.Split('/'), false);
+
+            UUID folderID;
+            InventoryFolder rootFolder = Inventory.Store.RootFolder;
+            //List<FolderData> folderContents;
+            // List<ItemData> folderItems;
+            BotInventoryEval searcher = new BotInventoryEval(this);
+
+            folderID = searcher.findInFolders(rootFolder, folderName);
+
+            if (folderID != UUID.Zero)
+            {
+                Self.Chat("Wearing folder \"" + folderName + "\"", 0, ChatType.Normal);
+                WriteLine("Wearing folder \"" + folderName + "\"");
+
+                Appearance.AddToOutfit(GetFolderItems(folderName));
+                /*
+                List<InventoryBase> folderContents=  Client.Inventory.FolderContents(folderID, Client.Self.AgentID,
+                                                                false, true,
+                                                                InventorySortOrder.ByDate, new TimeSpan(0, 0, 0, 0, 10000));
+
+                if (folderContents != null)
+                {
+                    folderContents.ForEach(
+                        delegate(ItemData i)
+                        {
+                            Client.Appearance.Attach(i, AttachmentPoint.Default);
+                            Client.Self.Chat("Attaching item: " + i.Name, 0, ChatType.Normal);
+                            WriteLine("Attaching item: " + i.Name);
+                        }
+                    );
+                }
+                */
+            }
+            else
+            {
+                Self.Chat("Can't find folder \"" + folderName + "\" to wear", 0, ChatType.Normal);
+                WriteLine("Can't find folder \"" + folderName + "\" to wear");
+            }
+
+        }
+
+        public void PrintInventoryAll()
+        {
+            InventoryFolder rootFolder = Inventory.Store.RootFolder;
+            //InventoryEval searcher = new InventoryEval(this);
+            searcher.evalOnFolders(rootFolder, "print", "");
+
+        }
+
+
+        public UUID findInventoryItem(string name)
+        {
+            InventoryFolder rootFolder = Inventory.Store.RootFolder;  //  .Inventory.InventorySkeleton.Folders;// .RootUUID;
+            //InventoryEval searcher = new InventoryEval(this);
+
+            return searcher.findInFolders(rootFolder, name);
+
+        }
+
+
+        public void logout()
+        {
+            ExpectConnected = false;
+            if (Network.Connected)
+                Network.Logout();
+        }
+
+        public void WriteLine(string str)
+        {          
+            try
+            {
+                if (str == null) return;
+                if (str == "") return;
+                if (str.StartsWith("$bot")) str = str.Substring(4);
+                str = str.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "\r\n").Trim();
+                string SelfName = String.Format("{0}", GetName());
+                str = str.Replace("$bot", SelfName);
+                if (str.StartsWith(SelfName)) str = str.Substring(SelfName.Length).Trim();
+                ClientManager.WriteLine(str);
+            }
+            catch (Exception ex)            
+            {
+                Logger.Log(GetName() + " exeption " + ex, Helpers.LogLevel.Error, ex);
+            }
+
+        }
+        public void WriteLine(string str, params object[] args)
+        {
+            try
+            {
+                if (str == null) return;
+                if (args != null && args.Length > 0) str = String.Format(str, args);
+                WriteLine(str);
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(GetName() + " exeption " + ex, Helpers.LogLevel.Error, ex);
+            }
+        }
+        // for lisp to call
+        public void output(string txt)
+        {
+            WriteLine(txt);
+        }
+
+        public void describeAll(bool detailed, OutputDelegate outputDel)
+        {
+            foreach (string dname in describers.Keys)
+                describers[dname].Invoke(detailed, outputDel);
+        }
+
+        public void describeSituation(OutputDelegate outputDel)
+        {
+            int i = 0;
+            string name = "";
+            foreach (string dname in describers.Keys)
+                if (i++ == describePos)
+                    name = dname;
+            describePos = (describePos + 1) % describers.Count;
+            describers[name].Invoke(false, outputDel);
+        }
+
+        public void describeLocation(bool detailed, OutputDelegate WriteLine)
+        {
+            WriteLine("$bot is in " + (Network.CurrentSim != null ? Network.CurrentSim.Name : "<Unknown>") + ".");
+        }
+
+        public void describePeople(bool detailed, OutputDelegate WriteLine)
+        {
+            //if (detailed) {
+            //    List<Avatar> avatarList = WorldSystem.getAvatarsNear(Self.RelativePosition, 8);
+            //    if (avatarList.Count > 1) {
+            //        string str = "$bot sees the people ";
+            //        for (int i = 0; i < avatarList.Count - 1; ++i)
+            //            str += WorldSystem.getAvatarName(avatarList[i]) + ", ";
+            //        str += "and " + WorldSystem.getAvatarName(avatarList[avatarList.Count - 1]) + ".";
+            //        WriteLine(str);
+            //    } else if (avatarList.Count == 1) {
+            //        WriteLine("$bot sees one person: " + WorldSystem.getAvatarName(avatarList[0]) + ".");
+            //    } else
+            //        WriteLine("doesn't see anyone around.");
+            //} else {
+            //    WriteLine("$bot sees " + WorldSystem.numAvatars() + " people.");
+            //}
+        }
+
+        public void describeObjects(bool detailed, OutputDelegate WriteLine)
+        {
+            List<Primitive> prims = WorldSystem.getPrimitives(16);
+            if (prims.Count > 1)
+            {
+                string str = "$bot sees the objects:\n";
+                for (int i = 0; i < prims.Count; ++i)
+                    str += WorldSystem.describePrim(prims[i], detailed) + "\n";
+                //str += "and " + WorldSystem.GetSimObject(prims[prims.Count - 1]) + ".";
+                WriteLine(str);
+            }
+            else if (prims.Count == 1)
+            {
+                WriteLine("$bot sees one object: " + WorldSystem.getObjectName(prims[0]));
+            }
+            else
+            {
+                WriteLine("$bot doesn't see any objects around.");
+            }
+        }
+
+        public void describeBuildings(bool detailed, OutputDelegate WriteLine)
+        {
+            List<Vector3> buildings = WorldSystem.getBuildings(8);
+            WriteLine("$bot sees " + buildings.Count + " buildings.");
+        }
+
+        //------------------------------------ 
+        // External XML socket server
+        //------------------------------------
+
+        //public void msgClient(string serverMessage)
+        //{
+        //    if (debugLevel>1) {
+        //        WriteLine(serverMessage);             
+        //    }
+        //    lock (lBotMsgSubscribers)
+        //    {
+        //        foreach (BotMessageSubscriber ms in lBotMsgSubscribers)
+        //        {
+        //            ms.msgClient(serverMessage);
+        //        }
+        //    }
+        //}
+
+        public void overwrite2Hash(Hashtable hashTable, string key, string value)
+        {
+            if (hashTable.ContainsKey(key)) hashTable.Remove(key);
+            hashTable.Add(key, value);
+            //WriteLine("  +Hash :('" + key + "' , " + value + ")");
+        }
+
+        public string getWithDefault(Hashtable hashTable, string key, string defaultValue)
+        {
+            if (hashTable.ContainsKey(key)) return hashTable[key].ToString();
+            return defaultValue;
+        }
+
+        public string genActReport(string planID, string seqID, string act, string status)
+        {
+            DateTime dt = DateTime.Now;
+
+            string actReport = "  <pet-signal pet-name='" + GetName()
+                               + "' pet-id='" + Self.AgentID.ToString()
+                               + "' timestamp='" + dt.ToString()
+                               + "' action-plan-id='" + planID
+                               + "' sequence='" + seqID
+                               + "' name='" + act
+                               + "' status='" + status + "'/>";
+            WriteLine("actReport:" + actReport);
+            return actReport;
+        }
+
+        /// <summary>
+        /// (thisClient.XML2Lisp2 "http://myserver/myservice/?q=" chatstring) 
+        /// </summary>
+        /// <param name="URL"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
+        public string XML2Lisp2(string URL, string args)
+        {
+            args = args.Replace("\\", "");
+            args = args.Replace("\"", "");
+            string xcmd = URL + args;
+            return XML2Lisp(xcmd);
+        } // method: XML2Lisp2
+
+
+        public string XML2Lisp(string xcmd)
+        {
+            String lispCodeString = "";
+
+            try
+            {
+                XmlTextReader reader;
+                StringReader stringReader;
+
+                if (xcmd.Contains("http:") || xcmd.Contains(".xml") || xcmd.Contains(".xlsp"))
+                {
+                    // assuming its a file
+                    xcmd = xcmd.Trim();
+                    reader = new XmlTextReader(xcmd);
+                }
+                else
+                {
+                    // otherwise just use the string
+                    stringReader = new System.IO.StringReader(xcmd);
+                    reader = new XmlTextReader(stringReader);
+                }
+
+                Hashtable[] attributeStack = new Hashtable[64];
+
+                for (int i = 0; i < 64; i++)
+                {
+                    attributeStack[i] = new Hashtable();
+                }
+                int depth = 0;
+
+                while (reader.Read())
+                {
+                    depth = reader.Depth + 1;
+                    if (attributeStack[depth] == null)
+                    {
+                        attributeStack[depth] = new Hashtable();
+                    }
+                    string tagname = reader.Name;
+                    switch (reader.NodeType)
+                    {
+
+                        case XmlNodeType.Element:
+                            if (reader.HasAttributes)
+                            {
+                                for (int i = 0; i < reader.AttributeCount; i++)
+                                {
+                                    reader.MoveToAttribute(i);
+                                    string attributeName = reader.Name;
+                                    string attributeValue = reader.Value;
+
+                                    overwrite2Hash(attributeStack[depth], attributeName, attributeValue);
+                                }
+                            }
+                            // WriteLine(" X2L Begin(" + depth.ToString() + ") " + attributeStack[depth]["name"].ToString());
+                            if (tagname == "op")
+                            {
+                                lispCodeString += "(" + getWithDefault(attributeStack[depth], "name", " ");
+                            }
+                            if (tagname == "opq")
+                            {
+                                lispCodeString += "'(" + getWithDefault(attributeStack[depth], "name", " ");
+                            }
+
+                            break;
+                        //
+                        //you can handle other cases here
+                        //
+
+                        case XmlNodeType.Text:
+                            //WriteLine(" X2L TEXT(" + depth.ToString() + ") " + reader.Name);
+
+                            // Todo
+                            lispCodeString += " " + reader.Value.ToString();
+                            break;
+
+                        case XmlNodeType.EndElement:
+
+                            if (tagname == "op")
+                            {
+                                lispCodeString += " )";
+                            }
+                            if (tagname == "opq")
+                            {
+                                lispCodeString += " )";
+                            }
+
+                            // Todo
+                            //depth--;
+                            break;
+
+                        default:
+                            break;
+                    } //switch
+                } //while
+                WriteLine("XML2Lisp =>'" + lispCodeString + "'");
+                //string results = evalLispString(lispCodeString);
+                //string results = "'(enqueued)";
+                return evalLispString(lispCodeString).ToString();
+                //return results;
+            } //try
+            catch (Exception e)
+            {
+                WriteLine("error occured: " + e.Message);
+                WriteLine("        Stack: " + e.StackTrace.ToString());
+                WriteLine("        lispCodeString: " + lispCodeString);
+                return "()";
+            }
+
+
+        }
+
+
+        public ScriptInterpreter LispTaskInterperter;
+        public readonly object LispTaskInterperterLock = new object();
+        readonly private List<Type> registeredTypes = new List<Type>();
+
+        public void enqueueLispTask(object p)
+        {
+            scriptEventListener.enqueueLispTask(p);
+        }
+
+        public string evalLispString(string lispCode)
+        {
+            try
+            {
+                LoadTaskInterpreter();
+                if (lispCode == null || lispCode.Length == 0) return null;
+                Object r = null;
+                //lispCode = "(load-assembly \"libsecondlife\")\r\n" + lispCode;                
+                StringReader stringCodeReader = new StringReader(lispCode);
+                r = LispTaskInterperter.Read("evalLispString", stringCodeReader);
+                if (LispTaskInterperter.Eof(r))
+                    return r.ToString();
+                return LispTaskInterperter.Str(evalLispCode(r));
+            }
+            catch (Exception e)
+            {
+                WriteLine("!Exception: " + e.GetBaseException().Message);
+                WriteLine("error occured: " + e.Message);
+                WriteLine("        Stack: " + e.StackTrace.ToString());
+                throw e;
+            }
+        }
+
+        public Object evalLispCode(Object lispCode)
+        {
+            try
+            {
+                if (lispCode == null) return null;
+                if (lispCode is String)
+                {
+                    StringReader stringCodeReader = new StringReader(lispCode.ToString());
+                    lispCode = LispTaskInterperter.Read("evalLispString", stringCodeReader);
+                }
+                WriteLine("Eval> " + lispCode);
+                if (LispTaskInterperter.Eof(lispCode))
+                    return lispCode.ToString();
+                return LispTaskInterperter.Eval(lispCode);
+            }
+            catch (Exception e)
+            {
+                WriteLine("!Exception: " + e.GetBaseException().Message);
+                WriteLine("error occured: " + e.Message);
+                WriteLine("        Stack: " + e.StackTrace.ToString());
+                throw e;
+            }
+        }
+
+        public override string ToString()
+        {
+            return "'(thisClient \"" + GetName() + "\")";
+        }
+
+        /// <summary>
+        /// Initialize everything that needs to be initialized once we're logged in.
+        /// </summary>
+        /// <param name="login">The status of the login</param>
+        /// <param name="message">Error message on failure, MOTD on success.</param>
+        public void Network_OnLogin(LoginStatus login, string message)
+        {
+            if (login == LoginStatus.Success)
+            {
+                // Start in the inventory root folder.
+                if (Inventory.Store != null)
+                    CurrentDirectory = Inventory.Store.RootFolder; //.RootFolder;
+                else
+                {
+                    Logger.Log("Cannot get Inventory.Store.RootFolder", OpenMetaverse.Helpers.LogLevel.Error);
+                    CurrentDirectory = null;
+                }
+            }
+            //            WriteLine("ClientManager Network_OnLogin : [" + login.ToString() + "] " + message);
+            //SendNewEvent("On-Login", login, message);
+
+            if (login == LoginStatus.Failed)
+            {
+                WriteLine("Not able to login");
+                // SendNewEvent("on-login-fail",login,message);
+                SendNetworkEvent("On-Login-Fail", login, message);
+                if (LoginRetries-- >= 0) Login();
+            }
+            else if (login == LoginStatus.Success)
+            {
+                SetLoginOptionsFromRadegast();
+                LoginRetries = 0;
+                WriteLine("Logged in successfully");
+                SendNetworkEvent("On-Login-Success", login, message);
+                //                SendNewEvent("on-login-success",login,message);
+            }
+            else
+            {
+                SendNetworkEvent("On-Login", login, message);
+            }
+
+        }
+
+        public void LoadAssembly(Assembly assembly)
+        {
+
+            ClientManager.RegisterAssembly(assembly);
+            bool found = false;
+
+            foreach (Type t in assembly.GetTypes())
+            {
+                try
+                {
+                    if (t.IsSubclassOf(typeof (WorldObjectsModule)))
+                    {
+                        ConstructorInfo info = t.GetConstructor(new Type[] {typeof (BotClient)});
+                        try
+                        {
+                            found = true;
+                            Invoke(() =>
+                                       {
+                                           Listener command = (Listener) info.Invoke(new object[] {this});
+                                           RegisterListener(command);
+                                       });
+                        }
+                        catch (Exception e)
+                        {
+                            WriteLine("RegisterListener: " + e + "\n In " + t.Name);
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    WriteLine(e.ToString());
+                }
+            }
+            if (!found)
+            {
+                // throw new Exception("missing entry point " + assembly);
+            }
+        }
+
+        /// <summary>
+        /// Initialize everything that needs to be initialized once we're logged in.
+        /// </summary>
+        /// <param name="login">The status of the login</param>
+        /// <param name="message">Error message on failure, MOTD on success.</param>
+        private void RegisterCommand(string name, cogbot.Actions.Command command)
+        {
+            string orginalName = name;
+            name = name.Replace(" ", "").ToLower();
+            while (name.EndsWith(".")) name = name.Substring(0, name.Length - 1);
+            Monitor.Enter(Commands);
+            if (!Commands.ContainsKey(name))
+            {
+                Commands.Add(name, command);
+                command.Name = orginalName;
+                command.TheBotClient = this;
+            }
+            else
+            {
+                RegisterCommand("!" + orginalName, command);
+            }
+            Monitor.Exit(Commands);
+        }
+
+        public void RegisterCommand(Command command)
+        {
+            RegisterCommand(command.Name, command);
+        }
+
+        internal void DoCommandAll(string line, UUID uUID, OutputDelegate outputDelegate)
+        {
+            ClientManager.DoCommandAll(line, uUID, outputDelegate);
+        }
+
+        //internal void LogOut(GridClient Client)
+        //{
+        //Client.Network.Logout();
+        //}
+
+        internal OpenMetaverse.Utilities.VoiceManager GetVoiceManager()
+        {
+            return VoiceManager;
+        }
+
+
+        public void Dispose()
+        {
+            //scriptEventListener.
+            logout();
+            updateTimer.Enabled = false;
+            updateTimer.Close();
+            //botPipeline.Shut
+            botPipeline.Dispose();
+            lispEventProducer.Dispose();
+            WorldSystem.Dispose();
+            //thrJobQueue.Abort();
+            //lock (lBotMsgSubscribers)
+            //{   
+            LispTaskInterperter.Dispose();
+            foreach (var ms in listeners.Values)
+            {
+                ms.Dispose();
+            }
+        }
+
+        //List<BotMessageSubscriber> lBotMsgSubscribers = new List<BotMessageSubscriber>();
+        public interface BotMessageSubscriber
+        {
+            void msgClient(string serverMessage);
+            void ShuttingDown();
+        }
+        public void AddBotMessageSubscriber(SimEventSubscriber tcpServer)
+        {
+            botPipeline.AddSubscriber(tcpServer);
+        }
+
+        public void SendNetworkEvent(string eventName, params object[] args)
+        {
+            SendPersonalEvent(SimEventType.NETWORK, eventName, args);
+        }
+
+
+        public void SendPersonalEvent(SimEventType type, string eventName, params object[] args)
+        {
+            if (args.Length > 0)
+            {
+                if (args[0] is BotClient)
+                {
+                    args[0] = ((BotClient)args[0]).GetAvatar();
+                }
+            }
+            SimObjectEvent evt = botPipeline.CreateEvent(type, SimEventClass.PERSONAL, eventName, args);
+            evt.AddParam("recipientOfInfo", GetAvatar());
+            SendPipelineEvent(evt);
+        }
+
+        public void SendPipelineEvent(SimObjectEvent evt)
+        {
+            botPipeline.SendEvent(evt);
+        }
+
+
+        internal string argsListString(IEnumerable list)
+        {
+            if (scriptEventListener == null) return "" + list;
+            return ScriptEventListener.argsListString(list);
+        }
+
+        internal string argString(object p)
+        {
+            if (scriptEventListener == null) return "" + p;
+            return ScriptEventListener.argString(p);
+        }
+
+        public string ExecuteCommand(string text)
+        {
+            return ExecuteCommand(text, WriteLine);
+        }
+
+        public string ExecuteCommand(string text, OutputDelegate WriteLine)
+        {
+            String res = ExecuteBotCommand(text, WriteLine);
+            if (!String.IsNullOrEmpty(res)) return res;
+            return ClientManager.ExecuteSystemCommand(text, WriteLine);
+        }
+
+
+        public string ExecuteBotCommand(string text, OutputDelegate WriteLine)
+        {
+            if (text == null)
+            {
+                return String.Empty;
+            }
+            text = text.TrimStart();
+            if (text.Length == 0)
+            {
+                return String.Empty;
+            }
+            try
+            {
+                if (text.StartsWith("("))
+                {
+                    return evalLispString(text).ToString();
+                }
+                //            Settings.LOG_LEVEL = Helpers.LogLevel.Debug;
+                //text = text.Replace("\"", "");
+                string verb = cogbot.Actions.Parser.ParseArgs(text)[0];
+                verb = verb.ToLower();
+                if (Commands != null && Commands.ContainsKey(verb))
+                {
+                    Command act = Commands[verb];
+                    if (act is GridMasterCommand)
+                    {
+                        if (!WorldSystem.IsGridMaster)
+                        {
+                            return String.Empty;
+                        }
+                    }
+                    if (act is RegionMasterCommand)
+                    {
+                        if (!IsRegionMaster)
+                        {
+                            return String.Empty;
+                        }
+                    }
+                    string res;
+                    if (text.Length > verb.Length)
+                        res = act.acceptInputWrapper(verb, text.Substring(verb.Length + 1), WriteLine).ToString();
+                    else
+                        res = act.acceptInputWrapper(verb, "", WriteLine).ToString();
+                    if (String.IsNullOrEmpty(res))
+                    {
+                        return string.Format("{0} Completed: {1}", GetName(), text);
+                    }
+                    return res.Replace("$bot", GetName());
+                }
+                else
+                {
+                    UUID assetID = WorldSystem.SimAssetSystem.GetAssetUUID(text, AssetType.Gesture);
+                    if (assetID != UUID.Zero) return ExecuteCommand("gesture " + assetID);
+                    assetID = WorldSystem.SimAssetSystem.GetAssetUUID(text, AssetType.Animation);
+                    if (assetID != UUID.Zero) return ExecuteCommand("anim " + assetID);
+                    return String.Empty;
+                }
+            }
+            catch (Exception e)
+            {
+                WriteLine("" + e);
+                return String.Empty;
+            }
+        }
+
+        public string GetName()
+        {
+            string n = Self.Name;
+            if (n!=null && !String.IsNullOrEmpty(n.Trim())) return n;
+            if (String.IsNullOrEmpty(BotLoginParams.FirstName))
+            {
+                throw new NullReferenceException("GEtName");
+            }
+            return string.Format("{0} {1}", BotLoginParams.FirstName, BotLoginParams.LastName);
+        }
+
+
+        void SimEventSubscriber.OnEvent(SimObjectEvent evt)
+        {
+            if (evt.GetVerb() == "On-Execute-Command")
+            {
+                ExecuteCommand(evt.GetArgs()[0].ToString(), WriteLine);
+            }
+        }
+
+        void SimEventSubscriber.Dispose()
+        {
+            ((BotClient)this).Dispose();
+        }
+
+
+        public void Talk(string str)
+        {
+            Self.Chat(str, 0, ChatType.Normal);
+        }
+
+        public void Intern(string n, object v)
+        {
+            LispTaskInterperter.Intern(n, v);
+        }
+
+
+        public void InternType(Type t)
+        {
+            LispTaskInterperter.InternType(t);
+        }
+
+        private void RegisterListener(Listener listener)
+        {
+            // listeners[listener.GetModuleName()] = listener;
+            Invoke(() => listener.StartupListener());
+            
+        }
+
+        internal void RegisterType(Type t)
+        {
+            ClientManager.RegisterType(t);
+            if (registeredTypes.Contains(t)) return;
+            registeredTypes.Add(t);
+            try
+            {
+                if (t.IsSubclassOf(typeof(Command)))
+                {
+                    if (!typeof (SystemApplicationCommand).IsAssignableFrom(t))
+                    {
+                        ConstructorInfo info = t.GetConstructor(new Type[] {typeof (BotClient)});
+                        try
+                        {
+                            Command command = (Command) info.Invoke(new object[] {this});
+                            RegisterCommand(command);
+                        }
+                        catch (Exception e)
+                        {
+                            WriteLine("RegisterCommand: " + e.ToString() + "\n" + e.InnerException + "\n In " + t.Name);
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                WriteLine(e.ToString());
+            }
+        }
+
+        internal object GetAvatar()
+        {
+            if (gridClient.Self.AgentID != UUID.Zero) return WorldSystem.TheSimAvatar;
+            return this;
+        }
+
+        public void FakeEvent(Object target, String infoName, params object[] parameters)
+        {
+
+            Type type = target.GetType();
+            EventInfo eventInfo = type.GetEvent(infoName);
+            MethodInfo m = eventInfo.GetRaiseMethod();
+
+            Exception lastException = null;
+            if (m != null)
+            {
+                try
+                {
+
+
+                    m.Invoke(target, parameters);
+                    return;
+                }
+                catch (Exception e)
+                {
+                    lastException = e;
+                }
+            }
+            else
+            {
+                {
+                    FieldInfo fieldInfo = type.GetField(eventInfo.Name,
+                                                        BindingFlags.Instance | BindingFlags.NonPublic |
+                                                        BindingFlags.Public);
+                    if (fieldInfo != null)
+                    {
+                        Delegate del = fieldInfo.GetValue(target) as Delegate;
+
+                        if (del != null)
+                        {
+                            del.DynamicInvoke(parameters);
+                            return;
+                        }
+                    }
+                }
+            }
+            if (lastException != null) throw lastException;
+            throw new NotSupportedException();
+        }
+
+        public List<InventoryItem> GetFolderItems(string target)
+        {
+            if (Inventory.Store==null)
+            {
+                return null;
+            }
+            if (Inventory.Store.RootNode == null)
+            {
+                return null;
+            }
+            if (Inventory.Store.RootFolder == null)
+            {
+                return null;
+            }
+            UUID folderID = Inventory.FindObjectByPath(Inventory.Store.RootFolder.UUID, Self.AgentID, target, 10000);
+            return GetFolderItems(folderID);
+        }
+
+        public List<InventoryItem> GetFolderItems(UUID folderID)
+        {
+            List<InventoryItem> items = new List<InventoryItem>();
+            var list = Inventory.FolderContents(folderID, Self.AgentID, false, true, InventorySortOrder.ByDate, 10000);
+            if (list != null) foreach (var i in list)
+                {
+                    if (i is InventoryItem) items.Add((InventoryItem)i);
+                }
+            return items;
+        }
+
+        public void SetRadegastLoginOptions()
+        {
+            var to= TheRadegastInstance.Netcom.LoginOptions;
+            to.FirstName = BotLoginParams.FirstName;
+            to.LastName = BotLoginParams.LastName;
+            to.Password = BotLoginParams.Password;
+            to.Grid = LoginGrid.Custom;
+            to.GridCustomLoginUri = BotLoginParams.URI;
+            to.StartLocation = StartLocationType.Custom;
+            to.StartLocationCustom = BotLoginParams.Start;
+            to.Author = BotLoginParams.Author;
+            to.UserAgent = BotLoginParams.UserAgent;
+        }
+
+        public void SetLoginOptionsFromRadegast()
+        {
+            var from = TheRadegastInstance.Netcom.LoginOptions;
+            BotLoginParams.FirstName = from.FirstName;
+            BotLoginParams.LastName = from.LastName;
+            BotLoginParams.Password = from.Password;
+            switch (from.Grid)
+            {
+                case LoginGrid.BetaGrid:
+                    BotLoginParams.URI = OpenMetaverse.Settings.ADITI_LOGIN_SERVER;
+                    break;
+                case LoginGrid.MainGrid:
+                    BotLoginParams.URI = OpenMetaverse.Settings.AGNI_LOGIN_SERVER;
+                    break;
+                default:
+                    BotLoginParams.URI = from.GridCustomLoginUri;
+                    break;
+            }
+            switch (from.StartLocation)
+            {
+                case StartLocationType.Last:
+                    BotLoginParams.Start = "last";
+                    break;
+                case StartLocationType.Home:
+                    BotLoginParams.Start = "home";
+                    break;
+                default:
+                    BotLoginParams.Start = from.StartLocationCustom;
+                    break;
+            }
+            BotLoginParams.Author = from.Author;
+            BotLoginParams.UserAgent = from.UserAgent;
+        }
+
+        public void ShowTab(string name)
+        {
+            Invoke(() => TheRadegastInstance.TabConsole.GetTab(name.ToLower()).Select());
+        }
+
+        public void AddTab(string name, string label, UserControl _debugWindow, EventHandler CloseDebug)
+        {
+            Invoke(() =>
+                       {
+                           RadegastTab tab = TheRadegastInstance.TabConsole.AddTab(name.ToLower(), label, _debugWindow);
+                           tab.AllowDetach = true;
+                           tab.AllowMerge = true;
+                           //tab.TabClosed += ((sender, args) => _debugWindow.Dispose());
+                           if (CloseDebug != null)
+                           {
+                               tab.AllowClose = true;
+                               tab.TabClosed += CloseDebug;
+                           }
+                           else
+                           {
+                               tab.AllowClose = false;
+                           }
+                           //Application.EnableVisualStyles();
+                           //Application.Run(new Form(_debugWindow));
+                       });
+        }
+
+        public void Invoke(ThreadStart o)
+        {
+            if (TheRadegastInstance.MainForm.InvokeRequired)
+            {
+                TheRadegastInstance.MainForm.Invoke(o); 
+            } else o();
+        }
+
+        public BotPermissions GetSecurityLevel(UUID uuid)
+        {
+            BotPermissions bp;
+            if (SecurityLevels.TryGetValue(uuid,out bp))
+            {
+                return bp;
+            }
+            return BotPermissions.Base;
+        }
+    }
+
+    /// <summary>
+    ///  
+    /// </summary>
+    [Flags]
+    public enum BotPermissions : byte
+    {
+        /// <summary>Recognise</summary>
+        Base = 0x01,
+        /// <summary>Execute owner commands</summary>
+        Owner = 0x02,
+        /// <summary>Execute group level perms</summary>
+        Group = 0x04,
+        /// <summary>Ignore like for bots and users we dont chat with</summary>
+        Ignore = 0x80
+    }
+}
