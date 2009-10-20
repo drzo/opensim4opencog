@@ -174,11 +174,11 @@ namespace AIMLBotModule
                 MyBot.outputDelegate = WriteLine;
                 LoadPersonalConfig();
                 // wont get here unless there was no problem
-                client.Self.OnChat += AIML_OnChat;
-                client.Self.OnInstantMessage += AIML_OnInstantMessage;
+                client.Self.ChatFromSimulator += AIML_OnChat;
+                client.Self.IM += AIML_OnInstantMessage;
                 client.Network.OnLogin += AIML_OnLogin;
                 client.Network.OnEventQueueRunning += AIML_OnEventQueueRunning;
-                client.Friends.OnFriendshipOffered += AIML_OnFriendshipOffered;
+                client.Friends.FriendshipOffered += AIML_OnFriendshipOffered;
                 client.Avatars.OnPointAt += AIML_OnPointAt;
                 client.Avatars.OnLookAt += AIML_OnLookAt;
                 client.Avatars.OnEffect += AINL_OnEffect;
@@ -241,9 +241,9 @@ namespace AIMLBotModule
         }
 
 
-        private void AIML_OnFriendshipOffered(UUID agentid, string agentname, UUID imsessionid)
+        private void AIML_OnFriendshipOffered(object sender,FriendshipOfferedEventArgs e)
         {
-            if (AcceptFriends) client.Friends.AcceptFriendship(agentid, imsessionid);
+            if (AcceptFriends) client.Friends.AcceptFriendship(e.AgentID, e.SessionID);
             //else client.Friends.DeclineFriendship(agentid, imsessionid);
         }
 
@@ -367,8 +367,9 @@ namespace AIMLBotModule
             return client.GetName();
         }
 
-        public void AIML_OnInstantMessage(InstantMessage im, Simulator simulator)
+        public void AIML_OnInstantMessage(object sender, InstantMessageEventArgs e)
         {
+            var im = e.IM;
             Console.WriteLine("InstantMessage=" + im.Dialog);
             Console.WriteLine("FromAgentID=" + WorldSystem.GetObject(im.FromAgentID));
             object toObject = WorldSystem.GetObject(im.ToAgentID);
@@ -539,8 +540,14 @@ namespace AIMLBotModule
 
         private DateTime lastFollow = DateTime.Now;
 
-        private void AIML_OnChat(string message, ChatAudibleLevel audible, ChatType type, ChatSourceType sourcetype, string fromname, UUID id, UUID ownerid, Vector3 position)
+        private void AIML_OnChat(object sender, ChatEventArgs e)// string message, ChatAudibleLevel audible, ChatType type, ChatSourceType sourcetype, string fromname, UUID id, UUID ownerid, Vector3 position)
         {
+
+            var type = e.Type;
+            var message = e.Message;
+            var id = e.SourceID;
+            var fromname = e.FromName;
+            var sourcetype = e.SourceType;
 
             if (String.IsNullOrEmpty(message) || message.Length < 2) return;
             if (sourcetype == ChatSourceType.System) return;
