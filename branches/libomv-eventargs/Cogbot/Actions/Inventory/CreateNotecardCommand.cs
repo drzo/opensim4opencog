@@ -186,7 +186,7 @@ namespace cogbot.Actions
             assetDownloadEvent.WaitOne(NOTECARD_FETCH_TIMEOUT, false);
 
             if (notecardData != null)
-                return Success(Utils.EncodingUTF8.GetString(notecardData));
+                return Success(Encoding.UTF8.GetString(notecardData));
             else
                 return Failure("Error downloading notecard asset: " + error);
         }

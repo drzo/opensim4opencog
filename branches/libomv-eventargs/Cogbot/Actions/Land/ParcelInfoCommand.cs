@@ -26,14 +26,14 @@ namespace cogbot.Actions
             StringBuilder sb = new StringBuilder();
             string result;
             Client.Network.OnDisconnected += callback;
-            ParcelManager.SimParcelsDownloaded del =
-                delegate(Simulator simulator, InternalDictionary<int, Parcel> simParcels, int[,] parcelMap)
+            EventHandler<SimParcelsDownloadedEventArgs> del =
+                (sender,e)=>
                 {
                     ParcelsDownloaded.Set();
                 };
 
             ParcelsDownloaded.Reset();
-            Client.Parcels.OnSimParcelsDownloaded += del;
+            Client.Parcels.SimParcelsDownloaded += del;
             try
             {
                 int argsUsed;
@@ -76,7 +76,7 @@ namespace cogbot.Actions
             }
             finally
             {
-                Client.Parcels.OnSimParcelsDownloaded -= del;
+                Client.Parcels.SimParcelsDownloaded -= del;
                 Client.Network.OnDisconnected -= callback;
             }
 

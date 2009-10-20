@@ -29,19 +29,20 @@ namespace cogbot.Actions
             if (Int32.TryParse(args[0], out parcelID) && CurSim.Parcels.TryGetValue(parcelID, out parcel))
             {
                 AutoResetEvent wait = new AutoResetEvent(false);
-                ParcelManager.ParcelObjectOwnersListReplyCallback callback = delegate(Simulator simulator, List<ParcelManager.ParcelPrimOwners> primOwners)
+
+                EventHandler<ParcelObjectOwnersReplyEventArgs> callback = delegate(object sender, ParcelObjectOwnersReplyEventArgs e)
                 {
-                    for(int i = 0; i < primOwners.Count; i++)
+                    for (int i = 0; i < e.PrimOwners.Count; i++)
                     {
-                        result.AppendFormat("Owner: {0} Count: {1}" + System.Environment.NewLine, primOwners[i].OwnerID, primOwners[i].Count);
+                        result.AppendFormat("Owner: {0} Count: {1}" + System.Environment.NewLine, e.PrimOwners[i].OwnerID, e.PrimOwners[i].Count);
                         wait.Set();
                     }
                 };
                 
-                Client.Parcels.OnPrimOwnersListReply += callback;
+                Client.Parcels.ParcelObjectOwnersReply += callback;
                 try
                 {
-                    Client.Parcels.ObjectOwnersRequest(CurSim, parcelID);
+                    Client.Parcels.RequestObjectOwners(CurSim, parcelID);
                     if (!wait.WaitOne(10000, false))
                     {
                         return Failure("Timed out waiting for packet.");
@@ -50,7 +51,7 @@ namespace cogbot.Actions
                 }
                 finally
                 {
-                    Client.Parcels.OnPrimOwnersListReply -= callback;                    
+                    Client.Parcels.ParcelObjectOwnersReply -= callback;                    
                 }
                 
                 return Success(result.ToString());;
@@ -59,12 +60,6 @@ namespace cogbot.Actions
             {
                 return Failure(string.Format("Unable to find Parcel {0} in Parcels Dictionary, Did you run parcelinfo to populate the dictionary first?", args[0]));
             }
-        }
-
-        void Parcels_OnPrimOwnersListReply(Simulator simulator, List<ParcelManager.ParcelPrimOwners> primOwners)
-        {
-            throw new Exception("The method or operation is not implemented.");
-        }
-        
+        }        
     }
 }
