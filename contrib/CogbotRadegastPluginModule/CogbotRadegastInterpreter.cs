@@ -24,7 +24,7 @@ namespace CogbotRadegastPluginModule
             {
                 cmdline = cmdline.Substring(1);
             }
-            WriteLine(clientManager.ExecuteCommand(cmdline, new OutputDelegate(WriteLine)));
+            WriteLine(clientManager.LastBotClient.ExecuteCommand(cmdline, new OutputDelegate(WriteLine)));
         }
 
         public void Help(string helpArgs, ConsoleWriteLine WriteLine)

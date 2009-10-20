@@ -101,17 +101,27 @@ namespace CogbotRadegastPluginModule
         static public readonly HashSet<Command> Actions = new HashSet<Command>();
         private void AddCommand(Command renCmd, Type type, Type use)
         {
-            lock (Actions) if (!Actions.Add(renCmd)) return;
-            CommandContextAction cca = new CommandContextAction(instance,Plugin)
-                                           {
-                                               Label = renCmd.Name,
-                                               Handler = SubHook,
-                                               ContextType = type,
-                                               act = renCmd,
-                                               useType = use
-                                           };
-            instance.TabConsole.RegisterContextAction(cca);
+            lock (Actions)
+            {
 
+                if (!Actions.Add(renCmd)) return;
+
+                CommandContextAction cca = new CommandContextAction(instance, Plugin)
+                                               {
+                                                   Label = renCmd.Name,
+                                                   Handler = null,
+                                                   ContextType = type,
+                                                   act = renCmd,
+                                                   useType = use
+                                               };
+                instance.TabConsole.RegisterContextAction(cca);
+            }
+        }
+
+        public override void OnInvoke(object sender, EventArgs e, object target)
+        {
+            
+            //base.OnInvoke(sender, e, target);
         }
 
         private void HookItem(ToolStripDropDownItem t)
