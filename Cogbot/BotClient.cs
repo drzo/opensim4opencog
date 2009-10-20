@@ -421,11 +421,11 @@ namespace cogbot
             Network.OnSimDisconnected += new NetworkManager.SimDisconnectedCallback(Network_OnSimDisconnected);
             Network.OnConnected += new NetworkManager.ConnectedCallback(Network_OnConnected);
             Network.OnDisconnected += new NetworkManager.DisconnectedCallback(Network_OnDisconnected);
-            Self.OnInstantMessage += new AgentManager.InstantMessageCallback(Self_OnInstantMessage);
+            Self.IM += Self_OnInstantMessage;
             //Self.OnScriptDialog += new AgentManager.ScriptDialogCallback(Self_OnScriptDialog);
             //Self.OnScriptQuestion += new AgentManager.ScriptQuestionCallback(Self_OnScriptQuestion);
-            Self.OnTeleport += new AgentManager.TeleportCallback(Self_OnTeleport);
-            Self.OnChat += new AgentManager.ChatCallback(Self_OnChat);
+            Self.TeleportProgress += Self_OnTeleport;
+            Self.ChatFromSimulator += Self_OnChat;
             GroupManager.CurrentGroupsCallback callback =
                     new GroupManager.CurrentGroupsCallback(Groups_OnCurrentGroups);
             Groups.OnCurrentGroups += callback;
@@ -586,8 +586,9 @@ namespace cogbot
         }
 
 
-        void Self_OnTeleport(string message, TeleportStatus status, TeleportFlags flags)
+        void Self_OnTeleport(object sender, TeleportEventArgs e)
         {
+            var status = e.Status;
             if (status == TeleportStatus.Finished || status == TeleportStatus.Failed || status == TeleportStatus.Cancelled)
             {
                 WriteLine("Teleport " + status);
@@ -596,16 +597,20 @@ namespace cogbot
         }
 
 
-        void Self_OnChat(string message, ChatAudibleLevel audible, ChatType type, ChatSourceType sourceType, string fromName, UUID id, UUID ownerid, Vector3 position)
+        void Self_OnChat(object sender, ChatEventArgs e)
         {
+            var sourceType = e.SourceType;
+            var message = e.Message;
+            var fromName = e.FromName;
             if (message.Length > 0 && sourceType == ChatSourceType.Agent && !muteList.Contains(fromName))
             {
                 WriteLine(String.Format("{0} says, \"{1}\".", fromName, message));
             }
         }
 
-        private void Self_OnInstantMessage(InstantMessage im, Simulator simulator)
+        private void Self_OnInstantMessage(object sender, InstantMessageEventArgs e)
         {
+            InstantMessage im = e.IM;
             if (im.Dialog == InstantMessageDialog.GroupNotice)
             {
                 im.GroupIM = true;
