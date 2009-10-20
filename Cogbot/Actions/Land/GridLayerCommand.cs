@@ -18,15 +18,16 @@ namespace cogbot.Actions
             if (!registeredCallback)
             {
                 registeredCallback = true;
-                Client.Grid.OnGridLayer += new GridManager.GridLayerCallback(Grid_OnGridLayer);
+                Client.Grid.GridLayer += Grid_OnGridLayer;
             }
             Client.Grid.RequestMapLayer(GridLayerType.Objects);
 
             return Success("Sent " + Name);
         }
 
-        private void Grid_OnGridLayer(GridLayer layer)
+        private void Grid_OnGridLayer(object sender, GridLayerEventArgs e)
         {
+            GridLayer layer = e.Layer;
             WriteLine(String.Format("Layer({0}) Bottom: {1} Left: {2} Top: {3} Right: {4}",
                 layer.ImageID.ToString(), layer.Bottom, layer.Left, layer.Top, layer.Right));
         }

@@ -142,9 +142,9 @@ namespace cogbot.Actions
             const int TIME = 10000;
             using (AutoResetEvent are = new AutoResetEvent(false))
             {
-                AgentManager.AlertMessageCallback callback = (message =>
+                EventHandler<AlertMessageEventArgs> callback = ((sender, e) =>
                                                                   {
-                                                                      if (message.ToLower().Contains("autopilot"))
+                                                                      if (e.Message.ToLower().Contains("autopilot"))
                                                                       {
                                                                           DistanceMessage(WriteLine);
                                                                           try
@@ -156,7 +156,7 @@ namespace cogbot.Actions
                                                                           }
                                                                       }
                                                                   });
-                Client.Self.OnAlertMessage += callback;
+                Client.Self.AlertMessage += callback;
 
                 int update = Client.Self.Movement.UpdateInterval;
                 bool reset = Client.Self.Movement.AutoResetControls;
@@ -175,7 +175,7 @@ namespace cogbot.Actions
                         WriteLine("Autopilot timed out moving to {0}", Position);
                         Client.Self.AutoPilotCancel();
                     }
-                    Client.Self.OnAlertMessage -= callback;
+                    Client.Self.AlertMessage -= callback;
                     Client.Self.Movement.SendUpdate(true);
                     Client.Self.Movement.TurnToward(Position);
                     Client.Self.Movement.SendUpdate(true);

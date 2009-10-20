@@ -32,18 +32,18 @@ namespace cogbot.Actions
 
             StringBuilder sb = new StringBuilder();
 
-            FriendsManager.FriendFoundEvent del = 
-                delegate(UUID agentID, ulong regionHandle, Vector3 location) 
+            EventHandler<FriendFoundReplyEventArgs> del = 
+                (sender, e) =>
                 {
-                    if (!regionHandle.Equals(0))
-                        sb.AppendFormat("Found Friend {0} in {1} at {2}/{3}", agentID, regionHandle, location.X, location.Y);
+                    if (!e.RegionHandle.Equals(0))
+                        sb.AppendFormat("Found Friend {0} in {1} at {2}/{3}", e.AgentID, e.RegionHandle, e.Location.X, e.Location.Y);
                     else
-                        sb.AppendFormat("Found Friend {0}, But they appear to be offline", agentID);
+                        sb.AppendFormat("Found Friend {0}, But they appear to be offline", e.AgentID);
 
                     WaitforFriend.Set();
                 };
 
-            Client.Friends.OnFriendFound += del;
+            Client.Friends.FriendFoundReply += del;
             try
             {
                 WaitforFriend.Reset();
@@ -55,7 +55,7 @@ namespace cogbot.Actions
             }
             finally
             {
-                Client.Friends.OnFriendFound -= del;                
+                Client.Friends.FriendFoundReply -= del;                
             }
             return Success(sb.ToString());
         }
