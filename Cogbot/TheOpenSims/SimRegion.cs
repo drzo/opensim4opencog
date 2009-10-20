@@ -91,17 +91,17 @@ namespace cogbot.TheOpenSims
             SimRegion r = null;
             {
                 AutoResetEvent are = new AutoResetEvent(false);
-                GridManager.RegionHandleReplyCallback rrc =
-                    new GridManager.RegionHandleReplyCallback(delegate(UUID regionID, ulong regionHandle)
+                EventHandler<RegionHandleReplyEventArgs> rrc =
+                   (sender, e)=>
                     {
-                        if (regionID == uuid)
+                        if (e.RegionID == uuid)
                         {
                             are.Set();
-                            r = GetRegion(regionHandle, client);
+                            r = GetRegion(e.RegionHandle, client);
                         }
 
-                    });
-                client.Grid.OnRegionHandleReply += rrc;
+                    };
+                client.Grid.RegionHandleReply += rrc;
                 client.Grid.RequestRegionHandle(uuid);
                 if (!are.WaitOne(10000, false))
                 {
@@ -110,7 +110,7 @@ namespace cogbot.TheOpenSims
                         if (uuid == v.RegionID) return v;
                     }
                 }
-                client.Grid.OnRegionHandleReply -= rrc;
+                client.Grid.RegionHandleReply -= rrc;
                 if (r == null)
                 {
                     return SimRegion.UNKNOWN;
@@ -214,10 +214,10 @@ namespace cogbot.TheOpenSims
                 {
                     RequestMapRegionOjectsOnce = true;
                     regionEvent.Reset();
-                    GridManager.GridRegionCallback callback =
-                        delegate(GridRegion gridRegion)
+                    EventHandler<GridRegionEventArgs> callback =
+                        (sender, e)=>
                             {
-                                if (gridRegion.RegionHandle == RegionHandle)
+                                if (e.Region.RegionHandle == RegionHandle)
                                     regionEvent.Set();
                             };
                     if (Client == null)
@@ -225,11 +225,11 @@ namespace cogbot.TheOpenSims
                         Client = AnyClient;
                     }
 
-                    Client.Grid.OnGridRegion += callback;
+                    Client.Grid.GridRegion += callback;
                     Debug("Requesting Objects " + RegionName);
                     Client.Grid.RequestMapRegion(RegionName, GridLayerType.Objects);
                     regionEvent.WaitOne(Client.Settings.MAP_REQUEST_TIMEOUT, false);
-                    Client.Grid.OnGridRegion -= callback;
+                    Client.Grid.GridRegion -= callback;
                 }
                 return _GridInfo;
             }
@@ -779,7 +779,7 @@ namespace cogbot.TheOpenSims
                 if (parcels.ContainsKey(parcel.LocalID)) return;
                 parcels[parcel.LocalID] = parcel;
             }
-            simulator.Client.Parcels.SelectObjects(parcel.LocalID, (ObjectReturnType)31, parcel.OwnerID);
+            simulator.Client.Parcels.RequestSelectObjects(parcel.LocalID, (ObjectReturnType)31, parcel.OwnerID);
             //ParcelSelectObjects(simulator, parcel.LocalID, parcel.OwnerID);
             //SimRegion r = SimRegion.GetRegion(simulator);
             //r.Parcels_OnParcelProperties(simulator, parcel, result, selectedPrims, sequenceID, snapSelection);
@@ -801,31 +801,31 @@ namespace cogbot.TheOpenSims
             // test argument that is is a valid integer, then verify we have that parcel data stored in the dictionary
             {
                 AutoResetEvent wait = new AutoResetEvent(false);
-                ParcelManager.ForceSelectObjects callback =
-                    delegate(Simulator simulator, List<uint> objectIDs, bool resetList)
+                EventHandler<ForceSelectObjectsReplyEventArgs> callback =
+                    (sender, e)=>
                     {
                         //result.AppendLine("New List: " + resetList.ToString());
-                        for (int i = 0; i < objectIDs.Count; i++)
+                        for (int i = 0; i < e.ObjectIDs.Count; i++)
                         {
-                            result.Append(objectIDs[i].ToString() + " ");
+                            result.Append(e.ObjectIDs[i].ToString() + " ");
                             counter++;
                         }
                         //result.AppendLine("Got " + objectIDs.Count.ToString() + " Objects in packet");
-                        if (objectIDs.Count < 251)
+                        if (e.ObjectIDs.Count < 251)
                             wait.Set();
                     };
 
-                client.Parcels.OnParcelSelectedObjects += callback;
-                client.Parcels.SelectObjects(parcelID, (ObjectReturnType)31, ownerUUID);
+                client.Parcels.ForceSelectObjectsReply += callback;
+                client.Parcels.RequestSelectObjects(parcelID, (ObjectReturnType)31, ownerUUID);
 
 
-                client.Parcels.ObjectOwnersRequest(sim, parcelID);
+                client.Parcels.RequestObjectOwners(sim, parcelID);
                 if (!wait.WaitOne(30000, false))
                 {
                     result.AppendLine("Timed out waiting for packet.");
                 }
 
-                client.Parcels.OnParcelSelectedObjects -= callback;
+                client.Parcels.ForceSelectObjectsReply -= callback;
                 result.AppendLine("Found a total of " + counter + " Objects");
 
             }
