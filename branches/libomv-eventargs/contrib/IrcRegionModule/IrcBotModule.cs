@@ -21,12 +21,17 @@ namespace IrcRegionModule
 
         public override void StartupListener()
         {
-            client.Self.OnChat += IrcBot_OnChat;
+            client.Self.ChatFromSimulator += IrcBot_OnChat;
             //throw new NotImplementedException();
         }
 
-        private void IrcBot_OnChat(string message, ChatAudibleLevel audible, ChatType type, ChatSourceType sourcetype, string fromname, UUID id, UUID ownerid, Vector3 position)
+        private void IrcBot_OnChat(object sender, ChatEventArgs e)
         {
+            var type = e.Type;
+            var message = e.Message;
+            var id = e.SourceID;
+            var fromname = e.FromName;
+            //string message, ChatAudibleLevel audible, ChatType type, ChatSourceType sourcetype, string fromname, UUID id, UUID ownerid, Vector3 position
             if (!client.IsRegionMaster) return;
             if (IrcCommand == null) return;
             if (type == ChatType.StartTyping || type == ChatType.StopTyping) return;
