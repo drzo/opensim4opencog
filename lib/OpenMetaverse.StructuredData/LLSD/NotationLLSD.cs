@@ -166,7 +166,7 @@ namespace OpenMetaverse.StructuredData
                     break;
                 case falseNotationValueThree:
                     matching = BufferCharactersEqual(reader, falseNotationValueThreeFull, 1);
-                    if (matching > 1 && matching < falseNotationValueThreeFull.Length) 
+                    if (matching > 1 && matching < falseNotationValueThreeFull.Length)
                         throw new OSDException("Notation LLSD parsing: True value parsing error:");
                     osd = OSD.FromBoolean(false);
                     break;

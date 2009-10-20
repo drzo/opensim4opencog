@@ -118,23 +118,22 @@ namespace OpenMetaverse.Assets
                         if (fields[0] == "parameters")
                         {
                             int count = Int32.Parse(fields[1]) + stri;
-                            for (; stri < count;)
+                            for (; stri < count; )
                             {
                                 stri++;
                                 line = lines[stri].Trim();
                                 fields = line.Split(' ');
 
                                 int id = Int32.Parse(fields[0]);
-                                if (fields.Length > 1)
-                                {
-                                    if (fields[1] == ",")
-                                        fields[1] = "0";
-                                    else
-                                        fields[1] = fields[1].Replace(',', '.');
-                                    float weight = float.Parse(fields[1], System.Globalization.NumberStyles.Float,
-                                                               Utils.EnUsCulture.NumberFormat);
-                                    Params[id] = weight;
-                                }
+                                if (fields[1] == ",")
+                                    fields[1] = "0";
+                                else
+                                    fields[1] = fields[1].Replace(',', '.');
+
+                                float weight = float.Parse(fields[1], System.Globalization.NumberStyles.Float,
+                                    Utils.EnUsCulture.NumberFormat);
+
+                                Params[id] = weight;
                             }
                         }
                         else if (fields[0] == "textures")

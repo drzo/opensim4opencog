@@ -64,8 +64,6 @@ namespace OpenMetaverse
             ClientInitiated,
             /// <summary>The server notified us that it is disconnecting</summary>
             ServerInitiated,
-            /// <summary>The server notified us that it is disconnecting</summary>
-            TeleportInitiated,
             /// <summary>Either a socket was closed or network traffic timed out</summary>
             NetworkTimeout,
             /// <summary>The last active simulator shut down</summary>
@@ -289,12 +287,11 @@ namespace OpenMetaverse
 
         /// <summary>All of the simulators we are currently connected to</summary>
         public List<Simulator> Simulators = new List<Simulator>();
-        public List<Simulator> SimulatorsAttepting = new List<Simulator>();
 
         /// <summary>Handlers for incoming capability events</summary>
         internal CapsEventDictionary CapsEvents;
         /// <summary>Handlers for incoming packets</summary>
-        public PacketEventDictionary PacketEvents;
+        internal PacketEventDictionary PacketEvents;
         /// <summary>Incoming packets that are awaiting handling</summary>
         internal BlockingQueue<IncomingPacket> PacketInbox = new BlockingQueue<IncomingPacket>(Settings.PACKET_INBOX_SIZE);
         /// <summary>Outgoing packets that are awaiting handling</summary>
@@ -319,7 +316,6 @@ namespace OpenMetaverse
 
             // Register internal CAPS callbacks
             RegisterEventCallback("EnableSimulator", new Caps.EventQueueCallback(EnableSimulatorHandler));
-            RegisterEventCallback("DisableSimulator", new Caps.EventQueueCallback(DisableSimulatorCapsHandler));
 
             // Register the internal callbacks
             RegisterCallback(PacketType.RegionHandshake, new PacketCallback(RegionHandshakeHandler));
@@ -442,16 +438,11 @@ namespace OpenMetaverse
             if (simulator == null)
             {
                 // We're not tracking this sim, create a new Simulator object
-                simulator = Simulator.Create(Client, endPoint, handle);
+                simulator = new Simulator(Client, endPoint, handle);
 
                 // Immediately add this simulator to the list of current sims. It will be removed if the
                 // connection fails
                 lock (Simulators) Simulators.Add(simulator);
-            }
-
-            lock (SimulatorsAttepting) if (!SimulatorsAttepting.Contains(simulator))
-            {
-               SimulatorsAttepting.Add(simulator);   
             }
 
             if (!simulator.Connected)
@@ -515,14 +506,9 @@ namespace OpenMetaverse
                 }
                 else
                 {
-                    if (OnSimDisconnected != null)
-                    {
-                        try { OnSimDisconnected(simulator,DisconnectType.NetworkTimeout); }
-                        catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
-                    }
                     // Connection failed, remove this simulator from our list and destroy it
                     lock (Simulators) Simulators.Remove(simulator);
-                    return null;// simulator;
+                    return null;
                 }
             }
             else if (setDefault)
@@ -566,7 +552,7 @@ namespace OpenMetaverse
             // will be fired in the callback. Otherwise we fire it manually with
             // a NetworkTimeout type
             if (!logoutEvent.WaitOne(Client.Settings.LOGOUT_TIMEOUT, false))
-                Shutdown(DisconnectType.ClientInitiated);
+                Shutdown(DisconnectType.NetworkTimeout);
 
             OnLogoutReply -= callback;
         }
@@ -606,23 +592,22 @@ namespace OpenMetaverse
         /// </summary>
         /// <param name="sim"></param>
         /// <param name="sendCloseCircuit"></param>
-        public void DisconnectSim(Simulator sim, bool sendCloseCircuit,DisconnectType disconnectType)
+        public void DisconnectSim(Simulator sim, bool sendCloseCircuit)
         {
             if (sim != null)
             {
-                sim.Disconnect(sendCloseCircuit, disconnectType);
+                sim.Disconnect(sendCloseCircuit);
 
                 // Fire the SimDisconnected event if a handler is registered
                 if (OnSimDisconnected != null)
                 {
-                    try { OnSimDisconnected(sim, disconnectType); }
+                    try { OnSimDisconnected(sim, DisconnectType.NetworkTimeout); }
                     catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
                 }
 
-                //if (disconnectType == DisconnectType.ClientInitiated)
-                    lock (Simulators) Simulators.Remove(sim);
+                lock (Simulators) Simulators.Remove(sim);
 
-                if (Simulators.Count == 0) Shutdown(disconnectType/* | DisconnectType.SimShutdown*/);
+                if (Simulators.Count == 0) Shutdown(DisconnectType.SimShutdown);
             }
             else
             {
@@ -637,7 +622,7 @@ namespace OpenMetaverse
         /// </summary>
         public void Shutdown(DisconnectType type)
         {
-            Logger.Log("NetworkManager shutdown initiated: " + type, Helpers.LogLevel.Info, Client);
+            Logger.Log("NetworkManager shutdown initiated", Helpers.LogLevel.Info, Client);
 
             // Send a CloseCircuit packet to simulators if we are initiating the disconnect
             bool sendCloseCircuit = (type == DisconnectType.ClientInitiated || type == DisconnectType.NetworkTimeout);
@@ -666,7 +651,7 @@ namespace OpenMetaverse
             if (CurrentSim != null)
             {
                 // Kill the connection to the curent simulator
-                CurrentSim.Disconnect(sendCloseCircuit,type);
+                CurrentSim.Disconnect(sendCloseCircuit);
 
                 // Fire the SimDisconnected event if a handler is registered
                 if (OnSimDisconnected != null)
@@ -1084,20 +1069,11 @@ namespace OpenMetaverse
             }
         }
 
-        private void DisableSimulatorCapsHandler(string capsKey, IMessage message, Simulator simulator)
-        {
-            if (!Client.Settings.MULTIPLE_SIMS) return;
-            Logger.DebugLog("Received a CAPS Based DisableSimulator packet from " + simulator + ", shutting it down", Client);
-            //if (CurrentSim == simulator) 
-                DisconnectSim(simulator, false, DisconnectType.ServerInitiated);
-        }
-
         private void DisableSimulatorHandler(Packet packet, Simulator simulator)
         {
             Logger.DebugLog("Received a DisableSimulator packet from " + simulator + ", shutting it down", Client);
 
-         //   if (CurrentSim==simulator)
-                DisconnectSim(simulator, false, DisconnectType.ServerInitiated);
+            DisconnectSim(simulator, false);
         }
 
         private void KickUserHandler(Packet packet, Simulator simulator)

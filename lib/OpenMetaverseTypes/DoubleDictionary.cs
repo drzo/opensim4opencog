@@ -28,11 +28,11 @@ using System;
 using System.Threading;
 using System.Collections.Generic;
 
-//#if VISUAL_STUDIO
+#if VISUAL_STUDIO
 using ReaderWriterLockImpl = System.Threading.ReaderWriterLockSlim;
-//#else
-//using ReaderWriterLockImpl = OpenMetaverse.ReaderWriterLockSlim;
-//#endif
+#else
+using ReaderWriterLockImpl = OpenMetaverse.ReaderWriterLockSlim;
+#endif
 
 namespace OpenMetaverse
 {

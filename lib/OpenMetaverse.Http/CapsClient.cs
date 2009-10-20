@@ -83,7 +83,7 @@ namespace OpenMetaverse.Http
                     break;
                 case OSDFormat.Json:
                 default:
-                    postData = Utils.EncodingUTF8.GetBytes(OSDParser.SerializeJsonString(data));
+                    postData = System.Text.Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(data));
                     contentType = "application/llsd+json";
                     break;
             }

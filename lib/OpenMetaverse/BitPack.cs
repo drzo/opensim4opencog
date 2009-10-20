@@ -292,7 +292,7 @@ namespace OpenMetaverse
         {
             if (bitPos != 0 || bytePos + size > Data.Length) throw new IndexOutOfRangeException();
 
-            string str = Utils.EncodingUTF8.GetString(Data, bytePos, size);
+            string str = System.Text.UTF8Encoding.UTF8.GetString(Data, bytePos, size);
             bytePos += size;
             return str;
         }

@@ -222,7 +222,7 @@ namespace OpenMetaverse
         /// </summary>
         /// <param name="textureID">The ID of the Texture Layer to bake</param>
         public delegate void RebakeAvatarCallback(UUID textureID);
-
+        
         #endregion
 
         #region Events
@@ -278,7 +278,11 @@ namespace OpenMetaverse
         /// <summary>
         /// Timer used for delaying rebake on changing outfit
         /// </summary>
-        Timer RebakeScheduleTimer;
+        private Timer RebakeScheduleTimer;
+        /// <summary>
+        /// Main appearance thread
+        /// </summary>
+        private Thread AppearanceThread;
         #endregion Private Members
 
         /// <summary>
@@ -346,7 +350,7 @@ namespace OpenMetaverse
             }
 
             // This is the first time setting appearance, run through the entire sequence
-            Thread appearanceThread = new Thread(
+            AppearanceThread = new Thread(
                 delegate()
                 {
                     bool success = true;
@@ -417,9 +421,9 @@ namespace OpenMetaverse
                     }
                 }
             );
-            appearanceThread.Name = "Appearance";
-            appearanceThread.IsBackground = true;
-            appearanceThread.Start();
+            AppearanceThread.Name = "Appearance";
+            AppearanceThread.IsBackground = true;
+            AppearanceThread.Start();
         }
 
         /// <summary>
@@ -1518,7 +1522,7 @@ namespace OpenMetaverse
         /// Create an AgentSetAppearance packet from Wearables data and the 
         /// Textures array and send it
         /// </summary>
-        public void SendAgentSetAppearance()
+        private void SendAgentSetAppearance()
         {
             AgentSetAppearancePacket set = new AgentSetAppearancePacket();
             set.AgentData.AgentID = Client.Self.AgentID;
@@ -1902,6 +1906,16 @@ namespace OpenMetaverse
             {
                 RebakeScheduleTimer.Dispose();
                 RebakeScheduleTimer = null;
+            }
+
+            if (AppearanceThread != null)
+            {
+                if (AppearanceThread.IsAlive)
+                {
+                    AppearanceThread.Abort();
+                }
+                AppearanceThread = null;
+                AppearanceThreadRunning = 0;
             }
         }
 

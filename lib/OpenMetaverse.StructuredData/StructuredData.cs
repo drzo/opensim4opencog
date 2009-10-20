@@ -546,7 +546,7 @@ namespace OpenMetaverse.StructuredData
         }
 
         public override string AsString() { return value; }
-        public override byte[] AsBinary() { return Utils.EncodingUTF8.GetBytes(value); }
+        public override byte[] AsBinary() { return Encoding.UTF8.GetBytes(value); }
         public override UUID AsUUID()
         {
             UUID uuid;
@@ -666,7 +666,7 @@ namespace OpenMetaverse.StructuredData
 
         public override string AsString() { return value != null ? value.ToString() : String.Empty; }
         public override Uri AsUri() { return value; }
-        public override byte[] AsBinary() { return Utils.EncodingUTF8.GetBytes(AsString()); }
+        public override byte[] AsBinary() { return Encoding.UTF8.GetBytes(AsString()); }
         public override string ToString() { return AsString(); }
     }
 
@@ -1134,13 +1134,13 @@ namespace OpenMetaverse.StructuredData
             else if (header.StartsWith(LLSD_XML_HEADER) || header.StartsWith(LLSD_XML_ALT_HEADER) || header.StartsWith(LLSD_XML_ALT2_HEADER))
                 return DeserializeLLSDXml(data);
             else
-                return DeserializeJson(Utils.EncodingUTF8.GetString(data));
+                return DeserializeJson(Encoding.UTF8.GetString(data));
         }
 
         public static OSD Deserialize(string data)
         {
             if (data.StartsWith(LLSD_BINARY_HEADER))
-                return DeserializeLLSDBinary(Utils.EncodingUTF8.GetBytes(data));
+                return DeserializeLLSDBinary(Encoding.UTF8.GetBytes(data));
             else if (data.StartsWith(LLSD_XML_HEADER) || data.StartsWith(LLSD_XML_ALT_HEADER) || data.StartsWith(LLSD_XML_ALT2_HEADER))
                 return DeserializeLLSDXml(data);
             else

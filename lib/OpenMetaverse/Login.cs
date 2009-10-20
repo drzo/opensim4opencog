@@ -77,7 +77,7 @@ namespace OpenMetaverse
         /// failed due to timeout</summary>
         public int Timeout;
         /// <summary>The request method</summary>
-        /// <remarks>login_to_server is currently the only supported method</remarks>
+        /// <remarks>login_to_simulator is currently the only supported method</remarks>
         public string MethodName;
         /// <summary>The Agents First name</summary>
         public string FirstName;
@@ -641,25 +641,6 @@ namespace OpenMetaverse
     #endregion Structs
 
     /// <summary>
-    /// Overrides SSL certificate validation check for Mono
-    /// </summary>
-    /// <remarks>Remove me when MONO can handle ServerCertificateValidationCallback</remarks>
-    public class AcceptAllCertificatePolicy : ICertificatePolicy
-    {
-        public AcceptAllCertificatePolicy()
-        {
-        }
-
-        public bool CheckValidationResult(ServicePoint sPoint,
-            System.Security.Cryptography.X509Certificates.X509Certificate cert,
-            WebRequest wRequest, int certProb)
-        {
-            // Always accept
-            return true;
-        }
-    }
-
-    /// <summary>
     /// Login Routines
     /// </summary>
     public partial class NetworkManager : INetworkManager
@@ -724,7 +705,9 @@ namespace OpenMetaverse
         private string InternalLoginMessage = String.Empty;
         private string InternalRawLoginReply = String.Empty;
         private Dictionary<LoginResponseCallback, string[]> CallbackOptions = new Dictionary<LoginResponseCallback, string[]>();
-        /// <summary>A list of packets obtained during the login process which networkmanager will log but not process</summary>
+
+        /// <summary>A list of packets obtained during the login process which 
+        /// networkmanager will log but not process</summary>
         private readonly List<string> UDPBlacklist = new List<string>();
         #endregion
 
@@ -743,7 +726,7 @@ namespace OpenMetaverse
         public LoginParams DefaultLoginParams(string firstName, string lastName, string password,
             string userAgent, string userVersion)
         {
-            List<string> options = new List<string>(15);
+            List<string> options = new List<string>(16);
             options.Add("inventory-root");
             options.Add("inventory-skeleton");
             options.Add("inventory-lib-root");
@@ -759,6 +742,7 @@ namespace OpenMetaverse
             options.Add("tutorial_settings");
             options.Add("login-flags");
             options.Add("global-textures");
+            options.Add("adult_compliant");
 
             LoginParams loginParams = new LoginParams();
             if (Client == null)
@@ -853,7 +837,7 @@ namespace OpenMetaverse
         {
             // FIXME: Now that we're using CAPS we could cancel the current login and start a new one
             if (CurrentContext != null)
-                return;// throw new Exception("Login already in progress");
+                throw new Exception("Login already in progress");
 
             LoginEvent.Reset();
             CurrentContext = loginParams;
@@ -942,12 +926,10 @@ namespace OpenMetaverse
 
             #endregion
 
-            // Override SSL authentication mechanisms. DO NOT convert this to the 
-            // .NET 2.0 preferred method, the equivalent function in Mono has a 
-            // different name and it will break compatibility!
-            #pragma warning disable 0618
-            ServicePointManager.CertificatePolicy = new AcceptAllCertificatePolicy();
-            // TODO: At some point, maybe we should check the cert?
+            // TODO: Allow a user callback to be defined for handling the cert
+            ServicePointManager.CertificatePolicy = new TrustAllCertificatePolicy();
+            // Even though this will compile on Mono 2.4, it throws a runtime exception
+            //ServicePointManager.ServerCertificateValidationCallback = TrustAllCertificatePolicy.TrustAllCertificateHandler;
 
             if (Client.Settings.USE_LLSD_LOGIN)
             {

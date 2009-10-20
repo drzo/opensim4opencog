@@ -217,9 +217,9 @@ namespace OpenMetaverse
                 }
 
                 if (bytes[bytes.Length - 1] == 0x00)
-                    output.Append(Utils.EncodingUTF8.GetString(bytes, 0, bytes.Length - 1));
+                    output.Append(UTF8Encoding.UTF8.GetString(bytes, 0, bytes.Length - 1));
                 else
-                    output.Append(Utils.EncodingUTF8.GetString(bytes, 0, bytes.Length));
+                    output.Append(UTF8Encoding.UTF8.GetString(bytes, 0, bytes.Length));
             }
             else
             {
@@ -518,7 +518,7 @@ namespace OpenMetaverse
             }
 
             return prims;
-        }        
+        }
 
         /// <summary>
         /// Converts a struct or class object containing fields only into a key value separated string
