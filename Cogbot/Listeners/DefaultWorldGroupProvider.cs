@@ -4,14 +4,22 @@ using System.Collections.Generic;
 using cogbot.ScriptEngines;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
+using PathSystem3D.Navigation;
 
 namespace cogbot.Listeners
 {
     public class DefaultWorldGroupProvider : ICollectionProvider
     {
-        public DefaultWorldGroupProvider(WorldObjects objects, SimActor avatar)
+        readonly WorldObjects world;
+        public DefaultWorldGroupProvider(WorldObjects objects)
         {
-            AddObjectGroup("selected", avatar.GetSelectedObjects);
+            world = objects;
+            AddObjectGroup("selected", () =>
+            {
+                SimActor avatar = this.avatar;
+                if (avatar == null) return null; 
+                return avatar.GetSelectedObjects();
+            });
             AddObjectGroup("avatars", () => WorldObjects.SimAvatars.CopyOf());
             AddObjectGroup("master", () =>
                                          {
@@ -27,9 +35,43 @@ namespace cogbot.Listeners
                                              }
                                              return v;
                                          });
-            AddObjectGroup("self", () => { var v = new List<SimObject> { avatar }; return v; });
+            AddObjectGroup("self", () =>
+                                       {
+                                           SimActor avatar = this.avatar;
+                                           if (avatar == null) return null; 
+                                           var v = new List<SimObject> { avatar }; return v;
+                                       });
             AddObjectGroup("all", () => WorldObjects.SimObjects.CopyOf());
-            AddObjectGroup("known", avatar.GetKnownObjects);
+            AddObjectGroup("known", () =>
+                                        {
+                                            SimActor avatar = this.avatar;
+                                            if (avatar == null) return null; 
+                                            return avatar.GetKnownObjects();
+                                        });
+            AddObjectGroup("target", () =>
+                                         {
+                                             SimActor avatar = this.avatar;
+                                             if (avatar == null) return null;
+                                             var v = new List<SimPosition>();
+                                             var a = avatar.CurrentAction;
+                                             if (a != null && a.Target != null)
+                                             {
+                                                 v.Add(a.Target);
+                                                 return v;
+                                             }
+                                             SimPosition p = avatar.ApproachPosition;
+                                             if (p != null)
+                                             {
+                                                 v.Add(p);
+                                                 return v;
+                                             }
+                                             return null;
+                                         });
+        }
+
+        protected SimActor avatar
+        {
+            get { return world.TheSimAvatar; }
         }
 
         public ICollection GetGroup(string arg0Lower)

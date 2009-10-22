@@ -141,6 +141,8 @@ namespace cogbot.Listeners
             ///client.Settings.USE_LLSD_LOGIN = true;
 
             client.Network.PacketEvents.SkipEvent += Network_SkipEvent;
+            _defaultProvider = new DefaultWorldGroupProvider(this);
+            AddGroupProvider(_defaultProvider);
             lock (WorldObjectsMasterLock)
             {
                 if (GridMaster == null)
@@ -265,8 +267,6 @@ namespace cogbot.Listeners
             {
                 if (value == m_TheSimAvatar) return;                
             	m_TheSimAvatar = value;
-                _defaultProvider = new DefaultWorldGroupProvider(this, m_TheSimAvatar);
-                AddGroupProvider(_defaultProvider);
             }
 
         }
