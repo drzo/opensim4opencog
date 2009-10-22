@@ -1917,6 +1917,15 @@ namespace PathSystem3D.Navigation
             return GetCollisionIndex(ix, iy);
         }
 
+        public CollisionIndex GetCollisionIndexNoSideEffect(int ix, int iy)
+        {
+            lock (MeshIndex)
+            {
+                CollisionIndex wp = MeshIndex[ix, iy];
+                return wp;
+            }
+        }
+
         public CollisionIndex GetCollisionIndex(int ix, int iy)
         {
             lock (MeshIndex)
