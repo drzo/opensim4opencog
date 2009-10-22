@@ -45,7 +45,7 @@ namespace cogbot.Actions
                                                {
                                                    try
                                                    {
-                                                       WriteLine(Client.ExecuteCommand(cmd, WriteLine));
+                                                       WriteLine(Client.ExecuteCommand(cmd, WriteLine).ToString());
                                                    }
                                                    catch (Exception e)
                                                    {

@@ -1471,35 +1471,35 @@ namespace cogbot
             return ScriptEventListener.argString(p);
         }
 
-        public string ExecuteCommand(string text)
+        public CmdResult ExecuteCommand(string text)
         {
             return ExecuteCommand(text, WriteLine);
         }
 
-        public string ExecuteCommand(string text, OutputDelegate WriteLine)
+        public CmdResult ExecuteCommand(string text, OutputDelegate WriteLine)
         {
-            String res = ExecuteBotCommand(text, WriteLine);
-            if (!String.IsNullOrEmpty(res)) return res;
+            CmdResult res = ExecuteBotCommand(text, WriteLine);
+            if (res !=null) return res;
             return ClientManager.ExecuteSystemCommand(text, WriteLine);
         }
 
 
-        public string ExecuteBotCommand(string text, OutputDelegate WriteLine)
+        public CmdResult ExecuteBotCommand(string text, OutputDelegate WriteLine)
         {
             if (text == null)
             {
-                return String.Empty;
+                return null;
             }
             text = text.TrimStart();
             if (text.Length == 0)
             {
-                return String.Empty;
+                return null;
             }
             try
             {
                 if (text.StartsWith("("))
                 {
-                    return evalLispString(text).ToString();
+                    return new CmdResult(evalLispString(text).ToString(),true);
                 }
                 //            Settings.LOG_LEVEL = Helpers.LogLevel.Debug;
                 //text = text.Replace("\"", "");
@@ -1512,26 +1512,30 @@ namespace cogbot
                     {
                         if (!WorldSystem.IsGridMaster)
                         {
-                            return String.Empty;
+                            return null;
                         }
                     }
                     if (act is RegionMasterCommand)
                     {
                         if (!IsRegionMaster)
                         {
-                            return String.Empty;
+                            return null;
                         }
                     }
-                    string res;
-                    if (text.Length > verb.Length)
-                        res = act.acceptInputWrapper(verb, text.Substring(verb.Length + 1), WriteLine).ToString();
-                    else
-                        res = act.acceptInputWrapper(verb, "", WriteLine).ToString();
-                    if (String.IsNullOrEmpty(res))
+                    try
                     {
-                        return string.Format("{0} Completed: {1}", GetName(), text);
+                        CmdResult res;
+                        if (text.Length > verb.Length)
+                            return act.acceptInputWrapper(verb, text.Substring(verb.Length + 1), WriteLine);
+                        else
+                            return act.acceptInputWrapper(verb, "", WriteLine);
                     }
-                    return res.Replace("$bot", GetName());
+                    catch (Exception e)
+                    {
+
+                        WriteLine("" + e);
+                        return new CmdResult("excetion " + e, false);
+                    }
                 }
                 else
                 {
@@ -1539,13 +1543,13 @@ namespace cogbot
                     if (assetID != UUID.Zero) return ExecuteCommand("gesture " + assetID);
                     assetID = WorldSystem.SimAssetSystem.GetAssetUUID(text, AssetType.Animation);
                     if (assetID != UUID.Zero) return ExecuteCommand("anim " + assetID);
-                    return String.Empty;
+                    return null;
                 }
             }
             catch (Exception e)
             {
                 WriteLine("" + e);
-                return String.Empty;
+                return null;
             }
         }
 
@@ -1709,7 +1713,7 @@ namespace cogbot
 
         public void SetRadegastLoginOptions()
         {
-            var to= TheRadegastInstance.Netcom.LoginOptions;
+            var to = TheRadegastInstance.Netcom.LoginOptions;
             to.FirstName = BotLoginParams.FirstName;
             to.LastName = BotLoginParams.LastName;
             to.Password = BotLoginParams.Password;
@@ -1719,6 +1723,25 @@ namespace cogbot
             to.StartLocationCustom = BotLoginParams.Start;
             to.Author = BotLoginParams.Author;
             to.UserAgent = BotLoginParams.UserAgent;
+            RadegastTab tab;
+            if (TheRadegastInstance.TabConsole.Tabs.TryGetValue("login",out tab))
+            {
+                LoginConsole form = (LoginConsole)tab.Control;
+                if (form.InvokeRequired)
+                {
+                    form.Invoke(new MethodInvoker(() => SetRadegastLoginForm(form, to)));
+                } else
+                {
+                    SetRadegastLoginForm(form, to);
+                }
+            }
+        }
+
+        private void SetRadegastLoginForm(LoginConsole console, LoginOptions options)
+        {
+            console.txtFirstName.Text = options.FirstName;
+            console.txtLastName.Text = options.LastName;
+            //console.cbxLocation.Text = options.StartLocationCustom;
         }
 
         public void SetLoginOptionsFromRadegast()

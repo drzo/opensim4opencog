@@ -212,84 +212,101 @@ namespace cogbot
         }
 
 
-        public string ExecuteCommand(string text, OutputDelegate WriteLine)
+        public CmdResult ExecuteCommand(string text, OutputDelegate WriteLine)
         {
-            if (String.IsNullOrEmpty(text)) return text;
+            if (String.IsNullOrEmpty(text)) return null;
             while (text.StartsWith("/"))
             {
                 text = text.Substring(1);
             }
-            if (String.IsNullOrEmpty(text)) return text;
+            if (String.IsNullOrEmpty(text)) return null;
             WriteLine("textform> {0}", text);
-            String res = ExecuteBotsCommand(text, WriteLine);
-            if (!String.IsNullOrEmpty(res)) return res;
+            CmdResult res = ExecuteBotsCommand(text, WriteLine);
+            if (res != null) return res;
             return ExecuteSystemCommand(text, WriteLine);
         }
 
-        private string ExecuteBotsCommand(string text, OutputDelegate WriteLine)
+        private CmdResult ExecuteBotsCommand(string text, OutputDelegate WriteLine)
         {
-            string res = String.Empty;
-            if (string.IsNullOrEmpty(text)) return res;
+            if (string.IsNullOrEmpty(text)) return null;
             text = text.Trim();
             while (text.StartsWith("/"))
             {
                 text = text.Substring(1);
                 text = text.Trim();
             }
-            if (string.IsNullOrEmpty(text)) return res;
+            if (string.IsNullOrEmpty(text)) return null;
             if (BotByName.Count == 0 && LastBotClient != null) return LastBotClient.ExecuteBotCommand(text, WriteLine);
             if (OnlyOneCurrentBotClient != null)
             {
                 return OnlyOneCurrentBotClient.ExecuteBotCommand(text, WriteLine);
 
             }
-
+            string res = null;
+            int success = 0;
+            int failure = 0;
             foreach (BotClient currentClient in BotClients)
                 if (currentClient != null)
                 {
-
-                    res += currentClient.ExecuteBotCommand(text, WriteLine).Trim();
+                    CmdResult t = currentClient.ExecuteBotCommand(text, WriteLine);
+                    if (t==null) continue;
+                    if (t.Success)
+                    {
+                        success++; 
+                    } else
+                    {
+                        failure++;
+                    }
+                    res += t.ToString();
                     if (!String.IsNullOrEmpty(res))
                     {
                         res += "\n";
                     }
                 }
-            return res;
+            if (success == 0)
+            {
+                return new CmdResult(res + " " + failure + " failures ", false);
+            }
+            if (failure > 0)
+            {
+                return new CmdResult(res + " " + failure + " failures and " + success + " successes", false);
+            }
+            return new CmdResult(res + " " + success + " successes", true);
         }
 
-        public string ExecuteSystemCommand(string text, OutputDelegate WriteLine)
+        public CmdResult ExecuteSystemCommand(string text, OutputDelegate WriteLine)
         {
             string res = String.Empty;
             try
             {
                 {
-                    if (string.IsNullOrEmpty(text)) return res;
+                    if (string.IsNullOrEmpty(text)) return null;
                     text = text.Trim();
                     while (text.StartsWith("/"))
                     {
                         text = text.Substring(1);
                         text = text.Trim();
                     }
-                    if (string.IsNullOrEmpty(text)) return res;
+                    if (string.IsNullOrEmpty(text)) return null;
 
                     string verb = Parser.ParseArguments(text)[0];
                     verb = verb.ToLower();
                     if (groupActions.ContainsKey(verb))
                     {
                         if (text.Length > verb.Length)
-                            res += groupActions[verb].acceptInputWrapper(verb, text.Substring(verb.Length + 1), WriteLine);
+                            return groupActions[verb].acceptInputWrapper(verb, text.Substring(verb.Length + 1), WriteLine);
                         else
-                            res += groupActions[verb].acceptInputWrapper(verb, "", WriteLine);
-                        return res;
+                            return groupActions[verb].acceptInputWrapper(verb, "", WriteLine);
                     }
                     WriteLine("I don't understand the ExecuteSystemCommand " + verb + ".");
+                    return null;
                 }
-                return res;
             }
             catch (Exception e)
             {
-                WriteLine("ClientManager:" + e);
-                return res;
+                string newVariable = "ClientManager:" + e;
+                WriteLine(newVariable);
+                return new CmdResult(newVariable, false);
             }
         }
 
@@ -338,7 +355,7 @@ namespace cogbot
             }
         }
 
-        public string ExecuteCommand(string text)
+        public CmdResult ExecuteCommand(string text)
         {
             return ExecuteCommand(text, WriteLine);
         }
@@ -511,9 +528,8 @@ namespace cogbot
                                                            bc = new BotClient(this, gridClient, BotLoginParams);
                                                            bc.TheRadegastInstance = inst;
                                                        }
-                                                       bc.SetRadegastLoginOptions();
-                                                       EnsureStarting(bc);
-                                                       if (bc.TheRadegastInstance.MainForm.InvokeRequired)
+                              
+                                                       if (bc.TheRadegastInstance.MainForm.IsHandleCreated)
                                                        {
                                                            //bc.TheRadegastInstance.MainForm.Visible = false;
                                                        }
@@ -521,6 +537,8 @@ namespace cogbot
                                                        {
                                                            Application.Run(bc.TheRadegastInstance.MainForm);
                                                        }
+                                                       bc.SetRadegastLoginOptions();
+                                                       EnsureStarting(bc);
                                                    }
                                                    catch (Exception e)
                                                    {
@@ -756,7 +774,7 @@ namespace cogbot
                 ;
                 string input = Program.consoleBase.CmdPrompt(GetPrompt());
                 if (string.IsNullOrEmpty(input)) continue;
-                outputDelegate(ExecuteCommand(input, outputDelegate));
+                outputDelegate(ExecuteCommand(input, outputDelegate).ToString());
             }
 
             foreach (BotClient client in BotClients)

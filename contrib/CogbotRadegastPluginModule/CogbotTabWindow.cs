@@ -415,14 +415,14 @@ namespace CogbotRadegastPluginModule
             BotClient bc = ClientManager.SingleInstance.LastBotClient;
             if (bc != null)
             {
-                WriteLine(ClientManager.SingleInstance.LastBotClient.ExecuteCommand(s, WriteLine));
+                WriteLine(ClientManager.SingleInstance.LastBotClient.ExecuteCommand(s, WriteLine).ToString());
                 ClearChatInput();
                 return;
             }
             WorldObjects gm = GridMaster;
             if (gm!=null)
             {
-                WriteLine(gm.client.ExecuteCommand(s, WriteLine));
+                WriteLine(gm.client.ExecuteCommand(s, WriteLine).ToString());
                 ClearChatInput();
                 return;
             }

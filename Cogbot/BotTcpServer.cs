@@ -462,7 +462,7 @@ namespace cogbot.Utilities
         {
             using (StringWriter wl = new StringWriter())
             {
-                string s = parent.ExecuteCommand(cmd, wl.WriteLine);
+                CmdResult s = parent.ExecuteCommand(cmd, wl.WriteLine);
                 return wl.ToString() + s;
             }
         }

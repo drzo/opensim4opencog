@@ -30,16 +30,17 @@ namespace cogbot.Actions
             // base.acceptInput(verb, args);
             string[] args = pargs.tokens;
             UUID primID;
+            SimActor TheSimAvatar = this.TheSimAvatar;
             if (verb == "stop-following")
             {
 
-                SimPosition ap = WorldSystem.TheSimAvatar.ApproachPosition;
-                if (WorldSystem.TheSimAvatar.CurrentAction is FollowerAction)
+                SimPosition ap = TheSimAvatar.ApproachPosition;
+                if (TheSimAvatar.CurrentAction is MoveToLocation)
                 {
-                    WorldSystem.TheSimAvatar.CurrentAction = null;
+                    TheSimAvatar.CurrentAction = null;
                 }
-                WorldSystem.TheSimAvatar.SetMoveTarget(null, 10);
-                WorldSystem.TheSimAvatar.StopMoving();
+                TheSimAvatar.SetMoveTarget(null, 10);
+                TheSimAvatar.StopMoving();
             }
             else if (args.Length > 0)
             {
@@ -54,9 +55,8 @@ namespace cogbot.Actions
                 {
                     String str = "" + Client + " start to follow " + position + ".";
                     WriteLine(str);
-                    SimActor me = WorldSystem.TheSimAvatar;
                     // The thread that accepts the Client and awaits messages
-                    me.CurrentAction = new FollowerAction(me, position);
+                    TheSimAvatar.CurrentAction = new FollowerAction(TheSimAvatar, position);
                     return Success("$bot started following " + position);
                 }
                 else
@@ -65,7 +65,7 @@ namespace cogbot.Actions
                 }
             }
             {
-                return Success("$bot ApproachPosition: " + WorldSystem.TheSimAvatar.ApproachPosition);
+                return Success("$bot ApproachPosition: " + TheSimAvatar.ApproachPosition);
             }
 
         }

@@ -464,7 +464,7 @@ namespace TheSimiansModule
             SimTypeUsage use = someObject.GetBestUse(CurrentNeeds);
             if (use == null)
             {
-                double closeness = Actor.Approach(someObject, someObject.GetSizeDistance());
+                double closeness = Actor.Approach(someObject, someObject.GetSizeDistance() + 1);
                 //AgentManager ClientSelf = Client.Self;
                 Actor.Touch(someObject);
                 if (closeness < 3)

@@ -24,12 +24,12 @@ namespace CogbotRadegastPluginModule
             {
                 cmdline = cmdline.Substring(1);
             }
-            WriteLine(clientManager.LastBotClient.ExecuteCommand(cmdline, new OutputDelegate(WriteLine)));
+            WriteLine(clientManager.LastBotClient.ExecuteCommand(cmdline, new OutputDelegate(WriteLine)).ToString());
         }
 
         public void Help(string helpArgs, ConsoleWriteLine WriteLine)
         {
-            WriteLine(clientManager.ExecuteCommand("help " + helpArgs, new OutputDelegate(WriteLine)));         
+            WriteLine(clientManager.ExecuteCommand("help " + helpArgs, new OutputDelegate(WriteLine)).ToString());         
         }
 
         public void Dispose()
