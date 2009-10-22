@@ -5,17 +5,16 @@ using PathSystem3D.Navigation;
 
 namespace cogbot.TheOpenSims
 {
-    public class FollowerAction : BotAction
+    public class FollowerAction : MoveToLocation
     {
-        public override SimPosition Target { get; set; }
-        readonly static BotNeeds ProposedChanges = new BotNeeds(0.0f);
+
         readonly private float maxDistance;
         readonly private Thread FollowThread;
         private bool KeepFollowing = true;
         public static bool UsePathfinder = true;
 
         public FollowerAction(SimAvatar impl, SimPosition position)
-            : base("" + impl.GetName() + ": Follow " + position + " -> " + impl.DistanceVectorString(position))
+            : base(impl,position)
         {
             TheBot = impl;
             maxDistance = 3;// position.GetSizeDistance();
@@ -30,7 +29,7 @@ namespace cogbot.TheOpenSims
 
         public override BotNeeds ProposedChange()
         {
-            return ProposedChanges;
+            return base.ProposedChange();
         }
 
         public override void InvokeReal()
@@ -78,6 +77,7 @@ namespace cogbot.TheOpenSims
                         }
                         TheBot.StopMoving();
                     }
+                    //if (UsePathfinder)
                     if (UsePathfinder && Target.IsRegionAttached && TheBot.Distance(Target) > maxDistance + 2)
                         TheBot.GotoTarget(Target);
                 }   

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading;
+using cogbot.Actions;
 using cogbot.Listeners;
 using cogbot.Utilities;
 using OpenMetaverse;
@@ -15,6 +16,7 @@ using Math=System.Math;
 using Object=System.Object;
 using String=System.String;
 using Thread=System.Threading.Thread;
+using cogbot.Actions.Pathfinder;
 
 /// Complex outcomes may be a result of simple causes, or they may just be complex by nature. 
 /// Those complexities that turn out to have simple causes can be simulated and studied, 
@@ -423,6 +425,7 @@ namespace cogbot.TheOpenSims
                             if (actionThread != null && value != null)
                             {
                                 actionThread.Name = value.ToString();
+                                actionThread.IsBackground = false;
                                 actionThread.Start();
                             }
                         }
@@ -1153,6 +1156,7 @@ namespace cogbot.TheOpenSims
         /// <returns></returns>
         public double Approach(SimObject obj, double maxDistance)
         {
+            OnlyMoveOnThisThread();
             BotClient Client = GetGridClient();
             ///  stand up first
             SimObject UnPhantom = StandUp();
@@ -1163,7 +1167,7 @@ namespace cogbot.TheOpenSims
             Debug(str);
             try
             {
-                Client.ExecuteCommand("pointat " + obj.ID, Debug);
+                IndicateTarget(obj, true);
                 obj.MakeEnterable(this);
                 ///  if (!MoveTo(obj.GlobalPosition(), obj.GetSizeDistance() + 0.5f, 12))
                 GotoTarget(obj);
@@ -1173,10 +1177,12 @@ namespace cogbot.TheOpenSims
             {
                 if (UnPhantom != null)
                     UnPhantom.RestoreEnterable(this);
-                Client.ExecuteCommand("pointat", Debug);
+                IndicateTarget(obj, false);
             }
             return (double)Distance(obj);
         }
+
+
 
         private readonly object TrackerLoopLock = new object();
 
@@ -1424,6 +1430,10 @@ namespace cogbot.TheOpenSims
         }
 
 
+
+        public MovementProceedure MoveToMovementProceedure = MovementProceedure.TurnToAndWalk;
+        public MovementProceedure GotoMovementProceedure = MovementProceedure.AStar;
+
         /// <summary>
         ///  
         /// </summary>
@@ -1433,17 +1443,44 @@ namespace cogbot.TheOpenSims
         /// <returns></returns>
         public override bool MoveTo(Vector3d finalTarget, double maxDistance, float maxSeconds)
         {
+            Random MyRand = new Random();
+            if (MyRand.Next(5)<2) 
+                Client.Self.LookAtEffect(ID, UUID.Zero, finalTarget, (LookAtType)MyRand.Next(11), ID);
+            OnlyMoveOnThisThread();
             TurnToward(finalTarget);
             int blockCount = 0;
             IsBlocked = false;
             double currentDist = Vector3d.Distance(finalTarget, GlobalPosition);
             ///  if (currentDist < maxDistance) return true;
-            lock (TrackerLoopLock)
+            switch (MoveToMovementProceedure)
             {
-                ///   SimWaypoint P = SimWaypointImpl.CreateGlobal(finalTarget);
-                SetMoveTarget(finalTarget);
-                ApproachDistance = maxDistance;
+                case MovementProceedure.Teleport:
+                    if (currentDist < maxDistance) return true;
+                    bool tp = this.TeleportTo(SimRegion.GetWaypoint(finalTarget));
+                    if (currentDist < maxDistance) return true;
+                    if (!tp)
+                    {
+                        Debug("TP failed => MoveToMovementProceedure = MovementProceedure.TurnToAndWalk;");
+                        MoveToMovementProceedure = MovementProceedure.TurnToAndWalk;
+                    }
+                    TurnToward(finalTarget);
+                    break;
+                case MovementProceedure.AStar:
+                    if (currentDist < maxDistance) return true;
+                    GotoTarget(SimRegion.GetWaypoint(finalTarget));
+                    break;
+                case MovementProceedure.AutoPilot:
+                case MovementProceedure.TurnToAndWalk:
+                default:
+                    lock (TrackerLoopLock)
+                    {
+                        ///   SimWaypoint P = SimWaypointImpl.CreateGlobal(finalTarget);
+                        SetMoveTarget(finalTarget);
+                        ApproachDistance = maxDistance;
+                    }
+                    break;
             }
+
             bool IsKnownMoving = false;
             double lastDistance = currentDist;
             long endTick = Environment.TickCount + (int)(maxSeconds * 1000);
@@ -1508,6 +1545,29 @@ namespace cogbot.TheOpenSims
             return false;
         }
 
+        public override bool GotoTarget(SimPosition pos)
+        {
+            switch (GotoMovementProceedure)
+            {
+                case MovementProceedure.Teleport:
+                    StopMoving();
+                    return this.TeleportTo(pos);
+                case MovementProceedure.AutoPilot:
+                case MovementProceedure.TurnToAndWalk:
+                    return MoveTo(pos.GlobalPosition, pos.GetSizeDistance(), 3);
+                    
+                // TODO 
+                case MovementProceedure.AStar:
+                default:
+                    bool res = base.GotoTarget(pos);
+                    if (res) return res;
+                    StopMoving();
+                    Debug("Goto sneaking in TP to " + pos);
+                    res = this.TeleportTo(pos);
+                    StopMoving();
+                    return res;
+            }
+        }
         public override void SendUpdate(int ms)
         {
             /// Client.Self.Movement.AutoResetControls = true;
@@ -1515,18 +1575,24 @@ namespace cogbot.TheOpenSims
             if (ms > 0) Thread.Sleep(ms);
         }
 
-        public override void TeleportTo(SimRegion R, Vector3 local)
+        public override bool TeleportTo(SimRegion R, Vector3 local)
         {
             if (!IsControllable)
             {
                 throw Error("GotoTarget !Client.Self.AgentID == Prim.ID");
             }
-            Client.ExecuteCommand("teleport " + R.RegionName + "/" + local.X + "/" + local.Y + "/" + local.Z);
+            SimPosition pos = R.GetWaypointOf(local);
+            Vector3d global = pos.GlobalPosition;
+            return Client.Self.Teleport(R.RegionHandle, local, local);
+
+            //CmdResult s = Client.ExecuteCommand("teleport " + R.RegionName + "/" + local.X + "/" + local.Y + "/" + local.Z, Debug);
+            //return s.Success;
             //  Client.Self.Teleport(R.RegionName, local);
         }
 
         public override void SetMoveTarget(SimPosition target, double maxDist)
         {
+            OnlyMoveOnThisThread();
             if (target == null)
             {
                 ApproachVector3D = Vector3d.Zero;
@@ -1542,8 +1608,26 @@ namespace cogbot.TheOpenSims
             }
         }
 
+        public Thread MovementConsumer;
+        public void OnlyMoveOnThisThread()
+        {
+            if (MovementConsumer!=null)
+            {
+                if (MovementConsumer != Thread.CurrentThread && MovementConsumer.IsAlive)
+                {
+                    if (!MovementConsumer.IsBackground)
+                    {
+                        MovementConsumer.Abort();
+                    }
+                }
+            }
+            //throw new NotImplementedException();
+            MovementConsumer = Thread.CurrentThread;
+        }
+
         public void SetMoveTarget(Vector3d target)
         {
+            OnlyMoveOnThisThread();
             lock (TrackerLoopLock)
             {
                 if (target != ApproachVector3D)
@@ -1572,6 +1656,7 @@ namespace cogbot.TheOpenSims
                     ApproachThread = new Thread(TrackerLoop);
                     ApproachThread.Name = "TrackerLoop for " + Client;
                     ApproachThread.Priority = ThreadPriority.Normal;
+                    ApproachThread.IsBackground = true;
                     ApproachThread.Start();
                 }
             }
