@@ -266,11 +266,10 @@ namespace cogbot.TheOpenSims
             if (tf)
             {
                 SimObject obj = pos as SimObject;
-                if (obj != null && false)
+                if (obj != null)
                 {
                     Client.ExecuteCommand("pointat " + obj.ID, Debug);
                 }
-                else
                 {
                     var finalDistance = pos.GetSizeDistance();
                     var vFinalLocation = pos.GlobalPosition;
@@ -1078,7 +1077,7 @@ namespace cogbot.TheOpenSims
             {
                 Primitive Prim = this.Prim;
                 EnsureParentAccruate(Prim);
-                _TOSRTING = null;
+                toStringNeedsUpdate = true;
                 if (objectProperties != null)
                 {
                     _propertiesCache = objectProperties;
@@ -1152,7 +1151,7 @@ namespace cogbot.TheOpenSims
                 UpdateProperties(_propertiesCache);
             }
             UpdateOccupied();
-            _TOSRTING = null;
+            toStringNeedsUpdate = true;
         }
 
         private bool IsMeshing;
@@ -1196,7 +1195,7 @@ namespace cogbot.TheOpenSims
 
         public void AddSuperTypes(IList<SimObjectType> listAsSet)
         {
-            _TOSRTING = null;
+            toStringNeedsUpdate = true;
             //SimObjectType _UNKNOWN = SimObjectType._UNKNOWN;
             foreach (SimObjectType type in listAsSet)
             {
@@ -1264,8 +1263,7 @@ namespace cogbot.TheOpenSims
 
         public override string ToString()
         {
-            if (needUpdate) _TOSRTING = null;
-            if (_TOSRTING == null)
+            if (needUpdate || _TOSRTING==null || toStringNeedsUpdate) 
             {
                 Primitive Prim = null;
                 lock (HasPrimLock)
@@ -1273,6 +1271,7 @@ namespace cogbot.TheOpenSims
                     Prim = this.Prim;
                     if (!HasPrim || Prim == null) return "UNATTACHED_PRIM " + ID;
                 }
+                toStringNeedsUpdate = false;
                 _TOSRTING = "";
                 if (_propertiesCache != null)
                 {
@@ -2252,6 +2251,7 @@ namespace cogbot.TheOpenSims
         #region SimObject Members
 
         readonly Dictionary<string, object> dict = new Dictionary<string, object>();
+        protected bool toStringNeedsUpdate = true;
 
         public bool IsMeshed { get; set; }
 
