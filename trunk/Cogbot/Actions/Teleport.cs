@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using cogbot.TheOpenSims;
 using OpenMetaverse;
-using System.Threading; //using libsecondlife;
+using System.Threading;
+using PathSystem3D.Navigation; //using libsecondlife;
 // older LibOMV
 //using TeleportFlags = OpenMetaverse.AgentManager.TeleportFlags;
 //using TeleportStatus = OpenMetaverse.AgentManager.TeleportStatus;
@@ -31,9 +33,12 @@ namespace cogbot.Actions
             if (status == TeleportStatus.Finished)
             {
                 WriteLine(message + " " + status);
-                Client.describePeople(false, WriteLine);
-                Client.describeObjects(false, WriteLine);
-                Client.describeBuildings(false, WriteLine);
+                if (false)
+                {
+                    Client.describePeople(false, WriteLine);
+                    Client.describeObjects(false, WriteLine);
+                    Client.describeBuildings(false, WriteLine);                    
+                }
                 Client.Self.OnTeleport -= On_Teleport;
                 TeleportFinished.Set();
             }
@@ -52,6 +57,27 @@ namespace cogbot.Actions
             if (String.IsNullOrEmpty(ToS))
             {
                 ToS = parser.str;
+            }
+            int argUsed;
+            SimPosition pos = WorldSystem.GetVector(args, out argUsed);
+            if (argUsed > 0)
+            {
+                Vector3d global = pos.GlobalPosition;
+                WriteLine("Teleporing to " + pos + "...");
+                float x, y;
+                bool res =
+                    Client.Self.Teleport(
+                        SimRegion.GlobalPosToRegionHandle((float) global.X, (float) global.Y, out x, out y),
+                        pos.SimPosition, pos.SimPosition);
+                if (res)
+                {
+                    Success("Teleported to " + pos);
+                }
+                else
+                {
+                    Failure("Teleport Failed to " + pos);
+                }
+                return;
             }
             char[] splitchar = null;
             if (ToS.Contains("/"))

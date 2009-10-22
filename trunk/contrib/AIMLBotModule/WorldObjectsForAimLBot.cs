@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading;
+using cogbot.Actions;
 using cogbot.Listeners;
 using cogbot.ScriptEngines;
 using cogbot.TheOpenSims;
@@ -95,7 +96,7 @@ namespace AIMLBotModule
                 MyUser = user;
                 StringWriter sw = new StringWriter();
                 {
-                    string s = client.ExecuteCommand(cmd, sw.WriteLine);
+                    CmdResult s = client.ExecuteCommand(cmd, sw.WriteLine);
                     return String.Format("{0}{1}", sw, s);
                 }
             }
@@ -725,7 +726,7 @@ namespace AIMLBotModule
                 WriteLine("X,Y " + dist + " Too far to " + talker);
                 return;
             }
-            if (a.CurrentAction == null || a.CurrentAction is FollowerAction)
+            if (a.CurrentAction == null || a.CurrentAction is MoveToLocation)
             {
                 if (UseMoveAttention)
                 {

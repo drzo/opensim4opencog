@@ -133,7 +133,7 @@ namespace TheSimiansModule
 
         private void ExecuteCommand(string text)
         {
-            new Thread(()=> WriteLine(client.ExecuteCommand(text, WriteLine))).Start();
+            new Thread(()=> WriteLine(client.ExecuteCommand(text, WriteLine).ToString())).Start();
         }
 
         public void WriteLine(string str, params object[] args)

@@ -29,7 +29,7 @@ namespace cogbot.Actions
                 string line = lines[i].Trim();
 
                 if (line.Length > 0)
-                    WriteLine(TheBotClient.ExecuteCommand(line, WriteLine));
+                    WriteLine(TheBotClient.ExecuteCommand(line, WriteLine).ToString());
             }
 
             return Success("Finished executing " + lines.Length + " commands");

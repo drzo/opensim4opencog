@@ -44,7 +44,7 @@ namespace cogbot.Tutorials
                 string command = text.Split(null)[0];
                 if ((AcceptableCommand == text) || (AcceptableCommand == command))
                 {
-                    if (parent.ExecuteCommand(text)!=String.Empty)
+                    if (parent.ExecuteCommand(text)!=null)
                     {
                         parent.WriteLine(SuccessMessage);
                         if (CommandIdx < CommandCount)

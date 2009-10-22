@@ -1,4 +1,5 @@
 ﻿using System;
+using cogbot.TheOpenSims;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 
@@ -37,6 +38,13 @@ namespace cogbot.Actions.Movement
             {
                 return ShowUsage();// " FlyTo x y z [seconds]";
             }
+            if (false)
+            {
+                TheSimAvatar.CurrentAction = new FlyToAction(TheSimAvatar, position);
+                return Success(string.Format("Start flying to {0}", target));
+            }
+            // iterupt any motion
+            //TheSimAvatar.CurrentAction = null;
             target = position.SimPosition;
             target0.X = target.X;
             target0.Y = target.Y;
@@ -58,7 +66,7 @@ namespace cogbot.Actions.Movement
             //ZMovement();
             //Client.Self.Movement.SendUpdate(false);
 
-            return Success(string.Format("flying to {0} in {1} seconds", target.ToString(), duration/1000));
+            return Success(string.Format("flying to {0} in {1} seconds", target.ToString(), duration / 1000));
         }
 
         private void Objects_OnObjectUpdated(Simulator simulator, ObjectUpdate update, ulong regionHandle, ushort timeDilation)
