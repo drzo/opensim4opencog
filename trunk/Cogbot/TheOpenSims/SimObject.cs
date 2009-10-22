@@ -194,9 +194,9 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        public virtual void TurnToward(SimPosition targetPosition)
+        public virtual bool TurnToward(SimPosition targetPosition)
         {
-            TurnToward(targetPosition.GlobalPosition);
+            return TurnToward(targetPosition.GlobalPosition);
             //SendUpdate(0);
         }
 
@@ -250,23 +250,39 @@ namespace cogbot.TheOpenSims
                     }
                     finally
                     {
-                        Client.ExecuteCommand("pointat", Debug);
+                        IndicateTarget(pos, false);
                     }
                     return true;
                 }
             }
-            SimObject obj = pos as SimObject;
-            if (obj != null)
-            {
-                Client.ExecuteCommand("pointat " + obj.ID, Debug);
-            }
-            else
-            {
-                Client.ExecuteCommand("pointat " + pos.GlobalPosition, Debug);
-            }
+            IndicateTarget(pos, true);
             return false;
         }
 
+        protected void IndicateTarget(SimPosition pos, bool tf)
+        {
+            //return;
+            BotClient Client = WorldSystem.client;
+            if (tf)
+            {
+                SimObject obj = pos as SimObject;
+                if (obj != null && false)
+                {
+                    Client.ExecuteCommand("pointat " + obj.ID, Debug);
+                }
+                else
+                {
+                    var finalDistance = pos.GetSizeDistance();
+                    var vFinalLocation = pos.GlobalPosition;
+                    Vector3 v3 = Vector3.Transform(Vector3.UnitX, Matrix4.CreateFromQuaternion(pos.SimRotation)) *
+                                 (float)finalDistance;
+                    vFinalLocation.X += v3.X;
+                    vFinalLocation.Y += v3.Y;
+                    Client.ExecuteCommand("pointat " + vFinalLocation.X + " " + vFinalLocation.Y + " " + vFinalLocation.Z, Debug);
+                }
+            }
+            else Client.ExecuteCommand("pointat", Debug);
+        }
         public virtual bool IsControllable
         {
             get
@@ -299,18 +315,18 @@ namespace cogbot.TheOpenSims
         }
 
 
-        public void TeleportTo(SimPosition local)
+        public virtual bool TeleportTo(SimPosition local)
         {
             if (!IsControllable)
             {
                 throw Error("GotoTarget !Client.Self.AgentID == Prim.ID");
             }
-            TeleportTo(SimRegion.GetRegion(SimRegion.GetRegionHandle(local.PathStore)), local.SimPosition);
+            return TeleportTo(SimRegion.GetRegion(SimRegion.GetRegionHandle(local.PathStore)), local.SimPosition);
         }
 
-        public virtual void TeleportTo(SimRegion R, Vector3 local)
+        public virtual bool TeleportTo(SimRegion R, Vector3 local)
         {
-            SetObjectPosition(R.LocalToGlobal(local));
+            return SetObjectPosition(R.LocalToGlobal(local));
         }
 
         public bool SetObjectPosition(Vector3d globalPos)
@@ -339,7 +355,7 @@ namespace cogbot.TheOpenSims
 
         #region SimMover Members
 
-        public void TurnToward(Vector3d targetPosition)
+        public virtual bool TurnToward(Vector3d targetPosition)
         {
             Vector3d Current = GlobalPosition;
             Vector3d diff = targetPosition - Current;
@@ -349,7 +365,7 @@ namespace cogbot.TheOpenSims
                 diff.Y *= 0.75f;
                 diff.Z *= 0.75f;
             }
-            TurnToward(SimPosition + new Vector3((float)diff.X, (float)diff.Y, 0));
+            return TurnToward(SimPosition + new Vector3((float)diff.X, (float)diff.Y, 0));
         }
 
         #endregion
@@ -2321,9 +2337,9 @@ namespace cogbot.TheOpenSims
         ulong RegionHandle { get; }
         void SortByDistance(List<SimObject> sortme);
         string SuperTypeString();
-        void TeleportTo(SimRegion R, Vector3 local);
+        bool TeleportTo(SimRegion R, Vector3 local);
         //inherited from Object string ToString();
-        void TurnToward(SimPosition targetPosition);
+        bool TurnToward(SimPosition targetPosition);
         bool TurnToward(Vector3 target);
         void UpdateObject(ObjectUpdate objectUpdate, ObjectUpdate objectUpdateDiff);
 
