@@ -2,12 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using OpenMetaverse;
+using PathSystem3D.Mesher;
 
 namespace PathSystem3D.Navigation
 {
     public interface SimMover : PathSystem3D.Navigation.SimPosition
     {
-        void TurnToward(Vector3d targetPosition);
+        bool TurnToward(Vector3d targetPosition);
         void StopMoving();
         bool MoveTo(Vector3d end, double maxDistance, float maxSeconds);
         void Debug(string format, params object[] args);
@@ -66,7 +67,15 @@ namespace PathSystem3D.Navigation
         {
             Mover = mover;
             FinalDistance = finalDistance;
-            FinalLocation = finalGoal.GlobalPosition;
+            var vFinalLocation = finalGoal.GlobalPosition;
+            if (finalGoal is MeshableObject)
+            {
+                Vector3 v3 = Vector3.Transform(Vector3.UnitX, Matrix4.CreateFromQuaternion(finalGoal.SimRotation))*
+                             (float) finalDistance;
+                vFinalLocation.X += v3.X;
+                vFinalLocation.Y += v3.Y;
+            }
+            FinalLocation = vFinalLocation;
             FinalPosition = finalGoal;
         }
 
