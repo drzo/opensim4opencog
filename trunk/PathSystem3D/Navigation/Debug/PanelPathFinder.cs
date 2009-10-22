@@ -307,15 +307,25 @@ namespace PathSystem3D.Navigation.Debug
             if (e.Button == MouseButtons.None || mDrawMode == DrawModeSetup.None)
             {
                 string str;
-                CollisionIndex o = PathStore.GetCollisionIndex(x, y);
+                CollisionIndex o = PathStore.GetCollisionIndexNoSideEffect(x, y);
                 if (o != null)
                 {
+                    byte before = Matrix[x, y];
+                    float fbef = CurrentPlane.HeightMap[o.PX, o.PY];
                     float low = _CurrentPlane == null ? 0 : CurrentPlane.MinZ;
                     float high = _CurrentPlane == null ? float.MaxValue : CurrentPlane.MaxZ;
                     str = "";
                     if (_CurrentPlane != null) str += o.OccupiedString(_CurrentPlane);
                     if (_Matrix != null) str += String.Format(" matrix={0}", Matrix[x, y]);
                     if (_CurrentPlane != null) str += String.Format(" GL={0}", CurrentPlane.HeightMap[o.PX, o.PY]);
+                    if (_Matrix != null) if (Matrix[x, y] != before)
+                    {
+                        Matrix[x, y] = before;
+                    }
+                    if (_CurrentPlane != null) if (CurrentPlane.HeightMap[o.PX, o.PY] != fbef)
+                    {
+                        CurrentPlane.HeightMap[o.PX, o.PY] = fbef;
+                    }
                 }
                 else
                 {
