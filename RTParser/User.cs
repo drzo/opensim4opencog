@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using RTParser;
+using RTParser.Utils;
 
 namespace RTParser
 {
@@ -77,18 +78,32 @@ namespace RTParser
 		
 		#region Methods
 
+        public void InsertProvider(ParentProvider pp)
+        {
+            Predicates.InsertProvider(pp);
+        }
         /// <summary>
         /// Ctor
         /// </summary>
         /// <param name="UserID">The GUID of the user</param>
         /// <param name="bot">the bot the user is connected to</param>
-		public User(string UserID, RTParser.RTPBot bot)
-		{
+        public User(string UserID, RTParser.RTPBot bot)
+            : this(UserID, bot, new ParentProvider(() => bot.GlobalSettings))
+        {
+        }
+
+        /// <summary>
+        /// Ctor
+        /// </summary>
+        /// <param name="UserID">The GUID of the user</param>
+        /// <param name="bot">the bot the user is connected to</param>
+        public User(string UserID, RTParser.RTPBot bot, ParentProvider provider)
+        {
             if (UserID.Length > 0)
             {
                 this.id = UserID;
                 this.bot = bot;
-                this.Predicates = new RTParser.Utils.SettingsDictionary(this.bot);
+                this.Predicates = new RTParser.Utils.SettingsDictionary(this.bot, provider);
                 this.bot.DefaultPredicates.Clone(this.Predicates);
                 this.Predicates.addSetting("topic", Unifiable.STAR);
             }
@@ -96,7 +111,7 @@ namespace RTParser
             {
                 throw new Exception("The UserID cannot be empty");
             }
-		}
+        }
 
         public override string ToString()
         {
