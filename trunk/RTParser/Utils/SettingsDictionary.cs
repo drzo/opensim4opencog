@@ -7,12 +7,47 @@ using RTParser.Normalize;
 
 namespace RTParser.Utils
 {
+    public delegate ISettingsDictionary ParentProvider();
+    public interface ISettingsDictionary
+    {
+        /// <summary>
+        /// Adds a bespoke setting to the Settings class (accessed via the grabSettings(string name)
+        /// method.
+        /// </summary>
+        /// <param name="name">The name of the new setting</param>
+        /// <param name="value">The value associated with this setting</param>
+        void addSetting(string name, Unifiable value);
+        /// <summary>
+        /// Removes the named setting from this class
+        /// </summary>
+        /// <param name="name">The name of the setting to remove</param>
+        void removeSetting(string name);
+        /// <summary>
+        /// Updates the named setting with a new value whilst retaining the position in the
+        /// dictionary
+        /// </summary>
+        /// <param name="name">the name of the setting</param>
+        /// <param name="value">the new value</param>
+        void updateSetting(string name, Unifiable value);
+        /// <summary>
+        /// Returns the value of a setting given the name of the setting
+        /// </summary>
+        /// <param name="name">the name of the setting whose value we're interested in</param>
+        /// <returns>the value of the setting</returns>
+        Unifiable grabSetting(string name);
+        /// <summary>
+        /// Checks to see if a setting of a particular name exists
+        /// </summary>
+        /// <param name="name">The setting name to check</param>
+        /// <returns>Existential truth value</returns>
+        bool containsSettingCalled(string name);
+    }
 
     /// <summary>
     /// A bespoke Dictionary<,> for loading, adding, checking, removing and extracting
     /// settings.
     /// </summary>
-    public class SettingsDictionary
+    public class SettingsDictionary : ISettingsDictionary
     {
         #region Attributes
 
@@ -27,10 +62,11 @@ namespace RTParser.Utils
         /// </summary>
         readonly private List<string> orderedKeys = new List<string>();
 
+        private List<ParentProvider> _parent = new List<ParentProvider>();
         /// <summary>
         /// The bot this dictionary is associated with
         /// </summary>
-        protected RTParser.RTPBot bot;
+        //protected RTParser.RTPBot bot;
 
         /// <summary>
         /// The number of items in the dictionary
@@ -76,9 +112,10 @@ namespace RTParser.Utils
         /// Ctor
         /// </summary>
         /// <param name="bot">The bot for whom this is a settings dictionary</param>
-        public SettingsDictionary(RTParser.RTPBot bot)
+        public SettingsDictionary(RTParser.RTPBot bot, ParentProvider parent)
         {
-            this.bot = bot;
+            //this.bot = bot;
+            if (parent!=null) _parent.Add(parent);
         }
 
         #region Methods
@@ -233,7 +270,12 @@ namespace RTParser.Utils
                 {
                     this.removeFromHash(key);
                     this.settingsHash.Add(MakeCaseInsensitive.TransformInput(key), value);
+                    return;
                 }
+            }
+            foreach (var parent in Parents)
+            {
+                parent.updateSetting(name, value);                
             }
         }
 
@@ -265,8 +307,19 @@ namespace RTParser.Utils
                 }
                 else
                 {
-                    if (bot.GlobalSettings == this) return Unifiable.Empty;
-                    return bot.GetBotSetting(name);
+                    foreach (var list in Parents)
+                    {
+                        if (list.containsSettingCalled(name))
+                        {
+                            Unifiable v = list.grabSetting(name);
+                            if (v != null && !Unifiable.IsFalse(v)) return v;
+                        }
+                    }
+                    if (Parents.Count>0)
+                    {
+                        return Parents[0].grabSetting(name);
+                    }
+                    return Unifiable.Empty;
                 }
             }
         }
@@ -309,6 +362,20 @@ namespace RTParser.Utils
             }
         }
 
+        public List<ISettingsDictionary> Parents
+        {
+            get
+            {
+                var ps = new List<ISettingsDictionary>();
+                foreach (var hash in _parent)
+                {
+                    ps.Add(hash());
+
+                }
+                return ps;
+            }
+        }
+
         /// <summary>
         /// Copies the values in the current object into the SettingsDictionary passed as the target
         /// </summary>
@@ -327,6 +394,11 @@ namespace RTParser.Utils
 
         public void addObjectFields(Object obj)
         {
+        }
+
+        public void InsertProvider(ParentProvider provider)
+        {
+            _parent.Insert(0, provider);
         }
     }
 }

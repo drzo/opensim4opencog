@@ -371,12 +371,13 @@ namespace RTParser
         /// </summary>
         private void setup()
         {
-            this.GlobalSettings = new SettingsDictionary(this);
-            this.GenderSubstitutions = new SettingsDictionary(this);
-            this.Person2Substitutions = new SettingsDictionary(this);
-            this.PersonSubstitutions = new SettingsDictionary(this);
-            this.Substitutions = new SettingsDictionary(this);
-            this.DefaultPredicates = new SettingsDictionary(this);
+            this.GlobalSettings = new SettingsDictionary(this, null);
+            ParentProvider provider = new ParentProvider(() => GlobalSettings);
+            this.GenderSubstitutions = new SettingsDictionary(this, provider);
+            this.Person2Substitutions = new SettingsDictionary(this, provider);
+            this.PersonSubstitutions = new SettingsDictionary(this, provider);
+            this.Substitutions = new SettingsDictionary(this, provider);
+            this.DefaultPredicates = new SettingsDictionary(this, provider);
             this.CustomTags = new Dictionary<Unifiable, TagHandler>();
             this.Size = 0;
             this.Graphmaster = new RTParser.Utils.Node(null);
@@ -415,123 +416,7 @@ namespace RTParser
             this.GlobalSettings.loadSettings(pathToSettings);
 
             // Checks for some important default settings
-            if (!this.GlobalSettings.containsSettingCalled("version"))
-            {
-                this.GlobalSettings.addSetting("version", Environment.Version.ToString());
-            }
-            if (!this.GlobalSettings.containsSettingCalled("name"))
-            {
-                this.GlobalSettings.addSetting("name", "Unknown");
-            }
-            if (!this.GlobalSettings.containsSettingCalled("botmaster"))
-            {
-                this.GlobalSettings.addSetting("botmaster", "Unknown");
-            } 
-            if (!this.GlobalSettings.containsSettingCalled("master"))
-            {
-                this.GlobalSettings.addSetting("botmaster", "Unknown");
-            }
-            if (!this.GlobalSettings.containsSettingCalled("author"))
-            {
-                this.GlobalSettings.addSetting("author", "Nicholas H.Tollervey");
-            }
-            if (!this.GlobalSettings.containsSettingCalled("location"))
-            {
-                this.GlobalSettings.addSetting("location", "Unknown");
-            }
-            if (!this.GlobalSettings.containsSettingCalled("gender"))
-            {
-                this.GlobalSettings.addSetting("gender", "-1");
-            }
-            if (!this.GlobalSettings.containsSettingCalled("birthday"))
-            {
-                this.GlobalSettings.addSetting("birthday", "2006/11/08");
-            }
-            if (!this.GlobalSettings.containsSettingCalled("birthplace"))
-            {
-                this.GlobalSettings.addSetting("birthplace", "Towcester, Northamptonshire, UK");
-            }
-            if (!this.GlobalSettings.containsSettingCalled("website"))
-            {
-                this.GlobalSettings.addSetting("website", "http://sourceforge.net/projects/aimlbot");
-            }
-            if (this.GlobalSettings.containsSettingCalled("adminemail"))
-            {
-                Unifiable emailToCheck = this.GlobalSettings.grabSetting("adminemail");
-                this.AdminEmail = emailToCheck;
-            }
-            else
-            {
-                this.GlobalSettings.addSetting("adminemail", "");
-            }
-            if (!this.GlobalSettings.containsSettingCalled("islogging"))
-            {
-                this.GlobalSettings.addSetting("islogging", "False");
-            }
-            if (!this.GlobalSettings.containsSettingCalled("willcallhome"))
-            {
-                this.GlobalSettings.addSetting("willcallhome", "False");
-            }
-            if (!this.GlobalSettings.containsSettingCalled("timeout"))
-            {
-                this.GlobalSettings.addSetting("timeout", "2000");
-            }
-            if (!this.GlobalSettings.containsSettingCalled("timeoutmessage"))
-            {
-                this.GlobalSettings.addSetting("timeoutmessage", "ERROR: The request has timed out.");
-            }
-            if (!this.GlobalSettings.containsSettingCalled("culture"))
-            {
-                this.GlobalSettings.addSetting("culture", "en-US");
-            }
-            if (!this.GlobalSettings.containsSettingCalled("splittersfile"))
-            {
-                this.GlobalSettings.addSetting("splittersfile", "Splitters.xml");
-            }
-            if (!this.GlobalSettings.containsSettingCalled("person2substitutionsfile"))
-            {
-                this.GlobalSettings.addSetting("person2substitutionsfile", "Person2Substitutions.xml");
-            }
-            if (!this.GlobalSettings.containsSettingCalled("personsubstitutionsfile"))
-            {
-                this.GlobalSettings.addSetting("personsubstitutionsfile", "PersonSubstitutions.xml");
-            }
-            if (!this.GlobalSettings.containsSettingCalled("gendersubstitutionsfile"))
-            {
-                this.GlobalSettings.addSetting("gendersubstitutionsfile", "GenderSubstitutions.xml");
-            }
-            if (!this.GlobalSettings.containsSettingCalled("defaultpredicates"))
-            {
-                this.GlobalSettings.addSetting("defaultpredicates", "DefaultPredicates.xml");
-            }
-            if (!this.GlobalSettings.containsSettingCalled("substitutionsfile"))
-            {
-                this.GlobalSettings.addSetting("substitutionsfile", "Substitutions.xml");
-            }
-            if (!this.GlobalSettings.containsSettingCalled("aimldirectory"))
-            {
-                this.GlobalSettings.addSetting("aimldirectory", "aiml");
-            }
-            if (!this.GlobalSettings.containsSettingCalled("configdirectory"))
-            {
-                this.GlobalSettings.addSetting("configdirectory", "config");
-            }
-            if (!this.GlobalSettings.containsSettingCalled("logdirectory"))
-            {
-                this.GlobalSettings.addSetting("logdirectory", "logs");
-            }
-            if (!this.GlobalSettings.containsSettingCalled("maxlogbuffersize"))
-            {
-                this.GlobalSettings.addSetting("maxlogbuffersize", "64");
-            }
-            if (!this.GlobalSettings.containsSettingCalled("notacceptinguserinputmessage"))
-            {
-                this.GlobalSettings.addSetting("notacceptinguserinputmessage", "This Proccessor is currently set to not accept user input.");
-            }
-            if (!this.GlobalSettings.containsSettingCalled("stripperregex"))
-            {
-                this.GlobalSettings.addSetting("stripperregex", "[^0-9a-zA-Z]");
-            }
+            SetSaneGlobals(this.GlobalSettings);
 
             // Load the dictionaries for this RTPBot from the various configuration files
             this.Person2Substitutions.loadSettings(Path.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("person2substitutionsfile")));
@@ -542,6 +427,127 @@ namespace RTParser
 
             // Grab the splitters for this Proccessor
             this.loadSplitters(Path.Combine(this.PathToConfigFiles,this.GlobalSettings.grabSetting("splittersfile")));
+        }
+
+        private void SetSaneGlobals(SettingsDictionary settings)
+        {
+            if (!settings.containsSettingCalled("version"))
+            {
+                settings.addSetting("version", Environment.Version.ToString());
+            }
+            if (!settings.containsSettingCalled("name"))
+            {
+                settings.addSetting("name", "Unknown");
+            }
+            if (!settings.containsSettingCalled("botmaster"))
+            {
+                settings.addSetting("botmaster", "Unknown");
+            } 
+            if (!settings.containsSettingCalled("master"))
+            {
+                settings.addSetting("botmaster", "Unknown");
+            }
+            if (!settings.containsSettingCalled("author"))
+            {
+                settings.addSetting("author", "Nicholas H.Tollervey");
+            }
+            if (!settings.containsSettingCalled("location"))
+            {
+                settings.addSetting("location", "Unknown");
+            }
+            if (!settings.containsSettingCalled("gender"))
+            {
+                settings.addSetting("gender", "-1");
+            }
+            if (!settings.containsSettingCalled("birthday"))
+            {
+                settings.addSetting("birthday", "2006/11/08");
+            }
+            if (!settings.containsSettingCalled("birthplace"))
+            {
+                settings.addSetting("birthplace", "Towcester, Northamptonshire, UK");
+            }
+            if (!settings.containsSettingCalled("website"))
+            {
+                settings.addSetting("website", "http://sourceforge.net/projects/aimlbot");
+            }
+            if (settings.containsSettingCalled("adminemail"))
+            {
+                Unifiable emailToCheck = settings.grabSetting("adminemail");
+                this.AdminEmail = emailToCheck;
+            }
+            else
+            {
+                settings.addSetting("adminemail", "");
+            }
+            if (!settings.containsSettingCalled("islogging"))
+            {
+                settings.addSetting("islogging", "False");
+            }
+            if (!settings.containsSettingCalled("willcallhome"))
+            {
+                settings.addSetting("willcallhome", "False");
+            }
+            if (!settings.containsSettingCalled("timeout"))
+            {
+                settings.addSetting("timeout", "2000");
+            }
+            if (!settings.containsSettingCalled("timeoutmessage"))
+            {
+                settings.addSetting("timeoutmessage", "ERROR: The request has timed out.");
+            }
+            if (!settings.containsSettingCalled("culture"))
+            {
+                settings.addSetting("culture", "en-US");
+            }
+            if (!settings.containsSettingCalled("splittersfile"))
+            {
+                settings.addSetting("splittersfile", "Splitters.xml");
+            }
+            if (!settings.containsSettingCalled("person2substitutionsfile"))
+            {
+                settings.addSetting("person2substitutionsfile", "Person2Substitutions.xml");
+            }
+            if (!settings.containsSettingCalled("personsubstitutionsfile"))
+            {
+                settings.addSetting("personsubstitutionsfile", "PersonSubstitutions.xml");
+            }
+            if (!settings.containsSettingCalled("gendersubstitutionsfile"))
+            {
+                settings.addSetting("gendersubstitutionsfile", "GenderSubstitutions.xml");
+            }
+            if (!settings.containsSettingCalled("defaultpredicates"))
+            {
+                settings.addSetting("defaultpredicates", "DefaultPredicates.xml");
+            }
+            if (!settings.containsSettingCalled("substitutionsfile"))
+            {
+                settings.addSetting("substitutionsfile", "Substitutions.xml");
+            }
+            if (!settings.containsSettingCalled("aimldirectory"))
+            {
+                settings.addSetting("aimldirectory", "aiml");
+            }
+            if (!settings.containsSettingCalled("configdirectory"))
+            {
+                settings.addSetting("configdirectory", "config");
+            }
+            if (!settings.containsSettingCalled("logdirectory"))
+            {
+                settings.addSetting("logdirectory", "logs");
+            }
+            if (!settings.containsSettingCalled("maxlogbuffersize"))
+            {
+                settings.addSetting("maxlogbuffersize", "64");
+            }
+            if (!settings.containsSettingCalled("notacceptinguserinputmessage"))
+            {
+                settings.addSetting("notacceptinguserinputmessage", "This Proccessor is currently set to not accept user input.");
+            }
+            if (!settings.containsSettingCalled("stripperregex"))
+            {
+                settings.addSetting("stripperregex", "[^0-9a-zA-Z]");
+            }
         }
 
         /// <summary>
