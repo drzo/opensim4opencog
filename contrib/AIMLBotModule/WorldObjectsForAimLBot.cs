@@ -12,14 +12,16 @@ using OpenMetaverse;
 using RTParser;
 using cogbot;
 using cogbot.Utilities;
+using RTParser.Utils;
 using Exception=System.Exception;
 using Math=System.Math;
 using String=System.String;
 using Thread=System.Threading.Thread;
+using PathSystem3D.Navigation;
 
 namespace AIMLBotModule
 {
-    public class WorldObjectsForAimLBot : WorldObjectsModule, ICollectionProvider
+    public class WorldObjectsForAimLBot : WorldObjectsModule, ICollectionProvider, ISettingsDictionary
     {
         private static int _DefaultMaxRespondToChatPerMinute = 20;
         public static int DefaultMaxRespondToChatPerMinute
@@ -169,6 +171,7 @@ namespace AIMLBotModule
                 MyBot.loadSettings();
                 //MyBot.GlobalSettings.addSetting("name", client.BotLoginParams.FirstName+ " " + client.BotLoginParams.LastName);
                 MyUser = new User(Unifiable.Create("AIMLInterp"), MyBot);
+                MyUser.InsertProvider(new ParentProvider(() => this));
                 MyBot.isAcceptingUserInput = false;
                 MyBot.loadAIMLFromFiles();
                 MyBot.isAcceptingUserInput = true;
@@ -355,6 +358,7 @@ namespace AIMLBotModule
             User user = MyBot.FindOrCreateUser(fromname, out newlyCreated);
             if (newlyCreated)
             {
+                user.InsertProvider(() => this);
                 user.RespondToChat = RespondToChatByDefaultAllUsers;
             }
             user.MaxRespondToChatPerMinute = DefaultMaxRespondToChatPerMinute;
@@ -910,6 +914,58 @@ namespace AIMLBotModule
             var list = new List<string>();
             list.Add(v);
             return list;
+        }
+
+        public void addSetting(string name, Unifiable value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void removeSetting(string name)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void updateSetting(string name, Unifiable value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Unifiable grabSetting(string name)
+        {
+            if (name == "botmod") return "botmody";
+            int argsUsed;
+            var v = WorldSystem.ResolveCollection(name.ToLower(), out argsUsed, this);
+            if (v == null) return String.Empty;
+            if (v.Count == 0) return Unifiable.Empty;
+            ListUnifiable us = new ListUnifiable();
+            Unifiable uu = null;
+            int c = 0;
+            foreach(var u in v)
+            {
+                c++;
+                uu = ObjectUnifiable(u);
+                us.List.Add(uu);
+            }
+            if (c == 1) return uu;
+            return name;
+            //return us;
+        }
+
+        private Unifiable ObjectUnifiable(object o)
+        {
+            if (o is SimObject) o = ((SimObject)o).ID;
+//            if (o is SimPosition) o = ((SimPosition) o).GlobalPosition;
+            return new StringUnifiable(o.ToString());
+        }
+
+        public bool containsSettingCalled(string name)
+        {
+            return name == "botmod";
+            int argsUsed;
+            var v = WorldSystem.ResolveCollection(name.ToLower(), out argsUsed, this);
+            return (v != null && v.Count > 0);
+
         }
     }
 }
