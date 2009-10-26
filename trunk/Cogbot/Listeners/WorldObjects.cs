@@ -405,6 +405,11 @@ namespace cogbot.Listeners
                 }
                 else
                 {
+                    if (prim.ID==UUID.Zero)
+                    {
+                        Debug("  - - -#$%#$%#$%% - ------- - Weird Prim " + prim);
+                        return null;
+                    }
                     obj0 = CreateSimObject(prim.ID, this, simulator);
                 }
             }
