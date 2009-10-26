@@ -433,35 +433,6 @@ namespace cogbot.Listeners
                 AsPrimitives(prims, v);
                 return prims;
             }
-
-            if (arg0Lower == "all")
-            {
-                prims.Clear();
-                argsUsed = 1;
-                return SimObjects.CopyOf();
-            }
-            if (arg0Lower == "self")
-            {
-                prims.Clear();
-                argsUsed = 1;
-                prims.Add(TheSimAvatar);
-                return prims;
-            }
-            if (arg0Lower == "known")
-            {
-                prims.Clear();
-                argsUsed = 1;
-                return TheSimAvatar.GetKnownObjects().CopyOf();
-            }
-            if (arg0Lower == "selected")
-            {
-                prims.Clear();
-                argsUsed = 1;
-                List<SimObject> objs = new List<SimObject>();
-                AsPrimitives(objs, TheSimAvatar.GetSelectedObjects());
-                return objs;
-
-            }
             if (arg0Lower == "dist")
             {
                 prims.Clear();

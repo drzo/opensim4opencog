@@ -79,7 +79,7 @@ namespace cogbot.Listeners
             Func<IList> func;
             if (ObjectGroups.TryGetValue(arg0Lower, out func))
             {
-
+                if (func == null) return null;
                 return func();
             }
             return null;
