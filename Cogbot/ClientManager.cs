@@ -222,7 +222,7 @@ namespace cogbot
             if (String.IsNullOrEmpty(text)) return null;
             WriteLine("textform> {0}", text);
             CmdResult res = ExecuteBotsCommand(text, WriteLine);
-            if (res != null) return res;
+            if (res != null && res.Success) return res;
             return ExecuteSystemCommand(text, WriteLine);
         }
 
