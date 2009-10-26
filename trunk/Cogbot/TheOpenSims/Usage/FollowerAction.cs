@@ -12,6 +12,7 @@ namespace cogbot.TheOpenSims
         readonly private Thread FollowThread;
         private bool KeepFollowing = true;
         public static bool UsePathfinder = true;
+        public static bool UseFlight = true;
 
         public FollowerAction(SimAvatar impl, SimPosition position)
             : base(impl,position)
@@ -61,7 +62,7 @@ namespace cogbot.TheOpenSims
                     {
                         if (!Target.IsRegionAttached)
                         {
-                            Console.WriteLine(""+this+" Not regions attached " + Target);                            
+                            Console.WriteLine("" + this + " Not regions attached " + Target);
                             Thread.Sleep(2000);
                             continue;
                         }
@@ -69,18 +70,30 @@ namespace cogbot.TheOpenSims
                         dist = TheBot.Distance(Target);
                         TheBot.SetMoveTarget(Target, maxDistance);
                         Thread.Sleep(3000);
-                        if (dist > (TheBot.Distance(Target)+2))
+                        if (dist > (TheBot.Distance(Target) + 2))
                         {
                             // Simple Follow might have worked. try again
                             useSimpleFollow = 2;
-                            continue;                            
+                            continue;
                         }
                         TheBot.StopMoving();
                     }
                     //if (UsePathfinder)
-                    if (UsePathfinder && Target.IsRegionAttached && TheBot.Distance(Target) > maxDistance + 2)
-                        TheBot.GotoTarget(Target);
-                }   
+                    if (!Target.IsRegionAttached || TheBot.Distance(Target) < maxDistance + 2) continue;
+
+                    if (Target is SimAvatar)
+                    {
+                        SimAvatar av = (SimAvatar)Target;
+                        if (UseFlight && av.Flying && av.RegionHandle == TheBot.RegionHandle)
+                        {
+                            TheBot.Flying = true;
+                            TheBot.GetGridClient().ExecuteBotCommand("flyto " + av.ID, TheBot.Debug);
+                        }
+                    }
+                    if (!Target.IsRegionAttached || TheBot.Distance(Target) < maxDistance + 2) continue;
+                    if (UsePathfinder)
+                        if (TheBot.GotoTarget(Target)) continue;
+                }  
                 else
                 {
                     TheBot.TurnToward(Target);
