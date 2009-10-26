@@ -1156,13 +1156,12 @@ namespace cogbot.TheOpenSims
         /// <returns></returns>
         public double Approach(SimObject obj, double maxDistance)
         {
-            OnlyMoveOnThisThread();
-            BotClient Client = GetGridClient();
+            OnlyMoveOnThisThread();            
             ///  stand up first
             SimObject UnPhantom = StandUp();
             ///  make sure it not going somewhere
             ///  set the new target
-            ApproachDistance = obj.GetSizeDistance() + 0.5f;
+            ApproachDistance = maxDistance;
             string str = "Approaching " + obj + " " + DistanceVectorString(obj) + " to get " + ApproachDistance;
             Debug(str);
             try
@@ -1172,6 +1171,7 @@ namespace cogbot.TheOpenSims
                 ///  if (!MoveTo(obj.GlobalPosition(), obj.GetSizeDistance() + 0.5f, 12))
                 GotoTarget(obj);
                 TurnToward(obj);
+                MoveTo(obj.GlobalPosition, maxDistance, 1);
             }
             finally
             {
@@ -1547,6 +1547,7 @@ namespace cogbot.TheOpenSims
 
         public override bool GotoTarget(SimPosition pos)
         {
+            double maxDistance = pos.GetSizeDistance() + 1;
             switch (GotoMovementProceedure)
             {
                 case MovementProceedure.Teleport:
@@ -1562,6 +1563,10 @@ namespace cogbot.TheOpenSims
                     bool res = base.GotoTarget(pos);
                     if (res) return res;
                     StopMoving();
+                    if (maxDistance > this.Distance(pos))
+                    {
+                        return true;
+                    }
                     Debug("Goto sneaking in TP to " + pos);
                     res = this.TeleportTo(pos);
                     StopMoving();
