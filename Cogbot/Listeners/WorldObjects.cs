@@ -20,7 +20,7 @@ namespace cogbot.Listeners
         public static bool CanPhantomize = false;
         public static bool CanUseSit = true;
         public static bool DoSimulatorsCatchUp = false; //GridMaster will turn this on/off only if it needed
-        public static bool MaintainAnims = false;
+        public static bool MaintainAnims = true;
         public static bool MaintainAnimsInFolders = true;
         public static bool GleanAssetsFromFolders = true;
         public static bool MaintainAttachments = true;

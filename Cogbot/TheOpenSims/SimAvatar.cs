@@ -930,7 +930,8 @@ namespace cogbot.TheOpenSims
             {
                 if (IsControllable)
                     return Client.Self.Movement.Fly;
-                return base.Flying;
+                if (base.Flying) return true;
+                return IsFlying;
             }
             set
             {
@@ -2488,6 +2489,7 @@ namespace cogbot.TheOpenSims
         BotAction LastAction { get; }
         Avatar.AvatarProperties ProfileProperties { get; set; }
         Avatar.Interests AvatarInterests { get; set; }
+        bool IsFlying { get; }
         void OnAvatarAnimations(InternalDictionary<UUID, int> anims);
 
         ICollection<UUID> GetCurrentAnims();
