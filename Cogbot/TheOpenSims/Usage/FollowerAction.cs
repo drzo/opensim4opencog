@@ -58,6 +58,16 @@ namespace cogbot.TheOpenSims
                 if (dist > maxDistance)
                 {
                     int useSimpleFollow = 2;
+                    if (!TheBot.Flying)
+                    {
+                        Vector3 botpos = TheBot.SimPosition;
+                        float theBotPathStoreGetGroundLevel = TheBot.PathStore.GetGroundLevel(botpos.X, botpos.Y);
+                        if (botpos.Z + 2 > theBotPathStoreGetGroundLevel)
+                        {
+                            // avoid faling from heights
+                            useSimpleFollow = 0;                            
+                        }
+                    }
                     while (useSimpleFollow-- > 0)
                     {
                         if (!Target.IsRegionAttached)
