@@ -16,10 +16,18 @@ namespace cogbot.Actions
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
+            int time = 10;
+            if (args.Length>0)
+            {
+                if (!int.TryParse(args[0], out time))
+                {
+                    time = 10;  
+                }
+            }
             foreach (var bot in ClientManager.SingleInstance.BotClients)
             {
                 var net = bot.gridClient.Network;
-                int retries = 10;
+                int retries = time;
                 while (net.CurrentSim == null)
                 {
                     WriteLine("Pending logins: " + bot.GetName());
@@ -28,8 +36,19 @@ namespace cogbot.Actions
                     if (retries < 1) break;
                 }
             }
-
-            return Success("All pending logins have completed, currently tracking " + ClientManager.SingleInstance.BotClients.Count + " bots");
+            foreach (var bot in ClientManager.SingleInstance.BotClients)
+            {
+                var net = bot.gridClient.Network;
+                if (net.CurrentSim == null)
+                {
+                    Failure("Pending logins: " + bot.GetName());
+                }
+                else
+                {
+                    Success(bot.GetName() + ": " + net.CurrentSim);
+                }
+            }
+            return SuccessOrFailure();
         }
     }
 }
