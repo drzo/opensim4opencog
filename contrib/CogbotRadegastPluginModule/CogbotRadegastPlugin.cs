@@ -111,6 +111,14 @@ namespace CogbotRadegastPluginModule
             tab1.AllowDetach = true;
             RadegastTab tab2 = RadegastInstance.TabConsole.GetTab("login");
             tab2.AllowDetach = true;
+            //RadegastTab tab3 = RadegastInstance.TabConsole.GetTab("search");
+            //tab3.Control = new METAbolt.SearchConsole(inst);
+            var sc = new METAbolt.SearchConsole(inst)
+            {
+                Dock = DockStyle.Fill,
+                // Visible = false
+            };
+            tab = inst.TabConsole.AddTab("cogbotsearch", "CogbotSearch", sc);
         }
 
         private void WriteLine(string str, object[] args)
