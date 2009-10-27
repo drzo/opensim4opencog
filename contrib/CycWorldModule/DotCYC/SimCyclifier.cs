@@ -669,28 +669,13 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
                 if (obj is SimAvatar)
                 {
                     type = "SimAvatar";
-                    name = obj.ID.ToString(); //obj.GetName();
-                    if (name == null)
-                    {
-                        name = WorldObjects.GridMaster.GetUserName(obj.ID);
-                    }
-                    if (name == null)
-                    {
-                        name = obj.ID.ToString();
-                    }
+                    name = obj.ID.ToString();
                 }
                 else
                 {
                     type = "SimObject";
                     name = obj.ID.ToString();
                 }
-
-                //byte[] ba = id.GetBytes();
-                ////ulong umsb = Utils.BytesToUInt64(ba);
-                ////long msb = umsb;
-                ////long lsb = 0L;
-                //System.Guid g = new System.Guid();
-                ////CUID cycid = CUID.nameUUIDFromBytes(ba);
 
                 cycTerms[obj] = constant =
                                 createIndividualFn(
@@ -701,12 +686,21 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
                 if (obj is SimAvatar)
                 {
                     string avName = obj.GetName();
-                    if (!string.IsNullOrEmpty(avName)) assertGaf(CycAccess.comment, constant,  avName);
+                    if (string.IsNullOrEmpty(avName))
+                    {
+                        string name = WorldObjects.GridMaster.GetUserName(obj.ID);
+                        if (!string.IsNullOrEmpty(name))
+                        {
+                            if (!name.EndsWith("..")) avName = name;
+                        }
+                    }
+                    if (!string.IsNullOrEmpty(avName)) assertGaf(C("fullName"), constant, avName);
                 }
                 else
                 {
                     assertGaf(CycAccess.comment, constant, obj.DebugInfo());
                 }
+                assertGaf(C("externalTermStrings"), constant, obj.ID.ToString());
                 return constant;
             }
         }
