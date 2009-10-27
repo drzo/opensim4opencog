@@ -29,11 +29,92 @@ namespace cogbot.Utilities
         }
     }
 
+    public class NewClient: SimEventSubscriber
+    {
+        
+        StreamReader tcpStreamReader = null;// = new StreamReader(ns);        
+        StreamWriter tcpStreamWriter = null;// = new StreamWriter(ns);        
+        private BotTcpServer Server;
+        public NewClient(TcpClient this_client, BotTcpServer server)
+        {
+            tcp_client = this_client;
+            Server = server;
+            Server.parent.AddBotMessageSubscriber(this);
+        }
+
+        public void DoLoop()
+        {
+            string clientMessage = string.Empty;
+
+            NetworkStream ns = tcp_client.GetStream();
+            tcpStreamReader = new StreamReader(ns);
+            tcpStreamWriter = new StreamWriter(ns);
+
+            tcpStreamWriter.WriteLine("<comment>Welcome to Cogbot</comment>");
+            tcpStreamWriter.Flush();
+            // Start loop and handle commands:
+            bool quitRequested = false;
+            while (!quitRequested)
+            {
+
+                clientMessage = tcpStreamReader.ReadLine().Trim();
+                Server.parent.WriteLine("SockClient: {0}", clientMessage);
+                tcpStreamWriter.WriteLine();
+                String lowerCmd = clientMessage.ToLower();
+
+                try
+                {
+                    if (lowerCmd == "bye")
+                    {
+                        quitRequested = true;
+                    }
+                    else Server.ProcessHttpCommand(tcpStreamWriter, clientMessage);
+                }
+                catch (Exception e)
+                {
+                    tcpStreamWriter.WriteLine("500 {0}", Server.parent.argString(e.ToString()));
+                }
+                tcpStreamWriter.Flush();
+            }
+
+            //data = new byte[1024];
+            //receivedDataLength = ns.Read(data, 0, data.Length);
+            //WriteLine(Encoding.ASCII.GetString(data, 0, receivedDataLength));
+            //ns.Write(data, 0, receivedDataLength);\
+            try
+            {
+                ns.Close();
+            }
+            catch (Exception) { }
+            try
+            {
+                tcp_client.Close();
+            }
+            catch (Exception) { }
+            tcpStreamWriter = null;
+        }
+        public TcpClient tcp_client { get; set; }
+
+        #region SimEventSubscriber Members
+
+        public void OnEvent(SimObjectEvent evt)
+        {
+            if (tcpStreamWriter != null) tcpStreamWriter.WriteLine(BotTcpServer.EventToString(evt, Server.parent));
+        }
+
+        public void Dispose()
+        {
+           
+        }
+
+        #endregion
+    }
+
     public class BotTcpServer : SimEventSubscriber
     {
         public bool DisableEventStore = true;// TODO this needs to be falso but running out of memory
         public Thread thrSvr;
-        BotClient parent;
+        public BotClient parent;
         GridClient client;
         Queue<String> whileClientIsAway = new Queue<string>();
 
@@ -89,12 +170,15 @@ namespace cogbot.Utilities
                 {
                     try
                     {
-                        lock (ClientHandlerLock)
+                        
                         {
+                            TcpClient ClientHandle;
                             ClientHandle = tcp_socket.AcceptTcpClient();
-                            Thread t = new Thread(new ThreadStart(OneClient));
+                            var clt = new NewClient(ClientHandle,this);
+                            Thread t = new Thread(new ThreadStart(clt.DoLoop));
                             t.Name = "ClientHandle thread for " + ClientHandle;
                             t.Start();
+
                         }
                     }
                     catch (Exception e)
@@ -112,74 +196,6 @@ namespace cogbot.Utilities
             }
         }
 
-        void OneClient()
-        {
-            TcpClient this_client = ClientHandle;
-            try
-            {
-                NewClient(this_client);
-            }
-            catch (Exception e)
-            {
-                WriteLine(""+this_client+ " caused " + e.ToString());
-            }
-        }
-
-        TcpClient ClientHandle;
-        object ClientHandlerLock = new object();
-
-        private void NewClient(TcpClient tcp_client)
-        {
-            string clientMessage = string.Empty;
-
-            StreamReader tcpStreamReader = null;// = new StreamReader(ns);
-            StreamWriter tcpStreamWriter = null;// = new StreamWriter(ns);
-            NetworkStream ns = tcp_client.GetStream();
-            tcpStreamReader = new StreamReader(ns);
-            tcpStreamWriter = new StreamWriter(ns);
-
-            tcpStreamWriter.WriteLine("<comment>Welcome to Cogbot</comment>");
-            tcpStreamWriter.Flush();
-            // Start loop and handle commands:
-            bool quitRequested = false;
-            while (!quitRequested)
-            {
-
-                clientMessage = tcpStreamReader.ReadLine().Trim();
-                parent.WriteLine("SockClient: {0}", clientMessage);
-                tcpStreamWriter.WriteLine();
-                String lowerCmd = clientMessage.ToLower();
-
-                try
-                {
-                    if (lowerCmd == "bye")
-                    {
-                        quitRequested = true;
-                    }
-                    else ProcessHttpCommand(tcpStreamWriter, clientMessage);
-                }
-                catch (Exception e)
-                {
-                    tcpStreamWriter.WriteLine("500 {0}", parent.argString(e.ToString()));
-                }
-                tcpStreamWriter.Flush();
-            }
-
-            //data = new byte[1024];
-            //receivedDataLength = ns.Read(data, 0, data.Length);
-            //WriteLine(Encoding.ASCII.GetString(data, 0, receivedDataLength));
-            //ns.Write(data, 0, receivedDataLength);\
-            try
-            {
-                ns.Close();
-            }
-            catch (Exception) { }
-            try
-            {
-                tcp_client.Close();
-            }
-            catch (Exception) { }
-        }
 
         public void ProcessHttpCommand(TextWriter tcpStreamWriter, string clientMessage)
         {
@@ -547,7 +563,12 @@ namespace cogbot.Utilities
         void SimEventSubscriber.OnEvent(SimObjectEvent evt)
         {
             if (DisableEventStore) return;
-            whileClientIsAway.Enqueue("("+evt.GetVerb()+" "+parent.argsListString(evt.GetArgs())+")");
+            whileClientIsAway.Enqueue(EventToString(evt, parent));
+        }
+
+        static internal string EventToString(SimObjectEvent evt, BotClient parent)
+        {
+            return string.Format("({0} {1})", evt.GetVerb(), parent.argsListString(evt.GetArgs()));
         }
 
         void SimEventSubscriber.Dispose()
