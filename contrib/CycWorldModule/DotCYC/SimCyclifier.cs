@@ -59,12 +59,15 @@ namespace CycWorldModule.DotCYC
         //static readonly List<String> SkipVerbs = new List<string>() { "on-log-message", "on-login", "on-event-queue-running", "on-sim-connecting" };
         public static SimCyclifier Master;
         static object SimCyclifierLock = new object();
+        static bool IsCycDead;
         // ReSharper restore InconsistentNaming
         public void OnEvent(SimObjectEvent evt)
         {
+            if (IsCycDead) return;
             if (cycAccess == null)
             {
                 //Console.WriteLine("No Cyc connection");
+                IsCycDead = true;
                 return;
             }
             if (evt.EventType == SimEventType.UNKNOWN) return;
@@ -112,6 +115,7 @@ namespace CycWorldModule.DotCYC
 
         internal void DataUpdate(object v)
         {
+            if (IsCycDead) return;
             if (IsDisposing) return;
             object constant = ToFort(v);
             if (constant is CycFort)
