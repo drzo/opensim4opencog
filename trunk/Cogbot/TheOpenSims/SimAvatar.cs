@@ -29,6 +29,7 @@ namespace cogbot.TheOpenSims
 
         ListAsSet<EffectBeamInfo> BeamInfos = new ListAsSet<EffectBeamInfo>();
         ListAsSet<SimPosition> SelectedObjects = new ListAsSet<SimPosition>();
+        private int _debugLevel = 2;
         private bool _SelectedBeam;
         public bool SelectedBeam
         {
@@ -1167,7 +1168,7 @@ namespace cogbot.TheOpenSims
             Debug(str);
             try
             {
-                IndicateTarget(obj, true);
+                if (DebugLevel > 1) IndicateTarget(obj, true);
                 obj.MakeEnterable(this);
                 ///  if (!MoveTo(obj.GlobalPosition(), obj.GetSizeDistance() + 0.5f, 12))
                 GotoTarget(obj);
@@ -1178,7 +1179,7 @@ namespace cogbot.TheOpenSims
             {
                 if (UnPhantom != null)
                     UnPhantom.RestoreEnterable(this);
-                IndicateTarget(obj, false);
+                if (DebugLevel > 1) IndicateTarget(obj, false);
             }
             return (double)Distance(obj);
         }
@@ -1444,9 +1445,12 @@ namespace cogbot.TheOpenSims
         /// <returns></returns>
         public override bool MoveTo(Vector3d finalTarget, double maxDistance, float maxSeconds)
         {
-            Random MyRand = new Random();
-            if (MyRand.Next(5)<2) 
-                Client.Self.LookAtEffect(ID, UUID.Zero, finalTarget, (LookAtType)MyRand.Next(11), ID);
+            if (false)
+            {
+                Random MyRand = new Random();
+                if (MyRand.Next(5) < 2)
+                    Client.Self.LookAtEffect(ID, UUID.Zero, finalTarget, (LookAtType) MyRand.Next(11), ID);
+            }
             OnlyMoveOnThisThread();
             TurnToward(finalTarget);
             int blockCount = 0;
@@ -2031,6 +2035,12 @@ namespace cogbot.TheOpenSims
             {
                 return Overlaps(GetCurrentAnims(), SimAssetStore.MeaningUUIDs("Sleeping"));
             }
+        }
+
+        public int DebugLevel
+        {
+            get { return _debugLevel; }
+            set { _debugLevel = value; }
         }
 
         public ICollection<UUID> GetCurrentAnims()
