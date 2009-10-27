@@ -15,27 +15,29 @@ using cogbot.Listeners;
 namespace cogbot.Utilities
 {
 
-    public class TcpServerCommand : Command,BotSystemCommand
+    public class TcpServerCommand : Command, BotSystemCommand
     {
-        public TcpServerCommand(BotClient bc):base(bc)
+        public TcpServerCommand(BotClient bc)
+            : base(bc)
         {
             Name = "tcpserver";
             Description = "";
         }
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
-           // BotTcpServer btp = TheBotClient.TheTcpServer;
+            // BotTcpServer btp = TheBotClient.TheTcpServer;
             throw new NotImplementedException();
         }
     }
 
-    public class NewClient: SimEventSubscriber
+    public class SingleBotTcpClient : SimEventSubscriber
     {
-        
+
         StreamReader tcpStreamReader = null;// = new StreamReader(ns);        
         StreamWriter tcpStreamWriter = null;// = new StreamWriter(ns);        
         private BotTcpServer Server;
-        public NewClient(TcpClient this_client, BotTcpServer server)
+        public Thread AbortThread;
+        public SingleBotTcpClient(TcpClient this_client, BotTcpServer server)
         {
             tcp_client = this_client;
             Server = server;
@@ -44,55 +46,72 @@ namespace cogbot.Utilities
 
         public void DoLoop()
         {
-            string clientMessage = string.Empty;
-
-            NetworkStream ns = tcp_client.GetStream();
-            tcpStreamReader = new StreamReader(ns);
-            tcpStreamWriter = new StreamWriter(ns);
-
-            tcpStreamWriter.WriteLine("<comment>Welcome to Cogbot</comment>");
-            tcpStreamWriter.Flush();
-            // Start loop and handle commands:
-            bool quitRequested = false;
-            while (!quitRequested)
+            try
             {
+                AbortThread = Thread.CurrentThread;
 
-                clientMessage = tcpStreamReader.ReadLine().Trim();
-                Server.parent.WriteLine("SockClient: {0}", clientMessage);
-                tcpStreamWriter.WriteLine();
-                String lowerCmd = clientMessage.ToLower();
 
+                NetworkStream ns = tcp_client.GetStream();
+                tcpStreamReader = new StreamReader(ns);
+                tcpStreamWriter = new StreamWriter(ns);
+
+                tcpStreamWriter.WriteLine("<comment>Welcome to Cogbot</comment>");
+                tcpStreamWriter.Flush();
+                // Start loop and handle commands:
+                bool quitRequested = false;
                 try
                 {
-                    if (lowerCmd == "bye")
+                    while (!quitRequested)
                     {
-                        quitRequested = true;
+                        string clientMessage = tcpStreamReader.ReadLine().Trim();
+                        Server.parent.WriteLine("SockClient: {0}", clientMessage);
+                        tcpStreamWriter.WriteLine();
+                        String lowerCmd = clientMessage.ToLower();
+
+                        try
+                        {
+                            if (lowerCmd == "bye")
+                            {
+                                quitRequested = true;
+                            }
+                            else Server.ProcessHttpCommand(tcpStreamWriter, clientMessage);
+                        }
+                        catch (Exception e)
+                        {
+                            tcpStreamWriter.WriteLine("500 {0}", Server.parent.argString(e.ToString()));
+                        }
+                        tcpStreamWriter.Flush();
                     }
-                    else Server.ProcessHttpCommand(tcpStreamWriter, clientMessage);
+
                 }
-                catch (Exception e)
+                finally
                 {
-                    tcpStreamWriter.WriteLine("500 {0}", Server.parent.argString(e.ToString()));
+                    Server.parent.RemoveBotMessageSubscriber(this);
                 }
-                tcpStreamWriter.Flush();
+
+                //data = new byte[1024];
+                //receivedDataLength = ns.Read(data, 0, data.Length);
+                //WriteLine(Encoding.ASCII.GetString(data, 0, receivedDataLength));
+                //ns.Write(data, 0, receivedDataLength);\
+                try
+                {
+                    ns.Close();
+                }
+                catch (Exception) { }
+                try
+                {
+                    tcp_client.Close();
+                }
+                catch (Exception) { }
+                tcpStreamWriter = null;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("" + e);
             }
 
-            //data = new byte[1024];
-            //receivedDataLength = ns.Read(data, 0, data.Length);
-            //WriteLine(Encoding.ASCII.GetString(data, 0, receivedDataLength));
-            //ns.Write(data, 0, receivedDataLength);\
-            try
-            {
-                ns.Close();
-            }
-            catch (Exception) { }
-            try
-            {
-                tcp_client.Close();
-            }
-            catch (Exception) { }
-            tcpStreamWriter = null;
         }
+
         public TcpClient tcp_client { get; set; }
 
         #region SimEventSubscriber Members
@@ -104,7 +123,7 @@ namespace cogbot.Utilities
 
         public void Dispose()
         {
-           
+
         }
 
         #endregion
@@ -117,6 +136,7 @@ namespace cogbot.Utilities
         public BotClient parent;
         GridClient client;
         Queue<String> whileClientIsAway = new Queue<string>();
+        HashSet<SingleBotTcpClient> singleBotTcpClients = new HashSet<SingleBotTcpClient>();
 
         public BotTcpServer(int port, BotClient botclient)
         {
@@ -125,7 +145,7 @@ namespace cogbot.Utilities
             serverPort = port;
             botclient.AddBotMessageSubscriber(this);
 
-//            config = parent.config;
+            //            config = parent.config;
         }
 
 
@@ -149,7 +169,7 @@ namespace cogbot.Utilities
         // External XML socket server
         //------------------------------------
         TcpListener tcp_socket = null;
-    //    TcpClient tcp_client = null;
+        //    TcpClient tcp_client = null;
         private void tcpSrv()
         {
 
@@ -160,9 +180,9 @@ namespace cogbot.Utilities
                 byte[] data = new byte[1024];
 
                 int PortNumber = serverPort; // 5555;
-// ReSharper disable AssignNullToNotNullAttribute
+                // ReSharper disable AssignNullToNotNullAttribute
                 tcp_socket = new TcpListener(IPAddress.Parse("0.0.0.0"), PortNumber);
-// ReSharper restore AssignNullToNotNullAttribute
+                // ReSharper restore AssignNullToNotNullAttribute
                 parent.WriteLine("About to initialize port.");
                 tcp_socket.Start();
                 parent.WriteLine("Listening for a connection... port=" + PortNumber);
@@ -170,11 +190,11 @@ namespace cogbot.Utilities
                 {
                     try
                     {
-                        
+
                         {
-                            TcpClient ClientHandle;
-                            ClientHandle = tcp_socket.AcceptTcpClient();
-                            var clt = new NewClient(ClientHandle,this);
+                            TcpClient ClientHandle = tcp_socket.AcceptTcpClient();
+                            var clt = new SingleBotTcpClient(ClientHandle, this);
+                            singleBotTcpClients.Add(clt);
                             Thread t = new Thread(new ThreadStart(clt.DoLoop));
                             t.Name = "ClientHandle thread for " + ClientHandle;
                             t.Start();
@@ -186,8 +206,8 @@ namespace cogbot.Utilities
                         WriteLine(e.ToString());
                     }
                 }
-              //  tcp_socket.Stop();
-               // thrSvr.Abort();
+                //  tcp_socket.Stop();
+                // thrSvr.Abort();
 
             }
             catch (Exception ee)
@@ -225,15 +245,15 @@ namespace cogbot.Utilities
 
 
         public void GetWhileAwayAndClear(TextWriter tw)
-        {                  
+        {
             lock (whileClientIsAway)
             {
-                while (whileClientIsAway.Count>0)
+                while (whileClientIsAway.Count > 0)
                 {
                     tw.Write("<msgClient>");
                     tw.Write(whileClientIsAway.Dequeue());
                     tw.WriteLine("</msgClient>");
-                }                
+                }
             }
             tw.Flush();
         }
@@ -241,11 +261,11 @@ namespace cogbot.Utilities
 
         public void closeTcpListener()
         {
-        //    if (ns != null) ns.Close();
-          //  if (tcp_client != null) tcp_client.Close();
+            //    if (ns != null) ns.Close();
+            //  if (tcp_client != null) tcp_client.Close();
             if (thrSvr != null) thrSvr.Abort();
             if (tcp_socket != null) tcp_socket.Stop();
-           // if (parent.thrJobQueue != null) parent.thrJobQueue.Abort();
+            // if (parent.thrJobQueue != null) parent.thrJobQueue.Abort();
 
         }
 
@@ -491,7 +511,7 @@ namespace cogbot.Utilities
         /// <returns></returns>
         public string XML2Lisp2(string URL, string args)
         {
-            return parent.XML2Lisp2(URL,args);
+            return parent.XML2Lisp2(URL, args);
         } // method: XML2Lisp2
 
 
@@ -500,8 +520,8 @@ namespace cogbot.Utilities
             return parent.XML2Lisp(xcmd);
         }
 
-       // private void enqueueLispTask(string lispCodeString)
-       // {
+        // private void enqueueLispTask(string lispCodeString)
+        // {
         //    parent.enqueueLispTask(lispCodeString);
         //}
 
@@ -541,7 +561,7 @@ namespace cogbot.Utilities
         //    ((BotTcpServer)this).closeTcpListener();
         //}
 
-       // #endregion
+        // #endregion
 
         //public bool IsClientConnected()
         //{

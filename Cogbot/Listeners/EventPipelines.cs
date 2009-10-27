@@ -75,6 +75,7 @@ namespace cogbot.Listeners
         // this object will propogate the event AS-IS 
         void SendEvent(SimObjectEvent evt);
         void AddSubscriber(SimEventSubscriber sub);
+        void RemoveSubscriber(SimEventSubscriber sub);
         void Dispose();
     }
 
@@ -176,6 +177,12 @@ namespace cogbot.Listeners
             if (sub == null) throw new NullReferenceException();
             lock (subscribers) if (!subscribers.Contains(sub))
                     subscribers.Add(sub);
+        }
+
+        public void RemoveSubscriber(SimEventSubscriber sub)
+        {
+            if (sub == null) throw new NullReferenceException();
+            lock (subscribers) subscribers.Remove(sub);
         }
 
         #endregion

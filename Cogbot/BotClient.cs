@@ -1432,6 +1432,10 @@ namespace cogbot
         {
             botPipeline.AddSubscriber(tcpServer);
         }
+        public void RemoveBotMessageSubscriber(SimEventSubscriber tcpServer)
+        {
+            botPipeline.RemoveSubscriber(tcpServer);
+        }
 
         public void SendNetworkEvent(string eventName, params object[] args)
         {
@@ -1480,7 +1484,10 @@ namespace cogbot
         {
             CmdResult res = ExecuteBotCommand(text, WriteLine);
             if (res !=null) return res;
-            return ClientManager.ExecuteSystemCommand(text, WriteLine);
+            res = ClientManager.ExecuteSystemCommand(text, WriteLine);
+            if (res != null) return res;
+            WriteLine("I don't understand the ExecuteCommand " + text + ".");
+            return null;
         }
 
 
