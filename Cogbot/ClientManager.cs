@@ -223,7 +223,10 @@ namespace cogbot
             WriteLine("textform> {0}", text);
             CmdResult res = ExecuteBotsCommand(text, WriteLine);
             if (res != null && res.Success) return res;
-            return ExecuteSystemCommand(text, WriteLine);
+            res = ExecuteSystemCommand(text, WriteLine);
+            if (res != null) return res;
+            WriteLine("I don't understand the ExecuteCommand " + text + ".");
+            return null;
         }
 
         private CmdResult ExecuteBotsCommand(string text, OutputDelegate WriteLine)
@@ -298,7 +301,6 @@ namespace cogbot
                         else
                             return groupActions[verb].acceptInputWrapper(verb, "", WriteLine);
                     }
-                    WriteLine("I don't understand the ExecuteSystemCommand " + verb + ".");
                     return null;
                 }
             }
