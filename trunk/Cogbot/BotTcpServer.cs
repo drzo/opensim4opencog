@@ -63,26 +63,43 @@ namespace cogbot.Utilities
                 {
                     while (!quitRequested)
                     {
-                        string clientMessage = tcpStreamReader.ReadLine().Trim();
-                        Server.parent.WriteLine("SockClient: {0}", clientMessage);
-                        tcpStreamWriter.WriteLine();
-                        String lowerCmd = clientMessage.ToLower();
-
                         try
                         {
-                            if (lowerCmd == "bye")
+
+                            string clientMessage = tcpStreamReader.ReadLine().Trim();
+                            Server.parent.WriteLine("SockClient: {0}", clientMessage);
+                            tcpStreamWriter.WriteLine();
+                            String lowerCmd = clientMessage.ToLower();
+
+                            try
                             {
+                                if (lowerCmd == "bye")
+                                {
+                                    quitRequested = true;
+                                }
+                                else Server.ProcessHttpCommand(tcpStreamWriter, clientMessage);
+                            }
+                            catch (Exception e)
+                            {
+                                tcpStreamWriter.WriteLine("500 {0}", Server.parent.argString(e.ToString()));
+                            }
+                            try
+                            {
+                                tcpStreamWriter.Flush();
+                            }
+                            catch (Exception)
+                            {
+
+                                tcpStreamWriter = null;
                                 quitRequested = true;
                             }
-                            else Server.ProcessHttpCommand(tcpStreamWriter, clientMessage);
                         }
-                        catch (Exception e)
+                        catch (Exception)
                         {
-                            tcpStreamWriter.WriteLine("500 {0}", Server.parent.argString(e.ToString()));
+                            tcpStreamWriter = null;
+                            quitRequested = true;
                         }
-                        tcpStreamWriter.Flush();
                     }
-
                 }
                 finally
                 {
