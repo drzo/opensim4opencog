@@ -4,11 +4,177 @@ using System.Reflection;
 using cogbot.ScriptEngines;
 using System.IO;
 using DotLisp;
+using System.Reflection;
+using System.Reflection.Emit;
 
 namespace cogbot.Listeners
 {
     public class LispEventProducer : AllEvents
     {
+
+
+
+        public class LispDelegate //: Delegate
+        {
+            public object Target;
+            public readonly LispEventProducer Producer;
+            private EventInfo Method;
+            private Delegate TheDelegate;
+            private EventHandler<EventArgs> Handler;
+            private MethodInfo eventHandler;
+
+            public LispDelegate(LispEventProducer prod, object target, EventInfo method)
+                //: base(target, method.Name)
+            {
+                Target = target;
+                Producer = prod;
+                Method = method;
+                Handler = Invoke;
+
+                Type t = target.GetType();
+                // In order to create a method to handle the Elapsed event,
+                // it is necessary to know the signature of the delegate 
+                // used to raise the event. Reflection.Emit can then be
+                // used to construct a dynamic class with a static method
+                // that has the correct signature.
+
+                // Get the event handler type of the Elapsed event. This is
+                // a delegate type, so it has an Invoke method that has
+                // the same signature as the delegate. The following code
+                // creates an array of Type objects that represent the 
+                // parameter types of the Invoke method.
+                //    
+                Type handlerType = method.EventHandlerType;
+                MethodInfo invokeMethod = handlerType.GetMethod("Invoke");
+                ParameterInfo[] parms = invokeMethod.GetParameters();
+                Type[] parmTypes = new Type[parms.Length];
+                for (int i = 0; i < parms.Length; i++)
+                {
+                    parmTypes[i] = parms[i].ParameterType;
+                }
+                if (false)
+                {
+                    // Use Reflection.Emit to create a dynamic assembly that
+                    // will be run but not saved. An assembly must have at 
+                    // least one module, which in this case contains a single
+                    // type. The only purpose of this type is to contain the 
+                    // event handler method. (In the .NET Framework version 
+                    // 2.0 you can use dynamic methods, which are simpler 
+                    // because there is no need to create an assembly, module,
+                    // or type.)
+                    AssemblyName aName = new AssemblyName();
+                    aName.Name = "DynamicTypes";
+                    AssemblyBuilder ab = AppDomain.CurrentDomain.DefineDynamicAssembly(aName, AssemblyBuilderAccess.Run);
+                    ModuleBuilder mb = ab.DefineDynamicModule(aName.Name);
+                    TypeBuilder tb = mb.DefineType("Handler", TypeAttributes.Class | TypeAttributes.Public);
+                    var localHandler = this.GetType().GetMethod("Invoke");
+
+                    ConstructorBuilder Ctor = tb.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard,
+                                                                   null);
+                    {
+                        ILGenerator ilc = Ctor.GetILGenerator();
+                        ilc.Emit(OpCodes.Ldarg_0);
+                        ilc.Emit(OpCodes.Call, typeof (object).GetConstructor(new Type[0]));
+                        ilc.Emit(OpCodes.Ret);
+                    }
+                    // Create the method that will handle the event. The name
+                    // is not important. The method is static, because there is
+                    // no reason to create an instance of the dynamic type.
+                    //
+                    // The parameter types and return type of the method are
+                    // the same as those of the delegate's Invoke method, 
+                    // captured earlier.
+                    MethodBuilder handler = tb.DefineMethod("DynamicHandler",
+                                                            MethodAttributes.Public | MethodAttributes.Static,
+                                                            invokeMethod.ReturnType, parmTypes);
+
+                    // Generate code to handle the event.
+                    //
+                    ILGenerator il = handler.GetILGenerator();
+                    il.Emit(OpCodes.Ldarg_0);
+                    il.Emit(OpCodes.Ldarg_1);
+                    il.EmitCall(OpCodes.Call, localHandler, new Type[] {typeof (object), typeof (EventArgs)});
+                    il.Emit(OpCodes.Ret);
+
+                    // CreateType must be called before the Handler type can
+                    // be used. In order to create the delegate that will
+                    // handle the event, a MethodInfo from the finished type
+                    // is required.
+                    Type finished = tb.CreateType();
+                    eventHandler = finished.GetMethod("DynamicHandler");
+                }
+                if (true)
+                {
+                    handlerType = Handler.GetType();
+                    eventHandler = this.GetType().GetMethod("Invoke");
+                }
+                // Use the MethodInfo to create a delegate of the correct 
+                // type, and call the AddEventHandler method to hook up 
+                // the event.
+                Delegate d = Delegate.CreateDelegate(handlerType, eventHandler);
+                //typeof(object)
+                //method.EventHandlerType.
+                
+                
+                //method.AddEventHandler(target, d);
+
+                // Late-bound calls to the Interval and Enabled property 
+                // are required to enable the timer with a one-second
+                // interval.
+                //t.InvokeMember("Interval", BindingFlags.SetProperty, null, timer, new Object[] { 1000 });
+                //t.InvokeMember("Enabled", BindingFlags.SetProperty, null, timer, new Object[] { true });
+
+               // Console.WriteLine("Press the Enter key to end the program.");
+                //Console.ReadLine();
+
+
+                TheDelegate = d;
+//                Delegate.CreateDelegate(method.EventHandlerType, this,
+  //                                                    this.GetType().GetMethod("DynamicInvokeImpl"));
+            }
+            public LispDelegate(Type target, string method)
+               // : base(target, method)
+            {
+
+            }
+            public void Invoke(Object sender, EventArgs o)
+            {
+                Dictionary<string, object> dictionary = new Dictionary<string, object>();
+                foreach (var info in o.GetType().GetProperties())
+                {
+                    dictionary.Add(info.Name, info.GetValue(info, null));
+                }
+                CallDict(dictionary);
+            }
+            public object DynamicInvokeImpl(object[] args)
+            {
+                ScriptInterpreter i = Producer.Interpreter;
+                Dictionary<string, object> dictionary = new Dictionary<string, object>();
+                foreach (var o in args)
+                {
+                    if (o is EventArgs)
+                    {
+                        foreach (var info in o.GetType().GetProperties())
+                        {
+                            dictionary.Add(info.Name, info.GetValue(info, null));
+                        }
+                    }
+                }
+                CallDict(dictionary);
+                return true;
+            }
+
+            private void CallDict(Dictionary<string, object> dictionary)
+            {
+                //throw new NotImplementedException();
+            }
+
+            public Delegate GetDelegate()
+            {
+                return TheDelegate;
+            }
+        }
+
         readonly private ScriptInterpreter Interpreter;
         public LispEventProducer(BotClient bc, ScriptInterpreter interp)
             : base(bc)
@@ -16,6 +182,35 @@ namespace cogbot.Listeners
             Interpreter = interp;
             // the subclass must now run this                
             RegisterAll();
+            foreach (var type in bc.GetType().GetProperties())
+            {
+                if (type.CanWrite) continue;
+                if (type.GetIndexParameters().Length!=0) continue;
+                if (type.Name.StartsWith("Is")) continue;
+                HookEvents(type.GetValue(bc, null));                
+            }
+        }
+
+        public void HookEvents(object manager)
+        {
+            Type t = manager.GetType();
+            string prefix = "client." +t.Name.Replace("Manager", "");
+            foreach (var eventInfo in t.GetEvents())
+            {
+                Console.WriteLine(prefix + "." + eventInfo.Name + "+=Invoke;");
+                //LispDelegate newLispDelegate = new LispDelegate(this, manager, eventInfo);
+                //eventInfo.AddEventHandler(manager, newLispDelegate.GetDelegate()); //psuedocode
+            }
+        }
+
+        public void Invoke(Object sender, EventArgs o)
+        {
+            Dictionary<string, object> dictionary = new Dictionary<string, object>();
+            foreach (var info in o.GetType().GetProperties())
+            {
+                dictionary.Add(info.Name, info.GetValue(info, null));
+            }
+           // CallDict(dictionary);
         }
 
         ~LispEventProducer()
