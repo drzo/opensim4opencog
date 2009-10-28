@@ -148,7 +148,13 @@ namespace cogbot.Actions
         {
             success = failure = 0;
             this.WriteLine = WriteLine;
-            return Execute(args.tokens, UUID.Zero, WriteLine);
+            try
+            {
+                return Execute(args.tokens, UUID.Zero, WriteLine);
+            } catch(Exception e)
+            {
+                return Failure("" + e);
+            }
         } // method: acceptInput
 
 
