@@ -406,7 +406,7 @@ namespace cogbot.Actions
             return Failure(Usage);
         }
 
-        protected object EnumParse(Type type, string[] names, int argStart, out int argsUsed)
+        protected bool TryEnumParse(Type type, string[] names, int argStart, out int argsUsed, out object value)
         {
             ulong d = 0;
             argsUsed = 0;
@@ -436,15 +436,20 @@ namespace cogbot.Actions
                 }
                 break;
             }
-            if (argsUsed == 0) return null;
+            if (argsUsed == 0)
+            {
+                value = null;
+                return false;
+            }
             Type etype = Enum.GetUnderlyingType(type);
             if (typeof (IConvertible).IsAssignableFrom(etype))
             {
                 MethodInfo mi = etype.GetMethod("Parse",new Type[]{typeof(string)});
-                object o = mi.Invoke(null, new object[] {d.ToString()});               
-                return o;
+                value = mi.Invoke(null, new object[] {d.ToString()});
+                return argsUsed > 0;
             }
-            return d;
+            value = d;
+            return argsUsed > 0;
         }
 
         static public bool IsEmpty(ICollection enumerable)

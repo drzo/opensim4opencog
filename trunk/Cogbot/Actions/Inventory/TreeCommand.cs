@@ -31,7 +31,12 @@ namespace cogbot.Actions
 		        {
 		            string treeName = args[0].Trim(new char[] { ' ' });
 		            int argsUsed;
-		            Tree tree = (Tree) EnumParse(typeof (Tree), args, 0, out argsUsed);
+		            Tree tree = (Tree) 0;
+		            object value;
+                    if (TryEnumParse(typeof(Tree), args, 0, out argsUsed, out value))
+                    {
+                        tree = (Tree) value;
+                    }
 
 		            Vector3 treePosition = GetSimPosition();
 		            treePosition.Z += 3.0f;
