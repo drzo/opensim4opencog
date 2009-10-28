@@ -48,7 +48,11 @@ namespace AIMLBotModule
         /// <summary>
         /// Respond to personal IM chat
         /// </summary>
-        public static bool RespondToIM = true;
+        public static bool RespondToUserIM = true;
+        /// <summary>
+        /// Respond to chat EVER
+        /// </summary>
+        public static bool RespondToChatEver = true;
         /// <summary>
         /// Accept all friendship requests
         /// </summary>
@@ -375,11 +379,11 @@ namespace AIMLBotModule
         public void AIML_OnInstantMessage(InstantMessage im, Simulator simulator)
         {
             Console.WriteLine("InstantMessage=" + im.Dialog);
-            Console.WriteLine("FromAgentID=" + WorldSystem.GetObject(im.FromAgentID));
+            //Console.WriteLine("FromAgentID=" + WorldSystem.GetObject(im.FromAgentID));
             object toObject = WorldSystem.GetObject(im.ToAgentID);
-            if (toObject!=null) Console.WriteLine("ToAgentID=" + toObject.GetType());
+            //if (toObject!=null) Console.WriteLine("ToAgentID=" + toObject.GetType());
             object sessionObject = WorldSystem.GetObject(im.IMSessionID);
-            if (sessionObject != null) Console.WriteLine("SessionID=" + sessionObject.GetType());
+            //if (sessionObject != null) Console.WriteLine("SessionID=" + sessionObject.GetType());            
 
             
             if (im.Dialog == InstantMessageDialog.StartTyping || im.Dialog == InstantMessageDialog.StopTyping)
@@ -391,7 +395,6 @@ namespace AIMLBotModule
             {
                 return;
             }
-            //if (!im.GroupIM)if (im.FromAgentName == GetName()) return;
 
             User myUser = GetMyUser(im.FromAgentName);
             myUser.Predicates.addSetting("host", im.FromAgentID.ToString());
@@ -411,7 +414,7 @@ namespace AIMLBotModule
             {
                 im.Message = String.Format("{0} {1}", im.Dialog, im.Message);
             }
-            UUID groupID = UUID.Zero;
+
             if (im.GroupIM)
             {
                 SimGroup g = sessionObject as SimGroup;
@@ -420,13 +423,7 @@ namespace AIMLBotModule
                     groupName = g.Group.Name;                    
                 }
                 WriteLine("Group IM {0}", groupName);
-                if (!myUser.RespondToChat) return;
             }
-
-            //UpdateQueue.Enqueue(() => SendNewEvent("on-instantmessage", , im.Message, im.ToAgentID,
-            //                           im.Offline, im.IMSessionID, im.GroupIM, im.Position, im.Dialog,
-            //                           im.ParentEstateID));
-
 
             string message = im.Message;
             if (string.IsNullOrEmpty(message)) return;
@@ -455,7 +452,7 @@ namespace AIMLBotModule
                                 if (Environment.TickCount - myUser.LastResponseGivenTime <
                                     (60000 / myUser.MaxRespondToChatPerMinute))
                                 {
-                                    WriteLine("AIML_OnInstantMessage Reply is too fast: " + resp);
+                                    WriteLine("AIML_OnInstantMessage Reply is too fast: {0}: {1}->{2}", myUser, message, resp);
                                     return; //too early to respond.. but still listened
                                 }
                             }
@@ -470,20 +467,31 @@ namespace AIMLBotModule
                                 Thread.Sleep(100);
                                 if (im.GroupIM)
                                 {
-                                    if (!myUser.RespondToChat) return;
-
                                     WriteLine("InstantMessageGroup={0} {1} {2} {3}",
                                               RespondToGroup, im.FromAgentName + "/" + groupName, im.FromAgentID,
                                               ting.Trim());
-                                    if (!RespondToGroup) return;
+                                    if (!myUser.RespondToChat)
+                                    {
+                                        WriteLine("AIML_OnInstantMessage Reply is quietly {0}: {1}->{2}", myUser, message, resp);
+                                        return;
+                                    }
+                                    if (!RespondToGroup)
+                                    {
+                                        WriteLine("!RespondToGroup {0}: {1}->{2}", myUser, message, resp);
+                                        return;
+                                    }
                                     client.Self.InstantMessageGroup(GetName(), im.IMSessionID, tsing);
                                 }
                                 else
                                 {
-                                    WriteLine("InstantMessage={0} {1} {2} {3}", RespondToIM,
+                                    WriteLine("InstantMessage={0} {1} {2} {3}", RespondToUserIM,
                                               im.FromAgentName, im.FromAgentID, ting.Trim());
 
-                                    if (!RespondToIM) return;
+                                    if (!RespondToUserIM)
+                                    {
+                                        WriteLine("!RespondToUserIM {0}: {1}->{2}", myUser, message, resp);
+                                        return;
+                                    }
                                     // todo maybe send a typing message for the UseRealism
                                     if (UseRealism)
                                     {
@@ -585,8 +593,6 @@ namespace AIMLBotModule
                 return;
             }
 
-            if (!myUser.RespondToChat && !RespondToChatByDefaultAllUsers) return;
-
             UseRealism = true;
 
             RunTask(() => // this can be long running
@@ -596,12 +602,18 @@ namespace AIMLBotModule
                             if (Environment.TickCount - myUser.LastResponseGivenTime <
                                 (60000 / myUser.MaxRespondToChatPerMinute))
                             {
-                                WriteLine("AIML_OnChat Reply is too fast: " + resp);
+                                WriteLine("AIML_OnChat Reply is too fast {0}: {1}->{2}", myUser, message, resp);
+                                
                                 return; //too early to respond.. but still listened
                             }
                             if (!myUser.RespondToChat)
                             {
-                                WriteLine("AIML_OnChat Reply is quietly: " + resp);
+                                WriteLine("AIML_OnChat Reply is quietly {0}: {1}->{2}", myUser, message, resp);
+                                return;
+                            }
+                            if (!RespondToChatEver)
+                            {
+                                WriteLine("!RespondToChatEver {0}: {1}->{2}", myUser, message, resp);
                                 return;
                             }
                             StringChat(resp, type);
