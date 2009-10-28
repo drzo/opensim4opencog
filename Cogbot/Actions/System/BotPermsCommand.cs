@@ -27,9 +27,13 @@ namespace cogbot.Actions
             {
                 return Failure("Cannot find objects from " + string.Join(" ", args));
             }
-            BotPermissions who =
-                (BotPermissions)
-                (EnumParse(typeof (BotPermissions), args, argsUsed, out argsUsed) ?? BotPermissions.Base);
+            BotPermissions who = BotPermissions.Base;
+
+            object value;
+            if (TryEnumParse(typeof (BotPermissions), args, argsUsed, out argsUsed, out value))
+            {
+                who = (BotPermissions) value;
+            }
 
             foreach (var p in worldSystemGetPrimitives)
             {
