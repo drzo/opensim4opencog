@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Version>2</Version>
+  <tcpPort>5555</tcpPort>
+  <tcpPortOffset>10</tcpPortOffset>
+  <tcpIPAddress>0.0.0.0</tcpIPAddress>
+  <firstName>Firstname</firstName>
+  <lastName>Lastname</lastName>
+  <password>myBotPassword</password>
+  <simURL>http://osgrid.org:8002/</simURL>
+  <startupLisp>
+    ;(setj WorldObjects:MaintainCollisions true)
+    (setj WorldObjects:MaintainCollisions false)
+    (setj WorldObjects:MaintainEffects true)
+    (setj WorldObjects:MaintainActions true)
+    (setj GridAddress "https://login.agni.lindenlab.com/cgi-bin/login.cgi")
+    (setj GridAddress "http://osgrid.org:8002/")
+    (setj GlobalPasswd "abc123")
+
+    (setj StartLoc "uri:Fairyverse&amp;115&amp;125&amp;21")
+    (setj StartLoc "uri:last&amp;173&amp;51&amp;38")
+    '(setj StartLoc "uri:MilSpecMoo&amp;128&amp;128&amp;38")
+    '(setj StartLoc "uri:MilSpecMoo&amp;72&amp;135&amp;38")
+    '(setj StartLoc "uri:LBSA Plaza&amp;128&amp;128&amp;38")
+    '(setj StartLoc "uri:Diva Texture test&amp;128&amp;128&amp;38")
+    '(setj StartLoc "uri:Wright Plaza&amp;128&amp;128&amp;38")
+
+
+    '(create-botclient "Nephrael" "Rae"  GlobalPasswd  "https://login.agni.lindenlab.com/cgi-bin/login.cgi" "uri:Fairyverse&amp;115&amp;125&amp;21")
+    '(create-botclient "Douglas" "Miles" GlobalPasswd GridAddress StartLoc)
+    (create-botclient "Nephrael" "Rae" GlobalPasswd GridAddress StartLoc )
+    '(create-botclient "Lisa" "Wooley" GlobalPasswd GridAddress StartLoc )
+    '(create-botclient "Cat" "Bot" GlobalPasswd GridAddress StartLoc )
+    '(create-botclient "Nephrael" "Rajesh" GlobalPasswd GridAddress)
+    '(create-botclient "Jon" "Doe" GlobalPasswd GridAddress StartLoc)
+  </startupLisp>
+  <startupClientLisp>
+    (thisClient.ExecuteCommand "load CogbotRadegastPluginModule")
+    (thisClient.ExecuteCommand "load AIMLBotModule.dll")
+    ;;(thisClient.ExecuteCommand "load CycWorldModule")
+    (thisClient.ExecuteCommand "load TheSimiansModule")
+    ;; (thisClient.ExecuteCommand "load IrcRegionModule")
+    (thisClient.ExecuteCommand "login") ;; does the login
+    ;;(thisClient.ExecuteCommand "thread setmaster Nephrael Rajesh") ;; change this to your name
+    (thisClient.ExecuteCommand "thread setmaster Douglas Miles") ;; change this to your name
+   ;; (thisClient.ExecuteCommand "thread irc #logicmoo cogbotIRCModule irc.freenode.net")  ;; to connect to IRC
+    (thisClient.ExecuteCommand "aiml off") ;; turns on/off aiml for all users
+    (setj WorldObjectsForAimLBot:DefaultMaxRespondToChatPerMinute 20) ;; once every three seconds
+   ;;(thisClient.ExecuteCommand "simbot start") ;; turns on/off Simian module thinker
+  </startupClientLisp>
+</Configuration>
+
