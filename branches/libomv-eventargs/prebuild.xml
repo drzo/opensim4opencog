@@ -701,6 +701,7 @@
      </Files>
 </Project>
 
+   <!--
   <Project name="RadegastSpeech" path="lib/radegastspeech-svn/RadegastSpeech" type="Library" frameworkVersion="v3_5">
    <Configuration name="Debug">
      <Options>
@@ -809,8 +810,8 @@
        <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
    </Files>
 </Project>
-
-      <!-- OpenSim app -->
+-->
+      <!-- OpenSim 
   <Project name="IdealistViewer" path="lib/IdealistViewer" type="Exe">
     <Configuration name="Debug">
       <Options>
@@ -846,10 +847,11 @@
     <Reference name="RadegastSpeech" localCopy="false"/>
     <Files>
       <Match pattern="*.cs" recurse="true"/>
-      <!--<Match pattern="frm*.cs" subType="Form"/>-->
       <Match pattern="*.resx" buildAction="EmbeddedResource" recurse="true"/>
     </Files>
   </Project>
+app -->
+  <!--
 
 
   <Project name="IdealistRadegastPlugin" path="lib/IdealistRadegastPlugin" type="Library" frameworkVersion="v3_5">
@@ -893,7 +895,6 @@
        <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
    </Files>
 </Project>
-
 
     <Project name="LookingGlass.Framework" path="lib/LookingGlass-svn/src/LookingGlass.Framework" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
@@ -1191,8 +1192,6 @@
       </Files>
     </Project>
 
-
-    <!--
     <Project name="LookingGlassOgre" language="C++" path="lib/LookingGlass-svn/src/LookingGlassOgre" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
@@ -1212,7 +1211,7 @@
         <Match pattern="*.cpp" recurse="false"/>
       </Files>
     </Project>
--->
+
 
     <Project name="LookingGlass" path="lib/LookingGlass-svn/src/LookingGlass" type="Exe" frameworkVersion="v3_5">
       <Configuration name="Debug">
@@ -1243,6 +1242,8 @@
         <Match pattern="*.cs" recurse="true"/>
       </Files>
     </Project>
+    -->
+
     <!-- DebugApp app -->
   <Project name="ABuildStartup" path="contrib/DebugStartup" type="Exe" frameworkVersion="v3_5">
   <Configuration name="Debug">
@@ -1297,6 +1298,8 @@
       <Reference name="protobuf-net.dll" />
       <Reference name="System.Windows.Forms" />
       <Reference name="System.Data" />
+      <!--
+
       <Reference name="LookingGlass.Comm"/>
       <Reference name="LookingGlass.Comm.LLLP"/>
       <Reference name="LookingGlass.Framework"/>
@@ -1305,6 +1308,7 @@
       <Reference name="LookingGlass.Radegast"/>
       <Reference name="LookingGlass.View"/>
       <Reference name="LookingGlass.Rest"/>
+      -->
     <Files>
     <Match pattern="*.cs" recurse="true"/>
     <!--<Match pattern="frm*.cs" subType="Form"/>-->
