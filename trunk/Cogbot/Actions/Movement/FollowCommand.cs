@@ -15,7 +15,7 @@ namespace cogbot.Actions
 
 		public FollowCommand(BotClient testClient)
 		{
-			Name = "AutoFollow";
+            Name = "Linden Server Auto Follow";
 			Description = "Follow another avatar. Usage: autofollow [FirstName LastName]/off.";
             Category = CommandCategory.Movement;
             Parameters = new[] {  new NamedParam(typeof(SimPosition), typeof(SimPosition)) };      

@@ -211,7 +211,7 @@ namespace OpenMetaverse
 #endif
             RefreshDownloadsTimer.Dispose();
             RefreshDownloadsTimer = null;
-            
+
             if (downloadMaster != null && downloadMaster.IsAlive)
             {
                 downloadMaster.Abort();
@@ -245,7 +245,7 @@ namespace OpenMetaverse
                         // Find the first missing packet in the download
                         ushort packet = 0;
                         lock (download) if (download.PacketsSeen != null && download.PacketsSeen.Count > 0)
-                            packet = GetFirstMissingPacket(download.PacketsSeen);
+                                packet = GetFirstMissingPacket(download.PacketsSeen);
 
                         if (download.TimeSinceLastPacket > 5000)
                         {
@@ -538,7 +538,7 @@ namespace OpenMetaverse
             // Find the first missing packet in the download
             ushort packet = 0;
             lock (task.Transfer) if (task.Transfer.PacketsSeen != null && task.Transfer.PacketsSeen.Count > 0)
-                packet = GetFirstMissingPacket(task.Transfer.PacketsSeen);
+                    packet = GetFirstMissingPacket(task.Transfer.PacketsSeen);
 
             // Request the texture
             RequestImage(task.RequestID, task.Type, task.Transfer.Priority, task.Transfer.DiscardLevel, packet);
@@ -671,9 +671,11 @@ namespace OpenMetaverse
                 {
                     if (task.Transfer.PacketsSeen != null && !task.Transfer.PacketsSeen.ContainsKey(image.ImageID.Packet))
                     {
+                        int destPos = task.Transfer.InitialDataSize + (1000 * (image.ImageID.Packet - 1));
+                        if (destPos < 0) destPos = 0;
                         task.Transfer.PacketsSeen[image.ImageID.Packet] = image.ImageID.Packet;
                         Buffer.BlockCopy(image.ImageData.Data, 0, task.Transfer.AssetData,
-                                         task.Transfer.InitialDataSize + (1000 * (image.ImageID.Packet - 1)),
+                                        destPos,
                                          image.ImageData.Data.Length);
                         task.Transfer.Transferred += image.ImageData.Data.Length;
                     }
@@ -740,17 +742,17 @@ namespace OpenMetaverse
                 task.Transfer.TimeSinceLastPacket = 0;
 
                 lock (task.Transfer) if (task.Transfer.Size == 0)
-                {
-                    task.Transfer.Codec = (ImageCodec)data.ImageID.Codec;
-                    task.Transfer.PacketCount = data.ImageID.Packets;
-                    task.Transfer.Size = (int)data.ImageID.Size;
-                    task.Transfer.AssetData = new byte[task.Transfer.Size];
-                    task.Transfer.AssetType = AssetType.Texture;
-                    task.Transfer.PacketsSeen = new SortedList<ushort, ushort>();
-                    Buffer.BlockCopy(data.ImageData.Data, 0, task.Transfer.AssetData, 0, data.ImageData.Data.Length);
-                    task.Transfer.InitialDataSize = data.ImageData.Data.Length;
-                    task.Transfer.Transferred += data.ImageData.Data.Length;
-                }
+                    {
+                        task.Transfer.Codec = (ImageCodec)data.ImageID.Codec;
+                        task.Transfer.PacketCount = data.ImageID.Packets;
+                        task.Transfer.Size = (int)data.ImageID.Size;
+                        task.Transfer.AssetData = new byte[task.Transfer.Size];
+                        task.Transfer.AssetType = AssetType.Texture;
+                        task.Transfer.PacketsSeen = new SortedList<ushort, ushort>();
+                        Buffer.BlockCopy(data.ImageData.Data, 0, task.Transfer.AssetData, 0, data.ImageData.Data.Length);
+                        task.Transfer.InitialDataSize = data.ImageData.Data.Length;
+                        task.Transfer.Transferred += data.ImageData.Data.Length;
+                    }
 
                 task.Transfer.HeaderReceivedEvent.Set();
 

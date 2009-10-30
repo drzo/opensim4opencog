@@ -44,14 +44,15 @@ namespace cogbot.Actions
                 {
                     //avatar = ((SimAvatar)position).theAvatar;
                     //Client.Self.Movement.Camera.AtAxis
-                    Vector3 myPos = base.GetSimPosition();
+                    Vector3d myPos = TheSimAvatar.GlobalPosition;
                     Vector3 forward = new Vector3(1, 0, 0);
-                    Vector3 positionVect = position.SimPosition;
-                    Vector3 offset = positionVect - myPos;
+                    Vector3d positionVect = position.GlobalPosition;
+                    Vector3d offsetG = positionVect - myPos;
+                    Vector3 offset = new Vector3((float)offsetG.X, (float)offsetG.Y, (float)offsetG.Z);
                     Quaternion newRot2 = Vector3.RotationBetween(forward, offset);
 
-                    Quaternion newRot1 = Vector3.RotationBetween(positionVect, Client.Self.RelativePosition);
-                    double newDist = Vector3.Distance(positionVect, Client.Self.RelativePosition);
+                    //Quaternion newRot1 = Vector3d.RotationBetween(positionVect, Client.Self.RelativePosition);
+                    double newDist = Vector3d.Distance(positionVect, myPos);
                     WriteLine("Where Found: {0}", position);
 
                     // Absolute
