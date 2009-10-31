@@ -89,10 +89,10 @@ namespace cogbot.Listeners
             get { return GridMaster == this; }
         }
 
-        public override void Parcels_OnSimParcelsDownloaded(Simulator simulator,
-                                                            InternalDictionary<int, Parcel> simParcels, int[,] parcelMap)
+        public override void Parcels_OnSimParcelsDownloaded(object sender,
+                                                            SimParcelsDownloadedEventArgs e)
         {
-            EnsureSimulator(simulator);
+            EnsureSimulator(e.Simulator);
             //base.Parcels_OnSimParcelsDownloaded(simulator, simParcels, parcelMap);
         }
 
@@ -134,8 +134,9 @@ namespace cogbot.Listeners
             }
         }
 
-        public void Network_OnSimConnectedHook(Simulator simulator)
+        public void Network_OnSimConnectedHook(object sender, SimConnectedEventArgs e)
         {
+            Simulator simulator = e.Simulator;
             ///base.Network_OnSimConnected(simulator);
             lock (WorldObjectsMasterLock)
             {
@@ -181,19 +182,20 @@ namespace cogbot.Listeners
         {
             if (!IsConnected)
             {
-                Network_OnSimConnectedHook(simulator);
+                Network_OnSimConnectedHook(this,new SimConnectedEventArgs(simulator));
             }
         }
 
 
-        public override bool Network_OnSimConnecting(Simulator simulator)
+        public override void Network_OnSimConnecting(object sender, SimConnectingEventArgs e)
         {
             //LeaveSimulator(simulator);
-            return true;// base.Network_OnSimConnecting(simulator);
+            e.Cancel = false;// base.Network_OnSimConnecting(simulator);
         }
                                           
-        public override void Network_OnEventQueueRunning(Simulator simulator)
+        public override void Network_OnEventQueueRunning(object sender, EventQueueRunningEventArgs e)
         {
+            var simulator = e.Simulator;
             //if (simulator == client.Network.CurrentSim) { new Thread(() => client.Appearance.WearOutfit(new string[] { "Clothing", "Default" })).Start(); }
             if (string.IsNullOrEmpty(simulator.Name))
             {
@@ -207,8 +209,9 @@ namespace cogbot.Listeners
             EnsureSimulator(simulator);
         }
 
-        public override void Network_OnCurrentSimChanged(Simulator PreviousSimulator)
+        public override void Network_OnCurrentSimChanged(object sender, SimChangedEventArgs e)
         {
+            var PreviousSimulator = e.PreviousSimulator;
             if (TheSimAvatar.GetSimulator() == PreviousSimulator)
             {
                 Debug("TheSimAvatar._CurrentRegion.TheSimulator == PreviousSimulator " + PreviousSimulator);
@@ -273,15 +276,17 @@ namespace cogbot.Listeners
             Debug("UHT OH, No client is Mastering for region " + R);
         }
 
-        public override void Self_OnTeleport(string message, TeleportStatus status, TeleportFlags flags)
+        public override void Self_OnTeleport(object sender, TeleportEventArgs e)
         {
-            base.Self_OnTeleport(message, status, flags);
+            base.Self_OnTeleport(sender, e);
         }
 
-        public override void Self_OnRegionCrossed(Simulator oldSim, Simulator newSim)
+        public override void Self_OnRegionCrossed(object sender, RegionCrossedEventArgs e)
         {
+            Simulator oldSim = e.OldSimulator;
+            Simulator newSim = e.NewSimulator;
             On_ChangeSims(oldSim, newSim);
-            base.Self_OnRegionCrossed(oldSim, newSim);
+            base.Self_OnRegionCrossed(sender,e);
         }
 
         private void On_ChangeSims(Simulator PreviousSimulator, Simulator newSim)
@@ -300,9 +305,11 @@ namespace cogbot.Listeners
             TheSimAvatar.ResetRegion(newSim.Handle);
         }
 
-        public override void Network_OnSimDisconnected(Simulator simulator, NetworkManager.DisconnectType reason)
+        public override void Network_OnSimDisconnected(object sender, SimDisconnectedEventArgs e)
         {
-            base.Network_OnSimDisconnected(simulator, reason);
+            var simulator = e.Simulator;
+            var reason = e.Reason;
+            base.Network_OnSimDisconnected(sender, e);
             RemoveSim(simulator);
             SimRegion.GetRegion(simulator).RemoveSim(simulator);            
             LeaveSimulator(simulator);
@@ -329,7 +336,7 @@ namespace cogbot.Listeners
             }
         }
 
-        public override void Network_OnDisconnected(NetworkManager.DisconnectType reason, string message)
+        public override void Network_OnDisconnected(object sender, DisconnectedEventArgs e)
         {            
             {
                 foreach (var simulator in AllSimulators)
@@ -349,11 +356,12 @@ namespace cogbot.Listeners
                 }
 
             }
-            base.Network_OnDisconnected(reason, message);
+            base.Network_OnDisconnected(sender, e);
         }
 
-        public override void Grid_OnGridRegion(GridRegion region)
+        public override void Grid_OnGridRegion(object sender, GridRegionEventArgs e)
         {
+            var region = e.Region;
             SimRegion R = SimRegion.GetRegion(region.RegionHandle, client);
             if (R != null)
                 R.GridInfo = region;
@@ -361,11 +369,13 @@ namespace cogbot.Listeners
         }
 
 
-        public override void Grid_OnRegionHandleReply(UUID regionID, ulong regionHandle)
+        public override void Grid_OnRegionHandleReply(object sender, RegionHandleReplyEventArgs e)
         {
+            var regionHandle = e.RegionHandle;
+            var regionID = e.RegionID;
             if (regionHandle==0) return;
             RegisterUUID(regionID, GetRegion(regionHandle));
-            base.Grid_OnRegionHandleReply(regionID, regionHandle);
+            base.Grid_OnRegionHandleReply(sender, e);
         }
 
 
@@ -384,56 +394,57 @@ namespace cogbot.Listeners
                      */
 
                     // Sound manager
-                    client.Network.RegisterCallback(PacketType.AttachedSound, new NetworkManager.PacketCallback(AttachedSoundHandler));
-                    client.Network.RegisterCallback(PacketType.AttachedSoundGainChange, new NetworkManager.PacketCallback(AttachedSoundGainChangeHandler));
-                    client.Network.RegisterCallback(PacketType.PreloadSound, new NetworkManager.PacketCallback(PreloadSoundHandler));
-                    client.Network.RegisterCallback(PacketType.SoundTrigger, new NetworkManager.PacketCallback(SoundTriggerHandler));
+                    client.Network.RegisterCallback(PacketType.AttachedSound, new EventHandler<PacketReceivedEventArgs>(AttachedSoundHandler));
+                    client.Network.RegisterCallback(PacketType.AttachedSoundGainChange, new EventHandler<PacketReceivedEventArgs>(AttachedSoundGainChangeHandler));
+                    client.Network.RegisterCallback(PacketType.PreloadSound, new EventHandler<PacketReceivedEventArgs>(PreloadSoundHandler));
+                    client.Network.RegisterCallback(PacketType.SoundTrigger, new EventHandler<PacketReceivedEventArgs>(SoundTriggerHandler));
 
-                    client.Sound.OnAttachSound -= Sound_OnAttachSound;
-                    client.Sound.OnAttachSoundGainChange -= Sound_OnAttachSoundGainChange;
-                    client.Sound.OnSoundTrigger -= Sound_OnSoundTrigger;
-                    client.Sound.OnPreloadSound -= Sound_OnPreloadSound;
+                    client.Sound.AttachedSound -= Sound_OnAttachSound;
+                    client.Sound.AttachedSoundGainChange -= Sound_OnAttachSoundGainChange;
+                    client.Sound.SoundTrigger -= Sound_OnSoundTrigger;
+                    client.Sound.PreloadSound -= Sound_OnPreloadSound;
 
 
                     // Mean collision
                     client.Network.RegisterCallback(PacketType.MeanCollisionAlert,
-                                                    new NetworkManager.PacketCallback(MeanCollisionAlertHandler));
-                    client.Self.OnMeanCollision -= Self_OnMeanCollision;
+                                                    new EventHandler<PacketReceivedEventArgs>(MeanCollisionAlertHandler));
+                    client.Self.MeanCollision -= Self_OnMeanCollision;
 
 
 
                     // Viewer effect callback
                     client.Network.RegisterCallback(PacketType.ViewerEffect,
-                                                    new NetworkManager.PacketCallback(ViewerEffectHandler));
-                    client.Avatars.OnPointAt -= Avatars_OnPointAt;
-                    client.Avatars.OnLookAt -= Avatars_OnLookAt;
-                    client.Avatars.OnEffect -= Avatars_OnEffect;
+                                                    new EventHandler<PacketReceivedEventArgs>(ViewerEffectHandler));
+                    client.Avatars.ViewerEffectPointAt -= Avatars_OnPointAt;
+                    client.Avatars.ViewerEffectLookAt -= Avatars_OnLookAt;
+                    client.Avatars.ViewerEffect -= Avatars_OnEffect;
 
 
                     // Avatar appearance
                     client.Network.RegisterCallback(PacketType.AvatarAppearance,
-                                                    new NetworkManager.PacketCallback(AvatarAppearanceHandler));
+                                                    new EventHandler<PacketReceivedEventArgs>(AvatarAppearanceHandler));
 
 
-                    client.Network.RegisterCallback(PacketType.AvatarAnimation, new NetworkManager.PacketCallback(AvatarAnimationHandler));
-                    client.Avatars.OnAvatarAnimation -= Avatars_OnAvatarAnimation;
+                    client.Network.RegisterCallback(PacketType.AvatarAnimation, new EventHandler<PacketReceivedEventArgs>(AvatarAnimationHandler));
+                    client.Avatars.AvatarAnimation -= Avatars_OnAvatarAnimation;
 
                     
                     // raises these events already
                     client.Assets.OnUploadProgress -= Assets_OnUploadProgress; // On-Upload-Progress
-                    client.Self.OnCameraConstraint -= Self_OnCameraConstraint;
+                    client.Self.CameraConstraint -= Self_OnCameraConstraint;
 
 
                     client.Settings.PIPELINE_REQUEST_TIMEOUT = 60000;
 
-                    client.Objects.OnObjectPropertiesUpdated += Objects_OnPrimitiveProperties;
-                    client.Objects.OnObjectTerseUpdate += Objects_OnPrimitiveUpdate;
-                    client.Objects.OnObjectUpdated -= Objects_OnObjectUpdated;
-                    client.Objects.OnObjectDataBlockUpdate += Objects_OnObjectDataBlockUpdate;
+
+                    client.Objects.ObjectPropertiesUpdated += Objects_OnPrimitiveProperties;
+                    client.Objects.TerseObjectUpdate += Objects_OnObjectUpdated;
+                    client.Objects.ObjectProperties += Objects_OnObjectProperties;
+                    client.Objects.ObjectDataBlockUpdate += Objects_OnObjectDataBlockUpdate;
 
                     client.Network.RegisterEventCallback("AgentGroupDataUpdate", new Caps.EventQueueCallback(AgentGroupDataUpdateHandler));
                     // deprecated in simulator v1.27
-                    client.Network.RegisterCallback(PacketType.AgentGroupDataUpdate, new NetworkManager.PacketCallback(AgentGroupDataUpdatePT));
+                    client.Network.RegisterCallback(PacketType.AgentGroupDataUpdate, new EventHandler<PacketReceivedEventArgs>(AgentGroupDataUpdatePT));
 
                 }
             }
@@ -448,82 +459,96 @@ namespace cogbot.Listeners
                     RegisterAllOnce = false;
                     base.UnregisterAll();
                     client.Network.UnregisterCallback(PacketType.ViewerEffect,
-                                new NetworkManager.PacketCallback(ViewerEffectHandler));
+                                new EventHandler<PacketReceivedEventArgs>(ViewerEffectHandler));
 
-                    client.Objects.OnObjectPropertiesUpdated -= Objects_OnPrimitiveProperties;
-                    client.Objects.OnObjectTerseUpdate -= Objects_OnPrimitiveUpdate;
-                    client.Objects.OnObjectUpdated -= Objects_OnObjectUpdated;
-                    client.Objects.OnObjectDataBlockUpdate -= Objects_OnObjectDataBlockUpdate;
+                    client.Objects.ObjectPropertiesUpdated -= Objects_OnPrimitiveProperties;
+                    client.Objects.TerseObjectUpdate -= Objects_OnObjectUpdated;
+                    client.Objects.ObjectProperties -= Objects_OnObjectProperties;
+                    client.Objects.ObjectDataBlockUpdate -= Objects_OnObjectDataBlockUpdate;
                     RegisterThinClient();
                 }
             }
         }
 
-        public override void Network_OnSimConnected(Simulator simulator)
+        public override void Network_OnSimConnected(object sender, SimConnectedEventArgs e)
         {
+            Simulator simulator = e.Simulator;
             EnsureSimulator(simulator);
         }
 
         private void RegisterThinClient()
         {
-            client.Network.OnLogin += Network_OnLogin;
-            client.Network.OnConnected += Network_OnConnected;
-            client.Network.OnLogoutReply += Network_OnLogoutReply;
-            client.Network.OnSimConnecting += Network_OnSimConnecting;
-            client.Network.OnSimConnected += Network_OnSimConnected;
-            client.Network.OnSimDisconnected += Network_OnSimDisconnected;
-            client.Network.OnDisconnected += Network_OnDisconnected;
-            client.Network.OnCurrentSimChanged += Network_OnCurrentSimChanged;
-            client.Network.OnEventQueueRunning += Network_OnEventQueueRunning;
+            client.Network.LoginProgress += Network_OnLogin;
+            //client.Network.OnConnected += Network_OnConnected;
+            client.Network.LoggedOut += Network_OnLogoutReply;
+            client.Network.SimConnecting += Network_OnSimConnecting;
+            client.Network.SimConnected += Network_OnSimConnected;
+            client.Network.SimDisconnected += Network_OnSimDisconnected;
+            client.Network.Disconnected += Network_OnDisconnected;
+            client.Network.SimChanged += Network_OnCurrentSimChanged;
+            client.Network.EventQueueRunning += Network_OnEventQueueRunning;
 
-            client.Self.OnChat += Self_OnChat;
-            client.Self.OnScriptDialog += Self_OnScriptDialog;
-            client.Self.OnScriptQuestion += Self_OnScriptQuestion;
-            client.Self.OnLoadURL += Self_OnLoadURL;
-            client.Self.OnInstantMessage += Self_OnInstantMessage;
-            client.Self.OnTeleport += Self_OnTeleport;
-            client.Self.OnBalanceUpdated += Self_OnBalanceUpdated;
-            client.Self.OnMoneyBalanceReplyReceived += Self_OnMoneyBalanceReplyReceived;
-            client.Self.OnAgentDataUpdated += Self_OnAgentDataUpdated;
-            client.Self.OnAnimationsChanged += Self_OnAnimationsChanged;
-            client.Self.OnMeanCollision -= Self_OnMeanCollision;
-            client.Self.OnRegionCrossed += Self_OnRegionCrossed;
-            client.Self.OnGroupChatJoin += Self_OnGroupChatJoin;
-            client.Self.OnGroupChatLeft += Self_OnGroupChatLeft;
-            client.Self.OnAlertMessage += Self_OnAlertMessage;
-            client.Self.OnScriptControlChange += Self_OnScriptControlChange;
-            client.Self.OnCameraConstraint -= Self_OnCameraConstraint;
-            client.Self.OnScriptSensorReply += Self_OnScriptSensorReply;
-            client.Self.OnAvatarSitResponse += Self_OnAvatarSitResponse;
-            client.Self.OnChatSessionMemberAdded += Self_OnChatSessionMemberAdded;
-            client.Self.OnChatSessionMemberLeft += Self_OnChatSessionMemberLeft;
+            client.Self.ChatFromSimulator += Self_OnChat;
+            throw new NotImplementedException();
+            /*
+            client.Self.ScriptDialog += senderFrom0(Self_OnScriptDialog);
+            client.Self.ScriptQuestion += senderFrom(Self_OnScriptQuestion);
+            client.Self.LoadURL += senderFrom(Self_OnLoadURL);
+            client.Self.IM += senderFrom(Self_OnInstantMessage);
+            client.Self.TeleportProgress += Self_OnTeleport;
+            client.Self.MoneyBalance += Self_OnBalanceUpdated;
+            client.Self.MoneyBalanceReply += Self_OnMoneyBalanceReplyReceived;
+            client.Self.AgentDataReply += Self_OnAgentDataUpdated;
+            client.Self.AnimationsChanged += Self_OnAnimationsChanged;
+            client.Self.MeanCollision -= Self_OnMeanCollision;
+            client.Self.RegionCrossed += Self_OnRegionCrossed;
+            client.Self.GroupChatJoined += Self_OnGroupChatJoin;
+            client.Self.GroupChatLeft += Self_OnGroupChatLeft;
+            client.Self.AlertMessage += Self_OnAlertMessage;
+            client.Self.ScriptControlChange += Self_OnScriptControlChange;
+            client.Self.CameraConstraint -= Self_OnCameraConstraint;
+            client.Self.ScriptSensorReply += Self_OnScriptSensorReply;
+            client.Self.AvatarSitResponse += Self_OnAvatarSitResponse;
+            client.Self.ChatSessionMemberAdded += Self_OnChatSessionMemberAdded;
+            client.Self.ChatSessionMemberLeft += Self_OnChatSessionMemberLeft;
             client.Appearance.OnAgentWearables += Appearance_OnAgentWearables;
             //client.Appearance.OnAppearanceUpdated += Appearance_OnAppearanceUpdated;
-            client.Friends.OnFriendNamesReceived += Friends_OnFriendNamesReceived;
-            client.Friends.OnFriendOnline += Friends_OnFriendOnline;
-            client.Friends.OnFriendOffline += Friends_OnFriendOffline;
-            client.Friends.OnFriendRights += Friends_OnFriendRights;
-            client.Friends.OnFriendshipOffered += Friends_OnFriendshipOffered;
-            client.Friends.OnFriendshipResponse += Friends_OnFriendshipResponse;
-            client.Friends.OnFriendshipTerminated += Friends_OnFriendshipTerminated;
-            client.Inventory.OnItemReceived += Inventory_OnItemReceived;
-            client.Inventory.OnFolderUpdated += Inventory_OnFolderUpdated;
-            client.Inventory.OnObjectOffered += Inventory_OnObjectOffered;
-            client.Inventory.OnFindObjectByPath += Inventory_OnFindObjectByPath;
-            client.Inventory.OnTaskItemReceived += Inventory_OnTaskItemReceived;
+            client.Friends.FriendNames += Friends_OnFriendNamesReceived;
+            client.Friends.FriendOnline += Friends_OnFriendOnline;
+            client.Friends.FriendOffline += Friends_OnFriendOffline;
+            client.Friends.FriendRightsUpdate += Friends_OnFriendRights;
+            client.Friends.FriendshipOffered += Friends_OnFriendshipOffered;
+            client.Friends.FriendshipResponse += Friends_OnFriendshipResponse;
+            client.Friends.FriendshipTerminated += Friends_OnFriendshipTerminated;
+             * */
+            client.Inventory.ItemReceived += Inventory_OnItemReceived;
+            client.Inventory.FolderUpdated += Inventory_OnFolderUpdated;
+            client.Inventory.InventoryObjectOffered += Inventory_OnObjectOffered;
+            client.Inventory.FindObjectByPathReply += Inventory_OnFindObjectByPath;
+            client.Inventory.TaskItemReceived += Inventory_OnTaskItemReceived;
 
 
             // so we can find ourselves
-            client.Objects.OnNewAvatar += Objects_OnNewAvatar;
+            client.Objects.AvatarUpdate += Objects_OnNewAvatar;
 
             // just in case
-            client.Network.OnSimConnected -= Network_OnSimConnectedHook;
-            client.Inventory.OnScriptRunning -= Inventory_OnScriptRunning;
+            client.Network.SimConnected -= Network_OnSimConnectedHook;
+            client.Inventory.ScriptRunningReply -= Inventory_OnScriptRunning;
             // just in case twice
-            client.Network.OnSimConnected -= Network_OnSimConnectedHook;
-            client.Inventory.OnScriptRunning -= Inventory_OnScriptRunning;
-            client.Network.OnSimConnected += Network_OnSimConnectedHook;
-            client.Inventory.OnScriptRunning += Inventory_OnScriptRunning;
+            client.Network.SimConnected -= Network_OnSimConnectedHook;
+            client.Inventory.ScriptRunningReply -= Inventory_OnScriptRunning;
+            client.Network.SimConnected += Network_OnSimConnectedHook;
+            client.Inventory.ScriptRunningReply += Inventory_OnScriptRunning;
+        }
+
+        private EventHandler<ScriptDialogEventArgs> senderFrom0(Delegate o)
+        {
+            throw new NotImplementedException();
+        }
+
+        private EventHandler senderFrom(object o)
+        {
+            throw new NotImplementedException();
         }
 
         //public volatile static WorldObjects Master;
@@ -630,40 +655,50 @@ namespace cogbot.Listeners
             //            WriteLine("ClientManager Terrain_OnLandPatch: "+simulator.ToString()+"/"+x.ToString()+"/"+y.ToString()+" w="+width.ToString());
         }
 
-        public override void Parcels_OnParcelInfo(ParcelInfo parcel)
+        public override void Parcels_OnParcelInfo(object sender, ParcelInfoReplyEventArgs e)
         {
+            var parcel = e.Parcel;
             SimRegion r = SimRegion.GetRegion(parcel.SimName, client);
-            if (r!=null) r.Parcels_OnParcelInfo(parcel);
-            else base.Parcels_OnParcelInfo(parcel);
+            if (r != null) r.Parcels_OnParcelInfo(parcel);
+            else base.Parcels_OnParcelInfo(sender, e);
         }
 
-        public override void Parcels_OnAccessListReply(Simulator simulator, int sequenceID, int localID, uint flags, List<ParcelManager.ParcelAccessEntry> accessEntries)
+        public override void Parcels_OnAccessListReply(object sender, ParcelAccessListReplyEventArgs e)
         {
             //base.Parcels_OnAccessListReply(simulator, sequenceID, localID, flags, accessEntries);
         }
 
-        public override void Parcels_OnParcelProperties(Simulator simulator, Parcel parcel, ParcelResult result, int selectedPrims, int sequenceID, bool snapSelection)
+        public override void Parcels_OnParcelProperties(object sender, ParcelPropertiesEventArgs e)
         {
+            Simulator simulator = e.Simulator;
+            var parcel = e.Parcel;
             SimRegion r = SimRegion.GetRegion(simulator);
-            r.Parcels_OnParcelProperties(simulator, parcel, result, selectedPrims, sequenceID, snapSelection);
+            r.Parcels_OnParcelProperties(simulator, parcel, e.Result, e.SelectedPrims, e.SequenceID, e.SnapSelection);
             //base.Parcels_OnParcelProperties(simulator, parcel, result, selectedPrims, sequenceID, snapSelection);
         }
-        public override void Parcels_OnParcelSelectedObjects(Simulator simulator, List<uint> objectIDs, bool resetList)
+        public override void Parcels_OnParcelSelectedObjects(object sender, ForceSelectObjectsReplyEventArgs e)
         {
+            Simulator simulator = e.Simulator;
+            var objectIDs = e.ObjectIDs;
+            var resetList = e.ResetList;
+
             SimRegion r = SimRegion.GetRegion(simulator);
             r.Parcels_OnParcelSelectedObjects(simulator, objectIDs, resetList);
-            base.Parcels_OnParcelSelectedObjects(simulator, objectIDs, resetList);
+            base.Parcels_OnParcelSelectedObjects(sender,e);
         }
 
         static readonly List<UUID> parcelInfoRequests = new List<UUID>();
-        public override void Parcels_OnParcelDwell(UUID parcelID, int localID, float dwell)
+        public override void Parcels_OnParcelDwell(object sender, ParcelDwellReplyEventArgs e)
         {
+
             lock (parcelInfoRequests)
             {
+                var parcelID = e.ParcelID;
                 if (parcelInfoRequests.Contains(parcelID)) return;
                 parcelInfoRequests.Add(parcelID);
+                client.Parcels.RequestParcelInfo(parcelID);
             }
-            client.Parcels.InfoRequest(parcelID);
+
             //base.Parcels_OnParcelDwell(parcelID, localID, dwell);
         }
 

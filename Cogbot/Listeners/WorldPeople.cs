@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
@@ -13,10 +14,18 @@ namespace cogbot.Listeners
     partial class WorldObjects
     {
                
-        public override void Self_OnChat(string message, ChatAudibleLevel audible, ChatType type,
-                                         ChatSourceType sourceType, string fromName, UUID id, UUID ownerid,
-                                         Vector3 position)
+        public override void Self_OnChat(object sender, ChatEventArgs e)
         {
+            var type = e.Type;
+            var message = e.Message;
+            var id = e.SourceID;
+            var fromName = e.FromName;
+            var sourceType = e.SourceType;
+            var position = e.Position;
+            var ownerid = e.OwnerID;
+            var audible = e.AudibleLevel;
+
+
             PCode pCode = PCode.None;
             if (sourceType == ChatSourceType.Agent)
             {
@@ -83,8 +92,9 @@ namespace cogbot.Listeners
 
         }
 
-        public override void Self_OnInstantMessage(InstantMessage im, Simulator simulator)
+        public override void Self_OnInstantMessage(object sender, InstantMessageEventArgs e)
         {
+            var im = e.IM;
             if (im.FromAgentID != UUID.Zero)
             {
                 AddName2Key(im.FromAgentName, im.FromAgentID);
@@ -143,12 +153,12 @@ namespace cogbot.Listeners
                                              im.ParentEstateID));
         }
 
-        public override void Self_OnAlertMessage(string msg)
+        public override void Self_OnAlertMessage(object sender, AlertMessageEventArgs e)
         {
-            EventQueue.Enqueue(() => SendNewRegionEvent(SimEventType.SCRIPT, "On-Alert-Message", client.gridClient, msg));
+            EventQueue.Enqueue(() => SendNewRegionEvent(SimEventType.SCRIPT, "On-Alert-Message", client.gridClient, e.Message));
         }
 
-        public override void Self_OnAgentDataUpdated(string firstName, string lastName, UUID activeGroupID, string groupTitle, GroupPowers groupPowers, string groupName)
+        public override void Self_OnAgentDataUpdated(object sender, AgentDataReplyEventArgs e)
         {
             //OnEvent("On-Agent-Data-Updated", firstName, lastName, activeGroupID, groupTitle, groupPowers, groupName);
         }
@@ -159,8 +169,9 @@ namespace cogbot.Listeners
         private Dictionary<UUID, object> uuid2Group = new Dictionary<UUID, object>();
 
 
-        public override void Groups_OnCurrentGroups(Dictionary<UUID, Group> groups)
+        public override void Groups_OnCurrentGroups(object sender, CurrentGroupsEventArgs e)
         {
+            var groups = e.Groups;
             foreach (UUID key in groups.Keys)
             {
                 Group g = groups[key];
@@ -171,8 +182,10 @@ namespace cogbot.Listeners
             //OnEvent("On-Current-Groups", paramNamesOnCurrentGroups, paramTypesOnCurrentGroups, groups);
         }
 
-        private void AvatarAppearanceHandler(Packet packet, Simulator sim)
+        private void AvatarAppearanceHandler(object sender, PacketReceivedEventArgs e)
         {
+            Simulator sim = e.Simulator;
+            var packet = e.Packet;
             if (sim != client.Network.CurrentSim) { Debug("from a differnt sim than current " + sim); }
             AvatarAppearancePacket appearance = (AvatarAppearancePacket)packet;
             Avatar found = sim.ObjectsAvatars.Find(delegate(Avatar av)
@@ -214,12 +227,12 @@ namespace cogbot.Listeners
                 CreateSimAvatar(id, this, sim);
         }
 
-        public override void Avatars_OnAvatarProperties(UUID avatarID, Avatar.AvatarProperties properties)
+        public override void Avatars_OnAvatarProperties(object sender, AvatarPropertiesReplyEventArgs e)
         {
-            SimAvatar A = CreateSimAvatar(avatarID, this, null);
+            SimAvatar A = CreateSimAvatar(e.AvatarID, this, null);
             if (!MaintainAvatarMetaData) return;
-            A.ProfileProperties = properties;
-            UUID propertiesPartner = properties.Partner;
+            A.ProfileProperties = e.Properties;
+            UUID propertiesPartner = e.Properties.Partner;
             if (propertiesPartner != UUID.Zero)
             {
                 SimAvatarImpl AA = CreateSimAvatar(propertiesPartner, this, null);
@@ -229,15 +242,18 @@ namespace cogbot.Listeners
                 //    AA.AspectName = s;
                 //}
             }
-            if (properties.ProfileImage != UUID.Zero)
+            if (e.Properties.ProfileImage != UUID.Zero)
             {
                // RequestAsset(properties.ProfileImage, AssetType.Texture, true);
             }
             //TODO SendNewEvent("On-Avatar-Properties", GetAvatar(avatarID, null), properties);
         }
 
-        public override void Grid_OnCoarseLocationUpdate(Simulator sim, List<UUID> newEntries, List<UUID> removedEntries)
+        public override void Grid_OnCoarseLocationUpdate(object sender, CoarseLocationUpdateEventArgs e)
         {
+            Simulator sim = e.Simulator;
+            var newEntries = e.NewEntries;
+            var removedEntries = e.RemovedEntries;
             if (!MaintainAvatarMetaData) return;
 
             foreach (UUID uuid in newEntries)
@@ -270,11 +286,11 @@ namespace cogbot.Listeners
         }
 
 
-        public override void Avatars_OnAvatarInterests(UUID avatarID, Avatar.Interests properties)
+        public override void Avatars_OnAvatarInterests(object sender, AvatarInterestsReplyEventArgs e)
         {
-            SimAvatar A = CreateSimAvatar(avatarID, this, null);
+            SimAvatar A = CreateSimAvatar(e.AvatarID, this, null);
             if (!MaintainAvatarMetaData) return;
-            A.AvatarInterests = properties;
+            A.AvatarInterests = e.Interests;
         }
 
 
@@ -288,23 +304,24 @@ namespace cogbot.Listeners
         }
 
 
-        public override void Avatars_OnAvatarGroups(UUID avatarID, List<AvatarGroup> avatarGroups)
+        public override void Avatars_OnAvatarGroups(object sender, AvatarGroupsReplyEventArgs e)
         {
-            SimAvatar A = CreateSimAvatar(avatarID, this, null);
-            foreach (AvatarGroup grp in avatarGroups)
+            SimAvatar A = CreateSimAvatar(e.AvatarID, this, null);
+            foreach (AvatarGroup grp in e.Groups)
             {
                 AddGroup2Key(grp.GroupName,grp.GroupID);
                 //TODO SendNewEvent("On-Avatar-Properties", GetAvatar(avatarID, null), grp);                
             }
         }
 
-        public override void Groups_OnGroupRoles(UUID requestID, UUID groupID, Dictionary<UUID, GroupRole> roles)
+        public override void Groups_OnGroupRoles(object sender, GroupRolesDataReplyEventArgs e)
         {
+            var groupID = e.GroupID;
             DeclareGroup(groupID);
             if (!MaintainGroupMetaData) return;
             MetaDataQueue.Enqueue(() =>
                                       {
-                                          foreach (var list in roles)
+                                          foreach (var list in e.Roles)
                                           {
                                               GroupRole value = list.Value;
                                               SimGeneric declareGeneric = DeclareGroupRole(groupID, list.Key);
@@ -331,14 +348,15 @@ namespace cogbot.Listeners
             return DeclareGeneric("GroupRole", key);
         }
 
-        public override void Groups_OnGroupRolesMembers(UUID requestID, UUID groupID, List<KeyValuePair<UUID, UUID>> rolesMembers)
+        public override void Groups_OnGroupRolesMembers(object sender, GroupRolesMembersReplyEventArgs e)
         {
+            var groupID = e.GroupID;
             SimGroup g = DeclareGroup(groupID);
             if (MaintainGroupMetaData)
             {
                 MetaDataQueue.Enqueue(() =>
                                           {
-                                              foreach (var list in rolesMembers)
+                                              foreach (var list in e.RolesMembers)
                                               {
                                                   SimGeneric declareGeneric = DeclareGroupRole(groupID, list.Key);
                                                   if (list.Value != UUID.Zero)
@@ -357,13 +375,14 @@ namespace cogbot.Listeners
            // base.Groups_OnGroupRolesMembers(requestID, groupID, rolesMembers);
         }
 
-        public override void Groups_OnGroupMembers(UUID requestID, UUID groupID, Dictionary<UUID, GroupMember> members)
+        public override void Groups_OnGroupMembers(object sender, GroupMembersReplyEventArgs e)
         {
+            var groupID = e.GroupID;
             SimGroup g = DeclareGroup(groupID);
             if (MaintainGroupMetaData)
                 MetaDataQueue.Enqueue(() =>
                                           {
-                                              foreach (var member in members)
+                                              foreach (var member in e.Members)
                                               {
                                                   var v = member.Value;
                                                   if (member.Key == UUID.Zero) continue;
@@ -375,23 +394,26 @@ namespace cogbot.Listeners
             // base.Groups_OnGroupMembers(requestID, totalCount, members);
         }
 
-        public override void Groups_OnGroupNames(Dictionary<UUID, string> groupNames)
+        public override void Groups_OnGroupNames(object sender, GroupNamesEventArgs e)
         {
-            foreach (KeyValuePair<UUID, string> kvp in groupNames)
+            foreach (KeyValuePair<UUID, string> kvp in e.GroupNames)
             {
                 AddGroup2Key(kvp.Value, kvp.Key);
             }
             ///base.Groups_OnGroupNames(groupNames);
         }
 
-        public override void Groups_OnGroupAccountSummary(UUID groupID, GroupAccountSummary summary)
+        public override void Groups_OnGroupAccountSummary(object sender, GroupAccountSummaryReplyEventArgs e)
         {
-            DeclareGroup(groupID);
-            base.Groups_OnGroupAccountSummary(groupID, summary);
+            var groupID = e.GroupID;
+            SimGroup g = DeclareGroup(groupID);
+            g.Summary = e.Summary; 
+            base.Groups_OnGroupAccountSummary(sender, e);
         }
 
-        public override void Groups_OnGroupProfile(Group group)
+        public override void Groups_OnGroupProfile(object sender, GroupProfileEventArgs e)
         {
+            Group group = e.Group;
             if (group.ID == UUID.Zero) return;
             SimGroup v = DeclareGroup(group.ID);
             v.Group = group;
@@ -402,17 +424,17 @@ namespace cogbot.Listeners
                                       });
         }
 
-        public override void Avatars_OnAvatarNameSearch(UUID queryID, Dictionary<UUID, string> avatars)
+        public override void Avatars_OnAvatarNameSearch(object sender, UUIDNameReplyEventArgs e)
         {
-            foreach (KeyValuePair<UUID, string> kvp in avatars)
+            foreach (KeyValuePair<UUID, string> kvp in e.Names)
             {
                 AddName2Key(kvp.Value, kvp.Key);
             }
         }
 
-        public override void Avatars_OnAvatarNames(Dictionary<UUID, string> names)
+        public override void Avatars_OnAvatarNames(object sender, AvatarPickerReplyEventArgs e)
         {
-            foreach (KeyValuePair<UUID, string> kvp in names)
+            foreach (KeyValuePair<UUID, string> kvp in e.Avatars)
             {
                 AddName2Key(kvp.Value, kvp.Key);
             }
@@ -496,7 +518,7 @@ namespace cogbot.Listeners
             // WriteLine("Requesting groupInfo " + uuid);
             GridMaster.client.Groups.RequestGroupRoles(uuid);
             GridMaster.client.Groups.RequestGroupMembers(uuid);
-            GridMaster.client.Groups.RequestGroupRoleMembers(uuid);
+            GridMaster.client.Groups.RequestGroupRolesMembers(uuid);
         }
 
         // like avatar picks or role names
@@ -551,16 +573,18 @@ namespace cogbot.Listeners
             }
         }
 
-        public override void Avatars_OnAvatarPicks(UUID avatarid, Dictionary<UUID, string> picks)
+        public override void Avatars_OnAvatarPicks(object sender, AvatarPicksReplyEventArgs e)
         {
+            var picks = e.Picks;
             foreach (KeyValuePair<UUID, string> kvp in picks)
             {
                 AddOther2Key(kvp.Value, kvp.Key);
             }
         }
 
-        public override void Friends_OnFriendOnline(FriendInfo friend)
+        public override void Friends_OnFriendOnline(object sender, FriendInfoEventArgs e)
         {
+            var friend = e.Friend;
             if (friend.IsOnline && !string.IsNullOrEmpty(friend.Name) && friend.Name == client.MasterName)
             {
                 client.Self.InstantMessage(friend.UUID, "Hello Master");
@@ -569,9 +593,10 @@ namespace cogbot.Listeners
             //base.Friends_OnFriendOnline(friend);
         }
 
-        public override void Friends_OnFriendNamesReceived(Dictionary<UUID, string> names)
+        public override void Friends_OnFriendNamesReceived(object sender, FriendNamesEventArgs e)
         {
-            base.Friends_OnFriendNamesReceived(names);
+            IEnumerable names = e.Names;
+            base.Friends_OnFriendNamesReceived(sender, e);
             bool masterFound = false;
             string clientMasterNameToLower = client.MasterName;
             foreach (KeyValuePair<UUID, string> kvp in names)
@@ -638,10 +663,11 @@ namespace cogbot.Listeners
             });
         }
 
-        public override void Friends_OnFriendRights(FriendInfo friend)
+        public override void Friends_OnFriendRights(object sender, FriendInfoEventArgs e)
         {
+            var friend = e.Friend;
             AddName2Key(friend.Name, friend.UUID);
-            base.Friends_OnFriendRights(friend);
+            base.Friends_OnFriendRights(sender, e);
         }
 
         public UUID GetUserID(string ToAvatarName)
@@ -664,30 +690,27 @@ namespace cogbot.Listeners
                 client.Directory.StartPeopleSearch(/*DirectoryManager.DirFindFlags.People,*/ ToAvatarName, 0/*, UUID.Random()*/);
 
                 ManualResetEvent NameSearchEvent = new ManualResetEvent(false);
-                AvatarManager.AvatarNameSearchCallback callback =
-                    new AvatarManager.AvatarNameSearchCallback((queryid, avatars) =>
+                UUID queryID = UUID.Random();
+                EventHandler<AvatarPickerReplyEventArgs> callback =
+                    new EventHandler<AvatarPickerReplyEventArgs>((s, e) =>
                     {
-                        foreach (KeyValuePair<UUID, string> kvp in avatars)
+                        foreach (KeyValuePair<UUID, string> kvp in e.Avatars)
                         {
                             AddName2Key(kvp.Value, kvp.Key);
-                            if (kvp.Value.ToLower() == ToAvatarName.ToLower())
-                            {
-                                NameSearchEvent.Set();
-                                return;
-                            }
                         }
+                        if (queryID == e.QueryID) NameSearchEvent.Set();
                     });
                 try
                 {
-                    client.Avatars.OnAvatarNameSearch += callback;
+                    client.Avatars.AvatarPickerReply += callback;
                     // Send the Query
-                    client.Avatars.RequestAvatarNameSearch(ToAvatarName, UUID.Random());
+                    client.Avatars.RequestAvatarNameSearch(ToAvatarName, queryID);
 
                     NameSearchEvent.WaitOne(10000, false);
                 }
                 finally
                 {
-                    client.Avatars.OnAvatarNameSearch -= callback;
+                    client.Avatars.AvatarPickerReply -= callback;
                 }
             }
 
@@ -720,31 +743,31 @@ namespace cogbot.Listeners
                     }
                 }
             {
+                UUID queryID = UUID.Random();
                 ManualResetEvent NameSearchEvent = new ManualResetEvent(false);
-                AvatarManager.AvatarNamesCallback callback =
-                    new AvatarManager.AvatarNamesCallback((avatars) =>
+                EventHandler<UUIDNameReplyEventArgs> callback =
+                    new EventHandler<UUIDNameReplyEventArgs>((s, e) =>
                     {
-                        foreach (KeyValuePair<UUID, string> kvp in avatars)
+                        foreach (KeyValuePair<UUID, string> kvp in e.Names)
                         {
                             AddName2Key(kvp.Value, kvp.Key);
                             if (kvp.Key == found)
                             {
                                 AA.AspectName = kvp.Value;
                                 NameSearchEvent.Set();
-                                return;
                             }
                         }
                     });
                 try
                 {
-                    client.Avatars.OnAvatarNames += callback;
+                    client.Avatars.UUIDNameReply += callback;
                     // Send the Query
                     client.Avatars.RequestAvatarName(found);
                     NameSearchEvent.WaitOne(10000, false);
                 }
                 finally
                 {
-                    client.Avatars.OnAvatarNames -= callback;
+                    client.Avatars.UUIDNameReply -= callback;
                 }
             }
 
@@ -832,7 +855,7 @@ namespace cogbot.Listeners
             //throw new NotImplementedException();
         }
 
-        private void AgentGroupDataUpdatePT(Packet packet, Simulator simulator)
+        private void AgentGroupDataUpdatePT(object sender, PacketReceivedEventArgs e)
         {
             //throw new NotImplementedException();
         }

@@ -31,7 +31,7 @@ namespace cogbot.Actions
             bool send = (args.Length > 0 && args[0].Equals("send"));
             if (send)
             {
-                Client.Appearance.SendAgentSetAppearance();
+                Client.Appearance.RequestSetAppearance();
                 return Success( "Sent Appearance");
             }
             Client.Appearance.RequestSetAppearance(bake);

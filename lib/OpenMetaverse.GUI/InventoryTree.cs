@@ -166,8 +166,8 @@ namespace OpenMetaverse.GUI
         private void InitializeClient(GridClient client)
         {
             _Client = client;
-            _Client.Inventory.OnFolderUpdated += new InventoryManager.FolderUpdatedCallback(Inventory_OnFolderUpdated);
-            _Client.Network.OnLogin += new NetworkManager.LoginCallback(Network_OnLogin);
+            _Client.Inventory.FolderUpdated += Inventory_OnFolderUpdated;
+            _Client.Network.LoginProgress += Network_OnLogin;
         }
 
         private void defaultMenuItem_Click(object sender, EventArgs e)
@@ -191,18 +191,18 @@ namespace OpenMetaverse.GUI
             }
         }
 
-        void Network_OnLogin(LoginStatus login, string message)
+        void Network_OnLogin(object sender, LoginProgressEventArgs e)
         {
-            if (login == LoginStatus.Success)
+            if (e.Status == LoginStatus.Success)
             {
                 if (Client.Inventory.Store != null)
                     UpdateFolder(Client.Inventory.Store.RootFolder.UUID);
             }
         }
 
-        void Inventory_OnFolderUpdated(UUID folderID)
+        private void Inventory_OnFolderUpdated(object sender, FolderUpdatedEventArgs e)
         {
-            UpdateFolder(folderID);
+            UpdateFolder(e.FolderID);
         }
 
         void InventoryTree_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)

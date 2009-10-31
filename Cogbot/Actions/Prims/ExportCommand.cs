@@ -2,60 +2,58 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
-using cogbot.TheOpenSims;
 using OpenMetaverse;
-using OpenMetaverse.Assets;
 using OpenMetaverse.StructuredData;
+using OpenMetaverse.Assets;
 
 namespace cogbot.Actions
 {
-    public class ExportCommand : Command, RegionMasterCommand
+    public class ExportCommand : Command
     {
         List<UUID> Textures = new List<UUID>();
         AutoResetEvent GotPermissionsEvent = new AutoResetEvent(false);
         Primitive.ObjectProperties Properties;
         bool GotPermissions = false;
         UUID SelectedObject = UUID.Zero;
-        private bool registedDelegates = false;
 
         Dictionary<UUID, Primitive> PrimsWaiting = new Dictionary<UUID, Primitive>();
         AutoResetEvent AllPropertiesReceived = new AutoResetEvent(false);
 
         public ExportCommand(BotClient testClient)
         {
+            testClient.Objects.ObjectPropertiesFamily += new EventHandler<ObjectPropertiesFamilyEventArgs>(Objects_OnObjectPropertiesFamily);
+
+            testClient.Objects.ObjectProperties += new EventHandler<ObjectPropertiesEventArgs>(Objects_OnObjectProperties);
+            testClient.Avatars.ViewerEffectPointAt += new EventHandler<ViewerEffectPointAtEventArgs>(Avatars_ViewerEffectPointAt);
 
             Name = "export";
             Description = "Exports an object to an xml file. Usage: export uuid outputfile.xml";
             Category = CommandCategory.Objects;
         }
 
-        void RegisterCallbacks()
+        void Avatars_ViewerEffectPointAt(object sender, ViewerEffectPointAtEventArgs e)
         {
-            if (registedDelegates) return;
-            registedDelegates = true;
-            Client.Objects.OnObjectPropertiesFamily +=
-                new ObjectManager.ObjectPropertiesFamilyCallback(Objects_OnObjectPropertiesFamily);
-            Client.Objects.OnObjectProperties += new ObjectManager.ObjectPropertiesCallback(Objects_OnObjectProperties);
-            Client.Avatars.OnPointAt += new AvatarManager.PointAtCallback(Avatars_OnPointAt);
-
+            if (e.SourceID == Client.MasterKey)
+            {
+                //Client.DebugLog("Master is now selecting " + targetID.ToString());
+                SelectedObject = e.TargetID;
+            }
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
-            RegisterCallbacks();
             if (args.Length != 2 && !(args.Length == 1 && SelectedObject != UUID.Zero))
-                return ShowUsage();// " export uuid outputfile.xml";
+                return ShowUsage();
 
             UUID id;
             uint localid;
             string file;
-            int argsUsed;
 
             if (args.Length == 2)
             {
                 file = args[1];
-                if (!UUIDTryParse(args, 0, out id, out argsUsed))
-                    return ShowUsage();// " export uuid outputfile.xml";
+                if (!UUID.TryParse(args[0], out id))
+                    return ShowUsage();
             }
             else
             {
@@ -63,20 +61,21 @@ namespace cogbot.Actions
                 id = SelectedObject;
             }
 
-            List<SimObject> PS = WorldSystem.GetPrimitives(args, out argsUsed);
-            if (IsEmpty(PS)) return Failure("Cannot find objects from " + string.Join(" ", args));
+            Primitive exportPrim;
 
-            foreach (var exportPrim in PS)
+            exportPrim = Client.Network.CurrentSim.ObjectsPrimitives.Find(
+                delegate(Primitive prim) { return prim.ID == id; }
+            );
+
+            if (exportPrim != null)
             {
-                Simulator CurSim = exportPrim.GetSimulator();
-
                 if (exportPrim.ParentID != 0)
                     localid = exportPrim.ParentID;
                 else
                     localid = exportPrim.LocalID;
 
                 // Check for export permission first
-                Client.Objects.RequestObjectPropertiesFamily(CurSim, id);
+                Client.Objects.RequestObjectPropertiesFamily(Client.Network.CurrentSim, id);
                 GotPermissionsEvent.WaitOne(1000 * 10, false);
 
                 if (!GotPermissions)
@@ -90,19 +89,19 @@ namespace cogbot.Actions
                         Properties.OwnerID != Client.MasterKey &&
                         Client.Self.AgentID != Client.Self.AgentID)
                     {
-                        return Failure( "That object is owned by " + Properties.OwnerID + ", we don't have permission " +
+                        return Failure("That object is owned by " + Properties.OwnerID + ", we don't have permission " +
                             "to export it");
                     }
                 }
 
-                List<Primitive> prims = CurSim.ObjectsPrimitives.FindAll(
+                List<Primitive> prims = Client.Network.CurrentSim.ObjectsPrimitives.FindAll(
                     delegate(Primitive prim)
                     {
                         return (prim.LocalID == localid || prim.ParentID == localid);
                     }
                 );
 
-                bool complete = RequestObjectProperties(CurSim,prims, 250);
+                bool complete = RequestObjectProperties(prims, 250);
 
                 if (!complete)
                 {
@@ -111,7 +110,7 @@ namespace cogbot.Actions
                         Logger.Log(uuid.ToString(), Helpers.LogLevel.Warning, Client);
                 }
 
-                string output = OSDParser.SerializeLLSDXmlString(ClientHelpers.PrimListToOSD(prims));
+                string output = OSDParser.SerializeLLSDXmlString(Helpers.PrimListToOSD(prims));
                 try { File.WriteAllText(file, output); }
                 catch (Exception e) { return Failure(e.Message); }
 
@@ -159,12 +158,17 @@ namespace cogbot.Actions
                     Client.Assets.RequestImage(request.ImageID, request.Type, Assets_OnImageReceived);
                 }
 
-                Success("XML exported, began downloading " + Textures.Count + " textures");
+                return Success("XML exported, began downloading " + Textures.Count + " textures");
+            }
+            else
+            {
+                return Failure("Couldn't find UUID " + id.ToString() + " in the " +
+                               Client.Network.CurrentSim.ObjectsPrimitives.Count +
+                               "objects currently indexed in the current simulator");
             }         
-            return SuccessOrFailure();
         }
 
-        private bool RequestObjectProperties(Simulator CurSim, List<Primitive> objects, int msPerRequest)
+        private bool RequestObjectProperties(List<Primitive> objects, int msPerRequest)
         {
             // Create an array of the local IDs of all the prims we are requesting properties for
             uint[] localids = new uint[objects.Count];
@@ -180,7 +184,7 @@ namespace cogbot.Actions
                 }
             }
 
-            Client.Objects.SelectObjects(CurSim, localids);
+            Client.Objects.SelectObjects(Client.Network.CurrentSim, localids);
 
             return AllPropertiesReceived.WaitOne(2000 + msPerRequest * objects.Count, false);
         }
@@ -217,30 +221,19 @@ namespace cogbot.Actions
             }
         }
 
-        void Avatars_OnPointAt(UUID sourceID, UUID targetID, Vector3d targetPos,
-            PointAtType pointType, float duration, UUID id)
-        {
-            if (sourceID == Client.MasterKey)
-            {
-                //Client.DebugLog("Master is now selecting " + targetID.ToString());
-                SelectedObject = targetID;
-            }
-        }
-
-        void Objects_OnObjectPropertiesFamily(Simulator simulator, Primitive.ObjectProperties properties,
-            ReportType type)
+        void Objects_OnObjectPropertiesFamily(object sender, ObjectPropertiesFamilyEventArgs e)
         {
             Properties = new Primitive.ObjectProperties();
-            Properties.SetFamilyProperties(properties);
+            Properties.SetFamilyProperties(e.Properties);
             GotPermissions = true;
             GotPermissionsEvent.Set();
         }
 
-        void Objects_OnObjectProperties(Simulator simulator, Primitive.ObjectProperties properties)
+        void Objects_OnObjectProperties(object sender, ObjectPropertiesEventArgs e)
         {
             lock (PrimsWaiting)
             {
-                PrimsWaiting.Remove(properties.ObjectID);
+                PrimsWaiting.Remove(e.Properties.ObjectID);
 
                 if (PrimsWaiting.Count == 0)
                     AllPropertiesReceived.Set();

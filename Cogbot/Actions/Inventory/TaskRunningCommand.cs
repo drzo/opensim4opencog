@@ -68,20 +68,20 @@ namespace cogbot.Actions
                     }
                     bool wasRunning = false;
 
-                    InventoryManager.ScriptRunningCallback callback;
+                    EventHandler<ScriptRunningReplyEventArgs> callback;
                     using (AutoResetEvent OnScriptRunningReset = new AutoResetEvent(false))
                     {
-                        callback = ((UUID objectID0, UUID sctriptID, bool isMono, bool isRunning) =>
+                        callback = ((s,e) =>
                                         {
-                                            if (objectID0 == objectID)
+                                            if (e.ObjectID == objectID)
                                             {
-                                                result += String.Format(" IsMono: {0} IsRunning: {1}", isMono, isRunning);
-                                                wasRunning = isRunning;
+                                                result += String.Format(" IsMono: {0} IsRunning: {1}", e.IsMono, e.IsRunning);
+                                                wasRunning = e.IsRunning;
                                                 OnScriptRunningReset.Set();
                                             }
                                         });
 
-                        Client.Inventory.OnScriptRunning += callback;
+                        Client.Inventory.ScriptRunningReply += callback;
 
                         for (int i = 0; i < items.Count; i++)
                         {
@@ -100,7 +100,7 @@ namespace cogbot.Actions
                                 if (assetType == AssetType.LSLBytecode || assetType == AssetType.LSLText)
                                 {
                                     OnScriptRunningReset.Reset();
-                                    Client.Inventory.GetScriptRunning(objectID, item.UUID);
+                                    Client.Inventory.RequestGetScriptRunning(objectID, item.UUID);
                                     if (!OnScriptRunningReset.WaitOne(10000, true))
                                     {
                                         result += " (no script info)";
@@ -111,7 +111,7 @@ namespace cogbot.Actions
                                         {
                                             OnScriptRunningReset.Reset();
                                             result += " Setting " + setTaskTo + " => ";
-                                            Client.Inventory.SetScriptRunning(objectID, item.UUID, setTaskTo);
+                                            Client.Inventory.RequestSetScriptRunning(objectID, item.UUID, setTaskTo);
                                             if (!OnScriptRunningReset.WaitOne(10000, true))
                                             {
                                                 result += " (was not set)";
@@ -124,7 +124,7 @@ namespace cogbot.Actions
                             }
                         }
                     }
-                    Client.Inventory.OnScriptRunning -= callback;
+                    Client.Inventory.ScriptRunningReply -= callback;
                     Success(result);
                 }
                 else

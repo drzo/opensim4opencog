@@ -17,9 +17,14 @@ namespace cogbot.Listeners
 
         public static bool AcceptOffersAnimationsObjects = true;
 
-        public override void Self_OnScriptQuestion(Simulator simulator, UUID taskID, UUID itemID, string objectName,
-                                                   string objectOwner, ScriptPermission questions)
+        public override void Self_OnScriptQuestion(object sender, ScriptQuestionEventArgs e)
         {
+            UUID taskID = e.TaskID;
+            UUID itemID = e.ItemID;
+            var objectName = e.ObjectName;
+            var objectOwner = e.ObjectOwnerName;
+            var simulator = e.Simulator;
+            var questions = e.Questions;
             EventQueue.Enqueue(
                 () =>
                 {
@@ -44,16 +49,16 @@ namespace cogbot.Listeners
                 );
         }
 
-        public override void Self_OnScriptDialog(string message, string objectName, UUID imageID, UUID objectID,
-                                                 string firstName, string lastName, int chatChannel,
-                                                 List<string> buttons)
+        public override void Self_OnScriptDialog(object sender, ScriptDialogEventArgs e)
         {
+            var objectName = e.ObjectName;
+            var buttons = e.ButtonLabels;
             EventQueue.Enqueue(
                 () =>
                 {
-                    client.SendPersonalEvent(SimEventType.SCRIPT, "On-Script-Dialog", message, objectName, imageID, objectID, firstName,
-                                 lastName,
-                                 chatChannel, buttons);
+                    client.SendPersonalEvent(SimEventType.SCRIPT, "On-Script-Dialog", e.Message, objectName, e.ImageID, e.ObjectID, e.FirstName,
+                                 e.LastName,
+                                 e.Channel, buttons);
                     if (AcceptOffersAnimationsObjects && buttons.Count > 0)
                     {
                         int buttonIndex = (new Random()).Next(buttons.Count);
@@ -68,30 +73,30 @@ namespace cogbot.Listeners
                             buttonlabelToLower = buttonlabel.ToLower();
                         }
 
-                        client.Self.ReplyToScriptDialog(chatChannel, buttonIndex, buttonlabel, objectID);
+                        client.Self.ReplyToScriptDialog(e.Channel, buttonIndex, buttonlabel, e.ObjectID);
                     }
                 }
                 );
         }
 
-        public override void Self_OnScriptControlChange(ScriptControlChange controls, bool pass, bool take)
+        public override void Self_OnScriptControlChange(object sender, ScriptControlEventArgs e)
         {
-            base.Self_OnScriptControlChange(controls, pass, take);
+            base.Self_OnScriptControlChange(sender, e);
         }
 
-        public override void Self_OnScriptSensorReply(UUID requestorID, UUID groupID, string name, UUID objectID, UUID ownerID, Vector3 position, float range, Quaternion rotation, ScriptSensorTypeFlags type, Vector3 velocity)
+        public override void Self_OnScriptSensorReply(object sender, ScriptSensorReplyEventArgs e)
         {
-            base.Self_OnScriptSensorReply(requestorID, groupID, name, objectID, ownerID, position, range, rotation, type, velocity);
+            base.Self_OnScriptSensorReply(sender, e);
         }
 
-        public override void Inventory_OnTaskInventoryReply(UUID itemID, short serial, string assetFilename)
+        public override void Inventory_OnTaskInventoryReply(object sender, TaskInventoryReplyEventArgs e)
         {
-            base.Inventory_OnTaskInventoryReply(itemID, serial, assetFilename);
+            base.Inventory_OnTaskInventoryReply(sender, e);
         }
 
-        public void Inventory_OnScriptRunning(UUID objectID0, UUID sctriptID, bool isMono, bool isRunning)
+        public void Inventory_OnScriptRunning(object sender, ScriptRunningReplyEventArgs e)
         {
-            Console.WriteLine("On-Script-Running ObjectID: {0} ItemID: {1} IsMono: {2} IsRunning: {3}", objectID0, sctriptID, isMono, isRunning);
+            Console.WriteLine("On-Script-Running ObjectID: {0} ItemID: {1} IsMono: {2} IsRunning: {3}", e.ObjectID, e.ScriptID, e.IsMono, e.IsRunning);
         }
 
         /// <summary>
@@ -146,21 +151,21 @@ namespace cogbot.Listeners
             // eval (thisClient.WorldSystem.ExecuteLSL "llOwnerSay(llGetObjectName());")
             using (AutoResetEvent LocalReset = new AutoResetEvent(false))
             {
-                InventoryManager.TaskInventoryReplyCallback callback
-                    = (UUID itemID, short serial, string assetFilename) =>
+                EventHandler<TaskInventoryReplyEventArgs> callback
+                    = (w,e) =>
                     {
-                        if (itemID == ScriptHolder.ID)
+                        if (e.ItemID == ScriptHolder.ID)
                         {
                             LocalReset.Set();
                         }
                     };
-                client.Inventory.OnTaskInventoryReply += callback;
+                client.Inventory.TaskInventoryReply += callback;
                 client.Inventory.CopyScriptToTask(ScriptHolder.LocalID, scriptItem, true);
                 if (LocalReset.WaitOne(10000, false))
                 {
                     Debug("time out on CopyScriptToTask");
                 }
-                client.Inventory.OnTaskInventoryReply -= callback;
+                client.Inventory.TaskInventoryReply -= callback;
             }
             // remove the arifact in agent inventory
             client.Inventory.RemoveItem(scriptItem.UUID);
@@ -170,18 +175,18 @@ namespace cogbot.Listeners
         {
             using (AutoResetEvent LocalReset = new AutoResetEvent(false))
             {
-                InventoryManager.ScriptRunningCallback callback
-                    = ((UUID objectID0, UUID sctriptID, bool isMono, bool isRunning) =>
+                EventHandler<ScriptRunningReplyEventArgs> callback
+                    = (s, e) =>
                     {
-                        if (objectID0 == objectID)
+                        if (e.ObjectID == objectID)
                         {
                             LocalReset.Set();
                         }
-                    });
-                client.Inventory.OnScriptRunning += callback;
-                client.Inventory.SetScriptRunning(objectID, itemID, enableScript);
+                    };
+                client.Inventory.ScriptRunningReply += callback;
+                client.Inventory.RequestSetScriptRunning(objectID, itemID, enableScript);
                 LocalReset.WaitOne(10000, true);
-                client.Inventory.OnScriptRunning -= callback;
+                client.Inventory.ScriptRunningReply -= callback;
             }
         }
 
@@ -190,19 +195,19 @@ namespace cogbot.Listeners
             bool wasRunning = false;
             using (AutoResetEvent LocalReset = new AutoResetEvent(false))
             {
-                InventoryManager.ScriptRunningCallback callback
-                    = ((UUID objectID0, UUID sctriptID, bool isMono, bool isRunning) =>
+                EventHandler<ScriptRunningReplyEventArgs> callback
+                    = (s,e) =>
                     {
-                        if (objectID0 == objectID && sctriptID == itemID)
+                        if (e.ObjectID == objectID && e.ScriptID == itemID)
                         {
-                            wasRunning = isRunning;
+                            wasRunning = e.IsRunning;
                             LocalReset.Set();
                         }
-                    });
-                client.Inventory.OnScriptRunning += callback;
-                client.Inventory.GetScriptRunning(objectID, itemID);
+                    };
+                client.Inventory.ScriptRunningReply += callback;
+                client.Inventory.RequestGetScriptRunning(objectID, itemID);
                 LocalReset.WaitOne(10000, true);
-                client.Inventory.OnScriptRunning -= callback;
+                client.Inventory.ScriptRunningReply -= callback;
             }
             return wasRunning;
         }
@@ -288,9 +293,9 @@ namespace cogbot.Listeners
             return null;
         }
 
-        public override void Inventory_OnTaskItemReceived(UUID itemID, UUID folderID, UUID creatorID, UUID assetID, InventoryType type)
+        public override void Inventory_OnTaskItemReceived(object sender, TaskItemReceivedEventArgs e)
         {
-            base.Inventory_OnTaskItemReceived(itemID, folderID, creatorID, assetID, type);
+            base.Inventory_OnTaskItemReceived(sender, e);
         }
 
         private UUID WaitingForTransaction = UUID.Zero;

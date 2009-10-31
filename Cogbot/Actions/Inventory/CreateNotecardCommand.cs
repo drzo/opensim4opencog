@@ -144,9 +144,10 @@ namespace cogbot.Actions
             InventoryItem fetchItem = null;
             AutoResetEvent fetchItemEvent = new AutoResetEvent(false);
 
-            InventoryManager.ItemReceivedCallback itemReceivedCallback =
-                delegate(InventoryItem item)
+            EventHandler<ItemReceivedEventArgs> itemReceivedCallback =
+                (s,e)=>
                 {
+                    var item = e.Item;
                     if (item.UUID == itemID)
                     {
                         fetchItem = item;
@@ -154,13 +155,13 @@ namespace cogbot.Actions
                     }
                 };
 
-            Client.Inventory.OnItemReceived += itemReceivedCallback;
+            Client.Inventory.ItemReceived += itemReceivedCallback;
 
             Client.Inventory.RequestFetchInventory(itemID, Client.Self.AgentID);
 
             fetchItemEvent.WaitOne(INVENTORY_FETCH_TIMEOUT, false);
 
-            Client.Inventory.OnItemReceived -= itemReceivedCallback;
+            Client.Inventory.ItemReceived -= itemReceivedCallback;
 
             return fetchItem;
         }
@@ -186,7 +187,7 @@ namespace cogbot.Actions
             assetDownloadEvent.WaitOne(NOTECARD_FETCH_TIMEOUT, false);
 
             if (notecardData != null)
-                return Success(Utils.EncodingUTF8.GetString(notecardData));
+                return Success(Encoding.UTF8.GetString(notecardData));
             else
                 return Failure("Error downloading notecard asset: " + error);
         }

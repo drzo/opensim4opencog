@@ -641,13 +641,13 @@ namespace cogbot
                         LastBotClient.TheRadegastInstance = RadegastInstance.GlobalInstance;
                         // LastBotClient.SetRadegastLoginOptions();
                         AddTypesToBotClient(LastBotClient);
-                        LastBotClient.Network.OnLogin += (delegate(LoginStatus login, string message)
+                        LastBotClient.Network.LoginProgress += (s,e)=>
                                                               {
-                                                                  if (login == LoginStatus.Success)
+                                                                  if (e.Status == LoginStatus.Success)
                                                                   {
                                                                       LastBotClient.StartupClientLisp();
                                                                   }
-                                                              });
+                                                              };
                     }
                 }
             }).Start();

@@ -29,14 +29,14 @@ namespace CogbotRadegastPluginModule
         {
             ContextType = typeof(Object);
             Label = "commands...";
-            Client.Network.OnLogin += aspectLogin;
+            Client.Network.LoginProgress += aspectLogin;
             Plugin = plugin;
         }
 
         public Dictionary<string, List<ToolStripMenuItem>> MenuItems = new Dictionary<string, List<ToolStripMenuItem>>();
-        private void aspectLogin(LoginStatus login, string message)
+        private void aspectLogin(object sender, LoginProgressEventArgs e)
         {
-            if (login != LoginStatus.Success) return;
+            if (e.Status != LoginStatus.Success) return;
             ScanCogbotMenu();
         }
 

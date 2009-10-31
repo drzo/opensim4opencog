@@ -31,8 +31,8 @@ namespace cogbot.Actions
                 if (!registered)
                 {
                     registered = true;
-                    Client.Objects.OnNewPrim += new ObjectManager.NewPrimCallback(Objects_OnNewPrim);
-                    Client.Objects.OnNewAvatar += new ObjectManager.NewAvatarCallback(Objects_OnNewAvatar);                    
+                    Client.Objects.ObjectUpdate += Objects_OnNewPrim;
+                    Client.Objects.AvatarUpdate += Objects_OnNewAvatar;
                 }
                 Client.ClientManager.GetTextures = enabled = true;
                 return Success("Texture downloading is on");
@@ -48,8 +48,9 @@ namespace cogbot.Actions
             }
         }
 
-        void Objects_OnNewAvatar(Simulator simulator, Avatar avatar, ulong regionHandle, ushort timeDilation)
+        void Objects_OnNewAvatar(object sender, AvatarUpdateEventArgs e)
         {
+            Avatar avatar = e.Avatar;
             if (enabled)
             {
                 // Search this avatar for textures
@@ -84,8 +85,10 @@ namespace cogbot.Actions
             }
         }
 
-        void Objects_OnNewPrim(Simulator simulator, Primitive prim, ulong regionHandle, ushort timeDilation)
+        void Objects_OnNewPrim(object sender, PrimEventArgs e)
         {
+            Primitive prim = e.Prim;
+
             if (enabled)
             {
                 // Search this prim for textures

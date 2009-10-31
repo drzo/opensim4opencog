@@ -15,7 +15,7 @@ namespace cogbot.Actions.Movement
         float diff, olddiff, saveolddiff;
         int startTime = 0;
         int duration = 10000;
-        ObjectManager.ObjectUpdatedCallback callback; 
+        EventHandler<TerseObjectUpdateEventArgs> callback; 
 
         public FlyToCommand(BotClient testClient)
         {
@@ -25,7 +25,7 @@ namespace cogbot.Actions.Movement
             Description = "Fly the avatar toward the specified position for a maximum of seconds. Usage: FlyTo x y z [seconds]";
             Category = CommandCategory.Movement;
             Parameters = new[] {  new NamedParam(typeof(SimPosition), typeof(SimPosition)) };
-            callback = new ObjectManager.ObjectUpdatedCallback(Objects_OnObjectUpdated);
+            callback = new EventHandler<TerseObjectUpdateEventArgs>(Objects_OnObjectUpdated);
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
@@ -53,7 +53,7 @@ namespace cogbot.Actions.Movement
                 if (Int32.TryParse(args[argsUsed], out duration))
                     duration *= 1000;
 
-            Client.Objects.OnObjectUpdated += callback;
+            Client.Objects.TerseObjectUpdate += callback;
             startTime = Environment.TickCount;
             Client.Self.Movement.Fly = true;
             Client.Self.Movement.AtPos = true;
@@ -69,10 +69,10 @@ namespace cogbot.Actions.Movement
             return Success(string.Format("flying to {0} in {1} seconds", target.ToString(), duration / 1000));
         }
 
-        private void Objects_OnObjectUpdated(Simulator simulator, ObjectUpdate update, ulong regionHandle, ushort timeDilation)
+        private void Objects_OnObjectUpdated(object s, TerseObjectUpdateEventArgs e)
         {
             if (startTime == 0) return;
-            if (update.LocalID == Client.Self.LocalID)
+            if (e.Update.LocalID == Client.Self.LocalID)
             {
                 XYMovement();
                 ZMovement();
@@ -164,7 +164,7 @@ namespace cogbot.Actions.Movement
             Client.Self.Movement.UpPos = false;
             Client.Self.Movement.UpNeg = false;
             Client.Self.Movement.SendUpdate(false);
-            Client.Objects.OnObjectUpdated -= callback;
+            Client.Objects.TerseObjectUpdate -= callback;
         }
 
         private void Debug(string x)

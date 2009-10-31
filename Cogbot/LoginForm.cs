@@ -39,7 +39,7 @@ namespace cogbot
         public LoginForm(GridClient _client)
         {
             client = _client;
-            client.Network.OnConnected += new NetworkManager.ConnectedCallback(Network_OnConnected);
+            client.Network.SimConnected += Network_OnConnected;
             InitializeComponent();
 
        }
@@ -50,8 +50,8 @@ namespace cogbot
         {
             client = _client.gridClient;
             parent = ClientManager.SingleInstance;
-            client.Network.OnConnected += new NetworkManager.ConnectedCallback(Network_OnConnected);
-            client.Network.OnLogin += new NetworkManager.LoginCallback(Network_OnLogin);
+            client.Network.SimConnected += Network_OnConnected;
+            client.Network.LoginProgress += Network_OnLogin;
             
             InitializeComponent();
             firstNameText.Text = parent.config.firstName;// "K";
@@ -60,27 +60,27 @@ namespace cogbot
 
         }
 
-        void Network_OnLogin(LoginStatus login, string message)
+        void Network_OnLogin(object sender, LoginProgressEventArgs e)
         {
             try
             {
                 //throw new NotImplementedException();
 
-                Text = "Logging In [" + login.ToString() + "]";
+                Text = "Logging In [" + e.Message.ToString() + "]";
             }
-            catch (Exception e)
+            catch (Exception)
             {
             }
-            if (login == LoginStatus.Success) CloseIt();
+            if (e.Status == LoginStatus.Success) CloseIt();
        }
 
-        void Network_OnConnected(object sender)
+        void Network_OnConnected(object sender, SimConnectedEventArgs e)
         {
             try
             {
             if (parent != null) parent.WriteLine("LoginForm Network_OnConnected :" + attempt.ToString());
             }
-            catch (Exception e)
+            catch (Exception)
             {
             }
             CloseIt();

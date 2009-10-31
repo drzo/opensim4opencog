@@ -372,9 +372,11 @@ namespace cogbot.Listeners
             // Register a handler for the creation event
             AutoResetEvent creationEvent = new AutoResetEvent(false);
             Quaternion rot = Quaternion.Identity;
-            ObjectManager.NewPrimCallback callback =
-                delegate(Simulator simulator0, Primitive prim, ulong regionHandle, ushort timeDilation)
+            EventHandler<PrimEventArgs> callback =
+                (s,e)=>//delegate(Simulator simulator0, Primitive prim, ulong regionHandle, ushort timeDilation)
                 {
+                    var regionHandle = e.Simulator.Handle;
+                    var prim = e.Prim;
                     if (regionHandle != R.RegionHandle) return;
                     if ((loc - prim.Position).Length() > 3)
                     {
@@ -413,7 +415,7 @@ namespace cogbot.Listeners
                     creationEvent.Set();
                 };
 
-            client.Objects.OnNewPrim += callback;
+            client.Objects.ObjectUpdate += callback;
 
             // Start the creation setting process (with baking enabled or disabled)
             client.Objects.AddPrim(simulator, CD, UUID.Zero, loc, scale, rot,
@@ -424,7 +426,7 @@ namespace cogbot.Listeners
                 success = true;
 
             // Unregister the handler
-            client.Objects.OnNewPrim -= callback;
+            client.Objects.ObjectUpdate -= callback;
 
             // Return success or failure message
             if (!success)
@@ -437,7 +439,7 @@ namespace cogbot.Listeners
             client.Objects.SetPosition(simulator, LocalID, loc);
             client.Objects.SetScale(simulator, LocalID, scale, true, true);
             client.Objects.SetRotation(simulator, LocalID, rot);
-            client.Objects.SetFlags(LocalID, false, true, true, false);
+            client.Objects.SetFlags(simulator, LocalID, false, true, true, false);
             return newPrim;
         }
 

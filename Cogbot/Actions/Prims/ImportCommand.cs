@@ -40,7 +40,7 @@ namespace cogbot.Actions
         List<uint> linkQueue;
         uint rootLocalID;
         ImporterState state = ImporterState.Idle;
-        ObjectManager.NewPrimCallback callback;
+        EventHandler<PrimEventArgs> callback;
 
         public ImportCommand(BotClient testClient)
         {
@@ -56,8 +56,8 @@ namespace cogbot.Actions
 
             if (callback == null)
             {
-                callback = new ObjectManager.NewPrimCallback(Objects_OnNewPrim);
-                Client.Objects.OnNewPrim += callback;
+                callback = new EventHandler<PrimEventArgs>(Objects_OnNewPrim);
+                Client.Objects.ObjectUpdate += callback;
             }
             try
             {
@@ -189,13 +189,15 @@ namespace cogbot.Actions
             }
             finally
             {
-                Client.Objects.OnNewPrim -= callback;
+                Client.Objects.ObjectUpdate -= callback;
                 callback = null;
             }
         }
 
-        void Objects_OnNewPrim(Simulator simulator, Primitive prim, ulong regionHandle, ushort timeDilation)
+        void Objects_OnNewPrim(object s, PrimEventArgs e)
         {
+            Simulator simulator = e.Simulator;
+            Primitive prim = e.Prim;
             if ((prim.Flags & PrimFlags.CreateSelected) == 0)
                 return; // We received an update for an object we didn't create
 

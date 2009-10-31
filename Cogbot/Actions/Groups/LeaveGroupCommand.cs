@@ -30,13 +30,12 @@ namespace cogbot.Actions
 
             UUID groupUUID = Client.GroupName2UUID(groupName);
             if (UUID.Zero != groupUUID) {
-                GroupManager.GroupLeftCallback lcallback = new GroupManager.GroupLeftCallback(Groups_OnGroupLeft);
-                Client.Groups.OnGroupLeft += lcallback;
+                Client.Groups.GroupLeaveReply += Groups_OnGroupLeft;
                 Client.Groups.LeaveGroup(groupUUID);
 
                 GroupsEvent.WaitOne(30000, false);
+                Client.Groups.GroupLeaveReply -= Groups_OnGroupLeft;
 
-                Client.Groups.OnGroupLeft -= lcallback;
                 GroupsEvent.Reset();
                 Client.ReloadGroupsCache();
 
@@ -48,11 +47,11 @@ namespace cogbot.Actions
         }
 
 
-        void Groups_OnGroupLeft(UUID groupID, bool success)
+        void Groups_OnGroupLeft(object sender, GroupOperationEventArgs e)
         {
-            Console.WriteLine(Client.ToString() + (success ? " has left group " : " failed to left group ") + groupID.ToString());
+            Console.WriteLine(Client.ToString() + (e.Success ? " has left group " : " failed to left group ") + e.GroupID.ToString());
 
-            leftGroup = success;
+            leftGroup = e.Success;
             GroupsEvent.Set();
         }
     }

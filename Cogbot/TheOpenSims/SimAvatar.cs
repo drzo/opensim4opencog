@@ -512,8 +512,7 @@ namespace cogbot.TheOpenSims
                     if (Client.Self.SittingOn != 0) return true;
                     if (Client.Self.Movement.SitOnGround) return true;
                 }
-                Dictionary<UUID, int> anims = ExpectedCurrentAnims.Dictionary;
-                if (SimAssetStore.Matches(anims.Keys, "sit").Count > 0) return true;
+                if (SimAssetStore.Matches(GetCurrentAnims(), "sit").Count > 0) return true;
                 return theAvatar.ParentID != 0;
             }
             set
@@ -1065,7 +1064,7 @@ namespace cogbot.TheOpenSims
         }
 
 
-        public override void UpdateObject(ObjectUpdate objectUpdate, ObjectUpdate objectUpdateDiff)
+        public override void UpdateObject(ObjectMovementUpdate objectUpdate, ObjectMovementUpdate objectUpdateDiff)
         {
         }
 
@@ -1702,15 +1701,15 @@ namespace cogbot.TheOpenSims
             }
 
             AutoResetEvent are = new AutoResetEvent(false);
-            ObjectManager.AvatarSitChanged OnSitChanged =
-                (simulator, avatar, sittingon, oldseat) =>
+            EventHandler<AvatarSitChangedEventArgs> OnSitChanged =
+                (s,e) =>
                 {
-                    if (avatar == theAvatar)
+                    if (e.Avatar == theAvatar)
                     {
                         are.Set();
                     }
                 };
-            Client.Objects.OnAvatarSitChanged += OnSitChanged;
+            Client.Objects.AvatarSitChanged += OnSitChanged;
             try
             {
                 ClientSelf.RequestSit(someObject.Prim.ID, Vector3.Zero);
@@ -1723,7 +1722,7 @@ namespace cogbot.TheOpenSims
             }
             finally
             {
-                Client.Objects.OnAvatarSitChanged -= OnSitChanged;
+                Client.Objects.AvatarSitChanged -= OnSitChanged;
             }
         }
 
@@ -1737,26 +1736,26 @@ namespace cogbot.TheOpenSims
             AutoResetEvent are = new AutoResetEvent(false);
             Avatar theAvatar = this.theAvatar;
             if (theAvatar == null) return false;
-            ObjectManager.AvatarSitChanged OnSitChanged =
-                (simulator, avatar, sittingon, oldseat) =>
+            EventHandler<AvatarSitChangedEventArgs> OnSitChanged =
+                (s, e) =>
                 {
-                    if (avatar == theAvatar)
+                    if (e.Avatar == theAvatar)
                     {
                         are.Set();
                     }
                 };
-            AvatarManager.AvatarAnimationCallback OnAnimsChanged =
-                (UUID avatarID, InternalDictionary<UUID, int> anims) =>
+            EventHandler<AvatarAnimationEventArgs> OnAnimsChanged =
+                (s,e) =>
                 {
-                    if (avatarID == theAvatar.ID)
-                        if (SimAssetStore.IsSitAnim(anims.Dictionary.Keys))
+                    if (e.AvatarID == theAvatar.ID)
+                        if (SimAssetStore.IsSitAnim(e.Animations))
                         {
                             //int seq = anims[Animations.SIT_GROUND];
                             are.Set();
                         }
                 };
-            Client.Objects.OnAvatarSitChanged += OnSitChanged;
-            Client.Avatars.OnAvatarAnimation += OnAnimsChanged;
+            Client.Objects.AvatarSitChanged += OnSitChanged;
+            Client.Avatars.AvatarAnimation += OnAnimsChanged;
             try
             {
                 ClientSelf.SitOnGround();
@@ -1768,8 +1767,8 @@ namespace cogbot.TheOpenSims
             }
             finally
             {
-                Client.Objects.OnAvatarSitChanged -= OnSitChanged;
-                Client.Avatars.OnAvatarAnimation -= OnAnimsChanged;
+                Client.Objects.AvatarSitChanged -= OnSitChanged;
+                Client.Avatars.AvatarAnimation -= OnAnimsChanged;
             }
         }
 
@@ -2045,15 +2044,18 @@ namespace cogbot.TheOpenSims
 
         public ICollection<UUID> GetCurrentAnims()
         {
-            return ExpectedCurrentAnims.Dictionary.Keys;
+            var c =  new List<UUID>();
+            lock (ExpectedCurrentAnims)
+                ExpectedCurrentAnims.ForEach((a)=> c.Add(a.AnimationID));           
+            return c;
         }
 
-        public IDictionary<UUID, int> GetCurrentAnimDict()
+        public List<Animation> GetCurrentAnimDict()
         {
-            return ExpectedCurrentAnims.Dictionary;
+            return ExpectedCurrentAnims;
         }
 
-        private readonly InternalDictionary<UUID, int> ExpectedCurrentAnims = new InternalDictionary<UUID, int>();
+        private readonly List<Animation> ExpectedCurrentAnims = new List<Animation>();
 
 
 
@@ -2064,8 +2066,9 @@ namespace cogbot.TheOpenSims
         ///  Nephrael Rae: [on-object-animation '(avatar "Candie Brooks") "TALK"][on-object-animation '(avatar "Candie Brooks") "STAND_1"][on-object-animation '(avatar "Candie Brooks") "e45fbdc9-af8f-9408-f742-fcb8c341d2c8"]
         /// </summary>
         /// <param name="anims"></param>
-        public void OnAvatarAnimations(InternalDictionary<UUID, int> anims)
+        public void OnAvatarAnimations(List<Animation> anims)
         {
+#if PORTED
             Dictionary<UUID, int> RemovedAnims = new Dictionary<UUID, int>();
             Dictionary<UUID, int> AddedAnims = new Dictionary<UUID, int>();
             bool SendAnimEvent = !WorldObjects.UseNewEventSystem;
@@ -2086,11 +2089,11 @@ namespace cogbot.TheOpenSims
                 //UUID mostCurrentAnim;// = UUID.Zero;
                 ///  List<String> names = new List<String>();
                 Dictionary<UUID, int> RemovedThisEvent = new Dictionary<UUID, int>(ExpectedCurrentAnims.Dictionary);
-                anims.ForEach(delegate(UUID key)
+                anims.ForEach(delegate(Animation animation)
                                   {
+                                      UUID key = animation.AnimationID;
                                       RemovedThisEvent.Remove(key);
-                                      int newAnimNumber;
-                                      anims.TryGetValue(key, out newAnimNumber);
+                                      int newAnimNumber = animation.AnimationSequence;
                                       if (newAnimNumber >= mostCurrentSequence)
                                       {
                                           mostCurrentSequence = newAnimNumber;
@@ -2132,7 +2135,7 @@ namespace cogbot.TheOpenSims
                                       /// RemovedAnimsWhen[whenSeq].Add(key);
                                   });
                 List<UUID> shownRemoved = new List<UUID>();
-                List<UUID> showAdded = new List<UUID>();
+                List<Animation> showAdded = new List<Animation>();
 
                 Dictionary<UUID, int> AddedThisEvent = new Dictionary<UUID, int>(AddedAnims);
 
@@ -2260,7 +2263,7 @@ namespace cogbot.TheOpenSims
                 {
 
                 }
-                foreach (UUID key in showAdded)
+                foreach (Animation key in showAdded)
                 {
                     AddedAnims.Remove(key);
                 }
@@ -2288,6 +2291,8 @@ namespace cogbot.TheOpenSims
 
             /// CurrentAmin = mostCurrentAnim;
             /// SendNewEvent("On-Avatar-Animation", avatar, names);
+            #endif 
+
         }
 
         private SimObjectEvent AnimEvent(UUID uuid, SimEventStatus status, int serial)
@@ -2500,10 +2505,10 @@ namespace cogbot.TheOpenSims
         Avatar.AvatarProperties ProfileProperties { get; set; }
         Avatar.Interests AvatarInterests { get; set; }
         bool IsFlying { get; }
-        void OnAvatarAnimations(InternalDictionary<UUID, int> anims);
+        void OnAvatarAnimations(List<Animation> anims);
 
         ICollection<UUID> GetCurrentAnims();
-        IDictionary<UUID, int> GetCurrentAnimDict();
+        List<Animation> GetCurrentAnimDict();
 
         BotClient GetGridClient();
     }

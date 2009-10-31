@@ -11,11 +11,10 @@ namespace cogbot.Actions
     {
         Dictionary<UUID, Primitive> PrimsWaiting = new Dictionary<UUID, Primitive>();
         AutoResetEvent AllPropertiesReceived = new AutoResetEvent(false);
-        ObjectManager.ObjectPropertiesCallback callback;
 
         public FindObjectsCommand(BotClient testClient)
         {
-            callback = new ObjectManager.ObjectPropertiesCallback(Objects_OnObjectProperties);
+            testClient.Objects.ObjectProperties += new EventHandler<ObjectPropertiesEventArgs>(Objects_OnObjectProperties);
 
             Name = "findobjects";
             Description = "Finds all objects, which name contains search-string. " +
@@ -29,17 +28,13 @@ namespace cogbot.Actions
             if ((args.Length < 1) || (args.Length > 2))
                 return ShowUsage();// " findobjects [radius] <search-string>";
             float radius = float.Parse(args[0]);
-            string searchString = (args.Length > 1)? args[1] : "";
+            string searchString = (args.Length > 1) ? args[1] : String.Empty;
 
             // *** get current location ***
-            Simulator CurSim = Client.Network.CurrentSim;
-            Vector3 location = GetSimPosition();
+            Vector3 location = Client.Self.SimPosition;
 
-            try
-            {
-                Client.Objects.OnObjectProperties += callback;
                 // *** find all objects in radius ***
-                List<Primitive> prims = CurSim.ObjectsPrimitives.FindAll(
+            List<Primitive> prims = Client.Network.CurrentSim.ObjectsPrimitives.FindAll(
                     delegate(Primitive prim)
                     {
                         Vector3 pos = prim.Position;
@@ -48,57 +43,56 @@ namespace cogbot.Actions
                 );
 
                 // *** request properties of these objects ***
-                bool complete = RequestObjectProperties(CurSim,prims, 250);
+            bool complete = RequestObjectProperties(prims, 250);
 
                 foreach (Primitive p in prims)
                 {
-                    string name = p.Properties.Name;
-                    if ((name != null) && (name.Contains(searchString)))
-                        WriteLine(String.Format("Object '{0}': {1}", name, p.ID.ToString()));
+                string name = p.Properties != null ? p.Properties.Name : null;
+                if (String.IsNullOrEmpty(searchString) || ((name != null) && (name.Contains(searchString))))
+                    Console.WriteLine(String.Format("Object '{0}': {1}", name, p.ID.ToString()));
                 }
 
                 if (!complete)
                 {
-                    WriteLine("Warning: Unable to retrieve full properties for:");
+                Console.WriteLine("Warning: Unable to retrieve full properties for:");
                     foreach (UUID uuid in PrimsWaiting.Keys)
-                        WriteLine(uuid.ToString());
+                    Console.WriteLine(uuid);
                 }
 
-                return Success("Done searching");
-            }
-            finally
-            {
-                Client.Objects.OnObjectProperties -= callback;
-            }
+            return Success("Done searching");
         }
 
-        private bool RequestObjectProperties(Simulator CurSim, List<Primitive> objects, int msPerRequest)
+        private bool RequestObjectProperties(List<Primitive> objects, int msPerRequest)
         {
             // Create an array of the local IDs of all the prims we are requesting properties for
             uint[] localids = new uint[objects.Count];
 
-            lock (PrimsWaiting) {
+            lock (PrimsWaiting)
+            {
                 PrimsWaiting.Clear();
 
-                for (int i = 0; i < objects.Count; ++i) {
+                for (int i = 0; i < objects.Count; ++i)
+                {
                     localids[i] = objects[i].LocalID;
                     PrimsWaiting.Add(objects[i].ID, objects[i]);
                 }
             }
 
-            Client.Objects.SelectObjects(CurSim, localids);
+            Client.Objects.SelectObjects(Client.Network.CurrentSim, localids);
 
             return AllPropertiesReceived.WaitOne(2000 + msPerRequest * objects.Count, false);
         }
 
-        void Objects_OnObjectProperties(Simulator simulator, Primitive.ObjectProperties properties)
+        void Objects_OnObjectProperties(object sender, ObjectPropertiesEventArgs e)
         {
-            lock (PrimsWaiting) {
+            lock (PrimsWaiting)
+        {
                 Primitive prim;
-                if (PrimsWaiting.TryGetValue(properties.ObjectID, out prim)) {
-                    prim.Properties = properties;
+                if (PrimsWaiting.TryGetValue(e.Properties.ObjectID, out prim))
+                {
+                    prim.Properties = e.Properties;
                 }
-                PrimsWaiting.Remove(properties.ObjectID);
+                PrimsWaiting.Remove(e.Properties.ObjectID);
 
                 if (PrimsWaiting.Count == 0)
                     AllPropertiesReceived.Set();

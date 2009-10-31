@@ -153,12 +153,44 @@ namespace OpenMetaverse.GUI
         private void InitializeClient(GridClient client)
         {
             _Client = client;
-            _Client.Avatars.OnAvatarAppearance += new AvatarManager.AvatarAppearanceCallback(Avatars_OnAvatarAppearance);
-            _Client.Avatars.OnAvatarNames += new AvatarManager.AvatarNamesCallback(Avatars_OnAvatarNames);
-            _Client.Grid.OnCoarseLocationUpdate += new GridManager.CoarseLocationUpdateCallback(Grid_OnCoarseLocationUpdate);
-            _Client.Network.OnCurrentSimChanged += new NetworkManager.CurrentSimChangedCallback(Network_OnCurrentSimChanged);
-            _Client.Objects.OnNewAvatar += new ObjectManager.NewAvatarCallback(Objects_OnNewAvatar);
-            _Client.Objects.OnObjectUpdated += new ObjectManager.ObjectUpdatedCallback(Objects_OnObjectUpdated);
+            _Client.Avatars.AvatarAppearance += Avatars_OnAvatarAppearance;
+            _Client.Avatars.UUIDNameReply += new EventHandler<UUIDNameReplyEventArgs>(Avatars_UUIDNameReply);
+            _Client.Grid.CoarseLocationUpdate += Grid_CoarseLocationUpdate;
+            _Client.Network.SimChanged += Network_OnCurrentSimChanged;
+            _Client.Objects.AvatarUpdate += Objects_OnNewAvatar;
+            _Client.Objects.TerseObjectUpdate += Objects_OnObjectUpdated;
+            
+        }
+
+        void Avatars_UUIDNameReply(object sender, UUIDNameReplyEventArgs e)
+        {
+            lock (_UntrackedAvatars)
+            {
+                foreach (KeyValuePair<UUID, string> name in e.Names)
+                {
+                    TrackedAvatar trackedAvatar;
+                    if (_UntrackedAvatars.TryGetValue(name.Key, out trackedAvatar))
+                    {
+                        trackedAvatar.Name = name.Value;
+
+                        if (OnAvatarAdded != null && trackedAvatar.ListViewItem.Text == "(Loading...)")
+                        {
+                            try { OnAvatarAdded(trackedAvatar); }
+                            catch (Exception ex) { Logger.Log(ex.Message, Helpers.LogLevel.Error, Client, ex); }
+                        }
+
+                        this.BeginInvoke((MethodInvoker)delegate
+                        {
+                            trackedAvatar.ListViewItem.Text = name.Value;
+                        });
+                    }
+                }
+            }
+        }
+
+        void Grid_CoarseLocationUpdate(object sender, CoarseLocationUpdateEventArgs e)
+        {
+            UpdateCoarseInfo(e.Simulator, e.NewEntries, e.RemovedEntries);
         }
 
         private void AddAvatar(UUID avatarID, Avatar avatar, Vector3 coarsePosition)
@@ -306,10 +338,10 @@ namespace OpenMetaverse.GUI
                 {
                     for (int i = 0; i < removedEntries.Count; i++)
                         RemoveAvatar(removedEntries[i]);
-                        }
+                }
 
                 if (newEntries != null)
-                        {
+                {
                     for (int i = 0; i < newEntries.Count; i++)
                     {
                         int index = this.Items.IndexOfKey(newEntries[i].ToString());
@@ -382,61 +414,29 @@ namespace OpenMetaverse.GUI
             }
         }
 
-        void Avatars_OnAvatarAppearance(UUID avatarID, bool isTrial, Primitive.TextureEntryFace defaultTexture, Primitive.TextureEntryFace[] faceTextures, List<byte> visualParams)
+        void Avatars_OnAvatarAppearance(object sender, AvatarAppearanceEventArgs e)
         {
-            if (visualParams.Count > 31)
+            if (e.VisualParams.Count > 31)
             {
                 lock (_TrackedAvatars)
                 {
                     TrackedAvatar trackedAvatar;
-                    if (_TrackedAvatars.TryGetValue(avatarID, out trackedAvatar))
+                    if (_TrackedAvatars.TryGetValue(e.AvatarID, out trackedAvatar))
                     {                        
                         this.BeginInvoke((MethodInvoker)delegate
                         {
-                            byte param = visualParams[31];
+                            byte param = e.VisualParams[31];
                             if (param > 0)
                                 trackedAvatar.ListViewItem.ForeColor = Color.Blue;
                             else
                                 trackedAvatar.ListViewItem.ForeColor = Color.Magenta;
-                        });
-                        
+                        });                        
                     }
                 }
             }
         }
 
-        void Avatars_OnAvatarNames(Dictionary<UUID, string> names)
-        {
-            lock (_UntrackedAvatars)
-            {
-                foreach (KeyValuePair<UUID, string> name in names)
-                {
-                    TrackedAvatar trackedAvatar;
-                    if (_UntrackedAvatars.TryGetValue(name.Key, out trackedAvatar))
-                    {
-                        trackedAvatar.Name = name.Value;
-
-                        if (OnAvatarAdded != null && trackedAvatar.ListViewItem.Text == "(Loading...)")
-                        {
-                            try { OnAvatarAdded(trackedAvatar); }
-                            catch (Exception ex) { Logger.Log(ex.Message, Helpers.LogLevel.Error, Client, ex); }
-                        }
-
-                        this.BeginInvoke((MethodInvoker)delegate
-                        {
-                            trackedAvatar.ListViewItem.Text = name.Value;
-                        });
-                    }
-                }
-            }
-        }
-
-        void Grid_OnCoarseLocationUpdate(Simulator sim, List<UUID> newEntries, List<UUID> removedEntries)
-        {
-            UpdateCoarseInfo(sim, newEntries, removedEntries);
-        }
-
-        void Network_OnCurrentSimChanged(Simulator PreviousSimulator)
+        void Network_OnCurrentSimChanged(object sender, SimChangedEventArgs e)
         {
             lock (_TrackedAvatars)
                 _TrackedAvatars.Clear();
@@ -447,19 +447,19 @@ namespace OpenMetaverse.GUI
             ClearItems();
         }
 
-        void Objects_OnNewAvatar(Simulator simulator, Avatar avatar, ulong regionHandle, ushort timeDilation)
+        void Objects_OnNewAvatar(object sender, AvatarUpdateEventArgs e)
         {
-            UpdateAvatar(avatar);
+            UpdateAvatar(e.Avatar);
         }
 
-        void Objects_OnObjectUpdated(Simulator simulator, ObjectUpdate update, ulong regionHandle, ushort timeDilation)
+        void Objects_OnObjectUpdated(object sender, TerseObjectUpdateEventArgs e)
         {
             lock (_TrackedAvatars)
             {
-                if (_TrackedAvatars.ContainsKey(update.LocalID))
+                if (_TrackedAvatars.ContainsKey(e.Update.LocalID))
                 {
                     Avatar av;
-                    if (simulator.ObjectsAvatars.TryGetValue(update.LocalID, out av))
+                    if (e.Simulator.ObjectsAvatars.TryGetValue(e.Update.LocalID, out av))
                         UpdateAvatar(av);
                 }
             }

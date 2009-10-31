@@ -67,8 +67,7 @@ namespace cogbot.Actions
                     return Success(resolvedGroupName);
             }
 
-            GroupManager.GroupJoinedCallback gcallback = new GroupManager.GroupJoinedCallback(Groups_OnGroupJoined);
-            Client.Groups.OnGroupJoined += gcallback;
+            Client.Groups.GroupJoinedReply += Groups_OnGroupJoined;
             Client.Groups.RequestJoinGroup(resolvedGroupID);
 
             /* A.Biondi 
@@ -77,7 +76,7 @@ namespace cogbot.Actions
 
             GetGroupsSearchEvent.WaitOne(60000, false);
 
-            Client.Groups.OnGroupJoined -= gcallback;
+            Client.Groups.GroupJoinedReply -= Groups_OnGroupJoined;
             GetGroupsSearchEvent.Reset();
             Client.ReloadGroupsCache();
 
@@ -128,9 +127,9 @@ namespace cogbot.Actions
             }
         }
 
-        void Groups_OnGroupJoined(UUID groupID, bool success)
+        void Groups_OnGroupJoined(object sender, GroupOperationEventArgs e)
         {
-            Console.WriteLine(Client.ToString() + (success ? " joined " : " failed to join ") + groupID.ToString());
+            Console.WriteLine(Client.ToString() + (e.Success ? " joined " : " failed to join ") + e.GroupID.ToString());
 
             /* A.Biondi 
              * This code is not necessary because it is yet present in the 
@@ -146,7 +145,7 @@ namespace cogbot.Actions
                 
             */
 
-            joinedGroup = success;
+            joinedGroup = e.Success;
             GetGroupsSearchEvent.Set();
         }                        
     }

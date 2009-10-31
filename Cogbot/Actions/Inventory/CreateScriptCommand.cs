@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Text;
 using OpenMetaverse;
 using System.Diagnostics;
 
@@ -64,7 +65,7 @@ namespace cogbot.Actions
         public static byte[] EncodeScript(string body)
         {
             // Assume this is a string, add 1 for the null terminator ?
-            byte[] stringBytes = Utils.EncodingUTF8.GetBytes(body);
+            byte[] stringBytes = Encoding.UTF8.GetBytes(body);
             byte[] assetData = new byte[stringBytes.Length]; //+ 1];
             Array.Copy(stringBytes, 0, assetData, 0, stringBytes.Length);
             return assetData;
