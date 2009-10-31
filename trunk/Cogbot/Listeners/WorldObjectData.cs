@@ -271,11 +271,11 @@ namespace cogbot.Listeners
 
           public override void Objects_OnObjectUpdated(object sender, TerseObjectUpdateEventArgs e1)
           {
-              Objects_OnObjectUpdatedReal(e1.Simulator, e1.Update, e1.Simulator.Handle, e1.TimeDilation);
+              Objects_OnPrimitiveUpdateReal(e1.Simulator, e1.Prim, e1.Update, e1.Simulator.Handle, e1.TimeDilation);
               base.Objects_OnObjectUpdated(sender,e1);
           }
 
-        public void Objects_OnObjectUpdatedReal(Simulator simulator, ObjectMovementUpdate update, ulong regionHandle,
+        public void Objects_OnPrimitiveUpdateRealDead(Simulator simulator, ObjectMovementUpdate update, ulong regionHandle,
                                                      ushort timeDilation)
         {
             throw new InvalidOperationException("Objects_OnObjectProperties");
@@ -562,7 +562,7 @@ namespace cogbot.Listeners
             prim.Position = update.Position;
             prim.Rotation = update.Rotation;
             prim.PrimData.State = update.State;
-            prim.Textures = update.Textures;
+            if (update.Textures != null) prim.Textures = update.Textures;
             prim.Velocity = update.Velocity;
         }
 

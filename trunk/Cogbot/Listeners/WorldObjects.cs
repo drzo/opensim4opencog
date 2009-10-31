@@ -52,7 +52,7 @@ namespace cogbot.Listeners
         private static readonly TaskQueueHandler EventQueue = new TaskQueueHandler("World EventQueue", 0);
         private static readonly TaskQueueHandler CatchUpQueue = new TaskQueueHandler("Simulator catchup", 30000, false);
         private static readonly TaskQueueHandler MetaDataQueue = new TaskQueueHandler("MetaData Getter", 0, false);
-        private static readonly TaskQueueHandler OnConnectedQueue = new TaskQueueHandler("OnConnectedQueue", 0, false);
+        public static readonly TaskQueueHandler OnConnectedQueue = new TaskQueueHandler("OnConnectedQueue", 0, false);
         internal static readonly Dictionary<UUID, object> uuidTypeObject = new Dictionary<UUID, object>();
         private static readonly object WorldObjectsMasterLock = new object();
 
