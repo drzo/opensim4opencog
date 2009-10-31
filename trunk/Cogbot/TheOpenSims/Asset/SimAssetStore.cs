@@ -26,7 +26,7 @@ namespace cogbot.TheOpenSims
 
         internal readonly BotClient Client;
 
-        readonly internal TaskQueueHandler taskQueue = new TaskQueueHandler("SimAssetStore",1);
+        internal readonly TaskQueueHandler taskQueue = new TaskQueueHandler("SimAssetStore", 1, false);
         private InventoryManager Manager;
         private OpenMetaverse.Inventory Inventory;
 

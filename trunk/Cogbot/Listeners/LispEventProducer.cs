@@ -253,6 +253,8 @@ namespace cogbot.Listeners
             }
             else
             {
+                //todo 
+                return true;
                 Cons invokeMe = null;              
                 for (int i = paramNames.Length - 1; i >= 0; i--)
                 {

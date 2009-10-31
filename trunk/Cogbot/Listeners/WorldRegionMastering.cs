@@ -204,7 +204,12 @@ namespace cogbot.Listeners
            // base.Network_OnEventQueueRunning(simulator);
             if (simulator == client.Network.CurrentSim)
             {
-              // new Thread(() => client.Appearance.SetPreviousAppearance(true)).Start();
+                ParentGrabber.Start();
+                CatchUpQueue.Start();
+                MetaDataQueue.Start();
+                OnConnectedQueue.Start();
+                SimAssetSystem.taskQueue.Start();
+                // new Thread(() => client.Appearance.SetPreviousAppearance(true)).Start();
             }
             EnsureSimulator(simulator);
         }

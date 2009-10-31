@@ -38,7 +38,7 @@ namespace cogbot.Listeners
         static public readonly string[] paramNamesOnLogin = new string[] { "login", "message" };
         static public readonly Type[] paramTypesOnLogin = new Type[] { typeof(LoginStatus), typeof(string) };
 
-       public virtual void Network_OnLogin(object sender, LoginProgressEventArgs e) { OnEvent("On-Login", paramNamesOnLogin, paramTypesOnLogin, e); }
+       public virtual void Network_OnLogin(object sender, LoginProgressEventArgs e) { OnEvent("On-Login", paramNamesOnLogin, paramTypesOnLogin, e.Status, e.Message); }
 
         static public readonly string[] paramNamesOnConnected = new string[] { "sender" };
         static public readonly Type[] paramTypesOnConnected = new Type[] { typeof(System.Object) };
