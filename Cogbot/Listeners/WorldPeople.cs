@@ -424,17 +424,17 @@ namespace cogbot.Listeners
                                       });
         }
 
-        public override void Avatars_OnAvatarNameSearch(object sender, UUIDNameReplyEventArgs e)
+        public override void Avatars_OnAvatarNameSearch(object sender, AvatarPickerReplyEventArgs e1)
         {
-            foreach (KeyValuePair<UUID, string> kvp in e.Names)
+            foreach (KeyValuePair<UUID, string> kvp in e1.Avatars)
             {
                 AddName2Key(kvp.Value, kvp.Key);
             }
         }
 
-        public override void Avatars_OnAvatarNames(object sender, AvatarPickerReplyEventArgs e)
+        public override void Avatars_OnAvatarNames(object sender, UUIDNameReplyEventArgs e1)
         {
-            foreach (KeyValuePair<UUID, string> kvp in e.Avatars)
+            foreach (KeyValuePair<UUID, string> kvp in e1.Names)
             {
                 AddName2Key(kvp.Value, kvp.Key);
             }

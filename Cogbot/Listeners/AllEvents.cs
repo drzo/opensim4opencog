@@ -32,7 +32,118 @@ namespace cogbot.Listeners
         public abstract bool BooleanOnEvent(string eventName, string[] paramNames, Type[] paramTypes, params object[] parameters);
         public virtual void OnEvent(string eventName, string[] paramNames, Type[] paramTypes, params object[] parameters)
         {
+            int missingParams = paramNames.Length - parameters.Length;
+            if (missingParams != 0)
+            {
+                object[] old = parameters;
+                parameters = new object[paramNames.Length];
+                foreach (var o in old)
+                {
+                    fillInParams(o, paramTypes, paramNames, parameters);
+                }
+                foreach (var o in parameters)
+                {
+                    if (o==null)
+                    {
+                        Console.WriteLine("bd args in " + eventName);
+                    }
+                }
+
+            }
             BooleanOnEvent(eventName, paramNames, paramTypes, parameters);
+        }
+
+        private void fillInParams(object o, Type[] types, string[] strings, object[] parameters)
+        {
+            if (o==null) return;
+            for (int i = 0; i < strings.Length; i++)
+            {
+                if (parameters[i] != null) continue;
+                if (types[i].IsInstanceOfType(o))
+                {
+                    parameters[i] = o;
+                    continue;
+                }
+                foreach (var propertyInfo in o.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public))
+                {
+                    if (propertyInfo.CanRead && propertyInfo.GetIndexParameters().Length == 0 && propertyInfo.PropertyType == types[i])
+                    {
+                        if (propertyInfo.Name.ToLower() == strings[i].ToLower())
+                        {
+                            var val = propertyInfo.GetValue(o, null);
+                            if (val != null) parameters[i] = val;
+                        }
+                    }
+                }
+            }
+            for (int i = 0; i < strings.Length; i++)
+            {
+                if (parameters[i] != null) continue;
+                foreach (var propertyInfo in o.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public))
+                {
+                    if (propertyInfo.CanRead && propertyInfo.GetIndexParameters().Length == 0 && propertyInfo.PropertyType == types[i])
+                    {
+                        //if (propertyInfo.Name.ToLower() == strings[i].ToLower())
+                        {
+                            var val = propertyInfo.GetValue(o, null);
+                            if (val != null) parameters[i] = val;
+                        }
+                    }
+                }
+            }
+            for (int i = 0; i < strings.Length; i++)
+            {
+                if (parameters[i] != null) continue;
+                foreach (var propertyInfo in o.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public))
+                {
+                    if (propertyInfo.FieldType == types[i])
+                    {
+                        if (propertyInfo.Name.ToLower() == strings[i].ToLower())
+                        {
+                            var val = propertyInfo.GetValue(o);
+                            if (val != null) parameters[i] = val;
+
+                        }
+                    }
+                }
+            }
+            for (int i = 0; i < strings.Length; i++)
+            {
+                if (parameters[i] != null) continue;
+                foreach (var propertyInfo in o.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public))
+                {
+                    if (propertyInfo.FieldType == types[i])
+                    {
+                        //if (propertyInfo.Name.ToLower() == strings[i].ToLower())
+                        {
+                            var val = propertyInfo.GetValue(o);
+                            if (val != null) parameters[i] = val;
+
+                        }
+                    }
+                }
+            }
+            for (int i = 0; i < strings.Length; i++)
+            {
+                if (parameters[i] != null) continue;
+                foreach (var propertyInfo in o.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public))
+                {
+                    if (!propertyInfo.CanRead || propertyInfo.GetIndexParameters().Length != 0) continue;
+                    object val = propertyInfo.GetValue(o, null);
+                    if (val == null) continue;
+                    fillInParams(val, types, strings, parameters);
+                }
+            }
+            for (int i = 0; i < strings.Length; i++)
+            {
+                if (parameters[i] != null) continue;
+                foreach (var propertyInfo in o.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public))
+                {
+                    object val = propertyInfo.GetValue(o);
+                    if (val == null) continue;
+                    fillInParams(val, types, strings, parameters);
+                }
+            }
         }
 
         static public readonly string[] paramNamesOnLogin = new string[] { "login", "message" };
@@ -124,16 +235,7 @@ namespace cogbot.Listeners
         static public readonly string[] paramNamesOnChat = new string[] { "message", "audible", "type", "sourceType", "fromName", "id", "ownerid", "position" };
         static public readonly Type[] paramTypesOnChat = new Type[] { typeof(string), typeof(ChatAudibleLevel), typeof(ChatType), typeof(ChatSourceType), typeof(string), typeof(UUID), typeof(UUID), typeof(Vector3) };
 
-        public virtual void Self_OnChat(object sender, ChatEventArgs e)
-        {
-            SendEventArgsEvent(e);    
-       // string message, ChatAudibleLevel audible, ChatType type, ChatSourceType sourceType, string fromName, UUID id, UUID ownerid, Vector3 position) { OnEvent("On-Chat", paramNamesOnChat, paramTypesOnChat, message, audible, type, sourceType, fromName, id, ownerid, position); 
-        }
-
-        private void SendEventArgsEvent(EventArgs args)
-        {
-            throw new NotImplementedException();
-        }
+        public virtual void Self_OnChat(object sender, ChatEventArgs e) {OnEvent("On-Chat", paramNamesOnChat, paramTypesOnChat, e);}
 
         static public readonly string[] paramNamesOnScriptDialog = new string[] { "message", "objectName", "imageID", "objectID", "firstName", "lastName", "chatChannel", "buttons" };
         static public readonly Type[] paramTypesOnScriptDialog = new Type[] { typeof(string), typeof(string), typeof(UUID), typeof(UUID), typeof(string), typeof(string), typeof(int), typeof(List<string>) };
@@ -186,10 +288,7 @@ namespace cogbot.Listeners
         static public readonly string[] paramNamesOnMeanCollision = new string[] { "type", "perp", "victim", "magnitude", "time" };
         static public readonly Type[] paramTypesOnMeanCollision = new Type[] { typeof(MeanCollisionType), typeof(UUID), typeof(UUID), typeof(float), typeof(System.DateTime) };
 
-        public virtual void Self_OnMeanCollision(object sender, MeanCollisionEventArgs e)
-        {
-            SendEventArgsEvent(e);
-        } //(object sender, MeanCollisionEventArgs e) MeanCollisionType type, UUID perp, UUID victim, float magnitude, System.DateTime time) { OnEvent("On-Mean-Collision", paramNamesOnMeanCollision, paramTypesOnMeanCollision, type, perp, victim, magnitude, time); }
+        public virtual void Self_OnMeanCollision(object sender, MeanCollisionEventArgs e) { OnEvent("On-Mean-Collision", paramNamesOnMeanCollision, paramTypesOnMeanCollision, e); }
 
         static public readonly string[] paramNamesOnRegionCrossed = new string[] { "oldSim", "newSim" };
         static public readonly Type[] paramTypesOnRegionCrossed = new Type[] { typeof(Simulator), typeof(Simulator) };
@@ -221,8 +320,8 @@ namespace cogbot.Listeners
 
         public virtual void Self_OnCameraConstraint(object sender, CameraConstraintEventArgs e)
         {
-            SendEventArgsEvent(e);
-        }//Vector4 collidePlane) { OnEvent("On-Camera-Constraint", paramNamesOnCameraConstraint, paramTypesOnCameraConstraint, collidePlane); }
+            OnEvent("On-Camera-Constraint", paramNamesOnCameraConstraint, paramTypesOnCameraConstraint, e);
+        }
 
         static public readonly string[] paramNamesOnScriptSensorReply = new string[] { "requestorID", "groupID", "name", "objectID", "ownerID", "position", "range", "rotation", "type", "velocity" };
         static public readonly Type[] paramTypesOnScriptSensorReply = new Type[] { typeof(UUID), typeof(UUID), typeof(string), typeof(UUID), typeof(UUID), typeof(Vector3), typeof(float), typeof(Quaternion), typeof(ScriptSensorTypeFlags), typeof(Vector3) };
@@ -252,7 +351,7 @@ namespace cogbot.Listeners
         static public readonly string[] paramNamesOnAvatarNames = new string[] { "names" };
         static public readonly Type[] paramTypesOnAvatarNames = new Type[] { typeof(Dictionary<UUID, string>) };
 
-        public virtual void Avatars_OnAvatarNames(object sender, AvatarPickerReplyEventArgs e) { OnEvent("On-Avatar-Names", paramNamesOnAvatarNames, paramTypesOnAvatarNames, e); }
+        public virtual void Avatars_OnAvatarNames(object sender, UUIDNameReplyEventArgs e) { OnEvent("On-Avatar-Names", paramNamesOnAvatarNames, paramTypesOnAvatarNames, e); }
 
         static public readonly string[] paramNamesOnAvatarInterests = new string[] { "avatarID", "interests" };
         static public readonly Type[] paramTypesOnAvatarInterests = new Type[] { typeof(UUID), typeof(Avatar.Interests) };
@@ -272,7 +371,7 @@ namespace cogbot.Listeners
         static public readonly string[] paramNamesOnAvatarNameSearch = new string[] { "queryID", "avatars" };
         static public readonly Type[] paramTypesOnAvatarNameSearch = new Type[] { typeof(UUID), typeof(Dictionary<UUID, string>) };
 
-        public virtual void Avatars_OnAvatarNameSearch(object sender, UUIDNameReplyEventArgs e) { OnEvent("On-Avatar-Name-Search", paramNamesOnAvatarNameSearch, paramTypesOnAvatarNameSearch, e); }
+        public virtual void Avatars_OnAvatarNameSearch(object sender, AvatarPickerReplyEventArgs e) { OnEvent("On-Avatar-Name-Search", paramNamesOnAvatarNameSearch, paramTypesOnAvatarNameSearch, e); }
 
         static public readonly string[] paramNamesOnPointAt = new string[] { "sourceID", "targetID", "targetPos", "pointType", "duration", "id" };
         static public readonly Type[] paramTypesOnPointAt = new Type[] { typeof(UUID), typeof(UUID), typeof(Vector3d), typeof(PointAtType), typeof(float), typeof(UUID) };
@@ -339,7 +438,7 @@ namespace cogbot.Listeners
 
         public virtual void Friends_OnFriendFound(object sender, FriendFoundReplyEventArgs e) { OnEvent("On-Friend-Found", paramNamesOnFriendFound, paramTypesOnFriendFound,e); }
 
-        static public readonly string[] paramNamesOnCoarseLocationUpdate = new string[] { "sim", "newEntries", "removedEntries" };
+        static public readonly string[] paramNamesOnCoarseLocationUpdate = new string[] { "simulator", "newEntries", "removedEntries" };
         static public readonly Type[] paramTypesOnCoarseLocationUpdate = new Type[] { typeof(Simulator), typeof(List<UUID>), typeof(List<UUID>) };
 
         public virtual void Grid_OnCoarseLocationUpdate(object sender, CoarseLocationUpdateEventArgs e) { OnEvent("On-Coarse-Location-Update", paramNamesOnCoarseLocationUpdate, paramTypesOnCoarseLocationUpdate, e); }
@@ -652,11 +751,11 @@ namespace cogbot.Listeners
             client.Avatars.AvatarAppearance += Avatars_OnAvatarAppearance;
             //client.Avatars.OnAvatarAnimation += Avatars_OnAvatarAnimation;
 
-            client.Avatars.AvatarPickerReply += Avatars_OnAvatarNames;
+            client.Avatars.AvatarPickerReply += Avatars_OnAvatarNameSearch;
             client.Avatars.AvatarInterestsReply += Avatars_OnAvatarInterests;
             client.Avatars.AvatarPropertiesReply += Avatars_OnAvatarProperties;
             client.Avatars.AvatarGroupsReply += Avatars_OnAvatarGroups;
-            client.Avatars.UUIDNameReply += Avatars_OnAvatarNameSearch;
+            client.Avatars.UUIDNameReply += Avatars_OnAvatarNames;
             client.Avatars.ViewerEffectPointAt += Avatars_OnPointAt;
             client.Avatars.ViewerEffectLookAt += Avatars_OnLookAt;
             client.Avatars.ViewerEffect += Avatars_OnEffect;
