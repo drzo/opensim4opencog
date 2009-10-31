@@ -272,7 +272,7 @@ namespace cogbot.Listeners
           public override void Objects_OnObjectUpdated(object sender, TerseObjectUpdateEventArgs e1)
           {
               Objects_OnPrimitiveUpdateReal(e1.Simulator, e1.Prim, e1.Update, e1.Simulator.Handle, e1.TimeDilation);
-              base.Objects_OnObjectUpdated(sender,e1);
+              //base.Objects_OnObjectUpdated(sender,e1);
           }
 
         public void Objects_OnPrimitiveUpdateRealDead(Simulator simulator, ObjectMovementUpdate update, ulong regionHandle,
