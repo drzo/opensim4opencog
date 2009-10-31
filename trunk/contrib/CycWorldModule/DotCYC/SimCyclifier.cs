@@ -352,7 +352,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
                 cycAssert(
                     "(#$pointInSystem (#$PointInRegionFn \"Daxlandia\" 128 120 27) (#$SimRegionCoordinateSystemFn (#$SimRegionFn \"Daxlandia\")))");
             }
-            ProbeNewAssets();
+            WorldObjects.OnConnectedQueue.Enqueue(ProbeNewAssets);
             // This will be the runtime state
             cycAccessQueueHandler.NoQueue = false;
         }
