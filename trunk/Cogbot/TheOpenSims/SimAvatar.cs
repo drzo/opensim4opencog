@@ -1571,9 +1571,11 @@ namespace cogbot.TheOpenSims
                     {
                         return true;
                     }
+                    if (!SimAvatarImpl.UseTeleportFallback) return false;
                     Debug("Goto sneaking in TP to " + pos);
                     res = this.TeleportTo(pos);
                     StopMoving();
+                    TurnToward(pos);
                     return res;
             }
         }
@@ -1748,7 +1750,7 @@ namespace cogbot.TheOpenSims
                 (s,e) =>
                 {
                     if (e.AvatarID == theAvatar.ID)
-                        if (SimAssetStore.IsSitAnim(e.Animations))
+                        if (SimAssetStore.IsSitAnim(GetAnimUUIDs(e.Animations)))
                         {
                             //int seq = anims[Animations.SIT_GROUND];
                             are.Set();
@@ -2042,100 +2044,140 @@ namespace cogbot.TheOpenSims
             set { _debugLevel = value; }
         }
 
+
         public ICollection<UUID> GetCurrentAnims()
         {
+            return ExpectedCurrentAnims.Dictionary.Keys;
+        }
+
+        private static List<UUID> GetAnimUUIDs(List<Animation> anims)
+        {
             var c =  new List<UUID>();
-            lock (ExpectedCurrentAnims)
-                ExpectedCurrentAnims.ForEach((a)=> c.Add(a.AnimationID));           
+            lock (anims)
+                anims.ForEach((a)=> c.Add(a.AnimationID));           
             return c;
         }
-
-        public List<Animation> GetCurrentAnimDict()
+        private static List<UUID> GetBeforeUUIDs(List<Animation> anims, int seq)
         {
-            return ExpectedCurrentAnims;
+            var c = new List<UUID>();
+            lock (anims)
+                anims.ForEach((a) =>
+                                  {
+                                      if (a.AnimationSequence<seq) c.Add(a.AnimationID);
+                                  });
+            return c;
+        }
+        private static List<UUID> GetAfterUUIDs(List<Animation> anims, int seq)
+        {
+            var c = new List<UUID>();
+            lock (anims)
+                anims.ForEach((a) =>
+                {
+                    if (a.AnimationSequence > seq) c.Add(a.AnimationID);
+                });
+            return c;
+        }
+        private static List<UUID> GetDurringUUIDs(List<Animation> anims, int seq)
+        {
+            var c = new List<UUID>();
+            lock (anims)
+                anims.ForEach((a) =>
+                {
+                    if (a.AnimationSequence == seq) c.Add(a.AnimationID);
+                });
+            return c;
+        }
+        public Dictionary<UUID, int> GetCurrentAnimDict()
+        {
+            return ExpectedCurrentAnims.Dictionary;
         }
 
-        private readonly List<Animation> ExpectedCurrentAnims = new List<Animation>();
+        private InternalDictionary<UUID, int> ExpectedCurrentAnims = new InternalDictionary<UUID, int>();
 
 
 
         public static bool mergeEvents = true;
-        private int AnimSequenceNumber = 0;
+        private int CurrentAnimSequenceNumber = 0;
         /// public UUID CurrentAmin = UUID.Zero;
         /// <summary>
         ///  Nephrael Rae: [on-object-animation '(avatar "Candie Brooks") "TALK"][on-object-animation '(avatar "Candie Brooks") "STAND_1"][on-object-animation '(avatar "Candie Brooks") "e45fbdc9-af8f-9408-f742-fcb8c341d2c8"]
         /// </summary>
         /// <param name="anims"></param>
-        public void OnAvatarAnimations(List<Animation> anims)
+        public void OnAvatarAnimations(List<Animation> anims0)
         {
-#if PORTED
+            var anims = new InternalDictionary<UUID, int>();
+            var animDict = anims.Dictionary;
+            foreach (var list in anims0)
+            {
+                animDict[list.AnimationID] = list.AnimationSequence;
+            }
             Dictionary<UUID, int> RemovedAnims = new Dictionary<UUID, int>();
             Dictionary<UUID, int> AddedAnims = new Dictionary<UUID, int>();
             bool SendAnimEvent = !WorldObjects.UseNewEventSystem;
-            //if (!theAvatar.Name.Contains("rael")) return;
+            //if (!theAvatar.Name.Contains("rael")) return; 
             lock (ExpectedCurrentAnims)
             {
                 int mostCurrentSequence = int.MinValue;
                 int leastCurrentSequence = int.MaxValue;
                 GetSequenceNumbers(ExpectedCurrentAnims.Dictionary, ref leastCurrentSequence, ref mostCurrentSequence);
 
-                ///  first time so find the lowest number
+                ///  first time so find the lowest number 
                 int mostCurrentSequence1 = int.MinValue;
                 int leastCurrentSequence1 = int.MaxValue;
                 GetSequenceNumbers(anims.Dictionary, ref leastCurrentSequence1, ref mostCurrentSequence1);
 
 
 
-                //UUID mostCurrentAnim;// = UUID.Zero;
-                ///  List<String> names = new List<String>();
+                //UUID mostCurrentAnim;// = UUID.Zero; 
+                ///  List<String> names = new List<String>(); 
                 Dictionary<UUID, int> RemovedThisEvent = new Dictionary<UUID, int>(ExpectedCurrentAnims.Dictionary);
-                anims.ForEach(delegate(Animation animation)
-                                  {
-                                      UUID key = animation.AnimationID;
-                                      RemovedThisEvent.Remove(key);
-                                      int newAnimNumber = animation.AnimationSequence;
-                                      if (newAnimNumber >= mostCurrentSequence)
-                                      {
-                                          mostCurrentSequence = newAnimNumber;
-                                          WorldObjects.GridMaster.RequestAsset(key, AssetType.Animation, true);
-                                          //mostCurrentAnim = key;
-                                      }
-                                      if (ExpectedCurrentAnims.ContainsKey(key))
-                                      {
-                                          int oldAnimNumber;
-                                          ExpectedCurrentAnims.TryGetValue(key, out oldAnimNumber);
-                                          if (oldAnimNumber == newAnimNumber)
-                                          ///  still the same
-                                          {
-                                              AddedAnims.Remove(key);
-                                              RemovedAnims.Remove(key);
-                                              return;
-                                          }
-                                          if (oldAnimNumber > newAnimNumber)
-                                          {
-                                              //  Debug("error oldAnimNumber > newAnimNumber");
-                                          }
-                                          ///      else
-                                          {
-                                              if (oldAnimNumber + 1 != newAnimNumber)
-                                              {
-                                                  RemovedAnims[key] = oldAnimNumber + 1;
-                                                  AddedAnims[key] = newAnimNumber;
-                                              }
-                                          }
-                                          return;
-                                      }
-                                      AddedAnims[key] = newAnimNumber; /// AddedAnims.Add(key, newAnimNumber);
-                                      RemovedAnims.Remove(key);
-                                      /// int whenSeq = newAnimNumber + 1;
-                                      /// if (!RemovedAnimsWhen.ContainsKey(whenSeq))
-                                      /// {
-                                      ///     RemovedAnimsWhen[whenSeq] = new List<UUID>();
-                                      /// }
-                                      /// RemovedAnimsWhen[whenSeq].Add(key);
-                                  });
+                anims.ForEach(delegate(UUID key)
+                {
+                    RemovedThisEvent.Remove(key);
+                    int newAnimNumber;
+                    anims.TryGetValue(key, out newAnimNumber);
+                    if (newAnimNumber >= mostCurrentSequence)
+                    {
+                        mostCurrentSequence = newAnimNumber;
+                        WorldObjects.GridMaster.RequestAsset(key, AssetType.Animation, true);
+                        //mostCurrentAnim = key; 
+                    }
+                    if (ExpectedCurrentAnims.ContainsKey(key))
+                    {
+                        int oldAnimNumber;
+                        ExpectedCurrentAnims.TryGetValue(key, out oldAnimNumber);
+                        if (oldAnimNumber == newAnimNumber)
+                        ///  still the same 
+                        {
+                            AddedAnims.Remove(key);
+                            RemovedAnims.Remove(key);
+                            return;
+                        }
+                        if (oldAnimNumber > newAnimNumber)
+                        {
+                            //  Debug("error oldAnimNumber > newAnimNumber"); 
+                        }
+                        ///      else 
+                        {
+                            if (oldAnimNumber + 1 != newAnimNumber)
+                            {
+                                RemovedAnims[key] = oldAnimNumber + 1;
+                                AddedAnims[key] = newAnimNumber;
+                            }
+                        }
+                        return;
+                    }
+                    AddedAnims[key] = newAnimNumber; /// AddedAnims.Add(key, newAnimNumber); 
+                    RemovedAnims.Remove(key);
+                    /// int whenSeq = newAnimNumber + 1; 
+                    /// if (!RemovedAnimsWhen.ContainsKey(whenSeq)) 
+                    /// { 
+                    ///     RemovedAnimsWhen[whenSeq] = new List<UUID>(); 
+                    /// } 
+                    /// RemovedAnimsWhen[whenSeq].Add(key); 
+                });
                 List<UUID> shownRemoved = new List<UUID>();
-                List<Animation> showAdded = new List<Animation>();
+                List<UUID> showAdded = new List<UUID>();
 
                 Dictionary<UUID, int> AddedThisEvent = new Dictionary<UUID, int>(AddedAnims);
 
@@ -2155,13 +2197,13 @@ namespace cogbot.TheOpenSims
 
                 List<SimObjectEvent> startStops = new List<SimObjectEvent>();
 
-                //if (SimAnimationStore.IsSitAnim(RemovedThisEvent)) {
-                //    if (!SimAnimationStore.IsSitAnim(AddedThisEvent))
-                //    {
-                //        LogEvent(new SimObjectEvent("StandUp", SimEventType.ANIM, this, ZHeading * SimPathStore.RAD2DEG, GetSimulator().Name, GetSimPosition()));
-                //    }
-                //}
-                //start or stop moving
+                //if (SimAnimationStore.IsSitAnim(RemovedThisEvent)) { 
+                //    if (!SimAnimationStore.IsSitAnim(AddedThisEvent)) 
+                //    { 
+                //        LogEvent(new SimObjectEvent("StandUp", SimEventType.ANIM, this, ZHeading * SimPathStore.RAD2DEG, GetSimulator().Name, GetSimPosition())); 
+                //    } 
+                //} 
+                //start or stop moving 
                 Dictionary<UUID, int> RemovedThisEventUnsent = new Dictionary<UUID, int>(RemovedThisEvent);
                 Dictionary<UUID, int> AddedThisEventUnsent = new Dictionary<UUID, int>(AddedThisEvent);
                 if (mergeEvents)
@@ -2174,16 +2216,16 @@ namespace cogbot.TheOpenSims
                     StartOrStopAnimEvent(RemovedThisEventUnsent, AddedThisEventUnsent, "SittingDown", startStops);
 
                     StartOrStopAnimEvent(RemovedThisEventUnsent, AddedThisEventUnsent, "StandingStill", startStops);
-                    // start or stop flying
+                    // start or stop flying 
                     StartOrStopAnimEvent(RemovedThisEventUnsent, AddedThisEventUnsent, "Flying", startStops);
-                    //start or stop sleeping
+                    //start or stop sleeping 
                     StartOrStopAnimEvent(RemovedThisEventUnsent, AddedThisEventUnsent, "Lying-Physical", startStops);
 
 
-                    //start or stop talking
-                    //StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, SimAnimationStore.IsCommunationAnim, "Commuincation", SimEventType.ANIM, startStops);
+                    //start or stop talking 
+                    //StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, SimAnimationStore.IsCommunationAnim, "Commuincation", SimEventType.ANIM, startStops); 
 
-                    // StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, "OtherAnim", startStops);
+                    // StartOrStopAnimEvent(RemovedThisEvent, AddedThisEvent, "OtherAnim", startStops); 
 
                     foreach (SimObjectEvent evt in startStops)
                     {
@@ -2195,29 +2237,29 @@ namespace cogbot.TheOpenSims
                         if (evt.Verb == "StandingStill")
                         {
                             LastEventByName[evt.EventName] = evt;
-                            //continue;
+                            //continue; 
                         }
                         if (evt.Verb == "SittingDown")
                         {
                             LastEventByName[evt.EventName] = evt;
-                            //continue;
+                            //continue; 
                         }
                         if (evt.EventName == "Movement-TranslationProcess-Start")
                         {
                             LastEventByName[evt.EventName] = evt;
-                            //lastEvent = evt;
-                            //continue;
+                            //lastEvent = evt; 
+                            //continue; 
                         }
-                        //if (evt.EventName == "MovingStop")
-                        //{
-                        //    object old = GetLastEvent("MovingStart", 2);
-                        //    evt.Verb = "MoveTo";
-                        //}
+                        //if (evt.EventName == "MovingStop") 
+                        //{ 
+                        //    object old = GetLastEvent("MovingStart", 2); 
+                        //    evt.Verb = "MoveTo"; 
+                        //} 
                         if (SimEventStatus.Start == evt.EventStatus)
                         {
                             SetPosture(evt);
                         }
-                        //  LogEvent(evt);
+                        //  LogEvent(evt); 
                     }
                 }
 
@@ -2263,38 +2305,37 @@ namespace cogbot.TheOpenSims
                 {
 
                 }
-                foreach (Animation key in showAdded)
+                foreach (UUID key in showAdded)
                 {
                     AddedAnims.Remove(key);
                 }
             }
 
-            //ExpectedCurrentAnims.Dictionary.Clear();
+            //ExpectedCurrentAnims.Dictionary.Clear(); 
             ExpectedCurrentAnims.Dictionary = anims.Dictionary;
-            /// String newName = WorldSystem.GetAnimationName(mostCurrentAnim);
-            /// {
-            ///     if (oldAnim != mostCurrentAnim)
-            ///     {
-            ///         String oldName = WorldSystem.GetAnimationName(oldAnim);
-            ///         if (oldName.Length > 4 && newName.Length > 4 &&
-            ///             oldName.Substring(0, 5) == newName.Substring(0, 5))
-            ///         {
-            ///         }
-            ///         else
-            ///             WorldSystem.SendNewEvent("On-Object-Start-Animation", this, newName);
-            ///     }
-            /// }
-            /// else
-            /// {
-            ///     WorldSystem.SendNewEvent("On-Object-Start-Animation", this, newName);
-            /// }
+            /// String newName = WorldSystem.GetAnimationName(mostCurrentAnim); 
+            /// { 
+            ///     if (oldAnim != mostCurrentAnim) 
+            ///     { 
+            ///         String oldName = WorldSystem.GetAnimationName(oldAnim); 
+            ///         if (oldName.Length > 4 && newName.Length > 4 && 
+            ///             oldName.Substring(0, 5) == newName.Substring(0, 5)) 
+            ///         { 
+            ///         } 
+            ///         else 
+            ///             WorldSystem.SendNewEvent("On-Object-Start-Animation", this, newName); 
+            ///     } 
+            /// } 
+            /// else 
+            /// { 
+            ///     WorldSystem.SendNewEvent("On-Object-Start-Animation", this, newName); 
+            /// } 
 
-            /// CurrentAmin = mostCurrentAnim;
-            /// SendNewEvent("On-Avatar-Animation", avatar, names);
-            #endif 
-
-        }
-
+            /// CurrentAmin = mostCurrentAnim; 
+            /// SendNewEvent("On-Avatar-Animation", avatar, names); 
+        } 
+  
+ 
         private SimObjectEvent AnimEvent(UUID uuid, SimEventStatus status, int serial)
         {
             SimAsset a = SimAssetStore.FindOrCreateAsset(uuid, AssetType.Animation);
@@ -2331,6 +2372,7 @@ namespace cogbot.TheOpenSims
         private string PostureType;
         private SimObjectEvent LastPostureEvent;
         readonly private object postureLock = new object();
+        public static bool UseTeleportFallback;
 
 
         private void SetPosture(SimObjectEvent evt)
@@ -2508,7 +2550,7 @@ namespace cogbot.TheOpenSims
         void OnAvatarAnimations(List<Animation> anims);
 
         ICollection<UUID> GetCurrentAnims();
-        List<Animation> GetCurrentAnimDict();
+        Dictionary<UUID, int> GetCurrentAnimDict();
 
         BotClient GetGridClient();
     }
