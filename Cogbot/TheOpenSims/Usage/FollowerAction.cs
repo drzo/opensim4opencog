@@ -45,6 +45,7 @@ namespace cogbot.TheOpenSims
 
         public void FollowLoop()
         {
+            int useSimpleFollow = 2;
             while (KeepFollowing)
             {
                 Thread.Sleep(2000);
@@ -57,7 +58,6 @@ namespace cogbot.TheOpenSims
                 double dist = TheBot.Distance(Target);
                 if (dist > maxDistance)
                 {
-                    int useSimpleFollow = 2;
                     if (!TheBot.Flying)
                     {
                         Vector3 botpos = TheBot.SimPosition;
@@ -68,14 +68,14 @@ namespace cogbot.TheOpenSims
                             useSimpleFollow = 0;                            
                         }
                     }
+                    if (!Target.IsRegionAttached)
+                    {
+                        Console.WriteLine("" + this + " Not regions attached " + Target);
+                        Thread.Sleep(2000);
+                        continue;
+                    }
                     while (useSimpleFollow-- > 0)
                     {
-                        if (!Target.IsRegionAttached)
-                        {
-                            Console.WriteLine("" + this + " Not regions attached " + Target);
-                            Thread.Sleep(2000);
-                            continue;
-                        }
                         // TheBot.TurnToward(Target);
                         dist = TheBot.Distance(Target);
                         TheBot.SetMoveTarget(Target, maxDistance);
@@ -100,9 +100,17 @@ namespace cogbot.TheOpenSims
                             TheBot.GetGridClient().ExecuteBotCommand("flyto " + av.ID, TheBot.Debug);
                         }
                     }
-                    if (!Target.IsRegionAttached || TheBot.Distance(Target) < maxDistance + 2) continue;
+                    if (!Target.IsRegionAttached || TheBot.Distance(Target) < maxDistance + 2)
+                    {
+                        useSimpleFollow++;
+                        continue;
+                    }
                     if (UsePathfinder)
-                        if (TheBot.GotoTarget(Target)) continue;
+                        if (TheBot.GotoTarget(Target))
+                        {
+                            useSimpleFollow++;
+                            continue;
+                        }
                 }  
                 else
                 {

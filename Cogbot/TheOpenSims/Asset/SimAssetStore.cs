@@ -1318,9 +1318,9 @@ namespace cogbot.TheOpenSims
         }
 
 
-        static public bool IsSitAnim(ICollection<Animation> anims)
+        static public bool IsSitAnim(ICollection<UUID> anims)
         {
-            return false;
+            return Matches(anims, "sit").Count != 0;
         }
 
         public static List<UUID> Matches(ICollection<UUID> anims, String name)
