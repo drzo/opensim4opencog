@@ -24,8 +24,8 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Text;
+using System.Collections.Generic;
 using OpenMetaverse.Packets;
 
 namespace OpenMetaverse
@@ -234,69 +234,196 @@ namespace OpenMetaverse
     public class FriendsManager
     {
         #region Delegates
+        
+        /// <summary>The event subscribers. null if no subcribers</summary>
+        private EventHandler<FriendInfoEventArgs> m_FriendOnline;
 
-        /// <summary>
-        /// Triggered when an avatar in your friends list comes online
-        /// </summary>
-        /// <param name="friend"> System ID of the avatar</param>
-        public delegate void FriendOnlineEvent(FriendInfo friend);
-        /// <summary>
-        /// Triggered when an avatar in your friends list goes offline
-        /// </summary>
-        /// <param name="friend"> System ID of the avatar</param>
-        public delegate void FriendOfflineEvent(FriendInfo friend);
-        /// <summary>
-        /// Triggered in response to a call to the FriendRights() method, or when a friend changes your rights
-        /// </summary>
-        /// <param name="friend"> System ID of the avatar you changed the right of</param>
-        public delegate void FriendRightsEvent(FriendInfo friend);
-        /// <summary>
-        /// Triggered when names on the friend list are received after the initial request upon login
-        /// </summary>
-        /// <param name="names"></param>
-        public delegate void FriendNamesReceived(Dictionary<UUID, string> names);
-        /// <summary>
-        /// Triggered when someone offers you friendship
-        /// </summary>
-        /// <param name="agentID">System ID of the agent offering friendship</param>
-        /// <param name="agentName">full name of the agent offereing friendship</param>
-        /// <param name="imSessionID">session ID need when accepting/declining the offer</param>
-        /// <returns>Return true to accept the friendship, false to deny it</returns>
-        public delegate void FriendshipOfferedEvent(UUID agentID, string agentName, UUID imSessionID);
-        /// <summary>
-        /// Trigger when your friendship offer has been accepted or declined
-        /// </summary>
-        /// <param name="agentID">System ID of the avatar who accepted your friendship offer</param>
-        /// <param name="agentName">Full name of the avatar who accepted your friendship offer</param>
-        /// <param name="accepted">Whether the friendship request was accepted or declined</param>
-        public delegate void FriendshipResponseEvent(UUID agentID, string agentName, bool accepted);
-        /// <summary>
-        /// Trigger when someone terminates your friendship.
-        /// </summary>
-        /// <param name="agentID">System ID of the avatar who terminated your friendship</param>
-        /// <param name="agentName">Full name of the avatar who terminated your friendship</param>
-        public delegate void FriendshipTerminatedEvent(UUID agentID, string agentName);
+        /// <summary>Raises the FriendOnline event</summary>
+        /// <param name="e">A FriendInfoEventArgs object containing the
+        /// data returned from the data server</param>
+        protected virtual void OnFriendOnline(FriendInfoEventArgs e)
+        {
+            EventHandler<FriendInfoEventArgs> handler = m_FriendOnline;
+            if (handler != null)
+                handler(this, e);
+        }
 
-        /// <summary>
-        /// Triggered in response to a FindFriend request
-        /// </summary>
-        /// <param name="agentID">Friends Key</param>
-        /// <param name="regionHandle">region handle friend is in</param>
-        /// <param name="location">X/Y location of friend</param>
-        public delegate void FriendFoundEvent(UUID agentID, ulong regionHandle, Vector3 location);
+        /// <summary>Thread sync lock object</summary>
+        private readonly object m_FriendOnlineLock = new object();
+
+        /// <summary>Raised when the simulator sends notification one of the members in our friends list comes online</summary>
+        public event EventHandler<FriendInfoEventArgs> FriendOnline
+        {
+            add { lock (m_FriendOnlineLock) { m_FriendOnline += value; } }
+            remove { lock (m_FriendOnlineLock) { m_FriendOnline -= value; } }
+        }
+
+        /// <summary>The event subscribers. null if no subcribers</summary>
+        private EventHandler<FriendInfoEventArgs> m_FriendOffline;
+
+        /// <summary>Raises the FriendOffline event</summary>
+        /// <param name="e">A FriendInfoEventArgs object containing the
+        /// data returned from the data server</param>
+        protected virtual void OnFriendOffline(FriendInfoEventArgs e)
+        {
+            EventHandler<FriendInfoEventArgs> handler = m_FriendOffline;
+            if (handler != null)
+                handler(this, e);
+        }
+
+        /// <summary>Thread sync lock object</summary>
+        private readonly object m_FriendOfflineLock = new object();
+
+        /// <summary>Raised when the simulator sends notification one of the members in our friends list goes offline</summary>
+        public event EventHandler<FriendInfoEventArgs> FriendOffline
+        {
+            add { lock (m_FriendOfflineLock) { m_FriendOffline += value; } }
+            remove { lock (m_FriendOfflineLock) { m_FriendOffline -= value; } }
+        }
+        
+        /// <summary>The event subscribers. null if no subcribers</summary>
+        private EventHandler<FriendInfoEventArgs> m_FriendRights;
+
+        /// <summary>Raises the FriendRightsUpdate event</summary>
+        /// <param name="e">A FriendInfoEventArgs object containing the
+        /// data returned from the data server</param>
+        protected virtual void OnFriendRights(FriendInfoEventArgs e)
+        {
+            EventHandler<FriendInfoEventArgs> handler = m_FriendRights;
+            if (handler != null)
+                handler(this, e);
+        }
+
+        /// <summary>Thread sync lock object</summary>
+        private readonly object m_FriendRightsLock = new object();
+
+        /// <summary>Raised when the simulator sends notification one of the members in our friends list grants or revokes permissions</summary>
+        public event EventHandler<FriendInfoEventArgs> FriendRightsUpdate
+        {
+            add { lock (m_FriendRightsLock) { m_FriendRights += value; } }
+            remove { lock (m_FriendRightsLock) { m_FriendRights -= value; } }
+        }        
+
+        /// <summary>The event subscribers. null if no subcribers</summary>
+        private EventHandler<FriendNamesEventArgs> m_FriendNames;
+
+        /// <summary>Raises the FriendNames event</summary>
+        /// <param name="e">A FriendNamesEventArgs object containing the
+        /// data returned from the data server</param>
+        protected virtual void OnFriendNames(FriendNamesEventArgs e)
+        {
+            EventHandler<FriendNamesEventArgs> handler = m_FriendNames;
+            if (handler != null)
+                handler(this, e);
+        }
+
+        /// <summary>Thread sync lock object</summary>
+        private readonly object m_FriendNamesLock = new object();
+
+        /// <summary>Raised when the simulator sends us the names on our friends list</summary>
+        public event EventHandler<FriendNamesEventArgs> FriendNames
+        {
+            add { lock (m_FriendNamesLock) { m_FriendNames += value; } }
+            remove { lock (m_FriendNamesLock) { m_FriendNames -= value; } }
+        }
+
+        /// <summary>The event subscribers. null if no subcribers</summary>
+        private EventHandler<FriendshipOfferedEventArgs> m_FriendshipOffered;
+
+        /// <summary>Raises the FriendshipOffered event</summary>
+        /// <param name="e">A FriendshipOfferedEventArgs object containing the
+        /// data returned from the data server</param>
+        protected virtual void OnFriendshipOffered(FriendshipOfferedEventArgs e)
+        {
+            EventHandler<FriendshipOfferedEventArgs> handler = m_FriendshipOffered;
+            if (handler != null)
+                handler(this, e);
+        }
+
+        /// <summary>Thread sync lock object</summary>
+        private readonly object m_FriendshipOfferedLock = new object();
+
+        /// <summary>Raised when the simulator sends notification another agent is offering us friendship</summary>
+        public event EventHandler<FriendshipOfferedEventArgs> FriendshipOffered
+        {
+            add { lock (m_FriendshipOfferedLock) { m_FriendshipOffered += value; } }
+            remove { lock (m_FriendshipOfferedLock) { m_FriendshipOffered -= value; } }
+        }        
+
+        /// <summary>The event subscribers. null if no subcribers</summary>
+        private EventHandler<FriendshipResponseEventArgs> m_FriendshipResponse;
+
+        /// <summary>Raises the FriendshipResponse event</summary>
+        /// <param name="e">A FriendshipResponseEventArgs object containing the
+        /// data returned from the data server</param>
+        protected virtual void OnFriendshipResponse(FriendshipResponseEventArgs e)
+        {
+            EventHandler<FriendshipResponseEventArgs> handler = m_FriendshipResponse;
+            if (handler != null)
+                handler(this, e);
+        }
+
+        /// <summary>Thread sync lock object</summary>
+        private readonly object m_FriendshipResponseLock = new object();
+
+        /// <summary>Raised when a request we sent to friend another agent is accepted or declined</summary>
+        public event EventHandler<FriendshipResponseEventArgs> FriendshipResponse
+        {
+            add { lock (m_FriendshipResponseLock) { m_FriendshipResponse += value; } }
+            remove { lock (m_FriendshipResponseLock) { m_FriendshipResponse -= value; } }
+        }
+        
+        /// <summary>The event subscribers. null if no subcribers</summary>
+        private EventHandler<FriendshipTerminatedEventArgs> m_FriendshipTerminated;
+
+        /// <summary>Raises the FriendshipTerminated event</summary>
+        /// <param name="e">A FriendshipTerminatedEventArgs object containing the
+        /// data returned from the data server</param>
+        protected virtual void OnFriendshipTerminated(FriendshipTerminatedEventArgs e)
+        {
+            EventHandler<FriendshipTerminatedEventArgs> handler = m_FriendshipTerminated;
+            if (handler != null)
+                handler(this, e);
+        }
+
+        /// <summary>Thread sync lock object</summary>
+        private readonly object m_FriendshipTerminatedLock = new object();
+
+        /// <summary>Raised when the simulator sends notification one of the members in our friends list has terminated 
+        /// our friendship</summary>
+        public event EventHandler<FriendshipTerminatedEventArgs> FriendshipTerminated
+        {
+            add { lock (m_FriendshipTerminatedLock) { m_FriendshipTerminated += value; } }
+            remove { lock (m_FriendshipTerminatedLock) { m_FriendshipTerminated -= value; } }
+        }        
+
+        /// <summary>The event subscribers. null if no subcribers</summary>
+        private EventHandler<FriendFoundReplyEventArgs> m_FriendFound;
+
+        /// <summary>Raises the FriendFoundReply event</summary>
+        /// <param name="e">A FriendFoundReplyEventArgs object containing the
+        /// data returned from the data server</param>
+        protected virtual void OnFriendFoundReply(FriendFoundReplyEventArgs e)
+        {
+            EventHandler<FriendFoundReplyEventArgs> handler = m_FriendFound;
+            if (handler != null)
+                handler(this, e);
+        }
+
+        /// <summary>Thread sync lock object</summary>
+        private readonly object m_FriendFoundLock = new object();
+
+        /// <summary>Raised when the simulator sends the location of a friend we have 
+        /// requested map location info for</summary>
+        public event EventHandler<FriendFoundReplyEventArgs> FriendFoundReply
+        {
+            add { lock (m_FriendFoundLock) { m_FriendFound += value; } }
+            remove { lock (m_FriendFoundLock) { m_FriendFound -= value; } }
+        }
 
         #endregion Delegates
 
         #region Events
-
-        public event FriendNamesReceived OnFriendNamesReceived;
-        public event FriendOnlineEvent OnFriendOnline;
-        public event FriendOfflineEvent OnFriendOffline;
-        public event FriendRightsEvent OnFriendRights;
-        public event FriendshipOfferedEvent OnFriendshipOffered;
-        public event FriendshipResponseEvent OnFriendshipResponse;
-        public event FriendshipTerminatedEvent OnFriendshipTerminated;
-        public event FriendFoundEvent OnFriendFound;
 
         #endregion Events
 
@@ -326,9 +453,9 @@ namespace OpenMetaverse
         {
             Client = client;
 
-            Client.Network.OnConnected += new NetworkManager.ConnectedCallback(Network_OnConnect);
-            Client.Avatars.OnAvatarNames += new AvatarManager.AvatarNamesCallback(Avatars_OnAvatarNames);
-            Client.Self.OnInstantMessage += new AgentManager.InstantMessageCallback(MainAvatar_InstantMessage);
+            Client.Network.LoginProgress += Network_OnConnect;            
+            Client.Avatars.UUIDNameReply += new EventHandler<UUIDNameReplyEventArgs>(Avatars_OnAvatarNames);
+            Client.Self.IM += Self_IM;
 
             Client.Network.RegisterCallback(PacketType.OnlineNotification, OnlineNotificationHandler);
             Client.Network.RegisterCallback(PacketType.OfflineNotification, OfflineNotificationHandler);
@@ -339,8 +466,9 @@ namespace OpenMetaverse
             Client.Network.RegisterLoginResponseCallback(new NetworkManager.LoginResponseCallback(Network_OnLoginResponse),
                 new string[] { "buddy-list" });
         }
+
         #region Public Methods
-        
+
         /// <summary>
         /// Accept a friendship request
         /// </summary>
@@ -360,7 +488,7 @@ namespace OpenMetaverse
 
             Client.Network.SendPacket(request);
 
-            FriendInfo friend = new FriendInfo(fromAgentID, FriendRights.CanSeeOnline, 
+            FriendInfo friend = new FriendInfo(fromAgentID, FriendRights.CanSeeOnline,
                 FriendRights.CanSeeOnline);
 
             if (!FriendList.ContainsKey(fromAgentID))
@@ -398,13 +526,12 @@ namespace OpenMetaverse
             OfferFriendship(agentID, "Do ya wanna be my buddy?");
         }
 
-
         /// <summary>
-        /// NEW Offer friendship to an avatar.
+        /// Offer friendship to an avatar.
         /// </summary>
         /// <param name="agentID">System ID of the avatar you are offering friendship to</param>
         /// <param name="message">A message to send with the request</param>
-        public void OfferFriendshipNew(UUID agentID, string message)
+        public void OfferFriendship(UUID agentID, string message)
         {
             Client.Self.InstantMessage(Client.Self.Name,
                 agentID,
@@ -415,26 +542,6 @@ namespace OpenMetaverse
                 Client.Self.SimPosition,
                 Client.Network.CurrentSim.ID,
                 null);
-        }
-
-        /// <summary>
-        /// Offer friendship to an avatar.
-        /// </summary>
-        /// <param name="agentID">System ID of the avatar you are offering friendship to</param>
-        /// <param name="message">A message to send with the request</param>
-        public void OfferFriendship(UUID agentID, string message)
-        {
-            // HACK: folder id stored as "message"
-            UUID callingCardFolder = Client.Inventory.FindFolderForType(AssetType.CallingCard);
-            Client.Self.InstantMessage(Client.Self.Name,
-                agentID,
-                callingCardFolder.ToString(),
-                UUID.Random(),
-                InstantMessageDialog.FriendshipOffered,
-                InstantMessageOnline.Online,
-                Client.Self.SimPosition,
-                Client.Network.CurrentSim.ID,
-                Utils.StringToBytes(message));
         }
 
 
@@ -457,14 +564,12 @@ namespace OpenMetaverse
                     FriendList.Remove(agentID);
             }
         }
-        /// <summary>
-        /// Fired when another friend terminates friendship. We need to remove them from
-        /// our cached list.
-        /// </summary>
-        /// <param name="packet"></param>
-        /// <param name="simulator"></param>
-        private void TerminateFriendshipHandler(Packet packet, Simulator simulator)
+        /// <summary>Process an incoming packet and raise the appropriate events</summary>
+        /// <param name="sender">The sender</param>
+        /// <param name="e">The EventArgs object containing the packet data</param>
+        private void TerminateFriendshipHandler(object sender, PacketReceivedEventArgs e)
         {
+            Packet packet = e.Packet;
             TerminateFriendshipPacket itsOver = (TerminateFriendshipPacket)packet;
             string name = String.Empty;
 
@@ -474,9 +579,9 @@ namespace OpenMetaverse
                 FriendList.Remove(itsOver.ExBlock.OtherID);
             }
 
-            if (OnFriendshipTerminated != null)
+            if (m_FriendshipTerminated != null)
             {
-                OnFriendshipTerminated(itsOver.ExBlock.OtherID, name);
+                OnFriendshipTerminated(new FriendshipTerminatedEventArgs(itsOver.ExBlock.OtherID, name));
             }
         }
 
@@ -556,14 +661,14 @@ namespace OpenMetaverse
         #endregion
 
         #region Internal events
-        /// <summary>
-        /// Called when a connection to the SL server is established.  The list of friend avatars 
-        /// is populated from XML returned by the login server.  That list contains the avatar's id 
-        /// and right, but no names.  Here is where those names are requested.
-        /// </summary>
-        /// <param name="sender"></param>
-        private void Network_OnConnect(object sender)
+
+        private void Network_OnConnect(object sender, LoginProgressEventArgs e)
         {
+            if (e.Status != LoginStatus.Success)
+            {
+                return;
+            }
+
             List<UUID> names = new List<UUID>();
 
             if (FriendList.Count > 0)
@@ -584,12 +689,13 @@ namespace OpenMetaverse
         /// <summary>
         /// This handles the asynchronous response of a RequestAvatarNames call.
         /// </summary>
-        /// <param name="names">names cooresponding to the the list of IDs sent the the RequestAvatarNames call.</param>
-        private void Avatars_OnAvatarNames(Dictionary<UUID, string> names)
+        /// <param name="sender"></param>
+        /// <param name="e">names cooresponding to the the list of IDs sent the the RequestAvatarNames call.</param>
+        private void Avatars_OnAvatarNames(object sender, UUIDNameReplyEventArgs e)
         {
             Dictionary<UUID, string> newNames = new Dictionary<UUID, string>();
 
-            foreach (KeyValuePair<UUID, string> kvp in names)
+            foreach (KeyValuePair<UUID, string> kvp in e.Names)
             {
                 FriendInfo friend;
                 lock (FriendList.Dictionary)
@@ -597,31 +703,29 @@ namespace OpenMetaverse
                     if (FriendList.TryGetValue(kvp.Key, out friend))
                     {
                         if (friend.Name == null)
-                            newNames.Add(kvp.Key, names[kvp.Key]);
+                            newNames.Add(kvp.Key, e.Names[kvp.Key]);
 
-                        friend.Name = names[kvp.Key];
+                        friend.Name = e.Names[kvp.Key];
                         FriendList[kvp.Key] = friend;
                     }
                 }
             }
 
-            if (newNames.Count > 0 && OnFriendNamesReceived != null)
+            if (newNames.Count > 0 && m_FriendNames != null)
             {
-                try { OnFriendNamesReceived(newNames); }
-                catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
+                OnFriendNames(new FriendNamesEventArgs(newNames));
             }
         }
         #endregion
 
         #region Packet Handlers
 
-        /// <summary>
-        /// Handle notifications sent when a friends has come online.
-        /// </summary>
-        /// <param name="packet"></param>
-        /// <param name="simulator"></param>
-        private void OnlineNotificationHandler(Packet packet, Simulator simulator)
+        /// <summary>Process an incoming packet and raise the appropriate events</summary>
+        /// <param name="sender">The sender</param>
+        /// <param name="e">The EventArgs object containing the packet data</param>
+        protected void OnlineNotificationHandler(object sender, PacketReceivedEventArgs e)
         {
+            Packet packet = e.Packet;
             if (packet.Type == PacketType.OnlineNotification)
             {
                 OnlineNotificationPacket notification = ((OnlineNotificationPacket)packet);
@@ -646,25 +750,23 @@ namespace OpenMetaverse
                     bool doNotify = !friend.IsOnline;
                     friend.IsOnline = true;
 
-                    if (OnFriendOnline != null && doNotify)
+                    if (m_FriendOnline != null && doNotify)
                     {
-                        try { OnFriendOnline(friend); }
-                        catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
+                        OnFriendOnline(new FriendInfoEventArgs(friend));
                     }
                 }
             }
         }
 
-        /// <summary>
-        /// Handle notifications sent when a friends has gone offline.
-        /// </summary>
-        /// <param name="packet"></param>
-        /// <param name="simulator"></param>
-        private void OfflineNotificationHandler(Packet packet, Simulator simulator)
+        /// <summary>Process an incoming packet and raise the appropriate events</summary>
+        /// <param name="sender">The sender</param>
+        /// <param name="e">The EventArgs object containing the packet data</param>
+        protected void OfflineNotificationHandler(object sender, PacketReceivedEventArgs e)
         {
+            Packet packet = e.Packet;
             if (packet.Type == PacketType.OfflineNotification)
             {
-                OfflineNotificationPacket notification = ((OfflineNotificationPacket)packet);
+                OfflineNotificationPacket notification = (OfflineNotificationPacket)packet;
 
                 foreach (OfflineNotificationPacket.AgentBlockBlock block in notification.AgentBlock)
                 {
@@ -680,24 +782,21 @@ namespace OpenMetaverse
 
                     friend.IsOnline = false;
 
-                    if (OnFriendOffline != null)
+                    if (m_FriendOffline != null)
                     {
-                        try { OnFriendOffline(friend); }
-                        catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
+                        OnFriendOffline(new FriendInfoEventArgs(friend));
                     }
                 }
             }
         }
 
 
-        /// <summary>
-        /// Handle notifications sent when a friend rights change.  This notification is also received
-        /// when my own rights change.
-        /// </summary>
-        /// <param name="packet"></param>
-        /// <param name="simulator"></param>
-        private void ChangeUserRightsHandler(Packet packet, Simulator simulator)
+        /// <summary>Process an incoming packet and raise the appropriate events</summary>
+        /// <param name="sender">The sender</param>
+        /// <param name="e">The EventArgs object containing the packet data</param>
+        private void ChangeUserRightsHandler(object sender, PacketReceivedEventArgs e)
         {
+            Packet packet = e.Packet;
             if (packet.Type == PacketType.ChangeUserRights)
             {
                 FriendInfo friend;
@@ -709,10 +808,9 @@ namespace OpenMetaverse
                     if (FriendList.TryGetValue(block.AgentRelated, out friend))
                     {
                         friend.TheirFriendRights = newRights;
-                        if (OnFriendRights != null)
+                        if (m_FriendRights != null)
                         {
-                            try { OnFriendRights(friend); }
-                            catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
+                            OnFriendRights(new FriendInfoEventArgs(friend));
                         }
                     }
                     else if (block.AgentRelated == Client.Self.AgentID)
@@ -720,10 +818,9 @@ namespace OpenMetaverse
                         if (FriendList.TryGetValue(rights.AgentData.AgentID, out friend))
                         {
                             friend.MyFriendRights = newRights;
-                            if (OnFriendRights != null)
+                            if (m_FriendRights != null)
                             {
-                                try { OnFriendRights(friend); }
-                                catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
+                                OnFriendRights(new FriendInfoEventArgs(friend));
                             }
                         }
                     }
@@ -731,70 +828,60 @@ namespace OpenMetaverse
             }
         }
 
-        /// <summary>
-        /// Handle friend location updates
-        /// </summary>
-        /// <param name="packet">The Packet</param>
-        /// <param name="simulator">The Simulator</param>
-        public void OnFindAgentReplyHandler(Packet packet, Simulator simulator)
+        /// <summary>Process an incoming packet and raise the appropriate events</summary>
+        /// <param name="sender">The sender</param>
+        /// <param name="e">The EventArgs object containing the packet data</param>
+        public void OnFindAgentReplyHandler(object sender, PacketReceivedEventArgs e)
         {
-            if(OnFriendFound != null)
+            if (m_FriendFound != null)
             {
-            FindAgentPacket reply = (FindAgentPacket)packet;
+                Packet packet = e.Packet;
+                FindAgentPacket reply = (FindAgentPacket)packet;
 
-            float x,y;
-            UUID prey = reply.AgentBlock.Prey;
-            ulong regionHandle = Helpers.GlobalPosToRegionHandle((float)reply.LocationBlock[0].GlobalX, 
-                (float)reply.LocationBlock[0].GlobalY, out x, out y);
-            Vector3 xyz = new Vector3(x, y, 0f);
+                float x, y;
+                UUID prey = reply.AgentBlock.Prey;
+                ulong regionHandle = Helpers.GlobalPosToRegionHandle((float)reply.LocationBlock[0].GlobalX,
+                    (float)reply.LocationBlock[0].GlobalY, out x, out y);
+                Vector3 xyz = new Vector3(x, y, 0f);
 
-            try { OnFriendFound(prey, regionHandle, xyz); }
-            catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
+                OnFriendFoundReply(new FriendFoundReplyEventArgs(prey, regionHandle, xyz));
             }
         }
 
         #endregion
 
-        /// <summary>
-        /// Handles relevant messages from the server encapsulated in instant messages.
-        /// </summary>
-        /// <param name="im">InstantMessage object containing encapsalated instant message</param>
-        /// <param name="simulator">Originating Simulator</param>
-        private void MainAvatar_InstantMessage(InstantMessage im, Simulator simulator)
+        private void Self_IM(object sender, InstantMessageEventArgs e)
         {
-            if (im.Dialog == InstantMessageDialog.FriendshipOffered)
+            if (e.IM.Dialog == InstantMessageDialog.FriendshipOffered)
             {
-                if (OnFriendshipOffered != null)
+                if (m_FriendshipOffered != null)
                 {
-                    if (FriendRequests.ContainsKey(im.FromAgentID))
-                        FriendRequests[im.FromAgentID] = im.IMSessionID;
+                    if (FriendRequests.ContainsKey(e.IM.FromAgentID))
+                        FriendRequests[e.IM.FromAgentID] = e.IM.IMSessionID;
                     else
-                        FriendRequests.Add(im.FromAgentID, im.IMSessionID);
+                        FriendRequests.Add(e.IM.FromAgentID, e.IM.IMSessionID);
 
-                    try { OnFriendshipOffered(im.FromAgentID, im.FromAgentName, im.IMSessionID); }
-                    catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
+                    OnFriendshipOffered(new FriendshipOfferedEventArgs(e.IM.FromAgentID, e.IM.FromAgentName, e.IM.IMSessionID));
                 }
             }
-            else if (im.Dialog == InstantMessageDialog.FriendshipAccepted)
+            else if (e.IM.Dialog == InstantMessageDialog.FriendshipAccepted)
             {
-                FriendInfo friend = new FriendInfo(im.FromAgentID, FriendRights.CanSeeOnline,
+                FriendInfo friend = new FriendInfo(e.IM.FromAgentID, FriendRights.CanSeeOnline,
                     FriendRights.CanSeeOnline);
-                friend.Name = im.FromAgentName;
+                friend.Name = e.IM.FromAgentName;
                 lock (FriendList.Dictionary) FriendList[friend.UUID] = friend;
 
-                if (OnFriendshipResponse != null)
+                if (m_FriendshipResponse != null)
                 {
-                    try { OnFriendshipResponse(im.FromAgentID, im.FromAgentName, true); }
-                    catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
+                    OnFriendshipResponse(new FriendshipResponseEventArgs(e.IM.FromAgentID, e.IM.FromAgentName, true));
                 }
-                RequestOnlineNotification(im.FromAgentID);
+                RequestOnlineNotification(e.IM.FromAgentID);
             }
-            else if (im.Dialog == InstantMessageDialog.FriendshipDeclined)
+            else if (e.IM.Dialog == InstantMessageDialog.FriendshipDeclined)
             {
-                if (OnFriendshipResponse != null)
+                if (m_FriendshipResponse != null)
                 {
-                    try { OnFriendshipResponse(im.FromAgentID, im.FromAgentName, false); }
-                    catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
+                    OnFriendshipResponse(new FriendshipResponseEventArgs(e.IM.FromAgentID, e.IM.FromAgentName, false));
                 }
             }
         }
@@ -833,4 +920,155 @@ namespace OpenMetaverse
             }
         }
     }
+    #region EventArgs
+
+    /// <summary>Contains information on a member of our friends list</summary>
+    public class FriendInfoEventArgs : EventArgs
+    {
+        private readonly FriendInfo m_Friend;
+
+        /// <summary>Get the FriendInfo</summary>
+        public FriendInfo Friend { get { return m_Friend; } }
+
+        /// <summary>
+        /// Construct a new instance of the FriendInfoEventArgs class
+        /// </summary>
+        /// <param name="friend">The FriendInfo</param>
+        public FriendInfoEventArgs(FriendInfo friend)
+        {
+            this.m_Friend = friend;
+        }
+    }
+
+    /// <summary>Contains Friend Names</summary>
+    public class FriendNamesEventArgs : EventArgs
+    {
+        private readonly Dictionary<UUID, string> m_Names;
+
+        /// <summary>A dictionary where the Key is the ID of the Agent, 
+        /// and the Value is a string containing their name</summary>
+        public Dictionary<UUID, string> Names { get { return m_Names; } }
+
+        /// <summary>
+        /// Construct a new instance of the FriendNamesEventArgs class
+        /// </summary>
+        /// <param name="names">A dictionary where the Key is the ID of the Agent, 
+        /// and the Value is a string containing their name</param>
+        public FriendNamesEventArgs(Dictionary<UUID, string> names)
+        {
+            this.m_Names = names;
+        }
+    }
+    
+    /// <summary>Sent when another agent requests a friendship with our agent</summary>
+    public class FriendshipOfferedEventArgs : EventArgs
+    {
+        private readonly UUID m_AgentID;
+        private readonly string m_AgentName;
+        private readonly UUID m_SessionID;
+
+        /// <summary>Get the ID of the agent requesting friendship</summary>
+        public UUID AgentID { get { return m_AgentID; } }
+        /// <summary>Get the name of the agent requesting friendship</summary>
+        public string AgentName { get { return m_AgentName; } }
+        /// <summary>Get the ID of the session, used in accepting or declining the 
+        /// friendship offer</summary>
+        public UUID SessionID { get { return m_SessionID; } }
+
+        /// <summary>
+        /// Construct a new instance of the FriendshipOfferedEventArgs class
+        /// </summary>
+        /// <param name="agentID">The ID of the agent requesting friendship</param>
+        /// <param name="agentName">The name of the agent requesting friendship</param>
+        /// <param name="imSessionID">The ID of the session, used in accepting or declining the 
+        /// friendship offer</param>
+        public FriendshipOfferedEventArgs(UUID agentID, string agentName, UUID imSessionID)
+        {
+            this.m_AgentID = agentID;
+            this.m_AgentName = agentName;
+            this.m_SessionID = imSessionID;
+        }
+    }
+    
+    /// <summary>A response containing the results of our request to form a friendship with another agent</summary>
+    public class FriendshipResponseEventArgs : EventArgs
+    {
+        private readonly UUID m_AgentID;
+        private readonly string m_AgentName;
+        private readonly bool m_Accepted;
+
+        /// <summary>Get the ID of the agent we requested a friendship with</summary>
+        public UUID AgentID { get { return m_AgentID; } }
+        /// <summary>Get the name of the agent we requested a friendship with</summary>
+        public string AgentName { get { return m_AgentName; } }
+        /// <summary>true if the agent accepted our friendship offer</summary>
+        public bool Accepted { get { return m_Accepted; } }
+
+        /// <summary>
+        /// Construct a new instance of the FriendShipResponseEventArgs class
+        /// </summary>
+        /// <param name="agentID">The ID of the agent we requested a friendship with</param>
+        /// <param name="agentName">The name of the agent we requested a friendship with</param>
+        /// <param name="accepted">true if the agent accepted our friendship offer</param>
+        public FriendshipResponseEventArgs(UUID agentID, string agentName, bool accepted)
+        {
+            this.m_AgentID = agentID;
+            this.m_AgentName = agentName;
+            this.m_Accepted = accepted;
+        }
+    }
+    
+    /// <summary>Contains data sent when a friend terminates a friendship with us</summary>
+    public class FriendshipTerminatedEventArgs : EventArgs
+    {
+        private readonly UUID m_AgentID;
+        private readonly string m_AgentName;
+
+        /// <summary>Get the ID of the agent that terminated the friendship with us</summary>
+        public UUID AgentID { get { return m_AgentID; } }
+        /// <summary>Get the name of the agent that terminated the friendship with us</summary>
+        public string AgentName { get { return m_AgentName; } }
+
+        /// <summary>
+        /// Construct a new instance of the FrindshipTerminatedEventArgs class
+        /// </summary>
+        /// <param name="agentID">The ID of the friend who terminated the friendship with us</param>
+        /// <param name="agentName">The name of the friend who terminated the friendship with us</param>
+        public FriendshipTerminatedEventArgs(UUID agentID, string agentName)
+        {
+            this.m_AgentID = agentID;
+            this.m_AgentName = agentName;
+        }
+    }
+    
+    /// <summary>
+    /// Data sent in response to a <see cref="FindFriend"/> request which contains the information to allow us to map the friends location
+    /// </summary>
+    public class FriendFoundReplyEventArgs : EventArgs
+    {
+        private readonly UUID m_AgentID;
+        private readonly ulong m_RegionHandle;
+        private readonly Vector3 m_Location;
+
+        /// <summary>Get the ID of the agent we have received location information for</summary>
+        public UUID AgentID { get { return m_AgentID; } }
+        /// <summary>Get the region handle where our mapped friend is located</summary>
+        public ulong RegionHandle { get { return m_RegionHandle; } }
+        /// <summary>Get the simulator local position where our friend is located</summary>
+        public Vector3 Location { get { return m_Location; } }
+
+        /// <summary>
+        /// Construct a new instance of the FriendFoundReplyEventArgs class
+        /// </summary>
+        /// <param name="agentID">The ID of the agent we have requested location information for</param>
+        /// <param name="regionHandle">The region handle where our friend is located</param>
+        /// <param name="location">The simulator local position our friend is located</param>
+        public FriendFoundReplyEventArgs(UUID agentID, ulong regionHandle, Vector3 location)
+        {
+            this.m_AgentID = agentID;
+            this.m_RegionHandle = regionHandle;
+            this.m_Location = location;
+        }
+    }
+    #endregion
 }

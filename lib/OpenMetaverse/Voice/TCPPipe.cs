@@ -77,7 +77,7 @@ namespace OpenMetaverse.Voice
                     IPAddress[] ips = Dns.GetHostAddresses(address);
                     ip = ips[0];
                 }
-                _TCPSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                _TCPSocket = new Socket(ip.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                 IPEndPoint ipEndPoint = new IPEndPoint(ip, port);
                 _TCPSocket.Connect(ipEndPoint);
                 if (_TCPSocket.Connected)
@@ -167,7 +167,7 @@ namespace OpenMetaverse.Voice
                 SocketPacket packet = (SocketPacket)asyn.AsyncState;
                 int end = packet.TCPSocket.EndReceive(asyn);
                 char[] chars = new char[end + 1];
-                System.Text.Decoder d = Utils.EncodingUTF8.GetDecoder();
+                System.Text.Decoder d = System.Text.Encoding.UTF8.GetDecoder();
                 d.GetChars(packet.DataBuffer, 0, end, chars, 0);
                 System.String data = new System.String(chars);
                 ReceiveData(data);

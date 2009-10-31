@@ -124,7 +124,7 @@ namespace OpenMetaverse
     }
 
     #endregion Enums
-
+    
     /// <summary>
     /// 
     /// </summary>
@@ -228,26 +228,14 @@ namespace OpenMetaverse
 
         #endregion Structs
 
-        #region Public Members
-
+        #region Public Members        
         /// <summary>A public reference to the client that this Simulator object
         /// is attached to</summary>
         public GridClient Client;
         /// <summary>A Unique Cache identifier for this simulator</summary>
         public UUID ID = UUID.Zero;
         /// <summary>The capabilities for this simulator</summary>
-        private Caps _Caps = null;
-        public Caps Caps
-        {
-            get
-            {
-                if (_Caps == null || !_Caps.IsEventQueueRunning)
-                {
-                    ConnectCaps();
-                }
-                return _Caps;
-            }
-        }
+        public Caps Caps = null;
         /// <summary></summary>
         public ulong Handle;
         /// <summary>The current version of software this simulator is running</summary>
@@ -369,7 +357,7 @@ namespace OpenMetaverse
 
         /// <summary>
         /// Provides access to an internal thread-safe multidimensional array containing a x,y grid mapped
-        /// each 64x64 parcel's LocalID.
+        /// to each 64x64 parcel's LocalID.
         /// </summary>
         public int[,] ParcelMap
         {
@@ -459,101 +447,43 @@ namespace OpenMetaverse
         /// <param name="client">Reference to the GridClient object</param>
         /// <param name="address">IPEndPoint of the simulator</param>
         /// <param name="handle">handle of the simulator</param>
-        private Simulator(GridClient client, IPEndPoint address, ulong handle)
+        public Simulator(GridClient client, IPEndPoint address, ulong handle)
             : base(address)
         {
-            Client = client;
-
+            Client = client;            
+            
             Handle = handle;
-            ReInit();
-        }
-
-        private void ReInit()
-        {
-            useReconnect = true;
             Network = Client.Network;
             PacketArchive = new IncomingPacketIDCollection(Settings.PACKET_ARCHIVE_SIZE);
             InBytes = new Queue<long>(Client.Settings.STATS_QUEUE_SIZE);
             OutBytes = new Queue<long>(Client.Settings.STATS_QUEUE_SIZE);
         }
 
-
-        public string _seed;
-
-        private bool useReconnect = true;
-        public void ConnectCaps()
-        {
-            if (!useReconnect) return;
-            useReconnect = false;
-            if (_Caps != null)
-            {
-                if (_Caps.IsEventQueueRunning) return;
-                _Caps.Disconnect(true);
-                _Caps = null;
-            }
-            if (!String.IsNullOrEmpty(_seed))
-            {
-                _Caps = new Caps(this, _seed);
-                Thread.Sleep(5000);
-                if (!_Caps.IsEventQueueRunning)
-                {
-                }
-            }
-        }
-
-        readonly static Dictionary<GridClient, Dictionary<ulong, Simulator>> savedSims = new Dictionary<GridClient, Dictionary<ulong, Simulator>>();
-        readonly static Dictionary<ulong, Simulator> firstSim = new Dictionary<ulong, Simulator>();
-        public static Simulator Create(GridClient client, IPEndPoint point, ulong handle)
-        {
-            Dictionary<ulong, Simulator> dict = null;
-
-            lock (savedSims)
-            {
-                if (!savedSims.TryGetValue(client, out dict))
-                {
-                    dict = new Dictionary<ulong, Simulator>();
-                    savedSims.Add(client, dict);
-                }
-                Simulator sim;
-                lock (firstSim)
-                    lock (dict)
-                        if (!dict.TryGetValue(handle, out sim))
-                        {
-                            sim = new Simulator(client, point, handle);
-                            if (!firstSim.ContainsKey(handle))
-                            {
-                                firstSim[handle] = sim;
-                            }
-                            else
-                            {
-                                Simulator S = firstSim[handle];
-                                sim.ObjectsAvatars.Dictionary = S.ObjectsAvatars.Dictionary;
-                                sim.ObjectsPrimitives.Dictionary = S.ObjectsPrimitives.Dictionary;
-                                sim.ParcelMap = S.ParcelMap;
-                                sim.AvatarPositions.Dictionary = S.AvatarPositions.Dictionary;
-                                sim.Name = S.Name;
-                                sim.Parcels.Dictionary = S.Parcels.Dictionary;
-                                sim.WaterHeight = S.WaterHeight;
-                            }
-                            dict.Add(handle, sim);
-                        }
-                        else
-                        {
-                            sim.ReInit();
-                        }
-                return sim;
-            }
-        }   
-
         /// <summary>
         /// Called when this Simulator object is being destroyed
         /// </summary>
         public void Dispose()
         {
-            // Force all the CAPS connections closed for this simulator
-            if (_Caps != null)
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        public virtual void Dispose(bool disposing)
+        {
+            if (disposing)
             {
-                _Caps.Disconnect(true);
+                if (AckTimer != null)
+                    AckTimer.Dispose();
+                if (PingTimer != null)
+                    PingTimer.Dispose();
+                if (StatsTimer != null)
+                    StatsTimer.Dispose();
+                if (ConnectedEvent != null)
+                    ConnectedEvent.Close();
+
+                // Force all the CAPS connections closed for this simulator
+                if (Caps != null)
+                    Caps.Disconnect(true);
             }
         }
 
@@ -614,14 +544,13 @@ namespace OpenMetaverse
                 if (Client.Settings.SEND_AGENT_UPDATES)
                     Client.Self.Movement.SendUpdate(true, this);
 
-                if (!ConnectedEvent.WaitOne(Client.Settings.LOGIN_TIMEOUT, false))
+                if (!ConnectedEvent.WaitOne(Client.Settings.SIMULATOR_TIMEOUT, false))
                 {
                     Logger.Log("Giving up on waiting for RegionHandshake for " + this.ToString(),
                         Helpers.LogLevel.Warning, Client);
-                    return false;
                 }
 
-                return connected;
+                return true;
             }
             catch (Exception e)
             {
@@ -633,22 +562,20 @@ namespace OpenMetaverse
 
         public void SetSeedCaps(string seedcaps)
         {
-            _seed = seedcaps;
-
-            if (_Caps != null)
+            if (Caps != null)
             {
-                if (_Caps._SeedCapsURI == seedcaps) return;
+                if (Caps._SeedCapsURI == seedcaps) return;
 
                 Logger.Log("Unexpected change of seed capability", Helpers.LogLevel.Warning, Client);
-                _Caps.Disconnect(true);
-                _Caps = null;
+                Caps.Disconnect(true);
+                Caps = null;
             }
 
             if (Client.Settings.ENABLE_CAPS)
             {
                 // Connect to the new CAPS system
                 if (!String.IsNullOrEmpty(seedcaps))
-                    _Caps = new Caps(this, seedcaps);
+                    Caps = new Caps(this, seedcaps);
                 else
                     Logger.Log("Setting up a sim without a valid capabilities server!", Helpers.LogLevel.Error, Client);
             }
@@ -659,23 +586,10 @@ namespace OpenMetaverse
         /// Disconnect from this simulator
         /// </summary>
         public void Disconnect(bool sendCloseCircuit)
-        {          
-            Disconnect(sendCloseCircuit,NetworkManager.DisconnectType.ClientInitiated);   
-        }
-        public void Disconnect(bool sendCloseCircuit, NetworkManager.DisconnectType disconnectType)
         {
-            Debug("Disconnect sendCloseCircuit=" + sendCloseCircuit + " disconnectType=" + disconnectType);
-            //lets wait until the server makes a desision
-            if (disconnectType == NetworkManager.DisconnectType.TeleportInitiated
-                //|| disconnectType == NetworkManager.DisconnectType.NetworkTimeout
-                ) return;
-
             if (connected)
             {
                 connected = false;
-
-                if (disconnectType != NetworkManager.DisconnectType.ServerInitiated)
-                {
 
                 // Destroy the timers
                 if (AckTimer != null) AckTimer.Dispose();
@@ -687,13 +601,12 @@ namespace OpenMetaverse
                 PingTimer = null;
 
                 // Kill the current CAPS system
-                if (_Caps != null)
+                if (Caps != null)
                 {
-                    _Caps.Disconnect(true);
-                    _Caps = null;
+                    Caps.Disconnect(true);
+                    Caps = null;
                 }
-                }
-                if (connected)
+
                 if (sendCloseCircuit)
                 {
                     // Try to send the CloseCircuit notice
@@ -709,7 +622,6 @@ namespace OpenMetaverse
                 // Shut the socket communication down
                 Stop();
             }
-            ConnectedEvent.Set();
         }
 
         /// <summary>
@@ -717,7 +629,6 @@ namespace OpenMetaverse
         /// </summary>
         public void Pause()
         {
-            Debug("pauseing");
             AgentPausePacket pause = new AgentPausePacket();
             pause.AgentData.AgentID = Client.Self.AgentID;
             pause.AgentData.SessionID = Client.Self.SessionID;
@@ -726,20 +637,11 @@ namespace OpenMetaverse
             Client.Network.SendPacket(pause, this);
         }
 
-        private void Debug(string s)
-        {
-            s = "" + s + " " + this;
-            Logger.Log(s,OpenMetaverse.Helpers.LogLevel.Info,Client);
-            Console.WriteLine("!!!!" + s);
-
-        }
-
         /// <summary>
         /// Instructs the simulator to resume sending update packets (unpause)
         /// </summary>
         public void Resume()
         {
-            Debug("resumeing");
             AgentResumePacket resume = new AgentResumePacket();
             resume.AgentData.AgentID = Client.Self.AgentID;
             resume.AgentData.SessionID = Client.Self.SessionID;
@@ -828,6 +730,13 @@ namespace OpenMetaverse
             }
 
             #endregion Queue or Send
+
+            #region Stats Tracking
+            if (Client.Settings.TRACK_UTILIZATION)
+            {
+                Client.Stats.Update(type.ToString(), OpenMetaverse.Stats.Type.Packet, dataLength, 0);
+            }
+            #endregion
         }
 
         internal void SendPacketFinal(NetworkManager.OutgoingPacket outgoingPacket)
@@ -889,8 +798,7 @@ namespace OpenMetaverse
         /// 
         /// </summary>
         public void SendPing()
-        {                        
-            //Debug("SendPing");
+        {
             uint oldestUnacked = 0;
 
             // Get the oldest NeedAck value, the first entry in the sorted dictionary
@@ -1080,17 +988,25 @@ namespace OpenMetaverse
             Network.PacketInbox.Enqueue(incomingPacket);
 
             #endregion Inbox Insertion
-        }
 
+            #region Stats Tracking
+            if (Client.Settings.TRACK_UTILIZATION)
+            {
+                Client.Stats.Update(packet.Type.ToString(), OpenMetaverse.Stats.Type.Packet, 0, packet.Length);
+            }
+            #endregion
+        }
+        
         protected override void PacketSent(UDPPacketBuffer buffer, int bytesSent)
         {
             // Stats tracking
             Interlocked.Add(ref Stats.SentBytes, bytesSent);
             Interlocked.Increment(ref Stats.SentPackets);
-
-            Client.Network.PacketSent(buffer.Data, bytesSent, this);
+            
+            Client.Network.RaisePacketSentEvent(buffer.Data, bytesSent, this);
         }
 
+        
         /// <summary>
         /// Sends out pending acknowledgements
         /// </summary>
@@ -1188,7 +1104,7 @@ namespace OpenMetaverse
             ResendUnacked();
 
             // Start the ACK handling functions again after NETWORK_TICK_INTERVAL milliseconds
-            if (AckTimer!=null) try { AckTimer.Change(Settings.NETWORK_TICK_INTERVAL, Timeout.Infinite); }
+            try { AckTimer.Change(Settings.NETWORK_TICK_INTERVAL, Timeout.Infinite); }
             catch (Exception) { }
         }
 

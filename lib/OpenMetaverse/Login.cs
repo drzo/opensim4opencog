@@ -77,7 +77,7 @@ namespace OpenMetaverse
         /// failed due to timeout</summary>
         public int Timeout;
         /// <summary>The request method</summary>
-        /// <remarks>login_to_server is currently the only supported method</remarks>
+        /// <remarks>login_to_simulator is currently the only supported method</remarks>
         public string MethodName;
         /// <summary>The Agents First name</summary>
         public string FirstName;
@@ -641,37 +641,62 @@ namespace OpenMetaverse
     #endregion Structs
 
     /// <summary>
-    /// Overrides SSL certificate validation check for Mono
-    /// </summary>
-    /// <remarks>Remove me when MONO can handle ServerCertificateValidationCallback</remarks>
-    public class AcceptAllCertificatePolicy : ICertificatePolicy
-    {
-        public AcceptAllCertificatePolicy()
-        {
-        }
-
-        public bool CheckValidationResult(ServicePoint sPoint,
-            System.Security.Cryptography.X509Certificates.X509Certificate cert,
-            WebRequest wRequest, int certProb)
-        {
-            // Always accept
-            return true;
-        }
-    }
-
-    /// <summary>
     /// Login Routines
     /// </summary>
-    public partial class NetworkManager : INetworkManager
+    public partial class NetworkManager
     {
         #region Delegates
+        
 
-        /// <summary>
-        /// Fired when a login request is successful or not
-        /// </summary>
-        /// <param name="login"></param>
-        /// <param name="message"></param>
-        public delegate void LoginCallback(LoginStatus login, string message);
+        //////LoginProgress
+        //// LoginProgress
+        /// <summary>The event subscribers, null of no subscribers</summary>
+        private EventHandler<LoginProgressEventArgs> m_LoginProgress;
+
+        ///<summary>Raises the LoginProgress Event</summary>
+        /// <param name="e">A LoginProgressEventArgs object containing
+        /// the data sent from the simulator</param>
+        protected virtual void OnLoginProgress(LoginProgressEventArgs e)
+        {
+            EventHandler<LoginProgressEventArgs> handler = m_LoginProgress;
+            if (handler != null)
+                handler(this, e);
+        }
+
+        /// <summary>Thread sync lock object</summary>
+        private readonly object m_LoginProgressLock = new object();
+
+        /// <summary>Raised when the simulator sends us data containing
+        /// ...</summary>
+        public event EventHandler<LoginProgressEventArgs> LoginProgress
+        {
+            add { lock (m_LoginProgressLock) { m_LoginProgress += value; } }
+            remove { lock (m_LoginProgressLock) { m_LoginProgress -= value; } }
+        }
+
+        ///// <summary>The event subscribers, null of no subscribers</summary>
+        //private EventHandler<LoggedInEventArgs> m_LoggedIn;
+
+        /////<summary>Raises the LoggedIn Event</summary>
+        ///// <param name="e">A LoggedInEventArgs object containing
+        ///// the data sent from the simulator</param>
+        //protected virtual void OnLoggedIn(LoggedInEventArgs e)
+        //{
+        //    EventHandler<LoggedInEventArgs> handler = m_LoggedIn;
+        //    if (handler != null)
+        //        handler(this, e);
+        //}
+
+        ///// <summary>Thread sync lock object</summary>
+        //private readonly object m_LoggedInLock = new object();
+
+        ///// <summary>Raised when the simulator sends us data containing
+        ///// ...</summary>
+        //public event EventHandler<LoggedInEventArgs> LoggedIn
+        //{
+        //    add { lock (m_LoggedInLock) { m_LoggedIn += value; } }
+        //    remove { lock (m_LoggedInLock) { m_LoggedIn -= value; } }
+        //}
 
         /// <summary>
         /// 
@@ -686,11 +711,7 @@ namespace OpenMetaverse
         #endregion Delegates
 
         #region Events
-
-        /// <summary>Called any time the login status changes, will eventually
-        /// return LoginStatus.Success or LoginStatus.Failure</summary>
-        public event LoginCallback OnLogin;
-
+        
         /// <summary>Called when a reply is received from the login server, the
         /// login sequence will block until this event returns</summary>
         private event LoginResponseCallback OnLoginResponse;
@@ -724,7 +745,9 @@ namespace OpenMetaverse
         private string InternalLoginMessage = String.Empty;
         private string InternalRawLoginReply = String.Empty;
         private Dictionary<LoginResponseCallback, string[]> CallbackOptions = new Dictionary<LoginResponseCallback, string[]>();
-        /// <summary>A list of packets obtained during the login process which networkmanager will log but not process</summary>
+
+        /// <summary>A list of packets obtained during the login process which 
+        /// networkmanager will log but not process</summary>
         private readonly List<string> UDPBlacklist = new List<string>();
         #endregion
 
@@ -743,7 +766,7 @@ namespace OpenMetaverse
         public LoginParams DefaultLoginParams(string firstName, string lastName, string password,
             string userAgent, string userVersion)
         {
-            List<string> options = new List<string>(15);
+            List<string> options = new List<string>(16);
             options.Add("inventory-root");
             options.Add("inventory-skeleton");
             options.Add("inventory-lib-root");
@@ -759,6 +782,7 @@ namespace OpenMetaverse
             options.Add("tutorial_settings");
             options.Add("login-flags");
             options.Add("global-textures");
+            options.Add("adult_compliant");
 
             LoginParams loginParams = new LoginParams();
             if (Client == null)
@@ -853,7 +877,7 @@ namespace OpenMetaverse
         {
             // FIXME: Now that we're using CAPS we could cancel the current login and start a new one
             if (CurrentContext != null)
-                return;// throw new Exception("Login already in progress");
+                throw new Exception("Login already in progress");            
 
             LoginEvent.Reset();
             CurrentContext = loginParams;
@@ -942,12 +966,10 @@ namespace OpenMetaverse
 
             #endregion
 
-            // Override SSL authentication mechanisms. DO NOT convert this to the 
-            // .NET 2.0 preferred method, the equivalent function in Mono has a 
-            // different name and it will break compatibility!
-            #pragma warning disable 0618
-            ServicePointManager.CertificatePolicy = new AcceptAllCertificatePolicy();
-            // TODO: At some point, maybe we should check the cert?
+            // TODO: Allow a user callback to be defined for handling the cert
+            ServicePointManager.CertificatePolicy = new TrustAllCertificatePolicy();
+            // Even though this will compile on Mono 2.4, it throws a runtime exception
+            //ServicePointManager.ServerCertificateValidationCallback = TrustAllCertificatePolicy.TrustAllCertificateHandler;
 
             if (Client.Settings.USE_LLSD_LOGIN)
             {
@@ -1093,10 +1115,9 @@ namespace OpenMetaverse
             }
 
             // Fire the login status callback
-            if (OnLogin != null)
+            if (m_LoginProgress != null)
             {
-                try { OnLogin(status, message); }
-                catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
+                OnLoginProgress(new LoginProgressEventArgs(status, message));
             }
         }
 
@@ -1233,13 +1254,6 @@ namespace OpenMetaverse
 
                     // Update the login message with the MOTD returned from the server
                     UpdateLoginStatus(LoginStatus.Success, message);
-
-                    // Fire an event for connecting to the grid
-                    if (OnConnected != null)
-                    {
-                        try { OnConnected(this.Client); }
-                        catch (Exception e) { Logger.Log(e.ToString(), Helpers.LogLevel.Error); }
-                    }
                 }
                 else
                 {
@@ -1333,14 +1347,7 @@ namespace OpenMetaverse
                                     SendPacket(new EconomyDataRequestPacket());
 
                                     // Update the login message with the MOTD returned from the server
-                                    UpdateLoginStatus(LoginStatus.Success, data.Message);
-
-                                    // Fire an event for connecting to the grid
-                                    if (OnConnected != null)
-                                    {
-                                        try { OnConnected(this.Client); }
-                                        catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
-                                    }
+                                    UpdateLoginStatus(LoginStatus.ConnectingToSim, "Authentication Successful");                                    
                                 }
                                 else
                                 {
@@ -1429,4 +1436,23 @@ namespace OpenMetaverse
 
         #endregion
     }
+    #region EventArgs
+    
+    public class LoginProgressEventArgs : EventArgs
+    {
+        private readonly LoginStatus m_Status;
+        private readonly String m_Message;
+
+        public LoginStatus Status { get { return m_Status; } }        
+        public String Message { get { return m_Message; } } 
+
+
+        public LoginProgressEventArgs(LoginStatus login, String message)
+        {
+            this.m_Status = login;
+            this.m_Message = message;
+        }
+    }
+    
+    #endregion EventArgs
 }

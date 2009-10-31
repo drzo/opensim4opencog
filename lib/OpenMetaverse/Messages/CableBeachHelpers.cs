@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using OpenMetaverse;
 
 namespace OpenMetaverse.Messages.CableBeach
@@ -298,7 +299,7 @@ namespace OpenMetaverse.Messages.CableBeach
 
         public static UUID IdentityToUUID(Uri identity)
         {
-            return new UUID((OpenMetaverse.Utils.MD5(Utils.EncodingUTF8.GetBytes(identity.ToString()))), 0);
+            return new UUID((OpenMetaverse.Utils.MD5(Encoding.UTF8.GetBytes(identity.ToString()))), 0);
         }
     }
 }

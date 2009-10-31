@@ -473,8 +473,8 @@ namespace OpenMetaverse
             {
                 Client = client;
                 Camera = new AgentCamera();
-                client.Network.OnConnected += new NetworkManager.ConnectedCallback(Network_OnConnected);
-                client.Network.OnDisconnected += new NetworkManager.DisconnectedCallback(Network_OnDisconnected);
+                Client.Network.LoginProgress += Network_OnConnected;                
+                Client.Network.Disconnected += Network_OnDisconnected;
                 updateInterval = Settings.DEFAULT_AGENT_UPDATE_INTERVAL;
             }
 
@@ -487,15 +487,18 @@ namespace OpenMetaverse
                 }
             }
 
-            private void Network_OnDisconnected(NetworkManager.DisconnectType reason, string message)
+            private void Network_OnDisconnected(object sender, DisconnectedEventArgs e)
             {
                 CleanupTimer();
             }
 
-            private void Network_OnConnected(object sender)
+            private void Network_OnConnected(object sender, LoginProgressEventArgs e)
             {
-                CleanupTimer();
-                updateTimer = new Timer(new TimerCallback(UpdateTimer_Elapsed), null, updateInterval, updateInterval);
+                if (e.Status == LoginStatus.Success)
+                {
+                    CleanupTimer();
+                    updateTimer = new Timer(new TimerCallback(UpdateTimer_Elapsed), null, updateInterval, updateInterval);
+                }
             }
 
             /// <summary>
@@ -696,7 +699,7 @@ namespace OpenMetaverse
                 else agentControls &= ~((uint)flag);
             }
 
-            public void ResetControlFlags()
+            private void ResetControlFlags()
             {
                 // Reset all of the flags except for persistent settings like
                 // away, fly, mouselook, and crouching

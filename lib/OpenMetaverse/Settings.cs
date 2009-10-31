@@ -230,6 +230,11 @@ namespace OpenMetaverse
         /// estimates for simulated objects</summary>
         public bool USE_INTERPOLATION_TIMER = true;
 
+        /// <summary>
+        /// If true, utilization statistics will be tracked. There is a minor penalty
+        /// in CPU time for enabling this option.
+        /// </summary>
+        public bool TRACK_UTILIZATION = true;
         #endregion
         #region Parcel Tracking
 
@@ -328,20 +333,18 @@ namespace OpenMetaverse
         public Settings(GridClient client)
         {
             Client = client;
-            Client.Network.RegisterCallback(Packets.PacketType.EconomyData, new NetworkManager.PacketCallback(EconomyDataHandler));
+            Client.Network.RegisterCallback(Packets.PacketType.EconomyData, EconomyDataHandler);
         }
 
         #endregion
         #region Packet Callbacks
 
-        /// <summary>
-        /// Gets the cost of uploading an asset to the grid
-        /// </summary>
-        /// <param name="packet"></param>
-        /// <param name="simulator"></param>
-        private void EconomyDataHandler(Packet packet, Simulator simulator)
+        /// <summary>Process an incoming packet and raise the appropriate events</summary>
+        /// <param name="sender">The sender</param>
+        /// <param name="e">The EventArgs object containing the packet data</param>
+        protected void EconomyDataHandler(object sender, PacketReceivedEventArgs e)
         {
-            EconomyDataPacket econ = (EconomyDataPacket)packet;
+            EconomyDataPacket econ = (EconomyDataPacket)e.Packet;
 
             priceUpload = econ.Info.PriceUpload;
         }

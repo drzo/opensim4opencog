@@ -121,7 +121,7 @@ namespace OpenMetaverse.Http
                 else
                 {
                     Logger.Log.Warn("Got an unparseable response from the event queue: \"" +
-                        Utils.EncodingUTF8.GetString(responseData) + "\"");
+                        System.Text.Encoding.UTF8.GetString(responseData) + "\"");
                 }
             }
             else if (error != null)

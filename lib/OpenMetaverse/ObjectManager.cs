@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2008, openmetaverse.org
+ * Copyright (c) 2006-2009, openmetaverse.org
  * All rights reserved.
  *
  * - Redistribution and use in source and binary forms, with or without
@@ -126,7 +126,7 @@ namespace OpenMetaverse
     /// Contains the variables sent in an object update packet for objects. 
     /// Used to track position and movement of prims and avatars
     /// </summary>
-    public struct ObjectUpdate
+    public struct ObjectMovementUpdate
     {
         /// <summary></summary>
         public bool Avatar;
@@ -161,209 +161,253 @@ namespace OpenMetaverse
         public const float HAVOK_TIMESTEP = 1.0f / 45.0f;
 
         #region Delegates
+       
+        /// <summary>The event subscribers, null of no subscribers</summary>
+        private EventHandler<PrimEventArgs> m_ObjectUpdate;
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="simulator"></param>
-        /// <param name="prim"></param>
-        /// <param name="regionHandle"></param>
-        /// <param name="timeDilation"></param>
-        public delegate void NewPrimCallback(Simulator simulator, Primitive prim, ulong regionHandle,
-            ushort timeDilation);
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="simulator"></param>
-        /// <param name="prim"></param>
-        /// <param name="regionHandle"></param>
-        /// <param name="timeDilation"></param>
-        public delegate void NewAttachmentCallback(Simulator simulator, Primitive prim, ulong regionHandle,
-            ushort timeDilation);
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="simulator"></param>
-        /// <param name="props"></param>
-        public delegate void ObjectPropertiesCallback(Simulator simulator, Primitive.ObjectProperties props);
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="simulator"></param>
-        /// <param name="prim"></param>
-        /// <param name="props"></param>
-        public delegate void ObjectPropertiesUpdatedCallback(Simulator simulator, Primitive prim, Primitive.ObjectProperties props);
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="simulator"></param>
-        /// <param name="props"></param>
-        /// <param name="type"></param>
-        public delegate void ObjectPropertiesFamilyCallback(Simulator simulator, Primitive.ObjectProperties props,
-            ReportType type);
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="simulator"></param>
-        /// <param name="avatar"></param>
-        /// <param name="regionHandle"></param>
-        /// <param name="timeDilation"></param>
-        public delegate void NewAvatarCallback(Simulator simulator, Avatar avatar, ulong regionHandle,
-            ushort timeDilation);
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="simulator"></param>
-        /// <param name="foliage"></param>
-        /// <param name="regionHandle"></param>
-        /// <param name="timeDilation"></param>
-        public delegate void NewFoliageCallback(Simulator simulator, Primitive foliage, ulong regionHandle,
-            ushort timeDilation);
-        /// <summary>
-        /// Called whenever an object terse update is received
-        /// </summary>
-        /// <param name="simulator"></param>
-        /// <param name="update"></param>
-        /// <param name="regionHandle"></param>
-        /// <param name="timeDilation"></param>
-        public delegate void ObjectUpdatedCallback(Simulator simulator, ObjectUpdate update, ulong regionHandle,
-            ushort timeDilation);
-        /// <summary>
-        /// Called whenever an object terse update is received
-        /// This is different than the above in that the update to the prim has not happened yet
-        /// </summary>
-        /// <param name="simulator"></param>
-        /// <param name="prim"></param>
-        /// <param name="update"></param>
-        /// <param name="RegionHandle"></param>
-        /// <param name="TimeDilation"></param>
-        public delegate void ObjectUpdatedTerseCallback(Simulator simulator, Primitive prim, ObjectUpdate update, ulong RegionHandle, ushort TimeDilation);
-        /// <summary>
-        /// Called whenever an major object update is received
-        /// This is when major changes are happening to the contructionData changing the shape of an object
-        /// </summary>
-        /// <param name="simulator"></param>
-        /// <param name="prim"></param>
-        /// <param name="constructionData"></param>
-        /// <param name="block"></param>     
-        /// <param name="objectupdate"></param>
-        /// <param name="nameValues"></param>        
-        public delegate void ObjectDataBlockUpdateCallback(Simulator simulator, Primitive prim, Primitive.ConstructionData constructionData, 
-            ObjectUpdatePacket.ObjectDataBlock block, ObjectUpdate objectupdate, NameValue[] nameValues);
-        /// <summary>
-        /// Called whenever an object disappears
-        /// </summary>
-        /// <param name="simulator"></param>
-        /// <param name="objectID"></param>
-        public delegate void KillObjectCallback(Simulator simulator, uint objectID);
-        /// <summary>
-        /// Called whenever the client avatar sits down or stands up
-        /// </summary>
-        /// <param name="simulator">Simulator the packet was received from</param>
-        /// <param name="avatar"></param>
-        /// <param name="sittingOn">The local ID of the object that is being sat
-        /// <param name="oldSeat"></param>
-        /// on. If this is zero the avatar is not sitting on an object</param>
-        public delegate void AvatarSitChanged(Simulator simulator, Avatar avatar, uint sittingOn, uint oldSeat);
+        ///<summary>Raises the ObjectUpdate Event</summary>
+        /// <param name="e">A ObjectUpdateEventArgs object containing
+        /// the data sent from the simulator</param>
+        protected virtual void OnObjectUpdate(PrimEventArgs e)
+        {
+            EventHandler<PrimEventArgs> handler = m_ObjectUpdate;
+            if (handler != null)
+                handler(this, e);
+        }
 
-        /// <summary>
-        /// Called when we get PayPriceReply packet after calling RequestPayPrice
-        /// </summary>
-        /// <param name="simulator">Simulator the packet was received from</param>
-        /// <param name="objectID">Object <seealso cref="UUID"/></param>
-        /// <param name="defaultPrice">Default pay price for the object, -1 means control should be disabled, -2 it should be empty</param>
-        /// <param name="buttonPrices">Array of 4 prices, -1 means button should be disabled</param>
-        public delegate void PayPriceReply(Simulator simulator, UUID objectID, int defaultPrice, int[] buttonPrices);
+        /// <summary>Thread sync lock object</summary>
+        private readonly object m_ObjectUpdateLock = new object();
+
+        /// <summary>Raised when the simulator sends us data containing
+        /// A <see cref="Primitive"/>, Foliage or Attachment</summary>
+        /// <seealso cref="RequestObject"/>
+        /// <seealso cref="RequestObjects"/>
+        public event EventHandler<PrimEventArgs> ObjectUpdate
+        {
+            add { lock (m_ObjectUpdateLock) { m_ObjectUpdate += value; } }
+            remove { lock (m_ObjectUpdateLock) { m_ObjectUpdate -= value; } }
+        }
+                     
+        /// <summary>The event subscribers, null of no subscribers</summary>
+        private EventHandler<ObjectPropertiesEventArgs> m_ObjectProperties;
+
+        ///<summary>Raises the ObjectProperties Event</summary>
+        /// <param name="e">A ObjectPropertiesEventArgs object containing
+        /// the data sent from the simulator</param>
+        protected virtual void OnObjectProperties(ObjectPropertiesEventArgs e)
+        {
+            EventHandler<ObjectPropertiesEventArgs> handler = m_ObjectProperties;
+            if (handler != null)
+                handler(this, e);
+        }
+
+        /// <summary>Thread sync lock object</summary>
+        private readonly object m_ObjectPropertiesLock = new object();
+
+        /// <summary>Raised when the simulator sends us data containing
+        /// additional <seea cref="Primitive"/> information</summary>
+        /// <seealso cref="SelectObject"/>
+        /// <seealso cref="SelectObjects"/>
+        public event EventHandler<ObjectPropertiesEventArgs> ObjectProperties
+        {
+            add { lock (m_ObjectPropertiesLock) { m_ObjectProperties += value; } }
+            remove { lock (m_ObjectPropertiesLock) { m_ObjectProperties -= value; } }
+        }
+       
+        /// <summary>The event subscribers, null of no subscribers</summary>
+        private EventHandler<ObjectPropertiesUpdatedEventArgs> m_ObjectPropertiesUpdated;
+
+        ///<summary>Raises the ObjectPropertiesUpdated Event</summary>
+        /// <param name="e">A ObjectPropertiesUpdatedEventArgs object containing
+        /// the data sent from the simulator</param>
+        protected virtual void OnObjectPropertiesUpdated(ObjectPropertiesUpdatedEventArgs e)
+        {
+            EventHandler<ObjectPropertiesUpdatedEventArgs> handler = m_ObjectPropertiesUpdated;
+            if (handler != null)
+                handler(this, e);
+        }
+
+        /// <summary>Thread sync lock object</summary>
+        private readonly object m_ObjectPropertiesUpdatedLock = new object();
+
+        /// <summary>Raised when the simulator sends us data containing
+        /// Primitive.ObjectProperties for an object we are currently tracking</summary>
+        public event EventHandler<ObjectPropertiesUpdatedEventArgs> ObjectPropertiesUpdated
+        {
+            add { lock (m_ObjectPropertiesUpdatedLock) { m_ObjectPropertiesUpdated += value; } }
+            remove { lock (m_ObjectPropertiesUpdatedLock) { m_ObjectPropertiesUpdated -= value; } }
+        }
+        
+        /// <summary>The event subscribers, null of no subscribers</summary>
+        private EventHandler<ObjectPropertiesFamilyEventArgs> m_ObjectPropertiesFamily;
+
+        ///<summary>Raises the ObjectPropertiesFamily Event</summary>
+        /// <param name="e">A ObjectPropertiesFamilyEventArgs object containing
+        /// the data sent from the simulator</param>
+        protected virtual void OnObjectPropertiesFamily(ObjectPropertiesFamilyEventArgs e)
+        {
+            EventHandler<ObjectPropertiesFamilyEventArgs> handler = m_ObjectPropertiesFamily;
+            if (handler != null)
+                handler(this, e);
+        }
+
+        /// <summary>Thread sync lock object</summary>
+        private readonly object m_ObjectPropertiesFamilyLock = new object();
+
+        /// <summary>Raised when the simulator sends us data containing
+        /// additional <seea cref="Primitive"/> and <see cref="Avatar"/> details</summary>
+        /// <seealso cref="RequestObjectPropertiesFamily"/>
+        public event EventHandler<ObjectPropertiesFamilyEventArgs> ObjectPropertiesFamily
+        {
+            add { lock (m_ObjectPropertiesFamilyLock) { m_ObjectPropertiesFamily += value; } }
+            remove { lock (m_ObjectPropertiesFamilyLock) { m_ObjectPropertiesFamily -= value; } }
+        }
+        
+        /// <summary>The event subscribers, null of no subscribers</summary>
+        private EventHandler<AvatarUpdateEventArgs> m_AvatarUpdate;
+
+        ///<summary>Raises the AvatarUpdate Event</summary>
+        /// <param name="e">A AvatarUpdateEventArgs object containing
+        /// the data sent from the simulator</param>
+        protected virtual void OnAvatarUpdate(AvatarUpdateEventArgs e)
+        {
+            EventHandler<AvatarUpdateEventArgs> handler = m_AvatarUpdate;
+            if (handler != null)
+                handler(this, e);
+        }
+
+        /// <summary>Thread sync lock object</summary>
+        private readonly object m_AvatarUpdateLock = new object();
+
+        /// <summary>Raised when the simulator sends us data containing
+        /// updated information for an <see cref="Avatar"/></summary>
+        public event EventHandler<AvatarUpdateEventArgs> AvatarUpdate
+        {
+            add { lock (m_AvatarUpdateLock) { m_AvatarUpdate += value; } }
+            remove { lock (m_AvatarUpdateLock) { m_AvatarUpdate -= value; } }
+        }
+                     
+        /// <summary>The event subscribers, null of no subscribers</summary>
+        private EventHandler<TerseObjectUpdateEventArgs> m_TerseObjectUpdate;
+
+        ///<summary>Raises the TerseObjectUpdate Event</summary>
+        /// <param name="e">A TerseObjectUpdateEventArgs object containing
+        /// the data sent from the simulator</param>
+        protected virtual void OnTerseObjectUpdate(TerseObjectUpdateEventArgs e)
+        {
+            EventHandler<TerseObjectUpdateEventArgs> handler = m_TerseObjectUpdate;
+            if (handler != null)
+                handler(this, e);
+        }
+
+        /// <summary>Thread sync lock object</summary>
+        private readonly object m_TerseObjectUpdateLock = new object();
+
+        /// <summary>Raised when the simulator sends us data containing
+        /// <see cref="Primitive"/> and <see cref="Avatar"/> movement changes</summary>
+        public event EventHandler<TerseObjectUpdateEventArgs> TerseObjectUpdate
+        {
+            add { lock (m_TerseObjectUpdateLock) { m_TerseObjectUpdate += value; } }
+            remove { lock (m_TerseObjectUpdateLock) { m_TerseObjectUpdate -= value; } }
+        }
+
+        /// <summary>The event subscribers, null of no subscribers</summary>
+        private EventHandler<ObjectDataBlockUpdateEventArgs> m_ObjectDataBlockUpdate;
+
+        ///<summary>Raises the ObjectDataBlockUpdate Event</summary>
+        /// <param name="e">A ObjectDataBlockUpdateEventArgs object containing
+        /// the data sent from the simulator</param>
+        protected virtual void OnObjectDataBlockUpdate(ObjectDataBlockUpdateEventArgs e)
+        {
+            EventHandler<ObjectDataBlockUpdateEventArgs> handler = m_ObjectDataBlockUpdate;
+            if (handler != null)
+                handler(this, e);
+        }
+
+        /// <summary>Thread sync lock object</summary>
+        private readonly object m_ObjectDataBlockUpdateLock = new object();
+
+        /// <summary>Raised when the simulator sends us data containing
+        /// updates to an Objects DataBlock</summary>
+        public event EventHandler<ObjectDataBlockUpdateEventArgs> ObjectDataBlockUpdate
+        {
+            add { lock (m_ObjectDataBlockUpdateLock) { m_ObjectDataBlockUpdate += value; } }
+            remove { lock (m_ObjectDataBlockUpdateLock) { m_ObjectDataBlockUpdate -= value; } }
+        }
+       
+        /// <summary>The event subscribers, null of no subscribers</summary>
+        private EventHandler<KillObjectEventArgs> m_KillObject;
+
+        ///<summary>Raises the KillObject Event</summary>
+        /// <param name="e">A KillObjectEventArgs object containing
+        /// the data sent from the simulator</param>
+        protected virtual void OnKillObject(KillObjectEventArgs e)
+        {
+            EventHandler<KillObjectEventArgs> handler = m_KillObject;
+            if (handler != null)
+                handler(this, e);
+        }
+
+        /// <summary>Thread sync lock object</summary>
+        private readonly object m_KillObjectLock = new object();
+
+        /// <summary>Raised when the simulator informs us an <see cref="Primitive"/>
+        /// or <see cref="Avatar"/> is no longer within view</summary>
+        public event EventHandler<KillObjectEventArgs> KillObject
+        {
+            add { lock (m_KillObjectLock) { m_KillObject += value; } }
+            remove { lock (m_KillObjectLock) { m_KillObject -= value; } }
+        }
+
+        /// <summary>The event subscribers, null of no subscribers</summary>
+        private EventHandler<AvatarSitChangedEventArgs> m_AvatarSitChanged;
+
+        ///<summary>Raises the AvatarSitChanged Event</summary>
+        /// <param name="e">A AvatarSitChangedEventArgs object containing
+        /// the data sent from the simulator</param>
+        protected virtual void OnAvatarSitChanged(AvatarSitChangedEventArgs e)
+        {
+            EventHandler<AvatarSitChangedEventArgs> handler = m_AvatarSitChanged;
+            if (handler != null)
+                handler(this, e);
+        }
+
+        /// <summary>Thread sync lock object</summary>
+        private readonly object m_AvatarSitChangedLock = new object();
+
+        /// <summary>Raised when the simulator sends us data containing
+        /// updated sit information for our <see cref="Avatar"/></summary>
+        public event EventHandler<AvatarSitChangedEventArgs> AvatarSitChanged
+        {
+            add { lock (m_AvatarSitChangedLock) { m_AvatarSitChanged += value; } }
+            remove { lock (m_AvatarSitChangedLock) { m_AvatarSitChanged -= value; } }
+        }
+        
+        /// <summary>The event subscribers, null of no subscribers</summary>
+        private EventHandler<PayPriceReplyEventArgs> m_PayPriceReply;
+
+        ///<summary>Raises the PayPriceReply Event</summary>
+        /// <param name="e">A PayPriceReplyEventArgs object containing
+        /// the data sent from the simulator</param>
+        protected virtual void OnPayPriceReply(PayPriceReplyEventArgs e)
+        {
+            EventHandler<PayPriceReplyEventArgs> handler = m_PayPriceReply;
+            if (handler != null)
+                handler(this, e);
+        }
+
+        /// <summary>Thread sync lock object</summary>
+        private readonly object m_PayPriceReplyLock = new object();
+
+        /// <summary>Raised when the simulator sends us data containing
+        /// purchase price information for a <see cref="Primitive"/></summary>
+        public event EventHandler<PayPriceReplyEventArgs> PayPriceReply
+        {
+            add { lock (m_PayPriceReplyLock) { m_PayPriceReply += value; } }
+            remove { lock (m_PayPriceReplyLock) { m_PayPriceReply -= value; } }
+        }
 
         #endregion Delegates
-
-        #region Events
-
-        /// <summary>
-        /// This event will be raised for every ObjectUpdate block that 
-        /// contains a prim that isn't attached to an avatar.
-        /// </summary>
-        /// <remarks>Depending on the circumstances a client could 
-        /// receive two or more of these events for the same object, if you 
-        /// or the object left the current sim and returned for example. Client
-        /// applications are responsible for tracking and storing objects.
-        /// </remarks>
-        public event NewPrimCallback OnNewPrim;
-        /// <summary>
-        /// This event will be raised for every ObjectUpdate block that 
-        /// contains an avatar attachment.
-        /// </summary>
-        /// <remarks>Depending on the circumstances a client could 
-        /// receive two or more of these events for the same object, if you 
-        /// or the object left the current sim and returned for example. Client
-        /// applications are responsible for tracking and storing objects.
-        /// </remarks>
-        public event NewAttachmentCallback OnNewAttachment;
-        /// <summary>
-        /// This event will be raised for every ObjectUpdate block that 
-        /// contains a new avatar.
-        /// </summary>
-        /// <remarks>Depending on the circumstances a client 
-        /// could receive two or more of these events for the same avatar, if 
-        /// you or the other avatar left the current sim and returned for 
-        /// example. Client applications are responsible for tracking and 
-        /// storing objects.
-        /// </remarks>
-        public event NewAvatarCallback OnNewAvatar;
-        /// <summary>
-        /// This event will be raised when a terse object update packet is 
-        /// received, containing the updated position, rotation, and 
-        /// movement-related vectors
-        /// </summary>
-        public event ObjectUpdatedTerseCallback OnObjectTerseUpdate;
-        /// <summary>
-        /// This event will be raised when a terse object update packet is 
-        /// received, containing the updated position, rotation, and 
-        /// movement-related vectors
-        /// </summary>
-        public event ObjectUpdatedCallback OnObjectUpdated;
-        #region OnOnObjectDataBlockUpdate
-
-        /// <summary>
-        /// Triggers the OnObjectDataBlockUpdate event.
-        /// </summary>
-        public event ObjectDataBlockUpdateCallback OnObjectDataBlockUpdate;
-        #endregion
-        
-        /// <summary>
-        /// This event will be raised when an avatar sits on an object
-        /// or stands up, with a local ID of the current seat or zero.
-        /// </summary>
-        public event AvatarSitChanged OnAvatarSitChanged;
-        /// <summary>
-        /// This event will be raised when an object is removed from a 
-        /// simulator.
-        /// </summary>
-        public event KillObjectCallback OnObjectKilled;
-        /// <summary>
-        /// This event will be raised when an objects properties are received
-        /// from the simulator
-        /// </summary>
-        public event ObjectPropertiesCallback OnObjectProperties;
-        /// <summary>
-        /// This event will be raised when an objects properties are updated
-        /// from the simulator
-        /// </summary>
-        public event ObjectPropertiesUpdatedCallback OnObjectPropertiesUpdated;
-        /// <summary>
-        /// Thie event will be raised when an objects properties family 
-        /// information is recieved from the simulator. ObjectPropertiesFamily
-        /// is a subset of the fields found in ObjectProperties
-        /// </summary>
-        public event ObjectPropertiesFamilyCallback OnObjectPropertiesFamily;
-
-        /// <summary>
-        /// This event will be fired when we recieve pay price information
-        /// for the object after having asked for them with RequestPayPrice
-        /// </summary>
-        public event PayPriceReply OnPayPriceReply;
-
-        #endregion
 
         /// <summary>Reference to the GridClient object</summary>
         protected GridClient Client;
@@ -372,35 +416,26 @@ namespace OpenMetaverse
         private Timer InterpolationTimer;
 
         /// <summary>
-        /// Instantiates a new ObjectManager class
+        /// Construct a new instance of the ObjectManager class
         /// </summary>
-        /// <param name="client">A reference to the client</param>
-        internal ObjectManager(GridClient client)
+        /// <param name="client">A reference to the <see cref="GridClient"/> instance</param>
+        public ObjectManager(GridClient client)
         {
             Client = client;
-            RegisterCallbacks();
+
+            Client.Network.RegisterCallback(PacketType.ObjectUpdate, ObjectUpdateHandler);
+            Client.Network.RegisterCallback(PacketType.ImprovedTerseObjectUpdate, ImprovedTerseObjectUpdateHandler);
+            Client.Network.RegisterCallback(PacketType.ObjectUpdateCompressed, ObjectUpdateCompressedHandler);
+            Client.Network.RegisterCallback(PacketType.ObjectUpdateCached, ObjectUpdateCachedHandler);
+            Client.Network.RegisterCallback(PacketType.KillObject, KillObjectHandler);
+            Client.Network.RegisterCallback(PacketType.ObjectPropertiesFamily, ObjectPropertiesFamilyHandler);
+            Client.Network.RegisterCallback(PacketType.ObjectProperties, ObjectPropertiesHandler);
+            Client.Network.RegisterCallback(PacketType.PayPriceReply, PayPriceReplyHandler);
         }
 
-        /// <summary>
-        /// Instantiates a new ObjectManager class
-        /// </summary>
-        /// <param name="client">A reference to the client</param>
-        /// <param name="registerCallbacks">If false, the ObjectManager won't
-        /// register any packet callbacks and won't decode incoming object
-        /// packets</param>
-        protected ObjectManager(GridClient client, bool registerCallbacks)
-        {
-            Client = client;
-            Client.Network.OnConnected += new NetworkManager.ConnectedCallback(Network_OnConnected);
-            Client.Network.OnDisconnected += new NetworkManager.DisconnectedCallback(Network_OnDisconnected);
+        #region Internal event handlers
 
-            if (registerCallbacks)
-            {
-                RegisterCallbacks();
-            }
-        }
-
-        void Network_OnDisconnected(NetworkManager.DisconnectType reason, string message)
+        private void Network_OnDisconnected(NetworkManager.DisconnectType reason, string message)
         {
             if (InterpolationTimer != null)
             {
@@ -409,7 +444,7 @@ namespace OpenMetaverse
             }
         }
 
-        void Network_OnConnected(object sender)
+        private void Network_OnConnected(object sender)
         {
             if (Client.Settings.USE_INTERPOLATION_TIMER)
             {
@@ -417,27 +452,16 @@ namespace OpenMetaverse
             }
         }
 
-        protected void RegisterCallbacks()
-        {
-            Client.Network.RegisterCallback(PacketType.ObjectUpdate, UpdateHandler);
-            Client.Network.RegisterCallback(PacketType.ImprovedTerseObjectUpdate, TerseUpdateHandler);
-            Client.Network.RegisterCallback(PacketType.ObjectUpdateCompressed, CompressedUpdateHandler);
-            Client.Network.RegisterCallback(PacketType.ObjectUpdateCached, CachedUpdateHandler);
-            Client.Network.RegisterCallback(PacketType.KillObject, KillObjectHandler);
-            Client.Network.RegisterCallback(PacketType.ObjectPropertiesFamily, ObjectPropertiesFamilyHandler);
-            Client.Network.RegisterCallback(PacketType.ObjectProperties, ObjectPropertiesHandler);
-            Client.Network.RegisterCallback(PacketType.PayPriceReply, PayPriceReplyHandler);
-        }
+        #endregion Internal event handlers
 
-        #region Action Methods
+        #region Public Methods
 
         /// <summary>
-        /// Request object information from the sim, primarily used for stale 
-        /// or missing cache entries
+        /// Request information for a single object from a <see cref="Simulator"/> 
+        /// you are currently connected to
         /// </summary>
-        /// <param name="simulator">The simulator containing the object you're 
-        /// looking for</param>
-        /// <param name="localID">The objects ID which is local to the simulator the object is in</param>
+        /// <param name="simulator">The <see cref="Simulator"/> the object is located</param>
+        /// <param name="localID">The Local ID of the object</param>
         public void RequestObject(Simulator simulator, uint localID)
         {
             RequestMultipleObjectsPacket request = new RequestMultipleObjectsPacket();
@@ -452,27 +476,23 @@ namespace OpenMetaverse
         }
 
         /// <summary>
-        /// Request object information for multiple objects all contained in
-        /// the same sim, primarily used for stale or missing cache entries
+        /// Request information for multiple objects contained in
+        /// the same simulator
         /// </summary>
-        /// <param name="simulator">A reference to the <seealso cref="OpenMetaverse.Simulator"/> object where the objects reside</param>
-        /// <param name="localIDs">An array which contains the IDs of the objects to request</param>
+        /// <param name="simulator">The <see cref="Simulator"/> the objects are located</param>
+        /// <param name="localIDs">An array containing the Local IDs of the objects</param>
         public void RequestObjects(Simulator simulator, List<uint> localIDs)
         {
-            int i = 0;
-
             RequestMultipleObjectsPacket request = new RequestMultipleObjectsPacket();
             request.AgentData.AgentID = Client.Self.AgentID;
             request.AgentData.SessionID = Client.Self.SessionID;
             request.ObjectData = new RequestMultipleObjectsPacket.ObjectDataBlock[localIDs.Count];
 
-            foreach (uint localID in localIDs)
+            for (int i = 0; i < localIDs.Count; i++)
             {
                 request.ObjectData[i] = new RequestMultipleObjectsPacket.ObjectDataBlock();
-                request.ObjectData[i].ID = localID;
+                request.ObjectData[i].ID = localIDs[i];
                 request.ObjectData[i].CacheMissType = 0;
-
-                i++;
             }
 
             Client.Network.SendPacket(request, simulator);
@@ -482,8 +502,8 @@ namespace OpenMetaverse
         /// Attempt to purchase an original object, a copy, or the contents of
         /// an object
         /// </summary>
-        /// <param name="simulator">A reference to the <seealso cref="OpenMetaverse.Simulator"/> object where the objects reside</param>        
-        /// <param name="localID">The objects ID which is local to the simulator the object is in</param>
+        /// <param name="simulator">The <see cref="Simulator"/> the object is located</param>        
+        /// <param name="localID">The Local ID of the object</param>
         /// <param name="saleType">Whether the original, a copy, or the object
         /// contents are on sale. This is used for verification, if the this
         /// sale type is not valid for the object the purchase will fail</param>
@@ -496,8 +516,8 @@ namespace OpenMetaverse
         /// purchased should be placed</param>
         /// <example>
         /// <code>
-        /// BuyObject(Client.Network.CurrentSim, 500, SaleType.Copy, 
-        /// 100, UUID.Zero, Client.Self.InventoryRootFolderUUID);
+        ///     BuyObject(Client.Network.CurrentSim, 500, SaleType.Copy, 
+        ///         100, UUID.Zero, Client.Self.InventoryRootFolderUUID);
         /// </code> 
         ///</example>
         public void BuyObject(Simulator simulator, uint localID, SaleType saleType, int price, UUID groupID,
@@ -523,27 +543,40 @@ namespace OpenMetaverse
         /// Request prices that should be displayed in pay dialog. This will triggger the simulator
         /// to send us back a PayPriceReply which can be handled by OnPayPriceReply event
         /// </summary>
-        /// <param name="simulator">A reference to the <seealso cref="OpenMetaverse.Simulator"/> object where the object resides</param>
-        /// <param name="objectID"><seealso cref="UUID"/> of the object we are requesting pay price</param>
+        /// <param name="simulator">The <see cref="Simulator"/> the object is located</param>
+        /// <param name="objectID">The ID of the object</param>
+        /// <remarks>The result is raised in the <see cref="PayPriceReply"/> event</remarks>
         public void RequestPayPrice(Simulator simulator, UUID objectID)
         {
             RequestPayPricePacket payPriceRequest = new RequestPayPricePacket();
-
+            
             payPriceRequest.ObjectData = new RequestPayPricePacket.ObjectDataBlock();
             payPriceRequest.ObjectData.ObjectID = objectID;
 
             Client.Network.SendPacket(payPriceRequest, simulator);
         }
 
+        /// <summary>
+        /// Select a single object. This will cause the <see cref="Simulator"/> to send us 
+        /// an <see cref="ObjectPropertiesPacket"/> which will raise the <see cref="ObjectProperties"/> event
+        /// </summary>
+        /// <param name="simulator">The <see cref="Simulator"/> the object is located</param>        
+        /// <param name="localID">The Local ID of the object</param>        
+        /// <seealso cref="ObjectPropertiesFamilyEventArgs"/>
+        public void SelectObject(Simulator simulator, uint localID)
+        {
+            SelectObject(simulator, localID, true);
+        }
 
         /// <summary>
-        /// Select a single object. This will trigger the simulator to send us back 
-        /// an ObjectProperties packet so we can get the full information for
-        /// this object
+        /// Select a single object. This will cause the <see cref="Simulator"/> to send us 
+        /// an <see cref="ObjectPropertiesPacket"/> which will raise the <see cref="ObjectProperties"/> event
         /// </summary>
-        /// <param name="simulator">A reference to the <seealso cref="OpenMetaverse.Simulator"/> object where the object resides</param>
-        /// <param name="localID">The objects ID which is local to the simulator the object is in</param>
-        /// <param name="automaticDeselect">Should objects be deselected immediately after selection</param>
+        /// <param name="simulator">The <see cref="Simulator"/> the object is located</param>
+        /// <param name="localID">The Local ID of the object</param>
+        /// <param name="automaticDeselect">if true, a call to <see cref="DeselectObject"/> is
+        /// made immediately following the request</param>
+        /// <seealso cref="ObjectPropertiesFamilyEventArgs"/>
         public void SelectObject(Simulator simulator, uint localID, bool automaticDeselect)
         {
             ObjectSelectPacket select = new ObjectSelectPacket();
@@ -556,6 +589,7 @@ namespace OpenMetaverse
             select.ObjectData[0].ObjectLocalID = localID;
 
             Client.Network.SendPacket(select, simulator);
+
             if (automaticDeselect)
             {
                 DeselectObject(simulator, localID);
@@ -563,24 +597,13 @@ namespace OpenMetaverse
         }
 
         /// <summary>
-        /// Select a single object. This will trigger the simulator to send us back 
-        /// an ObjectProperties packet so we can get the full information for
-        /// this object
-        /// </summary>
-        /// <param name="simulator">A reference to the <seealso cref="OpenMetaverse.Simulator"/> object where the object resides</param>
-        /// <param name="localID">The objects ID which is local to the simulator the object is in</param>
-        public void SelectObject(Simulator simulator, uint localID)
-        {
-            SelectObject(simulator, localID, true);
-        }
-
-        /// <summary>
-        /// Select multiple objects. This will trigger the simulator to send us
-        /// back ObjectProperties for each object
-        /// </summary>
-        /// <param name="simulator">A reference to the <seealso cref="OpenMetaverse.Simulator"/> object where the objects reside</param>
-        /// <param name="localIDs">An array which contains the IDs of the objects to select</param>
+        /// Select multiple objects. This will cause the <see cref="Simulator"/> to send us 
+        /// an <see cref="ObjectPropertiesPacket"/> which will raise the <see cref="ObjectProperties"/> event
+        /// </summary>        
+        /// <param name="simulator">The <see cref="Simulator"/> the objects are located</param> 
+        /// <param name="localIDs">An array containing the Local IDs of the objects</param>
         /// <param name="automaticDeselect">Should objects be deselected immediately after selection</param>
+        /// <seealso cref="ObjectPropertiesFamilyEventArgs"/>
         public void SelectObjects(Simulator simulator, uint[] localIDs, bool automaticDeselect)
         {
             ObjectSelectPacket select = new ObjectSelectPacket();
@@ -597,6 +620,7 @@ namespace OpenMetaverse
             }
 
             Client.Network.SendPacket(select, simulator);
+
             if (automaticDeselect)
             {
                 DeselectObjects(simulator, localIDs);
@@ -604,26 +628,27 @@ namespace OpenMetaverse
         }
 
         /// <summary>
-        /// Select multiple objects. This will trigger the simulator to send us
-        /// back ObjectProperties for each object
-        /// </summary>
-        /// <param name="simulator">A reference to the <seealso cref="OpenMetaverse.Simulator"/> object where the objects reside</param>
-        /// <param name="localIDs">An array which contains the IDs of the objects to select</param>
+        /// Select multiple objects. This will cause the <see cref="Simulator"/> to send us 
+        /// an <see cref="ObjectPropertiesPacket"/> which will raise the <see cref="ObjectProperties"/> event
+        /// </summary>        
+        /// <param name="simulator">The <see cref="Simulator"/> the objects are located</param> 
+        /// <param name="localIDs">An array containing the Local IDs of the objects</param>
+        /// <seealso cref="ObjectPropertiesFamilyEventArgs"/>
         public void SelectObjects(Simulator simulator, uint[] localIDs)
         {
             SelectObjects(simulator, localIDs, true);
         }
 
-
         /// <summary>
-        /// Sets and object's flags (physical, temporary, phantom, casts shadow)
+        /// Update the properties of an object
         /// </summary>
-        /// <param name="localID"></param>
-        /// <param name="physical"></param>
-        /// <param name="temporary"></param>
-        /// <param name="phantom"></param>
-        /// <param name="castsShadow"></param>
-        public void SetFlags(uint localID, bool physical, bool temporary, bool phantom, bool castsShadow)
+        /// <param name="simulator">The <see cref="Simulator"/> the object is located</param>        
+        /// <param name="localID">The Local ID of the object</param>        
+        /// <param name="physical">true to turn the objects physical property on</param>
+        /// <param name="temporary">true to turn the objects temporary property on</param>
+        /// <param name="phantom">true to turn the objects phantom property on</param>
+        /// <param name="castsShadow">true to turn the objects cast shadows property on</param>
+        public void SetFlags(Simulator simulator, uint localID, bool physical, bool temporary, bool phantom, bool castsShadow)
         {
             ObjectFlagUpdatePacket flags = new ObjectFlagUpdatePacket();
             flags.AgentData.AgentID = Client.Self.AgentID;
@@ -633,17 +658,18 @@ namespace OpenMetaverse
             flags.AgentData.IsTemporary = temporary;
             flags.AgentData.IsPhantom = phantom;
             flags.AgentData.CastsShadows = castsShadow;
-
-            Client.Network.SendPacket(flags);
+            
+            Client.Network.SendPacket(flags, simulator);
         }
 
         /// <summary>
-        /// Sets an object's sale information
+        /// Sets the sale properties of a single object
         /// </summary>
-        /// <param name="localID"></param>
-        /// <param name="saleType"></param>
-        /// <param name="price"></param>
-        public void SetSaleInfo(uint localID, SaleType saleType, int price)
+        /// <param name="simulator">The <see cref="Simulator"/> the object is located</param>        
+        /// <param name="localID">The Local ID of the object</param>        
+        /// <param name="saleType">One of the options from the <see cref="SaleType"/> enum</param>
+        /// <param name="price">The price of the object</param>
+        public void SetSaleInfo(Simulator simulator, uint localID, SaleType saleType, int price)
         {
             ObjectSaleInfoPacket sale = new ObjectSaleInfoPacket();
             sale.AgentData.AgentID = Client.Self.AgentID;
@@ -654,21 +680,23 @@ namespace OpenMetaverse
             sale.ObjectData[0].SalePrice = price;
             sale.ObjectData[0].SaleType = (byte)saleType;
 
-            Client.Network.SendPacket(sale);
+            Client.Network.SendPacket(sale, simulator);
         }
 
         /// <summary>
-        /// Sets sale info for multiple objects
-        /// </summary>
-        /// <param name="localIDs"></param>
-        /// <param name="saleType"></param>
-        /// <param name="price"></param>
-        public void SetSaleInfo(List<uint> localIDs, SaleType saleType, int price)
+        /// Sets the sale properties of multiple objects
+        /// </summary>        
+        /// <param name="simulator">The <see cref="Simulator"/> the objects are located</param> 
+        /// <param name="localIDs">An array containing the Local IDs of the objects</param>
+        /// <param name="saleType">One of the options from the <see cref="SaleType"/> enum</param>
+        /// <param name="price">The price of the object</param>
+        public void SetSaleInfo(Simulator simulator, List<uint> localIDs, SaleType saleType, int price)
         {
             ObjectSaleInfoPacket sale = new ObjectSaleInfoPacket();
             sale.AgentData.AgentID = Client.Self.AgentID;
             sale.AgentData.SessionID = Client.Self.SessionID;
             sale.ObjectData = new ObjectSaleInfoPacket.ObjectDataBlock[localIDs.Count];
+
             for (int i = 0; i < localIDs.Count; i++)
             {
                 sale.ObjectData[i] = new ObjectSaleInfoPacket.ObjectDataBlock();
@@ -677,14 +705,14 @@ namespace OpenMetaverse
                 sale.ObjectData[i].SaleType = (byte)saleType;
             }
 
-            Client.Network.SendPacket(sale);
+            Client.Network.SendPacket(sale, simulator);
         }
 
         /// <summary>
-        /// Deselect an object
+        /// Deselect a single object
         /// </summary>
-        /// <param name="simulator">A reference to the <seealso cref="OpenMetaverse.Simulator"/> object where the object resides</param>
-        /// <param name="localID">The objects ID which is local to the simulator the object is in</param>
+        /// <param name="simulator">The <see cref="Simulator"/> the object is located</param>        
+        /// <param name="localID">The Local ID of the object</param>
         public void DeselectObject(Simulator simulator, uint localID)
         {
             ObjectDeselectPacket deselect = new ObjectDeselectPacket();
@@ -702,8 +730,8 @@ namespace OpenMetaverse
         /// <summary>
         /// Deselect multiple objects.
         /// </summary>
-        /// <param name="simulator">A reference to the <seealso cref="libsecondlife.Simulator"/> object where the objects reside</param>
-        /// <param name="localIDs">An array which contains the IDs of the objects to select</param>
+        /// <param name="simulator">The <see cref="Simulator"/> the objects are located</param> 
+        /// <param name="localIDs">An array containing the Local IDs of the objects</param>
         public void DeselectObjects(Simulator simulator, uint[] localIDs)
         {
             ObjectDeselectPacket deselect = new ObjectDeselectPacket();
@@ -725,18 +753,18 @@ namespace OpenMetaverse
         /// <summary>
         /// Perform a click action on an object
         /// </summary>
-        /// <param name="simulator">A reference to the <seealso cref="OpenMetaverse.Simulator"/> object where the object resides</param>
-        /// <param name="localID">The objects ID which is local to the simulator the object is in</param>
+        /// <param name="simulator">The <see cref="Simulator"/> the object is located</param>        
+        /// <param name="localID">The Local ID of the object</param>
         public void ClickObject(Simulator simulator, uint localID)
         {
             ClickObject(simulator, localID, Vector3.Zero, Vector3.Zero, 0, Vector3.Zero, Vector3.Zero, Vector3.Zero);
         }
 
         /// <summary>
-        /// Perform a click action on an object
+        /// Perform a click action (Grab) on a single object
         /// </summary>
-        /// <param name="simulator">A reference to the <seealso cref="OpenMetaverse.Simulator"/> object where the object resides</param>
-        /// <param name="localID">The objects ID which is local to the simulator the object is in</param>
+        /// <param name="simulator">The <see cref="Simulator"/> the object is located</param>        
+        /// <param name="localID">The Local ID of the object</param>
         /// <param name="uvCoord"></param>
         /// <param name="stCoord"></param>
         /// <param name="faceIndex"></param>
@@ -782,8 +810,8 @@ namespace OpenMetaverse
             Client.Network.SendPacket(degrab, simulator);
         }
 
-                /// <summary>
-        /// Create, or "rez" a new prim object in a simulator
+        /// <summary>
+        /// Create (rez) a new prim object in a simulator
         /// </summary>
         /// <param name="simulator">A reference to the <seealso cref="OpenMetaverse.Simulator"/> object to place the object in</param>
         /// <param name="prim">Data describing the prim object to rez</param>
@@ -805,7 +833,7 @@ namespace OpenMetaverse
         }
 
         /// <summary>
-        /// Create, or "rez" a new prim object in a simulator
+        /// Create (rez) a new prim object in a simulator
         /// </summary>
         /// <param name="simulator">A reference to the <seealso cref="OpenMetaverse.Simulator"/> object to place the object in</param>
         /// <param name="prim">Data describing the prim object to rez</param>
@@ -1059,7 +1087,7 @@ namespace OpenMetaverse
         }
 
         /// <summary>
-        /// Set additional primitive parameters on an object
+        /// Unset additional primitive parameters on an object
         /// </summary>
         /// <param name="simulator">A reference to the <seealso cref="OpenMetaverse.Simulator"/> object where the object resides</param>
         /// <param name="localID">The objects ID which is local to the simulator the object is in</param>
@@ -1096,14 +1124,11 @@ namespace OpenMetaverse
 
             packet.ObjectData = new ObjectLinkPacket.ObjectDataBlock[localIDs.Count];
 
-            int i = 0;
-            foreach (uint localID in localIDs)
+            for (int i = 0; i < localIDs.Count; i++)
             {
                 packet.ObjectData[i] = new ObjectLinkPacket.ObjectDataBlock();
-                packet.ObjectData[i].ObjectLocalID = localID;
-
-                i++;
-            }
+                packet.ObjectData[i].ObjectLocalID = localIDs[i];
+            }            
 
             Client.Network.SendPacket(packet, simulator);
         }
@@ -1255,13 +1280,11 @@ namespace OpenMetaverse
             detach.AgentData.SessionID = Client.Self.SessionID;
             detach.ObjectData = new ObjectDetachPacket.ObjectDataBlock[localIDs.Count];
 
-            int i = 0;
-            foreach (uint localid in localIDs)
+            for (int i = 0; i < localIDs.Count; i++)
             {
                 detach.ObjectData[i] = new ObjectDetachPacket.ObjectDataBlock();
-                detach.ObjectData[i].ObjectLocalID = localid;
-                i++;
-            }
+                detach.ObjectData[i].ObjectLocalID = localIDs[i];
+            }            
 
             Client.Network.SendPacket(detach, simulator);
         }
@@ -1511,21 +1534,22 @@ namespace OpenMetaverse
 
         #region Packet Handlers
 
-        /// <summary>
-        /// Used for new prims, or significant changes to existing prims
-        /// </summary>
-        /// <param name="packet"></param>
-        /// <param name="simulator"></param>
-        protected void UpdateHandler(Packet packet, Simulator simulator)
+        /// <summary>Process an incoming packet and raise the appropriate events</summary>
+        /// <param name="sender">The sender</param>
+        /// <param name="e">The EventArgs object containing the packet data</param>
+        protected void ObjectUpdateHandler(object sender, PacketReceivedEventArgs e)
         {
+            Packet packet = e.Packet;
+            Simulator simulator = e.Simulator;
+
             ObjectUpdatePacket update = (ObjectUpdatePacket)packet;
-            UpdateDilation(simulator, update.RegionData.TimeDilation);
+            UpdateDilation(e.Simulator, update.RegionData.TimeDilation);
             
             for (int b = 0; b < update.ObjectData.Length; b++)
             {
                 ObjectUpdatePacket.ObjectDataBlock block = update.ObjectData[b];
 
-                ObjectUpdate objectupdate = new ObjectUpdate();
+                ObjectMovementUpdate objectupdate = new ObjectMovementUpdate();
                 //Vector4 collisionPlane = Vector4.Zero;
                 //Vector3 position;
                 //Vector3 velocity;
@@ -1547,11 +1571,11 @@ namespace OpenMetaverse
                         case PCode.Tree:
                         case PCode.NewTree:
                         case PCode.Prim:
-                            if (OnNewPrim == null) continue;
+                            if (m_ObjectUpdate == null) continue;
                             break;
                         case PCode.Avatar:
                             // Make an exception for updates about our own agent
-                            if (block.FullID != Client.Self.AgentID && OnNewAvatar == null) continue;
+                            if (block.FullID != Client.Self.AgentID && m_AvatarUpdate == null) continue;
                             break;
                         case PCode.ParticleSystem:
                             continue; // TODO: Do something with these
@@ -1737,7 +1761,8 @@ namespace OpenMetaverse
                         // Textures
                         objectupdate.Textures = new Primitive.TextureEntry(block.TextureEntry, 0,
                             block.TextureEntry.Length);
-                        FireOnObjectDataBlockUpdate(simulator, prim, data , block , objectupdate, nameValues);
+                                                
+                        OnObjectDataBlockUpdate(new ObjectDataBlockUpdateEventArgs(simulator, prim, data, block, objectupdate, nameValues));
 
                         #region Update Prim Info with decoded data
                         prim.Flags = (PrimFlags)block.UpdateFlags;
@@ -1816,12 +1841,7 @@ namespace OpenMetaverse
                         prim.AngularVelocity = objectupdate.AngularVelocity;
                         #endregion
 
-                        if (attachment)
-                            FireOnNewAttachment(simulator, prim, update.RegionData.RegionHandle,
-                                update.RegionData.TimeDilation);
-                        else
-                            FireOnNewPrim(simulator, prim, update.RegionData.RegionHandle,
-                                update.RegionData.TimeDilation);
+                        OnObjectUpdate(new PrimEventArgs(simulator, prim, update.RegionData.TimeDilation, attachment));                        
 
                         break;
                     #endregion Prim and Foliage
@@ -1855,7 +1875,7 @@ namespace OpenMetaverse
                         objectupdate.Textures = new Primitive.TextureEntry(block.TextureEntry, 0,                 
                             block.TextureEntry.Length);
 
-                        FireOnObjectDataBlockUpdate(simulator, avatar, data, block, objectupdate, nameValues);
+                        OnObjectDataBlockUpdate(new ObjectDataBlockUpdateEventArgs(simulator, avatar, data, block, objectupdate, nameValues));
 
                         uint oldSeatID = avatar.ParentID;
 
@@ -1869,7 +1889,10 @@ namespace OpenMetaverse
                         avatar.AngularVelocity = objectupdate.AngularVelocity;
                         avatar.NameValues = nameValues;
                         avatar.PrimData = data;
-                        if (block.Data.Length > 0) Logger.Log("Unexpected Data field for an avatar update, length " + block.Data.Length, Helpers.LogLevel.Warning);
+                        if (block.Data.Length > 0)
+                        {
+                            Logger.Log("Unexpected Data field for an avatar update, length " + block.Data.Length, Helpers.LogLevel.Warning);
+                        }
                         avatar.ParentID = block.ParentID;
                         avatar.RegionHandle = update.RegionData.RegionHandle;
 
@@ -1880,8 +1903,7 @@ namespace OpenMetaverse
 
                         #endregion Create an Avatar from the decoded data
 
-                        FireOnNewAvatar(simulator, avatar, update.RegionData.RegionHandle,
-                            update.RegionData.TimeDilation);
+                        OnAvatarUpdate(new AvatarUpdateEventArgs(simulator, avatar, update.RegionData.TimeDilation));
 
                         break;
                     #endregion Avatar
@@ -1943,10 +1965,13 @@ namespace OpenMetaverse
         /// velocity/acceleration for an object changes but nothing else
         /// (scale/position/rotation/acceleration/velocity)
         /// </summary>
-        /// <param name="packet"></param>
-        /// <param name="simulator"></param>
-        protected void TerseUpdateHandler(Packet packet, Simulator simulator)
+        /// <param name="sender">The sender</param>
+        /// <param name="e">The EventArgs object containing the packet data</param>
+        protected void ImprovedTerseObjectUpdateHandler(object sender, PacketReceivedEventArgs e)
         {
+            Packet packet = e.Packet;
+            Simulator simulator = e.Simulator;
+
             ImprovedTerseObjectUpdatePacket terse = (ImprovedTerseObjectUpdatePacket)packet;
             UpdateDilation(simulator, terse.RegionData.TimeDilation);
 
@@ -1960,12 +1985,16 @@ namespace OpenMetaverse
                     uint localid = Utils.BytesToUInt(block.Data, 0);
 
                     // Check if we are interested in this update
-                    if (!Client.Settings.ALWAYS_DECODE_OBJECTS && localid != Client.Self.localID && OnObjectUpdated == null && OnObjectTerseUpdate == null)
+                    if (!Client.Settings.ALWAYS_DECODE_OBJECTS
+                        && localid != Client.Self.localID
+                        && m_TerseObjectUpdate == null)
+                    {
                         continue;
+                    }
 
                     #region Decode update data
 
-                    ObjectUpdate update = new ObjectUpdate();
+                    ObjectMovementUpdate update = new ObjectMovementUpdate();
 
                     // LocalID
                     update.LocalID = localid;
@@ -2015,12 +2044,12 @@ namespace OpenMetaverse
 
                     #endregion Decode update data
 
-                    Primitive obj = (update.Avatar) ?
+                    Primitive obj = !Client.Settings.OBJECT_TRACKING ? null : (update.Avatar) ?
                         (Primitive)GetAvatar(simulator, update.LocalID, UUID.Zero) :
                         (Primitive)GetPrimitive(simulator, update.LocalID, UUID.Zero);
 
                     // Fire the pre-emptive notice (before we stomp the object)
-                    FireOnObjectTerseUpdate(simulator, obj, update, terse.RegionData.RegionHandle, terse.RegionData.TimeDilation);
+                    OnTerseObjectUpdate(new TerseObjectUpdateEventArgs(simulator, obj, update, terse.RegionData.TimeDilation));
 
                     #region Update Client.Self
                     if (update.LocalID == Client.Self.localID)
@@ -2032,34 +2061,36 @@ namespace OpenMetaverse
                         Client.Self.relativeRotation = update.Rotation;
                         Client.Self.angularVelocity = update.AngularVelocity;
                     }
-                    #endregion Update Client.Self
-
-                    obj.Acceleration = update.Acceleration;
-                    obj.AngularVelocity = update.AngularVelocity;
-                    obj.CollisionPlane = update.CollisionPlane;
-                    obj.Position = update.Position;
-                    obj.Rotation = update.Rotation;
-                    obj.Velocity = update.Velocity;
-                    if (update.Textures != null)
+                    #endregion Update Client.Self                   
+                    #region Update Client.Self
+                    if (Client.Settings.OBJECT_TRACKING && obj != null)
+                    {
+                        obj.Position = update.Position;
+                        obj.Rotation = update.Rotation;
+                        obj.Velocity = update.Velocity;
+                        obj.CollisionPlane = update.CollisionPlane;
+                        obj.Acceleration = update.Acceleration;
+                        obj.AngularVelocity = update.AngularVelocity;
+                        obj.PrimData.State = update.State;
                         obj.Textures = update.Textures;
-
-                    // Fire the callback
-                    FireOnObjectUpdated(simulator, update, terse.RegionData.RegionHandle, terse.RegionData.TimeDilation);
+                    }
+                    #endregion
                 }
-                catch (Exception e)
+                catch (Exception ex)
                 {
-                    Logger.Log(e.Message, Helpers.LogLevel.Warning, Client, e);
+                    Logger.Log(ex.Message, Helpers.LogLevel.Warning, Client, ex);
                 }
             }
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="packet"></param>
-        /// <param name="simulator"></param>
-        protected void CompressedUpdateHandler(Packet packet, Simulator simulator)
+        /// <summary>Process an incoming packet and raise the appropriate events</summary>
+        /// <param name="sender">The sender</param>
+        /// <param name="e">The EventArgs object containing the packet data</param>
+        protected void ObjectUpdateCompressedHandler(object sender, PacketReceivedEventArgs e)
         {
+            Packet packet = e.Packet;
+            Simulator simulator = e.Simulator;
+
             ObjectUpdateCompressedPacket update = (ObjectUpdateCompressedPacket)packet;
 
             for (int b = 0; b < update.ObjectData.Length; b++)
@@ -2088,7 +2119,7 @@ namespace OpenMetaverse
                             case PCode.Tree:
                             case PCode.NewTree:
                             case PCode.Prim:
-                                if (OnNewPrim == null) continue;
+                                if (m_ObjectUpdate == null) continue;
                                 break;
                         }
                     }
@@ -2292,35 +2323,37 @@ namespace OpenMetaverse
 
                     #endregion
 
-                    #region Fire Events
+                    #region Raise Events
 
-                    // Fire the appropriate callback
                     if ((flags & CompressedFlags.HasNameValues) != 0 && prim.ParentID != 0)
-                        FireOnNewAttachment(simulator, prim, update.RegionData.RegionHandle,
-                            update.RegionData.TimeDilation);
+                    {
+                        OnObjectUpdate(new PrimEventArgs(simulator, prim, update.RegionData.TimeDilation, true));
+                    }
                     else
-                        FireOnNewPrim(simulator, prim, update.RegionData.RegionHandle,
-                            update.RegionData.TimeDilation);
+                    {
+                        OnObjectUpdate(new PrimEventArgs(simulator, prim, update.RegionData.TimeDilation, false));
+                    }
 
                     #endregion
                 }
-                catch (IndexOutOfRangeException e)
+                catch (IndexOutOfRangeException ex)
                 {
-                    Logger.Log("Error decoding an ObjectUpdateCompressed packet", Helpers.LogLevel.Warning, Client, e);
+                    Logger.Log("Error decoding an ObjectUpdateCompressed packet", Helpers.LogLevel.Warning, Client, ex);
                     Logger.Log(block, Helpers.LogLevel.Warning);
                 }
             }
         }
 
-        /// <summary>
-        /// Handles cached object update packets from the simulator
-        /// </summary>
-        /// <param name="packet">The packet containing the object data</param>
-        /// <param name="simulator">The simulator sending the data</param>
-        protected void CachedUpdateHandler(Packet packet, Simulator simulator)
+        /// <summary>Process an incoming packet and raise the appropriate events</summary>
+        /// <param name="sender">The sender</param>
+        /// <param name="e">The EventArgs object containing the packet data</param>
+        protected void ObjectUpdateCachedHandler(object sender, PacketReceivedEventArgs e)
         {
             if (Client.Settings.ALWAYS_REQUEST_OBJECTS)
             {
+                Packet packet = e.Packet;
+                Simulator simulator = e.Simulator;
+
                 ObjectUpdateCachedPacket update = (ObjectUpdateCachedPacket)packet;
                 List<uint> ids = new List<uint>(update.ObjectData.Length);
 
@@ -2334,19 +2367,23 @@ namespace OpenMetaverse
             }
         }
 
-        /// <summary>
-        /// Handle KillObject packets from the simulator
-        /// </summary>
-        /// <param name="packet">The packet containing the object data</param>
-        /// <param name="simulator">The simulator sending the data</param>
-        protected void KillObjectHandler(Packet packet, Simulator simulator)
+        /// <summary>Process an incoming packet and raise the appropriate events</summary>
+        /// <param name="sender">The sender</param>
+        /// <param name="e">The EventArgs object containing the packet data</param>
+        protected void KillObjectHandler(object sender, PacketReceivedEventArgs e)
         {
+            Packet packet = e.Packet;
+            Simulator simulator = e.Simulator;
+
             KillObjectPacket kill = (KillObjectPacket)packet;
 
             // Notify first, so that handler has a chance to get a
             // reference from the ObjectTracker to the object being killed
             for (int i = 0; i < kill.ObjectData.Length; i++)
-                FireOnObjectKilled(simulator, kill.ObjectData[i].ID);
+            {
+                OnKillObject(new KillObjectEventArgs(simulator, kill.ObjectData[i].ID));
+            }
+                
 
             lock (simulator.ObjectsPrimitives.Dictionary)
             {
@@ -2367,7 +2404,7 @@ namespace OpenMetaverse
                         {
                             if (prim.Value.ParentID == localID)
                             {
-                                FireOnObjectKilled(simulator, prim.Key);
+                                OnKillObject(new KillObjectEventArgs(simulator, prim.Key));                                
                                 removePrims.Add(prim.Key);
                             }
                         }
@@ -2392,7 +2429,7 @@ namespace OpenMetaverse
                             {
                                 if (prim.Value.ParentID == localID)
                                 {
-                                    FireOnObjectKilled(simulator, prim.Key);
+                                    OnKillObject(new KillObjectEventArgs(simulator, prim.Key));                                    
                                     removePrims.Add(prim.Key);
                                     rootPrims.Add(prim.Key);
                                 }
@@ -2402,7 +2439,7 @@ namespace OpenMetaverse
                             {
                                 if (rootPrims.Contains(prim.Value.ParentID))
                                 {
-                                    FireOnObjectKilled(simulator, prim.Key);
+                                    OnKillObject(new KillObjectEventArgs(simulator, prim.Key));                                    
                                     removePrims.Add(prim.Key);
                                 }
                             }
@@ -2420,9 +2457,15 @@ namespace OpenMetaverse
             }
         }
 
-        protected void ObjectPropertiesHandler(Packet p, Simulator sim)
+        /// <summary>Process an incoming packet and raise the appropriate events</summary>
+        /// <param name="sender">The sender</param>
+        /// <param name="e">The EventArgs object containing the packet data</param>
+        protected void ObjectPropertiesHandler(object sender, PacketReceivedEventArgs e)
         {
-            ObjectPropertiesPacket op = (ObjectPropertiesPacket)p;
+            Packet packet = e.Packet;
+            Simulator simulator = e.Simulator;
+
+            ObjectPropertiesPacket op = (ObjectPropertiesPacket)packet;
             ObjectPropertiesPacket.ObjectDataBlock[] datablocks = op.ObjectData;
 
             for (int i = 0; i < datablocks.Length; ++i)
@@ -2436,7 +2479,7 @@ namespace OpenMetaverse
                 props.AggregatePermTexturesOwner = objectData.AggregatePermTexturesOwner;
                 props.Permissions = new Permissions(objectData.BaseMask, objectData.EveryoneMask, objectData.GroupMask,
                     objectData.NextOwnerMask, objectData.OwnerMask);
-                props.Category = (ObjectCategory)objectData.Category;
+                props.Category = (ObjectCategory)objectData.Category;                                    
                 props.CreationDate = Utils.UnixTimeToDateTime((uint)objectData.CreationDate);
                 props.CreatorID = objectData.CreatorID;
                 props.Description = Utils.BytesToString(objectData.Description);
@@ -2461,27 +2504,34 @@ namespace OpenMetaverse
 
                 if (Client.Settings.OBJECT_TRACKING)
                 {
-                    Primitive findPrim = sim.ObjectsPrimitives.Find(
+                    Primitive findPrim = simulator.ObjectsPrimitives.Find(
                         delegate(Primitive prim) { return prim.ID == props.ObjectID; });
 
                     if (findPrim != null)
                     {
-                        FireOnObjectPropertiesUpdated(sim,findPrim,props);
-                        lock (sim.ObjectsPrimitives.Dictionary)
+                        OnObjectPropertiesUpdated(new ObjectPropertiesUpdatedEventArgs(simulator, findPrim, props));
+
+                        lock (simulator.ObjectsPrimitives.Dictionary)
                         {
-                            if (sim.ObjectsPrimitives.Dictionary.ContainsKey(findPrim.LocalID))
-                                sim.ObjectsPrimitives.Dictionary[findPrim.LocalID].Properties = props;
+                            if (simulator.ObjectsPrimitives.Dictionary.ContainsKey(findPrim.LocalID))
+                                simulator.ObjectsPrimitives.Dictionary[findPrim.LocalID].Properties = props;
                         }
                     }
                 }
 
-                FireOnObjectProperties(sim, props);
+                OnObjectProperties(new ObjectPropertiesEventArgs(simulator, props));
             }
         }
 
-        protected void ObjectPropertiesFamilyHandler(Packet p, Simulator sim)
+        /// <summary>Process an incoming packet and raise the appropriate events</summary>
+        /// <param name="sender">The sender</param>
+        /// <param name="e">The EventArgs object containing the packet data</param>
+        protected void ObjectPropertiesFamilyHandler(object sender, PacketReceivedEventArgs e)
         {
-            ObjectPropertiesFamilyPacket op = (ObjectPropertiesFamilyPacket)p;
+            Packet packet = e.Packet;
+            Simulator simulator = e.Simulator;
+
+            ObjectPropertiesFamilyPacket op = (ObjectPropertiesFamilyPacket)packet;
             Primitive.ObjectProperties props = new Primitive.ObjectProperties();
 
             ReportType requestType = (ReportType)op.ObjectData.RequestFlags;
@@ -2504,30 +2554,36 @@ namespace OpenMetaverse
 
             if (Client.Settings.OBJECT_TRACKING)
             {
-                Primitive findPrim = sim.ObjectsPrimitives.Find(
+                Primitive findPrim = simulator.ObjectsPrimitives.Find(
                         delegate(Primitive prim) { return prim.ID == op.ObjectData.ObjectID; });
 
                 if (findPrim != null)
                 {
-                    lock (sim.ObjectsPrimitives.Dictionary)
+                    lock (simulator.ObjectsPrimitives.Dictionary)
                     {
-                        if (sim.ObjectsPrimitives.Dictionary.ContainsKey(findPrim.LocalID))
+                        if (simulator.ObjectsPrimitives.Dictionary.ContainsKey(findPrim.LocalID))
                         {
-                            if (sim.ObjectsPrimitives.Dictionary[findPrim.LocalID].Properties == null)
-                                sim.ObjectsPrimitives.Dictionary[findPrim.LocalID].Properties = new Primitive.ObjectProperties();
-                            sim.ObjectsPrimitives.Dictionary[findPrim.LocalID].Properties.SetFamilyProperties(props);
+                            if (simulator.ObjectsPrimitives.Dictionary[findPrim.LocalID].Properties == null)
+                                simulator.ObjectsPrimitives.Dictionary[findPrim.LocalID].Properties = new Primitive.ObjectProperties();
+                            simulator.ObjectsPrimitives.Dictionary[findPrim.LocalID].Properties.SetFamilyProperties(props);
                         }
                     }
                 }
             }
 
-            FireOnObjectPropertiesFamily(sim, props, requestType);
+            OnObjectPropertiesFamily(new ObjectPropertiesFamilyEventArgs(simulator, props, requestType));
         }
 
-        protected void PayPriceReplyHandler(Packet packet, Simulator sim)
+        /// <summary>Process an incoming packet and raise the appropriate events</summary>
+        /// <param name="sender">The sender</param>
+        /// <param name="e">The EventArgs object containing the packet data</param>
+        protected void PayPriceReplyHandler(object sender, PacketReceivedEventArgs e)
         {
-            if (OnPayPriceReply != null)
+            if (m_PayPriceReply != null)
             {
+                Packet packet = e.Packet;
+                Simulator simulator = e.Simulator;
+
                 PayPriceReplyPacket p = (PayPriceReplyPacket)packet;
                 UUID objectID = p.ObjectData.ObjectID;
                 int defaultPrice = p.ObjectData.DefaultPayPrice;
@@ -2538,8 +2594,7 @@ namespace OpenMetaverse
                     buttonPrices[i] = p.ButtonData[i].PayButton;
                 }
 
-                try { OnPayPriceReply(sim, objectID, defaultPrice, buttonPrices); }
-                catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
+                OnPayPriceReply(new PayPriceReplyEventArgs(simulator, objectID, defaultPrice, buttonPrices));
             }
         }
 
@@ -2645,12 +2700,11 @@ namespace OpenMetaverse
             }
             
             av.ParentID = localid;
+            
 
-
-            if (OnAvatarSitChanged != null && oldSeatID != localid)
+            if (m_AvatarSitChanged != null && oldSeatID != localid)
             {
-                try { OnAvatarSitChanged(sim, av, localid, oldSeatID); }
-                catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
+                OnAvatarSitChanged(new AvatarSitChangedEventArgs(sim, av, localid, oldSeatID));
             }
         }
 
@@ -2730,102 +2784,7 @@ namespace OpenMetaverse
 
 
         #endregion Utility Functions
-
-        #region Event Notification
-
-        protected void FireOnObjectDataBlockUpdate(Simulator simulator, Primitive primitive, Primitive.ConstructionData data, ObjectUpdatePacket.ObjectDataBlock block, ObjectUpdate objectupdate, NameValue[] nameValue)
-        {
-            if (OnObjectDataBlockUpdate != null)
-            {
-                try { OnObjectDataBlockUpdate(simulator, primitive, data, block, objectupdate, nameValue); }
-                catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
-            }
-        }
-
-        protected void FireOnObjectProperties(Simulator sim, Primitive.ObjectProperties props)
-        {
-            if (OnObjectProperties != null)
-            {
-                try { OnObjectProperties(sim, props); }
-                catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
-            }
-        }
-
-
-        protected void FireOnObjectPropertiesUpdated(Simulator sim,Primitive prim, Primitive.ObjectProperties props)
-        {
-            if (OnObjectPropertiesUpdated != null)
-            {
-                try { OnObjectPropertiesUpdated(sim,prim, props); }
-                catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
-            }
-        }
-
-        protected void FireOnObjectPropertiesFamily(Simulator sim, Primitive.ObjectProperties props,
-            ReportType type)
-        {
-            if (OnObjectPropertiesFamily != null)
-            {
-                try { OnObjectPropertiesFamily(sim, props, type); }
-                catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
-            }
-        }
-
-        protected void FireOnObjectKilled(Simulator simulator, uint localid)
-        {
-            if (OnObjectKilled != null)
-            {
-                try { OnObjectKilled(simulator, localid); }
-                catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
-            }
-        }
-
-        protected void FireOnNewPrim(Simulator simulator, Primitive prim, ulong RegionHandle, ushort TimeDilation)
-        {
-            if (OnNewPrim != null)
-            {
-                try { OnNewPrim(simulator, prim, RegionHandle, TimeDilation); }
-                catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
-            }
-        }
-
-        protected void FireOnNewAttachment(Simulator simulator, Primitive prim, ulong RegionHandle, ushort TimeDilation)
-        {
-            if (OnNewAttachment != null)
-            {
-                try { OnNewAttachment(simulator, prim, RegionHandle, TimeDilation); }
-                catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
-            }
-        }
-
-        protected void FireOnNewAvatar(Simulator simulator, Avatar avatar, ulong RegionHandle, ushort TimeDilation)
-        {
-            if (OnNewAvatar != null)
-            {
-                try { OnNewAvatar(simulator, avatar, RegionHandle, TimeDilation); }
-                catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
-            }
-        }
-
-        protected void FireOnObjectUpdated(Simulator simulator, ObjectUpdate update, ulong RegionHandle, ushort TimeDilation)
-        {
-            if (OnObjectUpdated != null)
-            {
-                try { OnObjectUpdated(simulator, update, RegionHandle, TimeDilation); }
-                catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
-            }
-        }
-
-        protected void FireOnObjectTerseUpdate(Simulator simulator, Primitive prim, ObjectUpdate update, ulong RegionHandle, ushort TimeDilation)
-        {
-            if (OnObjectTerseUpdate != null)
-            {
-                try { OnObjectTerseUpdate(simulator, prim, update, RegionHandle,TimeDilation); }
-                catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
-            }
-        }
-        #endregion
-
+        
         #region Object Tracking Link
 
         /// <summary>
@@ -3002,8 +2961,396 @@ namespace OpenMetaverse
             int delay = Math.Max(50, Settings.INTERPOLATION_INTERVAL - elapsed);
             if (InterpolationTimer != null)
             {
-            InterpolationTimer.Change(delay, Timeout.Infinite);
+                InterpolationTimer.Change(delay, Timeout.Infinite);
             }
+            
+        }                        
+    }
+    #region EventArgs classes
+    
+    /// <summary>Provides data for the <see cref="ObjectManager.ObjectUpdate"/> event</summary>
+    /// <remarks><para>The <see cref="ObjectManager.ObjectUpdate"/> event occurs when the simulator sends
+    /// an <see cref="ObjectUpdatePacket"/> containing a Primitive, Foliage or Attachment data</para>
+    /// <para>Note 1: The <see cref="ObjectManager.ObjectUpdate"/> event will not be raised when the object is an Avatar</para>
+    /// <para>Note 2: It is possible for the <see cref="ObjectManager.ObjectUpdate"/> or <see cref="ObjectManager.AttachmentUpdate"/> to be 
+    /// raised twice for the same object if for example the primitive moved to a new simulator, then returned to the current simulator or
+    /// if an Avatar crosses the border into a new simulator and returns to the current simulator</para>
+    /// </remarks>
+    /// <example>
+    /// The following code example uses the <see cref="PrimEventArgs.Prim"/>, <see cref="PrimEventArgs.Simulator"/>, and <see cref="PrimEventArgs.IsAttachment"/>
+    /// properties to display new Primitives and Attachments on the <see cref="Console"/> window.
+    /// <code>
+    ///     // Subscribe to the event that gives us new prims and foliage
+    ///     Client.Objects.ObjectUpdate += Objects_ObjectUpdate;
+    ///     
+    ///
+    ///     private void Objects_ObjectUpdate(object sender, PrimEventArgs e)
+    ///     {
+    ///         Console.WriteLine("Primitive {0} {1} in {2} is an attachment {3}", e.Prim.ID, e.Prim.LocalID, e.Simulator.Name, e.IsAttachment);
+    ///     }
+    /// </code>
+    /// </example>
+    /// <seealso cref="ObjectManager.AvatarUpdate"/>
+    /// <seealso cref="AvatarUpdateEventArgs"/>
+    public class PrimEventArgs : EventArgs
+    {
+        private readonly Simulator m_Simulator;
+        private readonly bool m_IsAttachment;
+        private readonly Primitive m_Prim;
+        private readonly ushort m_TimeDilation;
+
+        /// <summary>Get the simulator the object originated from</summary>
+        public Simulator Simulator { get { return m_Simulator; } }
+        /// <summary>Get the primitive details</summary>
+        public Primitive Prim { get { return m_Prim; } }
+        public bool IsAttachment { get { return m_IsAttachment; } }
+        /// <summary>Get the simulator Time Dilation</summary>
+        public ushort TimeDilation { get { return m_TimeDilation; } } 
+
+        /// <summary>
+        /// Construct a new instance of the PrimEventArgs class
+        /// </summary>
+        /// <param name="simulator">The simulator the object originated from</param>
+        /// <param name="prim">The Primitive</param>
+        /// <param name="isAttachment">true of the primitive represents an attachment to an agent</param>
+        /// <param name="timeDilation">The simulator time dilation</param>
+        public PrimEventArgs(Simulator simulator, Primitive prim, ushort timeDilation, bool isAttachment)
+        {
+            this.m_Simulator = simulator;
+            this.m_IsAttachment = IsAttachment;
+            this.m_Prim = prim;
+            this.m_TimeDilation = timeDilation;
         }
     }
+
+    /// <summary>Provides data for the <see cref="ObjectManager.AvatarUpdate"/> event</summary>
+    /// <remarks><para>The <see cref="ObjectManager.AvatarUpdate"/> event occurs when the simulator sends
+    /// an <see cref="ObjectUpdatePacket"/> containing Avatar data</para>    
+    /// <para>Note 1: The <see cref="ObjectManager.AvatarUpdate"/> event will not be raised when the object is an Avatar</para>
+    /// <para>Note 2: It is possible for the <see cref="ObjectManager.AvatarUpdate"/> to be 
+    /// raised twice for the same avatar if for example the avatar moved to a new simulator, then returned to the current simulator</para>
+    /// </remarks>
+    /// <example>
+    /// The following code example uses the <see cref="AvatarUpdateEventArgs.Avatar"/> property to make a request for the top picks
+    /// using the <see cref="AvatarManager.RequestAvatarPicks"/> method in the <see cref="AvatarManager"/> class to display the names
+    /// of our own agents picks listings on the <see cref="Console"/> window.
+    /// <code>
+    ///     // subscribe to the AvatarUpdate event to get our information
+    ///     Client.Objects.AvatarUpdate += Objects_AvatarUpdate;
+    ///     Client.Avatars.AvatarPicksReply += Avatars_AvatarPicksReply;
+    ///     
+    ///     private void Objects_AvatarUpdate(object sender, AvatarUpdateEventArgs e)
+    ///     {
+    ///         // we only want our own data
+    ///         if (e.Avatar.LocalID == Client.Self.LocalID)
+    ///         {    
+    ///             // Unsubscribe from the avatar update event to prevent a loop
+    ///             // where we continually request the picks every time we get an update for ourselves
+    ///             Client.Objects.AvatarUpdate -= Objects_AvatarUpdate;
+    ///             // make the top picks request through AvatarManager
+    ///             Client.Avatars.RequestAvatarPicks(e.Avatar.ID);
+    ///         }
+    ///     }
+    ///
+    ///     private void Avatars_AvatarPicksReply(object sender, AvatarPicksReplyEventArgs e)
+    ///     {
+    ///         // we'll unsubscribe from the AvatarPicksReply event since we now have the data 
+    ///         // we were looking for
+    ///         Client.Avatars.AvatarPicksReply -= Avatars_AvatarPicksReply;
+    ///         // loop through the dictionary and extract the names of the top picks from our profile
+    ///         foreach (var pickName in e.Picks.Values)
+    ///         {
+    ///             Console.WriteLine(pickName);
+    ///         }
+    ///     }
+    /// </code>
+    /// </example>
+    /// <seealso cref="ObjectManager.AttachmentUpdate"/>
+    /// <seealso cref="ObjectManager.ObjectUpdate"/>
+    /// <seealso cref="PrimEventArgs"/>
+    public class AvatarUpdateEventArgs : EventArgs
+    {
+        private readonly Simulator m_Simulator;
+        private readonly Avatar m_Avatar;
+        private readonly ushort m_TimeDilation;
+
+        /// <summary>Get the simulator the object originated from</summary>
+        public Simulator Simulator { get { return m_Simulator; } }
+        /// <summary>Get the <see cref="Avatar"/> data</summary>
+        public Avatar Avatar { get { return m_Avatar; } }
+        /// <summary>Get the simulator time dilation</summary>
+        public ushort TimeDilation { get { return m_TimeDilation; } }
+
+        /// <summary>
+        /// Construct a new instance of the AvatarUpdateEventArgs class
+        /// </summary>
+        /// <param name="simulator">The simulator the packet originated from</param>
+        /// <param name="avatar">The <see cref="Avatar"/> data</param>
+        /// <param name="timeDilation">The simulator time dilation</param>
+        public AvatarUpdateEventArgs(Simulator simulator, Avatar avatar, ushort timeDilation)
+        {
+            this.m_Simulator = simulator;
+            this.m_Avatar = avatar;
+            this.m_TimeDilation = timeDilation;
+        }
+    }
+
+    /// <summary>Provides additional primitive data for the <see cref="ObjectManager.ObjectProperties"/> event</summary>
+    /// <remarks><para>The <see cref="ObjectManager.ObjectProperties"/> event occurs when the simulator sends
+    /// an <see cref="ObjectPropertiesPacket"/> containing additional details for a Primitive, Foliage data or Attachment data</para>
+    /// <para>The <see cref="ObjectManager.ObjectProperties"/> event is also raised when a <see cref="ObjectManager.SelectObject"/> request is
+    /// made.</para>
+    /// </remarks>
+    /// <example>
+    /// The following code example uses the <see cref="PrimEventArgs.Prim"/>, <see cref="PrimEventArgs.Simulator"/> and
+    /// <see cref="ObjectPropertiesEventArgs.Properties"/>
+    /// properties to display new attachments and send a request for additional properties containing the name of the
+    /// attachment then display it on the <see cref="Console"/> window.
+    /// <code>
+    ///     // Subscribe to the event that gives us new Attachments worn
+    ///     // by yours or another agent
+    ///     Client.Objects.AttachmentUpdate += Objects_AttachmentUpdate;
+    ///     // Subscribe to the event that provides additional primitive details
+    ///     Client.Objects.ObjectProperties += Objects_ObjectProperties;
+    ///      
+    ///     private void Objects_AttachmentUpdate(object sender, PrimEventArgs e)
+    ///     {
+    ///         Console.WriteLine("New Attachment {0} {1} in {2}", e.Prim.ID, e.Prim.LocalID, e.Simulator.Name);
+    ///         // send a request that causes the simulator to send us back the ObjectProperties
+    ///         Client.Objects.SelectObject(e.Simulator, e.Prim.LocalID);
+    ///         
+    ///     }
+    ///     
+    ///     // handle the properties data that arrives
+    ///     private void Objects_ObjectProperties(object sender, ObjectPropertiesEventArgs e)
+    ///     {
+    ///         Console.WriteLine("Primitive Properties: {0} Name is {1}", e.Properties.ObjectID, e.Properties.Name);
+    ///     }   
+    /// </code>
+    /// </example>
+    public class ObjectPropertiesEventArgs : EventArgs
+    {
+        private readonly Simulator m_Simulator;
+        private readonly Primitive.ObjectProperties m_Properties;
+
+        /// <summary>Get the simulator the object is located</summary>
+        public Simulator Simulator { get { return m_Simulator; } }
+        /// <summary>Get the primitive properties</summary>
+        public Primitive.ObjectProperties Properties { get { return m_Properties; } }
+
+        /// <summary>
+        /// Construct a new instance of the ObjectPropertiesEventArgs class
+        /// </summary>
+        /// <param name="simulator">The simulator the object is located</param>
+        /// <param name="props">The primitive Properties</param>
+        public ObjectPropertiesEventArgs(Simulator simulator, Primitive.ObjectProperties props)
+        {
+            this.m_Simulator = simulator;
+            this.m_Properties = props;
+        }
+    }
+
+    /// <summary>Provides additional primitive data for the <see cref="ObjectManager.ObjectPropertiesUpdated"/> event</summary>
+    /// <remarks><para>The <see cref="ObjectManager.ObjectPropertiesUpdated"/> event occurs when the simulator sends
+    /// an <see cref="ObjectPropertiesPacket"/> containing additional details for a Primitive or Foliage data that is currently
+    /// being tracked in the <see cref="Simulator.ObjectsPrimitives"/> dictionary</para>
+    /// <para>The <see cref="ObjectManager.ObjectPropertiesUpdated"/> event is also raised when a <see cref="ObjectManager.SelectObject"/> request is
+    /// made and <see cref="Settings.OBJECT_TRACKING"/> is enabled</para>    
+    /// </remarks>    
+    public class ObjectPropertiesUpdatedEventArgs : EventArgs
+    {
+
+        private readonly Simulator m_Simulator;
+        private readonly Primitive m_Prim;
+        private readonly Primitive.ObjectProperties m_Properties;
+                
+        /// <summary>Get the simulator the object is located</summary>
+        public Simulator Simulator { get { return m_Simulator; } }
+        /// <summary>Get the primitive details</summary>
+        public Primitive Prim { get { return m_Prim; } }
+        /// <summary>Get the primitive properties</summary>
+        public Primitive.ObjectProperties Properties { get { return m_Properties; } }
+
+        /// <summary>
+        /// Construct a new instance of the ObjectPropertiesUpdatedEvenrArgs class
+        /// </summary>                
+        /// <param name="simulator">The simulator the object is located</param>
+        /// <param name="prim">The Primitive</param>
+        /// <param name="props">The primitive Properties</param>
+        public ObjectPropertiesUpdatedEventArgs(Simulator simulator, Primitive prim, Primitive.ObjectProperties props)
+        {
+            this.m_Simulator = simulator;
+            this.m_Prim = prim;
+            this.m_Properties = props;
+        }
+    }
+
+    /// <summary>Provides additional primitive data, permissions and sale info for the <see cref="ObjectManager.ObjectPropertiesFamily"/> event</summary>
+    /// <remarks><para>The <see cref="ObjectManager.ObjectPropertiesFamily"/> event occurs when the simulator sends
+    /// an <see cref="ObjectPropertiesPacket"/> containing additional details for a Primitive, Foliage data or Attachment. This includes
+    /// Permissions, Sale info, and other basic details on an object</para>
+    /// <para>The <see cref="ObjectManager.ObjectProperties"/> event is also raised when a <see cref="ObjectManager.RequestObjectPropertiesFamily"/> request is
+    /// made, the viewer equivalent is hovering the mouse cursor over an object</para>
+    /// </remarks>    
+    public class ObjectPropertiesFamilyEventArgs : EventArgs
+    {
+        private readonly Simulator m_Simulator;
+        private readonly Primitive.ObjectProperties m_Properties;
+        private readonly ReportType m_Type;
+
+        /// <summary>Get the simulator the object is located</summary>
+        public Simulator Simulator { get { return m_Simulator; } }
+        /// <summary></summary>
+        public Primitive.ObjectProperties Properties { get { return m_Properties; } }
+        /// <summary></summary>
+        public ReportType Type { get { return m_Type; } }
+
+        public ObjectPropertiesFamilyEventArgs(Simulator simulator, Primitive.ObjectProperties props, ReportType type)
+        {
+            this.m_Simulator = simulator;
+            this.m_Properties = props;
+            this.m_Type = type;
+        }
+    }
+
+    /// <summary>Provides primitive data containing updated location, velocity, rotation, textures for the <see cref="ObjectManager.TerseObjectUpdate"/> event</summary>
+    /// <remarks><para>The <see cref="ObjectManager.TerseObjectUpdate"/> event occurs when the simulator sends updated location, velocity, rotation, etc</para>        
+    /// </remarks>
+    public class TerseObjectUpdateEventArgs : EventArgs
+    {
+        private readonly Simulator m_Simulator;
+        private readonly Primitive m_Prim;
+        private readonly ObjectMovementUpdate m_Update;
+        private readonly ushort m_TimeDilation;
+
+        /// <summary>Get the simulator the object is located</summary>
+        public Simulator Simulator { get { return m_Simulator; } }
+        /// <summary>Get the primitive details</summary>
+        public Primitive Prim { get { return m_Prim; } }
+        /// <summary></summary>
+        public ObjectMovementUpdate Update { get { return m_Update; } }
+        /// <summary></summary>
+        public ushort TimeDilation { get { return m_TimeDilation; } }
+
+        public TerseObjectUpdateEventArgs(Simulator simulator, Primitive prim, ObjectMovementUpdate update, ushort timeDilation)
+        {
+            this.m_Simulator = simulator;
+            this.m_Prim = prim;
+            this.m_Update = update;
+            this.m_TimeDilation = timeDilation;                
+        }
+    }
+   
+    /// <summary>
+    /// 
+    /// </summary>
+    public class ObjectDataBlockUpdateEventArgs : EventArgs
+    {
+        private readonly Simulator m_Simulator;
+        private readonly Primitive m_Prim;
+        private readonly Primitive.ConstructionData m_ConstructionData;
+        private readonly ObjectUpdatePacket.ObjectDataBlock m_Block;
+        private readonly ObjectMovementUpdate m_Update;
+        private readonly NameValue[] m_NameValues;
+
+        /// <summary>Get the simulator the object is located</summary>
+        public Simulator Simulator { get { return m_Simulator; } }
+        /// <summary>Get the primitive details</summary>
+        public Primitive Prim { get { return m_Prim; } }
+        /// <summary></summary>
+        public Primitive.ConstructionData ConstructionData { get { return m_ConstructionData; } }
+        /// <summary></summary>
+        public ObjectUpdatePacket.ObjectDataBlock Block { get { return m_Block; } }
+        /// <summary></summary>
+        public ObjectMovementUpdate Update { get { return m_Update; } }
+        /// <summary></summary>
+        public NameValue[] NameValues { get { return m_NameValues; } } 
+
+        public ObjectDataBlockUpdateEventArgs(Simulator simulator, Primitive prim, Primitive.ConstructionData constructionData, 
+            ObjectUpdatePacket.ObjectDataBlock block, ObjectMovementUpdate objectupdate, NameValue[] nameValues)
+        {
+            this.m_Simulator = simulator;
+            this.m_Prim = prim;
+            this.m_ConstructionData = constructionData;
+            this.m_Block = block;
+            this.m_Update = objectupdate;
+            this.m_NameValues = nameValues;
+        }
+    }
+
+    /// <summary>Provides notification when an Avatar, Object or Attachment is DeRezzed or moves out of the avatars view for the 
+    /// <see cref="ObjectManager.KillObject"/> event</summary>
+    public class KillObjectEventArgs : EventArgs
+    {
+        private readonly Simulator m_Simulator;
+        private readonly uint m_ObjectLocalID;
+
+        /// <summary>Get the simulator the object is located</summary>
+        public Simulator Simulator { get { return m_Simulator; } }
+        /// <summary>The LocalID of the object</summary>
+        public uint ObjectLocalID { get { return m_ObjectLocalID; } } 
+
+        public KillObjectEventArgs(Simulator simulator, uint objectID)
+        {
+            this.m_Simulator = simulator;
+            this.m_ObjectLocalID = objectID;
+        }
+    }
+    
+    /// <summary>
+    /// Provides updates sit position data
+    /// </summary>
+    public class AvatarSitChangedEventArgs : EventArgs
+    {
+        private readonly Simulator m_Simulator;
+        private readonly Avatar m_Avatar;
+        private readonly uint m_SittingOn;
+        private readonly uint m_OldSeat;
+
+        /// <summary>Get the simulator the object is located</summary>
+        public Simulator Simulator { get { return m_Simulator; } }
+        /// <summary></summary>
+        public Avatar Avatar { get { return m_Avatar; } }
+        /// <summary></summary>
+        public uint SittingOn { get { return m_SittingOn; } }
+        /// <summary></summary>
+        public uint OldSeat { get { return m_OldSeat; } } 
+
+        public AvatarSitChangedEventArgs(Simulator simulator, Avatar avatar, uint sittingOn, uint oldSeat)
+        {
+            this.m_Simulator = simulator;
+            this.m_Avatar = avatar;
+            this.m_SittingOn = sittingOn;
+            this.m_OldSeat = oldSeat;
+        }
+    }
+    
+    /// <summary>
+    /// 
+    /// </summary>
+    public class PayPriceReplyEventArgs : EventArgs
+    {
+        private readonly Simulator m_Simulator;
+        private readonly UUID m_ObjectID;
+        private readonly int m_DefaultPrice;
+        private readonly int[] m_ButtonPrices;
+
+        /// <summary>Get the simulator the object is located</summary>
+        public Simulator Simulator { get { return m_Simulator; } }
+        /// <summary></summary>
+        public UUID ObjectID { get { return m_ObjectID; } }
+        /// <summary></summary>
+        public int DefaultPrice { get { return m_DefaultPrice; } }
+        /// <summary></summary>
+        public int[] ButtonPrices { get { return m_ButtonPrices; } } 
+
+        public PayPriceReplyEventArgs(Simulator simulator, UUID objectID, int defaultPrice, int[] buttonPrices)
+        {
+            this.m_Simulator = simulator;
+            this.m_ObjectID = objectID;
+            this.m_DefaultPrice = defaultPrice;
+            this.m_ButtonPrices = buttonPrices;
+        }
+    }
+    #endregion
 }
