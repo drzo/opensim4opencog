@@ -307,7 +307,7 @@ namespace OpenMetaverse
         public static string SHA1String(string value)
         {
             StringBuilder digest = new StringBuilder(40);
-            byte[] hash = SHA1(EncodingUTF8.GetBytes(value));
+            byte[] hash = SHA1(Encoding.UTF8.GetBytes(value));
 
             // Convert the hash to a hex string
             foreach (byte b in hash)
@@ -335,7 +335,7 @@ namespace OpenMetaverse
         public static string SHA256String(string value)
         {
             StringBuilder digest = new StringBuilder(64);
-            byte[] hash = SHA256(EncodingUTF8.GetBytes(value));
+            byte[] hash = SHA256(Encoding.UTF8.GetBytes(value));
 
             // Convert the hash to a hex string
             foreach (byte b in hash)
@@ -352,7 +352,7 @@ namespace OpenMetaverse
         public static string MD5(string password)
         {
             StringBuilder digest = new StringBuilder(32);
-            byte[] hash = MD5(AsciiEncodingDefault.GetBytes(password));
+            byte[] hash = MD5(ASCIIEncoding.Default.GetBytes(password));
 
             // Convert the hash to a hex string
             foreach (byte b in hash)
@@ -369,7 +369,7 @@ namespace OpenMetaverse
         public static string MD5String(string value)
         {
             StringBuilder digest = new StringBuilder(32);
-            byte[] hash = MD5(Utils.EncodingUTF8.GetBytes(value));
+            byte[] hash = MD5(Encoding.UTF8.GetBytes(value));
 
             // Convert the hash to a hex string
             foreach (byte b in hash)

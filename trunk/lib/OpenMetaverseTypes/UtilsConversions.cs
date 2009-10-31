@@ -488,8 +488,7 @@ namespace OpenMetaverse
         #endregion ToBytes
 
         #region Strings
-        public static readonly System.Text.Encoding EncodingUTF8 = System.Text.Encoding.UTF8;
-        public static readonly System.Text.Encoding AsciiEncodingDefault = ASCIIEncoding.Default;
+
         /// <summary>
         /// Converts an unsigned integer to a hexadecimal string
         /// </summary>
@@ -509,17 +508,17 @@ namespace OpenMetaverse
         public static string BytesToString(byte[] bytes)
         {
             if (bytes.Length > 0 && bytes[bytes.Length - 1] == 0x00)
-                return EncodingUTF8.GetString(bytes, 0, bytes.Length - 1);
+                return UTF8Encoding.UTF8.GetString(bytes, 0, bytes.Length - 1);
             else
-                return EncodingUTF8.GetString(bytes, 0, bytes.Length);
+                return UTF8Encoding.UTF8.GetString(bytes, 0, bytes.Length);
         }
 
         public static string BytesToString(byte[] bytes, int index, int count)
         {
             if (bytes.Length > index + count && bytes[index + count - 1] == 0x00)
-                return EncodingUTF8.GetString(bytes, index, count - 1);
+                return UTF8Encoding.UTF8.GetString(bytes, index, count - 1);
             else
-                return EncodingUTF8.GetString(bytes, index, count);
+                return UTF8Encoding.UTF8.GetString(bytes, index, count);
         }
 
         /// <summary>
@@ -583,7 +582,7 @@ namespace OpenMetaverse
         {
             if (String.IsNullOrEmpty(str)) { return Utils.EmptyBytes; }
             if (!str.EndsWith("\0")) { str += "\0"; }
-            return EncodingUTF8.GetBytes(str);
+            return System.Text.UTF8Encoding.UTF8.GetBytes(str);
         }
 
         /// <summary>
