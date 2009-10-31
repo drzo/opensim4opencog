@@ -59,7 +59,7 @@ namespace METAbolt
         private int startResult = 0;
 
         private int totalResults = 0;
-        GroupManager.GroupJoinedCallback gcallback;
+        EventHandler<GroupOperationEventArgs> gcallback;
 
 
         public SearchConsole(METAboltInstance instance)
@@ -608,26 +608,26 @@ namespace METAbolt
         {
             if (groupsconsole.SelectedName == null) return;
 
-            gcallback = new GroupManager.GroupJoinedCallback(Groups_OnGroupJoined);
-            client.Groups.OnGroupJoined += gcallback;
+            gcallback = new EventHandler<GroupOperationEventArgs>(Groups_OnGroupJoined);
+            client.Groups.GroupJoinedReply += gcallback;
             client.Groups.RequestJoinGroup(groupsconsole.SelectedGroupUUID);
         }
 
-        void Groups_OnGroupJoined(UUID groupID, bool success)
+        void Groups_OnGroupJoined(object sender, GroupOperationEventArgs e)
         {
-            //string msg = string.Empty;
+            string msg;
   
-            //if (success)
-            //{
-            //    msg = "You have joined group: " + groupID.ToString();  
-            //}
-            //else
-            //{
-            //    msg = "Failed to join group: " + groupID.ToString();
-            //}
-            //MessageBox.Show(msg);
+            if (e.Success)
+            {
+                msg = "You have joined group: " + e.GroupID.ToString();  
+            }
+            else
+            {
+                msg = "Failed to join group: " + e.GroupID.ToString();
+            }
+            MessageBox.Show(msg);
 
-            client.Groups.OnGroupJoined -= gcallback;
+            client.Groups.GroupJoinedReply -= gcallback;
         }
 
         private void pnlFindPeople_Paint(object sender, PaintEventArgs e)

@@ -182,14 +182,14 @@ namespace AIMLBotModule
                 MyBot.outputDelegate = WriteLine;
                 LoadPersonalConfig();
                 // wont get here unless there was no problem
-                client.Self.OnChat += AIML_OnChat;
-                client.Self.OnInstantMessage += AIML_OnInstantMessage;
-                client.Network.OnLogin += AIML_OnLogin;
-                client.Network.OnEventQueueRunning += AIML_OnEventQueueRunning;
-                client.Friends.OnFriendshipOffered += AIML_OnFriendshipOffered;
-                client.Avatars.OnPointAt += AIML_OnPointAt;
-                client.Avatars.OnLookAt += AIML_OnLookAt;
-                client.Avatars.OnEffect += AINL_OnEffect;
+                client.Self.ChatFromSimulator += AIML_OnChat;
+                client.Self.IM += AIML_OnInstantMessage;
+                client.Network.LoginProgress += AIML_OnLogin;
+                client.Network.EventQueueRunning += AIML_OnEventQueueRunning;
+                client.Friends.FriendshipOffered += AIML_OnFriendshipOffered;
+                client.Avatars.ViewerEffectPointAt += AIML_OnPointAt;
+                client.Avatars.ViewerEffectLookAt += AIML_OnLookAt;
+                client.Avatars.ViewerEffect += AINL_OnEffect;
 
                 if (EventsToAIML)
                 {
@@ -209,24 +209,24 @@ namespace AIMLBotModule
             }
         }
 
-        private void AINL_OnEffect(EffectType type, UUID sourceid, UUID targetid, Vector3d targetpos, float duration, UUID id)
+        private void AINL_OnEffect(object sender, ViewerEffectEventArgs e)
         {
-            if (sourceid == client.Self.AgentID) return;
-            if (type == EffectType.LookAt) return;
-            SetInterest(sourceid, targetid, false);
+            if (e.SourceID == client.Self.AgentID) return;
+            if (e.Type == EffectType.LookAt) return;
+            SetInterest(e.SourceID, e.TargetID, false);
         }
 
-        private void AIML_OnLookAt(UUID sourceid, UUID targetid, Vector3d targetpos, LookAtType looktype, float duration, UUID id)
+        private void AIML_OnLookAt(object sender, ViewerEffectLookAtEventArgs e)
         {
-            if (sourceid == client.Self.AgentID) return;
+            if (e.SourceID == client.Self.AgentID) return;
             //if (targetid==client.Self.AgentID) SetInterest(sourceid, targetid, false);
         }
 
-        private void AIML_OnPointAt(UUID sourceid, UUID targetid, Vector3d targetpos, PointAtType pointtype, float duration, UUID id)
+        private void AIML_OnPointAt(object sender, ViewerEffectPointAtEventArgs e)
         {
-            if (PointAtType.None == pointtype) return;
-            if (sourceid == client.Self.AgentID) return;
-            SetInterest(sourceid, targetid, true);
+            if (PointAtType.None == e.PointType) return;
+            if (e.SourceID == client.Self.AgentID) return;
+            SetInterest(e.SourceID, e.TargetID, true);
         }
 
         private void SetInterest(UUID sourceid, UUID targetid, bool forced)
@@ -249,20 +249,20 @@ namespace AIMLBotModule
         }
 
 
-        private void AIML_OnFriendshipOffered(UUID agentid, string agentname, UUID imsessionid)
+        private void AIML_OnFriendshipOffered(object sender,FriendshipOfferedEventArgs e)
         {
-            if (AcceptFriends) client.Friends.AcceptFriendship(agentid, imsessionid);
+            if (AcceptFriends) client.Friends.AcceptFriendship(e.AgentID, e.SessionID);
             //else client.Friends.DeclineFriendship(agentid, imsessionid);
         }
 
-        private void AIML_OnEventQueueRunning(Simulator simulator)
+        private void AIML_OnEventQueueRunning(object sender, EventQueueRunningEventArgs e)
         {
             ReadSimSettings();
         }
 
-        private void AIML_OnLogin(LoginStatus login, string message)
+        private void AIML_OnLogin(object sender, LoginProgressEventArgs e)
         {
-            if (login == LoginStatus.Success)
+            if (e.Status == LoginStatus.Success)
             {
                 ReadSimSettings();
             }
@@ -376,8 +376,9 @@ namespace AIMLBotModule
             return client.GetName();
         }
 
-        public void AIML_OnInstantMessage(InstantMessage im, Simulator simulator)
+        public void AIML_OnInstantMessage(object sender, InstantMessageEventArgs e)
         {
+            var im = e.IM;
             Console.WriteLine("InstantMessage=" + im.Dialog);
             //Console.WriteLine("FromAgentID=" + WorldSystem.GetObject(im.FromAgentID));
             object toObject = WorldSystem.GetObject(im.ToAgentID);
@@ -552,8 +553,14 @@ namespace AIMLBotModule
 
         private DateTime lastFollow = DateTime.Now;
 
-        private void AIML_OnChat(string message, ChatAudibleLevel audible, ChatType type, ChatSourceType sourcetype, string fromname, UUID id, UUID ownerid, Vector3 position)
+        private void AIML_OnChat(object sender, ChatEventArgs e)// string message, ChatAudibleLevel audible, ChatType type, ChatSourceType sourcetype, string fromname, UUID id, UUID ownerid, Vector3 position)
         {
+
+            var type = e.Type;
+            var message = e.Message;
+            var id = e.SourceID;
+            var fromname = e.FromName;
+            var sourcetype = e.SourceType;
 
             if (String.IsNullOrEmpty(message) || message.Length < 2) return;
             if (sourcetype == ChatSourceType.System) return;

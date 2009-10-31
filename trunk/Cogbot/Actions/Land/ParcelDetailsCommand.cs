@@ -29,7 +29,7 @@ namespace cogbot.Actions
             if (Int32.TryParse(args[argsUsed], out parcelID) && CurSim.Parcels.TryGetValue(parcelID, out parcel))
             {
                 // this request will update the parcels dictionary
-                Client.Parcels.PropertiesRequest(CurSim, parcelID, 0);
+                Client.Parcels.RequestParcelProperties(CurSim, parcelID, 0);
                 
                 // Use reflection to dynamically get the fields from the Parcel struct
                 Type t = parcel.GetType();

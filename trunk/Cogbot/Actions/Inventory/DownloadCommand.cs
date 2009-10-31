@@ -22,13 +22,30 @@ namespace cogbot.Actions
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 2) return ShowUsage();
+            AssetType assetType;
+
+            FieldInfo fi = typeof(AssetType).GetField(args[1]);
+            if (fi == null)
+            {
+                int typeInt;
+                if (int.TryParse(args[1], out typeInt))
+                {
+                    assetType = (AssetType)typeInt;
+                }
+                else
+                {
+                    WriteLine(typeof(AssetType).GetFields().ToString());
+                    return Failure("Unknown asset type");
+                }
+            }
+            else
+            {
+                assetType = (AssetType)fi.GetValue(null);
+            }
+            //var v = WorldObjects.uuidTypeObject;
             UUID AssetID;
             int argsUsed;
-            if (!UUIDTryParse(args, 0, out AssetID, out argsUsed)) return Failure("Cant determine asset ID");
-            object value;                
-            if (!TryEnumParse(typeof(AssetType), args, argsUsed, out argsUsed, out value))                      
-                return Failure("Cant determine asset type");
-            AssetType assetType = (AssetType) value;
+            UUIDTryParse(args, 0, out AssetID, out argsUsed);
             AutoResetEvent DownloadHandle = new AutoResetEvent(false);
             Client.Assets.RequestAsset(AssetID, assetType, true, delegate(AssetDownload transfer, Asset asset)
             {

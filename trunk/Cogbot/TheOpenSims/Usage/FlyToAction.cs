@@ -22,7 +22,7 @@ namespace cogbot.TheOpenSims
 
             if (CallbackReged)
             {
-                Client.Objects.OnObjectUpdated -= callback;
+                Client.Objects.TerseObjectUpdate -= callback;
                 CallbackReged = false;
             }
             TheBot.StopMoving();
@@ -44,7 +44,7 @@ namespace cogbot.TheOpenSims
             //Client.Objects.OnObjectUpdated -= callback;
             if (!CallbackReged)
             {
-                Client.Objects.OnObjectUpdated += callback;
+                Client.Objects.TerseObjectUpdate += callback;
                 CallbackReged = true;
             }
             SetMovement();
@@ -66,7 +66,7 @@ namespace cogbot.TheOpenSims
                 {
                     if (CallbackReged)
                     {
-                        Client.Objects.OnObjectUpdated -= callback;
+                        Client.Objects.TerseObjectUpdate -= callback;
                         CallbackReged = false;
                     }
                 }
@@ -79,7 +79,7 @@ namespace cogbot.TheOpenSims
             BotClient Client = TheBot.GetGridClient();
             if (!CallbackReged)
             {
-                Client.Objects.OnObjectUpdated += callback;
+                Client.Objects.TerseObjectUpdate += callback;
                 CallbackReged = true;
             }
             startTime = Environment.TickCount;
@@ -106,7 +106,7 @@ namespace cogbot.TheOpenSims
         float diff, olddiff, saveolddiff;
         int startTime = 0;
         //   int duration = 10000;
-        readonly ObjectManager.ObjectUpdatedCallback callback;
+        readonly EventHandler<TerseObjectUpdateEventArgs> callback;
 
         public FlyToAction(SimAvatar impl, SimPosition position)
             : base(impl, position)
@@ -156,7 +156,7 @@ namespace cogbot.TheOpenSims
                                 //Client.Objects.OnObjectUpdated -= callback;
                                 if (!CallbackReged)
                                 {
-                                    Client.Objects.OnObjectUpdated += callback;
+                                    Client.Objects.TerseObjectUpdate += callback;
                                     CallbackReged = true;
                                 }
                                 SetMovement();
@@ -199,25 +199,25 @@ namespace cogbot.TheOpenSims
                 BotClient Client = TheBot.GetGridClient();
                 if (CallbackReged)
                 {
-                    Client.Objects.OnObjectUpdated -= callback;
+                    Client.Objects.TerseObjectUpdate -= callback;
                     CallbackReged = false;
                 }
             }
         }
 
-        private void Objects_OnObjectUpdated(Simulator simulator, ObjectUpdate update, ulong regionHandle, ushort timeDilation)
+        private void Objects_OnObjectUpdated(object s , TerseObjectUpdateEventArgs e)
         {
             BotClient Client = TheBot.GetGridClient();
             if (startTime == 0)
             {
                 if (CallbackReged)
                 {
-                    Client.Objects.OnObjectUpdated -= callback;
+                    Client.Objects.TerseObjectUpdate -= callback;
                     CallbackReged = false;
                 }
                 return;
             }
-            if (update.LocalID == Client.Self.LocalID)
+            if (e.Update.LocalID == Client.Self.LocalID)
             {
                 XYMovement();
                 ZMovement();
@@ -313,7 +313,7 @@ namespace cogbot.TheOpenSims
             Client.Self.Movement.SendUpdate(false);
             if (CallbackReged)
             {
-                Client.Objects.OnObjectUpdated -= callback;
+                Client.Objects.TerseObjectUpdate -= callback;
                 CallbackReged = false;
             }
             DoZ = true;

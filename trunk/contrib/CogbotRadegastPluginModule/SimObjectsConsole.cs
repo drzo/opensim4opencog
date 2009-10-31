@@ -83,12 +83,12 @@ namespace CogbotRadegastPluginModule
             AddObjectType(typeof(Primitive));
             AddObjectType(typeof(Primitive.ObjectProperties));
             // Callbacks
-            client.Network.OnDisconnected += new NetworkManager.DisconnectedCallback(Network_OnDisconnected);
-            client.Network.OnConnected += new NetworkManager.ConnectedCallback(Network_OnConnected);
-            client.Objects.OnObjectKilled += new ObjectManager.KillObjectCallback(Objects_OnObjectKilled);
+            client.Network.Disconnected += Network_OnDisconnected;
+            client.Network.SimConnected += Network_OnConnected;
+            client.Objects.KillObject +=  Objects_OnObjectKilled;
             //client.Objects.OnObjectProperties += new ObjectManager.ObjectPropertiesCallback(Objects_OnObjectProperties);
-            client.Network.OnCurrentSimChanged += new NetworkManager.CurrentSimChangedCallback(Network_OnCurrentSimChanged);
-            client.Avatars.OnAvatarNames += new AvatarManager.AvatarNamesCallback(Avatars_OnAvatarNames);
+            client.Network.SimChanged +=  Network_OnCurrentSimChanged;
+            client.Avatars.UUIDNameReply += Avatars_OnAvatarNames;
             instance.State.OnWalkStateCanged += new StateManager.WalkStateCanged(State_OnWalkStateCanged);
         }
 
@@ -111,7 +111,7 @@ namespace CogbotRadegastPluginModule
 
         }
 
-        private void Network_OnConnected(object sender)
+        private void Network_OnConnected(object sender, SimConnectedEventArgs e)
         {
             ClientManager.SingleInstance.LastBotClient.WorldSystem.OnAddSimObject += Objects_OnAddSimObject;
             ClientManager.SingleInstance.LastBotClient.WorldSystem.OnUpdateDataAspect += Objects_OnUpdateSimObject;
@@ -119,7 +119,7 @@ namespace CogbotRadegastPluginModule
 
         }
 
-        private void Network_OnDisconnected(NetworkManager.DisconnectType reason, string message)
+        private void Network_OnDisconnected(object sender, DisconnectedEventArgs e)
         {
             ClientManager.SingleInstance.LastBotClient.WorldSystem.OnAddSimObject -= Objects_OnAddSimObject;
             ClientManager.SingleInstance.LastBotClient.WorldSystem.OnUpdateDataAspect -= Objects_OnUpdateSimObject;
@@ -131,11 +131,11 @@ namespace CogbotRadegastPluginModule
             addObjects.Dispose();
             ClientManager.SingleInstance.LastBotClient.WorldSystem.OnAddSimObject -= Objects_OnAddSimObject;
             ClientManager.SingleInstance.LastBotClient.WorldSystem.OnUpdateDataAspect -= Objects_OnUpdateSimObject;
-            client.Network.OnDisconnected -= new NetworkManager.DisconnectedCallback(Network_OnDisconnected);
-            client.Objects.OnObjectKilled -= new ObjectManager.KillObjectCallback(Objects_OnObjectKilled);
+            //client.Network.OnDisconnected -= new NetworkManager.DisconnectedCallback(Network_OnDisconnected);
+            client.Objects.KillObject -= Objects_OnObjectKilled;
             //client.Objects.OnObjectProperties -= new ObjectManager.ObjectPropertiesCallback(Objects_OnObjectProperties);
-            client.Network.OnCurrentSimChanged -= new NetworkManager.CurrentSimChangedCallback(Network_OnCurrentSimChanged);
-            client.Avatars.OnAvatarNames -= new AvatarManager.AvatarNamesCallback(Avatars_OnAvatarNames);
+            client.Network.SimChanged -= Network_OnCurrentSimChanged;
+            client.Avatars.UUIDNameReply -= Avatars_OnAvatarNames;
             instance.State.OnWalkStateCanged -= new StateManager.WalkStateCanged(State_OnWalkStateCanged);
         }
 
@@ -171,13 +171,13 @@ namespace CogbotRadegastPluginModule
             lblStatus.Text = sb.ToString();
         }
 
-        void Network_OnCurrentSimChanged(Simulator PreviousSimulator)
+        void Network_OnCurrentSimChanged(object sender, SimChangedEventArgs e)
         {
             if (InvokeRequired)
             {
                 Invoke(new MethodInvoker(delegate()
                 {
-                    Network_OnCurrentSimChanged(PreviousSimulator);
+                    Network_OnCurrentSimChanged(sender, e);
                 }
                 ));
                 return;
@@ -186,12 +186,13 @@ namespace CogbotRadegastPluginModule
             btnRefresh_Click(null, null);
         }
 
-        void Avatars_OnAvatarNames(Dictionary<UUID, string> names)
+        void Avatars_OnAvatarNames(object sender, UUIDNameReplyEventArgs e)
         {
             if (IsDisposing) return;
+            var names = e.Names;
             if (InvokeRequired)
             {
-                Invoke(new MethodInvoker(delegate() { Avatars_OnAvatarNames(names); }));
+                Invoke(new MethodInvoker(delegate() { Avatars_OnAvatarNames(sender, e); }));
                 return;
             }
 
@@ -396,12 +397,14 @@ namespace CogbotRadegastPluginModule
             }
         }
 
-        private void Objects_OnObjectKilled(Simulator simulator, uint objectID)
+        private void Objects_OnObjectKilled(object sender, KillObjectEventArgs e)
         {
             return;
+            var simulator = e.Simulator;
+            var objectID = e.ObjectLocalID;
             if (InvokeRequired)
             {
-                Invoke(new MethodInvoker(delegate() { Objects_OnObjectKilled(simulator, objectID); }));
+                Invoke(new MethodInvoker(delegate() { Objects_OnObjectKilled(sender,e); }));
                 return;
             }
 

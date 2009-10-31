@@ -24,23 +24,24 @@ namespace cogbot.Actions
             Dictionary<UUID, Primitive> objects = new Dictionary<UUID, Primitive>();
             PermissionMask perms = PermissionMask.None;
 
-            ObjectManager.ObjectPropertiesCallback callback = new ObjectManager.ObjectPropertiesCallback((simulator, properties) =>
-                                                                                                             {
-                                                                                                                 if (permsSent)
-                                                                                                                 {
-                                                                                                                     if (objects.ContainsKey(properties.ObjectID))
-                                                                                                                     {
-                                                                                                                         // FIXME: Confirm the current operation against properties.Permissions.NextOwnerMask
+            EventHandler<ObjectPropertiesEventArgs> callback =
+                new EventHandler<ObjectPropertiesEventArgs>((s, e) =>
+                                                               {
+                                                                   if (permsSent)
+                                                                   {
+                                                                       if (objects.ContainsKey(e.Properties.ObjectID))
+                                                                       {
+                                                                           // FIXME: Confirm the current operation against properties.Permissions.NextOwnerMask
 
-                                                                                                                         ++permCount;
-                                                                                                                         if (permCount >= objects.Count)
-                                                                                                                             GotPermissionsEvent.Set();
-                                                                                                                     }
-                                                                                                                 }
-                                                                                                             });
+                                                                           ++permCount;
+                                                                           if (permCount >= objects.Count)
+                                                                               GotPermissionsEvent.Set();
+                                                                       }
+                                                                   }
+                                                               });
             try
             {
-                Client.Objects.OnObjectProperties += callback;
+                Client.Objects.ObjectProperties += callback;
 
                 // Reset class-wide variables
                 permsSent = false;
@@ -179,13 +180,13 @@ namespace cogbot.Actions
                     }
 
                     Success("Set permissions to " + perms.ToString() + " on " + localIDs.Count + " objects and " +
-                                taskItems + " inventory items");
-                }
-            }
-            finally
+                            taskItems + " inventory items");
+                } 
+            } finally
             {
-                Client.Objects.OnObjectProperties -= callback;
+                Client.Objects.ObjectProperties -= callback;
             }
+
             return SuccessOrFailure();
         }
     }

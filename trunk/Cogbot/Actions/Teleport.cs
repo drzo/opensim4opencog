@@ -26,20 +26,17 @@ namespace cogbot.Actions
         }
 
                                     //string message, TeleportStatus status, TeleportFlags flags
-        public void On_Teleport(string message, TeleportStatus status, TeleportFlags flags)
+        public void On_Teleport(object sender,TeleportEventArgs e)
         {
             BotClient Client = TheBotClient;
             Client.describeNext = false;
-            if (status == TeleportStatus.Finished)
-            {
-                WriteLine(message + " " + status);
-                if (false)
+            WriteLine(e + " " + e.Status);
+            if (e.Status == TeleportStatus.Finished)
                 {
                     Client.describePeople(false, WriteLine);
                     Client.describeObjects(false, WriteLine);
                     Client.describeBuildings(false, WriteLine);                    
-                }
-                Client.Self.OnTeleport -= On_Teleport;
+                Client.Self.TeleportProgress -= On_Teleport;
                 TeleportFinished.Set();
             }
         }
@@ -123,13 +120,13 @@ namespace cogbot.Actions
                 {
                     if (String.IsNullOrEmpty(simName)) simName = Client.Network.CurrentSim.Name;
                     TeleportFinished.Reset();
-                    Client.Self.OnTeleport += On_Teleport;
+                    Client.Self.TeleportProgress += On_Teleport;
                     WriteLine("Trying to teleport to " + simName + " " + coords);
                     Client.Self.Teleport(simName, coords);
                     // wait 30 seconds
                     if (!TeleportFinished.WaitOne(30000, false))
                     {
-                        Client.Self.OnTeleport -= On_Teleport;
+                        Client.Self.TeleportProgress -= On_Teleport;
                         WriteLine("Timeout on teleport to " + simName + " " + coords);
                     }
                 }

@@ -85,13 +85,13 @@ namespace CycWorldModule
             }
 
             // Register callbacks
-            client.Network.OnCurrentSimChanged += new NetworkManager.CurrentSimChangedCallback(Network_OnCurrentSimChanged);
+            //TODO client.Network.OnCurrentSimChanged += new NetworkManager.CurrentSimChangedCallback(Network_OnCurrentSimChanged);
         }
 
         void frmMap_Disposed(object sender, EventArgs e)
         {
             // Unregister callbacks
-            client.Network.OnCurrentSimChanged -= new NetworkManager.CurrentSimChangedCallback(Network_OnCurrentSimChanged);
+            //TODO client.Network.OnCurrentSimChanged -= new NetworkManager.CurrentSimChangedCallback(Network_OnCurrentSimChanged);
 
             if (map != null)
             {

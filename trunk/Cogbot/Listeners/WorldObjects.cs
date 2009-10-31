@@ -140,7 +140,7 @@ namespace cogbot.Listeners
             } //else
             ///client.Settings.USE_LLSD_LOGIN = true;
 
-            client.Network.PacketEvents.SkipEvent += Network_SkipEvent;
+            // TODO client.Network.PacketEvents.SkipEvent += Network_SkipEvent;
             _defaultProvider = new DefaultWorldGroupProvider(this);
             AddGroupProvider(_defaultProvider);
             lock (WorldObjectsMasterLock)
@@ -185,8 +185,8 @@ namespace cogbot.Listeners
                 //client.Self.Movement.AutoResetControls = false;
                 //client.Self.Movement.UpdateInterval = 0;
 
-                client.Network.OnSimConnected += Network_OnSimConnectedHook;
-                client.Inventory.OnScriptRunning += Inventory_OnScriptRunning;
+                client.Network.SimConnected += Network_OnSimConnectedHook;
+                client.Inventory.ScriptRunningReply += Inventory_OnScriptRunning;
                 _simAssetSystem = new SimAssetStore(client);
 
 
@@ -288,7 +288,7 @@ namespace cogbot.Listeners
             return null;
         }
 
-        public override void Self_OnCameraConstraint(Vector4 collidePlane)
+        public override void Self_OnCameraConstraint(object sender, CameraConstraintEventArgs e)
         {
             //base.Self_OnCameraConstraint(collidePlane);
         }
@@ -513,10 +513,11 @@ namespace cogbot.Listeners
         }
 
 
-        public override void Objects_OnObjectKilled(Simulator simulator, uint objectID)
+        public override void Objects_OnObjectKilled(object sender, KillObjectEventArgs e)
         {
+            Simulator simulator = e.Simulator;
             // had to move this out of the closure because the Primitive is gone later
-            Primitive p = GetPrimitive(objectID, simulator);
+            Primitive p = GetPrimitive(e.ObjectLocalID, simulator);
             if (p == null)
             {
                 //   base.Objects_OnObjectKilled(simulator, objectID);
@@ -607,17 +608,18 @@ namespace cogbot.Listeners
         folderID: "29a6c2e7-cfd0-4c59-a629-b81262a0d9a2"
          */
 
-        public override void Inventory_OnFolderUpdated(UUID folderID)
+        public override void Inventory_OnFolderUpdated(object sender, FolderUpdatedEventArgs e)
         {
+            var folderID = e.FolderID;
             RegisterUUID(folderID, client.Inventory.Store[folderID]); //;;typeof(OpenMetaverse.InventoryFolder);
             //base.Inventory_OnFolderUpdated(folderID);
         }
 
-        public override void Objects_OnObjectPropertiesFamily(Simulator simulator, Primitive.ObjectProperties props,
-                                                              ReportType type)
+        public override void Objects_OnObjectPropertiesFamily(object sender, ObjectPropertiesFamilyEventArgs e)
         {
-            base.Objects_OnObjectPropertiesFamily(simulator, props, type);
-            Objects_OnObjectProperties(simulator, props);
+            var simulator = e.Simulator;
+            base.Objects_OnObjectPropertiesFamily(sender, e);
+            Objects_OnObjectProperties(sender, new ObjectPropertiesEventArgs(e.Simulator,e.Properties));
             // Properties = new Primitive.ObjectProperties();
             //Properties.SetFamilyProperties(props);
             // GotPermissions = true;
@@ -625,8 +627,15 @@ namespace cogbot.Listeners
             //  SendNewEvent("On-Object-PropertiesFamily", simulator, props, type);
         }
 
-        public override void Objects_OnNewPrim(Simulator simulator, Primitive prim, ulong regionHandle,
-                                               ushort timeDilation)
+        public override void Objects_OnNewPrim(object sender, PrimEventArgs e)
+        {                        
+            var simulator = e.Simulator;
+            var prim = e.Prim;
+            var regionHandle = e.Simulator.Handle;
+            Objects_OnNewPrimReal(simulator, prim, regionHandle);
+        }
+
+        void Objects_OnNewPrimReal(Simulator simulator, Primitive prim, ulong regionHandle)
         {
             CheckConnected(simulator);
 
@@ -665,32 +674,31 @@ namespace cogbot.Listeners
         }
 
 
-        public override void Objects_OnNewAttachment(Simulator simulator, Primitive prim, ulong regionHandle,
-                                                     ushort timeDilation)
-        {
-            if (!IsMaster(simulator)) return;
-            if (ScriptHolder == null && prim.ParentID != 0 && prim.ParentID == client.Self.LocalID)
-            {
-                EnsureSelected(prim.LocalID, simulator);
-            }
-            if (!MaintainAttachments) return;
-            Objects_OnNewPrim(simulator, prim, regionHandle, timeDilation);
-            EventQueue.Enqueue(() => GetSimObject(prim, simulator).IsAttachment = true);
-        }
+        //public override void Objects_OnNewAttachment(Simulator simulator, Primitive prim, ulong regionHandle,
+        //                                             ushort timeDilation)
+        //{
+        //    if (!IsMaster(simulator)) return;
+        //    if (ScriptHolder == null && prim.ParentID != 0 && prim.ParentID == client.Self.LocalID)
+        //    {
+        //        EnsureSelected(prim.LocalID, simulator);
+        //    }
+        //    if (!MaintainAttachments) return;
+        //    Objects_OnNewPrim(simulator, prim, regionHandle, timeDilation);
+        //    EventQueue.Enqueue(() => GetSimObject(prim, simulator).IsAttachment = true);
+        //}
 
-        public override void Avatars_OnAvatarAppearance(UUID avatarID, bool isTrial,
-                                                        Primitive.TextureEntryFace defaultTexture,
-                                                        Primitive.TextureEntryFace[] faceTextures,
-                                                        List<byte> visualParams)
+        public override void Avatars_OnAvatarAppearance(object sender, AvatarAppearanceEventArgs e)
         {
-            client.Avatars.OnAvatarAppearance -= Avatars_OnAvatarAppearance;
-            base.Avatars_OnAvatarAppearance(avatarID, isTrial, defaultTexture, faceTextures, visualParams);
+            client.Avatars.AvatarAppearance -= Avatars_OnAvatarAppearance;
+            base.Avatars_OnAvatarAppearance(sender, e);
         }
 
         //object Objects_OnNewAvatarLock = new object();
-        public override void Objects_OnNewAvatar(Simulator simulator, Avatar avatar, ulong regionHandle,
-                                                 ushort timeDilation)
+        public override void Objects_OnNewAvatar(object sender, AvatarUpdateEventArgs e)
         {
+            Avatar avatar = e.Avatar;
+            var simulator = e.Simulator;
+            var regionHandle = e.Simulator.Handle;
             if (regionHandle==0)
             {
                 return;
@@ -710,15 +718,15 @@ namespace cogbot.Listeners
             {
                 AV.ResetPrim(avatar, client, simulator);
             }
-            Objects_OnNewAvatar1(simulator, avatar, regionHandle, timeDilation);
+            Objects_OnNewAvatar1(simulator, avatar, regionHandle);
         }
 
 
-        public void Objects_OnNewAvatar1(Simulator simulator, Avatar avatar, ulong regionHandle, ushort timeDilation)
+        public void Objects_OnNewAvatar1(Simulator simulator, Avatar avatar, ulong regionHandle)
         {
             try
             {
-                Objects_OnNewPrim(simulator, avatar, regionHandle, timeDilation);
+                Objects_OnNewPrimReal(simulator, avatar, regionHandle);
                 if (avatar.LocalID == client.Self.LocalID)
                 {
                     SimObject AV = (SimObject)GetSimObject(avatar, simulator);
@@ -768,7 +776,10 @@ namespace cogbot.Listeners
             Primitive prim = GetPrimitive(avatarID, simulator);
             if (prim is Avatar) return (Avatar)prim;
             // in case we request later
-            if (!uuidTypeObject.ContainsKey(avatarID)) client.Avatars.RequestAvatarName(avatarID);
+            if (!uuidTypeObject.ContainsKey(avatarID))
+            {
+                if (client.Network.Connected) client.Avatars.RequestAvatarName(avatarID);
+            }
             //   prim = GetPrimitive(avatarID, simulator);
             return null;
         }
@@ -1172,7 +1183,7 @@ namespace cogbot.Listeners
 
         public void SetPrimFlags(Primitive UnPhantom, PrimFlags fs)
         {
-            client.Objects.SetFlags(UnPhantom.LocalID, ((fs & PrimFlags.Physics) != 0), //
+            client.Objects.SetFlags(GetSimulator(UnPhantom),UnPhantom.LocalID, ((fs & PrimFlags.Physics) != 0), //
                                     ((fs & PrimFlags.Temporary) != 0),
                                     ((fs & PrimFlags.Phantom) != 0),
                                     ((fs & PrimFlags.CastShadows) != 0));

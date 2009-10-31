@@ -28,21 +28,27 @@ namespace FashionBotModule
 
         public override void StartupListener()
         {
-            client.Network.OnSimConnected += FashionBotModuleMain_OnSimConnected;
-            client.Inventory.OnItemReceived += FashionBotModuleMain_OnItemRecieved;
-            client.Inventory.OnFolderUpdated += FashionBotModuleMain_OnFolderUpdated;
-            client.Inventory.OnObjectOffered += FashionBotModuleMain_OnObjectOffered;
+            client.Network.SimConnected += FashionBotModuleMain_OnSimConnected;
+            client.Inventory.ItemReceived += FashionBotModuleMain_OnItemRecieved;
+            client.Inventory.FolderUpdated += FashionBotModuleMain_OnFolderUpdated;
+            client.Inventory.InventoryObjectOffered += FashionBotModuleMain_OnObjectOffered;
         }
 
-        private bool FashionBotModuleMain_OnObjectOffered(InstantMessage offerdetails, AssetType type, UUID objectid, bool fromtask)
+        private void FashionBotModuleMain_OnObjectOffered(object sender, InventoryObjectOfferedEventArgs e)
         {
-            
-            if (offerdetails.FromAgentID==client.MasterKey || offerdetails.FromAgentName.ToLower()==client.MasterName.ToLower())
+            var offerdetails = e.Offer;
+            if (offerdetails.FromAgentID == client.MasterKey ||
+                offerdetails.FromAgentName.ToLower() == client.MasterName.ToLower())
             {
+                UUID objectid = e.ObjectID;
+                AssetType type = e.AssetType;
                 ReceiveAndUse(objectid, type);
-                return true;
+                e.Accept = true;
             }
-            return false;
+            else
+            {
+                e.Accept = false;
+            }
         }
 
         private void ReceiveAndUse(UUID objectid, AssetType type)
@@ -53,13 +59,14 @@ namespace FashionBotModule
             }
         }
 
-        private void FashionBotModuleMain_OnFolderUpdated(UUID folderid)
+        private void FashionBotModuleMain_OnFolderUpdated(object sender, FolderUpdatedEventArgs e)
         {
             EnumerateClothing();
         }
 
-        private void FashionBotModuleMain_OnItemRecieved(InventoryItem item)
+        private void FashionBotModuleMain_OnItemRecieved(object sender, ItemReceivedEventArgs e)
         {
+            var item = e.Item;
             if (Received.Contains(item.AssetUUID))
             {
                 List<InventoryItem> newList = new List<InventoryItem> { item };
@@ -68,7 +75,7 @@ namespace FashionBotModule
             EnumerateClothing();
         }
 
-        private void FashionBotModuleMain_OnSimConnected(Simulator simulator)
+        private void FashionBotModuleMain_OnSimConnected(object sender, SimConnectedEventArgs e)
         {
             EnumerateClothing();
             if (ClothingFolderFolders.Count>0)

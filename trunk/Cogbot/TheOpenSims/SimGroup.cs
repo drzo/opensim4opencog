@@ -31,7 +31,8 @@ namespace cogbot.TheOpenSims
         }
         public UUID ID;
         private Group group;
-            
+        public GroupAccountSummary Summary;
+
         public SimGroup(UUID g)
         {
             ID = g;

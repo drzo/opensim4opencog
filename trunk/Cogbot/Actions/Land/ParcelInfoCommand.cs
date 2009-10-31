@@ -10,7 +10,7 @@ namespace cogbot.Actions
     {
         private AutoResetEvent ParcelsDownloaded = new AutoResetEvent(false);
 
-        NetworkManager.DisconnectedCallback callback;
+      //  NetworkManager.DisconnectedCallback callback;
 
         public ParcelInfoCommand(BotClient testClient)
         {
@@ -18,22 +18,22 @@ namespace cogbot.Actions
             Description = "Prints out info about all the parcels in this simulator";
             Category = CommandCategory.Parcel;
 
-            callback = new NetworkManager.DisconnectedCallback(Network_OnDisconnected);
+            //callback = new NetworkManager.DisconnectedCallback(Network_OnDisconnected);
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             StringBuilder sb = new StringBuilder();
             string result;
-            Client.Network.OnDisconnected += callback;
-            ParcelManager.SimParcelsDownloaded del =
-                delegate(Simulator simulator, InternalDictionary<int, Parcel> simParcels, int[,] parcelMap)
+          //  Client.Network.OnDisconnected += callback;
+            EventHandler<SimParcelsDownloadedEventArgs> del =
+                (sender,e)=>
                 {
                     ParcelsDownloaded.Set();
                 };
 
             ParcelsDownloaded.Reset();
-            Client.Parcels.OnSimParcelsDownloaded += del;
+            Client.Parcels.SimParcelsDownloaded += del;
             try
             {
                 int argsUsed;
@@ -76,8 +76,8 @@ namespace cogbot.Actions
             }
             finally
             {
-                Client.Parcels.OnSimParcelsDownloaded -= del;
-                Client.Network.OnDisconnected -= callback;
+                Client.Parcels.SimParcelsDownloaded -= del;
+                //Client.Network.OnDisconnected -= callback;
             }
 
         }

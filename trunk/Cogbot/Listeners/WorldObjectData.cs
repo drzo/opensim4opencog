@@ -6,19 +6,23 @@ using cogbot.TheOpenSims;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using System.Drawing;
+using System.Collections;
 
 namespace cogbot.Listeners
 {
     partial class WorldObjects
     {
 
-        private static readonly Dictionary<SimObject, ObjectUpdate> LastObjectUpdate = new Dictionary<SimObject, ObjectUpdate>();
-        private static readonly Dictionary<UUID, ObjectUpdate> LastObjectUpdateDiff = new Dictionary<UUID, ObjectUpdate>();
+        private static readonly Dictionary<SimObject, ObjectMovementUpdate> LastObjectUpdate = new Dictionary<SimObject, ObjectMovementUpdate>();
+        private static readonly Dictionary<UUID, ObjectMovementUpdate> LastObjectUpdateDiff = new Dictionary<UUID, ObjectMovementUpdate>();
         private static readonly Dictionary<SimObject, Vector3> primVect = new Dictionary<SimObject, Vector3>();
 
 
-        public void Objects_OnPrimitiveProperties(Simulator simulator, Primitive prim, Primitive.ObjectProperties props)
+        public void Objects_OnPrimitiveProperties(object sender, ObjectPropertiesUpdatedEventArgs e)
         {
+            var prim = e.Prim;
+            var props = e.Properties;
+            var simulator = e.Simulator;
             if (ScriptHolder == null && prim.ParentID != 0 && prim.ParentID == client.Self.LocalID)
             {
                 if ("ScriptHolder" == props.Name)
@@ -39,8 +43,10 @@ namespace cogbot.Listeners
                 PropertyQueue.Enqueue(() => Objects_OnObjectProperties11(simulator, prim, props));
         }
 
-        public override void Objects_OnObjectProperties(Simulator simulator, Primitive.ObjectProperties props)
+        public override void Objects_OnObjectProperties(object sender, ObjectPropertiesEventArgs e)
         {
+            var simulator = e.Simulator;
+            var props = e.Properties;
             //throw new InvalidOperationException("Objects_OnObjectProperties");
             CheckConnected(simulator);
             //NeverSelect(props.LocalID, simulator);                
@@ -79,10 +85,13 @@ namespace cogbot.Listeners
 
         #endregion
 
-        private void Objects_OnObjectDataBlockUpdate(Simulator simulator, Primitive prim,
-            Primitive.ConstructionData data, ObjectUpdatePacket.ObjectDataBlock block,
-            ObjectUpdate objectupdate0, NameValue[] nameValues)
+        private void Objects_OnObjectDataBlockUpdate(object sender, ObjectDataBlockUpdateEventArgs e)
         {
+            Simulator simulator = e.Simulator;
+            Primitive prim = e.Prim;
+            var data = e.ConstructionData;
+            var block = e.Block;
+            var objectupdate0 = e.Update;
             if (!IsMaster(simulator)) return;
             // return;            
             if (!objectupdate0.Avatar)
@@ -118,7 +127,7 @@ namespace cogbot.Listeners
                         SimObject O = GetSimObjectFromUUID(prim.ID);
                         if (O != null && prim.Properties!=null && prim.RegionHandle == simulator.Handle)
                         {
-                            Objects_OnPrimitiveUpdate(simulator, prim, objectupdate0, simulator.Handle, 0);
+                            Objects_OnPrimitiveUpdateReal(simulator, prim, objectupdate0, simulator.Handle, 0);
                             //O = GetSimObject(prim, simulator);
                         }
                     }
@@ -130,11 +139,11 @@ namespace cogbot.Listeners
 
                 if ((prim.Flags & PrimFlags.ZlibCompressed) != 0)
                 {
-                    Logger.Log("Got a ZlibCompressed ObjectUpdate, implement me!",
+                    Logger.Log("Got a ZlibCompressed ObjectMovementUpdate, implement me!",
                         Helpers.LogLevel.Warning, client);
                 }
 
-                prim.NameValues = nameValues;
+                prim.NameValues = e.NameValues;
                 prim.LocalID = block.ID;
                 prim.ID = block.FullID;
                //NOTE this broke onSitChanged! prim.ParentID = block.ParentID;
@@ -194,11 +203,11 @@ namespace cogbot.Listeners
                 //prim.Rotation = objectupdate.Rotation;
                 //prim.AngularVelocity = objectupdate.AngularVelocity;
                 client.Objects.SelectObject(simulator, prim.LocalID);
-                Objects_OnPrimitiveUpdate(simulator, prim, objectupdate0, simulator.Handle, 0);
+                Objects_OnPrimitiveUpdateReal(simulator, prim, objectupdate0, simulator.Handle, 0);
             }
         }
 
-        private void Objects_OnPrimitiveUpdate(Simulator simulator, Primitive av, ObjectUpdate update, ulong RegionHandle, ushort TimeDilation)
+        private void Objects_OnPrimitiveUpdateReal(Simulator simulator, Primitive av, ObjectMovementUpdate update, ulong RegionHandle, ushort TimeDilation)
         {
             if (!IsMaster(simulator)) return;
             if (av == null)
@@ -260,7 +269,13 @@ namespace cogbot.Listeners
             }
         }
 
-        public override void Objects_OnObjectUpdated(Simulator simulator, ObjectUpdate update, ulong regionHandle,
+          public override void Objects_OnObjectUpdated(object sender, TerseObjectUpdateEventArgs e1)
+          {
+              Objects_OnObjectUpdatedReal(e1.Simulator, e1.Update, e1.Simulator.Handle, e1.TimeDilation);
+              base.Objects_OnObjectUpdated(sender,e1);
+          }
+
+        public void Objects_OnObjectUpdatedReal(Simulator simulator, ObjectMovementUpdate update, ulong regionHandle,
                                                      ushort timeDilation)
         {
             throw new InvalidOperationException("Objects_OnObjectProperties");
@@ -268,17 +283,17 @@ namespace cogbot.Listeners
             if (simulator.Handle != regionHandle)
             {
                 Debug("Strange update" + simulator);
-                base.Objects_OnObjectUpdated(simulator, update, regionHandle, timeDilation);
+                //base.Objects_OnObjectUpdated(simulator, update, regionHandle, timeDilation);
             }
             // return;
             CheckConnected(simulator);
             //all things if (update.Avatar)
 
             Primitive av = GetPrimitive(update.LocalID, simulator);
-            Objects_OnPrimitiveUpdate(simulator, av, update, regionHandle, timeDilation);
+            Objects_OnObjectUpdated1(simulator, av, update, regionHandle, timeDilation);
         }
 
-        public void Objects_OnObjectUpdated1(Simulator simulator, Primitive objectUpdated, ObjectUpdate update, ulong regionHandle,
+        public void Objects_OnObjectUpdated1(Simulator simulator, Primitive objectUpdated, ObjectMovementUpdate update, ulong regionHandle,
                                              ushort timeDilation)
         {
             if (!IsMaster(simulator)) return;
@@ -317,13 +332,13 @@ namespace cogbot.Listeners
                                 if (dist > 30 && !update.Avatar) return;
                             }                            
                             // Make a "diff" from previous
-                            ObjectUpdate up;
+                            ObjectMovementUpdate up;
                             lock (LastObjectUpdate) up = LastObjectUpdate[simObject];
                             Object diffO = notifyUpdate(simObject, up, update,
                                                         InformUpdate);
                             if (diffO != null)
                             {
-                                ObjectUpdate diff = (ObjectUpdate) diffO;
+                                ObjectMovementUpdate diff = (ObjectMovementUpdate) diffO;
                                 //if (lastObjectUpdateDiff.ContainsKey(objectUpdated.ID))
                                 //{
                                 //    notifyUpdate(objectUpdated, lastObjectUpdateDiff[objectUpdated.ID], diff, InformUpdateDiff);
@@ -336,7 +351,7 @@ namespace cogbot.Listeners
                                 // someThingElseNeedsUpdate(objectUpdated);
                                 //  needsOsdDiff = true;
                             }
-                            ObjectUpdate TheDiff = default(ObjectUpdate);
+                            ObjectMovementUpdate TheDiff = default(ObjectMovementUpdate);
                             lock (LastObjectUpdateDiff)
                             {
                                 if (LastObjectUpdateDiff.ContainsKey(objectUpdated.ID))
@@ -377,9 +392,9 @@ namespace cogbot.Listeners
             return after;
         }
 
-        private Object notifyUpdate(SimObject objectUpdated, ObjectUpdate before, ObjectUpdate after, DoWhat didUpdate)
+        private Object notifyUpdate(SimObject objectUpdated, ObjectMovementUpdate before, ObjectMovementUpdate after, DoWhat didUpdate)
         {
-            ObjectUpdate diff = updateDiff(before, after);
+            ObjectMovementUpdate diff = updateDiff(before, after);
             bool wasChanged = false;
             bool wasPositionUpdateSent = false;
             if (before.Acceleration != after.Acceleration)
@@ -486,9 +501,9 @@ namespace cogbot.Listeners
             SendNewRegionEvent(SimEventType.MOVEMENT, eventName, obj, value);
         }
 
-        public static ObjectUpdate updatFromSimObject(SimObject from)
+        public static ObjectMovementUpdate updatFromSimObject(SimObject from)
         {
-            ObjectUpdate update = new ObjectUpdate();
+            ObjectMovementUpdate update = new ObjectMovementUpdate();
             if (from.Prim != null)
             {
                 update.Acceleration = from.Prim.Acceleration;
@@ -505,9 +520,9 @@ namespace cogbot.Listeners
             return update;
         }
 
-        public static ObjectUpdate updatFromPrim0(Primitive fromPrim)
+        public static ObjectMovementUpdate updatFromPrim0(Primitive fromPrim)
         {
-            ObjectUpdate update;// = new ObjectUpdate();
+            ObjectMovementUpdate update;// = new ObjectMovementUpdate();
             update.Acceleration = fromPrim.Acceleration;
             update.AngularVelocity = fromPrim.AngularVelocity;
             update.CollisionPlane = fromPrim.CollisionPlane;
@@ -522,9 +537,9 @@ namespace cogbot.Listeners
         }
 
 
-        public static ObjectUpdate updateDiff(ObjectUpdate fromPrim, ObjectUpdate diff)
+        public static ObjectMovementUpdate updateDiff(ObjectMovementUpdate fromPrim, ObjectMovementUpdate diff)
         {
-            ObjectUpdate update;// = new ObjectUpdate();
+            ObjectMovementUpdate update;// = new ObjectMovementUpdate();
             update.LocalID = fromPrim.LocalID;
             update.Avatar = fromPrim.Avatar;
             update.Acceleration = fromPrim.Acceleration - diff.Acceleration;
@@ -539,7 +554,7 @@ namespace cogbot.Listeners
         }
 
 
-        public static void updateToPrim(Primitive prim, ObjectUpdate update)
+        public static void updateToPrim(Primitive prim, ObjectMovementUpdate update)
         {
             prim.Acceleration = update.Acceleration;
             prim.AngularVelocity = update.AngularVelocity;

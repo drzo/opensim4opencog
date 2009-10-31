@@ -405,30 +405,29 @@ namespace cogbot
                 UtilitiesTcpServer.startSocketListener();
             }
 
-            Network.RegisterCallback(PacketType.AgentDataUpdate, new NetworkManager.PacketCallback(AgentDataUpdateHandler));
-            Network.RegisterCallback(PacketType.AlertMessage, new NetworkManager.PacketCallback(AlertMessageHandler));
-            Network.RegisterCallback(PacketType.AvatarAppearance, new NetworkManager.PacketCallback(AvatarAppearanceHandler));
+            Network.RegisterCallback(PacketType.AgentDataUpdate, AgentDataUpdateHandler);
+            Network.RegisterCallback(PacketType.AlertMessage, AlertMessageHandler);
+            Network.RegisterCallback(PacketType.AvatarAppearance, AvatarAppearanceHandler);
 
             //Move to effects Appearance.OnAppearanceUpdated += new AppearanceManager.AppearanceUpdatedCallback(Appearance_OnAppearanceUpdated);
 
-            Inventory.OnObjectOffered += new InventoryManager.ObjectOfferedCallback(Inventory_OnInventoryObjectReceived);
-            Groups.OnGroupMembers += new GroupManager.GroupMembersCallback(GroupMembersHandler);
+            Inventory.InventoryObjectOffered += Inventory_OnInventoryObjectReceived;
+            Groups.GroupMembersReply += new EventHandler<GroupMembersReplyEventArgs>(GroupMembersHandler);
             Logger.OnLogMessage += new Logger.LogCallback(client_OnLogMessage);
-            Network.OnEventQueueRunning += new NetworkManager.EventQueueRunningCallback(Network_OnEventQueueRunning);
-            Network.OnLogin += new NetworkManager.LoginCallback(Network_OnLogin);
-            Network.OnLogoutReply += new NetworkManager.LogoutCallback(Network_OnLogoutReply);
-            Network.OnSimConnected += new NetworkManager.SimConnectedCallback(Network_OnSimConnected);
-            Network.OnSimDisconnected += new NetworkManager.SimDisconnectedCallback(Network_OnSimDisconnected);
-            Network.OnConnected += new NetworkManager.ConnectedCallback(Network_OnConnected);
-            Network.OnDisconnected += new NetworkManager.DisconnectedCallback(Network_OnDisconnected);
-            Self.OnInstantMessage += new AgentManager.InstantMessageCallback(Self_OnInstantMessage);
+            Network.EventQueueRunning += Network_OnEventQueueRunning;
+            Network.LoginProgress += Network_OnLogin;
+            Network.LoggedOut += Network_OnLogoutReply;
+            Network.SimConnected += Network_OnSimConnected;
+            Network.SimDisconnected += Network_OnSimDisconnected;
+            //Network.OnConnected += Network_OnConnected;
+            Network.Disconnected += Network_OnDisconnected;
+            Self.IM += Self_OnInstantMessage;
             //Self.OnScriptDialog += new AgentManager.ScriptDialogCallback(Self_OnScriptDialog);
             //Self.OnScriptQuestion += new AgentManager.ScriptQuestionCallback(Self_OnScriptQuestion);
-            Self.OnTeleport += new AgentManager.TeleportCallback(Self_OnTeleport);
-            Self.OnChat += new AgentManager.ChatCallback(Self_OnChat);
-            GroupManager.CurrentGroupsCallback callback =
-                    new GroupManager.CurrentGroupsCallback(Groups_OnCurrentGroups);
-            Groups.OnCurrentGroups += callback;
+            Self.TeleportProgress += Self_OnTeleport;
+            Self.ChatFromSimulator += Self_OnChat;
+            var callback = new EventHandler<CurrentGroupsEventArgs>(Groups_OnCurrentGroups);
+            Groups.CurrentGroups += callback;
 
             updateTimer.Start();
             searcher = new BotInventoryEval(this);
@@ -511,8 +510,10 @@ namespace cogbot
                     c.Think();
         }
 
-        private void AgentDataUpdateHandler(Packet packet, Simulator sim)
+        private void AgentDataUpdateHandler(object sender, PacketReceivedEventArgs e)
         {
+            var sim = e.Simulator;
+            var packet = e.Packet;
             AgentDataUpdatePacket p = (AgentDataUpdatePacket)packet;
             if (p.AgentData.AgentID == sim.Client.Self.AgentID)
             {
@@ -523,33 +524,38 @@ namespace cogbot
             }
         }
 
-        private void GroupMembersHandler(UUID requestID, UUID groupID, Dictionary<UUID, GroupMember> members)
+        private void GroupMembersHandler(object sender, GroupMembersReplyEventArgs e)
         {
             //TODO MAKE DEBUG MESSAGE  WriteLine(String.Format("Got {0} group members.", members.Count));
-            GroupMembers = members;
+            GroupMembers = e.Members;
         }
 
-        private void AvatarAppearanceHandler(Packet packet, Simulator simulator)
+        private void AvatarAppearanceHandler(object sender, PacketReceivedEventArgs e)
         {
+            var sim = e.Simulator;
+            var packet = e.Packet;
             AvatarAppearancePacket appearance = (AvatarAppearancePacket)packet;
 
             lock (Appearances) Appearances[appearance.Sender.ID] = appearance;
         }
 
-        private void AlertMessageHandler(Packet packet, Simulator simulator)
+        private void AlertMessageHandler(object sender, PacketReceivedEventArgs e)
         {
+            var sim = e.Simulator;
+            var packet = e.Packet;
             AlertMessagePacket message = (AlertMessagePacket)packet;
             WriteLine("[AlertMessage] " + Utils.BytesToString(message.AlertData.Message));
         }
 
         public void ReloadGroupsCache()
         {
-            GroupManager.CurrentGroupsCallback callback =
-                    new GroupManager.CurrentGroupsCallback(Groups_OnCurrentGroups);
-            Groups.OnCurrentGroups += callback;
+   //         GroupManager.CurrentGroupsCallback callback =
+     //               new GroupManager.CurrentGroupsCallback(Groups_OnCurrentGroups);
+            var callback = new EventHandler<CurrentGroupsEventArgs>(Groups_OnCurrentGroups);
+            Groups.CurrentGroups += callback;
             Groups.RequestCurrentGroups();
             GroupsEvent.WaitOne(10000, false);
-            Groups.OnCurrentGroups -= callback;
+            Groups.CurrentGroups -= callback;
             GroupsEvent.Reset();
         }
 
@@ -576,18 +582,19 @@ namespace cogbot
             return UUID.Zero;
         }
 
-        private void Groups_OnCurrentGroups(Dictionary<UUID, Group> pGroups)
+        private void Groups_OnCurrentGroups(object sender, CurrentGroupsEventArgs e)
         {
             if (null == GroupsCache)
-                GroupsCache = pGroups;
+                GroupsCache = e.Groups;
             else
-                lock (GroupsCache) { GroupsCache = pGroups; }
+                lock (GroupsCache) { GroupsCache = e.Groups; }
             GroupsEvent.Set();
         }
 
 
-        void Self_OnTeleport(string message, TeleportStatus status, TeleportFlags flags)
+        void Self_OnTeleport(object sender, TeleportEventArgs e)
         {
+            var status = e.Status;
             if (status == TeleportStatus.Finished || status == TeleportStatus.Failed || status == TeleportStatus.Cancelled)
             {
                 WriteLine("Teleport " + status);
@@ -596,16 +603,20 @@ namespace cogbot
         }
 
 
-        void Self_OnChat(string message, ChatAudibleLevel audible, ChatType type, ChatSourceType sourceType, string fromName, UUID id, UUID ownerid, Vector3 position)
+        void Self_OnChat(object sender, ChatEventArgs e)
         {
+            var sourceType = e.SourceType;
+            var message = e.Message;
+            var fromName = e.FromName;
             if (message.Length > 0 && sourceType == ChatSourceType.Agent && !muteList.Contains(fromName))
             {
                 WriteLine(String.Format("{0} says, \"{1}\".", fromName, message));
             }
         }
 
-        private void Self_OnInstantMessage(InstantMessage im, Simulator simulator)
+        private void Self_OnInstantMessage(object sender, InstantMessageEventArgs e)
         {
+            InstantMessage im = e.IM;
             if (im.Dialog == InstantMessageDialog.GroupNotice)
             {
                 im.GroupIM = true;
@@ -692,26 +703,35 @@ namespace cogbot
         }
 
 
-        private bool Inventory_OnInventoryObjectReceived(InstantMessage offer, AssetType type,
-                                                         UUID objectID, bool fromTask)
+        private void Inventory_OnInventoryObjectReceived(object sender, InventoryObjectOfferedEventArgs e)
         {
-            if (true) return true; // accept everything
+            if (true)
+            {
+                e.Accept = true;
+                return; // accept everything}
+            }
             if (_masterKey != UUID.Zero)
             {
-                if (offer.FromAgentID != _masterKey)
-                    return false;
+                if (e.Offer.FromAgentID != _masterKey)
+                {
+                    e.Accept = false;
+                    return;
+                }
             }
-            else if (GroupMembers != null && !GroupMembers.ContainsKey(offer.FromAgentID))
+            else if (GroupMembers != null && !GroupMembers.ContainsKey(e.Offer.FromAgentID))
             {
-                return false;
+                e.Accept = false;
+                return;
             }
 
-            return true;
+            e.Accept = true;
         }
 
         // EVENT CALLBACK SECTION
-        void Network_OnDisconnected(NetworkManager.DisconnectType reason, string message)
+        void Network_OnDisconnected(object sender, DisconnectedEventArgs e)
         {
+            var message = e.Message;
+            var reason = e.Reason;
             try
             {
                 if (message.Length > 0)
@@ -724,7 +744,7 @@ namespace cogbot
                 WriteLine("Bad Names: " + BoringNamesCount);
                 WriteLine("Good Names: " + GoodNamesCount);
             }
-            catch (Exception e)
+            catch (Exception)
             {
             }
             EnsureConnectedCheck(reason);
@@ -777,8 +797,10 @@ namespace cogbot
         }
 
 
-        void Network_OnSimDisconnected(Simulator simulator, NetworkManager.DisconnectType reason)
+        void Network_OnSimDisconnected(object sender, SimDisconnectedEventArgs e)
         {
+            var simulator = e.Simulator;
+            var reason = e.Reason;
             SendNetworkEvent("On-Sim-Disconnected", this, simulator, reason);
             if (simulator == Network.CurrentSim)
             {
@@ -793,14 +815,16 @@ namespace cogbot
             if (WorldSystem.IsGridMaster) SendNetworkEvent("On-Log-Message", message, level);
         }
 
-        void Network_OnEventQueueRunning(Simulator simulator)
+        void Network_OnEventQueueRunning(object sender, EventQueueRunningEventArgs e)
         {
+            var simulator = e.Simulator;
             SendNetworkEvent("On-Event-Queue-Running", simulator);
         }
 
-        void Network_OnSimConnected(Simulator simulator)
+        void Network_OnSimConnected(object sender, SimConnectedEventArgs e)
         {
             ExpectConnected = true;
+            var simulator = e.Simulator;
             if (simulator == Network.CurrentSim)
             {
                 if (!Settings.SEND_AGENT_APPEARANCE)
@@ -819,9 +843,9 @@ namespace cogbot
             return true;
         }
 
-        void Network_OnLogoutReply(List<UUID> inventoryItems)
+        void Network_OnLogoutReply(object sender, LoggedOutEventArgs e)
         {
-            SendNetworkEvent("On-Logout-Reply", inventoryItems);
+            SendNetworkEvent("On-Logout-Reply", e);
         }
 
         //=====================
@@ -1280,8 +1304,10 @@ namespace cogbot
         /// </summary>
         /// <param name="login">The status of the login</param>
         /// <param name="message">Error message on failure, MOTD on success.</param>
-        public void Network_OnLogin(LoginStatus login, string message)
+        public void Network_OnLogin(object sender, LoginProgressEventArgs e)
         {
+            var message = e.Message;
+            var login = e.Status;
             if (login == LoginStatus.Success)
             {
                 // Start in the inventory root folder.

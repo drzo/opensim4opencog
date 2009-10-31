@@ -104,7 +104,7 @@ namespace CogbotRadegastPluginModule
 
 
             // Callbacks
-            netcom.ClientLoginStatus += new EventHandler<ClientLoginEventArgs>(netcom_ClientLoginStatus);
+            netcom.ClientLoginStatus += new EventHandler<LoginProgressEventArgs>(netcom_ClientLoginStatus);
             //netcom.ClientLoggedOut += new EventHandler(netcom_ClientLoggedOut);
             //  netcom.ChatReceived += new EventHandler<ChatEventArgs>(netcom_ChatReceived);
             //netcom.InstantMessageReceived += new EventHandler<InstantMessageEventArgs>(netcom_InstantMessageReceived);
@@ -142,17 +142,17 @@ namespace CogbotRadegastPluginModule
 
         void ChatConsole_Disposed(object sender, EventArgs e)
         {
-            netcom.ClientLoginStatus -= new EventHandler<ClientLoginEventArgs>(netcom_ClientLoginStatus);
+            netcom.ClientLoginStatus -= new EventHandler<LoginProgressEventArgs>(netcom_ClientLoginStatus);
             netcom.ClientLoggedOut -= new EventHandler(netcom_ClientLoggedOut);
             //   netcom.ChatReceived -= new EventHandler<ChatEventArgs>(netcom_ChatReceived);
             netcom.InstantMessageReceived -= new EventHandler<InstantMessageEventArgs>(netcom_InstantMessageReceived);
           //  this.instance.Config.ConfigApplied -= new EventHandler<ConfigAppliedEventArgs>(Config_ConfigApplied);
-            client.Grid.OnCoarseLocationUpdate -= new GridManager.CoarseLocationUpdateCallback(Grid_OnCoarseLocationUpdate);
-            client.Avatars.OnAvatarProperties -= new AvatarManager.AvatarPropertiesCallback(Avatars_OnAvatarProperties);
+            //client.Grid.CoarseLocationUpdate -= new GridManager.CoarseLocationUpdateCallback(Grid_OnCoarseLocationUpdate);
+            client.Avatars.AvatarPropertiesReply -= new EventHandler<AvatarPropertiesReplyEventArgs>(Avatars_OnAvatarProperties);
             writeLock.Dispose();
         }
 
-        void Avatars_OnAvatarProperties(UUID avatarID, Avatar.AvatarProperties properties)
+        void Avatars_OnAvatarProperties(object sender, AvatarPropertiesReplyEventArgs e)
         {
             //if (avatarID == client.Self.AgentID)
             //{
@@ -290,7 +290,7 @@ namespace CogbotRadegastPluginModule
             //}
         }
 
-        private void netcom_ClientLoginStatus(object sender, ClientLoginEventArgs e)
+        private void netcom_ClientLoginStatus(object sender, LoginProgressEventArgs e)
         {
             if (e.Status != LoginStatus.Success) return;
 

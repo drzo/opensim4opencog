@@ -33,12 +33,12 @@ namespace cogbot.Actions
                     message += args[ct] + " ";
                 message = message.TrimEnd();
                 if (message.Length > 1023) message = message.Remove(1023);
-                AgentManager.GroupChatJoinedCallback callback =
-                    delegate(UUID groupchatsessionid, string sessionname, UUID tmpsessionid, bool success)
+                EventHandler<GroupChatJoinedEventArgs> callback =
+                    delegate(object sender, GroupChatJoinedEventArgs e)
                         {
-                            if (success)
+                            if (e.Success)
                             {
-                                WriteLine("Joined {0} Group Chat Success!", sessionname);
+                                WriteLine("Joined {0} Group Chat Success!", e.SessionName);
                                 WaitForSessionStart.Set();
                             }
                             else
@@ -48,7 +48,7 @@ namespace cogbot.Actions
                         };
                 try
                 {
-                    Client.Self.OnGroupChatJoin += callback;
+                    Client.Self.GroupChatJoined += callback;
                     if (!Client.Self.GroupChatSessions.ContainsKey(ToGroupID))
                     {
                         WaitForSessionStart.Reset();
@@ -70,7 +70,7 @@ namespace cogbot.Actions
                 }
                 finally
                 {
-                    Client.Self.OnGroupChatJoin -= callback;
+                    Client.Self.GroupChatJoined -= callback;
                 }
                 return Success("Instant Messaged group " + ToGroupID.ToString() + " with message: " + message);
             }

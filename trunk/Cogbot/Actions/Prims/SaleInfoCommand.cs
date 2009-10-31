@@ -56,7 +56,7 @@ namespace cogbot.Actions
             }
 
             WriteLine("Setting Ammount={0} SaleType={1} for {2}", saletype, amount, o);
-            TheBotClient.Objects.SetSaleInfo(currentPrim.LocalID,saletype,amount);
+            TheBotClient.Objects.SetSaleInfo(WorldSystem.GetSimulator(currentPrim),currentPrim.LocalID,saletype,amount);
 
             return Success(Name + " on " + o);
         }

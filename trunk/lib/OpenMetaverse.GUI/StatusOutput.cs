@@ -83,20 +83,25 @@ namespace OpenMetaverse.GUI
         private void InitializeClient(GridClient client)
         {
             _Client = client;
-            _Client.Network.OnCurrentSimChanged += new NetworkManager.CurrentSimChangedCallback(Network_OnCurrentSimChanged);
-            _Client.Network.OnDisconnected += new NetworkManager.DisconnectedCallback(Network_OnDisconnected);
-            _Client.Network.OnLogin += new NetworkManager.LoginCallback(Network_OnLogin);
-            _Client.Self.OnAlertMessage += new AgentManager.AlertMessageCallback(Self_OnAlertMessage);
-            _Client.Self.OnMoneyBalanceReplyReceived += new AgentManager.MoneyBalanceReplyCallback(Self_OnMoneyBalanceReplyReceived);
+            _Client.Network.SimChanged += Network_OnCurrentSimChanged;
+            _Client.Network.Disconnected += Network_OnDisconnected;
+            _Client.Network.LoginProgress += Network_OnLogin;
+            _Client.Self.AlertMessage += Self_AlertMessage;
+            _Client.Self.MoneyBalanceReply += Self_MoneyBalanceReply;
         }
 
-        void Self_OnMoneyBalanceReplyReceived(UUID transactionID, bool transactionSuccess, int balance, int metersCredit, int metersCommitted, string description)
+        void Self_AlertMessage(object sender, AlertMessageEventArgs e)
         {
-            if (description != String.Empty) LogText(description, Color.Green);
-            LogText("Balance: L$" + balance, Color.Green);
+            LogText(e.Message, Color.Gray);
         }
 
-        void Network_OnCurrentSimChanged(Simulator PreviousSimulator)
+        void Self_MoneyBalanceReply(object sender, MoneyBalanceReplyEventArgs e)
+        {
+            if (e.Description != String.Empty) LogText(e.Description, Color.Green);
+            LogText("Balance: L$" + e.Balance, Color.Green);
+        }
+        
+        void Network_OnCurrentSimChanged(object sender, SimChangedEventArgs e)
         {
             if (Client.Network.CurrentSim != null)
             {
@@ -104,21 +109,15 @@ namespace OpenMetaverse.GUI
             }
         }
 
-        void Network_OnDisconnected(NetworkManager.DisconnectType reason, string message)
+        void Network_OnDisconnected(object sender, DisconnectedEventArgs e)
         {
-            LogText("Disconnected" + (message != null && message != String.Empty ? ": " + message : "."), Color.Black);
+            LogText("Disconnected" + (!String.IsNullOrEmpty(e.Message) ? ": " + e.Message : "."), Color.Black);
         }
 
-        void Network_OnLogin(LoginStatus login, string message)
+        void Network_OnLogin(object sender, LoginProgressEventArgs e)
         {
-            if (login == LoginStatus.Failed) LogText("Login failed: " + message, Color.Red);
-            else if (login != LoginStatus.Success) LogText(message, Color.Black);
+            if (e.Status == LoginStatus.Failed) LogText("Login failed: " + e.Message, Color.Red);
+            else if (e.Status != LoginStatus.Success) LogText(e.Message, Color.Black);
         }
-
-        void Self_OnAlertMessage(string message)
-        {
-            LogText(message, Color.Gray);
-        }
-
     }
 }

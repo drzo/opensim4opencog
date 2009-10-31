@@ -1144,7 +1144,7 @@ namespace cogbot.TheOpenSims
         }
 
 
-        public virtual void UpdateObject(ObjectUpdate objectUpdate, ObjectUpdate objectUpdateDiff)
+        public virtual void UpdateObject(ObjectMovementUpdate objectUpdate, ObjectMovementUpdate objectUpdateDiff)
         {
             if (needUpdate)
             {
@@ -2341,7 +2341,7 @@ namespace cogbot.TheOpenSims
         //inherited from Object string ToString();
         bool TurnToward(SimPosition targetPosition);
         bool TurnToward(Vector3 target);
-        void UpdateObject(ObjectUpdate objectUpdate, ObjectUpdate objectUpdateDiff);
+        void UpdateObject(ObjectMovementUpdate objectUpdate, ObjectMovementUpdate objectUpdateDiff);
 
         //void UpdateProperties(Primitive.ObjectProperties props);
 

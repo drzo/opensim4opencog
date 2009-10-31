@@ -3,25 +3,24 @@ using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-using PathSystem3D.Navigation;
 
 namespace cogbot.Actions
 {
-    public class FollowCommand : Command, BotPersonalCommand
+    public class FollowCommand: Command
     {
         const float DISTANCE_BUFFER = 3.0f;
         uint targetLocalID = 0;
-        bool regsiteredCallback = false;
 
 		public FollowCommand(BotClient testClient)
 		{
-            Name = "Linden Server Auto Follow";
-			Description = "Follow another avatar. Usage: autofollow [FirstName LastName]/off.";
+			Name = "Linden follow";
+			Description = "Follow another avatar. Usage: follow [FirstName LastName]/off.";
             Category = CommandCategory.Movement;
-            Parameters = new[] {  new NamedParam(typeof(SimPosition), typeof(SimPosition)) };      
+
+            testClient.Network.RegisterCallback(PacketType.AlertMessage, AlertMessageHandler);
 		}
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine1)
 		{
             // Construct the target name from the passed arguments
 			string target = String.Empty;
@@ -29,11 +28,6 @@ namespace cogbot.Actions
 				target = target + args[ct] + " ";
 			target = target.TrimEnd();
 
-            if (!regsiteredCallback)
-            {
-                regsiteredCallback = true;
-                Client.Network.RegisterCallback(PacketType.AlertMessage, new NetworkManager.PacketCallback(AlertMessageHandler));
-            }
             if (target.Length == 0 || target == "off")
             {
                 Active = false;
@@ -52,25 +46,6 @@ namespace cogbot.Actions
 
         bool Follow(string name)
         {
-            Primitive target = WorldSystem.GetPrimitive(name);
-            if (target != null)
-            {
-                targetLocalID = target.LocalID;
-                Active = true;
-                return true;
-            }
-
-            if (Active)
-            {
-                Client.Self.AutoPilotCancel();
-                Active = false;
-            }
-
-            return false;
-        }
-
-        bool Follow(UUID id)
-        {
             lock (Client.Network.Simulators)
             {
                 for (int i = 0; i < Client.Network.Simulators.Count; i++)
@@ -78,7 +53,7 @@ namespace cogbot.Actions
                     Avatar target = Client.Network.Simulators[i].ObjectsAvatars.Find(
                         delegate(Avatar avatar)
                         {
-                            return avatar.ID == id;
+                            return avatar.Name == name;
                         }
                     );
 
@@ -91,7 +66,12 @@ namespace cogbot.Actions
                 }
             }
 
-            Active = false;
+            if (Active)
+            {
+                Client.Self.AutoPilotCancel();
+                Active = false;
+            }
+
             return false;
         }
 
@@ -112,7 +92,7 @@ namespace cogbot.Actions
 
                             if (Client.Network.Simulators[i] == Client.Network.CurrentSim)
                             {
-                                distance = Vector3.Distance(targetAv.Position, GetSimPosition());
+                                distance = Vector3.Distance(targetAv.Position, Client.Self.SimPosition);
                             }
                             else
                             {
@@ -146,8 +126,10 @@ namespace cogbot.Actions
 			base.Think();
 		}
 
-        private void AlertMessageHandler(Packet packet, Simulator simulator)
+        private void AlertMessageHandler(object sender, PacketReceivedEventArgs e)
         {
+            Packet packet = e.Packet;
+            
             AlertMessagePacket alert = (AlertMessagePacket)packet;
             string message = Utils.BytesToString(alert.AlertData.Message);
 

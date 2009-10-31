@@ -16,6 +16,7 @@ namespace cogbot.Actions
         bool ReceivedInterests = false;
         bool ReceivedGroups = false;
         ManualResetEvent ReceivedProfileEvent = new ManualResetEvent(false);
+        UUID targetID;
 
         bool registeredCallbacks = false;
 
@@ -34,7 +35,6 @@ namespace cogbot.Actions
             if (args.Length < 1)
                 return ShowUsage();
 
-            UUID targetID;
             ReceivedProperties = false;
             ReceivedInterests = false;
             ReceivedGroups = false;
@@ -42,12 +42,12 @@ namespace cogbot.Actions
             if (!registeredCallbacks)
             {
                 registeredCallbacks = true;
-                Client.Avatars.OnAvatarInterests += new AvatarManager.AvatarInterestsCallback(Avatars_OnAvatarInterests);
-                Client.Avatars.OnAvatarProperties += new AvatarManager.AvatarPropertiesCallback(Avatars_OnAvatarProperties);
-                Client.Avatars.OnAvatarGroups += new AvatarManager.AvatarGroupsCallback(Avatars_OnAvatarGroups);
-                Client.Groups.OnGroupJoined += new GroupManager.GroupJoinedCallback(Groups_OnGroupJoined);
-                Client.Avatars.OnAvatarPicks += new AvatarManager.AvatarPicksCallback(Avatars_OnAvatarPicks);
-                Client.Avatars.OnPickInfo += new AvatarManager.PickInfoCallback(Avatars_OnPickInfo);
+                Client.Avatars.AvatarInterestsReply += new EventHandler<AvatarInterestsReplyEventArgs>(Avatars_AvatarInterestsReply);
+                Client.Avatars.AvatarPropertiesReply += new EventHandler<AvatarPropertiesReplyEventArgs>(Avatars_AvatarPropertiesReply);
+                Client.Avatars.AvatarGroupsReply += new EventHandler<AvatarGroupsReplyEventArgs>(Avatars_AvatarGroupsReply);
+                Client.Groups.GroupJoinedReply += new EventHandler<GroupOperationEventArgs>(Groups_OnGroupJoined);
+                Client.Avatars.AvatarPicksReply += new EventHandler<AvatarPicksReplyEventArgs>(Avatars_AvatarPicksReply);
+                Client.Avatars.PickInfoReply += new EventHandler<PickInfoReplyEventArgs>(Avatars_PickInfoReply);
             }
 
             int argsUsed;
@@ -83,60 +83,51 @@ namespace cogbot.Actions
             }
 
             return Success("Synchronized our profile to the profile of " + targetID.ToString());
+        }                           
+
+        void Groups_OnGroupJoined(object sender, GroupOperationEventArgs e)
+        {
+            Console.WriteLine(Client.ToString() + (e.Success ? " joined " : " failed to join ") +
+                e.GroupID.ToString());
+
+            if (e.Success)
+            {
+                Console.WriteLine(Client.ToString() + " setting " + e.GroupID.ToString() +
+                    " as the active group");
+                Client.Groups.ActivateGroup(e.GroupID);
+            }
         }
 
-        void Avatars_OnAvatarPicks(UUID avatarid, Dictionary<UUID, string> picks)
+        void Avatars_PickInfoReply(object sender, PickInfoReplyEventArgs e)
         {
-            foreach (KeyValuePair<UUID, string> kvp in picks)
+            Client.Self.PickInfoUpdate(e.PickID, e.Pick.TopPick, e.Pick.ParcelID, e.Pick.Name, e.Pick.PosGlobal, e.Pick.SnapshotID, e.Pick.Desc);
+        }
+
+        void Avatars_AvatarPicksReply(object sender, AvatarPicksReplyEventArgs e)
+        {
+            if (e.AvatarID != targetID) return;
+            foreach (KeyValuePair<UUID, string> kvp in e.Picks)
             {
-                if (avatarid == Client.Self.AgentID)
+                if (e.AvatarID == Client.Self.AgentID)
                 {
                     Client.Self.PickDelete(kvp.Key);
                 }
                 else
                 {
-                    Client.Avatars.RequestPickInfo(avatarid, kvp.Key);
+                    Client.Avatars.RequestPickInfo(e.AvatarID, kvp.Key);
                 }
             }
         }
 
-        void Avatars_OnPickInfo(UUID pickid, ProfilePick pick)
+        void Avatars_AvatarGroupsReply(object sender, AvatarGroupsReplyEventArgs e)
         {
-            Client.Self.PickInfoUpdate(pickid, pick.TopPick, pick.ParcelID, pick.Name, pick.PosGlobal, pick.SnapshotID, pick.Desc);
-        }
-
-        void Avatars_OnAvatarProperties(UUID avatarID, Avatar.AvatarProperties properties)
-        {
+            if (e.AvatarID != targetID) return;
             lock (ReceivedProfileEvent)
-            {
-                Properties = properties;
-                ReceivedProperties = true;
-
-                if (ReceivedInterests && ReceivedProperties && ReceivedGroups)
-                    ReceivedProfileEvent.Set();
-            }
-        }
-
-        void Avatars_OnAvatarInterests(UUID avatarID, Avatar.Interests interests)
         {
-            lock (ReceivedProfileEvent)
-            {
-                Interests = interests;
-                ReceivedInterests = true;
-
-                if (ReceivedInterests && ReceivedProperties && ReceivedGroups)
-                    ReceivedProfileEvent.Set();
-            }
-        }
-
-        void Avatars_OnAvatarGroups(UUID avatarID, List<AvatarGroup> groups)
-        {
-            lock (ReceivedProfileEvent)
-            {
-                foreach (AvatarGroup group in groups)
+                foreach (AvatarGroup group in e.Groups)
                 {
                     Groups.Add(group.GroupID);
-                }
+        }
 
                 ReceivedGroups = true;
 
@@ -145,17 +136,31 @@ namespace cogbot.Actions
             }
         }
 
-        void Groups_OnGroupJoined(UUID groupID, bool success)
+        void Avatars_AvatarPropertiesReply(object sender, AvatarPropertiesReplyEventArgs e)
         {
-            WriteLine(Client.ToString() + (success ? " joined " : " failed to join ") +
-                groupID.ToString());
-
-            if (success)
+            if (e.AvatarID != targetID) return;
+            lock (ReceivedProfileEvent)
             {
-                WriteLine(Client.ToString() + " setting " + groupID.ToString() +
-                    " as the active group");
-                Client.Groups.ActivateGroup(groupID);
+                Properties = e.Properties;
+                ReceivedProperties = true;
+
+                if (ReceivedInterests && ReceivedProperties && ReceivedGroups)
+                    ReceivedProfileEvent.Set();
             }
         }
+
+        void Avatars_AvatarInterestsReply(object sender, AvatarInterestsReplyEventArgs e)
+        {
+            if (e.AvatarID != targetID) return;
+            lock (ReceivedProfileEvent)
+            {
+                Interests = e.Interests;
+                ReceivedInterests = true;
+
+                if (ReceivedInterests && ReceivedProperties && ReceivedGroups)
+                    ReceivedProfileEvent.Set();
+            }
+        }
+
     }
 }

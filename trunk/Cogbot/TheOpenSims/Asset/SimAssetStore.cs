@@ -36,41 +36,43 @@ namespace cogbot.TheOpenSims
             TheStore = this;
             Client = GC;           
             Manager = Client.Inventory;
-            Manager.OnItemReceived += Inventory_OnItemReceived;
-            Manager.OnTaskItemReceived += Inventory_OnTaskItemReceived;
-            Manager.OnFolderUpdated += Inventory_OnFolderUpdated;
+            Manager.ItemReceived += Inventory_OnItemReceived;
+            Manager.TaskItemReceived += Inventory_OnTaskItemReceived;
+            Manager.FolderUpdated += Inventory_OnFolderUpdated;
             Inventory = Manager.Store;
-            Client.Network.OnSimConnected += Ensure_Downloaded;
+            Client.Network.SimConnected += Ensure_Downloaded;
             FillAssetNames();
         }
 
 
-        private void Store_OnInventoryObjectRemoved(InventoryBase obj)
+        private void Store_OnInventoryObjectRemoved(object sender, InventoryObjectRemovedEventArgs e)
         {
            // throw new NotImplementedException();
         }
 
-        private void Store_OnInventoryObjectUpdated(InventoryBase oldobject, InventoryBase newobject)
+        private void Store_OnInventoryObjectUpdated(object sender, InventoryObjectUpdatedEventArgs e)
         {
-            taskQueue.Enqueue(() =>LoadItemOrFolder(newobject));
+            taskQueue.Enqueue(() =>LoadItemOrFolder(e.NewObject));
         }
 
-        private void Store_OnInventoryObjectAdded(InventoryBase obj)
+        private void Store_OnInventoryObjectAdded(object sender, InventoryObjectAddedEventArgs e)
         {
-            taskQueue.Enqueue(() =>LoadItemOrFolder(obj));
+            taskQueue.Enqueue(() =>LoadItemOrFolder(e.Obj));
         }
 
-        private void Inventory_OnFolderUpdated(UUID folderid)
+        private void Inventory_OnFolderUpdated(object sender, FolderUpdatedEventArgs e)
         {
+            var folderid = e.FolderID;
             lock (BusyUpdating) if (BusyUpdating.Contains(folderid)) return;
             LoadFolderId(folderid);
          //   lock (BusyUpdating) if (BusyUpdating.Remove(folderid)) return;
         }
 
-        private void Inventory_OnTaskItemReceived(UUID itemid, UUID folderid, UUID creatorid, UUID assetid, InventoryType type)
+        private void Inventory_OnTaskItemReceived(object sender, TaskItemReceivedEventArgs e)
         {
-            if (type == InventoryType.Object) return;
-         //   SimAsset A = SetAssetName(assetid, null, type);
+            if (e.Type == InventoryType.Object) return;
+            var folderid = e.FolderID;
+            //   SimAsset A = SetAssetName(assetid, null, type);
             LoadFolderId(folderid);
             lock (BusyUpdating) if (BusyUpdating.Remove(folderid)) return;
         }
@@ -94,21 +96,21 @@ namespace cogbot.TheOpenSims
 
         }
 
-        private void Inventory_OnItemReceived(InventoryItem item)
+        private void Inventory_OnItemReceived(object sender, ItemReceivedEventArgs e)
         {
-            taskQueue.Enqueue(() => LoadItemOrFolder(item));
+            taskQueue.Enqueue(() => LoadItemOrFolder(e.Item));
         }
 
         private bool downloadedAssetFolders = false;
         static bool downloadedAssetFoldersComplete = false;
-        private void Ensure_Downloaded(Simulator simulator)
+        private void Ensure_Downloaded(object sender, SimConnectedEventArgs e)
         {
             if (downloadedAssetFolders) return;
             downloadedAssetFolders = true;
             Inventory = Manager.Store;
-            Inventory.OnInventoryObjectAdded += new Inventory.InventoryObjectAdded(Store_OnInventoryObjectAdded);
-            Inventory.OnInventoryObjectUpdated += new Inventory.InventoryObjectUpdated(Store_OnInventoryObjectUpdated);
-            Inventory.OnInventoryObjectRemoved += new Inventory.InventoryObjectRemoved(Store_OnInventoryObjectRemoved);
+            Inventory.InventoryObjectAdded += Store_OnInventoryObjectAdded;
+            Inventory.InventoryObjectUpdated += Store_OnInventoryObjectUpdated;
+            Inventory.InventoryObjectRemoved += Store_OnInventoryObjectRemoved;
             taskQueue.Enqueue((DownloadAssetFolders));
 
         }
@@ -1316,7 +1318,7 @@ namespace cogbot.TheOpenSims
         }
 
 
-        static public bool IsSitAnim(ICollection<UUID> anims)
+        static public bool IsSitAnim(ICollection<Animation> anims)
         {
             return false;
         }

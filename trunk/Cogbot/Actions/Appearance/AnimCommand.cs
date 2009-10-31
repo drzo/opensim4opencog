@@ -23,13 +23,13 @@ namespace cogbot.Actions
             {
                 ICollection<string> list = WorldSystem.SimAssetSystem.GetAssetNames(AssetType.Animation);
                 WriteLine(TheBotClient.argsListString(list));
-                IDictionary<UUID, int> anims = WorldSystem.TheSimAvatar.GetCurrentAnimDict();
+                List<Animation> gestures = WorldSystem.TheSimAvatar.GetCurrentAnimDict();
                 string alist = String.Empty;
-                foreach (UUID id in anims.Keys)
+                foreach (var anim in gestures)
                 {
-                    alist += WorldSystem.GetAnimationName(id);
+                    alist += WorldSystem.GetAnimationName(anim.AnimationID);
                     alist += " ";
-                    alist += anims[id];
+                    alist += anim.AnimationSequence;
                     alist += Environment.NewLine;
                 }
                 WriteLine("Currently: {0}", alist);
