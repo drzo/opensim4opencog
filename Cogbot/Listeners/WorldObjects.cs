@@ -45,13 +45,14 @@ namespace cogbot.Listeners
         private static readonly Dictionary<ulong, List<uint>> primsSelectedOutbox = new Dictionary<ulong, List<uint>>();
 
         private static readonly TaskQueueHandler PropertyQueue = new TaskQueueHandler("NewObjectQueue", 0);
-        public static readonly TaskQueueHandler ParentGrabber = new TaskQueueHandler("ParentGrabber", 10);
+        public static readonly TaskQueueHandler ParentGrabber = new TaskQueueHandler("ParentGrabber", 10, false);
 
         private static readonly object SelectObjectsTimerLock = new object();
         private static readonly List<ThreadStart> ShutdownHooks = new List<ThreadStart>();
         private static readonly TaskQueueHandler EventQueue = new TaskQueueHandler("World EventQueue", 0);
-        private static readonly TaskQueueHandler CatchUpQueue = new TaskQueueHandler("Simulator catchup", 30000);
-        private static readonly TaskQueueHandler MetaDataQueue = new TaskQueueHandler("MetaData Getter", 0);
+        private static readonly TaskQueueHandler CatchUpQueue = new TaskQueueHandler("Simulator catchup", 30000, false);
+        private static readonly TaskQueueHandler MetaDataQueue = new TaskQueueHandler("MetaData Getter", 0, false);
+        private static readonly TaskQueueHandler OnConnectedQueue = new TaskQueueHandler("OnConnectedQueue", 0, false);
         internal static readonly Dictionary<UUID, object> uuidTypeObject = new Dictionary<UUID, object>();
         private static readonly object WorldObjectsMasterLock = new object();
 
@@ -1398,12 +1399,15 @@ namespace cogbot.Listeners
                     //client.Avatars.RequestAvatarPicks(uuid);
                     SimObjects.AddTo(obj0);
                     RegisterUUID(uuid, obj0);
-                    client.Avatars.RequestAvatarName(uuid);
-                    if (MaintainAvatarMetaData)
+                    OnConnectedQueue.Enqueue(() =>
                     {
-                        client.Avatars.RequestAvatarProperties(uuid);
-                        //   client.Avatars.RequestAvatarClassified(uuid);
-                    }
+                        client.Avatars.RequestAvatarName(uuid);
+                        if (MaintainAvatarMetaData)
+                        {
+                            client.Avatars.RequestAvatarProperties(uuid);
+                            //   client.Avatars.RequestAvatarClassified(uuid);
+                        }
+                    });
                     return (SimAvatarImpl) obj0;
                 }
             }

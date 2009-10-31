@@ -7,7 +7,7 @@ namespace cogbot.Utilities
     public class TaskQueueHandler : IDisposable
     {
         static public HashSet<TaskQueueHandler> TaskQueueHandlers = new HashSet<TaskQueueHandler>();
-        readonly private Thread EventQueueHandler;
+        private Thread EventQueueHandler;
         readonly private Thread EventQueuePing;
         readonly private string Name;
         static private readonly TimeSpan PING_TIME = new TimeSpan(0, 0, 0, 30); //30 seconds
@@ -23,22 +23,30 @@ namespace cogbot.Utilities
         AutoResetEvent WaitingOn = new AutoResetEvent(false);
         readonly LinkedList<ThreadStart> EventQueue = new LinkedList<ThreadStart>();
         public static bool DebugQueue = true;
-        public TaskQueueHandler(string str, int msWaitBetween)
+        public TaskQueueHandler(string str, int msWaitBetween) : this(str,msWaitBetween,true)
+        {
+
+        }
+
+        public TaskQueueHandler(string str, int msWaitBetween, bool autoStart)
         {
             lock (TaskQueueHandlers) TaskQueueHandlers.Add(this);
             Name = str;
             if (msWaitBetween < 1) msWaitBetween = 1;
             WAIT_AFTER = msWaitBetween;
-            EventQueueHandler = new Thread(EventQueue_Handler)
-                                    {
-                                        Name = str + " worker",
-                                        Priority = ThreadPriority.BelowNormal
-                                    };
-            EventQueueHandler.Start();
-            //if (DebugQueue)
+            EventQueuePing = new Thread(EventQueue_Ping) { Name = str + " debug", Priority = ThreadPriority.Lowest };
+            if (autoStart) Start();
+            EventQueuePing.Start();
+        }
+
+        public void Start()
+        {
+            if (EventQueueHandler==null) EventQueueHandler = new Thread(EventQueue_Handler);
+            if (!EventQueueHandler.IsAlive)
             {
-                EventQueuePing = new Thread(EventQueue_Ping) {Name = str + " debug", Priority = ThreadPriority.Lowest};
-                EventQueuePing.Start();
+                EventQueueHandler.Name = Name + " worker";
+                EventQueueHandler.Priority = ThreadPriority.BelowNormal;
+                EventQueueHandler.Start();
             }
         }
 
@@ -155,10 +163,11 @@ namespace cogbot.Utilities
             bool WaitingOnPing = false;
             while (!(IsDisposing))
             {
-                if (!EventQueueHandler.IsAlive)
-                {
-                    Console.WriteLine("Dead " + this); 
-                }
+                if (EventQueueHandler != null)
+                    if (!EventQueueHandler.IsAlive)
+                    {
+                        Console.WriteLine("Dead " + this); 
+                    }
                 Thread.Sleep(PING_TIME);
                 if (_noQueue) continue;
                 if (Busy || WaitingOnPing)
