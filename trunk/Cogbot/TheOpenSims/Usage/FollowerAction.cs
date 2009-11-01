@@ -74,8 +74,9 @@ namespace cogbot.TheOpenSims
                         Thread.Sleep(2000);
                         continue;
                     }
-                    while (useSimpleFollow-- > 0)
+                    while (useSimpleFollow > 0)
                     {
+                        useSimpleFollow--;
                         // TheBot.TurnToward(Target);
                         dist = TheBot.Distance(Target);
                         TheBot.SetMoveTarget(Target, maxDistance);
