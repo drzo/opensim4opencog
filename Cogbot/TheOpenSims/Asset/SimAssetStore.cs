@@ -238,7 +238,8 @@ namespace cogbot.TheOpenSims
         {
             if (FilledInAssets) return;
             lock (uuidAsset)
-            {          
+            {
+                if (FilledInAssets) return; 
                 FilledInAssets = true;
                 AddTexture("alpha_gradient", "e97cf410-8e61-7005-ec06-629eba4cd1fb","Used for generating the texture for the ground dynamically. Also used for creating the *invisiprim* that hides avatars, prims with alpha values less than 1.0 and particle effects");
                 AddTexture("alpha_gradient_2d", "38b86f85-2575-52a9-a531-23108d8da837",
@@ -729,6 +730,24 @@ namespace cogbot.TheOpenSims
                 AddTexture("numbers_9", "42b58e86-e83c-bc1b-4d73-ab3603d00d98");
                 AddTexture("numbers_0", "872560f2-d964-ab22-d558-1607366666c1");
                 AddTexture("hearts", "fcdac14d-6128-ce47-66bc-a3d0d27f6d3d");
+                AddTexture("circle.tga", "0498c309-5306-43cd-82a2-ae31d096cdef");
+                AddTexture("mute_icon.tga", "37c8e000-6aa2-41ef-8f86-e0c2e60bfa42");
+                AddTexture("active_speakers.tga", "c97bdfb5-b0da-4741-877c-7c1553957d30");
+                AddTexture("active_voice_tab.tga", "33281629-74b3-4b0e-98e7-a6383eb277fa");
+                AddTexture("music_icon.tga", "9de3ef3d-ab90-4963-be15-ae77a122a484");
+                AddTexture("media_icon.tga", "9724ad2b-b0ec-4b8c-9558-73f36661db26");
+                AddTexture("volume_icon.tga", "eb510e2b-3815-4434-b502-b18712db65cc");
+                AddTexture("icn_active-speakers-dot-lvl0.tga", "73577b7b-19c3-4050-a19d-36bc2408aa79");
+                AddTexture("icn_active-speakers-dot-lvl1.tga", "8f761ce3-5939-4d3a-8991-00064fdfacf9");
+                AddTexture("icn_active-speakers-dot-lvl2.tga", "0e82d24e-ed45-41bc-b090-94c97c1caab2");
+                AddTexture("icn_active-speakers-typing1.tga", "f9bbb2fe-584b-4c01-86fc-599c69534c1b");
+                AddTexture("icn_active-speakers-typing2.tga", "e3369e02-93e1-43dc-b9c0-4533db0963d0");
+                AddTexture("icn_active-speakers-typing3.tga", "13dd1d96-6836-461e-8a4c-36003065c59b");
+                AddTexture("icn_voice_ptt-off.tga", "ce19b99f-bd2d-4324-88ab-975c357f9e4e");
+                AddTexture("icn_voice_ptt-on.tga", "67f672e1-576f-42ee-973f-c796cc8eefb1");
+                AddTexture("icn_voice_ptt-on-lvl1.tga", "24ebff50-ced7-4d52-8b74-77a5a901e701");
+                AddTexture("icn_voice_ptt-on-lvl2.tga", "1a803501-0da7-4b80-80db-1f79a7842368");
+                AddTexture("icn_voice_ptt-on-lvl3.tga", "3342bfc4-0bd9-4c89-8e87-e5980aee00e5");
 
                 AddAThuruZ(new string[]
                                {
