@@ -1403,6 +1403,7 @@ namespace cogbot.TheOpenSims
             get
             {
                 if (WasKilled) return false;
+                if (!HasPrim) return false;
                 lock (HasPrimLock)
                 {
 

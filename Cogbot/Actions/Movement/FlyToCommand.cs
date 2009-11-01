@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
@@ -38,9 +39,41 @@ namespace cogbot.Actions.Movement
             {
                 return ShowUsage();// " FlyTo x y z [seconds]";
             }
-            if (false)
+            duration = 30000;
+            if (argsUsed < args.Length)
+                if (Int32.TryParse(args[argsUsed], out duration))
+                    duration *= 1000;
+
+            if (true)
             {
-                TheSimAvatar.CurrentAction = new FlyToAction(TheSimAvatar, position);
+                startTime = Environment.TickCount;
+                FlyToAction fta = new FlyToAction(TheSimAvatar, position);
+                if (true)
+                {
+                    fta.InvokeReal();
+                    return Success(string.Format("Start flying to {0}", target));
+                }
+                try
+                {
+                    bool KeepFollowing = true;
+                    fta.RegCallback();
+                    while (KeepFollowing)
+                    {
+                        if (Environment.TickCount - startTime > duration)
+                        {
+                            return Failure("Timer Complete");
+                        }
+                        if (!position.IsRegionAttached)
+                        {
+                            return Failure("Target detatched " + position);
+                        }
+                        KeepFollowing = fta.FlyToOnce();
+                    }
+                }
+                finally
+                {
+                    fta.EndFlyto();
+                }
                 return Success(string.Format("Start flying to {0}", target));
             }
             // iterupt any motion
@@ -49,9 +82,6 @@ namespace cogbot.Actions.Movement
             target0.X = target.X;
             target0.Y = target.Y;
 
-            if (argsUsed < args.Length)
-                if (Int32.TryParse(args[argsUsed], out duration))
-                    duration *= 1000;
 
             Client.Objects.TerseObjectUpdate += callback;
             startTime = Environment.TickCount;

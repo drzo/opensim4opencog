@@ -12,7 +12,8 @@ namespace cogbot.TheOpenSims
         readonly private Thread FollowThread;
         private bool KeepFollowing = true;
         public static bool UsePathfinder = true;
-        bool CallbackReged = false;        
+        bool CallbackReged = false;
+        private int blockedTimes = 0;
         bool DoZ = false;
         
 
@@ -20,11 +21,7 @@ namespace cogbot.TheOpenSims
         {
             BotClient Client = TheBot.GetGridClient();
 
-            if (CallbackReged)
-            {
-                Client.Objects.TerseObjectUpdate -= callback;
-                CallbackReged = false;
-            }
+            DeRegCallback();
             TheBot.StopMoving();
             EndFlyto();
             Client.Self.Movement.Fly = true;
@@ -40,13 +37,7 @@ namespace cogbot.TheOpenSims
             target0.X = (float)target.X;
             target0.Y = (float)target.Y;
 
-            BotClient Client = TheBot.GetGridClient();
-            //Client.Objects.OnObjectUpdated -= callback;
-            if (!CallbackReged)
-            {
-                Client.Objects.TerseObjectUpdate += callback;
-                CallbackReged = true;
-            }
+            RegCallback();
             SetMovement();
             //System.Threading.Thread.Sleep(100);
 
@@ -64,24 +55,17 @@ namespace cogbot.TheOpenSims
                 }
                 finally
                 {
-                    if (CallbackReged)
-                    {
-                        Client.Objects.TerseObjectUpdate -= callback;
-                        CallbackReged = false;
-                    }
+                    DeRegCallback();
                 }
             }
         }
+
 
         private void SetMovement()
         {
 
             BotClient Client = TheBot.GetGridClient();
-            if (!CallbackReged)
-            {
-                Client.Objects.TerseObjectUpdate += callback;
-                CallbackReged = true;
-            }
+            RegCallback();
             startTime = Environment.TickCount;
             Client.Self.Movement.Fly = true;
             Client.Self.Movement.AtPos = true;
@@ -125,82 +109,119 @@ namespace cogbot.TheOpenSims
             {
                 while (KeepFollowing)
                 {
-                    //DoZ = !DoZ;
-                    //if (DoZ) SetMovement();
-                    Thread.Sleep(2000);
-                    // startTime = 10000;
                     if (!Target.IsRegionAttached)
                     {
                         EndFlyto();
                         Console.WriteLine("" + this + " Not regions attached " + Target);
                         Thread.Sleep(2000);
-                        continue;
+                        return;
                     }
-                    BotClient Client = TheBot.GetGridClient();
-                    double dist = TheBot.Distance(Target);
-                    if (dist > maxDistance)
-                    {
-                        //Client.Self.Movement.Fly = true;
-                        //KeepFollowing = true;
-                        //Client.Self.Movement.AtPos = true;
-                        //startTime = 10000;
-                        if (DoZ)
-                        {
-                            Client.Self.Movement.AtPos = false;
-                            //if (startTime + 30000 > Environment.TickCount)
-                            {
-                                DoZ = false;
-                                XYMovement();
-                                target0.X = (float)target.X;
-                                target0.Y = (float)target.Y;
-                                //Client.Objects.OnObjectUpdated -= callback;
-                                if (!CallbackReged)
-                                {
-                                    Client.Objects.TerseObjectUpdate += callback;
-                                    CallbackReged = true;
-                                }
-                                SetMovement();
-                            }
-
-                        }
-                        else
-                        {
-                            if (startTime + 60000 > Environment.TickCount)
-                            {
-                                DoZ = true;
-                            }
-                        }
-                       
-                        //DoZ = !DoZ;
-                        //if (DoZ) ZMovement();
-                        //Client.Self.Movement.TurnToward(target);
-                        //System.Threading.Thread.Sleep(100);
-
-                        //if (!DoZ) XYMovement();
-                        //  Client.Self.Movement.AtPos = false;
-                        //   Client.Self.Movement.AtNeg = false;
-                        //  ZMovement();
-                        //   Client.Self.Movement.SendUpdate(false);
-
-                    }
-                    else
-                    {
-                        DoZ = true;
-                        EndFlyto();
-                        TheBot.TurnToward(Target);
-                        //Thread.Sleep(1000); // total 3 seconds
-                        //KeepFollowing = false;
-                    }
+                    //DoZ = !DoZ;
+                    //if (DoZ) SetMovement();
+                    KeepFollowing = FlyToOnce();
                 }
             }
             finally
             {
                 EndFlyto();
+            }
+        }
+
+        public void RegCallback()
+        {
+            if (!CallbackReged)
+            {
                 BotClient Client = TheBot.GetGridClient();
-                if (CallbackReged)
+                Client.Objects.TerseObjectUpdate += callback;
+                CallbackReged = true;
+            }
+        }
+
+        public void DeRegCallback()
+        {
+            if (CallbackReged)
+            {
+                BotClient Client = TheBot.GetGridClient();
+                Client.Objects.TerseObjectUpdate -= callback;
+                CallbackReged = false;
+            }
+        }
+
+        public bool FlyToOnce()
+        {
+            // startTime = 10000;
+            try
+            {
+
+
+                BotClient Client = TheBot.GetGridClient();
+                double dist = TheBot.Distance(Target);
+                Vector3d premoved = TheBot.GlobalPosition;
+                if (dist > maxDistance)
                 {
-                    Client.Objects.TerseObjectUpdate -= callback;
-                    CallbackReged = false;
+                    //Client.Self.Movement.Fly = true;
+                    //KeepFollowing = true;
+                    //Client.Self.Movement.AtPos = true;
+                    //startTime = 10000;
+                    if (DoZ)
+                    {
+                        Client.Self.Movement.AtPos = false;
+                        //if (startTime + 30000 > Environment.TickCount)
+                        {
+                            DoZ = false;
+                            XYMovement();
+                            target0.X = (float) target.X;
+                            target0.Y = (float) target.Y;
+                            //Client.Objects.OnObjectUpdated -= callback;
+                            RegCallback();
+                            SetMovement();
+                        }
+
+                    }
+                    else
+                    {
+                        if (startTime + 60000 > Environment.TickCount)
+                        {
+                            DoZ = true;
+                        }
+                    }
+                    Thread.Sleep(2000);
+                    double premovedDist = Vector3d.Distance(premoved, TheBot.GlobalPosition);
+                    if (premovedDist < 1)
+                    {
+                        blockedTimes++;
+                        if (blockedTimes < 5) return true;
+                        blockedTimes = 0;
+                        KeepFollowing = false;
+                        TheBot.Debug("Blocked only moved " + premovedDist);
+                        return false;
+                    }
+                    //DoZ = !DoZ;
+                    //if (DoZ) ZMovement();
+                    //Client.Self.Movement.TurnToward(target);
+                    //System.Threading.Thread.Sleep(100);
+
+                    //if (!DoZ) XYMovement();
+                    //  Client.Self.Movement.AtPos = false;
+                    //   Client.Self.Movement.AtNeg = false;
+                    //  ZMovement();
+                    //   Client.Self.Movement.SendUpdate(false);
+                    return true;
+                }
+                else
+                {
+                    DoZ = true;
+                    EndFlyto();
+                    TheBot.TurnToward(Target);
+                    //Thread.Sleep(1000); // total 3 seconds
+                    return false;
+                }
+            }
+            finally
+            {
+                if (false)
+                {
+                    DeRegCallback();
                 }
             }
         }
@@ -210,11 +231,7 @@ namespace cogbot.TheOpenSims
             BotClient Client = TheBot.GetGridClient();
             if (startTime == 0)
             {
-                if (CallbackReged)
-                {
-                    Client.Objects.TerseObjectUpdate -= callback;
-                    CallbackReged = false;
-                }
+                DeRegCallback();
                 return;
             }
             if (e.Update.LocalID == Client.Self.LocalID)
@@ -235,6 +252,7 @@ namespace cogbot.TheOpenSims
                 else if (Vector3d.Distance(Target.GlobalPosition, TheBot.GlobalPosition) <= 2.0)
                 {
                     EndFlyto();
+                    KeepFollowing = false;
                     Debug("At Target");
                 }
             }
@@ -302,7 +320,7 @@ namespace cogbot.TheOpenSims
                 Client.Self.Movement.UpNeg = true;
         }
 
-        private void EndFlyto()
+        public void EndFlyto()
         {
             startTime = 0;
             BotClient Client = TheBot.GetGridClient();
@@ -311,11 +329,7 @@ namespace cogbot.TheOpenSims
             Client.Self.Movement.UpPos = false;
             Client.Self.Movement.UpNeg = false;
             Client.Self.Movement.SendUpdate(false);
-            if (CallbackReged)
-            {
-                Client.Objects.TerseObjectUpdate -= callback;
-                CallbackReged = false;
-            }
+            DeRegCallback();
             DoZ = true;
         }
 
