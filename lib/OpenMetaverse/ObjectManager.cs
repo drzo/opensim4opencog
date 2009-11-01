@@ -1807,7 +1807,7 @@ namespace OpenMetaverse
                         prim.PrimData = data;
 
                         // Textures, texture animations, particle system, and extra params
-                        prim.Textures = objectupdate.Textures;
+                        if (objectupdate.Textures != null) prim.Textures = objectupdate.Textures;
 
                         prim.TextureAnim = new Primitive.TextureAnimation(block.TextureAnim, 0);
                         prim.ParticleSys = new Primitive.ParticleSystem(block.PSBlock, 0);
@@ -1899,7 +1899,7 @@ namespace OpenMetaverse
                         SetAvatarSittingOn(simulator, avatar, block.ParentID, oldSeatID);
 
                         // Textures
-                        avatar.Textures = objectupdate.Textures;
+                        if (objectupdate.Textures != null) avatar.Textures = objectupdate.Textures;
 
                         #endregion Create an Avatar from the decoded data
 
@@ -2072,7 +2072,7 @@ namespace OpenMetaverse
                         obj.Acceleration = update.Acceleration;
                         obj.AngularVelocity = update.AngularVelocity;
                         obj.PrimData.State = update.State;
-                        obj.Textures = update.Textures;
+                        if (update.Textures != null) obj.Textures = update.Textures;
                     }
                     #endregion
                 }
