@@ -413,14 +413,31 @@ namespace cogbot.Actions
             for (int i = argStart; i < names.Length; i++)
             {
                 var name = names[i];
-                Object e = Enum.Parse(type, name);
+
+                Object e = null;
+                try
+                {
+                    e = Enum.Parse(type, name);
+                }
+                catch (ArgumentException)
+                {
+
+                }
                 if (e != null)
                 {
                     d += (ulong) e.GetHashCode();
                     argsUsed++;
                     continue;
                 }
-                e = Enum.Parse(type, name, true);
+                try
+                {
+                    e = Enum.Parse(type, name, true);
+                }
+                catch (ArgumentException)
+                {
+
+                }
+
                 if (e != null)
                 {
                     d += (ulong) e.GetHashCode();

@@ -8,7 +8,7 @@ using OpenMetaverse.Assets;
 
 namespace cogbot.Actions
 {
-    public class ExportCommand : Command
+    public class ExportCommand : Command, RegionMasterCommand
     {
         List<UUID> Textures = new List<UUID>();
         AutoResetEvent GotPermissionsEvent = new AutoResetEvent(false);

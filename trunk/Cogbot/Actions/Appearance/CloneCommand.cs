@@ -22,7 +22,7 @@ namespace cogbot.Actions
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             string targetName = String.Empty;
-
+            bool detatchAll = false;
             for (int ct = 0; ct < args.Length; ct++)
                 targetName = targetName + args[ct] + " ";
             targetName = targetName.TrimEnd();
@@ -44,7 +44,7 @@ namespace cogbot.Actions
 
                     AvatarAppearancePacket appearance = TheBotClient.Appearances[target];
 
-                    AgentSetAppearancePacket set = new AgentSetAppearancePacket();
+                    AgentSetAppearancePacket set = Client.Appearance.MakeAppearancePacket();
                     set.AgentData.AgentID = Client.Self.AgentID;
                     set.AgentData.SessionID = Client.Self.SessionID;
                     set.AgentData.SerialNum = SerialNum++;
@@ -64,7 +64,7 @@ namespace cogbot.Actions
                     #endregion AvatarAppearance to AgentSetAppearance
 
                     // Detach everything we are currently wearing
-                    Client.Appearance.AddAttachments(new List<InventoryItem>(), true);
+                    if (detatchAll) Client.Appearance.AddAttachments(new List<InventoryItem>(), true);
 
                     // Send the new appearance packet
                     Client.Network.SendPacket(set);
@@ -73,6 +73,16 @@ namespace cogbot.Actions
                 }
                 else
                 {
+                    /// allow clone thyself
+                    if (Client.Self.AgentID==target)
+                    {
+                        AgentSetAppearancePacket set = Client.Appearance.MakeAppearancePacket();
+
+                        Client.Network.SendPacket(set);
+                        Logger.DebugLog("Send AgentSetAppearance packet");
+
+                        return Success("Cloned " + targetName);
+                    }
                     return Failure("Don't know the appearance of avatar " + targetName);
                 }
             }

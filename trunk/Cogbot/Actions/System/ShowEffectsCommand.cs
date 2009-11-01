@@ -5,7 +5,7 @@ using OpenMetaverse;
 
 namespace cogbot.Actions
 {
-    public class ShowEffectsCommand : Command
+    public class ShowEffectsCommand : Command, RegionMasterCommand
     {
         bool ShowEffects = false;
 

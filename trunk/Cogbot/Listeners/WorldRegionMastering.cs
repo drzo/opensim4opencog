@@ -135,7 +135,7 @@ namespace cogbot.Listeners
         }
 
         public void Network_OnSimConnectedHook(object sender, SimConnectedEventArgs e)
-        {
+        {            
             Simulator simulator = e.Simulator;
             ///base.Network_OnSimConnected(simulator);
             lock (WorldObjectsMasterLock)
@@ -175,6 +175,11 @@ namespace cogbot.Listeners
                     }
                 }
             }
+            if (simulator == client.Network.CurrentSim)
+            {
+                StartupPostLoginQueues();
+                // new Thread(() => client.Appearance.SetPreviousAppearance(true)).Start();
+            }
             //if (simulator == client.Network.CurrentSim) { new Thread(() => { Thread.Sleep(30000); client.Appearance.SetPreviousAppearance(true); }).Start(); }
         }
 
@@ -204,14 +209,27 @@ namespace cogbot.Listeners
            // base.Network_OnEventQueueRunning(simulator);
             if (simulator == client.Network.CurrentSim)
             {
-                ParentGrabber.Start();
-                CatchUpQueue.Start();
-                MetaDataQueue.Start();
-                OnConnectedQueue.Start();
-                SimAssetSystem.taskQueue.Start();
+                StartupPostLoginQueues();
                 // new Thread(() => client.Appearance.SetPreviousAppearance(true)).Start();
             }
             EnsureSimulator(simulator);
+        }
+
+        static bool DidStartupPostLoginQueues = false;
+        static readonly object DidStartupPostLoginQueuesLock = new object();
+        
+        private void StartupPostLoginQueues()
+        {
+            lock (DidStartupPostLoginQueuesLock)
+            {
+                if (DidStartupPostLoginQueues) return;
+                DidStartupPostLoginQueues = true;
+            }
+            ParentGrabber.Start();
+            CatchUpQueue.Start();
+            MetaDataQueue.Start();
+            OnConnectedQueue.Start();
+            SimAssetSystem.taskQueue.Start();
         }
 
         public override void Network_OnCurrentSimChanged(object sender, SimChangedEventArgs e)

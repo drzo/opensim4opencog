@@ -6,7 +6,7 @@ using OpenMetaverse.Packets;
 
 namespace cogbot.Actions
 {
-    public class FollowCommand: Command
+    public class FollowCommand: Command, BotPersonalCommand
     {
         const float DISTANCE_BUFFER = 3.0f;
         uint targetLocalID = 0;

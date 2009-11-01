@@ -13,9 +13,12 @@
     (setj WorldObjects:MaintainCollisions false)
     (setj WorldObjects:MaintainEffects true)
     (setj WorldObjects:MaintainActions true)
+    (setj WorldObjects:MaintainAnims true)
+    (setj WorldObjects:MaintainSounds false) ;; for testing in a noisey world
+
     (setj GridAddress "https://login.agni.lindenlab.com/cgi-bin/login.cgi")
     (setj GridAddress "http://osgrid.org:8002/")
-    (setj GlobalPasswd "abc123")
+    (setj GlobalPasswd "tek123")
 
     (setj StartLoc "uri:Fairyverse&amp;115&amp;125&amp;21")
     (setj StartLoc "uri:last&amp;173&amp;51&amp;38")
@@ -33,14 +36,18 @@
     '(create-botclient "Cat" "Bot" GlobalPasswd GridAddress StartLoc )
     '(create-botclient "Nephrael" "Rajesh" GlobalPasswd GridAddress)
     '(create-botclient "Jon" "Doe" GlobalPasswd GridAddress StartLoc)
+
   </startupLisp>
   <startupClientLisp>
     (thisClient.ExecuteCommand "load CogbotRadegastPluginModule")
     (thisClient.ExecuteCommand "load AIMLBotModule.dll")
-    ;;(thisClient.ExecuteCommand "load CycWorldModule")
+    (thisClient.ExecuteCommand "load CycWorldModule")
     (thisClient.ExecuteCommand "load TheSimiansModule")
     ;; (thisClient.ExecuteCommand "load IrcRegionModule")
-    (thisClient.ExecuteCommand "login") ;; does the login
+    (thisClient.ExecuteCommand "waitforlogin 60") ;; wait for the login
+    (thisClient.ExecuteCommand "login") ;; does the login if the user didnt press the button
+    ;;(thisClient.ExecuteCommand "goto last/128/128/32") ;; TP home
+
     ;;(thisClient.ExecuteCommand "thread setmaster Nephrael Rajesh") ;; change this to your name
     (thisClient.ExecuteCommand "thread setmaster Douglas Miles") ;; change this to your name
    ;; (thisClient.ExecuteCommand "thread irc #logicmoo cogbotIRCModule irc.freenode.net")  ;; to connect to IRC
@@ -49,4 +56,3 @@
    ;;(thisClient.ExecuteCommand "simbot start") ;; turns on/off Simian module thinker
   </startupClientLisp>
 </Configuration>
-
