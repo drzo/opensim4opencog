@@ -39,7 +39,7 @@ namespace cogbot.Listeners
                 parameters = new object[paramNames.Length];
                 foreach (var o in old)
                 {
-                    fillInParams(o, paramTypes, paramNames, parameters);
+                    fillInParams(o, paramTypes, paramNames, parameters, 2);
                 }
                 foreach (var o in parameters)
                 {
@@ -53,8 +53,9 @@ namespace cogbot.Listeners
             BooleanOnEvent(eventName, paramNames, paramTypes, parameters);
         }
 
-        private void fillInParams(object o, Type[] types, string[] strings, object[] parameters)
+        private void fillInParams(object o, Type[] types, string[] strings, object[] parameters, int d)
         {
+            if (d--<0) return;
             if (o==null) return;
             for (int i = 0; i < strings.Length; i++)
             {
@@ -131,7 +132,7 @@ namespace cogbot.Listeners
                     if (!propertyInfo.CanRead || propertyInfo.GetIndexParameters().Length != 0) continue;
                     object val = propertyInfo.GetValue(o, null);
                     if (val == null) continue;
-                    fillInParams(val, types, strings, parameters);
+                    fillInParams(val, types, strings, parameters, d);
                 }
             }
             for (int i = 0; i < strings.Length; i++)
@@ -141,7 +142,7 @@ namespace cogbot.Listeners
                 {
                     object val = propertyInfo.GetValue(o);
                     if (val == null) continue;
-                    fillInParams(val, types, strings, parameters);
+                    fillInParams(val, types, strings, parameters, d);
                 }
             }
         }
