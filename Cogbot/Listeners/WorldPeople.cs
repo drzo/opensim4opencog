@@ -46,7 +46,7 @@ namespace cogbot.Listeners
                 s1 = fromName;
             }
             if (source != null) s1 = source;
-            object location = AsLocation(client.Network.CurrentSim, position, source);
+            object location = AsLocation(e.Simulator, position, source);
             if (ownerid != id)
             {
                 SendNewRegionEvent(SimEventType.NETWORK, "Bug", "id!=ownerID?", "on-chat",
