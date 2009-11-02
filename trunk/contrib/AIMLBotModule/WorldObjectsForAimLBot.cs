@@ -567,7 +567,7 @@ namespace AIMLBotModule
             if (fromname == GetName()) return;
             if (string.IsNullOrEmpty(fromname))
             {
-                Primitive prim = WorldSystem.GetPrimitive(id, null);
+                Primitive prim = WorldSystem.GetPrimitive(id, e.Simulator);
                 if (prim != null)
                 {
                     fromname = GetSimObject(prim).GetName();
