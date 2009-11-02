@@ -51,6 +51,7 @@ namespace cogbot.Actions.Movement
                 if (true)
                 {
                     fta.InvokeReal();
+                    fta.Abort();
                     return Success(string.Format("Start flying to {0}", target));
                 }
                 try

@@ -46,15 +46,18 @@ namespace cogbot.TheOpenSims
             //Client.Self.Movement.SendUpdate(false);
 
             // start if not already started
+            var list = TheBot.GetGridClient().botCommandThreads;
             if (!FollowThread.IsAlive)
             {
                 try
                 {
+                    list.Add(FollowThread);
                     FollowThread.Start();
                     FollowThread.Join();
                 }
                 finally
                 {
+                    list.Remove(FollowThread);
                     DeRegCallback();
                 }
             }
@@ -100,6 +103,7 @@ namespace cogbot.TheOpenSims
             //Target = position;
             maxDistance = position.GetSizeDistance();
             FollowThread = new Thread(FollowLoop);
+            FollowThread.Name = ToString();
             callback = Objects_OnObjectUpdated;
         }
 
@@ -118,7 +122,7 @@ namespace cogbot.TheOpenSims
                     }
                     //DoZ = !DoZ;
                     //if (DoZ) SetMovement();
-                    KeepFollowing = FlyToOnce();
+                    FlyToOnce();
                 }
             }
             finally
@@ -241,13 +245,13 @@ namespace cogbot.TheOpenSims
                 if (Client.Self.Movement.AtPos || Client.Self.Movement.AtNeg)
                 {
                     TheBot.TurnToward(Target);
-                    Debug("Flyxy ");
+                    //Debug("Flyxy ");
                 }
                 else if (Client.Self.Movement.UpPos || Client.Self.Movement.UpNeg)
                 {
                     TheBot.TurnToward(Target);
                     //Client.Self.Movement.SendUpdate(false);
-                    Debug("Fly z ");
+                    //Debug("Fly z ");
                 }
                 else if (Vector3d.Distance(Target.GlobalPosition, TheBot.GlobalPosition) <= 2.0)
                 {
