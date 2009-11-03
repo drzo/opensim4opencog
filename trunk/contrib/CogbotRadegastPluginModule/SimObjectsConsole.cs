@@ -84,7 +84,7 @@ namespace CogbotRadegastPluginModule
             AddObjectType(typeof(Primitive.ObjectProperties));
             // Callbacks
             client.Network.Disconnected += Network_OnDisconnected;
-            client.Network.SimConnected += Network_OnConnected;
+            instance.Netcom.ClientConnected += Network_OnConnected;
             client.Objects.KillObject +=  Objects_OnObjectKilled;
             //client.Objects.OnObjectProperties += new ObjectManager.ObjectPropertiesCallback(Objects_OnObjectProperties);
             client.Network.SimChanged +=  Network_OnCurrentSimChanged;
@@ -111,7 +111,7 @@ namespace CogbotRadegastPluginModule
 
         }
 
-        private void Network_OnConnected(object sender, SimConnectedEventArgs e)
+        private void Network_OnConnected(object sender, EventArgs e1)
         {
             ClientManager.SingleInstance.LastBotClient.WorldSystem.OnAddSimObject += Objects_OnAddSimObject;
             ClientManager.SingleInstance.LastBotClient.WorldSystem.OnUpdateDataAspect += Objects_OnUpdateSimObject;
