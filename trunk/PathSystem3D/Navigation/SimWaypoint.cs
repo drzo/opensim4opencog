@@ -17,7 +17,14 @@ namespace PathSystem3D.Navigation
     [Serializable]
     public class SimWaypointImpl : PathSystem3D.Navigation.SimWaypoint,SimPosition
     {
-   
+
+        public SimPosition UsePosition
+        {
+            get
+            {
+                return this;
+            }
+        }
         public string DistanceVectorString(SimPosition pos)
         {
             Vector3 loc = pos.SimPosition;

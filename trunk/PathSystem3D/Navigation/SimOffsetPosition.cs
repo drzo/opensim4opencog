@@ -1,10 +1,9 @@
 using System;
 using OpenMetaverse;
-using PathSystem3D.Navigation;
 
 namespace PathSystem3D.Navigation
 {
-    public class SimHeading : SimPosition
+    public class SimOffsetPosition : SimPosition
     {
         public SimPosition UsePosition
         {
@@ -13,57 +12,32 @@ namespace PathSystem3D.Navigation
                 return this;
             }
         }
-        public static SimHeading UNKNOWN = new SimHeading();
-        public SimHeading()
-        {
-        }
-        public SimHeading(SimPosition pos)
-        {
-            late = pos;
-            if (pos.IsRegionAttached)
-            {
-                InitFromPos(pos);
-            }
-        }
 
         public override string ToString()
         {
-            
-            if (reg==null && late!=null && !late.IsRegionAttached )
+            var reg = PathStore;
+            if (reg == null && _late != null && !_late.IsRegionAttached)
             {
-                return "HEADING: " + late;
+                return "HEADING: " + _late;
             }
-            return (reg==null?"?":reg.RegionName) + "/" + pos.X + "/" + pos.Y + "/" + pos.Z + "@" +
+            var pos = this.SimPosition;
+            return (reg == null ? "?" : reg.RegionName) + "/" + pos.X + "/" + pos.Y + "/" + pos.Z + "@" +
                    ZHeading * SimPathStore.RAD2DEG;
         }
 
-        private SimPosition late;
-        private Vector3 lateV3;
-        SimPathStore reg;
-        private Vector3 pos;
-        Quaternion rot;
+        private readonly SimPosition _late;
+        private readonly Vector3 _lateV3;
 
-        public SimHeading(SimPathStore reg, Vector3 pos, Quaternion rot)
+        public SimOffsetPosition(SimPosition pos, Vector3 vector3)
         {
-            this.reg = reg;
-            this.pos = pos;
-            this.rot = rot;
-        }
-
-        public SimHeading(SimPosition pos, Vector3 vector3)
-        {
-            late = pos;
-            lateV3 = vector3;
-            if (pos.IsRegionAttached)
-            {
-                InitFromPos(pos);
-            }
+            _late = pos;
+            _lateV3 = vector3;
         }
 
         public bool IsPassable
         {
             get { return true; }
-            set { throw new NotImplementedException(); }
+            set { _late.IsPassable = value; }
         }
 
         public string DistanceVectorString(SimPosition obj)
@@ -88,7 +62,7 @@ namespace PathSystem3D.Navigation
 
         public string DistanceVectorString(Vector3 loc)
         {
-            SimPathStore R = reg;
+            SimPathStore R = PathStore;
             return String.Format("{0:0.0#}m ", Vector3.Distance(SimPosition, loc))
                    + String.Format("{0}/{1:0.0#}/{2:0.0#}/{3:0.0#}", R.RegionName, loc.X, loc.Y, loc.Z);
         }
@@ -97,21 +71,8 @@ namespace PathSystem3D.Navigation
         {
             get
             {
-                if (reg == null && late != null)
-                {
-                    InitFromPos(late);
-                }
-                return pos;
+                return _late.SimPosition + _lateV3;
             }
-        }
-
-        private void InitFromPos(SimPosition position)
-        {
-            this.reg = position.PathStore;
-            this.pos = position.SimPosition + lateV3;
-            this.rot = position.SimRotation;
-            late = null;
-            lateV3 = Vector3.Zero;
         }
 
         public float GetSizeDistance()
@@ -123,12 +84,7 @@ namespace PathSystem3D.Navigation
         {
             get
             {
-                if (reg == null && late != null)
-                {
-                    if (late.IsRegionAttached)
-                        InitFromPos(late);
-                }
-                return reg != null;
+                return _late.IsRegionAttached;
             }
         }
 
@@ -136,11 +92,7 @@ namespace PathSystem3D.Navigation
         {
             get
             {
-                if (reg == null && late != null)
-                {
-                    InitFromPos(late);
-                }
-                return rot;
+                return _late.SimRotation;
             }
         }
 
@@ -153,11 +105,7 @@ namespace PathSystem3D.Navigation
         {
             get
             {
-                if (reg == null && late != null)
-                {
-                    InitFromPos(late);
-                }
-                return reg;
+                return _late.PathStore;
             }
         }
 
@@ -172,11 +120,11 @@ namespace PathSystem3D.Navigation
 
         public SimPosition GetRoot()
         {
-            return late;
+            return _late;
         }
         public Vector3 GetOffset()
         {
-            return lateV3;
+            return _lateV3;
         }
     }
 }
