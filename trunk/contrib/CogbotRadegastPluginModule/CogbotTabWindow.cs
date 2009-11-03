@@ -774,7 +774,7 @@ namespace CogbotRadegastPluginModule
                                                                                  if (sLength > 20000)
                                                                                  {
                                                                                      rtbChat.Text =
-                                                                                         s.Substring(20000 - sLength);
+                                                                                         s.Substring(sLength - 20000);
                                                                                  }
                                                                                  printer.PrintTextLine(str);
                                                                              })));
