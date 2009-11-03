@@ -174,7 +174,6 @@
         <Reference name="log4net"/>
         <Reference name="OpenMetaverseTypes"/>
         <Reference name="OpenMetaverse.StructuredData"/>
-        <Reference name="OpenMetaverseCore"/>
         <Reference name="OpenMetaverse.Http"/>
         <Reference name="XMLRPC"/>
         <Files>
@@ -416,6 +415,7 @@
         <Reference name="OpenMetaverse" localCopy="false"/>
         <Reference name="OpenMetaverseTypes" localCopy="false"/>
         <Reference name="OpenMetaverse.StructuredData" localCopy="false"/>
+        <Reference name="OpenMetaverse.Http"/>
 
         <Reference name="assemblies/fmodex-dotnet.dll" localCopy="true"/>
         <Reference name="assemblies/Tao.OpenGl.dll" localCopy="true"/>
