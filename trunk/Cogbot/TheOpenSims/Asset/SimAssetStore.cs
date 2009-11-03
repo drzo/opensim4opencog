@@ -826,7 +826,7 @@ namespace cogbot.TheOpenSims
                 AddSound("window open (same as above)", "c80260ba-41fd-8a46-768a-6bf236360e3a");
                 AddSound("zipper? (Floor squeek)", "6cf2be26-90cb-2669-a599-f5ab7698225f");
 
-                if (Directory.Exists("sound_files/"))
+                if (WorldObjects.MaintainAssetsInFolders && Directory.Exists("sound_files/"))
                 {
                     foreach (string files in Directory.GetFiles("sound_files/"))
                     {
@@ -842,39 +842,6 @@ namespace cogbot.TheOpenSims
 
 
                // if (uuidAsset.Count > 0) return;
-
-                AnimMap("aim_bazooka_r", "avatar_aim_R_bazooka");
-                AnimMap("aim_bow_l", "avatar_aim_L_bow");
-                AnimMap("aim_handgun_r", "avatar_aim_R_handgun");
-                AnimMap("aim_rifle_r", "avatar_aim_R_rifle");
-                AnimMap("medium_land", "avatar_soft_land");
-                AnimMap("muscle_beach", "avatar_musclebeach");
-                AnimMap("no", "avatar_no_head");
-                AnimMap("nyah_nyah", "avatar_nyanya");
-                AnimMap("onetwo_punch", "avatar_punch_onetwo");
-                AnimMap("pre_jump", "avatar_prejump");
-                AnimMap("punch_left", "avatar_punch_L");
-                AnimMap("punch_right", "avatar_punch_R");
-                AnimMap("roundhouse_kick", "avatar_kick_roundhouse_R");
-                AnimMap("shoot_bow_l", "avatar_shoot_L_bow");
-                AnimMap("sit_ground_staticrained", "avatar_sit_ground_constrained");
-                AnimMap("sword_strike", "avatar_sword_strike_R");
-                AnimMap("tantrum", "avatar_angry_tantrum");
-                AnimMap("yes", "avatar_yes_head");
-                AnimMap("blow_kiss", "avatar_blowkiss");
-                AnimMap("busy", "avatar_away");
-                AnimMap("finger_wag", "avatar_angry_fingerwag");
-                AnimMap("hold_bazooka_r", "avatar_hold_R_bazooka");
-                AnimMap("hold_bow_l", "avatar_hold_L_bow");
-                AnimMap("hold_handgun_r", "avatar_hold_R_handgun");
-                AnimMap("hold_rifle_r", "avatar_hold_R_rifle");
-                AnimMap("jump_for_joy", "avatar_jumpforjoy");
-                AnimMap("kiss_my_butt", "avatar_kissmybutt");
-                // TODO: these animations need corrected likely
-                AnimMap("express_embarrassed", "avatar_express_embarrased");
-                AnimMap("embarrassed", "avatar_express_embarrased");
-                AnimMap("belly_laugh", "avatar_express_laugh");
-                AnimMap("angry", "avatar_angry_tantrum");
                 /*
                  * need UUIDS for
                         customize.animation
@@ -1042,6 +1009,39 @@ namespace cogbot.TheOpenSims
                 //common extras i've noticed
                 AnimUUID("drinking_or_snowcone", "758547a2-7212-d533-43e3-1666eda1705e");
 
+                AddAssetAlias("aim_bazooka_r", "avatar_aim_R_bazooka");
+                AddAssetAlias("aim_bow_l", "avatar_aim_L_bow");
+                AddAssetAlias("aim_handgun_r", "avatar_aim_R_handgun");
+                AddAssetAlias("aim_rifle_r", "avatar_aim_R_rifle");
+                AddAssetAlias("medium_land", "avatar_soft_land");
+                AddAssetAlias("muscle_beach", "avatar_musclebeach");
+                AddAssetAlias("no", "avatar_no_head");
+                AddAssetAlias("nyah_nyah", "avatar_nyanya");
+                AddAssetAlias("onetwo_punch", "avatar_punch_onetwo");
+                AddAssetAlias("pre_jump", "avatar_prejump");
+                AddAssetAlias("punch_left", "avatar_punch_L");
+                AddAssetAlias("punch_right", "avatar_punch_R");
+                AddAssetAlias("roundhouse_kick", "avatar_kick_roundhouse_R");
+                AddAssetAlias("shoot_bow_l", "avatar_shoot_L_bow");
+                AddAssetAlias("sit_ground_staticrained", "avatar_sit_ground_constrained");
+                AddAssetAlias("sword_strike", "avatar_sword_strike_R");
+                AddAssetAlias("tantrum", "avatar_angry_tantrum");
+                AddAssetAlias("yes", "avatar_yes_head");
+                AddAssetAlias("blow_kiss", "avatar_blowkiss");
+                AddAssetAlias("busy", "avatar_away");
+                AddAssetAlias("finger_wag", "avatar_angry_fingerwag");
+                AddAssetAlias("hold_bazooka_r", "avatar_hold_R_bazooka");
+                AddAssetAlias("hold_bow_l", "avatar_hold_L_bow");
+                AddAssetAlias("hold_handgun_r", "avatar_hold_R_handgun");
+                AddAssetAlias("hold_rifle_r", "avatar_hold_R_rifle");
+                AddAssetAlias("jump_for_joy", "avatar_jumpforjoy");
+                AddAssetAlias("kiss_my_butt", "avatar_kissmybutt");
+                // TODO: these animations need corrected likely
+                AddAssetAlias("express_embarrassed", "avatar_express_embarrased");
+                AddAssetAlias("embarrassed", "avatar_express_embarrased");
+                AddAssetAlias("belly_laugh", "avatar_express_laugh");
+                AddAssetAlias("angry", "avatar_angry_tantrum");
+
                 foreach (FieldInfo fi in typeof(Animations).GetFields())
                 {
                     AnimUUID(fi.Name, ((UUID)fi.GetValue(null)).ToString());
@@ -1051,17 +1051,31 @@ namespace cogbot.TheOpenSims
                     //WorldObjects.RegisterUUID(uid, fName);
                     //                  nameAnim[fName] = uid;
                 }
-                if (Directory.Exists("bvh_files/"))
+                if (WorldObjects.MaintainAnimsInFolders && Directory.Exists("bvh_files/"))
                 {
                     foreach (string files in Directory.GetFiles("bvh_files/"))
                     {
                         if (!files.EndsWith("animation")) continue;
                         byte[] bs = File.ReadAllBytes(files);
-                        string name = Path.GetFileNameWithoutExtension(Path.GetFileName(files)).ToLower();
+                        string name = Path.GetFileNameWithoutExtension(Path.GetFileName(files)).ToLower();               
                         if (nameAsset.ContainsKey(name)) continue;
-                        WriteLine("Anim w/o UUID " + name);
-                        SimAsset anim = new SimAnimation(UUID.Zero, name);
-                        nameAsset[name] = anim;
+                        UUID uuid = TheStore.GetAssetUUID(name, AssetType.Animation);
+                        SimAsset anim;
+                        if (uuid==UUID.Zero)
+                        {
+                            WriteLine("Anim w/o UUID " + name);
+                            anim = new SimAnimation(UUID.Zero, name);                            
+                        } else
+                        {
+                            anim = FindAsset(uuid);
+                        }
+                        if (anim != null)
+                        {
+                            nameAsset[name] = anim;
+                        } else
+                        {
+                            WriteLine("NULL Anim w/o UUID " + name);  
+                        }
                     }
                 }
 
@@ -1198,8 +1212,23 @@ namespace cogbot.TheOpenSims
             return false;
         }
 
-        static void AnimMap(string name, string file)
+        static void AddAssetAlias(string name, string file)
         {
+            UUID prev  = TheStore.GetAssetUUID(name, AssetType.Unknown);
+            if (prev != UUID.Zero)
+            {
+                SimAsset A = FindAsset(prev);
+                if (A != null) A.Name = file;
+            }
+            else
+            {
+                prev = TheStore.GetAssetUUID(file, AssetType.Unknown);
+                if (prev != UUID.Zero)
+                {
+                    SimAsset A = FindAsset(prev);
+                    if (A != null) A.Name = name;
+                }
+            }
             nameNameMap[name.ToLower()] = file.ToLower();
         }
 
@@ -1210,7 +1239,7 @@ namespace cogbot.TheOpenSims
             //lock (SimAssets) 
                 foreach (var list in SimAssets)
                 {
-                    if (list.AssetType==types) names.Add(list.Name);
+                    if (types==AssetType.Unknown || list.AssetType==types) names.Add(list.Name);
                 }
             return names;
         }
