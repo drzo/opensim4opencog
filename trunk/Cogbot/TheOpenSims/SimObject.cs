@@ -15,7 +15,29 @@ namespace cogbot.TheOpenSims
     //TheSims-like object
     public class SimObjectImpl : SimPosition, BotMentalAspect, SimMover, SimObject, MeshableObject
     {
-        
+        public SimPosition UsePosition
+        {
+            get
+            {
+                var pos = this;
+                var finalDistance = pos.GetSizeDistance();
+
+                if  (finalDistance > 6) finalDistance = 6;
+                else
+                    if (finalDistance < 1)
+                    {
+                        return this;
+                    }
+
+
+                Vector3 v3 = Vector3.Transform(Vector3.UnitX, Matrix4.CreateFromQuaternion(pos.SimRotation)) *
+                             (float)finalDistance;
+                //var vFinalLocation = pos.GlobalPosition;
+                //vFinalLocation.X += v3.X;
+                //vFinalLocation.Y += v3.Y;
+                return new SimOffsetPosition(this, v3);
+            }
+        }
         public static implicit operator Primitive(SimObjectImpl m)
         {            
             Primitive p = m.Prim;
@@ -271,13 +293,8 @@ namespace cogbot.TheOpenSims
                     Client.ExecuteCommand("pointat " + obj.ID, Debug);
                 }
                 {
-                    var finalDistance = pos.GetSizeDistance();
-                    var vFinalLocation = pos.GlobalPosition;
-                    Vector3 v3 = Vector3.Transform(Vector3.UnitX, Matrix4.CreateFromQuaternion(pos.SimRotation)) *
-                                 (float)finalDistance;
-                    vFinalLocation.X += v3.X;
-                    vFinalLocation.Y += v3.Y;
-                    Client.ExecuteCommand("pointat " + vFinalLocation.X + " " + vFinalLocation.Y + " " + vFinalLocation.Z, Debug);
+                    var vFinalLocation = pos.UsePosition.GlobalPosition;
+                    Client.ExecuteCommand("pointat " + vFinalLocation.ToRawString(), Debug);
                 }
             }
             else Client.ExecuteCommand("pointat", Debug);
@@ -764,7 +781,12 @@ namespace cogbot.TheOpenSims
         {
             if (prim == null || !prim.IsRegionAttached) return 1300;
             if (!IsRegionAttached) return 1300;
-            return Vector3d.Distance(GlobalPosition, prim.GlobalPosition);
+            Vector3d use = prim.UsePosition.GlobalPosition;
+            Vector3d primGlobalPosition = prim.GlobalPosition;
+            Vector3d GlobalPosition = this.GlobalPosition;
+            double d = Vector3d.Distance(GlobalPosition, primGlobalPosition);
+            double d1 = Vector3d.Distance(use, GlobalPosition);
+            return Math.Min(d, d1);
         }
 
         // the prim in Secondlife
@@ -1548,6 +1570,7 @@ namespace cogbot.TheOpenSims
 
         protected Primitive GetParentPrim(Primitive thisPrim)
         {
+            if (IsKilled) return null;
             Primitive outerPrim = null;
             if (thisPrim.ParentID == 0)
             {
@@ -1570,6 +1593,7 @@ namespace cogbot.TheOpenSims
                 outerPrim = WorldSystem.GetPrimitive(theLPrimParentID, simu);
                 if (outerPrim == null)
                 {
+                    if (IsKilled) return null;
                     Thread.Sleep(500);
                     Debug("Probing for parent");
                     if (!RequestedParent)
@@ -1611,6 +1635,7 @@ namespace cogbot.TheOpenSims
 
         private void TaskGetParent(uint theLPrimParentID, Simulator simu)
         {
+            if (IsKilled) return;
             if (theLPrimParentID == 0 || _Parent != null) return;
 
             Primitive outerPrim = WorldSystem.GetPrimitive(theLPrimParentID, simu);
@@ -1685,12 +1710,14 @@ namespace cogbot.TheOpenSims
             return ObjectType.GetUsagePromise(pUse).Magnify(scaleOnNeeds);
         }
 
+        private float cachedSize = 0f;
         /// <summary>
         ///  Gets the distance a ISimAvatar may be from ISimObject to use
         /// </summary>
         /// <returns>1-255</returns>
         public virtual float GetSizeDistance()
         {
+            if (cachedSize > 0) return cachedSize;
             double size = Math.Sqrt(BottemArea()) / 2;
 
             //            if (IsPhantom) return size;
@@ -1711,7 +1738,7 @@ namespace cogbot.TheOpenSims
                 double childSize = obj.GetSizeDistance();
                 if (childSize > size) size = childSize;
             }
-            return (float)size;
+            return cachedSize = (float) size;
         }
 
         public virtual List<SimObject> GetNearByObjects(double maxDistance, bool rootOnly)

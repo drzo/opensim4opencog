@@ -802,7 +802,7 @@ namespace cogbot.TheOpenSims
                 Client.WorldSystem.WriteLine(str);
                 if (Client.TheRadegastInstance != null)
                 {
-                    Client.TheRadegastInstance.TabConsole.DisplayNotificationInChat(str);
+                    Client.DisplayNotificationInChat(str);
                 }
             }
             else
@@ -1559,7 +1559,7 @@ namespace cogbot.TheOpenSims
                     return this.TeleportTo(pos);
                 case MovementProceedure.AutoPilot:
                 case MovementProceedure.TurnToAndWalk:
-                    return MoveTo(pos.GlobalPosition, pos.GetSizeDistance(), 3);
+                    return MoveTo(pos.UsePosition.GlobalPosition, pos.GetSizeDistance(), 3);
                     
                 // TODO 
                 case MovementProceedure.AStar:
@@ -1573,7 +1573,7 @@ namespace cogbot.TheOpenSims
                     }
                     if (!SimAvatarImpl.UseTeleportFallback) return false;
                     Debug("Goto sneaking in TP to " + pos);
-                    res = this.TeleportTo(pos);
+                    res = this.TeleportTo(pos.UsePosition);
                     StopMoving();
                     TurnToward(pos);
                     return res;
