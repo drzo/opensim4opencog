@@ -62,6 +62,7 @@ namespace CogbotRadegastPluginModule
         public void StartPlugin0(RadegastInstance inst)
         {
             RadegastInstance = inst;
+            RadegastInstance.MainForm.Closing += MainForm_Closing;
             CogbotContextMenuListener = new CogbotContextMenuListener();
             CogbotNoticeuListener = new CogbotNotificationListener();
             if (ClientManager.UsingRadgastFromCogbot)
@@ -119,6 +120,11 @@ namespace CogbotRadegastPluginModule
                 // Visible = false
             };
             tab = inst.TabConsole.AddTab("cogbotsearch", "CogbotSearch", sc);
+        }
+
+        private void MainForm_Closing(object sender, CancelEventArgs e)
+        {
+            clientManager.ShutDown();
         }
 
         private void WriteLine(string str, object[] args)

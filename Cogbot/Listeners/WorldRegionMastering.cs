@@ -512,12 +512,12 @@ namespace cogbot.Listeners
             client.Network.EventQueueRunning += Network_OnEventQueueRunning;
 
             client.Self.ChatFromSimulator += Self_OnChat;
-            throw new NotImplementedException();
-            /*
-            client.Self.ScriptDialog += senderFrom0(Self_OnScriptDialog);
-            client.Self.ScriptQuestion += senderFrom(Self_OnScriptQuestion);
-            client.Self.LoadURL += senderFrom(Self_OnLoadURL);
-            client.Self.IM += senderFrom(Self_OnInstantMessage);
+            //throw new NotImplementedException();
+            
+            client.Self.ScriptDialog += Self_OnScriptDialog;
+            client.Self.ScriptQuestion += Self_OnScriptQuestion;
+            client.Self.LoadURL += Self_OnLoadURL;
+            client.Self.IM += Self_OnInstantMessage;
             client.Self.TeleportProgress += Self_OnTeleport;
             client.Self.MoneyBalance += Self_OnBalanceUpdated;
             client.Self.MoneyBalanceReply += Self_OnMoneyBalanceReplyReceived;
@@ -534,7 +534,7 @@ namespace cogbot.Listeners
             client.Self.AvatarSitResponse += Self_OnAvatarSitResponse;
             client.Self.ChatSessionMemberAdded += Self_OnChatSessionMemberAdded;
             client.Self.ChatSessionMemberLeft += Self_OnChatSessionMemberLeft;
-            client.Appearance.OnAgentWearables += Appearance_OnAgentWearables;
+            client.Appearance.AgentWearablesReply += Appearance_OnAgentWearables;
             //client.Appearance.OnAppearanceUpdated += Appearance_OnAppearanceUpdated;
             client.Friends.FriendNames += Friends_OnFriendNamesReceived;
             client.Friends.FriendOnline += Friends_OnFriendOnline;
@@ -543,7 +543,7 @@ namespace cogbot.Listeners
             client.Friends.FriendshipOffered += Friends_OnFriendshipOffered;
             client.Friends.FriendshipResponse += Friends_OnFriendshipResponse;
             client.Friends.FriendshipTerminated += Friends_OnFriendshipTerminated;
-             * */
+        
             client.Inventory.ItemReceived += Inventory_OnItemReceived;
             client.Inventory.FolderUpdated += Inventory_OnFolderUpdated;
             client.Inventory.InventoryObjectOffered += Inventory_OnObjectOffered;

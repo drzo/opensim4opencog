@@ -21,6 +21,7 @@ namespace cogbot.Listeners
         public static bool CanUseSit = true;
         public static bool DoSimulatorsCatchUp = false; //GridMaster will turn this on/off only if it needed
         public static bool MaintainAnims = true;
+        public static bool MaintainAssetsInFolders = true;
         public static bool MaintainAnimsInFolders = true;
         public static bool GleanAssetsFromFolders = true;
         public static bool MaintainAttachments = true;
@@ -101,6 +102,7 @@ namespace cogbot.Listeners
                 }
             }
             UnregisterAll();
+            base.UnregisterAll(); //becasue of "thin client"
             if (IsGridMaster)
             {
                 WriteLine("GridMaster Disposing!");
@@ -113,6 +115,7 @@ namespace cogbot.Listeners
                 ParentGrabber.Dispose();
                 SimPaths.Dispose();
                 MetaDataQueue.Dispose();
+                OnConnectedQueue.Dispose();
             }
         }
 

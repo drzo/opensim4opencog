@@ -765,9 +765,9 @@ namespace CogbotRadegastPluginModule
             if (args.Length > 0) str = String.Format(str, args);
             str = str.Trim();
             if (str == "") return;
-            try
-            {
-                writeLock.Enqueue(() => rtbChat.Invoke(new MethodInvoker(() =>
+            writeLock.Enqueue(() => rtbChat.Invoke(new MethodInvoker(() =>
+                                                                         {
+                                                                             try
                                                                              {
                                                                                  string s = rtbChat.Text;
                                                                                  int sLength = s.Length;
@@ -777,14 +777,13 @@ namespace CogbotRadegastPluginModule
                                                                                          s.Substring(sLength - 20000);
                                                                                  }
                                                                                  printer.PrintTextLine(str);
-                                                                             })));
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("" + e);
-                // probably dead anyway ...
-            }
-            return;
+                                                                             }
+                                                                             catch (Exception e)
+                                                                             {
+                                                                                 Console.WriteLine("" + e);
+                                                                                 // probably dead anyway ...
+                                                                             }
+                                                                         })));
         }
 
         private void setCameraToolStripMenuItem_Click(object sender, EventArgs e)
