@@ -60,7 +60,10 @@ namespace cogbot.Listeners
                 Animation animation = new Animation();
                 animation.AnimationID = data.AnimationList[i].AnimID;
                 animation.AnimationSequence = data.AnimationList[i].AnimSequenceID;
-                animation.AnimationSourceObjectID = data.AnimationSourceList[i].ObjectID;
+                if (i < data.AnimationSourceList.Length)
+                {
+                    animation.AnimationSourceObjectID = data.AnimationSourceList[i].ObjectID;
+                }
 
                 signaledAnimations.Add(animation);
             }
@@ -350,6 +353,7 @@ namespace cogbot.Listeners
             {
                 SimAvatar A = (SimAvatar)so;
                 if (!A.IsRegionAttached) return false;
+                if (A == m_TheSimAvatar) return false;
                 if (A.Distance(TheSimAvatar) < 30) return true;
                 if (A.IsRegionAttached && A.GetName().Contains("Rajesh"))
                     return true;

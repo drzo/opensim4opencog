@@ -48,7 +48,7 @@ namespace CogbotRadegastPluginModule
                              if (sender != lastObject && sender is ToolStripItem)
                                  FakeEvent(sender, "Click", lastObject, e);
                          });
-            instance.TabConsole.DisplayNotificationInChat(
+            Plugin.DisplayNotificationInChat(
                 string.Format("SubHook sender={0}\nlastObect={1}", ToString(sender),
                               ToString(lastObject)));
         }
@@ -164,7 +164,7 @@ namespace CogbotRadegastPluginModule
         //        }
         //    }
         //    EventHandler act = (sender, e) =>
-        //           instance.TabConsole.DisplayNotificationInChat(
+        //           Plugin.DisplayNotificationInChat(
         //               string.Format(" sender={0}\ntarget={1}", ToString(sender), ToString(target)));
         //    item.Click += act;
 
