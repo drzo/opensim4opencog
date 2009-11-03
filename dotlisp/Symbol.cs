@@ -136,23 +136,30 @@ internal class SymbolTable
 
 	internal void internType(Type t)
 		{
-        lock (fullNamesToTypes)
-		//add the name to both the full and shortNames
-		//should be no dupes in fullNames
-        //    Console.WriteLine(" internType :" + t.ToString() + " fn=" + t.FullName + " sn=" + t.Name);
-		if(fullNamesToTypes[t.FullName] == null)
-			{
-			fullNamesToTypes[t.FullName] = t;
+            try
+            {
+                lock (fullNamesToTypes)
+                    //add the name to both the full and shortNames
+                    //should be no dupes in fullNames
+                    //    Console.WriteLine(" internType :" + t.ToString() + " fn=" + t.FullName + " sn=" + t.Name);
+                    if (fullNamesToTypes[t.FullName] == null)
+                    {
+                        fullNamesToTypes[t.FullName] = t;
 
-			ArrayList arr = (ArrayList)shortNamesToTypes[t.Name];
+                        ArrayList arr = (ArrayList)shortNamesToTypes[t.Name];
 
-			if(arr == null)
-				{
-				arr = new ArrayList(5);
-				shortNamesToTypes[t.Name] = arr;
-				}
-			arr.Add(t);
-			}
+                        if (arr == null)
+                        {
+                            arr = new ArrayList(5);
+                            shortNamesToTypes[t.Name] = arr;
+                        }
+                        arr.Add(t);
+                    }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("WARNING: SKIPPING TYPE " + t + "  BECAUSE OF " + e + " (Only WARNING)");
+            }
 		}
 
 	internal Type findType(String name)
