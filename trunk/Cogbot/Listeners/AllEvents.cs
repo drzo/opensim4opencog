@@ -838,7 +838,7 @@ namespace cogbot.Listeners
         
 
         public virtual void UnregisterAll()
-        {/*
+        {
             client.Network.LoginProgress -= Network_OnLogin;
             //client.Network.OnConnected -= Network_OnConnected;
             client.Network.LoggedOut -= Network_OnLogoutReply;
@@ -880,11 +880,11 @@ namespace cogbot.Listeners
             client.Avatars.AvatarAppearance -= Avatars_OnAvatarAppearance;
             //client.Avatars.OnAvatarAnimation -= Avatars_OnAvatarAnimation;
 
-            client.Avatars.AvatarPickerReply -= Avatars_OnAvatarNames;
+            client.Avatars.AvatarPickerReply -= Avatars_OnAvatarNameSearch;
             client.Avatars.AvatarInterestsReply -= Avatars_OnAvatarInterests;
             client.Avatars.AvatarPropertiesReply -= Avatars_OnAvatarProperties;
             client.Avatars.AvatarGroupsReply -= Avatars_OnAvatarGroups;
-            client.Avatars.UUIDNameReply -= Avatars_OnAvatarNameSearch;
+            client.Avatars.UUIDNameReply -= Avatars_OnAvatarNames;
             client.Avatars.ViewerEffectPointAt -= Avatars_OnPointAt;
             client.Avatars.ViewerEffectLookAt -= Avatars_OnLookAt;
             client.Avatars.ViewerEffect -= Avatars_OnEffect;
@@ -906,7 +906,7 @@ namespace cogbot.Listeners
             client.Objects.ObjectUpdate -= Objects_OnNewPrim;
             //TODO client.Objects.OnNewAttachment -= Objects_OnNewAttachment;
             client.Objects.AvatarUpdate -= Objects_OnNewAvatar;
-            client.Objects.ObjectPropertiesUpdated -= Objects_OnObjectUpdated;
+            //client.Objects.ObjectPropertiesUpdated -= Objects_OnObjectUpdated;
             client.Objects.AvatarSitChanged -= Objects_OnAvatarSitChanged;
             client.Objects.KillObject -= Objects_OnObjectKilled;
             client.Objects.ObjectProperties -= Objects_OnObjectProperties;
@@ -951,7 +951,7 @@ namespace cogbot.Listeners
             client.Sound.AttachedSoundGainChange -= Sound_OnAttachSoundGainChange;
             client.Sound.SoundTrigger -= Sound_OnSoundTrigger;
             client.Sound.PreloadSound -= Sound_OnPreloadSound;
-          * */
+
         }
 
     }
