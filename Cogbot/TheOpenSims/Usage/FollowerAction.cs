@@ -24,6 +24,7 @@ namespace cogbot.TheOpenSims
             maxDistance = 3;// position.GetSizeDistance();
             Target = position;
             FollowThread = new Thread(FollowLoop);
+            FollowThread.Name = ToString();
         }
 
         public override string ToString()
@@ -75,6 +76,7 @@ namespace cogbot.TheOpenSims
                     if (!Target.IsRegionAttached) continue;
                     if (UseSimpleTurnTo)
                     {
+                        if (useSimpleFollow > 0) Debug("UseSimpleTurnTo");
                         while (useSimpleFollow > 0)
                         {
                             useSimpleFollow--;
@@ -99,8 +101,9 @@ namespace cogbot.TheOpenSims
                     {
                         if (UseFlight || (simO.Flying || TheBot.IsFlying))
                         {
+                            Debug("UseFlight");
                             TheBot.Flying = true;
-                            TheBot.GetGridClient().ExecuteBotCommand("flyto " + simO.ID, TheBot.Debug);
+                            TheBot.GetGridClient().ExecuteBotCommand("flyto " + simO.ID, Debug);
                         }
                         if (CloseEnough())
                         {
@@ -110,11 +113,16 @@ namespace cogbot.TheOpenSims
                     }
 
                     if (UsePathfinder)
+                    {
+                        Debug("UsePathfinder");
                         if (TheBot.GotoTarget(Target))
                         {
+                            UseFlight = false;
                             useSimpleFollow++;
                             continue;
                         }
+                        UseFlight = !UseFlight;
+                    }
 
                     if (CloseEnough())
                     {
@@ -127,15 +135,18 @@ namespace cogbot.TheOpenSims
                     {
                         if (UseTeleport)
                         {
-                            Vector3d vto = Target.GlobalPosition - TheBot.GlobalPosition;
+                            Debug("UseTeleport");
+                            Vector3d vto = Target.UsePosition.GlobalPosition - TheBot.GlobalPosition;
                             vto /= UseTeleportSteps;
                             vto += TheBot.GlobalPosition;
                             vto.Z = Target.GlobalPosition.Z;
-                            TheBot.GetGridClient().ExecuteBotCommand(string.Format("teleport {0}", vto.ToRawString()), TheBot.Debug);
+                            var res = TheBot.GetGridClient().ExecuteBotCommand(string.Format("teleport {0}", vto.ToRawString()), Debug);
+                            if (!res.Success) UseTeleport = false; // cant teleport
                             TheBot.TurnToward(Target);
                             FullPasses = 0;
                         }
                     }
+                    Debug("FullPasses=" + FullPasses);
                 }  
                 else
                 {
@@ -143,6 +154,11 @@ namespace cogbot.TheOpenSims
                     Thread.Sleep(1000); // total 3 seconds
                 }
             }
+        }
+
+        private void Debug(string p, params object[] args)
+        {
+            TheBot.Debug(p, args);
         }
 
         private bool CloseEnough()

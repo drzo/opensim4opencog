@@ -328,8 +328,8 @@ namespace cogbot.Listeners
                                 }
                             if (m_TheSimAvatar != null)
                             {
-                                double dist = simObject.Distance(TheSimAvatar);
-                                if (dist > 30 && !update.Avatar) return;
+                                //double dist = simObject.Distance(TheSimAvatar);
+                                //if (dist > 30 && !update.Avatar) return;
                             }                            
                             // Make a "diff" from previous
                             ObjectMovementUpdate up;
