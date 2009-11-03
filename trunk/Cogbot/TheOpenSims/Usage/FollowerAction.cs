@@ -118,7 +118,7 @@ namespace cogbot.TheOpenSims
                         if (TheBot.GotoTarget(Target))
                         {
                             UseFlight = false;
-                            useSimpleFollow++;
+                            useSimpleFollow = 1;
                             continue;
                         }
                         UseFlight = !UseFlight;
