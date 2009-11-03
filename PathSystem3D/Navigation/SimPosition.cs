@@ -14,6 +14,7 @@ namespace PathSystem3D.Navigation
         bool IsRegionAttached { get; }
         Quaternion SimRotation { get; }
         Vector3d GlobalPosition { get; }
+        SimPosition UsePosition { get; }
         SimPathStore PathStore { get; }
     }
 }
