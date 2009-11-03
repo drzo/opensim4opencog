@@ -89,7 +89,7 @@ namespace CogbotRadegastPluginModule
             inst.Client.Settings.MULTIPLE_SIMS = true;
             clientManager.outputDelegate = WriteLine;
             clientManager.StartUpLisp();
-            chatConsole = new CogbotTabWindow(inst, clientManager)
+            chatConsole = new CogbotTabWindow(inst, this)
                               {
                                   Dock = DockStyle.Fill,
                                   Visible = false
@@ -142,5 +142,9 @@ namespace CogbotRadegastPluginModule
         {
         }
 
+        public void DisplayNotificationInChat(string format)
+        {
+            TheBot.DisplayNotificationInChat(format);
+        }
     }
 }

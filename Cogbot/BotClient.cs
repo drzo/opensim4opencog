@@ -664,7 +664,7 @@ namespace cogbot
                 {
                     if (im.RegionID != UUID.Zero)
                     {
-                        DisplayNoticeInChat("TP to Lure from " + im.FromAgentName);
+                        DisplayNotificationInChat("TP to Lure from " + im.FromAgentName);
                         SimRegion R = SimRegion.GetRegion(im.RegionID,gridClient);
                         if (R != null)
                         {
@@ -672,12 +672,12 @@ namespace cogbot
                             return;
                         }
                     }
-                    DisplayNoticeInChat("Accepting TP Lure from " + im.FromAgentName);
+                    DisplayNotificationInChat("Accepting TP Lure from " + im.FromAgentName);
                     Self.TeleportLureRespond(im.FromAgentID, true);
                 }
                 else if (im.Dialog == InstantMessageDialog.FriendshipOffered)
                 {
-                    DisplayNoticeInChat("Accepting Friendship from " + im.FromAgentName);
+                    DisplayNotificationInChat("Accepting Friendship from " + im.FromAgentName);
                     Friends.AcceptFriendship(im.FromAgentID, im.IMSessionID);
                 }
                 else if (im.Dialog == InstantMessageDialog.MessageFromAgent ||
@@ -689,17 +689,28 @@ namespace cogbot
             }            
             {
                 // Received an IM from someone that is not the bot's master, ignore
-                DisplayNoticeInChat(String.Format("UNTRUSTED <{0} ({1})> {2} (not master): {3} (@{4}:{5})", im.GroupIM ? "GroupIM" : "IM",
+                DisplayNotificationInChat(String.Format("UNTRUSTED <{0} ({1})> {2} (not master): {3} (@{4}:{5})", im.GroupIM ? "GroupIM" : "IM",
                                         im.Dialog, im.FromAgentName, im.Message,
                                         im.RegionID, im.Position));
                 return;
             }
         }
 
-        private void DisplayNoticeInChat(string str)
+        public void DisplayNotificationInChat(string str)
         {
-            WriteLine(str);
-            TheRadegastInstance.TabConsole.DisplayNotificationInChat(str);
+            Invoke(() =>
+                       {
+                           WriteLine(str);
+                           ChatConsole cc = (ChatConsole) TheRadegastInstance.TabConsole.Tabs["chat"].Control;
+                           var tp = cc.ChatManager.TextPrinter;
+                           string s = tp.Content;
+                           if (s.Length > 30000)
+                           {
+                               tp.Content = s.Substring(s.Length - 30000);
+                           }
+                           //if (cc.)
+                           TheRadegastInstance.TabConsole.DisplayNotificationInChat(str);
+                       });
         }
 
 

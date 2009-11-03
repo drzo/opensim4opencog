@@ -60,11 +60,20 @@ namespace CogbotRadegastPluginModule
         {
             get { return instance.Client; }
         }
-        private ClientManager chatManager;
         private TabsConsole tabConsole
         {
             get { return instance.TabConsole; }
         }
+        private CogbotRadegastPlugin chatManager;
+        public CogbotRadegastPlugin ChatManager
+        {
+            get { return chatManager; }
+        }
+        public BotClient TheBot
+        {
+            get { return ChatManager.TheBot; }
+        }
+
         private Avatar currentAvatar;
         private RadegastMovement  movement;
         //    private AIMLbot.Bot Alice;
@@ -83,7 +92,7 @@ namespace CogbotRadegastPluginModule
 
         public RadegastContextMenuStrip PluginExtraContextMenu { get { return ExtraContextMenu; } }
 
-        public CogbotTabWindow(RadegastInstance instance, ClientManager man)
+        public CogbotTabWindow(RadegastInstance instance, CogbotRadegastPlugin man)
         {
             InitializeComponent();
             this.instance = instance;
@@ -454,16 +463,6 @@ namespace CogbotRadegastPluginModule
             }
         }
 
-        public ClientManager ChatManager
-        {
-            get { return chatManager; }
-        }
-
-        public BotClient TheBot
-        {
-            get { throw new NotImplementedException(); }
-        }
-
         private void tbtnStartIM_Click(object sender, EventArgs e)
         {
             if (lvwObjects.SelectedItems.Count == 0) return;
@@ -669,13 +668,13 @@ namespace CogbotRadegastPluginModule
             {
                 InventoryItem item = node.Tag as InventoryItem;
                 client.Inventory.GiveItem(item.UUID, item.Name, item.AssetType, (UUID)litem.Tag, true);
-                instance.TabConsole.DisplayNotificationInChat("Offered item " + item.Name + " to " + instance.getAvatarName((UUID)litem.Tag) + ".");
+                chatManager.DisplayNotificationInChat("Offered item " + item.Name + " to " + instance.getAvatarName((UUID)litem.Tag) + ".");
             }
             else if (node.Tag is InventoryFolder)
             {
                 InventoryFolder folder = node.Tag as InventoryFolder;
                 client.Inventory.GiveFolder(folder.UUID, folder.Name, AssetType.Folder, (UUID)litem.Tag, true);
-                instance.TabConsole.DisplayNotificationInChat("Offered folder " + folder.Name + " to " + instance.getAvatarName((UUID)litem.Tag) + ".");
+                chatManager.DisplayNotificationInChat("Offered folder " + folder.Name + " to " + instance.getAvatarName((UUID)litem.Tag) + ".");
             }
         }
 
