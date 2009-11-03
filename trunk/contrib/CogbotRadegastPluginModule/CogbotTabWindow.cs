@@ -767,7 +767,17 @@ namespace CogbotRadegastPluginModule
             if (str == "") return;
             try
             {
-                writeLock.Enqueue(() => printer.PrintTextLine(str));
+                writeLock.Enqueue(() => rtbChat.Invoke(new MethodInvoker(() =>
+                                                                             {
+                                                                                 string s = rtbChat.Text;
+                                                                                 int sLength = s.Length;
+                                                                                 if (sLength > 20000)
+                                                                                 {
+                                                                                     rtbChat.Text =
+                                                                                         s.Substring(20000 - sLength);
+                                                                                 }
+                                                                                 printer.PrintTextLine(str);
+                                                                             })));
             }
             catch (Exception e)
             {
