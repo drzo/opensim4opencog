@@ -46195,7 +46195,7 @@ namespace OpenMetaverse.Packets
                 return length;
             }
         }
-        public AgentDataBlock AgentData;
+        readonly public AgentDataBlock AgentData;
         public FolderDataBlock[] FolderData;
         public ItemDataBlock[] ItemData;
 
