@@ -86,7 +86,7 @@ namespace cogbot.Utilities
             lock (TaskQueueHandlers)
                 TaskQueueHandlers.Remove(this);
             if (EventQueuePing != null) EventQueuePing.Abort();
-            EventQueueHandler.Abort();
+            if (EventQueueHandler != null && EventQueueHandler.IsAlive) EventQueueHandler.Abort();
             try
             {
                 WaitingOn.Set();
