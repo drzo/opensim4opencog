@@ -295,7 +295,7 @@ namespace cogbot.TheOpenSims
                 if (!SculptedMeshes.TryGetValue(Id, out SM))
                 {
                     byte[] bytes = WorldObjects.GridMaster.TextureBytesFormUUID(SD.SculptTexture);
-                    SM = ToSculptMesh(bytes, primitive.Sculpt);
+                    SM = ToSculptMesh(bytes, primitive.Sculpt, "" + primitive);
                     if (MaintainSculptPool) SculptedMeshes[Id] = SM;
                     //  SM.DumpRaw(".", primitive.ID.ToString(), "sculptMesh" + primitive.LocalID);
                 }
@@ -386,33 +386,42 @@ namespace cogbot.TheOpenSims
         }
 
         // partly from OpenSim.Region.Physics.Meshing
-        public static SculptMesh ToSculptMesh(byte[] sculptData, Primitive.SculptData sculptDataIn)//( Vector3 size, Quaternion Rotation)
+        public static SculptMesh ToSculptMesh(byte[] sculptData, Primitive.SculptData sculptDataIn, string sculptDataString)//( Vector3 size, Quaternion Rotation)
         {
             SculptMesh sculptMesh;
             if (sculptData == null || sculptData.Length == 0)
+            {
+                Error("[PHYSICS]: Missing Sclupt Data ", sculptDataString);
                 return null;
+            }
 
             System.Drawing.Image idata = null;
 
             try
             {
                 OpenMetaverse.Imaging.ManagedImage managedImage;  // we never use this
-                OpenMetaverse.Imaging.OpenJPEG.DecodeToImage(sculptData, out managedImage, out idata);
+                if (!OpenMetaverse.Imaging.OpenJPEG.DecodeToImage(sculptData, out managedImage, out idata))
+                {
+                    Error("[PHYSICS]: OpenMetaverse.Imaging.OpenJPEG.DecodeToImage failed ", sculptDataString);
+                    return null;
+                }
 
             }
             catch (DllNotFoundException)
             {
-                System.Console.WriteLine("[PHYSICS]: OpenJpeg is not installed correctly on this system. Physics Proxy generation failed.  Often times this is because of an old version of GLIBC.  You must have version 2.4 or above!");
+                Error(
+                    "[PHYSICS]: OpenJpeg is not installed correctly on this system. Physics Proxy generation failed.  Often times this is because of an old version of GLIBC.  You must have version 2.4 or above!",
+                    sculptDataString);
                 return null;
             }
             catch (IndexOutOfRangeException e)
             {
-                System.Console.WriteLine("[PHYSICS]: OpenJpeg was unable to decode this.   Physics Proxy generation failed " + e);
+                Error("[PHYSICS]: OpenJpeg was unable to decode this.   Physics Proxy generation failed " + e, sculptDataString);
                 return null;
             }
             catch (Exception e)
             {
-                System.Console.WriteLine("[PHYSICS]: Unable to generate a Sculpty physics proxy.  Sculpty texture decode failed! " + e);
+                Error("[PHYSICS]: Unable to generate a Sculpty physics proxy.  Sculpty texture decode failed! " + e, sculptDataString);
                 return null;
             }
 
@@ -434,7 +443,11 @@ namespace cogbot.TheOpenSims
                     sculptType = SculptMesh.SculptType.sphere;
                     break;
             }
-            if (idata == null) return null;
+            if (idata == null)
+            {
+                Error("[PHYSICS]: IData Null " , sculptDataString);
+                return null;
+            }
             sculptMesh = new SculptMesh((System.Drawing.Bitmap)idata, sculptType, (int)32, false, sculptDataIn.Mirror, sculptDataIn.Invert);
 
             idata.Dispose();
@@ -443,6 +456,10 @@ namespace cogbot.TheOpenSims
             return sculptMesh;
         }
 
+        private static void Error(string s, string sculptDataString)
+        {
+            Console.WriteLine(s + " " + sculptDataString);
+        }
 
 
         /// <summary>

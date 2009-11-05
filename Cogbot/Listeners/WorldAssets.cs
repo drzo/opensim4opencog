@@ -372,8 +372,7 @@ namespace cogbot.Listeners
 
         public static void EnqueueRequestAsset(UUID id, AssetType type, bool b)
         {
-            return;
-            if (GridMaster!=null)
+            OnConnectedQueue.Enqueue(()=>
             GridMaster.
             client.Assets.RequestAsset(id, type,true,
                                          delegate(AssetDownload transfer, Asset asset)
@@ -383,8 +382,8 @@ namespace cogbot.Listeners
 
                                                      try
                                                      {
-                                                         asset.Decode();
-                                                         Debug("Asset decoded as " + asset.AssetType);
+                                                         bool tf = asset.Decode();
+                                                         Debug("Asset decoded " + tf + " as " + asset.AssetType);
                                                      }
                                                      catch (Exception ex)
                                                      {
@@ -397,7 +396,7 @@ namespace cogbot.Listeners
                                                  }
                                              }
                                              
-                                         });
+                                         }));
         }
     }
 }
