@@ -14,7 +14,7 @@
           <DebugInformation>true</DebugInformation>
           <IncrementalBuild>true</IncrementalBuild>
           <NoStdLib>false</NoStdLib>
-          <PlatformTarget>x86</PlatformTarget>
+          <PlatformTarget>anycpu</PlatformTarget>
         </Options>
       </Configuration>
       <Configuration name="Release">
@@ -30,7 +30,7 @@
           <DebugInformation>false</DebugInformation>
           <IncrementalBuild>true</IncrementalBuild>
           <NoStdLib>false</NoStdLib>
-          <PlatformTarget>x86</PlatformTarget>
+          <PlatformTarget>anycpu</PlatformTarget>
         </Options>
       </Configuration>
 
@@ -89,7 +89,7 @@
           <Options>
             <OutputPath>../../bin/</OutputPath>
             <XmlDocFile>OpenMetaverseTypes.XML</XmlDocFile>
-            <PlatformTarget>x86</PlatformTarget>
+            <PlatformTarget>anycpu</PlatformTarget>
           </Options>
         </Configuration>
 
@@ -398,7 +398,7 @@
         <Configuration name="Release">
             <Options>
                 <OutputPath>../../bin/</OutputPath>
-                <PlatformTarget>x86</PlatformTarget>
+                <PlatformTarget>anycpu</PlatformTarget>
             </Options>
         </Configuration>
 
@@ -676,7 +676,7 @@
        <Options>
          
          <OutputPath>../../bin/</OutputPath>
-         <PlatformTarget>x86</PlatformTarget>
+         <PlatformTarget>anycpu</PlatformTarget>
        </Options>
      </Configuration>
 
@@ -701,7 +701,7 @@
      </Files>
 </Project>
 
-   <!--
+<!--
   <Project name="RadegastSpeech" path="lib/radegastspeech-svn/RadegastSpeech" type="Library" frameworkVersion="v3_5">
    <Configuration name="Debug">
      <Options>
@@ -712,12 +712,13 @@
      <Options>
        
        <OutputPath>../../../bin/</OutputPath>
-       <PlatformTarget>x86</PlatformTarget>
+       <PlatformTarget>anycpu</PlatformTarget>
      </Options>
    </Configuration>
 
    <ReferencePath>../../../bin/</ReferencePath>
    <Reference name="OpenMetaverse" localCopy="false"/>
+   <Reference name="OpenMetaverse.StructurefData" localCopy="false"/>
    <Reference name="OpenMetaverseTypes" localCopy="false"/>
    
    <Reference name="Radegast.exe" />
@@ -747,7 +748,7 @@
      <Options>
        
        <OutputPath>../../bin/</OutputPath>
-       <PlatformTarget>x86</PlatformTarget>
+       <PlatformTarget>anycpu</PlatformTarget>
      </Options>
    </Configuration>
 
@@ -783,7 +784,7 @@
      <Options>
        
        <OutputPath>../../bin/</OutputPath>
-       <PlatformTarget>x86</PlatformTarget>
+       <PlatformTarget>anycpu</PlatformTarget>
      </Options>
    </Configuration>
 
@@ -864,7 +865,7 @@ app -->
      <Options>
        
        <OutputPath>../../bin/</OutputPath>
-       <PlatformTarget>x86</PlatformTarget>
+       <PlatformTarget>anycpu</PlatformTarget>
      </Options>
    </Configuration>
 
@@ -895,6 +896,8 @@ app -->
        <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
    </Files>
 </Project>
+
+-->
 
     <Project name="LookingGlass.Framework" path="lib/LookingGlass-svn/src/LookingGlass.Framework" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
@@ -975,6 +978,7 @@ app -->
       <Reference name="LookingGlass.Comm.LLLP"/>
       <Reference name="LookingGlass.Framework"/>
       <Reference name="LookingGlass.Renderer"/>
+      <Reference name="LookingGlass.World"/>
       <Reference name="Radegast.exe"/>
       <Reference name="OpenMetaverse"/>
       <Reference name="OpenMetaverseTypes"/>
@@ -1192,6 +1196,8 @@ app -->
       </Files>
     </Project>
 
+      <!--
+
     <Project name="LookingGlassOgre" language="C++" path="lib/LookingGlass-svn/src/LookingGlassOgre" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
@@ -1211,7 +1217,7 @@ app -->
         <Match pattern="*.cpp" recurse="false"/>
       </Files>
     </Project>
-
+ -->
 
     <Project name="LookingGlass" path="lib/LookingGlass-svn/src/LookingGlass" type="Exe" frameworkVersion="v3_5">
       <Configuration name="Debug">
@@ -1242,18 +1248,19 @@ app -->
         <Match pattern="*.cs" recurse="true"/>
       </Files>
     </Project>
-    -->
 
     <!-- DebugApp app -->
   <Project name="ABuildStartup" path="contrib/DebugStartup" type="Exe" frameworkVersion="v3_5">
   <Configuration name="Debug">
     <Options>
       <OutputPath>../../bin/</OutputPath>
+      <PlatformTarget>x86</PlatformTarget>
     </Options>
   </Configuration>
   <Configuration name="Release">
     <Options>
       <OutputPath>../../bin/</OutputPath>
+      <PlatformTarget>x86</PlatformTarget>
     </Options>
   </Configuration>
       <Reference name="HttpServer" />
@@ -1298,7 +1305,7 @@ app -->
       <Reference name="protobuf-net.dll" />
       <Reference name="System.Windows.Forms" />
       <Reference name="System.Data" />
-      <!--
+      
 
       <Reference name="LookingGlass.Comm"/>
       <Reference name="LookingGlass.Comm.LLLP"/>
@@ -1308,7 +1315,7 @@ app -->
       <Reference name="LookingGlass.Radegast"/>
       <Reference name="LookingGlass.View"/>
       <Reference name="LookingGlass.Rest"/>
-      -->
+
     <Files>
     <Match pattern="*.cs" recurse="true"/>
     <!--<Match pattern="frm*.cs" subType="Form"/>-->
