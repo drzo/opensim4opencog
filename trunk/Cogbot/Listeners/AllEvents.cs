@@ -30,7 +30,7 @@ namespace cogbot.Listeners
 
 
         public abstract bool BooleanOnEvent(string eventName, string[] paramNames, Type[] paramTypes, params object[] parameters);
-        public virtual void OnEvent(string eventName, string[] paramNames, Type[] paramTypes, params object[] parameters)
+        public virtual bool OnEvent(string eventName, string[] paramNames, Type[] paramTypes, params object[] parameters)
         {
             int missingParams = paramNames.Length - parameters.Length;
             if (missingParams != 0)
@@ -50,7 +50,7 @@ namespace cogbot.Listeners
                 }
 
             }
-            BooleanOnEvent(eventName, paramNames, paramTypes, parameters);
+            return BooleanOnEvent(eventName, paramNames, paramTypes, parameters);
         }
 
         private void fillInParams(object o, Type[] types, string[] strings, object[] parameters, int d)
@@ -166,7 +166,7 @@ namespace cogbot.Listeners
         static public readonly Type[] paramTypesOnSimConnecting = new Type[] { typeof(Simulator) };
 
         public virtual void Network_OnSimConnecting(object sender, SimConnectingEventArgs e)
-        { e.Cancel = !BooleanOnEvent("On-Sim-Connecting", paramNamesOnSimConnecting, paramTypesOnSimConnecting, e); }
+        { e.Cancel = !OnEvent("On-Sim-Connecting", paramNamesOnSimConnecting, paramTypesOnSimConnecting, e); }
 
         static public readonly string[] paramNamesOnSimConnected = new string[] { "simulator" };
         static public readonly Type[] paramTypesOnSimConnected = new Type[] { typeof(Simulator) };
@@ -632,7 +632,7 @@ namespace cogbot.Listeners
         static public readonly Type[] paramTypesOnObjectOffered = new Type[] { typeof(InstantMessage), typeof(AssetType), typeof(UUID), typeof(bool) };
 
         public void Inventory_OnObjectOffered(object sender, InventoryObjectOfferedEventArgs e)
-        { e.Accept = BooleanOnEvent("On-Object-Offered", paramNamesOnObjectOffered, paramTypesOnObjectOffered, e); }
+        { e.Accept = OnEvent("On-Object-Offered", paramNamesOnObjectOffered, paramTypesOnObjectOffered, e); }
 
         static public readonly string[] paramNamesOnFindObjectByPath = new string[] { "path", "inventoryObjectID" };
         static public readonly Type[] paramTypesOnFindObjectByPath = new Type[] { typeof(string), typeof(UUID) };
