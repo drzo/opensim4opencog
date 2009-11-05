@@ -11,7 +11,6 @@ namespace cogbot.Actions
 {
     public class DumpOutfitCommand : Command, BotPersonalCommand
     {
-        List<UUID> OutfitAssets = new List<UUID>();
 
         public DumpOutfitCommand(BotClient testClient)
         {
@@ -40,12 +39,11 @@ namespace cogbot.Actions
                     int argsUsed;
                     List<SimObject> PS = WorldSystem.GetPrimitives(args, out argsUsed);
                     if (IsEmpty(PS)) return Failure("Cannot find objects from " + string.Join(" ", args));
+                    List<UUID> OutfitAssets = new List<UUID>();
                     foreach (var O in PS)
                     {
                         Primitive targetAv = O.Prim;
-                        StringBuilder output = new StringBuilder("Downloading ");
-
-                        lock (OutfitAssets) OutfitAssets.Clear();
+                        StringBuilder output = new StringBuilder("Downloading ");                        
 
                         for (int j = 0; j < targetAv.Textures.FaceTextures.Length; j++)
                         {
@@ -67,7 +65,47 @@ namespace cogbot.Actions
                                 }
 
                                 OutfitAssets.Add(face.TextureID);
-                                Client.Assets.RequestImage(face.TextureID, type, Assets_OnImageReceived);
+                                Client.Assets.RequestImage(face.TextureID, type,
+                                                           delegate(TextureRequestState state, AssetTexture assettexture)
+                                                               {
+                                                                   lock (OutfitAssets)
+                                                                   {
+                                                                       if (OutfitAssets.Contains(assettexture.AssetID))
+                                                                       {
+                                                                           if (state == TextureRequestState.Finished)
+                                                                           {
+
+                                                                               try
+                                                                               {
+                                                                                   string newVariable = assettexture.AssetID + ".jp2";
+                                                                                   File.WriteAllBytes(newVariable, assettexture.AssetData);
+                                                                                   Success("Wrote JPEG2000 image " + newVariable);
+
+                                                                                   ManagedImage imgData;
+                                                                                   if (OpenJPEG.DecodeToImage(assettexture.AssetData, out imgData))
+                                                                                   {
+                                                                                       byte[] tgaFile = imgData.ExportTGA();
+                                                                                       File.WriteAllBytes(assettexture.AssetID + ".tga", tgaFile);
+                                                                                       Success("Wrote TGA image " + assettexture.AssetID + ".tga");
+                                                                                   } else
+                                                                                   {
+                                                                                       Failure("Failed decode of " + newVariable);
+                                                                                   }
+                                                                               }
+                                                                               catch (Exception e)
+                                                                               {
+                                                                                   Failure(e.ToString());
+                                                                               }
+                                                                           }
+                                                                           else
+                                                                           {
+                                                                               Failure("Failed to download image " + assettexture.AssetID);
+                                                                           }
+
+                                                                           OutfitAssets.Remove(assettexture.AssetID);
+                                                                       }
+                                                                   }
+                                                               });
                                 output.Append(((AvatarTextureIndex) j).ToString());
                                 output.Append(" ");
                             }
@@ -78,40 +116,6 @@ namespace cogbot.Actions
                 }
             }
             return SuccessOrFailure();
-        }
-
-        private void Assets_OnImageReceived(TextureRequestState state, AssetTexture assetTexture)
-        {
-            lock (OutfitAssets)
-            {
-                if (OutfitAssets.Contains(assetTexture.AssetID))
-                {
-                    if (state == TextureRequestState.Finished)
-                    {
-                        try
-                        {
-                            File.WriteAllBytes(assetTexture.AssetID + ".jp2", assetTexture.AssetData);
-                            Console.WriteLine("Wrote JPEG2000 image " + assetTexture.AssetID + ".jp2");
-
-                            ManagedImage imgData;
-                            OpenJPEG.DecodeToImage(assetTexture.AssetData, out imgData);
-                            byte[] tgaFile = imgData.ExportTGA();
-                            File.WriteAllBytes(assetTexture.AssetID + ".tga", tgaFile);
-                            Console.WriteLine("Wrote TGA image " + assetTexture.AssetID + ".tga");
-                        }
-                        catch (Exception e)
-                        {
-                            Console.WriteLine(e.ToString());
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine("Failed to download image " + assetTexture.AssetID);
-                    }
-
-                    OutfitAssets.Remove(assetTexture.AssetID);
-                }
-            }
         }
     }
 }
