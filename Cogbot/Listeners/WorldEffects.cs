@@ -281,8 +281,7 @@ namespace cogbot.Listeners
                     DateTime time = Utils.UnixTimeToDateTime(block.Time);
                     MeanCollisionType type = (MeanCollisionType)block.Type;
 
-                    throw new NotImplementedException();
-                   // Self_OnMeanCollision(type, block.Perp, block.Victim, block.Mag, time);
+                    Self_OnMeanCollision(sim,new MeanCollisionEventArgs(type, block.Perp, block.Victim, block.Mag, time));
                 }
             }
         }
@@ -633,7 +632,7 @@ namespace cogbot.Listeners
                                 }
                                 catch (Exception ex)
                                 {
-                                    Debug(ex.Message, Helpers.LogLevel.Error, Client, ex);
+                                    Logger.Log(ex.Message, Helpers.LogLevel.Error, Client, ex);
                                 }
                             }
                             else
@@ -678,7 +677,7 @@ namespace cogbot.Listeners
 
                                 try
                                 {
-                                    SendEffect(client.Network.CurrentSim, sourceAvatar, targetObject, targetPos, "PointAtType-" + pointAt.ToString(), block.Duration, block.ID);
+                                    SendEffect(simulator, sourceAvatar, targetObject, targetPos, "PointAtType-" + pointAt.ToString(), block.Duration, block.ID);
                                 }
                                 catch (Exception ex)
                                 {
