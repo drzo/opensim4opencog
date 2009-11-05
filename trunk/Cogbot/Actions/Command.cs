@@ -403,7 +403,7 @@ namespace cogbot.Actions
         /// <returns>CmdResult Failure with a string containing the parameter usage instructions</returns>
         public virtual CmdResult ShowUsage()
         {
-            return Failure(Usage);
+            return Failure("Usage: //" + Usage);
         }
 
         protected bool TryEnumParse(Type type, string[] names, int argStart, out int argsUsed, out object value)
