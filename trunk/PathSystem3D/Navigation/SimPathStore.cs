@@ -2326,29 +2326,27 @@ namespace PathSystem3D.Navigation
         public void ShowDebugger()
         {
             if (PanelGUI == null)
-            {
+            {                
                 PanelGUI = new PathFinderDemo(this);
                 (new Thread(() =>
-                {
-                    try
-                    {
-                        PanelGUI.CollisionPlaneListUpdate();
-                        PanelGUI.Closing += new CancelEventHandler(delegate(object sender, CancelEventArgs e)
-                                                                       {
-                                                                           PanelGUI = null;
-                                                                       });
-                        Application.EnableVisualStyles();
-                        PanelGUI.Show();
-                        Application.Run(PanelGUI);
-                    } 
-                    catch (Exception e)
-                    {
-                        Debug("" + e);                       
-                        PanelGUI = null;
-                    }
-                   
-                })).Start();
-            } else
+                                {
+                                    try
+                                    {
+                                        PanelGUI.CollisionPlaneListUpdate();
+                                        PanelGUI.Closing += new CancelEventHandler((sender, e) => PanelGUI = null);
+                                        Application.EnableVisualStyles();
+                                        PanelGUI.Show();
+                                        Application.Run(PanelGUI);
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        Debug("" + e);
+                                        PanelGUI = null;
+                                    }
+
+                                }) {Name = string.Format("PathFinder Form for {0}", this.RegionName), IsBackground = true}).Start();
+            }
+            else
             {
                 PanelGUI.CollisionPlaneListUpdate();
                 PanelGUI.Show();
