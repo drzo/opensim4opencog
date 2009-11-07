@@ -753,6 +753,7 @@
          <Reference name="OpenMetaverse.StructuredData"/>
 
          <Reference name="Radegast" />
+         <Reference name="Radegast.exe" />
          <Reference name="Radegast.Plugin.Speech" />
          <Reference name="System" />
          <Reference name="System.Core"/>
