@@ -49,6 +49,9 @@ namespace IrcRegionModule
                     if (ListenerThreaThread == null)
                     {
                         ListenerThreaThread = new Thread(ListenerThread);
+                        ListenerThreaThread.IsBackground = true;
+                        ListenerThreaThread.Name = "Irc Thread " + IrcNick;
+                        ;
                         ListenerThreaThread.Start();
                     }
                 }
