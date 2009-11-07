@@ -140,6 +140,11 @@ namespace cogbot.Listeners
             ///base.Network_OnSimConnected(simulator);
             lock (WorldObjectsMasterLock)
             {
+                if (simulator.Handle == 0)
+                {
+                    Debug("Simulator Handle==0 for " + simulator);
+                    return;
+                }
                 EnsureSimulator(simulator);
                 IsConnected = true;
                 if (SimRegion.IsMaster(simulator, client.gridClient))
@@ -599,7 +604,7 @@ namespace cogbot.Listeners
         }
         public void EnsureSimulator(Simulator simulator)
         {
-            if (simulator == null) return;
+            if (simulator == null || simulator.Handle==0) return;
             if (!Monitor.TryEnter(_AllSimulators,10000))
             {
                 WriteLine("Cant lock _AllSimulators");
