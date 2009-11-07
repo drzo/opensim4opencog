@@ -120,7 +120,8 @@ namespace cogbot.Listeners
             return new SimObjectEvent(type,clazz, eventName, args);
         }
 
-        static private bool UseQueue = false;
+        public static bool UseQueue = false;
+        public static bool ExecSynchronous = false;
         SimObjectEvent LastEvent = null;
         // this pipelike will fire OnEvent to the subscriber list 
         public void SendEvent(SimObjectEvent simObjectEvent)
@@ -144,6 +145,11 @@ namespace cogbot.Listeners
                                        Console.WriteLine(e);
                                    }
                                };
+                if (ExecSynchronous)
+                {
+                    start();
+                    return;
+                }
                 if (UseQueue)
                 {
                     new Thread(start).Start();
