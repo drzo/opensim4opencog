@@ -139,9 +139,46 @@ namespace CogbotRadegastPluginModule
             instance.State.OnWalkStateCanged -= new StateManager.WalkStateCanged(State_OnWalkStateCanged);
         }
 
+        private readonly object RefreshObjectListLock = new object();
+        private bool RefreshObjectListWorking;
         public void RefreshObjectList()
         {
-            btnRefresh_Click(this, EventArgs.Empty);
+            if (IsDisposing || RefreshObjectListWorking) return;
+            if (InvokeRequired)
+            {
+                Invoke(new MethodInvoker(RefreshObjectList));
+                return;
+            }
+            if (IsDisposing || RefreshObjectListWorking) return;
+            if (!Monitor.TryEnter(RefreshObjectListLock)) return;
+            RefreshObjectListWorking = true;
+            lstPrims.BeginUpdate();
+            Cursor.Current = Cursors.WaitCursor;
+            lock (lstPrims.Items)
+            {
+                lstPrims.Items.Clear();
+            }
+            Vector3d location = client.Self.GlobalPosition;
+            List<ListViewItem> items = new List<ListViewItem>();
+
+            foreach (var prim in WorldObjects.SimObjects.CopyOf())
+            {
+                if (IsSkipped(location, prim)) continue;
+                items.Add(new ListViewItem
+                {
+                    Text = GetObjectName(prim),
+                    Tag = prim,
+                    Name = prim.ID.ToString()
+                });
+            }
+            lock (lstPrims.Items)
+            {
+                lstPrims.Items.AddRange(items.ToArray());
+            }
+            Cursor.Current = Cursors.Default;
+            lstPrims.EndUpdate();
+            RefreshObjectListWorking = false;
+            Monitor.Exit(RefreshObjectListLock);
         }
 
         void propRequester_OnTick(int remaining)
@@ -173,17 +210,7 @@ namespace CogbotRadegastPluginModule
 
         void Network_OnCurrentSimChanged(object sender, SimChangedEventArgs e)
         {
-            if (InvokeRequired)
-            {
-                Invoke(new MethodInvoker(delegate()
-                {
-                    Network_OnCurrentSimChanged(sender, e);
-                }
-                ));
-                return;
-            }
-
-            btnRefresh_Click(null, null);
+            RefreshObjectList();
         }
 
         void Avatars_OnAvatarNames(object sender, UUIDNameReplyEventArgs e)
@@ -440,27 +467,6 @@ namespace CogbotRadegastPluginModule
             Boxs[IsRoot] = typeof (SimObjectImpl).GetProperty(name);
         }
 
-        private void AddAllObjects()
-        {
-            if (IsDisposing) return;
-            Vector3d location = client.Self.GlobalPosition;
-            List<ListViewItem> items = new List<ListViewItem>();
-
-            foreach (var prim in WorldObjects.SimObjects.CopyOf())
-            {
-                if (IsSkipped(location, prim)) continue;
-                items.Add(new ListViewItem
-                              {
-                                  Text = GetObjectName(prim),
-                                  Tag = prim,
-                                  Name = prim.ID.ToString()
-                              });
-            }
-            lock (lstPrims.Items)
-            {
-                lstPrims.Items.AddRange(items.ToArray());
-            }
-        }
 
         private bool IsSkipped(Vector3d location, SimObject prim)
         {
@@ -505,28 +511,21 @@ namespace CogbotRadegastPluginModule
 
         private void txtSearch_TextChanged(object sender, EventArgs e)
         {
-            btnRefresh_Click(null, null);
+            RefreshObjectList();
         }
 
         private void btnClear_Click(object sender, EventArgs e)
         {
             txtSearch.Clear();
             txtSearch.Select();
-            btnRefresh_Click(null, null);
+            RefreshObjectList();
         }
 
         private void btnRefresh_Click(object sender, EventArgs e)
         {
-            lstPrims.BeginUpdate();
-            Cursor.Current = Cursors.WaitCursor;
-            lock (lstPrims.Items)
-            {
-                lstPrims.Items.Clear();
-            }
-            AddAllObjects();
-            Cursor.Current = Cursors.Default;
-            lstPrims.EndUpdate();
+            RefreshObjectList();
         }
+
 
         private void lstPrims_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -586,7 +585,7 @@ namespace CogbotRadegastPluginModule
         private void nudRadius_ValueChanged(object sender, EventArgs e)
         {
             searchRadius = (float)nudRadius.Value;
-            btnRefresh_Click(null, null);
+            RefreshObjectList();
         }
 
 
@@ -700,7 +699,7 @@ namespace CogbotRadegastPluginModule
                     uBoxs.Add(box.Value, box.Key.Checked);
                 }
             }
-            btnRefresh_Click(null, null);
+            RefreshObjectList();
         }
 
 
