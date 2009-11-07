@@ -856,7 +856,7 @@ namespace cogbot
 
         void Network_OnLogoutReply(object sender, LoggedOutEventArgs e)
         {
-            SendNetworkEvent("On-Logout-Reply", e);
+            SendNetworkEvent("On-Logout-Reply", e.InventoryItems);
         }
 
         //=====================
