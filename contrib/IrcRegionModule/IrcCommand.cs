@@ -77,9 +77,17 @@ namespace IrcRegionModule
             {
                 id = IrcUUIDs[nick] = UUID.Random();
             }
-            Client.FakeEvent(Client.Self, "OnChat", data.Message, ChatAudibleLevel.Fully, ChatType.Normal,
-                             ChatSourceType.Agent, nick,
-                             id, id, Vector3.Zero);
+            try
+            {
+                Client.FakeEvent(Client.Self, "ChatFromSimulator",
+                                 new ChatEventArgs(Client.Network.CurrentSim, data.Message, ChatAudibleLevel.Fully,
+                                                   ChatType.Normal,
+                                                   ChatSourceType.Agent, nick,
+                                                   id, id, Vector3.Zero));
+            } catch(Exception exception)
+            {
+                Console.WriteLine("ChatFromSimulator: " + exception);
+            }
         }
 
         private string _regionChannel = "#logicmoo";
