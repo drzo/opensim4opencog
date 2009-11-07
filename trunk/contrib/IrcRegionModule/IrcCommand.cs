@@ -79,7 +79,7 @@ namespace IrcRegionModule
             }
             try
             {
-                Client.FakeEvent(Client.Self, "ChatFromSimulator",
+                Client.FakeEvent(Client.Self, "ChatFromSimulator", this,
                                  new ChatEventArgs(Client.Network.CurrentSim, data.Message, ChatAudibleLevel.Fully,
                                                    ChatType.Normal,
                                                    ChatSourceType.Agent, nick,
