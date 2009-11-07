@@ -512,7 +512,7 @@ namespace cogbot.Listeners
                 update.Position = from.Prim.Position;
                 update.Rotation = from.Prim.Rotation;
                 update.State = from.Prim.PrimData.State;
-                update.Textures = from.Prim.Textures;
+                if (from.Prim.Textures != null) update.Textures = from.Prim.Textures;
                 update.Velocity = from.Prim.Velocity;
                 update.LocalID = from.Prim.LocalID;
             }
