@@ -784,8 +784,8 @@
          <Reference name="OpenMetaverse.StructuredData"/>
 
          <Reference name="Radegast" />
-         <Reference name="Radegast.Plugin.Speech" />
          <Reference name="Radegast.exe" />
+         <Reference name="Radegast.Plugin.Speech" />
          <Reference name="System" />
          <Reference name="System.Core"/>
          <Reference name="System.Speech"/>
@@ -817,11 +817,11 @@
          <Reference name="OpenMetaverse.StructuredData"/>
 
          <Reference name="Radegast" />
+         <Reference name="Radegast.exe" />
          <Reference name="Radegast.Plugin.Speech" />
          <Reference name="Assemblies/Monobjc.dll" />
          <Reference name="Assemblies/Monobjc.Cocoa.dll" />
          
-         <Reference name="Radegast.exe" />
          <Reference name="System" />
          <Reference name="System.Core"/>
          <Reference name="System.Speech"/>
