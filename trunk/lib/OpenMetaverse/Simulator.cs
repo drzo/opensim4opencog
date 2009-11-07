@@ -348,6 +348,8 @@ namespace OpenMetaverse
         public InternalDictionary<uint, Avatar> ObjectsAvatars = new InternalDictionary<uint, Avatar>();
 
         public InternalDictionary<uint, Primitive> ObjectsPrimitives = new InternalDictionary<uint, Primitive>();
+        
+        public List<Primitive> ObjectsMoving = new List<Primitive>();
 
         /// <summary>The current sequence number for packets sent to this
         /// simulator. Must be Interlocked before modifying. Only
