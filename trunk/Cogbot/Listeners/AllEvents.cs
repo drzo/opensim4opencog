@@ -33,7 +33,7 @@ namespace cogbot.Listeners
         public virtual bool OnEvent(string eventName, string[] paramNames, Type[] paramTypes, params object[] parameters)
         {
             int missingParams = paramNames.Length - parameters.Length;
-            if (missingParams != 0)
+            //if (missingParams != 0)
             {
                 object[] old = parameters;
                 parameters = new object[paramNames.Length];
@@ -67,8 +67,9 @@ namespace cogbot.Listeners
                 }
                 foreach (var propertyInfo in o.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public))
                 {
-                    if (propertyInfo.CanRead && propertyInfo.GetIndexParameters().Length == 0 && propertyInfo.PropertyType == types[i])
+                    if (propertyInfo.PropertyType == types[i])
                     {
+                        if (SkipCall(propertyInfo)) continue;
                         if (propertyInfo.Name.ToLower() == strings[i].ToLower())
                         {
                             var val = propertyInfo.GetValue(o, null);
@@ -82,8 +83,9 @@ namespace cogbot.Listeners
                 if (parameters[i] != null) continue;
                 foreach (var propertyInfo in o.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public))
                 {
-                    if (propertyInfo.CanRead && propertyInfo.GetIndexParameters().Length == 0 && propertyInfo.PropertyType == types[i])
+                    if (propertyInfo.PropertyType == types[i])
                     {
+                        if (SkipCall(propertyInfo)) continue;
                         //if (propertyInfo.Name.ToLower() == strings[i].ToLower())
                         {
                             var val = propertyInfo.GetValue(o, null);
@@ -129,7 +131,7 @@ namespace cogbot.Listeners
                 if (parameters[i] != null) continue;
                 foreach (var propertyInfo in o.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public))
                 {
-                    if (!propertyInfo.CanRead || propertyInfo.GetIndexParameters().Length != 0) continue;
+                    if (SkipCall(propertyInfo)) continue;
                     object val = propertyInfo.GetValue(o, null);
                     if (val == null) continue;
                     fillInParams(val, types, strings, parameters, d);
@@ -145,6 +147,19 @@ namespace cogbot.Listeners
                     fillInParams(val, types, strings, parameters, d);
                 }
             }
+        }
+
+        private bool SkipCall(PropertyInfo info)
+        {
+            if (!info.CanRead || info.GetIndexParameters().Length != 0) return true;
+            string infoNameToLower = info.Name.ToLower();
+            if (infoNameToLower.Contains("scope") || infoNameToLower.Contains("worldtime"))
+            {
+                return true;
+            }
+            return false;
+
+
         }
 
         static public readonly string[] paramNamesOnLogin = new string[] { "login", "message" };
