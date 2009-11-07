@@ -19,7 +19,7 @@ rm -f lib/LookingGlass-svn/bin/libo*
 cp lib/LookingGlass-svn/bin/*.* bin/
 
 # Stomp on BuildFiles
-cp NullBuild.txt lib/radegastspeech-svn/RadSpeechWin/RadSpeechWin.dll.build
+cp NullBuild.txt lib/Radegast.Plugin.Speech/RadSpeechWin/RadSpeechWin.dll.build
 
 #delay building LookingGlass on Linux
 cp NullBuild.txt ./lib/LookingGlass-svn/src/LookingGlass.Renderer/LookingGlass.Renderer.dll.build
