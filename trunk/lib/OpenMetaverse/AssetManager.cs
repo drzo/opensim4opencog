@@ -230,6 +230,7 @@ namespace OpenMetaverse
         public ImageCodec Codec;
         public Simulator Simulator;
         public SortedList<ushort, ushort> PacketsSeen;
+        public readonly object PacketSeenLock = new object();
         public ImageType ImageType;
         public int DiscardLevel;
         public float Priority;
@@ -1108,8 +1109,7 @@ namespace OpenMetaverse
             {
                 download = (AssetDownload)transfer;
 
-                if (download.Callback == null) return;
-
+                
                 download.Channel = (ChannelType)info.TransferInfo.ChannelType;
                 download.Status = (StatusCode)info.TransferInfo.Status;
                 download.Target = (TargetType)info.TransferInfo.TargetType;
@@ -1127,7 +1127,7 @@ namespace OpenMetaverse
                     download.AssetData = null;
 
                     // Fire the event with our transfer that contains Success = false;
-                    try { download.Callback(download, null); }
+                    if (download.Callback != null) try { download.Callback(download, null); }
                     catch (Exception ex) { Logger.Log(ex.Message, Helpers.LogLevel.Error, Client, ex); }
                 }
                 else
