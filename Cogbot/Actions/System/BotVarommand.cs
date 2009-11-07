@@ -27,13 +27,14 @@ namespace cogbot.Actions
             else
             {
                 var PS = WorldSystem.ResolveCollection(args[0], out used, null);
+                if (PS == null) return Success("argsUsed " + used + " botvar was NULL");
                 int found = 0;
                 foreach (var o in PS)
                 {
                     found++;
                     WriteLine("" + o);
                 }
-                return Success("argsUsed " + used + " found " + found);
+                return Success("argsUsed " + used + " found set with " + found);
             }
         }
     }
