@@ -842,17 +842,17 @@ namespace cogbot.TheOpenSims
             // get { return WasKilled; }
             set
             {
-                if (!WasKilled) //already
+                if (WasKilled!=value) //already
                 {
+                    WasKilled = value;
                     List<SimObject> AttachedChildren0 = Children;
                     lock (AttachedChildren0)
                         foreach (SimObject C in AttachedChildren0)
                         {
-                            C.IsKilled = true;
+                            C.IsKilled = value;
                         }
-                    RemoveCollisions();
+                    if (WasKilled) RemoveCollisions();                  
                 }
-                WasKilled = value;
             }
             get
             {
@@ -1178,6 +1178,19 @@ namespace cogbot.TheOpenSims
 
         private bool IsMeshing;
         public virtual bool UpdateOccupied()
+        {
+            try
+            {
+                return UpdateOccupied0();
+            }
+            catch (Exception e)
+            {
+                Debug("While updating " + e);
+                return false;
+            }
+
+        }
+        public virtual bool UpdateOccupied0()
         {
             if (!IsRegionAttached)
             {
