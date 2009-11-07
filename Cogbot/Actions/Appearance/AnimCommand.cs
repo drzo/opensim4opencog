@@ -39,9 +39,9 @@ namespace cogbot.Actions
             List<KeyValuePair<UUID, int>> amins = new List<KeyValuePair<UUID, int>>();
             for (int i = 0; i < args.Length; i++)
             {
+                int mode = 0;
                 string a = args[i];
                 if (String.IsNullOrEmpty(a)) continue;
-                if (time < 1) time = 1300;
                 try
                 {
                     float ia;
@@ -50,6 +50,7 @@ namespace cogbot.Actions
                         if (ia > 0.0)
                         {
                             time = (int)(ia * 1000);
+                            amins.Add(new KeyValuePair<UUID, int>(UUID.Zero, time));
                             continue;
                         }
                     }
@@ -58,13 +59,16 @@ namespace cogbot.Actions
                 char c = a.ToCharArray()[0];
                 if (c == '-')
                 {
-                    time = -1;
+                    mode = -1;
                     a = a.Substring(1);
                 }
                 else if (c == '+')
                 {
-                    time = 0;
+                    mode = 1;
                     a = a.Substring(1);
+                } else
+                {
+                    mode = 0;
                 }
                 UUID anim = WorldSystem.GetAssetUUID(a, AssetType.Animation);
 
@@ -82,20 +86,32 @@ namespace cogbot.Actions
                     WriteLine("unknown animation " + a);
                     continue;
                 }
-                amins.Add(new KeyValuePair<UUID,int>(anim,time));
+                 if (mode==0)
+                 {
+                     amins.Add(new KeyValuePair<UUID, int>(anim, -1));
+                     amins.Add(new KeyValuePair<UUID, int>(anim, +1));
+                     amins.Add(new KeyValuePair<UUID, int>(anim, -1));
+                     continue;
+                 }
+                amins.Add(new KeyValuePair<UUID,int>(anim,mode));
             }
             foreach (KeyValuePair<UUID, int> anim in amins)
             {
                 try
                 {
                     int val = anim.Value;
+                    if (anim.Key == UUID.Zero)
+                    {
+                        Thread.Sleep(val);
+                        continue;
+                    }
                     switch (val)
                     {
                         case -1:
                             Client.Self.AnimationStop(anim.Key, true);
                             WriteLine("Stop anim " + WorldSystem.GetAnimationName(anim.Key));
                             continue;
-                        case 0:
+                        case +1:
                             Client.Self.AnimationStart(anim.Key, true);
                             WriteLine("Start anim " + WorldSystem.GetAnimationName(anim.Key));
                             continue;
