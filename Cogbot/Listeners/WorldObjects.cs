@@ -1272,6 +1272,7 @@ namespace cogbot.Listeners
             ulong Handle = simulator.Handle;
             if (Handle == 0)
             {
+                return;
                 throw new AbandonedMutexException();
             }
             lock (primsSelectedOutbox)
