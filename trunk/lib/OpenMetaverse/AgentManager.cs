@@ -1244,7 +1244,12 @@ namespace OpenMetaverse
         public string TeleportMessage { get { return teleportMessage; } }
         /// <summary>Current position of the agent as a relative offset from
         /// the simulator, or the parent object if we are sitting on something</summary>
-        public Vector3 RelativePosition { get { return relativePosition; } }
+        public Vector3 RelativePosition
+        {
+            get { return relativePosition; }
+            set { relativePosition=value; }
+        }
+
         /// <summary>Current rotation of the agent as a relative rotation from
         /// the simulator, or the parent object if we are sitting on something</summary>
         public Quaternion RelativeRotation { get { return relativeRotation; } }
@@ -1839,6 +1844,7 @@ namespace OpenMetaverse
                 Buffer.BlockCopy(sourceAvatar.GetBytes(), 0, typeData, 0, 16);
             if (targetObject != UUID.Zero)
                 Buffer.BlockCopy(targetObject.GetBytes(), 0, typeData, 16, 16);
+            Buffer.BlockCopy(globalOffset.GetBytes(), 0, typeData, 32, 24);
             typeData[56] = (byte)type;
 
             effect.Effect[0].TypeData = typeData;

@@ -53,6 +53,7 @@ namespace OpenMetaverse.Messages
                 case "ParcelObjectOwnersReply": message = new ParcelObjectOwnersReplyMessage(); break;
                 case "TeleportFinish": message = new TeleportFinishMessage(); break;
                 case "EnableSimulator": message = new EnableSimulatorMessage(); break;
+                case "DisableSimulator": message = new DisableSimulatorMessage(); break;
                 case "ParcelPropertiesUpdate": message = new ParcelPropertiesUpdateMessage(); break;
                 case "EstablishAgentCommunication": message = new EstablishAgentCommunicationMessage(); break;
                 case "ChatterBoxInvitation": message = new ChatterBoxInvitationMessage(); break;
