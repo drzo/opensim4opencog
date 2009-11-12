@@ -385,6 +385,7 @@ namespace OpenMetaverse
 
             // Register internal CAPS callbacks
             RegisterEventCallback("EnableSimulator", new Caps.EventQueueCallback(EnableSimulatorHandler));
+            RegisterEventCallback("DisableSimulator", new Caps.EventQueueCallback(DisableSimulatorHandler));
 
             // Register the internal callbacks
             RegisterCallback(PacketType.RegionHandshake, RegionHandshakeHandler);
@@ -1192,6 +1193,28 @@ namespace OpenMetaverse
                     Logger.Log("Unabled to connect to new sim " + ip + ":" + port,
                         Helpers.LogLevel.Error, Client);
                 }
+            }
+        }
+
+        protected void DisableSimulatorHandler(string capsKey, IMessage message, Simulator simulator)
+        {
+            if (!Client.Settings.MULTIPLE_SIMS) return;
+
+            DisableSimulatorMessage msg = (DisableSimulatorMessage)message;
+
+            for (int i = 0; i < msg.Simulators.Length; i++)
+            {
+                IPAddress ip = msg.Simulators[i].IP;
+                ushort port = (ushort)msg.Simulators[i].Port;
+                ulong handle = msg.Simulators[i].RegionHandle;
+
+                IPEndPoint endPoint = new IPEndPoint(ip, port);
+
+                if (FindSimulator(endPoint) != null) return;
+                string mess = "DisableSimulatorHandler Caps";
+
+                // Shutdown the network layer
+                Shutdown(DisconnectType.ServerInitiated, mess);
             }
         }
 

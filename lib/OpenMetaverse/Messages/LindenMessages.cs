@@ -268,6 +268,64 @@ namespace OpenMetaverse.Messages.Linden
         }
     }
 
+
+    public class DisableSimulatorMessage : IMessage
+    {
+        public class SimulatorInfoBlock
+        {
+            public ulong RegionHandle;
+            public IPAddress IP;
+            public int Port;
+        }
+
+        public SimulatorInfoBlock[] Simulators;
+
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
+        public OSDMap Serialize()
+        {
+            OSDMap map = new OSDMap(1);
+
+            OSDArray array = new OSDArray(Simulators.Length);
+            for (int i = 0; i < Simulators.Length; i++)
+            {
+                SimulatorInfoBlock block = Simulators[i];
+
+                OSDMap blockMap = new OSDMap(3);
+                blockMap["Handle"] = OSD.FromULong(block.RegionHandle);
+                blockMap["IP"] = MessageUtils.FromIP(block.IP);
+                blockMap["Port"] = OSD.FromInteger(block.Port);
+                array.Add(blockMap);
+            }
+
+            map["SimulatorInfo"] = array;
+            return map;
+        }
+
+        /// <summary>
+        /// Deserialize the message
+        /// </summary>
+        /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
+        public void Deserialize(OSDMap map)
+        {
+            OSDArray array = (OSDArray)map["SimulatorInfo"];
+            Simulators = new SimulatorInfoBlock[array.Count];
+
+            for (int i = 0; i < array.Count; i++)
+            {
+                OSDMap blockMap = (OSDMap)array[i];
+
+                SimulatorInfoBlock block = new SimulatorInfoBlock();
+                block.RegionHandle = blockMap["Handle"].AsULong();
+                block.IP = MessageUtils.ToIP(blockMap["IP"]);
+                block.Port = blockMap["Port"].AsInteger();
+                Simulators[i] = block;
+            }
+        }
+    }
+
     /// <summary>
     /// A message sent to the client which indicates a teleport request has failed
     /// and contains some information on why it failed
@@ -2209,10 +2267,47 @@ namespace OpenMetaverse.Messages.Linden
 
     #region Grid/Maps
 
+     /// <summary>Base class for Map Layers via Capabilities</summary>
+    public abstract class MapLayerMessageBase
+    {
+        /// <summary></summary>
+        public int Flags;
+
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
+        public abstract OSDMap Serialize();
+
+        /// <summary>
+        /// Deserialize the message
+        /// </summary>
+        /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
+        public abstract void Deserialize(OSDMap map);
+    }
+
+    /// <summary>
+    /// Sent by an agent to the capabilities server to request map layers
+    /// </summary>
+    public class MapLayerRequestVariant : MapLayerMessageBase
+    {
+        public override OSDMap Serialize()
+        {
+            OSDMap map = new OSDMap(1);
+            map["Flags"] = OSD.FromInteger(Flags);
+            return map;
+        }
+
+        public override void Deserialize(OSDMap map)
+        {
+            Flags = map["Flags"].AsInteger();
+        }
+    }
+
     /// <summary>
     /// A message sent from the simulator to the viewer which contains an array of map images and their grid coordinates
     /// </summary>
-    public class MapLayerMessage : IMessage
+    public class MapLayerReplyVariant : MapLayerMessageBase
     {
         /// <summary></summary>
         public int Flags;
@@ -2241,7 +2336,7 @@ namespace OpenMetaverse.Messages.Linden
         /// Serialize the object
         /// </summary>
         /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
-        public OSDMap Serialize()
+        public override OSDMap Serialize()
         {
             OSDMap map = new OSDMap(2);
             OSDMap agentMap = new OSDMap(1);
@@ -2271,7 +2366,7 @@ namespace OpenMetaverse.Messages.Linden
         /// Deserialize the message
         /// </summary>
         /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
-        public void Deserialize(OSDMap map)
+        public override void Deserialize(OSDMap map)
         {
             OSDMap agentMap = (OSDMap)map["AgentData"];
             Flags = agentMap["Flags"].AsInteger();
@@ -2293,6 +2388,38 @@ namespace OpenMetaverse.Messages.Linden
 
                 LayerDataBlocks[i] = layer;
             }
+        }
+    }
+
+    public class MapLayerMessage : IMessage
+    {
+        /// <summary>Object containing request or response</summary>
+        public MapLayerMessageBase Request;
+
+        /// <summary>
+        /// Serialize the object
+        /// </summary>
+        /// <returns>An <see cref="OSDMap"/> containing the objects data</returns>
+        public OSDMap Serialize()
+        {
+            return Request.Serialize();
+        }
+
+        /// <summary>
+        /// Deserialize the message
+        /// </summary>
+        /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
+        public void Deserialize(OSDMap map)
+        {
+            if (map.ContainsKey("LayerData"))
+                Request = new MapLayerReplyVariant();
+            else if (map.ContainsKey("Flags"))
+                Request = new MapLayerRequestVariant();
+            else
+                Logger.Log("Unable to deserialize MapLayerMessage: No message handler exists", Helpers.LogLevel.Warning);
+
+            if (Request != null)
+                Request.Deserialize(map);
         }
     }
 
