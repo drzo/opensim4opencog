@@ -1,5 +1,4 @@
-
-= The intial checkout of the project =
+= The intial checkout of the project (*BIG*) =
 <pre>
 svn checkout http://opensim4opencog.googlecode.com/svn/trunk/ opensim4opencog-read-only
 </pre>
