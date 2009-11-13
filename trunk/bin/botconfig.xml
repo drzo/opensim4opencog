@@ -18,7 +18,7 @@
 
     (setj GridAddress "https://login.agni.lindenlab.com/cgi-bin/login.cgi")
     (setj GridAddress "http://osgrid.org:8002/")
-    (setj GlobalPasswd "tek123")
+    (setj GlobalPasswd "abc123")
 
     (setj StartLoc "uri:Fairyverse&amp;115&amp;125&amp;21")
     (setj StartLoc "uri:last&amp;173&amp;51&amp;38")
@@ -31,7 +31,7 @@
 
     '(create-botclient "Nephrael" "Rae"  GlobalPasswd  "https://login.agni.lindenlab.com/cgi-bin/login.cgi" "uri:Fairyverse&amp;115&amp;125&amp;21")
     '(create-botclient "Douglas" "Miles" GlobalPasswd GridAddress StartLoc)
-    (create-botclient "Nephrael" "Rae" GlobalPasswd GridAddress StartLoc )
+    '(create-botclient "Nephrael" "Rae" GlobalPasswd GridAddress StartLoc )
     '(create-botclient "Lisa" "Wooley" GlobalPasswd GridAddress StartLoc )
     '(create-botclient "Cat" "Bot" GlobalPasswd GridAddress StartLoc )
     '(create-botclient "Nephrael" "Rajesh" GlobalPasswd GridAddress)
@@ -39,13 +39,14 @@
 
   </startupLisp>
   <startupClientLisp>
+   ;;(thisClient.ExecuteCommand "debug Debug")
     (thisClient.ExecuteCommand "load CogbotRadegastPluginModule")
     (thisClient.ExecuteCommand "load AIMLBotModule.dll")
-    (thisClient.ExecuteCommand "load CycWorldModule")
+    ;;;(thisClient.ExecuteCommand "load CycWorldModule")
     (thisClient.ExecuteCommand "load TheSimiansModule")
     ;; (thisClient.ExecuteCommand "load IrcRegionModule")
     (thisClient.ExecuteCommand "waitforlogin 60") ;; wait for the login
-    (thisClient.ExecuteCommand "login") ;; does the login if the user didnt press the button
+    ;;(thisClient.ExecuteCommand "login") ;; does the login if the user didnt press the button
     ;;(thisClient.ExecuteCommand "goto last/128/128/32") ;; TP home
 
     ;;(thisClient.ExecuteCommand "thread setmaster Nephrael Rajesh") ;; change this to your name
