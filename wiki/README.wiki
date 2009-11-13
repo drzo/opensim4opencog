@@ -1,15 +1,7 @@
-#summary One-sentence summary of this page.
-
-= Introduction =
-
-Add your content here.
-
-
-= Details =
 Readme for OpenSim4OpenCog/Cogbot, a bot interface for external AI systems.
 
 +-------------------------+
-|        OVERVIEW         |
+=        OVERVIEW         =
 +-------------------------+
 
 OpenSim4OpenCog/Cogbot is a server written in C# that connects to a avatar acting 
@@ -21,7 +13,7 @@ an internal LISP interperter (based on DotLisp) and task management queue.
 This allows operations to be persistent.
 
 +-------------------------+
-|   COMPILING 4 WINDOWS   |
+=   COMPILING 4 WINDOWS   =
 +-------------------------+
 
 Cogbot was developed using Windows XP and Visual Studio 2008.
@@ -63,7 +55,7 @@ On the status bar at the bottom of the Visual Studio window - you should see
 Time to Configure the system.
 
 +-------------------------+
-|    COMPILING - LINUX    |
+=    COMPILING - LINUX    =
 +-------------------------+
 We do know the follwing will be needed:
 
@@ -108,7 +100,7 @@ After 10-50 seconds of compiling you should see "BUILD SUCCEEDED".
 
 
 +-------------------------+
-|      CONFIGURATION      |
+=      CONFIGURATION      =
 +-------------------------+
 
 To configure the system you will need to provide or modify the botconfig.xml
@@ -142,7 +134,7 @@ New: <startupLisp> allows an initial Lisp expression to be evaluated after the
  task manager starts executing and has loaded its boot files.
  
 +-------------------------+
-|      MANUAL OPERATION   |
+=      MANUAL OPERATION   =
 +-------------------------+
 Since Cogbot is based on TextSL, you can drive things manually.
 You can start the system by executing:
@@ -250,7 +242,7 @@ TextForm Avatars_OnLookAt: 7dbd61c6-90cf-49df-bf77-94f5a7223c19
  
 
 +-------------------------+
-|   External Access       |
+=   External Access       =
 +-------------------------+
 
 The whole point is to be something an AI running as an external process
@@ -331,7 +323,7 @@ The system should automatically load
  \cogbot\bin\cogbot.lisp
  
 +-------------------------+
-| Cogbot.lisp and events  |
+= Cogbot.lisp and events  =
 +-------------------------+
 The simulator sends update messages to clients like TextSL or the
 Second Life viewer. Cogbot hooks reception of these messages
@@ -398,7 +390,7 @@ The Avatars_OnLookAt need to be captured and transformed. Then the
 system would be able to track objects being pointed to, like itself.
  
 +-------------------------+
-|   TODO: 2008-08-24      |
+=   TODO: 2008-08-24      =
 +-------------------------+
 At this time all the subprojects "aligned" to the point to allow Cogbot to
 function. OpenSim and OpenMetaverse are currently moving and OpenCog is being
