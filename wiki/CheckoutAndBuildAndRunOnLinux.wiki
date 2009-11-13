@@ -1,5 +1,4 @@
 
-
 = The intial checkout of the project =
 <pre>
 svn checkout http://opensim4opencog.googlecode.com/svn/trunk/ opensim4opencog-read-only
@@ -8,7 +7,7 @@ svn checkout http://opensim4opencog.googlecode.com/svn/trunk/ opensim4opencog-re
 <pre>
 cd opensim4opencog-read-only
 </pre>
-= Run GNU Make (it uses NAnt =
+= Run GNU Make (it uses NAnt) =
 <pre>
 make
 </pre>
@@ -20,3 +19,9 @@ cd bin
 <pre>
 mono ABuildStartup.exe
 </pre>
+
+
+= Each time there is a SVN update =
+cd to "opensim4opencog-read-only" Dir
+svn update
+make
