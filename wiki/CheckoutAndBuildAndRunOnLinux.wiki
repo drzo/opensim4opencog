@@ -1,0 +1,14 @@
+
+
+
+= The intial checkout of the project =
+svn checkout http://opensim4opencog.googlecode.com/svn/trunk/ opensim4opencog-read-only
+= Change Directory to the SVN Checkout dir =
+cd opensim4opencog-read-only
+= Run GNU Make (it uses NAnt =
+make
+= Change to the run diirrecotry =
+cd bin
+= Make sure X windows is running =
+mono ABuildStartup.exe
+
