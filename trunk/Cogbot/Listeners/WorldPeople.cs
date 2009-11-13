@@ -514,7 +514,7 @@ namespace cogbot.Listeners
         {
             lock (GroupsRequested) if (!GroupsRequested.Add(uuid)) return;
             GridMaster.client.Groups.RequestGroupProfile(uuid);
-            if (!MaintainGroupMetaData) return;
+            if (!RequestGroupMetaData) return;
             // WriteLine("Requesting groupInfo " + uuid);
             GridMaster.client.Groups.RequestGroupRoles(uuid);
             GridMaster.client.Groups.RequestGroupMembers(uuid);
