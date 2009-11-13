@@ -1,14 +1,22 @@
 
 
-
 = The intial checkout of the project =
+<pre>
 svn checkout http://opensim4opencog.googlecode.com/svn/trunk/ opensim4opencog-read-only
+</pre>
 = Change Directory to the SVN Checkout dir =
+<pre>
 cd opensim4opencog-read-only
+</pre>
 = Run GNU Make (it uses NAnt =
+<pre>
 make
-= Change to the run diirrecotry =
+</pre>
+= Change to the run directory =
+<pre>
 cd bin
+</pre>
 = Make sure X windows is running =
+<pre>
 mono ABuildStartup.exe
-
+</pre>
