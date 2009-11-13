@@ -487,7 +487,9 @@ namespace cogbot.Listeners
                     if (g is SimGroup) return g as SimGroup;
                     if (g is Group)
                     {
-                        return (SimGroup)(uuid2Group[uuid] = new SimGroup(uuid) { Group = (Group)g });
+                        SimGroup sg = new SimGroup(uuid) {Group = (Group) g};
+                        RegisterUUID(uuid, sg);
+                        return (SimGroup)(uuid2Group[uuid] = sg);
                     }
                     if (g is BotMentalAspect)
                     {
@@ -498,7 +500,9 @@ namespace cogbot.Listeners
                 }
                 try
                 {
-                    return (SimGroup)(uuid2Group[uuid] = new SimGroup(uuid));
+                    SimGroup sg = new SimGroup(uuid);
+                    RegisterUUID(uuid, sg);
+                    return (SimGroup)(uuid2Group[uuid] = sg);
                 }
                 finally
                 {
