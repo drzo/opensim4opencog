@@ -315,10 +315,21 @@ namespace cogbot
 
         public void ShutDown()
         {
-            logout();
+            try
+            {
+                logout();
+            }
+            catch (Exception) { }
             foreach (BotClient CurrentClient in BotClients)
             {
-                CurrentClient.Dispose();
+                try
+                {
+                    CurrentClient.Dispose();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("" + e);
+                }
             }
             _scriptEventListener.Dispose();
             _lispTaskInterperter.Dispose();
@@ -328,9 +339,20 @@ namespace cogbot
         public void logout()
         {
             foreach (BotClient CurrentClient in BotClients)
-                if (CurrentClient.Network.Connected)
-                    CurrentClient.Network.Logout();
-            config.saveConfig();
+                try
+                {
+                    if (CurrentClient.Network.Connected)
+                        CurrentClient.Network.Logout();
+                }
+                catch (Exception) { }
+            try
+            {
+                config.saveConfig();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("" + e);
+            }
         }
 
         // for lisp to call
