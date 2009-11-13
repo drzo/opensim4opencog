@@ -15,22 +15,22 @@
 
 ;;;; CREATE EVENTS;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; (avatar  "Maria BraveNewBot")
-(def (avatar id &rest notused) (thisClient.WorldSystem.GetPrimitive (vector id ) 1))
+(def (avatar id &rest notused) (thilient.WorldSystem.GetPrimitive (vector id ) 1))
 ;; eval (on-heard "hello there" "Maria BraveNewBot")
 (def (on-heard message agent)
      (let (av () id () pos ())
         (setj av (avatar (str agent)))
         (setj pos (if av (.Position av) (.GetSimPosition thisClient.WorldSystem.TheSimAvatar)))
         (setj id (if av (.ID av) OpenMetaverse:UUID:Zero))
-        (thisClient.Self.OnChat 
-           (str message) 
+        (thisClient.Self.ChatFromSimulator thisClient
+         (.ChatEventArgs thisClient.Network.CurrentSim  (str message) 
             ChatAudibleLevel:Fully 
             ChatType:Normal 
             ChatSourceType:Agent 
             (str agent) 
             id
             id
-            pos	 )
+            pos	 ))
        )
 )
         
@@ -47,7 +47,7 @@
 
 (def (on-login-success  login description)
   (progn
-    ;; (thisClient.output (@"fromLispExample: (on-login-success {0} {1})" (str login)(str description)) )
+    (thisClient.output (@"fromLispExample: (on-login-success {0} {1})" (str login)(str description)) )
     )
  )
 
