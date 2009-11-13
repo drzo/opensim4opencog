@@ -186,6 +186,7 @@ namespace cogbot.Utilities
         // External XML socket server
         //------------------------------------
         TcpListener tcp_socket = null;
+        private bool IsDisposing;
         //    TcpClient tcp_client = null;
         private void tcpSrv()
         {
@@ -203,7 +204,7 @@ namespace cogbot.Utilities
                 parent.WriteLine("About to initialize port.");
                 tcp_socket.Start();
                 parent.WriteLine("Listening for a connection... port=" + PortNumber);
-                while (true)
+                while (!IsDisposing)
                 {
                     try
                     {
@@ -280,6 +281,7 @@ namespace cogbot.Utilities
         {
             //    if (ns != null) ns.Close();
             //  if (tcp_client != null) tcp_client.Close();
+            IsDisposing = true;
             if (thrSvr != null) thrSvr.Abort();
             if (tcp_socket != null) tcp_socket.Stop();
             // if (parent.thrJobQueue != null) parent.thrJobQueue.Abort();
@@ -610,6 +612,7 @@ namespace cogbot.Utilities
 
         void SimEventSubscriber.Dispose()
         {
+            IsDisposing = true;
             ((BotTcpServer)this).closeTcpListener();
         }
 
