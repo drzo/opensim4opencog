@@ -1258,6 +1258,7 @@ The AIMLbot program.
                         cycAccess.createIndividual("AimlContextMt",
                                                     "#$AimlContextMt contains storage location in OpenCyc for AIML variables",
                                                     "UniversalVocabularyMt", "DataMicrotheory");
+                        populateFromCyc();
                     }
                     catch (Exception e)
                     {
@@ -1270,6 +1271,14 @@ The AIMLbot program.
             }
             set { cycAccess = value; }
         }
+
+        private void populateFromCyc()
+        {
+            cycAccess.setCyclist("CycAdministrator");
+            
+
+        }
+
         public Unifiable EvalSubL(Unifiable cmd, Unifiable filter)
         {
             Unifiable result = "(EVAL-SUBL " + cmd + ")";
@@ -1337,6 +1346,18 @@ The AIMLbot program.
             }
         }
 
+        internal Unifiable Cyclify(string mt)
+        {
+            mt = mt.Trim();
+            if (mt.Length == 0) return mt;
+            if (System.Char.IsLetter(mt.ToCharArray()[0])) return "#$" + mt;
+            return mt;
+
+            if (System.Char.IsDigit(mt.ToCharArray()[0])) return mt;
+            if (mt.StartsWith("(") || mt.StartsWith("#$")) return mt;
+            return "#$" + mt;
+        }
+
         #endregion
 
         internal Unifiable SystemExecute(Unifiable cmd, Unifiable langu, User user)
@@ -1366,17 +1387,6 @@ The AIMLbot program.
             
         }
 
-        internal Unifiable Cyclify(string mt)
-        {
-            mt = mt.Trim();
-            if (mt.Length == 0) return mt;
-            if (System.Char.IsLetter(mt.ToCharArray()[0])) return "#$"+mt;
-            return mt;
-
-            if (System.Char.IsDigit(mt.ToCharArray()[0])) return mt;
-            if (mt.StartsWith("(") || mt.StartsWith("#$")) return mt;
-            return "#$" + mt;
-        }
 
         readonly Dictionary<string,SystemExecHandler> ExecuteHandlers = new Dictionary<string, SystemExecHandler>();
         public void AddExcuteHandler(string lang, SystemExecHandler handler)
