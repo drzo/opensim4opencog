@@ -26,7 +26,7 @@ namespace cogbot.Actions
             Parcel parcel;
             StringBuilder result = new StringBuilder();
             // test argument that is is a valid integer, then verify we have that parcel data stored in the dictionary
-            if (Int32.TryParse(args[0], out parcelID) && CurSim.Parcels.TryGetValue(parcelID, out parcel))
+            if (Int32.TryParse(args[argsUsed], out parcelID) && CurSim.Parcels.TryGetValue(parcelID, out parcel))
             {
                 AutoResetEvent wait = new AutoResetEvent(false);
 

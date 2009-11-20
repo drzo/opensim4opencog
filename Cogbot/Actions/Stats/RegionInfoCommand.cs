@@ -24,6 +24,8 @@ namespace cogbot.Actions
             output.AppendLine(CurSim.ToString());
             output.Append("UUID: ");
             output.AppendLine(CurSim.ID.ToString());
+            output.Append("RegionID: ");
+            output.AppendLine(CurSim.RegionID.ToString());
             uint x, y;
             Utils.LongToUInts(CurSim.Handle, out x, out y);
             output.AppendLine(String.Format("Handle: {0} (X: {1} Y: {2})", CurSim.Handle, x, y));
