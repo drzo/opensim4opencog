@@ -105,7 +105,7 @@ namespace RTParser
         //    return arrayOf(str.Split(FromArrayOf(tokens), stringSplitOptions));
         //}
 
-        protected override object Raw
+        public override object Raw
         {
             get { return str; }
         }
@@ -221,6 +221,15 @@ namespace RTParser
             //return Create(rest.Trim());
         }
 
+        public override bool IsShort()
+        {
+            if (str == "_") return true;
+            // if (this.IsMarkerTag()) return false; // tested by the next line
+            if (IsLazyStar()) return false;
+            if (IsLazy()) return true;
+            return false;
+        }
+
         public override bool IsShortWildCard()
         {
             if (str == "_") return true;
@@ -238,7 +247,7 @@ namespace RTParser
             return false;
         }
 
-        public virtual bool IsLazy()
+        public override bool IsLazy()
         {
             if (this.IsMarkerTag()) return false;
             return str.StartsWith("<");
@@ -250,34 +259,9 @@ namespace RTParser
             return test.StartsWith("TAG-");
         }
 
-        static public SubQuery subquery;
-        public override float Unify(Unifiable other, SubQuery query)
-        {
-            if (IsShortWildCard()) if (other.AsString().Contains(" ")) return UNIFY_FALSE;
-            subquery = query;
-            if (IsWildCard())
-            {
-                if (IsLazy())
-                {
-                    try
-                    {
-                        return UnifyLazy(other);
-                    } catch(Exception e)
-                    {
-                        //Console.WriteLine(""+e);
-                        return UNIFY_FALSE;
-                    }
-                }
-                return 0;
-            }
-            if (other.IsWildCard())
-            {
-                // return unifiable.Unify(this, query);
-            }
-            return other.AsString().ToUpper() == str.ToUpper() ? UNIFY_TRUE : UNIFY_FALSE;
-        }
 
-        public virtual float UnifyLazy(Unifiable unifiable)
+
+        public override float UnifyLazy(Unifiable unifiable)
         {
             AIMLTagHandler tagHandler = GetTagHandler();
             if (tagHandler.CanUnify(unifiable) == UNIFY_TRUE) return UNIFY_TRUE;

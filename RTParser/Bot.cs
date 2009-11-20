@@ -61,12 +61,12 @@ namespace RTParser
         /// Key = class name
         /// Value = TagHandler class that provides information about the class
         /// </summary>
-        private Dictionary<Unifiable, TagHandler> CustomTags;
+        private Dictionary<string, TagHandler> CustomTags;
 
         /// <summary>
         /// Holds references to the assemblies that hold the custom tag handling code.
         /// </summary>
-        private Dictionary<Unifiable, Assembly> LateBindingAssemblies = new Dictionary<Unifiable, Assembly>();
+        private Dictionary<string, Assembly> LateBindingAssemblies = new Dictionary<string, Assembly>();
 
         /// <summary>
         /// An List<> containing the tokens used to split the input into sentences during the 
@@ -378,7 +378,7 @@ namespace RTParser
             this.PersonSubstitutions = new SettingsDictionary(this, provider);
             this.Substitutions = new SettingsDictionary(this, provider);
             this.DefaultPredicates = new SettingsDictionary(this, provider);
-            this.CustomTags = new Dictionary<Unifiable, TagHandler>();
+            this.CustomTags = new Dictionary<string, TagHandler>();
             this.Size = 0;
             this.Graphmaster = new RTParser.Utils.Node(null);
             loadCustomTagHandlers("AIMLbot.dll");
@@ -898,12 +898,13 @@ namespace RTParser
 
         internal AIMLTagHandler GetTagHandler(User user, SubQuery query, Request request, Result result, XmlNode node)
         {
-            AIMLTagHandler tagHandler = null;
-            tagHandler = this.getBespokeTags(user, query, request, result, node);
+            AIMLTagHandler tagHandler = this.getBespokeTags(user, query, request, result, node);
             if (object.Equals(null, tagHandler))
             {
                 switch (node.Name.ToLower())
                 {
+                    case "#text":
+                        return null;
                     case "template":
                         tagHandler = new AIMLTagHandlers.template(this, user, query, request, result, node);
                         break;
@@ -1063,19 +1064,13 @@ namespace RTParser
             {
                 TagHandler customTagHandler = (TagHandler)this.CustomTags[node.Name.ToLower()];
 
-                AIMLTagHandler newCustomTag = customTagHandler.Instantiate(this.LateBindingAssemblies);
+                AIMLTagHandler newCustomTag = customTagHandler.Instantiate(this.LateBindingAssemblies, user, query, request, result, node, this);
                 if(object.Equals(null,newCustomTag))
                 {
                     return null;
                 }
                 else
                 {
-                    newCustomTag.user = user;
-                    newCustomTag.query = query;
-                    newCustomTag.request = request;
-                    newCustomTag.result = result;
-                    newCustomTag.templateNode = node;
-                    newCustomTag.Proc = this;
                     return newCustomTag;
                 }
             }
@@ -1131,12 +1126,18 @@ namespace RTParser
         /// <param name="pathToDLL">the path to the dll containing the custom tag handling code</param>
         public void loadCustomTagHandlers(string pathToDLL)
         {
-            return;
+           // return;
             Assembly tagDLL = Assembly.LoadFrom(pathToDLL);
             Type[] tagDLLTypes = tagDLL.GetTypes();
             for (int i = 0; i < tagDLLTypes.Length; i++)
             {
-                object[] typeCustomAttributes = tagDLLTypes[i].GetCustomAttributes(false);
+                Type type = tagDLLTypes[i];
+                object[] typeCustomAttributes = type.GetCustomAttributes(false);
+                if (typeCustomAttributes.Length == 0 && typeof(AIMLTagHandler).IsAssignableFrom(type) && !type.IsAbstract && !type.IsInterface)
+                {
+                    AddTagHandler(type);
+                    continue;
+                }
                 for (int j = 0; j < typeCustomAttributes.Length; j++)
                 {
                     if (typeCustomAttributes[j] is CustomTagAttribute)
@@ -1144,30 +1145,35 @@ namespace RTParser
                         // We've found a custom tag handling class
                         // so store the assembly and store it away in the Dictionary<,> as a TagHandler class for 
                         // later usage
-                        
-                        // store Assembly
-                        if (!this.LateBindingAssemblies.ContainsKey(tagDLL.FullName))
-                        {
-                            this.LateBindingAssemblies.Add(tagDLL.FullName, tagDLL);
-                        }
-
-                        // create the TagHandler representation
-                        TagHandler newTagHandler = new TagHandler();
-                        newTagHandler.AssemblyName = tagDLL.FullName;
-                        newTagHandler.ClassName = tagDLLTypes[i].FullName;
-                        newTagHandler.TagName = tagDLLTypes[i].Name.ToLower();
-                        if (this.CustomTags.ContainsKey(newTagHandler.TagName))
-                        {
-                            throw new Exception("ERROR! Unable to add the custom tag: <" + newTagHandler.TagName + ">, found in: " + pathToDLL + " as a handler for this tag already exists.");
-                        }
-                        else
-                        {
-                            this.CustomTags.Add(newTagHandler.TagName, newTagHandler);
-                        }
+                        AddTagHandler(type);
                     }
                 }
             }
         }
+
+        private void AddTagHandler(Type type)
+        {
+            Assembly tagDLL = type.Assembly;
+            // store Assembly
+            if (!this.LateBindingAssemblies.ContainsKey(tagDLL.FullName))
+            {
+                this.LateBindingAssemblies.Add(tagDLL.FullName, tagDLL);
+            }
+            // create the TagHandler representation
+            TagHandler newTagHandler = new TagHandler(type);
+            newTagHandler.AssemblyName = tagDLL.FullName;
+            newTagHandler.ClassName = type.FullName;
+            newTagHandler.TagName = type.Name.ToLower();
+            if (this.CustomTags.ContainsKey(newTagHandler.TagName))
+            {
+                throw new Exception("ERROR! Unable to add the custom tag: <" + newTagHandler.TagName + ">, found in: " + tagDLL.Location + " as a handler for this tag already exists.");
+            }
+            else
+            {
+                this.CustomTags.Add(newTagHandler.TagName, newTagHandler);
+            }
+        }
+
         #endregion
 
         #region Phone Home
@@ -1275,8 +1281,6 @@ The AIMLbot program.
         private void populateFromCyc()
         {
             cycAccess.setCyclist("CycAdministrator");
-            
-
         }
 
         public Unifiable EvalSubL(Unifiable cmd, Unifiable filter)

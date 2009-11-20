@@ -11,6 +11,7 @@ namespace RTParser
         public const float UNIFY_TRUE = 0;
         public const float UNIFY_FALSE = 1;
 
+
         /// <summary>
         /// This should be overridden!
         /// </summary>
@@ -178,7 +179,7 @@ namespace RTParser
         public static Unifiable ThatTag = Create("TAG-THAT");
         public static Unifiable TopicTag = Create("TAG-TOPIC");
 
-        protected abstract object Raw { get; }
+        public abstract object Raw { get; }
         public virtual bool IsEmpty
         {
             get
@@ -199,7 +200,38 @@ namespace RTParser
         public abstract bool IsLazyStar();
         public abstract bool IsLongWildCard();
         public abstract bool IsShortWildCard();
-        public abstract float Unify(Unifiable unifiable, SubQuery query);
+
+        static public SubQuery subquery;
+        public abstract bool IsLazy();
+
+        public abstract float UnifyLazy(Unifiable other);
+
+        public virtual float Unify(Unifiable other, SubQuery query)
+        {
+            if (IsShortWildCard()) if (other.AsString().Contains(" ")) return UNIFY_FALSE;
+            subquery = query;
+            if (IsWildCard())
+            {
+                if (IsLazy())
+                {
+                    try
+                    {
+                        return UnifyLazy(other);
+                    }
+                    catch (Exception e)
+                    {
+                        //Console.WriteLine(""+e);
+                        return UNIFY_FALSE;
+                    }
+                }
+                return 0;
+            }
+            if (other.IsWildCard())
+            {
+                // return unifiable.Unify(this, query);
+            }
+            return other.AsString().ToUpper() == AsString().ToUpper() ? UNIFY_TRUE : UNIFY_FALSE;
+        }
 
         public virtual Unifiable ToCaseInsenitive()
         {
@@ -232,6 +264,7 @@ namespace RTParser
 
         public abstract Unifiable Rest();
 
+        public abstract bool IsShort();
     }
 }
 
