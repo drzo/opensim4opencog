@@ -4,15 +4,19 @@ using RTParser.Utils;
 
 namespace RTParser
 {
-    public class ListUnifiable : Unifiable
+    public class BestUnifiable : Unifiable
 
     {
         private Unifiable best;
         public List<Unifiable> List = new List<Unifiable>();
 
-        protected override object Raw
+        public override object Raw
         {
-            get { throw new NotImplementedException(); }
+            get
+            {
+                if (best != null) return best.Raw;
+                throw new NotImplementedException();
+            }
         }
 
         public override bool IsTag(string s)
@@ -78,6 +82,32 @@ namespace RTParser
                 }
             }
             return true;
+        }
+
+        public override bool IsLazy()
+        {
+            foreach (var list in List)
+            {
+                if (list.IsLazy())
+                {
+                    best = list;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public override float UnifyLazy(Unifiable unifiable)
+        {
+            best = null;
+            float bestf = 0;
+            foreach (var u in List)
+            {
+                float b = u.UnifyLazy(unifiable);
+                if (b > bestf) best = u;
+            }
+            return unifiable.UnifyLazy(best);
+            //return bestf;
         }
 
         public override float Unify(Unifiable unifiable, SubQuery query)
@@ -147,6 +177,19 @@ namespace RTParser
                 return u.Rest();
             }
             return Empty;
+        }
+
+        public override bool IsShort()
+        {
+            foreach (var list in List)
+            {
+                if (list.IsShort())
+                {
+                    best = list;
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }

@@ -957,7 +957,7 @@ namespace AIMLBotModule
             var v = WorldSystem.ResolveCollection(name.ToLower(), out argsUsed, this);
             if (v == null) return String.Empty;
             if (v.Count == 0) return Unifiable.Empty;
-            ListUnifiable us = new ListUnifiable();
+            BestUnifiable us = new BestUnifiable();
             Unifiable uu = null;
             int c = 0;
             foreach(var u in v)
