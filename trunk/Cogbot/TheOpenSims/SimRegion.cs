@@ -130,7 +130,7 @@ namespace cogbot.TheOpenSims
                 if (_RegionID == UUID.Zero)
                 {
                     Simulator sim = TheSimulator;
-                    if (sim != null) _RegionID = sim.ID;
+                    if (sim != null) _RegionID = sim.RegionID;
                     if (_RegionID == UUID.Zero)
                     {
                         if (!RequestMapRegionTerrainOnce && IsLegalSimName(RegionName))
@@ -302,7 +302,7 @@ namespace cogbot.TheOpenSims
                         _Simulators.Add(value);
                         PathStore.WaterHeight = value.WaterHeight;
                         _GridInfo.WaterHeight = (byte) value.WaterHeight;
-                        if (value.ID != UUID.Zero) this._RegionID = value.ID;
+                        if (value.RegionID != UUID.Zero) this._RegionID = value.RegionID;
                         if (!string.IsNullOrEmpty(value.Name)) this.RegionName = value.Name;
                         Console.WriteLine("{0} SimWaterHeight = {1}", value.Name, PathStore.WaterHeight);
                     }
