@@ -47,16 +47,23 @@ namespace RTParser.AIMLTagHandlers
             if (this.templateNode.Name.ToLower() == "set")
             {
                 Unifiable name = GetAttribValue("name", null);
+                Unifiable gName = GetAttribValue("global_name", null);
+                // try to use a global blackboard predicate
+                bool newlyCreated;
+                RTParser.User gUser = this.user.bot.FindOrCreateUser("globalPreds", out newlyCreated);
+
                 if (!Unifiable.IsNull(name))
                 {
                     if (!templateNodeInnerText.IsEmpty)
                     {
+                        if (!Unifiable.IsNull(gName)) gUser.Predicates.addSetting(gName, templateNodeInnerText);
                         this.user.Predicates.addSetting(name, templateNodeInnerText);
                         return this.user.Predicates.grabSetting(name);
                     }
                     else
                     {
                         // remove the predicate
+                        if (!Unifiable.IsNull(gName)) gUser.Predicates.removeSetting(gName);
                         this.user.Predicates.removeSetting(name);
                         return Unifiable.Empty;
                     }
@@ -73,6 +80,7 @@ namespace RTParser.AIMLTagHandlers
                         this.user.Predicates.removeSetting(name);
                         return Unifiable.Empty;
                     }
+                    if (!Unifiable.IsNull(gName)) gUser.Predicates.addSetting(gName, templateNodeInnerText);
                     this.user.Predicates.addSetting(name, joined);
                     return this.user.Predicates.grabSetting(name);
                 }
