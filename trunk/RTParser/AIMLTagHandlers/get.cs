@@ -49,7 +49,36 @@ namespace RTParser.AIMLTagHandlers
                 Unifiable defaultVal = GetAttribValue("default", Unifiable.Empty);
                 Unifiable result = this.user.Predicates.grabSetting(name).Trim();
                 if (result.ToValue().ToUpper() == "UNKNOWN") return result + " " + name;
-                if (!String.IsNullOrEmpty(result)) return result;
+                // if ((!String.IsNullOrEmpty(result)) && (!result.IsWildCard())) return result; // we have a local one
+                
+                // try to use a global blackboard predicate
+                bool newlyCreated;
+                RTParser.User gUser = this.user.bot.FindOrCreateUser("globalPreds", out newlyCreated);
+                Unifiable gResult = gUser.Predicates.grabSetting(name).Trim();
+
+                if ((String.IsNullOrEmpty(result)) && (!String.IsNullOrEmpty(gResult)))
+                {
+                    // result=nothing, gResult=something => return gResult
+                    return gResult;
+                }
+
+                if (!String.IsNullOrEmpty(result))
+                {
+                    if (!String.IsNullOrEmpty(gResult))
+                    {
+                        // result=*, gResult=something => return gResult
+                        if (result.IsWildCard()) return gResult;
+
+                        // result=something, gResult=something => return result
+                        return result;
+                    }
+                    else
+                    {
+                        // result=something, gResult=nothing => return result
+                        return result;
+                    }
+                }
+                // default => return defaultVal
                 return defaultVal;
             }
             return Unifiable.Empty;
