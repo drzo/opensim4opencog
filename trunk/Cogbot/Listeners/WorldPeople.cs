@@ -13,6 +13,7 @@ namespace cogbot.Listeners
 {
     partial class WorldObjects
     {
+        public bool MasterIsFriendYet = false;
                
         public override void Self_OnChat(object sender, ChatEventArgs e)
         {
@@ -597,11 +598,11 @@ namespace cogbot.Listeners
             //base.Friends_OnFriendOnline(friend);
         }
 
+
         public override void Friends_OnFriendNamesReceived(object sender, FriendNamesEventArgs e)
         {
             IEnumerable names = e.Names;
             base.Friends_OnFriendNamesReceived(sender, e);
-            bool masterFound = false;
             string clientMasterNameToLower = client.MasterName;
             foreach (KeyValuePair<UUID, string> kvp in names)
             {
@@ -609,16 +610,16 @@ namespace cogbot.Listeners
                 AddName2Key(kvpValueToLower, kvp.Key);
                 if (clientMasterNameToLower == kvpValueToLower)
                 {
-                    masterFound = true;
+                    MasterIsFriendYet = true;
                     client.MasterKey = kvp.Key;
                 }
                 else if (kvp.Key == client.MasterKey)
                 {
                     client.MasterName = kvp.Value;
-                    masterFound = true;
+                    MasterIsFriendYet = true;
                 }
             }
-            if (!masterFound)
+            if (!MasterIsFriendYet)
             {
                 if (!string.IsNullOrEmpty(clientMasterNameToLower))
                 {
@@ -628,21 +629,21 @@ namespace cogbot.Listeners
                             if (Name2Key.ContainsKey(clientMasterNameToLower))
                             {
                                 client.Friends.OfferFriendship(Name2Key[clientMasterNameToLower]);
-                                masterFound = true;
+                                MasterIsFriendYet = true;
                             }
                         }
                     }
                 }
             }
-            if (!masterFound)
+            if (!MasterIsFriendYet)
             {
                 if (client.MasterKey != UUID.Zero)
                 {
                     client.Friends.OfferFriendship(client.MasterKey);
-                    masterFound = true;
+                    MasterIsFriendYet = true;
                 }
             }
-            if (!masterFound)
+            if (!MasterIsFriendYet)
             {
                 if (!string.IsNullOrEmpty(clientMasterNameToLower))
                 {
