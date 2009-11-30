@@ -113,7 +113,7 @@ namespace CogbotRadegastPluginModule
             ChatConsole rchatConsole = (ChatConsole)tab1.Control;
             rchatConsole.cbxInput.Enabled = true;
             rchatConsole.btnSay.Enabled = true;
-            rchatConsole.btnShout.Enabled = true;
+          //  rchatConsole.btnShout.Enabled = true;
             RadegastTab tab2 = RadegastInstance.TabConsole.GetTab("login");
             tab2.AllowDetach = true;
             //RadegastTab tab3 = RadegastInstance.TabConsole.GetTab("search");
