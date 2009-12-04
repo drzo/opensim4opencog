@@ -128,6 +128,124 @@ namespace OpenMetaverse
         NonExistent = 255
     }
 
+    public class SimulatorData
+    {
+        /// <summary></summary>
+        public ulong Handle;
+        /// <summary>The current version of software this simulator is running</summary>
+        public string SimVersion = String.Empty;
+        /// <summary></summary>
+        public string Name = String.Empty;
+        /// <summary>A 64x64 grid of parcel coloring values. The values stored 
+        /// in this array are of the <seealso cref="ParcelArrayType"/> type</summary>
+        public byte[] ParcelOverlay = new byte[4096];
+        /// <summary></summary>
+      //  public int ParcelOverlaysReceived;
+        /// <summary></summary>
+        public float TerrainHeightRange00;
+        /// <summary></summary>
+        public float TerrainHeightRange01;
+        /// <summary></summary>
+        public float TerrainHeightRange10;
+        /// <summary></summary>
+        public float TerrainHeightRange11;
+        /// <summary></summary>
+        public float TerrainStartHeight00;
+        /// <summary></summary>
+        public float TerrainStartHeight01;
+        /// <summary></summary>
+        public float TerrainStartHeight10;
+        /// <summary></summary>
+        public float TerrainStartHeight11;
+        /// <summary></summary>
+        public float WaterHeight;
+        /// <summary></summary>
+        public UUID SimOwner = UUID.Zero;
+        /// <summary></summary>
+        public UUID TerrainBase0 = UUID.Zero;
+        /// <summary></summary>
+        public UUID TerrainBase1 = UUID.Zero;
+        /// <summary></summary>
+        public UUID TerrainBase2 = UUID.Zero;
+        /// <summary></summary>
+        public UUID TerrainBase3 = UUID.Zero;
+        /// <summary></summary>
+        public UUID TerrainDetail0 = UUID.Zero;
+        /// <summary></summary>
+        public UUID TerrainDetail1 = UUID.Zero;
+        /// <summary></summary>
+        public UUID TerrainDetail2 = UUID.Zero;
+        /// <summary></summary>
+        public UUID TerrainDetail3 = UUID.Zero;
+        /// <summary>true if your agent has Estate Manager rights on this region</summary>
+        //public bool IsEstateManager;
+        /// <summary></summary>
+        public RegionFlags Flags;
+        /// <summary></summary>
+        public SimAccess Access;
+        /// <summary></summary>
+        public float BillableFactor;
+        /// <summary>The regions Unique ID</summary>
+        public UUID RegionID = UUID.Zero;
+        /// <summary>The physical data center the simulator is located</summary>
+        /// <remarks>Known values are:
+        /// <list type="table">
+        /// <item>Dallas</item>
+        /// <item>Chandler</item>
+        /// <item>SF</item>
+        /// </list>
+        /// </remarks>
+        public string ColoLocation;
+        /// <summary>The CPU Class of the simulator</summary>
+        /// <remarks>Most full mainland/estate sims appear to be 5,
+        /// Homesteads and Openspace appear to be 501</remarks>
+        public int CPUClass;
+        /// <summary>The number of regions sharing the same CPU as this one</summary>
+        /// <remarks>"Full Sims" appear to be 1, Homesteads appear to be 4</remarks>
+        public int CPURatio;
+        /// <summary>The billing product name</summary>
+        /// <remarks>Known values are:
+        /// <list type="table">
+        /// <item>Mainland / Full Region (Sku: 023)</item>
+        /// <item>Estate / Full Region (Sku: 024)</item>
+        /// <item>Estate / Openspace (Sku: 027)</item>
+        /// <item>Estate / Homestead (Sku: 029)</item>
+        /// <item>Mainland / Homestead (Sku: 129) (Linden Owned)</item>
+        /// </list>
+        /// </remarks>
+        public string ProductName;
+        /// <summary>The billing product SKU</summary>
+        /// <remarks>Known values are:
+        /// <list type="table">
+        /// <item>023 Mainland / Full Region</item>
+        /// <item>024 Estate / Full Region</item>
+        /// <item>027 Estate / Openspace</item>
+        /// <item>029 Estate / Homestead</item>
+        /// <item>129 Mainland / Homestead (Linden Owned)</item>
+        /// </list>
+        /// </remarks>
+        public string ProductSku;
+
+        /// <summary>Provides access to two thread-safe dictionaries containing
+        /// avatars and primitives found in this simulator</summary>
+        //public ObjectTracker Objects = new ObjectTracker();
+
+        public InternalDictionary<uint, Avatar> ObjectsAvatars = new InternalDictionary<uint, Avatar>();
+
+        public InternalDictionary<uint, Primitive> ObjectsPrimitives = new InternalDictionary<uint, Primitive>();
+
+        public List<Primitive> ObjectsMoving = new List<Primitive>();
+        /// <summary>
+        /// Provides access to an internal thread-safe dictionary containing parcel
+        /// information found in this simulator
+        /// </summary>
+        public InternalDictionary<int, Parcel> Parcels = new InternalDictionary<int, Parcel>();
+        // simulator <> parcel LocalID Map
+        public int[,] ParcelMap = new int[64, 64];
+        /// <summary>Coarse locations of avatars in this simulator</summary>
+        internal InternalDictionary<UUID, Vector3> avatarPositions = new InternalDictionary<UUID, Vector3>();
+    }
+
     #endregion Enums
     
     /// <summary>
@@ -237,71 +355,86 @@ namespace OpenMetaverse
         /// <summary>A public reference to the client that this Simulator object
         /// is attached to</summary>
         public GridClient Client;
+
+        static private readonly Dictionary<ulong ,SimulatorData> AllSimData = new Dictionary<ulong, SimulatorData>();
+        public SimulatorData SimData
+        {
+            get
+            {
+                SimulatorData data;
+                if (AllSimData.TryGetValue(Handle, out data)) return data;
+                lock (AllSimData)
+                {
+                    if (AllSimData.TryGetValue(Handle, out data)) return data;
+                    return AllSimData[Handle] = new SimulatorData(){Handle = this.Handle};
+                }
+            }
+        }
         /// <summary>A Unique Cache identifier for this simulator</summary>
         public UUID ID = UUID.Zero;
         /// <summary>The capabilities for this simulator</summary>
         public Caps Caps = null;
-        /// <summary></summary>
-        public ulong Handle;
+        /// <summary>Region handle</summary>
+        readonly public ulong Handle;
         /// <summary>The current version of software this simulator is running</summary>
-        public string SimVersion = String.Empty;
+        public string SimVersion { get { return SimData.SimVersion; } }
         /// <summary></summary>
-        public string Name = String.Empty;
+        public string Name { get { return SimData.Name; } }
         /// <summary>A 64x64 grid of parcel coloring values. The values stored 
         /// in this array are of the <seealso cref="ParcelArrayType"/> type</summary>
-        public byte[] ParcelOverlay = new byte[4096];
+        public byte[] ParcelOverlay { get { return SimData.ParcelOverlay; } }
         /// <summary></summary>
         public int ParcelOverlaysReceived;
         /// <summary></summary>
-        public float TerrainHeightRange00;
+        public float TerrainHeightRange00 { get { return SimData.TerrainHeightRange00; } }
         /// <summary></summary>
-        public float TerrainHeightRange01;
+        public float TerrainHeightRange01 { get { return SimData.TerrainHeightRange01; } }
         /// <summary></summary>
-        public float TerrainHeightRange10;
+        public float TerrainHeightRange10 { get { return SimData.TerrainHeightRange10; } }
         /// <summary></summary>
-        public float TerrainHeightRange11;
+        public float TerrainHeightRange11 { get { return SimData.TerrainHeightRange11; } }
         /// <summary></summary>
-        public float TerrainStartHeight00;
+        public float TerrainStartHeight00 { get { return SimData.TerrainStartHeight00; } }
         /// <summary></summary>
-        public float TerrainStartHeight01;
+        public float TerrainStartHeight01 { get { return SimData.TerrainStartHeight01; } }
         /// <summary></summary>
-        public float TerrainStartHeight10;
+        public float TerrainStartHeight10 { get { return SimData.TerrainStartHeight10; } }
         /// <summary></summary>
-        public float TerrainStartHeight11;
+        public float TerrainStartHeight11 { get { return SimData.TerrainStartHeight11; } }
         /// <summary></summary>
-        public float WaterHeight;
+        public float WaterHeight { get { return SimData.WaterHeight; } }
         /// <summary></summary>
-        public UUID SimOwner = UUID.Zero;
+        public UUID SimOwner { get { return SimData.SimOwner; } }
         /// <summary></summary>
-        public UUID TerrainBase0 = UUID.Zero;
+        public UUID TerrainBase0 { get { return SimData.TerrainBase0; } }
         /// <summary></summary>
-        public UUID TerrainBase1 = UUID.Zero;
+        public UUID TerrainBase1 { get { return SimData.TerrainBase1; } }
         /// <summary></summary>
-        public UUID TerrainBase2 = UUID.Zero;
+        public UUID TerrainBase2 { get { return SimData.TerrainBase2; } }
         /// <summary></summary>
-        public UUID TerrainBase3 = UUID.Zero;
+        public UUID TerrainBase3 { get { return SimData.TerrainBase3; } }
         /// <summary></summary>
-        public UUID TerrainDetail0 = UUID.Zero;
+        public UUID TerrainDetail0 { get { return SimData.TerrainDetail0; } }
         /// <summary></summary>
-        public UUID TerrainDetail1 = UUID.Zero;
+        public UUID TerrainDetail1 { get { return SimData.TerrainDetail1; } }
         /// <summary></summary>
-        public UUID TerrainDetail2 = UUID.Zero;
+        public UUID TerrainDetail2 { get { return SimData.TerrainDetail2; } }
         /// <summary></summary>
-        public UUID TerrainDetail3 = UUID.Zero;
+        public UUID TerrainDetail3 { get { return SimData.TerrainDetail3; } }
         /// <summary>true if your agent has Estate Manager rights on this region</summary>
         public bool IsEstateManager;
         /// <summary></summary>
-        public RegionFlags Flags;
+        public RegionFlags Flags { get { return SimData.Flags; } }
         /// <summary></summary>
-        public SimAccess Access;
+        public SimAccess Access { get { return SimData.Access; } }
         /// <summary></summary>
-        public float BillableFactor;
+        public float BillableFactor { get { return SimData.BillableFactor; } }
         /// <summary>Statistics information for this simulator and the
         /// connection to the simulator, calculated by the simulator itself
         /// and the library</summary>
         public SimStats Stats;
         /// <summary>The regions Unique ID</summary>
-        public UUID RegionID = UUID.Zero;
+        public UUID RegionID { get { return SimData.RegionID; } }
         /// <summary>The physical data center the simulator is located</summary>
         /// <remarks>Known values are:
         /// <list type="table">
@@ -310,14 +443,14 @@ namespace OpenMetaverse
         /// <item>SF</item>
         /// </list>
         /// </remarks>
-        public string ColoLocation;
+        public string ColoLocation { get { return SimData.ColoLocation; } }
         /// <summary>The CPU Class of the simulator</summary>
         /// <remarks>Most full mainland/estate sims appear to be 5,
         /// Homesteads and Openspace appear to be 501</remarks>
-        public int CPUClass;
+        public int CPUClass { get { return SimData.CPUClass; } }
         /// <summary>The number of regions sharing the same CPU as this one</summary>
         /// <remarks>"Full Sims" appear to be 1, Homesteads appear to be 4</remarks>
-        public int CPURatio;
+        public int CPURatio { get { return SimData.CPURatio; } }
         /// <summary>The billing product name</summary>
         /// <remarks>Known values are:
         /// <list type="table">
@@ -328,7 +461,7 @@ namespace OpenMetaverse
         /// <item>Mainland / Homestead (Sku: 129) (Linden Owned)</item>
         /// </list>
         /// </remarks>
-        public string ProductName;
+        public string ProductName { get { return SimData.ProductName; } }
         /// <summary>The billing product SKU</summary>
         /// <remarks>Known values are:
         /// <list type="table">
@@ -339,17 +472,16 @@ namespace OpenMetaverse
         /// <item>129 Mainland / Homestead (Linden Owned)</item>
         /// </list>
         /// </remarks>
-        public string ProductSku;
-            
+        public string ProductSku { get { return SimData.ProductSku; } }
+
         /// <summary>Provides access to two thread-safe dictionaries containing
         /// avatars and primitives found in this simulator</summary>
         //public ObjectTracker Objects = new ObjectTracker();
 
-        public InternalDictionary<uint, Avatar> ObjectsAvatars = new InternalDictionary<uint, Avatar>();
+        public InternalDictionary<uint, Avatar> ObjectsAvatars { get { return SimData.ObjectsAvatars; } }
+        public InternalDictionary<uint, Primitive> ObjectsPrimitives { get { return SimData.ObjectsPrimitives; } }
 
-        public InternalDictionary<uint, Primitive> ObjectsPrimitives = new InternalDictionary<uint, Primitive>();
-        
-        public List<Primitive> ObjectsMoving = new List<Primitive>();
+        public List<Primitive> ObjectsMoving { get { return SimData.ObjectsMoving; } }
 
         /// <summary>The current sequence number for packets sent to this
         /// simulator. Must be Interlocked before modifying. Only
@@ -360,7 +492,7 @@ namespace OpenMetaverse
         /// Provides access to an internal thread-safe dictionary containing parcel
         /// information found in this simulator
         /// </summary>
-        public InternalDictionary<int, Parcel> Parcels = new InternalDictionary<int, Parcel>();
+        public InternalDictionary<int, Parcel> Parcels { get { return SimData.Parcels; } }
 
         /// <summary>
         /// Provides access to an internal thread-safe multidimensional array containing a x,y grid mapped
@@ -370,14 +502,13 @@ namespace OpenMetaverse
         {
             get
             {
-                lock (this)
-                    return _ParcelMap;
+                    return SimData.ParcelMap;
             }
-            set
-            {
-                lock (this)
-                    _ParcelMap = value;
-            }
+            //set
+            //{
+            //    lock (this)
+            //        _ParcelMap = value;
+            //}
         }
 
         /// <summary>
@@ -386,11 +517,12 @@ namespace OpenMetaverse
         /// <returns>true if map is full (contains no 0's)</returns>
         public bool IsParcelMapFull()
         {
+            int[,] parcelMap = this.ParcelMap;
             for (int y = 0; y < 64; y++)
             {
                 for (int x = 0; x < 64; x++)
                 {
-                    if (this.ParcelMap[y, x] == 0)
+                    if (parcelMap[y, x] == 0)
                         return false;
                 }
             }
@@ -423,7 +555,7 @@ namespace OpenMetaverse
         /// to the property Connected</summary>
         internal bool connected;
         /// <summary>Coarse locations of avatars in this simulator</summary>
-        internal InternalDictionary<UUID, Vector3> avatarPositions = new InternalDictionary<UUID, Vector3>();
+        internal InternalDictionary<UUID, Vector3> avatarPositions { get { return SimData.avatarPositions; }}
         /// <summary>AvatarPositions key representing TrackAgent target</summary>
         internal UUID preyID = UUID.Zero;
         /// <summary>Sequence numbers of packets we've received
@@ -442,8 +574,6 @@ namespace OpenMetaverse
         private Timer AckTimer;
         private Timer PingTimer;
         private Timer StatsTimer;
-        // simulator <> parcel LocalID Map
-        private int[,] _ParcelMap = new int[64, 64];
         internal bool DownloadingParcelMap = false;
 
         #endregion Internal/Private Members

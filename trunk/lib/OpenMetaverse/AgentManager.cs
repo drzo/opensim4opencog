@@ -1805,7 +1805,7 @@ namespace OpenMetaverse
             switch (type)
             {
                 case LookAtType.Clear:
-                    duration = 0.0f;
+                    duration = 2.0f;
                     break;
                 case LookAtType.Hover:
                     duration = 1.0f;
@@ -3301,8 +3301,12 @@ namespace OpenMetaverse
 
             relativePosition = movement.Data.Position;
             Movement.Camera.LookDirection(movement.Data.LookAt);
-            simulator.Handle = movement.Data.RegionHandle;
-            simulator.SimVersion = Utils.BytesToString(movement.SimData.ChannelVersion);
+            //simulator.Handle = movement.Data.RegionHandle;
+            simulator.SimData.SimVersion = Utils.BytesToString(movement.SimData.ChannelVersion);
+            if (Client.Network.CurrentSim.Handle!=simulator.Handle)
+            {
+                Client.Network.SetCurrentSim(simulator, simulator.Caps._SeedCapsURI);   
+            }
         }
 
         /// <summary>Process an incoming packet and raise the appropriate events</summary>
@@ -4020,6 +4024,7 @@ namespace OpenMetaverse
         /// <summary>
         /// Construct a new instance of the ChatEventArgs object
         /// </summary>
+        /// <param name="simulator">Sim from which the message originates</param>
         /// <param name="message">The message sent</param>
         /// <param name="audible">The audible level of the message</param>
         /// <param name="type">The type of message sent: whisper, shout, etc</param>
