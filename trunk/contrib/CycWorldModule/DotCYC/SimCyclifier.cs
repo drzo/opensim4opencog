@@ -324,7 +324,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
                 "#$SimRegionCoordinateSystemFn Takes a #$SimRegion and returns a example: (#$SimRegionCoordinateSystemFn (#$SimRegionFn \"LogicMoo\")) => #$ThreeDimensionalCoordinateSystem",
                 simFort["SimRegion"]);
 
-            createIndividual("PointInRegionFn", "Creates region 3D #$Point relative to (#$SimRegionFn :ARG1)", "SimVocabMt", "QuaternaryFunction");
+            createIndividual("PointInRegionFn", "Creates region 3D #$Point relative to (#$SimRegionFn :ARG1)", "SimVocabMt", "QuaternaryFunction", out newlyCreated);
             assertIsa(C("PointInRegionFn"), C("TotalFunction"));
             //assertGaf(CycAccess.isa, simFort["PointInRegionFn"], C(""));
             assertGafNow(C("arg1Isa"), simFort["PointInRegionFn"], C("IDString"));
@@ -336,7 +336,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
                 + " (#$PointIn3DCoordinateSystemFn (#$SimRegionCoordinateSystemFn"
                 + " (#$SimRegionFn :ARG1)) :ARG2 :ARG3 :ARG4 ))");
 
-            createIndividual("PointRelativeToFn", "Creates Local 3D #$Point relative to the #$SpatialThing-Localized in :ARG1", "SimVocabMt", "QuaternaryFunction");
+            createIndividual("PointRelativeToFn", "Creates Local 3D #$Point relative to the #$SpatialThing-Localized in :ARG1", "SimVocabMt", "QuaternaryFunction", out newlyCreated);
             assertIsa(C("PointRelativeToFn"), C("QuaternaryFunction"));
             assertIsa(C("PointRelativeToFn"), C("TotalFunction"));
             assertGaf(C("arg1Isa"), simFort["PointRelativeToFn"], C("SpatialThing-Localized"));
@@ -443,9 +443,13 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
 
         public void ResultIsa(string fn, string col, string comment, CycFort arg1Isa)
         {
-            simFort[fn] = createIndividual(fn, comment, "SimVocabMt", "ReifiableFunction");
-            assertGafNow(C("resultIsa"), simFort[fn], C(col));
-            assertGafNow(C("arg1Isa"), simFort[fn], arg1Isa);
+            bool newlyCreated;
+            simFort[fn] = createIndividual(fn, comment, "SimVocabMt", "ReifiableFunction", out newlyCreated);
+            if (newlyCreated)
+            {
+                assertGafNow(C("resultIsa"), simFort[fn], C(col));
+                assertGafNow(C("arg1Isa"), simFort[fn], arg1Isa);                
+            }
 
         }
 
@@ -456,16 +460,20 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
 
         public void FunctionToCollection(string fn, string col, string comment)
         {
-            CycFort fortFn = simFort[fn] = createIndividual(fn, comment, "SimVocabMt", "UnaryFunction");
-            assertIsa(fortFn, C("CollectionDenotingFunction"));
-            assertIsa(fortFn, C("ReifiableFunction"));
-            CycFort fortCol = simFort[col] = createCollection(col, comment, "SimVocabMt", "Collection", null);
-            assertIsa(fortCol, C("PartiallyTangibleTypeByPhysicalFeature"));
-            //not true assertIsa(simFort[fn], C("SubcollectionDenotingFunction"));
-            //not true assertIsa(simFort[fn], C("TotalFunction"));
-            assertGafNow(C("resultIsa"), fortFn, C("PartiallyTangibleTypeByPhysicalFeature"));
-            assertGafNow(C("resultIsa"), fortFn, C("FirstOrderCollection"));
-            assertGafNow(C("resultGenl"), fortFn, fortCol);
+            bool newlyCreated;
+            CycFort fortFn = simFort[fn] = createIndividual(fn, comment, "SimVocabMt", "UnaryFunction",out newlyCreated);
+            if (newlyCreated)
+            {
+                assertIsa(fortFn, C("CollectionDenotingFunction"));
+                assertIsa(fortFn, C("ReifiableFunction"));
+                CycFort fortCol = simFort[col] = createCollection(col, comment, "SimVocabMt", "Collection", null);
+                assertIsa(fortCol, C("PartiallyTangibleTypeByPhysicalFeature"));
+                //not true assertIsa(simFort[fn], C("SubcollectionDenotingFunction"));
+                //not true assertIsa(simFort[fn], C("TotalFunction"));
+                assertGafNow(C("resultIsa"), fortFn, C("PartiallyTangibleTypeByPhysicalFeature"));
+                assertGafNow(C("resultIsa"), fortFn, C("FirstOrderCollection"));
+                assertGafNow(C("resultGenl"), fortFn, fortCol);
+            }
         }
 
         private CycFort createCollection(string col, string comment, string simvocabmt, string isa, string genls)
@@ -480,19 +488,22 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
 
         public void FunctionToIndividual(string fn, string col, string comment)
         {
-            CycFort fort = simFort[fn] = createIndividual(fn, comment, "SimVocabMt", "UnaryFunction");
-            assertIsa(fort, C("IndividualDenotingFunction"));
-            assertIsa(fort, C("ReifiableFunction"));
-            CycFort fcol = C(col);
-            assertIsa(fcol, CycAccess.collection);
-            assertGaf(CycAccess.comment, fcol, comment);
-            // simFort[col] = createIndividual(col, comment, "SimVocabMt", "Collection");
-            assertGafNow(C("resultIsa"), fort, fcol);
+            bool newlyCreated;
+            CycFort fort = simFort[fn] = createIndividual(fn, comment, "SimVocabMt", "UnaryFunction", out newlyCreated);
+            if (newlyCreated)
+            {
+                assertIsa(fort, C("IndividualDenotingFunction"));
+                assertIsa(fort, C("ReifiableFunction"));
+                CycFort fcol = C(col);
+                assertIsa(fcol, CycAccess.collection);
+                assertGaf(CycAccess.comment, fcol, comment);
+                // simFort[col] = createIndividual(col, comment, "SimVocabMt", "Collection");
+                assertGafNow(C("resultIsa"), fort, fcol);
+            }
         }
 
-        public CycFort createIndividual(string term, string comment, string mt, string type)
+        public CycFort createIndividual(string term, string comment, string mt, string type ,out bool newlyCreated)
         {
-            bool newlyCreated;
             return createTerm(term, comment, mt, type, out newlyCreated);
         }
         public void assertGenls(CycFort a, CycFort b)
@@ -605,7 +616,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
                     {
                         Debug("Assertion failed: " + asert);
                         if (!asert.Contains("icode"))
-                        Trace();
+                            Trace();
                     }
                 }
                 catch (Exception e)
@@ -1419,9 +1430,10 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
 
         private CycFort createSimProperty(string p)
         {
-            CycFort fort = createIndividual(p, "sim #$BinaryPredicate", "SimVocabMt", "SimProperty");
+            bool newlyCreated;
+            CycFort fort = createIndividual(p, "sim #$BinaryPredicate", "SimVocabMt", "SimProperty", out newlyCreated);
             //TODO remove WORKAROUND opencyc?
-            assertIsa(fort,C("BinaryPredicate"));
+            if (newlyCreated) assertIsa(fort, C("BinaryPredicate"));
             return fort;
         }
 
