@@ -3203,6 +3203,12 @@ namespace OpenMetaverse
             this.m_TimeDilation = timeDilation;
             this.m_IsNew = isNew;
         }
+
+        public AvatarUpdateEventArgs(Simulator simulator, Avatar avatar, ushort timeDilation)
+            : this(simulator, avatar, timeDilation, false)
+        {
+            
+        }
     }
 
     /// <summary>Provides additional primitive data for the <see cref="ObjectManager.ObjectProperties"/> event</summary>
