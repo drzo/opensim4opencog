@@ -284,7 +284,7 @@ namespace OpenMetaverse
         ///<summary>Raises the SimChanged Event</summary>
         /// <param name="e">A SimChangedEventArgs object containing
         /// the data sent from the simulator</param>
-        protected virtual void OnSimChanged(SimChangedEventArgs e)
+        public virtual void OnSimChanged(SimChangedEventArgs e)
         {
             EventHandler<SimChangedEventArgs> handler = m_SimChanged;
             if (handler != null)
@@ -473,7 +473,7 @@ namespace OpenMetaverse
             }
             else
             {
-                throw new NotConnectedException("Packet received before simulator packet processing threads running, make certain you are completely logged in");
+                //throw new NotConnectedException("Packet received before simulator packet processing threads running, make certain you are completely logged in");
             }
         }
 
@@ -902,7 +902,7 @@ namespace OpenMetaverse
             }
         }
 
-        private void SetCurrentSim(Simulator simulator, string seedcaps)
+        internal void SetCurrentSim(Simulator simulator, string seedcaps)
         {
             if (simulator != CurrentSim)
             {
@@ -1126,10 +1126,10 @@ namespace OpenMetaverse
         protected void RegionHandshakeHandler(object sender, PacketReceivedEventArgs e)
         {
             RegionHandshakePacket handshake = (RegionHandshakePacket)e.Packet;
-            Simulator simulator = e.Simulator;
+            Simulator simulator0 = e.Simulator;
             e.Simulator.ID = handshake.RegionInfo.CacheID;
-
-            simulator.IsEstateManager = handshake.RegionInfo.IsEstateManager;
+            SimulatorData simulator = simulator0.SimData;
+            simulator0.IsEstateManager = handshake.RegionInfo.IsEstateManager;
             simulator.Name = Utils.BytesToString(handshake.RegionInfo.SimName);
             simulator.SimOwner = handshake.RegionInfo.SimOwner;
             simulator.TerrainBase0 = handshake.RegionInfo.TerrainBase0;
@@ -1165,11 +1165,11 @@ namespace OpenMetaverse
             reply.AgentData.AgentID = Client.Self.AgentID;
             reply.AgentData.SessionID = Client.Self.SessionID;
             reply.RegionInfo.Flags = 0;
-            SendPacket(reply, simulator);
+            SendPacket(reply, simulator0);
 
             // We're officially connected to this sim
-            simulator.connected = true;
-            simulator.ConnectedEvent.Set();
+            simulator0.connected = true;
+            simulator0.ConnectedEvent.Set();
         }
 
         protected void EnableSimulatorHandler(string capsKey, IMessage message, Simulator simulator)
