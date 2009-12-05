@@ -978,7 +978,7 @@ namespace cogbot.TheOpenSims
                 }
                 else if (value != this)
                 {
-                    IsAttachment = (value is SimAvatar);
+                    _isChild = true;
                     if (value.Children.AddTo(this))
                     {
                         needUpdate = true;
@@ -2182,14 +2182,36 @@ namespace cogbot.TheOpenSims
         }
 
 
-        private bool _isAttachment;
+        private bool _isChild;
 
         public bool IsAttachment
         {
-            get { return _isAttachment || _Parent is SimAvatar; }
-            set { _isAttachment = value; }
+            get { return _Parent is SimAvatar; }
         }
 
+        public AttachmentPoint AttachPoint
+        {
+            get
+            {
+                Primitive Prim = this.Prim;
+                if (Prim == null) return AttachmentPoint.Default;
+                return Prim.PrimData.AttachmentPoint;
+            }
+        }
+
+        public bool IsAttachable
+        {
+            get
+            {
+                return AttachPoint != AttachmentPoint.Default;
+            }
+        }
+
+        public bool IsChild
+        {
+            get { return _isChild || _Parent is SimAvatar; }
+            set { _isChild = value; }
+        }
 
         private readonly ListAsSet<UUID> CurrentSounds = new ListAsSet<UUID>();
         public static float SoundGainThreshold = 0.1f;
@@ -2350,7 +2372,10 @@ namespace cogbot.TheOpenSims
         //inherited from SimPosition: bool IsPassable { get; set; }
         bool IsPhantom { get; set; }
         bool IsPhysical { get; set; }
-        bool IsAttachment { get; set; }
+        bool IsAttachment { get; }
+        bool IsAttachable { get; }
+        AttachmentPoint AttachPoint { get; }
+        bool IsChild { get; set; }
         bool IsRoot { get; }
         bool IsUseable { get; }
         bool IsSculpted { get; }
