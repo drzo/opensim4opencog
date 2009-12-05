@@ -677,6 +677,56 @@ namespace cogbot.TheOpenSims
             CurrentAction = new BotObjectAction(this, new SimObjectUsage(use, someObject));
         }
 
+        public InventoryItem TakeObject(SimObject currentPrim)
+        {
+            if (!IsControllable) return null;
+
+            InventoryItem iitem = null;
+            ManualResetEvent ItemsRecieved = new ManualResetEvent(false);
+
+            EventHandler<ItemReceivedEventArgs> onItemReceived = (sender, e) =>
+            {
+                var item = e.Item;
+                if (currentPrim.ID == item.AssetUUID)
+                {
+                    iitem = item;
+                    ItemsRecieved.Set();
+                }
+            };
+            Client.Inventory.ItemReceived += onItemReceived;
+            Client.Inventory.RequestDeRezToInventory(currentPrim.LocalID, DeRezDestination.AgentInventoryTake,
+                                                     Client.Inventory.FindFolderForType(AssetType.Object), UUID.Zero);
+
+            try
+            {
+                //30 secs
+                if (!ItemsRecieved.WaitOne(30000))
+                {
+                    return null;
+                }
+                return iitem;
+            }
+            finally
+            {
+                Client.Inventory.ItemReceived -= onItemReceived;
+            }
+        }
+
+
+        public bool AttachToSelf(SimObject currentPrim)
+        {
+            if (!IsControllable) return false;
+            return WearItem(TakeObject(currentPrim));
+        }
+
+        public bool WearItem(InventoryItem item)
+        {
+            if (!IsControllable) return false;
+            if (item == null) return false;
+            Client.Appearance.AddToOutfit(new List<InventoryItem> { item });
+            return true;
+        }
+
 
         /// <summary>
         ///  
@@ -2523,6 +2573,9 @@ namespace cogbot.TheOpenSims
         ListAsSet<SimPosition> GetSelectedObjects();
         void SelectedRemove(SimPosition position);
         void SelectedAdd(SimPosition position);
+        bool AttachToSelf(SimObject prim);
+        InventoryItem TakeObject(SimObject prim);
+        bool WearItem(InventoryItem item);
     }
 
 
