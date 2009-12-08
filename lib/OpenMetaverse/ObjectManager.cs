@@ -3127,6 +3127,11 @@ namespace OpenMetaverse
             this.m_Prim = prim;
             this.m_TimeDilation = timeDilation;
         }
+        public PrimEventArgs(Simulator simulator, Primitive prim, ushort timeDilation, bool isNew)
+            : this(simulator, prim, timeDilation, isNew, false)
+         {
+             
+         }
     }
 
     /// <summary>Provides data for the <see cref="ObjectManager.AvatarUpdate"/> event</summary>
