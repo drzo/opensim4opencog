@@ -6,53 +6,51 @@
 <STYLE></STYLE>
 </HEAD>
 <BODY bgColor=#ffffff background="">
-<DIV>
-
-<BR>-----------------------------------------------------------------------------------------------------------------------------------------------------<BR>[the, 
-shopper, drank, the, pepsi]<BR>(thereExists ?shopper4675 <BR>  (and (isa 
-?shopper4675 (FrequentPerformerFn Shopping ) ) <BR>   (thereExists 
-?pepsi6 <BR>     (and (isa ?pepsi6 PepsiCola ) 
-<BR>     (and (occursDuring ?drank7550 Past ) 
-<BR>     (and (isa ?drank7550 DrinkingEvent ) 
-<BR>     (performedBy ?drank7550 ?shopper4675 ) 
-<BR>     (consumedObject ?drank7550 ?pepsi6 ) ) ) ) ) ) 
-)       
-<BR>                                                  
-<BR>[the, shopper, drinks, the, pepsi]<BR>(thereExists ?shopper4675 <BR>  
-(and (isa ?shopper4675 (FrequentPerformerFn Shopping ) ) <BR>   
-(thereExists ?pepsi6 <BR>     (and (isa ?pepsi6 PepsiCola ) 
-<BR>     (and (occursDuring ?drank7550 Now ) 
-<BR>     (and (isa ?drank7550 DrinkingEvent ) 
-<BR>     (performedBy ?drank7550 ?shopper4675 ) 
-<BR>     (consumedObject ?drank7550 ?pepsi6 ) ) ) ) ) ) 
-)                           
+<DIV><BR>-----------------------------------------------------------------------------------------------------------------------------------------------------<BR>[the, 
+shopper, drank, the, pepsi]<BR>(thereExists ?shopper4675 <BR>&nbsp; (and (isa 
+?shopper4675 (FrequentPerformerFn Shopping ) ) <BR>&nbsp;&nbsp; (thereExists 
+?pepsi6 <BR>&nbsp;&nbsp;&nbsp;&nbsp; (and (isa ?pepsi6 PepsiCola ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp; (and (occursDuring ?drank7550 Past ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp; (and (isa ?drank7550 DrinkingEvent ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp; (performedBy ?drank7550 ?shopper4675 ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp; (consumedObject ?drank7550 ?pepsi6 ) ) ) ) ) ) 
+)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<BR>[the, shopper, drinks, the, pepsi]<BR>(thereExists ?shopper4675 <BR>&nbsp; 
+(and (isa ?shopper4675 (FrequentPerformerFn Shopping ) ) <BR>&nbsp;&nbsp; 
+(thereExists ?pepsi6 <BR>&nbsp;&nbsp;&nbsp;&nbsp; (and (isa ?pepsi6 PepsiCola ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp; (and (occursDuring ?drank7550 Now ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp; (and (isa ?drank7550 DrinkingEvent ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp; (performedBy ?drank7550 ?shopper4675 ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp; (consumedObject ?drank7550 ?pepsi6 ) ) ) ) ) ) 
+)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 <BR><BR>[the, shopper, bought, fries]<BR>(thereExists ?shopper4794 
-<BR>   (and (isa ?shopper4794 (FrequentPerformerFn Shopping ) ) 
-<BR>   (and (and (isa ?fries20 Frying ) <BR>   
-(objectOfStateChange ?fries20 ?POSSESSOR13610 ) ) <BR>   (and 
-(occursDuring ?bought3 Past ) <BR>   (and (isa ?bought3 Buying ) 
-<BR>   (buyer ?bought3 ?shopper4794 ) <BR>   (objectPaidFor 
+<BR>&nbsp;&nbsp; (and (isa ?shopper4794 (FrequentPerformerFn Shopping ) ) 
+<BR>&nbsp;&nbsp; (and (and (isa ?fries20 Frying ) <BR>&nbsp;&nbsp; 
+(objectOfStateChange ?fries20 ?POSSESSOR13610 ) ) <BR>&nbsp;&nbsp; (and 
+(occursDuring ?bought3 Past ) <BR>&nbsp;&nbsp; (and (isa ?bought3 Buying ) 
+<BR>&nbsp;&nbsp; (buyer ?bought3 ?shopper4794 ) <BR>&nbsp;&nbsp; (objectPaidFor 
 ?bought3 ?fries20 ) ) ) ) ) )<BR><BR>[the, shopper, bought, fries, with, his, 
-pepsi]<BR>(thereExists ?shopper4863 <BR>    (and (isa 
-?shopper4863 (FrequentPerformerFn Shopping ) ) <BR>    (and (isa 
-?pepsi42 PepsiCola ) <BR>    (and (and (and (isa ?fries103 Frying 
-) <BR>       (objectOfStateChange ?fries103 
-?POSSESSOR13613 ) ) <BR>    (and (isa ?bought4 Buying ) (seller 
-?bought4 ?shopper4863 ) <BR>    (objectPaidFor ?bought4 ?fries103 
-) <BR>    (buyingPerformer ?bought4 ?pepsi42 ) ) ) 
-<BR>    (equals ?POSSESSOR13613 
-<BR>            (OneOfFn 
+pepsi]<BR>(thereExists ?shopper4863 <BR>&nbsp;&nbsp;&nbsp; (and (isa 
+?shopper4863 (FrequentPerformerFn Shopping ) ) <BR>&nbsp;&nbsp;&nbsp; (and (isa 
+?pepsi42 PepsiCola ) <BR>&nbsp;&nbsp;&nbsp; (and (and (and (isa ?fries103 Frying 
+) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (objectOfStateChange ?fries103 
+?POSSESSOR13613 ) ) <BR>&nbsp;&nbsp;&nbsp; (and (isa ?bought4 Buying ) (seller 
+?bought4 ?shopper4863 ) <BR>&nbsp;&nbsp;&nbsp; (objectPaidFor ?bought4 ?fries103 
+) <BR>&nbsp;&nbsp;&nbsp; (buyingPerformer ?bought4 ?pepsi42 ) ) ) 
+<BR>&nbsp;&nbsp;&nbsp; (equals ?POSSESSOR13613 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (OneOfFn 
 (PronounFn ThirdPerson-NLAttr Singular-NLAttr Masculine-NLAttr 
 PossessivePronoun-Post ) 
-<BR>             
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (PronounFn ThirdPerson-NLAttr Singular-NLAttr Masculine-NLAttr 
-PossessivePronoun-Pre ) ) ) <BR>    (controls (OneOfFn (PronounFn 
+PossessivePronoun-Pre ) ) ) <BR>&nbsp;&nbsp;&nbsp; (controls (OneOfFn (PronounFn 
 ThirdPerson-NLAttr Singular-NLAttr Masculine-NLAttr PossessivePronoun-Post ) 
-<BR>                           
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (PronounFn ThirdPerson-NLAttr Singular-NLAttr Masculine-NLAttr 
 PossessivePronoun-Pre ) 
-)<BR>                   
-?pepsi42 ) ) ) ) )<BR><BR><BR><BR>|    english2Kif("I see 
+)<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+?pepsi42 ) ) ) ) )<BR><BR><BR><BR>|&nbsp;&nbsp;&nbsp; english2Kif("I see 
 you").<BR>assert(known_phrase(verbSemTrans(#$and(#$isa(?ACTION1, 
 #$VisualPerception), #$pe<BR>rformedBy(?ACTION1, ?Speaker), 
 #$perceivedThings(?ACTION1, ?TargetAgent)), true)<BR>))<BR><BR><BR>e2c("George 
@@ -60,25 +58,25 @@ fell last year").<BR><BR>[[txt, 'George'], [tag, staart, nnp, np]]<BR>[[txt,
 fell], [tag, z, vbd]]<BR>[[txt, last], [tag, z, jj, ap, 'Adjective', 'Adverb', 
 'CountNoun', 'WHAdverb']]<BR>[[txt, year], [tag, laast, nn, 
 'CountNoun']]<BR><BR>seg([p('VP_non_cyclic', 1, 1), p('VP_non_cyclic', 2, 2), 
-p('PP_non_cyclic', 3, 3), p('VP_non_cyclic', 4, 4)])<BR><BR>(implies <BR>  
-(equals ?GEORGE2 <BR>    (OneOfFn 
-EddieGeorge-FootballPlayer-American <BR>      
-(CityNamedFn "George" RepublicOfSouthAfrica ) ) ) <BR>  (and 
-<BR>    (isa ?FELL1 Event ) <BR>    (implies 
-<BR>      (and 
-<BR>        (isa ?YEAR5 CalendarYear ) 
-<BR>        (isa ?YEAR5 ContemporaryArtifact 
-) ) <BR>      (or 
-<BR>        (and 
-<BR>          (isa ?FELL1 
-CuttingDownATree ) <BR>          
+p('PP_non_cyclic', 3, 3), p('VP_non_cyclic', 4, 4)])<BR><BR>(implies <BR>&nbsp; 
+(equals ?GEORGE2 <BR>&nbsp;&nbsp;&nbsp; (OneOfFn 
+EddieGeorge-FootballPlayer-American <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+(CityNamedFn "George" RepublicOfSouthAfrica ) ) ) <BR>&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp; (isa ?FELL1 Event ) <BR>&nbsp;&nbsp;&nbsp; (implies 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?YEAR5 CalendarYear ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?YEAR5 ContemporaryArtifact 
+) ) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (or 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?FELL1 
+CuttingDownATree ) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (objectOfStateChange ?FELL1 ?YEAR5 ) 
-<BR>          (doneBy ?FELL1 
-?GEORGE2 ) ) <BR>        (and 
-<BR>          (organismKilled 
-?FELL1 ?YEAR5 ) <BR>          (isa 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (doneBy ?FELL1 
+?GEORGE2 ) ) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (organismKilled 
+?FELL1 ?YEAR5 ) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa 
 ?FELL1 CuttingDownATree ) 
-<BR>          (performedBy ?FELL1 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (performedBy ?FELL1 
 ?GEORGE2 ) ) ) ) ) )<BR><BR><BR><BR>e2c("I see you").<BR><BR>[[txt, 'I'], [tag, 
 staart, ppss, prp, 'ExpletivePronoun', 'IndefinitePronoun', 'Number-SP', 
 'ObjectPronoun', 'PossessivePronoun', 'PossessivePronoun-Post', 'Pronoun', 
@@ -91,20 +89,20 @@ staart, ppss, prp, 'ExpletivePronoun', 'IndefinitePronoun', 'Number-SP',
 'Pronoun-SubjectOrObject', 'ReciprocalPronoun', 'ReflexivePronoun', 
 'SubjectPronoun', 'WHDeterminer', 'WHPronoun']]<BR><BR>seg([p('ADVP_non_cyclic', 
 1, 1), p('VP_non_cyclic', 2, 2), p('ADVP_non_cyclic', 3, 
-3)])<BR><BR>(thereExists ?SPEAKER <BR>  (and <BR>    (isa 
-?SPEAKER Person ) <BR>    (and <BR>      
-(isa ?SEE1 Event ) <BR>      (thereExists ?TARGETAGENT 
-<BR>        (and 
-<BR>          (isa ?TARGETAGENT 
-Person ) <BR>          (or 
-<BR>            (awareOf 
+3)])<BR><BR>(thereExists ?SPEAKER <BR>&nbsp; (and <BR>&nbsp;&nbsp;&nbsp; (isa 
+?SPEAKER Person ) <BR>&nbsp;&nbsp;&nbsp; (and <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+(isa ?SEE1 Event ) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (thereExists ?TARGETAGENT 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?TARGETAGENT 
+Person ) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (or 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (awareOf 
 ?SPEAKER ?TARGETAGENT ) 
-<BR>            (and 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (isa ?SEE1 VisualPerception ) 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (performedBy ?SEE1 ?SPEAKER ) 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (perceivedThings ?SEE1 ?TARGETAGENT ) ) ) ) ) ) ) )<BR><BR>e2c("I seen the 
 wood").<BR><BR>[[txt, 'I'], [tag, staart, ppss, prp, 'ExpletivePronoun', 
 'IndefinitePronoun', 'Number-SP', 'ObjectPronoun', 'PossessivePronoun', 
@@ -116,22 +114,22 @@ wood").<BR><BR>[[txt, 'I'], [tag, staart, ppss, prp, 'ExpletivePronoun',
 'CountNoun', 'MassNoun', 'MassNoun-Generic']]<BR>[[txt, wood], [tag, laast, nn, 
 'CountNoun', 'MassNoun', 'MassNoun-Generic']]<BR><BR>seg([p('ADVP_non_cyclic', 
 1, 1), p('VP_non_cyclic', 2, 2), p('QP', 3, 4)])<BR><BR>(thereExists ?SPEAKER 
-<BR>  (and <BR>    (isa ?SPEAKER Person ) 
-<BR>    (and <BR>      (isa ?SEEN1 Event 
-) <BR>      (thereExists ?WOOD5 
-<BR>        (and 
-<BR>          (isa ?WOOD5 
-<BR>            (OneOfFn 
+<BR>&nbsp; (and <BR>&nbsp;&nbsp;&nbsp; (isa ?SPEAKER Person ) 
+<BR>&nbsp;&nbsp;&nbsp; (and <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?SEEN1 Event 
+) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (thereExists ?WOOD5 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?WOOD5 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (OneOfFn 
 Wood Wood-GolfClub WoodedArea ) ) 
-<BR>          (or 
-<BR>            (awareOf 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (or 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (awareOf 
 ?SPEAKER ?WOOD5 ) 
-<BR>            (and 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (isa ?SEEN1 VisualPerception ) 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (performedBy ?SEEN1 ?SPEAKER ) 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (perceivedThings ?SEEN1 ?WOOD5 ) ) ) ) ) ) ) )<BR><BR>e2c("I sawed the 
 wood").<BR><BR>[[txt, 'I'], [tag, staart, ppss, prp, 'ExpletivePronoun', 
 'IndefinitePronoun', 'Number-SP', 'ObjectPronoun', 'PossessivePronoun', 
@@ -142,20 +140,20 @@ wood").<BR><BR>[[txt, 'I'], [tag, staart, ppss, prp, 'ExpletivePronoun',
 'Determiner-ClassA', 'Determiner-ClassB', 'Determiner-ClassC', 
 'Determiner-Indefinite', 'Postdeterminer', 'WHDeterminer', 'CountNoun', 
 'MassNoun', 'MassNoun-Generic']]<BR>[[txt, wood], [tag, laast, nn, 'CountNoun', 
-'MassNoun', 'MassNoun-Generic']]<BR><BR><BR>(thereExists ?SPEAKER <BR>  
-(and <BR>    (isa ?SPEAKER Person ) <BR>    (and 
-<BR>      (isa ?SAWED1 Event ) 
-<BR>      (thereExists ?WOOD11 
-<BR>        (and 
-<BR>          (isa ?WOOD11 
-<BR>            (OneOfFn 
+'MassNoun', 'MassNoun-Generic']]<BR><BR><BR>(thereExists ?SPEAKER <BR>&nbsp; 
+(and <BR>&nbsp;&nbsp;&nbsp; (isa ?SPEAKER Person ) <BR>&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?SAWED1 Event ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (thereExists ?WOOD11 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?WOOD11 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (OneOfFn 
 Wood Wood-GolfClub WoodedArea ) ) 
-<BR>          (and 
-<BR>            (isa 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa 
 ?SAWED1 SawingSomething ) 
-<BR>            
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (objectOfStateChange ?SAWED1 ?WOOD11 ) 
-<BR>            (doneBy 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (doneBy 
 ?SAWED1 ?SPEAKER ) ) ) ) ) ) )<BR><BR>e2c("I see two books on a 
 shelf").<BR><BR>[[txt, 'I'], [tag, staart, ppss, prp, 'ExpletivePronoun', 
 'IndefinitePronoun', 'Number-SP', 'ObjectPronoun', 'PossessivePronoun', 
@@ -177,33 +175,33 @@ at, 'Determiner', 'Determiner-Central', 'Determiner-ClassA',
 'MassNoun-Generic']]<BR>[[txt, shelf], [tag, laast, nn, 
 'CountNoun']]<BR><BR>seg([p('ADVP_non_cyclic', 1, 1), p('VP_non_cyclic', 2, 2), 
 p('QP', 3, 4), p('PP_non_cyclic', 5, 5), p('QP', 6, 7)])<BR><BR>(thereExists 
-?SPEAKER <BR>  (and <BR>    (isa ?SPEAKER Person ) 
-<BR>    (and <BR>      (isa ?SEE2 Event 
-) <BR>      (thereExistExactly 2 ?TWO2 
-<BR>        (and 
-<BR>          (and 
-<BR>            (isa 
+?SPEAKER <BR>&nbsp; (and <BR>&nbsp;&nbsp;&nbsp; (isa ?SPEAKER Person ) 
+<BR>&nbsp;&nbsp;&nbsp; (and <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?SEE2 Event 
+) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (thereExistExactly 2 ?TWO2 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa 
 ?TWO2 BookCopy ) 
-<BR>            (isa 
-?TWO2 Thing ) ) <BR>          (and 
-<BR>            (or 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa 
+?TWO2 Thing ) ) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (or 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (awareOf ?SPEAKER ?TWO2 ) 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (and 
-<BR>                
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (isa ?SEE2 VisualPerception ) 
-<BR>                
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (performedBy ?SEE2 ?SPEAKER ) 
-<BR>                
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (perceivedThings ?SEE2 ?TWO2 ) ) ) 
-<BR>            
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (thereExists ?SHELF5 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (and 
-<BR>                
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (isa ?SHELF5 ShelfInABuilding ) 
-<BR>                
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (on-UnderspecifiedSurface ?TWO2 ?SHELF5 ) ) ) ) ) ) ) ) )<BR><BR>e2c("I see two 
 books sitting on a shelf").<BR><BR>[[txt, 'I'], [tag, staart, ppss, prp, 
 'ExpletivePronoun', 'IndefinitePronoun', 'Number-SP', 'ObjectPronoun', 
@@ -226,33 +224,33 @@ books sitting on a shelf").<BR><BR>[[txt, 'I'], [tag, staart, ppss, prp,
 'MassNoun', 'MassNoun-Generic']]<BR>[[txt, shelf], [tag, laast, nn, 
 'CountNoun']]<BR><BR>seg([p('ADVP_non_cyclic', 1, 1), p('VP_non_cyclic', 2, 2), 
 p('QP', 3, 4), p('VP_non_cyclic', 5, 5), p('PP_non_cyclic', 6, 6), p('QP', 7, 
-8)])<BR><BR>(thereExists ?SPEAKER <BR>  (and <BR>    (isa 
-?SPEAKER Person ) <BR>    (and <BR>      
-(isa ?SEE3 Event ) <BR>      (thereExistExactly 2 ?TWO4 
-<BR>        (and 
-<BR>          (and 
-<BR>            (isa 
+8)])<BR><BR>(thereExists ?SPEAKER <BR>&nbsp; (and <BR>&nbsp;&nbsp;&nbsp; (isa 
+?SPEAKER Person ) <BR>&nbsp;&nbsp;&nbsp; (and <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+(isa ?SEE3 Event ) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (thereExistExactly 2 ?TWO4 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa 
 ?TWO4 BookCopy ) 
-<BR>            (isa 
-?TWO4 SittingDown ) ) <BR>          
-(and <BR>            (or 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa 
+?TWO4 SittingDown ) ) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+(and <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (or 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (awareOf ?SPEAKER ?TWO4 ) 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (and 
-<BR>                
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (isa ?SEE3 VisualPerception ) 
-<BR>                
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (performedBy ?SEE3 ?SPEAKER ) 
-<BR>                
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (perceivedThings ?SEE3 ?TWO4 ) ) ) 
-<BR>            
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (thereExists ?SHELF11 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (and 
-<BR>                
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (isa ?SHELF11 ShelfInABuilding ) 
-<BR>                
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (on-UnderspecifiedSurface ?TWO4 ?SHELF11 ) ) ) ) ) ) ) ) )<BR><BR>e2c("I can see 
 you").<BR><BR>[[txt, 'I'], [tag, staart, ppss, prp, 'ExpletivePronoun', 
 'IndefinitePronoun', 'Number-SP', 'ObjectPronoun', 'PossessivePronoun', 
@@ -267,40 +265,40 @@ see], [tag, z, vb]]<BR>[[txt, you], [tag, laast, ppss, ppo, prp, 'Determiner',
 'ReflexivePronoun', 'SubjectPronoun', 'WHDeterminer', 
 'WHPronoun']]<BR><BR>seg([p('ADVP_non_cyclic', 1, 1), p('VP_non_cyclic', 2, 2), 
 p('VP_non_cyclic', 3, 3), p('ADVP_non_cyclic', 4, 4)])<BR><BR>(thereExists 
-?SPEAKER <BR>  (and <BR>    (isa ?SPEAKER Person ) 
-<BR>    (and <BR>      (behavourCapable 
-?SPEAKER ?SEE4 ) <BR>      (and 
-<BR>        (isa ?SEE4 Event ) 
-<BR>        (thereExists ?TARGETAGENT 
-<BR>          (and 
-<BR>            (isa 
+?SPEAKER <BR>&nbsp; (and <BR>&nbsp;&nbsp;&nbsp; (isa ?SPEAKER Person ) 
+<BR>&nbsp;&nbsp;&nbsp; (and <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (behavourCapable 
+?SPEAKER ?SEE4 ) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?SEE4 Event ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (thereExists ?TARGETAGENT 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa 
 ?TARGETAGENT Person ) 
-<BR>            (or 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (or 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (awareOf ?SPEAKER ?TARGETAGENT ) 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (and 
-<BR>                
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (isa ?SEE4 VisualPerception ) 
-<BR>                
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (performedBy ?SEE4 ?SPEAKER ) 
-<BR>                
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (perceivedThings ?SEE4 ?TARGETAGENT ) ) ) ) ) ) ) ) )<BR><BR>e2c("Fido is a 
 dog").<BR><BR>[[txt, 'Fido'], [tag, staart]]<BR>[[txt, is], [tag, z, bez, vbz, 
 'BeAux']]<BR>[[txt, a], [tag, z, dt, at, 'Determiner', 'Determiner-Central', 
 'Determiner-ClassA', 'Determiner-ClassB', 'Determiner-ClassC', 
 'Determiner-Indefinite', 'Postdeterminer', 'WHDeterminer', 'CountNoun', 
 'MassNoun', 'MassNoun-Generic']]<BR>[[txt, dog], [tag, laast, nn, 
-'CountNoun']]<BR><BR><BR>(implies <BR>  (properNameString ?FIDO3 "Fido" ) 
-<BR>  (thereExists ?DOG8 <BR>    (and 
-<BR>      (and 
-<BR>        (isa ?DOG8 InsultingSomeone ) 
-<BR>        (subjectOfInfo ?DOG8 :POSSESSOR ) 
-) <BR>      (and 
-<BR>        (isa ?IS1 Living ) 
-<BR>        (occursDuring ?IS1 Now ) 
-<BR>        (preActors ?IS1 ?FIDO3 ) 
-<BR>        (actors ?IS1 ?DOG8 ) ) ) ) 
+'CountNoun']]<BR><BR><BR>(implies <BR>&nbsp; (properNameString ?FIDO3 "Fido" ) 
+<BR>&nbsp; (thereExists ?DOG8 <BR>&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?DOG8 InsultingSomeone ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (subjectOfInfo ?DOG8 :POSSESSOR ) 
+) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?IS1 Living ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (occursDuring ?IS1 Now ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (preActors ?IS1 ?FIDO3 ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (actors ?IS1 ?DOG8 ) ) ) ) 
 )<BR><BR>e2c("Who is the president of the United States of America 
 ?").<BR><BR>[[txt, 'Who'], [tag, staart, nnp, prp, wp, 'ExpletivePronoun', 
 'IndefinitePronoun', 'Number-SP', 'ObjectPronoun', 'PossessivePronoun', 
@@ -317,35 +315,35 @@ dt, at, 'Determiner', 'Determiner-Central', 'Determiner-ClassA',
 'Determiner-ClassC', 'Determiner-Indefinite', 'Postdeterminer', 'WHDeterminer', 
 'CountNoun', 'MassNoun', 'MassNoun-Generic']]<BR>[[txt, 'United', 'States', of, 
 'America'], [tag, z]]<BR>[[txt, ?], [tag, laast, ?, 
-'Punctuation-SP']]<BR><BR><BR>(CYC-QUERY <BR>  (thereExists ?Who 
-<BR>    (thereExists ?PRESIDENT46 
-<BR>      (and 
-<BR>        (and 
-<BR>          (and 
-<BR>            (isa 
+'Punctuation-SP']]<BR><BR><BR>(CYC-QUERY <BR>&nbsp; (thereExists ?Who 
+<BR>&nbsp;&nbsp;&nbsp; (thereExists ?PRESIDENT46 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa 
 ?PRESIDENT46 Thing ) 
-<BR>            (isa 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa 
 ?PRESIDENT46 Thing ) ) 
-<BR>          (isa ?PRESIDENT46 
-<BR>            (OneOfFn 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?PRESIDENT46 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (OneOfFn 
 PresidentOfOrganization 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (SubcollectionOfWithRelationFromTypeFn Person president Organization ) ) ) ) 
-<BR>        (and 
-<BR>          (and 
-<BR>            (isa 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa 
 ?IS10 Living ) 
-<BR>            
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (occursDuring ?IS10 Now ) 
-<BR>            
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (preActors ?IS10 ?Who ) 
-<BR>            (actors 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (actors 
 ?IS10 ?PRESIDENT46 ) ) 
-<BR>          (thereExists ?G300312 
-<BR>            (and 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (thereExists ?G300312 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (eq ?G300312 UnitedStatesOfAmerica ) 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (possessiveRelation ?G300312 ?PRESIDENT46 ) ) ) ) ) ) ) )<BR><BR>e2c("I saw 
 him").<BR><BR>[[txt, 'I'], [tag, staart, ppss, prp, 'ExpletivePronoun', 
 'IndefinitePronoun', 'Number-SP', 'ObjectPronoun', 'PossessivePronoun', 
@@ -357,29 +355,29 @@ laast, ppo, prp, 'ExpletivePronoun', 'IndefinitePronoun', 'Number-SP',
 'Pronoun-SubjectOrObject', 'ReciprocalPronoun', 'ReflexivePronoun', 
 'SubjectPronoun', 'WHPronoun']]<BR><BR>seg([p('ADVP_non_cyclic', 1, 1), 
 p('VP_non_cyclic', 2, 2), p('ADVP_non_cyclic', 3, 3)])<BR><BR>(thereExists 
-?SPEAKER <BR>  (and <BR>    (isa ?SPEAKER Person ) 
-<BR>    (and <BR>      (isa ?SAW1 Event 
-) <BR>      (thereExists ?HIM 
-<BR>        (and 
-<BR>          (equals ?HIM 
-<BR>            
+?SPEAKER <BR>&nbsp; (and <BR>&nbsp;&nbsp;&nbsp; (isa ?SPEAKER Person ) 
+<BR>&nbsp;&nbsp;&nbsp; (and <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?SAW1 Event 
+) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (thereExists ?HIM 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (equals ?HIM 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (PronounFn ThirdPerson-NLAttr Singular-NLAttr Masculine-NLAttr ObjectPronoun ) ) 
-<BR>          (or 
-<BR>            (awareOf 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (or 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (awareOf 
 ?SPEAKER ?HIM ) 
-<BR>            (and 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (isa ?SAW1 SawingSomething ) 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (objectOfStateChange ?SAW1 ?HIM ) 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (doneBy ?SAW1 ?SPEAKER ) ) 
-<BR>            (and 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (isa ?SAW1 VisualPerception ) 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (performedBy ?SAW1 ?SPEAKER ) 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (perceivedThings ?SAW1 ?HIM ) ) ) ) ) ) ) )<BR><BR>e2c("I saw him 
 Monday").<BR><BR>[[txt, 'I'], [tag, staart, ppss, prp, 'ExpletivePronoun', 
 'IndefinitePronoun', 'Number-SP', 'ObjectPronoun', 'PossessivePronoun', 
@@ -392,37 +390,37 @@ z, ppo, prp, 'ExpletivePronoun', 'IndefinitePronoun', 'Number-SP',
 'SubjectPronoun', 'WHPronoun']]<BR>[[txt, 'Monday'], [tag, laast, nnp, nr, 
 'CountNoun', 'ProperCountNoun', 'ProperNoun']]<BR><BR>seg([p('ADVP_non_cyclic', 
 1, 1), p('VP_non_cyclic', 2, 2), p('ADVP_non_cyclic', 3, 3), p('VP_non_cyclic', 
-4, 4)])<BR><BR>(thereExists ?SPEAKER <BR>  (and <BR>    (isa 
-?SPEAKER Person ) <BR>    (implies 
-<BR>      (occursDuring ?SAW2 Monday ) 
-<BR>      (holdsIn ?SAW2 
-<BR>        (and 
-<BR>          (isa ?SAW2 Event ) 
-<BR>          (thereExists ?HIM 
-<BR>            (and 
-<BR>              
+4, 4)])<BR><BR>(thereExists ?SPEAKER <BR>&nbsp; (and <BR>&nbsp;&nbsp;&nbsp; (isa 
+?SPEAKER Person ) <BR>&nbsp;&nbsp;&nbsp; (implies 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (occursDuring ?SAW2 Monday ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (holdsIn ?SAW2 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?SAW2 Event ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (thereExists ?HIM 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (equals ?HIM 
-<BR>                
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (PronounFn ThirdPerson-NLAttr Singular-NLAttr Masculine-NLAttr ObjectPronoun ) ) 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (or 
-<BR>                
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (awareOf ?SPEAKER ?HIM ) 
-<BR>                
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (and 
-<BR>                  
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (isa ?SAW2 SawingSomething ) 
-<BR>                  
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (objectOfStateChange ?SAW2 ?HIM ) 
-<BR>                  
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (doneBy ?SAW2 ?SPEAKER ) ) 
-<BR>                
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (and 
-<BR>                  
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (isa ?SAW2 VisualPerception ) 
-<BR>                  
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (performedBy ?SAW2 ?SPEAKER ) 
-<BR>                  
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (perceivedThings ?SAW2 ?HIM ) ) ) ) ) ) ) ) ) )<BR><BR>e2c("I saw him 
 January").<BR><BR>[[txt, 'I'], [tag, staart, ppss, prp, 'ExpletivePronoun', 
 'IndefinitePronoun', 'Number-SP', 'ObjectPronoun', 'PossessivePronoun', 
@@ -435,37 +433,37 @@ z, ppo, prp, 'ExpletivePronoun', 'IndefinitePronoun', 'Number-SP',
 'SubjectPronoun', 'WHPronoun']]<BR>[[txt, 'January'], [tag, laast, nnp, np, 
 'ProperCountNoun', 'ProperNoun']]<BR><BR>seg([p('ADVP_non_cyclic', 1, 1), 
 p('VP_non_cyclic', 2, 2), p('ADVP_non_cyclic', 3, 3), p('VP_non_cyclic', 4, 
-4)])<BR><BR>(thereExists ?SPEAKER <BR>  (and <BR>    (isa 
-?SPEAKER Person ) <BR>    (implies 
-<BR>      (occursDuring ?SAW3 January ) 
-<BR>      (holdsIn ?SAW3 
-<BR>        (and 
-<BR>          (isa ?SAW3 Event ) 
-<BR>          (thereExists ?HIM 
-<BR>            (and 
-<BR>              
+4)])<BR><BR>(thereExists ?SPEAKER <BR>&nbsp; (and <BR>&nbsp;&nbsp;&nbsp; (isa 
+?SPEAKER Person ) <BR>&nbsp;&nbsp;&nbsp; (implies 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (occursDuring ?SAW3 January ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (holdsIn ?SAW3 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?SAW3 Event ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (thereExists ?HIM 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (equals ?HIM 
-<BR>                
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (PronounFn ThirdPerson-NLAttr Singular-NLAttr Masculine-NLAttr ObjectPronoun ) ) 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (or 
-<BR>                
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (awareOf ?SPEAKER ?HIM ) 
-<BR>                
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (and 
-<BR>                  
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (isa ?SAW3 SawingSomething ) 
-<BR>                  
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (objectOfStateChange ?SAW3 ?HIM ) 
-<BR>                  
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (doneBy ?SAW3 ?SPEAKER ) ) 
-<BR>                
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (and 
-<BR>                  
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (isa ?SAW3 VisualPerception ) 
-<BR>                  
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (performedBy ?SAW3 ?SPEAKER ) 
-<BR>                  
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (perceivedThings ?SAW3 ?HIM ) ) ) ) ) ) ) ) ) )<BR><BR>e2c("I saw him January 
 twenty first").<BR><BR>[[txt, 'I'], [tag, staart, ppss, prp, 'ExpletivePronoun', 
 'IndefinitePronoun', 'Number-SP', 'ObjectPronoun', 'PossessivePronoun', 
@@ -507,18 +505,18 @@ vbd, 'DoAux']]<BR>[[txt, it], [tag, z, prp, pps, ppo, 'ExpletivePronoun',
 'VerbParticle', 'WHAdverb']]<BR>[[txt, 'Jan'], [tag, laast, nnp, 
 np]]<BR><BR>seg([p('ADVP_non_cyclic', 1, 1), p('VP_non_cyclic', 2, 2), 
 p('ADVP_non_cyclic', 3, 3), p('PP_non_cyclic', 4, 4), p('VP_non_cyclic', 5, 
-5)])<BR><BR>(thereExists ?WE <BR>  (and <BR>    (equals ?WE 
-<BR>      (PronounFn FirstPerson-NLAttr Plural-NLAttr 
-Ungendered-NLAttr SubjectPronoun ) ) <BR>    (and 
-<BR>      (and 
-<BR>        (occursDurring ?IN3 ?G431374 ) 
-<BR>        (bodilyDoer ?WE ?IN3 ) ) 
-<BR>      (implies 
-<BR>        (properNameString ?JAN68 "Jan" ) 
-<BR>        (and 
-<BR>          (occursDuring ?IN3 
-Now ) <BR>          (holdsIn ?IN3 
-<BR>            
+5)])<BR><BR>(thereExists ?WE <BR>&nbsp; (and <BR>&nbsp;&nbsp;&nbsp; (equals ?WE 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (PronounFn FirstPerson-NLAttr Plural-NLAttr 
+Ungendered-NLAttr SubjectPronoun ) ) <BR>&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (occursDurring ?IN3 ?G431374 ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (bodilyDoer ?WE ?IN3 ) ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (implies 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (properNameString ?JAN68 "Jan" ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (occursDuring ?IN3 
+Now ) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (holdsIn ?IN3 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (in-UnderspecifiedContainer ?WE ?JAN68 ) ) ) ) ) ) )<BR><BR><BR>e2c("Failure to 
 comply may result in dismissal").<BR><BR>[[txt, 'Failure'], [tag, staart, nn, 
 'CountNoun', 'MassNoun', 'MassNoun-Generic']]<BR>[[txt, to], [tag, z, to, in, 
@@ -530,33 +528,33 @@ comply may result in dismissal").<BR><BR>[[txt, 'Failure'], [tag, staart, nn,
 'VerbParticle', 'WHAdverb']]<BR>[[txt, dismissal], [tag, laast, nn, 'CountNoun', 
 'Adjective']]<BR><BR>seg([p('VP_non_cyclic', 1, 1), p('PP_non_cyclic', 2, 2), 
 p('VP_non_cyclic', 3, 3), p('VP_non_cyclic', 4, 4), p('VP_non_cyclic', 5, 5), 
-p('PP_non_cyclic', 6, 6), p('VP_non_cyclic', 7, 7)])<BR><BR>(implies <BR>  
-(properNameString ?FAILURE3 "Failure" ) <BR>  (and <BR>    
-(and <BR>      (isa ?RESULT3 
-<BR>        (AdverbFn Comply-TheWord ) ) 
-<BR>      (and 
-<BR>        (behavourCapable ?FAILURE3 
-?RESULT3 ) <BR>        (implies 
-<BR>          (and 
-<BR>            (isa 
+p('PP_non_cyclic', 6, 6), p('VP_non_cyclic', 7, 7)])<BR><BR>(implies <BR>&nbsp; 
+(properNameString ?FAILURE3 "Failure" ) <BR>&nbsp; (and <BR>&nbsp;&nbsp;&nbsp; 
+(and <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?RESULT3 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (AdverbFn Comply-TheWord ) ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (behavourCapable ?FAILURE3 
+?RESULT3 ) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (implies 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa 
 ?DISMISSAL9 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (NounFn Dismiss-TheWord ) ) 
-<BR>            
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (agentPopularity ?DISMISSAL9 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (HighAmountFn PopularityLevel ) ) ) 
-<BR>          (and 
-<BR>            
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (occursDuring ?RESULT3 Now ) 
-<BR>            (holdsIn 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (holdsIn 
 ?RESULT3 
-<BR>              
-(eventOutcomes ?FAILURE3 ?DISMISSAL9 ) ) ) ) ) ) <BR>    (implies 
-<BR>      (and 
-<BR>        (isa ?G461366 Thing ) 
-<BR>        (isa ?G461366 Thing ) ) 
-<BR>      (to-UnderspecifiedLocation ?FAILURE3 ?G461366 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+(eventOutcomes ?FAILURE3 ?DISMISSAL9 ) ) ) ) ) ) <BR>&nbsp;&nbsp;&nbsp; (implies 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?G461366 Thing ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?G461366 Thing ) ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (to-UnderspecifiedLocation ?FAILURE3 ?G461366 
 ) ) ) )<BR><BR>e2c("Absence to comply may result in dismissal").<BR><BR>[[txt, 
 'Absence'], [tag, staart, 'CountNoun', 'CountNoun-Generic', 'NLWordForm', 
 'Noun']]<BR>[[txt, to], [tag, z, to, in, 'InfinitiveComp', 'Preposition', 
@@ -566,33 +564,33 @@ p('PP_non_cyclic', 6, 6), p('VP_non_cyclic', 7, 7)])<BR><BR>(implies <BR>
 [tag, z, in, 'Adjective', 'Adverb', 'CountNoun', 'Preposition', 
 'Preposition-Directional-Telic', 'Preposition-Locative', 'VerbParticle', 
 'WHAdverb']]<BR>[[txt, dismissal], [tag, laast, nn, 'CountNoun', 
-'Adjective']]<BR><BR><BR>(implies <BR>  (properNameString ?ABSENCE3 
-"Absence" ) <BR>  (and <BR>    (and 
-<BR>      (isa ?RESULT7 
-<BR>        (AdverbFn Comply-TheWord ) ) 
-<BR>      (and 
-<BR>        (behavourCapable ?ABSENCE3 
-?RESULT7 ) <BR>        (implies 
-<BR>          (and 
-<BR>            (isa 
+'Adjective']]<BR><BR><BR>(implies <BR>&nbsp; (properNameString ?ABSENCE3 
+"Absence" ) <BR>&nbsp; (and <BR>&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?RESULT7 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (AdverbFn Comply-TheWord ) ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (behavourCapable ?ABSENCE3 
+?RESULT7 ) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (implies 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa 
 ?DISMISSAL18 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (NounFn Dismiss-TheWord ) ) 
-<BR>            
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (agentPopularity ?DISMISSAL18 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (HighAmountFn PopularityLevel ) ) ) 
-<BR>          (and 
-<BR>            
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (occursDuring ?RESULT7 Now ) 
-<BR>            (holdsIn 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (holdsIn 
 ?RESULT7 
-<BR>              
-(eventOutcomes ?ABSENCE3 ?DISMISSAL18 ) ) ) ) ) ) <BR>    
-(implies <BR>      (and 
-<BR>        (isa ?G495123 Thing ) 
-<BR>        (isa ?G495123 Thing ) ) 
-<BR>      (to-UnderspecifiedLocation ?ABSENCE3 ?G495123 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+(eventOutcomes ?ABSENCE3 ?DISMISSAL18 ) ) ) ) ) ) <BR>&nbsp;&nbsp;&nbsp; 
+(implies <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?G495123 Thing ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?G495123 Thing ) ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (to-UnderspecifiedLocation ?ABSENCE3 ?G495123 
 ) ) ) )<BR><BR>e2c("He made a request that there be an 
 investigation").<BR><BR>[[txt, 'He'], [tag, staart, pps, 'ExpletivePronoun', 
 'IndefinitePronoun', 'Number-SP', 'ObjectPronoun', 'PossessivePronoun', 
@@ -618,53 +616,53 @@ that], [tag, z, in, cs, dt, wdt, 'Adverb', 'Complementizer', 'Determiner',
 'Determiner-Central', 'Determiner-ClassA', 'Determiner-ClassB', 
 'Determiner-ClassC', 'Determiner-Indefinite', 'Postdeterminer', 
 'WHDeterminer']]<BR>[[txt, investigation], [tag, laast, nn, 'CountNoun', 
-'MassNoun', 'MassNoun-Generic']]<BR><BR><BR>(thereExists ?HE <BR>  (and 
-<BR>    (isa ?HE Male ) <BR>    (and 
-<BR>      (isa ?MADE1 Event ) 
-<BR>      (thereExists ?REQUEST8 
-<BR>        (and 
-<BR>          (and 
-<BR>            (isa 
+'MassNoun', 'MassNoun-Generic']]<BR><BR><BR>(thereExists ?HE <BR>&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp; (isa ?HE Male ) <BR>&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?MADE1 Event ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (thereExists ?REQUEST8 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa 
 ?REQUEST8 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (OneOfFn InformationRequest-IBT Request Requesting-CommunicationAct ) ) 
-<BR>            (isa 
-?REQUEST8 Thing ) ) <BR>          
-(and <BR>            (or 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa 
+?REQUEST8 Thing ) ) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+(and <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (or 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (causes-Underspecified ?HE ?REQUEST8 ) 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (createdBy ?REQUEST8 ?HE ) 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (doneBy ?REQUEST8 ?HE ) 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (and 
-<BR>                
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (isa ?MADE1 MakingSomething ) 
-<BR>                
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (performedBy ?MADE1 ?HE ) 
-<BR>                
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (products ?MADE1 ?REQUEST8 ) ) ) 
-<BR>            (and 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (isa ?BE29 
-<BR>                
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (AdverbFn There-TheWord ) ) 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (thereExists ?INVESTIGATION7 
-<BR>                
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (and 
-<BR>                  
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (isa ?INVESTIGATION7 Research ) 
-<BR>                  
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (and 
-<BR>                    
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (isa ?BE29 Living ) 
-<BR>                    
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (occursDuring ?BE29 Now ) 
-<BR>                    
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (preActors ?BE29 ?REQUEST8 ) 
-<BR>                    
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (actors ?BE29 ?INVESTIGATION7 ) ) ) ) ) ) ) ) ) ) )<BR><BR>e2c("He stated the 
 fact that there be an investigation").<BR><BR>[[txt, 'He'], [tag, staart, pps, 
 'ExpletivePronoun', 'IndefinitePronoun', 'Number-SP', 'ObjectPronoun', 
@@ -691,37 +689,37 @@ an], [tag, z, dt, at, 'Determiner', 'Determiner-Central', 'Determiner-ClassA',
 'Determiner-ClassB', 'Determiner-ClassC', 'Determiner-Indefinite', 
 'Postdeterminer', 'WHDeterminer']]<BR>[[txt, investigation], [tag, laast, nn, 
 'CountNoun', 'MassNoun', 'MassNoun-Generic']]<BR><BR><BR>(thereExists ?HE 
-<BR>  (and <BR>    (isa ?HE Male ) <BR>    
-(thereExists ?FACT10 <BR>      (and 
-<BR>        (ist :POSSESSOR ?FACT10 ) 
-<BR>        (and 
-<BR>          (implies 
-<BR>            (isa 
+<BR>&nbsp; (and <BR>&nbsp;&nbsp;&nbsp; (isa ?HE Male ) <BR>&nbsp;&nbsp;&nbsp; 
+(thereExists ?FACT10 <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (ist :POSSESSOR ?FACT10 ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (implies 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa 
 ?STATED3 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (VerbFn State-TheWord ) ) 
-<BR>            (eventSOT 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (eventSOT 
 ?STATED3 ?HE ?FACT10 Past ) ) 
-<BR>          (and 
-<BR>            (isa 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa 
 ?BE31 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (AdverbFn There-TheWord ) ) 
-<BR>            
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (thereExists ?INVESTIGATION15 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (and 
-<BR>                
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (isa ?INVESTIGATION15 Research ) 
-<BR>                
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (and 
-<BR>                  
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (isa ?BE31 Living ) 
-<BR>                  
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (occursDuring ?BE31 Now ) 
-<BR>                  
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (preActors ?BE31 ?FACT10 ) 
-<BR>                  
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (actors ?BE31 ?INVESTIGATION15 ) ) ) ) ) ) ) ) ) )<BR><BR><BR>e2c("Many were 
 angered by the hearings").<BR><BR>[[txt, 'Many'], [tag, staart, dt, jj, nnp, 
 pdt, rb, 'Adverb', 'Determiner', 'Determiner-Central', 'Determiner-ClassA', 
@@ -739,44 +737,44 @@ pdt, rb, 'Adverb', 'Determiner', 'Determiner-Central', 'Determiner-ClassA',
 'MassNoun', 'MassNoun-Generic']]<BR>[[txt, hearings], [tag, laast, nns, 
 'CountNoun', 'GerundiveCountNoun']]<BR><BR>seg([p('QP', 1, 1), 
 p('VP_non_cyclic', 2, 2), p('VP_non_cyclic', 3, 3), p('PP_non_cyclic', 4, 4), 
-p('QP', 5, 5), p('QP', 6, 6)])<BR><BR>(thereExists ?MANY <BR>  (and 
-<BR>    (or <BR>      (and 
-<BR>        (equals ?MANY Many-NLAttr ) 
-<BR>        (isa ?MANY 
-<BR>          (CollectionUnionFn 
-Individual NLGenQuantAttribute ) ) ) <BR>      (and 
-<BR>        (equals ?MANY Many-Quant ) 
-<BR>        (isa ?MANY 
-<BR>          (CollectionUnionFn 
-Individual PositiveIntegerExtent ) ) ) <BR>      (and 
-<BR>        (equals ?MANY many ) 
-<BR>        (isa ?MANY 
-<BR>          (CollectionUnionFn 
+p('QP', 5, 5), p('QP', 6, 6)])<BR><BR>(thereExists ?MANY <BR>&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp; (or <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (equals ?MANY Many-NLAttr ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?MANY 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (CollectionUnionFn 
+Individual NLGenQuantAttribute ) ) ) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (equals ?MANY Many-Quant ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?MANY 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (CollectionUnionFn 
+Individual PositiveIntegerExtent ) ) ) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (equals ?MANY many ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?MANY 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (CollectionUnionFn 
 GeneralizedQuantifier-Conservative Individual ReflexiveBinaryPredicate 
-TruthFunction ) ) ) ) <BR>    (and 
-<BR>      (occursDurring ?ANGERED3 Past ) 
-<BR>      (implies 
-<BR>        (and 
-<BR>          (isa ?G626264 Thing ) 
-<BR>          (isa ?G626264 Thing ) 
-) <BR>        (and 
-<BR>          (implies 
-<BR>            (isa 
+TruthFunction ) ) ) ) <BR>&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (occursDurring ?ANGERED3 Past ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (implies 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?G626264 Thing ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?G626264 Thing ) 
+) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (implies 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa 
 ?ANGERED3 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (VerbFn Anger-TheWord ) ) 
-<BR>            (eventSOT 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (eventSOT 
 ?ANGERED3 ?MANY ?G626264 Past ) ) 
-<BR>          (thereExists 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (thereExists 
 ?HEARINGS5 
-<BR>            (and 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (and 
-<BR>                
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (isa ?HEARINGS5 Hearing ) 
-<BR>                
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (objectActedOn ?HEARINGS5 :POSSESSOR ) ) 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (by-Underspecified ?G626264 ?HEARINGS5 ) ) ) ) ) ) ) )<BR><BR><BR>e2c("Many who 
 initially supported Thomas later changed their minds").<BR><BR>[[txt, 'Many'], 
 [tag, staart, dt, jj, nnp, pdt, rb, 'Adverb', 'Determiner', 
@@ -802,97 +800,97 @@ z, vbn, vbd, 'Adjective', 'CountNoun']]<BR>[[txt, their], [tag, z, 'pp$',
 'SubjectPronoun', 'WHDeterminer', 'WHPronoun']]<BR>[[txt, minds], [tag, laast, 
 nns, 'CountNoun']]<BR><BR>seg([p('QP', 1, 1), p('X', 2, 2), p('PP_non_cyclic', 
 3, 3), p('VP_non_cyclic', 4, 4), p('VP_non_cyclic', 5, 5), p('QP', 6, 6), 
-p('VP_non_cyclic', 7, 7), p('NX', 8, 9)])<BR><BR>(thereExists ?MANY <BR>  
-(and <BR>    (or <BR>      (and 
-<BR>        (equals ?MANY Many-NLAttr ) 
-<BR>        (isa ?MANY 
-<BR>          (CollectionUnionFn 
-Individual NLGenQuantAttribute ) ) ) <BR>      (and 
-<BR>        (equals ?MANY Many-Quant ) 
-<BR>        (isa ?MANY 
-<BR>          (CollectionUnionFn 
-Individual PositiveIntegerExtent ) ) ) <BR>      (and 
-<BR>        (equals ?MANY many ) 
-<BR>        (isa ?MANY 
-<BR>          (CollectionUnionFn 
+p('VP_non_cyclic', 7, 7), p('NX', 8, 9)])<BR><BR>(thereExists ?MANY <BR>&nbsp; 
+(and <BR>&nbsp;&nbsp;&nbsp; (or <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (equals ?MANY Many-NLAttr ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?MANY 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (CollectionUnionFn 
+Individual NLGenQuantAttribute ) ) ) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (equals ?MANY Many-Quant ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?MANY 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (CollectionUnionFn 
+Individual PositiveIntegerExtent ) ) ) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (equals ?MANY many ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?MANY 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (CollectionUnionFn 
 GeneralizedQuantifier-Conservative Individual ReflexiveBinaryPredicate 
-TruthFunction ) ) ) ) <BR>    (implies 
-<BR>      (and 
-<BR>        (or 
-<BR>          (and 
-<BR>            (equals 
+TruthFunction ) ) ) ) <BR>&nbsp;&nbsp;&nbsp; (implies 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (or 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (equals 
 ?MANY Agent-PartiallyTangible ) 
-<BR>            (isa 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa 
 ?MANY 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (CollectionUnionFn Collection ExistingObjectType StuffType TemporalStuffType ) ) 
-) ) <BR>        (and 
-<BR>          (isa ?CHANGED1 Event 
-) <BR>          (and 
-<BR>            (controls 
+) ) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?CHANGED1 Event 
+) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (controls 
 ?THEIR ?MINDS4 ) 
-<BR>            (and 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (equals ?THEIR 
-<BR>                
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (PronounFn ThirdPerson-NLAttr Plural-NLAttr Ungendered-NLAttr 
 PossessivePronoun-Pre ) ) 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (implies 
-<BR>                
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (and 
-<BR>                  
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (isa ?MINDS4 TakingCareOfSomething ) 
-<BR>                  
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (beneficiary ?MINDS4 :POSSESSOR ) ) 
-<BR>                
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (or 
-<BR>                  
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (and 
-<BR>                    
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (isa ?CHANGED1 IntrinsicStateChangeEvent ) 
-<BR>                    
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (performedBy ?CHANGED1 ?MANY ) 
-<BR>                    
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (objectOfStateChange ?CHANGED1 ?MINDS4 ) ) 
-<BR>                  
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (and 
-<BR>                    
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (isa ?CHANGED1 ReplacingAnObject ) 
-<BR>                    
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (objectActedOn ?CHANGED1 ?MINDS4 ) 
-<BR>                    
-(doneBy ?CHANGED1 ?MANY ) ) ) ) ) ) ) ) <BR>      (and 
-<BR>        (isa ?SUPPORTED1 
-<BR>          (AdverbFn 
-Initial-TheWord ) ) <BR>        (and 
-<BR>          (isa ?SUPPORTED1 
-<BR>            (AdverbFn 
-Late-TheWord ) ) <BR>          (and 
-<BR>            (isa 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+(doneBy ?CHANGED1 ?MANY ) ) ) ) ) ) ) ) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?SUPPORTED1 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (AdverbFn 
+Initial-TheWord ) ) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?SUPPORTED1 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (AdverbFn 
+Late-TheWord ) ) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa 
 ?SUPPORTED1 Event ) 
-<BR>            (implies 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (implies 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (equals ?THOMAS2 JackThomas-911FOAF ) 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (or 
-<BR>                
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (satisfiesStandard ?MANY ?THOMAS2 ) 
-<BR>                
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (and 
-<BR>                  
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (isa ?SUPPORTED1 ShowingSupportForSomeone ) 
-<BR>                  
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (beneficiary ?SUPPORTED1 ?THOMAS2 ) 
-<BR>                  
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (performedBy ?SUPPORTED1 ?MANY ) ) 
-<BR>                
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (and 
-<BR>                  
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (isa ?SUPPORTED1 SupportingSomething ) 
-<BR>                  
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (supportedObject ?SUPPORTED1 ?THOMAS2 ) 
-<BR>                  
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (supportingObject ?SUPPORTED1 ?MANY ) ) ) ) ) ) ) ) ) )<BR><BR><BR>e2c("Those 
 that want to come can come").<BR><BR>[[txt, 'Those'], [tag, staart, dt, nnp, 
 'Determiner', 'Determiner-Central', 'Determiner-ClassA', 'Determiner-ClassB', 
@@ -912,49 +910,49 @@ that], [tag, z, in, cs, dt, wdt, 'Adverb', 'Complementizer', 'Determiner',
 [tag, z, md, 'Modal', 'CountNoun']]<BR>[[txt, come], [tag, laast, vb, 
 vbn]]<BR><BR>seg([p('PP_non_cyclic', 1, 2), p('VP_non_cyclic', 3, 3), 
 p('PP_non_cyclic', 4, 4), p('VP_non_cyclic', 5, 5), p('VP_non_cyclic', 6, 6), 
-p('VP_non_cyclic', 7, 7)])<BR><BR>(thereExists ?THOSE <BR>  (and 
-<BR>    (or <BR>      (and 
-<BR>        (equals ?THOSE 
-Backreference-ClassB-NLAttr ) <BR>        
-(isa ?THOSE <BR>          
+p('VP_non_cyclic', 7, 7)])<BR><BR>(thereExists ?THOSE <BR>&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp; (or <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (equals ?THOSE 
+Backreference-ClassB-NLAttr ) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+(isa ?THOSE <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (CollectionUnionFn Backreference-NLAttrType Individual ) ) ) 
-<BR>      (and 
-<BR>        (equals ?THOSE 
-Demonstrative-ClassB-NLAttr ) <BR>        
-(isa ?THOSE <BR>          
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (equals ?THOSE 
+Demonstrative-ClassB-NLAttr ) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+(isa ?THOSE <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (CollectionUnionFn Demonstrative-NLAttrType Individual ) ) ) ) 
-<BR>    (and <BR>      (eventSOT 
-?EVENT88 ?THOSE ?OBJ88 ?TIME88 ) <BR>      (implies 
-<BR>        (occursDuring ?WANT3 
-<BR>          (OneOfFn 
+<BR>&nbsp;&nbsp;&nbsp; (and <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (eventSOT 
+?EVENT88 ?THOSE ?OBJ88 ?TIME88 ) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (implies 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (occursDuring ?WANT3 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (OneOfFn 
 ArrivingAtAPlace HavingAnOrgasm ) ) 
-<BR>        (holdsIn ?WANT3 
-<BR>          (implies 
-<BR>            (and 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (holdsIn ?WANT3 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (implies 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (isa ?G738781 Thing ) 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (isa ?G738781 Thing ) ) 
-<BR>            (and 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (implies 
-<BR>                
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (isa ?WANT3 
-<BR>                  
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (VerbFn Want-TheWord ) ) 
-<BR>                
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (eventSOT ?WANT3 ?THOSE ?G738781 Now ) ) 
-<BR>              
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (implies 
-<BR>                
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (and 
-<BR>                  
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (isa ?COME4 Emission ) 
-<BR>                  
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (isa ?COME4 
-<BR>                    
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (OneOfFn Buttocks Can CanningFood ) ) ) 
-<BR>                
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 (to-UnderspecifiedLocation ?G738781 ?COME4 ) ) ) ) ) ) ) ) )<BR><BR><BR>e2c("the 
 best costumes got prizes").<BR><BR>[[txt, a], [tag, staart, dt, at, 
 'Determiner', 'Determiner-Central', 'Determiner-ClassA', 'Determiner-ClassB', 
@@ -964,14 +962,14 @@ jjs, 'CountNoun', 'Adjective', 'Adverb']]<BR>[[txt, costumes], [tag, z, nns,
 'CountNoun']]<BR>[[txt, got], [tag, z, vbd, vbn]]<BR>[[txt, prizes], [tag, 
 laast, nns, 'CountNoun']]<BR><BR>seg([p('QP', 1, 1), p('ADVP_non_cyclic', 2, 2), 
 p('QP', 3, 3), p('VP_non_cyclic', 4, 4), p('QP', 5, 5)])<BR><BR>(thereExists 
-?COSTUMES5 <BR>  (and <BR>    (and 
-<BR>      (isa ?COSTUMES5 Costume ) 
-<BR>      (isa ?COSTUMES5 Thing ) ) 
-<BR>    (implies <BR>      (isa ?PRIZES7 
-AwardPractice ) <BR>      (implies 
-<BR>        (isa ?GOT7 
-<BR>          (VerbFn Get-TheWord ) 
-) <BR>        (eventSOT ?GOT7 ?COSTUMES5 
+?COSTUMES5 <BR>&nbsp; (and <BR>&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?COSTUMES5 Costume ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?COSTUMES5 Thing ) ) 
+<BR>&nbsp;&nbsp;&nbsp; (implies <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?PRIZES7 
+AwardPractice ) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (implies 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?GOT7 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (VerbFn Get-TheWord ) 
+) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (eventSOT ?GOT7 ?COSTUMES5 
 ?PRIZES7 Past ) ) ) ) )<BR><BR>e2c("a best costume got prizes").<BR><BR>[[txt, 
 a], [tag, staart, dt, at, 'Determiner', 'Determiner-Central', 
 'Determiner-ClassA', 'Determiner-ClassB', 'Determiner-ClassC', 
@@ -981,14 +979,14 @@ a], [tag, staart, dt, at, 'Determiner', 'Determiner-Central',
 'CountNoun']]<BR>[[txt, got], [tag, z, vbd, vbn]]<BR>[[txt, prizes], [tag, 
 laast, nns, 'CountNoun']]<BR><BR>seg([p('QP', 1, 1), p('ADVP_non_cyclic', 2, 2), 
 p('VP_non_cyclic', 3, 3), p('VP_non_cyclic', 4, 4), p('QP', 5, 
-5)])<BR><BR>(thereExists ?COSTUME5 <BR>  (and <BR>    (and 
-<BR>      (isa ?COSTUME5 Costume ) 
-<BR>      (isa ?COSTUME5 Thing ) ) 
-<BR>    (implies <BR>      (isa 
-?PRIZES15 AwardPractice ) <BR>      (implies 
-<BR>        (isa ?GOT14 
-<BR>          (VerbFn Get-TheWord ) 
-) <BR>        (eventSOT ?GOT14 ?COSTUME5 
+5)])<BR><BR>(thereExists ?COSTUME5 <BR>&nbsp; (and <BR>&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?COSTUME5 Costume ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?COSTUME5 Thing ) ) 
+<BR>&nbsp;&nbsp;&nbsp; (implies <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa 
+?PRIZES15 AwardPractice ) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (implies 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?GOT14 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (VerbFn Get-TheWord ) 
+) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (eventSOT ?GOT14 ?COSTUME5 
 ?PRIZES15 Past ) ) ) ) )<BR><BR>e2c("some best costumes got 
 prizes").<BR><BR>[[txt, some], [tag, staart, dt, dti, 'Adverb', 'Determiner', 
 'Determiner-Central', 'Determiner-ClassA', 'Determiner-ClassB', 
@@ -997,14 +995,14 @@ best], [tag, z, jjt, jjs, 'CountNoun', 'Adjective', 'Adverb']]<BR>[[txt,
 costumes], [tag, z, nns, 'CountNoun']]<BR>[[txt, got], [tag, z, vbd, 
 vbn]]<BR>[[txt, prizes], [tag, laast, nns, 'CountNoun']]<BR><BR>seg([p('QP', 1, 
 1), p('ADVP_non_cyclic', 2, 2), p('QP', 3, 3), p('VP_non_cyclic', 4, 4), p('QP', 
-5, 5)])<BR><BR>(thereExists ?COSTUMES10 <BR>  (and <BR>    
-(and <BR>      (isa ?COSTUMES10 Costume ) 
-<BR>      (isa ?COSTUMES10 Thing ) ) 
-<BR>    (implies <BR>      (isa 
-?PRIZES23 AwardPractice ) <BR>      (implies 
-<BR>        (isa ?GOT21 
-<BR>          (VerbFn Get-TheWord ) 
-) <BR>        (eventSOT ?GOT21 ?COSTUMES10 
+5, 5)])<BR><BR>(thereExists ?COSTUMES10 <BR>&nbsp; (and <BR>&nbsp;&nbsp;&nbsp; 
+(and <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?COSTUMES10 Costume ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?COSTUMES10 Thing ) ) 
+<BR>&nbsp;&nbsp;&nbsp; (implies <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa 
+?PRIZES23 AwardPractice ) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (implies 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?GOT21 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (VerbFn Get-TheWord ) 
+) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (eventSOT ?GOT21 ?COSTUMES10 
 ?PRIZES23 Past ) ) ) ) )<BR><BR>e2c("the best five costumes got 
 prizes").<BR><BR>[[txt, a], [tag, staart, dt, at, 'Determiner', 
 'Determiner-Central', 'Determiner-ClassA', 'Determiner-ClassB', 
@@ -1020,14 +1018,14 @@ jjs, 'CountNoun', 'Adjective', 'Adverb']]<BR>[[txt, five], [tag, z, cd,
 nns, 'CountNoun']]<BR>[[txt, got], [tag, z, vbd, vbn]]<BR>[[txt, prizes], [tag, 
 laast, nns, 'CountNoun']]<BR><BR>seg([p('QP', 1, 1), p('ADVP_non_cyclic', 2, 2), 
 p('QP', 3, 4), p('VP_non_cyclic', 5, 5), p('QP', 6, 
-6)])<BR><BR>(thereExistExactly 5 ?FIVE1 <BR>  (and <BR>    
-(and <BR>      (isa ?FIVE1 Costume ) 
-<BR>      (isa ?FIVE1 Thing ) ) <BR>    
-(implies <BR>      (isa ?PRIZES31 AwardPractice ) 
-<BR>      (implies 
-<BR>        (isa ?GOT28 
-<BR>          (VerbFn Get-TheWord ) 
-) <BR>        (eventSOT ?GOT28 ?FIVE1 
+6)])<BR><BR>(thereExistExactly 5 ?FIVE1 <BR>&nbsp; (and <BR>&nbsp;&nbsp;&nbsp; 
+(and <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?FIVE1 Costume ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?FIVE1 Thing ) ) <BR>&nbsp;&nbsp;&nbsp; 
+(implies <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?PRIZES31 AwardPractice ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (implies 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?GOT28 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (VerbFn Get-TheWord ) 
+) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (eventSOT ?GOT28 ?FIVE1 
 ?PRIZES31 Past ) ) ) ) )<BR><BR>e2c("best costumes got prizes").<BR><BR>[[txt, 
 best], [tag, staart, jjt, jjs, 'CountNoun', 'Adjective', 'Adverb']]<BR>[[txt, 
 costumes], [tag, z, nns, 'CountNoun']]<BR>[[txt, got], [tag, z, vbd, 
@@ -1044,16 +1042,16 @@ prizes").<BR><BR>[[txt, best], [tag, staart, jjt, jjs, 'CountNoun', 'Adjective',
 costumes], [tag, z, nns, 'CountNoun']]<BR>[[txt, got], [tag, z, vbd, 
 vbn]]<BR>[[txt, prizes], [tag, laast, nns, 
 'CountNoun']]<BR><BR>seg([p('ADVP_non_cyclic', 1, 1), p('QP', 2, 3), 
-p('VP_non_cyclic', 4, 4), p('QP', 5, 5)])<BR><BR>(implies <BR>  (and 
-<BR>    (and <BR>      (isa ?COSTUMES42 
-<BR>        (NounFn Five-TheWord ) ) 
-<BR>      (isa ?COSTUMES42 Costume ) ) 
-<BR>    (hasEvaluativeQuantity ?COSTUMES42 
-<BR>      (MediumToVeryHighAmountFn Goodness-Generic ) 
-) ) <BR>  (implies <BR>    (isa ?PRIZES65 AwardPractice ) 
-<BR>    (implies <BR>      (isa ?GOT45 
-<BR>        (VerbFn Get-TheWord ) ) 
-<BR>      (eventSOT ?GOT45 ?COSTUMES42 ?PRIZES65 Past ) 
+p('VP_non_cyclic', 4, 4), p('QP', 5, 5)])<BR><BR>(implies <BR>&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp; (and <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?COSTUMES42 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (NounFn Five-TheWord ) ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?COSTUMES42 Costume ) ) 
+<BR>&nbsp;&nbsp;&nbsp; (hasEvaluativeQuantity ?COSTUMES42 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (MediumToVeryHighAmountFn Goodness-Generic ) 
+) ) <BR>&nbsp; (implies <BR>&nbsp;&nbsp;&nbsp; (isa ?PRIZES65 AwardPractice ) 
+<BR>&nbsp;&nbsp;&nbsp; (implies <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?GOT45 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (VerbFn Get-TheWord ) ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (eventSOT ?GOT45 ?COSTUMES42 ?PRIZES65 Past ) 
 ) ) )<BR><BR>e2c("five other costumes got prizes").<BR><BR>[[txt, five], [tag, 
 staart, cd, 'CountNoun', 'Determiner', 'Determiner-Central', 
 'Determiner-ClassA', 'Determiner-ClassB', 'Determiner-ClassC', 
@@ -1065,16 +1063,16 @@ ap, 'Adjective', 'CountNoun']]<BR>[[txt, costumes], [tag, z, nns,
 'CountNoun']]<BR>[[txt, got], [tag, z, vbd, vbn]]<BR>[[txt, prizes], [tag, 
 laast, nns, 'CountNoun']]<BR><BR>seg([p('QP', 1, 1), p('PP_non_cyclic', 2, 2), 
 p('QP', 3, 3), p('VP_non_cyclic', 4, 4), p('QP', 5, 
-5)])<BR><BR>(thereExistExactly 5 ?FIVE18 <BR>  (and <BR>    
-(and <BR>      (and 
-<BR>        (isa ?FIVE18 Costume ) 
-<BR>        (isa ?FIVE18 Thing ) ) 
-<BR>      (isa ?FIVE18 BIOS-OTHERSurveillanceSyndrome ) 
-) <BR>    (implies <BR>      (isa 
-?PRIZES73 AwardPractice ) <BR>      (implies 
-<BR>        (isa ?GOT52 
-<BR>          (VerbFn Get-TheWord ) 
-) <BR>        (eventSOT ?GOT52 ?FIVE18 
+5)])<BR><BR>(thereExistExactly 5 ?FIVE18 <BR>&nbsp; (and <BR>&nbsp;&nbsp;&nbsp; 
+(and <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?FIVE18 Costume ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?FIVE18 Thing ) ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?FIVE18 BIOS-OTHERSurveillanceSyndrome ) 
+) <BR>&nbsp;&nbsp;&nbsp; (implies <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa 
+?PRIZES73 AwardPractice ) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (implies 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?GOT52 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (VerbFn Get-TheWord ) 
+) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (eventSOT ?GOT52 ?FIVE18 
 ?PRIZES73 Past ) ) ) ) )<BR><BR>e2c("the other five costumes got 
 prizes").<BR><BR>[[txt, a], [tag, staart, dt, at, 'Determiner', 
 'Determiner-Central', 'Determiner-ClassA', 'Determiner-ClassB', 
@@ -1089,53 +1087,50 @@ prizes").<BR><BR>[[txt, a], [tag, staart, dt, at, 'Determiner',
 costumes], [tag, z, nns, 'CountNoun']]<BR>[[txt, got], [tag, z, vbd, 
 vbn]]<BR>[[txt, prizes], [tag, laast, nns, 'CountNoun']]<BR><BR>seg([p('QP', 1, 
 2), p('QP', 3, 4), p('VP_non_cyclic', 5, 5), p('QP', 6, 
-6)])<BR><BR>(thereExistExactly 5 ?FIVE19 <BR>  (and <BR>    
-(and <BR>      (isa ?FIVE19 Costume ) 
-<BR>      (isa ?FIVE19 Thing ) ) <BR>    
-(implies <BR>      (isa ?PRIZES81 AwardPractice ) 
-<BR>      (implies 
-<BR>        (isa ?GOT59 
-<BR>          (VerbFn Get-TheWord ) 
-) <BR>        (eventSOT ?GOT59 ?FIVE19 
+6)])<BR><BR>(thereExistExactly 5 ?FIVE19 <BR>&nbsp; (and <BR>&nbsp;&nbsp;&nbsp; 
+(and <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?FIVE19 Costume ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?FIVE19 Thing ) ) <BR>&nbsp;&nbsp;&nbsp; 
+(implies <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?PRIZES81 AwardPractice ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (implies 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?GOT59 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (VerbFn Get-TheWord ) 
+) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (eventSOT ?GOT59 ?FIVE19 
 ?PRIZES81 Past ) ) ) ) )<BR><BR>e2c("other five costumes got 
-prizes").<BR><BR>(implies <BR>  (and <BR>    (and 
-<BR>      (isa ?OTHER12 
-<BR>        (NounFn Five-TheWord ) ) 
-<BR>      (isa ?OTHER12 Costume ) ) 
-<BR>    (isa ?OTHER12 BIOS-OTHERSurveillanceSyndrome ) ) 
-<BR>  (implies <BR>    (isa ?PRIZES89 AwardPractice ) 
-<BR>    (implies <BR>      (isa ?GOT62 
-<BR>        (VerbFn Get-TheWord ) ) 
-<BR>      (eventSOT ?GOT62 ?OTHER12 ?PRIZES89 Past ) ) 
+prizes").<BR><BR>(implies <BR>&nbsp; (and <BR>&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?OTHER12 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (NounFn Five-TheWord ) ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?OTHER12 Costume ) ) 
+<BR>&nbsp;&nbsp;&nbsp; (isa ?OTHER12 BIOS-OTHERSurveillanceSyndrome ) ) 
+<BR>&nbsp; (implies <BR>&nbsp;&nbsp;&nbsp; (isa ?PRIZES89 AwardPractice ) 
+<BR>&nbsp;&nbsp;&nbsp; (implies <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?GOT62 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (VerbFn Get-TheWord ) ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (eventSOT ?GOT62 ?OTHER12 ?PRIZES89 Past ) ) 
 ) )<BR><BR><BR>e2c("some other costumes were really 
-bad").<BR><BR><BR>(thereExists ?OTHER52 <BR>  (and <BR>    
-(and <BR>      (and 
-<BR>        (isa ?OTHER52 Costume ) 
-<BR>        (isa ?OTHER52 Thing ) ) 
-<BR>      (isa ?OTHER52 BIOS-OTHERSurveillanceSyndrome 
-) ) <BR>    (implies <BR>      (and 
-<BR>        (isa ?BAD14 
-<BR>          (NounFn Real-TheWord 
-) ) <BR>        (isa ?BAD14 
-<BR>          (OneOfFn 
-Badness-Generic Badness-Moral ) ) ) <BR>      (and 
-<BR>        (isa ?WERE6 Living ) 
-<BR>        (occursDuring ?WERE6 Past ) 
-<BR>        (preActors ?WERE6 ?OTHER52 ) 
-<BR>        (actors ?WERE6 ?BAD14 ) ) ) ) 
-)</FONT>
-
-</DIV>
-
-<DIV><FONT face=Arial size=2></FONT> </DIV>
-<DIV><FONT face=Arial size=2></FONT> </DIV>
+bad").<BR><BR><BR>(thereExists ?OTHER52 <BR>&nbsp; (and <BR>&nbsp;&nbsp;&nbsp; 
+(and <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?OTHER52 Costume ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?OTHER52 Thing ) ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?OTHER52 BIOS-OTHERSurveillanceSyndrome 
+) ) <BR>&nbsp;&nbsp;&nbsp; (implies <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?BAD14 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (NounFn Real-TheWord 
+) ) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?BAD14 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (OneOfFn 
+Badness-Generic Badness-Moral ) ) ) <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (and 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (isa ?WERE6 Living ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (occursDuring ?WERE6 Past ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (preActors ?WERE6 ?OTHER52 ) 
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (actors ?WERE6 ?BAD14 ) ) ) ) 
+)</FONT></DIV>
+<DIV><FONT face=Arial size=2></FONT>&nbsp;</DIV>
+<DIV><FONT face=Arial size=2></FONT>&nbsp;</DIV>
 <DIV><FONT face=Arial size=2></FONT><BR><FONT face=Arial size=2>English 
 Parser<BR></FONT>
 <DIV>
 <FORM method=get>
 <P><TEXTAREA name=english cols=80>I drank the arabian coffee .</TEXTAREA><BR><INPUT type=submit value="Parse Normally" name=submit><FONT 
-face=Arial size=2> </FONT><INPUT type=submit value="Parse with idiomatics" name=submit><FONT 
-face=Arial size=2> <INPUT type=checkbox value=CHECKED name=findall> Show 
+face=Arial size=2>&nbsp;</FONT><INPUT type=submit value="Parse with idiomatics" name=submit><FONT 
+face=Arial size=2> <INPUT type=checkbox value=CHECKED name=findall>&nbsp;Show 
 All<BR></FONT></P></FORM><FONT face=Arial size=2>Please wait..<BR></FONT><TEXTAREA name=debug rows=5 wrap=off cols=80>?- e2c("I drank the arabian coffee .").
 
 substPos([nn, nnp, surroundtag, dt, nn], [[txt, arabian], 4:4, 1.0-nn, 0.85-nn, 0.2-'ProperCountNoun', 0.2-'ProperNoun', 0.2-'Adjective', 0.195-jj, 0.02-ns, 0.01-vbz], nn, nnp, [[txt, arabian], 4:4, 1.0-nnp, 0.85-nnp, 0.2-'ProperCountNoun', 0.2-'ProperNoun', 0.2-'Adjective', 0.195-jj, 0.02-ns, 0.01-vbz])
@@ -1231,8 +1226,8 @@ value="I drank the arabian coffee ." name=english><FONT face=Arial size=2>
       (Persistent)</TR> </FONT>
   <TR>
     <TD noWrap>
-      <P><FONT face=Arial size=2> <INPUT type=radio CHECKED value=skolemize 
-      name="skolem('Hypothetic-I')">Hypothetic-I</INPUT><BR> <INPUT 
+      <P><FONT face=Arial size=2>&nbsp;<INPUT type=radio CHECKED value=skolemize 
+      name="skolem('Hypothetic-I')">Hypothetic-I</INPUT><BR>&nbsp;<INPUT 
       type=radio value=find-or-create-constant 
       name="skolem('Hypothetic-I')"></FONT><INPUT value=Hypothetic-I2 
       name="constant('Hypothetic-I')"></INPUT><FONT face=Arial size=2> 
@@ -1240,8 +1235,8 @@ value="I drank the arabian coffee ." name=english><FONT face=Arial size=2>
     <TD noWrap><PRE><FONT face=Arial size=2></FONT></PRE></TD>
   <TR>
     <TD noWrap>
-      <P><FONT face=Arial size=2> <INPUT type=radio CHECKED value=skolemize 
-      name="skolem('Hypothetic-The-Arabian-Coffee')">Hypothetic-The-Arabian-Coffee</INPUT><BR> <INPUT 
+      <P><FONT face=Arial size=2>&nbsp;<INPUT type=radio CHECKED value=skolemize 
+      name="skolem('Hypothetic-The-Arabian-Coffee')">Hypothetic-The-Arabian-Coffee</INPUT><BR>&nbsp;<INPUT 
       type=radio value=find-or-create-constant 
       name="skolem('Hypothetic-The-Arabian-Coffee')"></FONT><INPUT 
       value=Hypothetic-The-Arabian-Coffee2 
@@ -1250,8 +1245,8 @@ value="I drank the arabian coffee ." name=english><FONT face=Arial size=2>
     <TD noWrap><PRE><FONT face=Arial size=2></FONT></PRE></TD>
   <TR>
     <TD noWrap>
-      <P><FONT face=Arial size=2> <INPUT type=radio CHECKED value=skolemize 
-      name="skolem('Hypothetic-Drank')">Hypothetic-Drank</INPUT><BR> <INPUT 
+      <P><FONT face=Arial size=2>&nbsp;<INPUT type=radio CHECKED value=skolemize 
+      name="skolem('Hypothetic-Drank')">Hypothetic-Drank</INPUT><BR>&nbsp;<INPUT 
       type=radio value=find-or-create-constant 
       name="skolem('Hypothetic-Drank')"></FONT><INPUT value=Hypothetic-Drank2 
       name="constant('Hypothetic-Drank')"></INPUT><FONT face=Arial size=2> 
@@ -1259,12 +1254,12 @@ value="I drank the arabian coffee ." name=english><FONT face=Arial size=2>
     <TD noWrap><PRE><FONT face=Arial size=2></FONT></PRE></TD>
   <TR>
     <TD noWrap><FONT face=Arial size=2></FONT>
-    <TD noWrap><PRE><FONT face=Arial size=2><INPUT title="'Hypothetic-I'." type=checkbox CHECKED name="accepted('Hypothetic-I')"></FONT><INPUT type=hidden value=Hypothetic-I name="offered('Hypothetic-I')"><FONT face=Arial size=2> (situationConstituents Hypothetic-GenitiveFrame Hypothetic-I)<BR> T
-<INPUT title="'Hypothetic-Drank'." type=checkbox CHECKED name="accepted('Hypothetic-Drank')"></FONT><INPUT type=hidden value=Hypothetic-Drank name="offered('Hypothetic-Drank')"><FONT face=Arial size=2> (subEvents Hypothetic-GenitiveFrame Hypothetic-Drank)<BR> T
-<INPUT title="textCached([drank], [denotation, 'DrinkingEvent', 'QAClarifyingCollectionType', 'IterativeSituationType', 'ProcessType', 'StuffType', 'ClarifyingCollectionType', 'Collection', 'TemporalStuffType', 'DurativeEventType'])." type=checkbox CHECKED name="accepted(textCached([drank], [denotation, 'DrinkingEvent', 'QAClarifyingCollectionType', 'IterativeSituationType', 'ProcessType', 'StuffType', 'ClarifyingCollectionType', 'Collection', 'TemporalStuffType', 'DurativeEventType']))"></FONT><INPUT type=hidden value="textCached([drank], [denotation, DrinkingEvent, QAClarifyingCollectionType, IterativeSituationType, ProcessType, StuffType, ClarifyingCollectionType, Collection, TemporalStuffType, DurativeEventType])" name="offered(textCached([drank], [denotation, 'DrinkingEvent', 'QAClarifyingCollectionType', 'IterativeSituationType', 'ProcessType', 'StuffType', 'ClarifyingCollectionType', 'Collection', 'TemporalStuffType', 'DurativeEventType']))"><FONT face=Arial size=2> (actors Hypothetic-Drank Hypothetic-The-Arabian-Coffee)<BR> T
-<INPUT title="textCached([drank], [denotation, 'DrinkingEvent', 'QAClarifyingCollectionType', 'IterativeSituationType', 'ProcessType', 'StuffType', 'ClarifyingCollectionType', 'Collection', 'TemporalStuffType', 'DurativeEventType'])." type=checkbox CHECKED name="accepted(textCached([drank], [denotation, 'DrinkingEvent', 'QAClarifyingCollectionType', 'IterativeSituationType', 'ProcessType', 'StuffType', 'ClarifyingCollectionType', 'Collection', 'TemporalStuffType', 'DurativeEventType']))"></FONT><INPUT type=hidden value="textCached([drank], [denotation, DrinkingEvent, QAClarifyingCollectionType, IterativeSituationType, ProcessType, StuffType, ClarifyingCollectionType, Collection, TemporalStuffType, DurativeEventType])" name="offered(textCached([drank], [denotation, 'DrinkingEvent', 'QAClarifyingCollectionType', 'IterativeSituationType', 'ProcessType', 'StuffType', 'ClarifyingCollectionType', 'Collection', 'TemporalStuffType', 'DurativeEventType']))"><FONT face=Arial size=2> (preActors Hypothetic-Drank Hypothetic-I)<BR> T
-<INPUT title="textCached([drank], [denotation, 'DrinkingEvent', 'QAClarifyingCollectionType', 'IterativeSituationType', 'ProcessType', 'StuffType', 'ClarifyingCollectionType', 'Collection', 'TemporalStuffType', 'DurativeEventType'])." type=checkbox CHECKED name="accepted(textCached([drank], [denotation, 'DrinkingEvent', 'QAClarifyingCollectionType', 'IterativeSituationType', 'ProcessType', 'StuffType', 'ClarifyingCollectionType', 'Collection', 'TemporalStuffType', 'DurativeEventType']))"></FONT><INPUT type=hidden value="textCached([drank], [denotation, DrinkingEvent, QAClarifyingCollectionType, IterativeSituationType, ProcessType, StuffType, ClarifyingCollectionType, Collection, TemporalStuffType, DurativeEventType])" name="offered(textCached([drank], [denotation, 'DrinkingEvent', 'QAClarifyingCollectionType', 'IterativeSituationType', 'ProcessType', 'StuffType', 'ClarifyingCollectionType', 'Collection', 'TemporalStuffType', 'DurativeEventType']))"><FONT face=Arial size=2> (isa Hypothetic-Drank DrinkingEvent)<BR> T
-<INPUT title="textCached('Drink-TheWord', [frame, 'Drink-TheWord', 'Verb', 'IntransitiveVerbFrame', and(isa('Hypothetic-Drank', 'DrinkingEvent'), performedBy('Hypothetic-Drank', 'Hypothetic-I')), verbSemTrans])." type=checkbox name="accepted(textCached('Drink-TheWord', [frame, 'Drink-TheWord', 'Verb', 'IntransitiveVerbFrame', and(isa('Hypothetic-Drank', 'DrinkingEvent'), performedBy('Hypothetic-Drank', 'Hypothetic-I')), verbSemTrans]))"></FONT><INPUT type=hidden value="textCached(Drink-TheWord, [frame, Drink-TheWord, Verb, IntransitiveVerbFrame, and(isa(Hypothetic-Drank, DrinkingEvent), performedBy(Hypothetic-Drank, Hypothetic-I)), verbSemTrans])" name="offered(textCached('Drink-TheWord', [frame, 'Drink-TheWord', 'Verb', 'IntransitiveVerbFrame', and(isa('Hypothetic-Drank', 'DrinkingEvent'), performedBy('Hypothetic-Drank', 'Hypothetic-I')), verbSemTrans]))"><FONT face=Arial size=2> (performedBy Hypothetic-Drank Hypothetic-I)<BR> "Formula 
+    <TD noWrap><PRE><FONT face=Arial size=2><INPUT title="'Hypothetic-I'." type=checkbox CHECKED name="accepted('Hypothetic-I')"></FONT><INPUT type=hidden value=Hypothetic-I name="offered('Hypothetic-I')"><FONT face=Arial size=2>&nbsp;(situationConstituents Hypothetic-GenitiveFrame Hypothetic-I)<BR>&nbsp;T
+<INPUT title="'Hypothetic-Drank'." type=checkbox CHECKED name="accepted('Hypothetic-Drank')"></FONT><INPUT type=hidden value=Hypothetic-Drank name="offered('Hypothetic-Drank')"><FONT face=Arial size=2>&nbsp;(subEvents Hypothetic-GenitiveFrame Hypothetic-Drank)<BR>&nbsp;T
+<INPUT title="textCached([drank], [denotation, 'DrinkingEvent', 'QAClarifyingCollectionType', 'IterativeSituationType', 'ProcessType', 'StuffType', 'ClarifyingCollectionType', 'Collection', 'TemporalStuffType', 'DurativeEventType'])." type=checkbox CHECKED name="accepted(textCached([drank], [denotation, 'DrinkingEvent', 'QAClarifyingCollectionType', 'IterativeSituationType', 'ProcessType', 'StuffType', 'ClarifyingCollectionType', 'Collection', 'TemporalStuffType', 'DurativeEventType']))"></FONT><INPUT type=hidden value="textCached([drank], [denotation, DrinkingEvent, QAClarifyingCollectionType, IterativeSituationType, ProcessType, StuffType, ClarifyingCollectionType, Collection, TemporalStuffType, DurativeEventType])" name="offered(textCached([drank], [denotation, 'DrinkingEvent', 'QAClarifyingCollectionType', 'IterativeSituationType', 'ProcessType', 'StuffType', 'ClarifyingCollectionType', 'Collection', 'TemporalStuffType', 'DurativeEventType']))"><FONT face=Arial size=2>&nbsp;(actors Hypothetic-Drank Hypothetic-The-Arabian-Coffee)<BR>&nbsp;T
+<INPUT title="textCached([drank], [denotation, 'DrinkingEvent', 'QAClarifyingCollectionType', 'IterativeSituationType', 'ProcessType', 'StuffType', 'ClarifyingCollectionType', 'Collection', 'TemporalStuffType', 'DurativeEventType'])." type=checkbox CHECKED name="accepted(textCached([drank], [denotation, 'DrinkingEvent', 'QAClarifyingCollectionType', 'IterativeSituationType', 'ProcessType', 'StuffType', 'ClarifyingCollectionType', 'Collection', 'TemporalStuffType', 'DurativeEventType']))"></FONT><INPUT type=hidden value="textCached([drank], [denotation, DrinkingEvent, QAClarifyingCollectionType, IterativeSituationType, ProcessType, StuffType, ClarifyingCollectionType, Collection, TemporalStuffType, DurativeEventType])" name="offered(textCached([drank], [denotation, 'DrinkingEvent', 'QAClarifyingCollectionType', 'IterativeSituationType', 'ProcessType', 'StuffType', 'ClarifyingCollectionType', 'Collection', 'TemporalStuffType', 'DurativeEventType']))"><FONT face=Arial size=2>&nbsp;(preActors Hypothetic-Drank Hypothetic-I)<BR>&nbsp;T
+<INPUT title="textCached([drank], [denotation, 'DrinkingEvent', 'QAClarifyingCollectionType', 'IterativeSituationType', 'ProcessType', 'StuffType', 'ClarifyingCollectionType', 'Collection', 'TemporalStuffType', 'DurativeEventType'])." type=checkbox CHECKED name="accepted(textCached([drank], [denotation, 'DrinkingEvent', 'QAClarifyingCollectionType', 'IterativeSituationType', 'ProcessType', 'StuffType', 'ClarifyingCollectionType', 'Collection', 'TemporalStuffType', 'DurativeEventType']))"></FONT><INPUT type=hidden value="textCached([drank], [denotation, DrinkingEvent, QAClarifyingCollectionType, IterativeSituationType, ProcessType, StuffType, ClarifyingCollectionType, Collection, TemporalStuffType, DurativeEventType])" name="offered(textCached([drank], [denotation, 'DrinkingEvent', 'QAClarifyingCollectionType', 'IterativeSituationType', 'ProcessType', 'StuffType', 'ClarifyingCollectionType', 'Collection', 'TemporalStuffType', 'DurativeEventType']))"><FONT face=Arial size=2>&nbsp;(isa Hypothetic-Drank DrinkingEvent)<BR>&nbsp;T
+<INPUT title="textCached('Drink-TheWord', [frame, 'Drink-TheWord', 'Verb', 'IntransitiveVerbFrame', and(isa('Hypothetic-Drank', 'DrinkingEvent'), performedBy('Hypothetic-Drank', 'Hypothetic-I')), verbSemTrans])." type=checkbox name="accepted(textCached('Drink-TheWord', [frame, 'Drink-TheWord', 'Verb', 'IntransitiveVerbFrame', and(isa('Hypothetic-Drank', 'DrinkingEvent'), performedBy('Hypothetic-Drank', 'Hypothetic-I')), verbSemTrans]))"></FONT><INPUT type=hidden value="textCached(Drink-TheWord, [frame, Drink-TheWord, Verb, IntransitiveVerbFrame, and(isa(Hypothetic-Drank, DrinkingEvent), performedBy(Hypothetic-Drank, Hypothetic-I)), verbSemTrans])" name="offered(textCached('Drink-TheWord', [frame, 'Drink-TheWord', 'Verb', 'IntransitiveVerbFrame', and(isa('Hypothetic-Drank', 'DrinkingEvent'), performedBy('Hypothetic-Drank', 'Hypothetic-I')), verbSemTrans]))"><FONT face=Arial size=2>&nbsp;(performedBy Hypothetic-Drank Hypothetic-I)<BR>&nbsp;"Formula 
   (#$performedBy #$Hypothetic-Drank #$Hypothetic-I) 
 was not well formed because: 
 Term #$Hypothetic-I violates arg-isa #$Agent-Generic
@@ -1279,7 +1274,7 @@ applicable to argument 2 of relation #$performedBy
 (via #$awareOf)
 in mt #&lt;(#$ParseMtForSourceFn (#$StringInDocumentFn #$NLTESTMT \"I drank the arabian coffee .\"))&gt;.
 "
-<INPUT title="textCached('Drink-TheWord', [frame, 'Drink-TheWord', 'Verb', 'IntransitiveVerbFrame', and(isa('Hypothetic-Drank', 'DrinkingEvent'), primaryObjectMoving('Hypothetic-Drank', 'Hypothetic-I')), verbSemTrans])." type=checkbox name="accepted(textCached('Drink-TheWord', [frame, 'Drink-TheWord', 'Verb', 'IntransitiveVerbFrame', and(isa('Hypothetic-Drank', 'DrinkingEvent'), primaryObjectMoving('Hypothetic-Drank', 'Hypothetic-I')), verbSemTrans]))"></FONT><INPUT type=hidden value="textCached(Drink-TheWord, [frame, Drink-TheWord, Verb, IntransitiveVerbFrame, and(isa(Hypothetic-Drank, DrinkingEvent), primaryObjectMoving(Hypothetic-Drank, Hypothetic-I)), verbSemTrans])" name="offered(textCached('Drink-TheWord', [frame, 'Drink-TheWord', 'Verb', 'IntransitiveVerbFrame', and(isa('Hypothetic-Drank', 'DrinkingEvent'), primaryObjectMoving('Hypothetic-Drank', 'Hypothetic-I')), verbSemTrans]))"><FONT face=Arial size=2> (primaryObjectMoving Hypothetic-Drank Hypothetic-I)<BR> "Formula 
+<INPUT title="textCached('Drink-TheWord', [frame, 'Drink-TheWord', 'Verb', 'IntransitiveVerbFrame', and(isa('Hypothetic-Drank', 'DrinkingEvent'), primaryObjectMoving('Hypothetic-Drank', 'Hypothetic-I')), verbSemTrans])." type=checkbox name="accepted(textCached('Drink-TheWord', [frame, 'Drink-TheWord', 'Verb', 'IntransitiveVerbFrame', and(isa('Hypothetic-Drank', 'DrinkingEvent'), primaryObjectMoving('Hypothetic-Drank', 'Hypothetic-I')), verbSemTrans]))"></FONT><INPUT type=hidden value="textCached(Drink-TheWord, [frame, Drink-TheWord, Verb, IntransitiveVerbFrame, and(isa(Hypothetic-Drank, DrinkingEvent), primaryObjectMoving(Hypothetic-Drank, Hypothetic-I)), verbSemTrans])" name="offered(textCached('Drink-TheWord', [frame, 'Drink-TheWord', 'Verb', 'IntransitiveVerbFrame', and(isa('Hypothetic-Drank', 'DrinkingEvent'), primaryObjectMoving('Hypothetic-Drank', 'Hypothetic-I')), verbSemTrans]))"><FONT face=Arial size=2>&nbsp;(primaryObjectMoving Hypothetic-Drank Hypothetic-I)<BR>&nbsp;"Formula 
   (#$primaryObjectMoving #$Hypothetic-Drank #$Hypothetic-I) 
 was not well formed because: 
 Term #$Hypothetic-I violates inter-arg-isa #$FluidTangibleThing
@@ -1303,7 +1298,7 @@ Term #$Hypothetic-I violates arg-isa #$PartiallyTangible
 applicable to argument 2 of relation #$primaryObjectMoving
 in mt #&lt;(#$ParseMtForSourceFn (#$StringInDocumentFn #$NLTESTMT \"I drank the arabian coffee .\"))&gt;.
 "
-<INPUT title="textCached('Drink-TheWord', [frame, 'Drink-TheWord', 'Verb', 'IntransitiveVerbFrame', and(isa('Hypothetic-Drank', 'DrinkingEvent'), objectMoving('Hypothetic-Drank', 'Hypothetic-I')), verbSemTrans])." type=checkbox name="accepted(textCached('Drink-TheWord', [frame, 'Drink-TheWord', 'Verb', 'IntransitiveVerbFrame', and(isa('Hypothetic-Drank', 'DrinkingEvent'), objectMoving('Hypothetic-Drank', 'Hypothetic-I')), verbSemTrans]))"></FONT><INPUT type=hidden value="textCached(Drink-TheWord, [frame, Drink-TheWord, Verb, IntransitiveVerbFrame, and(isa(Hypothetic-Drank, DrinkingEvent), objectMoving(Hypothetic-Drank, Hypothetic-I)), verbSemTrans])" name="offered(textCached('Drink-TheWord', [frame, 'Drink-TheWord', 'Verb', 'IntransitiveVerbFrame', and(isa('Hypothetic-Drank', 'DrinkingEvent'), objectMoving('Hypothetic-Drank', 'Hypothetic-I')), verbSemTrans]))"><FONT face=Arial size=2> (objectMoving Hypothetic-Drank Hypothetic-I)<BR> "Formula 
+<INPUT title="textCached('Drink-TheWord', [frame, 'Drink-TheWord', 'Verb', 'IntransitiveVerbFrame', and(isa('Hypothetic-Drank', 'DrinkingEvent'), objectMoving('Hypothetic-Drank', 'Hypothetic-I')), verbSemTrans])." type=checkbox name="accepted(textCached('Drink-TheWord', [frame, 'Drink-TheWord', 'Verb', 'IntransitiveVerbFrame', and(isa('Hypothetic-Drank', 'DrinkingEvent'), objectMoving('Hypothetic-Drank', 'Hypothetic-I')), verbSemTrans]))"></FONT><INPUT type=hidden value="textCached(Drink-TheWord, [frame, Drink-TheWord, Verb, IntransitiveVerbFrame, and(isa(Hypothetic-Drank, DrinkingEvent), objectMoving(Hypothetic-Drank, Hypothetic-I)), verbSemTrans])" name="offered(textCached('Drink-TheWord', [frame, 'Drink-TheWord', 'Verb', 'IntransitiveVerbFrame', and(isa('Hypothetic-Drank', 'DrinkingEvent'), objectMoving('Hypothetic-Drank', 'Hypothetic-I')), verbSemTrans]))"><FONT face=Arial size=2>&nbsp;(objectMoving Hypothetic-Drank Hypothetic-I)<BR>&nbsp;"Formula 
   (#$objectMoving #$Hypothetic-Drank #$Hypothetic-I) 
 was not well formed because: 
 Term #$Hypothetic-I violates inter-arg-isa #$FluidTangibleThing
@@ -1314,19 +1309,19 @@ Term #$Hypothetic-I violates arg-isa #$SpatialThing
 applicable to argument 2 of relation #$objectMoving
 in mt #&lt;(#$ParseMtForSourceFn (#$StringInDocumentFn #$NLTESTMT \"I drank the arabian coffee .\"))&gt;.
 "
-<INPUT title="textCached('Drink-TheWord', [frame, 'Drink-TheWord', 'Verb', 'TransitiveNPFrame', and(isa('Hypothetic-Drank', 'DrinkingEvent'), performedBy('Hypothetic-Drank', 'Hypothetic-I'), consumedObject('Hypothetic-Drank', 'Hypothetic-The-Arabian-Coffee')), verbSemTrans])." type=checkbox CHECKED name="accepted(textCached('Drink-TheWord', [frame, 'Drink-TheWord', 'Verb', 'TransitiveNPFrame', and(isa('Hypothetic-Drank', 'DrinkingEvent'), performedBy('Hypothetic-Drank', 'Hypothetic-I'), consumedObject('Hypothetic-Drank', 'Hypothetic-The-Arabian-Coffee')), verbSemTrans]))"></FONT><INPUT type=hidden value="textCached(Drink-TheWord, [frame, Drink-TheWord, Verb, TransitiveNPFrame, and(isa(Hypothetic-Drank, DrinkingEvent), performedBy(Hypothetic-Drank, Hypothetic-I), consumedObject(Hypothetic-Drank, Hypothetic-The-Arabian-Coffee)), verbSemTrans])" name="offered(textCached('Drink-TheWord', [frame, 'Drink-TheWord', 'Verb', 'TransitiveNPFrame', and(isa('Hypothetic-Drank', 'DrinkingEvent'), performedBy('Hypothetic-Drank', 'Hypothetic-I'), consumedObject('Hypothetic-Drank', 'Hypothetic-The-Arabian-Coffee')), verbSemTrans]))"><FONT face=Arial size=2> (consumedObject Hypothetic-Drank Hypothetic-The-Arabian-Coffee)<BR> T
-<INPUT title="'Hypothetic-Drank'." type=checkbox CHECKED name="accepted('Hypothetic-Drank')"></FONT><INPUT type=hidden value=Hypothetic-Drank name="offered('Hypothetic-Drank')"><FONT face=Arial size=2> (isa Hypothetic-Drank Event)<BR> T
-<INPUT title="'Hypothetic-Drank'." type=checkbox CHECKED name="accepted('Hypothetic-Drank')"></FONT><INPUT type=hidden value=Hypothetic-Drank name="offered('Hypothetic-Drank')"><FONT face=Arial size=2> (isa Hypothetic-Drank Situation)<BR> T
-<INPUT title="'Hypothetic-Drank'." type=checkbox CHECKED name="accepted('Hypothetic-Drank')"></FONT><INPUT type=hidden value=Hypothetic-Drank name="offered('Hypothetic-Drank')"><FONT face=Arial size=2> (termStrings Hypothetic-Drank "drank")<BR> T
-<INPUT title="'Hypothetic-Drank'." type=checkbox CHECKED name="accepted('Hypothetic-Drank')"></FONT><INPUT type=hidden value=Hypothetic-Drank name="offered('Hypothetic-Drank')"><FONT face=Arial size=2> (occursDuring Hypothetic-Drank 
-      (IntervalBeforeFn Now AnIndefiniteAmountOfTime))<BR> T
-<INPUT title="'Hypothetic-The-Arabian-Coffee'." type=checkbox CHECKED name="accepted('Hypothetic-The-Arabian-Coffee')"></FONT><INPUT type=hidden value=Hypothetic-The-Arabian-Coffee name="offered('Hypothetic-The-Arabian-Coffee')"><FONT face=Arial size=2> (isa Hypothetic-The-Arabian-Coffee Individual)<BR> T
-<INPUT title="'Hypothetic-The-Arabian-Coffee'." type=checkbox CHECKED name="accepted('Hypothetic-The-Arabian-Coffee')"></FONT><INPUT type=hidden value=Hypothetic-The-Arabian-Coffee name="offered('Hypothetic-The-Arabian-Coffee')"><FONT face=Arial size=2> (isa Hypothetic-The-Arabian-Coffee SomethingExisting)<BR> T
-<INPUT title="'Hypothetic-The-Arabian-Coffee'." type=checkbox CHECKED name="accepted('Hypothetic-The-Arabian-Coffee')"></FONT><INPUT type=hidden value=Hypothetic-The-Arabian-Coffee name="offered('Hypothetic-The-Arabian-Coffee')"><FONT face=Arial size=2> (termStrings Hypothetic-The-Arabian-Coffee "the arabian coffee")<BR> T
-<INPUT title="textCached([coffee], [denotation, 'Coffee-Ground', 'TangibleStuffCompositionType', 'ArtifactTypeByGenericCategory', 'StuffType', 'ClarifyingCollectionType', 'Collection', 'TemporalStuffType'])." type=checkbox CHECKED name="accepted(textCached([coffee], [denotation, 'Coffee-Ground', 'TangibleStuffCompositionType', 'ArtifactTypeByGenericCategory', 'StuffType', 'ClarifyingCollectionType', 'Collection', 'TemporalStuffType']))"></FONT><INPUT type=hidden value="textCached([coffee], [denotation, Coffee-Ground, TangibleStuffCompositionType, ArtifactTypeByGenericCategory, StuffType, ClarifyingCollectionType, Collection, TemporalStuffType])" name="offered(textCached([coffee], [denotation, 'Coffee-Ground', 'TangibleStuffCompositionType', 'ArtifactTypeByGenericCategory', 'StuffType', 'ClarifyingCollectionType', 'Collection', 'TemporalStuffType']))"><FONT face=Arial size=2> (isa Hypothetic-The-Arabian-Coffee Coffee-Ground)<BR> T
-<INPUT title="textCached([coffee], [denotation, 'Coffee-Beverage', 'DefaultDisjointEdibleStuffType', 'TangibleStuffCompositionType', 'StuffType', 'Collection', 'TemporalStuffType'])." type=checkbox CHECKED name="accepted(textCached([coffee], [denotation, 'Coffee-Beverage', 'DefaultDisjointEdibleStuffType', 'TangibleStuffCompositionType', 'StuffType', 'Collection', 'TemporalStuffType']))"></FONT><INPUT type=hidden value="textCached([coffee], [denotation, Coffee-Beverage, DefaultDisjointEdibleStuffType, TangibleStuffCompositionType, StuffType, Collection, TemporalStuffType])" name="offered(textCached([coffee], [denotation, 'Coffee-Beverage', 'DefaultDisjointEdibleStuffType', 'TangibleStuffCompositionType', 'StuffType', 'Collection', 'TemporalStuffType']))"><FONT face=Arial size=2> (isa Hypothetic-The-Arabian-Coffee Coffee-Beverage)<BR> T
-<INPUT title="textCached([arabian], [denotation, 'ArabianPeninsula', 'Peninsula', 'SpatialThing-Localized', 'Individual'])." type=checkbox CHECKED name="accepted(textCached([arabian], [denotation, 'ArabianPeninsula', 'Peninsula', 'SpatialThing-Localized', 'Individual']))"></FONT><INPUT type=hidden value="textCached([arabian], [denotation, ArabianPeninsula, Peninsula, SpatialThing-Localized, Individual])" name="offered(textCached([arabian], [denotation, 'ArabianPeninsula', 'Peninsula', 'SpatialThing-Localized', 'Individual']))"><FONT face=Arial size=2> (equals Hypothetic-The-Arabian-Coffee ArabianPeninsula)<BR> T
-<INPUT title="textCached([arabian], [denotation, 'ArabianHorse', 'BiologicalSubspecies', 'StuffType', 'Collection', 'TemporalStuffType'])." type=checkbox name="accepted(textCached([arabian], [denotation, 'ArabianHorse', 'BiologicalSubspecies', 'StuffType', 'Collection', 'TemporalStuffType']))"></FONT><INPUT type=hidden value="textCached([arabian], [denotation, ArabianHorse, BiologicalSubspecies, StuffType, Collection, TemporalStuffType])" name="offered(textCached([arabian], [denotation, 'ArabianHorse', 'BiologicalSubspecies', 'StuffType', 'Collection', 'TemporalStuffType']))"><FONT face=Arial size=2> (isa Hypothetic-The-Arabian-Coffee ArabianHorse)<BR> "Formula 
+<INPUT title="textCached('Drink-TheWord', [frame, 'Drink-TheWord', 'Verb', 'TransitiveNPFrame', and(isa('Hypothetic-Drank', 'DrinkingEvent'), performedBy('Hypothetic-Drank', 'Hypothetic-I'), consumedObject('Hypothetic-Drank', 'Hypothetic-The-Arabian-Coffee')), verbSemTrans])." type=checkbox CHECKED name="accepted(textCached('Drink-TheWord', [frame, 'Drink-TheWord', 'Verb', 'TransitiveNPFrame', and(isa('Hypothetic-Drank', 'DrinkingEvent'), performedBy('Hypothetic-Drank', 'Hypothetic-I'), consumedObject('Hypothetic-Drank', 'Hypothetic-The-Arabian-Coffee')), verbSemTrans]))"></FONT><INPUT type=hidden value="textCached(Drink-TheWord, [frame, Drink-TheWord, Verb, TransitiveNPFrame, and(isa(Hypothetic-Drank, DrinkingEvent), performedBy(Hypothetic-Drank, Hypothetic-I), consumedObject(Hypothetic-Drank, Hypothetic-The-Arabian-Coffee)), verbSemTrans])" name="offered(textCached('Drink-TheWord', [frame, 'Drink-TheWord', 'Verb', 'TransitiveNPFrame', and(isa('Hypothetic-Drank', 'DrinkingEvent'), performedBy('Hypothetic-Drank', 'Hypothetic-I'), consumedObject('Hypothetic-Drank', 'Hypothetic-The-Arabian-Coffee')), verbSemTrans]))"><FONT face=Arial size=2>&nbsp;(consumedObject Hypothetic-Drank Hypothetic-The-Arabian-Coffee)<BR>&nbsp;T
+<INPUT title="'Hypothetic-Drank'." type=checkbox CHECKED name="accepted('Hypothetic-Drank')"></FONT><INPUT type=hidden value=Hypothetic-Drank name="offered('Hypothetic-Drank')"><FONT face=Arial size=2>&nbsp;(isa Hypothetic-Drank Event)<BR>&nbsp;T
+<INPUT title="'Hypothetic-Drank'." type=checkbox CHECKED name="accepted('Hypothetic-Drank')"></FONT><INPUT type=hidden value=Hypothetic-Drank name="offered('Hypothetic-Drank')"><FONT face=Arial size=2>&nbsp;(isa Hypothetic-Drank Situation)<BR>&nbsp;T
+<INPUT title="'Hypothetic-Drank'." type=checkbox CHECKED name="accepted('Hypothetic-Drank')"></FONT><INPUT type=hidden value=Hypothetic-Drank name="offered('Hypothetic-Drank')"><FONT face=Arial size=2>&nbsp;(termStrings Hypothetic-Drank "drank")<BR>&nbsp;T
+<INPUT title="'Hypothetic-Drank'." type=checkbox CHECKED name="accepted('Hypothetic-Drank')"></FONT><INPUT type=hidden value=Hypothetic-Drank name="offered('Hypothetic-Drank')"><FONT face=Arial size=2>&nbsp;(occursDuring Hypothetic-Drank 
+      (IntervalBeforeFn Now AnIndefiniteAmountOfTime))<BR>&nbsp;T
+<INPUT title="'Hypothetic-The-Arabian-Coffee'." type=checkbox CHECKED name="accepted('Hypothetic-The-Arabian-Coffee')"></FONT><INPUT type=hidden value=Hypothetic-The-Arabian-Coffee name="offered('Hypothetic-The-Arabian-Coffee')"><FONT face=Arial size=2>&nbsp;(isa Hypothetic-The-Arabian-Coffee Individual)<BR>&nbsp;T
+<INPUT title="'Hypothetic-The-Arabian-Coffee'." type=checkbox CHECKED name="accepted('Hypothetic-The-Arabian-Coffee')"></FONT><INPUT type=hidden value=Hypothetic-The-Arabian-Coffee name="offered('Hypothetic-The-Arabian-Coffee')"><FONT face=Arial size=2>&nbsp;(isa Hypothetic-The-Arabian-Coffee SomethingExisting)<BR>&nbsp;T
+<INPUT title="'Hypothetic-The-Arabian-Coffee'." type=checkbox CHECKED name="accepted('Hypothetic-The-Arabian-Coffee')"></FONT><INPUT type=hidden value=Hypothetic-The-Arabian-Coffee name="offered('Hypothetic-The-Arabian-Coffee')"><FONT face=Arial size=2>&nbsp;(termStrings Hypothetic-The-Arabian-Coffee "the arabian coffee")<BR>&nbsp;T
+<INPUT title="textCached([coffee], [denotation, 'Coffee-Ground', 'TangibleStuffCompositionType', 'ArtifactTypeByGenericCategory', 'StuffType', 'ClarifyingCollectionType', 'Collection', 'TemporalStuffType'])." type=checkbox CHECKED name="accepted(textCached([coffee], [denotation, 'Coffee-Ground', 'TangibleStuffCompositionType', 'ArtifactTypeByGenericCategory', 'StuffType', 'ClarifyingCollectionType', 'Collection', 'TemporalStuffType']))"></FONT><INPUT type=hidden value="textCached([coffee], [denotation, Coffee-Ground, TangibleStuffCompositionType, ArtifactTypeByGenericCategory, StuffType, ClarifyingCollectionType, Collection, TemporalStuffType])" name="offered(textCached([coffee], [denotation, 'Coffee-Ground', 'TangibleStuffCompositionType', 'ArtifactTypeByGenericCategory', 'StuffType', 'ClarifyingCollectionType', 'Collection', 'TemporalStuffType']))"><FONT face=Arial size=2>&nbsp;(isa Hypothetic-The-Arabian-Coffee Coffee-Ground)<BR>&nbsp;T
+<INPUT title="textCached([coffee], [denotation, 'Coffee-Beverage', 'DefaultDisjointEdibleStuffType', 'TangibleStuffCompositionType', 'StuffType', 'Collection', 'TemporalStuffType'])." type=checkbox CHECKED name="accepted(textCached([coffee], [denotation, 'Coffee-Beverage', 'DefaultDisjointEdibleStuffType', 'TangibleStuffCompositionType', 'StuffType', 'Collection', 'TemporalStuffType']))"></FONT><INPUT type=hidden value="textCached([coffee], [denotation, Coffee-Beverage, DefaultDisjointEdibleStuffType, TangibleStuffCompositionType, StuffType, Collection, TemporalStuffType])" name="offered(textCached([coffee], [denotation, 'Coffee-Beverage', 'DefaultDisjointEdibleStuffType', 'TangibleStuffCompositionType', 'StuffType', 'Collection', 'TemporalStuffType']))"><FONT face=Arial size=2>&nbsp;(isa Hypothetic-The-Arabian-Coffee Coffee-Beverage)<BR>&nbsp;T
+<INPUT title="textCached([arabian], [denotation, 'ArabianPeninsula', 'Peninsula', 'SpatialThing-Localized', 'Individual'])." type=checkbox CHECKED name="accepted(textCached([arabian], [denotation, 'ArabianPeninsula', 'Peninsula', 'SpatialThing-Localized', 'Individual']))"></FONT><INPUT type=hidden value="textCached([arabian], [denotation, ArabianPeninsula, Peninsula, SpatialThing-Localized, Individual])" name="offered(textCached([arabian], [denotation, 'ArabianPeninsula', 'Peninsula', 'SpatialThing-Localized', 'Individual']))"><FONT face=Arial size=2>&nbsp;(equals Hypothetic-The-Arabian-Coffee ArabianPeninsula)<BR>&nbsp;T
+<INPUT title="textCached([arabian], [denotation, 'ArabianHorse', 'BiologicalSubspecies', 'StuffType', 'Collection', 'TemporalStuffType'])." type=checkbox name="accepted(textCached([arabian], [denotation, 'ArabianHorse', 'BiologicalSubspecies', 'StuffType', 'Collection', 'TemporalStuffType']))"></FONT><INPUT type=hidden value="textCached([arabian], [denotation, ArabianHorse, BiologicalSubspecies, StuffType, Collection, TemporalStuffType])" name="offered(textCached([arabian], [denotation, 'ArabianHorse', 'BiologicalSubspecies', 'StuffType', 'Collection', 'TemporalStuffType']))"><FONT face=Arial size=2>&nbsp;(isa Hypothetic-The-Arabian-Coffee ArabianHorse)<BR>&nbsp;"Formula 
   (#$isa #$Hypothetic-The-Arabian-Coffee #$ArabianHorse) 
 was not well formed because: 
 #$Hypothetic-The-Arabian-Coffee is known not to be an instance of #$ArabianHorse in mt #&lt;(#$ParseMtForSourceFn (#$StringInDocumentFn #$NLTESTMT \"I drank the arabian coffee .\"))&gt;.  
@@ -1345,23 +1340,23 @@ sbhl conflict: (#$isa #$Hypothetic-The-Arabian-Coffee #$ArabianHorse) TRUE #&lt;
 (#$genls #$ArabianHorse #$Horse-Domesticated) TRUE
 
 "
-<INPUT title="textCached('Arabian-TheWord', [frame, 'Arabian-TheWord', 'Adjective', 'RegularAdjFrame', conceptuallyRelated('Hypothetic-The-Arabian-Coffee', 'ArabianPeninsula'), adjSemTrans])." type=checkbox name="accepted(textCached('Arabian-TheWord', [frame, 'Arabian-TheWord', 'Adjective', 'RegularAdjFrame', conceptuallyRelated('Hypothetic-The-Arabian-Coffee', 'ArabianPeninsula'), adjSemTrans]))"></FONT><INPUT type=hidden value="textCached(Arabian-TheWord, [frame, Arabian-TheWord, Adjective, RegularAdjFrame, conceptuallyRelated(Hypothetic-The-Arabian-Coffee, ArabianPeninsula), adjSemTrans])" name="offered(textCached('Arabian-TheWord', [frame, 'Arabian-TheWord', 'Adjective', 'RegularAdjFrame', conceptuallyRelated('Hypothetic-The-Arabian-Coffee', 'ArabianPeninsula'), adjSemTrans]))"><FONT face=Arial size=2> (conceptuallyRelated Hypothetic-The-Arabian-Coffee ArabianPeninsula)<BR> "Formula 
+<INPUT title="textCached('Arabian-TheWord', [frame, 'Arabian-TheWord', 'Adjective', 'RegularAdjFrame', conceptuallyRelated('Hypothetic-The-Arabian-Coffee', 'ArabianPeninsula'), adjSemTrans])." type=checkbox name="accepted(textCached('Arabian-TheWord', [frame, 'Arabian-TheWord', 'Adjective', 'RegularAdjFrame', conceptuallyRelated('Hypothetic-The-Arabian-Coffee', 'ArabianPeninsula'), adjSemTrans]))"></FONT><INPUT type=hidden value="textCached(Arabian-TheWord, [frame, Arabian-TheWord, Adjective, RegularAdjFrame, conceptuallyRelated(Hypothetic-The-Arabian-Coffee, ArabianPeninsula), adjSemTrans])" name="offered(textCached('Arabian-TheWord', [frame, 'Arabian-TheWord', 'Adjective', 'RegularAdjFrame', conceptuallyRelated('Hypothetic-The-Arabian-Coffee', 'ArabianPeninsula'), adjSemTrans]))"><FONT face=Arial size=2>&nbsp;(conceptuallyRelated Hypothetic-The-Arabian-Coffee ArabianPeninsula)<BR>&nbsp;"Formula 
   (#$conceptuallyRelated #$Hypothetic-The-Arabian-Coffee #$ArabianPeninsula) 
 was not well formed because: 
 (#$isa #$conceptuallyRelated #$IrreflexiveBinaryPredicate) in mt #&lt;(#$ParseMtForSourceFn (#$StringInDocumentFn #$NLTESTMT \"I drank the arabian coffee .\"))&gt;
 "
-<INPUT title="'Hypothetic-I'." type=checkbox CHECKED name="accepted('Hypothetic-I')"></FONT><INPUT type=hidden value=Hypothetic-I name="offered('Hypothetic-I')"><FONT face=Arial size=2> (isa Hypothetic-I Individual)<BR> T
-<INPUT title=captialized1. type=checkbox name=accepted(captialized1)></FONT><INPUT type=hidden value=captialized1 name=offered(captialized1)><FONT face=Arial size=2> (properNameStrings Hypothetic-I "I")<BR> "Formula 
+<INPUT title="'Hypothetic-I'." type=checkbox CHECKED name="accepted('Hypothetic-I')"></FONT><INPUT type=hidden value=Hypothetic-I name="offered('Hypothetic-I')"><FONT face=Arial size=2>&nbsp;(isa Hypothetic-I Individual)<BR>&nbsp;T
+<INPUT title=captialized1. type=checkbox name=accepted(captialized1)></FONT><INPUT type=hidden value=captialized1 name=offered(captialized1)><FONT face=Arial size=2>&nbsp;(properNameStrings Hypothetic-I "I")<BR>&nbsp;"Formula 
   (#$properNameStrings #$Hypothetic-I \"I\") 
 was not well formed because: 
 Asserting a literal with predicate #$properNameStrings is prohibited in mt #&lt;(#$ParseMtForSourceFn (#$StringInDocumentFn #$NLTESTMT \"I drank the arabian coffee .\"))&gt;.
 "
-<INPUT title="textCached(['I'], [denotation, nart(['PronounFn', 'FirstPerson-NLAttr', 'Singular-NLAttr', 'Ungendered-NLAttr', 'SubjectPronoun']), 'IndexicalConcept', 'Person', 'SpatialThing-Localized', 'Individual', 'Agent-Generic'])." type=checkbox CHECKED name="accepted(textCached(['I'], [denotation, nart(['PronounFn', 'FirstPerson-NLAttr', 'Singular-NLAttr', 'Ungendered-NLAttr', 'SubjectPronoun']), 'IndexicalConcept', 'Person', 'SpatialThing-Localized', 'Individual', 'Agent-Generic']))"></FONT><INPUT type=hidden value="textCached([I], [denotation, nart([PronounFn, FirstPerson-NLAttr, Singular-NLAttr, Ungendered-NLAttr, SubjectPronoun]), IndexicalConcept, Person, SpatialThing-Localized, Individual, Agent-Generic])" name="offered(textCached(['I'], [denotation, nart(['PronounFn', 'FirstPerson-NLAttr', 'Singular-NLAttr', 'Ungendered-NLAttr', 'SubjectPronoun']), 'IndexicalConcept', 'Person', 'SpatialThing-Localized', 'Individual', 'Agent-Generic']))"><FONT face=Arial size=2> (equals Hypothetic-I 
-      (PronounFn FirstPerson-NLAttr Singular-NLAttr Ungendered-NLAttr SubjectPronoun))<BR> T
-<INPUT title="'Hypothetic-I'." type=checkbox CHECKED name="accepted('Hypothetic-I')"></FONT><INPUT type=hidden value=Hypothetic-I name="offered('Hypothetic-I')"><FONT face=Arial size=2> (isa Hypothetic-I SomethingExisting)<BR> T
-<INPUT title="'Hypothetic-I'." type=checkbox CHECKED name="accepted('Hypothetic-I')"></FONT><INPUT type=hidden value=Hypothetic-I name="offered('Hypothetic-I')"><FONT face=Arial size=2> (termStrings Hypothetic-I "I")<BR> T
-<INPUT title="textCached(['I'], [denotation, 'Hypothetic-I', 'SomethingExisting', 'Individual'])." type=checkbox CHECKED name="accepted(textCached(['I'], [denotation, 'Hypothetic-I', 'SomethingExisting', 'Individual']))"></FONT><INPUT type=hidden value="textCached([I], [denotation, Hypothetic-I, SomethingExisting, Individual])" name="offered(textCached(['I'], [denotation, 'Hypothetic-I', 'SomethingExisting', 'Individual']))"><FONT face=Arial size=2> (equals Hypothetic-I Hypothetic-I)<BR> T
-<INPUT title="'Hypothetic-GenitiveFrame'." type=checkbox CHECKED name="accepted('Hypothetic-GenitiveFrame')"></FONT><INPUT type=hidden value=Hypothetic-GenitiveFrame name="offered('Hypothetic-GenitiveFrame')"><FONT face=Arial size=2> (isa Hypothetic-GenitiveFrame Event)<BR> T
+<INPUT title="textCached(['I'], [denotation, nart(['PronounFn', 'FirstPerson-NLAttr', 'Singular-NLAttr', 'Ungendered-NLAttr', 'SubjectPronoun']), 'IndexicalConcept', 'Person', 'SpatialThing-Localized', 'Individual', 'Agent-Generic'])." type=checkbox CHECKED name="accepted(textCached(['I'], [denotation, nart(['PronounFn', 'FirstPerson-NLAttr', 'Singular-NLAttr', 'Ungendered-NLAttr', 'SubjectPronoun']), 'IndexicalConcept', 'Person', 'SpatialThing-Localized', 'Individual', 'Agent-Generic']))"></FONT><INPUT type=hidden value="textCached([I], [denotation, nart([PronounFn, FirstPerson-NLAttr, Singular-NLAttr, Ungendered-NLAttr, SubjectPronoun]), IndexicalConcept, Person, SpatialThing-Localized, Individual, Agent-Generic])" name="offered(textCached(['I'], [denotation, nart(['PronounFn', 'FirstPerson-NLAttr', 'Singular-NLAttr', 'Ungendered-NLAttr', 'SubjectPronoun']), 'IndexicalConcept', 'Person', 'SpatialThing-Localized', 'Individual', 'Agent-Generic']))"><FONT face=Arial size=2>&nbsp;(equals Hypothetic-I 
+      (PronounFn FirstPerson-NLAttr Singular-NLAttr Ungendered-NLAttr SubjectPronoun))<BR>&nbsp;T
+<INPUT title="'Hypothetic-I'." type=checkbox CHECKED name="accepted('Hypothetic-I')"></FONT><INPUT type=hidden value=Hypothetic-I name="offered('Hypothetic-I')"><FONT face=Arial size=2>&nbsp;(isa Hypothetic-I SomethingExisting)<BR>&nbsp;T
+<INPUT title="'Hypothetic-I'." type=checkbox CHECKED name="accepted('Hypothetic-I')"></FONT><INPUT type=hidden value=Hypothetic-I name="offered('Hypothetic-I')"><FONT face=Arial size=2>&nbsp;(termStrings Hypothetic-I "I")<BR>&nbsp;T
+<INPUT title="textCached(['I'], [denotation, 'Hypothetic-I', 'SomethingExisting', 'Individual'])." type=checkbox CHECKED name="accepted(textCached(['I'], [denotation, 'Hypothetic-I', 'SomethingExisting', 'Individual']))"></FONT><INPUT type=hidden value="textCached([I], [denotation, Hypothetic-I, SomethingExisting, Individual])" name="offered(textCached(['I'], [denotation, 'Hypothetic-I', 'SomethingExisting', 'Individual']))"><FONT face=Arial size=2>&nbsp;(equals Hypothetic-I Hypothetic-I)<BR>&nbsp;T
+<INPUT title="'Hypothetic-GenitiveFrame'." type=checkbox CHECKED name="accepted('Hypothetic-GenitiveFrame')"></FONT><INPUT type=hidden value=Hypothetic-GenitiveFrame name="offered('Hypothetic-GenitiveFrame')"><FONT face=Arial size=2>&nbsp;(isa Hypothetic-GenitiveFrame Event)<BR>&nbsp;T
 </FONT></PRE></TD></TR></TBODY></TABLE><BR><INPUT value=NLTESTMT 
-name=profile><FONT face=Arial size=2> </FONT><INPUT type=submit value="Save Profile" name=review></FORM>
-<P><FONT face=Arial size=2></FONT> </P></DIV></DIV></BODY></HTML>
+name=profile><FONT face=Arial size=2>&nbsp;</FONT><INPUT type=submit value="Save Profile" name=review></FORM>
+<P><FONT face=Arial size=2></FONT>&nbsp;</P></DIV></DIV></BODY></HTML>
