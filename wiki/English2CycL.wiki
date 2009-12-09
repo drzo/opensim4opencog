@@ -6,6 +6,7 @@
 <STYLE></STYLE>
 </HEAD>
 <BODY bgColor=#ffffff background="">
+<pre>
 <DIV><BR>-----------------------------------------------------------------------------------------------------------------------------------------------------<BR>[the, 
 shopper, drank, the, pepsi]<BR>(thereExists ?shopper4675 <BR>  (and (isa 
 ?shopper4675 (FrequentPerformerFn Shopping ) ) <BR>   (thereExists 
@@ -1122,6 +1123,7 @@ Badness-Generic Badness-Moral ) ) ) <BR>      (and
 <BR>        (preActors ?WERE6 ?OTHER52 ) 
 <BR>        (actors ?WERE6 ?BAD14 ) ) ) ) 
 )</FONT></DIV>
+</pre>
 <DIV><FONT face=Arial size=2></FONT> </DIV>
 <DIV><FONT face=Arial size=2></FONT> </DIV>
 <DIV><FONT face=Arial size=2></FONT><BR><FONT face=Arial size=2>English 
