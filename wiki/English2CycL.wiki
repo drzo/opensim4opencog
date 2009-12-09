@@ -6,1124 +6,1128 @@
 <STYLE></STYLE>
 </HEAD>
 <BODY bgColor=#ffffff background="">
+<DIV>
 <pre>
-<DIV><BR>-----------------------------------------------------------------------------------------------------------------------------------------------------<BR>[the, 
-shopper, drank, the, pepsi]<BR>(thereExists ?shopper4675 <BR>  (and (isa 
-?shopper4675 (FrequentPerformerFn Shopping ) ) <BR>   (thereExists 
-?pepsi6 <BR>     (and (isa ?pepsi6 PepsiCola ) 
-<BR>     (and (occursDuring ?drank7550 Past ) 
-<BR>     (and (isa ?drank7550 DrinkingEvent ) 
-<BR>     (performedBy ?drank7550 ?shopper4675 ) 
-<BR>     (consumedObject ?drank7550 ?pepsi6 ) ) ) ) ) ) 
+<BR>-----------------------------------------------------------------------------------------------------------------------------------------------------<BR>[the, 
+shopper, drank, the, pepsi](thereExists ?shopper4675   (and (isa 
+?shopper4675 (FrequentPerformerFn Shopping ) )    (thereExists 
+?pepsi6      (and (isa ?pepsi6 PepsiCola ) 
+     (and (occursDuring ?drank7550 Past ) 
+     (and (isa ?drank7550 DrinkingEvent ) 
+     (performedBy ?drank7550 ?shopper4675 ) 
+     (consumedObject ?drank7550 ?pepsi6 ) ) ) ) ) ) 
 )       
-<BR>                                                  
-<BR>[the, shopper, drinks, the, pepsi]<BR>(thereExists ?shopper4675 <BR>  
-(and (isa ?shopper4675 (FrequentPerformerFn Shopping ) ) <BR>   
-(thereExists ?pepsi6 <BR>     (and (isa ?pepsi6 PepsiCola ) 
-<BR>     (and (occursDuring ?drank7550 Now ) 
-<BR>     (and (isa ?drank7550 DrinkingEvent ) 
-<BR>     (performedBy ?drank7550 ?shopper4675 ) 
-<BR>     (consumedObject ?drank7550 ?pepsi6 ) ) ) ) ) ) 
+                                                  
+[the, shopper, drinks, the, pepsi](thereExists ?shopper4675   
+(and (isa ?shopper4675 (FrequentPerformerFn Shopping ) )    
+(thereExists ?pepsi6      (and (isa ?pepsi6 PepsiCola ) 
+     (and (occursDuring ?drank7550 Now ) 
+     (and (isa ?drank7550 DrinkingEvent ) 
+     (performedBy ?drank7550 ?shopper4675 ) 
+     (consumedObject ?drank7550 ?pepsi6 ) ) ) ) ) ) 
 )                           
-<BR><BR>[the, shopper, bought, fries]<BR>(thereExists ?shopper4794 
-<BR>   (and (isa ?shopper4794 (FrequentPerformerFn Shopping ) ) 
-<BR>   (and (and (isa ?fries20 Frying ) <BR>   
-(objectOfStateChange ?fries20 ?POSSESSOR13610 ) ) <BR>   (and 
-(occursDuring ?bought3 Past ) <BR>   (and (isa ?bought3 Buying ) 
-<BR>   (buyer ?bought3 ?shopper4794 ) <BR>   (objectPaidFor 
-?bought3 ?fries20 ) ) ) ) ) )<BR><BR>[the, shopper, bought, fries, with, his, 
-pepsi]<BR>(thereExists ?shopper4863 <BR>    (and (isa 
-?shopper4863 (FrequentPerformerFn Shopping ) ) <BR>    (and (isa 
-?pepsi42 PepsiCola ) <BR>    (and (and (and (isa ?fries103 Frying 
-) <BR>       (objectOfStateChange ?fries103 
-?POSSESSOR13613 ) ) <BR>    (and (isa ?bought4 Buying ) (seller 
-?bought4 ?shopper4863 ) <BR>    (objectPaidFor ?bought4 ?fries103 
-) <BR>    (buyingPerformer ?bought4 ?pepsi42 ) ) ) 
-<BR>    (equals ?POSSESSOR13613 
-<BR>            (OneOfFn 
+[the, shopper, bought, fries](thereExists ?shopper4794 
+   (and (isa ?shopper4794 (FrequentPerformerFn Shopping ) ) 
+   (and (and (isa ?fries20 Frying )    
+(objectOfStateChange ?fries20 ?POSSESSOR13610 ) )    (and 
+(occursDuring ?bought3 Past )    (and (isa ?bought3 Buying ) 
+   (buyer ?bought3 ?shopper4794 )    (objectPaidFor 
+?bought3 ?fries20 ) ) ) ) ) )[the, shopper, bought, fries, with, his, 
+pepsi](thereExists ?shopper4863     (and (isa 
+?shopper4863 (FrequentPerformerFn Shopping ) )     (and (isa 
+?pepsi42 PepsiCola )     (and (and (and (isa ?fries103 Frying 
+)        (objectOfStateChange ?fries103 
+?POSSESSOR13613 ) )     (and (isa ?bought4 Buying ) (seller 
+?bought4 ?shopper4863 )     (objectPaidFor ?bought4 ?fries103 
+)     (buyingPerformer ?bought4 ?pepsi42 ) ) ) 
+    (equals ?POSSESSOR13613 
+            (OneOfFn 
 (PronounFn ThirdPerson-NLAttr Singular-NLAttr Masculine-NLAttr 
 PossessivePronoun-Post ) 
-<BR>             
+             
 (PronounFn ThirdPerson-NLAttr Singular-NLAttr Masculine-NLAttr 
-PossessivePronoun-Pre ) ) ) <BR>    (controls (OneOfFn (PronounFn 
+PossessivePronoun-Pre ) ) )     (controls (OneOfFn (PronounFn 
 ThirdPerson-NLAttr Singular-NLAttr Masculine-NLAttr PossessivePronoun-Post ) 
-<BR>                           
+                           
 (PronounFn ThirdPerson-NLAttr Singular-NLAttr Masculine-NLAttr 
 PossessivePronoun-Pre ) 
-)<BR>                   
-?pepsi42 ) ) ) ) )<BR><BR><BR><BR>|    english2Kif("I see 
-you").<BR>assert(known_phrase(verbSemTrans(#$and(#$isa(?ACTION1, 
-#$VisualPerception), #$pe<BR>rformedBy(?ACTION1, ?Speaker), 
-#$perceivedThings(?ACTION1, ?TargetAgent)), true)<BR>))<BR><BR><BR>e2c("George 
-fell last year").<BR><BR>[[txt, 'George'], [tag, staart, nnp, np]]<BR>[[txt, 
-fell], [tag, z, vbd]]<BR>[[txt, last], [tag, z, jj, ap, 'Adjective', 'Adverb', 
-'CountNoun', 'WHAdverb']]<BR>[[txt, year], [tag, laast, nn, 
-'CountNoun']]<BR><BR>seg([p('VP_non_cyclic', 1, 1), p('VP_non_cyclic', 2, 2), 
-p('PP_non_cyclic', 3, 3), p('VP_non_cyclic', 4, 4)])<BR><BR>(implies <BR>  
-(equals ?GEORGE2 <BR>    (OneOfFn 
-EddieGeorge-FootballPlayer-American <BR>      
-(CityNamedFn "George" RepublicOfSouthAfrica ) ) ) <BR>  (and 
-<BR>    (isa ?FELL1 Event ) <BR>    (implies 
-<BR>      (and 
-<BR>        (isa ?YEAR5 CalendarYear ) 
-<BR>        (isa ?YEAR5 ContemporaryArtifact 
-) ) <BR>      (or 
-<BR>        (and 
-<BR>          (isa ?FELL1 
-CuttingDownATree ) <BR>          
+)                   
+?pepsi42 ) ) ) ) )|    english2Kif("I see 
+you").assert(known_phrase(verbSemTrans(#$and(#$isa(?ACTION1, 
+#$VisualPerception), #$performedBy(?ACTION1, ?Speaker), 
+#$perceivedThings(?ACTION1, ?TargetAgent)), true)))e2c("George 
+fell last year").[[txt, 'George'], [tag, staart, nnp, np]][[txt, 
+fell], [tag, z, vbd]][[txt, last], [tag, z, jj, ap, 'Adjective', 'Adverb', 
+'CountNoun', 'WHAdverb']][[txt, year], [tag, laast, nn, 
+'CountNoun']]seg([p('VP_non_cyclic', 1, 1), p('VP_non_cyclic', 2, 2), 
+p('PP_non_cyclic', 3, 3), p('VP_non_cyclic', 4, 4)])(implies   
+(equals ?GEORGE2     (OneOfFn 
+EddieGeorge-FootballPlayer-American       
+(CityNamedFn "George" RepublicOfSouthAfrica ) ) )   (and 
+    (isa ?FELL1 Event )     (implies 
+      (and 
+        (isa ?YEAR5 CalendarYear ) 
+        (isa ?YEAR5 ContemporaryArtifact 
+) )       (or 
+        (and 
+          (isa ?FELL1 
+CuttingDownATree )           
 (objectOfStateChange ?FELL1 ?YEAR5 ) 
-<BR>          (doneBy ?FELL1 
-?GEORGE2 ) ) <BR>        (and 
-<BR>          (organismKilled 
-?FELL1 ?YEAR5 ) <BR>          (isa 
+          (doneBy ?FELL1 
+?GEORGE2 ) )         (and 
+          (organismKilled 
+?FELL1 ?YEAR5 )           (isa 
 ?FELL1 CuttingDownATree ) 
-<BR>          (performedBy ?FELL1 
-?GEORGE2 ) ) ) ) ) )<BR><BR><BR><BR>e2c("I see you").<BR><BR>[[txt, 'I'], [tag, 
+          (performedBy ?FELL1 
+?GEORGE2 ) ) ) ) ) )e2c("I see you").[[txt, 'I'], [tag, 
 staart, ppss, prp, 'ExpletivePronoun', 'IndefinitePronoun', 'Number-SP', 
 'ObjectPronoun', 'PossessivePronoun', 'PossessivePronoun-Post', 'Pronoun', 
 'Pronoun-SubjectOrObject', 'ReciprocalPronoun', 'ReflexivePronoun', 
-'SubjectPronoun', 'WHPronoun']]<BR>[[txt, see], [tag, z, vb]]<BR>[[txt, you], 
+'SubjectPronoun', 'WHPronoun']][[txt, see], [tag, z, vb]][[txt, you], 
 [tag, laast, ppss, ppo, prp, 'Determiner', 'Determiner-Central', 
 'Determiner-ClassA', 'Determiner-ClassB', 'Determiner-ClassC', 
 'ExpletivePronoun', 'IndefinitePronoun', 'Number-SP', 'ObjectPronoun', 
 'PossessivePronoun', 'PossessivePronoun-Post', 'Postdeterminer', 'Pronoun', 
 'Pronoun-SubjectOrObject', 'ReciprocalPronoun', 'ReflexivePronoun', 
-'SubjectPronoun', 'WHDeterminer', 'WHPronoun']]<BR><BR>seg([p('ADVP_non_cyclic', 
+'SubjectPronoun', 'WHDeterminer', 'WHPronoun']]seg([p('ADVP_non_cyclic', 
 1, 1), p('VP_non_cyclic', 2, 2), p('ADVP_non_cyclic', 3, 
-3)])<BR><BR>(thereExists ?SPEAKER <BR>  (and <BR>    (isa 
-?SPEAKER Person ) <BR>    (and <BR>      
-(isa ?SEE1 Event ) <BR>      (thereExists ?TARGETAGENT 
-<BR>        (and 
-<BR>          (isa ?TARGETAGENT 
-Person ) <BR>          (or 
-<BR>            (awareOf 
+3)])(thereExists ?SPEAKER   (and     (isa 
+?SPEAKER Person )     (and       
+(isa ?SEE1 Event )       (thereExists ?TARGETAGENT 
+        (and 
+          (isa ?TARGETAGENT 
+Person )           (or 
+            (awareOf 
 ?SPEAKER ?TARGETAGENT ) 
-<BR>            (and 
-<BR>              
+            (and 
+              
 (isa ?SEE1 VisualPerception ) 
-<BR>              
+              
 (performedBy ?SEE1 ?SPEAKER ) 
-<BR>              
-(perceivedThings ?SEE1 ?TARGETAGENT ) ) ) ) ) ) ) )<BR><BR>e2c("I seen the 
-wood").<BR><BR>[[txt, 'I'], [tag, staart, ppss, prp, 'ExpletivePronoun', 
+              
+(perceivedThings ?SEE1 ?TARGETAGENT ) ) ) ) ) ) ) )e2c("I seen the 
+wood").[[txt, 'I'], [tag, staart, ppss, prp, 'ExpletivePronoun', 
 'IndefinitePronoun', 'Number-SP', 'ObjectPronoun', 'PossessivePronoun', 
 'PossessivePronoun-Post', 'Pronoun', 'Pronoun-SubjectOrObject', 
 'ReciprocalPronoun', 'ReflexivePronoun', 'SubjectPronoun', 
-'WHPronoun']]<BR>[[txt, seen], [tag, z, vbn]]<BR>[[txt, a], [tag, z, dt, at, 
+'WHPronoun']][[txt, seen], [tag, z, vbn]][[txt, a], [tag, z, dt, at, 
 'Determiner', 'Determiner-Central', 'Determiner-ClassA', 'Determiner-ClassB', 
 'Determiner-ClassC', 'Determiner-Indefinite', 'Postdeterminer', 'WHDeterminer', 
-'CountNoun', 'MassNoun', 'MassNoun-Generic']]<BR>[[txt, wood], [tag, laast, nn, 
-'CountNoun', 'MassNoun', 'MassNoun-Generic']]<BR><BR>seg([p('ADVP_non_cyclic', 
-1, 1), p('VP_non_cyclic', 2, 2), p('QP', 3, 4)])<BR><BR>(thereExists ?SPEAKER 
-<BR>  (and <BR>    (isa ?SPEAKER Person ) 
-<BR>    (and <BR>      (isa ?SEEN1 Event 
-) <BR>      (thereExists ?WOOD5 
-<BR>        (and 
-<BR>          (isa ?WOOD5 
-<BR>            (OneOfFn 
+'CountNoun', 'MassNoun', 'MassNoun-Generic']][[txt, wood], [tag, laast, nn, 
+'CountNoun', 'MassNoun', 'MassNoun-Generic']]seg([p('ADVP_non_cyclic', 
+1, 1), p('VP_non_cyclic', 2, 2), p('QP', 3, 4)])(thereExists ?SPEAKER 
+  (and     (isa ?SPEAKER Person ) 
+    (and       (isa ?SEEN1 Event 
+)       (thereExists ?WOOD5 
+        (and 
+          (isa ?WOOD5 
+            (OneOfFn 
 Wood Wood-GolfClub WoodedArea ) ) 
-<BR>          (or 
-<BR>            (awareOf 
+          (or 
+            (awareOf 
 ?SPEAKER ?WOOD5 ) 
-<BR>            (and 
-<BR>              
+            (and 
+              
 (isa ?SEEN1 VisualPerception ) 
-<BR>              
+              
 (performedBy ?SEEN1 ?SPEAKER ) 
-<BR>              
-(perceivedThings ?SEEN1 ?WOOD5 ) ) ) ) ) ) ) )<BR><BR>e2c("I sawed the 
-wood").<BR><BR>[[txt, 'I'], [tag, staart, ppss, prp, 'ExpletivePronoun', 
+              
+(perceivedThings ?SEEN1 ?WOOD5 ) ) ) ) ) ) ) )e2c("I sawed the 
+wood").[[txt, 'I'], [tag, staart, ppss, prp, 'ExpletivePronoun', 
 'IndefinitePronoun', 'Number-SP', 'ObjectPronoun', 'PossessivePronoun', 
 'PossessivePronoun-Post', 'Pronoun', 'Pronoun-SubjectOrObject', 
 'ReciprocalPronoun', 'ReflexivePronoun', 'SubjectPronoun', 
-'WHPronoun']]<BR>[[txt, sawed], [tag, z, 'NLWordForm', 'Verb', 
-'Adjective']]<BR>[[txt, a], [tag, z, dt, at, 'Determiner', 'Determiner-Central', 
+'WHPronoun']][[txt, sawed], [tag, z, 'NLWordForm', 'Verb', 
+'Adjective']][[txt, a], [tag, z, dt, at, 'Determiner', 'Determiner-Central', 
 'Determiner-ClassA', 'Determiner-ClassB', 'Determiner-ClassC', 
 'Determiner-Indefinite', 'Postdeterminer', 'WHDeterminer', 'CountNoun', 
-'MassNoun', 'MassNoun-Generic']]<BR>[[txt, wood], [tag, laast, nn, 'CountNoun', 
-'MassNoun', 'MassNoun-Generic']]<BR><BR><BR>(thereExists ?SPEAKER <BR>  
-(and <BR>    (isa ?SPEAKER Person ) <BR>    (and 
-<BR>      (isa ?SAWED1 Event ) 
-<BR>      (thereExists ?WOOD11 
-<BR>        (and 
-<BR>          (isa ?WOOD11 
-<BR>            (OneOfFn 
+'MassNoun', 'MassNoun-Generic']][[txt, wood], [tag, laast, nn, 'CountNoun', 
+'MassNoun', 'MassNoun-Generic']](thereExists ?SPEAKER   
+(and     (isa ?SPEAKER Person )     (and 
+      (isa ?SAWED1 Event ) 
+      (thereExists ?WOOD11 
+        (and 
+          (isa ?WOOD11 
+            (OneOfFn 
 Wood Wood-GolfClub WoodedArea ) ) 
-<BR>          (and 
-<BR>            (isa 
+          (and 
+            (isa 
 ?SAWED1 SawingSomething ) 
-<BR>            
+            
 (objectOfStateChange ?SAWED1 ?WOOD11 ) 
-<BR>            (doneBy 
-?SAWED1 ?SPEAKER ) ) ) ) ) ) )<BR><BR>e2c("I see two books on a 
-shelf").<BR><BR>[[txt, 'I'], [tag, staart, ppss, prp, 'ExpletivePronoun', 
+            (doneBy 
+?SAWED1 ?SPEAKER ) ) ) ) ) ) )e2c("I see two books on a 
+shelf").[[txt, 'I'], [tag, staart, ppss, prp, 'ExpletivePronoun', 
 'IndefinitePronoun', 'Number-SP', 'ObjectPronoun', 'PossessivePronoun', 
 'PossessivePronoun-Post', 'Pronoun', 'Pronoun-SubjectOrObject', 
 'ReciprocalPronoun', 'ReflexivePronoun', 'SubjectPronoun', 
-'WHPronoun']]<BR>[[txt, see], [tag, z, vb]]<BR>[[txt, two], [tag, z, cd, 
+'WHPronoun']][[txt, see], [tag, z, vb]][[txt, two], [tag, z, cd, 
 'CountNoun', 'Determiner', 'Determiner-Central', 'Determiner-ClassA', 
 'Determiner-ClassB', 'Determiner-ClassC', 'ExpletivePronoun', 
 'IndefinitePronoun', 'Number-SP', 'ObjectPronoun', 'PossessivePronoun', 
 'PossessivePronoun-Post', 'Postdeterminer', 'Pronoun', 
 'Pronoun-SubjectOrObject', 'ReciprocalPronoun', 'ReflexivePronoun', 
-'SubjectPronoun', 'WHDeterminer', 'WHPronoun']]<BR>[[txt, books], [tag, z, nns, 
-'CountNoun', 'ProperCountNoun', 'ProperNoun']]<BR>[[txt, on], [tag, z, in, 
+'SubjectPronoun', 'WHDeterminer', 'WHPronoun']][[txt, books], [tag, z, nns, 
+'CountNoun', 'ProperCountNoun', 'ProperNoun']][[txt, on], [tag, z, in, 
 'Adverb', 'Preposition', 'Preposition-Directional-Telic', 
-'Preposition-Locative', 'VerbParticle', 'WHAdverb']]<BR>[[txt, a], [tag, z, dt, 
+'Preposition-Locative', 'VerbParticle', 'WHAdverb']][[txt, a], [tag, z, dt, 
 at, 'Determiner', 'Determiner-Central', 'Determiner-ClassA', 
 'Determiner-ClassB', 'Determiner-ClassC', 'Determiner-Indefinite', 
 'Postdeterminer', 'WHDeterminer', 'CountNoun', 'MassNoun', 
-'MassNoun-Generic']]<BR>[[txt, shelf], [tag, laast, nn, 
-'CountNoun']]<BR><BR>seg([p('ADVP_non_cyclic', 1, 1), p('VP_non_cyclic', 2, 2), 
-p('QP', 3, 4), p('PP_non_cyclic', 5, 5), p('QP', 6, 7)])<BR><BR>(thereExists 
-?SPEAKER <BR>  (and <BR>    (isa ?SPEAKER Person ) 
-<BR>    (and <BR>      (isa ?SEE2 Event 
-) <BR>      (thereExistExactly 2 ?TWO2 
-<BR>        (and 
-<BR>          (and 
-<BR>            (isa 
+'MassNoun-Generic']][[txt, shelf], [tag, laast, nn, 
+'CountNoun']]seg([p('ADVP_non_cyclic', 1, 1), p('VP_non_cyclic', 2, 2), 
+p('QP', 3, 4), p('PP_non_cyclic', 5, 5), p('QP', 6, 7)])(thereExists 
+?SPEAKER   (and     (isa ?SPEAKER Person ) 
+    (and       (isa ?SEE2 Event 
+)       (thereExistExactly 2 ?TWO2 
+        (and 
+          (and 
+            (isa 
 ?TWO2 BookCopy ) 
-<BR>            (isa 
-?TWO2 Thing ) ) <BR>          (and 
-<BR>            (or 
-<BR>              
+            (isa 
+?TWO2 Thing ) )           (and 
+            (or 
+              
 (awareOf ?SPEAKER ?TWO2 ) 
-<BR>              
+              
 (and 
-<BR>                
+                
 (isa ?SEE2 VisualPerception ) 
-<BR>                
+                
 (performedBy ?SEE2 ?SPEAKER ) 
-<BR>                
+                
 (perceivedThings ?SEE2 ?TWO2 ) ) ) 
-<BR>            
+            
 (thereExists ?SHELF5 
-<BR>              
+              
 (and 
-<BR>                
+                
 (isa ?SHELF5 ShelfInABuilding ) 
-<BR>                
-(on-UnderspecifiedSurface ?TWO2 ?SHELF5 ) ) ) ) ) ) ) ) )<BR><BR>e2c("I see two 
-books sitting on a shelf").<BR><BR>[[txt, 'I'], [tag, staart, ppss, prp, 
+                
+(on-UnderspecifiedSurface ?TWO2 ?SHELF5 ) ) ) ) ) ) ) ) )e2c("I see two 
+books sitting on a shelf").[[txt, 'I'], [tag, staart, ppss, prp, 
 'ExpletivePronoun', 'IndefinitePronoun', 'Number-SP', 'ObjectPronoun', 
 'PossessivePronoun', 'PossessivePronoun-Post', 'Pronoun', 
 'Pronoun-SubjectOrObject', 'ReciprocalPronoun', 'ReflexivePronoun', 
-'SubjectPronoun', 'WHPronoun']]<BR>[[txt, see], [tag, z, vb]]<BR>[[txt, two], 
+'SubjectPronoun', 'WHPronoun']][[txt, see], [tag, z, vb]][[txt, two], 
 [tag, z, cd, 'CountNoun', 'Determiner', 'Determiner-Central', 
 'Determiner-ClassA', 'Determiner-ClassB', 'Determiner-ClassC', 
 'ExpletivePronoun', 'IndefinitePronoun', 'Number-SP', 'ObjectPronoun', 
 'PossessivePronoun', 'PossessivePronoun-Post', 'Postdeterminer', 'Pronoun', 
 'Pronoun-SubjectOrObject', 'ReciprocalPronoun', 'ReflexivePronoun', 
-'SubjectPronoun', 'WHDeterminer', 'WHPronoun']]<BR>[[txt, books], [tag, z, nns, 
-'CountNoun', 'ProperCountNoun', 'ProperNoun']]<BR>[[txt, sitting], [tag, z, vbg, 
+'SubjectPronoun', 'WHDeterminer', 'WHPronoun']][[txt, books], [tag, z, nns, 
+'CountNoun', 'ProperCountNoun', 'ProperNoun']][[txt, sitting], [tag, z, vbg, 
 'GerundiveCountNoun', 'GerundiveNoun', 'MassNoun-Generic', 
-'Adjective']]<BR>[[txt, on], [tag, z, in, 'Adverb', 'Preposition', 
+'Adjective']][[txt, on], [tag, z, in, 'Adverb', 'Preposition', 
 'Preposition-Directional-Telic', 'Preposition-Locative', 'VerbParticle', 
-'WHAdverb']]<BR>[[txt, a], [tag, z, dt, at, 'Determiner', 'Determiner-Central', 
+'WHAdverb']][[txt, a], [tag, z, dt, at, 'Determiner', 'Determiner-Central', 
 'Determiner-ClassA', 'Determiner-ClassB', 'Determiner-ClassC', 
 'Determiner-Indefinite', 'Postdeterminer', 'WHDeterminer', 'CountNoun', 
-'MassNoun', 'MassNoun-Generic']]<BR>[[txt, shelf], [tag, laast, nn, 
-'CountNoun']]<BR><BR>seg([p('ADVP_non_cyclic', 1, 1), p('VP_non_cyclic', 2, 2), 
+'MassNoun', 'MassNoun-Generic']][[txt, shelf], [tag, laast, nn, 
+'CountNoun']]seg([p('ADVP_non_cyclic', 1, 1), p('VP_non_cyclic', 2, 2), 
 p('QP', 3, 4), p('VP_non_cyclic', 5, 5), p('PP_non_cyclic', 6, 6), p('QP', 7, 
-8)])<BR><BR>(thereExists ?SPEAKER <BR>  (and <BR>    (isa 
-?SPEAKER Person ) <BR>    (and <BR>      
-(isa ?SEE3 Event ) <BR>      (thereExistExactly 2 ?TWO4 
-<BR>        (and 
-<BR>          (and 
-<BR>            (isa 
+8)])(thereExists ?SPEAKER   (and     (isa 
+?SPEAKER Person )     (and       
+(isa ?SEE3 Event )       (thereExistExactly 2 ?TWO4 
+        (and 
+          (and 
+            (isa 
 ?TWO4 BookCopy ) 
-<BR>            (isa 
-?TWO4 SittingDown ) ) <BR>          
-(and <BR>            (or 
-<BR>              
+            (isa 
+?TWO4 SittingDown ) )           
+(and             (or 
+              
 (awareOf ?SPEAKER ?TWO4 ) 
-<BR>              
+              
 (and 
-<BR>                
+                
 (isa ?SEE3 VisualPerception ) 
-<BR>                
+                
 (performedBy ?SEE3 ?SPEAKER ) 
-<BR>                
+                
 (perceivedThings ?SEE3 ?TWO4 ) ) ) 
-<BR>            
+            
 (thereExists ?SHELF11 
-<BR>              
+              
 (and 
-<BR>                
+                
 (isa ?SHELF11 ShelfInABuilding ) 
-<BR>                
-(on-UnderspecifiedSurface ?TWO4 ?SHELF11 ) ) ) ) ) ) ) ) )<BR><BR>e2c("I can see 
-you").<BR><BR>[[txt, 'I'], [tag, staart, ppss, prp, 'ExpletivePronoun', 
+                
+(on-UnderspecifiedSurface ?TWO4 ?SHELF11 ) ) ) ) ) ) ) ) )e2c("I can see 
+you").[[txt, 'I'], [tag, staart, ppss, prp, 'ExpletivePronoun', 
 'IndefinitePronoun', 'Number-SP', 'ObjectPronoun', 'PossessivePronoun', 
 'PossessivePronoun-Post', 'Pronoun', 'Pronoun-SubjectOrObject', 
 'ReciprocalPronoun', 'ReflexivePronoun', 'SubjectPronoun', 
-'WHPronoun']]<BR>[[txt, can], [tag, z, md, 'Modal', 'CountNoun']]<BR>[[txt, 
-see], [tag, z, vb]]<BR>[[txt, you], [tag, laast, ppss, ppo, prp, 'Determiner', 
+'WHPronoun']][[txt, can], [tag, z, md, 'Modal', 'CountNoun']][[txt, 
+see], [tag, z, vb]][[txt, you], [tag, laast, ppss, ppo, prp, 'Determiner', 
 'Determiner-Central', 'Determiner-ClassA', 'Determiner-ClassB', 
 'Determiner-ClassC', 'ExpletivePronoun', 'IndefinitePronoun', 'Number-SP', 
 'ObjectPronoun', 'PossessivePronoun', 'PossessivePronoun-Post', 
 'Postdeterminer', 'Pronoun', 'Pronoun-SubjectOrObject', 'ReciprocalPronoun', 
 'ReflexivePronoun', 'SubjectPronoun', 'WHDeterminer', 
-'WHPronoun']]<BR><BR>seg([p('ADVP_non_cyclic', 1, 1), p('VP_non_cyclic', 2, 2), 
-p('VP_non_cyclic', 3, 3), p('ADVP_non_cyclic', 4, 4)])<BR><BR>(thereExists 
-?SPEAKER <BR>  (and <BR>    (isa ?SPEAKER Person ) 
-<BR>    (and <BR>      (behavourCapable 
-?SPEAKER ?SEE4 ) <BR>      (and 
-<BR>        (isa ?SEE4 Event ) 
-<BR>        (thereExists ?TARGETAGENT 
-<BR>          (and 
-<BR>            (isa 
+'WHPronoun']]seg([p('ADVP_non_cyclic', 1, 1), p('VP_non_cyclic', 2, 2), 
+p('VP_non_cyclic', 3, 3), p('ADVP_non_cyclic', 4, 4)])(thereExists 
+?SPEAKER   (and     (isa ?SPEAKER Person ) 
+    (and       (behavourCapable 
+?SPEAKER ?SEE4 )       (and 
+        (isa ?SEE4 Event ) 
+        (thereExists ?TARGETAGENT 
+          (and 
+            (isa 
 ?TARGETAGENT Person ) 
-<BR>            (or 
-<BR>              
+            (or 
+              
 (awareOf ?SPEAKER ?TARGETAGENT ) 
-<BR>              
+              
 (and 
-<BR>                
+                
 (isa ?SEE4 VisualPerception ) 
-<BR>                
+                
 (performedBy ?SEE4 ?SPEAKER ) 
-<BR>                
-(perceivedThings ?SEE4 ?TARGETAGENT ) ) ) ) ) ) ) ) )<BR><BR>e2c("Fido is a 
-dog").<BR><BR>[[txt, 'Fido'], [tag, staart]]<BR>[[txt, is], [tag, z, bez, vbz, 
-'BeAux']]<BR>[[txt, a], [tag, z, dt, at, 'Determiner', 'Determiner-Central', 
+                
+(perceivedThings ?SEE4 ?TARGETAGENT ) ) ) ) ) ) ) ) )e2c("Fido is a 
+dog").[[txt, 'Fido'], [tag, staart]][[txt, is], [tag, z, bez, vbz, 
+'BeAux']][[txt, a], [tag, z, dt, at, 'Determiner', 'Determiner-Central', 
 'Determiner-ClassA', 'Determiner-ClassB', 'Determiner-ClassC', 
 'Determiner-Indefinite', 'Postdeterminer', 'WHDeterminer', 'CountNoun', 
-'MassNoun', 'MassNoun-Generic']]<BR>[[txt, dog], [tag, laast, nn, 
-'CountNoun']]<BR><BR><BR>(implies <BR>  (properNameString ?FIDO3 "Fido" ) 
-<BR>  (thereExists ?DOG8 <BR>    (and 
-<BR>      (and 
-<BR>        (isa ?DOG8 InsultingSomeone ) 
-<BR>        (subjectOfInfo ?DOG8 :POSSESSOR ) 
-) <BR>      (and 
-<BR>        (isa ?IS1 Living ) 
-<BR>        (occursDuring ?IS1 Now ) 
-<BR>        (preActors ?IS1 ?FIDO3 ) 
-<BR>        (actors ?IS1 ?DOG8 ) ) ) ) 
-)<BR><BR>e2c("Who is the president of the United States of America 
-?").<BR><BR>[[txt, 'Who'], [tag, staart, nnp, prp, wp, 'ExpletivePronoun', 
+'MassNoun', 'MassNoun-Generic']][[txt, dog], [tag, laast, nn, 
+'CountNoun']](implies   (properNameString ?FIDO3 "Fido" ) 
+  (thereExists ?DOG8     (and 
+      (and 
+        (isa ?DOG8 InsultingSomeone ) 
+        (subjectOfInfo ?DOG8 :POSSESSOR ) 
+)       (and 
+        (isa ?IS1 Living ) 
+        (occursDuring ?IS1 Now ) 
+        (preActors ?IS1 ?FIDO3 ) 
+        (actors ?IS1 ?DOG8 ) ) ) ) 
+)e2c("Who is the president of the United States of America 
+?").[[txt, 'Who'], [tag, staart, nnp, prp, wp, 'ExpletivePronoun', 
 'IndefinitePronoun', 'Number-SP', 'ObjectPronoun', 'PossessivePronoun', 
 'PossessivePronoun-Post', 'Pronoun', 'Pronoun-SubjectOrObject', 
 'ReciprocalPronoun', 'ReflexivePronoun', 'SubjectPronoun', 
-'WHPronoun']]<BR>[[txt, is], [tag, z, bez, vbz, 'BeAux']]<BR>[[txt, a], [tag, z, 
+'WHPronoun']][[txt, is], [tag, z, bez, vbz, 'BeAux']][[txt, a], [tag, z, 
 dt, at, 'Determiner', 'Determiner-Central', 'Determiner-ClassA', 
 'Determiner-ClassB', 'Determiner-ClassC', 'Determiner-Indefinite', 
 'Postdeterminer', 'WHDeterminer', 'CountNoun', 'MassNoun', 
-'MassNoun-Generic']]<BR>[[txt, president], [tag, z, nn, 'CountNoun', 
-'ProperCountNoun', 'ProperNoun', 'Adjective']]<BR>[[txt, of], [tag, z, in, 
-'Preposition', 'Preposition-Of']]<BR>[[txt, a], [tag, z, dt, at, 'Determiner', 
+'MassNoun-Generic']][[txt, president], [tag, z, nn, 'CountNoun', 
+'ProperCountNoun', 'ProperNoun', 'Adjective']][[txt, of], [tag, z, in, 
+'Preposition', 'Preposition-Of']][[txt, a], [tag, z, dt, at, 'Determiner', 
 'Determiner-Central', 'Determiner-ClassA', 'Determiner-ClassB', 
 'Determiner-ClassC', 'Determiner-Indefinite', 'Postdeterminer', 'WHDeterminer', 
-'CountNoun', 'MassNoun', 'MassNoun-Generic']]<BR>[[txt, 'United', 'States', of, 
-'America'], [tag, z]]<BR>[[txt, ?], [tag, laast, ?, 
-'Punctuation-SP']]<BR><BR><BR>(CYC-QUERY <BR>  (thereExists ?Who 
-<BR>    (thereExists ?PRESIDENT46 
-<BR>      (and 
-<BR>        (and 
-<BR>          (and 
-<BR>            (isa 
+'CountNoun', 'MassNoun', 'MassNoun-Generic']][[txt, 'United', 'States', of, 
+'America'], [tag, z]][[txt, ?], [tag, laast, ?, 
+'Punctuation-SP']](CYC-QUERY   (thereExists ?Who 
+    (thereExists ?PRESIDENT46 
+      (and 
+        (and 
+          (and 
+            (isa 
 ?PRESIDENT46 Thing ) 
-<BR>            (isa 
+            (isa 
 ?PRESIDENT46 Thing ) ) 
-<BR>          (isa ?PRESIDENT46 
-<BR>            (OneOfFn 
+          (isa ?PRESIDENT46 
+            (OneOfFn 
 PresidentOfOrganization 
-<BR>              
+              
 (SubcollectionOfWithRelationFromTypeFn Person president Organization ) ) ) ) 
-<BR>        (and 
-<BR>          (and 
-<BR>            (isa 
+        (and 
+          (and 
+            (isa 
 ?IS10 Living ) 
-<BR>            
+            
 (occursDuring ?IS10 Now ) 
-<BR>            
+            
 (preActors ?IS10 ?Who ) 
-<BR>            (actors 
+            (actors 
 ?IS10 ?PRESIDENT46 ) ) 
-<BR>          (thereExists ?G300312 
-<BR>            (and 
-<BR>              
+          (thereExists ?G300312 
+            (and 
+              
 (eq ?G300312 UnitedStatesOfAmerica ) 
-<BR>              
-(possessiveRelation ?G300312 ?PRESIDENT46 ) ) ) ) ) ) ) )<BR><BR>e2c("I saw 
-him").<BR><BR>[[txt, 'I'], [tag, staart, ppss, prp, 'ExpletivePronoun', 
+              
+(possessiveRelation ?G300312 ?PRESIDENT46 ) ) ) ) ) ) ) )e2c("I saw 
+him").[[txt, 'I'], [tag, staart, ppss, prp, 'ExpletivePronoun', 
 'IndefinitePronoun', 'Number-SP', 'ObjectPronoun', 'PossessivePronoun', 
 'PossessivePronoun-Post', 'Pronoun', 'Pronoun-SubjectOrObject', 
 'ReciprocalPronoun', 'ReflexivePronoun', 'SubjectPronoun', 
-'WHPronoun']]<BR>[[txt, saw], [tag, z, vbd, 'CountNoun']]<BR>[[txt, him], [tag, 
+'WHPronoun']][[txt, saw], [tag, z, vbd, 'CountNoun']][[txt, him], [tag, 
 laast, ppo, prp, 'ExpletivePronoun', 'IndefinitePronoun', 'Number-SP', 
 'ObjectPronoun', 'PossessivePronoun', 'PossessivePronoun-Post', 'Pronoun', 
 'Pronoun-SubjectOrObject', 'ReciprocalPronoun', 'ReflexivePronoun', 
-'SubjectPronoun', 'WHPronoun']]<BR><BR>seg([p('ADVP_non_cyclic', 1, 1), 
-p('VP_non_cyclic', 2, 2), p('ADVP_non_cyclic', 3, 3)])<BR><BR>(thereExists 
-?SPEAKER <BR>  (and <BR>    (isa ?SPEAKER Person ) 
-<BR>    (and <BR>      (isa ?SAW1 Event 
-) <BR>      (thereExists ?HIM 
-<BR>        (and 
-<BR>          (equals ?HIM 
-<BR>            
+'SubjectPronoun', 'WHPronoun']]seg([p('ADVP_non_cyclic', 1, 1), 
+p('VP_non_cyclic', 2, 2), p('ADVP_non_cyclic', 3, 3)])(thereExists 
+?SPEAKER   (and     (isa ?SPEAKER Person ) 
+    (and       (isa ?SAW1 Event 
+)       (thereExists ?HIM 
+        (and 
+          (equals ?HIM 
+            
 (PronounFn ThirdPerson-NLAttr Singular-NLAttr Masculine-NLAttr ObjectPronoun ) ) 
-<BR>          (or 
-<BR>            (awareOf 
+          (or 
+            (awareOf 
 ?SPEAKER ?HIM ) 
-<BR>            (and 
-<BR>              
+            (and 
+              
 (isa ?SAW1 SawingSomething ) 
-<BR>              
+              
 (objectOfStateChange ?SAW1 ?HIM ) 
-<BR>              
+              
 (doneBy ?SAW1 ?SPEAKER ) ) 
-<BR>            (and 
-<BR>              
+            (and 
+              
 (isa ?SAW1 VisualPerception ) 
-<BR>              
+              
 (performedBy ?SAW1 ?SPEAKER ) 
-<BR>              
-(perceivedThings ?SAW1 ?HIM ) ) ) ) ) ) ) )<BR><BR>e2c("I saw him 
-Monday").<BR><BR>[[txt, 'I'], [tag, staart, ppss, prp, 'ExpletivePronoun', 
+              
+(perceivedThings ?SAW1 ?HIM ) ) ) ) ) ) ) )e2c("I saw him 
+Monday").[[txt, 'I'], [tag, staart, ppss, prp, 'ExpletivePronoun', 
 'IndefinitePronoun', 'Number-SP', 'ObjectPronoun', 'PossessivePronoun', 
 'PossessivePronoun-Post', 'Pronoun', 'Pronoun-SubjectOrObject', 
 'ReciprocalPronoun', 'ReflexivePronoun', 'SubjectPronoun', 
-'WHPronoun']]<BR>[[txt, saw], [tag, z, vbd, 'CountNoun']]<BR>[[txt, him], [tag, 
+'WHPronoun']][[txt, saw], [tag, z, vbd, 'CountNoun']][[txt, him], [tag, 
 z, ppo, prp, 'ExpletivePronoun', 'IndefinitePronoun', 'Number-SP', 
 'ObjectPronoun', 'PossessivePronoun', 'PossessivePronoun-Post', 'Pronoun', 
 'Pronoun-SubjectOrObject', 'ReciprocalPronoun', 'ReflexivePronoun', 
-'SubjectPronoun', 'WHPronoun']]<BR>[[txt, 'Monday'], [tag, laast, nnp, nr, 
-'CountNoun', 'ProperCountNoun', 'ProperNoun']]<BR><BR>seg([p('ADVP_non_cyclic', 
+'SubjectPronoun', 'WHPronoun']][[txt, 'Monday'], [tag, laast, nnp, nr, 
+'CountNoun', 'ProperCountNoun', 'ProperNoun']]seg([p('ADVP_non_cyclic', 
 1, 1), p('VP_non_cyclic', 2, 2), p('ADVP_non_cyclic', 3, 3), p('VP_non_cyclic', 
-4, 4)])<BR><BR>(thereExists ?SPEAKER <BR>  (and <BR>    (isa 
-?SPEAKER Person ) <BR>    (implies 
-<BR>      (occursDuring ?SAW2 Monday ) 
-<BR>      (holdsIn ?SAW2 
-<BR>        (and 
-<BR>          (isa ?SAW2 Event ) 
-<BR>          (thereExists ?HIM 
-<BR>            (and 
-<BR>              
+4, 4)])(thereExists ?SPEAKER   (and     (isa 
+?SPEAKER Person )     (implies 
+      (occursDuring ?SAW2 Monday ) 
+      (holdsIn ?SAW2 
+        (and 
+          (isa ?SAW2 Event ) 
+          (thereExists ?HIM 
+            (and 
+              
 (equals ?HIM 
-<BR>                
+                
 (PronounFn ThirdPerson-NLAttr Singular-NLAttr Masculine-NLAttr ObjectPronoun ) ) 
-<BR>              
+              
 (or 
-<BR>                
+                
 (awareOf ?SPEAKER ?HIM ) 
-<BR>                
+                
 (and 
-<BR>                  
+                  
 (isa ?SAW2 SawingSomething ) 
-<BR>                  
+                  
 (objectOfStateChange ?SAW2 ?HIM ) 
-<BR>                  
+                  
 (doneBy ?SAW2 ?SPEAKER ) ) 
-<BR>                
+                
 (and 
-<BR>                  
+                  
 (isa ?SAW2 VisualPerception ) 
-<BR>                  
+                  
 (performedBy ?SAW2 ?SPEAKER ) 
-<BR>                  
-(perceivedThings ?SAW2 ?HIM ) ) ) ) ) ) ) ) ) )<BR><BR>e2c("I saw him 
-January").<BR><BR>[[txt, 'I'], [tag, staart, ppss, prp, 'ExpletivePronoun', 
+                  
+(perceivedThings ?SAW2 ?HIM ) ) ) ) ) ) ) ) ) )e2c("I saw him 
+January").[[txt, 'I'], [tag, staart, ppss, prp, 'ExpletivePronoun', 
 'IndefinitePronoun', 'Number-SP', 'ObjectPronoun', 'PossessivePronoun', 
 'PossessivePronoun-Post', 'Pronoun', 'Pronoun-SubjectOrObject', 
 'ReciprocalPronoun', 'ReflexivePronoun', 'SubjectPronoun', 
-'WHPronoun']]<BR>[[txt, saw], [tag, z, vbd, 'CountNoun']]<BR>[[txt, him], [tag, 
+'WHPronoun']][[txt, saw], [tag, z, vbd, 'CountNoun']][[txt, him], [tag, 
 z, ppo, prp, 'ExpletivePronoun', 'IndefinitePronoun', 'Number-SP', 
 'ObjectPronoun', 'PossessivePronoun', 'PossessivePronoun-Post', 'Pronoun', 
 'Pronoun-SubjectOrObject', 'ReciprocalPronoun', 'ReflexivePronoun', 
-'SubjectPronoun', 'WHPronoun']]<BR>[[txt, 'January'], [tag, laast, nnp, np, 
-'ProperCountNoun', 'ProperNoun']]<BR><BR>seg([p('ADVP_non_cyclic', 1, 1), 
+'SubjectPronoun', 'WHPronoun']][[txt, 'January'], [tag, laast, nnp, np, 
+'ProperCountNoun', 'ProperNoun']]seg([p('ADVP_non_cyclic', 1, 1), 
 p('VP_non_cyclic', 2, 2), p('ADVP_non_cyclic', 3, 3), p('VP_non_cyclic', 4, 
-4)])<BR><BR>(thereExists ?SPEAKER <BR>  (and <BR>    (isa 
-?SPEAKER Person ) <BR>    (implies 
-<BR>      (occursDuring ?SAW3 January ) 
-<BR>      (holdsIn ?SAW3 
-<BR>        (and 
-<BR>          (isa ?SAW3 Event ) 
-<BR>          (thereExists ?HIM 
-<BR>            (and 
-<BR>              
+4)])(thereExists ?SPEAKER   (and     (isa 
+?SPEAKER Person )     (implies 
+      (occursDuring ?SAW3 January ) 
+      (holdsIn ?SAW3 
+        (and 
+          (isa ?SAW3 Event ) 
+          (thereExists ?HIM 
+            (and 
+              
 (equals ?HIM 
-<BR>                
+                
 (PronounFn ThirdPerson-NLAttr Singular-NLAttr Masculine-NLAttr ObjectPronoun ) ) 
-<BR>              
+              
 (or 
-<BR>                
+                
 (awareOf ?SPEAKER ?HIM ) 
-<BR>                
+                
 (and 
-<BR>                  
+                  
 (isa ?SAW3 SawingSomething ) 
-<BR>                  
+                  
 (objectOfStateChange ?SAW3 ?HIM ) 
-<BR>                  
+                  
 (doneBy ?SAW3 ?SPEAKER ) ) 
-<BR>                
+                
 (and 
-<BR>                  
+                  
 (isa ?SAW3 VisualPerception ) 
-<BR>                  
+                  
 (performedBy ?SAW3 ?SPEAKER ) 
-<BR>                  
-(perceivedThings ?SAW3 ?HIM ) ) ) ) ) ) ) ) ) )<BR><BR>e2c("I saw him January 
-twenty first").<BR><BR>[[txt, 'I'], [tag, staart, ppss, prp, 'ExpletivePronoun', 
+                  
+(perceivedThings ?SAW3 ?HIM ) ) ) ) ) ) ) ) ) )e2c("I saw him January 
+twenty first").[[txt, 'I'], [tag, staart, ppss, prp, 'ExpletivePronoun', 
 'IndefinitePronoun', 'Number-SP', 'ObjectPronoun', 'PossessivePronoun', 
 'PossessivePronoun-Post', 'Pronoun', 'Pronoun-SubjectOrObject', 
 'ReciprocalPronoun', 'ReflexivePronoun', 'SubjectPronoun', 
-'WHPronoun']]<BR>[[txt, saw], [tag, z, vbd, 'CountNoun']]<BR>[[txt, him], [tag, 
+'WHPronoun']][[txt, saw], [tag, z, vbd, 'CountNoun']][[txt, him], [tag, 
 z, ppo, prp, 'ExpletivePronoun', 'IndefinitePronoun', 'Number-SP', 
 'ObjectPronoun', 'PossessivePronoun', 'PossessivePronoun-Post', 'Pronoun', 
 'Pronoun-SubjectOrObject', 'ReciprocalPronoun', 'ReflexivePronoun', 
-'SubjectPronoun', 'WHPronoun']]<BR>[[txt, 'January'], [tag, z, nnp, np, 
-'ProperCountNoun', 'ProperNoun']]<BR>[[txt, twenty], [tag, z, cd, 'CountNoun', 
+'SubjectPronoun', 'WHPronoun']][[txt, 'January'], [tag, z, nnp, np, 
+'ProperCountNoun', 'ProperNoun']][[txt, twenty], [tag, z, cd, 'CountNoun', 
 'Determiner', 'Determiner-Central', 'Determiner-ClassA', 'Determiner-ClassB', 
 'Determiner-ClassC', 'ExpletivePronoun', 'IndefinitePronoun', 'Number-SP', 
 'ObjectPronoun', 'PossessivePronoun', 'PossessivePronoun-Post', 
 'Postdeterminer', 'Pronoun', 'Pronoun-SubjectOrObject', 'ReciprocalPronoun', 
-'ReflexivePronoun', 'SubjectPronoun', 'WHDeterminer', 'WHPronoun']]<BR>[[txt, 
+'ReflexivePronoun', 'SubjectPronoun', 'WHDeterminer', 'WHPronoun']][[txt, 
 first], [tag, laast, jj, od, rb, 'Adjective', 'Adverb', 'CountNoun', 
 'NongradableAdjective', 'OrdinalAdjective', 
-'WHAdverb']]<BR><BR>seg([p('ADVP_non_cyclic', 1, 1), p('VP_non_cyclic', 2, 2), 
+'WHAdverb']]seg([p('ADVP_non_cyclic', 1, 1), p('VP_non_cyclic', 2, 2), 
 p('ADVP_non_cyclic', 3, 3), p('VP_non_cyclic', 4, 4), p('QP', 5, 5), 
-p('PP_non_cyclic', 6, 6)])<BR><BR>e2c("Monday ' s concert should be 
-good").<BR><BR>[[txt, 'Monday\'s'], [txt, 'Monday', '\'s'], [txt, 'Monday'], 
-[tag, staart, '\'s', 'nr$']]<BR>[[txt, concert], [tag, z, nn, 
-'CountNoun']]<BR>[[txt, should], [tag, z, md, 'Modal']]<BR>[[txt, be], [tag, z, 
-be, vb, 'BeAux']]<BR>[[txt, good], [tag, laast, jj, 
-'Adjective']]<BR><BR><BR>e2c("We did it in Jan").<BR><BR>[[txt, 'We'], [tag, 
+p('PP_non_cyclic', 6, 6)])e2c("Monday ' s concert should be 
+good").[[txt, 'Monday\'s'], [txt, 'Monday', '\'s'], [txt, 'Monday'], 
+[tag, staart, '\'s', 'nr$']][[txt, concert], [tag, z, nn, 
+'CountNoun']][[txt, should], [tag, z, md, 'Modal']][[txt, be], [tag, z, 
+be, vb, 'BeAux']][[txt, good], [tag, laast, jj, 
+'Adjective']]e2c("We did it in Jan").[[txt, 'We'], [tag, 
 staart, prp, ppss, 'Determiner', 'Determiner-Central', 'Determiner-ClassA', 
 'Determiner-ClassB', 'Determiner-ClassC', 'ExpletivePronoun', 
 'IndefinitePronoun', 'Number-SP', 'ObjectPronoun', 'PossessivePronoun', 
 'PossessivePronoun-Post', 'Postdeterminer', 'Pronoun', 
 'Pronoun-SubjectOrObject', 'ReciprocalPronoun', 'ReflexivePronoun', 
-'SubjectPronoun', 'WHDeterminer', 'WHPronoun']]<BR>[[txt, did], [tag, z, dod, 
-vbd, 'DoAux']]<BR>[[txt, it], [tag, z, prp, pps, ppo, 'ExpletivePronoun', 
+'SubjectPronoun', 'WHDeterminer', 'WHPronoun']][[txt, did], [tag, z, dod, 
+vbd, 'DoAux']][[txt, it], [tag, z, prp, pps, ppo, 'ExpletivePronoun', 
 'IndefinitePronoun', 'Number-SP', 'ObjectPronoun', 'PossessivePronoun', 
 'PossessivePronoun-Post', 'Pronoun', 'Pronoun-SubjectOrObject', 
 'ReciprocalPronoun', 'ReflexivePronoun', 'SubjectPronoun', 
-'WHPronoun']]<BR>[[txt, in], [tag, z, in, 'Adjective', 'Adverb', 'CountNoun', 
+'WHPronoun']][[txt, in], [tag, z, in, 'Adjective', 'Adverb', 'CountNoun', 
 'Preposition', 'Preposition-Directional-Telic', 'Preposition-Locative', 
-'VerbParticle', 'WHAdverb']]<BR>[[txt, 'Jan'], [tag, laast, nnp, 
-np]]<BR><BR>seg([p('ADVP_non_cyclic', 1, 1), p('VP_non_cyclic', 2, 2), 
+'VerbParticle', 'WHAdverb']][[txt, 'Jan'], [tag, laast, nnp, 
+np]]seg([p('ADVP_non_cyclic', 1, 1), p('VP_non_cyclic', 2, 2), 
 p('ADVP_non_cyclic', 3, 3), p('PP_non_cyclic', 4, 4), p('VP_non_cyclic', 5, 
-5)])<BR><BR>(thereExists ?WE <BR>  (and <BR>    (equals ?WE 
-<BR>      (PronounFn FirstPerson-NLAttr Plural-NLAttr 
-Ungendered-NLAttr SubjectPronoun ) ) <BR>    (and 
-<BR>      (and 
-<BR>        (occursDurring ?IN3 ?G431374 ) 
-<BR>        (bodilyDoer ?WE ?IN3 ) ) 
-<BR>      (implies 
-<BR>        (properNameString ?JAN68 "Jan" ) 
-<BR>        (and 
-<BR>          (occursDuring ?IN3 
-Now ) <BR>          (holdsIn ?IN3 
-<BR>            
-(in-UnderspecifiedContainer ?WE ?JAN68 ) ) ) ) ) ) )<BR><BR><BR>e2c("Failure to 
-comply may result in dismissal").<BR><BR>[[txt, 'Failure'], [tag, staart, nn, 
-'CountNoun', 'MassNoun', 'MassNoun-Generic']]<BR>[[txt, to], [tag, z, to, in, 
-'InfinitiveComp', 'Preposition', 'Preposition-Directional']]<BR>[[txt, comply], 
-[tag, z, vb, 'Adjective', 'Adverb', 'WHAdverb']]<BR>[[txt, may], [tag, z, md, 
-'Modal', 'ProperCountNoun', 'ProperNoun']]<BR>[[txt, result], [tag, z, nn, vb, 
-'CountNoun']]<BR>[[txt, in], [tag, z, in, 'Adjective', 'Adverb', 'CountNoun', 
+5)])(thereExists ?WE   (and     (equals ?WE 
+      (PronounFn FirstPerson-NLAttr Plural-NLAttr 
+Ungendered-NLAttr SubjectPronoun ) )     (and 
+      (and 
+        (occursDurring ?IN3 ?G431374 ) 
+        (bodilyDoer ?WE ?IN3 ) ) 
+      (implies 
+        (properNameString ?JAN68 "Jan" ) 
+        (and 
+          (occursDuring ?IN3 
+Now )           (holdsIn ?IN3 
+            
+(in-UnderspecifiedContainer ?WE ?JAN68 ) ) ) ) ) ) )e2c("Failure to 
+comply may result in dismissal").[[txt, 'Failure'], [tag, staart, nn, 
+'CountNoun', 'MassNoun', 'MassNoun-Generic']][[txt, to], [tag, z, to, in, 
+'InfinitiveComp', 'Preposition', 'Preposition-Directional']][[txt, comply], 
+[tag, z, vb, 'Adjective', 'Adverb', 'WHAdverb']][[txt, may], [tag, z, md, 
+'Modal', 'ProperCountNoun', 'ProperNoun']][[txt, result], [tag, z, nn, vb, 
+'CountNoun']][[txt, in], [tag, z, in, 'Adjective', 'Adverb', 'CountNoun', 
 'Preposition', 'Preposition-Directional-Telic', 'Preposition-Locative', 
-'VerbParticle', 'WHAdverb']]<BR>[[txt, dismissal], [tag, laast, nn, 'CountNoun', 
-'Adjective']]<BR><BR>seg([p('VP_non_cyclic', 1, 1), p('PP_non_cyclic', 2, 2), 
+'VerbParticle', 'WHAdverb']][[txt, dismissal], [tag, laast, nn, 'CountNoun', 
+'Adjective']]seg([p('VP_non_cyclic', 1, 1), p('PP_non_cyclic', 2, 2), 
 p('VP_non_cyclic', 3, 3), p('VP_non_cyclic', 4, 4), p('VP_non_cyclic', 5, 5), 
-p('PP_non_cyclic', 6, 6), p('VP_non_cyclic', 7, 7)])<BR><BR>(implies <BR>  
-(properNameString ?FAILURE3 "Failure" ) <BR>  (and <BR>    
-(and <BR>      (isa ?RESULT3 
-<BR>        (AdverbFn Comply-TheWord ) ) 
-<BR>      (and 
-<BR>        (behavourCapable ?FAILURE3 
-?RESULT3 ) <BR>        (implies 
-<BR>          (and 
-<BR>            (isa 
+p('PP_non_cyclic', 6, 6), p('VP_non_cyclic', 7, 7)])(implies   
+(properNameString ?FAILURE3 "Failure" )   (and     
+(and       (isa ?RESULT3 
+        (AdverbFn Comply-TheWord ) ) 
+      (and 
+        (behavourCapable ?FAILURE3 
+?RESULT3 )         (implies 
+          (and 
+            (isa 
 ?DISMISSAL9 
-<BR>              
+              
 (NounFn Dismiss-TheWord ) ) 
-<BR>            
+            
 (agentPopularity ?DISMISSAL9 
-<BR>              
+              
 (HighAmountFn PopularityLevel ) ) ) 
-<BR>          (and 
-<BR>            
+          (and 
+            
 (occursDuring ?RESULT3 Now ) 
-<BR>            (holdsIn 
+            (holdsIn 
 ?RESULT3 
-<BR>              
-(eventOutcomes ?FAILURE3 ?DISMISSAL9 ) ) ) ) ) ) <BR>    (implies 
-<BR>      (and 
-<BR>        (isa ?G461366 Thing ) 
-<BR>        (isa ?G461366 Thing ) ) 
-<BR>      (to-UnderspecifiedLocation ?FAILURE3 ?G461366 
-) ) ) )<BR><BR>e2c("Absence to comply may result in dismissal").<BR><BR>[[txt, 
+              
+(eventOutcomes ?FAILURE3 ?DISMISSAL9 ) ) ) ) ) )     (implies 
+      (and 
+        (isa ?G461366 Thing ) 
+        (isa ?G461366 Thing ) ) 
+      (to-UnderspecifiedLocation ?FAILURE3 ?G461366 
+) ) ) )e2c("Absence to comply may result in dismissal").[[txt, 
 'Absence'], [tag, staart, 'CountNoun', 'CountNoun-Generic', 'NLWordForm', 
-'Noun']]<BR>[[txt, to], [tag, z, to, in, 'InfinitiveComp', 'Preposition', 
-'Preposition-Directional']]<BR>[[txt, comply], [tag, z, vb, 'Adjective', 
-'Adverb', 'WHAdverb']]<BR>[[txt, may], [tag, z, md, 'Modal', 'ProperCountNoun', 
-'ProperNoun']]<BR>[[txt, result], [tag, z, nn, vb, 'CountNoun']]<BR>[[txt, in], 
+'Noun']][[txt, to], [tag, z, to, in, 'InfinitiveComp', 'Preposition', 
+'Preposition-Directional']][[txt, comply], [tag, z, vb, 'Adjective', 
+'Adverb', 'WHAdverb']][[txt, may], [tag, z, md, 'Modal', 'ProperCountNoun', 
+'ProperNoun']][[txt, result], [tag, z, nn, vb, 'CountNoun']][[txt, in], 
 [tag, z, in, 'Adjective', 'Adverb', 'CountNoun', 'Preposition', 
 'Preposition-Directional-Telic', 'Preposition-Locative', 'VerbParticle', 
-'WHAdverb']]<BR>[[txt, dismissal], [tag, laast, nn, 'CountNoun', 
-'Adjective']]<BR><BR><BR>(implies <BR>  (properNameString ?ABSENCE3 
-"Absence" ) <BR>  (and <BR>    (and 
-<BR>      (isa ?RESULT7 
-<BR>        (AdverbFn Comply-TheWord ) ) 
-<BR>      (and 
-<BR>        (behavourCapable ?ABSENCE3 
-?RESULT7 ) <BR>        (implies 
-<BR>          (and 
-<BR>            (isa 
+'WHAdverb']][[txt, dismissal], [tag, laast, nn, 'CountNoun', 
+'Adjective']](implies   (properNameString ?ABSENCE3 
+"Absence" )   (and     (and 
+      (isa ?RESULT7 
+        (AdverbFn Comply-TheWord ) ) 
+      (and 
+        (behavourCapable ?ABSENCE3 
+?RESULT7 )         (implies 
+          (and 
+            (isa 
 ?DISMISSAL18 
-<BR>              
+              
 (NounFn Dismiss-TheWord ) ) 
-<BR>            
+            
 (agentPopularity ?DISMISSAL18 
-<BR>              
+              
 (HighAmountFn PopularityLevel ) ) ) 
-<BR>          (and 
-<BR>            
+          (and 
+            
 (occursDuring ?RESULT7 Now ) 
-<BR>            (holdsIn 
+            (holdsIn 
 ?RESULT7 
-<BR>              
-(eventOutcomes ?ABSENCE3 ?DISMISSAL18 ) ) ) ) ) ) <BR>    
-(implies <BR>      (and 
-<BR>        (isa ?G495123 Thing ) 
-<BR>        (isa ?G495123 Thing ) ) 
-<BR>      (to-UnderspecifiedLocation ?ABSENCE3 ?G495123 
-) ) ) )<BR><BR>e2c("He made a request that there be an 
-investigation").<BR><BR>[[txt, 'He'], [tag, staart, pps, 'ExpletivePronoun', 
+              
+(eventOutcomes ?ABSENCE3 ?DISMISSAL18 ) ) ) ) ) )     
+(implies       (and 
+        (isa ?G495123 Thing ) 
+        (isa ?G495123 Thing ) ) 
+      (to-UnderspecifiedLocation ?ABSENCE3 ?G495123 
+) ) ) )e2c("He made a request that there be an 
+investigation").[[txt, 'He'], [tag, staart, pps, 'ExpletivePronoun', 
 'IndefinitePronoun', 'Number-SP', 'ObjectPronoun', 'PossessivePronoun', 
 'PossessivePronoun-Post', 'Pronoun', 'Pronoun-SubjectOrObject', 
 'ReciprocalPronoun', 'ReflexivePronoun', 'SubjectPronoun', 
-'WHPronoun']]<BR>[[txt, made], [tag, z, vbd, vbn]]<BR>[[txt, a], [tag, z, dt, 
+'WHPronoun']][[txt, made], [tag, z, vbd, vbn]][[txt, a], [tag, z, dt, 
 at, 'Determiner', 'Determiner-Central', 'Determiner-ClassA', 
 'Determiner-ClassB', 'Determiner-ClassC', 'Determiner-Indefinite', 
 'Postdeterminer', 'WHDeterminer', 'CountNoun', 'MassNoun', 
-'MassNoun-Generic']]<BR>[[txt, request], [tag, z, nn, 'CountNoun']]<BR>[[txt, 
+'MassNoun-Generic']][[txt, request], [tag, z, nn, 'CountNoun']][[txt, 
 that], [tag, z, in, cs, dt, wdt, 'Adverb', 'Complementizer', 'Determiner', 
 'Determiner-Central', 'Determiner-ClassA', 'Determiner-ClassB', 
 'Determiner-ClassC', 'Determiner-Definite', 'IndefinitePronoun', 'Number-SP', 
 'ObjectPronoun', 'PossessivePronoun', 'PossessivePronoun-Post', 
 'Postdeterminer', 'Pronoun', 'Pronoun-SubjectOrObject', 'ReciprocalPronoun', 
 'ReflexivePronoun', 'SubjectPronoun', 'WHAdverb', 'WHDeterminer', 
-'WHPronoun']]<BR>[[txt, there], [tag, z, ex, rb, 'Adverb', 'AdverbOfPlace', 
+'WHPronoun']][[txt, there], [tag, z, ex, rb, 'Adverb', 'AdverbOfPlace', 
 'ExpletivePronoun', 'IndefinitePronoun', 'Number-SP', 'ObjectPronoun', 
 'PossessivePronoun', 'PossessivePronoun-Post', 'Pronoun', 
 'Pronoun-SubjectOrObject', 'ReciprocalPronoun', 'ReflexivePronoun', 
-'SubjectPronoun', 'There-Existential', 'WHAdverb', 'WHPronoun']]<BR>[[txt, be], 
-[tag, z, be, vb, 'BeAux']]<BR>[[txt, an], [tag, z, dt, at, 'Determiner', 
+'SubjectPronoun', 'There-Existential', 'WHAdverb', 'WHPronoun']][[txt, be], 
+[tag, z, be, vb, 'BeAux']][[txt, an], [tag, z, dt, at, 'Determiner', 
 'Determiner-Central', 'Determiner-ClassA', 'Determiner-ClassB', 
 'Determiner-ClassC', 'Determiner-Indefinite', 'Postdeterminer', 
-'WHDeterminer']]<BR>[[txt, investigation], [tag, laast, nn, 'CountNoun', 
-'MassNoun', 'MassNoun-Generic']]<BR><BR><BR>(thereExists ?HE <BR>  (and 
-<BR>    (isa ?HE Male ) <BR>    (and 
-<BR>      (isa ?MADE1 Event ) 
-<BR>      (thereExists ?REQUEST8 
-<BR>        (and 
-<BR>          (and 
-<BR>            (isa 
+'WHDeterminer']][[txt, investigation], [tag, laast, nn, 'CountNoun', 
+'MassNoun', 'MassNoun-Generic']](thereExists ?HE   (and 
+    (isa ?HE Male )     (and 
+      (isa ?MADE1 Event ) 
+      (thereExists ?REQUEST8 
+        (and 
+          (and 
+            (isa 
 ?REQUEST8 
-<BR>              
+              
 (OneOfFn InformationRequest-IBT Request Requesting-CommunicationAct ) ) 
-<BR>            (isa 
-?REQUEST8 Thing ) ) <BR>          
-(and <BR>            (or 
-<BR>              
+            (isa 
+?REQUEST8 Thing ) )           
+(and             (or 
+              
 (causes-Underspecified ?HE ?REQUEST8 ) 
-<BR>              
+              
 (createdBy ?REQUEST8 ?HE ) 
-<BR>              
+              
 (doneBy ?REQUEST8 ?HE ) 
-<BR>              
+              
 (and 
-<BR>                
+                
 (isa ?MADE1 MakingSomething ) 
-<BR>                
+                
 (performedBy ?MADE1 ?HE ) 
-<BR>                
+                
 (products ?MADE1 ?REQUEST8 ) ) ) 
-<BR>            (and 
-<BR>              
+            (and 
+              
 (isa ?BE29 
-<BR>                
+                
 (AdverbFn There-TheWord ) ) 
-<BR>              
+              
 (thereExists ?INVESTIGATION7 
-<BR>                
+                
 (and 
-<BR>                  
+                  
 (isa ?INVESTIGATION7 Research ) 
-<BR>                  
+                  
 (and 
-<BR>                    
+                    
 (isa ?BE29 Living ) 
-<BR>                    
+                    
 (occursDuring ?BE29 Now ) 
-<BR>                    
+                    
 (preActors ?BE29 ?REQUEST8 ) 
-<BR>                    
-(actors ?BE29 ?INVESTIGATION7 ) ) ) ) ) ) ) ) ) ) )<BR><BR>e2c("He stated the 
-fact that there be an investigation").<BR><BR>[[txt, 'He'], [tag, staart, pps, 
+                    
+(actors ?BE29 ?INVESTIGATION7 ) ) ) ) ) ) ) ) ) ) )e2c("He stated the 
+fact that there be an investigation").[[txt, 'He'], [tag, staart, pps, 
 'ExpletivePronoun', 'IndefinitePronoun', 'Number-SP', 'ObjectPronoun', 
 'PossessivePronoun', 'PossessivePronoun-Post', 'Pronoun', 
 'Pronoun-SubjectOrObject', 'ReciprocalPronoun', 'ReflexivePronoun', 
-'SubjectPronoun', 'WHPronoun']]<BR>[[txt, stated], [tag, z, vbn, vbd, 
-'Adjective']]<BR>[[txt, a], [tag, z, dt, at, 'Determiner', 'Determiner-Central', 
+'SubjectPronoun', 'WHPronoun']][[txt, stated], [tag, z, vbn, vbd, 
+'Adjective']][[txt, a], [tag, z, dt, at, 'Determiner', 'Determiner-Central', 
 'Determiner-ClassA', 'Determiner-ClassB', 'Determiner-ClassC', 
 'Determiner-Indefinite', 'Postdeterminer', 'WHDeterminer', 'CountNoun', 
-'MassNoun', 'MassNoun-Generic']]<BR>[[txt, fact], [tag, z, nn, 
-'CountNoun']]<BR>[[txt, that], [tag, z, in, cs, dt, wdt, 'Adverb', 
+'MassNoun', 'MassNoun-Generic']][[txt, fact], [tag, z, nn, 
+'CountNoun']][[txt, that], [tag, z, in, cs, dt, wdt, 'Adverb', 
 'Complementizer', 'Determiner', 'Determiner-Central', 'Determiner-ClassA', 
 'Determiner-ClassB', 'Determiner-ClassC', 'Determiner-Definite', 
 'IndefinitePronoun', 'Number-SP', 'ObjectPronoun', 'PossessivePronoun', 
 'PossessivePronoun-Post', 'Postdeterminer', 'Pronoun', 
 'Pronoun-SubjectOrObject', 'ReciprocalPronoun', 'ReflexivePronoun', 
-'SubjectPronoun', 'WHAdverb', 'WHDeterminer', 'WHPronoun']]<BR>[[txt, there], 
+'SubjectPronoun', 'WHAdverb', 'WHDeterminer', 'WHPronoun']][[txt, there], 
 [tag, z, ex, rb, 'Adverb', 'AdverbOfPlace', 'ExpletivePronoun', 
 'IndefinitePronoun', 'Number-SP', 'ObjectPronoun', 'PossessivePronoun', 
 'PossessivePronoun-Post', 'Pronoun', 'Pronoun-SubjectOrObject', 
 'ReciprocalPronoun', 'ReflexivePronoun', 'SubjectPronoun', 'There-Existential', 
-'WHAdverb', 'WHPronoun']]<BR>[[txt, be], [tag, z, be, vb, 'BeAux']]<BR>[[txt, 
+'WHAdverb', 'WHPronoun']][[txt, be], [tag, z, be, vb, 'BeAux']][[txt, 
 an], [tag, z, dt, at, 'Determiner', 'Determiner-Central', 'Determiner-ClassA', 
 'Determiner-ClassB', 'Determiner-ClassC', 'Determiner-Indefinite', 
-'Postdeterminer', 'WHDeterminer']]<BR>[[txt, investigation], [tag, laast, nn, 
-'CountNoun', 'MassNoun', 'MassNoun-Generic']]<BR><BR><BR>(thereExists ?HE 
-<BR>  (and <BR>    (isa ?HE Male ) <BR>    
-(thereExists ?FACT10 <BR>      (and 
-<BR>        (ist :POSSESSOR ?FACT10 ) 
-<BR>        (and 
-<BR>          (implies 
-<BR>            (isa 
+'Postdeterminer', 'WHDeterminer']][[txt, investigation], [tag, laast, nn, 
+'CountNoun', 'MassNoun', 'MassNoun-Generic']](thereExists ?HE 
+  (and     (isa ?HE Male )     
+(thereExists ?FACT10       (and 
+        (ist :POSSESSOR ?FACT10 ) 
+        (and 
+          (implies 
+            (isa 
 ?STATED3 
-<BR>              
+              
 (VerbFn State-TheWord ) ) 
-<BR>            (eventSOT 
+            (eventSOT 
 ?STATED3 ?HE ?FACT10 Past ) ) 
-<BR>          (and 
-<BR>            (isa 
+          (and 
+            (isa 
 ?BE31 
-<BR>              
+              
 (AdverbFn There-TheWord ) ) 
-<BR>            
+            
 (thereExists ?INVESTIGATION15 
-<BR>              
+              
 (and 
-<BR>                
+                
 (isa ?INVESTIGATION15 Research ) 
-<BR>                
+                
 (and 
-<BR>                  
+                  
 (isa ?BE31 Living ) 
-<BR>                  
+                  
 (occursDuring ?BE31 Now ) 
-<BR>                  
+                  
 (preActors ?BE31 ?FACT10 ) 
-<BR>                  
-(actors ?BE31 ?INVESTIGATION15 ) ) ) ) ) ) ) ) ) )<BR><BR><BR>e2c("Many were 
-angered by the hearings").<BR><BR>[[txt, 'Many'], [tag, staart, dt, jj, nnp, 
+                  
+(actors ?BE31 ?INVESTIGATION15 ) ) ) ) ) ) ) ) ) )e2c("Many were 
+angered by the hearings").[[txt, 'Many'], [tag, staart, dt, jj, nnp, 
 pdt, rb, 'Adverb', 'Determiner', 'Determiner-Central', 'Determiner-ClassA', 
 'Determiner-ClassB', 'Determiner-ClassC', 'ExpletivePronoun', 
 'IndefinitePronoun', 'Number-SP', 'ObjectPronoun', 'PossessivePronoun', 
 'PossessivePronoun-Post', 'Postdeterminer', 'Pronoun', 
 'Pronoun-SubjectOrObject', 'ReciprocalPronoun', 'ReflexivePronoun', 
 'SubjectPronoun', 'WHAdverb', 'WHDeterminer', 'WHPronoun', 
-'Adjective']]<BR>[[txt, were], [tag, z, bed, vbd, 'BeAux']]<BR>[[txt, angered], 
-[tag, z, vbn, vbd, 'Adjective']]<BR>[[txt, by], [tag, z, in, 'Adverb', 
+'Adjective']][[txt, were], [tag, z, bed, vbd, 'BeAux']][[txt, angered], 
+[tag, z, vbn, vbd, 'Adjective']][[txt, by], [tag, z, in, 'Adverb', 
 'Preposition', 'Preposition-Directional-Telic', 'WHAdverb', 
-'Adjective']]<BR>[[txt, a], [tag, z, dt, at, 'Determiner', 'Determiner-Central', 
+'Adjective']][[txt, a], [tag, z, dt, at, 'Determiner', 'Determiner-Central', 
 'Determiner-ClassA', 'Determiner-ClassB', 'Determiner-ClassC', 
 'Determiner-Indefinite', 'Postdeterminer', 'WHDeterminer', 'CountNoun', 
-'MassNoun', 'MassNoun-Generic']]<BR>[[txt, hearings], [tag, laast, nns, 
-'CountNoun', 'GerundiveCountNoun']]<BR><BR>seg([p('QP', 1, 1), 
+'MassNoun', 'MassNoun-Generic']][[txt, hearings], [tag, laast, nns, 
+'CountNoun', 'GerundiveCountNoun']]seg([p('QP', 1, 1), 
 p('VP_non_cyclic', 2, 2), p('VP_non_cyclic', 3, 3), p('PP_non_cyclic', 4, 4), 
-p('QP', 5, 5), p('QP', 6, 6)])<BR><BR>(thereExists ?MANY <BR>  (and 
-<BR>    (or <BR>      (and 
-<BR>        (equals ?MANY Many-NLAttr ) 
-<BR>        (isa ?MANY 
-<BR>          (CollectionUnionFn 
-Individual NLGenQuantAttribute ) ) ) <BR>      (and 
-<BR>        (equals ?MANY Many-Quant ) 
-<BR>        (isa ?MANY 
-<BR>          (CollectionUnionFn 
-Individual PositiveIntegerExtent ) ) ) <BR>      (and 
-<BR>        (equals ?MANY many ) 
-<BR>        (isa ?MANY 
-<BR>          (CollectionUnionFn 
+p('QP', 5, 5), p('QP', 6, 6)])(thereExists ?MANY   (and 
+    (or       (and 
+        (equals ?MANY Many-NLAttr ) 
+        (isa ?MANY 
+          (CollectionUnionFn 
+Individual NLGenQuantAttribute ) ) )       (and 
+        (equals ?MANY Many-Quant ) 
+        (isa ?MANY 
+          (CollectionUnionFn 
+Individual PositiveIntegerExtent ) ) )       (and 
+        (equals ?MANY many ) 
+        (isa ?MANY 
+          (CollectionUnionFn 
 GeneralizedQuantifier-Conservative Individual ReflexiveBinaryPredicate 
-TruthFunction ) ) ) ) <BR>    (and 
-<BR>      (occursDurring ?ANGERED3 Past ) 
-<BR>      (implies 
-<BR>        (and 
-<BR>          (isa ?G626264 Thing ) 
-<BR>          (isa ?G626264 Thing ) 
-) <BR>        (and 
-<BR>          (implies 
-<BR>            (isa 
+TruthFunction ) ) ) )     (and 
+      (occursDurring ?ANGERED3 Past ) 
+      (implies 
+        (and 
+          (isa ?G626264 Thing ) 
+          (isa ?G626264 Thing ) 
+)         (and 
+          (implies 
+            (isa 
 ?ANGERED3 
-<BR>              
+              
 (VerbFn Anger-TheWord ) ) 
-<BR>            (eventSOT 
+            (eventSOT 
 ?ANGERED3 ?MANY ?G626264 Past ) ) 
-<BR>          (thereExists 
+          (thereExists 
 ?HEARINGS5 
-<BR>            (and 
-<BR>              
+            (and 
+              
 (and 
-<BR>                
+                
 (isa ?HEARINGS5 Hearing ) 
-<BR>                
+                
 (objectActedOn ?HEARINGS5 :POSSESSOR ) ) 
-<BR>              
-(by-Underspecified ?G626264 ?HEARINGS5 ) ) ) ) ) ) ) )<BR><BR><BR>e2c("Many who 
-initially supported Thomas later changed their minds").<BR><BR>[[txt, 'Many'], 
+              
+(by-Underspecified ?G626264 ?HEARINGS5 ) ) ) ) ) ) ) )e2c("Many who 
+initially supported Thomas later changed their minds").[[txt, 'Many'], 
 [tag, staart, dt, jj, nnp, pdt, rb, 'Adverb', 'Determiner', 
 'Determiner-Central', 'Determiner-ClassA', 'Determiner-ClassB', 
 'Determiner-ClassC', 'ExpletivePronoun', 'IndefinitePronoun', 'Number-SP', 
 'ObjectPronoun', 'PossessivePronoun', 'PossessivePronoun-Post', 
 'Postdeterminer', 'Pronoun', 'Pronoun-SubjectOrObject', 'ReciprocalPronoun', 
 'ReflexivePronoun', 'SubjectPronoun', 'WHAdverb', 'WHDeterminer', 'WHPronoun', 
-'Adjective']]<BR>[[txt, who], [tag, z, wps, wp, 'ExpletivePronoun', 
+'Adjective']][[txt, who], [tag, z, wps, wp, 'ExpletivePronoun', 
 'IndefinitePronoun', 'Number-SP', 'ObjectPronoun', 'PossessivePronoun', 
 'PossessivePronoun-Post', 'Pronoun', 'Pronoun-SubjectOrObject', 
 'ReciprocalPronoun', 'ReflexivePronoun', 'SubjectPronoun', 'WHPronoun', 
-'WHPronoun-Subject']]<BR>[[txt, initially], [tag, z, rb, 'Adverb', 'WHAdverb', 
-'Adjective']]<BR>[[txt, supported], [tag, z, vbn, vbd, 'Adjective']]<BR>[[txt, 
-'Thomas'], [tag, z, np, nnp]]<BR>[[txt, later], [tag, z, rbr, rb, 'Adjective', 
-'Adverb', 'AgentiveNoun', 'AdverbOfTime', 'WHAdverb']]<BR>[[txt, changed], [tag, 
-z, vbn, vbd, 'Adjective', 'CountNoun']]<BR>[[txt, their], [tag, z, 'pp$', 
+'WHPronoun-Subject']][[txt, initially], [tag, z, rb, 'Adverb', 'WHAdverb', 
+'Adjective']][[txt, supported], [tag, z, vbn, vbd, 'Adjective']][[txt, 
+'Thomas'], [tag, z, np, nnp]][[txt, later], [tag, z, rbr, rb, 'Adjective', 
+'Adverb', 'AgentiveNoun', 'AdverbOfTime', 'WHAdverb']][[txt, changed], [tag, 
+z, vbn, vbd, 'Adjective', 'CountNoun']][[txt, their], [tag, z, 'pp$', 
 'prp$', 'Determiner', 'Determiner-Central', 'Determiner-ClassA', 
 'Determiner-ClassB', 'Determiner-ClassC', 'ExpletivePronoun', 
 'IndefinitePronoun', 'Number-SP', 'ObjectPronoun', 'PossessivePronoun', 
 'PossessivePronoun-Post', 'PossessivePronoun-Pre', 'Postdeterminer', 'Pronoun', 
 'Pronoun-SubjectOrObject', 'ReciprocalPronoun', 'ReflexivePronoun', 
-'SubjectPronoun', 'WHDeterminer', 'WHPronoun']]<BR>[[txt, minds], [tag, laast, 
-nns, 'CountNoun']]<BR><BR>seg([p('QP', 1, 1), p('X', 2, 2), p('PP_non_cyclic', 
+'SubjectPronoun', 'WHDeterminer', 'WHPronoun']][[txt, minds], [tag, laast, 
+nns, 'CountNoun']]seg([p('QP', 1, 1), p('X', 2, 2), p('PP_non_cyclic', 
 3, 3), p('VP_non_cyclic', 4, 4), p('VP_non_cyclic', 5, 5), p('QP', 6, 6), 
-p('VP_non_cyclic', 7, 7), p('NX', 8, 9)])<BR><BR>(thereExists ?MANY <BR>  
-(and <BR>    (or <BR>      (and 
-<BR>        (equals ?MANY Many-NLAttr ) 
-<BR>        (isa ?MANY 
-<BR>          (CollectionUnionFn 
-Individual NLGenQuantAttribute ) ) ) <BR>      (and 
-<BR>        (equals ?MANY Many-Quant ) 
-<BR>        (isa ?MANY 
-<BR>          (CollectionUnionFn 
-Individual PositiveIntegerExtent ) ) ) <BR>      (and 
-<BR>        (equals ?MANY many ) 
-<BR>        (isa ?MANY 
-<BR>          (CollectionUnionFn 
+p('VP_non_cyclic', 7, 7), p('NX', 8, 9)])(thereExists ?MANY   
+(and     (or       (and 
+        (equals ?MANY Many-NLAttr ) 
+        (isa ?MANY 
+          (CollectionUnionFn 
+Individual NLGenQuantAttribute ) ) )       (and 
+        (equals ?MANY Many-Quant ) 
+        (isa ?MANY 
+          (CollectionUnionFn 
+Individual PositiveIntegerExtent ) ) )       (and 
+        (equals ?MANY many ) 
+        (isa ?MANY 
+          (CollectionUnionFn 
 GeneralizedQuantifier-Conservative Individual ReflexiveBinaryPredicate 
-TruthFunction ) ) ) ) <BR>    (implies 
-<BR>      (and 
-<BR>        (or 
-<BR>          (and 
-<BR>            (equals 
+TruthFunction ) ) ) )     (implies 
+      (and 
+        (or 
+          (and 
+            (equals 
 ?MANY Agent-PartiallyTangible ) 
-<BR>            (isa 
+            (isa 
 ?MANY 
-<BR>              
+              
 (CollectionUnionFn Collection ExistingObjectType StuffType TemporalStuffType ) ) 
-) ) <BR>        (and 
-<BR>          (isa ?CHANGED1 Event 
-) <BR>          (and 
-<BR>            (controls 
+) )         (and 
+          (isa ?CHANGED1 Event 
+)           (and 
+            (controls 
 ?THEIR ?MINDS4 ) 
-<BR>            (and 
-<BR>              
+            (and 
+              
 (equals ?THEIR 
-<BR>                
+                
 (PronounFn ThirdPerson-NLAttr Plural-NLAttr Ungendered-NLAttr 
 PossessivePronoun-Pre ) ) 
-<BR>              
+              
 (implies 
-<BR>                
+                
 (and 
-<BR>                  
+                  
 (isa ?MINDS4 TakingCareOfSomething ) 
-<BR>                  
+                  
 (beneficiary ?MINDS4 :POSSESSOR ) ) 
-<BR>                
+                
 (or 
-<BR>                  
+                  
 (and 
-<BR>                    
+                    
 (isa ?CHANGED1 IntrinsicStateChangeEvent ) 
-<BR>                    
+                    
 (performedBy ?CHANGED1 ?MANY ) 
-<BR>                    
+                    
 (objectOfStateChange ?CHANGED1 ?MINDS4 ) ) 
-<BR>                  
+                  
 (and 
-<BR>                    
+                    
 (isa ?CHANGED1 ReplacingAnObject ) 
-<BR>                    
+                    
 (objectActedOn ?CHANGED1 ?MINDS4 ) 
-<BR>                    
-(doneBy ?CHANGED1 ?MANY ) ) ) ) ) ) ) ) <BR>      (and 
-<BR>        (isa ?SUPPORTED1 
-<BR>          (AdverbFn 
-Initial-TheWord ) ) <BR>        (and 
-<BR>          (isa ?SUPPORTED1 
-<BR>            (AdverbFn 
-Late-TheWord ) ) <BR>          (and 
-<BR>            (isa 
+                    
+(doneBy ?CHANGED1 ?MANY ) ) ) ) ) ) ) )       (and 
+        (isa ?SUPPORTED1 
+          (AdverbFn 
+Initial-TheWord ) )         (and 
+          (isa ?SUPPORTED1 
+            (AdverbFn 
+Late-TheWord ) )           (and 
+            (isa 
 ?SUPPORTED1 Event ) 
-<BR>            (implies 
-<BR>              
+            (implies 
+              
 (equals ?THOMAS2 JackThomas-911FOAF ) 
-<BR>              
+              
 (or 
-<BR>                
+                
 (satisfiesStandard ?MANY ?THOMAS2 ) 
-<BR>                
+                
 (and 
-<BR>                  
+                  
 (isa ?SUPPORTED1 ShowingSupportForSomeone ) 
-<BR>                  
+                  
 (beneficiary ?SUPPORTED1 ?THOMAS2 ) 
-<BR>                  
+                  
 (performedBy ?SUPPORTED1 ?MANY ) ) 
-<BR>                
+                
 (and 
-<BR>                  
+                  
 (isa ?SUPPORTED1 SupportingSomething ) 
-<BR>                  
+                  
 (supportedObject ?SUPPORTED1 ?THOMAS2 ) 
-<BR>                  
-(supportingObject ?SUPPORTED1 ?MANY ) ) ) ) ) ) ) ) ) )<BR><BR><BR>e2c("Those 
-that want to come can come").<BR><BR>[[txt, 'Those'], [tag, staart, dt, nnp, 
+                  
+(supportingObject ?SUPPORTED1 ?MANY ) ) ) ) ) ) ) ) ) )e2c("Those 
+that want to come can come").[[txt, 'Those'], [tag, staart, dt, nnp, 
 'Determiner', 'Determiner-Central', 'Determiner-ClassA', 'Determiner-ClassB', 
 'Determiner-ClassC', 'ExpletivePronoun', 'IndefinitePronoun', 'Number-SP', 
 'ObjectPronoun', 'PossessivePronoun', 'PossessivePronoun-Post', 
 'Postdeterminer', 'Pronoun', 'Pronoun-SubjectOrObject', 'ReciprocalPronoun', 
-'ReflexivePronoun', 'SubjectPronoun', 'WHDeterminer', 'WHPronoun']]<BR>[[txt, 
+'ReflexivePronoun', 'SubjectPronoun', 'WHDeterminer', 'WHPronoun']][[txt, 
 that], [tag, z, in, cs, dt, wdt, 'Adverb', 'Complementizer', 'Determiner', 
 'Determiner-Central', 'Determiner-ClassA', 'Determiner-ClassB', 
 'Determiner-ClassC', 'Determiner-Definite', 'IndefinitePronoun', 'Number-SP', 
 'ObjectPronoun', 'PossessivePronoun', 'PossessivePronoun-Post', 
 'Postdeterminer', 'Pronoun', 'Pronoun-SubjectOrObject', 'ReciprocalPronoun', 
 'ReflexivePronoun', 'SubjectPronoun', 'WHAdverb', 'WHDeterminer', 
-'WHPronoun']]<BR>[[txt, want], [tag, z, vb, vbp, 'CountNoun']]<BR>[[txt, to], 
+'WHPronoun']][[txt, want], [tag, z, vb, vbp, 'CountNoun']][[txt, to], 
 [tag, z, to, in, 'InfinitiveComp', 'Preposition', 
-'Preposition-Directional']]<BR>[[txt, come], [tag, z, vb, vbn]]<BR>[[txt, can], 
-[tag, z, md, 'Modal', 'CountNoun']]<BR>[[txt, come], [tag, laast, vb, 
-vbn]]<BR><BR>seg([p('PP_non_cyclic', 1, 2), p('VP_non_cyclic', 3, 3), 
+'Preposition-Directional']][[txt, come], [tag, z, vb, vbn]][[txt, can], 
+[tag, z, md, 'Modal', 'CountNoun']][[txt, come], [tag, laast, vb, 
+vbn]]seg([p('PP_non_cyclic', 1, 2), p('VP_non_cyclic', 3, 3), 
 p('PP_non_cyclic', 4, 4), p('VP_non_cyclic', 5, 5), p('VP_non_cyclic', 6, 6), 
-p('VP_non_cyclic', 7, 7)])<BR><BR>(thereExists ?THOSE <BR>  (and 
-<BR>    (or <BR>      (and 
-<BR>        (equals ?THOSE 
-Backreference-ClassB-NLAttr ) <BR>        
-(isa ?THOSE <BR>          
+p('VP_non_cyclic', 7, 7)])(thereExists ?THOSE   (and 
+    (or       (and 
+        (equals ?THOSE 
+Backreference-ClassB-NLAttr )         
+(isa ?THOSE           
 (CollectionUnionFn Backreference-NLAttrType Individual ) ) ) 
-<BR>      (and 
-<BR>        (equals ?THOSE 
-Demonstrative-ClassB-NLAttr ) <BR>        
-(isa ?THOSE <BR>          
+      (and 
+        (equals ?THOSE 
+Demonstrative-ClassB-NLAttr )         
+(isa ?THOSE           
 (CollectionUnionFn Demonstrative-NLAttrType Individual ) ) ) ) 
-<BR>    (and <BR>      (eventSOT 
-?EVENT88 ?THOSE ?OBJ88 ?TIME88 ) <BR>      (implies 
-<BR>        (occursDuring ?WANT3 
-<BR>          (OneOfFn 
+    (and       (eventSOT 
+?EVENT88 ?THOSE ?OBJ88 ?TIME88 )       (implies 
+        (occursDuring ?WANT3 
+          (OneOfFn 
 ArrivingAtAPlace HavingAnOrgasm ) ) 
-<BR>        (holdsIn ?WANT3 
-<BR>          (implies 
-<BR>            (and 
-<BR>              
+        (holdsIn ?WANT3 
+          (implies 
+            (and 
+              
 (isa ?G738781 Thing ) 
-<BR>              
+              
 (isa ?G738781 Thing ) ) 
-<BR>            (and 
-<BR>              
+            (and 
+              
 (implies 
-<BR>                
+                
 (isa ?WANT3 
-<BR>                  
+                  
 (VerbFn Want-TheWord ) ) 
-<BR>                
+                
 (eventSOT ?WANT3 ?THOSE ?G738781 Now ) ) 
-<BR>              
+              
 (implies 
-<BR>                
+                
 (and 
-<BR>                  
+                  
 (isa ?COME4 Emission ) 
-<BR>                  
+                  
 (isa ?COME4 
-<BR>                    
+                    
 (OneOfFn Buttocks Can CanningFood ) ) ) 
-<BR>                
-(to-UnderspecifiedLocation ?G738781 ?COME4 ) ) ) ) ) ) ) ) )<BR><BR><BR>e2c("the 
-best costumes got prizes").<BR><BR>[[txt, a], [tag, staart, dt, at, 
+                
+(to-UnderspecifiedLocation ?G738781 ?COME4 ) ) ) ) ) ) ) ) )e2c("the 
+best costumes got prizes").[[txt, a], [tag, staart, dt, at, 
 'Determiner', 'Determiner-Central', 'Determiner-ClassA', 'Determiner-ClassB', 
 'Determiner-ClassC', 'Determiner-Indefinite', 'Postdeterminer', 'WHDeterminer', 
-'CountNoun', 'MassNoun', 'MassNoun-Generic']]<BR>[[txt, best], [tag, z, jjt, 
-jjs, 'CountNoun', 'Adjective', 'Adverb']]<BR>[[txt, costumes], [tag, z, nns, 
-'CountNoun']]<BR>[[txt, got], [tag, z, vbd, vbn]]<BR>[[txt, prizes], [tag, 
-laast, nns, 'CountNoun']]<BR><BR>seg([p('QP', 1, 1), p('ADVP_non_cyclic', 2, 2), 
-p('QP', 3, 3), p('VP_non_cyclic', 4, 4), p('QP', 5, 5)])<BR><BR>(thereExists 
-?COSTUMES5 <BR>  (and <BR>    (and 
-<BR>      (isa ?COSTUMES5 Costume ) 
-<BR>      (isa ?COSTUMES5 Thing ) ) 
-<BR>    (implies <BR>      (isa ?PRIZES7 
-AwardPractice ) <BR>      (implies 
-<BR>        (isa ?GOT7 
-<BR>          (VerbFn Get-TheWord ) 
-) <BR>        (eventSOT ?GOT7 ?COSTUMES5 
-?PRIZES7 Past ) ) ) ) )<BR><BR>e2c("a best costume got prizes").<BR><BR>[[txt, 
+'CountNoun', 'MassNoun', 'MassNoun-Generic']][[txt, best], [tag, z, jjt, 
+jjs, 'CountNoun', 'Adjective', 'Adverb']][[txt, costumes], [tag, z, nns, 
+'CountNoun']][[txt, got], [tag, z, vbd, vbn]][[txt, prizes], [tag, 
+laast, nns, 'CountNoun']]seg([p('QP', 1, 1), p('ADVP_non_cyclic', 2, 2), 
+p('QP', 3, 3), p('VP_non_cyclic', 4, 4), p('QP', 5, 5)])(thereExists 
+?COSTUMES5   (and     (and 
+      (isa ?COSTUMES5 Costume ) 
+      (isa ?COSTUMES5 Thing ) ) 
+    (implies       (isa ?PRIZES7 
+AwardPractice )       (implies 
+        (isa ?GOT7 
+          (VerbFn Get-TheWord ) 
+)         (eventSOT ?GOT7 ?COSTUMES5 
+?PRIZES7 Past ) ) ) ) )e2c("a best costume got prizes").[[txt, 
 a], [tag, staart, dt, at, 'Determiner', 'Determiner-Central', 
 'Determiner-ClassA', 'Determiner-ClassB', 'Determiner-ClassC', 
 'Determiner-Indefinite', 'Postdeterminer', 'WHDeterminer', 'CountNoun', 
-'MassNoun', 'MassNoun-Generic']]<BR>[[txt, best], [tag, z, jjt, jjs, 
-'CountNoun', 'Adjective', 'Adverb']]<BR>[[txt, costume], [tag, z, nn, 
-'CountNoun']]<BR>[[txt, got], [tag, z, vbd, vbn]]<BR>[[txt, prizes], [tag, 
-laast, nns, 'CountNoun']]<BR><BR>seg([p('QP', 1, 1), p('ADVP_non_cyclic', 2, 2), 
+'MassNoun', 'MassNoun-Generic']][[txt, best], [tag, z, jjt, jjs, 
+'CountNoun', 'Adjective', 'Adverb']][[txt, costume], [tag, z, nn, 
+'CountNoun']][[txt, got], [tag, z, vbd, vbn]][[txt, prizes], [tag, 
+laast, nns, 'CountNoun']]seg([p('QP', 1, 1), p('ADVP_non_cyclic', 2, 2), 
 p('VP_non_cyclic', 3, 3), p('VP_non_cyclic', 4, 4), p('QP', 5, 
-5)])<BR><BR>(thereExists ?COSTUME5 <BR>  (and <BR>    (and 
-<BR>      (isa ?COSTUME5 Costume ) 
-<BR>      (isa ?COSTUME5 Thing ) ) 
-<BR>    (implies <BR>      (isa 
-?PRIZES15 AwardPractice ) <BR>      (implies 
-<BR>        (isa ?GOT14 
-<BR>          (VerbFn Get-TheWord ) 
-) <BR>        (eventSOT ?GOT14 ?COSTUME5 
-?PRIZES15 Past ) ) ) ) )<BR><BR>e2c("some best costumes got 
-prizes").<BR><BR>[[txt, some], [tag, staart, dt, dti, 'Adverb', 'Determiner', 
+5)])(thereExists ?COSTUME5   (and     (and 
+      (isa ?COSTUME5 Costume ) 
+      (isa ?COSTUME5 Thing ) ) 
+    (implies       (isa 
+?PRIZES15 AwardPractice )       (implies 
+        (isa ?GOT14 
+          (VerbFn Get-TheWord ) 
+)         (eventSOT ?GOT14 ?COSTUME5 
+?PRIZES15 Past ) ) ) ) )e2c("some best costumes got 
+prizes").[[txt, some], [tag, staart, dt, dti, 'Adverb', 'Determiner', 
 'Determiner-Central', 'Determiner-ClassA', 'Determiner-ClassB', 
-'Determiner-ClassC', 'Postdeterminer', 'WHAdverb', 'WHDeterminer']]<BR>[[txt, 
-best], [tag, z, jjt, jjs, 'CountNoun', 'Adjective', 'Adverb']]<BR>[[txt, 
-costumes], [tag, z, nns, 'CountNoun']]<BR>[[txt, got], [tag, z, vbd, 
-vbn]]<BR>[[txt, prizes], [tag, laast, nns, 'CountNoun']]<BR><BR>seg([p('QP', 1, 
+'Determiner-ClassC', 'Postdeterminer', 'WHAdverb', 'WHDeterminer']][[txt, 
+best], [tag, z, jjt, jjs, 'CountNoun', 'Adjective', 'Adverb']][[txt, 
+costumes], [tag, z, nns, 'CountNoun']][[txt, got], [tag, z, vbd, 
+vbn]][[txt, prizes], [tag, laast, nns, 'CountNoun']]seg([p('QP', 1, 
 1), p('ADVP_non_cyclic', 2, 2), p('QP', 3, 3), p('VP_non_cyclic', 4, 4), p('QP', 
-5, 5)])<BR><BR>(thereExists ?COSTUMES10 <BR>  (and <BR>    
-(and <BR>      (isa ?COSTUMES10 Costume ) 
-<BR>      (isa ?COSTUMES10 Thing ) ) 
-<BR>    (implies <BR>      (isa 
-?PRIZES23 AwardPractice ) <BR>      (implies 
-<BR>        (isa ?GOT21 
-<BR>          (VerbFn Get-TheWord ) 
-) <BR>        (eventSOT ?GOT21 ?COSTUMES10 
-?PRIZES23 Past ) ) ) ) )<BR><BR>e2c("the best five costumes got 
-prizes").<BR><BR>[[txt, a], [tag, staart, dt, at, 'Determiner', 
+5, 5)])(thereExists ?COSTUMES10   (and     
+(and       (isa ?COSTUMES10 Costume ) 
+      (isa ?COSTUMES10 Thing ) ) 
+    (implies       (isa 
+?PRIZES23 AwardPractice )       (implies 
+        (isa ?GOT21 
+          (VerbFn Get-TheWord ) 
+)         (eventSOT ?GOT21 ?COSTUMES10 
+?PRIZES23 Past ) ) ) ) )e2c("the best five costumes got 
+prizes").[[txt, a], [tag, staart, dt, at, 'Determiner', 
 'Determiner-Central', 'Determiner-ClassA', 'Determiner-ClassB', 
 'Determiner-ClassC', 'Determiner-Indefinite', 'Postdeterminer', 'WHDeterminer', 
-'CountNoun', 'MassNoun', 'MassNoun-Generic']]<BR>[[txt, best], [tag, z, jjt, 
-jjs, 'CountNoun', 'Adjective', 'Adverb']]<BR>[[txt, five], [tag, z, cd, 
+'CountNoun', 'MassNoun', 'MassNoun-Generic']][[txt, best], [tag, z, jjt, 
+jjs, 'CountNoun', 'Adjective', 'Adverb']][[txt, five], [tag, z, cd, 
 'CountNoun', 'Determiner', 'Determiner-Central', 'Determiner-ClassA', 
 'Determiner-ClassB', 'Determiner-ClassC', 'ExpletivePronoun', 
 'IndefinitePronoun', 'Number-SP', 'ObjectPronoun', 'PossessivePronoun', 
 'PossessivePronoun-Post', 'Postdeterminer', 'Pronoun', 
 'Pronoun-SubjectOrObject', 'ReciprocalPronoun', 'ReflexivePronoun', 
-'SubjectPronoun', 'WHDeterminer', 'WHPronoun']]<BR>[[txt, costumes], [tag, z, 
-nns, 'CountNoun']]<BR>[[txt, got], [tag, z, vbd, vbn]]<BR>[[txt, prizes], [tag, 
-laast, nns, 'CountNoun']]<BR><BR>seg([p('QP', 1, 1), p('ADVP_non_cyclic', 2, 2), 
+'SubjectPronoun', 'WHDeterminer', 'WHPronoun']][[txt, costumes], [tag, z, 
+nns, 'CountNoun']][[txt, got], [tag, z, vbd, vbn]][[txt, prizes], [tag, 
+laast, nns, 'CountNoun']]seg([p('QP', 1, 1), p('ADVP_non_cyclic', 2, 2), 
 p('QP', 3, 4), p('VP_non_cyclic', 5, 5), p('QP', 6, 
-6)])<BR><BR>(thereExistExactly 5 ?FIVE1 <BR>  (and <BR>    
-(and <BR>      (isa ?FIVE1 Costume ) 
-<BR>      (isa ?FIVE1 Thing ) ) <BR>    
-(implies <BR>      (isa ?PRIZES31 AwardPractice ) 
-<BR>      (implies 
-<BR>        (isa ?GOT28 
-<BR>          (VerbFn Get-TheWord ) 
-) <BR>        (eventSOT ?GOT28 ?FIVE1 
-?PRIZES31 Past ) ) ) ) )<BR><BR>e2c("best costumes got prizes").<BR><BR>[[txt, 
-best], [tag, staart, jjt, jjs, 'CountNoun', 'Adjective', 'Adverb']]<BR>[[txt, 
-costumes], [tag, z, nns, 'CountNoun']]<BR>[[txt, got], [tag, z, vbd, 
-vbn]]<BR>[[txt, prizes], [tag, laast, nns, 
-'CountNoun']]<BR><BR>seg([p('ADVP_non_cyclic', 1, 1), p('QP', 2, 2), 
-p('VP_non_cyclic', 3, 3), p('QP', 4, 4)])<BR><BR>e2c("best five costumes got 
-prizes").<BR><BR>[[txt, best], [tag, staart, jjt, jjs, 'CountNoun', 'Adjective', 
-'Adverb']]<BR>[[txt, five], [tag, z, cd, 'CountNoun', 'Determiner', 
+6)])(thereExistExactly 5 ?FIVE1   (and     
+(and       (isa ?FIVE1 Costume ) 
+      (isa ?FIVE1 Thing ) )     
+(implies       (isa ?PRIZES31 AwardPractice ) 
+      (implies 
+        (isa ?GOT28 
+          (VerbFn Get-TheWord ) 
+)         (eventSOT ?GOT28 ?FIVE1 
+?PRIZES31 Past ) ) ) ) )e2c("best costumes got prizes").[[txt, 
+best], [tag, staart, jjt, jjs, 'CountNoun', 'Adjective', 'Adverb']][[txt, 
+costumes], [tag, z, nns, 'CountNoun']][[txt, got], [tag, z, vbd, 
+vbn]][[txt, prizes], [tag, laast, nns, 
+'CountNoun']]seg([p('ADVP_non_cyclic', 1, 1), p('QP', 2, 2), 
+p('VP_non_cyclic', 3, 3), p('QP', 4, 4)])e2c("best five costumes got 
+prizes").[[txt, best], [tag, staart, jjt, jjs, 'CountNoun', 'Adjective', 
+'Adverb']][[txt, five], [tag, z, cd, 'CountNoun', 'Determiner', 
 'Determiner-Central', 'Determiner-ClassA', 'Determiner-ClassB', 
 'Determiner-ClassC', 'ExpletivePronoun', 'IndefinitePronoun', 'Number-SP', 
 'ObjectPronoun', 'PossessivePronoun', 'PossessivePronoun-Post', 
 'Postdeterminer', 'Pronoun', 'Pronoun-SubjectOrObject', 'ReciprocalPronoun', 
-'ReflexivePronoun', 'SubjectPronoun', 'WHDeterminer', 'WHPronoun']]<BR>[[txt, 
-costumes], [tag, z, nns, 'CountNoun']]<BR>[[txt, got], [tag, z, vbd, 
-vbn]]<BR>[[txt, prizes], [tag, laast, nns, 
-'CountNoun']]<BR><BR>seg([p('ADVP_non_cyclic', 1, 1), p('QP', 2, 3), 
-p('VP_non_cyclic', 4, 4), p('QP', 5, 5)])<BR><BR>(implies <BR>  (and 
-<BR>    (and <BR>      (isa ?COSTUMES42 
-<BR>        (NounFn Five-TheWord ) ) 
-<BR>      (isa ?COSTUMES42 Costume ) ) 
-<BR>    (hasEvaluativeQuantity ?COSTUMES42 
-<BR>      (MediumToVeryHighAmountFn Goodness-Generic ) 
-) ) <BR>  (implies <BR>    (isa ?PRIZES65 AwardPractice ) 
-<BR>    (implies <BR>      (isa ?GOT45 
-<BR>        (VerbFn Get-TheWord ) ) 
-<BR>      (eventSOT ?GOT45 ?COSTUMES42 ?PRIZES65 Past ) 
-) ) )<BR><BR>e2c("five other costumes got prizes").<BR><BR>[[txt, five], [tag, 
+'ReflexivePronoun', 'SubjectPronoun', 'WHDeterminer', 'WHPronoun']][[txt, 
+costumes], [tag, z, nns, 'CountNoun']][[txt, got], [tag, z, vbd, 
+vbn]][[txt, prizes], [tag, laast, nns, 
+'CountNoun']]seg([p('ADVP_non_cyclic', 1, 1), p('QP', 2, 3), 
+p('VP_non_cyclic', 4, 4), p('QP', 5, 5)])(implies   (and 
+    (and       (isa ?COSTUMES42 
+        (NounFn Five-TheWord ) ) 
+      (isa ?COSTUMES42 Costume ) ) 
+    (hasEvaluativeQuantity ?COSTUMES42 
+      (MediumToVeryHighAmountFn Goodness-Generic ) 
+) )   (implies     (isa ?PRIZES65 AwardPractice ) 
+    (implies       (isa ?GOT45 
+        (VerbFn Get-TheWord ) ) 
+      (eventSOT ?GOT45 ?COSTUMES42 ?PRIZES65 Past ) 
+) ) )e2c("five other costumes got prizes").[[txt, five], [tag, 
 staart, cd, 'CountNoun', 'Determiner', 'Determiner-Central', 
 'Determiner-ClassA', 'Determiner-ClassB', 'Determiner-ClassC', 
 'ExpletivePronoun', 'IndefinitePronoun', 'Number-SP', 'ObjectPronoun', 
 'PossessivePronoun', 'PossessivePronoun-Post', 'Postdeterminer', 'Pronoun', 
 'Pronoun-SubjectOrObject', 'ReciprocalPronoun', 'ReflexivePronoun', 
-'SubjectPronoun', 'WHDeterminer', 'WHPronoun']]<BR>[[txt, other], [tag, z, jj, 
-ap, 'Adjective', 'CountNoun']]<BR>[[txt, costumes], [tag, z, nns, 
-'CountNoun']]<BR>[[txt, got], [tag, z, vbd, vbn]]<BR>[[txt, prizes], [tag, 
-laast, nns, 'CountNoun']]<BR><BR>seg([p('QP', 1, 1), p('PP_non_cyclic', 2, 2), 
+'SubjectPronoun', 'WHDeterminer', 'WHPronoun']][[txt, other], [tag, z, jj, 
+ap, 'Adjective', 'CountNoun']][[txt, costumes], [tag, z, nns, 
+'CountNoun']][[txt, got], [tag, z, vbd, vbn]][[txt, prizes], [tag, 
+laast, nns, 'CountNoun']]seg([p('QP', 1, 1), p('PP_non_cyclic', 2, 2), 
 p('QP', 3, 3), p('VP_non_cyclic', 4, 4), p('QP', 5, 
-5)])<BR><BR>(thereExistExactly 5 ?FIVE18 <BR>  (and <BR>    
-(and <BR>      (and 
-<BR>        (isa ?FIVE18 Costume ) 
-<BR>        (isa ?FIVE18 Thing ) ) 
-<BR>      (isa ?FIVE18 BIOS-OTHERSurveillanceSyndrome ) 
-) <BR>    (implies <BR>      (isa 
-?PRIZES73 AwardPractice ) <BR>      (implies 
-<BR>        (isa ?GOT52 
-<BR>          (VerbFn Get-TheWord ) 
-) <BR>        (eventSOT ?GOT52 ?FIVE18 
-?PRIZES73 Past ) ) ) ) )<BR><BR>e2c("the other five costumes got 
-prizes").<BR><BR>[[txt, a], [tag, staart, dt, at, 'Determiner', 
+5)])(thereExistExactly 5 ?FIVE18   (and     
+(and       (and 
+        (isa ?FIVE18 Costume ) 
+        (isa ?FIVE18 Thing ) ) 
+      (isa ?FIVE18 BIOS-OTHERSurveillanceSyndrome ) 
+)     (implies       (isa 
+?PRIZES73 AwardPractice )       (implies 
+        (isa ?GOT52 
+          (VerbFn Get-TheWord ) 
+)         (eventSOT ?GOT52 ?FIVE18 
+?PRIZES73 Past ) ) ) ) )e2c("the other five costumes got 
+prizes").[[txt, a], [tag, staart, dt, at, 'Determiner', 
 'Determiner-Central', 'Determiner-ClassA', 'Determiner-ClassB', 
 'Determiner-ClassC', 'Determiner-Indefinite', 'Postdeterminer', 'WHDeterminer', 
-'CountNoun', 'MassNoun', 'MassNoun-Generic']]<BR>[[txt, other], [tag, z, jj, ap, 
-'Adjective', 'CountNoun']]<BR>[[txt, five], [tag, z, cd, 'CountNoun', 
+'CountNoun', 'MassNoun', 'MassNoun-Generic']][[txt, other], [tag, z, jj, ap, 
+'Adjective', 'CountNoun']][[txt, five], [tag, z, cd, 'CountNoun', 
 'Determiner', 'Determiner-Central', 'Determiner-ClassA', 'Determiner-ClassB', 
 'Determiner-ClassC', 'ExpletivePronoun', 'IndefinitePronoun', 'Number-SP', 
 'ObjectPronoun', 'PossessivePronoun', 'PossessivePronoun-Post', 
 'Postdeterminer', 'Pronoun', 'Pronoun-SubjectOrObject', 'ReciprocalPronoun', 
-'ReflexivePronoun', 'SubjectPronoun', 'WHDeterminer', 'WHPronoun']]<BR>[[txt, 
-costumes], [tag, z, nns, 'CountNoun']]<BR>[[txt, got], [tag, z, vbd, 
-vbn]]<BR>[[txt, prizes], [tag, laast, nns, 'CountNoun']]<BR><BR>seg([p('QP', 1, 
+'ReflexivePronoun', 'SubjectPronoun', 'WHDeterminer', 'WHPronoun']][[txt, 
+costumes], [tag, z, nns, 'CountNoun']][[txt, got], [tag, z, vbd, 
+vbn]][[txt, prizes], [tag, laast, nns, 'CountNoun']]seg([p('QP', 1, 
 2), p('QP', 3, 4), p('VP_non_cyclic', 5, 5), p('QP', 6, 
-6)])<BR><BR>(thereExistExactly 5 ?FIVE19 <BR>  (and <BR>    
-(and <BR>      (isa ?FIVE19 Costume ) 
-<BR>      (isa ?FIVE19 Thing ) ) <BR>    
-(implies <BR>      (isa ?PRIZES81 AwardPractice ) 
-<BR>      (implies 
-<BR>        (isa ?GOT59 
-<BR>          (VerbFn Get-TheWord ) 
-) <BR>        (eventSOT ?GOT59 ?FIVE19 
-?PRIZES81 Past ) ) ) ) )<BR><BR>e2c("other five costumes got 
-prizes").<BR><BR>(implies <BR>  (and <BR>    (and 
-<BR>      (isa ?OTHER12 
-<BR>        (NounFn Five-TheWord ) ) 
-<BR>      (isa ?OTHER12 Costume ) ) 
-<BR>    (isa ?OTHER12 BIOS-OTHERSurveillanceSyndrome ) ) 
-<BR>  (implies <BR>    (isa ?PRIZES89 AwardPractice ) 
-<BR>    (implies <BR>      (isa ?GOT62 
-<BR>        (VerbFn Get-TheWord ) ) 
-<BR>      (eventSOT ?GOT62 ?OTHER12 ?PRIZES89 Past ) ) 
-) )<BR><BR><BR>e2c("some other costumes were really 
-bad").<BR><BR><BR>(thereExists ?OTHER52 <BR>  (and <BR>    
-(and <BR>      (and 
-<BR>        (isa ?OTHER52 Costume ) 
-<BR>        (isa ?OTHER52 Thing ) ) 
-<BR>      (isa ?OTHER52 BIOS-OTHERSurveillanceSyndrome 
-) ) <BR>    (implies <BR>      (and 
-<BR>        (isa ?BAD14 
-<BR>          (NounFn Real-TheWord 
-) ) <BR>        (isa ?BAD14 
-<BR>          (OneOfFn 
-Badness-Generic Badness-Moral ) ) ) <BR>      (and 
-<BR>        (isa ?WERE6 Living ) 
-<BR>        (occursDuring ?WERE6 Past ) 
-<BR>        (preActors ?WERE6 ?OTHER52 ) 
-<BR>        (actors ?WERE6 ?BAD14 ) ) ) ) 
-)</FONT></DIV>
+6)])(thereExistExactly 5 ?FIVE19   (and     
+(and       (isa ?FIVE19 Costume ) 
+      (isa ?FIVE19 Thing ) )     
+(implies       (isa ?PRIZES81 AwardPractice ) 
+      (implies 
+        (isa ?GOT59 
+          (VerbFn Get-TheWord ) 
+)         (eventSOT ?GOT59 ?FIVE19 
+?PRIZES81 Past ) ) ) ) )e2c("other five costumes got 
+prizes").(implies   (and     (and 
+      (isa ?OTHER12 
+        (NounFn Five-TheWord ) ) 
+      (isa ?OTHER12 Costume ) ) 
+    (isa ?OTHER12 BIOS-OTHERSurveillanceSyndrome ) ) 
+  (implies     (isa ?PRIZES89 AwardPractice ) 
+    (implies       (isa ?GOT62 
+        (VerbFn Get-TheWord ) ) 
+      (eventSOT ?GOT62 ?OTHER12 ?PRIZES89 Past ) ) 
+) )e2c("some other costumes were really 
+bad").(thereExists ?OTHER52   (and     
+(and       (and 
+        (isa ?OTHER52 Costume ) 
+        (isa ?OTHER52 Thing ) ) 
+      (isa ?OTHER52 BIOS-OTHERSurveillanceSyndrome 
+) )     (implies       (and 
+        (isa ?BAD14 
+          (NounFn Real-TheWord 
+) )         (isa ?BAD14 
+          (OneOfFn 
+Badness-Generic Badness-Moral ) ) )       (and 
+        (isa ?WERE6 Living ) 
+        (occursDuring ?WERE6 Past ) 
+        (preActors ?WERE6 ?OTHER52 ) 
+        (actors ?WERE6 ?BAD14 ) ) ) ) 
+)</FONT>
+
 </pre>
+</DIV>
+
 <DIV><FONT face=Arial size=2></FONT> </DIV>
 <DIV><FONT face=Arial size=2></FONT> </DIV>
 <DIV><FONT face=Arial size=2></FONT><BR><FONT face=Arial size=2>English 
