@@ -941,6 +941,7 @@ app -->
       <Reference name="System.Xml"/>
       <Reference name="log4net.dll"/>
       <Reference name="OpenMetaverse"/>
+      <Reference name="OpenMetaverseTypes"/>
       <Reference name="OpenMetaverse.StructuredData"/>
       <Files>
         <Match path="." pattern="*.cs" recurse="false"/>
