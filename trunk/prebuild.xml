@@ -1003,6 +1003,7 @@ app -->
       <Reference name="LookingGlass.Framework"/>
       <Reference name="LookingGlass.Renderer"/>
       <Reference name="LookingGlass.World"/>
+      <Reference name="LookingGlass.World.OS"/>
       <Reference name="Radegast.exe"/>
       <Reference name="OpenMetaverse"/>
       <Reference name="OpenMetaverseTypes"/>
@@ -1034,6 +1035,7 @@ app -->
       <Reference name="LookingGlass.Rest"/>
       <Reference name="LookingGlass.World"/>
       <Reference name="LookingGlass.World.LL"/>
+      <Reference name="LookingGlass.World.OS"/>
       <Reference name="OpenMetaverse"/>
       <Reference name="OpenMetaverse.StructuredData"/>
       <Reference name="OpenMetaverseTypes"/>
@@ -1125,8 +1127,8 @@ app -->
       <Reference name="System.Windows.Forms"/>
       <Reference name="LookingGlass.Framework"/>
       <Reference name="LookingGlass.Renderer"/>
-      <Reference name="LookingGlass.Rest"/>
       <Reference name="LookingGlass.World"/>
+      <Reference name="LookingGlass.Rest"/>
       <Reference name="OpenMetaverse"/>
       <Reference name="OpenMetaverse.StructuredData"/>
       <Reference name="OpenMetaverseTypes"/>
@@ -1184,7 +1186,9 @@ app -->
       <Reference name="System.Drawing"/>
       <Reference name="LookingGlass.Comm"/>
       <Reference name="LookingGlass.Framework"/>
+      <Reference name="LookingGlass.Rest"/>
       <Reference name="OpenMetaverse"/>
+      <Reference name="OpenMetaverse.StructuredData"/>
       <Reference name="OpenMetaverseTypes"/>
       <Files>
         <Match pattern="*.cs" recurse="false"/>
@@ -1220,7 +1224,68 @@ app -->
       </Files>
     </Project>
 
-      <!--
+
+
+        <Project name="LookingGlass.World.OS" path="lib/LookingGlass-svn/src/LookingGlass.World.OS" type="Library" frameworkVersion="v3_5">
+      <Configuration name="Debug">
+        <Options>
+          <OutputPath>../../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release">
+        <Options>
+          <OutputPath>../../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+
+      <ReferencePath>../../../../bin/</ReferencePath>
+      <Reference name="System"/>
+      <Reference name="System.Data"/>
+      <Reference name="System.Drawing"/>
+      <Reference name="System.Xml"/>
+      <Reference name="LookingGlass.Comm"/>
+      <Reference name="LookingGlass.Framework"/>
+      <Reference name="LookingGlass.World"/>
+      <Reference name="LookingGlass.World.LL"/>
+      <Reference name="OpenMetaverse"/>
+      <Reference name="OpenMetaverse.StructuredData"/>
+      <Reference name="OpenMetaverseTypes"/>
+      <Files>
+        <Match pattern="*.cs" recurse="false"/>
+      </Files>
+    </Project>
+
+        <Project name="LookingGlass.World.Services" path="lib/LookingGlass-svn/src/LookingGlass.World.Services" type="Library" frameworkVersion="v3_5">
+      <Configuration name="Debug">
+        <Options>
+          <OutputPath>../../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release">
+        <Options>
+          <OutputPath>../../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+
+      <ReferencePath>../../../../bin/</ReferencePath>
+      <Reference name="System"/>
+      <Reference name="System.Data"/>
+      <Reference name="System.Drawing"/>
+      <Reference name="System.Xml"/>
+      <Reference name="LookingGlass.Comm"/>
+      <Reference name="LookingGlass.Framework"/>
+      <Reference name="LookingGlass.World"/>
+      <Reference name="LookingGlass.Rest"/>
+      <Reference name="HttpServer.dll"/>
+      <Reference name="OpenMetaverse"/>
+      <Reference name="OpenMetaverse.StructuredData"/>
+      <Reference name="OpenMetaverseTypes"/>
+      <Files>
+        <Match pattern="*.cs" recurse="true"/>
+      </Files>
+    </Project>
+
+<!--
 
     <Project name="LookingGlassOgre" language="C++" path="lib/LookingGlass-svn/src/LookingGlassOgre" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
