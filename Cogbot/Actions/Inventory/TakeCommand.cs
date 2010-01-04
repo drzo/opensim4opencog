@@ -29,8 +29,7 @@ namespace cogbot.Actions
             foreach (var currentPrim in PS)
             {
                 Success(Name + " on " + currentPrim);
-                client.Inventory.RequestDeRezToInventory(currentPrim.LocalID, DeRezDestination.AgentInventoryTake,
-                                                         client.Inventory.FindFolderForType(AssetType.Object), UUID.Zero);
+                if (TheSimAvatar.TakeObject(currentPrim)==null) Failure("Cannot Take " + currentPrim);
             }
             return SuccessOrFailure();
         }
