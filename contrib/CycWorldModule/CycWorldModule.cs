@@ -73,7 +73,16 @@ namespace CycWorldModule
         public void Show(Object position)
         {
             object fort = cyclifier.ToFort(position);
-            cyclifier.DataUpdate(position);
+            var noQ = SimCyclifier.cycInfoMapSaver.NoQueue;
+            try
+            {
+                SimCyclifier.cycInfoMapSaver.NoQueue = true;
+                cyclifier.DataUpdate(position);
+            }
+            finally
+            {
+                SimCyclifier.cycInfoMapSaver.NoQueue = noQ;
+            }
             cycBrowser.Show(fort);
         }
     }
