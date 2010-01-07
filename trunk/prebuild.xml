@@ -595,6 +595,8 @@
      <Reference name="System.Linq" localCopy="false"/>
      <Reference name="OpenMetaverse" localCopy="false"/>
      <Reference name="OpenMetaverseTypes" localCopy="false"/>     
+     <Reference name="OpenMetaverse.StructuredData" localCopy="false"/>     
+     <Reference name="OpenMetaverse.Utilities" localCopy="false"/>     
      <Reference name="System" localCopy="false"/>
      <Reference name="Radegast.exe" localCopy="false"/>
      <Reference name="DotLisp" localCopy="false"/>
