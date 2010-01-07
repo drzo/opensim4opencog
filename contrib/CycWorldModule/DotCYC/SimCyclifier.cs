@@ -11,6 +11,7 @@ using cogbot.Listeners;
 using cogbot.TheOpenSims;
 using cogbot.Utilities;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using org.opencyc.api;
 using org.opencyc.cycobject;
 using CUID = org.opencyc.util.UUID;
@@ -29,14 +30,17 @@ namespace CycWorldModule.DotCYC
         // ReSharper disable InconsistentNaming
 
         public static bool UseCyc = true;
-        public static bool ClearKBBetweenSessions = false;
+        public static bool ClearGridDataBetweenSessions = false;
+        public static bool ClearRegionDataBetweenSessions = false;
+        public static bool ClearHistoryBetweenSessions = true;
         static public CycAccess cycAccess;
         static public CycFort vocabMt;
         static public CycFort assertMt;
+        static public int KBTick = 0;
         static public bool ProcessEvents = true;
         private bool IsDisposing;
 
-        private static IEqualityComparer<object> CompareKeys = new CompareKeysImpl();
+        public static IEqualityComparer<object> CompareKeys = new CompareKeysImpl();
         static public Dictionary<object, CycFort> simFort
         {
             get
@@ -47,7 +51,7 @@ namespace CycWorldModule.DotCYC
         static CycConnectionForm cycConnection;
         static readonly DateTime baseTime = new DateTime(1970, 1, 1, 0, 0, 0);
         private static readonly TaskQueueHandler cycAccessQueueHandler = new TaskQueueHandler("CycAssertions", 0);
-        private static readonly TaskQueueHandler cycInfoMapSaver = new TaskQueueHandler("CycInfoMapSaver", 0);
+        public static readonly TaskQueueHandler cycInfoMapSaver = new TaskQueueHandler("CycInfoMapSaver", 0);
         private static TaskQueueHandler taskQueueHandler = null;// new TaskQueueHandler("SimCyclifier", 0);
 
         readonly static public Dictionary<object, CycFort> cycTerms = new Dictionary<object, CycFort>(CompareKeys);
@@ -193,14 +197,16 @@ namespace CycWorldModule.DotCYC
             }
             genlPreds = C("genlPreds");
             cycIsa = C("isa");
-            assertMt = cycAccess.createIndividual("SimDataMt", "#$DataMicrotheory for the simulator", "UniversalVocabularyMt",
+            cycAccess.createIndividual("SimCurrentStateMt", "#$DataMicrotheory for the simulator", "UniversalVocabularyMt",
                                         "DataMicrotheory");
-            vocabMt = cycAccess.createIndividual("SimVocabMt", "#$VocabularyMicrotheory for the simulator",
+            vocabMt = cycAccess.createIndividual("SimVocabularyMt", "#$VocabularyMicrotheory for the simulator",
                                        "UniversalVocabularyMt",
                                        "VocabularyMicrotheory");
+            cycAccess.createIndividual("SimStaticStateMt", "#$Microtheory static entities for the simulator",
+                           "UniversalVocabularyMt",
+                           "Microtheory");
 
-
-            if (ClearKBBetweenSessions)
+            if (ClearHistoryBetweenSessions)
             {
                 cycAccess.converseVoid("(fi-kill (find-or-create-constant \"SimEvent-LISPFn\"))");
                 cycAccess.converseVoid("(fi-kill (find-or-create-constant \"SimEvent-EFFECTFn\"))");
@@ -210,26 +216,38 @@ namespace CycWorldModule.DotCYC
                 cycAccess.converseVoid("(fi-kill (find-or-create-constant \"SimEvent-SOCIALFn\"))");
                 cycAccess.converseVoid("(fi-kill (find-or-create-constant \"SimEvent-MOVEMENTFn\"))");
             }
+            if (ClearGridDataBetweenSessions)
+            {
+                cycAccess.converseVoid("(fi-kill (find-or-create-constant \"SimAvatarFn\"))");
+                cycAccess.converseVoid("(fi-kill (find-or-create-constant \"SimGroupFn\"))");
+            }
+            if (ClearRegionDataBetweenSessions || ClearGridDataBetweenSessions)
+            {
+                cycAccess.converseVoid("(fi-kill (find-or-create-constant \"SimObjectFn\"))");
+            }
             cycAccess.converseVoid("(fi-kill (find-or-create-constant \"TheDefaultSimInstance\"))");
             cycAccess.converseVoid("(fi-kill (find-or-create-constant \"SimTheDefaultInstance\"))");
 
-            assertIsa(C("SimTheDefaultInstance"), C("Thing"));
-            assertIsa(C("SimTheDefaultInstance"), C("HLPrototypicalTerm"));
-
             simFort["SimObject"] = createCollection("SimObject", "#$SpatiallyDisjointObjectType for the simulator",
-                                                    "SimVocabMt", "SpatiallyDisjointObjectType", null);
+                                                    "SimVocabularyMt", "SpatiallyDisjointObjectType", null);
+
+            assertGafNow(C("defaultDefiningMtForInstances"), simFort["SimObject"], C("SimStaticStateMt"));
             simFort["SimAsset"] = createCollection("SimAsset",
                                                    "A SimAsset is a #$PartiallyTangibleTypeByPhysicalFeature or #$ObjectTypeBySensibleFeature from the simulator such as #$BlueColor or #$BlowingAKiss animation",
-                                                   "SimVocabMt", "Collection", "ObjectTypeBySensibleFeature");
-            assertGenls(simFort["SimAsset"], C("ExistenceDependentCollection"));
-            simFort["SimAvatar"] = createCollection("SimAvatar", "#$Agent-Generic for the simulator", "SimVocabMt",
+                                                   "SimVocabularyMt", "Collection", "ObjectTypeBySensibleFeature");
+            assertGenls(simFort["SimAsset"], C("ExistenceDependentNonInitialIntermittentCollection")); //ExistenceDependentCollection
+            simFort["SimAvatar"] = createCollection("SimAvatar", "#$Agent-Generic for the simulator", "SimVocabularyMt",
                                                     "Collection", "Agent-Generic");
 
             assertGenls(simFort["SimAvatar"], simFort["SimObject"]);
+            //assertGenls(simFort["SimAvatar"], C("SimAgent"));
             FunctionToIndividual("SimRegionFn", "SimRegion", "A region in the simulator");
             FunctionToIndividual("SimAvatarFn", "SimAvatar", "An avatar in the simulator");
             FunctionToIndividual("SimObjectFn", "SimObject", "A primitive in the simulator");
+            //"TODO maybe not all objects are Artifacts?"
+            //assertGafNow(C("resultIsa"),C("SimObjectFn"),C("SimArtifact"));
             assertIsa(simFort["SimObject"], C("SpatiallyDisjointObjectType"));
+            assertGenls(simFort["SimObject"], C("SimItem"));
 
             // FunctionToCollection("SimAnimationFn", "SimAnimation", "An animation in the simulator");
 
@@ -246,20 +264,27 @@ namespace CycWorldModule.DotCYC
             assertIsa(C("SimAssetFn"), C("CollectionDenotingFunction"));
 
             simFort["SimGroup"] = createCollection("SimGroup", "#$SocialGroup for the simulator",
-                                        "SimVocabMt", "Collection", "SocialGroup");
+                                        "SimVocabularyMt", "Collection", "SocialGroup");
             FunctionToIndividual("SimGroupFn", "SimGroup", "A group in the simulator");
 
+            assertIsa(C("SimEnumCollection"), CycAccess.collection);
+            assertGenls(C("SimEnumCollection"), CycAccess.collection);
+            assertIsa(C("SimEnumCollection"), C("CollectionType"));
+            assertIsa(C("SimEnumBitFlagsCollection"), CycAccess.collection);
+            assertGenls(C("SimEnumBitFlagsCollection"), C("SimEnumCollection"));
+            assertIsa(C("SimEnumBitFlagsCollection"), C("CollectionType"));
+            assertGaf(CycAccess.comment, C("SimEnumCollection"), "Enums collected from SecondLife");
+            assertGaf(CycAccess.comment, C("SimEnumBitFlagsCollection"), "BitFlag Enums collected from SecondLife");
+
             // visit libomv
-            if (cycAccess.find("SimEnumCollection") == null)
+            if (cycAccess.find("PCode-None") == null)
             {
                 Debug("Loading SimEnumCollection Collections ");
-                assertIsa(C("SimEnumCollection"), CycAccess.collection);
-                assertGenls(C("SimEnumCollection"), CycAccess.collection);
-                assertIsa(C("SimEnumCollection"), C("CollectionType"));
-                assertGaf(CycAccess.comment, C("SimEnumCollection"), "Enums collected from SecondLife");
                 VisitAssembly(Assembly.GetAssembly(typeof(AssetType)));
+                VisitAssembly(Assembly.GetAssembly(typeof(OpenMetaverse.PrimFlags)));                
                 VisitAssembly(Assembly.GetAssembly(typeof(Vector4)));
-                VisitAssembly(Assembly.GetAssembly(typeof(AgentManager)));
+                VisitAssembly(Assembly.GetAssembly(typeof(OpenMetaverse.Utilities.VoiceStatus)));
+                VisitAssembly(Assembly.GetAssembly(typeof(OSD)));
             }
             //else
             {
@@ -269,7 +294,8 @@ namespace CycWorldModule.DotCYC
             {
                 VisitAssembly(Assembly.GetAssembly(typeof(SimEventType)));
             }
-
+            // turn off metadata clearing
+            ClearGridDataBetweenSessions = false;
             simFort["SimRegion"] = cycAccess.createCollection("SimRegion", "A region in the simulator", vocabMt, CycAccess.collection,
                            C("GeographicalPlace-3D"));
             assertGenls(simFort["SimRegion"], C("Polyhedron"));
@@ -279,8 +305,8 @@ namespace CycWorldModule.DotCYC
 (isa SimLSLText Collection) in UniversalVocabularyMt
              * 
              * Explanation :
-BodyMovementEvent is known not to be a spec of SimAnimation in mt SimVocabMt.  
-sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
+BodyMovementEvent is known not to be a spec of SimAnimation in mt SimVocabularyMt.  
+sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
       because: ISA (isa genls TransitiveBinaryPredicate) UniversalVocabularyMt TRUE-DEF               
 (genls BodyMovementEvent MovementOrShapeChangeEvent) TRUE               
 (genls MovementOrShapeChangeEvent PhysicalEvent) TRUE               
@@ -324,7 +350,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
                 "#$SimRegionCoordinateSystemFn Takes a #$SimRegion and returns a example: (#$SimRegionCoordinateSystemFn (#$SimRegionFn \"LogicMoo\")) => #$ThreeDimensionalCoordinateSystem",
                 simFort["SimRegion"]);
 
-            createIndividual("PointInRegionFn", "Creates region 3D #$Point relative to (#$SimRegionFn :ARG1)", "SimVocabMt", "QuaternaryFunction", out newlyCreated);
+            createIndividual("PointInRegionFn", "Creates region 3D #$Point relative to (#$SimRegionFn :ARG1)", "SimVocabularyMt", "QuaternaryFunction", out newlyCreated);
             assertIsa(C("PointInRegionFn"), C("TotalFunction"));
             //assertGaf(CycAccess.isa, simFort["PointInRegionFn"], C(""));
             assertGafNow(C("arg1Isa"), simFort["PointInRegionFn"], C("IDString"));
@@ -334,9 +360,9 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
             assertGaf(C("resultIsa"), simFort["PointInRegionFn"], C("Point"));
             if (false) cycAssert("(#$expansion #$PointInRegionFn "
                 + " (#$PointIn3DCoordinateSystemFn (#$SimRegionCoordinateSystemFn"
-                + " (#$SimRegionFn :ARG1)) :ARG2 :ARG3 :ARG4 ))");
+                + " (#$SimRegionFn :ARG1)) :ARG2 :ARG3 :ARG4 ))",vocabMt);
 
-            createIndividual("PointRelativeToFn", "Creates Local 3D #$Point relative to the #$SpatialThing-Localized in :ARG1", "SimVocabMt", "QuaternaryFunction", out newlyCreated);
+            createIndividual("PointRelativeToFn", "Creates Local 3D #$Point relative to the #$SpatialThing-Localized in :ARG1", "SimVocabularyMt", "QuaternaryFunction", out newlyCreated);
             assertIsa(C("PointRelativeToFn"), C("QuaternaryFunction"));
             assertIsa(C("PointRelativeToFn"), C("TotalFunction"));
             assertGaf(C("arg1Isa"), simFort["PointRelativeToFn"], C("SpatialThing-Localized"));
@@ -348,9 +374,9 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
             if (false)
             {
                 cycAssert(
-                    "(#$pointInSystem (#$PointInRegionFn ?STR ?X ?Y ?Z) (#$SimRegionCoordinateSystemFn (#$SimRegionFn ?STR)))");
+                    "(#$pointInSystem (#$PointInRegionFn ?STR ?X ?Y ?Z) (#$SimRegionCoordinateSystemFn (#$SimRegionFn ?STR)))",vocabMt);
                 cycAssert(
-                    "(#$pointInSystem (#$PointInRegionFn \"Daxlandia\" 128 120 27) (#$SimRegionCoordinateSystemFn (#$SimRegionFn \"Daxlandia\")))");
+                    "(#$pointInSystem (#$PointInRegionFn \"Daxlandia\" 128 120 27) (#$SimRegionCoordinateSystemFn (#$SimRegionFn \"Daxlandia\")))",vocabMt);
             }
             WorldObjects.OnConnectedQueue.Enqueue(ProbeNewAssets);
             // This will be the runtime state
@@ -391,60 +417,81 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
 
         }
 
-        public void VisitType(Type type)
+        public CycTypeInfo VisitType(Type type)
         {
-            if (type.IsSubclassOf(typeof(Asset)))
+            CycTypeInfo ctype;
+            if (typeFort.TryGetValue(type, out ctype)) return ctype;
+            lock (typeFort)
             {
-                string fn = type.Name;
-                if (fn.StartsWith("Asset")) fn = fn.Substring(5);
-                string col = string.Format("Sim{0}", fn);
-                string comment =
-                    "A spec of #$SimAsset that is a #$PartiallyTangibleTypeByPhysicalFeature from the simulator's type " +
-                    type.FullName + " such as #$BlueColor or #$BlowingAKiss animation";
-                fn = string.Format("Sim{0}Fn", fn);
-                FunctionToCollection(fn, col, comment);
-                assertGafNow(C("genlFuncs"), simFort[fn], simFort["SimAssetFn"]);
-                assertGenls(simFort[col], simFort["SimAsset"]);
-            }
-            else //if (type.Namespace ==null || type.Namespace.StartsWith("OpenMetaverse"))
-            {
-                try
+                if (typeFort.TryGetValue(type, out ctype)) return ctype;
+                CycTypeInfo cctype;
+                if (type.IsSubclassOf(typeof (Asset)))
                 {
-                    if (type.IsEnum) VisitEnumType(type);
-                    else
+                    string fn = type.Name;
+                    if (fn.StartsWith("Asset")) fn = fn.Substring(5);
+                    string col = string.Format("Sim{0}", fn);
+                    string comment =
+                        String.Format("A spec of #$SimAsset that is a #$PartiallyTangibleTypeByPhysicalFeature from the simulator's type {0} such as #$BlueColor or #$BlowingAKiss animation", type.FullName);
+                    fn = string.Format("Sim{0}Fn", fn);
+                    if (ClearGridDataBetweenSessions)
                     {
-
+                        cycAccess.converseVoid("(fi-kill (find-or-create-constant \"" + fn + "\"))");
                     }
+                    FunctionToCollection(fn, col, comment);
+                    assertGafNow(C("genlFuncs"), simFort[fn], simFort["SimAssetFn"]);
+                    assertGenls(simFort[col], simFort["SimAsset"]);
+                    cctype = typeFort[type] = new CycTypeInfo(simFort[col], type);
+                    return cctype;
                 }
-                catch (Exception e)
+                else //if (type.Namespace ==null || type.Namespace.StartsWith("OpenMetaverse"))
                 {
-                    Exception(e);
+                    try
+                    {
+                        if (type.IsEnum) return VisitEnumType(type);
+                        else
+                        {
+                            return null;
+                            string name = string.Format("Sim{0}", type.Name);
+                            if (name.StartsWith("SimSim"))
+                            {
+                                name = name.Substring(3);
+                            }
+                            CycFort cn = C(name);
+                            ctype = typeFort[type] = new CycTypeInfo(cn, type);
+                            return ctype;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Exception(e);
+                        return null;
+                    }
                 }
             }
         }
 
-        private CycFort VisitEnumType(Type type)
+        private CycTypeInfo VisitEnumType(Type type)
         {
             CycTypeInfo ctype;
-            if (typeFort.TryGetValue(type, out ctype)) return ctype.cycFort;
+            if (typeFort.TryGetValue(type, out ctype)) return ctype;
             lock (typeFort)
             {               
-                if (typeFort.TryGetValue(type, out ctype)) return ctype.cycFort;
+                if (typeFort.TryGetValue(type, out ctype)) return ctype;
                 string name = string.Format("Sim{0}", type.Name);
                 if (name.StartsWith("SimSim"))
                 {
                     name = name.Substring(3);
                 }
                 CycFort cn = C(name);
-                ctype = new CycTypeInfo(cn, type);
-                return cn;
+                ctype = typeFort[type] = new CycTypeInfo(cn, type);
+                return ctype;
             }
         }
 
         public void ResultIsa(string fn, string col, string comment, CycFort arg1Isa)
         {
             bool newlyCreated;
-            simFort[fn] = createIndividual(fn, comment, "SimVocabMt", "ReifiableFunction", out newlyCreated);
+            simFort[fn] = createIndividual(fn, comment, "SimVocabularyMt", "ReifiableFunction", out newlyCreated);
             if (newlyCreated)
             {
                 assertGafNow(C("resultIsa"), simFort[fn], C(col));
@@ -461,18 +508,31 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
         public void FunctionToCollection(string fn, string col, string comment)
         {
             bool newlyCreated;
-            CycFort fortFn = simFort[fn] = createIndividual(fn, comment, "SimVocabMt", "UnaryFunction",out newlyCreated);
+            CycFort fortFn = simFort[fn] = createIndividual(fn, comment, "SimVocabularyMt", "UnaryFunction",out newlyCreated);
             if (newlyCreated)
             {
                 assertIsa(fortFn, C("CollectionDenotingFunction"));
                 assertIsa(fortFn, C("ReifiableFunction"));
-                CycFort fortCol = simFort[col] = createCollection(col, comment, "SimVocabMt", "Collection", null);
-                assertIsa(fortCol, C("PartiallyTangibleTypeByPhysicalFeature"));
+                CycFort fortCol = simFort[col] = createCollection(col, comment, "SimVocabularyMt", "Collection", null);
+                assertGenls(fortCol, C("PartiallyTangibleTypeByPhysicalFeature")); //or isa?
                 //not true assertIsa(simFort[fn], C("SubcollectionDenotingFunction"));
                 //not true assertIsa(simFort[fn], C("TotalFunction"));
                 assertGafNow(C("resultIsa"), fortFn, C("PartiallyTangibleTypeByPhysicalFeature"));
-                assertGafNow(C("resultIsa"), fortFn, C("FirstOrderCollection"));
+                unassertGafNow(C("resultIsa"), fortFn, C("FirstOrderCollection"));
                 assertGafNow(C("resultGenl"), fortFn, fortCol);
+            }
+        }
+
+        private void unassertGafNow(CycFort a, CycFort b, CycFort c)
+        {
+            try
+            {
+                cycAccess.unassertGaf(CycList.list(a, b, c),vocabMt);
+            }
+            catch (Exception e)
+            {
+
+                Exception(e);
             }
         }
 
@@ -489,7 +549,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
         public void FunctionToIndividual(string fn, string col, string comment)
         {
             bool newlyCreated;
-            CycFort fort = simFort[fn] = createIndividual(fn, comment, "SimVocabMt", "UnaryFunction", out newlyCreated);
+            CycFort fort = simFort[fn] = createIndividual(fn, comment, "SimVocabularyMt", "UnaryFunction", out newlyCreated);
             if (newlyCreated)
             {
                 assertIsa(fort, C("IndividualDenotingFunction"));
@@ -497,7 +557,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
                 CycFort fcol = C(col);
                 assertIsa(fcol, CycAccess.collection);
                 assertGaf(CycAccess.comment, fcol, comment);
-                // simFort[col] = createIndividual(col, comment, "SimVocabMt", "Collection");
+                // simFort[col] = createIndividual(col, comment, "SimVocabularyMt", "Collection");
                 assertGafNow(C("resultIsa"), fort, fcol);
             }
         }
@@ -565,7 +625,20 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
                 }
             };
         }
+        public void assertGafNow(CycFort a, CycFort b, CycFort c, CycObject mt)
+        {
+            {
+                try
+                {
+                    cycAccess.assertGaf(mt, a, b, c);
+                }
+                catch (Exception e)
+                {
 
+                    Exception(e);
+                }
+            };
+        }
         public void assertGaf(CycFort a, CycFort b, CycFort c)
         {
             cycAccessQueueHandler.Enqueue(() => assertGafNow(a,b,c));
@@ -591,12 +664,12 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
         }
 
 
-        private void CycListAssert(CycList list)
+        private void CycListAssert(CycList list, CycObject mt)
         {
             try
             {
                 string ast = list.cyclifyWithEscapeChars();
-                cycAssert(ast);
+                cycAssert(ast,mt);
             }
             catch (Exception re)
             {
@@ -605,9 +678,9 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
             }
         }
 
-        public void cycAssert(string s)
+        public void cycAssert(string s, CycObject mt)
         {
-            string asert = string.Format("(fi-assert '{0} {1})", s, vocabMt.cyclifyWithEscapeChars());
+            string asert = string.Format("(fi-assert '{0} {1})", s, mt.cyclifyWithEscapeChars());
             cycAccessQueueHandler.Enqueue(() =>
             {
                 try
@@ -632,12 +705,12 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
         public CycFort createTerm(string term, string comment, string mt, string type, out bool created)
         {
             CycFort indv;
-            bool noQueue = cycAccessQueueHandler.NoQueue;
             if (simFort.TryGetValue(term, out indv))
             {
                 created = false;
                 return indv;
             }
+            bool noQueue = cycAccessQueueHandler.NoQueue;
             lock (simFort)
             {
                 if (simFort.TryGetValue(term, out indv))
@@ -665,7 +738,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
         }
         public CycFort createIndividual(string term, string comment, string type, out bool created)
         {
-            return createTerm(term, comment, "SimVocabMt", type, out created);
+            return createTerm(term, comment, "SimVocabularyMt", type, out created);
 
         }
 
@@ -695,7 +768,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
                 cycTerms[obj] = constant =
                                 createIndividualFn(
                                     type, name,
-                                    String.Format("{0} {1}", obj.GetName(), obj.ID), "SimVocabMt", type);
+                                    String.Format("{0} {1}", obj.GetName(), obj.ID), "SimVocabularyMt", type);
             }
             {
                 if (obj is SimAvatar)
@@ -772,7 +845,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
             lock (cycTerms)
             {
                 if (cycTerms.TryGetValue(simObj, out constant)) return constant;
-                constant = createIndividualColFn("Sim" + simObj.AssetType, simObj.Name, simObj.DebugInfo(), "SimVocabMt", "Sim" + simObj.AssetType);
+                constant = createIndividualColFn("Sim" + simObj.AssetType, simObj.Name, simObj.DebugInfo(), "SimVocabularyMt", "Sim" + simObj.AssetType);
                 cycTerms[simObj] = constant;
             }
             assertGaf(CycAccess.comment, constant, simObj.DebugInfo());
@@ -801,7 +874,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
             {
                 CycFort constant;
                 if (cycTerms.TryGetValue(simObj, out constant)) return constant;
-                constant = cycAccess.createIndividual(simObj.AspectName, simObj.ToDebugString(), "SimVocabMt",
+                constant = cycAccess.createIndividual(simObj.AspectName, simObj.ToDebugString(), "SimVocabularyMt",
                                                       "SimObjectType");
                 cycTerms[simObj] = constant;
                 return constant;
@@ -875,12 +948,12 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
                     cycTerms[evt] = constant = createIndividualFn("SimEvent-" + evt.EventType,
                                                                   evt.ToEventString(),
                                                                   evt.ToString(),
-                                                                  "SimVocabMt",
+                                                                  "SimVocabularyMt",
                                                                   "SimObjectEvent");
                 }
                 bool wasNew;
                 CycFort col = createTerm(evt.GetVerb().Replace(" ", "-"),
-                                               "Event subtype of #$SimObjectEvent", "SimVocabMt", "Collection",
+                                               "Event subtype of #$SimObjectEvent", "SimVocabularyMt", "Collection",
                                                out wasNew);
                 if (wasNew)
                 {
@@ -972,16 +1045,30 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
             {
                 unFolded = true;
                 var num = (Int32)Convert.ChangeType(value, typeof(Int32));
+                if (num == 0)
+                {
+                    results.Add(value);
+                    return results;
+                }
                 foreach (var val in values)
                 {
                     var v = (Int32)Convert.ChangeType(val, typeof(Int32));
-                    if ((v & num) == v) results.Add(Enum.ToObject(value.GetType(), val));
+                    if (v == 0) continue;
+                    if ((v & num) == v)
+                    {
+                        results.Add(Enum.ToObject(value.GetType(), val));
+                    }
                 }
             }
             else if (utype == typeof(UInt32))
             {
                 unFolded = true;
                 var num = (UInt32)value;
+                if (num == 0)
+                {
+                    results.Add(value);
+                    return results;
+                }
                 foreach (var val in values)
                 {
                     var v = (UInt32)Convert.ChangeType(val, typeof(UInt32));
@@ -992,9 +1079,18 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
             {
                 unFolded = true;
                 var num = (Int64)value;
+                if (num == 0)
+                {
+                    results.Add(value);
+                    return results;
+                }
                 foreach (var val in values)
                 {
                     var v = (Int64)Convert.ChangeType(val, typeof(Int64));
+                    if (v == 0L)
+                    {
+                        continue;
+                    }
                     if ((v & num) == v) results.Add(Enum.ToObject(value.GetType(), val));
                 }
             }
@@ -1002,9 +1098,18 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
             {
                 unFolded = true;
                 var num = (UInt64)value;
+                if (num == 0)
+                {
+                    results.Add(value);
+                    return results;
+                }
                 foreach (var val in values)
                 {
                     var v = (UInt64)Convert.ChangeType(val, typeof(UInt64));
+                    if (v == 0U)
+                    {
+                        continue;
+                    }
                     if ((v & num) == v) results.Add(Enum.ToObject(value.GetType(), val));
                 }
             }
@@ -1019,13 +1124,22 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
         private void ForEachEnumValue(WithEnum withValue, object p)
         {
             Type pType = p.GetType();
+            if (!CycTypeInfo.IsFlagType(pType))
+            {
+                CycFort fort = (CycFort) ToFort(p);
+                withValue(fort);
+                return;
+            }
             Array pTypeValues = System.Enum.GetValues(pType);
+            Array.Reverse(pTypeValues);          
+            
             if (p is byte)
             {
                 byte b = (byte)p;
                 if (b == 0)
                 {
                     withValue((CycFort)ToFort(p));
+                    return;
                 }
                 foreach (object v in pTypeValues)
                 {
@@ -1045,6 +1159,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
                 if (b == 0)
                 {
                     withValue((CycFort)ToFort(p));
+                    return;
                 }
                 foreach (object v in pTypeValues)
                 {
@@ -1064,6 +1179,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
                 if (b == 0)
                 {
                     withValue((CycFort)ToFort(p));
+                    return;
                 }
                 foreach (object v in pTypeValues)
                 {
@@ -1083,6 +1199,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
                 if (b == 0)
                 {
                     withValue((CycFort)ToFort(p));
+                    return;
                 }
                 foreach (object v in pTypeValues)
                 {
@@ -1102,6 +1219,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
                 if (b == 0)
                 {
                     withValue((CycFort)ToFort(p));
+                    return;
                 }
                 foreach (object v in pTypeValues)
                 {
@@ -1121,6 +1239,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
                 if (b == 0)
                 {
                     withValue((CycFort)ToFort(p));
+                    return;
                 }
                 foreach (object v in pTypeValues)
                 {
@@ -1140,6 +1259,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
                 if (b == 0)
                 {
                     withValue((CycFort)ToFort(p));
+                    return;
                 }
                 foreach (object v in pTypeValues)
                 {
@@ -1159,6 +1279,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
                 if (b == 0)
                 {
                     withValue((CycFort)ToFort(p));
+                    return;
                 }
                 foreach (object v in pTypeValues)
                 {
@@ -1180,7 +1301,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
                 //return;
             }
             if (unfolded) return;
-
+            Trace();
             if (p is IConvertible)
             {
                 withValue((CycFort)ToFort(p));
@@ -1330,10 +1451,12 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
 
         private void defaultAssert(CycFort fort, CycFort constant, object o)
         {
+
+            CycFort mt = CurrentStateMt();
             if ((o is String && ((String) o) != String.Empty) ||
                 (o is CycNart && ((CycNart) o).getFunctor() != C("TheList")))
             {
-                CycListAssert(CycList.makeCycList(fort, constant, o));
+                CycListAssert(CycList.makeCycList(fort, constant, o), mt);
                 return;
             }
             if (o is CycVariable)
@@ -1344,13 +1467,15 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
             {
                 if (o.ToString() != "0.0" && o.ToString() != "1.0")
                 {
-                    CycListAssert(CycList.makeCycList(fort, constant, o));
+                    CycListAssert(CycList.makeCycList(fort, constant, o),mt);
                     return;
                 }
             }
 
             object temp;
             bool added = false;
+            CycObject DefaultInstance;
+            Dictionary<object, object> DefaultNotNeededInAssert = GetDefaultMapFor(constant, out DefaultInstance);
             lock (DefaultNotNeededInAssert)
             {
                 if (!DefaultNotNeededInAssert.TryGetValue(fort, out temp))
@@ -1361,7 +1486,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
             }
             if (added)
             {
-                CycListAssert(CycList.makeCycList(fort, C("SimTheDefaultInstance"), o));
+                CycListAssert(CycList.makeCycList(fort, DefaultInstance, o), mt);
                 return;
             }
             if (temp.Equals(o))
@@ -1370,13 +1495,41 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
             }
             else
             {
-                CycListAssert(CycList.makeCycList(fort, constant, o));
+                CycListAssert(CycList.makeCycList(fort, constant, o),mt);
             }
             return;
 
         }
 
-        Dictionary<object, object> DefaultNotNeededInAssert = new Dictionary<object, object>(CompareKeys);
+        private CycFort CurrentStateMt()
+        {
+            if (assertMt == null)
+            {
+                assertMt = C("SimInitialStateMt");
+                KBTick = 0;
+            }
+            return assertMt;
+        }
+
+        private Dictionary<CycObject, DefaultInstanceMap> DefaultMapsFor = new Dictionary<CycObject, DefaultInstanceMap>();
+        private Dictionary<object, object> GetDefaultMapFor(CycFort constant, out CycObject instance)
+        {
+            if (constant is CycNart)
+            {
+                constant = ((CycNart) constant).getFunctor();
+            }
+            DefaultInstanceMap dm;
+            lock (DefaultMapsFor)
+            {
+                if (!DefaultMapsFor.TryGetValue(constant,out dm))
+                {
+                    dm = DefaultMapsFor[constant] = new DefaultInstanceMap((CycConstant)constant);
+                }
+            }
+            instance = dm.GetDefaultObject();
+            return dm.GetMap();
+        }
+
 
         private void docPredicate(CycFort prop, HashSet<MemberInfo> info)
         {
@@ -1428,13 +1581,18 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
             return false;
         }
 
+        static readonly object CreateSimPropertyLock = new object();
         private CycFort createSimProperty(string p)
         {
-            bool newlyCreated;
-            CycFort fort = createIndividual(p, "sim #$BinaryPredicate", "SimVocabMt", "SimProperty", out newlyCreated);
-            //TODO remove WORKAROUND opencyc?
-            if (newlyCreated) assertIsa(fort, C("BinaryPredicate"));
-            return fort;
+            lock (CreateSimPropertyLock)
+            {
+                bool newlyCreated;
+                CycFort fort = createIndividual(p, "sim #$BinaryPredicate", "SimVocabularyMt", "SimProperty",
+                                                out newlyCreated);
+                //TODO remove WORKAROUND opencyc?
+                if (newlyCreated) assertIsa(fort, C("BinaryPredicate"));
+                return fort;
+            }
         }
 
 
@@ -1489,17 +1647,17 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
                 indv = new CycNart(CycList.list(fn, name));
             }
             else
+            {
+                string nv = name + "-" + typename;
+                if (cycTerms.TryGetValue(nv, out indv)) return indv;
+                lock (cycTerms)
                 {
-                    string nv = name + "-" + typename;
                     if (cycTerms.TryGetValue(nv, out indv)) return indv;
-                    lock (cycTerms)
-                    {
-                        if (cycTerms.TryGetValue(nv, out indv)) return indv;
-                        indv = new CycNart(CycList.list(fn, name));
-                        cycTerms[nv] = indv;
-                    }
-                    assertGaf(CycAccess.comment, indv, comment);
+                    indv = new CycNart(CycList.list(fn, name));
+                    cycTerms[nv] = indv;
                 }
+                assertGaf(CycAccess.comment, indv, comment);
+            }
             return indv;
         }
 
@@ -1589,10 +1747,10 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
 
             if (t.IsLayoutSequential)
             {
-                
+
             }
             Trace();
-            Debug("Cant convert " + t + " "+t.StructLayoutAttribute);
+            Debug("Cant convert " + t + " " + t.StructLayoutAttribute);
             return CYC_NULL;
         }
 
@@ -1642,9 +1800,9 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
         private CycFort FindOrCreateCycArray(Array args, Type t)
         {
             int len = args.GetLength(0);
-            if (len>100)
+            if (len > 100)
             {
-               // Trace();
+                // Trace();
                 return LockToFort(args);
             }
             return CreateCycNartEnumerable("TheList", args);
@@ -1713,14 +1871,14 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
                 new java.lang.Float(b.A)));
         }
 
-          public CycFort FindOrCreateCycFort(byte[] b)
-          {
-              return FindOrCreateCycArray(b, b.GetType());
-          }
-          public CycFort FindOrCreateCycFort(int[] b)
-          {
-              return FindOrCreateCycArray(b, b.GetType());
-          }
+        public CycFort FindOrCreateCycFort(byte[] b)
+        {
+            return FindOrCreateCycArray(b, b.GetType());
+        }
+        public CycFort FindOrCreateCycFort(int[] b)
+        {
+            return FindOrCreateCycArray(b, b.GetType());
+        }
 
         public object FindOrCreateCycFort(GridClient client)
         {
@@ -1745,7 +1903,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
             {
                 Trace();
             }
-            return new CycVariable("NULL-" + regionTypeName  + "-" + (nullCount++));
+            return new CycVariable("NULL-" + regionTypeName + "-" + (nullCount++));
         }
 
         // TODO confirm this will work
@@ -1871,7 +2029,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
             {
                 LoadConverters();
                 //one day will be Converter<object, CycFort> converter;
-  
+
                 if (converters.TryGetValue(type, out converter)) return converter;
                 foreach (var v in converters)
                 {
@@ -1919,19 +2077,22 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
         {
             CycFort c;
             if (simFort.TryGetValue(p, out c)) return c;
-            string sp = CheckConstantName(p);
-            lock (simFort)
+            //lock (SimCyclifierLock) // added to guard againt early users
             {
-                if (simFort.TryGetValue(p, out c)) return c;
-                try
+                string sp = CheckConstantName(p);
+                lock (simFort)
                 {
-                    return simFort[p] = simFort[sp] = cycAccess.findOrCreate(sp);
-                }
-                catch (Exception e)
-                {
-                    Exception(e);
-                    throw e;
-                    //return CYC_NULL;
+                    if (simFort.TryGetValue(p, out c)) return c;
+                    try
+                    {
+                        return simFort[p] = simFort[sp] = cycAccess.findOrCreate(sp);
+                    }
+                    catch (Exception e)
+                    {
+                        Exception(e);
+                        throw e;
+                        //return CYC_NULL;
+                    }
                 }
             }
         }
@@ -1949,7 +2110,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
             CycConstant colided = cycAccess.constantNameCaseCollision(s);
             if (colided != null)
             {
-               // Trace();
+                // Trace();
                 return CheckConstantName(s + "-Pred");
             }
             return s;
@@ -1974,7 +2135,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
                 if (simFort.TryGetValue(gname, out fort)) return fort;
 
                 fort = simFort[gname] = createCollection(gname, "#$Thing for the simulator",
-                                                  "SimVocabMt", "Collection", null);
+                                                  "SimVocabularyMt", "Collection", null);
             }
             FunctionToIndividual(gname + "Fn", gname, "A " + name + " in the simulator");
             return fort;
@@ -1984,7 +2145,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
         {
             if (region == null) return CYC_NULL;
             string gname = region.GetGenericName();
-            CycFort gtype = DeclareGeneric(gname);           
+            CycFort gtype = DeclareGeneric(gname);
             CycFort obj;
             if (simFort.TryGetValue(region, out obj)) return obj;
             lock (simFort)
@@ -1994,7 +2155,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
                 obj = simFort[region] = createIndividualFn(gname, region.ID.ToString(), gname + " " + region, vocabMt.ToString(),
                                          gname);
             }
-            if (region.Value!=null)
+            if (region.Value != null)
             {
                 SaveInfoMap(obj, region);
             }
@@ -2014,7 +2175,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
             }
             if (!string.IsNullOrEmpty(region.Group.Name))
             {
-                SaveInfoMap(obj,region);
+                SaveInfoMap(obj, region);
             }
             return obj;
         }
@@ -2122,7 +2283,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
                 CycFort constant;
                 if (cycTerms.TryGetValue(te, out constant)) return constant;
                 //   object[] forts = ToForts(simObj.Parameters);
-                return cycTerms[te] = createIndividualFn(p, te.ToString(), te.ToString(), "SimVocabMt", p);
+                return cycTerms[te] = createIndividualFn(p, te.ToString(), te.ToString(), "SimVocabularyMt", p);
             }
         }
 
@@ -2236,7 +2397,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
 
         public static string GetDocString(XElement docMembers, MemberInfo info)
         {
-            if (docMembers == null) return null;            
+            if (docMembers == null) return null;
             string memberId = GetMemberId(info);
             foreach (XElement e in docMembers.Elements("member"))
             {
@@ -2278,11 +2439,38 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabMt
         }
 
         // just used for a breakpoint in debugger
-        internal static void Trace()        
+        internal static void Trace()
         {
 
         }
 
+    }
+
+    internal class DefaultInstanceMap
+    {
+        private Dictionary<object, object> defmap;
+        private CycFort clazz;
+        private SimCyclifier Master;
+        public DefaultInstanceMap(CycConstant constant)
+        {
+            Master = SimCyclifier.Master;
+            string n = "SimDefaultInstance-" + constant.name;
+            SimCyclifier.cycAccess.converseVoid("(fi-kill (find-or-create-constant \""+n+"\"))");
+            clazz = Master.C(n);
+            defmap = new Dictionary<object, object>(SimCyclifier.CompareKeys);
+            Master.assertIsa(clazz, Master.C("Thing"));
+            Master.assertIsa(clazz, Master.C("HLPrototypicalTerm"));
+        }
+
+        public CycObject GetDefaultObject()
+        {
+            return clazz;
+        }
+
+        public Dictionary<object, object> GetMap()
+        {
+            return defmap;
+        }
     }
 
     internal class CompareKeysImpl : IEqualityComparer<object>
