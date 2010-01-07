@@ -43,17 +43,22 @@ namespace cogbot.Actions.Appearance
                 targetName = String.Join(" ", args, 0, argsUsed);
                 output.AppendFormat("{0} ({1})", targetName, foundAv.ID);
                 output.AppendLine();
-                for (int i = 0; i < foundAv.Textures.FaceTextures.Length; i++)
+                if (foundAv.Textures != null)
                 {
-                    if (foundAv.Textures.FaceTextures[i] != null)
-                    {
-                        Primitive.TextureEntryFace face = foundAv.Textures.FaceTextures[i];
-                        AvatarTextureIndex type = (AvatarTextureIndex)i;
-
-                        output.AppendFormat("{0}: {1}", type, face.TextureID);
-                        output.AppendLine();
-                    }
+                    output.AppendLine("No textures yet");
                 }
+                else
+                    for (int i = 0; i < foundAv.Textures.FaceTextures.Length; i++)
+                    {
+                        if (foundAv.Textures.FaceTextures[i] != null)
+                        {
+                            Primitive.TextureEntryFace face = foundAv.Textures.FaceTextures[i];
+                            AvatarTextureIndex type = (AvatarTextureIndex)i;
+
+                            output.AppendFormat("{0}: {1}", type, face.TextureID);
+                            output.AppendLine();
+                        }
+                    }
                 Success(output.ToString());
             }
             return SuccessOrFailure();
