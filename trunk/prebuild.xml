@@ -1003,7 +1003,7 @@ app -->
       <Reference name="LookingGlass.Comm"/>
       <Reference name="LookingGlass.Comm.LLLP"/>
       <Reference name="LookingGlass.Framework"/>
-      <Reference name="LookingGlass.Renderer"/>
+      <Reference name="LookingGlass.Renderer.dll"/>
       <Reference name="LookingGlass.World"/>
       <Reference name="LookingGlass.World.OS"/>
       <Reference name="Radegast.exe"/>
@@ -1097,10 +1097,10 @@ app -->
       <Reference name="System.Windows.Forms"/>
       <Reference name="System.Xml"/>
       <Reference name="LookingGlass.Framework"/>
-      <Reference name="LookingGlass.Renderer"/>
-      <Reference name="LookingGlass.Rest"/>
-      <Reference name="LookingGlass.World"/>
-      <Reference name="LookingGlass.World.LL"/>
+      <Reference name="LookingGlass.Renderer.dll"/>
+      <Reference name="LookingGlass.Rest.dll"/>
+      <Reference name="LookingGlass.World.dll"/>
+      <Reference name="LookingGlass.World.LL.dll"/>
       <Reference name="OpenMetaverse"/>
       <Reference name="OpenMetaverse.StructuredData"/>
       <Reference name="OpenMetaverseTypes"/>
@@ -1128,7 +1128,7 @@ app -->
       <Reference name="System.Drawing"/>
       <Reference name="System.Windows.Forms"/>
       <Reference name="LookingGlass.Framework"/>
-      <Reference name="LookingGlass.Renderer"/>
+      <Reference name="LookingGlass.Renderer.dll"/>
       <Reference name="LookingGlass.World"/>
       <Reference name="LookingGlass.Rest"/>
       <Reference name="OpenMetaverse"/>
@@ -1159,8 +1159,8 @@ app -->
       <Reference name="System.Windows.Forms"/>
       <Reference name="System.Xml"/>
       <Reference name="LookingGlass.Framework"/>
-      <Reference name="LookingGlass.Renderer"/>
-      <Reference name="LookingGlass.World"/>
+      <Reference name="LookingGlass.Renderer.dll"/>
+      <Reference name="LookingGlass.World.dll"/>
       <Reference name="OpenMetaverse"/>
       <Reference name="OpenMetaverseTypes"/>
       <Reference name="OpenMetaverse.StructuredData"/>
@@ -1398,7 +1398,7 @@ app -->
       <Reference name="System.Data" />
       
 
-      <Reference name="LookingGlass.Comm"/>
+<!--      <Reference name="LookingGlass.Comm"/>
       <Reference name="LookingGlass.Comm.LLLP"/>
       <Reference name="LookingGlass.Framework"/>
       <Reference name="LookingGlass.Renderer"/>
@@ -1406,7 +1406,7 @@ app -->
       <Reference name="LookingGlass.Radegast"/>
       <Reference name="LookingGlass.View"/>
       <Reference name="LookingGlass.Rest"/>
-
+-->
     <Files>
     <Match pattern="*.cs" recurse="true"/>
     <!--<Match pattern="frm*.cs" subType="Form"/>-->
