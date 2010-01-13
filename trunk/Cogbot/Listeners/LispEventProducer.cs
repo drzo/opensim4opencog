@@ -193,6 +193,7 @@ namespace cogbot.Listeners
 
         public void HookEvents(object manager)
         {
+            return;
             Type t = manager.GetType();
             string prefix = "client." +t.Name.Replace("Manager", "");
             foreach (var eventInfo in t.GetEvents())
