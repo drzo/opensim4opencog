@@ -48,7 +48,7 @@ namespace cogbot.Listeners
                 msg += " ";
                 msg += From.argString(args[i]);
             }
-
+            if (msg.Contains("Transfer failed with status code")) return;
             msg += "";
             
             textForm(msg);
