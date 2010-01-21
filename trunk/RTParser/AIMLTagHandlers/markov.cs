@@ -65,6 +65,39 @@ namespace RTParser.AIMLTagHandlers
                         }
                     }
                     String line = templateNodeInnerText.ToValue();
+
+                    // This section splits the line into words and looks for the words as files
+                    // in each directory and loads them if found. Probably should be non-stopwords.
+
+                    string words_str = line.ToLower();
+                    string[] wordset = words_str.Split(' ');
+                    foreach (string name in wordset)
+                    {
+
+                        string file = Path.Combine("trn", name);
+                        //if (Directory.Exists(file))
+                        if (File.Exists(file))
+                        {
+                            Console.WriteLine("LoadMarkovSTM: '{0}'", file);
+                            StreamReader sr = new StreamReader(file);
+                            this.user.bot.STM_Brain.WindowSize = 4;
+                            this.user.bot.STM_Brain.Learn(sr);
+                            sr.Close();
+                        }
+
+                        file = Path.Combine("ngm", name);
+                        //if (Directory.Exists(file))
+                        if (File.Exists(file))
+                        {
+                            Console.WriteLine("LoadMarkovSTM: '{0}'", file);
+                            StreamReader sr = new StreamReader(file);
+                            this.user.bot.STM_Brain.WindowSize = 3;
+                            this.user.bot.STM_Brain.LearnNgram(sr);
+                            sr.Close();
+                        }
+                    }
+
+
                     line = this.user.bot.STM_Brain.GetResponse(line);
                     if (line == null) line = this.user.bot.STM_Brain.GetRandomResponse();
                     Unifiable result = line;
