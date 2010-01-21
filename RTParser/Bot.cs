@@ -297,6 +297,14 @@ namespace RTParser
         public RTParser.Utils.Node Graphmaster;
 
         /// <summary>
+        /// The Markovian "brain" of the Proccessor
+        /// </summary>
+        public MBrain MBrain { get { return mbrain; } }
+        MBrain mbrain = new MBrain();
+        public MBrain STM_Brain { get { return stm_brain; } }
+        MBrain stm_brain = new MBrain();
+
+        /// <summary>
         /// If set to false the input from AIML files will undergo the same normalization process that
         /// user input goes through. If true the Proccessor will assume the AIML is correct. Defaults to true.
         /// </summary>
@@ -382,7 +390,41 @@ namespace RTParser
             this.Size = 0;
             this.Graphmaster = new RTParser.Utils.Node(null);
             loadCustomTagHandlers("AIMLbot.dll");
-        }
+
+            string names_str = "markovx.trn 5ngram.ngm";
+            string[] nameset = names_str.Split(' ');
+            foreach (string name in nameset)
+            {
+
+               int loadcount = 0;
+               string file = Path.Combine("trn", name);
+                if (File.Exists(file))
+                {
+                    StreamReader sr = new StreamReader(file);
+                    Console.WriteLine(" **** Markovian Brain LoadMarkovLTM: '{0}'****",file);
+                    this.MBrain.Learn(sr);
+                    sr.Close();
+                    Console.WriteLine(" **** Markovian Brain initialized.: '{0}' **** ",file);
+                    loadcount++;
+                }
+
+                file = Path.Combine("ngm", name);
+                if (File.Exists(file))
+                {
+                    StreamReader sr = new StreamReader(file);
+                    Console.WriteLine(" **** Markovian Brain LoadMarkovLTM: '{0}'**** ",file);
+                    this.MBrain.LearnNgram(sr);
+                    sr.Close();
+                    Console.WriteLine(" **** Markovian Brain N-Gram initialized '{0}'. **** ",file);
+                    loadcount++;
+                }
+
+                if (loadcount == 0)
+                {
+                    Console.WriteLine(" **** WARNING: No Markovian Brain Training nor N-Gram file found for '{0}' . **** ", name);
+                }
+            }
+    }
 
         /// <summary>
         /// Loads settings based upon the default location of the Settings.xml file
@@ -1039,6 +1081,9 @@ namespace RTParser
                         break;
                     case "space":
                         tagHandler = new AIMLTagHandlers.space(this, user, query, request, result, node);
+                        break;
+                    case "markov":
+                        tagHandler = new AIMLTagHandlers.markov(this, user, query, request, result, node);
                         break;
 
                     default:
