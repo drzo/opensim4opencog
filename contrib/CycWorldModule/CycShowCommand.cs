@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using cogbot;
 using cogbot.Actions;
 using cogbot.TheOpenSims;
@@ -17,9 +18,13 @@ namespace CycWorldModule
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             int argsUsed;
-            SimPosition target = WorldSystem.GetVector(args, out argsUsed);
-            CycWorldModule.CycModule.Show(target);
-            return Success("CycShow " + target);
+            List<SimObject> target = WorldSystem.GetPrimitives(args, out argsUsed);
+            foreach (var o in target)
+            {
+                Success(""+o);
+                CycWorldModule.CycModule.Show(target);                
+            }
+            return SuccessOrFailure();
         }
     }
 }
