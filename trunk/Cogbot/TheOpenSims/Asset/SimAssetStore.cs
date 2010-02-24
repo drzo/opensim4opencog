@@ -1080,13 +1080,15 @@ namespace cogbot.TheOpenSims
                 }
 
                 SimAnimation.ClassifyAnims();
-
+#if SPAMMY_DEBUG
                 //lock (SimAssets) 
                     foreach (SimAsset A in SimAssets)
                     {
                         if (A.IsIncomplete()) WriteLine("Incomplete Asset: " + A.ToString());
                     }
+#endif
             }
+            
         }
 
         public static void WriteLine(string s, params object[] args)
