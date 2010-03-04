@@ -114,8 +114,38 @@ namespace CogbotRadegastPluginModule
                                                    act = renCmd,
                                                    useType = use
                                                };
-                instance.TabConsole.RegisterContextAction(cca);
+                RegisterConextAction(renCmd,cca);
             }
+        }
+
+        static public readonly Dictionary<String, CommandContextMenu> ActionSubMenu = new Dictionary<String, CommandContextMenu>();
+        private CommandContextMenu GetCommandContextMenu(String subDir)
+        {
+            int i = subDir.LastIndexOf(".");
+            if (i > 0) subDir = subDir.Substring(i + 1);
+            CommandContextMenu ccc;           
+            if (ActionSubMenu.TryGetValue(subDir,out ccc)) return ccc;
+            ccc = new CommandContextMenu(instance, Plugin)
+            {
+                Label = subDir,
+                Handler = null,
+                ContextType = typeof(object),
+                act = null,
+                useType = typeof(object)
+            };
+            ActionSubMenu[subDir] = ccc;
+            instance.TabConsole.RegisterContextAction(ccc);
+            return ccc;
+        }
+
+        private void RegisterConextAction(Command t, CommandContextAction cca)
+        {            
+            String subDir = t.GetType().Namespace;
+            var ccc = GetCommandContextMenu(subDir);
+            ccc.AddSubCommand(cca);
+            var ccc2 = GetCommandContextMenu(t.Category.ToString());
+            if (ccc2!=ccc) ccc2.AddSubCommand(cca);
+            //instance.TabConsole.RegisterContextAction(cca);
         }
 
         public override void OnInvoke(object sender, EventArgs e, object target)
@@ -160,7 +190,7 @@ namespace CogbotRadegastPluginModule
 
         }
 
-        public string ActName
+        virtual public string ActName
         {
             get
             {
@@ -260,6 +290,66 @@ namespace CogbotRadegastPluginModule
         public void DebugLog(string s)
         {
             Plugin.DisplayNotificationInChat(string.Format("ContextAction {0}: {1}", Label, s));
+        }
+    }
+
+    public class CommandContextMenu : CommandContextAction
+    {
+        readonly HashSet<CommandContextAction> SubCommands = new HashSet<CommandContextAction>();
+        override public string ActName
+        {
+            get
+            {
+                return Label + "...";
+            }
+        }
+
+        public override bool Contributes(object o, Type type)
+        {
+            foreach (var list in SubCommands)
+            {
+                var its = list.Contributes(o, type);
+                if (its) return true;
+            }
+            return false;
+        }
+
+        public CommandContextMenu(RadegastInstance radegastInstance, CogbotRadegastPlugin plugin) : base(radegastInstance,plugin)
+        {
+            Enabled = true;
+        }
+
+        public override IEnumerable<ToolStripMenuItem> GetToolItems(object target, Type type)
+        {
+            List<ToolStripMenuItem> lst = new List<ToolStripMenuItem>();
+            lastObject = target;
+            {
+                ToolStripMenuItem item = new ToolStripMenuItem(Label + "...", null)
+                                             {
+                                                 ToolTipText = Label
+                                             };
+                foreach (var list in SubCommands)
+                {
+                    var its = list.GetToolItems(target, type);
+                    if (its==null) continue;
+                    foreach (var menuItem in its)
+                    {
+                        item.DropDownItems.Add(menuItem);                                            
+                    }
+                }
+                lst.Add(item);
+            }
+            return ListOfOne("Commands...", lst);
+        }
+        public override IEnumerable<Control> GetControls(object target, Type type)
+        {
+            IEnumerable < Control > r = base.GetControls(target, type);
+            return r;
+        }
+
+        public void AddSubCommand(CommandContextAction command)
+        {
+            SubCommands.Add(command);
         }
     }
 }
