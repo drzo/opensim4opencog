@@ -334,16 +334,17 @@ namespace cogbot.Listeners
                     using (AutoResetEvent UpdateEvent = new AutoResetEvent(false))
                     {
                         client.Inventory.RequestUpdateScriptAgentInventory(Utils.StringToBytes(body), created.UUID, false,
-                               (success1, status, itemid, assetid) =>
-                               {
-                                   UpdateEvent.Set();
-                                   if (!success1)
-                                   {
-                                       Debug("Update error for {0} {1}", name, status);
-                                       return;
-                                   }
-                                   Debug("Script successfully uploaded, ItemID {0} AssetID {1} Created {2}", itemid, assetid, created);
-                               });
+                                                                           (success1, status, itemid, assetid, itemid1,
+                                                                            assetid1) =>
+                                                                               {
+                                                                                   UpdateEvent.Set();
+                                                                                   if (!success1)
+                                                                                   {
+                                                                                       Debug("Update error for {0} {1}", name, status);
+                                                                                       return;
+                                                                                   }
+                                                                                   Debug("Script successfully uploaded, ItemID {0} AssetID {1} Created {2}", itemid, assetid, created);
+                                                                               });
 
                         if (UpdateEvent.WaitOne(30000, true))
                         {

@@ -87,6 +87,27 @@ namespace OpenMetaverse
         Gesture = 21,
         /// <summary>Simstate file</summary>
         Simstate = 22,
+        /// <summary>Contains landmarks for favorites</summary>
+        FavoriteFolder = 23,
+        /// <summary>Asset is a link to another inventory item</summary>
+        Link = 24,
+        /// <summary>Asset is a link to another inventory folder</summary>
+        LinkFolder = 25,
+        /// <summary>Beginning of the range reserved for ensembles</summary>
+        EnsembleStart = 26,
+        /// <summary>End of the range reserved for ensembles</summary>
+        EnsembleEnd = 45,
+        /// <summary>Folder containing inventory links to wearables and attachments
+        /// that are part of the current outfit</summary>
+        CurrentOutfitFolder = 46,
+        /// <summary>Folder containing inventory items or links to
+        /// inventory items of wearables and attachments
+        /// together make a full outfit</summary>
+        OutfitFolder = 47,
+        /// <summary>Root folder for the folders of type OutfitFolder</summary>
+        MyOutfitsFolder = 48,
+        /// <summary></summary>
+        InboxFolder = 49,
     }
 
     /// <summary>
@@ -194,6 +215,10 @@ namespace OpenMetaverse
         Underpants,
         /// <summary>Skirt</summary>
         Skirt,
+        /// <summary>Alpha mask to hide parts of the avatar</summary>
+        Alpha,
+        /// <summary>Tattoo</summary>
+        Tattoo,
         /// <summary>Invalid wearable asset</summary>
         Invalid = 255
     };

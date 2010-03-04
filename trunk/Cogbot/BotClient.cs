@@ -1765,8 +1765,8 @@ namespace cogbot
             to.GridCustomLoginUri = BotLoginParams.URI;
             to.StartLocation = StartLocationType.Custom;
             to.StartLocationCustom = BotLoginParams.Start;
-            to.Author = BotLoginParams.Author;
-            to.UserAgent = BotLoginParams.UserAgent;
+            to.Version = BotLoginParams.Version;
+            to.Channel = BotLoginParams.Channel;
             RadegastTab tab;
             if (TheRadegastInstance.TabConsole.Tabs.TryGetValue("login",out tab))
             {
@@ -1818,8 +1818,8 @@ namespace cogbot
                     BotLoginParams.Start = from.StartLocationCustom;
                     break;
             }
-            BotLoginParams.Author = from.Author;
-            BotLoginParams.UserAgent = from.UserAgent;
+            BotLoginParams.Version = from.Version;
+            BotLoginParams.Channel = from.Channel;
         }
 
         public void ShowTab(string name)

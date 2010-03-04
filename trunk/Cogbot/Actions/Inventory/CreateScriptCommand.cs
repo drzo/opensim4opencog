@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using OpenMetaverse;
@@ -43,7 +44,8 @@ namespace cogbot.Actions
                     {
                         if (success)
                             // upload the asset
-                            Client.Inventory.RequestUpdateScriptAgentInventory(EncodeScript(body), item.UUID, false, new InventoryManager.ScriptUpdatedCallback(delegate(bool success1, string status, UUID itemid, UUID assetid)
+                            Client.Inventory.RequestUpdateScriptAgentInventory(EncodeScript(body), item.UUID, false, new InventoryManager.ScriptUpdatedCallback(delegate(bool success1, string status, bool itemid, List<string>
+                                                                                                                                                                    assetid, UUID itemid1, UUID assetid1)
                             {
                                 if (success1)
                                     WriteLine("Script successfully uploaded, ItemID {0} AssetID {1}", itemid, assetid);

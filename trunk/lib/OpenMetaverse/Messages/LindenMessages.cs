@@ -2862,6 +2862,8 @@ namespace OpenMetaverse.Messages.Linden
         public InstantMessageOnline Offline;
         /// <summary>Context specific packed data</summary>
         public byte[] BinaryBucket;
+        /// <summary>Is this invitation for voice group/conference chat</summary>
+        public bool Voice;
 
         /// <summary>
         /// Serialize the object
@@ -2903,6 +2905,16 @@ namespace OpenMetaverse.Messages.Linden
         /// <param name="map">An <see cref="OSDMap"/> containing the data</param>
         public void Deserialize(OSDMap map)
         {
+            if (map.ContainsKey("voice"))
+            {
+                FromAgentID = map["from_id"].AsUUID();
+                FromAgentName = map["from_name"].AsString();
+                IMSessionID = map["session_id"].AsUUID();
+                BinaryBucket = Utils.StringToBytes(map["session_name"].AsString());
+                Voice = true;
+            }
+            else
+            {
             OSDMap im = (OSDMap)map["instantmessage"];
             OSDMap msg = (OSDMap)im["message_params"];
             OSDMap msgdata = (OSDMap)msg["data"];
@@ -2920,7 +2932,39 @@ namespace OpenMetaverse.Messages.Linden
             Dialog = (InstantMessageDialog)msgdata["type"].AsInteger();
             BinaryBucket = msgdata["binary_bucket"].AsBinary();
             Timestamp = msgdata["timestamp"].AsDate();
+                Voice = false;
+            }
         }
+    }
+
+    public class RegionInfoMessage : IMessage
+    {
+        public int ParcelLocalID;
+        public string RegionName;
+        public string ChannelUri;
+
+        #region IMessage Members
+
+        public OSDMap Serialize()
+        {
+            OSDMap map = new OSDMap(3);
+            map["parcel_local_id"] = OSD.FromInteger(ParcelLocalID);
+            map["region_name"] = OSD.FromString(RegionName);
+            OSDMap voiceMap = new OSDMap(1);
+            voiceMap["channel_uri"] = OSD.FromString(ChannelUri);
+            map["voice_credentials"] = voiceMap;
+            return map;
+        }
+
+        public void Deserialize(OSDMap map)
+        {
+            this.ParcelLocalID = map["parcel_local_id"].AsInteger();
+            this.RegionName = map["region_name"].AsString();
+            OSDMap voiceMap = (OSDMap)map["voice_credentials"];
+            this.ChannelUri = voiceMap["channel_uri"].AsString();            
+        }
+
+        #endregion
     }
 
     /// <summary>

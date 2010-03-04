@@ -1244,15 +1244,10 @@ namespace OpenMetaverse
         public string TeleportMessage { get { return teleportMessage; } }
         /// <summary>Current position of the agent as a relative offset from
         /// the simulator, or the parent object if we are sitting on something</summary>
-        public Vector3 RelativePosition
-        {
-            get { return relativePosition; }
-            set { relativePosition=value; }
-        }
-
+        public Vector3 RelativePosition { get { return relativePosition; } set { relativePosition = value; } }
         /// <summary>Current rotation of the agent as a relative rotation from
         /// the simulator, or the parent object if we are sitting on something</summary>
-        public Quaternion RelativeRotation { get { return relativeRotation; } }
+        public Quaternion RelativeRotation { get { return relativeRotation; } set { relativeRotation = value; } }
         /// <summary>Current position of the agent in the simulator</summary>
         public Vector3 SimPosition
         {
@@ -3303,9 +3298,10 @@ namespace OpenMetaverse
             Movement.Camera.LookDirection(movement.Data.LookAt);
             //simulator.Handle = movement.Data.RegionHandle;
             simulator.SimData.SimVersion = Utils.BytesToString(movement.SimData.ChannelVersion);
-            if (Client.Network.CurrentSim.Handle!=simulator.Handle)
+            lock (Client.Network.Simulators) 
+                if (Client.Network.CurrentSim == null || Client.Network.CurrentSim.Handle != simulator.Handle)
             {
-                Client.Network.SetCurrentSim(simulator, simulator.Caps._SeedCapsURI);   
+               Client.Network.SetCurrentSim(simulator, simulator.Caps._SeedCapsURI);   
             }
         }
 
@@ -3859,6 +3855,10 @@ namespace OpenMetaverse
             if (m_InstantMessage != null)
             {
                 ChatterBoxInvitationMessage msg = (ChatterBoxInvitationMessage)message;
+
+                //TODO: do something about invitations to voice group chat/friends conference
+                //Skip for now
+                if (msg.Voice) return;
 
                 InstantMessage im = new InstantMessage();
 
