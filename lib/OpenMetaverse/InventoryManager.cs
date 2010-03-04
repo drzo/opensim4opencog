@@ -254,6 +254,14 @@ namespace OpenMetaverse
         /// <param name="itemID"><seealso cref="OpenMetaverse.UUID"/> of the item</param>
         public InventoryItem(InventoryType type, UUID itemID) : base(itemID) { InventoryType = type; }
 
+        /// <summary>
+        /// Indicates inventory item is a link
+        /// </summary>
+        /// <returns>True if inventory item is a link to another inventory item</returns>
+        public bool IsLink()
+        {
+            return AssetType == AssetType.Link || AssetType == AssetType.LinkFolder;
+        }
 
         /// <summary>
         /// 
@@ -1073,13 +1081,15 @@ namespace OpenMetaverse
         }
 
         /// <summary>
-        /// 
+        /// Delegate that is invoked when script upload is completed
         /// </summary>
-        /// <param name="success"></param>
-        /// <param name="status"></param>
-        /// <param name="itemID"></param>
-        /// <param name="assetID"></param>
-        public delegate void ScriptUpdatedCallback(bool success, string status, UUID itemID, UUID assetID);
+        /// <param name="uploadSuccess">Has upload succeded (note, there still might be compile errors)</param>
+        /// <param name="uploadStatus">Upload status message</param>
+        /// <param name="compileSuccess">Is compilation successful</param>
+        /// <param name="compileMessages">If compilation failed, list of error messages, null on compilation success</param>
+        /// <param name="itemID">Script inventory UUID</param>
+        /// <param name="assetID">Script's new asset UUID</param>
+        public delegate void ScriptUpdatedCallback(bool uploadSuccess, string uploadStatus, bool compileSuccess, List<string> compileMessages, UUID itemID, UUID assetID);
         
         /// <summary>The event subscribers, null of no subscribers</summary>
         private EventHandler<ScriptRunningReplyEventArgs> m_ScriptRunningReply;
@@ -1512,28 +1522,41 @@ namespace OpenMetaverse
         /// <param name="newName">The name to change the folder to</param>
         public void MoveFolder(UUID folderID, UUID newparentID, string newName)
         {
+            UpdateFolderProperties(folderID, newparentID, newName, AssetType.Unknown);
+        }
+
+        /// <summary>
+        /// Update folder properties
+        /// </summary>
+        /// <param name="folderID"><seealso cref="UUID"/> of the folder to update</param>
+        /// <param name="parentID">Sets folder's parent to <seealso cref="UUID"/></param>
+        /// <param name="name">Folder name</param>
+        /// <param name="type">Folder type</param>
+        public void UpdateFolderProperties(UUID folderID, UUID parentID, string name, AssetType type)
+        {
             lock (Store)
             {
                 if (_Store.Contains(folderID))
                 {
-                    InventoryBase inv = Store[folderID];
-                    inv.Name = newName;
-                    inv.ParentUUID = newparentID;
+                    InventoryFolder inv = (InventoryFolder)Store[folderID];
+                    inv.Name = name;
+                    inv.ParentUUID = parentID;
+                    inv.PreferredType = type;
                     _Store.UpdateNodeFor(inv);
                 }
             }
 
-            UpdateInventoryFolderPacket move = new UpdateInventoryFolderPacket();
-            move.AgentData.AgentID = Client.Self.AgentID;
-            move.AgentData.SessionID = Client.Self.SessionID;
-            move.FolderData = new UpdateInventoryFolderPacket.FolderDataBlock[1];
-            move.FolderData[0] = new UpdateInventoryFolderPacket.FolderDataBlock();
-            move.FolderData[0].FolderID = folderID;
-            move.FolderData[0].ParentID = newparentID;
-            move.FolderData[0].Name = Utils.StringToBytes(newName);
-            move.FolderData[0].Type = -1;
+            UpdateInventoryFolderPacket invFolder = new UpdateInventoryFolderPacket();
+            invFolder.AgentData.AgentID = Client.Self.AgentID;
+            invFolder.AgentData.SessionID = Client.Self.SessionID;
+            invFolder.FolderData = new UpdateInventoryFolderPacket.FolderDataBlock[1];
+            invFolder.FolderData[0] = new UpdateInventoryFolderPacket.FolderDataBlock();
+            invFolder.FolderData[0].FolderID = folderID;
+            invFolder.FolderData[0].ParentID = parentID;
+            invFolder.FolderData[0].Name = Utils.StringToBytes(name);
+            invFolder.FolderData[0].Type = (sbyte)type;
 
-            Client.Network.SendPacket(move);
+            Client.Network.SendPacket(invFolder);
         }
 
         /// <summary>
@@ -2053,6 +2076,77 @@ namespace OpenMetaverse
             }
         }
 
+        /// <summary>
+        /// Creates inventory link to another inventory item or folder
+        /// </summary>
+        /// <param name="folderID">Put newly created link in folder with this UUID</param>
+        /// <param name="bse">Inventory item or folder</param>
+        /// <param name="callback">Method to call upon creation of the link</param>
+        public void CreateLink(UUID folderID, InventoryBase bse, ItemCreatedCallback callback)
+        {
+            if (bse is InventoryFolder)
+            {
+                InventoryFolder folder = (InventoryFolder)bse;
+                CreateLink(folderID, folder, callback);
+            }
+            else if (bse is InventoryItem)  
+            {
+                InventoryItem item = (InventoryItem)bse;
+                CreateLink(folderID, item.UUID, item.Name, item.Description, AssetType.Link, item.InventoryType, UUID.Random(), callback);
+            }
+        }
+
+        /// <summary>
+        /// Creates inventory link to another inventory item
+        /// </summary>
+        /// <param name="folderID">Put newly created link in folder with this UUID</param>
+        /// <param name="item">Original inventory item</param>
+        /// <param name="callback">Method to call upon creation of the link</param>
+        public void CreateLink(UUID folderID, InventoryItem item, ItemCreatedCallback callback)
+        {
+            CreateLink(folderID, item.UUID, item.Name, item.Description, AssetType.Link, item.InventoryType, UUID.Random(), callback);
+        }
+
+        /// <summary>
+        /// Creates inventory link to another inventory folder
+        /// </summary>
+        /// <param name="folderID">Put newly created link in folder with this UUID</param>
+        /// <param name="folder">Original inventory folder</param>
+        /// <param name="callback">Method to call upon creation of the link</param>
+        public void CreateLink(UUID folderID, InventoryFolder folder, ItemCreatedCallback callback)
+        {
+            CreateLink(folderID, folder.UUID, folder.Name, "", AssetType.LinkFolder, InventoryType.Folder, UUID.Random(), callback);
+        }
+
+        /// <summary>
+        /// Creates inventory link to another inventory item or folder
+        /// </summary>
+        /// <param name="folderID">Put newly created link in folder with this UUID</param>
+        /// <param name="itemID">Original item's UUID</param>
+        /// <param name="name">Name</param>
+        /// <param name="description">Description</param>
+        /// <param name="assetType">Asset Type</param>
+        /// <param name="invType">Inventory Type</param>
+        /// <param name="transactionID">Transaction UUID</param>
+        /// <param name="callback">Method to call upon creation of the link</param>
+        public void CreateLink(UUID folderID, UUID itemID, string name, string description, AssetType assetType, InventoryType invType, UUID transactionID, ItemCreatedCallback callback)
+        {
+            LinkInventoryItemPacket create = new LinkInventoryItemPacket();
+            create.AgentData.AgentID = Client.Self.AgentID;
+            create.AgentData.SessionID = Client.Self.SessionID;
+
+            create.InventoryBlock.CallbackID = RegisterItemCreatedCallback(callback);
+            create.InventoryBlock.FolderID = folderID;
+            create.InventoryBlock.TransactionID = transactionID;
+            create.InventoryBlock.OldItemID = itemID;
+            create.InventoryBlock.Type = (sbyte)assetType;
+            create.InventoryBlock.InvType = (sbyte)invType;
+            create.InventoryBlock.Name = Utils.StringToBytes(name);
+            create.InventoryBlock.Description = Utils.StringToBytes(description);
+            
+            Client.Network.SendPacket(create);
+        }
+
         #endregion Create
 
         #region Copy
@@ -2276,6 +2370,38 @@ namespace OpenMetaverse
         }
 
         /// <summary>
+        /// Save changes to notecard embedded in object contents
+        /// </summary>
+        /// <param name="data">Encoded notecard asset data</param>
+        /// <param name="notecardID">Notecard UUID</param>
+        /// <param name="taskID">Object's UUID</param>
+        /// <param name="callback">Called upon finish of the upload with status information</param>
+        public void RequestUpdateNotecardTask(byte[] data, UUID notecardID, UUID taskID, InventoryUploadedAssetCallback callback)
+        {
+            if (Client.Network.CurrentSim == null || Client.Network.CurrentSim.Caps == null)
+                throw new Exception("UpdateNotecardTaskInventory capability is not currently available");
+
+            Uri url = Client.Network.CurrentSim.Caps.CapabilityURI("UpdateNotecardTaskInventory");
+
+            if (url != null)
+            {
+                OSDMap query = new OSDMap();
+                query.Add("item_id", OSD.FromUUID(notecardID));
+                query.Add("task_id", OSD.FromUUID(taskID));
+
+                // Make the request
+                CapsClient request = new CapsClient(url);
+                request.OnComplete += UploadInventoryAssetResponse;
+                request.UserData = new object[] { new KeyValuePair<InventoryUploadedAssetCallback, byte[]>(callback, data), notecardID };
+                request.BeginGetResponse(query, OSDFormat.Xml, Client.Settings.CAPS_TIMEOUT);
+            }
+            else
+            {
+                throw new Exception("UpdateNotecardTaskInventory capability is not currently available");
+            }
+        }
+
+        /// <summary>
         /// Upload new gesture asset for an inventory gesture item
         /// </summary>
         /// <param name="data">Encoded gesture asset</param>
@@ -2333,6 +2459,37 @@ namespace OpenMetaverse
             }
         }
 
+        /// <summary>
+        /// Update an existing script in an task Inventory
+        /// </summary>
+        /// <param name="data">A byte[] array containing the encoded scripts contents</param>
+        /// <param name="itemID">the itemID of the script</param>
+        /// <param name="taskID">UUID of the prim containting the script</param>
+        /// <param name="mono">if true, sets the script content to run on the mono interpreter</param>
+        /// <param name="running">if true, sets the script to running</param>
+        /// <param name="callback"></param>
+        public void RequestUpdateScriptTask(byte[] data, UUID itemID, UUID taskID, bool mono, bool running, ScriptUpdatedCallback callback)
+        {
+            Uri url = Client.Network.CurrentSim.Caps.CapabilityURI("UpdateScriptTask");
+
+            if (url != null)
+            {
+                UpdateScriptTaskUpdateMessage msg = new UpdateScriptTaskUpdateMessage();
+                msg.ItemID = itemID;
+                msg.TaskID = taskID;
+                msg.ScriptRunning = running;
+                msg.Target = mono ? "mono" : "lsl2";
+
+                CapsClient request = new CapsClient(url);
+                request.OnComplete += new CapsClient.CompleteCallback(UpdateScriptAgentInventoryResponse);
+                request.UserData = new object[2] { new KeyValuePair<ScriptUpdatedCallback, byte[]>(callback, data), itemID };
+                request.BeginGetResponse(msg.Serialize(), OSDFormat.Xml, Client.Settings.CAPS_TIMEOUT);
+            }
+            else
+            {
+                throw new Exception("UpdateScriptTask capability is not currently available");
+            }
+        }
         #endregion Update
 
         #region Rez/Give
@@ -3640,7 +3797,7 @@ namespace OpenMetaverse
 
             if (result == null)
             {
-                try { callback(false, error.Message, UUID.Zero, UUID.Zero); }
+                try { callback(false, error.Message, false, null, UUID.Zero, UUID.Zero); }
                 catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
                 return;
             }
@@ -3664,18 +3821,40 @@ namespace OpenMetaverse
                     // Request full item update so we keep store in sync
                     RequestFetchInventory((UUID)(((object[])client.UserData)[1]), contents["new_asset"].AsUUID());
 
-                    try { callback(true, status, (UUID)(((object[])client.UserData)[1]), contents["new_asset"].AsUUID()); }
+
+                    try
+                    {
+                        List<string> compileErrors = null;
+                        
+                        if (contents.ContainsKey("errors"))
+                        {
+                            OSDArray errors = (OSDArray)contents["errors"];
+                            compileErrors = new List<string>(errors.Count);
+
+                            for (int i = 0; i < errors.Count; i++)
+                            {
+                                compileErrors.Add(errors[i].AsString());
+                            }
+                        }
+
+                        callback(true,
+                            status,
+                            contents["compiled"].AsBoolean(),
+                            compileErrors,
+                            (UUID)(((object[])client.UserData)[1]),
+                            contents["new_asset"].AsUUID());
+                    }
                     catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
                 }
                 else
                 {
-                    try { callback(false, "Failed to parse asset UUID", UUID.Zero, UUID.Zero); }
+                    try { callback(false, "Failed to parse asset UUID", false, null, UUID.Zero, UUID.Zero); }
                     catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
                 }
             }
             else if (callback != null)
             {
-                try { callback(false, status, UUID.Zero, UUID.Zero); }
+                try { callback(false, status, false, null, UUID.Zero, UUID.Zero); }
                 catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
             }
         }
@@ -3709,7 +3888,7 @@ namespace OpenMetaverse
             if (reply.AgentData.Descendents > 0)
             {
                 // InventoryDescendantsReply sends a null folder if the parent doesnt contain any folders
-                if (reply.FolderData.Length > 0 && reply.FolderData[0].FolderID != UUID.Zero)
+                if (reply.FolderData[0].FolderID != UUID.Zero)
                 {
                     // Iterate folders in this packet
                     for (int i = 0; i < reply.FolderData.Length; i++)
