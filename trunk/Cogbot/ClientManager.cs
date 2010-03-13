@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Windows.Forms;
 using System.Threading;
 using cogbot.ScriptEngines;
+using cogbot.Utilities;
 using OpenMetaverse;
 using cogbot.Actions;
 using Radegast;
@@ -18,7 +19,7 @@ namespace cogbot
 
     public class ClientManager : IDisposable
     {
-
+        static private ClientManagerHttpServer clientManagerHttpServer;
         public void AddTool(string name, string text, EventHandler threadStart)
         {
             //      base.Invoke(new AddToolDelegate(AddTool0), new object[] {name, text, threadStart});
@@ -594,11 +595,14 @@ namespace cogbot
             return BotLoginParams;
         }
 
-
         private void EnsureStarting(BotClient client)
         {
             AddTypesToBotClient(client);
             client.StartupClientLisp();
+            if (clientManagerHttpServer==null)
+            {
+                clientManagerHttpServer = new ClientManagerHttpServer(client, 5580);
+            }
         }
 
         private void AddTypesToBotClient(BotClient bc)
