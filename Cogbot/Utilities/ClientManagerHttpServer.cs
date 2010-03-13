@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Web;
 using cogbot;
 using HttpServer;
 using OpenMetaverse;
@@ -58,6 +59,7 @@ namespace cogbot.Utilities
             bool success;
 
             string path = request.Uri.PathAndQuery;//.TrimEnd('/');
+            string pathd =  HttpUtility.UrlDecode(request.Uri.PathAndQuery);//.TrimEnd('/');
             Console.WriteLine("_listener " + path + " from " + request.RemoteEndPoint);
             if (request.UriPath.EndsWith(".ico"))
             {
@@ -67,7 +69,7 @@ namespace cogbot.Utilities
             bool useHtml = true;
             string botname = GetVariable(request, "bot", _botClient.GetName());
             string cmd = GetVariable(request, "cmd", "aiml");
-            string text = GetVariable(request, "text", string.Empty);
+            string text =GetVariable(request, "text", pathd.TrimStart('/'));
             var wrresp = new WriteLineToResponse(response);
             try
             {
@@ -111,9 +113,9 @@ namespace cogbot.Utilities
         {
             if (request.QueryString.Contains(bot))
             {
-                return request.QueryString[bot].Value;
+                return HttpUtility.UrlDecode(request.QueryString[bot].Value);
             }
-            return name;
+            return HttpUtility.UrlDecode(name);
         }
 
         private void _listener_Accepted(object sender, ClientAcceptedEventArgs e)
