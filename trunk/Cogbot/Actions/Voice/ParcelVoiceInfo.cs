@@ -4,7 +4,7 @@ using System.Threading;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Voice
 {
     public class ParcelVoiceInfoCommand : Command, RegionMasterCommand
     {
@@ -17,7 +17,7 @@ namespace cogbot.Actions
         {
             Name = "voiceparcel";
             Description = "obtain parcel voice info. Usage: voiceparcel";
-            Category = CommandCategory.Other;
+            Category = CommandCategory.Parcel;
 
             TheBotClient = testClient;
             Parameters = new [] {  new NamedParam(typeof(GridClient), null) };

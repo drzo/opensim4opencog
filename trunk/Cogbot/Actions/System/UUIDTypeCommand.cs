@@ -5,7 +5,7 @@ using System.Text;
 using OpenMetaverse;
 using cogbot.Listeners;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.System
 {
     public class UUIDTypeCommand : Command, GridMasterCommand
     {

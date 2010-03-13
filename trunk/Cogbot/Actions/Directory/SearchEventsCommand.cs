@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using OpenMetaverse;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Search
 {
     class SearchEventsCommand : Command, GridMasterCommand
     {
-        System.Threading.AutoResetEvent waitQuery = new System.Threading.AutoResetEvent(false);
+        AutoResetEvent waitQuery = new AutoResetEvent(false);
         int resultCount;
 
         public SearchEventsCommand(BotClient testClient)

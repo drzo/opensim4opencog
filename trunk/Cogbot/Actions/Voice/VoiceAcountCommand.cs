@@ -5,7 +5,7 @@ using System.Threading;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Voice
 {
     public class VoiceAccountCommand : Command, RegionMasterCommand
     {

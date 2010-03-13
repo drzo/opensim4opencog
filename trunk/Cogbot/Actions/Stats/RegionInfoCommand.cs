@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+using cogbot.Actions;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
 
@@ -18,7 +19,7 @@ namespace cogbot.Actions
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             int argsUsed;
-            Simulator CurSim = TryGetSim(args, out argsUsed) ?? Client.Network.CurrentSim;
+            OpenMetaverse.Simulator CurSim = TryGetSim(args, out argsUsed) ?? Client.Network.CurrentSim;
 
             StringBuilder output = new StringBuilder();
             output.AppendLine(CurSim.ToString());

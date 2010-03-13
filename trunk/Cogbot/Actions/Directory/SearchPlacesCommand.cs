@@ -1,16 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using cogbot;
 using cogbot.Actions;
 using OpenMetaverse;
 
 // the Namespace used for all BotClient commands
-namespace cogbot.Actions
+namespace cogbot.Actions.Search
 {
     class SearchPlacesCommand : Command, GridMasterCommand
     {
-        System.Threading.AutoResetEvent waitQuery = new System.Threading.AutoResetEvent(false);
+        AutoResetEvent waitQuery = new AutoResetEvent(false);
         int resultCount;
 
         public SearchPlacesCommand(BotClient testClient)
@@ -35,7 +36,7 @@ namespace cogbot.Actions
 
             EventHandler<PlacesReplyEventArgs> callback = delegate(object sender, PlacesReplyEventArgs e)
             {
-                result.AppendFormat("Your search string '{0}' returned {1} results" + System.Environment.NewLine,
+                result.AppendFormat("Your search string '{0}' returned {1} results" + Environment.NewLine,
                     searchText, e.MatchedPlaces.Count);
                 foreach (DirectoryManager.PlacesSearchData place in e.MatchedPlaces)
                 {

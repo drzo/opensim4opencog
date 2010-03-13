@@ -1,7 +1,7 @@
 using System;
 using OpenMetaverse;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Movement
 {
     public class GoHomeCommand : Command, BotPersonalCommand
     {

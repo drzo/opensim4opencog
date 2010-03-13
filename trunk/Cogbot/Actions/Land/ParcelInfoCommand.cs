@@ -4,7 +4,7 @@ using System.Text;
 using System.Threading;
 using OpenMetaverse;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Land
 {
     public class ParcelInfoCommand : Command, RegionMasterCommand
     {
@@ -46,13 +46,13 @@ namespace cogbot.Actions
 
                 if (ParcelsDownloaded.WaitOne(30000, false) && Client.Network.Connected)
                 {
-                    Success(string.Format("Downloaded {0} Parcels in {1} " + System.Environment.NewLine,CurSim.Parcels.Count, CurSim.Name));
+                    Success(string.Format("Downloaded {0} Parcels in {1} " + Environment.NewLine,CurSim.Parcels.Count, CurSim.Name));
 
                     CurSim.Parcels.ForEach(delegate(Parcel parcel)
                                                                   {
                                                                       Success(string.Format(
                                                                           "Parcel[{0}]: Name: \"{1}\", Description: \"{2}\" ACLBlacklist Count: {3}, ACLWhiteList Count: {5} Traffic: {4}" +
-                                                                          System.Environment.NewLine,
+                                                                          Environment.NewLine,
                                                                           parcel.LocalID, parcel.Name, parcel.Desc,
                                                                           parcel.AccessBlackList.Count, parcel.Dwell,
                                                                           parcel.AccessWhiteList.Count));

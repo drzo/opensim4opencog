@@ -3,7 +3,7 @@ using cogbot.TheOpenSims;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Land
 {
     public class WindCommand : Command, RegionMasterCommand
     {

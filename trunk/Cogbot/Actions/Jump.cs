@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
+
 
 namespace cogbot.Actions
 {
@@ -19,7 +21,7 @@ namespace cogbot.Actions
           //  base.acceptInput(verb, args);
 
             Client.Self.Jump(true);
-            System.Threading.Thread.Sleep(500);
+            Thread.Sleep(500);
             Client.Self.Jump(false);
 
             TheBotClient.describeNext = true;

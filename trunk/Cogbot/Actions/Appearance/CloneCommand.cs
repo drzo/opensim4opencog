@@ -5,7 +5,7 @@ using cogbot.TheOpenSims;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Appearance
 {
     public class CloneCommand : Command, BotPersonalCommand
     {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.System
 {
     public class DebugCommand : Command, SystemApplicationCommand
     {

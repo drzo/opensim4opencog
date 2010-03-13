@@ -4,7 +4,7 @@ using System.Text;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Land
 {
     /// <summary>
     /// Display a list of all agent locations in a specified region

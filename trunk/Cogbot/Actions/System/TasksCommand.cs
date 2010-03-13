@@ -3,7 +3,7 @@ using System.Threading;
 using cogbot.Utilities;
 using OpenMetaverse;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.System
 {
 
     public class TasksCommand : Command, BotSystemCommand

@@ -8,6 +8,7 @@ using OpenMetaverse;
 using OpenMetaverse.Packets;
 using Radegast;
 using System.Reflection;
+using  Simulator = OpenMetaverse.Simulator;
 
 namespace cogbot.Actions
 {

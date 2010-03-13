@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Inventorys
 {
     public class EmptyTrashCommand : Command, BotPersonalCommand
     {

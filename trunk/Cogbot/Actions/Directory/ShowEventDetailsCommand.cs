@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Search
 {
     class ShowEventDetailsCommand : Command, GridMasterCommand
     {
@@ -37,7 +37,7 @@ namespace cogbot.Actions
         {
             float x, y;
             Helpers.GlobalPosToRegionHandle((float)e.MatchedEvent.GlobalPos.X, (float)e.MatchedEvent.GlobalPos.Y, out x, out y);
-            StringBuilder sb = new StringBuilder("secondlife://" + e.MatchedEvent.SimName + "/" + x + "/" + y + "/0" + System.Environment.NewLine);
+            StringBuilder sb = new StringBuilder("secondlife://" + e.MatchedEvent.SimName + "/" + x + "/" + y + "/0" + Environment.NewLine);
             sb.AppendLine(e.MatchedEvent.ToString());
             
             //sb.AppendFormat("       Name: {0} ({1})" + System.Environment.NewLine, e.MatchedEvent.Name, e.MatchedEvent.ID);

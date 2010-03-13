@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Drawing2D = System.Drawing.Drawing2D;
 using System.IO;
 using System.Threading;
 using System.Drawing;
@@ -7,7 +8,7 @@ using OpenMetaverse;
 using OpenMetaverse.Http;
 using OpenMetaverse.Imaging;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Inventory
 {
     public class UploadImageCommand : Command, BotPersonalCommand
     {
@@ -61,7 +62,7 @@ namespace cogbot.Actions
         {
             if (UploadData != null)
             {
-                string name = System.IO.Path.GetFileNameWithoutExtension(FileName);
+                string name = Path.GetFileNameWithoutExtension(FileName);
 
                 Client.Inventory.RequestCreateItemFromAsset(UploadData, name, "Uploaded with TestClient",
                     AssetType.Texture, InventoryType.Texture, Client.Inventory.FindFolderForType(AssetType.Texture),
@@ -93,7 +94,7 @@ namespace cogbot.Actions
                     ManagedImage managedImage;
 
                     // Upload JPEG2000 images untouched
-                    UploadData = System.IO.File.ReadAllBytes(fileName);
+                    UploadData =  File.ReadAllBytes(fileName);
 
                     OpenJPEG.DecodeToImage(UploadData, out managedImage, out image);
                     bitmap = (Bitmap)image;
@@ -103,7 +104,7 @@ namespace cogbot.Actions
                     if (lowfilename.EndsWith(".tga"))
                         bitmap = LoadTGAClass.LoadTGA(fileName);
                     else
-                        bitmap = (Bitmap)System.Drawing.Image.FromFile(fileName);
+                        bitmap = (Bitmap) Image.FromFile(fileName);
 
                     int oldwidth = bitmap.Width;
                     int oldheight = bitmap.Height;
@@ -113,9 +114,9 @@ namespace cogbot.Actions
                         Bitmap resized = new Bitmap(256, 256, bitmap.PixelFormat);
                         Graphics graphics = Graphics.FromImage(resized);
 
-                        graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+                        graphics.SmoothingMode =  Drawing2D.SmoothingMode.HighQuality;
                         graphics.InterpolationMode =
-                           System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                            Drawing2D.InterpolationMode.HighQualityBicubic;
                         graphics.DrawImage(bitmap, 0, 0, 256, 256);
 
                         bitmap.Dispose();
@@ -134,9 +135,9 @@ namespace cogbot.Actions
                         Bitmap resized = new Bitmap(newwidth, newheight, bitmap.PixelFormat);
                         Graphics graphics = Graphics.FromImage(resized);
 
-                        graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+                        graphics.SmoothingMode = Drawing2D.SmoothingMode.HighQuality;
                         graphics.InterpolationMode =
-                           System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                          Drawing2D.InterpolationMode.HighQualityBicubic;
                         graphics.DrawImage(bitmap, 0, 0, newwidth, newheight);
 
                         bitmap.Dispose();

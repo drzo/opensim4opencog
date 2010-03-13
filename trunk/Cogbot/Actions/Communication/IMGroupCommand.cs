@@ -4,7 +4,7 @@ using System.Threading;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Communication
 {
     public class ImGroupCommand : Command, BotPersonalCommand
     {

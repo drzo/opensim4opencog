@@ -5,7 +5,7 @@ using OpenMetaverse;
 using OpenMetaverse.Packets;
 using System.Text;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Groups
 {
     public class GroupsCommand : Command, BotPersonalCommand
     {        

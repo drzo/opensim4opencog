@@ -5,7 +5,7 @@ using System.Text;
 using OpenMetaverse;
 using System.Diagnostics;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Inventory
 {
     public class CreateScriptCommand : Command, BotPersonalCommand
     {
@@ -55,7 +55,7 @@ namespace cogbot.Actions
                 return Success("Done");
 
             }
-            catch (System.Exception e)
+            catch (Exception e)
             {
                 Logger.Log(e.ToString(), Helpers.LogLevel.Error, Client);
                 return Failure("Error creating script.");

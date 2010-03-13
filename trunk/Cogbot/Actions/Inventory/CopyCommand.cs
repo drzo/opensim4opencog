@@ -4,7 +4,7 @@ using cogbot.TheOpenSims;
 using OpenMetaverse;
 using Radegast;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Inventory
 {
     public class CopyCommand : cogbot.Actions.Command, RegionMasterCommand
     {
