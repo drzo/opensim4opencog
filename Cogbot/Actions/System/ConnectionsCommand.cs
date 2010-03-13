@@ -2,7 +2,7 @@ using System;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
 
-namespace cogbot.Actions.Movement
+namespace cogbot.Actions.System
 {
     public class ConnectionsCommand : cogbot.Actions.Command, SystemApplicationCommand
     {

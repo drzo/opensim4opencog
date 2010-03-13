@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using OpenMetaverse; //using libsecondlife;
 
 namespace cogbot.Actions
@@ -26,7 +27,7 @@ namespace cogbot.Actions
             if (tokens.Length == 0)
             {
                 Client.Self.Crouch(true);
-                System.Threading.Thread.Sleep(500);
+                Thread.Sleep(500);
                // isCrouching = false;
                 Client.Self.Crouch(false);
                 return Success("$bot crouched.");

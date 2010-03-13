@@ -5,7 +5,7 @@ using OpenMetaverse;
 using OpenMetaverse.Packets;
 using PathSystem3D.Navigation;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Movement
 {
     public class GotoLandmarkCommand : Command, BotPersonalCommand
     {

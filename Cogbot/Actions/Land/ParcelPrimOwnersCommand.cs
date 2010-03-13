@@ -4,7 +4,7 @@ using System.Text;
 using System.Threading;
 using OpenMetaverse;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Land
 {
     public class ParcelPrimOwnersCommand : Command, RegionMasterCommand
     {
@@ -34,7 +34,7 @@ namespace cogbot.Actions
                 {
                     for (int i = 0; i < e.PrimOwners.Count; i++)
                     {
-                        result.AppendFormat("Owner: {0} Count: {1}" + System.Environment.NewLine, e.PrimOwners[i].OwnerID, e.PrimOwners[i].Count);
+                        result.AppendFormat("Owner: {0} Count: {1}" + Environment.NewLine, e.PrimOwners[i].OwnerID, e.PrimOwners[i].Count);
                         wait.Set();
                     }
                 };

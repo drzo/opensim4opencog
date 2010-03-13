@@ -195,7 +195,7 @@ namespace cogbot.Actions
         {
             if (moveDist >= precision)
             {
-                System.Threading.Thread.Sleep(1000);
+                Thread.Sleep(1000);
                 //WriteLine("Prev: " + PrevPosition.ToString() + " Now: " + CurrentClient.Self.SimPosition.ToString());
                 if (moveTo == "west")
                 {

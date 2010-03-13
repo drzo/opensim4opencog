@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
+using System.Threading;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.System
 {
     public class WaitForLoginCommand : Command, BotSystemCommand
     {
@@ -31,7 +32,7 @@ namespace cogbot.Actions
                 while (net.CurrentSim == null)
                 {
                     WriteLine("Pending logins: " + bot.GetName());
-                    System.Threading.Thread.Sleep(1000);
+                     Thread.Sleep(1000);
                     retries--;
                     if (retries < 1) break;
                 }

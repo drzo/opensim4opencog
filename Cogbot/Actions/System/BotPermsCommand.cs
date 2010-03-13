@@ -6,7 +6,7 @@ using OpenMetaverse;
 using OpenMetaverse.Packets;
 using cogbot.TheOpenSims;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.System
 {
     public class BotPermsCommand : Command, BotSystemCommand
     {

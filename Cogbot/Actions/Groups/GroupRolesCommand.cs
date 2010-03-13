@@ -5,7 +5,7 @@ using OpenMetaverse;
 using OpenMetaverse.Packets;
 using System.Text;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Groups
 {
     /// <summary>
     /// dumps group roles to console

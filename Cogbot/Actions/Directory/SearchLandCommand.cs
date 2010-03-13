@@ -1,17 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using OpenMetaverse;
 
 // the Namespace used for all BotClient commands
-namespace cogbot.Actions
+namespace cogbot.Actions.Search
 {
     /// <summary>
     /// 
     /// </summary>
     public class SearchLandCommand : Command, GridMasterCommand
     {
-        private System.Threading.AutoResetEvent waitQuery = new System.Threading.AutoResetEvent(false);
+        private AutoResetEvent waitQuery = new AutoResetEvent(false);
         private StringBuilder result = new StringBuilder();
 
         /// <summary>
@@ -111,7 +112,7 @@ namespace cogbot.Actions
                 // add the results to the StringBuilder object that contains the results
                 result.AppendLine(searchResult.ToString());
             }
-            result.AppendFormat("{0} results" + System.Environment.NewLine, e.DirParcels.Count);
+            result.AppendFormat("{0} results" + Environment.NewLine, e.DirParcels.Count);
             // let the calling method know we have data
             waitQuery.Set();
         }

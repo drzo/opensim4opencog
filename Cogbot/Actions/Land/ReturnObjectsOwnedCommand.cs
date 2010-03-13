@@ -4,7 +4,7 @@ using System.Text;
 using System.Threading;
 using OpenMetaverse;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Land
 {
     public class ReturnObjectsOwnedCommand : Command, RegionMasterCommand
     {

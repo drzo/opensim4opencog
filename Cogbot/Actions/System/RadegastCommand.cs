@@ -7,7 +7,7 @@ using OpenMetaverse;
 using org.opencyc.xml;
 using Radegast;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.System
 {
     public class ShowRadCommand : Command, BotSystemCommand
     {

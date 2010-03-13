@@ -5,7 +5,7 @@ using cogbot.Listeners;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Communication
 {
     public class ImCommand : Command, BotPersonalCommand
     {

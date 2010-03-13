@@ -6,7 +6,7 @@ using OpenMetaverse.Packets;
 using System.Text;
 
 // the Namespace used for all BotClient commands
-namespace cogbot.Actions
+namespace cogbot.Actions.Friends
 {
     /// <summary>
     /// Shows a list of friends
@@ -24,6 +24,7 @@ namespace cogbot.Actions
             // A short description of the command with usage instructions
             Description = "List avatar friends. Usage: friends";
             Category = CommandCategory.Friends;
+            Parameters = new[] { new NamedParam(typeof(Avatar), typeof(UUID)) };
         }
 
         /// <summary>
@@ -36,6 +37,11 @@ namespace cogbot.Actions
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             // initialize a StringBuilder object used to return the results
+            return Success(ListFriends(Client));
+        }
+
+        static public String ListFriends(GridClient Client)
+        {
             StringBuilder sb = new StringBuilder();
 
             // Only iterate the Friends dictionary if we actually have friends!
@@ -44,10 +50,10 @@ namespace cogbot.Actions
                 // iterate over the InternalDictionary using a delegate to populate
                 // our StringBuilder WriteLine string
                 Client.Friends.FriendList.ForEach(delegate(FriendInfo friend)
-                {
-                    // append the name of the friend to our WriteLine
-                    sb.AppendLine(friend.Name);
-                });
+                                                      {
+                                                          // append the name of the friend to our WriteLine
+                                                          sb.AppendLine(friend.Name);
+                                                      });
             }
             else
             {
@@ -56,7 +62,7 @@ namespace cogbot.Actions
             }
 
             // return the result
-            return Success(sb.ToString());            
+            return sb.ToString();
         }
     }
 }

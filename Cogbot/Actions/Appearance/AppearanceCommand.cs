@@ -2,7 +2,7 @@ using System;
 using System.Threading;
 using OpenMetaverse;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Appearance
 {
     /// <summary>
     /// Set avatars current appearance to appearance last stored on simulator

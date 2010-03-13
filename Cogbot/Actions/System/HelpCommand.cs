@@ -4,7 +4,7 @@ using System.Text;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.System
 {
     public class HelpCommand: Command ,SystemApplicationCommand
     {
@@ -50,7 +50,7 @@ namespace cogbot.Actions
 
             foreach (KeyValuePair<CommandCategory, List<Command>> kvp in CommandTree)
             {
-                result.AppendFormat(System.Environment.NewLine + "* {0} Related Commands:" + System.Environment.NewLine, kvp.Key.ToString());
+                result.AppendFormat(Environment.NewLine + "* {0} Related Commands:" + Environment.NewLine, kvp.Key.ToString());
                 int colMax = 0;
                 for (int i = 0; i < kvp.Value.Count; i++)
                 {
@@ -65,7 +65,7 @@ namespace cogbot.Actions
                 }
                 result.AppendLine();
             }
-            result.AppendLine(System.Environment.NewLine + "Help [command] for usage/information");
+            result.AppendLine(Environment.NewLine + "Help [command] for usage/information");
             
             return Success(result.ToString());;
 		}

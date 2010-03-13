@@ -1,7 +1,7 @@
 using System;
 using OpenMetaverse;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Groups
 {
     /// <summary>
     /// Shows group info Dialog using Radegast UI

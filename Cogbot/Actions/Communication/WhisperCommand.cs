@@ -4,7 +4,7 @@ using System.Text;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Communication
 {
     public class WhisperCommand : Command, BotPersonalCommand
     {

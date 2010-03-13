@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
+using System.Threading;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using OpenMetaverse.Assets;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Inventory
 {
     public class ViewNotecardCommand : Command, BotPersonalCommand
     {
@@ -39,9 +41,9 @@ namespace cogbot.Actions
                 return Failure( "First argument expected UUID.");
             }
 
-            System.Threading.AutoResetEvent waitEvent = new System.Threading.AutoResetEvent(false);
+             AutoResetEvent waitEvent = new AutoResetEvent(false);
 
-            System.Text.StringBuilder result = new System.Text.StringBuilder();
+            StringBuilder result = new StringBuilder();
 
             // verify asset is loaded in store
             if (Client.Inventory.Store.Contains(note))
@@ -55,7 +57,7 @@ namespace cogbot.Actions
                     {
                         if (transfer.Success)
                         {
-                            result.AppendFormat("Raw Notecard Data: " + System.Environment.NewLine + " {0}", Utils.BytesToString(asset.AssetData));
+                            result.AppendFormat("Raw Notecard Data: " + Environment.NewLine + " {0}", Utils.BytesToString(asset.AssetData));
                             waitEvent.Set();
                         }
                     }

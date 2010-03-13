@@ -2,7 +2,7 @@
 using cogbot.TheOpenSims;
 using OpenMetaverse;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.System
 {
     public class WaitEventCommand : Command, BotPersonalCommand
     {

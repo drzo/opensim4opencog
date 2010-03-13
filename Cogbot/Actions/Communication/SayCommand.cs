@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Communication
 {
     public class SayCommand : Command, BotPersonalCommand
     {

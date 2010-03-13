@@ -1,13 +1,14 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Threading;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-namespace cogbot.Actions
+namespace cogbot.Actions.Estate
 {
     public class UploadRawTerrainCommand : Command, RegionMasterCommand
     {
-        System.Threading.AutoResetEvent WaitForUploadComplete = new System.Threading.AutoResetEvent(false);
+        AutoResetEvent WaitForUploadComplete = new AutoResetEvent(false);
 
         public UploadRawTerrainCommand(BotClient testClient)
         {
@@ -26,7 +27,7 @@ namespace cogbot.Actions
 
             fileName = args[0];
 
-            if (!System.IO.File.Exists(fileName))
+            if (!File.Exists(fileName))
             {
                 return Failure(String.Format("File {0} Does not exist", fileName));
             }

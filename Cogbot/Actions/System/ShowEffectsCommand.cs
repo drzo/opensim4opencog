@@ -3,7 +3,7 @@ using cogbot;
 using cogbot.Actions;
 using OpenMetaverse;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.System
 {
     public class ShowEffectsCommand : Command, RegionMasterCommand
     {

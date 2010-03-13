@@ -381,7 +381,7 @@ namespace cogbot
 
             Commands["fly"] = new Actions.Fly(this);
             Commands["stop-flying"] = new Actions.StopFlying(this);
-            Commands["locate"] = Commands["location"] = Commands["where"] = new Actions.LocationCommand(this);
+            Commands["locate"] = Commands["location"] = Commands["where"] = new Actions.Movement.LocationCommand(this);
             Actions.Follow follow = new Actions.Follow(this);
             Commands["follow"] = follow;
             Commands["wear"] = new Actions.Wear(this);

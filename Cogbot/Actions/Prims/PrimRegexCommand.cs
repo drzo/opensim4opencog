@@ -56,7 +56,7 @@ namespace cogbot.Actions
                     }
                 );
             }
-            catch (System.Exception e)
+            catch (Exception e)
             {
                 Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e);
                 return Failure("Error searching");

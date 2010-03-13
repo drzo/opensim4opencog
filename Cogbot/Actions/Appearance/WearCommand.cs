@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using OpenMetaverse;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Appearance
 {
     public class WearCommand : Command, BotPersonalCommand
     {

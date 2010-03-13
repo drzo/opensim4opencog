@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Threading;
 using cogbot.TheOpenSims;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Appearance
 {
     public class AnimCommand : Command, BotPersonalCommand
     {

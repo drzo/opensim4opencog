@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Appearance
 {
     public class AttachmentsCommand : Command, RegionMasterCommand
     {

@@ -7,7 +7,7 @@ using OpenMetaverse;
 using OpenMetaverse.Assets;
 using OpenMetaverse.Imaging;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Appearance
 {
     public class DumpOutfitCommand : Command, BotPersonalCommand
     {

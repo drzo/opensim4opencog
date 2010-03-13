@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using OpenMetaverse;
 
 
@@ -66,7 +67,7 @@ namespace cogbot.Actions
                 return Success(ret);
 
             }
-            catch (System.Exception e)
+            catch (Exception e)
             {
                 Logger.Log(e.ToString(), Helpers.LogLevel.Error, Client);
                 return Failure(String.Format("Error creating script for {0}", ret));
@@ -79,7 +80,7 @@ namespace cogbot.Actions
         public static byte[] EncodeScript(string body)
         {
             // Assume this is a string, add 1 for the null terminator ?
-            byte[] stringBytes = System.Text.Encoding.UTF8.GetBytes(body);
+            byte[] stringBytes = Encoding.UTF8.GetBytes(body);
             byte[] assetData = new byte[stringBytes.Length]; //+ 1];
             Array.Copy(stringBytes, 0, assetData, 0, stringBytes.Length);
             return assetData;

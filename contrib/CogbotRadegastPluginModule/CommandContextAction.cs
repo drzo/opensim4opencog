@@ -334,7 +334,8 @@ namespace CogbotRadegastPluginModule
                     if (its==null) continue;
                     foreach (var menuItem in its)
                     {
-                        item.DropDownItems.Add(menuItem);                                            
+                        item.DropDownItems.Add(menuItem);
+                        if (!list.Contributes(target, type)) menuItem.Enabled = false;
                     }
                 }
                 lst.Add(item);

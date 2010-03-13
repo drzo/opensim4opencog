@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using OpenMetaverse;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Land
 {
     public class ParcelDetailsCommand : Command, RegionMasterCommand
     {
@@ -33,12 +34,12 @@ namespace cogbot.Actions
                 
                 // Use reflection to dynamically get the fields from the Parcel struct
                 Type t = parcel.GetType();
-                System.Reflection.FieldInfo[] fields = t.GetFields(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
+                FieldInfo[] fields = t.GetFields(BindingFlags.Instance | BindingFlags.Public);
 
                 StringBuilder sb = new StringBuilder();
-                foreach (System.Reflection.FieldInfo field in fields)
+                foreach (FieldInfo field in fields)
                 {
-                    sb.AppendFormat("{0} = {1}" + System.Environment.NewLine, field.Name, field.GetValue(parcel));
+                    sb.AppendFormat("{0} = {1}" + Environment.NewLine, field.Name, field.GetValue(parcel));
                 }
                 return Success(sb.ToString());
             }

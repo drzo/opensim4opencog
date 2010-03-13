@@ -5,7 +5,7 @@ using System.Reflection;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.System
 {
     public class LoadCommand : Command, BotSystemCommand
     {

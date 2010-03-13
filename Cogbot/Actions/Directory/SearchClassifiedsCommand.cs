@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using OpenMetaverse;
 
 // the Namespace used for all BotClient commands
-namespace cogbot.Actions
+namespace cogbot.Actions.Search
 {
     class SearchClassifiedsCommand : Command, GridMasterCommand
     {
-        System.Threading.AutoResetEvent waitQuery = new System.Threading.AutoResetEvent(false);
+        AutoResetEvent waitQuery = new AutoResetEvent(false);
         int resultCount;
 
         public SearchClassifiedsCommand(BotClient testClient)
@@ -33,7 +34,7 @@ namespace cogbot.Actions
 
             EventHandler<DirClassifiedsReplyEventArgs> callback = delegate(object sender, DirClassifiedsReplyEventArgs e)
             {
-                result.AppendFormat("Your search string '{0}' returned {1} classified ads" + System.Environment.NewLine,
+                result.AppendFormat("Your search string '{0}' returned {1} classified ads" + Environment.NewLine,
                     searchText, e.Classifieds.Count);
                 foreach (DirectoryManager.Classified ad in e.Classifieds)
                 {

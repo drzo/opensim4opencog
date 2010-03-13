@@ -1,8 +1,9 @@
 using System;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
+using System.Threading;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.System
 {
     public class SleepCommand : Command, BotSystemCommand
     {
@@ -29,7 +30,7 @@ namespace cogbot.Actions
             Client.Network.SendPacket(pause);
 
             // Sleep
-            System.Threading.Thread.Sleep(seconds * 1000);
+            Thread.Sleep(seconds * 1000);
 
             AgentResumePacket resume = new AgentResumePacket();
             resume.AgentData.AgentID = Client.Self.AgentID;

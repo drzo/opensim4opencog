@@ -6,7 +6,7 @@ using cogbot.Utilities;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.System
 {
     public class BotVarCommand : cogbot.Actions.Command, BotSystemCommand
     {

@@ -1,10 +1,11 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading;
 using OpenMetaverse;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Estate
 {
     /// <summary>
     /// Request the raw terrain file from the simulator, save it as a file.
@@ -19,7 +20,7 @@ namespace cogbot.Actions
         private static AutoResetEvent xferTimeout = new AutoResetEvent(false);
         
         /// <summary>A string we use to report the result of the request with.</summary>
-        private static System.Text.StringBuilder result = new System.Text.StringBuilder();
+        private static StringBuilder result = new StringBuilder();
 
         private static string fileName;
 
