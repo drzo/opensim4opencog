@@ -474,6 +474,7 @@ namespace OpenMetaverse
             else
             {
                 //throw new NotConnectedException("Packet received before simulator packet processing threads running, make certain you are completely logged in");
+                Logger.Log("Packet received before simulator packet processing threads running, make certain you are completely logged in.", Helpers.LogLevel.Error);
             }
         }
 
@@ -490,6 +491,7 @@ namespace OpenMetaverse
             }
             else
             {
+                Logger.Log("Packet received before simulator packet processing threads running, make certain you are completely logged in", Helpers.LogLevel.Error);
                 SendPacket(packet);
                 //throw new NotConnectedException("Packet received before simulator packet processing threads running, make certain you are completely logged in");
             }

@@ -1740,8 +1740,15 @@ namespace OpenMetaverse.Packets
                     result.AppendFormat("-- {0} --" + Environment.NewLine, messageField.FieldType.Name);
                     foreach (object nestedArrayObject in messageObjectData as Array)
                     {
+                        if (nestedArrayObject == null)
+                        {
+                            result.AppendFormat("{0,30}" + Environment.NewLine, "-- null --");
+                            continue;
+                        }
+                        else
+                        {
                         result.AppendFormat("{0,30}" + Environment.NewLine, "-- " + nestedArrayObject.GetType().Name + " --");
-
+                        }
                         foreach (FieldInfo nestedField in nestedArrayObject.GetType().GetFields())
                         {
                             if (nestedField.FieldType.IsEnum)
@@ -1762,7 +1769,7 @@ namespace OpenMetaverse.Packets
                                 result.AppendFormat("{0, 30}: {1,-40} [{2}]" + Environment.NewLine,
                                  nestedField.Name,
                                  nestedField.GetValue(nestedArrayObject),
-                                 nestedField.GetValue(nestedArrayObject).GetType().Name);
+                                 nestedField.FieldType.Name);
                             }
                         }
                     }
