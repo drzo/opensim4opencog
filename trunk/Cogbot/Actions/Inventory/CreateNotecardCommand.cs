@@ -75,7 +75,7 @@ namespace cogbot.Actions.Inventory
             #endregion Notecard asset data
 
             Client.Inventory.RequestCreateItem(Client.Inventory.FindFolderForType(AssetType.Notecard),
-                filename, filename + " created by OpenMetaverse TestClient " + DateTime.Now, AssetType.Notecard,
+                filename, filename + " created by OpenMetaverse BotClient " + DateTime.Now, AssetType.Notecard,
                 UUID.Random(), InventoryType.Notecard, PermissionMask.All,
                 delegate(bool createSuccess, InventoryItem item)
                 {

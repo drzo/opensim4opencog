@@ -12,7 +12,7 @@ namespace cogbot.Actions.System
             {
                 Name = "setbot";
                 Description = "Sets one current bot for subsequent textform commands";
-                Category = CommandCategory.TestClient;
+                Category = CommandCategory.BotClient;
             }
 
             public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

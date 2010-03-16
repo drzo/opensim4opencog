@@ -7,7 +7,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using OpenMetaverse;
 
-namespace cogbot.Actions.Inventory
+namespace cogbot.Actions.Inventory.Shell
 {
     /// <summary>
     /// Inventory Example, Moves a folder to the Trash folder

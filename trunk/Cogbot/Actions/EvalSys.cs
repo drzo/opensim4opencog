@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 //using OpenMetaverse; //using libsecondlife;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.System
 {
     class EvalSys : Command, SystemApplicationCommand
     {

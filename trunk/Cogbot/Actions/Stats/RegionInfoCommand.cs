@@ -4,7 +4,7 @@ using cogbot.Actions;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.System
 {
     public class RegionInfoCommand : Command, RegionMasterCommand
     {

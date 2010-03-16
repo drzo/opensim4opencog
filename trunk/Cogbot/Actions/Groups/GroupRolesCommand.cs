@@ -22,6 +22,7 @@ namespace cogbot.Actions.Groups
             Name = "grouproles";
             Description = "Dump group roles to console. Usage: grouproles GroupName";
             Category = CommandCategory.Groups;
+            Parameters = new[] { new NamedParam(typeof(Group), typeof(UUID)) };
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

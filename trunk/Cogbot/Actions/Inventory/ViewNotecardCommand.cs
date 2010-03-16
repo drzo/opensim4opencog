@@ -11,7 +11,7 @@ namespace cogbot.Actions.Inventory
     public class ViewNotecardCommand : Command, BotPersonalCommand
     {
         /// <summary>
-        /// TestClient command to download and display a notecard asset
+        /// BotClient command to download and display a notecard asset
         /// </summary>
         /// <param name="testClient"></param>
         public ViewNotecardCommand(BotClient testClient)

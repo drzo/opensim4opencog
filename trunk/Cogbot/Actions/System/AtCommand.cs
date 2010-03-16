@@ -12,7 +12,7 @@ namespace cogbot.Actions.System
         {
             Name = "@";
             Description = "Restrict the following commands to one or all avatars. Usage: @ [firstname lastname]";
-            Category = CommandCategory.TestClient;
+            Category = CommandCategory.BotClient;
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

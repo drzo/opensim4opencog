@@ -9,7 +9,7 @@ namespace cogbot.Actions.System
         {
             Name = "tobot";
             Description = "Send a command only to one bot.  Usage: tobot \"Nephrael Rae\" anim KISS";
-            Category = CommandCategory.TestClient;
+            Category = CommandCategory.BotClient;
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

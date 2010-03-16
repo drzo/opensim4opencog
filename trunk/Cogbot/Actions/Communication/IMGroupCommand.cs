@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using cogbot.TheOpenSims;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
@@ -13,7 +14,8 @@ namespace cogbot.Actions.Communication
 
             Name = "imgroup";
             Description = "Send an instant message to a group. Usage: imgroup <group_uuid> [message]";
-            Category = CommandCategory.Communication;
+            Category = CommandCategory.Groups;
+            Parameters = new[] { new NamedParam(typeof(SimGroup), typeof(UUID)) };
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

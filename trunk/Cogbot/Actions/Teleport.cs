@@ -9,7 +9,7 @@ using PathSystem3D.Navigation; //using libsecondlife;
 //using TeleportFlags = OpenMetaverse.AgentManager.TeleportFlags;
 //using TeleportStatus = OpenMetaverse.AgentManager.TeleportStatus;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Agent
 {
 #pragma warning disable 0168
     class Teleport : Command, BotPersonalCommand
@@ -20,7 +20,8 @@ namespace cogbot.Actions
             : base(testClient)
         {
             TheBotClient = testClient;
-
+            Category = CommandCategory.Movement;
+            Parameters = new[] { new NamedParam(typeof(SimPosition), typeof(SimPosition)) };
             Description = "Teleport to a location.";
             Usage = "To teleport to a location, type \"teleport to <location name>\"";
         }

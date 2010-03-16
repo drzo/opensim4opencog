@@ -9,7 +9,7 @@ namespace cogbot.Actions.System
         {
             Name = "packetlog";
             Description = "Logs a given number of packets to an xml file. Usage: packetlog 10 tenpackets.xml";
-            Category = CommandCategory.TestClient;
+            Category = CommandCategory.BotClient;
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

@@ -10,7 +10,7 @@ namespace cogbot.Actions.System
         {
             Name = "quietly";
             Description = "Invoke a console command with no return results.  Usage: quietly priminfo";
-            Category = CommandCategory.TestClient;
+            Category = CommandCategory.BotClient;
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

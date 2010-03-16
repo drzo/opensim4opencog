@@ -14,6 +14,7 @@ namespace cogbot.Actions.Groups
             Name = "groups";
             Description = "List avatar groups. Usage: groups";
             Category = CommandCategory.Groups;
+            Parameters = new[] { new NamedParam(typeof(GridClient), null) };
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

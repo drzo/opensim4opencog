@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
-namespace cogbot.Actions.Inventorys
+namespace cogbot.Actions.Inventory
 {
     public class EmptyTrashCommand : Command, BotPersonalCommand
     {
         /// <summary>
-        /// TestClient command to download and display a notecard asset
+        /// BotClient command to download and display a notecard asset
         /// </summary>
         /// <param name="testClient"></param>
         public EmptyTrashCommand(BotClient testClient)

@@ -8,7 +8,7 @@ using System.Xml.Serialization;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Inventory.Shell
 {
     public class InventoryCommand : Command, BotPersonalCommand
     {

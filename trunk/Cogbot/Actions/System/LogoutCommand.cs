@@ -1,25 +1,31 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
-using OpenMetaverse.Packets;
 
-namespace cogbot.Actions.System
+namespace cogbot.Actions
 {
-    public class LogoutCommand : Command, BotSystemCommand
+    class Logout : Command, BotSystemCommand
     {
-        public LogoutCommand(BotClient testClient)
+        public Logout(BotClient Client)
+            : base(Client)
         {
-            Name = "logout";
-            Description = "Log this avatar out";
-            Category = CommandCategory.TestClient;
+            Name = "Logout";
+            Description = "Logout from Secondlife";
+            Usage = "To Logout from Second Life, type \"logout\"";
+            Category = CommandCategory.BotClient;
+            Parameters = new[] { new NamedParam(typeof(GridClient), null) };
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
-            string name = Client.ToString();
-			TheBotClient.ClientManager.Logout(TheBotClient);
-            return Success("Logged " + name + " out");
+            if (Client.Network.Connected)
+            {
+                ClientManager.Logout(Client);
+                return Success("Logged out " + Client);
+            }
+            return Success("Was Logged out " + Client);
         }
+
     }
 }

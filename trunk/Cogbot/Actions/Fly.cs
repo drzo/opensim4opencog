@@ -4,7 +4,7 @@ using System.Text;
 using OpenMetaverse;
 using System.Threading; //using libsecondlife;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Movement
 {
     class Fly : Command, BotPersonalCommand
     {

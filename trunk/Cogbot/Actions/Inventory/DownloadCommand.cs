@@ -7,7 +7,7 @@ using cogbot.Listeners;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
 
-namespace cogbot.Actions.Inventory
+namespace cogbot.Actions.SimExport
 {
     public class DownloadCommand : Command, GridMasterCommand
     {

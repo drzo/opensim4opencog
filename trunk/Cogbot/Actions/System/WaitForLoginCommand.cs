@@ -12,7 +12,7 @@ namespace cogbot.Actions.System
         {
             Name = "waitforlogin";
             Description = "Waits until all bots that are currently attempting to login have succeeded or failed";
-            Category = CommandCategory.TestClient;
+            Category = CommandCategory.BotClient;
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

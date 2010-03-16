@@ -5,7 +5,7 @@ using System.Text;
 using OpenMetaverse;
 
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Inventory
 {
     /// <summary>
     /// Example of how to put a new script in your inventory
@@ -13,7 +13,7 @@ namespace cogbot.Actions
     public class UploadScriptCommand : Command, BotPersonalCommand
     {
         /// <summary>
-        ///  The default constructor for TestClient commands
+        ///  The default constructor for BotClient commands
         /// </summary>
         /// <param name="testClient"></param>
         public UploadScriptCommand(BotClient testClient)
@@ -24,7 +24,7 @@ namespace cogbot.Actions
         }
 
         /// <summary>
-        /// The default override for TestClient commands
+        /// The default override for BotClient commands
         /// </summary>
         /// <param name="args"></param>
         /// <param name="fromAgentID"></param>
@@ -49,7 +49,7 @@ namespace cogbot.Actions
                 using (StreamReader reader = new StreamReader(file))
                 {
                     string body = reader.ReadToEnd();
-                    string desc = String.Format("{0} created by OpenMetaverse TestClient {1}", file, DateTime.Now);
+                    string desc = String.Format("{0} created by OpenMetaverse BotClient {1}", file, DateTime.Now);
                     // create the asset
                     Client.Inventory.RequestCreateItem(Client.Inventory.FindFolderForType(AssetType.LSLText), file, desc, AssetType.LSLText, UUID.Random(), InventoryType.LSL, PermissionMask.All,
                     delegate(bool success, InventoryItem item)

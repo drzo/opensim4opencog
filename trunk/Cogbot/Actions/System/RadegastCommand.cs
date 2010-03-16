@@ -15,7 +15,7 @@ namespace cogbot.Actions.System
         {
             Name = "showgui";
             Description = "Shows the Radegast UI";
-            Category = CommandCategory.TestClient;
+            Category = CommandCategory.BotClient;
         }
         internal frmMain PanelGUI;
 

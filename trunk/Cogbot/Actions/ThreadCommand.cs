@@ -13,7 +13,7 @@ namespace cogbot.Actions
         {
             Name = "thread";
             Description = "executes a command in its own thread. Usage: thread anim 30 crouch";
-            Category = CommandCategory.Other;
+            Category = CommandCategory.BotClient;
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

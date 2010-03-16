@@ -5,7 +5,7 @@ using System.Threading;
 using cogbot.TheOpenSims;
 using OpenMetaverse; //using libsecondlife;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Movement
 {
     class Sit : Command, BotPersonalCommand
     {
@@ -19,6 +19,7 @@ namespace cogbot.Actions
             Usage = "To sit on ground, type \"sit\" \r\n" +
                           "To sit on an object, type \"sit on <object name>\"";
             Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
+            Category = CommandCategory.Movement;
         }
 
         void Objects_OnAvatarSitChanged(Simulator simulator, Avatar avatar, uint sittingOn, uint oldSeat)

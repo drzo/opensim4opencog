@@ -5,7 +5,7 @@ using PathSystem3D.Navigation;
 
 //using libsecondlife;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Agent
 {
     class Use : Command, BotPersonalCommand
     {
@@ -13,7 +13,8 @@ namespace cogbot.Actions
             : base(Client)
         {
             Description = "Use an item from inventory or world.";
-            Parameters = new [] { new NamedParam(typeof(SimPosition), typeof(UUID))};
+            Category = CommandCategory.Objects;
+            Parameters = new[] { new NamedParam(typeof(SimPosition), typeof(UUID)) };
             Name = "Use..";
         }
 

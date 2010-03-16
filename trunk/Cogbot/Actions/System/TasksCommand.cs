@@ -11,7 +11,7 @@ namespace cogbot.Actions.System
         public TasksCommand(BotClient testClient)
         {
             Description = "Shows the list of task queue statuses.  Usage: tasks";
-            Category = CommandCategory.TestClient;
+            Category = CommandCategory.BotClient;
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID1, OutputDelegate WriteLine)

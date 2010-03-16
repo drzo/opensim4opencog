@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
+using PathSystem3D.Navigation;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Land
 {
     public class TreeCommand: Command, RegionMasterCommand
     {
@@ -21,7 +22,8 @@ namespace cogbot.Actions
             usage += "]";
             Usage = usage;
             Category = CommandCategory.Objects;
-		}
+            Parameters = new[] { new NamedParam(typeof(Tree), typeof(Tree)), new NamedParam(typeof(SimPosition), typeof(SimPosition)) };
+        }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
 		{

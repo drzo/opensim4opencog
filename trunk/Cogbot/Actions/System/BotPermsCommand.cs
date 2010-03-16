@@ -14,7 +14,7 @@ namespace cogbot.Actions.System
         {
             Name = "botperms";
             Description = "Sets the bot use permissions. Usage: botperms name [Base] [Owner] [Group] [Ignore]";
-            Category = CommandCategory.TestClient;
+            Category = CommandCategory.Security;
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

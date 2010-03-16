@@ -22,12 +22,14 @@ namespace cogbot.Actions
         Inventory,
         Objects,
         Voice,
-        TestClient,
+        BotClient,
         Friends,
         Groups,
         Other,
         Unknown,
-        Search
+        Search,
+        Money,
+        Security
     }
     /// <summary>
     /// An interface for commands is only invoked on Region mastering bots
@@ -135,6 +137,30 @@ namespace cogbot.Actions
             if (!(this is BotCommand))
             {
                 Console.WriteLine("" + this + " is not a BotCommand?!");
+            }
+            if (this is BotPersonalCommand)
+            {
+                Parameters = new[] { new NamedParam(typeof(GridClient), null) };
+                Category = CommandCategory.Other;
+            }
+            if (this is BotSystemCommand)
+            {
+                Parameters = new[] { new NamedParam(typeof(GridClient), null) };
+                Category = CommandCategory.Simulator;
+            }
+            if (this is RegionMasterCommand)
+            {
+                Parameters = new[] { new NamedParam(typeof(Simulator), null) };
+                Category = CommandCategory.Simulator;
+            }
+            if (this is SystemApplicationCommand)
+            {
+                Parameters = new[] { new NamedParam(typeof(GridClient), null) };
+                Category = CommandCategory.BotClient;
+            }
+            if (this.GetType().Namespace.ToString() == "cogbot.Actions.Movement")
+            {
+                Category = CommandCategory.Movement;
             }
         } // constructor
 

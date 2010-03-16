@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.System
 {
     class Help : Command, SystemApplicationCommand
     {
@@ -12,7 +12,8 @@ namespace cogbot.Actions
         {
             Description = "Print this help message.";
             Usage = Description;
-            Parameters = new [] {  new NamedParam(typeof(GridClient), null)};
+            Parameters = new[] { new NamedParam(typeof(GridClient), null) };
+            Category = CommandCategory.BotClient;
             Name = "help";
         }
 

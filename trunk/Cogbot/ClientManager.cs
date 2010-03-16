@@ -4,6 +4,7 @@ using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
 using System.Threading;
+using cogbot.Actions.Agent;
 using cogbot.ScriptEngines;
 using cogbot.Utilities;
 using OpenMetaverse;
@@ -307,7 +308,7 @@ namespace cogbot
             }
             catch (Exception e)
             {
-                string newVariable = "ClientManager:" + e;
+                string newVariable = "ClientManager: " + e;
                 WriteLine(newVariable);
                 return new CmdResult(newVariable, false);
             }

@@ -16,6 +16,7 @@ namespace cogbot.Actions.Groups
             Name = "groupinfo";
             Description = "Shows the group UI. Usage: groupinfo GroupName";
             Category = CommandCategory.Groups;
+            Parameters = new[] { new NamedParam(typeof(Group), typeof(UUID)) };
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
