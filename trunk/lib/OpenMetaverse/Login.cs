@@ -112,9 +112,9 @@ namespace OpenMetaverse
         /// is used by the library to generate the Version information</summary>
         public string Author;
         /// <summary>If true, this agent agrees to the Terms of Service of the grid its connecting to</summary>
-        public string AgreeToTos;
+        public bool AgreeToTos;
         /// <summary>Unknown</summary>
-        public string ReadCritical;
+        public bool ReadCritical;
         /// <summary>An array of string sent to the login server to enable various options</summary>
         public string[] Options;
 
@@ -802,7 +802,8 @@ namespace OpenMetaverse
             loginParams.ViewerDigest = String.Empty;
             loginParams.Options = options.ToArray();
             loginParams.ID0 = GetMAC();
-
+            loginParams.AgreeToTos = true;
+            loginParams.ReadCritical = true;
             return loginParams;
         }
 
@@ -958,12 +959,6 @@ namespace OpenMetaverse
             if (loginParams.Channel == null)
                 loginParams.Channel = String.Empty;
 
-            if (loginParams.AgreeToTos == null)
-                loginParams.AgreeToTos = "true";
-
-            if (loginParams.ReadCritical == null)
-                loginParams.ReadCritical = "true";
-
             if (loginParams.Author == null)
                 loginParams.Author = String.Empty;
 
@@ -988,8 +983,8 @@ namespace OpenMetaverse
                 loginLLSD["version"] = OSD.FromString(loginParams.Version);
                 loginLLSD["platform"] = OSD.FromString(loginParams.Platform);
                 loginLLSD["mac"] = OSD.FromString(loginParams.MAC);
-                loginLLSD["agree_to_tos"] = OSD.FromBoolean(true);
-                loginLLSD["read_critical"] = OSD.FromBoolean(true);
+                loginLLSD["agree_to_tos"] = OSD.FromBoolean(loginParams.AgreeToTos);
+                loginLLSD["read_critical"] = OSD.FromBoolean(loginParams.ReadCritical);
                 loginLLSD["viewer_digest"] = OSD.FromString(loginParams.ViewerDigest);
                 loginLLSD["id0"] = OSD.FromString(loginParams.ID0);
                 
@@ -1046,9 +1041,10 @@ namespace OpenMetaverse
                 loginXmlRpc["version"] = loginParams.Version;
                 loginXmlRpc["platform"] = loginParams.Platform;
                 loginXmlRpc["mac"] = loginParams.MAC;
-                loginXmlRpc["agree_to_tos"] = true;
-                loginXmlRpc["read_critical"] = true;
-                loginXmlRpc["viewer_digest"] = loginParams.ViewerDigest;
+                if (loginParams.AgreeToTos)
+                    loginXmlRpc["agree_to_tos"] = "true";
+                if (loginParams.ReadCritical)
+                    loginXmlRpc["read_critical"] = "true";
                 loginXmlRpc["id0"] = loginParams.ID0;
                 loginXmlRpc["last_exec_event"] = 0;
 
@@ -1120,7 +1116,7 @@ namespace OpenMetaverse
             // Fire the login status callback
             if (m_LoginProgress != null)
             {
-                OnLoginProgress(new LoginProgressEventArgs(status, message));
+                OnLoginProgress(new LoginProgressEventArgs(status, message, InternalErrorKey));
             }
         }
 
@@ -1445,15 +1441,17 @@ namespace OpenMetaverse
     {
         private readonly LoginStatus m_Status;
         private readonly String m_Message;
+        private readonly String m_FailReason;
 
         public LoginStatus Status { get { return m_Status; } }        
         public String Message { get { return m_Message; } } 
+        public string FailReason { get { return m_FailReason; } }
 
-
-        public LoginProgressEventArgs(LoginStatus login, String message)
+        public LoginProgressEventArgs(LoginStatus login, String message, String failReason)
         {
             this.m_Status = login;
             this.m_Message = message;
+            this.m_FailReason = failReason;
         }
     }
     
