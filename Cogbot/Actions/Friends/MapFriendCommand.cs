@@ -14,7 +14,7 @@ namespace cogbot.Actions.Friends
 
         public MapFriendCommand(BotClient testClient)
         {
-            Name = "mapfriend";
+            Name = "Map Friend";
             Description = "Show a friends location. Usage: mapfriend UUID";
             Category = CommandCategory.Friends;
             Parameters = new[] { new NamedParam(typeof(SimAvatar), typeof(UUID)) };

@@ -13,7 +13,7 @@ namespace cogbot.Actions.System
 		{
 			Name = "load";
 			Description = "Loads commands from a dll. (Usage: load AssemblyNameWithoutExtension)";
-            Category = CommandCategory.TestClient;
+            Category = CommandCategory.BotClient;
 		}
 
 		public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

@@ -4,7 +4,7 @@ using System.Text;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.System
 {
     public class UptimeCommand : Command, BotSystemCommand
     {
@@ -14,7 +14,7 @@ namespace cogbot.Actions
         {
             Name = "uptime";
             Description = "Shows the login name, login time and length of time logged on.";
-            Category = CommandCategory.TestClient;
+            Category = CommandCategory.Simulator;
             Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
         }
 

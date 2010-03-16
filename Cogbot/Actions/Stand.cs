@@ -4,7 +4,7 @@ using System.Text;
 using cogbot.TheOpenSims;
 using OpenMetaverse; //using libsecondlife;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Movement
 {
     class Stand : Command, BotPersonalCommand
     {

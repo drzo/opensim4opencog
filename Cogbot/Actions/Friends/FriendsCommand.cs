@@ -20,7 +20,7 @@ namespace cogbot.Actions.Friends
         public FriendsCommand(BotClient testClient)
         {
             // The name of the command
-            Name = "friends";
+            Name = "Friends List";
             // A short description of the command with usage instructions
             Description = "List avatar friends. Usage: friends";
             Category = CommandCategory.Friends;

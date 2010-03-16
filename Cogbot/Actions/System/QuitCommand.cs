@@ -12,7 +12,7 @@ namespace cogbot.Actions.System
 		{
 			Name = "quit";
 			Description = "Log all avatars out and shut down";
-            Category = CommandCategory.TestClient;
+            Category = CommandCategory.BotClient;
 		}
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

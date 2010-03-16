@@ -10,7 +10,7 @@ namespace cogbot.Actions.System
         {
             Name = "waitevent";
             Description = "wait until a certain event takes place.  Usage: waitevent 10000 EventPipeline say <_> ten seconds are up";
-            Category = CommandCategory.TestClient;
+            Category = CommandCategory.BotClient;
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

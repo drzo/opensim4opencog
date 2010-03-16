@@ -23,7 +23,7 @@ namespace cogbot.Actions.Agent
         public CloneProfileCommand(BotClient testClient)
         {
 
-            Name = "cloneprofile";
+            Name = "Profile Clone";
             Description = "Clones another avatars profile as closely as possible. WARNING: This command will " +
                 "destroy your existing profile! Usage: cloneprofile [targetuuid]";
             Category = CommandCategory.Other;

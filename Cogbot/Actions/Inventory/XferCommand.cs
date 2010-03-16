@@ -7,8 +7,9 @@ using cogbot;
 using cogbot.Actions;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using PathSystem3D.Navigation;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.SimExport
 {
     public class XferCommand : Command, GridMasterCommand
     {
@@ -18,6 +19,8 @@ namespace cogbot.Actions
         {
             Name = "xfer";
             Description = "Downloads the specified asset using the Xfer system. Usage: xfer [uuid]";
+            Category = CommandCategory.Inventory;
+            Parameters = new[] { new NamedParam(typeof(SimPosition), typeof(SimPosition)) };
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

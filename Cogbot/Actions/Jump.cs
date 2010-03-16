@@ -2,9 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using OpenMetaverse;
 
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Movement
 {
     class Jump : Command, BotPersonalCommand
     {
@@ -14,6 +15,8 @@ namespace cogbot.Actions
             Description = "Jump for 500ms.";
             Usage = "to Jump type \"jump\"";
             Name = "Jump";
+            Parameters = new[] { new NamedParam(typeof(GridClient), null) };
+            Category = CommandCategory.Movement;
         }
 
         public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)

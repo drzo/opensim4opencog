@@ -10,7 +10,7 @@ namespace cogbot.Actions.System
         {
             Name = "botact";
             Description = "Invoke a command a bot interuptable action (interupts previous foreground action).  Usage: botact anim KISS";
-            Category = CommandCategory.TestClient;
+            Category = CommandCategory.BotClient;
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

@@ -7,7 +7,7 @@ using System.Windows.Forms;
 using cogbot.TheOpenSims;
 using PathSystem3D.Navigation;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Movement
 {
     class Follow : Command, BotPersonalCommand
     {
@@ -19,7 +19,8 @@ namespace cogbot.Actions
             Description = "Start or stop following a user.";
             Usage = "To start following an avatar, type \"follow <avatar name>\" \r\n" +
                           "To stop following an avatar, type \"stop-following <avatar name>\"";
-            Parameters = new [] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
+            Category = CommandCategory.Movement;
+            Parameters = new[] { new NamedParam(typeof(SimPosition), typeof(SimPosition)) };
             Name = "Follow*";
         }
 

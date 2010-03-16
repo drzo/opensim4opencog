@@ -13,7 +13,7 @@ namespace cogbot.Actions.System
         {
             Name = "setMasterKey";
             Description = "Sets the key of the master user.  The master user can IM to run commands.";
-            Category = CommandCategory.TestClient;
+            Category = CommandCategory.Security;
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

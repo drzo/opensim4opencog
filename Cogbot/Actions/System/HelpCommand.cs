@@ -12,7 +12,7 @@ namespace cogbot.Actions.System
 		{
 			Name = "help";
 			Description = "Lists available commands. usage: help [command] to display information on commands";
-            Category = CommandCategory.TestClient;
+            Category = CommandCategory.BotClient;
             Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
 		}
 

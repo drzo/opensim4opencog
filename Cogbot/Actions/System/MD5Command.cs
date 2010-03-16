@@ -9,7 +9,7 @@ namespace cogbot.Actions.System
         {
             Name = "md5";
             Description = "Creates an MD5 hash from a given password. Usage: md5 [password]";
-            Category = CommandCategory.Other;
+            Category = CommandCategory.Security;
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

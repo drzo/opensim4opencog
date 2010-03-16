@@ -10,7 +10,7 @@ using OpenMetaverse;
 using OpenMetaverse.Packets;
 using OpenMetaverse.Assets;
 
-namespace cogbot.Actions.Inventory
+namespace cogbot.Actions.SimExport
 {
     public class QueuedDownloadInfo
     {

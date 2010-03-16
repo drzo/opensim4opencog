@@ -10,7 +10,7 @@ namespace cogbot.Actions.System
         {
             Name = GetType().Name;
             Description = "shows simulator connections";
-            Category = cogbot.Actions.CommandCategory.Movement;
+            Category = CommandCategory.Simulator;
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

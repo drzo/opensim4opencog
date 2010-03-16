@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Movement
 {
     class StopFlying : Command, BotPersonalCommand
     {
@@ -12,6 +12,7 @@ namespace cogbot.Actions
         {
             Description = "You stop flying.";
             Usage = "To stop flying type: \"stop-flying\"";
+            Category = CommandCategory.Movement;
             Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
         }
 

@@ -8,7 +8,7 @@ using OpenMetaverse;
 using OpenMetaverse.Http;
 using OpenMetaverse.Imaging;
 
-namespace cogbot.Actions.Inventory
+namespace cogbot.Actions.SimExport
 {
     public class UploadImageCommand : Command, BotPersonalCommand
     {
@@ -64,7 +64,7 @@ namespace cogbot.Actions.Inventory
             {
                 string name = Path.GetFileNameWithoutExtension(FileName);
 
-                Client.Inventory.RequestCreateItemFromAsset(UploadData, name, "Uploaded with TestClient",
+                Client.Inventory.RequestCreateItemFromAsset(UploadData, name, "Uploaded with BotClient",
                     AssetType.Texture, InventoryType.Texture, Client.Inventory.FindFolderForType(AssetType.Texture),
                     delegate(bool success, string status, UUID itemID, UUID assetID)
                     {

@@ -12,6 +12,7 @@ namespace cogbot.Actions
         {
             Name = "eval";
             Description = "Enqueue a lisp task on a bot. Usage: Eval <lisp expression>";
+            Category = CommandCategory.BotClient;
         }
        public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
        {

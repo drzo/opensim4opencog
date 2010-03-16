@@ -16,6 +16,7 @@ namespace cogbot.Actions
             Description = "crouch [on|off] 'no argumennt=for 500ms' ";
             Usage = "crouch [on|off]";
             Name = "Crouch";
+            Category = CommandCategory.Movement;
             Parameters = new[] {new NamedParam(typeof (GridClient),typeof(string), null, "on", "off", typeof (int))};
         }
 

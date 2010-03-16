@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using OpenMetaverse;
 
 namespace cogbot.Actions
 {
@@ -12,6 +13,8 @@ namespace cogbot.Actions
         {
             Description = "Cancels a particular action";
 			Usage = "To cancel a particular action, type \"stop <action>\"";
+            Parameters = new[] { new NamedParam(typeof(GridClient), null) };
+            Category = CommandCategory.BotClient;
         }
 
         public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)

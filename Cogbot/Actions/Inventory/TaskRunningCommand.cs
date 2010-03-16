@@ -4,7 +4,7 @@ using System.Threading;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Objects
 {
     public class TaskRunningCommand : Command, RegionMasterCommand
     {

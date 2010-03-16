@@ -5,7 +5,7 @@ using System.Text;
 using OpenMetaverse;
 using cogbot.Listeners;
 
-namespace cogbot.Actions.System
+namespace cogbot.Actions.Search
 {
     public class UUIDTypeCommand : Command, GridMasterCommand
     {
@@ -13,7 +13,7 @@ namespace cogbot.Actions.System
         {
             Name = "UUID Type";
             Description = "Resolve the type of Object the UUID represents.  Usage: uuidtype b06c0586-da9a-473d-aa94-ee3ab5606e4d";
-            Category = CommandCategory.TestClient;
+            Category = CommandCategory.BotClient;
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

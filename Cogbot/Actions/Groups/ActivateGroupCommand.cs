@@ -20,6 +20,7 @@ namespace cogbot.Actions.Groups
             Name = "activategroup";
             Description = "Set a group as active. Usage: activategroup GroupName";
             Category = CommandCategory.Groups;
+            Parameters = new[] { new NamedParam(typeof(Group), typeof(UUID)) };
         }
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {

@@ -13,7 +13,7 @@ namespace cogbot.Actions.System
         {
             Name = "setmaster";
             Description = "Sets the user name of the master user. The master user can IM to run commands. Usage: setmaster [name]";
-            Category = CommandCategory.TestClient;
+            Category = CommandCategory.Security;
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

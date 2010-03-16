@@ -4,7 +4,7 @@ using System.Text;
 using OpenMetaverse;
 using cogbot.TheOpenSims; //using libsecondlife;
 
-namespace cogbot.Actions
+namespace cogbot.Actions.Land
 {
     class Describe : Command, BotPersonalCommand
     {
@@ -12,6 +12,7 @@ namespace cogbot.Actions
             : base(Client)
         {
             Name = "Describe";
+            Category = CommandCategory.Objects;
             Parameters = new []{ new NamedParam(typeof(SimObject), typeof(UUID))};
         }
 
