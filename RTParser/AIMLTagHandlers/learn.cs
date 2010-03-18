@@ -39,20 +39,43 @@ namespace RTParser.AIMLTagHandlers
                 if (!templateNodeInnerText.IsEmpty)
                 {
                     Unifiable path = templateNodeInnerText;
-                    FileInfo fi = new FileInfo(path);
-                    if (fi.Exists)
+                    try
                     {
                         XmlDocument doc = new XmlDocument();
                         try
                         {
-                            doc.Load(path);
-                            this.Proc.loadAIMLFromXML(doc, path);
+                            FileInfo fi = new FileInfo(path);
+                            if (fi.Exists)
+                            {
+                                doc.Load(path);
+                            }
+                            else
+                            {
+                                XmlTextReader reader = new XmlTextReader(path);
+                                doc.Load(reader);
+                            }
                         }
-                        catch
+                        catch (Exception e)
                         {
-                            this.Proc.writeToLog("ERROR! Attempted (but failed) to <learn> some new AIML from the following URI: " + path);
+                            String s =
+                                "ERROR! Attempted (but failed) to <learn> some new AIML from the following URI: " + path +
+                                " error " + e;
+                            this.Proc.writeToLog(s);
+                            return s;
                         }
+
+                        doc.Load(path);
+                        this.Proc.loadAIMLFromXML(doc, path);
                     }
+                    catch (Exception e2)
+                    {
+                        String s =
+                            "ERROR! Attempted (but failed) to <learn> some new AIML from the following URI: " + path +
+                            " error " + e2;
+                        this.Proc.writeToLog(s);
+                        return s;
+                    }
+
                 }
             }
             return Unifiable.Empty;
