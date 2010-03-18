@@ -5,6 +5,7 @@ using System.Net;
 using System.Text;
 using System.Web;
 using cogbot;
+using cogbot.Actions;
 using HttpServer;
 using OpenMetaverse;
 using OpenMetaverse.Http;
@@ -69,8 +70,13 @@ namespace cogbot.Utilities
             bool useHtml = true;
             string botname = GetVariable(request, "bot", _botClient.GetName());
             string cmd = GetVariable(request, "cmd", "aiml");
-            string text =GetVariable(request, "text", pathd.TrimStart('/'));
+            string username = GetVariable(request, "username", GetVariable(request, "ident", null));
+            string text = GetVariable(request, "text", GetVariable(request, "entry", pathd.TrimStart('/')));           
             var wrresp = new WriteLineToResponse(response);
+            if (path.StartsWith("/chat?"))
+            {
+                useHtml = false;
+            }
             try
             {
                 if (useHtml)
@@ -85,11 +91,23 @@ namespace cogbot.Utilities
                     AddToBody(response, "cmd = " + cmd);
                     AddToBody(response, "text = " + text);
                     AddToBody(response, "</pre>");
-                    AddToBody(response, "<a href='" + request.Uri.PathAndQuery + "'>&nbsp;"
-                                        + request.Uri.PathAndQuery + "&nbsp;</a>");
+                    AddToBody(response, "<a href='" + request.Uri.PathAndQuery + "'>"
+                                        + request.Uri.PathAndQuery + "</a>");
                 }
+                
                 AddToBody(response, "<pre>");
-                var res = _botClient.ExecuteCommand(cmd + " " + text, wrresp.WriteLine);
+                AddToBody(response, "<!-- Begin Response !-->");
+                
+                CmdResult res;
+                if (String.IsNullOrEmpty(username))
+                {
+                    res = _botClient.ExecuteCommand(cmd + " " + text, wrresp.WriteLine);
+                } else
+                {
+                    res = _botClient.ExecuteCommand(cmd + " @ " + username + " - " + text, wrresp.WriteLine);
+                }
+                AddToBody(response, "");
+                AddToBody(response, "<!-- End Response !-->");
                 AddToBody(response, "</pre>");
                 if (useHtml)
                 {

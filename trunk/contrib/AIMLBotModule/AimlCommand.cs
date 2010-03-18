@@ -12,11 +12,11 @@ namespace AIMLBotModule
 {
     public class AimlCommand : cogbot.Actions.Command, BotPersonalCommand
     {
-
+        private string defaultAIMLUser;
         public AimlCommand(BotClient testClient)
         {
             Name = "aiml";
-            Description = "Usage: aiml [[on|off|reload|learn]|text]";
+            Description = "Usage: aiml [[on|off|reload|learn]|text|user]";
             Category = CommandCategory.Communication;
         }
 
@@ -30,7 +30,7 @@ namespace AIMLBotModule
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
-            if (args.Length == 0) return Failure(Usage) ;
+            if (args.Length == 0) return Failure(Usage);
             string s = args[0].ToLower();
             if (s == "on")
             {
@@ -38,29 +38,45 @@ namespace AIMLBotModule
                 WorldSystemModule.SetChatOnOff(String.Join(" ", args, 1, args.Length - 1), true);
                 return Success("WorldObjects.RespondToChatByDefaultAllUsers = true;");
             }
-            else
-                if (s == "off")
-                {
-                    WorldSystemModule.RespondToChatByDefaultAllUsers = false;
-                    WorldSystemModule.SetChatOnOff(String.Join(" ", args, 1, args.Length - 1), false);
-                    return Success("WorldObjects.RespondToChatByDefaultAllUsers = false;");
-                }
-                else
-                    if (s == "reload")
-                    {
-                        WorldSystemModule.MyBot.ReloadAll();
-                        return Success("WorldSystemModule.MyBot.ReloadAll();");
-                    }
-                    else
-                        if (s == "load")
-                        {
-                            if (args.Length < 2) return Failure(Usage);
-                            string stringJoin = String.Join(" ", args, 1, args.Length - 1);
-                            WorldSystemModule.MyBot.loadAIMLFromFiles(stringJoin);
-                            return Success("aiml loaded " + stringJoin);
-                        }
+            if (s == "user")
+            {
+                defaultAIMLUser = String.Join(" ", args, 1, args.Length - 1);
+                WorldSystemModule.SetDefaultUser(defaultAIMLUser);
+                return Success("WorldObjects.SetDefaultUser = " + defaultAIMLUser + ";");
+            }
+            if (s == "off")
+            {
+                WorldSystemModule.RespondToChatByDefaultAllUsers = false;
+                WorldSystemModule.SetChatOnOff(String.Join(" ", args, 1, args.Length - 1), false);
+                return Success("WorldObjects.RespondToChatByDefaultAllUsers = false;");
+            }
+            if (s == "reload")
+            {
+                WorldSystemModule.MyBot.ReloadAll();
+                return Success("WorldSystemModule.MyBot.ReloadAll();");
+            }
+            if (s == "load")
+            {
+                if (args.Length < 2) return Failure(Usage);
+                string stringJoin = String.Join(" ", args, 1, args.Length - 1);
+                WorldSystemModule.MyBot.loadAIMLFromFiles(stringJoin);
+                return Success("aiml loaded " + stringJoin);
+            }
             string joined = String.Join(" ", args);
-            return Success(WorldSystemModule.AIMLInterp(joined));
+            if (s == "@")
+            {
+                joined = joined.TrimStart(new[] { '@', ' ' });
+                int lastIndex = joined.IndexOf("-");
+                defaultAIMLUser = joined.Substring(0, lastIndex).Trim();
+                s = "-";
+                WorldSystemModule.SetDefaultUser(defaultAIMLUser);
+            }
+            if (s=="-")
+            {
+                int lastIndex = joined.IndexOf("-");
+                joined = joined.Substring(lastIndex + 1).Trim();
+            }
+            return Success(WorldSystemModule.AIMLInterp(joined, defaultAIMLUser));
         }
     }
 

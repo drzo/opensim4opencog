@@ -852,7 +852,10 @@ namespace AIMLBotModule
         {
             return AIMLInterp(input, MyUser);
         }
-
+        public Unifiable AIMLInterp(string input, string myUser)
+        {
+            return AIMLInterp(input, GetMyUser(myUser));
+        }
         public Unifiable AIMLInterp(string input, User myUser)
         {
             // set a global
@@ -985,6 +988,11 @@ namespace AIMLBotModule
             var v = WorldSystem.ResolveCollection(name.ToLower(), out argsUsed, this);
             return (v != null && v.Count > 0);
 
+        }
+
+        public void SetDefaultUser(string user)
+        {
+            MyUser = GetMyUser(user);
         }
     }
 }
