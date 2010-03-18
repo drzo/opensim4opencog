@@ -81,8 +81,35 @@ namespace RTParser.Utils
             }
             else
             {
-                throw new FileNotFoundException("The directory specified as the path to the AIML files (" + path + ") cannot be found by the AIMLLoader object. Please make sure the directory where you think the AIML files are to be found is the same as the directory specified in the settings file.");
+                this.loadAIMLURI(path);
             }
+        }
+
+        private void loadAIMLURI(string path)
+        {
+            this.RProcessor.writeToLog("Processing AIML URI: " + path);
+            XmlDocument doc = new XmlDocument();
+            try
+            {
+                FileInfo fi = new FileInfo(path);
+                if (fi.Exists)
+                {
+                    doc.Load(path);
+                }
+                else
+                {
+                    XmlTextReader reader = new XmlTextReader(path);
+                    doc.Load(reader);
+                }
+            }
+            catch (Exception e)
+            {
+                String s = "ERROR: XmlTextReader of AIML files (" + path + ")  threw " + e;
+                throw new FileNotFoundException(s);
+            }
+
+            doc.Load(path);
+            loadAIMLFromXML(doc, path);
         }
 
         /// <summary>
