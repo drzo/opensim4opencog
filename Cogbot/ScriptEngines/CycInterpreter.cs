@@ -9,6 +9,11 @@ namespace cogbot.ScriptEngines
     {
         DotLisp.Interpreter dotLispInterpreter;
 
+        public override bool LoadsFileType(string filename)
+        {
+            return filename.EndsWith("subl") || base.LoadsFileType(filename);
+        }
+
         public override void InternType(Type t)
         {
             dotLispInterpreter.InternType(t);
@@ -42,7 +47,7 @@ namespace cogbot.ScriptEngines
         /// </summary>
         /// <param name="filename"></param>
         /// <returns></returns>
-        public override bool LoadFile(string filename)
+        public override bool LoadFile(string filename, OutputDelegate WriteLine)
         {
             if (!filename.EndsWith(".lisp"))
             {
@@ -64,7 +69,7 @@ namespace cogbot.ScriptEngines
         /// <param name="context_name"></param>
         /// <param name="stringCodeReader"></param>
         /// <returns></returns>
-        public override object Read(string context_name, System.IO.StringReader stringCodeReader)
+        public override object Read(string context_name, System.IO.StringReader stringCodeReader, OutputDelegate WriteLine)
         {
             return dotLispInterpreter.Read(context_name, stringCodeReader);
         } // method: Read
@@ -118,9 +123,11 @@ namespace cogbot.ScriptEngines
         /// 
         /// </summary>
         /// <returns></returns>
-        public override ScriptInterpreter newInterpreter()
+        public override ScriptInterpreter newInterpreter(object self)
         {
-            return new CycInterpreter();
+            var v = new CycInterpreter();
+            v.Intern("*SELF*", self);
+            return v;
         } // method: newInterpreter
 
     }

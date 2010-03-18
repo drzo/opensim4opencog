@@ -6,6 +6,7 @@ using System.Windows.Forms;
 using System.Xml;
 using cogbot.Actions.Land;
 using cogbot.Actions.Movement;
+using cogbot.Actions.Scripting;
 using cogbot.Actions.System;
 using cogbot.Utilities;
 using OpenMetaverse;
@@ -381,7 +382,7 @@ namespace cogbot
             Commands["mute"] = new Actions.Mute(this);
             Commands["move"] = new Actions.Move(this);
             Commands["use"] = new Use(this);
-            Commands["eval"] = new Actions.Eval(this);
+            Commands["eval"] = new Eval(this);
 
             Commands["fly"] = new Fly(this);
             Commands["stop-flying"] = new StopFlying(this);
@@ -447,10 +448,10 @@ namespace cogbot
                 {
                     if (LispTaskInterperter != null) return;
                     //WriteLine("Start Loading TaskInterperter ... '" + TaskInterperterType + "' \n");
-                    LispTaskInterperter = ScriptEngines.ScriptManager.LoadScriptInterpreter(taskInterperterType);
-                    LispTaskInterperter.LoadFile("boot.lisp");
-                    LispTaskInterperter.LoadFile("extra.lisp");
-                    LispTaskInterperter.LoadFile("cogbot.lisp");
+                    LispTaskInterperter = ScriptManager.LoadScriptInterpreter(taskInterperterType, this);
+                    LispTaskInterperter.LoadFile("boot.lisp", WriteLine);
+                    LispTaskInterperter.LoadFile("extra.lisp",WriteLine);
+                    LispTaskInterperter.LoadFile("cogbot.lisp",WriteLine);
                     LispTaskInterperter.Intern("clientManager", ClientManager);
                     scriptEventListener = new ScriptEventListener(LispTaskInterperter, this);
                     botPipeline.AddSubscriber(scriptEventListener);
@@ -1271,7 +1272,7 @@ namespace cogbot
                 Object r = null;
                 //lispCode = "(load-assembly \"libsecondlife\")\r\n" + lispCode;                
                 StringReader stringCodeReader = new StringReader(lispCode);
-                r = LispTaskInterperter.Read("evalLispString", stringCodeReader);
+                r = LispTaskInterperter.Read("evalLispString", stringCodeReader,WriteLine);
                 if (LispTaskInterperter.Eof(r))
                     return r.ToString();
                 return LispTaskInterperter.Str(evalLispCode(r));
@@ -1293,7 +1294,7 @@ namespace cogbot
                 if (lispCode is String)
                 {
                     StringReader stringCodeReader = new StringReader(lispCode.ToString());
-                    lispCode = LispTaskInterperter.Read("evalLispString", stringCodeReader);
+                    lispCode = LispTaskInterperter.Read("evalLispString", stringCodeReader,WriteLine);
                 }
                 WriteLine("Eval> " + lispCode);
                 if (LispTaskInterperter.Eof(lispCode))
@@ -1870,6 +1871,17 @@ namespace cogbot
             }
             return BotPermissions.Base;
         }
+
+        public CmdResult ExecuteTask(string scripttype, StringReader reader,OutputDelegate WriteLine)
+        {
+            var si = ScriptEngines.ScriptManager.LoadScriptInterpreter(scripttype, this);
+            object o = si.Read(scripttype, reader,WriteLine);
+            if (o is CmdResult) return (CmdResult)o;
+            if (o == null) return new CmdResult("void", true);
+            if (si.Eof(o)) return new CmdResult("EOF " + o, true);
+            return new CmdResult("" + o, true);
+        }
+
     }
 
     /// <summary>

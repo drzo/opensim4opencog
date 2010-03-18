@@ -248,7 +248,7 @@ namespace cogbot.ScriptEngines
             System.Windows.Forms.Application.DoEvents();
         }
 
-        public override bool LoadFile(string p)
+        public override bool LoadFile(string p, OutputDelegate WriteLine)
         {
             if (!p.StartsWith("cl-"))
             {
@@ -267,7 +267,12 @@ namespace cogbot.ScriptEngines
             return false;
         }
 
-        public override object Read(string p, StringReader stringCodeReader)
+        public override bool LoadsFileType(string filename)
+        {
+            return filename.EndsWith("lisp") || base.LoadsFileType(filename);
+        }
+
+        public override object Read(string p, StringReader stringCodeReader, OutputDelegate WriteLine)
         {
             try
             {
@@ -452,9 +457,10 @@ namespace cogbot.ScriptEngines
             return x.ToString();
         }
 
-        public override ScriptInterpreter newInterpreter()
+        public override ScriptInterpreter newInterpreter(object self)
         {
             getInterpreter();
+            Intern("*SELF*", self);
             return this; //throw new Exception("The method or operation is not implemented.");
         }
 

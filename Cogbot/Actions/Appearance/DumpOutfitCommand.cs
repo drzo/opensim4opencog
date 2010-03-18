@@ -43,8 +43,12 @@ namespace cogbot.Actions.Appearance
                     foreach (var O in PS)
                     {
                         Primitive targetAv = O.Prim;
-                        StringBuilder output = new StringBuilder("Downloading ");                        
-
+                        StringBuilder output = new StringBuilder("Downloading ");
+                        if (targetAv.Textures==null)
+                        {
+                            Failure("no textures " + targetAv);
+                            continue;
+                        }
                         for (int j = 0; j < targetAv.Textures.FaceTextures.Length; j++)
                         {
                             Primitive.TextureEntryFace face = targetAv.Textures.FaceTextures[j];

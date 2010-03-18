@@ -7,7 +7,7 @@ using OpenMetaverse.Packets;
 
 namespace cogbot.Actions.Agent
 {
-    public class CloneProfileCommand : Command, BotPersonalCommand
+    public class ProfileCloneCommand : Command, BotPersonalCommand
     {
         Avatar.AvatarProperties Properties;
         Avatar.Interests Interests;
@@ -20,12 +20,12 @@ namespace cogbot.Actions.Agent
 
         bool registeredCallbacks = false;
 
-        public CloneProfileCommand(BotClient testClient)
+        public ProfileCloneCommand(BotClient testClient)
         {
 
             Name = "Profile Clone";
             Description = "Clones another avatars profile as closely as possible. WARNING: This command will " +
-                "destroy your existing profile! Usage: cloneprofile [targetuuid]";
+                "destroy your existing profile! Usage: profileclone [targetuuid]";
             Category = CommandCategory.Other;
             Parameters = new [] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
         }

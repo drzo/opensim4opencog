@@ -4,7 +4,7 @@ using System.Text;
 
 namespace cogbot.ScriptEngines
 {
-    class ClojureInterpreter : CommonScriptInterpreter
+    public class ClojureInterpreter : CommonScriptInterpreter
     {
         DotLisp.Interpreter dotLispInterpreter;
 
@@ -39,7 +39,7 @@ namespace cogbot.ScriptEngines
         /// </summary>
         /// <param name="filename"></param>
         /// <returns></returns>
-        public override bool LoadFile(string filename)
+        public override bool LoadFile(string filename, OutputDelegate WriteLine)
         {
             if (!filename.EndsWith(".lisp"))
             {
@@ -52,7 +52,14 @@ namespace cogbot.ScriptEngines
                 return true;
             }      
             return false;
-        } // method: LoadFile
+        }
+
+        public override bool LoadsFileType(string filename)
+        {
+            return filename.EndsWith("cloj") || base.LoadsFileType(filename);
+        }
+
+// method: LoadFile
 
 
         /// <summary>
@@ -61,7 +68,7 @@ namespace cogbot.ScriptEngines
         /// <param name="context_name"></param>
         /// <param name="stringCodeReader"></param>
         /// <returns></returns>
-        public override object Read(string context_name, System.IO.StringReader stringCodeReader)
+        public override object Read(string context_name, System.IO.StringReader stringCodeReader, OutputDelegate WriteLine)
         {
             return dotLispInterpreter.Read(context_name, stringCodeReader);
         } // method: Read
@@ -115,9 +122,11 @@ namespace cogbot.ScriptEngines
         /// 
         /// </summary>
         /// <returns></returns>
-        public override ScriptInterpreter newInterpreter()
+        public override ScriptInterpreter newInterpreter(object self)
         {
-            return new DotLispInterpreter();
+            var v = new DotLispInterpreter();
+            v.Intern("*SELF*", self);
+            return v;
         } // method: newInterpreter
 
     }

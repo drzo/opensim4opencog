@@ -490,7 +490,7 @@ namespace cogbot.TheOpenSims
         private static ScriptInterpreter ScriptInterpreter0 = null;
         private static ScriptInterpreter GetScriptInterpreter()
         {
-            if (ScriptInterpreter0 == null) ScriptInterpreter0 = ScriptManager.LoadScriptInterpreter("lisp");
+            if (ScriptInterpreter0 == null) ScriptInterpreter0 = ScriptManager.LoadScriptInterpreter("lisp", null);
             return ScriptInterpreter0;
         }
 

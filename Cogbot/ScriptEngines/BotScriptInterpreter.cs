@@ -1,46 +1,48 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
+using cogbot.Actions;
+using DotLisp;
 
 namespace cogbot.ScriptEngines
 {
-    class DotLispInterpreter : CommonScriptInterpreter
+    public class BotScriptInterpreter : CommonScriptInterpreter
     {
-        DotLisp.Interpreter dotLispInterpreter;
-
-        public override void Dispose()
-        {
-            dotLispInterpreter.Dispose();
-        }
+        public BotClient BotClient;
 
         public override bool LoadsFileType(string filename)
         {
-            return filename.EndsWith("lisp") || base.LoadsFileType(filename);
+            return filename.EndsWith("bot") || filename.EndsWith("txt") || filename.EndsWith("note") ||
+                   base.LoadsFileType(filename);
         }
 
-        public override bool IsSubscriberOf(string eventName)
+        public override void InternType(Type t)
         {
-            if (!eventName.Contains(".")) eventName = eventName.ToLower();
-            DotLisp.Symbol o = dotLispInterpreter.intern(eventName);//.Read("DefinedFunction", new System.IO.StringReader(eventName));           
-            if (o!=null && o.isDefined()) return true;
-            return false;
+            BotClient.InternType(t);
+        }
+
+        public override void Dispose()
+        {
+            BotClient.Dispose();
         }
 
         public override object GetSymbol(string eventName)
         {
             eventName = eventName.ToLower();
-            DotLisp.Symbol o = dotLispInterpreter.intern(eventName);//.Read("DefinedFunction", new System.IO.StringReader(eventName));           
+            Command o;
+            BotClient.Commands.TryGetValue(eventName,out o);
             return o;
         }
 
-        public override void InternType(Type t)
+        public override bool IsSubscriberOf(string eventName)
         {
-            dotLispInterpreter.InternType(t);
+            return GetSymbol(eventName) != null;
         }
 
-        public DotLispInterpreter()
+        public BotScriptInterpreter()
         {
-            dotLispInterpreter = new DotLisp.Interpreter();
+
         }
         /// <summary>
         /// 
@@ -50,19 +52,12 @@ namespace cogbot.ScriptEngines
         /// <returns></returns>
         public override bool LoadFile(string filename, OutputDelegate WriteLine)
         {
-            if (!filename.EndsWith(".lisp"))
-            {
-                filename = filename + ".lisp";
-            }
-            System.IO.FileInfo fi = new System.IO.FileInfo(filename);
-            if (fi.Exists)
-            {
-                dotLispInterpreter.LoadFile(filename);
-                return true;
-            }      
-            return false;
-        } // method: LoadFile
-
+            if (!File.Exists(filename)) return false;
+            System.IO.FileStream f = System.IO.File.OpenRead(filename);
+            StreamReader r = new StreamReader(f);
+            r.BaseStream.Seek(0, SeekOrigin.Begin);
+            return Read(filename, new StringReader(r.ReadToEnd()),WriteLine) != null;
+        }
 
         /// <summary>
         /// 
@@ -72,7 +67,14 @@ namespace cogbot.ScriptEngines
         /// <returns></returns>
         public override object Read(string context_name, System.IO.StringReader stringCodeReader, OutputDelegate WriteLine)
         {
-            return dotLispInterpreter.Read(context_name, stringCodeReader);
+            CmdResult res = null;
+            int line = 0;
+            while (stringCodeReader.Peek() != -1)
+            {
+                line++;
+                res = BotClient.ExecuteCommand(stringCodeReader.ReadLine(), WriteLine);
+            }
+            return res;
         } // method: Read
 
 
@@ -83,7 +85,9 @@ namespace cogbot.ScriptEngines
         /// <returns></returns>
         public override bool Eof(object codeTree)
         {
-           return dotLispInterpreter.Eof(codeTree);
+            if (codeTree == null) return true;
+            String str = codeTree.ToString().Trim();
+            return String.IsNullOrEmpty((String)codeTree);
         } // method: Eof
 
 
@@ -94,7 +98,7 @@ namespace cogbot.ScriptEngines
         /// <param name="textForm"></param>
         public override void Intern(string varname, object value)
         {
-           dotLispInterpreter.Intern(varname, value);
+            BotClient.Intern(varname, value);
         } // method: Intern
 
 
@@ -105,7 +109,7 @@ namespace cogbot.ScriptEngines
         /// <returns></returns>
         public override object Eval(object code)
         {
-            return dotLispInterpreter.Eval(code);
+            return BotClient.ExecuteCommand(code.ToString());
         } // method: Eval
 
 
@@ -116,7 +120,7 @@ namespace cogbot.ScriptEngines
         /// <returns></returns>
         public override string Str(object code)
         {
-            return dotLispInterpreter.Str(code);
+            return ScriptEventListener.argString(code);
         } // method: Str
 
 
@@ -124,13 +128,15 @@ namespace cogbot.ScriptEngines
         /// 
         /// </summary>
         /// <returns></returns>
-        public override ScriptInterpreter newInterpreter(object self)
+        public override ScriptInterpreter newInterpreter(object thiz)
         {
-            var v = this; // new DotLispInterpreter();
-            v.Intern("*SELF*", self);
-            return v;
+            BotScriptInterpreter si;
+            if (BotClient == null || BotClient == thiz) si = this;
+            else
+                si = new BotScriptInterpreter();
+            si.BotClient = thiz as BotClient;
+            return si;
         } // method: newInterpreter
-
 
     }
 }
