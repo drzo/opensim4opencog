@@ -10,6 +10,7 @@ using cogbot.Utilities;
 using OpenMetaverse;
 using cogbot.Actions;
 using Radegast;
+using cogbot.Actions.Scripting;
 
 //using Radegast;
 namespace cogbot
@@ -402,10 +403,10 @@ namespace cogbot
                     try
                     {
                         WriteLine("Start Loading Main TaskInterperter ... '" + taskInterperterType + "' \n");
-                        _lispTaskInterperter = ScriptEngines.ScriptManager.LoadScriptInterpreter(taskInterperterType);
-                        _lispTaskInterperter.LoadFile("boot.lisp");
-                        _lispTaskInterperter.LoadFile("extra.lisp");
-                        _lispTaskInterperter.LoadFile("cogbot.lisp");
+                        _lispTaskInterperter = ScriptEngines.ScriptManager.LoadScriptInterpreter(taskInterperterType, this);
+                        _lispTaskInterperter.LoadFile("boot.lisp",WriteLine);
+                        _lispTaskInterperter.LoadFile("extra.lisp",WriteLine);
+                        _lispTaskInterperter.LoadFile("cogbot.lisp",WriteLine);
                         _lispTaskInterperter.Intern("clientManager", this);
                         _scriptEventListener = new ScriptEventListener(_lispTaskInterperter, null);
                         _lispTaskInterperter.Intern("thisClient", this);
@@ -444,7 +445,7 @@ namespace cogbot
                 Object r = null;
                 using (var stringCodeReader = new StringReader(lispCode))
                 {
-                    r = _lispTaskInterperter.Read("evalLispString", stringCodeReader);
+                    r = _lispTaskInterperter.Read("evalLispString", stringCodeReader,WriteLine);
                     return _lispTaskInterperter.Eof(r)
                                ? r.ToString()
                                : _lispTaskInterperter.Str(_lispTaskInterperter.Eval(r));

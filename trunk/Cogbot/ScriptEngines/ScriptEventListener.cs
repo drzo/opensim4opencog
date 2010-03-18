@@ -9,6 +9,7 @@ using OpenMetaverse;
 using System.Reflection;
 using cogbot.TheOpenSims;
 using OpenMetaverse.Assets;
+using Radegast;
 
 namespace cogbot.ScriptEngines
 {
@@ -59,7 +60,7 @@ namespace cogbot.ScriptEngines
             try
             {
                 StringReader stringCodeReader = new System.IO.StringReader(lispCode);
-                codeTree = taskInterperter.Read("enqueueLispEvent", stringCodeReader);
+                codeTree = taskInterperter.Read("enqueueLispEvent", stringCodeReader, Console.WriteLine);
                 if (taskInterperter.Eof(codeTree))
                     return null;
             }
@@ -84,7 +85,7 @@ namespace cogbot.ScriptEngines
             Console.WriteLine(":: " + lispCode);
             try
             {
-                enqueueLispTask(taskInterperter.Read("enqueueLispEvent", new StringReader(lispCode)));
+                enqueueLispTask(taskInterperter.Read("enqueueLispEvent", new StringReader(lispCode), Console.WriteLine));
             }
             catch (Exception e)
             {

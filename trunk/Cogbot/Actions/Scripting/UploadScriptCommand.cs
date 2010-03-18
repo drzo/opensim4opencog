@@ -3,35 +3,47 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using OpenMetaverse;
-using System.Diagnostics;
 
-namespace cogbot.Actions.Inventory
+
+namespace cogbot.Actions.Scripting
 {
-    public class CreateScriptCommand : Command, BotPersonalCommand
+    /// <summary>
+    /// Example of how to put a new script in your inventory
+    /// </summary>
+    public class UploadScriptCommand : Command, BotPersonalCommand
     {
-        public CreateScriptCommand(BotClient testClient)
+        /// <summary>
+        ///  The default constructor for BotClient commands
+        /// </summary>
+        /// <param name="testClient"></param>
+        public UploadScriptCommand(BotClient testClient)
         {
-            Name = "createscript";
-            Description = "Creates a script in your inventory from a local .lsl file.";
+            Name = "Upload Script";
+            Description = "Upload a local .lsl file file into your inventory.";
             Category = CommandCategory.Inventory;
         }
 
+        /// <summary>
+        /// The default override for BotClient commands
+        /// </summary>
+        /// <param name="args"></param>
+        /// <param name="fromAgentID"></param>
+        /// <returns></returns>
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
-                return ShowUsage();// " createscript filename.lsl";
+                return ShowUsage();// " uploadscript filename.lsl";
 
             string file = String.Empty;
             for (int ct = 0; ct < args.Length; ct++)
                 file = String.Format("{0}{1} ", file, args[ct]);
             file = file.TrimEnd();
 
-            WriteLine("Filename: {0}", file);
             if (!File.Exists(file))
                 return Failure( String.Format("Filename '{0}' does not exist", file));
 
+            string ret = String.Format("Filename: {0}", file);
 
-            // FIXME: Upload the script asset first. When that completes, call RequestCreateItem
             try
             {
                 using (StreamReader reader = new StreamReader(file))
@@ -44,24 +56,25 @@ namespace cogbot.Actions.Inventory
                     {
                         if (success)
                             // upload the asset
-                            Client.Inventory.RequestUpdateScriptAgentInventory(EncodeScript(body), item.UUID, false, new InventoryManager.ScriptUpdatedCallback(delegate(bool success1, string status, bool itemid, List<string>
-                                                                                                                                                                    assetid, UUID itemid1, UUID assetid1)
+                            Client.Inventory.RequestUpdateScriptAgentInventory(EncodeScript(body), item.UUID, true, 
+                                new InventoryManager.ScriptUpdatedCallback(delegate(bool success1, string status, bool itemid, List<string> assetid, UUID itemid1, UUID assetid1)
                             {
                                 if (success1)
-                                    WriteLine("Script successfully uploaded, ItemID {0} AssetID {1}", itemid, assetid);
+                                    ret += String.Format(" Script successfully uploaded, ItemID {0} AssetID {1}", itemid, assetid);
                             }));
                     });
                 }
-                return Success("Done");
+                return Success(ret);
 
             }
             catch (Exception e)
             {
                 Logger.Log(e.ToString(), Helpers.LogLevel.Error, Client);
-                return Failure("Error creating script.");
+                return Failure(String.Format("Error creating script for {0}", ret));
             }
         }
         /// <summary>
+        /// Encodes the script text for uploading
         /// </summary>
         /// <param name="body"></param>
         public static byte[] EncodeScript(string body)
@@ -73,4 +86,5 @@ namespace cogbot.Actions.Inventory
             return assetData;
         }
     }
+
 }

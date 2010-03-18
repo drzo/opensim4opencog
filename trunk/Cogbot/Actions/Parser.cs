@@ -101,6 +101,32 @@ namespace cogbot.Actions
             return newstring;
         }
 
+        public static string Rejoin(string[] args, int p)
+        {
+            if (p >= args.Length) return string.Empty;
+            if (p == args.Length) return args[p];
+            string newstring = args[p];
+            for (int i = p+1; i < args.Length; i++)
+            {
+                newstring += " ";
+                newstring += EscapeIfNeeded(args[i]);
+            }
+            return newstring;
+        }
+
+        public static string EscapeIfNeeded(string s)
+        {
+            if (s.Length == 0) return "\"\"";
+            bool needsQuotes = s.Contains(" ");
+            bool needsSQuotes = s.Contains("\"");
+            if (needsSQuotes)
+            {
+                return "'" + s + "'";
+            }
+            if (needsQuotes) return "\"" + s + "\"";
+            return s;
+        }
+
         static string[] preps = { "of", "to", "in", "for", "with", "as", "by", "at", "from", "on", "is" };
 
         public Dictionary<string, string> prepPhrases;

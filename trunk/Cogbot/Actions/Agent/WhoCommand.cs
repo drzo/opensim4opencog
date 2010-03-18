@@ -10,7 +10,7 @@ namespace cogbot.Actions.Agent
     {
         public WhoCommand(BotClient testClient)
 		{
-			Name = "who";
+			Name = "Who";
 			Description = "Lists seen avatars.";
             Category = CommandCategory.Other;
             Parameters = new [] {  new NamedParam(typeof(GridClient), null) };

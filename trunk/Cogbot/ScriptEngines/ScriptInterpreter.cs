@@ -6,9 +6,11 @@ namespace cogbot.ScriptEngines
 {
     public interface ScriptInterpreter: IDisposable
     {
-        bool LoadFile(string filename);
+        bool LoadFile(string filename, OutputDelegate WriteLine);
 
-        object Read(string context_name, System.IO.StringReader stringCodeReader);
+        bool LoadsFileType(string filenameorext, object self);
+
+        object Read(string context_name, System.IO.StringReader stringCodeReader, OutputDelegate WriteLine);
 
         bool Eof(object codeTree);
 
@@ -22,7 +24,7 @@ namespace cogbot.ScriptEngines
 
         string Str(object code);
 
-        ScriptInterpreter newInterpreter();
+        ScriptInterpreter newInterpreter(object self);
 
         bool IsSubscriberOf(string eventName);
 
