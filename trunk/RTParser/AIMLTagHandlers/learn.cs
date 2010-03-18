@@ -8,6 +8,7 @@ namespace RTParser.AIMLTagHandlers
     /// <summary>
     /// The learn element instructs the AIML interpreter to retrieve a resource specified by a URI, 
     /// and to process its AIML object contents.
+    /// supports network HTTP and web service based AIML learning (as well as local filesystem)
     /// </summary>
     public class learn : RTParser.Utils.AIMLTagHandler
     {
@@ -34,46 +35,21 @@ namespace RTParser.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "learn")
             {
-                // currently only AIML files in the local filesystem can be referenced
-                // ToDo: Network HTTP and web service based learning
+                //recurse here?
+                Unifiable templateNodeInnerText = Recurse();
                 if (!templateNodeInnerText.IsEmpty)
                 {
                     Unifiable path = templateNodeInnerText;
                     try
                     {
-                        XmlDocument doc = new XmlDocument();
-                        try
-                        {
-                            FileInfo fi = new FileInfo(path);
-                            if (fi.Exists)
-                            {
-                                doc.Load(path);
-                            }
-                            else
-                            {
-                                XmlTextReader reader = new XmlTextReader(path);
-                                doc.Load(reader);
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            String s =
-                                "ERROR! Attempted (but failed) to <learn> some new AIML from the following URI: " + path +
-                                " error " + e;
-                            this.Proc.writeToLog(s);
-                            return s;
-                        }
-
-                        doc.Load(path);
-                        this.Proc.loadAIMLFromXML(doc, path);
+                        Proc.loadAIMLFromFiles(path);
                     }
                     catch (Exception e2)
                     {
                         String s =
                             "ERROR! Attempted (but failed) to <learn> some new AIML from the following URI: " + path +
                             " error " + e2;
-                        this.Proc.writeToLog(s);
-                        return s;
+                        this.Proc.writeToLog(s);                   
                     }
 
                 }
