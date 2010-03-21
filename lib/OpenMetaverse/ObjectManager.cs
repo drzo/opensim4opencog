@@ -27,7 +27,10 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using OpenMetaverse.Http;
 using OpenMetaverse.Packets;
+using OpenMetaverse.Messages.Linden;
+using OpenMetaverse.StructuredData;
 
 namespace OpenMetaverse
 {
@@ -406,6 +409,14 @@ namespace OpenMetaverse
             add { lock (m_PayPriceReplyLock) { m_PayPriceReply += value; } }
             remove { lock (m_PayPriceReplyLock) { m_PayPriceReply -= value; } }
         }
+
+        /// <summary>
+        /// Callback for getting object media data via CAP
+        /// </summary>
+        /// <param name="success">Indicates if the operation was succesfull</param>
+        /// <param name="version">Object media version string</param>
+        /// <param name="faceMedia">Array indexed on prim face of media entry data</param>
+        public delegate void ObjectMediaCallback(bool success, string version, MediaEntry[] faceMedia);
 
 
 
@@ -1555,6 +1566,136 @@ namespace OpenMetaverse
             }
 
             Client.Network.SendPacket(packet, simulator);
+        }
+
+        /// <summary>
+        /// Update current URL of the previously set prim media
+        /// </summary>
+        /// <param name="primID">UUID of the prim</param>
+        /// <param name="newURL">Set current URL to this</param>
+        /// <param name="face">Prim face number</param>
+        /// <param name="sim">Simulator in which prim is located</param>
+        public void NavigateObjectMedia(UUID primID, int face, string newURL, Simulator sim)
+        {
+            Uri url;
+            if (sim.Caps != null && null != (url = sim.Caps.CapabilityURI("ObjectMediaNavigate")))
+            {
+                ObjectMediaNavigateMessage req = new ObjectMediaNavigateMessage();
+                req.PrimID = primID;
+                req.URL = newURL;
+                req.Face = face;
+
+                CapsClient request = new CapsClient(url);
+                request.OnComplete += (CapsClient client, OSD result, Exception error) =>
+                    {
+                        if (error != null)
+                        {
+                            Logger.Log("ObjectMediaNavigate: " + error.Message, Helpers.LogLevel.Error, Client);
+                        }
+                    };
+
+                request.BeginGetResponse(req.Serialize(), OSDFormat.Xml, Client.Settings.CAPS_TIMEOUT);
+            }
+            else
+            {
+                Logger.Log("ObjectMediaNavigate capability not available", Helpers.LogLevel.Error, Client);
+            }
+        }
+
+        /// <summary>
+        /// Set object media
+        /// </summary>
+        /// <param name="primID">UUID of the prim</param>
+        /// <param name="faceMedia">Array the length of prims number of faces. Null on face indexes where there is
+        /// no media, <seealso cref="MediaEntry"/> on faces which contain the media</param>
+        /// <param name="sim">Simulatior in which prim is located</param>
+        public void UpdateObjectMedia(UUID primID, MediaEntry[] faceMedia, Simulator sim)
+        {
+            Uri url;
+            if (sim.Caps != null && null != (url = sim.Caps.CapabilityURI("ObjectMedia")))
+            {
+                ObjectMediaUpdate req = new ObjectMediaUpdate();
+                req.PrimID = primID;
+                req.FaceMedia = faceMedia;
+                req.Verb = "UPDATE";
+
+                CapsClient request = new CapsClient(url);
+                request.OnComplete += (CapsClient client, OSD result, Exception error) =>
+                    {
+                        if (error != null)
+                        {
+                            Logger.Log("ObjectMediaUpdate: " + error.Message, Helpers.LogLevel.Error, Client);
+                        }
+                    };
+                request.BeginGetResponse(req.Serialize(), OSDFormat.Xml, Client.Settings.CAPS_TIMEOUT);
+            }
+            else
+            {
+                Logger.Log("ObjectMedia capability not available", Helpers.LogLevel.Error, Client);
+            }
+        }
+
+        /// <summary>
+        /// Retrieve information about object media
+        /// </summary>
+        /// <param name="primID">UUID of the primitive</param>
+        /// <param name="sim">Simulator where prim is located</param>
+        /// <param name="callback">Call this callback when done</param>
+        public void RequestObjectMedia(UUID primID, Simulator sim, ObjectMediaCallback callback)
+        {
+            Uri url;
+            if (sim.Caps != null && null != (url = sim.Caps.CapabilityURI("ObjectMedia")))
+            {
+                ObjectMediaRequest req = new ObjectMediaRequest();
+                req.PrimID = primID;
+                req.Verb = "GET";
+
+                CapsClient request = new CapsClient(url);
+                request.OnComplete += (CapsClient client, OSD result, Exception error) =>
+                    {
+                        if (result == null)
+                        {
+                            Logger.Log("Failed retrieving ObjectMedia data", Helpers.LogLevel.Error, Client);
+                            try { callback(false, string.Empty, null); }
+                            catch (Exception ex) { Logger.Log(ex.Message, Helpers.LogLevel.Error, Client); }
+                            return;
+                        }
+
+                        ObjectMediaMessage msg = new ObjectMediaMessage();
+                        msg.Deserialize((OSDMap)result);
+
+                        if (msg.Request is ObjectMediaResponse)
+                        {
+                            ObjectMediaResponse response = (ObjectMediaResponse)msg.Request;
+
+                            if (Client.Settings.OBJECT_TRACKING)
+                            {
+                                Primitive prim = sim.ObjectsPrimitives.Find((Primitive p) => { return p.ID == primID; });
+                                if (prim != null)
+                                {
+                                    prim.MediaVersion = response.Version;
+                                    prim.FaceMedia = response.FaceMedia;
+                                }
+                            }
+
+                            try { callback(true, response.Version, response.FaceMedia); }
+                            catch (Exception ex) { Logger.Log(ex.Message, Helpers.LogLevel.Error, Client); }
+                        }
+                        else
+                        {
+                            try { callback(false, string.Empty, null); }
+                            catch (Exception ex) { Logger.Log(ex.Message, Helpers.LogLevel.Error, Client); }
+                        }
+                    };
+
+                request.BeginGetResponse(req.Serialize(), OSDFormat.Xml, Client.Settings.CAPS_TIMEOUT);
+            }
+            else
+            {
+                Logger.Log("ObjectMedia capability not available", Helpers.LogLevel.Error, Client);
+                try { callback(false, string.Empty, null); }
+                catch (Exception ex) { Logger.Log(ex.Message, Helpers.LogLevel.Error, Client); }
+            }
         }
         #endregion
 
@@ -3463,6 +3604,31 @@ namespace OpenMetaverse
         }
     }
 
+    public class ObjectMediaEventArgs : EventArgs
+    {
+        /// <summary>
+        /// Indicates if the operation was successful
+        /// </summary>
+        public bool Success { get; set; }
+
+        /// <summary>
+        /// Media version string
+        /// </summary>
+        public string Version { get; set; }
+
+        /// <summary>
+        /// Array of media entries indexed by face number
+        /// </summary>
+        public MediaEntry[] FaceMedia { get; set; }
+
+        public ObjectMediaEventArgs(bool success, string version, MediaEntry[] faceMedia)
+        {
+            this.Success = success;
+            this.Version = version;
+            this.FaceMedia = faceMedia;
+        }
+    }
+
     /// <summary>
     /// Raised after interpolation is complete for a simulator
     /// </summary>
@@ -3482,5 +3648,6 @@ namespace OpenMetaverse
             this.m_Moving = prims;
         }
     }
+
     #endregion
 }

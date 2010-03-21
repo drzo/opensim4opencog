@@ -3301,7 +3301,7 @@ namespace OpenMetaverse
             lock (Client.Network.Simulators) 
                 if (Client.Network.CurrentSim == null || Client.Network.CurrentSim.Handle != simulator.Handle)
             {
-               Client.Network.SetCurrentSim(simulator, simulator.Caps._SeedCapsURI);   
+                if (simulator.Caps!=null) Client.Network.SetCurrentSim(simulator, simulator.Caps._SeedCapsURI);   
             }
         }
 

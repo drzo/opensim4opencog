@@ -31,7 +31,7 @@ namespace cogbot.Actions.SimExport
                 return ShowUsage();// " xfer [uuid]";
 
             string filename;
-            byte[] assetData = RequestXferPrim(assetID, out filename);
+            byte[] assetData = RequestXfer(assetID, AssetType.Object, out filename);
 
             if (assetData != null)
             {
@@ -51,31 +51,31 @@ namespace cogbot.Actions.SimExport
             }
         }
 
-        byte[] RequestXferPrim(UUID assetID, out string filename)
+        byte[] RequestXfer(UUID assetID, AssetType type, out string filename)
         {
             AutoResetEvent xferEvent = new AutoResetEvent(false);
             ulong xferID = 0;
             byte[] data = null;
 
-            AssetManager.XferReceivedCallback xferCallback =
-                delegate(XferDownload xfer)
+            EventHandler<XferReceivedEventArgs> xferCallback =
+                delegate(object sender, XferReceivedEventArgs e)
                 {
-                    if (xfer.XferID == xferID)
+                    if (e.Xfer.XferID == xferID)
                     {
-                        if (xfer.Success)
-                            data = xfer.AssetData;
+                        if (e.Xfer.Success)
+                            data = e.Xfer.AssetData;
                         xferEvent.Set();
                     }
                 };
 
-            Client.Assets.OnXferReceived += xferCallback;
+            Client.Assets.XferReceived += xferCallback;
 
             filename = assetID + ".asset";
-            xferID = Client.Assets.RequestAssetXfer(filename, false, true, assetID, AssetType.Object, false);
+            xferID = Client.Assets.RequestAssetXfer(filename, false, true, assetID, type, false);
 
             xferEvent.WaitOne(FETCH_ASSET_TIMEOUT, false);
 
-            Client.Assets.OnXferReceived -= xferCallback;
+            Client.Assets.XferReceived -= xferCallback;
 
             return data;
         }

@@ -54,15 +54,16 @@ namespace cogbot.Actions.Estate
             
             // Create a delegate which will be fired when the simulator receives our download request
             // Starts the actual transfer request
-            AssetManager.InitiateDownloadCallback initiateDownloadDelegate = delegate(string simFilename, string viewerFileName) {
-                Client.Assets.RequestAssetXfer(simFilename, false, false, UUID.Zero, AssetType.Unknown, false);
-            };
+            EventHandler<InitiateDownloadEventArgs> initiateDownloadDelegate =
+                delegate(object sender, InitiateDownloadEventArgs e)
+                {
+                    Client.Assets.RequestAssetXfer(e.SimFileName, false, false, UUID.Zero, AssetType.Unknown, false);
+                };
 
             // Subscribe to the event that will tell us the status of the download
-            Client.Assets.OnXferReceived += new AssetManager.XferReceivedCallback(Assets_OnXferReceived);
-
+            Client.Assets.XferReceived += new EventHandler<XferReceivedEventArgs>(Assets_XferReceived);
             // subscribe to the event which tells us when the simulator has received our request
-            Client.Assets.OnInitiateDownload += initiateDownloadDelegate;
+            Client.Assets.InitiateDownload += initiateDownloadDelegate;
 
             // configure request to tell the simulator to send us the file
             List<string> parameters = new List<string>();
@@ -78,8 +79,8 @@ namespace cogbot.Actions.Estate
             }
 
             // unsubscribe from events
-            Client.Assets.OnInitiateDownload -= initiateDownloadDelegate;
-            Client.Assets.OnXferReceived -= new AssetManager.XferReceivedCallback(Assets_OnXferReceived);
+            Client.Assets.InitiateDownload -= initiateDownloadDelegate;
+            Client.Assets.XferReceived -= new EventHandler<XferReceivedEventArgs>(Assets_XferReceived);
 
             // return the result
             return Success(result.ToString());;
@@ -88,23 +89,21 @@ namespace cogbot.Actions.Estate
         /// <summary>
         /// Handle the reply to the OnXferReceived event
         /// </summary>
-        /// <param name="xfer"></param>
-        private void Assets_OnXferReceived(XferDownload xfer)
+        private void Assets_XferReceived(object sender, XferReceivedEventArgs e)
         {
-            if (xfer.Success)
+            if (e.Xfer.Success)
             {
                 // set the result message
-                result.AppendFormat("Terrain file {0} ({1} bytes) downloaded successfully, written to {2}", xfer.Filename, xfer.Size, fileName);
+                result.AppendFormat("Terrain file {0} ({1} bytes) downloaded successfully, written to {2}", e.Xfer.Filename, e.Xfer.Size, fileName);
 
                 // write the file to disk
                 FileStream stream = new FileStream(fileName, FileMode.Create);
                 BinaryWriter w = new BinaryWriter(stream);
-                w.Write(xfer.AssetData);
+                w.Write(e.Xfer.AssetData);
                 w.Close();
 
                 // tell the application we've gotten the file
                 xferTimeout.Set();
-
             }
         }
     }

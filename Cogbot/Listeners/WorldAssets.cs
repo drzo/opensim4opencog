@@ -129,11 +129,11 @@ namespace cogbot.Listeners
         }
 
 
-        public override void Assets_OnXferReceived(XferDownload xfer)
-        {
-            //AssetRequests.
-            //RegisterUUIDMaybe(xfer.ID, xfer);
-        }
+        //public override void Assets_OnXferReceived(XferDownload xfer)
+        //{
+        //    //AssetRequests.
+        //    //RegisterUUIDMaybe(xfer.ID, xfer);
+        //}
 
         public override void Assets_OnAssetReceived(AssetDownload transfer, Asset asset)
         {
