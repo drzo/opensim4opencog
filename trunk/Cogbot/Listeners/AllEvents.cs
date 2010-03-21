@@ -601,7 +601,7 @@ namespace cogbot.Listeners
         static public readonly string[] paramNamesOnXferReceived = new string[] { "xfer" };
         static public readonly Type[] paramTypesOnXferReceived = new Type[] { typeof(XferDownload) };
 
-        public virtual void Assets_OnXferReceived(XferDownload xfer) { OnEvent("On-Xfer-Received", paramNamesOnXferReceived, paramTypesOnXferReceived, xfer); }
+        public virtual void Assets_OnXferReceived(object sender, XferReceivedEventArgs e) { OnEvent("On-Xfer-Received", paramNamesOnXferReceived, paramTypesOnXferReceived, e.Xfer); }
 
         static public readonly string[] paramNamesOnImageReceived = new string[] { "image", "asset" };
         static public readonly Type[] paramTypesOnImageReceived = new Type[] { typeof(ImageDownload), typeof(AssetTexture) };
@@ -611,17 +611,17 @@ namespace cogbot.Listeners
         static public readonly string[] paramNamesOnImageReceiveProgress = new string[] { "image", "recieved", "total" };
         static public readonly Type[] paramTypesOnImageReceiveProgress = new Type[] { typeof(UUID),  typeof(int), typeof(int) };
 
-        public virtual void Assets_OnImageReceiveProgress(UUID image, int recieved, int total) { OnEvent("On-Image-Receive-Progress", paramNamesOnImageReceiveProgress, paramTypesOnImageReceiveProgress, image,  recieved, total); }
+        public virtual void Assets_OnImageReceiveProgress(object sender, ImageReceiveProgressEventArgs e) { OnEvent("On-Image-Receive-Progress", paramNamesOnImageReceiveProgress, paramTypesOnImageReceiveProgress, e.ImageID,  e.Received, e.Total); }
 
         static public readonly string[] paramNamesOnAssetUploaded = new string[] { "upload" };
         static public readonly Type[] paramTypesOnAssetUploaded = new Type[] { typeof(AssetUpload) };
 
-        public virtual void Assets_OnAssetUploaded(AssetUpload upload) { OnEvent("On-Asset-Uploaded", paramNamesOnAssetUploaded, paramTypesOnAssetUploaded, upload); }
+        public virtual void Assets_OnAssetUploaded(object sender, AssetUploadEventArgs e) { OnEvent("On-Asset-Uploaded", paramNamesOnAssetUploaded, paramTypesOnAssetUploaded, e.Upload); }
 
         static public readonly string[] paramNamesOnUploadProgress = new string[] { "upload" };
         static public readonly Type[] paramTypesOnUploadProgress = new Type[] { typeof(AssetUpload) };
 
-        public virtual void Assets_OnUploadProgress(AssetUpload upload) { OnEvent("On-Upload-Progress", paramNamesOnUploadProgress, paramTypesOnUploadProgress, upload); }
+        public virtual void Assets_OnUploadProgress(object sender, AssetUploadEventArgs e) { OnEvent("On-Upload-Progress", paramNamesOnUploadProgress, paramTypesOnUploadProgress, e.Upload); }
 
         static public readonly string[] paramNamesOnAgentWearables = new string[] { };
         static public readonly Type[] paramTypesOnAgentWearables = new Type[] { };
@@ -813,11 +813,11 @@ namespace cogbot.Listeners
             client.Groups.GroupMemberEjected += Groups_OnGroupMemberEjected;
             client.Groups.GroupNoticesListReply += Groups_OnGroupNoticesList;
             // client.Assets.OnAssetReceived += Assets_OnAssetReceived;
-            client.Assets.OnXferReceived += Assets_OnXferReceived;
+            client.Assets.XferReceived += Assets_OnXferReceived;
             //todo client.Assets.OnImageReceived += Assets_OnImageReceived;
-            client.Assets.OnImageRecieveProgress += Assets_OnImageReceiveProgress;
-            client.Assets.OnAssetUploaded += Assets_OnAssetUploaded;
-            client.Assets.OnUploadProgress += Assets_OnUploadProgress;
+            client.Assets.ImageReceiveProgress += Assets_OnImageReceiveProgress;
+            client.Assets.AssetUploaded += Assets_OnAssetUploaded;
+            client.Assets.UploadProgress += Assets_OnUploadProgress;
             client.Appearance.AgentWearablesReply += Appearance_OnAgentWearables;
             //client.Appearance.OnAppearanceUpdated += Appearance_OnAppearanceUpdated;
             client.Inventory.ItemReceived += Inventory_OnItemReceived;
@@ -941,11 +941,11 @@ namespace cogbot.Listeners
             client.Groups.GroupMemberEjected -= Groups_OnGroupMemberEjected;
             client.Groups.GroupNoticesListReply -= Groups_OnGroupNoticesList;
             // client.Assets.OnAssetReceived -= Assets_OnAssetReceived;
-            client.Assets.OnXferReceived -= Assets_OnXferReceived;
+            client.Assets.XferReceived -= Assets_OnXferReceived;
             //todo client.Assets.OnImageReceived -= Assets_OnImageReceived;
-            client.Assets.OnImageRecieveProgress -= Assets_OnImageReceiveProgress;
-            client.Assets.OnAssetUploaded -= Assets_OnAssetUploaded;
-            client.Assets.OnUploadProgress -= Assets_OnUploadProgress;
+            client.Assets.ImageReceiveProgress -= Assets_OnImageReceiveProgress;
+            client.Assets.AssetUploaded -= Assets_OnAssetUploaded;
+            client.Assets.UploadProgress -= Assets_OnUploadProgress;
             client.Appearance.AgentWearablesReply -= Appearance_OnAgentWearables;
             //client.Appearance.OnAppearanceUpdated -= Appearance_OnAppearanceUpdated;
             client.Inventory.ItemReceived -= Inventory_OnItemReceived;

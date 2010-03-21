@@ -458,7 +458,7 @@ namespace cogbot.Listeners
 
                     
                     // raises these events already
-                    client.Assets.OnUploadProgress -= Assets_OnUploadProgress; // On-Upload-Progress
+                    client.Assets.UploadProgress -= Assets_OnUploadProgress; // On-Upload-Progress
                     client.Self.CameraConstraint -= Self_OnCameraConstraint;
 
 
@@ -673,7 +673,7 @@ namespace cogbot.Listeners
 
         public override void Terrain_OnLandPatch(Simulator simulator, int x, int y, int width, float[] data)
         {
-            client.Terrain.OnLandPatch -= Terrain_OnLandPatch;
+            //client.Terrain.LandPatchReceived -= Terrain_OnLandPatch;
             //Console.Write(",");
             //SimRegion R = SimRegion.GetRegion(simulator);
             //base.Terrain_OnLandPatch(simulator, x, y, width, null);
