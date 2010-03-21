@@ -1453,6 +1453,12 @@ namespace OpenMetaverse
             this.m_Message = message;
             this.m_FailReason = failReason;
         }
+        public LoginProgressEventArgs(LoginStatus login, String message)
+        {
+            this.m_Status = login;
+            this.m_Message = message;
+            this.m_FailReason = "login failed";
+        }
     }
     
     #endregion EventArgs
