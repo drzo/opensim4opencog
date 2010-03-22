@@ -53,28 +53,7 @@ namespace RTParser.Utils
             if (Directory.Exists(path))
             {
                 // process the AIML
-                this.RProcessor.writeToLog("Starting to process AIML files found in the directory " + path);
-
-                string[] fileEntries = Directory.GetFiles(path, "*.aiml");
-                if (fileEntries.Length > 0)
-                {
-                    foreach (string filename in fileEntries)
-                    {
-                        try
-                        {
-                            this.loadAIMLFile(filename);
-                        } catch(Exception ee)
-                        {
-                            Console.WriteLine("" + ee);
-                            RProcessor.writeToLog("Error in loadAIMLFile " + ee);
-                        }
-                    }
-                    this.RProcessor.writeToLog("Finished processing the AIML files. " + Convert.ToString(this.RProcessor.Size) + " categories processed.");
-                }
-                else
-                {
-                    throw new FileNotFoundException("Could not find any .aiml files in the specified directory (" + path + "). Please make sure that your aiml file end in a lowercase aiml extension, for example - myFile.aiml is valid but myFile.AIML is not.");
-                }
+                loadAIMLDir(path);
             } else if (File.Exists(path))
             {
                 this.loadAIMLFile(path); 
@@ -82,6 +61,32 @@ namespace RTParser.Utils
             else
             {
                 this.loadAIMLURI(path);
+            }
+        }
+
+        private void loadAIMLDir(string path)
+        {
+            this.RProcessor.writeToLog("Starting to process AIML files found in the directory " + path);
+
+            string[] fileEntries = Directory.GetFiles(path, "*.aiml");
+            if (fileEntries.Length > 0)
+            {
+                foreach (string filename in fileEntries)
+                {
+                    try
+                    {
+                        this.loadAIMLFile(filename);
+                    } catch(Exception ee)
+                    {
+                        Console.WriteLine("" + ee);
+                        RProcessor.writeToLog("Error in loadAIMLFile " + ee);
+                    }
+                }
+                this.RProcessor.writeToLog("Finished processing the AIML files. " + Convert.ToString(this.RProcessor.Size) + " categories processed.");
+            }
+            else
+            {
+                this.RProcessor.writeToLog("Could not find any .aiml files in the specified directory (" + path + "). Please make sure that your aiml file end in a lowercase aiml extension, for example - myFile.aiml is valid but myFile.AIML is not.");
             }
         }
 
@@ -130,7 +135,7 @@ namespace RTParser.Utils
             {
                 if (Directory.Exists(filename))
                 {
-                    loadAIML(filename);
+                    loadAIMLDir(filename);
                     return;
                 }
                 throw e;
@@ -160,6 +165,21 @@ namespace RTParser.Utils
         private void loadAIMLNode(XmlNode currentNode, string filename)
         {
             if (currentNode.NodeType == XmlNodeType.Comment) return;
+            if (currentNode.Name == "root")
+            {
+                // process each of these child "settings"? nodes
+                foreach (XmlNode child in currentNode.ChildNodes)
+                {
+                    loadAIMLNode(child, filename);
+                }
+                return;
+            }
+            if (currentNode.Name == "item")
+            {
+                this.RProcessor.GlobalSettings.loadSettingNode(currentNode);
+                return;
+            }
+
             if (currentNode.Name == "topic")
             {
                 this.processTopic(currentNode, filename);
@@ -167,18 +187,6 @@ namespace RTParser.Utils
             else if (currentNode.Name == "category")
             {
                 this.processCategory(currentNode, filename);
-            }
-            else if (currentNode.Name == "root")
-            {
-                // process each of these child "settings"? nodes
-                foreach (XmlNode child in currentNode.ChildNodes)
-                {
-                    loadAIMLNode(child, filename);
-                }
-            }
-            else if (currentNode.Name == "item")
-            {
-                this.RProcessor.GlobalSettings.loadSettingNode(currentNode);
             }
             else
             {
@@ -229,6 +237,7 @@ namespace RTParser.Utils
         /// <param name="filename">the file from which this category was taken</param>
         private void processCategory(XmlNode node, Unifiable topicName, string filename)
         {
+            Dictionary<string,List<XmlNode>> store = GetTopicStore();
             // reference and check the required nodes
             List<XmlNode> patterns = this.FindNodes("pattern", node);
             foreach (XmlNode pattern in patterns)
@@ -266,6 +275,11 @@ namespace RTParser.Utils
                     this.RProcessor.writeToLog("WARNING! Attempted to load a new category with an empty pattern where the path = " + categoryPath + " and template = " + template.OuterXml + " produced by a category in the file: " + filename);
                 }
             }
+        }
+
+        private Dictionary<string, List<XmlNode>> GetTopicStore()
+        {
+            return null;// throw new NotImplementedException();
         }
 
         /// <summary>
