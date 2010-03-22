@@ -70,7 +70,18 @@ namespace RTParser.Utils
                 throw new XmlException("The category with a pattern: " + path + " found in file: " + filename +
                                        " has an empty template tag. ABORTING");
             }
+            String ts = template.OuterXml;
+            addCategoryTagChild(path, template, guard, filename);
+        }
 
+        /// <summary>
+        /// Adds a category to the node
+        /// </summary>
+        /// <param name="path">the path for the category</param>
+        /// <param name="template">the template to find at the end of the path</param>
+        /// <param name="filename">the file that was the source of this category</param>
+        public void addCategoryTagChild(Unifiable path, XmlNode template, XmlNode guard, string filename)
+        {
             // check we're not at the leaf node
             if (!path.IsWildCard() && path.AsString().Trim().Length == 0)
             {
@@ -145,7 +156,7 @@ namespace RTParser.Utils
                 if (c.Key.AsString() == firstWord.AsString())
                 {
                     Node childNode = c.Value;
-                    childNode.addCategoryTag(newPath, template, guard, filename);
+                    childNode.addCategoryTagChild(newPath, template, guard, filename);
                     found = true;
                     break;
                 }
@@ -154,7 +165,7 @@ namespace RTParser.Utils
             {
                 Node childNode = new Node(this);
                 childNode.word = firstWord;
-                childNode.addCategoryTag(newPath, template, guard, filename);
+                childNode.addCategoryTagChild(newPath, template, guard, filename);
                 this.children.Add(childNode.word, childNode);
             }
         }
@@ -236,7 +247,7 @@ namespace RTParser.Utils
             }
 
             // otherwise split the input into it's component words
-          //  Unifiable[] splitPath0 = path.Split();
+            //  Unifiable[] splitPath0 = path.Split();
             Unifiable first = path.First();
 
             // get the first word of the sentence
@@ -251,7 +262,7 @@ namespace RTParser.Utils
             {
                 Unifiable childNodeWord = childNodeKV.Key;
                 if (!childNodeWord.IsShortWildCard()) continue;
-                if (childNodeWord.Unify(first, query)>0) continue;
+                if (childNodeWord.Unify(first, query) > 0) continue;
                 Node childNode = childNodeKV.Value;
                 // add the next word to the wildcard match 
                 Unifiable newWildcard = Unifiable.CreateAppendable();
@@ -321,7 +332,7 @@ namespace RTParser.Utils
                 // add the next word to the wildcard match 
                 Unifiable newWildcard = Unifiable.CreateAppendable();
                 // normal * and LazyMatch on first word
-                if (childNodeWord.Unify(first, query)==0)
+                if (childNodeWord.Unify(first, query) == 0)
                 {
                     this.storeWildCard(first, newWildcard);
                     result = childNode.evaluate(newPath, query, request, matchstate, newWildcard);
@@ -329,12 +340,12 @@ namespace RTParser.Utils
                 }
                 else
                 {
-                // some lazy matches take two words
+                    // some lazy matches take two words
                     Unifiable second = newPath.First();
                     if (!second.IsEmpty && childNodeWord.IsLazyStar())
                     {
                         Unifiable firstAndSecond = first + " " + second;
-                        if (childNodeWord.Unify(firstAndSecond, query)==0)
+                        if (childNodeWord.Unify(firstAndSecond, query) == 0)
                         {
                             this.storeWildCard(firstAndSecond, newWildcard);
                             result = childNode.evaluate(newPath.Rest(), query,

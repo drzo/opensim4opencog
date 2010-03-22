@@ -358,6 +358,10 @@ namespace AIMLBotModule
 
         private User GetMyUser(string fromname)
         {
+            if (String.IsNullOrEmpty(fromname))
+            {
+                fromname = "Test User";
+            }
             bool newlyCreated;
             User user = MyBot.FindOrCreateUser(fromname, out newlyCreated);
             if (newlyCreated)
