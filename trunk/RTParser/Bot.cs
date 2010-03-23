@@ -79,6 +79,9 @@ namespace RTParser
         /// </summary>
         private List<Unifiable> LogBuffer = new List<Unifiable>();
 
+
+        public List<Unifiable> CurrentActions = new List<Unifiable>();
+
         /// <summary>
         /// How big to let the log buffer get before writing to disk
         /// </summary>

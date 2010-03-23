@@ -102,7 +102,12 @@ namespace AIMLBotModule
                 MyUser = user;
                 StringWriter sw = new StringWriter();
                 {
+
                     CmdResult s = client.ExecuteCommand(cmd, sw.WriteLine);
+                    if (cmd.StartsWith("anim"))
+                    {
+                        AddAnimToNextResponse(sw.ToString());
+                    }
                     return String.Format("{0}{1}", sw, s);
                 }
             }
@@ -851,7 +856,11 @@ namespace AIMLBotModule
                 client.Self.AnimationStop(Animations.TYPE, false);
             }
         }
-
+        StringWriter AddedToNextResponse = new StringWriter();
+        private void AddAnimToNextResponse(string s)
+        {
+            AddedToNextResponse.WriteLine("\r\n"+s);
+        }
         public Unifiable AIMLInterp(string input)
         {
             return AIMLInterp(input, MyUser);
@@ -861,6 +870,71 @@ namespace AIMLBotModule
             return AIMLInterp(input, GetMyUser(myUser));
         }
         public Unifiable AIMLInterp(string input, User myUser)
+        {
+            StringWriter old = AddedToNextResponse;
+            AddedToNextResponse = new StringWriter();
+            try
+            {
+                Unifiable result = AIMLInterp0(input, myUser);
+                String append = AddedToNextResponse.ToString().Trim();
+                if (append.Length>0)
+                {
+                    result = AddToResult(result, append);
+                }
+                return result;
+            } finally
+            {
+                AddedToNextResponse = old;
+            }
+        }
+
+        private Unifiable AddToResult(Unifiable unifiable, string[] splts)
+        {
+            if (splts.Length == 0) return unifiable;
+            if (splts.Length == 1) return AddToResult1(unifiable, splts[0]);
+            foreach (var s in splts)
+            {
+                unifiable = AddToResult1(unifiable, s);
+            }
+            return unifiable;
+        }
+
+        private Unifiable AddToResult1(Unifiable unifiable, string s)
+        {
+            if (String.IsNullOrEmpty(s)) return unifiable;
+            s = s.Trim();
+            if (s.Length == 0) return unifiable;
+            if (s.StartsWith("unknown animation "))
+            {
+                return AddToResult1(unifiable, asAnim(s.Substring("unknown animation ".Length)));
+            }
+            if (s.StartsWith("Start anim "))
+            {
+                return AddToResult1(unifiable, asAnim(s.Substring("Start anim ".Length)));
+            }
+            if (s.StartsWith("Stop anim "))
+            {
+                return AddToResult1(unifiable, asAnim(s.Substring("Stop anim ".Length)));
+            }
+            if (s.StartsWith("Ran "))
+            {
+                return unifiable;
+            }
+            return "" + unifiable + "\r\n " + s;
+        }
+
+        private string asAnim(string a)
+        {
+            return "\n<!-- Begin Meta !-->\n" + a.ToLower().Trim() + "\n<!-- End Meta !-->\n";
+        }
+
+        private Unifiable AddToResult(Unifiable unifiable, string s)
+        {
+            String[] splts = s.Split(new string[] { "\r", "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+            return AddToResult(unifiable, splts);
+        }
+
+        public Unifiable AIMLInterp0(string input, User myUser)
         {
             // set a global
             MyUser = myUser;
