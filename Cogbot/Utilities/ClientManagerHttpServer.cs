@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Web;
 using cogbot;
@@ -50,7 +51,20 @@ namespace cogbot.Utilities
             _listener = HttpServer.HttpListener.Create(log4netLogWriter.Instance, IPAddress.Any, _port);
             _listener.Accepted += _listener_Accepted;
             _listener.Set404Handler(_listener_404);
+            workArroundReuse();
             _listener.Start(10);
+        }
+
+        private void workArroundReuse()
+        {
+            try
+            {
+                TcpClient client = new TcpClient();
+                client.Connect("localhost", _port);
+            } catch
+            {
+                
+            }
         }
 
         private void _listener_404(IHttpClientContext context, IHttpRequest request, IHttpResponse response)
