@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Xml;
 using System.Text;
 
@@ -36,6 +37,12 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessChange()
         {
+            int d = request.GetCurrentDepth();
+            if (d > 30)
+            {
+                Console.WriteLine("WARNING Depth pretty deep " + templateNode + " returning empty");
+                return Unifiable.Empty;
+            }
             if (this.templateNode.Name.ToLower() == "srai")
             {
                 if (!templateNodeInnerText.IsEmpty)
