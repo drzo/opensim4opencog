@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using RTParser;
 
@@ -41,6 +42,9 @@ namespace RTParser
         /// </summary>
         public bool hasTimedOut = false;
 
+
+        public readonly int framesAtStart;
+
         #endregion
 
         /// <summary>
@@ -55,6 +59,13 @@ namespace RTParser
             this.user = user;
             this.Proccessor = bot;
             this.StartedOn = DateTime.Now;
+            this.framesAtStart = new StackTrace().FrameCount;
+        }
+
+        public int GetCurrentDepth()
+        {
+            int here = new StackTrace().FrameCount - framesAtStart;
+            return here / 6;
         }
     }
 }
