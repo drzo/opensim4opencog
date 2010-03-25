@@ -138,7 +138,9 @@ namespace RTParser.Utils
                     loadAIMLDir(filename);
                     return;
                 }
-                throw e;
+                this.RProcessor.writeToLog("Error in AIML Stacktrace: " + filename + " " + e.StackTrace);
+                this.RProcessor.writeToLog("Error in AIML file: " + filename + " Message " + e.Message);
+                //return;
             }
             this.loadAIMLFromXML(doc, filename);
         }
