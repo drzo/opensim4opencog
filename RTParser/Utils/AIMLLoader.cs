@@ -106,14 +106,13 @@ namespace RTParser.Utils
                     XmlTextReader reader = new XmlTextReader(path);
                     doc.Load(reader);
                 }
+                return;
             }
             catch (Exception e)
             {
                 String s = "ERROR: XmlTextReader of AIML files (" + path + ")  threw " + e;
                 throw new FileNotFoundException(s);
             }
-
-            doc.Load(path);
             loadAIMLFromXML(doc, path);
         }
 
@@ -130,19 +129,28 @@ namespace RTParser.Utils
             XmlDocument doc = new XmlDocument();
             try
             {
-                doc.Load(filename);
-            } catch(Exception e)
-            {
                 if (Directory.Exists(filename))
                 {
                     loadAIMLDir(filename);
                     return;
                 }
-                this.RProcessor.writeToLog("Error in AIML Stacktrace: " + filename + " " + e.StackTrace);
+                doc.Load(filename);
+                this.loadAIMLFromXML(doc, filename);
+                return;
+            }
+            catch (Exception e)
+            {
+                this.RProcessor.writeToLog("Error in AIML Stacktrace: " + filename + "\n  " + e.Message + "\n" + e.StackTrace);
                 this.RProcessor.writeToLog("Error in AIML file: " + filename + " Message " + e.Message);
+                try
+                {
+                    this.loadAIMLFromXML(doc, filename);
+                }   catch (Exception e2)
+                {
+                    this.RProcessor.writeToLog("which causes loadAIMLFromXML: " + filename + "\n  " + e.Message + "\n" + e.StackTrace);                    
+                }
                 //return;
             }
-            this.loadAIMLFromXML(doc, filename);
         }
 
         /// <summary>
