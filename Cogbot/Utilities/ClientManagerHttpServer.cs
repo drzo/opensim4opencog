@@ -52,7 +52,16 @@ namespace cogbot.Utilities
             _listener.Accepted += _listener_Accepted;
             _listener.Set404Handler(_listener_404);
             workArroundReuse();
-            _listener.Start(10);
+            try
+            {
+                _listener.Start(10);
+                Console.WriteLine("Ready for HTTPD port " + _port);
+                _botClient.WriteLine("Ready for HTTPD port " + _port);
+            }
+            catch (Exception e)
+            {
+                _botClient.WriteLine("NOT OK for HTTPD port " + _port + "\n" +e);
+            }
         }
 
         private void workArroundReuse()
