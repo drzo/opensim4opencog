@@ -15,7 +15,7 @@ namespace RTParser
             get
             {
                 if (best != null) return best.Raw;
-                throw new NotImplementedException();
+                throw noBest();
             }
         }
 
@@ -130,6 +130,21 @@ namespace RTParser
             {
                 return u.ToValue();
             }
+            throw noBest();
+        }
+
+        public override object AsNodeXML()
+        {
+            if (best != null) return best.AsNodeXML();
+            foreach (var u in List)
+            {
+                return u.AsNodeXML();
+            }
+            throw noBest();
+        }
+
+        private Exception noBest()
+        {
             throw new NotImplementedException();
         }
 
@@ -140,7 +155,7 @@ namespace RTParser
             {
                 return u.AsString();
             }
-            throw new NotImplementedException();
+            throw noBest();
         }
 
         public override void Append(Unifiable part)

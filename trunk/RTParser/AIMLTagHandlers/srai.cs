@@ -35,26 +35,45 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
+        private static int depth = 0;
         protected override Unifiable ProcessChange()
         {
-            int d = request.GetCurrentDepth();
-            if (d > 30)
+            try
             {
-                Console.WriteLine("WARNING Depth pretty deep " + templateNode + " returning empty");
-                return Unifiable.Empty;
-            }
-            if (this.templateNode.Name.ToLower() == "srai")
-            {
-                if (!templateNodeInnerText.IsEmpty)
+                depth++;
+                int d = request.GetCurrentDepth();
+                if (d > 30)
                 {
-                    AIMLbot.Request subRequest = new AIMLbot.Request(templateNodeInnerText, this.user, this.Proc);
-                    subRequest.StartedOn = this.request.StartedOn; // make sure we don't keep adding time to the request
-                    AIMLbot.Result subQuery = this.Proc.Chat(subRequest);
-                    this.request.hasTimedOut = subRequest.hasTimedOut;
-                    return subQuery.Output;
+                    Console.WriteLine("WARNING Depth pretty deep " + templateNode + " returning empty");
+                    return Unifiable.Empty;
                 }
+                if (depth > 30)
+                {
+                    Console.WriteLine("WARNING Depth pretty deep " + templateNode + " returning empty");
+                    return Unifiable.Empty;
+                }
+                if (this.templateNode.Name.ToLower() == "srai")
+                {
+                    if (!templateNodeInnerText.IsEmpty)
+                    {
+                        AIMLbot.Request subRequest = new AIMLbot.Request(templateNodeInnerText, this.user, this.Proc);
+                        subRequest.StartedOn = this.request.StartedOn;
+                            // make sure we don't keep adding time to the request
+                                        if (depth > 200)
+                            {
+                                Console.WriteLine("WARNING Depth pretty deep " + templateNode + " returning empty");
+                                return Unifiable.Empty;
+                            }
+                        AIMLbot.Result subQuery = this.Proc.Chat(subRequest);
+                        this.request.hasTimedOut = subRequest.hasTimedOut;
+                        return subQuery.Output;
+                    }
+                }
+                return Unifiable.Empty;
+            } finally
+            {
+                depth--;
             }
-            return Unifiable.Empty;
         }
     }
 }

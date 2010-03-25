@@ -265,6 +265,8 @@ namespace RTParser
         public abstract Unifiable Rest();
 
         public abstract bool IsShort();
+
+        public abstract object AsNodeXML();
     }
 }
 
