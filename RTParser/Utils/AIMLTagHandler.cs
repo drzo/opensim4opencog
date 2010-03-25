@@ -180,7 +180,7 @@ namespace RTParser.Utils
             else
             {
                 Unifiable resultNodeInnerXML = tagHandler.Transform();
-                XmlNode resultNode = getNode(String.Format("<node>{0}</node>", resultNodeInnerXML));
+                XmlNode resultNode = getNode(String.Format("<node>{0}</node>", resultNodeInnerXML.AsNodeXML()));
                 if (resultNode.HasChildNodes)
                 {
                     Unifiable recursiveResult = Unifiable.CreateAppendable();

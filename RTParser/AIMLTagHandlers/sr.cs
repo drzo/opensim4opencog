@@ -40,7 +40,7 @@ namespace RTParser.AIMLTagHandlers
                 star recursiveStar = new star(this.Proc, this.user, this.query, this.request, this.result, starNode);
                 Unifiable starContent = recursiveStar.Transform();
 
-                XmlNode sraiNode = RTParser.Utils.AIMLTagHandler.getNode(String.Format("<srai>{0}</srai>", starContent));
+                XmlNode sraiNode = RTParser.Utils.AIMLTagHandler.getNode(String.Format("<srai>{0}</srai>", starContent.AsNodeXML()));
                 srai sraiHandler = new srai(this.Proc, this.user, this.query, this.request, this.result, sraiNode);
                 return sraiHandler.Transform();
             }

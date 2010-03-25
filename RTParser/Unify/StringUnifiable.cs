@@ -59,8 +59,6 @@ namespace RTParser
             return "" + param1;
         }
 
-
-
         public override Unifiable Trim()
         {
             string str2 = str.Trim().Replace("  "," ").Replace("  "," ");
@@ -87,6 +85,11 @@ namespace RTParser
         {
             if (obj is Unifiable) return ((Unifiable)obj) == this;
             return str == astr(obj);
+        }
+
+        public override object AsNodeXML()
+        {
+            return str;
         }
 
         public override string ToString()
@@ -302,7 +305,7 @@ namespace RTParser
             if (IsLazy())
             {
                 //todo 
-                Console.WriteLine("TODO " + ToString());
+                Console.WriteLine("TODO " + str);
             }
             return AsString();
         }
