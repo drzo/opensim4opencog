@@ -144,6 +144,7 @@ namespace RTParser.Utils
                 this.RProcessor.writeToLog("Error in AIML file: " + filename + " Message " + e.Message);
                 try
                 {
+                    if (doc.DocumentElement==null) return;
                     this.loadAIMLFromXML(doc, filename);
                 }   catch (Exception e2)
                 {
