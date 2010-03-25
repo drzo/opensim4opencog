@@ -21,10 +21,11 @@ namespace cogbot.Actions.System
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
+            if (args==null || args.Length==0) args =new []{"show"};
             if (PanelGUI == null)
             {
                 PanelGUI = Client.TheRadegastInstance.MainForm;
-               // (new Thread(() =>
+                // (new Thread(() =>
                 {
                     PanelGUI.Closing += new CancelEventHandler(delegate(object sender, CancelEventArgs e)
                     {
@@ -40,14 +41,44 @@ namespace cogbot.Actions.System
                     //                                           }));
                     //Application.Run(PanelGUI);
                 }
-               // )).Start();
+                // )).Start();
             }
+            switch (args[0].ToLower())
             {
-                //(new Thread(() => {
-                PanelGUI.Invoke(new MethodInvoker(PanelGUI.Show));
-                //PanelGUI.Show();
-                //})).Start();
-                return Success("radegast shown");
+                case "show":
+                    {
+                        //(new Thread(() => {
+                        PanelGUI.Invoke(new MethodInvoker(PanelGUI.Show));
+                        //PanelGUI.Show();
+                        //})).Start();
+                        return Success("radegast shown");
+                    }
+                case "maximize":
+                    {
+                        PanelGUI.BeginInvoke(new MethodInvoker(() =>
+                        {
+                            PanelGUI.WindowState = FormWindowState.Maximized;
+                        }));
+                        return Success("radegast " + args[0]);
+                    }
+                case "minimize":
+                    {
+                        PanelGUI.BeginInvoke(new MethodInvoker(() =>
+                        {
+                            PanelGUI.WindowState = FormWindowState.Minimized;
+                        }));
+                        return Success("radegast " + args[0]);
+                    }
+                case "normal":
+                    {
+                        PanelGUI.BeginInvoke(new MethodInvoker(() =>
+                        {
+                            PanelGUI.WindowState = FormWindowState.Normal;
+                        }));
+                        return Success("radegast " + args[0]);
+                    }
+                default:
+                    return Success("Unknow state");
             }
         }
     }
