@@ -365,7 +365,7 @@ namespace AIMLBotModule
         {
             if (String.IsNullOrEmpty(fromname))
             {
-                fromname = "Visitor";
+                fromname = "UNKNOWN_PARTNER";
             }
             bool newlyCreated;
             User user = MyBot.FindOrCreateUser(fromname, out newlyCreated);
