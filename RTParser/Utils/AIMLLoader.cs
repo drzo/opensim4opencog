@@ -62,6 +62,8 @@ namespace RTParser.Utils
             {
                 this.loadAIMLURI(path);
             }
+            Console.WriteLine("*** Loaded AIMLFiles From Location: '{0}' ***", path);
+
         }
 
         private void loadAIMLDir(string path)
@@ -136,6 +138,7 @@ namespace RTParser.Utils
                 }
                 doc.Load(filename);
                 this.loadAIMLFromXML(doc, filename);
+                Console.WriteLine("Loaded AIMLFile: '{0}'", filename);
                 return;
             }
             catch (Exception e)
