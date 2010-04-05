@@ -1298,7 +1298,7 @@ The AIMLbot program.
                 return UseCyc;
             }
         }
-        private bool UseCyc = true;
+        private bool UseCyc = false;
         public CycAccess GetCycAccess
         {
             get
