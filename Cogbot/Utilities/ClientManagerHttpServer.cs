@@ -119,7 +119,7 @@ namespace cogbot.Utilities
                 }
                 
                 AddToBody(response, "<pre>");
-                AddToBody(response, "<!-- Begin Response !-->");
+                AddToBody(response, "\n<!-- Begin Response !-->");
                 
                 CmdResult res;
                 if (String.IsNullOrEmpty(username))
@@ -130,7 +130,7 @@ namespace cogbot.Utilities
                     res = _botClient.ExecuteCommand(cmd + " @ " + username + " - " + text, wrresp.WriteLine);
                 }
                 AddToBody(response, "");
-                AddToBody(response, "<!-- End Response !-->");
+                AddToBody(response, "\n<!-- End Response !-->");
                 AddToBody(response, "</pre>");
                 if (useHtml)
                 {
