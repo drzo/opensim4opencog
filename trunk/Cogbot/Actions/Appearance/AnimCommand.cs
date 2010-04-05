@@ -8,6 +8,7 @@ namespace cogbot.Actions.Appearance
 {
     public class AnimCommand : Command, BotPersonalCommand
     {
+        public static bool NOSEARCH_ANIM = true;
         public AnimCommand(BotClient testClient)
         {
             TheBotClient = testClient;
@@ -35,6 +36,12 @@ namespace cogbot.Actions.Appearance
                 WriteLine("Currently: {0}", alist);
                 return ShowUsage();// " anim [seconds] HOVER [seconds] 23423423423-4234234234-234234234-23423423  +CLAP -JUMP STAND";
            }
+            if (NOSEARCH_ANIM)
+            {
+                String str = string.Join(" ", args);
+                Console.WriteLine("ANIM ECHO " + str);
+                return Success("\nStart anim " + str + "\n");
+            }
             int time = 1300; //should be long enough for most animations
             List<KeyValuePair<UUID, int>> amins = new List<KeyValuePair<UUID, int>>();
             for (int i = 0; i < args.Length; i++)
@@ -109,17 +116,17 @@ namespace cogbot.Actions.Appearance
                     {
                         case -1:
                             Client.Self.AnimationStop(anim.Key, true);
-                            WriteLine("Stop anim " + WorldSystem.GetAnimationName(anim.Key));
+                            WriteLine("\nStop anim " + WorldSystem.GetAnimationName(anim.Key));
                             continue;
                         case +1:
                             Client.Self.AnimationStart(anim.Key, true);
-                            WriteLine("Start anim " + WorldSystem.GetAnimationName(anim.Key));
+                            WriteLine("\nStart anim " + WorldSystem.GetAnimationName(anim.Key));
                             continue;
                         default:
                             try
                             {
                                 Client.Self.AnimationStart(anim.Key, true);
-                                WriteLine("Ran anim " + WorldSystem.GetAnimationName(anim.Key) + " for " + val/1000 +
+                                WriteLine("\nRan anim " + WorldSystem.GetAnimationName(anim.Key) + " for " + val / 1000 +
                                           " seconds.");
                                 Thread.Sleep(val);
                             }
@@ -132,7 +139,7 @@ namespace cogbot.Actions.Appearance
                 }
                 catch (Exception e)
                 {
-                    return Failure("Ran " + amins.Count + " amins but " + e); 
+                    return Failure("\nRan " + amins.Count + " amins but " + e); 
                 }
             }
             return Success("Ran " + amins.Count + " amins");
