@@ -124,8 +124,10 @@ namespace cogbot.Utilities
                 CmdResult res;
                 if (String.IsNullOrEmpty(username))
                 {
-                    res = _botClient.ExecuteCommand(cmd + " " + text, wrresp.WriteLine);
-                } else
+                    //res = _botClient.ExecuteCommand(cmd + " " + text, wrresp.WriteLine);
+                    res = _botClient.ExecuteCommand(cmd + " @ UNKNOWN_PARTNER - " + text, wrresp.WriteLine);
+                }
+                else
                 {
                     res = _botClient.ExecuteCommand(cmd + " @ " + username + " - " + text, wrresp.WriteLine);
                 }
