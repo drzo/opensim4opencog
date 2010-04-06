@@ -64,8 +64,11 @@ namespace RTParser.AIMLTagHandlers
                                 Console.WriteLine("WARNING Depth pretty deep " + templateNode + " returning empty");
                                 return Unifiable.Empty;
                             }
+                         Console.WriteLine(" SRAI--> ("+depth+")" + subRequest.rawInput);
                         AIMLbot.Result subQuery = this.Proc.Chat(subRequest);
                         this.request.hasTimedOut = subRequest.hasTimedOut;
+                        Console.WriteLine(" SRAI <-- (" + depth + ")" + subQuery.RawOutput);
+
                         return subQuery.Output;
                     }
                 }

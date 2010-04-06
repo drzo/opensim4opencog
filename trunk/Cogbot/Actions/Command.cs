@@ -396,6 +396,7 @@ namespace cogbot.Actions
         {
             failure++;
             WriteLine(usage);
+            Console.WriteLine(usage);
             return Result(usage, false);
         }
 
@@ -403,6 +404,7 @@ namespace cogbot.Actions
         {
             success++;
             WriteLine(usage);
+            Console.WriteLine(usage);
             return Result("Success " + Name, true);
         }
 
