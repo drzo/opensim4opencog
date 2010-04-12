@@ -152,13 +152,20 @@ namespace cogbot.Utilities
             response.AddToBody(text + Environment.NewLine);
         }
 
-        static public string GetVariable(IHttpRequest request, string bot, string name)
+        static public string GetVariable(IHttpRequest request, string varName, string defaultValue)
         {
-            if (request.QueryString.Contains(bot))
+            if (request.QueryString.Contains(varName))
             {
-                return HttpUtility.UrlDecode(request.QueryString[bot].Value);
+                return HttpUtility.UrlDecode(request.QueryString[varName].Value);
             }
-            return HttpUtility.UrlDecode(name);
+            if (request.Param.Contains(varName))
+            {
+                var single = request.Param[varName].Value;
+                if (!String.IsNullOrEmpty(single)) return HttpUtility.UrlDecode(single);
+                var values = request.Param[varName].Values;
+                if (values.Count > 0) return HttpUtility.UrlDecode(values[0]);
+            }
+            return HttpUtility.UrlDecode(defaultValue);
         }
 
         private void _listener_Accepted(object sender, ClientAcceptedEventArgs e)
