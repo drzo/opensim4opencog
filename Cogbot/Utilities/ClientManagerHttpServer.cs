@@ -94,7 +94,8 @@ namespace cogbot.Utilities
             string botname = GetVariable(request, "bot", _botClient.GetName());
             string cmd = GetVariable(request, "cmd", "aiml");
             string username = GetVariable(request, "username", GetVariable(request, "ident", null));
-            string text = GetVariable(request, "text", GetVariable(request, "entry", pathd.TrimStart('/')));           
+            string saytext = GetVariable(request, "saytext", "missed the post");
+            string text = GetVariable(request, "text", GetVariable(request, "entry", pathd.TrimStart('/')));
             var wrresp = new WriteLineToResponse(response);
             if (path.StartsWith("/chat?"))
             {
@@ -112,6 +113,7 @@ namespace cogbot.Utilities
                     AddToBody(response, "<pre>");
                     AddToBody(response, "bot = " + botname);
                     AddToBody(response, "cmd = " + cmd);
+                    AddToBody(response, "saytext = " + saytext);
                     AddToBody(response, "text = " + text);
                     AddToBody(response, "</pre>");
                     AddToBody(response, "<a href='" + request.Uri.PathAndQuery + "'>"
@@ -164,6 +166,24 @@ namespace cogbot.Utilities
                 if (!String.IsNullOrEmpty(single)) return HttpUtility.UrlDecode(single);
                 var values = request.Param[varName].Values;
                 if (values.Count > 0) return HttpUtility.UrlDecode(values[0]);
+            }
+            if (request.Param.Contains(varName))
+            {
+                var single = request.Param[varName].Value;
+                if (!String.IsNullOrEmpty(single)) return HttpUtility.UrlDecode(single);
+                var values = request.Param[varName].Values;
+                if (values.Count > 0) return HttpUtility.UrlDecode(values[0]);
+            }
+            if (request.Method == "POST")
+            {
+                var f = request.Form;
+                if (f.Contains(varName))
+                {
+                    var single = f[varName].Value;
+                    if (!String.IsNullOrEmpty(single)) return HttpUtility.UrlDecode(single);
+                    var values = f[varName].Values;
+                    if (values.Count > 0) return HttpUtility.UrlDecode(values[0]);
+                }
             }
             return HttpUtility.UrlDecode(defaultValue);
         }
