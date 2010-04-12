@@ -61,7 +61,7 @@ namespace cogbot.Utilities
             }
             catch (Exception e)
             {
-                _botClient.WriteLine("NOT OK for HTTPD port " + _port + "\n" +e);
+                _botClient.WriteLine("NOT OK for HTTPD port " + _port + "\n" + e);
             }
         }
 
@@ -71,27 +71,28 @@ namespace cogbot.Utilities
             {
                 TcpClient client = new TcpClient();
                 client.Connect("localhost", _port);
-            } catch
+            }
+            catch
             {
-                
+
             }
         }
 
         private void _listener_404(IHttpClientContext context, IHttpRequest request, IHttpResponse response)
         {
             UUID capsID;
-         
+
             bool success;
 
             string path = request.Uri.PathAndQuery;//.TrimEnd('/');
-            string pathd =  HttpUtility.UrlDecode(request.Uri.PathAndQuery);//.TrimEnd('/');
+            string pathd = HttpUtility.UrlDecode(request.Uri.PathAndQuery);//.TrimEnd('/');
             Console.WriteLine("_listener " + path + " from " + request.RemoteEndPoint);
             if (request.UriPath.EndsWith(".ico"))
             {
                 response.Status = HttpStatusCode.NotFound;
-                response.Send();                
+                response.Send();
             }
-            bool useHtml = true;
+            bool useHtml = false;
             if (request.Method == "POST")
             {
                 var fdp = new FormDecoderProvider();
@@ -99,15 +100,11 @@ namespace cogbot.Utilities
                 fdp.Add(new UrlDecoder());
                 request.DecodeBody(fdp);
             }
-            string botname = GetVariable(request, "bot", _botClient.GetName());
-            string cmd = GetVariable(request, "cmd", "aiml");
-            string username = GetVariable(request, "username", GetVariable(request, "ident", null));
-            string saytext = GetVariable(request, "saytext", "missed the post");
-            string text = GetVariable(request, "text", GetVariable(request, "entry", pathd.TrimStart('/')));
+
             var wrresp = new WriteLineToResponse(response);
-            if (path.StartsWith("/chat?"))
+            if (path.StartsWith("/?") || path.StartsWith("/test"))
             {
-                useHtml = false;
+                useHtml = true;
             }
             try
             {
@@ -115,45 +112,74 @@ namespace cogbot.Utilities
                 {
                     AddToBody(response, "<html>");
                     AddToBody(response, "<head>");
+                    string botname = GetVariable(request, "bot", _botClient.GetName());
+
                     AddToBody(response, "<title>" + botname + "</title>");
                     AddToBody(response, "</head>");
                     AddToBody(response, "<body>");
                     AddToBody(response, "<pre>");
-                    AddToBody(response, "bot = " + botname);
-                    AddToBody(response, "cmd = " + cmd);
-                    AddToBody(response, "saytext = " + saytext);
-                    AddToBody(response, "text = " + text);
+                    foreach (var p in request.Param.AsEnumerable())
+                    {
+                        foreach (var item in p.Values)
+                        {
+                            AddToBody(response, "" + p.Name + " = " + item);
+                        }
+                    }
                     AddToBody(response, "</pre>");
                     AddToBody(response, "<a href='" + request.Uri.PathAndQuery + "'>"
                                         + request.Uri.PathAndQuery + "</a>");
+                    AddToBody(response, "<pre>");
                 }
-                
-                AddToBody(response, "<pre>");
-                AddToBody(response, "\n<!-- Begin Response !-->");
-                
+
+                AddToBody(response, "<xml>");
+
+                string cmd = GetVariable(request, "cmd", "aiml");
+
                 CmdResult res;
-                if (String.IsNullOrEmpty(username))
+                // this is our default handler
+                if (cmd != "aiml")
                 {
-                    //res = _botClient.ExecuteCommand(cmd + " " + text, wrresp.WriteLine);
-                    res = _botClient.ExecuteCommand(cmd + " @ UNKNOWN_PARTNER - " + text, wrresp.WriteLine);
+                    AddToBody(response, "<cmdtext>" + cmd + "</cmdtext>"); //strinbg
+                    AddToBody(response, "<output>"); //string
+                    res = _botClient.ExecuteCommand(cmd, wrresp.WriteLine);
+                    AddToBody(response, "\n</output>");
+                    AddToBody(response, "<message>" + res.Message + "</message>"); //string
+                    AddToBody(response, "<success>" + res.Success + "</success>"); //True/False
+                    AddToBody(response, "<completedSynchronously>" + res.CompletedSynchronously + "</completedSynchronously>"); //True/False
+                    AddToBody(response, "<isCompleted>" + res.IsCompleted + "</isCompleted>"); //True/False
                 }
                 else
                 {
-                    res = _botClient.ExecuteCommand(cmd + " @ " + username + " - " + text, wrresp.WriteLine);
+                    AddToBody(response, "\n<!-- Begin Response !-->");
+                    // this is our MeNe handler
+                    string username = GetVariable(request, "username", GetVariable(request, "ident", null));
+                    string saytext = GetVariable(request, "saytext", "missed the post");
+                    string text = GetVariable(request, "text", GetVariable(request, "entry", pathd.TrimStart('/')));
+                    if (String.IsNullOrEmpty(username))
+                    {
+                        //res = _botClient.ExecuteCommand(cmd + " " + text, wrresp.WriteLine);
+                        res = _botClient.ExecuteCommand(cmd + " @ UNKNOWN_PARTNER - " + text, wrresp.WriteLine);
+                    }
+                    else
+                    {
+                        res = _botClient.ExecuteCommand(cmd + " @ " + username + " - " + text, wrresp.WriteLine);
+                    }
+                    AddToBody(response, "");
+                    AddToBody(response, "\n<!-- End Response !-->");
                 }
-                AddToBody(response, "");
-                AddToBody(response, "\n<!-- End Response !-->");
-                AddToBody(response, "</pre>");
+                AddToBody(response, "</xml>");
                 if (useHtml)
                 {
+                    AddToBody(response, "</pre>");
                     AddToBody(response, "</body>");
                     AddToBody(response, "</html>");
                 }
-            } finally
+            }
+            finally
             {
                 wrresp.response = null;
                 response.Status = HttpStatusCode.OK;
-                response.Send();                
+                response.Send();
             }
         }
 
@@ -164,34 +190,16 @@ namespace cogbot.Utilities
 
         static public string GetVariable(IHttpRequest request, string varName, string defaultValue)
         {
+            if (request.Param.Contains(varName))
+            {
+                var single = request.Param[varName].Value;
+                if (!String.IsNullOrEmpty(single)) return single;
+                var values = request.Param[varName].Values;
+                if (values.Count > 0) return values[0];
+            }
             if (request.QueryString.Contains(varName))
             {
                 return HttpUtility.UrlDecode(request.QueryString[varName].Value);
-            }
-            if (request.Param.Contains(varName))
-            {
-                var single = request.Param[varName].Value;
-                if (!String.IsNullOrEmpty(single)) return HttpUtility.UrlDecode(single);
-                var values = request.Param[varName].Values;
-                if (values.Count > 0) return HttpUtility.UrlDecode(values[0]);
-            }
-            if (request.Param.Contains(varName))
-            {
-                var single = request.Param[varName].Value;
-                if (!String.IsNullOrEmpty(single)) return HttpUtility.UrlDecode(single);
-                var values = request.Param[varName].Values;
-                if (values.Count > 0) return HttpUtility.UrlDecode(values[0]);
-            }
-            if (request.Method == "POST")
-            {
-                var f = request.Form;
-                if (f.Contains(varName))
-                {
-                    var single = f[varName].Value;
-                    if (!String.IsNullOrEmpty(single)) return HttpUtility.UrlDecode(single);
-                    var values = f[varName].Values;
-                    if (values.Count > 0) return HttpUtility.UrlDecode(values[0]);
-                }
             }
             return HttpUtility.UrlDecode(defaultValue);
         }
