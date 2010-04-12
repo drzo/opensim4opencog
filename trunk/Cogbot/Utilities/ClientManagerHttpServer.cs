@@ -8,6 +8,7 @@ using System.Web;
 using cogbot;
 using cogbot.Actions;
 using HttpServer;
+using HttpServer.FormDecoders;
 using OpenMetaverse;
 using OpenMetaverse.Http;
 
@@ -91,6 +92,13 @@ namespace cogbot.Utilities
                 response.Send();                
             }
             bool useHtml = true;
+            if (request.Method == "POST")
+            {
+                var fdp = new FormDecoderProvider();
+                fdp.Add(new MultipartDecoder());
+                fdp.Add(new UrlDecoder());
+                request.DecodeBody(fdp);
+            }
             string botname = GetVariable(request, "bot", _botClient.GetName());
             string cmd = GetVariable(request, "cmd", "aiml");
             string username = GetVariable(request, "username", GetVariable(request, "ident", null));
