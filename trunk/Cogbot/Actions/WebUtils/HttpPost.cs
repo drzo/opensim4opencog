@@ -18,12 +18,12 @@ namespace cogbot.Actions.WebUtil
         /// <param name="url">The url to post to.</param>
         /// <param name="values">The values to post.</param>
         /// <returns>a string containing the result of the post.</returns>
-        public string DoHttpPost(string url, NameValueCollection m_values)
+        static public string DoHttpPost(string url, NameValueCollection values)
         {
             StringBuilder postData = new StringBuilder();
-            for (int i = 0; i < m_values.Count; i++)
+            for (int i = 0; i < values.Count; i++)
             {
-                EncodeAndAddItem(ref postData, m_values.GetKey(i), m_values[i]);
+                EncodeAndAddItem(ref postData, values.GetKey(i), values[i]);
             }
             HttpWebRequest request = null;
             Uri uri = new Uri(url);
@@ -69,6 +69,7 @@ namespace cogbot.Actions.WebUtil
             }
             return Success(DoHttpPost(url, dict));
         }
+
         /// <summary>
         /// Encodes an item and ads it to the string.
         /// </summary>
