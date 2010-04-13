@@ -1885,12 +1885,12 @@ namespace cogbot
             return new CmdResult("" + o, true);
         }
 
-        static public string DoHttpGet(string url)
+        public string DoHttpGet(string url)
         {
             return Encoding.UTF8.GetString((new System.Net.WebClient()).DownloadData(url)); ;
         }
 
-        static public string DoHttpPost(string[] args)
+        public string DoHttpPost(string[] args)
         {
             NameValueCollection dict = new NameValueCollection();
             for (int i = 1; i < args.Length; i++)
