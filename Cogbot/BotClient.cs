@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Reflection;
 using System.Windows.Forms;
@@ -8,6 +9,7 @@ using cogbot.Actions.Land;
 using cogbot.Actions.Movement;
 using cogbot.Actions.Scripting;
 using cogbot.Actions.System;
+using cogbot.Actions.WebUtil;
 using cogbot.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
@@ -24,6 +26,7 @@ using cogbot.TheOpenSims;
 using System.Drawing;
 using Settings=OpenMetaverse.Settings;
 using cogbot.Actions.Agent;
+using System.Text;
 //using RadegastTab = Radegast.SleekTab;
 
 // older LibOMV
@@ -1881,6 +1884,23 @@ namespace cogbot
             if (si.Eof(o)) return new CmdResult("EOF " + o, true);
             return new CmdResult("" + o, true);
         }
+
+        static public string DoHttpGet(string url)
+        {
+            return Encoding.UTF8.GetString((new System.Net.WebClient()).DownloadData(url)); ;
+        }
+
+        static public string DoHttpPost(string[] args)
+        {
+            NameValueCollection dict = new NameValueCollection();
+            for (int i = 1; i < args.Length; i++)
+            {
+                dict.Add(args[i++], args[i]);
+            }
+            return HttpPost.DoHttpPost(args[0], dict);
+        }
+
+
 
     }
 
