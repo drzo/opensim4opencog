@@ -56,7 +56,7 @@ namespace cogbot.Actions.WebUtil
             : base(Client)
         {
             Name = "HttpPost";
-            Description = "Do an http post. Usage: HttpPost http://localhost:5580/action?cmd=say&args=hello";
+            Description = "Do an http post. Usage: HttpPost http://localhost:5580/ cmd say args hello";
         }
         public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
