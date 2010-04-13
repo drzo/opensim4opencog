@@ -133,7 +133,7 @@ namespace cogbot.Utilities
 
                 AddToBody(response, "<xml>");
 
-                string cmd = GetVariable(request, "cmd", "aiml");
+                string cmd = GetVariable(request, "cmd", "aiml") + " " + GetVariable(request, "args", "");
 
                 CmdResult res;
                 // this is our default handler
