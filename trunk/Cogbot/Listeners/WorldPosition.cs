@@ -475,8 +475,11 @@ namespace cogbot.Listeners
                 if (obj != except)
                 {
                     if (rootOnly && !obj.IsRoot) continue;
-                    if (obj.IsRegionAttached && Vector3d.Distance(obj.GlobalPosition, here) <= maxDistance)
-                        nearby.Add(obj);
+                    try
+                    {
+                        if (obj.IsRegionAttached && Vector3d.Distance(obj.GlobalPosition, here) <= maxDistance)
+                            nearby.Add(obj);
+                    } catch(Exception) {}
                 }
             }
             ;
