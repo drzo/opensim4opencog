@@ -135,6 +135,7 @@ namespace cogbot
         public bool Running = true;
         public bool GroupCommands = true;
         private string _masterName = string.Empty;
+        public Hashtable PosterBoard = new Hashtable();
         public string MasterName
         {
             get
@@ -619,6 +620,15 @@ namespace cogbot
             if (message.Length > 0 && sourceType == ChatSourceType.Agent && !muteList.Contains(fromName))
             {
                 WriteLine(String.Format("{0} says, \"{1}\".", fromName, message));
+                PosterBoard["/posterboard/onchat"]=message;
+                if (fromName == Self.Name)
+                {
+                    PosterBoard["/posterboard/onchat-said"] = message;
+                }
+                else
+                {
+                    PosterBoard["/posterboard/onchat-heard"] = message;
+                }
             }
         }
 
@@ -1889,7 +1899,7 @@ namespace cogbot
         {
             return Encoding.UTF8.GetString((new System.Net.WebClient()).DownloadData(url)); ;
         }
-
+        
         public string DoHttpPost(string[] args)
         {
             NameValueCollection dict = new NameValueCollection();
@@ -1899,7 +1909,7 @@ namespace cogbot
             }
             return HttpPost.DoHttpPost(args[0], dict);
         }
-
+        
 
 
     }

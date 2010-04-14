@@ -92,6 +92,31 @@ namespace cogbot.Utilities
                 response.Status = HttpStatusCode.NotFound;
                 response.Send();
             }
+            var wrresp = new WriteLineToResponse(response);
+
+            // Micro-posterboard
+            if (pathd.StartsWith("/posterboard"))
+            {
+                string slot = path;
+                string value = "";
+                if (_botClient.PosterBoard.Contains(slot))
+                {
+                    value = (string)_botClient.PosterBoard[slot];
+                    _botClient.PosterBoard.Remove(slot); // consume the data from the queue
+                }
+                AddToBody(response, "<xml>");
+                AddToBody(response, "<slot>");
+                AddToBody(response, "<path>" + path + "</path>"); 
+                AddToBody(response, "<value>" + value + "</value>");
+                AddToBody(response, "</slot>");
+                AddToBody(response, "</xml>");
+
+                wrresp.response = null;
+                response.Status = HttpStatusCode.OK;
+                response.Send();
+
+            }
+
             bool useHtml = false;
             if (request.Method == "POST")
             {
@@ -101,7 +126,6 @@ namespace cogbot.Utilities
                 request.DecodeBody(fdp);
             }
 
-            var wrresp = new WriteLineToResponse(response);
             if (path.StartsWith("/?") || path.StartsWith("/test"))
             {
                 useHtml = true;
