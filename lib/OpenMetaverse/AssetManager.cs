@@ -1128,6 +1128,9 @@ namespace OpenMetaverse
                 case AssetType.Gesture:
                     asset = new AssetGesture();
                     break;
+                case AssetType.CallingCard:
+                    asset = new AssetCallingCard();
+                    break;
                 default:
                     Logger.Log("Unimplemented asset type: " + type, Helpers.LogLevel.Error, Client);
                     return null;
