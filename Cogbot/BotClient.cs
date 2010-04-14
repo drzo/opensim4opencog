@@ -1900,14 +1900,14 @@ namespace cogbot
             return Encoding.UTF8.GetString((new System.Net.WebClient()).DownloadData(url)); ;
         }
         
-        public string DoHttpPost(string[] args)
+        public string DoHttpPost(Object[] args)
         {
             NameValueCollection dict = new NameValueCollection();
             for (int i = 1; i < args.Length; i++)
             {
-                dict.Add(args[i++], args[i]);
+                dict.Add(args[i++].ToString(), args[i].ToString());
             }
-            return HttpPost.DoHttpPost(args[0], dict);
+            return HttpPost.DoHttpPost(args[0].ToString(), dict);
         }
         
 
