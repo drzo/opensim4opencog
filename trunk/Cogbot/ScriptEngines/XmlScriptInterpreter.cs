@@ -526,5 +526,21 @@ namespace cogbot.ScriptEngines
             WriteLine("   xStartElement: strURI =(" + strURI + ") strName=(" + strName + ") depth=(" + depth + ")");
         }
 
+        public CmdResult ExecuteXmlCommand(string cmd, OutputDelegate outputDelegate)
+        {
+            outputDelegate("<xml>");
+            outputDelegate("<cmdtext>" + cmd + "</cmdtext>"); //strinbg
+            outputDelegate("<output>"); //string
+            CmdResult res = BotClient.ExecuteCommand(cmd, outputDelegate);
+            outputDelegate("\n</output>");
+            outputDelegate("<message>" + res.Message + "</message>"); //string
+            outputDelegate("<success>" + res.Success + "</success>"); //True/False
+            outputDelegate("<invalidArgs>" + res.InvalidArgs + "</invalidArgs>"); //True/False
+            outputDelegate("<completedSynchronously>" + res.CompletedSynchronously + "</completedSynchronously>");
+                //True/False
+            outputDelegate("<isCompleted>" + res.IsCompleted + "</isCompleted>"); //True/False
+            outputDelegate("</xml>");
+            return res;
+        }
     }
 }

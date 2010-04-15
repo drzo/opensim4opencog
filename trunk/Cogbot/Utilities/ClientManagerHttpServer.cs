@@ -27,7 +27,7 @@ namespace cogbot.Utilities
             string s = string.Format(str, args);
             if (response != null)
             {
-                response.AddToBody(s);
+                response.AddToBody(s + Environment.NewLine);
             }
             else
             {
@@ -155,25 +155,19 @@ namespace cogbot.Utilities
                     AddToBody(response, "<pre>");
                 }
 
-                AddToBody(response, "<xml>");
 
-                string cmd = GetVariable(request, "cmd", "aiml") + " " + GetVariable(request, "args", "");
+                string cmd = GetVariable(request, "cmd", "MeNe");
 
                 CmdResult res;
                 // this is our default handler
-                if (cmd != "aiml")
+                if (cmd != "MeNe")
                 {
-                    AddToBody(response, "<cmdtext>" + cmd + "</cmdtext>"); //strinbg
-                    AddToBody(response, "<output>"); //string
-                    res = _botClient.ExecuteCommand(cmd, wrresp.WriteLine);
-                    AddToBody(response, "\n</output>");
-                    AddToBody(response, "<message>" + res.Message + "</message>"); //string
-                    AddToBody(response, "<success>" + res.Success + "</success>"); //True/False
-                    AddToBody(response, "<completedSynchronously>" + res.CompletedSynchronously + "</completedSynchronously>"); //True/False
-                    AddToBody(response, "<isCompleted>" + res.IsCompleted + "</isCompleted>"); //True/False
+                    res = _botClient.ExecuteXmlCommand(cmd  + " " + GetVariable(request, "args", ""), wrresp.WriteLine);
+
                 }
                 else
                 {
+                    AddToBody(response, "<xml>");
                     AddToBody(response, "\n<!-- Begin Response !-->");
                     // this is our MeNe handler
                     string username = GetVariable(request, "username", GetVariable(request, "ident", null));
@@ -182,16 +176,16 @@ namespace cogbot.Utilities
                     if (String.IsNullOrEmpty(username))
                     {
                         //res = _botClient.ExecuteCommand(cmd + " " + text, wrresp.WriteLine);
-                        res = _botClient.ExecuteCommand(cmd + " @ UNKNOWN_PARTNER - " + text, wrresp.WriteLine);
+                        res = _botClient.ExecuteCommand("aiml @ UNKNOWN_PARTNER - " + text, wrresp.WriteLine);
                     }
                     else
                     {
-                        res = _botClient.ExecuteCommand(cmd + " @ " + username + " - " + text, wrresp.WriteLine);
+                        res = _botClient.ExecuteCommand("aiml @ " + username + " - " + text, wrresp.WriteLine);
                     }
                     AddToBody(response, "");
                     AddToBody(response, "\n<!-- End Response !-->");
+                    AddToBody(response, "</xml>");
                 }
-                AddToBody(response, "</xml>");
                 if (useHtml)
                 {
                     AddToBody(response, "</pre>");
