@@ -66,7 +66,17 @@ namespace cogbot.Utilities
                     while (!quitRequested && tcpStreamWriter!=null)
                     {
                         try
-                        {        
+                        {
+                            try
+                            {
+                                tcpStreamWriter.Flush();
+                            }
+                            catch (Exception)
+                            {
+
+                                tcpStreamWriter = null;
+                                quitRequested = true;
+                            }
                             try
                             {
                                 ProcessOneCommand();                                
@@ -144,18 +154,21 @@ namespace cogbot.Utilities
         
         public void ProcessOneCommand()
         {
+            ScopedTextReader tcpStreamReader = new ScopedTextReader(this.tcpStreamReader);
             SourceLanguage syntaxType = SourceLanguage.Unknown;
             while (syntaxType == SourceLanguage.Unknown)
             {
                 int peeked = tcpStreamReader.Peek();
                 if (peeked == -1)
                 {
+                    Thread.Sleep(100);
                     continue;
                 }
                 char ch = (char) peeked;
 
                 if (Char.IsWhiteSpace(ch) || Char.IsControl(ch))
                 {
+                    peeked = tcpStreamReader.Read();
                     continue;
                 }
                 if (ch == '(')
@@ -198,7 +211,7 @@ namespace cogbot.Utilities
                                               "</errormsg>\n<stack>\n" + e + "\n</stack>\n</error>");
                 }
             }
-            string clientMessage = tcpStreamReader.ReadToEnd().Trim();
+            string clientMessage = tcpStreamReader.ReadLine().Trim();
             if (clientMessage.Contains("xml") || clientMessage.Contains("http:"))
             {
                 tcpStreamWriter.WriteLine(EvaluateXmlCommand(clientMessage));
@@ -545,6 +558,38 @@ namespace cogbot.Utilities
         //}
 
         #endregion
+    }
+
+    public class ScopedTextReader : TextReader
+    {
+        readonly TextReader scoped;
+        public ScopedTextReader(TextReader reader)
+        {
+            scoped = reader;
+        }
+        public override void Close()
+        {
+        }
+        public override int Read()
+        {
+            return scoped.Read();
+        }
+        public override string ReadToEnd()
+        {
+            return scoped.ReadLine();
+        }
+        public override int Peek()
+        {
+            return scoped.Peek();
+        }
+        public override int ReadBlock(char[] buffer, int index, int count)
+        {
+            return scoped.ReadBlock(buffer, index, count);
+        }
+        public override string ReadLine()
+        {
+            return scoped.ReadLine();
+        }
     }
 
     public class BotTcpServer : SimEventSubscriber
