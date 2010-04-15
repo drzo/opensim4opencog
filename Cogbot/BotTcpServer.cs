@@ -151,22 +151,22 @@ namespace cogbot.Utilities
         }
 
 
-        
-        public void ProcessOneCommand()
+        private SourceLanguage GetSyntaxType()
         {
-            ScopedTextReader tcpStreamReader = new ScopedTextReader(this.tcpStreamReader);
             SourceLanguage syntaxType = SourceLanguage.Unknown;
             while (syntaxType == SourceLanguage.Unknown)
             {
                 int peeked = tcpStreamReader.Peek();
                 if (peeked == -1)
                 {
+                    System.Windows.Forms.Application.DoEvents();
                     Thread.Sleep(100);
+                    // PushbackReader r;
                     continue;
                 }
-                char ch = (char) peeked;
+                char ch = (char)peeked;
 
-                if (Char.IsWhiteSpace(ch) || Char.IsControl(ch))
+                if (Char.IsWhiteSpace(ch))
                 {
                     peeked = tcpStreamReader.Read();
                     continue;
@@ -183,13 +183,19 @@ namespace cogbot.Utilities
                 }
                 syntaxType = SourceLanguage.Text;
             }
+            return syntaxType;
+        }
+        
+        public void ProcessOneCommand()
+        {
+            SourceLanguage syntaxType = GetSyntaxType();
 
             Server.parent.WriteLine("SockClient: {0}", syntaxType);
             if (syntaxType == SourceLanguage.Lisp)
             {
                 try
                 {
-                    tcpStreamWriter.WriteLine("200 " + botclient.evalLispReaderString(tcpStreamReader));
+                    tcpStreamWriter.WriteLine("200 " + botclient.evalLispReaderString(new ScopedTextReader(this.tcpStreamReader)));
                 }
                 catch (Exception e)
                 {
@@ -201,7 +207,7 @@ namespace cogbot.Utilities
             {
                 try
                 {
-                    tcpStreamWriter.WriteLine(evalXMLString(tcpStreamReader));
+                    tcpStreamWriter.WriteLine(evalXMLString(new ScopedTextReader(this.tcpStreamReader)));
                 }
                 catch (Exception e)
                 {
@@ -210,6 +216,7 @@ namespace cogbot.Utilities
                     tcpStreamWriter.WriteLine("<error><response></response><errormsg>" + e.Message.ToString() +
                                               "</errormsg>\n<stack>\n" + e + "\n</stack>\n</error>");
                 }
+                return;
             }
             string clientMessage = tcpStreamReader.ReadLine().Trim();
             if (clientMessage.Contains("xml") || clientMessage.Contains("http:"))
@@ -562,8 +569,8 @@ namespace cogbot.Utilities
 
     public class ScopedTextReader : TextReader
     {
-        readonly TextReader scoped;
-        public ScopedTextReader(TextReader reader)
+        readonly StreamReader scoped;
+        public ScopedTextReader(StreamReader reader)
         {
             scoped = reader;
         }
@@ -576,7 +583,7 @@ namespace cogbot.Utilities
         }
         public override string ReadToEnd()
         {
-            return scoped.ReadLine();
+            return ReadLine();
         }
         public override int Peek()
         {
@@ -588,7 +595,16 @@ namespace cogbot.Utilities
         }
         public override string ReadLine()
         {
+            if (NoMoreInput())
+            {
+                return "";
+            }
             return scoped.ReadLine();
+        }
+
+        private bool NoMoreInput()
+        {
+            return (scoped.Peek() == -1);
         }
     }
 
