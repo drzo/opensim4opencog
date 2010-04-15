@@ -1782,9 +1782,12 @@ namespace cogbot
             }
             return HttpPost.DoHttpPost(args[0].ToString(), dict);
         }
-        
 
 
+        public CmdResult ExecuteXmlCommand(string cmd, OutputDelegate line)
+        {
+            return XmlInterp.ExecuteXmlCommand(cmd, line);
+        }
     }
 
     /// <summary>

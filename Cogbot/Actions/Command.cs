@@ -79,6 +79,7 @@ namespace cogbot.Actions
     {
         public String Message;
         public bool Success;
+        public bool InvalidArgs;
 
         public CmdResult(string usage, bool b)
         {
@@ -86,6 +87,7 @@ namespace cogbot.Actions
             Success = b;
             IsCompleted = true;
             CompletedSynchronously = true;
+            InvalidArgs = false;
         }
         public override string ToString()
         {
@@ -432,7 +434,9 @@ namespace cogbot.Actions
         /// <returns>CmdResult Failure with a string containing the parameter usage instructions</returns>
         public virtual CmdResult ShowUsage()
         {
-            return Failure("Usage: //" + Usage);
+            CmdResult res = Failure("Usage: //" + Usage);
+            res.InvalidArgs = true;
+            return res;
         }
 
         protected bool TryEnumParse(Type type, string[] names, int argStart, out int argsUsed, out object value)
