@@ -8,7 +8,49 @@ using System.Threading;
 
 namespace cogbot.Listeners
 {
+    public class SimEventFilterSubscriber : SimEventSubscriber
+    {
+        private SimEventSubscriber Next;
+        public bool DefaultUse = true;
+        // Events to always send
+        public List<String> Always = new List<string>();
+        // Events to never send
+        public List<String> Never = new List<string>();
+        public List<String> KnownSet = new List<string>();
 
+        public SimEventFilterSubscriber(SimEventSubscriber next)
+        {
+            Next = next;
+        }
+        #region Implementation of SimEventSubscriber
+
+        public void OnEvent(SimObjectEvent evt)
+        {
+            if (Skipped(evt)) return;
+            Next.OnEvent(evt);
+        }
+
+        private bool Skipped(SimObjectEvent evt)
+        {
+            return (SkippedVerb(evt.Verb) || SkippedVerb(evt.EventType.ToString()) || SkippedVerb(evt.EventName));
+        }
+
+        private bool SkippedVerb(string verb)
+        {
+            KnownSet.Add(verb);
+            if (Always.Contains(verb)) return false;
+            if (Never.Contains(verb)) return true;
+            return !DefaultUse;
+        }
+
+        public void Dispose()
+        {
+            Next.Dispose();
+            Next = null;
+        }
+
+        #endregion
+    }
 
     public class SimEventTextSubscriber : SimEventSubscriber
     {

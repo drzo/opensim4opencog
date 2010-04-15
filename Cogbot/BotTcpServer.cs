@@ -37,6 +37,7 @@ namespace cogbot.Utilities
         private StreamWriter tcpStreamWriter = null;// = new StreamWriter(ns);        
         readonly BotTcpServer Server;
         public Thread AbortThread;
+        readonly private SimEventFilterSubscriber filter;
         readonly protected BotClient botclient;        
         bool quitRequested = false;
         
@@ -44,7 +45,11 @@ namespace cogbot.Utilities
         {
             tcp_client = this_client;
             Server = server;
-            Server.parent.AddBotMessageSubscriber(this);
+            filter = new SimEventFilterSubscriber(this);
+            // never recieve data updates
+            filter.Never.Add(SimEventType.DATA_UPDATE.ToString());
+            filter.Never.Add("On-Log-Message");
+            
             botclient = server.parent;
         }
 
@@ -57,8 +62,8 @@ namespace cogbot.Utilities
 
                 NetworkStream ns = tcp_client.GetStream();
                 tcpStreamWriter = new StreamWriter(ns);
-
                 tcpStreamWriter.WriteLine("<!-- Welcome to Cogbot "+botclient.GetName()+" !-->");
+                Server.parent.AddBotMessageSubscriber(filter);
                 tcpStreamWriter.Flush();
                 // Start loop and handle commands:
                 try
@@ -106,7 +111,7 @@ namespace cogbot.Utilities
                 }
                 finally
                 {
-                    Server.parent.RemoveBotMessageSubscriber(this);
+                    Server.parent.RemoveBotMessageSubscriber(filter);
                 }
 
                 //data = new byte[1024];
@@ -163,7 +168,7 @@ namespace cogbot.Utilities
         private SourceLanguage GetSyntaxType()
         {
             SourceLanguage syntaxType = SourceLanguage.Unknown;
-            while (syntaxType == SourceLanguage.Unknown)
+            while (syntaxType == SourceLanguage.Unknown && tcpStreamReader!=null)
             {
                 int peeked = tcpStreamReader.Peek();
                 if (peeked == -1)
