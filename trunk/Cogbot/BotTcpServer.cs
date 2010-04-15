@@ -8,6 +8,7 @@ using System.Net.Sockets;
 using System.Net;
 using System.Xml;
 using cogbot.Actions;
+using cogbot.ScriptEngines;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
 using cogbot.Listeners;
@@ -55,7 +56,6 @@ namespace cogbot.Utilities
 
 
                 NetworkStream ns = tcp_client.GetStream();
-                tcpStreamReader = new StreamReader(ns);
                 tcpStreamWriter = new StreamWriter(ns);
 
                 tcpStreamWriter.WriteLine("<!-- Welcome to Cogbot "+botclient.GetName()+" !-->");
@@ -65,6 +65,7 @@ namespace cogbot.Utilities
                 {
                     while (!quitRequested && tcpStreamWriter!=null)
                     {
+                        tcpStreamReader = new StreamReader(ns);
                         try
                         {
                             try
@@ -137,10 +138,18 @@ namespace cogbot.Utilities
 
         public void OnEvent(SimObjectEvent evt)
         {
-            if (tcpStreamWriter != null)
+            try
             {
-                tcpStreamWriter.WriteLine(BotTcpServer.EventToString(evt, Server.parent));
-                tcpStreamWriter.Flush();
+                if (tcpStreamWriter != null)
+                {
+                    tcpStreamWriter.WriteLine(BotTcpServer.EventToString(evt, Server.parent));
+                    tcpStreamWriter.Flush();
+                }
+            }
+            catch (IOException)
+            {
+                quitRequested = true;
+                tcpStreamWriter = null;
             }
         }
 
@@ -207,7 +216,7 @@ namespace cogbot.Utilities
             {
                 try
                 {
-                    tcpStreamWriter.WriteLine(evalXMLString(new ScopedTextReader(this.tcpStreamReader)));
+                    tcpStreamWriter.WriteLine(botclient.evalXMLString(new ScopedTextReader(this.tcpStreamReader)));
                 }
                 catch (Exception e)
                 {
@@ -219,13 +228,20 @@ namespace cogbot.Utilities
                 return;
             }
             string clientMessage = tcpStreamReader.ReadLine().Trim();
-            if (clientMessage.Contains("xml") || clientMessage.Contains("http:"))
+            try
             {
-                tcpStreamWriter.WriteLine(EvaluateXmlCommand(clientMessage));
+                if (clientMessage.Contains("xml") || clientMessage.Contains("http:"))
+                {
+                    tcpStreamWriter.WriteLine(botclient.XmlInterp.EvaluateXmlDocument(clientMessage));
+                }
+                else
+                {
+                    tcpStreamWriter.WriteLine(EvaluateCommand(clientMessage));
+                }
             }
-            else
+            catch (Exception e)
             {
-                tcpStreamWriter.WriteLine(EvaluateCommand(clientMessage));
+                tcpStreamWriter.WriteLine("500 \"" + e.ToString().Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"");
             }
 
         }
@@ -238,239 +254,12 @@ namespace cogbot.Utilities
             Text = 'A'
         } 
 
-        private string evalXMLString(TextReader message)
-        {
-            XmlReader reader = new XmlTextReader(message);
-            XmlDocument xdoc = new XmlDocument();
-            xdoc.Load(reader);
-            throw new NotImplementedException();
-        }
-
-        public string EvaluateXmlCommand(string xcmd)
-        {
-            WriteLine("EvaluateXmlCommand :" + xcmd);
-
-            string response = "<request>\r\n <cmd>" + xcmd + "</cmd>\r\n <response>null</response>\r\n</request>";
-            try
-            {
-                if (xcmd.Contains(".xlsp"))
-                {
-                    return XML2Lisp(xcmd);
-                }
-
-
-                int depth = 0;
-                XmlDocument xdoc = new XmlDocument();
-                XmlTextReader reader;
-                StringReader stringReader;
-                if (xcmd.Contains("http:") || xcmd.Contains(".xml"))
-                {
-                    // assuming its a file
-                    xcmd = xcmd.Trim();
-                    reader = new XmlTextReader(xcmd);
-                    xdoc.Load(xcmd);
-                }
-                else
-                {
-                    // otherwise just use the string
-                    stringReader = new System.IO.StringReader(xcmd);
-                    reader = new XmlTextReader(stringReader);
-                    xdoc.LoadXml(xcmd);
-                }
-
-                Hashtable[] attributeStack = new Hashtable[16];
-
-
-                string[] strURI = new String[16];
-                string[] strName = new String[16];
-                string[] strPath = new String[16];
-
-                string totalResponse = "";
-                for (int i = 0; i < 16; i++) { attributeStack[i] = new Hashtable(); }
-
-                while (reader.Read())
-                {
-                    depth = reader.Depth + 1;
-                    switch (reader.NodeType)
-                    {
-
-                        case XmlNodeType.Element:
-                            //Hashtable attributes = new Hashtable();
-                            strURI[depth] = reader.NamespaceURI;
-                            strName[depth] = reader.Name;
-                            strPath[depth] = strPath[depth - 1] + "." + strName[depth];
-                            if (reader.HasAttributes)
-                            {
-                                for (int i = 0; i < reader.AttributeCount; i++)
-                                {
-                                    reader.MoveToAttribute(i);
-                                    string attributeName = reader.Name;
-                                    string attributeValue = reader.Value;
-                                    string attributePath = "";
-                                    if ((attributeName == "name") && ((strName[depth] == "param") || (strName[depth] == "feeling")))
-                                    {
-                                        // so you can have multiple named params
-                                        strPath[depth] = strPath[depth] + "." + attributeValue;
-                                    }
-                                    if (depth > 1)
-                                    {
-                                        attributePath = strPath[depth] + "." + attributeName;
-                                    }
-                                    else
-                                    {
-                                        attributePath = attributeName;
-                                    }
-                                    overwrite2Hash(attributeStack[depth], attributeName, attributeValue);
-                                    // zero depth contains the fully qualified nested dotted value
-                                    // i.e. pet-action-plan.action.param.vector.x
-                                    // i.e. pet-action-plan.action.param.entity.value
-                                    overwrite2Hash(attributeStack[0], attributePath, attributeValue);
-                                }
-                            }
-                            overwrite2Hash(attributeStack[depth], "ElementName", strName[depth]);
-                            overwrite2Hash(attributeStack[depth], "Path", strPath[depth]);
-                            xStartElement(strURI[depth], strName[depth], attributeStack[depth], depth, attributeStack);
-                            if (reader.IsEmptyElement)
-                            {
-                                // do whatever EndElement would do
-                                response = xEndElement(strURI[depth], strName[depth], attributeStack[depth], depth, attributeStack);
-                                totalResponse += response + "\r\n";
-
-                            }
-                            break;
-                        //
-                        //you can handle other cases here
-                        //
-
-                        case XmlNodeType.Text:
-                            // Todo
-                            WriteLine(" TextNode: depth=" + depth.ToString() + "  path = " + strPath[depth - 1]); ;
-                            if (reader.Name == "param")
-                            {
-                                overwrite2Hash(attributeStack[depth], strPath[depth - 1] + ".param." + strName[depth] + ".InnerText", reader.Value);
-                                overwrite2Hash(attributeStack[0], strPath[depth - 1] + ".param." + strName[depth] + ".InnerText", reader.Value);
-                            }
-                            else
-                            {
-
-                                overwrite2Hash(attributeStack[depth], strPath[depth - 1] + ".InnerText", reader.Value);
-                                overwrite2Hash(attributeStack[0], strPath[depth - 1] + ".InnerText", reader.Value);
-                            }
-                            break;
-
-                        case XmlNodeType.EndElement:
-                            response = xEndElement(strURI[depth], strName[depth], attributeStack[depth], depth, attributeStack);
-                            totalResponse += response + "\r\n";
-                            // Todo
-                            //depth--;
-                            break;
-                        default:
-                            break;
-                    } //switch
-                } //while
-                string finalResponse = "<pet-petaverse-msg>\r\n" + totalResponse + "</pet-petaverse-msg>\r\n";
-                return finalResponse;
-            } //try
-            catch (Exception e)
-            {
-                WriteLine("error occured: " + e.Message);
-                WriteLine("        Stack: " + e.StackTrace.ToString());
-                return "<error><response>" + response + "</response><errormsg>" + e.Message.ToString() + "</errormsg> </error>";
-            }
-        }
-
-        public void xStartElement(string strURI, string strName, Hashtable attributes, int depth, Hashtable[] attributeStack)
-        {
-            WriteLine("   xStartElement: strURI =(" + strURI + ") strName=(" + strName + ") depth=(" + depth + ")");
-        }
-
         private void WriteLine(string p)
         {
             botclient.WriteLine(p);
         }
 
-        public string xEndElement(string strURI, string strName, Hashtable attributes, int depth, Hashtable[] attributeStack)
-        {
-            try
-            {
-                WriteLine("   xEndElement: strURI =(" + strURI + ") strName=(" + strName + ") depth=(" + depth + ")");
-                if (strName == "action")
-                {
-                    string act = attributes["name"].ToString();
-                    string seqid = attributes["sequence"].ToString();
-                    string planID = getWithDefault(attributeStack[1], "id", "unknown");
 
-                    if (act == "say")
-                    {
-                        string actCmd = act + " " + getWithDefault(attributeStack[0], ".pet-action-plan.action.InnerText", "");
-                        string evalReply = EvaluateCommand(actCmd);
-                        string actSignal = genActReport(planID, seqid, act, "done");
-                        return actSignal;
-                    }
-                    if (act == "wear")
-                    {
-                        string actCmd = act + " " + getWithDefault(attributeStack[0], ".pet-action-plan.action.InnerText", "");
-                        string evalReply = EvaluateCommand(actCmd);
-                        string actSignal = genActReport(planID, seqid, act, "done");
-                        return actSignal;
-                    }
-                    if (act == "follow")
-                    {
-                        string TargetName = getWithDefault(attributeStack[0], ".pet-action-plan.action.param.target.entity.value", "");
-
-                        string actCmd = act + " " + TargetName;
-                        string evalReply = EvaluateCommand(actCmd);
-                        string actSignal = genActReport(planID, seqid, act, "done");
-                        return actSignal;
-                    }
-
-                }
-                /*
-                 * if (strName == "param")
-                {
-                    string paramName = attributes["name"].ToString();
-                    string paramType = attributes["type"].ToString();
-                    string paramValue = attributes["value"].ToString();
-                    string paramText = attributes["InnerText"].ToString();
-                }
-                 */
-
-                return "<response>null</response>";
-            }
-            catch (Exception e)
-            {
-                WriteLine("error occured: " + e.Message);
-                WriteLine("        Stack: " + e.StackTrace.ToString());
-                return "<error>" + e.Message + "</error>";
-            }
-        }
-
-        public string genActReport(string planID, string seqID, string act, string status)
-        {
-            DateTime dt = DateTime.Now;
-            string actReport = "  <pet-signal pet-name='" + botclient.Self.Name.ToString()
-                                       + "' pet-id='" + botclient.Self.AgentID.ToString()
-                                       + "' timestamp='" + dt.ToString()
-                                       + "' action-plan-id='" + planID
-                                       + "' sequence='" + seqID
-                                       + "' name='" + act
-                                       + "' status='" + status + "'/>";
-            WriteLine("actReport:" + actReport);
-            return actReport;
-        }
-
-        public void overwrite2Hash(Hashtable hashTable, string key, string value)
-        {
-            if (hashTable.ContainsKey(key)) hashTable.Remove(key);
-            hashTable.Add(key, value);
-            //WriteLine("  +Hash :('" + key + "' , " + value + ")");
-        }
-
-        public string getWithDefault(Hashtable hashTable, string key, string defaultValue)
-        {
-            if (hashTable.ContainsKey(key)) return hashTable[key].ToString();
-            return defaultValue;
-        }
         public string EvaluateCommand(string cmd)
         {
             String lowerCmd = cmd.ToLower();
@@ -490,79 +279,6 @@ namespace cogbot.Utilities
                 return wl.ToString() + s;
             }
         }
-
-        /// <summary>
-        /// (thisClient.XML2Lisp2 "http://myserver/myservice/?q=" chatstring) 
-        /// </summary>
-        /// <param name="URL"></param>
-        /// <param name="args"></param>
-        /// <returns></returns>
-        public string XML2Lisp2(string URL, string args)
-        {
-            return botclient.XML2Lisp2(URL, args);
-        } // method: XML2Lisp2
-
-
-        public string XML2Lisp(string xcmd)
-        {
-            return botclient.XML2Lisp(xcmd);
-        }
-
-        // private void enqueueLispTask(string lispCodeString)
-        // {
-        //    parent.enqueueLispTask(lispCodeString);
-        //}
-
-        //#region BotMessageSubscriber Members
-
-        //void BotClient.BotMessageSubscriber.msgClient(string serverMessage)
-        //{
-        //    ////   System.Console.Out.WriteLine("msgClient: " + serverMessage);
-        //    //if (!IsEventClientConnected())
-        //    //{
-        //        lock (whileClientIsAway)
-        //            whileClientIsAway.Enqueue(serverMessage);
-        //        return;
-        //    //}
-        //    //if (IsEventClientConnected())
-        //    //{
-        //    //    lock (tcpStreamWriter)
-        //    //    {
-        //    //        if (serverMessage != "")
-        //    //            tcpStreamWriter.WriteLine(serverMessage);
-
-        //    //        tcpStreamWriter.WriteLine();
-        //    //        ns.Write(Encoding.ASCII.GetBytes(serverMessage.ToCharArray()),
-        //    //                 0, serverMessage.Length);
-        //    //    }
-        //    //}
-
-        //}
-
-        //#endregion
-
-        //#region BotMessageSubscriber Members
-
-
-        //void BotClient.BotMessageSubscriber.Dispose()
-        //{
-        //    ((BotTcpServer)this).closeTcpListener();
-        //}
-
-        // #endregion
-
-        //public bool IsClientConnected()
-        //{
-        //    return (ns != null) && (tcpStreamWriter != null);
-        //}
-
-        //internal void taskTick(string serverMessage)
-        //{
-        //    if (serverMessage != "")
-        //    {
-        //        ((BotClient.BotMessageSubscriber)this).msgClient(serverMessage);
-        //    }        
-        //}
 
         #endregion
     }

@@ -128,6 +128,7 @@ namespace cogbot
         public OpenMetaverse.LoginParams BotLoginParams;// = null;
         private readonly SimEventPublisher botPipeline;
         public List<Thread> botCommandThreads = new ListAsSet<Thread>();
+        public XmlScriptInterpreter XmlInterp = new XmlScriptInterpreter();
         public UUID GroupID = UUID.Zero;
         public Dictionary<UUID, GroupMember> GroupMembers = null; // intialized from a callback
         public Dictionary<UUID, AvatarAppearancePacket> Appearances = new Dictionary<UUID, AvatarAppearancePacket>();
@@ -276,6 +277,7 @@ namespace cogbot
         public BotClient(ClientManager manager, GridClient g, LoginParams lp )
         {
             ClientManager = manager;
+            XmlInterp.BotClient = this;
             gridClient = g;
             BotLoginParams = lp;
             manager.LastBotClient = this;
@@ -1094,178 +1096,7 @@ namespace cogbot
             WriteLine("$bot sees " + buildings.Count + " buildings.");
         }
 
-        //------------------------------------ 
-        // External XML socket server
-        //------------------------------------
-
-        //public void msgClient(string serverMessage)
-        //{
-        //    if (debugLevel>1) {
-        //        WriteLine(serverMessage);             
-        //    }
-        //    lock (lBotMsgSubscribers)
-        //    {
-        //        foreach (BotMessageSubscriber ms in lBotMsgSubscribers)
-        //        {
-        //            ms.msgClient(serverMessage);
-        //        }
-        //    }
-        //}
-
-        public void overwrite2Hash(Hashtable hashTable, string key, string value)
-        {
-            if (hashTable.ContainsKey(key)) hashTable.Remove(key);
-            hashTable.Add(key, value);
-            //WriteLine("  +Hash :('" + key + "' , " + value + ")");
-        }
-
-        public string getWithDefault(Hashtable hashTable, string key, string defaultValue)
-        {
-            if (hashTable.ContainsKey(key)) return hashTable[key].ToString();
-            return defaultValue;
-        }
-
-        public string genActReport(string planID, string seqID, string act, string status)
-        {
-            DateTime dt = DateTime.Now;
-
-            string actReport = "  <pet-signal pet-name='" + GetName()
-                               + "' pet-id='" + Self.AgentID.ToString()
-                               + "' timestamp='" + dt.ToString()
-                               + "' action-plan-id='" + planID
-                               + "' sequence='" + seqID
-                               + "' name='" + act
-                               + "' status='" + status + "'/>";
-            WriteLine("actReport:" + actReport);
-            return actReport;
-        }
-
-        /// <summary>
-        /// (thisClient.XML2Lisp2 "http://myserver/myservice/?q=" chatstring) 
-        /// </summary>
-        /// <param name="URL"></param>
-        /// <param name="args"></param>
-        /// <returns></returns>
-        public string XML2Lisp2(string URL, string args)
-        {
-            args = args.Replace("\\", "");
-            args = args.Replace("\"", "");
-            string xcmd = URL + args;
-            return XML2Lisp(xcmd);
-        } // method: XML2Lisp2
-
-
-        public string XML2Lisp(string xcmd)
-        {
-            String lispCodeString = "";
-
-            try
-            {
-                XmlTextReader reader;
-                StringReader stringReader;
-
-                if (xcmd.Contains("http:") || xcmd.Contains(".xml") || xcmd.Contains(".xlsp"))
-                {
-                    // assuming its a file
-                    xcmd = xcmd.Trim();
-                    reader = new XmlTextReader(xcmd);
-                }
-                else
-                {
-                    // otherwise just use the string
-                    stringReader = new System.IO.StringReader(xcmd);
-                    reader = new XmlTextReader(stringReader);
-                }
-
-                Hashtable[] attributeStack = new Hashtable[64];
-
-                for (int i = 0; i < 64; i++)
-                {
-                    attributeStack[i] = new Hashtable();
-                }
-                int depth = 0;
-
-                while (reader.Read())
-                {
-                    depth = reader.Depth + 1;
-                    if (attributeStack[depth] == null)
-                    {
-                        attributeStack[depth] = new Hashtable();
-                    }
-                    string tagname = reader.Name;
-                    switch (reader.NodeType)
-                    {
-
-                        case XmlNodeType.Element:
-                            if (reader.HasAttributes)
-                            {
-                                for (int i = 0; i < reader.AttributeCount; i++)
-                                {
-                                    reader.MoveToAttribute(i);
-                                    string attributeName = reader.Name;
-                                    string attributeValue = reader.Value;
-
-                                    overwrite2Hash(attributeStack[depth], attributeName, attributeValue);
-                                }
-                            }
-                            // WriteLine(" X2L Begin(" + depth.ToString() + ") " + attributeStack[depth]["name"].ToString());
-                            if (tagname == "op")
-                            {
-                                lispCodeString += "(" + getWithDefault(attributeStack[depth], "name", " ");
-                            }
-                            if (tagname == "opq")
-                            {
-                                lispCodeString += "'(" + getWithDefault(attributeStack[depth], "name", " ");
-                            }
-
-                            break;
-                        //
-                        //you can handle other cases here
-                        //
-
-                        case XmlNodeType.Text:
-                            //WriteLine(" X2L TEXT(" + depth.ToString() + ") " + reader.Name);
-
-                            // Todo
-                            lispCodeString += " " + reader.Value.ToString();
-                            break;
-
-                        case XmlNodeType.EndElement:
-
-                            if (tagname == "op")
-                            {
-                                lispCodeString += " )";
-                            }
-                            if (tagname == "opq")
-                            {
-                                lispCodeString += " )";
-                            }
-
-                            // Todo
-                            //depth--;
-                            break;
-
-                        default:
-                            break;
-                    } //switch
-                } //while
-                WriteLine("XML2Lisp =>'" + lispCodeString + "'");
-                //string results = evalLispString(lispCodeString);
-                //string results = "'(enqueued)";
-                return evalLispString(lispCodeString).ToString();
-                //return results;
-            } //try
-            catch (Exception e)
-            {
-                WriteLine("error occured: " + e.Message);
-                WriteLine("        Stack: " + e.StackTrace.ToString());
-                WriteLine("        lispCodeString: " + lispCodeString);
-                return "()";
-            }
-
-
-        }
-
+ 
 
         public ScriptInterpreter LispTaskInterperter;
         public readonly object LispTaskInterperterLock = new object();
@@ -1299,6 +1130,27 @@ namespace cogbot
             return LispTaskInterperter.Str(evalLispReader(reader));
         }
 
+
+        public string evalXMLString(TextReader reader)
+        {
+            return XmlInterp.evalXMLString(reader);
+        }
+
+        /// <summary>
+        /// (thisClient.XML2Lisp2 "http://myserver/myservice/?q=" chatstring) 
+        /// </summary>
+        /// <param name="URL"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
+        public string XML2Lisp2(string URL, string args)
+        {
+            return XmlInterp.XML2Lisp2(URL,args);
+        } // method: XML2Lisp2
+
+
+        public string XML2Lisp(string xcmd) {
+            return XmlInterp.XML2Lisp(xcmd);
+        }
 
         public string evalLispString(string lispCode)
         {

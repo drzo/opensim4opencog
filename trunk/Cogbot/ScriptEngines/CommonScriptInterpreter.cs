@@ -1,5 +1,7 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 namespace cogbot.ScriptEngines
@@ -34,6 +36,28 @@ namespace cogbot.ScriptEngines
              return GetType().Name.Contains(filename);
         }
 
+        public virtual Object EvalForObject(Object lispCode, OutputDelegate output)
+        {
+            if (lispCode == null) return null;
+            TextReader stringCodeReader;
+            if (lispCode is String)
+            {
+                stringCodeReader = new StringReader(lispCode.ToString());
+            } else if (lispCode is TextReader)
+            {
+                stringCodeReader = lispCode as TextReader;
+            } else
+            {
+                stringCodeReader = null;
+            }
+
+            if (stringCodeReader!=null) lispCode = Read("" + this, stringCodeReader, output);
+            output("Eval> " + lispCode);
+            if (Eof(lispCode))
+                return lispCode.ToString();
+            return Eval(lispCode);
+        }
+
         public abstract object Read(string context_name, System.IO.TextReader stringCodeReader, OutputDelegate WriteLine);
         public abstract bool Eof(object codeTree);
         public abstract void Intern(string varname, object value);
@@ -48,6 +72,20 @@ namespace cogbot.ScriptEngines
         #endregion
 
         public abstract void Dispose();
+
+        static public void overwrite2Hash(Hashtable hashTable, string key, string value)
+        {
+            if (hashTable.ContainsKey(key)) hashTable.Remove(key);
+            hashTable.Add(key, value);
+            //WriteLine("  +Hash :('" + key + "' , " + value + ")");
+        }
+
+        static public string getWithDefault(Hashtable hashTable, string key, string defaultValue)
+        {
+            if (hashTable.ContainsKey(key)) return hashTable[key].ToString();
+            return defaultValue;
+        }
+
     }
 
 }
