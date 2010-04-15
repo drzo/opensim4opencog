@@ -1276,6 +1276,30 @@ namespace cogbot
             scriptEventListener.enqueueLispTask(p);
         }
 
+        public Object evalLispReader(TextReader stringCodeReader)
+        {
+            try
+            {
+                Object r = LispTaskInterperter.Read("evalLispString", stringCodeReader, WriteLine);
+                if (LispTaskInterperter.Eof(r))
+                    return r.ToString();
+                return evalLispCode(r);
+            }
+            catch (Exception e)
+            {
+                WriteLine("!Exception: " + e.GetBaseException().Message);
+                WriteLine("error occured: " + e.Message);
+                WriteLine("        Stack: " + e.StackTrace.ToString());
+                throw e;
+            }
+        }
+
+        public string evalLispReaderString(StringReader reader)
+        {
+            return LispTaskInterperter.Str(evalLispReader(reader));
+        }
+
+
         public string evalLispString(string lispCode)
         {
             try
@@ -1285,10 +1309,7 @@ namespace cogbot
                 Object r = null;
                 //lispCode = "(load-assembly \"libsecondlife\")\r\n" + lispCode;                
                 StringReader stringCodeReader = new StringReader(lispCode);
-                r = LispTaskInterperter.Read("evalLispString", stringCodeReader,WriteLine);
-                if (LispTaskInterperter.Eof(r))
-                    return r.ToString();
-                return LispTaskInterperter.Str(evalLispCode(r));
+                return evalLispReaderString(stringCodeReader);
             }
             catch (Exception e)
             {
@@ -1885,7 +1906,7 @@ namespace cogbot
             return BotPermissions.Base;
         }
 
-        public CmdResult ExecuteTask(string scripttype, StringReader reader,OutputDelegate WriteLine)
+        public CmdResult ExecuteTask(string scripttype, TextReader reader,OutputDelegate WriteLine)
         {
             var si = ScriptEngines.ScriptManager.LoadScriptInterpreter(scripttype, this);
             object o = si.Read(scripttype, reader,WriteLine);
