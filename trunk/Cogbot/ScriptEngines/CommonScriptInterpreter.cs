@@ -34,7 +34,7 @@ namespace cogbot.ScriptEngines
              return GetType().Name.Contains(filename);
         }
 
-        public abstract object Read(string context_name, System.IO.StringReader stringCodeReader, OutputDelegate WriteLine);
+        public abstract object Read(string context_name, System.IO.TextReader stringCodeReader, OutputDelegate WriteLine);
         public abstract bool Eof(object codeTree);
         public abstract void Intern(string varname, object value);
         public abstract object Eval(object code);

@@ -272,7 +272,7 @@ namespace cogbot.ScriptEngines
             return filename.EndsWith("lisp") || base.LoadsFileType(filename);
         }
 
-        public override object Read(string p, StringReader stringCodeReader, OutputDelegate WriteLine)
+        public override object Read(string p, TextReader stringCodeReader, OutputDelegate WriteLine)
         {
             try
             {
