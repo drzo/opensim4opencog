@@ -32,16 +32,19 @@ namespace cogbot.Utilities
 
     public class SingleBotTcpClient : SimEventSubscriber
     {
-
-        StreamReader tcpStreamReader = null;// = new StreamReader(ns);        
-        StreamWriter tcpStreamWriter = null;// = new StreamWriter(ns);        
-        private BotTcpServer Server;
+        private StreamReader tcpStreamReader = null;// = new StreamReader(ns);        
+        private StreamWriter tcpStreamWriter = null;// = new StreamWriter(ns);        
+        readonly BotTcpServer Server;
         public Thread AbortThread;
+        readonly protected BotClient botclient;        
+        bool quitRequested = false;
+        
         public SingleBotTcpClient(TcpClient this_client, BotTcpServer server)
         {
             tcp_client = this_client;
             Server = server;
             Server.parent.AddBotMessageSubscriber(this);
+            botclient = server.parent;
         }
 
         public void DoLoop()
@@ -55,34 +58,23 @@ namespace cogbot.Utilities
                 tcpStreamReader = new StreamReader(ns);
                 tcpStreamWriter = new StreamWriter(ns);
 
-                tcpStreamWriter.WriteLine("<comment>Welcome to Cogbot</comment>");
+                tcpStreamWriter.WriteLine("<!-- Welcome to Cogbot "+botclient.GetName()+" !-->");
                 tcpStreamWriter.Flush();
                 // Start loop and handle commands:
-                bool quitRequested = false;
                 try
                 {
-                    while (!quitRequested)
+                    while (!quitRequested && tcpStreamWriter!=null)
                     {
                         try
-                        {
-
-                            string clientMessage = tcpStreamReader.ReadLine().Trim();
-                            Server.parent.WriteLine("SockClient: {0}", clientMessage);
-                            tcpStreamWriter.WriteLine();
-                            String lowerCmd = clientMessage.ToLower();
-
+                        {        
                             try
                             {
-                                if (lowerCmd == "bye")
-                                {
-                                    quitRequested = true;
-                                }
-                                else Server.ProcessHttpCommand(tcpStreamWriter, clientMessage);
-                            }
-                            catch (Exception e)
+                                ProcessOneCommand();                                
+                            } catch(Exception e)
                             {
-                                tcpStreamWriter.WriteLine("500 {0}", Server.parent.argString(e.ToString()));
+                                botclient.WriteLine(this+": "+e);
                             }
+
                             try
                             {
                                 tcpStreamWriter.Flush();
@@ -135,157 +127,103 @@ namespace cogbot.Utilities
 
         public void OnEvent(SimObjectEvent evt)
         {
-            if (tcpStreamWriter != null) tcpStreamWriter.WriteLine(BotTcpServer.EventToString(evt, Server.parent));
+            if (tcpStreamWriter != null)
+            {
+                tcpStreamWriter.WriteLine(BotTcpServer.EventToString(evt, Server.parent));
+                tcpStreamWriter.Flush();
+            }
         }
 
         public void Dispose()
         {
-
-        }
-
-        #endregion
-    }
-
-    public class BotTcpServer : SimEventSubscriber
-    {
-        public bool DisableEventStore = true;// TODO this needs to be falso but running out of memory
-        public Thread thrSvr;
-        public BotClient parent;
-        GridClient client;
-        Queue<String> whileClientIsAway = new Queue<string>();
-        HashSet<SingleBotTcpClient> singleBotTcpClients = new HashSet<SingleBotTcpClient>();
-
-        public BotTcpServer(int port, BotClient botclient)
-        {
-            parent = botclient;
-            client = botclient.gridClient;
-            serverPort = port;
-            botclient.AddBotMessageSubscriber(this);
-
-            //            config = parent.config;
+            tcpStreamWriter = null;
+            tcpStreamReader = null;
         }
 
 
-        int serverPort = -1;
-        ///Configuration config;
-
-        public void startSocketListener()
+        
+        public void ProcessOneCommand()
         {
-            // The thread that accepts the Client and awaits messages
-
-            thrSvr = new Thread(tcpSrv);
-            thrSvr.Name = "BotTcpServer for " + client;
-            // The thread calls the tcpSvr() method
-
-            thrSvr.Start();
-
-
-
-        }
-        //------------------------------------ 
-        // External XML socket server
-        //------------------------------------
-        TcpListener tcp_socket = null;
-        private bool IsDisposing;
-        //    TcpClient tcp_client = null;
-        private void tcpSrv()
-        {
-
-            try
+            SourceLanguage syntaxType = SourceLanguage.Unknown;
+            while (syntaxType == SourceLanguage.Unknown)
             {
-
-                //int receivedDataLength;
-                byte[] data = new byte[1024];
-
-                int PortNumber = serverPort; // 5555;
-                // ReSharper disable AssignNullToNotNullAttribute
-                tcp_socket = new TcpListener(IPAddress.Parse("0.0.0.0"), PortNumber);
-                // ReSharper restore AssignNullToNotNullAttribute
-                parent.WriteLine("About to initialize port.");
-                tcp_socket.Start();
-                parent.WriteLine("Listening for a connection... port=" + PortNumber);
-                while (!IsDisposing)
+                int peeked = tcpStreamReader.Peek();
+                if (peeked == -1)
                 {
-                    try
-                    {
-
-                        {
-                            TcpClient ClientHandle = tcp_socket.AcceptTcpClient();
-                            var clt = new SingleBotTcpClient(ClientHandle, this);
-                            singleBotTcpClients.Add(clt);
-                            Thread t = new Thread(new ThreadStart(clt.DoLoop));
-                            t.Name = "ClientHandle thread for " + ClientHandle;
-                            t.Start();
-
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        WriteLine(e.ToString());
-                    }
+                    continue;
                 }
-                //  tcp_socket.Stop();
-                // thrSvr.Abort();
+                char ch = (char) peeked;
 
+                if (Char.IsWhiteSpace(ch) || Char.IsControl(ch))
+                {
+                    continue;
+                }
+                if (ch == '(')
+                {
+                    syntaxType = SourceLanguage.Lisp;
+                    break;
+                }
+                if (ch == '<')
+                {
+                    syntaxType = SourceLanguage.Xml;
+                    break;
+                }
+                syntaxType = SourceLanguage.Text;
             }
-            catch (Exception ee)
+
+            Server.parent.WriteLine("SockClient: {0}", syntaxType);
+            if (syntaxType == SourceLanguage.Lisp)
             {
-                WriteLine(ee.ToString());
+                try
+                {
+                    tcpStreamWriter.WriteLine("200 " + botclient.evalLispReaderString(tcpStreamReader));
+                }
+                catch (Exception e)
+                {
+                    tcpStreamWriter.WriteLine("500 \"" + e.ToString().Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"");
+                }
+                return;
             }
-        }
-
-
-        public void ProcessHttpCommand(TextWriter tcpStreamWriter, string clientMessage)
-        {
-            clientMessage = clientMessage.Trim();
-            if (clientMessage.ToLower() == "currentevents")
+            if (syntaxType == SourceLanguage.Xml)
             {
-                GetWhileAwayAndClear(tcpStreamWriter);
+                try
+                {
+                    tcpStreamWriter.WriteLine(evalXMLString(tcpStreamReader));
+                }
+                catch (Exception e)
+                {
+                    WriteLine("error occured: " + e.Message);
+                    WriteLine("        Stack: " + e.StackTrace.ToString());
+                    tcpStreamWriter.WriteLine("<error><response></response><errormsg>" + e.Message.ToString() +
+                                              "</errormsg>\n<stack>\n" + e + "\n</stack>\n</error>");
+                }
+            }
+            string clientMessage = tcpStreamReader.ReadToEnd().Trim();
+            if (clientMessage.Contains("xml") || clientMessage.Contains("http:"))
+            {
+                tcpStreamWriter.WriteLine(EvaluateXmlCommand(clientMessage));
             }
             else
             {
-                if (clientMessage.StartsWith("("))
-                {
-                    tcpStreamWriter.WriteLine("200 " + parent.evalLispString(clientMessage));
-
-                }
-                else
-                    if (clientMessage.Contains("xml") || clientMessage.Contains("http:"))
-                    {
-                        tcpStreamWriter.WriteLine(EvaluateXmlCommand(clientMessage));
-                    }
-                    else
-                    {
-                        tcpStreamWriter.WriteLine(EvaluateCommand(clientMessage));
-                    }
+                tcpStreamWriter.WriteLine(EvaluateCommand(clientMessage));
             }
+
         }
 
-
-        public void GetWhileAwayAndClear(TextWriter tw)
+        public enum SourceLanguage:ushort
         {
-            lock (whileClientIsAway)
-            {
-                while (whileClientIsAway.Count > 0)
-                {
-                    tw.Write("<msgClient>");
-                    tw.Write(whileClientIsAway.Dequeue());
-                    tw.WriteLine("</msgClient>");
-                }
-            }
-            tw.Flush();
-        }
+            Unknown = 0,
+            Xml = '<',
+            Lisp = '(',
+            Text = 'A'
+        } 
 
-
-        public void closeTcpListener()
+        private string evalXMLString(TextReader message)
         {
-            //    if (ns != null) ns.Close();
-            //  if (tcp_client != null) tcp_client.Close();
-            IsDisposing = true;
-            if (thrSvr != null) thrSvr.Abort();
-            if (tcp_socket != null) tcp_socket.Stop();
-            // if (parent.thrJobQueue != null) parent.thrJobQueue.Abort();
-
+            XmlReader reader = new XmlTextReader(message);
+            XmlDocument xdoc = new XmlDocument();
+            xdoc.Load(reader);
+            throw new NotImplementedException();
         }
 
         public string EvaluateXmlCommand(string xcmd)
@@ -428,7 +366,7 @@ namespace cogbot.Utilities
 
         private void WriteLine(string p)
         {
-            parent.WriteLine(p);
+            botclient.WriteLine(p);
         }
 
         public string xEndElement(string strURI, string strName, Hashtable attributes, int depth, Hashtable[] attributeStack)
@@ -490,8 +428,8 @@ namespace cogbot.Utilities
         public string genActReport(string planID, string seqID, string act, string status)
         {
             DateTime dt = DateTime.Now;
-            string actReport = "  <pet-signal pet-name='" + client.Self.Name.ToString()
-                                       + "' pet-id='" + client.Self.AgentID.ToString()
+            string actReport = "  <pet-signal pet-name='" + botclient.Self.Name.ToString()
+                                       + "' pet-id='" + botclient.Self.AgentID.ToString()
                                        + "' timestamp='" + dt.ToString()
                                        + "' action-plan-id='" + planID
                                        + "' sequence='" + seqID
@@ -515,9 +453,20 @@ namespace cogbot.Utilities
         }
         public string EvaluateCommand(string cmd)
         {
+            String lowerCmd = cmd.ToLower();
+            if (lowerCmd == "bye")
+            {
+                quitRequested = true;
+                return "goodbye";
+            }
+            if (lowerCmd == "currentevents")
+            {
+                Server.GetWhileAwayAndClear(tcpStreamWriter);
+                return "";
+            }
             using (StringWriter wl = new StringWriter())
             {
-                CmdResult s = parent.ExecuteCommand(cmd, wl.WriteLine);
+                CmdResult s = botclient.ExecuteCommand(cmd, wl.WriteLine);
                 return wl.ToString() + s;
             }
         }
@@ -530,13 +479,13 @@ namespace cogbot.Utilities
         /// <returns></returns>
         public string XML2Lisp2(string URL, string args)
         {
-            return parent.XML2Lisp2(URL, args);
+            return botclient.XML2Lisp2(URL, args);
         } // method: XML2Lisp2
 
 
         public string XML2Lisp(string xcmd)
         {
-            return parent.XML2Lisp(xcmd);
+            return botclient.XML2Lisp(xcmd);
         }
 
         // private void enqueueLispTask(string lispCodeString)
@@ -595,7 +544,128 @@ namespace cogbot.Utilities
         //    }        
         //}
 
+        #endregion
+    }
 
+    public class BotTcpServer : SimEventSubscriber
+    {
+        public bool DisableEventStore = true;// TODO this needs to be falso but running out of memory
+        public Thread thrSvr;
+        public BotClient parent;
+        GridClient client;
+        Queue<String> whileClientIsAway = new Queue<string>();
+        HashSet<SingleBotTcpClient> singleBotTcpClients = new HashSet<SingleBotTcpClient>();
+
+        public BotTcpServer(int port, BotClient botclient)
+        {
+            parent = botclient;
+            client = botclient.gridClient;
+            serverPort = port;
+            botclient.AddBotMessageSubscriber(this);
+
+            //            config = parent.config;
+        }
+
+
+
+        int serverPort = -1;
+        ///Configuration config;
+
+        public void startSocketListener()
+        {
+            // The thread that accepts the Client and awaits messages
+
+            thrSvr = new Thread(tcpSrv);
+            thrSvr.Name = "BotTcpServer for " + client;
+            // The thread calls the tcpSvr() method
+
+            thrSvr.Start();
+
+
+
+        }
+        //------------------------------------ 
+        // External XML socket server
+        //------------------------------------
+        TcpListener tcp_socket = null;
+        private bool IsDisposing;
+        //    TcpClient tcp_client = null;
+        private void tcpSrv()
+        {
+
+            try
+            {
+
+                //int receivedDataLength;
+                byte[] data = new byte[1024];
+
+                int PortNumber = serverPort; // 5555;
+                // ReSharper disable AssignNullToNotNullAttribute
+                tcp_socket = new TcpListener(IPAddress.Parse("0.0.0.0"), PortNumber);
+                // ReSharper restore AssignNullToNotNullAttribute
+                parent.WriteLine("About to initialize port.");
+                tcp_socket.Start();
+                parent.WriteLine("Listening for a connection... port=" + PortNumber);
+                while (!IsDisposing)
+                {
+                    try
+                    {
+
+                        {
+                            TcpClient ClientHandle = tcp_socket.AcceptTcpClient();
+                            var clt = new SingleBotTcpClient(ClientHandle, this);
+                            singleBotTcpClients.Add(clt);
+                            Thread t = new Thread(new ThreadStart(clt.DoLoop));
+                            t.Name = "ClientHandle thread for " + ClientHandle;
+                            t.Start();
+
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        WriteLine(e.ToString());
+                    }
+                }
+                //  tcp_socket.Stop();
+                // thrSvr.Abort();
+
+            }
+            catch (Exception ee)
+            {
+                WriteLine(ee.ToString());
+            }
+        }
+
+        private void WriteLine(string s)
+        {
+            parent.WriteLine(s);
+        }
+
+        public void GetWhileAwayAndClear(TextWriter tw)
+        {
+            lock (whileClientIsAway)
+            {
+                while (whileClientIsAway.Count > 0)
+                {
+                    tw.Write("<msgClient>");
+                    tw.Write(whileClientIsAway.Dequeue());
+                    tw.WriteLine("</msgClient>");
+                }
+            }
+            tw.Flush();
+        }
+
+
+        public void closeTcpListener()
+        {
+            //    if (ns != null) ns.Close();
+            //  if (tcp_client != null) tcp_client.Close();
+            IsDisposing = true;
+            if (thrSvr != null) thrSvr.Abort();
+            if (tcp_socket != null) tcp_socket.Stop();
+            // if (parent.thrJobQueue != null) parent.thrJobQueue.Abort();
+
+        }
 
         #region SimEventSubscriber Members
 

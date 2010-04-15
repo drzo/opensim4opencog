@@ -1294,7 +1294,7 @@ namespace cogbot
             }
         }
 
-        public string evalLispReaderString(StringReader reader)
+        public string evalLispReaderString(TextReader reader)
         {
             return LispTaskInterperter.Str(evalLispReader(reader));
         }
