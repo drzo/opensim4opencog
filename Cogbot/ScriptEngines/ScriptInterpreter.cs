@@ -10,7 +10,7 @@ namespace cogbot.ScriptEngines
 
         bool LoadsFileType(string filenameorext, object self);
 
-        object Read(string context_name, System.IO.StringReader stringCodeReader, OutputDelegate WriteLine);
+        object Read(string context_name, System.IO.TextReader stringCodeReader, OutputDelegate WriteLine);
 
         bool Eof(object codeTree);
 

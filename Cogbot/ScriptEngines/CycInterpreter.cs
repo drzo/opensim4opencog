@@ -69,7 +69,7 @@ namespace cogbot.ScriptEngines
         /// <param name="context_name"></param>
         /// <param name="stringCodeReader"></param>
         /// <returns></returns>
-        public override object Read(string context_name, System.IO.StringReader stringCodeReader, OutputDelegate WriteLine)
+        public override object Read(string context_name, System.IO.TextReader stringCodeReader, OutputDelegate WriteLine)
         {
             return dotLispInterpreter.Read(context_name, stringCodeReader);
         } // method: Read
