@@ -169,6 +169,7 @@ namespace CycWorldModule.DotCYC
 
         public SimCyclifier(CycWorldModule tf)
         {
+            eventFilter = new SimEventFilterSubscriber(this);
             lock (SimCyclifierLock)
             {
                 if (Master == null) Master = this;
@@ -2312,6 +2313,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
 
         static Dictionary<Assembly, XElement> AssmblyXDoics = new Dictionary<Assembly, XElement>();
         public TaskQueueHandler DocQueue = new TaskQueueHandler("Cyc Doc Queue", 0);
+        readonly public SimEventSubscriber eventFilter;
 
         public static XElement GetXmlDocMembers(Assembly typeAssembly)
         {

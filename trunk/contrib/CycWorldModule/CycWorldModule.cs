@@ -32,7 +32,7 @@ namespace CycWorldModule
                     _parent.ClientManager.AddTool("CycWorldModule","CycWorldModule", ShowCycForm);
                     cyclifier = new SimCyclifier(this);
                     client.WorldSystem.OnAddSimObject += cyclifier.World_OnSimObject;
-                    client.AddBotMessageSubscriber(cyclifier);
+                    client.AddBotMessageSubscriber(cyclifier.eventFilter);
                     Console.WriteLine("CycWorldModule Loaded");
 
                 }
