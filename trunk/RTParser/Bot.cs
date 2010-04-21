@@ -1297,21 +1297,28 @@ The AIMLbot program.
                 cycAccess = GetCycAccess;
                 return UseCyc;
             }
+            set
+            {
+                UseCyc = value;
+            }
         }
+
         private bool UseCyc = false;
         public CycAccess GetCycAccess
         {
             get
             {
-                if (UseCyc && (cycAccess == null || cycAccess.isClosed()))
+                if (!UseCyc) return null;
+                if (!isCycAccessCorrect())
                 {
                     try
                     {
-                        cycAccess = new CycAccess("CycServer", 3600);
-                        cycAccess.converseInt("(+ 1 1)");
-                        cycAccess.createIndividual("AimlContextMt",
-                                                    "#$AimlContextMt contains storage location in OpenCyc for AIML variables",
-                                                    "UniversalVocabularyMt", "DataMicrotheory");
+                        if (cycAccess==null) cycAccess = CycAccess.current();
+                        if (!isCycAccessCorrect())
+                        {
+                            cycAccess = new CycAccess(CycHostName,CycBasePort);
+                        }
+                        TestConnection();
                         populateFromCyc();
                     }
                     catch (Exception e)
@@ -1320,10 +1327,70 @@ The AIMLbot program.
                     }
                     //if (cycAccess.isClosed()) cycAccess.persistentConnection = true;
                 }
-
                 return cycAccess;
             }
             set { cycAccess = value; }
+        }
+
+        private void TestConnection()
+        {
+            try
+            {
+                cycAccess.converseInt("(+ 1 1)");
+                cycAccess.createIndividual("AimlContextMt",
+                                           "#$AimlContextMt contains storage location in OpenCyc for AIML variables",
+                                           "UniversalVocabularyMt", "DataMicrotheory");
+
+            }
+            catch (Exception e)
+            {
+                UseCyc = false;
+            }
+        }
+
+        private bool isCycAccessCorrect()
+        {
+            if (cycAccess == null) return false;
+            if (cycAccess.isClosed()) return false;
+            if (cycAccess.getCycConnection().getHostName() != CycHostName) return false;
+            if (cycAccess.getCycConnection().getBasePort() != CycBasePort) return false;
+            return true;
+        }
+
+        private int cycBasePort = -1;
+        public int CycBasePort
+        {
+            get
+            {
+                if (cycBasePort > 0) return cycBasePort;
+                if (cycAccess != null) return cycBasePort = cycAccess.getCycConnection().getBasePort();
+                return cycBasePort = CycConnection.DEFAULT_BASE_PORT;
+            }
+            set
+            {
+                if (cycBasePort == -1) cycBasePort = value;
+                if (CycBasePort == value) return;
+                cycBasePort = value;
+                cycAccess = null;
+            }
+        }
+
+        private String cycHostName = null;
+        public string CycHostName
+        {
+            get
+            {
+                if (CycHostName != null) return cycHostName;
+                if (cycAccess != null) return cycHostName = cycAccess.getCycConnection().getHostName();
+                return cycHostName = CycConnection.DEFAULT_HOSTNAME;
+            }
+            set
+            {
+                if (cycHostName == null) cycHostName = value;
+                if (cycHostName == value) return;
+                cycHostName = value;
+                cycAccess = null;
+            }
         }
 
         private void populateFromCyc()
@@ -1441,6 +1508,7 @@ The AIMLbot program.
 
 
         readonly Dictionary<string,SystemExecHandler> ExecuteHandlers = new Dictionary<string, SystemExecHandler>();
+
         public void AddExcuteHandler(string lang, SystemExecHandler handler)
         {
             ExecuteHandlers[lang] = handler;
