@@ -59,7 +59,7 @@ namespace AIMLBotModule
             {
                 if (args.Length < 2) return Failure(Usage);
                 string stringJoin = String.Join(" ", args, 1, args.Length - 1);
-                WorldSystemModule.MyBot.loadAIMLFromFiles(stringJoin);
+                WorldSystemModule.MyBot.loadAIMLFromURI(stringJoin, WorldSystemModule.MyBot.BotAsUser);
                 return Success("aiml loaded " + stringJoin);
             }
             string joined = String.Join(" ", args);
