@@ -15,7 +15,7 @@ namespace RTParser.AIMLTagHandlers
     /// 
     /// The bot element does not have any content. 
     /// </summary>
-    public class aiml : RTParser.Utils.AIMLTagHandler
+    public class xml : RTParser.Utils.AIMLTagHandler
     {
         /// <summary>
         /// Ctor
@@ -26,7 +26,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public aiml(RTParser.RTPBot bot,
+        public xml(RTParser.RTPBot bot,
                         RTParser.User user,
                         RTParser.Utils.SubQuery query,
                         RTParser.Request request,
@@ -36,18 +36,13 @@ namespace RTParser.AIMLTagHandlers
         {
             isRecursive = false;
         }
-
+        public override Unifiable CompleteProcess()
+        {
+            return templateNode.InnerXml;
+        }
         protected override Unifiable ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "aiml")
-            {
-                // process each of these child "settings"? nodes
-                foreach (XmlNode child in this.templateNode.ChildNodes)
-                {
-                    Proc.Loader.loadAIMLNode(child, "no filename", request);
-                }
-            }
-            return Unifiable.Empty;
+            return templateNode.InnerXml;
         }
     }
 }

@@ -67,7 +67,7 @@ namespace RTParser.Utils
             }
         }
 
-        protected static Type[] CONSTRUCTOR_TYPES = new[]
+        public static Type[] CONSTRUCTOR_TYPES = new[]
                                                         {
                                                             typeof (RTPBot), typeof (User), typeof (SubQuery),
                                                             typeof (Request), typeof (Result), typeof (XmlNode)

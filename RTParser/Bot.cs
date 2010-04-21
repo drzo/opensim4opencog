@@ -803,6 +803,7 @@ namespace RTParser
             {
                 // Normalize the input
                 AIMLLoader loader = new AIMLLoader(this, request);
+                Loader = loader;
                 //RTParser.Normalize.SplitIntoSentences splitter = new RTParser.Normalize.SplitIntoSentences(this);
                 Unifiable[] rawSentences = new Unifiable[] { request.rawInput };//splitter.Transform(request.rawInput);
                 foreach (Unifiable sentence in rawSentences)
@@ -857,50 +858,9 @@ namespace RTParser
                 {
                     try
                     {
-                        //XmlNode guardNode = AIMLTagHandler.getNode(s.Guard.InnerXml);
-                        string output = s.Output.OuterXml;
-                        bool usedGuard = false;
-                        if (s.Guard != null)
-                        {
-                            usedGuard = true;
-                            output = output.Trim();
-                            if (output.StartsWith("<template>"))
-                            {
-                                output = "<template>" + s.Guard.InnerXml + " GUARDBOM " + output.Substring(10);
-                            }
-
-                        }
-                        XmlNode templateNode = AIMLTagHandler.getNode(output);
-                        string outputSentence = this.processNode(templateNode, query, request, result, request.user);
-                        int f = outputSentence.IndexOf("GUARDBOM");
-                        if (f < 0)
-                        {
-                            if (outputSentence.Length > 0)
-                            {
-                                result.OutputSentences.Add(outputSentence.Trim().Replace("  ", " ").Replace("  ", " "));
-                                found = true;
-                            }
-                        }
-                        else
-                        {
-                            try
-                           {
-	                           string left = outputSentence.Substring(0, f);
-	                            Unifiable ss = EvalSubL("(cyc-query '" + left + " #$EverythingPSC)", null);
-	                            if (Unifiable.IsFalse(ss)) continue;
-	                            outputSentence = outputSentence.Substring(f + 9);
-	                            if (outputSentence.Length > 0)
-	                            {
-	                                result.OutputSentences.Add(outputSentence);
-	                                found = true;
-	                                break;
-	                            }
-                           }
-                           catch (System.Exception ex)
-                           {
-                               continue;
-                           }
-                        }
+                        bool found0;
+                        if(proccessResponse(query, request, result, s.Output, s.Guard, out found0)) break;
+                        if (found0) found = true;
                     }
                     catch (Exception e)
                     {
@@ -913,10 +873,62 @@ namespace RTParser
                                         request.rawInput + " with the template: \"" + query.Template + "\"");
                         return false;
                     }
+
                 }
             }
             return found;
         }
+
+        public bool proccessResponse(SubQuery query, Request request, Result result, XmlNode sOutput, XmlNode sGuard, out bool found)
+        {
+            found = false;
+            //XmlNode guardNode = AIMLTagHandler.getNode(s.Guard.InnerXml);
+            string output = sOutput.OuterXml;
+            bool usedGuard = sGuard != null;
+            if (usedGuard)
+            {
+                output = output.Trim();
+                if (output.StartsWith("<template>"))
+                {
+                    output = "<template>" + sGuard.InnerXml + " GUARDBOM " + output.Substring(10);
+                }
+            }
+            XmlNode templateNode = AIMLTagHandler.getNode(output);
+            string outputSentence = this.processNode(templateNode, query, request, result, request.user);
+            int f = outputSentence.IndexOf("GUARDBOM");
+            if (f < 0)
+            {
+                if (outputSentence.Length > 0)
+                {
+                    result.OutputSentences.Add(outputSentence.Trim().Replace("  ", " ").Replace("  ", " "));
+                    found = true;
+                }
+                return false;
+            }
+
+            try
+            {
+                string left = outputSentence.Substring(0, f);
+                Unifiable ss = EvalSubL("(cyc-query '" + left + " #$EverythingPSC)", null);
+                if (Unifiable.IsFalse(ss))
+                {
+                    return false;
+                }
+                outputSentence = outputSentence.Substring(f + 9);
+                if (outputSentence.Length > 0)
+                {
+                    result.OutputSentences.Add(outputSentence);
+                    found = true;
+                    return true;
+                }
+                return false;
+            }
+            catch (System.Exception ex)
+            {
+                return false;
+            }
+        }
+
         /// <summary>
         /// Recursively evaluates the template nodes returned from the Proccessor
         /// </summary>
@@ -962,6 +974,9 @@ namespace RTParser
                         break;
                     case "aiml":
                         tagHandler = new AIMLTagHandlers.aiml(this, user, query, request, result, node);
+                        break;
+                    case "aimlexec":
+                        tagHandler = new AIMLTagHandlers.aimlexec(this, user, query, request, result, node);
                         break;
                     case "root":
                         tagHandler = new AIMLTagHandlers.root(this, user, query, request, result, node);
@@ -1127,7 +1142,8 @@ namespace RTParser
         /// <returns>the output Unifiable</returns>
         public AIMLTagHandler getBespokeTags(User user, SubQuery query, Request request, Result result, XmlNode node)
         {
-            if (this.CustomTags.ContainsKey(node.Name.ToLower()))
+            string nodename = node.Name.ToLower();
+            if (this.CustomTags.ContainsKey(nodename))
             {
                 TagHandler customTagHandler = (TagHandler)this.CustomTags[node.Name.ToLower()];
 
@@ -1143,7 +1159,19 @@ namespace RTParser
             }
             else
             {
-                return null;
+                try
+                {
+                    if (nodename.StartsWith("#")) return null;
+                    String typeName = GetType().Namespace + ".AIMLTagHandlers." + nodename;
+                    Type t = Type.GetType(typeName);
+                    if (t == null) return null;
+                    var c = t.GetConstructor(TagHandler.CONSTRUCTOR_TYPES);
+                    return (AIMLTagHandler) c.Invoke(new object[] {user, query, request, result, node, this});
+                } catch(Exception e)
+                {
+                    writeToLog("getBespokeTags: " + e);
+                    return null;
+                }
             }
         }
 
@@ -1548,6 +1576,12 @@ The AIMLbot program.
         {
             Request request = new Request(templateNode.OuterXml, request0.user, request0.Proccessor);
             AIMLbot.Result result = new AIMLbot.Result(request.user, this, request);
+            if (true)
+            {
+                bool found0;
+                proccessResponse(null, request, result, templateNode, null, out found0);
+                return result;
+            }
             if (true)
             {
                 Unifiable path = loader.generatePath("no stars", request.user.getLastBotOutput(), request.user.Topic, true);
