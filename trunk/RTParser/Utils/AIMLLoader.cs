@@ -176,36 +176,49 @@ namespace RTParser.Utils
             }
         }
 
-        private void loadAIMLNode(XmlNode currentNode, string filename, Request request)
+        public void loadAIMLNode(XmlNode currentNode, string filename, Request request)
         {
-            if (currentNode.NodeType == XmlNodeType.Comment) return;
-            RProcessor.ImmediateAiml(currentNode, request);
-            if (currentNode.Name == "root")
+            var prev = RProcessor.Loader;
+            try
             {
-                // process each of these child "settings"? nodes
-                foreach (XmlNode child in currentNode.ChildNodes)
+                RProcessor.Loader = this;
+                if (currentNode.NodeType == XmlNodeType.Comment) return;
+                if (currentNode.Name == "root")
                 {
-                    loadAIMLNode(child, filename, request);
+                    // process each of these child "settings"? nodes
+                    foreach (XmlNode child in currentNode.ChildNodes)
+                    {
+                        loadAIMLNode(child, filename, request);
+                    }
+                    return;
                 }
-                return;
-            }
-            if (currentNode.Name == "item")
-            {
-                this.RProcessor.GlobalSettings.loadSettingNode(currentNode);
-                return;
-            }
+                if (currentNode.Name == "item")
+                {
+                    this.RProcessor.GlobalSettings.loadSettingNode(currentNode);
+                    return;
+                }
 
-            if (currentNode.Name == "topic")
+                if (currentNode.Name == "topic")
+                {
+                    this.processTopic(currentNode, filename);
+                }
+                else if (currentNode.Name == "category")
+                {
+                    this.processCategory(currentNode, filename);
+                }
+                else
+                {
+                    try
+                    {
+                        RProcessor.ImmediateAiml(currentNode, request, this);
+                    } catch(Exception e)
+                    {
+                        RProcessor.writeToLog("ImmediateAiml: " + e);
+                    }
+                }
+            } finally
             {
-                this.processTopic(currentNode, filename);
-            }
-            else if (currentNode.Name == "category")
-            {
-                this.processCategory(currentNode, filename);
-            }
-            else
-            {
-                this.RProcessor.writeToLog("unused node in " + filename + ": " + currentNode.OuterXml);
+                RProcessor.Loader = prev;
             }
         }
 
@@ -215,7 +228,7 @@ namespace RTParser.Utils
         /// </summary>
         /// <param name="node">the "topic" node</param>
         /// <param name="filename">the file from which this node is taken</param>
-        private void processTopic(XmlNode node, string filename)
+        public void processTopic(XmlNode node, string filename)
         {
             // find the name of the topic or set to default "*"
             Unifiable topicName="*";
