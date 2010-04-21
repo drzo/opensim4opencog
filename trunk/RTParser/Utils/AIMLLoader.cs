@@ -28,7 +28,7 @@ namespace RTParser.Utils
         /// Ctor
         /// </summary>
         /// <param name="bot">The bot whose brain is being processed</param>
-        public AIMLLoader(RTParser.RTPBot bot, User user)
+        public AIMLLoader(RTParser.RTPBot bot, Request request)
         {
             this.RProcessor = bot;
         }
@@ -38,35 +38,35 @@ namespace RTParser.Utils
         /// <summary>
         /// Loads the AIML from files found in the RProcessor's AIMLpath into the RProcessor's brain
         /// </summary>
-        public void loadAIML(User user)
+        public void loadAIML(Request request)
         {
-            this.loadAIML(this.RProcessor.PathToAIML, user);
+            this.loadAIML(this.RProcessor.PathToAIML, request);
         }
 
         /// <summary>
         /// Loads the AIML from files found in the path
         /// </summary>
         /// <param name="path"></param>
-        public void loadAIML(string path, User user)
+        public void loadAIML(string path, Request request)
         {
-            RProcessor.ReloadHooks.Add(() => loadAIML(path, user));
+            RProcessor.ReloadHooks.Add(() => loadAIML(path, request));
             if (Directory.Exists(path))
             {
                 // process the AIML
-                loadAIMLDir(path, user);
+                loadAIMLDir(path, request);
             } else if (File.Exists(path))
             {
-                this.loadAIMLFile(path, user); 
+                this.loadAIMLFile(path, request); 
             }
             else
             {
-                this.loadAIMLURI(path, user);
+                this.loadAIMLURI(path, request);
             }
             Console.WriteLine("*** Loaded AIMLFiles From Location: '{0}' ***", path);
 
         }
 
-        private void loadAIMLDir(string path, User user)
+        private void loadAIMLDir(string path, Request request)
         {
             this.RProcessor.writeToLog("Starting to process AIML files found in the directory " + path);
 
@@ -77,7 +77,7 @@ namespace RTParser.Utils
                 {
                     try
                     {
-                        this.loadAIMLFile(filename , user);
+                        this.loadAIMLFile(filename, request);
                     } catch(Exception ee)
                     {
                         Console.WriteLine("" + ee);
@@ -92,7 +92,7 @@ namespace RTParser.Utils
             }
         }
 
-        private void loadAIMLURI(string path, User user)
+        private void loadAIMLURI(string path, Request request)
         {
             this.RProcessor.writeToLog("Processing AIML URI: " + path);
             XmlDocument doc = new XmlDocument();
@@ -115,7 +115,7 @@ namespace RTParser.Utils
                 String s = "ERROR: XmlTextReader of AIML files (" + path + ")  threw " + e;
                 throw new FileNotFoundException(s);
             }
-            loadAIMLFromXML(doc, path, user);
+            loadAIMLFromXML(doc, path, request);
         }
 
         /// <summary>
@@ -123,7 +123,7 @@ namespace RTParser.Utils
         /// graphmaster
         /// </summary>
         /// <param name="filename">The name of the file to process</param>
-        public void loadAIMLFile(string filename, User user)
+        public void loadAIMLFile(string filename, Request request)
         {
             this.RProcessor.writeToLog("Processing AIML file: " + filename);
             
@@ -133,11 +133,11 @@ namespace RTParser.Utils
             {
                 if (Directory.Exists(filename))
                 {
-                    loadAIMLDir(filename, user);
+                    loadAIMLDir(filename, request);
                     return;
                 }
                 doc.Load(filename);
-                this.loadAIMLFromXML(doc, filename, user);
+                this.loadAIMLFromXML(doc, filename, request);
                 Console.WriteLine("Loaded AIMLFile: '{0}'", filename);
                 return;
             }
@@ -148,7 +148,7 @@ namespace RTParser.Utils
                 try
                 {
                     if (doc.DocumentElement==null) return;
-                    this.loadAIMLFromXML(doc, filename, user);
+                    this.loadAIMLFromXML(doc, filename, request);
                 }   catch (Exception e2)
                 {
                     this.RProcessor.writeToLog("which causes loadAIMLFromXML: " + filename + "\n  " + e.Message + "\n" + e.StackTrace);                    
@@ -162,7 +162,7 @@ namespace RTParser.Utils
         /// </summary>
         /// <param name="doc">The XML document containing the AIML</param>
         /// <param name="filename">Where the XML document originated</param>
-        public void loadAIMLFromXML(XmlDocument doc, string filename, User user)
+        public void loadAIMLFromXML(XmlDocument doc, string filename, Request request)
         {
             // Get a list of the nodes that are children of the <aiml> tag
             // these nodes should only be either <topic> or <category>
@@ -172,20 +172,20 @@ namespace RTParser.Utils
             // process each of these child nodes
             foreach (XmlNode currentNode in rootChildren)
             {
-                loadAIMLNode(currentNode, filename, user);
+                loadAIMLNode(currentNode, filename, request);
             }
         }
 
-        private void loadAIMLNode(XmlNode currentNode, string filename, User user)
+        private void loadAIMLNode(XmlNode currentNode, string filename, Request request)
         {
             if (currentNode.NodeType == XmlNodeType.Comment) return;
-            RProcessor.ImmediateAiml(currentNode, user);
+            RProcessor.ImmediateAiml(currentNode, request);
             if (currentNode.Name == "root")
             {
                 // process each of these child "settings"? nodes
                 foreach (XmlNode child in currentNode.ChildNodes)
                 {
-                    loadAIMLNode(child, filename, user);
+                    loadAIMLNode(child, filename, request);
                 }
                 return;
             }
@@ -229,7 +229,7 @@ namespace RTParser.Utils
             {
                 if (thisNode.Name == "category")
                 {
-                    processCategory(thisNode, topicName, filename);
+                    processCategoryWithTopic(thisNode, topicName, filename);
                 }
             }
         }
@@ -241,7 +241,7 @@ namespace RTParser.Utils
         /// <param name="filename">the file from which this category was taken</param>
         private void processCategory(XmlNode node, string filename)
         {
-            this.processCategory(node, Unifiable.STAR, filename);
+            this.processCategoryWithTopic(node, Unifiable.STAR, filename);
         }
 
         /// <summary>
@@ -250,7 +250,7 @@ namespace RTParser.Utils
         /// <param name="node">the XML node containing the category</param>
         /// <param name="topicName">the topic to be used</param>
         /// <param name="filename">the file from which this category was taken</param>
-        private void processCategory(XmlNode node, Unifiable topicName, string filename)
+        private void processCategoryWithTopic(XmlNode node, Unifiable topicName, string filename)
         {
             Dictionary<string,List<XmlNode>> store = GetTopicStore();
             // reference and check the required nodes

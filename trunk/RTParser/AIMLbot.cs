@@ -37,7 +37,7 @@ namespace AIMLbot
         public class AIMLLoader : RTParser.Utils.AIMLLoader
         {
             public AIMLLoader(RTPBot bot)
-                : base(bot,bot.BotAsUser)
+                : base(bot,bot.BotAsRequest)
             {
             }
         }
