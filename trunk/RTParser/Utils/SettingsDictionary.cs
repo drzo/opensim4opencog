@@ -16,19 +16,19 @@ namespace RTParser.Utils
         /// </summary>
         /// <param name="name">The name of the new setting</param>
         /// <param name="value">The value associated with this setting</param>
-        void addSetting(string name, Unifiable value);
+        bool addSetting(string name, Unifiable value);
         /// <summary>
         /// Removes the named setting from this class
         /// </summary>
         /// <param name="name">The name of the setting to remove</param>
-        void removeSetting(string name);
+        bool removeSetting(string name);
         /// <summary>
         /// Updates the named setting with a new value whilst retaining the position in the
         /// dictionary
         /// </summary>
         /// <param name="name">the name of the setting</param>
         /// <param name="value">the new value</param>
-        void updateSetting(string name, Unifiable value);
+        bool updateSetting(string name, Unifiable value);
         /// <summary>
         /// Returns the value of a setting given the name of the setting
         /// </summary>
@@ -214,7 +214,7 @@ namespace RTParser.Utils
         /// </summary>
         /// <param name="name">The name of the new setting</param>
         /// <param name="value">The value associated with this setting</param>
-        public void addSetting(string name, Unifiable value)
+        public bool addSetting(string name, Unifiable value)
         {
             lock (orderedKeys)
             {
@@ -226,19 +226,22 @@ namespace RTParser.Utils
                     this.settingsHash.Add(MakeCaseInsensitive.TransformInput(key), value);
                 }
             }
+            return true;
         }
 
         /// <summary>
         /// Removes the named setting from this class
         /// </summary>
         /// <param name="name">The name of the setting to remove</param>
-        public void removeSetting(string name)
+        public bool removeSetting(string name)
         {
             lock (orderedKeys)
             {
                 string normalizedName = MakeCaseInsensitive.TransformInput(name);
+                bool ret = orderedKeys.Contains(normalizedName);
                 this.orderedKeys.Remove(normalizedName);
                 this.removeFromHash(normalizedName);
+                return ret;
             }
         }
 
@@ -261,7 +264,7 @@ namespace RTParser.Utils
         /// </summary>
         /// <param name="name">the name of the setting</param>
         /// <param name="value">the new value</param>
-        public void updateSetting(string name, Unifiable value)
+        public bool updateSetting(string name, Unifiable value)
         {
             lock (orderedKeys)
             {
@@ -270,13 +273,14 @@ namespace RTParser.Utils
                 {
                     this.removeFromHash(key);
                     this.settingsHash.Add(MakeCaseInsensitive.TransformInput(key), value);
-                    return;
+                    return true;
                 }
             }
             foreach (var parent in Parents)
             {
                 parent.updateSetting(name, value);                
             }
+            return true;
         }
 
         /// <summary>
@@ -394,11 +398,99 @@ namespace RTParser.Utils
 
         public void addObjectFields(Object obj)
         {
+            foreach (var hash in obj.GetType().GetProperties())
+            {
+                addObjectProperty(obj,hash);
+            }
+        }
+
+        public void AddObjectProperty(object o, String name)
+        {
+            addGetSet(new PropertySetter(name, name, o));
+        }
+
+
+        private void addObjectProperty(object o, PropertyInfo info)
+        {
+            string name = info.Name;
+            addGetSet(new PropertySetter(name,name,o));
+        }
+
+        private void addGetSet(PropertySetter o)
+        {
+            InsertProvider(() => { return o; });
         }
 
         public void InsertProvider(ParentProvider provider)
         {
             _parent.Insert(0, provider);
         }
+    }
+
+    internal class PropertySetter : ISettingsDictionary
+    {
+        readonly private object obj;
+        readonly private string named;
+        private object oldValue = null;
+        public PropertySetter(string name, string pname, object o)
+        {
+            obj = o;
+            named = name;
+        }
+        private void propSet(object p)
+        {
+            PropertyInfo info = obj.GetType().GetProperty(named);
+            info.SetValue(obj, p, null);
+        }
+        private object propGet()
+        {
+            PropertyInfo info = obj.GetType().GetProperty(named);
+            return info.GetValue(obj, null);
+        }
+
+
+        #region ISettingsDictionary Members
+
+        public bool addSetting(string name, Unifiable value)
+        {
+            if (!containsSettingCalled(name)) return false;
+            oldValue = propGet();
+            propSet(value);
+            return true;
+        }
+
+        public bool removeSetting(string name)
+        {
+            if (!containsSettingCalled(name)) return false;
+            propSet(oldValue);
+            return true;
+        }
+
+        public bool updateSetting(string name, Unifiable value)
+        {
+            if (containsSettingCalled(name))
+            {
+                oldValue = propGet();
+                propSet(value);
+                return true;
+            }
+            return false;
+        }
+
+        public Unifiable grabSetting(string name)
+        {
+            if (containsSettingCalled(name))
+            {
+                return Unifiable.Create(propGet());
+            }
+            return Unifiable.Empty;
+        }
+
+        public bool containsSettingCalled(string name)
+        {
+            return named.ToLower() == name.ToLower();
+        }
+
+        #endregion
     }
 }
