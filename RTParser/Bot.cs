@@ -26,6 +26,7 @@ namespace RTParser
     {
         public readonly User BotAsUser;
         public readonly Request BotAsRequest;
+        public AIMLLoader Loader;
         #region Attributes
         public List<CrossAppDomainDelegate> ReloadHooks = new List<CrossAppDomainDelegate>();
         /// <summary>
@@ -1529,9 +1530,50 @@ The AIMLbot program.
             return (Unifiable) GlobalSettings.grabSetting(name);
         }
 
-        public void ImmediateAiml(XmlNode node, Request user)
+        public AIMLbot.Result ImmediateAiml(XmlNode node, Request request0, AIMLLoader loader)
         {
-//            throw new NotImplementedException();
+            Request request = new Request(node.OuterXml,request0.user,request0.Proccessor);
+            AIMLbot.Result result = new AIMLbot.Result(request.user, this, request);
+
+            //if (this.isAcceptingUserInput)
+            {
+                string sentence = "aimlexec " + node.OuterXml;
+                //RTParser.Normalize.SplitIntoSentences splitter = new RTParser.Normalize.SplitIntoSentences(this);
+                //Unifiable[] rawSentences = new Unifiable[] { request.rawInput };//splitter.Transform(request.rawInput);
+                //foreach (Unifiable sentence in rawSentences)
+                {
+                    result.InputSentences.Add(sentence);
+                    Unifiable path = loader.generatePath(sentence, request.user.getLastBotOutput(), request.user.Topic, true);
+                    result.NormalizedPaths.Add(path);
+                }
+
+                // grab the templates for the various sentences from the graphmaster
+                foreach (Unifiable path in result.NormalizedPaths)
+                {
+                    Utils.SubQuery query = new SubQuery(path, result);
+                    query.Template = this.Graphmaster.evaluate(path, query, request, MatchState.UserInput, Unifiable.CreateAppendable());
+                    result.SubQueries.Add(query);
+                }
+
+                //todo pick and chose the queries
+                if (result.SubQueries.Count != 1) Console.WriteLine("Found " + result.SubQueries.Count + " queries");
+
+                // process the templates into appropriate output
+                foreach (SubQuery query in result.SubQueries)
+                {
+                    if (processTemplate(query, request, result)) ;
+                }
+            }
+            //else
+            {
+              //  result.OutputSentences.Add(this.NotAcceptingUserInputMessage);
+            }
+
+            // populate the Result object
+            result.Duration = DateTime.Now - request.StartedOn;
+            request.user.addResult(result);
+
+            return result;
         }
     }
 }

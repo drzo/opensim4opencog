@@ -182,7 +182,7 @@ namespace AIMLBotModule
                 MyUser = new User(Unifiable.Create("AIMLInterp"), MyBot);
                 MyUser.InsertProvider(new ParentProvider(() => this));
                 MyBot.isAcceptingUserInput = false;
-                MyBot.loadAIMLFromURI(MyBot.BotAsUser);
+                MyBot.loadAIMLFromDefaults();
                 MyBot.isAcceptingUserInput = true;
                 MyBot.outputDelegate = WriteLine;
                 LoadPersonalConfig();
@@ -316,7 +316,7 @@ namespace AIMLBotModule
                 WriteLine("LoadPersonalDirectories: '{0}'", file);
                 loaded = true;
                 MyBot.isAcceptingUserInput = false;
-                MyBot.loadAIMLFromURI(file, MyBot.BotAsUser);
+                MyBot.loadAIMLFromURI(file, MyBot.BotAsRequest);
                 MyBot.isAcceptingUserInput = true;
             }
 
@@ -334,7 +334,7 @@ namespace AIMLBotModule
                 WriteLine("LoadPersonalDirectories: '{0}'", file);
                 loaded = true;
                 MyBot.isAcceptingUserInput = false;
-                MyBot.loadAIMLFromURI(file, MyBot.BotAsUser);
+                MyBot.loadAIMLFromURI(file, MyBot.BotAsRequest);
                 MyBot.isAcceptingUserInput = true;
             }
 
@@ -346,7 +346,7 @@ namespace AIMLBotModule
                     WriteLine("LoadPersonalDirectories: '{0}'", file);
                     loaded = true;
                     MyBot.isAcceptingUserInput = false;
-                    MyBot.loadAIMLFromURI(file, MyBot.BotAsUser);
+                    MyBot.loadAIMLFromURI(file, MyBot.BotAsRequest);
                     MyBot.isAcceptingUserInput = true;
                 }
             }
