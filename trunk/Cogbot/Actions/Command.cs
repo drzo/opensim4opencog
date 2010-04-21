@@ -112,7 +112,8 @@ namespace cogbot.Actions
         /// Returns: A user-defined object that qualifies or contains information about an asynchronous operation.
         public object AsyncState
         {
-            get { throw new NotImplementedException(); }
+            get {
+                return this;/* throw new NotImplementedException();*/ }
         }
 
         /// <summary>
@@ -405,8 +406,23 @@ namespace cogbot.Actions
         protected CmdResult Success(string usage)
         {
             success++;
-            WriteLine(usage);
-            Console.WriteLine(usage);
+
+            try
+            {
+                WriteLine(usage);
+            }
+            catch (Exception e)
+            {
+
+            }
+            try
+            {
+                Console.WriteLine(usage);
+            }
+            catch (Exception e)
+            {
+
+            }
             return Result("Success " + Name, true);
         }
 
