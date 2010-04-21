@@ -42,7 +42,7 @@ namespace RTParser.AIMLTagHandlers
                     Unifiable path = templateNodeInnerText;
                     try
                     {
-                        Proc.loadAIMLFromFiles(path);
+                        Proc.loadAIMLFromURI(path, user);
                     }
                     catch (Exception e2)
                     {

@@ -182,7 +182,7 @@ namespace AIMLBotModule
                 MyUser = new User(Unifiable.Create("AIMLInterp"), MyBot);
                 MyUser.InsertProvider(new ParentProvider(() => this));
                 MyBot.isAcceptingUserInput = false;
-                MyBot.loadAIMLFromFiles();
+                MyBot.loadAIMLFromURI(MyBot.BotAsUser);
                 MyBot.isAcceptingUserInput = true;
                 MyBot.outputDelegate = WriteLine;
                 LoadPersonalConfig();
@@ -316,7 +316,7 @@ namespace AIMLBotModule
                 WriteLine("LoadPersonalDirectories: '{0}'", file);
                 loaded = true;
                 MyBot.isAcceptingUserInput = false;
-                MyBot.loadAIMLFromFiles(file);
+                MyBot.loadAIMLFromURI(file, MyBot.BotAsUser);
                 MyBot.isAcceptingUserInput = true;
             }
 
@@ -334,7 +334,7 @@ namespace AIMLBotModule
                 WriteLine("LoadPersonalDirectories: '{0}'", file);
                 loaded = true;
                 MyBot.isAcceptingUserInput = false;
-                MyBot.loadAIMLFromFiles(file);
+                MyBot.loadAIMLFromURI(file, MyBot.BotAsUser);
                 MyBot.isAcceptingUserInput = true;
             }
 
@@ -346,7 +346,7 @@ namespace AIMLBotModule
                     WriteLine("LoadPersonalDirectories: '{0}'", file);
                     loaded = true;
                     MyBot.isAcceptingUserInput = false;
-                    MyBot.loadAIMLFromFiles(file);
+                    MyBot.loadAIMLFromURI(file, MyBot.BotAsUser);
                     MyBot.isAcceptingUserInput = true;
                 }
             }
@@ -1016,19 +1016,19 @@ namespace AIMLBotModule
             return list;
         }
 
-        public void addSetting(string name, Unifiable value)
+        public bool addSetting(string name, Unifiable value)
         {
-            throw new NotImplementedException();
+            return false;
         }
 
-        public void removeSetting(string name)
+        public bool removeSetting(string name)
         {
-            throw new NotImplementedException();
+            return false;
         }
 
-        public void updateSetting(string name, Unifiable value)
+        public bool updateSetting(string name, Unifiable value)
         {
-            throw new NotImplementedException();
+            return false;
         }
 
         public Unifiable grabSetting(string name)
