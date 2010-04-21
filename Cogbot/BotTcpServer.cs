@@ -37,6 +37,7 @@ namespace cogbot.Utilities
         private StreamWriter tcpStreamWriter = null;// = new StreamWriter(ns);        
         readonly BotTcpServer Server;
         public Thread AbortThread;
+        readonly object readerSwitchLock = new object();
         readonly private SimEventFilterSubscriber filter;
         readonly protected BotClient botclient;        
         bool quitRequested = false;
@@ -70,7 +71,10 @@ namespace cogbot.Utilities
                 {
                     while (!quitRequested && tcpStreamWriter!=null)
                     {
-                        tcpStreamReader = new StreamReader(ns);
+                        lock (readerSwitchLock)
+                        {
+                            tcpStreamReader = new StreamReader(ns);
+                        }
                         try
                         {
                             try
@@ -85,7 +89,8 @@ namespace cogbot.Utilities
                             }
                             try
                             {
-                                ProcessOneCommand();                                
+                                lock (readerSwitchLock)
+                                    ProcessOneCommand();                                
                             } catch(Exception e)
                             {
                                 botclient.WriteLine(this+": "+e);
@@ -202,7 +207,9 @@ namespace cogbot.Utilities
         
         public void ProcessOneCommand()
         {
+
             SourceLanguage syntaxType = GetSyntaxType();
+            if (syntaxType==SourceLanguage.Unknown) return;
 
             Server.parent.WriteLine("SockClient: {0}", syntaxType);
             if (syntaxType == SourceLanguage.Lisp)
