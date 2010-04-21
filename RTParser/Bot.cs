@@ -356,6 +356,7 @@ namespace RTParser
         public void loadAIMLFromDefaults()
         {
             AIMLLoader loader = new AIMLLoader(this, BotAsRequest);
+            Loader = loader;
             loader.loadAIML(BotAsRequest);
         }
 
@@ -365,6 +366,7 @@ namespace RTParser
         public void loadAIMLFromURI(string path, Request request)
         {
             AIMLLoader loader = new AIMLLoader(this, request);
+            Loader = loader;
             loader.loadAIML(path, request);
             // maybe loads settings files if they are there
             string settings = Path.Combine(path, "Settings.xml");
@@ -958,6 +960,18 @@ namespace RTParser
                     case "template":
                         tagHandler = new AIMLTagHandlers.template(this, user, query, request, result, node);
                         break;
+                    case "aiml":
+                        tagHandler = new AIMLTagHandlers.aiml(this, user, query, request, result, node);
+                        break;
+                    case "root":
+                        tagHandler = new AIMLTagHandlers.root(this, user, query, request, result, node);
+                        break;
+                    case "topic":
+                        tagHandler = new AIMLTagHandlers.topic(this, user, query, request, result, node);
+                        break;
+                    case "category":
+                        tagHandler = new AIMLTagHandlers.category(this, user, query, request, result, node);
+                        break;
                     case "and":
                         tagHandler = new AIMLTagHandlers.and(this, user, query, request, result, node);
                         break;
@@ -1530,14 +1544,21 @@ The AIMLbot program.
             return (Unifiable) GlobalSettings.grabSetting(name);
         }
 
-        public AIMLbot.Result ImmediateAiml(XmlNode node, Request request0, AIMLLoader loader)
+        public AIMLbot.Result ImmediateAiml(XmlNode templateNode, Request request0, AIMLLoader loader)
         {
-            Request request = new Request(node.OuterXml,request0.user,request0.Proccessor);
+            Request request = new Request(templateNode.OuterXml, request0.user, request0.Proccessor);
             AIMLbot.Result result = new AIMLbot.Result(request.user, this, request);
+            if (true)
+            {
+                Unifiable path = loader.generatePath("no stars", request.user.getLastBotOutput(), request.user.Topic, true);
+                Utils.SubQuery query = new SubQuery(path, result);
+                string outputSentence = this.processNode(templateNode, query, request, result, request.user);
+                return result;
 
+            }
             //if (this.isAcceptingUserInput)
             {
-                string sentence = "aimlexec " + node.OuterXml;
+                string sentence = "aimlexec " + templateNode.OuterXml;
                 //RTParser.Normalize.SplitIntoSentences splitter = new RTParser.Normalize.SplitIntoSentences(this);
                 //Unifiable[] rawSentences = new Unifiable[] { request.rawInput };//splitter.Transform(request.rawInput);
                 //foreach (Unifiable sentence in rawSentences)
