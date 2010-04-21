@@ -167,13 +167,7 @@ namespace RTParser.Utils
             // Get a list of the nodes that are children of the <aiml> tag
             // these nodes should only be either <topic> or <category>
             // the <topic> nodes will contain more <category> nodes
-            XmlNodeList rootChildren = doc.DocumentElement.ChildNodes;
-
-            // process each of these child nodes
-            foreach (XmlNode currentNode in rootChildren)
-            {
-                loadAIMLNode(currentNode, filename, request);
-            }
+            loadAIMLNode(doc.DocumentElement, filename, request);
         }
 
         public void loadAIMLNode(XmlNode currentNode, string filename, Request request)
@@ -183,6 +177,15 @@ namespace RTParser.Utils
             {
                 RProcessor.Loader = this;
                 if (currentNode.NodeType == XmlNodeType.Comment) return;
+                if (currentNode.Name == "aiml")
+                {
+                    // process each of these child nodes
+                    foreach (XmlNode child in currentNode.ChildNodes)
+                    {
+                        loadAIMLNode(child, filename, request);
+                    }
+                    return;
+                }
                 if (currentNode.Name == "root")
                 {
                     // process each of these child "settings"? nodes
@@ -252,7 +255,7 @@ namespace RTParser.Utils
         /// </summary>
         /// <param name="node">the XML node containing the category</param>
         /// <param name="filename">the file from which this category was taken</param>
-        private void processCategory(XmlNode node, string filename)
+        public void processCategory(XmlNode node, string filename)
         {
             this.processCategoryWithTopic(node, Unifiable.STAR, filename);
         }
