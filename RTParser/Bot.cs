@@ -24,7 +24,8 @@ namespace RTParser
     /// </summary>
     public class RTPBot
     {
-        readonly public User BotAsUser;
+        public readonly User BotAsUser;
+        public readonly Request BotAsRequest;
         #region Attributes
         public List<CrossAppDomainDelegate> ReloadHooks = new List<CrossAppDomainDelegate>();
         /// <summary>
@@ -343,6 +344,7 @@ namespace RTParser
         {
             this.setup();
             BotAsUser = new User("Self", this);
+            BotAsRequest = new Request("", BotAsUser, this);
         }
 
         #region Settings methods
@@ -350,19 +352,19 @@ namespace RTParser
         /// <summary>
         /// Loads AIML from .aiml files into the graphmaster "brain" of the Proccessor
         /// </summary>
-        public void loadAIMLFromURI(User user)
+        public void loadAIMLFromDefaults()
         {
-            AIMLLoader loader = new AIMLLoader(this, user);
-            loader.loadAIML(user);
+            AIMLLoader loader = new AIMLLoader(this, BotAsRequest);
+            loader.loadAIML(BotAsRequest);
         }
 
         /// <summary>
         /// Loads AIML from .aiml files into the graphmaster "brain" of the Proccessor
         /// </summary>
-        public void loadAIMLFromURI(string path, User user)
+        public void loadAIMLFromURI(string path, Request request)
         {
-            AIMLLoader loader = new AIMLLoader(this, user);
-            loader.loadAIML(path, user);
+            AIMLLoader loader = new AIMLLoader(this, request);
+            loader.loadAIML(path, request);
             // maybe loads settings files if they are there
             string settings = Path.Combine(path, "Settings.xml");
             if (File.Exists(settings)) loadSettings(settings);
@@ -373,10 +375,10 @@ namespace RTParser
         /// </summary>
         /// <param name="newAIML">The XML document containing the AIML</param>
         /// <param name="filename">The originator of the XML document</param>
-        public void loadAIMLFromXML(XmlDocument newAIML, Unifiable filename, User user)
+        public void loadAIMLFromXML(XmlDocument newAIML, Unifiable filename, Request r)
         {
-            AIMLLoader loader = new AIMLLoader(this, user);
-            loader.loadAIMLFromXML(newAIML, filename, user);
+            AIMLLoader loader = new AIMLLoader(this, r);
+            loader.loadAIMLFromXML(newAIML, filename, r);
         }
 
         /// <summary>
@@ -797,7 +799,7 @@ namespace RTParser
             if (this.isAcceptingUserInput)
             {
                 // Normalize the input
-                AIMLLoader loader = new AIMLLoader(this, BotAsUser);
+                AIMLLoader loader = new AIMLLoader(this, request);
                 //RTParser.Normalize.SplitIntoSentences splitter = new RTParser.Normalize.SplitIntoSentences(this);
                 Unifiable[] rawSentences = new Unifiable[] { request.rawInput };//splitter.Transform(request.rawInput);
                 foreach (Unifiable sentence in rawSentences)
@@ -1527,9 +1529,9 @@ The AIMLbot program.
             return (Unifiable) GlobalSettings.grabSetting(name);
         }
 
-        public void ImmediateAiml(XmlNode node, User user)
+        public void ImmediateAiml(XmlNode node, Request user)
         {
-            throw new NotImplementedException();
+//            throw new NotImplementedException();
         }
     }
 }
