@@ -421,7 +421,7 @@ namespace cogbot.Actions
             }
             catch (Exception e)
             {
-
+                Console.WriteLine(e);
             }
             return Result("Success " + Name, true);
         }
