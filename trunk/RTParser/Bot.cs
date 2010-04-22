@@ -343,6 +343,7 @@ namespace RTParser
         /// </summary>
         public RTPBot()
         {
+            UseCyc = true;
             this.setup();
             BotAsUser = new User("Self", this);
             BotAsRequest = new Request("", BotAsUser, this);
@@ -1360,10 +1361,15 @@ The AIMLbot program.
                 {
                     try
                     {
-                        if (cycAccess==null) cycAccess = CycAccess.current();
+                        if (cycAccess == null) cycAccess = CycAccess.current();
+                    }
+                    catch (Exception) { }
+                    try
+                    {
                         if (!isCycAccessCorrect())
                         {
-                            cycAccess = new CycAccess(CycHostName,CycBasePort);
+                            cycAccess = new CycAccess(CycHostName, CycBasePort);
+                            CycAccess.setSharedCycAccessInstance(cycAccess);
                         }
                         TestConnection();
                         populateFromCyc();
@@ -1422,12 +1428,13 @@ The AIMLbot program.
             }
         }
 
-        private String cycHostName = null;
+        // So people dont have to use their own cyc instance (unless they set it)
+        private String cycHostName = "daxcyc.gotdns.org";
         public string CycHostName
         {
             get
             {
-                if (CycHostName != null) return cycHostName;
+                if (cycHostName != null) return cycHostName;
                 if (cycAccess != null) return cycHostName = cycAccess.getCycConnection().getHostName();
                 return cycHostName = CycConnection.DEFAULT_HOSTNAME;
             }
@@ -1442,21 +1449,21 @@ The AIMLbot program.
 
         private void populateFromCyc()
         {
-            cycAccess.setCyclist("CycAdministrator");
+            //cycAccess.setCyclist("CycAdministrator");
         }
 
         public Unifiable EvalSubL(Unifiable cmd, Unifiable filter)
         {
             Unifiable result = "(EVAL-SUBL " + cmd + ")";
             CycAccess access = GetCycAccess;
-            if (!UseCyc) return result;
+            Console.Write(result);
+            Console.Out.Flush();
+            if (!UseCyc)  return result;
             try
             {
-                Console.Write(result);
-                Console.Out.Flush();
                 string str = "(list " + cmd + ")";
                 Object oresult = access.converseList(str).first();
-                Console.WriteLine( " => " + oresult);
+                Console.WriteLine(str + " => " + oresult);
                 result = "" + oresult;
                 if (oresult is CycObject)
                 {
@@ -1504,7 +1511,9 @@ The AIMLbot program.
             //return text;
             try
             {
-	            return EvalSubL(String.Format("(generate-phrase {0})", text), null);
+	            string res = EvalSubL(String.Format("(generate-phrase {0})", text), null);
+                if ( String.IsNullOrEmpty(res)) return text;
+                return res;
             }
             catch (System.Exception ex)
             {
@@ -1514,11 +1523,10 @@ The AIMLbot program.
 
         internal Unifiable Cyclify(string mt)
         {
+            if (mt == "NIL") return "NIL";
             mt = mt.Trim();
-            if (mt.Length == 0) return mt;
+            if (mt.Length < 3) return mt;
             if (System.Char.IsLetter(mt.ToCharArray()[0])) return "#$" + mt;
-            return mt;
-
             if (System.Char.IsDigit(mt.ToCharArray()[0])) return mt;
             if (mt.StartsWith("(") || mt.StartsWith("#$")) return mt;
             return "#$" + mt;
