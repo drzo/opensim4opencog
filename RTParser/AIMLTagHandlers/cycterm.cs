@@ -30,7 +30,10 @@ namespace RTParser.AIMLTagHandlers
             //isRecursive = false;
         }
 
-
+        public override Unifiable CompleteProcess()
+        {
+            return ProcessChange();
+        }
         protected override Unifiable ProcessChange()
         {
             if (this.templateNode.Name.ToLower() == "cycterm")
@@ -50,16 +53,15 @@ namespace RTParser.AIMLTagHandlers
         private bool lookup(Unifiable textIn,Unifiable filter,out Unifiable term)
         {
             string text = textIn.ToValue();
-
+            if (text.Length < 2)
+            {
+                term = text;
+                return false;
+            }
             if (!Proc.CycEnabled)
             {
                 term = String.Format("\"{0}\"", text);
                 return true;
-            }
-            if (text.Length<2)
-            {
-                term = text;
-                return false;
             }
             filter = Proc.Cyclify(filter);
             Unifiable ptext = textIn.ToPropper();

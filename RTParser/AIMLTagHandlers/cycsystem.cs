@@ -25,6 +25,10 @@ namespace RTParser.AIMLTagHandlers
             : base(bot, user, query, request, result, templateNode)
         {
         }
+        public override Unifiable CompleteProcess()
+        {
+            return ProcessChange();
+        }
 
         protected override Unifiable ProcessChange()
         {

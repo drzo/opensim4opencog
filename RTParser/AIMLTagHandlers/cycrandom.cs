@@ -31,6 +31,10 @@ namespace RTParser.AIMLTagHandlers
         {
           //  this.isRecursive = false;
         }
+        public override Unifiable CompleteProcess()
+        {
+            return ProcessChange();
+        }
 
         protected override Unifiable ProcessChange()
         {
