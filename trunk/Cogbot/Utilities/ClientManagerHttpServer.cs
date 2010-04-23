@@ -103,6 +103,7 @@ namespace cogbot.Utilities
                 {
                     value = (string)_botClient.PosterBoard[slot];
                     _botClient.PosterBoard.Remove(slot); // consume the data from the queue
+                    if (value.Length > 0) { Console.WriteLine(" board response: {0} = {1}", slot, value); }
                 }
                 AddToBody(response, "<xml>");
                 AddToBody(response, "<slot>");
@@ -114,7 +115,7 @@ namespace cogbot.Utilities
                 wrresp.response = null;
                 response.Status = HttpStatusCode.OK;
                 response.Send();
-
+                return;
             }
 
             bool useHtml = false;
@@ -173,6 +174,25 @@ namespace cogbot.Utilities
                     string username = GetVariable(request, "username", GetVariable(request, "ident", null));
                     string saytext = GetVariable(request, "saytext", "missed the post");
                     string text = GetVariable(request, "text", GetVariable(request, "entry", pathd.TrimStart('/')));
+                    if (text.Contains("<sapi>"))
+                    {
+                        // example fragment
+                        // <sapi> <silence msec="100" /> <bookmark mark="anim:hello.csv"/> Hi there </sapi>
+                        text = text.Replace("<sapi>", "");
+                        text = text.Replace("</sapi>", "");
+                        while (text.Contains("<"))
+                        {
+                            int p1 = text.IndexOf("<");
+                            int p2 = text.IndexOf(">",p1);
+                            if (p2>p1) 
+                            {
+                                string fragment = text.Substring(p1, (p2+1) - p1);
+                                text = text.Replace(fragment, " ");
+                            }
+                        }
+
+                    }
+
                     if (String.IsNullOrEmpty(username))
                     {
                         //res = _botClient.ExecuteCommand(cmd + " " + text, wrresp.WriteLine);
