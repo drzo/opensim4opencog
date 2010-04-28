@@ -23,23 +23,10 @@ namespace cogbot.Actions
 
             if (args.str.Length > 0)
             {
-                if (text.Contains("<sapi>"))
+                if (text.StartsWith("<") && text.EndsWith(">"))
                 {
-                    // example fragment
-                    // <sapi> <silence msec="100" /> <bookmark mark="anim:hello.csv"/> Hi there </sapi>
-                    text = text.Replace("<sapi>", "");
-                    text = text.Replace("</sapi>", "");
-                    while (text.Contains("<"))
-                    {
-                        int p1 = text.IndexOf("<");
-                        int p2 = text.IndexOf(">", p1);
-                        if (p2 > p1)
-                        {
-                            string fragment = text.Substring(p1, (p2 + 1) - p1);
-                            text = text.Replace(fragment, " ");
-                        }
-                    }
-
+                    TheBotClient.XmlTalk(text, WriteLine);
+                    return Success("xmlsaid: " + text);
                 }
                 TheBotClient.Talk(text);
             }
