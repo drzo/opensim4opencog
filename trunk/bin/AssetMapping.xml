@@ -1,0 +1,8 @@
+<xml>
+   <alias from="fooyes.csv" to="yes" type="Animation"/>
+   <alias to="yes" type="Animation">
+       <from>yes1.csv</from>
+       <from>yes2.csv</from>
+   </alias>
+
+</xml>

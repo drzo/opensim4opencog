@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading;
+using System.Xml;
 using cogbot.Listeners;
 using cogbot.Utilities;
 using OpenMetaverse;
@@ -1078,7 +1079,10 @@ namespace cogbot.TheOpenSims
                         }
                     }
                 }
-
+                if (File.Exists("AssetMapping.xml"))
+                {
+                    LoadAssetFile("AssetMapping.xml");
+                }
                 SimAnimation.ClassifyAnims();
 #if SPAMMY_DEBUG
                 //lock (SimAssets) 
@@ -1090,6 +1094,61 @@ namespace cogbot.TheOpenSims
             }
             
         }
+
+        public static void LoadAssetFile(string s)
+        {
+            try
+            {
+                XmlDocument doc = new XmlDocument();
+                doc.Load(s);
+                foreach (XmlNode node in doc.DocumentElement.ChildNodes)
+                {
+                    string nodename = node.Name.ToLower();
+                    if (nodename == "alias")
+                    {
+                        string type = GetAttribValue(node, "type", String.Empty);
+                        string to = GetAttribValue(node, "to", String.Empty);
+                        string from = GetAttribValue(node, "from", String.Empty);
+                        AssetType atype = AssetType.Unknown;
+                        try
+                        {
+                            atype = (AssetType) Enum.Parse(typeof (AssetType), type);
+                        }
+                        catch (Exception)
+                        {
+                        }
+                        if (!String.IsNullOrEmpty(from))
+                        {
+                            AddAssetAlias(from, to, atype);
+                        }
+                        else
+                        {
+                           foreach (XmlNode fnode in node.ChildNodes)
+                           {
+                               AddAssetAlias(fnode.InnerText, to, atype);                               
+                           } 
+                        }
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine("" + exception);
+            }
+
+        }
+
+        static string GetAttribValue(XmlNode templateNode, string attribName, string defaultIfEmpty)
+        {
+            attribName = attribName.ToLower();
+            foreach (XmlAttribute attrib in templateNode.Attributes)
+            {
+                if (attrib.Name.ToLower() == attribName) return attrib.Value;
+            }
+            return defaultIfEmpty;
+        }
+
+
 
         public static void WriteLine(string s, params object[] args)
         {
@@ -1214,9 +1273,14 @@ namespace cogbot.TheOpenSims
             return false;
         }
 
-        static void AddAssetAlias(string name, string file)
+        static void AddAssetAlias(string from, string to)
         {
-            UUID prev  = TheStore.GetAssetUUID(name, AssetType.Unknown);
+            AddAssetAlias(from, to, AssetType.Unknown);
+        }
+
+        static void AddAssetAlias(string name, string file, AssetType type)
+        {
+            UUID prev = TheStore.GetAssetUUID(name, type);
             if (prev != UUID.Zero)
             {
                 SimAsset A = FindAsset(prev);
@@ -1470,6 +1534,15 @@ namespace cogbot.TheOpenSims
         public void Dispose()
         {
            taskQueue.Dispose();
+        }
+
+        public SimAsset GetAnimationOrGesture(string animate)
+        {
+            UUID uuid = GetAssetUUID(animate, AssetType.Animation);
+            if (uuid != UUID.Zero) return FindAsset(uuid);
+            uuid = GetAssetUUID(animate, AssetType.Gesture);
+            if (uuid != UUID.Zero) return FindAsset(uuid);
+            return null;
         }
     }
 
