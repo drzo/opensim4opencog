@@ -11,6 +11,7 @@ using cogbot.Actions.Scripting;
 using cogbot.Actions.System;
 using cogbot.Actions.WebUtil;
 using cogbot.Utilities;
+using com.sun.org.apache.xalan.@internal.xsltc.compiler.util;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using OpenMetaverse.Utilities;
@@ -27,6 +28,8 @@ using System.Drawing;
 using Settings=OpenMetaverse.Settings;
 using cogbot.Actions.Agent;
 using System.Text;
+using Type=System.Type;
+
 //using RadegastTab = Radegast.SleekTab;
 
 // older LibOMV
@@ -35,7 +38,7 @@ using System.Text;
 
 namespace cogbot
 {
-    public class BotClient: SimEventSubscriber,IDisposable
+    public class BotClient : SimEventSubscriber, IDisposable
     {
 
         public static implicit operator GridClient(BotClient m)
@@ -101,7 +104,7 @@ namespace cogbot
         public void Login()
         {
             if (ExpectConnected) return;
-            if (Network.CurrentSim!=null)
+            if (Network.CurrentSim != null)
             {
                 if (Network.CurrentSim.Connected) return;
             }
@@ -146,7 +149,7 @@ namespace cogbot
                     MasterName = WorldSystem.GetUserName(_masterKey);
                 }
                 return _masterName;
-            } 
+            }
             set
             {
                 if (!string.IsNullOrEmpty(value))
@@ -168,7 +171,7 @@ namespace cogbot
         }
 
         // permissions "NextOwner" means banned "Wait until they are an owner before doing anything!"
-        public Dictionary<UUID, BotPermissions> SecurityLevels = new Dictionary<UUID,BotPermissions>();
+        public Dictionary<UUID, BotPermissions> SecurityLevels = new Dictionary<UUID, BotPermissions>();
 
         private UUID _masterKey = UUID.Zero;
         public UUID MasterKey
@@ -261,7 +264,7 @@ namespace cogbot
         //public InventoryManager Manager;
         // public Configuration config;
         public String taskInterperterType = "DotLispInterpreter";// DotLispInterpreter,CycInterpreter or ABCLInterpreter
-        ScriptEventListener scriptEventListener = null;        
+        ScriptEventListener scriptEventListener = null;
         readonly public ClientManager ClientManager;
 
         public List<string> muteList;
@@ -274,7 +277,7 @@ namespace cogbot
         /// <summary>
         /// 
         /// </summary>
-        public BotClient(ClientManager manager, GridClient g, LoginParams lp )
+        public BotClient(ClientManager manager, GridClient g, LoginParams lp)
         {
             ClientManager = manager;
             XmlInterp.BotClient = this;
@@ -456,8 +459,8 @@ namespace cogbot
                     //WriteLine("Start Loading TaskInterperter ... '" + TaskInterperterType + "' \n");
                     LispTaskInterperter = ScriptManager.LoadScriptInterpreter(taskInterperterType, this);
                     LispTaskInterperter.LoadFile("boot.lisp", WriteLine);
-                    LispTaskInterperter.LoadFile("extra.lisp",WriteLine);
-                    LispTaskInterperter.LoadFile("cogbot.lisp",WriteLine);
+                    LispTaskInterperter.LoadFile("extra.lisp", WriteLine);
+                    LispTaskInterperter.LoadFile("cogbot.lisp", WriteLine);
                     LispTaskInterperter.Intern("clientManager", ClientManager);
                     scriptEventListener = new ScriptEventListener(LispTaskInterperter, this);
                     botPipeline.AddSubscriber(scriptEventListener);
@@ -489,7 +492,7 @@ namespace cogbot
                 }
             }
         }
-   
+
         //breaks up large responses to deal with the max IM size
         private void SendResponseIM(GridClient client, UUID fromAgentID, OutputDelegate WriteLine, string data)
         {
@@ -514,7 +517,7 @@ namespace cogbot
             List<Command> actions = new List<Command>();
             lock (Commands)
             {
-                actions.AddRange(Commands.Values);   
+                actions.AddRange(Commands.Values);
             }
             foreach (var c in actions)
                 if (c.Active)
@@ -528,7 +531,7 @@ namespace cogbot
             AgentDataUpdatePacket p = (AgentDataUpdatePacket)packet;
             if (p.AgentData.AgentID == sim.Client.Self.AgentID)
             {
-              //TODO MAKE DEBUG MESSAGE  WriteLine(String.Format("Got the group ID for {0}, requesting group members...", sim.Client));
+                //TODO MAKE DEBUG MESSAGE  WriteLine(String.Format("Got the group ID for {0}, requesting group members...", sim.Client));
                 GroupID = p.AgentData.ActiveGroupID;
 
                 sim.Client.Groups.RequestGroupMembers(GroupID);
@@ -560,8 +563,8 @@ namespace cogbot
 
         public void ReloadGroupsCache()
         {
-   //         GroupManager.CurrentGroupsCallback callback =
-     //               new GroupManager.CurrentGroupsCallback(Groups_OnCurrentGroups);
+            //         GroupManager.CurrentGroupsCallback callback =
+            //               new GroupManager.CurrentGroupsCallback(Groups_OnCurrentGroups);
             var callback = new EventHandler<CurrentGroupsEventArgs>(Groups_OnCurrentGroups);
             Groups.CurrentGroups += callback;
             Groups.RequestCurrentGroups();
@@ -622,7 +625,7 @@ namespace cogbot
             if (message.Length > 0 && sourceType == ChatSourceType.Agent && !muteList.Contains(fromName))
             {
                 WriteLine(String.Format("{0} says, \"{1}\".", fromName, message));
-                PosterBoard["/posterboard/onchat"]=message;
+                PosterBoard["/posterboard/onchat"] = message;
                 if (fromName == Self.Name)
                 {
                     PosterBoard["/posterboard/onchat-said"] = message;
@@ -685,7 +688,7 @@ namespace cogbot
                     if (im.RegionID != UUID.Zero)
                     {
                         DisplayNotificationInChat("TP to Lure from " + im.FromAgentName);
-                        SimRegion R = SimRegion.GetRegion(im.RegionID,gridClient);
+                        SimRegion R = SimRegion.GetRegion(im.RegionID, gridClient);
                         if (R != null)
                         {
                             Self.Teleport(R.RegionHandle, im.Position);
@@ -706,7 +709,7 @@ namespace cogbot
                     //   ClientManager.DoCommandAll(im.Message, im.FromAgentID, WriteLine);
                 }
                 return;
-            }            
+            }
             {
                 // Received an IM from someone that is not the bot's master, ignore
                 DisplayNotificationInChat(String.Format("UNTRUSTED <{0} ({1})> {2} (not master): {3} (@{4}:{5})", im.GroupIM ? "GroupIM" : "IM",
@@ -721,7 +724,7 @@ namespace cogbot
             Invoke(() =>
                        {
                            WriteLine(str);
-                           ChatConsole cc = (ChatConsole) TheRadegastInstance.TabConsole.Tabs["chat"].Control;
+                           ChatConsole cc = (ChatConsole)TheRadegastInstance.TabConsole.Tabs["chat"].Control;
                            var tp = cc.ChatManager.TextPrinter;
                            string s = tp.Content;
                            if (s.Length > 30000)
@@ -841,7 +844,7 @@ namespace cogbot
 
         void client_OnLogMessage(object message, Helpers.LogLevel level)
         {
-           // if (!WorldSystem.IsGridMaster) return;
+            // if (!WorldSystem.IsGridMaster) return;
 
             if (WorldSystem.IsGridMaster) SendNetworkEvent("On-Log-Message", message, level);
         }
@@ -991,7 +994,7 @@ namespace cogbot
         }
 
         public void WriteLine(string str)
-        {          
+        {
             try
             {
                 if (str == null) return;
@@ -1003,7 +1006,7 @@ namespace cogbot
                 if (str.StartsWith(SelfName)) str = str.Substring(SelfName.Length).Trim();
                 ClientManager.WriteLine(str);
             }
-            catch (Exception ex)            
+            catch (Exception ex)
             {
                 Logger.Log(GetName() + " exeption " + ex, Helpers.LogLevel.Error, ex);
             }
@@ -1096,7 +1099,7 @@ namespace cogbot
             WriteLine("$bot sees " + buildings.Count + " buildings.");
         }
 
- 
+
 
         public ScriptInterpreter LispTaskInterperter;
         public readonly object LispTaskInterperterLock = new object();
@@ -1144,11 +1147,12 @@ namespace cogbot
         /// <returns></returns>
         public string XML2Lisp2(string URL, string args)
         {
-            return XmlInterp.XML2Lisp2(URL,args);
+            return XmlInterp.XML2Lisp2(URL, args);
         } // method: XML2Lisp2
 
 
-        public string XML2Lisp(string xcmd) {
+        public string XML2Lisp(string xcmd)
+        {
             return XmlInterp.XML2Lisp(xcmd);
         }
 
@@ -1180,7 +1184,7 @@ namespace cogbot
                 if (lispCode is String)
                 {
                     StringReader stringCodeReader = new StringReader(lispCode.ToString());
-                    lispCode = LispTaskInterperter.Read("evalLispString", stringCodeReader,WriteLine);
+                    lispCode = LispTaskInterperter.Read("evalLispString", stringCodeReader, WriteLine);
                 }
                 WriteLine("Eval> " + lispCode);
                 if (LispTaskInterperter.Eof(lispCode))
@@ -1256,15 +1260,15 @@ namespace cogbot
             {
                 try
                 {
-                    if (t.IsSubclassOf(typeof (WorldObjectsModule)))
+                    if (t.IsSubclassOf(typeof(WorldObjectsModule)))
                     {
-                        ConstructorInfo info = t.GetConstructor(new Type[] {typeof (BotClient)});
+                        ConstructorInfo info = t.GetConstructor(new Type[] { typeof(BotClient) });
                         try
                         {
                             found = true;
                             Invoke(() =>
                                        {
-                                           Listener command = (Listener) info.Invoke(new object[] {this});
+                                           Listener command = (Listener)info.Invoke(new object[] { this });
                                            RegisterListener(command);
                                        });
                         }
@@ -1411,7 +1415,7 @@ namespace cogbot
         public CmdResult ExecuteCommand(string text, OutputDelegate WriteLine)
         {
             CmdResult res = ExecuteBotCommand(text, WriteLine);
-            if (res !=null) return res;
+            if (res != null) return res;
             res = ClientManager.ExecuteSystemCommand(text, WriteLine);
             if (res != null) return res;
             WriteLine("I don't understand the ExecuteCommand " + text + ".");
@@ -1434,7 +1438,7 @@ namespace cogbot
             {
                 if (text.StartsWith("("))
                 {
-                    return new CmdResult(evalLispString(text).ToString(),true);
+                    return new CmdResult(evalLispString(text).ToString(), true);
                 }
                 //            Settings.LOG_LEVEL = Helpers.LogLevel.Debug;
                 //text = text.Replace("\"", "");
@@ -1491,7 +1495,7 @@ namespace cogbot
         public string GetName()
         {
             string n = Self.Name;
-            if (n!=null && !String.IsNullOrEmpty(n.Trim())) return n;
+            if (n != null && !String.IsNullOrEmpty(n.Trim())) return n;
             if (String.IsNullOrEmpty(BotLoginParams.FirstName))
             {
                 throw new NullReferenceException("GEtName");
@@ -1534,7 +1538,7 @@ namespace cogbot
         {
             // listeners[listener.GetModuleName()] = listener;
             Invoke(() => listener.StartupListener());
-            
+
         }
 
         internal void RegisterType(Type t)
@@ -1546,12 +1550,12 @@ namespace cogbot
             {
                 if (t.IsSubclassOf(typeof(Command)))
                 {
-                    if (!typeof (SystemApplicationCommand).IsAssignableFrom(t))
+                    if (!typeof(SystemApplicationCommand).IsAssignableFrom(t))
                     {
-                        ConstructorInfo info = t.GetConstructor(new Type[] {typeof (BotClient)});
+                        ConstructorInfo info = t.GetConstructor(new Type[] { typeof(BotClient) });
                         try
                         {
-                            Command command = (Command) info.Invoke(new object[] {this});
+                            Command command = (Command)info.Invoke(new object[] { this });
                             RegisterCommand(command);
                         }
                         catch (Exception e)
@@ -1619,7 +1623,7 @@ namespace cogbot
 
         public List<InventoryItem> GetFolderItems(string target)
         {
-            if (Inventory.Store==null)
+            if (Inventory.Store == null)
             {
                 return null;
             }
@@ -1659,13 +1663,14 @@ namespace cogbot
             to.Version = BotLoginParams.Version;
             to.Channel = BotLoginParams.Channel;
             RadegastTab tab;
-            if (TheRadegastInstance.TabConsole.Tabs.TryGetValue("login",out tab))
+            if (TheRadegastInstance.TabConsole.Tabs.TryGetValue("login", out tab))
             {
                 LoginConsole form = (LoginConsole)tab.Control;
                 if (form.InvokeRequired)
                 {
                     form.Invoke(new MethodInvoker(() => SetRadegastLoginForm(form, to)));
-                } else
+                }
+                else
                 {
                     SetRadegastLoginForm(form, to);
                 }
@@ -1744,24 +1749,25 @@ namespace cogbot
         {
             if (TheRadegastInstance.MainForm.InvokeRequired)
             {
-                TheRadegastInstance.MainForm.Invoke(o); 
-            } else o();
+                TheRadegastInstance.MainForm.Invoke(o);
+            }
+            else o();
         }
 
         public BotPermissions GetSecurityLevel(UUID uuid)
         {
             BotPermissions bp;
-            if (SecurityLevels.TryGetValue(uuid,out bp))
+            if (SecurityLevels.TryGetValue(uuid, out bp))
             {
                 return bp;
             }
             return BotPermissions.Base;
         }
 
-        public CmdResult ExecuteTask(string scripttype, TextReader reader,OutputDelegate WriteLine)
+        public CmdResult ExecuteTask(string scripttype, TextReader reader, OutputDelegate WriteLine)
         {
             var si = ScriptEngines.ScriptManager.LoadScriptInterpreter(scripttype, this);
-            object o = si.Read(scripttype, reader,WriteLine);
+            object o = si.Read(scripttype, reader, WriteLine);
             if (o is CmdResult) return (CmdResult)o;
             if (o == null) return new CmdResult("void", true);
             if (si.Eof(o)) return new CmdResult("EOF " + o, true);
@@ -1772,7 +1778,7 @@ namespace cogbot
         {
             return Encoding.UTF8.GetString((new System.Net.WebClient()).DownloadData(url)); ;
         }
-        
+
         public string DoHttpPost(Object[] args)
         {
             NameValueCollection dict = new NameValueCollection();
@@ -1788,9 +1794,117 @@ namespace cogbot
         {
             return XmlInterp.ExecuteXmlCommand(cmd, line);
         }
-    }
 
-    /// <summary>
+        /// <summary>
+        /// Example text: <sapi> <silence msec="100" /> <bookmark mark="anim:hello.csv"/> Hi there </sapi>
+        /// </summary>
+        /// <param name="text"></param>
+        /// <param name="gate"></param>
+        public void XmlTalk(string text, OutputDelegate gate)
+        {
+            if (true)
+            {
+              //  SendCleanText(text);
+               // return;
+            }
+            try
+            {
+                
+                if (!text.Trim().StartsWith("<sapi"))
+                {
+                    text = "<sapi>" + text + "</sapi>";
+                    //  Talk(text);
+                    //  return;
+                }
+                // var sr = new StringReader("<xml>" + text + "</xml>");
+                String toSay = "";
+                String toAnimate = "";
+                // var reader = new XmlTextReader(sr);
+                //while (reader.Read())
+                {
+                    var doc = new XmlDocument();
+                    doc.Load(new XmlTextReader(new StringReader(text)));
+                    //reader.MoveToElement();
+                    foreach (var n in doc.DocumentElement.ChildNodes)
+                    {
+                        XmlNode node = (XmlNode) n;
+                        if (node == null) continue;
+                        string lname = node.Name.ToLower();
+
+                        //XmlNode node = null;
+                        if (lname == "sapi")
+                        {
+                            XmlTalk(node.InnerXml, gate);
+                            continue;
+                        }
+                        if (lname == "silence")
+                        {
+                            double sleepms = Double.Parse(node.Attributes["msec"].Value);
+                            // todo
+                            continue;
+                        }
+                        if (lname == "bookmark")
+                        {
+                            toSay = toSay.Trim();
+                            if (!String.IsNullOrEmpty(toSay))
+                                Talk(toSay);
+                            toSay = String.Empty;
+                            toAnimate = node.Attributes["mark"].Value;
+                            DoAnimation(toAnimate);
+                            
+                            continue;
+                        }
+                        if (node.NodeType == XmlNodeType.Text)
+                        {
+                            toSay += " " + node.InnerText;
+                            continue;
+                        }
+                        toSay += " <parseme>" + node.OuterXml + "</parseme>";
+                    }
+                }
+                toSay = toSay.Trim();
+                if (!String.IsNullOrEmpty(toSay))
+                    Talk(toSay);
+                return;
+            }
+            catch (Exception e)
+            {
+                // example fragment
+                // <sapi> <silence msec="100" /> <bookmark mark="anim:hello.csv"/> Hi there </sapi>
+                SendCleanText(text);
+            }
+        }
+
+        private void DoAnimation(string animate)
+        {
+            SimAsset asset = SimAssetStore.TheStore.GetAnimationOrGesture(animate);
+            SimAvatarImpl av = WorldSystem.TheSimAvatar as SimAvatarImpl;
+            if (av!=null)
+            {
+                av.WithAnim(asset, () => Thread.Sleep(2000));
+            }       
+        }
+
+        private void SendCleanText(string text)
+        {
+            text = text.Replace("<sapi>", "");
+            text = text.Replace("</sapi>", "");
+            while (text.Contains("<"))
+            {
+                int p1 = text.IndexOf("<");
+                int p2 = text.IndexOf(">", p1);
+                if (p2 > p1)
+                {
+                    string fragment = text.Substring(p1, (p2 + 1) - p1);
+                    text = text.Replace(fragment, " ");
+                }
+            }
+            text = text.Trim();
+            if (!String.IsNullOrEmpty(text))
+                Talk(text);
+        }
+    }
+        /// <summary>
     ///  
     /// </summary>
     [Flags]
