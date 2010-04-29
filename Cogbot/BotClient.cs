@@ -1877,12 +1877,25 @@ namespace cogbot
 
         private void DoAnimation(string animate)
         {
-            SimAsset asset = SimAssetStore.TheStore.GetAnimationOrGesture(animate);
             SimAvatarImpl av = WorldSystem.TheSimAvatar as SimAvatarImpl;
-            if (av!=null)
+            if (av != null)
             {
-                av.WithAnim(asset, () => Thread.Sleep(2000));
+                SimAsset asset = GetAnimationOrGesture(animate);
+                if (asset != null) av.WithAnim(asset, () => Thread.Sleep(2000));
             }       
+        }
+
+        private SimAsset GetAnimationOrGesture(string animate)
+        {
+            SimAsset asset = SimAssetStore.TheStore.GetAnimationOrGesture(animate);
+            if (asset == null)
+            {
+                WriteLine(";; DEBUG no anim: " + animate);
+            } else
+            {
+                WriteLine(";; DEBUG SUCCESS anim: " + asset);
+            }
+            return asset;
         }
 
         private void SendCleanText(string text)
