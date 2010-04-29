@@ -33,6 +33,7 @@ namespace cogbot.TheOpenSims
         {
             try
             {
+                ClientSelf.AnimationStop(AssetID, true);
                 ClientSelf.AnimationStart(AssetID, true);
                 while (NeedsLooping)
                 {

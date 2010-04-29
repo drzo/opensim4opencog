@@ -1116,6 +1116,13 @@ namespace cogbot.TheOpenSims
                         }
                         catch (Exception)
                         {
+                            try
+                            {
+                                atype = (AssetType)Enum.Parse(typeof(AssetType),type.Substring(0,1).ToUpper()+type.Substring(1).ToLower());
+                            }
+                            catch (Exception)
+                            {
+                            }
                         }
                         if (!String.IsNullOrEmpty(from))
                         {
@@ -1538,7 +1545,9 @@ namespace cogbot.TheOpenSims
 
         public SimAsset GetAnimationOrGesture(string animate)
         {
+            if (animate.StartsWith("anim:")) animate = animate.Substring(5);
             UUID uuid = GetAssetUUID(animate, AssetType.Animation);
+            if (uuid == UUID.Zero) uuid =  GetAssetUUID(animate+".csv", AssetType.Animation);
             if (uuid != UUID.Zero) return FindAsset(uuid);
             uuid = GetAssetUUID(animate, AssetType.Gesture);
             if (uuid != UUID.Zero) return FindAsset(uuid);
