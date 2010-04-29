@@ -555,7 +555,10 @@ namespace cogbot
                                                            bc = new BotClient(this, gridClient, BotLoginParams);
                                                            bc.TheRadegastInstance = inst;
                                                        }
-                              
+                                                       if (clientManagerHttpServer == null)
+                                                       {
+                                                           clientManagerHttpServer = new ClientManagerHttpServer(bc, 5580);
+                                                       }
                                                        if (bc.TheRadegastInstance.MainForm.IsHandleCreated)
                                                        {
                                                            //bc.TheRadegastInstance.MainForm.Visible = false;
