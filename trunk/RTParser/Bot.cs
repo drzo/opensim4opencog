@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text.RegularExpressions;
@@ -303,12 +304,19 @@ namespace RTParser
         public RTParser.Utils.Node Graphmaster;
 
         /// <summary>
-        /// The Markovian "brain" of the Proccessor
+        /// The Markovian "brain" of the Proccessor for generation
         /// </summary>
         public MBrain MBrain { get { return mbrain; } }
         MBrain mbrain = new MBrain();
         public MBrain STM_Brain { get { return stm_brain; } }
         MBrain stm_brain = new MBrain();
+
+        /// <summary>
+        /// Proccessor for phonetic HMM
+        /// </summary>
+        // emission and transition stored as double hash tables
+        public PhoneticHmm pHMM { get { return phoneHMM; } }
+        PhoneticHmm phoneHMM = new PhoneticHmm();
 
         /// <summary>
         /// If set to false the input from AIML files will undergo the same normalization process that
@@ -435,6 +443,22 @@ namespace RTParser
                     Console.WriteLine(" **** WARNING: No Markovian Brain Training nor N-Gram file found for '{0}' . **** ", name);
                 }
             }
+            
+            if (pHMM.hmmCorpusLoaded == 0)
+            {
+                string file = Path.Combine("bgm", "corpus.txt");
+                //if (Directory.Exists(file))
+                if (File.Exists(file))
+                {
+                    Console.WriteLine("Load Corpus Bigrams: '{0}'", file);
+                    StreamReader sr = new StreamReader(file);
+                    pHMM.LearnBigramFile(sr);
+                    sr.Close();
+                    pHMM.hmmCorpusLoaded++;
+                    Console.WriteLine("Loaded Corpus Bigrams: '{0}'", file);
+                }
+            }
+            
     }
 
         /// <summary>
@@ -1122,6 +1146,9 @@ namespace RTParser
                         break;
                     case "markov":
                         tagHandler = new AIMLTagHandlers.markov(this, user, query, request, result, node);
+                        break;
+                    case "soundcode":
+                        tagHandler = new AIMLTagHandlers.soundcode(this, user, query, request, result, node);
                         break;
 
                     default:
