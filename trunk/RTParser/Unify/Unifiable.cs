@@ -84,6 +84,16 @@ namespace RTParser
             return !IsFalse(v);
         }
 
+        static public bool IsLogicTF(Unifiable v)
+        {
+            if (IsFalse(v)) return false;
+            String value = v.ToValue().ToLower();
+            if (value.Length == 0) return false;
+            char c = value[0];
+            if (c == 'n' || c == 'f') return false;
+            return true;           
+        }
+
 
         public static Unifiable Join(string p, Unifiable[] fsp, int p_3, int p_4)
         {
