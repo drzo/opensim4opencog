@@ -657,7 +657,7 @@ namespace AIMLBotModule
                 string sting = ting.Trim();
                 if (UseRealism)
                     Chat(client, sting, type, 6);
-                else client.Self.Chat(sting, 0, type);
+                else client.Talk(sting, 0, type);
                 UseRealism = false;
             }
         }
@@ -804,7 +804,7 @@ namespace AIMLBotModule
         /// <param name="message">The chat message to send</param>
         /// <param name="type">The chat type (usually Normal, Whisper or Shout)</param>
         /// <param name="cps">Characters per second rate for chatting</param>
-        public static void Chat(GridClient client, string message, ChatType type, int cps)
+        public static void Chat(BotClient client, string message, ChatType type, int cps)
         {
             Random rand = new Random();
             int characters = 0;
@@ -847,7 +847,7 @@ namespace AIMLBotModule
                 }
 
                 // Send the message
-                client.Self.Chat(message, 0, type);
+                client.Talk(message, 0, type);
             }
             finally
             {

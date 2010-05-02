@@ -1518,8 +1518,13 @@ namespace cogbot
         }
 
 
-        public void Talk(string str)
+        public void TalkExact(string str)
         {
+            if(!TalkingAllowed)
+            {
+                Console.WriteLine("!!NOTE!! skipping saying " + str);
+                return;
+            }
             Self.Chat(str, 0, ChatType.Normal);
         }
 
@@ -1847,7 +1852,7 @@ namespace cogbot
                         {
                             toSay = toSay.Trim();
                             if (!String.IsNullOrEmpty(toSay))
-                                Talk(toSay);
+                                TalkExact(toSay);
                             toSay = String.Empty;
                             toAnimate = node.Attributes["mark"].Value;
                             DoAnimation(toAnimate);
@@ -1864,14 +1869,14 @@ namespace cogbot
                 }
                 toSay = toSay.Trim();
                 if (!String.IsNullOrEmpty(toSay))
-                    Talk(toSay);
+                    TalkExact(toSay);
                 return;
             }
             catch (Exception e)
             {
                 // example fragment
                 // <sapi> <silence msec="100" /> <bookmark mark="anim:hello.csv"/> Hi there </sapi>
-                SendCleanText(text);
+                Talk(text);
             }
         }
 
@@ -1898,10 +1903,34 @@ namespace cogbot
             return asset;
         }
 
-        private void SendCleanText(string text)
+        bool TalkingAllowed = true;
+        public void Talk(string text)
+        {
+            Talk(text, 0, ChatType.Normal);
+        }
+        public void Talk(string text, int channel, ChatType type)
         {
             text = text.Replace("<sapi>", "");
             text = text.Replace("</sapi>", "");
+            text = text.Trim();
+
+            int len = text.IndexOf("<");
+            if (len>0)
+            {
+                TalkExact(text.Substring(0, len));
+                text = text.Substring(len);
+                Talk(text, channel, type);
+                return;                
+            } else if (len==0)
+            {
+                int p2 = text.IndexOf(">") + 1;
+                if (p2 > 0 && p2<text.Length)
+                {
+                    Talk(text.Substring(0, p2), channel, type);
+                    Talk(text.Substring(p2), channel, type);
+                    return;
+                }
+            }
             while (text.Contains("<"))
             {
                 int p1 = text.IndexOf("<");
@@ -1909,12 +1938,19 @@ namespace cogbot
                 if (p2 > p1)
                 {
                     string fragment = text.Substring(p1, (p2 + 1) - p1);
+                    if (fragment.Contains("Begin Meta"))
+                    {
+                        TalkingAllowed = false;
+                    } else if (fragment.Contains("End Meta"))
+                    {
+                        TalkingAllowed = true;
+                    }
                     text = text.Replace(fragment, " ");
                 }
             }
             text = text.Trim();
             if (!String.IsNullOrEmpty(text))
-                Talk(text);
+                TalkExact(text);
         }
     }
         /// <summary>
