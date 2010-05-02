@@ -2,6 +2,7 @@ using System;
 using System.Xml;
 using System.Text;
 using System.IO;
+using RTParser.Utils;
 
 namespace RTParser.AIMLTagHandlers
 {
@@ -35,6 +36,9 @@ namespace RTParser.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "learn")
             {
+                LoaderOptions opts = new LoaderOptions();
+
+                opts.recurse = Unifiable.IsLogicTF(GetAttribValue("recurse", Unifiable.Empty));
                 //recurse here?
                 Unifiable templateNodeInnerText = Recurse();
                 if (!templateNodeInnerText.IsEmpty)
@@ -42,14 +46,13 @@ namespace RTParser.AIMLTagHandlers
                     Unifiable path = templateNodeInnerText;
                     try
                     {
-                        Proc.loadAIMLFromURI(path, request);
+                        Proc.loadAIMLFromURI(path, opts, request);
                     }
                     catch (Exception e2)
                     {
                         String s =
-                            "ERROR! Attempted (but failed) to <learn> some new AIML from the following URI: " + path +
-                            " error " + e2;
-                        this.Proc.writeToLog(s);                   
+                            "ERROR! Attempted (but failed) to <learn> some new AIML from the following URI: " + path + " error " + e2;
+                        this.Proc.writeToLog(s);
                     }
 
                 }
