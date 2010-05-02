@@ -374,9 +374,19 @@ namespace RTParser
         /// </summary>
         public void loadAIMLFromURI(string path, Request request)
         {
+            loadAIMLFromURI(path, LoaderOptions.DEFAULT, request);
+        }
+
+
+        /// <summary>
+        /// Loads AIML from .aiml files into the graphmaster "brain" of the Proccessor
+        /// </summary>
+        public void loadAIMLFromURI(string path, LoaderOptions options, Request request)
+        {
+            options.request = request;
             AIMLLoader loader = new AIMLLoader(this, request);
             Loader = loader;
-            loader.loadAIML(path, request);
+            loader.loadAIML(path, options, request);
             // maybe loads settings files if they are there
             string settings = Path.Combine(path, "Settings.xml");
             if (File.Exists(settings)) loadSettings(settings);
@@ -387,7 +397,7 @@ namespace RTParser
         /// </summary>
         /// <param name="newAIML">The XML document containing the AIML</param>
         /// <param name="filename">The originator of the XML document</param>
-        public void loadAIMLFromXML(XmlDocument newAIML, Unifiable filename, Request r)
+        public void loadAIMLFromXML(XmlDocument newAIML, String filename, Request r)
         {
             AIMLLoader loader = new AIMLLoader(this, r);
             loader.loadAIMLFromXML(newAIML, filename, r);

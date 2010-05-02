@@ -40,23 +40,24 @@ namespace RTParser.Utils
         /// </summary>
         public void loadAIML(Request request)
         {
-            this.loadAIML(this.RProcessor.PathToAIML, request);
+            this.loadAIML(this.RProcessor.PathToAIML, LoaderOptions.DEFAULT, request);
         }
 
         /// <summary>
         /// Loads the AIML from files found in the path
         /// </summary>
         /// <param name="path"></param>
-        public void loadAIML(string path, Request request)
+        public void loadAIML(string path, LoaderOptions options, Request request)
         {
-            RProcessor.ReloadHooks.Add(() => loadAIML(path, request));
+            RProcessor.ReloadHooks.Add(() => loadAIML(path, options, request));
             if (Directory.Exists(path))
             {
                 // process the AIML
-                loadAIMLDir(path, request);
-            } else if (File.Exists(path))
+                loadAIMLDir(path, options, request);
+            }
+            else if (File.Exists(path))
             {
-                this.loadAIMLFile(path, request); 
+                this.loadAIMLFile(path, options, request);
             }
             else
             {
@@ -66,7 +67,7 @@ namespace RTParser.Utils
 
         }
 
-        private void loadAIMLDir(string path, Request request)
+        private void loadAIMLDir(string path, LoaderOptions options, Request request)
         {
             this.RProcessor.writeToLog("Starting to process AIML files found in the directory " + path);
 
@@ -77,8 +78,9 @@ namespace RTParser.Utils
                 {
                     try
                     {
-                        this.loadAIMLFile(filename, request);
-                    } catch(Exception ee)
+                        this.loadAIMLFile(filename, options, request);
+                    }
+                    catch (Exception ee)
                     {
                         Console.WriteLine("" + ee);
                         RProcessor.writeToLog("Error in loadAIMLFile " + ee);
@@ -90,6 +92,15 @@ namespace RTParser.Utils
             {
                 this.RProcessor.writeToLog("Could not find any .aiml files in the specified directory (" + path + "). Please make sure that your aiml file end in a lowercase aiml extension, for example - myFile.aiml is valid but myFile.AIML is not.");
             }
+
+            if (options.recurse)
+            {
+                foreach (string filename in Directory.GetDirectories(path))
+                {
+                    loadAIMLDir(path + Path.DirectorySeparatorChar + filename, options, request);
+                }
+            }
+
         }
 
         private void loadAIMLURI(string path, Request request)
@@ -123,17 +134,17 @@ namespace RTParser.Utils
         /// graphmaster
         /// </summary>
         /// <param name="filename">The name of the file to process</param>
-        public void loadAIMLFile(string filename, Request request)
+        public void loadAIMLFile(string filename, LoaderOptions opt, Request request)
         {
             this.RProcessor.writeToLog("Processing AIML file: " + filename);
-            
+
             // load the document
             XmlDocument doc = new XmlDocument();
             try
             {
                 if (Directory.Exists(filename))
                 {
-                    loadAIMLDir(filename, request);
+                    if (opt.recurse) loadAIMLDir(filename, opt, request);
                     return;
                 }
                 doc.Load(filename);
@@ -147,11 +158,12 @@ namespace RTParser.Utils
                 this.RProcessor.writeToLog("Error in AIML file: " + filename + " Message " + e.Message);
                 try
                 {
-                    if (doc.DocumentElement==null) return;
+                    if (doc.DocumentElement == null) return;
                     this.loadAIMLFromXML(doc, filename, request);
-                }   catch (Exception e2)
+                }
+                catch (Exception e2)
                 {
-                    this.RProcessor.writeToLog("which causes loadAIMLFromXML: " + filename + "\n  " + e.Message + "\n" + e.StackTrace);                    
+                    this.RProcessor.writeToLog("which causes loadAIMLFromXML: " + filename + "\n  " + e.Message + "\n" + e.StackTrace);
                 }
                 //return;
             }
@@ -214,12 +226,14 @@ namespace RTParser.Utils
                     try
                     {
                         RProcessor.ImmediateAiml(currentNode, request, this);
-                    } catch(Exception e)
+                    }
+                    catch (Exception e)
                     {
                         RProcessor.writeToLog("ImmediateAiml: " + e);
                     }
                 }
-            } finally
+            }
+            finally
             {
                 RProcessor.Loader = prev;
             }
@@ -234,8 +248,8 @@ namespace RTParser.Utils
         public void processTopic(XmlNode node, string filename)
         {
             // find the name of the topic or set to default "*"
-            Unifiable topicName="*";
-            if((node.Attributes.Count==1)&(node.Attributes[0].Name=="name"))
+            Unifiable topicName = "*";
+            if ((node.Attributes.Count == 1) & (node.Attributes[0].Name == "name"))
             {
                 topicName = node.Attributes["name"].Value;
             }
@@ -268,7 +282,7 @@ namespace RTParser.Utils
         /// <param name="filename">the file from which this category was taken</param>
         private void processCategoryWithTopic(XmlNode node, Unifiable topicName, string filename)
         {
-            Dictionary<string,List<XmlNode>> store = GetTopicStore();
+            Dictionary<string, List<XmlNode>> store = GetTopicStore();
             // reference and check the required nodes
             List<XmlNode> patterns = this.FindNodes("pattern", node);
             foreach (XmlNode pattern in patterns)
@@ -352,7 +366,7 @@ namespace RTParser.Utils
         /// <returns>The node (or null)</returns>
         private XmlNode FindNode(string name, XmlNode node)
         {
-            foreach(XmlNode child in node.ChildNodes)
+            foreach (XmlNode child in node.ChildNodes)
             {
                 if (child.Name == name)
                 {
@@ -503,8 +517,15 @@ namespace RTParser.Utils
                 result.Append(normalizedWord.Trim() + " ");
             }
 
-            return result.ToString().Replace("  "," "); // make sure the whitespace is neat
+            return result.ToString().Replace("  ", " "); // make sure the whitespace is neat
         }
         #endregion
+    }
+
+    public class LoaderOptions
+    {
+        public bool recurse;
+        public static LoaderOptions DEFAULT = new LoaderOptions();
+        public Request request;
     }
 }
