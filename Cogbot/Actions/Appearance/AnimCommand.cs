@@ -36,12 +36,6 @@ namespace cogbot.Actions.Appearance
                 WriteLine("Currently: {0}", alist);
                 return ShowUsage();// " anim [seconds] HOVER [seconds] 23423423423-4234234234-234234234-23423423  +CLAP -JUMP STAND";
            }
-            if (NOSEARCH_ANIM)
-            {
-                String str = string.Join(" ", args);
-                Console.WriteLine("ANIM ECHO " + str);
-                return Success("\nStart anim " + str + "\n");
-            }
             int time = 1300; //should be long enough for most animations
             List<KeyValuePair<UUID, int>> amins = new List<KeyValuePair<UUID, int>>();
             for (int i = 0; i < args.Length; i++)
@@ -141,6 +135,12 @@ namespace cogbot.Actions.Appearance
                 {
                     return Failure("\nRan " + amins.Count + " amins but " + e); 
                 }
+            }
+            if (NOSEARCH_ANIM)
+            {
+                String str = string.Join(" ", args);
+                Console.WriteLine("ANIM ECHO " + str);
+                Success("\nStart anim " + str + "\n");
             }
             return Success("Ran " + amins.Count + " amins");
         }
