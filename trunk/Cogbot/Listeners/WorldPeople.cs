@@ -297,6 +297,7 @@ namespace cogbot.Listeners
 
         private void RegisterGroup(UUID uuid, Group g)
         {
+            if (uuid == UUID.Zero) return;
             lock (uuid2Group)
             {
                 SimGroup v = DeclareGroup(uuid);
