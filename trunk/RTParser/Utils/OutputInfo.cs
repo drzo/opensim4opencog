@@ -11,7 +11,7 @@ namespace RTParser.Utils
         {
         }
 
-        public XmlNode Output
+        virtual public XmlNode Output
         {
             get { return srcNode; }
         }
