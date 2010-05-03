@@ -83,8 +83,10 @@ namespace RTParser
         /// </summary>
         private List<Unifiable> LogBuffer = new List<Unifiable>();
 
-
-        public List<Unifiable> CurrentActions = new List<Unifiable>();
+        /// <summary>
+        /// A list of Topic states that are set currently (for use of guarding content)
+        /// </summary>
+        public List<Unifiable> CurrentStates = new List<Unifiable>();
 
         /// <summary>
         /// How big to let the log buffer get before writing to disk
@@ -296,12 +298,16 @@ namespace RTParser
         /// <summary>
         /// The number of categories this Proccessor has in its graphmaster "brain"
         /// </summary>
-        public int Size;
+        public int Size
+        {
+            get { return GraphMaster.Size; }
+        }
 
         /// <summary>
         /// The "brain" of the Proccessor
         /// </summary>
-        public RTParser.Utils.Node Graphmaster;
+        public GraphMaster GraphMaster;
+
 
         /// <summary>
         /// The Markovian "brain" of the Proccessor for generation
@@ -374,7 +380,7 @@ namespace RTParser
         /// </summary>
         public void loadAIMLFromURI(string path, Request request)
         {
-            loadAIMLFromURI(path, LoaderOptions.DEFAULT, request);
+            loadAIMLFromURI(path, LoaderOptions.GetDefault(request), request);
         }
 
 
@@ -397,10 +403,10 @@ namespace RTParser
         /// </summary>
         /// <param name="newAIML">The XML document containing the AIML</param>
         /// <param name="filename">The originator of the XML document</param>
-        public void loadAIMLFromXML(XmlDocument newAIML, String filename, Request r)
+        public void loadAIMLFromXML(XmlDocument newAIML, LoaderOptions filename, Request r)
         {
             AIMLLoader loader = new AIMLLoader(this, r);
-            loader.loadAIMLFromXML(newAIML, filename, r);
+            loader.loadAIMLNode(newAIML.DocumentElement, filename, r);
         }
 
         /// <summary>
@@ -416,8 +422,7 @@ namespace RTParser
             this.Substitutions = new SettingsDictionary(this, provider);
             this.DefaultPredicates = new SettingsDictionary(this, provider);
             this.CustomTags = new Dictionary<string, TagHandler>();
-            this.Size = 0;
-            this.Graphmaster = new RTParser.Utils.Node(null);
+            this.GraphMaster = new GraphMaster();
             loadCustomTagHandlers("AIMLbot.dll");
 
             string names_str = "markovx.trn 5ngram.ngm";
@@ -718,7 +723,8 @@ namespace RTParser
             else
             {
                 string m = message.AsString().ToLower();
-               if (m.Contains("error") || m.Contains("excep")) Console.WriteLine(message);
+               //if (m.Contains("error") || m.Contains("excep"))
+                   Console.WriteLine(message);
             }
             this.LastLogMessage = message;
             if (this.IsLogging)
@@ -852,7 +858,7 @@ namespace RTParser
                 foreach (Unifiable path in result.NormalizedPaths)
                 {
                     Utils.SubQuery query = new SubQuery(path,result);
-                    query.Template = this.Graphmaster.evaluate(path, query, request, MatchState.UserInput, Unifiable.CreateAppendable());
+                    query.Template = this.GraphMaster.evaluate(path, query, request, MatchState.UserInput, Unifiable.CreateAppendable());
                     result.SubQueries.Add(query);
                 }
 
@@ -889,7 +895,7 @@ namespace RTParser
             bool found = false;
             if (query.Template != null && query.Template.Count > 0)
             {
-                foreach (Template s in query.Template)
+                foreach (TemplateInfo s in query.Template)
                 {
                     try
                     {
@@ -914,7 +920,7 @@ namespace RTParser
             return found;
         }
 
-        public bool proccessResponse(SubQuery query, Request request, Result result, XmlNode sOutput, XmlNode sGuard, out bool found)
+        public bool proccessResponse(SubQuery query, Request request, Result result, XmlNode sOutput, GuardInfo sGuard, out bool found)
         {
             found = false;
             //XmlNode guardNode = AIMLTagHandler.getNode(s.Guard.InnerXml);
@@ -1224,17 +1230,7 @@ namespace RTParser
         /// <param name="path">the path to the file for saving</param>
         public void saveToBinaryFile(Unifiable path)
         {
-            // check to delete an existing version of the file
-            FileInfo fi = new FileInfo(path);
-            if (fi.Exists)
-            {
-                fi.Delete();
-            }
-
-            FileStream saveFile = File.Create(path);
-            BinaryFormatter bf = new BinaryFormatter();
-            bf.Serialize(saveFile, this.Graphmaster);
-            saveFile.Close();
+            GraphMaster.saveToBinaryFile(path);
         }
 
         /// <summary>
@@ -1243,10 +1239,7 @@ namespace RTParser
         /// <param name="path">the path to the dump file</param>
         public void loadFromBinaryFile(Unifiable path)
         {
-            FileStream loadFile = File.OpenRead(path);
-            BinaryFormatter bf = new BinaryFormatter();
-            this.Graphmaster = (Node)bf.Deserialize(loadFile);
-            loadFile.Close();
+            GraphMaster.loadFromBinaryFile(path);
         }
 
         #endregion
@@ -1651,7 +1644,7 @@ The AIMLbot program.
                 foreach (Unifiable path in result.NormalizedPaths)
                 {
                     Utils.SubQuery query = new SubQuery(path, result);
-                    query.Template = this.Graphmaster.evaluate(path, query, request, MatchState.UserInput, Unifiable.CreateAppendable());
+                    query.Template = this.GraphMaster.evaluate(path, query, request, MatchState.UserInput, Unifiable.CreateAppendable());
                     result.SubQueries.Add(query);
                 }
 

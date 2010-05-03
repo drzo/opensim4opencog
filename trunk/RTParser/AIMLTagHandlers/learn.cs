@@ -36,7 +36,7 @@ namespace RTParser.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "learn")
             {
-                LoaderOptions opts = new LoaderOptions();
+                LoaderOptions opts = new LoaderOptions(this.Proc.GraphMaster);
 
                 opts.recurse = Unifiable.IsLogicTF(GetAttribValue("recurse", Unifiable.Empty));
                 //recurse here?
@@ -46,6 +46,7 @@ namespace RTParser.AIMLTagHandlers
                     Unifiable path = templateNodeInnerText;
                     try
                     {
+                        opts.Filename = path;
                         Proc.loadAIMLFromURI(path, opts, request);
                     }
                     catch (Exception e2)

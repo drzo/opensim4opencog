@@ -1,6 +1,7 @@
 using System;
 using System.Xml;
 using System.Text;
+using RTParser.Utils;
 
 namespace RTParser.AIMLTagHandlers
 {
@@ -44,7 +45,7 @@ namespace RTParser.AIMLTagHandlers
                 // process each of these child "settings"? nodes
                 foreach (XmlNode child in this.templateNode.ChildNodes)
                 {
-                    Proc.Loader.loadAIMLNode(child, "no filename", request);
+                    Proc.Loader.loadAIMLNode(child, LoaderOptions.GetDefault(this.request), request);
                 }
             }
             return Unifiable.Empty;

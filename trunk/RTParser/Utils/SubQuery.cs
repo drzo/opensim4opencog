@@ -19,7 +19,7 @@ namespace RTParser.Utils
         /// <summary>
         /// The template found from searching the graphmaster brain with the path 
         /// </summary>
-        public List<Template> Template = new List<Template>();
+        public List<TemplateInfo> Template = new List<TemplateInfo>();
 
         /// <summary>
         /// If the raw input matches a wildcard then this attribute will contain the block of 
