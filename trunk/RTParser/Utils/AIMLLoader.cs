@@ -153,13 +153,26 @@ namespace RTParser.Utils
                 if (opt.recurse) loadAIMLDir(filename, opt, request);
                 return;
             }
-            // load the document
             try
             {
-
+                // load the document
                 var tr = File.OpenRead(filename);
-                opt.SetFilename(filename);
-                this.loadAIMLStream(tr, opt, request);
+                try
+                {
+                    opt.SetFilename(filename);
+                    this.loadAIMLStream(tr, opt, request);
+                }
+                finally
+                {
+                    try
+                    {
+                        tr.Close();
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }
+
                 Console.WriteLine("Loaded AIMLFile: '{0}'", filename);
                 return;
             }
