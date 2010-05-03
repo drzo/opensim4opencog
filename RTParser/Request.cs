@@ -79,7 +79,17 @@ namespace RTParser
             set
             {
                 Unifiable prev = Topic;
-                if (prev==value) return;
+                if (prev == value) return;
+                if (_topic != null)
+                {
+                    _topic = value;
+                    return;
+                }
+                if (parent != null)
+                {
+                    parent.Topic = value;
+                    return;
+                }
                 _topic = value;
             }
         }
