@@ -37,13 +37,14 @@ namespace RTParser.Utils
         /// <summary>
         /// The template (if any) associated with this node
         /// </summary>
-        public List<Template> template = null;//Unifiable.Empty;
+        public List<TemplateInfo> template = null;//Unifiable.Empty;
 
+#if UNUSED
         /// <summary>
         /// The AIML source for the category that defines the template
         /// </summary>
         public string filename = Unifiable.Empty;
-
+#endif
         /// <summary>
         /// The word that identifies this node to it's parent node
         /// </summary>
@@ -63,15 +64,15 @@ namespace RTParser.Utils
         /// <param name="path">the path for the category</param>
         /// <param name="template">the template to find at the end of the path</param>
         /// <param name="filename">the file that was the source of this category</param>
-        public void addCategoryTag(Unifiable path, XmlNode template, XmlNode guard, string filename)
+        public void addCategoryTag(Unifiable path, PatternInfo patternInfo, CategoryInfo category, XmlNode template, GuardInfo guard, GraphMaster master)
         {
             if (template == null)
             {
-                throw new XmlException("The category with a pattern: " + path + " found in file: " + filename +
+                throw new XmlException("The category with a pattern: " + path + " found in file: " + category +
                                        " has an empty template tag. ABORTING");
             }
             String ts = template.OuterXml;
-            addCategoryTagChild(path, template, guard, filename);
+            addCategoryTagChild(path, patternInfo, category, template, guard, master);
         }
 
         /// <summary>
@@ -80,15 +81,16 @@ namespace RTParser.Utils
         /// <param name="path">the path for the category</param>
         /// <param name="template">the template to find at the end of the path</param>
         /// <param name="filename">the file that was the source of this category</param>
-        public void addCategoryTagChild(Unifiable path, XmlNode template, XmlNode guard, string filename)
+        public void addCategoryTagChild(Unifiable path, PatternInfo pi, CategoryInfo category, XmlNode template, GuardInfo guard, GraphMaster master)
         {
+            
             // check we're not at the leaf node
             if (!path.IsWildCard() && path.AsString().Trim().Length == 0)
             {
                 const bool RemoveDupes = true; //slows it down but maybe important to do
                 if (this.template == null)
                 {
-                    this.template = new List<Template>();
+                    this.template = new List<TemplateInfo>();
                 }
                 else if (RemoveDupes)
                     lock (this.template)
@@ -96,24 +98,35 @@ namespace RTParser.Utils
                         // search for old
                         string newStr = template.OuterXml;
                         string newGuard = guard != null ? guard.OuterXml : null;
-                        List<Template> dupes = new List<Template>();
-                        this.template.ForEach(delegate(Template temp)
+                        List<TemplateInfo> dupes = new List<TemplateInfo>();
+                        this.template.ForEach(delegate(TemplateInfo temp)
                                                   {
                                                       string oldGuard = temp.Guard != null ? temp.Guard.OuterXml : null;
                                                       if (newStr == temp.Output.OuterXml)
                                                           if (newGuard == oldGuard)
                                                               dupes.Add(temp);
                                                   });
-                        dupes.ForEach(delegate(Template temp)
+                        dupes.ForEach(delegate(TemplateInfo temp)
                                           {
+                                              master.RemoveTemplate(temp);
                                               this.template.Remove(temp);
                                           });
                     }
 
                 // last in first out addition
-                this.template.Insert(0, new Template(template, guard, this));
+                TemplateInfo newTemplateInfo = new TemplateInfo(template, guard, this, category);
+                PatternInfo pat = category.Pattern;
+                pat.GraphmasterNode = this;
+                pat.AddCategory(category);
+                category.AddTemplate(newTemplateInfo);
+                master.AddTemplate(newTemplateInfo);
+                if (pat!=pi)
+                {
+                    Console.WriteLine("Wierd!");
+                }
+                this.template.Insert(0, newTemplateInfo);
                 //this.GuardText = guard;
-                this.filename = filename;
+                //this.filename = filename;
                 return;
             }
 
@@ -156,7 +169,7 @@ namespace RTParser.Utils
                 if (c.Key.AsString() == firstWord.AsString())
                 {
                     Node childNode = c.Value;
-                    childNode.addCategoryTagChild(newPath, template, guard, filename);
+                    childNode.addCategoryTagChild(newPath,pi, category, template, guard, master);
                     found = true;
                     break;
                 }
@@ -165,7 +178,7 @@ namespace RTParser.Utils
             {
                 Node childNode = new Node(this);
                 childNode.word = firstWord;
-                childNode.addCategoryTagChild(newPath, template, guard, filename);
+                childNode.addCategoryTagChild(newPath, pi, category, template, guard, master);
                 this.children.Add(childNode.word, childNode);
             }
         }
@@ -213,7 +226,7 @@ namespace RTParser.Utils
         /// <param name="matchstate">The part of the input path the node represents</param>
         /// <param name="wildcard">The contents of the user input absorbed by the AIML wildcards "_" and "*"</param>
         /// <returns>The template to process to generate the output</returns>
-        public List<Template> evaluate(Unifiable path, SubQuery query, Request request, MatchState matchstate, Unifiable wildcard)
+        public List<TemplateInfo> evaluate(Unifiable path, SubQuery query, Request request, MatchState matchstate, Unifiable wildcard)
         {
             // check for timeout
             if (request.StartedOn.AddMilliseconds(request.Proccessor.TimeOut) < DateTime.Now)
@@ -269,7 +282,7 @@ namespace RTParser.Utils
                 this.storeWildCard(first, newWildcard);
 
                 // move down into the identified branch of the GraphMaster structure
-                List<Template> result = childNode.evaluate(newPath, query, request, matchstate, newWildcard);
+                List<TemplateInfo> result = childNode.evaluate(newPath, query, request, matchstate, newWildcard);
 
                 // and if we get a result from the branch process the wildcard matches and return 
                 // the result
@@ -311,7 +324,7 @@ namespace RTParser.Utils
                 // move down into the identified branch of the GraphMaster structure using the new
                 // matchstate
                 Unifiable newWildcard = Unifiable.CreateAppendable();
-                List<Template> result = childNode.evaluate(newPath, query, request, newMatchstate, newWildcard);
+                List<TemplateInfo> result = childNode.evaluate(newPath, query, request, newMatchstate, newWildcard);
                 // and if we get a result from the child return it
                 if (ResultStateReady(result, newWildcard, matchstate, query)) return result;
 
@@ -328,7 +341,7 @@ namespace RTParser.Utils
                 Node childNode = childNodeKV.Value;
                 // o.k. look for the path in the child node denoted by "*"
                 //Node childNode = (Node)this.children["*"];
-                List<Template> result = null;
+                List<TemplateInfo> result = null;
                 // add the next word to the wildcard match 
                 Unifiable newWildcard = Unifiable.CreateAppendable();
                 // normal * and LazyMatch on first word
@@ -382,7 +395,7 @@ namespace RTParser.Utils
         /// <param name="matchstate"></param>
         /// <param name="query"></param>
         /// <returns></returns>
-        private static bool ResultStateReady(ICollection<Template> result, Unifiable newWildcard, MatchState matchstate, SubQuery query)
+        private static bool ResultStateReady(ICollection<TemplateInfo> result, Unifiable newWildcard, MatchState matchstate, SubQuery query)
         {
             // and if we get a result from the branch process and return it
             if (result != null && result.Count > 0)

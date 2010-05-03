@@ -1,6 +1,7 @@
 using System;
 using System.Xml;
 using System.Text;
+using RTParser.Utils;
 
 namespace RTParser.AIMLTagHandlers
 {
@@ -40,7 +41,7 @@ namespace RTParser.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "topic")
             {
-                Proc.Loader.processTopic(templateNode,"no filename");
+                Proc.Loader.processTopic(templateNode,LoaderOptions.GetDefault(this.request));
             }
             return Unifiable.Empty;
         }

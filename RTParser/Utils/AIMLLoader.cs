@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Xml;
 using System.IO;
 using System.Text;
@@ -40,7 +41,7 @@ namespace RTParser.Utils
         /// </summary>
         public void loadAIML(Request request)
         {
-            this.loadAIML(this.RProcessor.PathToAIML, LoaderOptions.DEFAULT, request);
+            this.loadAIML(this.RProcessor.PathToAIML, LoaderOptions.GetDefault(request), request);
         }
 
         /// <summary>
@@ -61,7 +62,7 @@ namespace RTParser.Utils
             }
             else
             {
-                this.loadAIMLURI(path, request);
+                this.loadAIMLURI(path, options, request);
             }
             Console.WriteLine("*** Loaded AIMLFiles From Location: '{0}' ***", path);
 
@@ -103,30 +104,40 @@ namespace RTParser.Utils
 
         }
 
-        private void loadAIMLURI(string path, Request request)
+        private void loadAIMLURI(string path, LoaderOptions loadOpts, Request request)
         {
-            this.RProcessor.writeToLog("Processing AIML URI: " + path);
-            XmlDocument doc = new XmlDocument();
             try
             {
-                FileInfo fi = new FileInfo(path);
-                if (fi.Exists)
+                this.RProcessor.writeToLog("Processing AIML URI: " + path);
+                if (Directory.Exists(path))
                 {
-                    doc.Load(path);
+                    loadAIMLDir(path, loadOpts, request);
                 }
-                else
+                else if (File.Exists(path))
                 {
-                    XmlTextReader reader = new XmlTextReader(path);
-                    doc.Load(reader);
+                    loadAIMLFile(path, loadOpts, request);
                 }
-                return;
+                else if (Uri.IsWellFormedUriString(path, UriKind.RelativeOrAbsolute))
+                {
+                    var uri = new Uri(path);
+                    if (uri.IsFile)
+                    {
+                        loadAIMLURI(uri.AbsolutePath, loadOpts, request);
+                        return;
+                    }
+                    WebRequest req = WebRequest.Create(uri);
+                    WebResponse resp = req.GetResponse();
+                    Stream stream = resp.GetResponseStream();
+                    loadAIMLStream(stream, LoaderOptions.FromFilename(path, request), request);
+                }
             }
             catch (Exception e)
             {
                 String s = "ERROR: XmlTextReader of AIML files (" + path + ")  threw " + e;
                 throw new FileNotFoundException(s);
             }
-            loadAIMLFromXML(doc, path, request);
+            String nf = "ERROR: XmlTextReader of AIML files (" + path + ")";
+            throw new FileNotFoundException(nf);
         }
 
         /// <summary>
@@ -137,18 +148,18 @@ namespace RTParser.Utils
         public void loadAIMLFile(string filename, LoaderOptions opt, Request request)
         {
             this.RProcessor.writeToLog("Processing AIML file: " + filename);
-
+            if (Directory.Exists(filename))
+            {
+                if (opt.recurse) loadAIMLDir(filename, opt, request);
+                return;
+            }
             // load the document
-            XmlDocument doc = new XmlDocument();
             try
             {
-                if (Directory.Exists(filename))
-                {
-                    if (opt.recurse) loadAIMLDir(filename, opt, request);
-                    return;
-                }
-                doc.Load(filename);
-                this.loadAIMLFromXML(doc, filename, request);
+
+                var tr = File.OpenRead(filename);
+                opt.SetFilename(filename);
+                this.loadAIMLStream(tr, opt, request);
                 Console.WriteLine("Loaded AIMLFile: '{0}'", filename);
                 return;
             }
@@ -156,17 +167,36 @@ namespace RTParser.Utils
             {
                 this.RProcessor.writeToLog("Error in AIML Stacktrace: " + filename + "\n  " + e.Message + "\n" + e.StackTrace);
                 this.RProcessor.writeToLog("Error in AIML file: " + filename + " Message " + e.Message);
+            }
+        }
+        /// <summary>
+        /// Given an XML document containing valid AIML, attempts to load it into the graphmaster
+        /// </summary>
+        /// <param name="doc">The XML document containing the AIML</param>
+        /// <param name="filename">Where the XML document originated</param>
+        public void loadAIMLString(string input, LoaderOptions filename, Request request)
+        {
+            var tr = new StringReader(input);
+            XmlTextReader xtr = new XmlTextReader(tr);
+            while (!xtr.EOF)
+            {
                 try
                 {
-                    if (doc.DocumentElement == null) return;
-                    this.loadAIMLFromXML(doc, filename, request);
+                    XmlDocumentLineInfo doc = new XmlDocumentLineInfo(tr);
+                    doc.Load(xtr);
+                    if (doc.DocumentElement == null) continue;
+                    this.loadAIMLNode(doc.DocumentElement, filename, request);
                 }
                 catch (Exception e2)
                 {
-                    this.RProcessor.writeToLog("which causes loadAIMLFromXML: " + filename + "\n  " + e.Message + "\n" + e.StackTrace);
+                    String s = "which causes loadAIMLString '" + input + "' " + filename + " charpos " + tr;
+                    s = s + "\n" + e2.Message + "\n" + e2.StackTrace + "\n" + s;
+                    System.Console.WriteLine(s);
+                    throw e2;
                 }
-                //return;
+
             }
+            return;
         }
 
         /// <summary>
@@ -174,21 +204,41 @@ namespace RTParser.Utils
         /// </summary>
         /// <param name="doc">The XML document containing the AIML</param>
         /// <param name="filename">Where the XML document originated</param>
-        public void loadAIMLFromXML(XmlDocument doc, string filename, Request request)
+        public void loadAIMLStream(Stream input, LoaderOptions filename, Request request)
         {
-            // Get a list of the nodes that are children of the <aiml> tag
-            // these nodes should only be either <topic> or <category>
-            // the <topic> nodes will contain more <category> nodes
-            loadAIMLNode(doc.DocumentElement, filename, request);
+
+            var xtr = new XmlTextReader(input);
+            while (!xtr.EOF)
+            {
+                try
+                {
+                    XmlDocumentLineInfo doc = new XmlDocumentLineInfo(input);
+                    doc.Load(xtr);
+                    if (doc.DocumentElement == null) continue;
+                    this.loadAIMLNode(doc.DocumentElement, filename, request);
+                }
+                catch (Exception e2)
+                {
+                    String s = "which causes loadAIMLStream '" + input + "' " + filename + " charpos=" + input.Position;
+                    s = s + "\n" + e2.Message + "\n" + e2.StackTrace + "\n" + s;
+                    System.Console.WriteLine(s);
+                    // throw e2;
+                }
+
+            }
+            return;
         }
 
-        public void loadAIMLNode(XmlNode currentNode, string filename, Request request)
+        public void loadAIMLNode(XmlNode currentNode, LoaderOptions filename, Request request)
         {
             var prev = RProcessor.Loader;
             try
             {
                 RProcessor.Loader = this;
                 if (currentNode.NodeType == XmlNodeType.Comment) return;
+                // Get a list of the nodes that are children of the <aiml> tag
+                // these nodes should only be either <topic> or <category>
+                // the <topic> nodes will contain more <category> nodes
                 if (currentNode.Name == "aiml")
                 {
                     // process each of these child nodes
@@ -245,7 +295,7 @@ namespace RTParser.Utils
         /// </summary>
         /// <param name="node">the "topic" node</param>
         /// <param name="filename">the file from which this node is taken</param>
-        public void processTopic(XmlNode node, string filename)
+        public void processTopic(XmlNode node, LoaderOptions filename)
         {
             // find the name of the topic or set to default "*"
             Unifiable topicName = "*";
@@ -269,7 +319,7 @@ namespace RTParser.Utils
         /// </summary>
         /// <param name="node">the XML node containing the category</param>
         /// <param name="filename">the file from which this category was taken</param>
-        public void processCategory(XmlNode node, string filename)
+        public void processCategory(XmlNode node, LoaderOptions filename)
         {
             this.processCategoryWithTopic(node, Unifiable.STAR, filename);
         }
@@ -280,46 +330,53 @@ namespace RTParser.Utils
         /// <param name="node">the XML node containing the category</param>
         /// <param name="topicName">the topic to be used</param>
         /// <param name="filename">the file from which this category was taken</param>
-        private void processCategoryWithTopic(XmlNode node, Unifiable topicName, string filename)
+        private void processCategoryWithTopic(XmlNode node, Unifiable topicName, LoaderOptions filename)
         {
             Dictionary<string, List<XmlNode>> store = GetTopicStore();
             // reference and check the required nodes
-            List<XmlNode> patterns = this.FindNodes("pattern", node);
+            List<XmlNode> patterns = FindNodes("pattern", node);
+            List<XmlNode> templates = FindNodes("template", node);
             foreach (XmlNode pattern in patterns)
             {
-                XmlNode template = this.FindNode("template", node);
-                XmlNode guard = this.FindNode("guard", node);
-
-                if (object.Equals(null, pattern))
+                foreach (var template in templates)
                 {
-                    throw new XmlException("Missing pattern tag in a node found in " + filename);
-                }
-                if (object.Equals(null, template))
-                {
-                    throw new XmlException("Missing template tag in the node with pattern: " + pattern.InnerText + " found in " + filename);
-                }
+                    XmlNode guardnode = FindNode("guard", node);
+                    GuardInfo guard = guardnode == null ? null : new GuardInfo(guardnode);
 
-                Unifiable categoryPath = this.generatePath00(pattern, node, topicName, false);
 
-                // o.k., add the processed AIML to the GraphMaster structure
-                if (!categoryPath.IsEmpty)
-                {
-                    try
+                    if (object.Equals(null, pattern))
                     {
-                        this.RProcessor.Graphmaster.addCategoryTag(categoryPath, template, guard, filename);
-                        // keep count of the number of categories that have been processed
-                        this.RProcessor.Size++;
+                        throw new XmlException("Missing pattern tag in a node found in " + filename);
                     }
-                    catch
+                    if (object.Equals(null, template))
                     {
-                        this.RProcessor.writeToLog("ERROR! Failed to load a new category into the graphmaster where the path = " + categoryPath + " and template = " + template.OuterXml + " produced by a category in the file: " + filename);
+                        throw new XmlException("Missing template tag in the node with pattern: " + pattern.InnerText + " found in " + filename);
+                    }
+
+                    Unifiable categoryPath = this.generatePath00(pattern, node, topicName, false);
+
+                    PatternInfo patternInfo = (PatternInfo) PatternInfo.GetPattern(filename, pattern, categoryPath);
+
+                    // o.k., add the processed AIML to the GraphMaster structure
+                    if (!categoryPath.IsEmpty)
+                    {
+                        try
+                        {
+                            this.RProcessor.GraphMaster.addCategoryTag(categoryPath, patternInfo,
+                                                                       CategoryInfo.GetCategoryInfo(patternInfo, node, filename),
+                                                                       template, guard);
+                        }
+                        catch
+                        {
+                            this.RProcessor.writeToLog("ERROR! Failed to load a new category into the graphmaster where the path = " + categoryPath + " and template = " + template.OuterXml + " produced by a category in the file: " + filename);
+                        }
+                    }
+                    else
+                    {
+                        this.RProcessor.writeToLog("WARNING! Attempted to load a new category with an empty pattern where the path = " + categoryPath + " and template = " + template.OuterXml + " produced by a category in the file: " + filename);
                     }
                 }
-                else
-                {
-                    this.RProcessor.writeToLog("WARNING! Attempted to load a new category with an empty pattern where the path = " + categoryPath + " and template = " + template.OuterXml + " produced by a category in the file: " + filename);
-                }
-            }
+            }            
         }
 
         private Dictionary<string, List<XmlNode>> GetTopicStore()
@@ -338,7 +395,7 @@ namespace RTParser.Utils
         private Unifiable generatePath00(XmlNode pattern, XmlNode node, Unifiable topicName, bool isUserInput)
         {
             // get the nodes that we need
-            XmlNode that = this.FindNode("that", node);
+            XmlNode that = FindNode("that", node);
 
             Unifiable patternText;
             Unifiable thatText = Unifiable.STAR;
@@ -364,7 +421,7 @@ namespace RTParser.Utils
         /// <param name="name">The name of the node</param>
         /// <param name="node">The node whose children need searching</param>
         /// <returns>The node (or null)</returns>
-        private XmlNode FindNode(string name, XmlNode node)
+        static public XmlNode FindNode(string name, XmlNode node)
         {
             foreach (XmlNode child in node.ChildNodes)
             {
@@ -375,7 +432,7 @@ namespace RTParser.Utils
             }
             return null;
         }
-        private List<XmlNode> FindNodes(string name, XmlNode node)
+        static public List<XmlNode> FindNodes(string name, XmlNode node)
         {
             List<XmlNode> nodes = new List<XmlNode>();
             foreach (XmlNode child in node.ChildNodes)
@@ -522,10 +579,91 @@ namespace RTParser.Utils
         #endregion
     }
 
-    public class LoaderOptions
+    class XmlDocumentLineInfo : XmlDocument
     {
-        public bool recurse;
-        public static LoaderOptions DEFAULT = new LoaderOptions();
-        public Request request;
+        public override void Load(Stream reader)
+        {
+            if (reader is IXmlLineInfo)
+            {
+                LineTracker = (IXmlLineInfo)reader;
+            }
+            base.Load(reader);
+        }
+
+        public override void Load(XmlReader reader)
+        {
+            if (reader is IXmlLineInfo)
+            {
+                LineTracker = (IXmlLineInfo)reader;
+            }
+            base.Load(reader);
+        }
+
+        private Stream LineInfoReader;
+        public IXmlLineInfo LineTracker;
+        private StringReader stringReader;
+        public XmlDocumentLineInfo(Stream lineInfoReader)
+        {
+            LineInfoReader = lineInfoReader;
+        }
+        public XmlDocumentLineInfo(StringReader lineInfoReader)
+        {
+            stringReader = lineInfoReader;
+        }
+        public XmlDocumentLineInfo(IXmlLineInfo lineInfoReader)
+        {
+            LineTracker = lineInfoReader;
+        }
+        public override XmlElement CreateElement(string prefix, string localname, string nsURI)
+        {
+            LineInfoElement elem = new LineInfoElement(prefix, localname, nsURI, this);
+            if (LineInfoReader != null)
+                elem.SetPos(LineInfoReader.Position);
+            if (LineTracker != null)
+            {
+                elem.SetLineInfo(LineTracker.LineNumber, LineTracker.LinePosition);
+            }
+            return elem;
+        }
     }
+
+    class LineInfoElement : XmlElement, IXmlLineInfo
+    {
+        public int lineNumber = 0;
+        public int linePosition = 0;
+        public long charPos = 0;
+        internal LineInfoElement(string prefix, string localname, string nsURI, XmlDocument doc)
+            : base(prefix, localname, nsURI, doc)
+        {
+            //((XmlDocumentLineInfo)doc).IncrementElementCount();
+        }
+        public void SetLineInfo(int linenum, int linepos)
+        {
+            lineNumber = linenum;
+            linePosition = linepos;            
+        }
+        public int LineNumber
+        {
+            get
+            {
+                return lineNumber;
+            }
+        }
+        public int LinePosition
+        {
+            get
+            {
+                return linePosition;
+            }
+        }
+        public bool HasLineInfo()
+        {
+            return true;
+        }
+
+        public void SetPos(long position)
+        {
+            charPos = position;
+        }
+    } // End LineInfoElement class.
 }
