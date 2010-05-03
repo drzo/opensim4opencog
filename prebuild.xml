@@ -542,6 +542,81 @@
       </Files>
 </Project>
 
+  <Project name="xglore" path="lib/xglore" type="exe" frameworkVersion="v3_5">
+      <Configuration name="Debug">
+        <Options>
+            <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release">
+        <Options>
+            <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+
+      <ReferencePath>../../bin/</ReferencePath>
+      <Reference name="System" localCopy="false"/>
+      <Reference name="System.Core" localCopy="false"/>
+      <Reference name="System.Data" localCopy="false"/>
+      <Reference name="System.Data.DataSetExtensions" localCopy="false"/>
+      <Reference name="System.Deployment" localCopy="false"/>
+      <Reference name="System.Drawing" localCopy="false"/>
+      <Reference name="System.Windows.Forms" localCopy="false"/>
+      <Reference name="System.Xml" localCopy="false"/>
+      <Reference name="System.Xml.Linq" localCopy="false"/>
+      <Files>
+          <Match path="." pattern="*.cs"  recurse="true"  subType="Form">  <Exclude name="AssemblyInfo.cs"/><Exclude name="Plugins/"/></Match>
+          <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource">  <Exclude name="AssemblyInfo.cs"/><Exclude name="Plugins/"/></Match>
+          <Match path="." pattern="AssemblyInfo.cs"/>
+      </Files>
+</Project>
+
+<!--
+
+
+      <Reference name="Cogbot.exe" localCopy="false"/>
+      <Reference name="PathSystem3D" localCopy="false"/>
+      <Reference name="OpenMetaverse" localCopy="false"/>
+      <Reference name="OpenMetaverseTypes" localCopy="false"/>      
+      <Reference name="DotLisp" localCopy="false"/>
+      <Reference name="AIMLbot" localCopy="false"/>
+      <Reference name="System.Core" localCopy="false"/>
+      <Reference name="OpenCyc.dll" localCopy="false"/>
+       <Reference name="IKVM.Runtime.dll" localCopy="false"/>
+      <Reference name="IKVM.OpenJDK.ClassLibrary.dll" localCopy="false"/>
+
+
+ <Project name="GraphvizDot" path="lib/xglore/Plugins/GraphvizDot" type="Library" frameworkVersion="v3_5">
+      <Configuration name="Debug">
+        <Options>
+            <OutputPath>../../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release">
+        <Options>
+            <OutputPath>../../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+
+      <ReferencePath>../../../../bin/</ReferencePath>
+      <Reference name="Cogbot.exe" localCopy="false"/>
+      <Reference name="PathSystem3D" localCopy="false"/>
+      <Reference name="OpenMetaverse" localCopy="false"/>
+      <Reference name="OpenMetaverseTypes" localCopy="false"/>      
+      <Reference name="System" localCopy="false"/>
+      <Reference name="DotLisp" localCopy="false"/>
+      <Reference name="AIMLbot" localCopy="false"/>
+      <Reference name="System.Core" localCopy="false"/>
+      <Reference name="OpenCyc.dll" localCopy="false"/>
+       <Reference name="IKVM.Runtime.dll" localCopy="false"/>
+      <Reference name="IKVM.OpenJDK.ClassLibrary.dll" localCopy="false"/>
+      <Files>
+          <Match path="." pattern="*.cs"  recurse="true"  subType="Form"/>
+          <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
+      </Files>
+</Project>
+
+-->
 
   <Project name="TheSimiansModule" path="contrib/TheSimiansModule" type="Library" frameworkVersion="v3_5">
      <Configuration name="Debug">
@@ -842,7 +917,8 @@
          </Files>
       </Project>
 
- <!-- OpenSim 
+ <!-- 
+ OpenSim 
   <Project name="IdealistViewer" path="lib/IdealistViewer" type="Exe">
     <Configuration name="Debug">
       <Options>
