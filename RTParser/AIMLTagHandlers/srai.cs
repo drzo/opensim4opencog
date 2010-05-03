@@ -56,15 +56,17 @@ namespace RTParser.AIMLTagHandlers
                 {
                     if (!templateNodeInnerText.IsEmpty)
                     {
+                        Unifiable top = GetAttribValue("topic", request.Topic);
                         AIMLbot.Request subRequest = new AIMLbot.Request(templateNodeInnerText, this.user, this.Proc);
+                        subRequest.Topic = top;
                         subRequest.StartedOn = this.request.StartedOn;
-                            // make sure we don't keep adding time to the request
-                                        if (depth > 200)
-                            {
-                                Console.WriteLine("WARNING Depth pretty deep " + templateNode + " returning empty");
-                                return Unifiable.Empty;
-                            }
-                         Console.WriteLine(" SRAI--> ("+depth+")" + subRequest.rawInput);
+                        // make sure we don't keep adding time to the request
+                        if (depth > 200)
+                        {
+                            Console.WriteLine("WARNING Depth pretty deep " + templateNode + " returning empty");
+                            return Unifiable.Empty;
+                        }
+                        Console.WriteLine(" SRAI--> (" + depth + ")" + subRequest.rawInput);
                         AIMLbot.Result subQuery = this.Proc.Chat(subRequest);
                         this.request.hasTimedOut = subRequest.hasTimedOut;
                         Console.WriteLine(" SRAI <-- (" + depth + ")" + subQuery.RawOutput);
@@ -73,7 +75,8 @@ namespace RTParser.AIMLTagHandlers
                     }
                 }
                 return Unifiable.Empty;
-            } finally
+            }
+            finally
             {
                 depth--;
             }

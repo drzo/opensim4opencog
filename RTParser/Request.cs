@@ -18,6 +18,11 @@ namespace RTParser
         public Unifiable rawInput;
 
         /// <summary>
+        /// The raw input from the user
+        /// </summary>
+        public Request parent;
+
+        /// <summary>
         /// The time at which this request was created within the system
         /// </summary>
         public DateTime StartedOn;
@@ -60,6 +65,23 @@ namespace RTParser
             this.Proccessor = bot;
             this.StartedOn = DateTime.Now;
             this.framesAtStart = new StackTrace().FrameCount;
+        }
+
+        private Unifiable _topic;
+        public Unifiable Topic
+        {
+            get
+            {
+                if (_topic != null) return _topic;
+                if (parent != null) return parent.Topic;
+                return user.TopicSetting;
+            }
+            set
+            {
+                Unifiable prev = Topic;
+                if (prev==value) return;
+                _topic = value;
+            }
         }
 
         public int GetCurrentDepth()

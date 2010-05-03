@@ -43,7 +43,7 @@ namespace RTParser
 		/// <summary>
 		/// the value of the "topic" predicate
 		/// </summary>
-        public Unifiable Topic
+        public Unifiable TopicSetting
         {
             get
             {
