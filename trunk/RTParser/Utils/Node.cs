@@ -79,9 +79,9 @@ namespace RTParser.Utils
         /// Adds a category to the node
         /// </summary>
         /// <param name="path">the path for the category</param>
-        /// <param name="template">the template to find at the end of the path</param>
+        /// <param name="outTemplate">the template to find at the end of the path</param>
         /// <param name="filename">the file that was the source of this category</param>
-        public void addCategoryTagChild(Unifiable path, PatternInfo pi, CategoryInfo category, XmlNode template, GuardInfo guard, GraphMaster master)
+        public void addCategoryTagChild(Unifiable path, PatternInfo pi, CategoryInfo category, XmlNode outTemplate, GuardInfo guard, GraphMaster master)
         {
             
             // check we're not at the leaf node
@@ -96,7 +96,7 @@ namespace RTParser.Utils
                     lock (this.template)
                     {
                         // search for old
-                        string newStr = template.OuterXml;
+                        string newStr = outTemplate.OuterXml;
                         string newGuard = guard != null ? guard.OuterXml : null;
                         List<TemplateInfo> dupes = new List<TemplateInfo>();
                         this.template.ForEach(delegate(TemplateInfo temp)
@@ -114,7 +114,7 @@ namespace RTParser.Utils
                     }
 
                 // last in first out addition
-                TemplateInfo newTemplateInfo = new TemplateInfo(template, guard, this, category);
+                TemplateInfo newTemplateInfo = new TemplateInfo(outTemplate, guard, this, category);
                 PatternInfo pat = category.Pattern;
                 pat.GraphmasterNode = this;
                 pat.AddCategory(category);
@@ -169,7 +169,7 @@ namespace RTParser.Utils
                 if (c.Key.AsString() == firstWord.AsString())
                 {
                     Node childNode = c.Value;
-                    childNode.addCategoryTagChild(newPath,pi, category, template, guard, master);
+                    childNode.addCategoryTagChild(newPath,pi, category, outTemplate, guard, master);
                     found = true;
                     break;
                 }
@@ -178,7 +178,7 @@ namespace RTParser.Utils
             {
                 Node childNode = new Node(this);
                 childNode.word = firstWord;
-                childNode.addCategoryTagChild(newPath, pi, category, template, guard, master);
+                childNode.addCategoryTagChild(newPath, pi, category, outTemplate, guard, master);
                 this.children.Add(childNode.word, childNode);
             }
         }

@@ -94,12 +94,12 @@ namespace AIMLBotModule
         readonly static object RegisterTalkToCmdLock = new object();
 
 
-        object BotExecHandler(string cmd, User user)
+        object BotExecHandler(string cmd, Request request)
         {
             User prev = MyUser;
             try
             {
-                MyUser = user;
+                MyUser = request.user;
                 StringWriter sw = new StringWriter();
                 {
 
@@ -118,12 +118,12 @@ namespace AIMLBotModule
             }
         }
 
-        object LispExecHandler(string cmd, User user)
+        object LispExecHandler(string cmd, Request request)
         {
             User prev = MyUser;
             try
             {
-                MyUser = user;
+                MyUser = request.user;
                 return client.evalLispString(cmd);
             }
             finally
