@@ -5,11 +5,11 @@ using System.Xml;
 namespace RTParser.Utils
 {
     [Serializable]
-    public class CategoryInfo : OutputInfo
+    public class CategoryInfo : GraphLinkInfo
     {
         public XmlNode Category
         {
-            get { return Output; }
+            get { return srcNode; }
         }
 
         public XmlNode Template
@@ -28,7 +28,7 @@ namespace RTParser.Utils
         }
 
         public PatternInfo Pattern;
-        public GuardInfo Guard;
+       // public GuardInfo Guard;
         public LoaderOptions Filename;
         public List<TemplateInfo> TemplateInfos = new List<TemplateInfo>();
         public CategoryInfo(PatternInfo pattern, XmlNode node, LoaderOptions filename)

@@ -17,7 +17,7 @@ using org.opencyc.cycobject;
 
 namespace RTParser
 {
-    public delegate object SystemExecHandler(string cmd, User user);
+    public delegate object SystemExecHandler(string cmd, Request user);
 
     /// <summary>
     /// Encapsulates a Proccessor. If no settings.xml file is found or referenced the Proccessor will try to
@@ -155,7 +155,7 @@ namespace RTParser
         {
             get
             {
-                return new Regex(this.GlobalSettings.grabSetting("stripperregex"),RegexOptions.IgnorePatternWhitespace);
+                return new Regex(this.GlobalSettings.grabSetting("stripperregex"), RegexOptions.IgnorePatternWhitespace);
             }
         }
 
@@ -246,7 +246,7 @@ namespace RTParser
                 switch (sex)
                 {
                     case -1:
-                        result=Gender.Unknown;
+                        result = Gender.Unknown;
                         break;
                     case 0:
                         result = Gender.Female;
@@ -430,15 +430,15 @@ namespace RTParser
             foreach (string name in nameset)
             {
 
-               int loadcount = 0;
-               string file = Path.Combine("trn", name);
+                int loadcount = 0;
+                string file = Path.Combine("trn", name);
                 if (File.Exists(file))
                 {
                     StreamReader sr = new StreamReader(file);
-                    Console.WriteLine(" **** Markovian Brain LoadMarkovLTM: '{0}'****",file);
+                    Console.WriteLine(" **** Markovian Brain LoadMarkovLTM: '{0}'****", file);
                     this.MBrain.Learn(sr);
                     sr.Close();
-                    Console.WriteLine(" **** Markovian Brain initialized.: '{0}' **** ",file);
+                    Console.WriteLine(" **** Markovian Brain initialized.: '{0}' **** ", file);
                     loadcount++;
                 }
 
@@ -446,10 +446,10 @@ namespace RTParser
                 if (File.Exists(file))
                 {
                     StreamReader sr = new StreamReader(file);
-                    Console.WriteLine(" **** Markovian Brain LoadMarkovLTM: '{0}'**** ",file);
+                    Console.WriteLine(" **** Markovian Brain LoadMarkovLTM: '{0}'**** ", file);
                     this.MBrain.LearnNgram(sr);
                     sr.Close();
-                    Console.WriteLine(" **** Markovian Brain N-Gram initialized '{0}'. **** ",file);
+                    Console.WriteLine(" **** Markovian Brain N-Gram initialized '{0}'. **** ", file);
                     loadcount++;
                 }
 
@@ -458,7 +458,7 @@ namespace RTParser
                     Console.WriteLine(" **** WARNING: No Markovian Brain Training nor N-Gram file found for '{0}' . **** ", name);
                 }
             }
-            
+
             if (pHMM.hmmCorpusLoaded == 0)
             {
                 string file = Path.Combine("bgm", "corpus.txt");
@@ -473,8 +473,8 @@ namespace RTParser
                     Console.WriteLine("Loaded Corpus Bigrams: '{0}'", file);
                 }
             }
-            
-    }
+
+        }
 
         /// <summary>
         /// Loads settings based upon the default location of the Settings.xml file
@@ -483,7 +483,7 @@ namespace RTParser
         {
             // try a safe default setting for the settings xml file
             string path = Path.Combine(Environment.CurrentDirectory, Path.Combine("config", "Settings.xml"));
-            this.loadSettings(path);         
+            this.loadSettings(path);
         }
 
         public void ReloadAll()
@@ -518,7 +518,7 @@ namespace RTParser
             this.Substitutions.loadSettings(Path.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("substitutionsfile")));
 
             // Grab the splitters for this Proccessor
-            this.loadSplitters(Path.Combine(this.PathToConfigFiles,this.GlobalSettings.grabSetting("splittersfile")));
+            this.loadSplitters(Path.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("splittersfile")));
         }
 
         private void SetSaneGlobals(SettingsDictionary settings)
@@ -534,7 +534,7 @@ namespace RTParser
             if (!settings.containsSettingCalled("botmaster"))
             {
                 settings.addSetting("botmaster", "Unknown");
-            } 
+            }
             if (!settings.containsSettingCalled("master"))
             {
                 settings.addSetting("botmaster", "Unknown");
@@ -675,7 +675,7 @@ namespace RTParser
             if (this.Splitters.Count == 0)
             {
                 // if we process lisp and other things
-                if (true) return; 
+                if (true) return;
                 // we don't have any splitters, so lets make do with these...
                 this.Splitters.Add(".");
                 this.Splitters.Add("!");
@@ -723,15 +723,15 @@ namespace RTParser
             else
             {
                 string m = message.AsString().ToLower();
-               //if (m.Contains("error") || m.Contains("excep"))
-                   Console.WriteLine(message);
+                //if (m.Contains("error") || m.Contains("excep"))
+                Console.WriteLine(message);
             }
             this.LastLogMessage = message;
             if (this.IsLogging)
             {
                 //  this.LogBuffer.Add(DateTime.Now.ToString() + ": " + message + Environment.NewLine);
                 this.LogBuffer.Add(message);
-                if (this.LogBuffer.Count > this.MaxLogBufferSize-1)
+                if (this.LogBuffer.Count > this.MaxLogBufferSize - 1)
                 {
                     // Write out to log file
                     DirectoryInfo logDirectory = new DirectoryInfo(this.PathToLogs);
@@ -740,8 +740,8 @@ namespace RTParser
                         logDirectory.Create();
                     }
 
-                    Unifiable logFileName = DateTime.Now.ToString("yyyyMMdd")+".log";
-                    FileInfo logFile = new FileInfo(Path.Combine(this.PathToLogs,logFileName));
+                    Unifiable logFileName = DateTime.Now.ToString("yyyyMMdd") + ".log";
+                    FileInfo logFile = new FileInfo(Path.Combine(this.PathToLogs, logFileName));
                     StreamWriter writer;
                     if (!logFile.Exists)
                     {
@@ -857,7 +857,7 @@ namespace RTParser
                 // grab the templates for the various sentences from the graphmaster
                 foreach (Unifiable path in result.NormalizedPaths)
                 {
-                    Utils.SubQuery query = new SubQuery(path,result);
+                    Utils.SubQuery query = new SubQuery(path, result);
                     query.Template = this.GraphMaster.evaluate(path, query, request, MatchState.UserInput, Unifiable.CreateAppendable());
                     result.SubQueries.Add(query);
                 }
@@ -900,7 +900,7 @@ namespace RTParser
                     try
                     {
                         bool found0;
-                        if(proccessResponse(query, request, result, s.Output, s.Guard, out found0)) break;
+                        if (proccessResponse(query, request, result, s.Output, s.Guard, out found0)) break;
                         if (found0) found = true;
                     }
                     catch (Exception e)
@@ -918,6 +918,16 @@ namespace RTParser
                 }
             }
             return found;
+        }
+
+        public static Unifiable GetAttribValue(XmlNode templateNode, string attribName, Unifiable defaultIfEmpty)
+        {
+            attribName = attribName.ToLower();
+            foreach (XmlAttribute attrib in templateNode.Attributes)
+            {
+                if (attrib.Name.ToLower() == attribName) return attrib.Value;
+            }
+            return defaultIfEmpty;
         }
 
         public bool proccessResponse(SubQuery query, Request request, Result result, XmlNode sOutput, GuardInfo sGuard, out bool found)
@@ -949,12 +959,30 @@ namespace RTParser
 
             try
             {
-                string left = outputSentence.Substring(0, f);
-                Unifiable ss = EvalSubL("(cyc-query '" + left + " #$EverythingPSC)", null);
-                if (Unifiable.IsFalse(ss))
+                string left = outputSentence.Substring(0, f).Trim();
+
+                if (Unifiable.IsFalse(left))
                 {
                     return false;
                 }
+                string lang = GetAttribValue(sGuard.Output, "lang", "cycl").AsString().ToLower();
+
+                try
+                {
+                    Unifiable ss = SystemExecute(left, lang, request);
+                    if (Unifiable.IsFalse(ss))
+                    {
+                        return false;
+                    }
+                }
+                catch (Exception e)
+                {
+                    string s = "" + e;
+                    Console.WriteLine(s);
+                    writeToLog(s);
+                    return false;
+                }
+
                 outputSentence = outputSentence.Substring(f + 9);
                 if (outputSentence.Length > 0)
                 {
@@ -1192,7 +1220,7 @@ namespace RTParser
                 TagHandler customTagHandler = (TagHandler)this.CustomTags[node.Name.ToLower()];
 
                 AIMLTagHandler newCustomTag = customTagHandler.Instantiate(this.LateBindingAssemblies, user, query, request, result, node, this);
-                if(object.Equals(null,newCustomTag))
+                if (object.Equals(null, newCustomTag))
                 {
                     return null;
                 }
@@ -1210,8 +1238,9 @@ namespace RTParser
                     Type t = Type.GetType(typeName);
                     if (t == null) return null;
                     var c = t.GetConstructor(TagHandler.CONSTRUCTOR_TYPES);
-                    return (AIMLTagHandler) c.Invoke(new object[] {user, query, request, result, node, this});
-                } catch(Exception e)
+                    return (AIMLTagHandler)c.Invoke(new object[] { user, query, request, result, node, this });
+                }
+                catch (Exception e)
                 {
                     writeToLog("getBespokeTags: " + e);
                     return null;
@@ -1252,7 +1281,7 @@ namespace RTParser
         /// <param name="pathToDLL">the path to the dll containing the custom tag handling code</param>
         public void loadCustomTagHandlers(string pathToDLL)
         {
-           // return;
+            // return;
             Assembly tagDLL = Assembly.LoadFrom(pathToDLL);
             Type[] tagDLLTypes = tagDLL.GetTypes();
             for (int i = 0; i < tagDLLTypes.Length; i++)
@@ -1311,7 +1340,7 @@ namespace RTParser
         /// <param name="request">the request object that encapsulates all sorts of useful information</param>
         public void phoneHome(Unifiable errorMessage, Request request)
         {
-            MailMessage msg = new MailMessage("donotreply@aimlbot.com",this.AdminEmail);
+            MailMessage msg = new MailMessage("donotreply@aimlbot.com", this.AdminEmail);
             msg.Subject = "WARNING! AIMLBot has encountered a problem...";
             string message = @"Dear Botmaster,
 
@@ -1341,14 +1370,14 @@ The AIMLbot program.
             message = message.Replace("*MESSAGE*", errorMessage);
             message = message.Replace("*RAWINPUT*", request.rawInput);
             message = message.Replace("*USER*", request.user.UserID);
-            Unifiable paths = Unifiable.CreateAppendable(); 
-            foreach(Unifiable path in request.result.NormalizedPaths)
+            Unifiable paths = Unifiable.CreateAppendable();
+            foreach (Unifiable path in request.result.NormalizedPaths)
             {
-                paths.Append(path+Environment.NewLine);
+                paths.Append(path + Environment.NewLine);
             }
             message = message.Replace("*PATHS*", paths.ToString());
             msg.Body = message;
-            msg.IsBodyHtml=false;
+            msg.IsBodyHtml = false;
             try
             {
                 if (msg.To.Count > 0)
@@ -1476,10 +1505,54 @@ The AIMLbot program.
                 cycAccess = null;
             }
         }
-
+        
         private void populateFromCyc()
         {
+            AddExcuteHandler("cycl", ExecCycQuery);
+            AddExcuteHandler("subl", EvalSubLHandler);
+            AddExcuteHandler("aiml", EvalAIMLHandler);
             //cycAccess.setCyclist("CycAdministrator");
+        }
+
+        private object EvalAIMLHandler(string cmd, Request user)
+        {
+            XmlNode node =AIMLTagHandler.getNode("<template>" + cmd + "</template>");
+            var res = ImmediateAiml(node, BotAsRequest, Loader);
+            return res;
+        }
+
+        private object ExecCycQuery(string cmd, Request user)
+        {
+            try
+            {
+                Unifiable ss = EvalSubL("(cyc-query '" + cmd + " #$EverythingPSC)", null);
+                if (Unifiable.IsFalse(ss))
+                {
+                    return Unifiable.Empty;
+                }
+                return ss;
+            }
+            catch (Exception e)
+            {
+                string s = "" + e;
+                Console.WriteLine(s);
+                writeToLog(s);
+                return null;
+            }
+        }
+        private object EvalSubLHandler(string cmd, Request user)
+        {
+            try
+            {
+                return EvalSubL(cmd, null);
+            }
+            catch (Exception e)
+            {
+                string s = "" + e;
+                Console.WriteLine(s);
+                writeToLog(s);
+                return null;
+            }
         }
 
         public Unifiable EvalSubL(Unifiable cmd, Unifiable filter)
@@ -1488,7 +1561,7 @@ The AIMLbot program.
             CycAccess access = GetCycAccess;
             Console.Write(result);
             Console.Out.Flush();
-            if (!UseCyc)  return result;
+            if (!UseCyc) return result;
             try
             {
                 string str = "(list " + cmd + ")";
@@ -1506,7 +1579,7 @@ The AIMLbot program.
             }
             catch (Exception e)
             {
-                Console.WriteLine(""+e);
+                Console.WriteLine("" + e);
                 Console.Out.Flush();
                 return null;
             }
@@ -1541,8 +1614,8 @@ The AIMLbot program.
             //return text;
             try
             {
-	            string res = EvalSubL(String.Format("(generate-phrase {0})", text), null);
-                if ( String.IsNullOrEmpty(res)) return text;
+                string res = EvalSubL(String.Format("(generate-phrase {0})", text), null);
+                if (String.IsNullOrEmpty(res)) return text;
                 return res;
             }
             catch (System.Exception ex)
@@ -1564,11 +1637,11 @@ The AIMLbot program.
 
         #endregion
 
-        internal Unifiable SystemExecute(Unifiable cmd, Unifiable langu, User user)
+        internal Unifiable SystemExecute(Unifiable cmd, Unifiable langu, Request user)
         {
             if (String.IsNullOrEmpty(langu))
             {
-                langu = "bot";  
+                langu = "bot";
             }
             Unifiable s = "<The system tag should be doing '" + cmd + "' lang=" + langu + ">";
             writeToLog(s);
@@ -1588,11 +1661,11 @@ The AIMLbot program.
             }
             if (langu == "subl") return EvalSubL(cmd, null);
             return s;
-            
+
         }
 
 
-        readonly Dictionary<string,SystemExecHandler> ExecuteHandlers = new Dictionary<string, SystemExecHandler>();
+        readonly Dictionary<string, SystemExecHandler> ExecuteHandlers = new Dictionary<string, SystemExecHandler>();
 
         public void AddExcuteHandler(string lang, SystemExecHandler handler)
         {
@@ -1607,7 +1680,7 @@ The AIMLbot program.
         /// <returns>the value of the setting</returns>
         public Unifiable GetBotSetting(Unifiable name)
         {
-            return (Unifiable) GlobalSettings.grabSetting(name);
+            return (Unifiable)GlobalSettings.grabSetting(name);
         }
 
         public AIMLbot.Result ImmediateAiml(XmlNode templateNode, Request request0, AIMLLoader loader)
@@ -1659,7 +1732,7 @@ The AIMLbot program.
             }
             //else
             {
-              //  result.OutputSentences.Add(this.NotAcceptingUserInputMessage);
+                //  result.OutputSentences.Add(this.NotAcceptingUserInputMessage);
             }
 
             // populate the Result object
