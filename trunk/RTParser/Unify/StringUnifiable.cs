@@ -117,7 +117,7 @@ namespace RTParser
         {
             if (String.IsNullOrEmpty(str)) return true;
             string found = str.Trim().ToUpper();
-            return found == "" || found == "NIL" || found == "()" || found == "FALSE";
+            return found == "" || found == "NIL" || found == "()" || found == "FALSE" || found == "NO" || found == "OFF";
         }
 
         public override bool IsWildCard()
