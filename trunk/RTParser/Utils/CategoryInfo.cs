@@ -14,17 +14,17 @@ namespace RTParser.Utils
 
         public XmlNode Template
         {
-            get { return AIMLLoader.FindNode("template", Category); }
+            get { return AIMLLoader.FindNode("template", Category, null); }
         }
 
         public XmlNode Topic
         {
-            get { return AIMLLoader.FindNode("topic", Category); }
+            get { return AIMLLoader.FindNode("topic", Category, null); }
         }
 
         public XmlNode What
         {
-            get { return AIMLLoader.FindNode("what", Category); }
+            get { return AIMLLoader.FindNode("what", Category, null); }
         }
 
         public PatternInfo Pattern;

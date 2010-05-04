@@ -41,7 +41,7 @@ namespace RTParser.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "topic")
             {
-                Proc.Loader.processTopic(templateNode,LoaderOptions.GetDefault(this.request));
+                Proc.Loader.processTopic(templateNode, templateNode.ParentNode, LoaderOptions.GetDefault(this.request));
             }
             return Unifiable.Empty;
         }

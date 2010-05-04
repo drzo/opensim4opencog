@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using AIMLbot;
 
@@ -19,7 +20,7 @@ namespace RTParser.Utils
         /// <summary>
         /// The template found from searching the graphmaster brain with the path 
         /// </summary>
-        public List<TemplateInfo> Template = new List<TemplateInfo>();
+        public UList Template = new UList();
 
         /// <summary>
         /// If the raw input matches a wildcard then this attribute will contain the block of 
@@ -38,7 +39,7 @@ namespace RTParser.Utils
         /// will contain the block of text that the user has inputted that is matched by the wildcard.
         /// </summary>
         public List<Unifiable> TopicStar = new List<Unifiable>();
-             
+
         public List<Unifiable> GuardStar = new List<Unifiable>();
 
         #endregion
@@ -52,6 +53,58 @@ namespace RTParser.Utils
         {
             Result = req;
             this.FullPath = fullPath;
+        }
+    }
+
+    public class UList : IEnumerable<TemplateInfo>
+    {
+        private List<TemplateInfo> root = new List<TemplateInfo>();
+        public decimal Count
+        {
+            get { lock (root) return root.Count; }
+        }
+
+        public void Insert(int i, TemplateInfo info)
+        {
+            lock (root) root.Insert(i, info);
+
+        }
+
+        public void ForEach(Action<TemplateInfo> action)
+        {
+            lock (root) root.ForEach(action);
+        }
+
+        public void Remove(TemplateInfo info)
+        {
+            lock (root) root.Remove(info);
+        }
+
+        /// <summary>
+        /// Returns an enumerator that iterates through the collection.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="T:System.Collections.Generic.IEnumerator`1"/> that can be used to iterate through the collection.
+        /// </returns>
+        /// <filterpriority>1</filterpriority>
+        IEnumerator<TemplateInfo> IEnumerable<TemplateInfo>.GetEnumerator()
+        {
+            return GetRootEnumerator();
+        }
+
+        public IEnumerator GetEnumerator()
+        {
+            return GetRootEnumerator();
+        }
+
+        private IEnumerator<TemplateInfo> GetRootEnumerator()
+        {
+            var next = new List<TemplateInfo>();
+            lock (root)
+            {
+                next.AddRange(root);
+            }
+            return next.GetEnumerator();
         }
     }
 }

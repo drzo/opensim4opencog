@@ -154,14 +154,14 @@ namespace RTParser.Utils
 
         }
 
-        public void addCategoryTag(Unifiable unifiable, PatternInfo patternInfo, CategoryInfo category, XmlNode template, GuardInfo guard)
+        public void addCategoryTag(Unifiable generatedPath, PatternInfo patternInfo, CategoryInfo category, XmlNode outerNode, XmlNode templateNode, GuardInfo guard)
         {
-            RootNode.addCategoryTag(unifiable,patternInfo, category, template, guard, this);
+            RootNode.addCategoryTag(generatedPath, patternInfo, category, outerNode, templateNode, guard, this);
             // keep count of the number of categories that have been processed
             this.Size++;
         }
 
-        public List<TemplateInfo> evaluate(Unifiable unifiable, SubQuery query, Request request, MatchState state, Unifiable appendable)
+        public UList evaluate(Unifiable unifiable, SubQuery query, Request request, MatchState state, Unifiable appendable)
         {
             return RootNode.evaluate(unifiable, query, request, state, appendable);
         }
