@@ -188,6 +188,7 @@ namespace RTParser
 
         public static Unifiable ThatTag = Create("TAG-THAT");
         public static Unifiable TopicTag = Create("TAG-TOPIC");
+        public static Unifiable FlagTag = Create("TAG-FLAG");
 
         public abstract object Raw { get; }
         public virtual bool IsEmpty

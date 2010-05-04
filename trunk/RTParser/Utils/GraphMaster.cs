@@ -4,8 +4,11 @@ using System.Collections.Generic;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
 using System.Xml;
+using java.io;
 using RTParser.AIMLTagHandlers;
 using RTParser.Utils;
+using Console=System.Console;
+using File=System.IO.File;
 
 namespace RTParser.Utils
 {
@@ -46,66 +49,68 @@ namespace RTParser.Utils
 
         public PatternInfo FindPattern(XmlNode pattern, Unifiable unifiable)
         {
-            string pats = pattern.InnerXml.Replace("  ", " ").ToUpper();
-            pats = unifiable.AsString();
+            string pats = unifiable.AsString();
+            int skip = pats.IndexOf("TAG-THAT");
+            if (skip > 0) pats = pats.Substring(0, skip - 1);
             PatternInfo pi;
             lock (Patterns)
             {
                 if (!Patterns.TryGetValue(pats, out pi))
                 {
-                    Patterns[pats] = pi = new PatternInfo(pattern, unifiable);
+                    Patterns[pats] = pi = new PatternInfo(pattern, pats);
                 }
                 else
                 {
-                    if (pi.FullPath.AsNodeXML().ToString() != unifiable.AsNodeXML().ToString())
-                    {
-                        Console.WriteLine("Ut oh!");
-                    }
+                    CheckMismatch(pi, pats);
                     return pi;
                 }
             }
             return pi;
         }
 
-        public ThatInfo FindThat(XmlNode pattern, Unifiable unifiable)
+        public ThatInfo FindThat(Unifiable topicName)
         {
-            string pats = pattern.InnerXml.Replace("  ", " ").ToUpper();
-            pats = unifiable.AsString();
+            string pats = topicName.AsString();
             ThatInfo pi;
             lock (Thats)
             {
                 if (!Thats.TryGetValue(pats, out pi))
                 {
-                    Thats[pats] = pi = new ThatInfo(pattern, unifiable);
+                    Thats[pats] = pi = new ThatInfo(Utils.AIMLTagHandler.getNode("<pattern>" + topicName + "</pattern>"), topicName);
                 }
                 else
                 {
-                    if (pi.FullPath.AsNodeXML().ToString() != unifiable.AsNodeXML().ToString())
-                    {
-                        Console.WriteLine("Ut oh!");
-                    }
+                    CheckMismatch(pi, pats);
                     return pi;
                 }
             }
             return pi;
         }
-        public TopicInfo FindTopic(XmlNode pattern, Unifiable unifiable)
+
+        private void CheckMismatch(MatchInfo info, string pats)
         {
-            string pats = pattern.InnerXml.Replace("  ", " ").ToUpper();
-            pats = unifiable.AsString();
+            if (info.FullPath.AsNodeXML().ToString() != pats)
+            {
+                string s = "CheckMismatch " + info.FullPath.AsNodeXML().ToString() + "!=" + pats;
+                Console.WriteLine(s);
+                throw new InvalidObjectException(s);
+
+            }
+        }
+
+        public TopicInfo FindTopic(Unifiable topicName)
+        {
+            string pats = topicName.AsString();
             TopicInfo pi;
-            lock (Thats)
+            lock (Topics)
             {
                 if (!Topics.TryGetValue(pats, out pi))
                 {
-                    Topics[pats] = pi = new TopicInfo(pattern, unifiable);
+                    Topics[pats] = pi = new TopicInfo(Utils.AIMLTagHandler.getNode("<pattern>" + topicName + "</pattern>"), topicName);
                 }
                 else
                 {
-                    if (pi.FullPath.AsNodeXML().ToString() != unifiable.AsNodeXML().ToString())
-                    {
-                        Console.WriteLine("Ut oh!");
-                    }
+                    CheckMismatch(pi, topicName.AsNodeXML().ToString());
                     return pi;
                 }
             }
@@ -149,7 +154,7 @@ namespace RTParser.Utils
         {
             FileStream loadFile = File.OpenRead(path);
             BinaryFormatter bf = new BinaryFormatter();
-            this.RootNode = (Node) bf.Deserialize(loadFile);
+            this.RootNode = (Node)bf.Deserialize(loadFile);
             loadFile.Close();
 
         }

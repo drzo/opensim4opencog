@@ -12,6 +12,7 @@ namespace RTParser.Utils
     {
         UserInput,
         That,
-        Topic
+        Topic,
+        Flag
     }
 }

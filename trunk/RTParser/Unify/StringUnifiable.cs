@@ -167,7 +167,7 @@ namespace RTParser
 
         public override bool IsTag(string that)
         {
-            return str == "TAG-" + that;
+            return str == "TAG-" + that || str.StartsWith("<" + that.ToLower());
         }
 
         public override void Append(Unifiable p)

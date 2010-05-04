@@ -372,16 +372,38 @@ namespace RTParser.Utils
             GuardInfo guard = guardnode == null ? null : new GuardInfo(guardnode);
 
 
-            Unifiable categoryPath = this.generatePathExtractWhat(patternNode, cateNode, topicName, false);
+            XmlNode newPattern;
+            Unifiable patternText;
+            Unifiable that = extractThat(patternNode, "that", cateNode, out patternText, out newPattern).InnerXml;
+            patternNode = newPattern;
+            Unifiable cond = extractThat(patternNode, "flag", cateNode, out patternText, out newPattern).InnerXml;
+            patternNode = newPattern;
+            XmlNode topicTagText = extractThat(patternNode, "topic", cateNode, out patternText, out newPattern);
+            patternNode = newPattern;
+            if (!ContansNoInfo(cond))
+            {
+                //patternText = patternText;
+            }
+            if (!ContansNoInfo(topicTagText.InnerXml))
+            {
+                var s = RTPBot.GetAttribValue(topicTagText, "name", Unifiable.STAR);
+                if (topicName != s)
+                {
+                    throw new InvalidOperationException(cateNode.OuterXml);
+                }
+            }
+            Unifiable categoryPath = generatePath(patternText, that, cond ,topicName, false);
             PatternInfo patternInfo = PatternInfo.GetPattern(filename, patternNode, categoryPath);
+            TopicInfo topicInfo = TopicInfo.FindTopic(filename,topicName);
 
             // o.k., add the processed AIML to the GraphMaster structure
             if (!categoryPath.IsEmpty)
             {
                 try
                 {
+                    CategoryInfo categoryInfo = CategoryInfo.GetCategoryInfo(patternInfo, cateNode, filename);
                     this.RProcessor.GraphMaster.addCategoryTag(categoryPath, patternInfo,
-                                                               CategoryInfo.GetCategoryInfo(patternInfo, cateNode, filename),
+                                                               categoryInfo,
                                                                outerNode,templateNode, guard);
                 }
                 catch (Exception e)
@@ -398,6 +420,11 @@ namespace RTParser.Utils
             }
         }
 
+        private static bool ContansNoInfo(Unifiable cond)
+        {
+            return cond == null || cond == Unifiable.STAR || cond == Unifiable.Empty;
+        }
+
         /// <summary>
         /// Generates a path from a category XML cateNode and topic name
         /// </summary>
@@ -406,13 +433,13 @@ namespace RTParser.Utils
         /// <param name="isUserInput">marks the path to be created as originating from user input - so
         /// normalize out the * and _ wildcards used by AIML</param>
         /// <returns>The appropriately processed path</returns>
-        private Unifiable generatePathExtractWhat(XmlNode patternNode, XmlNode cateNode, Unifiable topicName, bool isUserInput)
+        static XmlNode extractThat(XmlNode patternNode,String tagname, XmlNode cateNode, out Unifiable patternText, out XmlNode newPattern)
         {
             // get the nodes that we need
-            XmlNode that = FindNode("that", cateNode, null);
+            XmlNode that = FindNodeOrHigher(tagname, cateNode, null);
 
-            Unifiable patternText;
-            Unifiable thatText = Unifiable.STAR;
+            //Unifiable thatText = Unifiable.STAR;
+
             if (object.Equals(null, patternNode))
             {
                 patternText = Unifiable.Empty;
@@ -421,13 +448,37 @@ namespace RTParser.Utils
             {
                 patternText = Unifiable.Create(patternNode);//.InnerXml;
             }
-            if (!object.Equals(null, that))
+
+            string patternString = patternNode.InnerXml;
+            int f = patternString.IndexOf("<" + tagname);
+            if (f>=0)
             {
-                thatText = that.InnerText;
+                that = FindNode(tagname, patternNode, null);
+                if (that==null)
+                {
+                    throw new NotImplementedException("generatePathExtractWhat: " + patternString);                    
+                }
+                string thatString = that.OuterXml;
+                if (!patternString.Contains(thatString))
+                {
+                    throw new NotImplementedException("generatePathExtractWhat: " + patternString);                    
+                }
+                patternString = patternString.Replace(thatString, "").Replace("  ", " ").Trim();
+                var newLineInfoPattern = AIMLTagHandler.getNode("<pattern>" + patternString + "</pattern>");
+                newLineInfoPattern.SetFromParent((LineInfoElement)patternNode);
+                patternNode = newLineInfoPattern;
+                patternText = Unifiable.Create(patternNode);//.InnerXml;
             }
 
-            return this.generatePath(patternText, thatText, topicName, isUserInput);
+            newPattern = patternNode;
+            if (!object.Equals(null, that))
+            {
+                //thatText = that.InnerXml;
+            }
+            return that ?? PatternStar;// hatText;//this.generatePath(patternText, thatText, topicName, isUserInput);
         }
+
+        protected static XmlNode PatternStar = AIMLTagHandler.getNode("<pattern name=\"*\">*</pattern>");
 
         /// <summary>
         /// Given a name will try to find a node named "name" in the childnodes or return null
@@ -445,6 +496,27 @@ namespace RTParser.Utils
                 }
             }
             return ifMissing;
+        }
+        static public XmlNode FindNodeOrHigher(string name, XmlNode node, XmlNode ifMissing)
+        {
+            if (node == null) return ifMissing;
+            foreach (XmlNode child in node.ChildNodes)
+            {
+                if (child.Name == name)
+                {
+                    return child;
+                }
+            }
+            return FindHigher(name, node.ParentNode, ifMissing);
+        }
+        static public XmlNode FindHigher(string name, XmlNode node, XmlNode ifMissing)
+        {
+            if (node == null) return ifMissing;
+            if (node.Name == name)
+            {
+                return node;
+            }
+            return FindHigher(name, node.ParentNode, ifMissing);
         }
         static public List<XmlNode> FindNodes(string name, XmlNode node)
         {
@@ -468,7 +540,7 @@ namespace RTParser.Utils
         /// <param name="isUserInput">marks the path to be created as originating from user input - so
         /// normalize out the * and _ wildcards used by AIML</param>
         /// <returns>The appropriately processed path</returns>
-        public Unifiable generatePath(Unifiable pattern, Unifiable that, Unifiable topicName, bool isUserInput)
+        public Unifiable generatePath(Unifiable pattern, Unifiable that, Unifiable flag, Unifiable topicName, bool isUserInput)
         {
             // to hold the normalized path to be entered into the graphmaster
             Unifiable normalizedPath = Unifiable.CreateAppendable();
@@ -518,6 +590,8 @@ namespace RTParser.Utils
                 normalizedPath.Append(Unifiable.Create(normalizedPattern));
                 normalizedPath.Append(Unifiable.ThatTag);
                 normalizedPath.Append(normalizedThat);
+                normalizedPath.Append(Unifiable.FlagTag);
+                normalizedPath.Append(flag);
                 normalizedPath.Append(Unifiable.TopicTag);
                 normalizedPath.Append(normalizedTopic);
 
@@ -593,7 +667,7 @@ namespace RTParser.Utils
         #endregion
     }
 
-    class XmlDocumentLineInfo : XmlDocument
+    public class XmlDocumentLineInfo : XmlDocument
     {
         public override void Load(Stream reader)
         {
@@ -628,6 +702,10 @@ namespace RTParser.Utils
         {
             LineTracker = lineInfoReader;
         }
+        public override void LoadXml(string xml)
+        {
+            base.Load(new XmlTextReader(new StringReader(xml)));
+        }
         public override XmlElement CreateElement(string prefix, string localname, string nsURI)
         {
             LineInfoElement elem = new LineInfoElement(prefix, localname, nsURI, this);
@@ -641,13 +719,14 @@ namespace RTParser.Utils
         }
     }
 
-    class LineInfoElement : XmlElement, IXmlLineInfo
+    public class LineInfoElement : XmlElement, IXmlLineInfo
     {
         public int lineNumber = 0;
         public int linePosition = 0;
         public long charPos = 0;
+        public LineInfoElement lParent;
         internal LineInfoElement(string prefix, string localname, string nsURI, XmlDocument doc)
-            : base(prefix, localname, nsURI, doc)
+            : base(prefix, localname.ToLower(), nsURI, doc)
         {
             //((XmlDocumentLineInfo)doc).IncrementElementCount();
         }
@@ -678,6 +757,22 @@ namespace RTParser.Utils
         public void SetPos(long position)
         {
             charPos = position;
+        }
+
+        internal void SetFromParent(LineInfoElement xmlNode)
+        {
+            lParent = (LineInfoElement) xmlNode.ParentNode;
+            lineNumber = xmlNode.LineNumber;
+            linePosition = xmlNode.linePosition;
+            charPos = xmlNode.charPos;
+        }
+        public override XmlNode ParentNode
+        {
+            get
+            {
+                if (lParent == null) return base.ParentNode;
+                return lParent;
+            }
         }
     } // End LineInfoElement class.
 }
