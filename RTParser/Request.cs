@@ -68,6 +68,8 @@ namespace RTParser
         }
 
         private Unifiable _topic;
+        public Unifiable Flags = "no flags";
+
         public Unifiable Topic
         {
             get

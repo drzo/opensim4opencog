@@ -851,7 +851,7 @@ namespace RTParser
                 foreach (Unifiable sentence in rawSentences)
                 {
                     result.InputSentences.Add(sentence);
-                    Unifiable path = loader.generatePath(sentence, request.user.getLastBotOutput(), request.Topic, true);
+                    Unifiable path = loader.generatePath(sentence, request.user.getLastBotOutput(),request.Flags, request.Topic, true);
                     result.NormalizedPaths.Add(path);
                 }
 
@@ -1719,7 +1719,7 @@ The AIMLbot program.
             }
             if (true)
             {
-                Unifiable path = loader.generatePath("no stars", request.user.getLastBotOutput(), request.Topic, true);
+                Unifiable path = loader.generatePath("no stars", request.user.getLastBotOutput(),request.Flags, request.Topic, true);
                 Utils.SubQuery query = new SubQuery(path, result);
                 string outputSentence = this.processNode(templateNode, query, request, result, request.user);
                 return result;
@@ -1733,7 +1733,8 @@ The AIMLbot program.
                 //foreach (Unifiable sentence in rawSentences)
                 {
                     result.InputSentences.Add(sentence);
-                    Unifiable path = loader.generatePath(sentence, request.user.getLastBotOutput(), request.Topic, true);
+                    Unifiable path = loader.generatePath(sentence, request.user.getLastBotOutput(), request.Flags,
+                                                         request.Topic, true);
                     result.NormalizedPaths.Add(path);
                 }
 

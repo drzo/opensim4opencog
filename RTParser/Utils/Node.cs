@@ -37,7 +37,7 @@ namespace RTParser.Utils
         /// <summary>
         /// The template (if any) associated with this node
         /// </summary>
-        public UList template = null;//Unifiable.Empty;
+        public UList TemplateInfos = null;//Unifiable.Empty;
 
 #if UNUSED
         /// <summary>
@@ -88,18 +88,18 @@ namespace RTParser.Utils
             if (!path.IsWildCard() && path.AsString().Trim().Length == 0)
             {
                 const bool RemoveDupes = true; //slows it down but maybe important to do
-                if (this.template == null)
+                if (this.TemplateInfos == null)
                 {
-                    this.template = new UList();
+                    this.TemplateInfos = new UList();
                 }
                 else if (RemoveDupes)
-                    lock (this.template)
+                    lock (this.TemplateInfos)
                     {
                         // search for old
                         string newStr = outTemplate.OuterXml;
                         string newGuard = guard != null ? guard.OuterXml : null;
                         List<TemplateInfo> dupes = null;
-                        this.template.ForEach(delegate(TemplateInfo temp)
+                        this.TemplateInfos.ForEach(delegate(TemplateInfo temp)
                                                   {
                                                       var categoryinfo1 = category;
                                                       var categoryinfo2 = temp.CategoryInfo;
@@ -120,7 +120,7 @@ namespace RTParser.Utils
                                 if (true)
                                 {
                                     master.RemoveTemplate(temp);
-                                    this.template.Remove(temp);
+                                    this.TemplateInfos.Remove(temp);
                                 }
                             });
                             dupes.Clear();
@@ -138,7 +138,7 @@ namespace RTParser.Utils
                 {
                     Console.WriteLine("Wierd!");
                 }
-                this.template.Insert(0, newTemplateInfo);
+                this.TemplateInfos.Insert(0, newTemplateInfo);
                 //this.GuardText = guard;
                 //this.filename = filename;
                 return;
@@ -263,14 +263,14 @@ namespace RTParser.Utils
                     // path.
                     this.storeWildCard(path, wildcard);
                 }
-                return this.template;
+                return this.TemplateInfos;
             }
 
             // if we've matched all the words in the input sentence and this is the end
             // of the line then return the cCategory for this node
             if (path.IsEmpty)
             {
-                return this.template;
+                return this.TemplateInfos;
             }
 
             // otherwise split the input into it's component words
@@ -332,6 +332,10 @@ namespace RTParser.Utils
                 else if (firstWord.IsTag("TOPIC"))
                 {
                     newMatchstate = MatchState.Topic;
+                }
+                else if (firstWord.IsTag("FLAG"))
+                {
+                    newMatchstate = MatchState.Flag;
                 }
 
                 //Node childNode = (Node)this.children[firstWord];
@@ -431,6 +435,9 @@ namespace RTParser.Utils
                             break;
                         case MatchState.Topic:
                             query.TopicStar.Add(newWildcard.Frozen());
+                            break;
+                        case MatchState.Flag:
+                           // query.TopicStar.Add(newWildcard.Frozen());
                             break;
                     }
                 }

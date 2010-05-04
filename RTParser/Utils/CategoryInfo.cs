@@ -31,8 +31,8 @@ namespace RTParser.Utils
        // public GuardInfo Guard;
         public LoaderOptions Filename;
         public List<TemplateInfo> TemplateInfos = new List<TemplateInfo>();
-        public CategoryInfo(PatternInfo pattern, XmlNode node, LoaderOptions filename)
-            : base(node)
+        public CategoryInfo(PatternInfo pattern, XmlNode cateNode, LoaderOptions filename)
+            : base(cateNode)
         {
             Pattern = pattern;
             Filename = filename;

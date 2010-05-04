@@ -21,9 +21,9 @@ namespace RTParser.Utils
             CategoryInfos.Add(template);
         }
 
-        public static ThatInfo GetPattern(LoaderOptions loaderOptions, XmlNode pattern, Unifiable unifiable)
+        public static ThatInfo GetPattern(LoaderOptions loaderOptions,Unifiable unifiable)
         {
-            return loaderOptions.Graph.FindThat(pattern, unifiable);
+            return loaderOptions.Graph.FindThat(unifiable);
         }
     }
 }

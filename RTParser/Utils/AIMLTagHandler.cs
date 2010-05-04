@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Text;
 using System.Xml;
 
@@ -119,11 +120,11 @@ namespace RTParser.Utils
         /// </summary>
         /// <param name="outerXML">the Unifiable to XMLize</param>
         /// <returns>The XML node</returns>
-        public static XmlNode getNode(string outerXML)
+        public static LineInfoElement getNode(string outerXML)
         {
-            XmlDocument temp = new XmlDocument();
+            XmlDocumentLineInfo temp = new XmlDocumentLineInfo(new StringReader(outerXML));
             temp.LoadXml(outerXML);
-            return temp.FirstChild;
+            return (LineInfoElement)temp.FirstChild;
         }
 
 
