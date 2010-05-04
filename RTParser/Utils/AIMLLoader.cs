@@ -235,7 +235,12 @@ namespace RTParser.Utils
                     String s = "which causes loadAIMLStream '" + input + "' " + filename + " charpos=" + input.Position;
                     s = s + "\n" + e2.Message + "\n" + e2.StackTrace + "\n" + s;
                     System.Console.WriteLine(s);
-                    // throw e2;
+                    //System.Console.Flush();
+                    if (!xtr.Read())
+                    {
+                        throw e2; 
+                    }
+                    // 
                 }
 
             }
@@ -278,11 +283,11 @@ namespace RTParser.Utils
 
                 if (currentNode.Name == "topic")
                 {
-                    this.processTopic(currentNode, filename);
+                    this.processTopic(currentNode, currentNode.ParentNode, filename);
                 }
                 else if (currentNode.Name == "category")
                 {
-                    this.processCategory(currentNode, filename);
+                    this.processCategory(currentNode, currentNode.ParentNode, filename);
                 }
                 else
                 {
@@ -303,26 +308,21 @@ namespace RTParser.Utils
         }
 
         /// <summary>
-        /// Given a "topic" node, processes all the categories for the topic and adds them to the 
+        /// Given a "topic" topicNode, processes all the categories for the topic and adds them to the 
         /// graphmaster "brain"
         /// </summary>
-        /// <param name="node">the "topic" node</param>
-        /// <param name="filename">the file from which this node is taken</param>
-        public void processTopic(XmlNode node, LoaderOptions filename)
+        /// <param name="topicNode">the "topic" node</param>
+        /// <param name="filename">the file from which this topicNode is taken</param>
+        public void processTopic(XmlNode topicNode, XmlNode outerNode, LoaderOptions filename)
         {
             // find the name of the topic or set to default "*"
-            Unifiable topicName = "*";
-            if ((node.Attributes.Count == 1) & (node.Attributes[0].Name == "name"))
-            {
-                topicName = node.Attributes["name"].Value;
-            }
-
+            Unifiable topicName = RTPBot.GetAttribValue(topicNode, "name", Unifiable.STAR);
             // process all the category nodes
-            foreach (XmlNode thisNode in node.ChildNodes)
+            foreach (XmlNode cateNode in topicNode.ChildNodes)
             {
-                if (thisNode.Name == "category")
+                if (cateNode.Name == "category")
                 {
-                    processCategoryWithTopic(thisNode, topicName, filename);
+                    processCategoryWithTopic(cateNode, topicName, topicNode, filename);
                 }
             }
         }
@@ -330,95 +330,96 @@ namespace RTParser.Utils
         /// <summary>
         /// Adds a category to the graphmaster structure using the default topic ("*")
         /// </summary>
-        /// <param name="node">the XML node containing the category</param>
+        /// <param name="cateNode">the XML node containing the category</param>
         /// <param name="filename">the file from which this category was taken</param>
-        public void processCategory(XmlNode node, LoaderOptions filename)
+        public void processCategory(XmlNode cateNode, XmlNode outerNode, LoaderOptions filename)
         {
-            this.processCategoryWithTopic(node, Unifiable.STAR, filename);
+            this.processCategoryWithTopic(cateNode, Unifiable.STAR, outerNode, filename);
         }
 
         /// <summary>
         /// Adds a category to the graphmaster structure using the given topic
         /// </summary>
-        /// <param name="node">the XML node containing the category</param>
+        /// <param name="cateNode">the XML node containing the category</param>
         /// <param name="topicName">the topic to be used</param>
         /// <param name="filename">the file from which this category was taken</param>
-        private void processCategoryWithTopic(XmlNode node, Unifiable topicName, LoaderOptions filename)
+        private void processCategoryWithTopic(XmlNode cateNode, Unifiable topicName, XmlNode outerNode,  LoaderOptions filename)
         {
-            Dictionary<string, List<XmlNode>> store = GetTopicStore();
             // reference and check the required nodes
-            List<XmlNode> patterns = FindNodes("pattern", node);
-            List<XmlNode> templates = FindNodes("template", node);
+            List<XmlNode> patterns = FindNodes("pattern", cateNode);
+            List<XmlNode> templates = FindNodes("template", cateNode);
             foreach (XmlNode pattern in patterns)
             {
                 foreach (var template in templates)
                 {
-                    XmlNode guardnode = FindNode("guard", node);
-                    GuardInfo guard = guardnode == null ? null : new GuardInfo(guardnode);
-
-
                     if (object.Equals(null, pattern))
                     {
-                        throw new XmlException("Missing pattern tag in a node found in " + filename);
+                        throw new XmlException("Missing pattern tag in a cateNode found in " + filename);
                     }
                     if (object.Equals(null, template))
                     {
-                        throw new XmlException("Missing template tag in the node with pattern: " + pattern.InnerText + " found in " + filename);
+                        throw new XmlException("Missing template tag in the cateNode with pattern: " + pattern.InnerText + " found in " + filename);
                     }
-
-                    Unifiable categoryPath = this.generatePath00(pattern, node, topicName, false);
-
-                    PatternInfo patternInfo = (PatternInfo) PatternInfo.GetPattern(filename, pattern, categoryPath);
-
-                    // o.k., add the processed AIML to the GraphMaster structure
-                    if (!categoryPath.IsEmpty)
-                    {
-                        try
-                        {
-                            this.RProcessor.GraphMaster.addCategoryTag(categoryPath, patternInfo,
-                                                                       CategoryInfo.GetCategoryInfo(patternInfo, node, filename),
-                                                                       template, guard);
-                        }
-                        catch
-                        {
-                            this.RProcessor.writeToLog("ERROR! Failed to load a new category into the graphmaster where the path = " + categoryPath + " and template = " + template.OuterXml + " produced by a category in the file: " + filename);
-                        }
-                    }
-                    else
-                    {
-                        this.RProcessor.writeToLog("WARNING! Attempted to load a new category with an empty pattern where the path = " + categoryPath + " and template = " + template.OuterXml + " produced by a category in the file: " + filename);
-                    }
+                    addCatNode(cateNode, pattern, filename, template, topicName, outerNode);
                 }
             }            
         }
 
-        private Dictionary<string, List<XmlNode>> GetTopicStore()
+        private void addCatNode(XmlNode cateNode, XmlNode patternNode, LoaderOptions filename, XmlNode templateNode, 
+            Unifiable topicName, XmlNode outerNode)
         {
-            return null;// throw new NotImplementedException();
+            XmlNode guardnode = FindNode("guard", cateNode, FindNode("guard", outerNode, null));
+            GuardInfo guard = guardnode == null ? null : new GuardInfo(guardnode);
+
+
+            Unifiable categoryPath = this.generatePathExtractWhat(patternNode, cateNode, topicName, false);
+            PatternInfo patternInfo = PatternInfo.GetPattern(filename, patternNode, categoryPath);
+
+            // o.k., add the processed AIML to the GraphMaster structure
+            if (!categoryPath.IsEmpty)
+            {
+                try
+                {
+                    this.RProcessor.GraphMaster.addCategoryTag(categoryPath, patternInfo,
+                                                               CategoryInfo.GetCategoryInfo(patternInfo, cateNode, filename),
+                                                               outerNode,templateNode, guard);
+                }
+                catch (Exception e)
+                {
+                    string s = "ERROR! Failed to load a new category into the graphmaster where the path = " +
+                               categoryPath + " and templateNode = " + templateNode.OuterXml +
+                               " produced by a category in the file: " + filename + "\n";
+                    this.RProcessor.writeToLog(s + e + "\n" + s);
+                }
+            }
+            else
+            {
+                this.RProcessor.writeToLog("WARNING! Attempted to load a new category with an empty patternNode where the path = " + categoryPath + " and templateNode = " + templateNode.OuterXml + " produced by a category in the file: " + filename);
+            }
         }
 
         /// <summary>
-        /// Generates a path from a category XML node and topic name
+        /// Generates a path from a category XML cateNode and topic name
         /// </summary>
-        /// <param name="node">the category XML node</param>
+        /// <param name="cateNode">the category XML node</param>
         /// <param name="topicName">the topic</param>
         /// <param name="isUserInput">marks the path to be created as originating from user input - so
         /// normalize out the * and _ wildcards used by AIML</param>
         /// <returns>The appropriately processed path</returns>
-        private Unifiable generatePath00(XmlNode pattern, XmlNode node, Unifiable topicName, bool isUserInput)
+        private Unifiable generatePathExtractWhat(XmlNode patternNode, XmlNode cateNode, Unifiable topicName, bool isUserInput)
         {
             // get the nodes that we need
-            XmlNode that = FindNode("that", node);
+            XmlNode that = FindNode("that", cateNode, null);
 
             Unifiable patternText;
             Unifiable thatText = Unifiable.STAR;
-            if (object.Equals(null, pattern))
+            if (object.Equals(null, patternNode))
             {
                 patternText = Unifiable.Empty;
             }
             else
             {
-                patternText = Unifiable.Create(pattern);//.InnerXml;
+                patternText = Unifiable.Create(patternNode);//.InnerXml;
             }
             if (!object.Equals(null, that))
             {
@@ -434,7 +435,7 @@ namespace RTParser.Utils
         /// <param name="name">The name of the node</param>
         /// <param name="node">The node whose children need searching</param>
         /// <returns>The node (or null)</returns>
-        static public XmlNode FindNode(string name, XmlNode node)
+        static public XmlNode FindNode(string name, XmlNode node, XmlNode ifMissing)
         {
             foreach (XmlNode child in node.ChildNodes)
             {
@@ -443,7 +444,7 @@ namespace RTParser.Utils
                     return child;
                 }
             }
-            return null;
+            return ifMissing;
         }
         static public List<XmlNode> FindNodes(string name, XmlNode node)
         {

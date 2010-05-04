@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using System.IO;
+using System.Threading;
 using System.Xml;
 using System.Text;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -892,10 +893,33 @@ namespace RTParser
         /// <returns></returns>
         private bool processTemplate(SubQuery query, Request request, Result result)
         {
-            bool found = false;
-            if (query.Template != null && query.Template.Count > 0)
+            UList queryTemplate = query.Template;
+            if (queryTemplate != null && queryTemplate.Count > 0)
             {
-                foreach (TemplateInfo s in query.Template)
+                try
+                {
+                    if (false && !Monitor.TryEnter(queryTemplate, 4000))
+                    {
+                        this.writeToLog("WARNING! Giving up on input: " + request.rawInput);
+                        return false;
+                    }
+                    return processTemplateUlocked(queryTemplate, query, request, result);
+                }
+                finally
+                {
+                   // Monitor.Exit(queryTemplate);
+                }
+
+            }
+            return false;
+        }
+
+        private bool processTemplateUlocked(UList queryTemplate, SubQuery query, Request request, Result result)
+        {
+            bool found = false;
+            if (queryTemplate != null && queryTemplate.Count > 0)
+            {
+                foreach (TemplateInfo s in queryTemplate)
                 {
                     try
                     {
@@ -911,7 +935,7 @@ namespace RTParser
                             this.phoneHome(e.Message, request);
                         }
                         this.writeToLog("WARNING! A problem was encountered when trying to process the input: " +
-                                        request.rawInput + " with the template: \"" + query.Template + "\"");
+                                        request.rawInput + " with the template: \"" + s + "\"");
                         return false;
                     }
 

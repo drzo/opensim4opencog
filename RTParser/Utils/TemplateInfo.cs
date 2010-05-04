@@ -12,6 +12,10 @@ namespace RTParser.Utils
 
         public TemplateInfo(XmlNode template, GuardInfo guard, Node patternNode, CategoryInfo categoryInfo):base(template)
         {
+            if (template.Name != "template")
+            {
+                throw new UnauthorizedAccessException();
+            }
             Guard = guard;
             GraphmasterNode = patternNode;
             CategoryInfo = categoryInfo;
