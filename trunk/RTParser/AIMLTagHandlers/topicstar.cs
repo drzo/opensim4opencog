@@ -39,48 +39,25 @@ namespace RTParser.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "topicstar")
             {
-                if (this.templateNode.Attributes.Count == 0)
+                try
                 {
-                    if (this.query.TopicStar.Count > 0)
+                    int result = Convert.ToInt32(GetAttribValue("index", "1"));
+                    if (result >= 0)
                     {
-                        return (Unifiable)this.query.TopicStar[0];
+                        if (result < query.TopicStar.Count)
+                        {
+                            return (Unifiable)this.query.TopicStar[result - 1];
+                        }
                     }
                     else
                     {
-                        this.Proc.writeToLog("ERROR! An out of bounds index to topicstar was encountered when processing the input: " + this.request.rawInput);
+                        this.Proc.writeToLog("ERROR! An out of bounds index " + result + " to TopicStar was encountered when processing the input: " + this.request.rawInput);
                     }
+                    return GetAttribValue("default", Unifiable.Empty);
                 }
-                else if (this.templateNode.Attributes.Count == 1)
+                catch
                 {
-                    if (this.templateNode.Attributes[0].Name.ToLower() == "index")
-                    {
-                        if (this.templateNode.Attributes[0].Value.Length > 0)
-                        {
-                            try
-                            {
-                                int result = Convert.ToInt32(this.templateNode.Attributes[0].Value.Trim());
-                                if (this.query.TopicStar.Count > 0)
-                                {
-                                    if (result > 0)
-                                    {
-                                        return (Unifiable)this.query.TopicStar[result - 1];
-                                    }
-                                    else
-                                    {
-                                        this.Proc.writeToLog("ERROR! An input tag with a bady formed index (" + this.templateNode.Attributes[0].Value + ") was encountered processing the input: " + this.request.rawInput);
-                                    }
-                                }
-                                else
-                                {
-                                    this.Proc.writeToLog("ERROR! An out of bounds index to topicstar was encountered when processing the input: " + this.request.rawInput);
-                                }
-                            }
-                            catch
-                            {
-                                this.Proc.writeToLog("ERROR! A thatstar tag with a bady formed index (" + this.templateNode.Attributes[0].Value + ") was encountered processing the input: " + this.request.rawInput);
-                            }
-                        }
-                    }
+                    this.Proc.writeToLog("ERROR! A TopicStar tag with a bady formed index (" + this.templateNode.OuterXml + ") was encountered processing the input: " + this.request.rawInput);
                 }
             }
             return Unifiable.Empty;
