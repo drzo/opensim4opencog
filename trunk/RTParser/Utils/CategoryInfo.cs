@@ -57,5 +57,11 @@ namespace RTParser.Utils
         {
             return filename.Graph.FindCategoryInfo(info, node, filename);
         }
+
+        public static CategoryInfo MakeCategoryInfo(PatternInfo info, XmlNode node, LoaderOptions filename)
+        {
+            if (NoInfo) return null;
+            return new CategoryInfo(info, node, filename);
+        }
     }
 }

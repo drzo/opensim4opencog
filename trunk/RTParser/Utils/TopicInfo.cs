@@ -23,6 +23,7 @@ namespace RTParser.Utils
 
         public static TopicInfo FindTopic(LoaderOptions loaderOptions, Unifiable unifiable)
         {
+            if (NoInfo) return null;
             return loaderOptions.Graph.FindTopic(unifiable);
         }
     }
