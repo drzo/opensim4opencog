@@ -66,7 +66,7 @@ namespace RTParser.Utils
         /// <summary>
         /// The bot this dictionary is associated with
         /// </summary>
-        //protected RTParser.RTPBot bot;
+        protected RTParser.RTPBot bot;
 
         /// <summary>
         /// The number of items in the dictionary
@@ -114,7 +114,7 @@ namespace RTParser.Utils
         /// <param name="bot">The bot for whom this is a settings dictionary</param>
         public SettingsDictionary(RTParser.RTPBot bot, ParentProvider parent)
         {
-            //this.bot = bot;
+            this.bot = bot;
             if (parent!=null) _parent.Add(parent);
         }
 
@@ -148,19 +148,25 @@ namespace RTParser.Utils
                         }
                         catch (Exception e)
                         {
-                            Console.WriteLine("loadSettings: " + pathToSettings + "\n" + e);
+                            writeToLog("loadSettings: " + pathToSettings + "\n" + e);
                         }
                     }
                     else
                     {
-                        Console.WriteLine("No settings found in: " + pathToSettings);
+                        writeToLog("No settings found in: " + pathToSettings);
                     }
+                    writeToLog("Loaded Settings found in: " + pathToSettings);
                 }
                 else
                 {
                     throw new FileNotFoundException();
                 }
             }
+        }
+
+        private void writeToLog(string s)
+        {
+            if (bot != null) bot.writeToLog(s); else Console.WriteLine(s);
         }
 
         /// <summary>

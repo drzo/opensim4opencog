@@ -40,7 +40,7 @@ namespace RTParser.Utils
             this.request = request;
             this.result = result;
             this.templateNode = templateNode;
-            this.templateNode.Attributes.RemoveNamedItem("xmlns");
+            if (this.templateNode.Attributes != null) this.templateNode.Attributes.RemoveNamedItem("xmlns");
         }
 
         /// <summary>
@@ -192,12 +192,12 @@ namespace RTParser.Utils
                     }
                     else
                     {
-                        s = s + " " + li.lineNumber + "/" + li.linePosition;
+                        s = s + " (" + li.lineNumber + ":" + li.linePosition + ")";
                     }
                 }
                 else
                 {
-                    s = s + " " + li.lineNumber + "/" + li.linePosition + " " + li.OwnerDocument.ToString();
+                    s = s + " (" + li.OwnerDocument.ToString() + ":line " + li.lineNumber + "," + li.linePosition + ") ";
                 }
             }
             else

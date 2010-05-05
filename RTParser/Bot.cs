@@ -438,10 +438,10 @@ namespace RTParser
                 if (File.Exists(file))
                 {
                     StreamReader sr = new StreamReader(file);
-                    Console.WriteLine(" **** Markovian Brain LoadMarkovLTM: '{0}'****", file);
+                    writeToLog(" **** Markovian Brain LoadMarkovLTM: '{0}'****", file);
                     this.MBrain.Learn(sr);
                     sr.Close();
-                    Console.WriteLine(" **** Markovian Brain initialized.: '{0}' **** ", file);
+                    writeToLog(" **** Markovian Brain initialized.: '{0}' **** ", file);
                     loadcount++;
                 }
 
@@ -449,16 +449,16 @@ namespace RTParser
                 if (File.Exists(file))
                 {
                     StreamReader sr = new StreamReader(file);
-                    Console.WriteLine(" **** Markovian Brain LoadMarkovLTM: '{0}'**** ", file);
+                    writeToLog(" **** Markovian Brain LoadMarkovLTM: '{0}'**** ", file);
                     this.MBrain.LearnNgram(sr);
                     sr.Close();
-                    Console.WriteLine(" **** Markovian Brain N-Gram initialized '{0}'. **** ", file);
+                    writeToLog(" **** Markovian Brain N-Gram initialized '{0}'. **** ", file);
                     loadcount++;
                 }
 
                 if (loadcount == 0)
                 {
-                    Console.WriteLine(" **** WARNING: No Markovian Brain Training nor N-Gram file found for '{0}' . **** ", name);
+                    writeToLog(" **** WARNING: No Markovian Brain Training nor N-Gram file found for '{0}' . **** ", name);
                 }
             }
 
@@ -468,12 +468,12 @@ namespace RTParser
                 //if (Directory.Exists(file))
                 if (File.Exists(file))
                 {
-                    Console.WriteLine("Load Corpus Bigrams: '{0}'", file);
+                    writeToLog("Load Corpus Bigrams: '{0}'", file);
                     StreamReader sr = new StreamReader(file);
                     pHMM.LearnBigramFile(sr);
                     sr.Close();
                     pHMM.hmmCorpusLoaded++;
-                    Console.WriteLine("Loaded Corpus Bigrams: '{0}'", file);
+                    writeToLog("Loaded Corpus Bigrams: '{0}'", file);
                 }
             }
 
@@ -705,9 +705,16 @@ namespace RTParser
         /// Log files have the form of yyyyMMdd.log.
         /// </summary>
         /// <param name="message">The message to log</param>
-        public void writeToLog(string message)
+        public void writeToLog(string message, params object[] args)
         {
-            message = (DateTime.Now.ToString() + ": " + message + Environment.NewLine);
+            try
+            {
+                if (args != null && args.Length != 0) message = String.Format(message, args);
+            }
+            catch (Exception)
+            {
+            }
+            message = ("[" + DateTime.Now.ToString() + "]: " + message.Trim() + Environment.NewLine);
             writeToLog0(Unifiable.Create(message));
         }
         public void writeToLog0(Unifiable message)
@@ -722,10 +729,11 @@ namespace RTParser
                 catch (Exception)
                 {
                 }
+                Console.WriteLine(message);
             }
             else
             {
-                string m = message.AsString().ToLower();
+                //string m = message.AsString().ToLower();
                 //if (m.Contains("error") || m.Contains("excep"))
                 Console.WriteLine(message);
             }
@@ -850,41 +858,82 @@ namespace RTParser
                 Loader = loader;
                 //RTParser.Normalize.SplitIntoSentences splitter = new RTParser.Normalize.SplitIntoSentences(this);
                 Unifiable[] rawSentences = new Unifiable[] { request.rawInput };//splitter.Transform(request.rawInput);
-                foreach (Unifiable sentence in rawSentences)
+                string lastInput = "";
+                foreach (Unifiable sentence0 in rawSentences)
                 {
+                    string sentence = sentence0;
                     result.InputSentences.Add(sentence);
-                    int topicNum = 0;
-                    foreach (Unifiable topic in request.Topics)
+                    sentence = sentence.Trim();
+                    while (sentence.EndsWith(".") || sentence.EndsWith(","))
                     {
+                        sentence = sentence.Substring(0, sentence.Length - 1).Trim();
+                    }
+                    int topicNum = 0;
+                    foreach (Unifiable topic0 in request.Topics)
+                    {
+                        Unifiable topic = topic0;
                         topicNum++;
+                        if (topic.IsWildCard())
+                        {
+                            topic = "NOTOPIC";
+                        }
                         int thatNum = 0;
                         foreach (Unifiable that in request.BotOutputs)
-                        {
+                        {                            
                             thatNum++;
                             UPath path = loader.generatePath(sentence, //thatNum + " " +
                                                              that, request.Flags,
                                                              //topicNum + " " +
                                                              topic, true);
+                            if (that.IsWildCard())
+                            {
+                                if (thatNum>1)
+                                {
+                                    continue;
+                                }
+                                if (topic.IsWildCard())
+                                {
+                                    topic = "NOTHAT";
+                                }
+                            }
+                            string thisInput = path.LegacyPath.AsString().Trim().ToUpper();
+                            if (thisInput==lastInput) continue;
+                            lastInput = thisInput;
                             result.NormalizedPaths.Add(path);
                         }
                     }
                 }
                 int NormalizedPathsCount = result.NormalizedPaths.Count;
-                if (NormalizedPathsCount > 1)
+                if (NormalizedPathsCount != 1)
                 {
                     writeToLog("NormalizedPaths.Count = " + NormalizedPathsCount);
+                    foreach (UPath path in  result.NormalizedPaths)
+                    {
+                        writeToLog("  i: " + path.LegacyPath);
+                    }
                 }
 
                 // grab the templates for the various sentences from the graphmaster
                 foreach (UPath path in result.NormalizedPaths)
                 {
                     Utils.SubQuery query = new SubQuery(path, result);
-                    query.Template = this.GraphMaster.evaluate(path, query, request, MatchState.UserInput, Unifiable.CreateAppendable());
+                    query.Templates = this.GraphMaster.evaluate(path, query, request, MatchState.UserInput, Unifiable.CreateAppendable());
                     result.SubQueries.Add(query);
                 }
 
                 //todo pick and chose the queries
-                if (result.SubQueries.Count != 1) Console.WriteLine("Found " + result.SubQueries.Count + " queries");
+                if (result.SubQueries.Count != 1)
+                {
+                    if (false)
+                    {
+                        string s = "SubQueries.Count = " + result.SubQueries.Count;
+                        foreach (var path in result.SubQueries)
+                        {
+                            s += "\r\n" + path.FullPath;
+                        }
+                        writeToLog(s);
+                    }
+                }
 
                 // process the templates into appropriate output
                 foreach (SubQuery query in result.SubQueries)
@@ -892,6 +941,14 @@ namespace RTParser
                     if (processTemplate(query, request, result, null))
                     {
                         
+                    }
+                }
+                if (result.SubQueries.Count != 1)
+                {
+                    writeToLog("SubQueries.Count = " + result.SubQueries.Count);
+                    foreach (var path in result.SubQueries)
+                    {
+                        writeToLog("\r\n tt: " + path.ToString().Replace("\n", " ").Replace("\r", " ").Replace("  ", " "));
                     }
                 }
             }
@@ -916,7 +973,7 @@ namespace RTParser
         /// <returns></returns>
         private bool processTemplate(SubQuery query, Request request, Result result, AIMLTagHandler handler)
         {
-            UList queryTemplate = query.Template;
+            UList queryTemplate = query.Templates;
             if (queryTemplate != null && queryTemplate.Count > 0)
             {
                 try
@@ -952,7 +1009,7 @@ namespace RTParser
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine("" + e);
+                        writeToLog("" + e);
                         if (this.WillCallHome)
                         {
                             this.phoneHome(e.Message, request);
@@ -1062,7 +1119,7 @@ namespace RTParser
             {
                 request.Proccessor.writeToLog("WARNING! Request timeout. User: " + request.user.UserID +
                                               " raw input: \"" + request.rawInput + "\" processing template: \"" +
-                                              query.Template + "\"");
+                                              query.Templates + "\"");
                 request.hasTimedOut = true;
                 return Unifiable.Empty;
             }
@@ -1097,8 +1154,6 @@ namespace RTParser
             {
                 switch (node.Name.ToLower())
                 {
-                    case "#text":
-                        return null;
                     case "template":
                         tagHandler = new AIMLTagHandlers.template(this, user, query, request, result, node);
                         break;
@@ -1255,10 +1310,17 @@ namespace RTParser
                     case "soundcode":
                         tagHandler = new AIMLTagHandlers.soundcode(this, user, query, request, result, node);
                         break;
-                    case "#comment":
+                    case "#text":
                         return null;
+                    case "#comment":
+                        return new AIMLTagHandlers.verbatum(node.OuterXml, this, user, query, request, result, node);
+                    case "br":
+                        return new AIMLTagHandlers.verbatum("\n", this, user, query, request, result, node);
+                    case "p":
+                        return new AIMLTagHandlers.verbatum("\n\n", this, user, query, request, result, node);
                     default:
-                        tagHandler = null;
+                        tagHandler = new AIMLTagHandlers.verbatum(node.OuterXml, this, user, query, request, result, node);
+                        writeToLog("Verbatum: " + node.OuterXml);
                         break;
                 }
             }
@@ -1628,7 +1690,7 @@ The AIMLbot program.
             {
                 string str = "(list " + cmd + ")";
                 Object oresult = access.converseList(str).first();
-                Console.WriteLine(str + " => " + oresult);
+                writeToLog(str + " => " + oresult);
                 result = "" + oresult;
                 if (oresult is CycObject)
                 {
@@ -1641,7 +1703,7 @@ The AIMLbot program.
             }
             catch (Exception e)
             {
-                Console.WriteLine("" + e);
+                writeToLog("" + e);
                 Console.Out.Flush();
                 return null;
             }
@@ -1717,7 +1779,7 @@ The AIMLbot program.
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("" + e);
+                    writeToLog("" + e);
                     return Unifiable.Empty;
                 }
             }
@@ -1781,12 +1843,15 @@ The AIMLbot program.
                 foreach (UPath path in result.NormalizedPaths)
                 {
                     Utils.SubQuery query = new SubQuery(path, result);
-                    query.Template = this.GraphMaster.evaluate(path, query, request, MatchState.UserInput, Unifiable.CreateAppendable());
+                    query.Templates = this.GraphMaster.evaluate(path, query, request, MatchState.UserInput, Unifiable.CreateAppendable());
                     result.SubQueries.Add(query);
                 }
 
                 //todo pick and chose the queries
-                if (result.SubQueries.Count != 1) Console.WriteLine("Found " + result.SubQueries.Count + " queries");
+                if (result.SubQueries.Count != 1)
+                {
+                    writeToLog("Found " + result.SubQueries.Count + " queries");
+                }
 
                 // process the templates into appropriate output
                 foreach (SubQuery query in result.SubQueries)
