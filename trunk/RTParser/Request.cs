@@ -105,9 +105,18 @@ namespace RTParser
             }
         }
 
-        public IEnumerable<Unifiable> Topics
+        public IList<Unifiable> Topics
         {
-            get { return new List<Unifiable>(){Topic}; }
+            get
+            {
+                var tops = user.Topics;
+                if (_topic!=null)
+                {
+                    if (!tops.Contains(_topic)) tops.Insert(0, _topic);
+                }
+                if (tops.Count == 0) return new List<Unifiable>() { Proccessor.NOTOPIC };
+                return tops;
+            }
         }
 
         public IEnumerable<Unifiable> BotOutputs

@@ -40,14 +40,37 @@ namespace RTParser
         /// </summary>
         private List<Result> Results = new List<Result>();
 
+        List<Unifiable>  _topics = new List<Unifiable>();
+        public IList<Unifiable> Topics
+        {
+            get
+            {
+                if (_topics.Count == 0) return new List<Unifiable>() {bot.NOTOPIC};
+                return _topics;
+            }
+        }
+
 		/// <summary>
 		/// the value of the "topic" predicate
 		/// </summary>
+        public Unifiable Topic
+        {
+            get
+            {
+                return TopicSetting;
+            }
+
+        }
+
         public Unifiable TopicSetting
         {
             get
             {
                 return this.Predicates.grabSetting("topic");
+            }
+            set
+            {
+                Predicates.addSetting("topic", value);
             }
         }
 
@@ -132,8 +155,9 @@ namespace RTParser
                 this.bot = bot;
                 this.Predicates = new RTParser.Utils.SettingsDictionary(this.bot, provider);
                 this.bot.DefaultPredicates.Clone(this.Predicates);
-                this.Predicates.addSetting("topic", Unifiable.STAR);
-                this.Predicates.addSetting("topic", "NOTOPIC");
+                this.Predicates.AddGetSetProperty("topic", new CollectionProperty(_topics, () => bot.NOTOPIC));
+                //this.Predicates.addSetting("topic", Unifiable.STAR);
+                //this.Predicates.addSetting("topic", "NOTOPIC");
             }
             else
             {

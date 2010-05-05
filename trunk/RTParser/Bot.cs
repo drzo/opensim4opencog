@@ -526,6 +526,10 @@ namespace RTParser
 
         private void SetSaneGlobals(SettingsDictionary settings)
         {
+            if (!settings.containsSettingCalled("notopic"))
+            {
+                GlobalSettings.addSetting("notopic", "Nothing");
+            }
             if (!settings.containsSettingCalled("version"))
             {
                 settings.addSetting("version", Environment.Version.ToString());
@@ -693,7 +697,7 @@ namespace RTParser
         /// <summary>
         /// The last message to be entered into the log (for testing purposes)
         /// </summary>
-        public string LastLogMessage = string.Empty;
+        public string LastLogMessage = String.Empty;
 
         public OutputDelegate outputDelegate;
 
@@ -771,7 +775,7 @@ namespace RTParser
                     this.LogBuffer.Clear();
                 }
             }
-            if (!object.Equals(null, this.WrittenToLog))
+            if (!Equals(null, this.WrittenToLog))
             {
                 this.WrittenToLog();
             }
@@ -875,13 +879,13 @@ namespace RTParser
                         topicNum++;
                         if (topic.IsWildCard())
                         {
-                            topic = "NOTOPIC";
+                            topic = NOTOPIC;
                         }
                         int thatNum = 0;
                         foreach (Unifiable that in request.BotOutputs)
                         {                            
                             thatNum++;
-                            UPath path = loader.generatePath(sentence, //thatNum + " " +
+                            Unifiable path = loader.generatePath(sentence, //thatNum + " " +
                                                              that, request.Flags,
                                                              //topicNum + " " +
                                                              topic, true);
@@ -907,14 +911,14 @@ namespace RTParser
                 if (NormalizedPathsCount != 1)
                 {
                     writeToLog("NormalizedPaths.Count = " + NormalizedPathsCount);
-                    foreach (UPath path in  result.NormalizedPaths)
+                    foreach (Unifiable path in  result.NormalizedPaths)
                     {
                         writeToLog("  i: " + path.LegacyPath);
                     }
                 }
 
                 // grab the templates for the various sentences from the graphmaster
-                foreach (UPath path in result.NormalizedPaths)
+                foreach (Unifiable path in result.NormalizedPaths)
                 {
                     Utils.SubQuery query = new SubQuery(path, result, request);
                     query.Templates = this.GraphMaster.evaluate(path, query, request, MatchState.UserInput, Unifiable.CreateAppendable());
@@ -1126,7 +1130,7 @@ namespace RTParser
 
             // process the node
             AIMLTagHandler tagHandler = GetTagHandler(user, query, request, result, node, parent);
-            if (object.ReferenceEquals(null, tagHandler))
+            if (ReferenceEquals(null, tagHandler))
             {
                 if (node.NodeType == XmlNodeType.Comment) return Unifiable.Empty;
                 string s = node.InnerText.Trim();
@@ -1150,7 +1154,7 @@ namespace RTParser
         internal AIMLTagHandler GetTagHandler0(User user, SubQuery query, Request request, Result result, XmlNode node)
         {
             AIMLTagHandler tagHandler = this.getBespokeTags(user, query, request, result, node);
-            if (object.Equals(null, tagHandler))
+            if (Equals(null, tagHandler))
             {
                 switch (node.Name.ToLower())
                 {
@@ -1344,7 +1348,7 @@ namespace RTParser
                 TagHandler customTagHandler = (TagHandler)this.CustomTags[node.Name.ToLower()];
 
                 AIMLTagHandler newCustomTag = customTagHandler.Instantiate(this.LateBindingAssemblies, user, query, request, result, node, this);
-                if (object.Equals(null, newCustomTag))
+                if (Equals(null, newCustomTag))
                 {
                     return null;
                 }
@@ -1495,7 +1499,7 @@ The AIMLbot program.
             message = message.Replace("*RAWINPUT*", request.rawInput);
             message = message.Replace("*USER*", request.user.UserID);
             Unifiable paths = Unifiable.CreateAppendable();
-            foreach (UPath path in request.result.NormalizedPaths)
+            foreach (Unifiable path in request.result.NormalizedPaths)
             {
                 paths.Append(path.LegacyPath + Environment.NewLine);
             }
@@ -1753,8 +1757,8 @@ The AIMLbot program.
             if (mt == "NIL") return "NIL";
             mt = mt.Trim();
             if (mt.Length < 3) return mt;
-            if (System.Char.IsLetter(mt.ToCharArray()[0])) return "#$" + mt;
-            if (System.Char.IsDigit(mt.ToCharArray()[0])) return mt;
+            if (Char.IsLetter(mt.ToCharArray()[0])) return "#$" + mt;
+            if (Char.IsDigit(mt.ToCharArray()[0])) return mt;
             if (mt.StartsWith("(") || mt.StartsWith("#$")) return mt;
             return "#$" + mt;
         }
@@ -1820,7 +1824,7 @@ The AIMLbot program.
             }
             if (true)
             {
-                UPath path = loader.generatePath("no stars", request.user.getLastBotOutput(),request.Flags, request.Topic, true);
+                Unifiable path = loader.generatePath("no stars", request.user.getLastBotOutput(),request.Flags, request.Topic, true);
                 Utils.SubQuery query = new SubQuery(path, result, request);
                 string outputSentence = this.processNode(templateNode, query, request, result, request.user, handler);
                 return result;
@@ -1834,13 +1838,13 @@ The AIMLbot program.
                 //foreach (Unifiable sentence in rawSentences)
                 {
                     result.InputSentences.Add(sentence);
-                    UPath path = loader.generatePath(sentence, request.user.getLastBotOutput(), request.Flags,
+                    Unifiable path = loader.generatePath(sentence, request.user.getLastBotOutput(), request.Flags,
                                                          request.Topic, true);
                     result.NormalizedPaths.Add(path);
                 }
 
                 // grab the templates for the various sentences from the graphmaster
-                foreach (UPath path in result.NormalizedPaths)
+                foreach (Unifiable path in result.NormalizedPaths)
                 {
                     Utils.SubQuery query = new SubQuery(path, result, request);
                     query.Templates = this.GraphMaster.evaluate(path, query, request, MatchState.UserInput, Unifiable.CreateAppendable());
@@ -1872,6 +1876,11 @@ The AIMLbot program.
             request.user.addResult(result);
 
             return result;
+        }
+
+        public Unifiable NOTOPIC
+        {
+            get { return GlobalSettings.grabSetting("notopic"); }
         }
     }
 }
