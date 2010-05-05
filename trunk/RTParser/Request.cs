@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using RTParser;
+using RTParser.Utils;
 
 namespace RTParser
 {
@@ -112,6 +113,11 @@ namespace RTParser
         public IEnumerable<Unifiable> BotOutputs
         {
             get { return user.BotOutputs; }
+        }
+
+        public SettingsDictionary Predicates
+        {
+            get { return result.Predicates; }
         }
 
         public int GetCurrentDepth()

@@ -137,6 +137,11 @@ namespace RTParser
             get { return OutputSentences.Count;  }
         }
 
+        public SettingsDictionary Predicates
+        {
+            get { return user.Predicates; }
+        }
+
         /// <summary>
         /// The subQueries processed by the bot's graphmaster that contain the templates that 
         /// are to be converted into the collection of Sentences

@@ -809,8 +809,8 @@ namespace RTParser
                 newlyCreated = true;
                 AIMLbot.User myUser = new AIMLbot.User(fromname, this);
                 BotUsers[fromname] = myUser;
-                AIMLbot.Request r = new AIMLbot.Request("My name is " + fromname, myUser, this);
-                AIMLbot.Result res = Chat(r);
+                //AIMLbot.Request r = new AIMLbot.Request("My name is " + fromname, myUser, this);
+                //AIMLbot.Result res = Chat(r);
                 myUser.Predicates.addSetting("name", fromname);
                 return myUser;
             }
@@ -943,7 +943,7 @@ namespace RTParser
                         
                     }
                 }
-                if (result.SubQueries.Count != 1)
+                if (true || result.SubQueries.Count != 1)
                 {
                     writeToLog("SubQueries.Count = " + result.SubQueries.Count);
                     foreach (var path in result.SubQueries)
