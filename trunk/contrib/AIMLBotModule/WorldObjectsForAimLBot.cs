@@ -18,6 +18,7 @@ using Math=System.Math;
 using String=System.String;
 using Thread=System.Threading.Thread;
 using PathSystem3D.Navigation;
+using SUnifiable=System.String;
 
 namespace AIMLBotModule
 {
@@ -179,7 +180,7 @@ namespace AIMLBotModule
                 MyBot.AddExcuteHandler("lisp", LispExecHandler);
                 MyBot.loadSettings();
                 //MyBot.GlobalSettings.addSetting("name", client.BotLoginParams.FirstName+ " " + client.BotLoginParams.LastName);
-                MyUser = new User(Unifiable.Create("AIMLInterp"), MyBot);
+                MyUser = new User("AIMLInterp", MyBot);
                 MyUser.InsertProvider(new ParentProvider(() => this));
                 MyBot.isAcceptingUserInput = false;
                 MyBot.loadAIMLFromDefaults();
@@ -861,21 +862,21 @@ namespace AIMLBotModule
         {
             AddedToNextResponse.WriteLine("\r\n"+s);
         }
-        public Unifiable AIMLInterp(string input)
+        public SUnifiable AIMLInterp(string input)
         {
             return AIMLInterp(input, MyUser);
         }
-        public Unifiable AIMLInterp(string input, string myUser)
+        public SUnifiable AIMLInterp(string input, string myUser)
         {
             return AIMLInterp(input, GetMyUser(myUser));
         }
-        public Unifiable AIMLInterp(string input, User myUser)
+        public SUnifiable AIMLInterp(string input, User myUser)
         {
             StringWriter old = AddedToNextResponse;
             AddedToNextResponse = new StringWriter();
             try
             {
-                Unifiable result = AIMLInterp0(input, myUser);
+                SUnifiable result = AIMLInterp0(input, myUser);
                 String append = AddedToNextResponse.ToString().Trim();
                 if (append.Length>0)
                 {
@@ -888,7 +889,7 @@ namespace AIMLBotModule
             }
         }
 
-        private Unifiable AddToResult(Unifiable unifiable, string[] splts)
+        private SUnifiable AddToResult(SUnifiable unifiable, string[] splts)
         {
             if (splts.Length == 0) return unifiable;
             if (splts.Length == 1) return AddToResult1(unifiable, splts[0]);
@@ -899,7 +900,7 @@ namespace AIMLBotModule
             return unifiable;
         }
 
-        private Unifiable AddToResult1(Unifiable unifiable, string s)
+        private string AddToResult1(string unifiable, string s)
         {
             if (String.IsNullOrEmpty(s)) return unifiable;
             s = s.Trim();
@@ -928,24 +929,24 @@ namespace AIMLBotModule
             return "\n<!-- Begin Meta !-->\n" + a.ToLower().Trim() + "\n<!-- End Meta !-->\n";
         }
 
-        private Unifiable AddToResult(Unifiable unifiable, string s)
+        private SUnifiable AddToResult(SUnifiable unifiable, string s)
         {
             String[] splts = s.Split(new string[] { "\r", "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
             return AddToResult(unifiable, splts);
         }
 
-        public Unifiable AIMLInterp0(string input, User myUser)
+        public SUnifiable AIMLInterp0(string input, User myUser)
         {
             // set a global
             MyUser = myUser;
-            if (input == null) return Unifiable.Empty;
+            if (input == null) return SUnifiable.Empty;
             input = input.Trim().Replace("  ", " ");
-            if (string.IsNullOrEmpty(input)) return Unifiable.Empty;
+            if (string.IsNullOrEmpty(input)) return SUnifiable.Empty;
             string removeName = RemoveNameFromString(input);
             string myName = GetName().ToLower();
             if (!string.IsNullOrEmpty(removeName))
             {
-                if (!myName.Contains(removeName.ToLower())) return Unifiable.Empty;
+                if (!myName.Contains(removeName.ToLower())) return SUnifiable.Empty;
                 input = input.Substring(removeName.Length);
             }
             else
@@ -963,7 +964,7 @@ namespace AIMLBotModule
             input = input.Trim();
             if (input.Length == 0)
             {
-                return Unifiable.Empty;
+                return SUnifiable.Empty;
             }
             Request r = new Request(input, myUser, MyBot);
             Result res = MyBot.Chat(r);
@@ -1000,13 +1001,13 @@ namespace AIMLBotModule
 
         public ICollection GetGroup(string name)
         {
-            Unifiable v = MyUser.Predicates.grabSetting(name);
+            SUnifiable v = MyUser.Predicates.grabSetting(name);
             if (v == null)
             {
                 v = MyBot.GlobalSettings.grabSetting(name);
                 if (v == null) return null;
             }
-            if (v.IsEmpty) return null;
+            if (SUnifiable.IsNullOrEmpty(v)) return null;
             if (name.ToString() == v.ToString())
             {
                 return null;
@@ -1037,9 +1038,9 @@ namespace AIMLBotModule
             int argsUsed;
             var v = WorldSystem.ResolveCollection(name.ToLower(), out argsUsed, this);
             if (v == null) return String.Empty;
-            if (v.Count == 0) return Unifiable.Empty;
+            if (v.Count == 0) return SUnifiable.Empty;
             BestUnifiable us = new BestUnifiable();
-            Unifiable uu = null;
+            SUnifiable uu = null;
             int c = 0;
             foreach(var u in v)
             {
@@ -1052,7 +1053,7 @@ namespace AIMLBotModule
             //return us;
         }
 
-        private Unifiable ObjectUnifiable(object o)
+        private SUnifiable ObjectUnifiable(object o)
         {
             if (o is SimObject) o = ((SimObject)o).ID;
 //            if (o is SimPosition) o = ((SimPosition) o).GlobalPosition;
