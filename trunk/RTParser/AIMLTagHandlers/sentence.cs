@@ -77,7 +77,7 @@ namespace RTParser.AIMLTagHandlers
                 else
                 {
                     // atomic version of the node
-                    XmlNode starNode = Utils.AIMLTagHandler.getNode("<star/>");
+                    XmlNode starNode = Utils.AIMLTagHandler.getNode("<star/>", templateNode);
                     star recursiveStar = new star(this.Proc, this.user, this.query, this.request, this.result, starNode);
                     templateNodeInnerText = recursiveStar.Transform();
                     if (!templateNodeInnerText.IsEmpty)

@@ -56,7 +56,7 @@ namespace RTParser.AIMLTagHandlers
                 }
                 XmlNode node = new XmlDocument().ReadNode(new XmlTextReader(new System.IO.StringReader(f.ToString())));
                 bool found0;
-                Proc.proccessResponse(query, request, result, (XmlNode)node, null, out found0);
+                Proc.proccessResponse(query, request, result, (XmlNode) node, null, out found0, this);
                 return Unifiable.Empty;
             }
             finally

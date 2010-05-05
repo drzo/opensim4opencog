@@ -79,6 +79,17 @@ namespace RTParser.Utils
         /// The template node to be processed by the class
         /// </summary>
         public XmlNode templateNode;
+
+        public AIMLTagHandler Parent;
+        public void SetParent(AIMLTagHandler handler)
+        {
+            if (handler==this)
+            {
+                throw new InvalidOperationException("same");
+            }
+            Parent = handler;
+        }
+
         protected Unifiable Recurse()
         {
             Unifiable templateResult = Unifiable.CreateAppendable();
@@ -93,7 +104,7 @@ namespace RTParser.Utils
                     }
                     else
                     {
-                        Unifiable found = Proc.processNode(childNode, query, request, result, user);
+                        Unifiable found = Proc.processNode(childNode, query, request, result, user, this);
                         if (Unifiable.IsFalse(found))
                         {
                         //    return Unifiable.Empty;
@@ -122,11 +133,79 @@ namespace RTParser.Utils
         /// <returns>The XML node</returns>
         public static LineInfoElement getNode(string outerXML)
         {
-            XmlDocumentLineInfo temp = new XmlDocumentLineInfo(new StringReader(outerXML));
-            temp.LoadXml(outerXML);
+            var sr = new StringReader(outerXML);
+            XmlDocumentLineInfo temp = new XmlDocumentLineInfo("From " + outerXML);
+            temp.Load(sr);
             return (LineInfoElement)temp.FirstChild;
         }
+        public static LineInfoElement getNode(string outerXML, XmlNode templateNode)
+        {
+            var sr = new StringReader(outerXML);
+            XmlDocumentLineInfo temp =
+                new XmlDocumentLineInfo("From '" + templateNode.OwnerDocument??" NODOC " + "' " + templateNode.OuterXml);
+            temp.Load(sr);
+            LineInfoElement li = (LineInfoElement) temp.FirstChild;
+            li.SetParentFromNode(templateNode);
+            return li;
+        }
+        public override string ToString()
+        {
+            return LineNumberTextInfo();
+        }
+        public string LineNumberTextInfo()
+        {
+            return LineTextInfo() + " " + LineNumberInfo();
+        }
+        public string LineTextInfo()
+        {
+            string s = templateNode.OuterXml.Trim();
+            if (String.IsNullOrEmpty(s))
+            {
 
+                LineInfoElement li = (LineInfoElement) templateNode;
+                s = s + " " + li.OwnerDocument.ToString();
+                if (Parent != null && Parent != this)
+                {
+                    s = s + " " + Parent.LineTextInfo();
+                }
+                else
+                {
+                    return s;
+                }
+
+            }
+            return s;
+        }
+
+        public string LineNumberInfo()
+        {
+            string s = "";
+            if (templateNode is LineInfoElement)
+            {
+                LineInfoElement li = (LineInfoElement) templateNode;
+                if (li.lineNumber == 0)
+                {
+                    s = s + " " + li.OwnerDocument.ToString();
+                    if (Parent != null && Parent != this)
+                    {
+                        s = s + " " + Parent.LineNumberInfo();
+                    }
+                    else
+                    {
+                        s = s + " " + li.lineNumber + "/" + li.linePosition;
+                    }
+                }
+                else
+                {
+                    s = s + " " + li.lineNumber + "/" + li.linePosition + " " + li.OwnerDocument.ToString();
+                }
+            }
+            else
+            {
+                return s;
+            }
+            return s;
+        }
 
 
         /// <summary>
@@ -172,7 +251,7 @@ namespace RTParser.Utils
                     {
                         if (childNode.NodeType != XmlNodeType.Text)
                         {
-                            childNode.InnerText = Proc.processNode(childNode, query, request, result, user);
+                            childNode.InnerText = Proc.processNode(childNode, query, request, result, user, this);
                         }
                     }
                 }
@@ -181,14 +260,14 @@ namespace RTParser.Utils
             else
             {
                 Unifiable resultNodeInnerXML = tagHandler.Transform();
-                XmlNode resultNode = getNode(String.Format("<node>{0}</node>", resultNodeInnerXML));
+                XmlNode resultNode = getNode(String.Format("<node>{0}</node>", resultNodeInnerXML), templateNode);
                 if (resultNode.HasChildNodes)
                 {
                     Unifiable recursiveResult = Unifiable.CreateAppendable();
                     // recursively check
                     foreach (XmlNode childNode in resultNode.ChildNodes)
                     {
-                        recursiveResult.Append(Proc.processNode(childNode, query, request, result, user));
+                        recursiveResult.Append(Proc.processNode(childNode, query, request, result, user, this));
                     }
                     return recursiveResult;//.ToString();
                 }

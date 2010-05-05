@@ -38,7 +38,7 @@ namespace RTParser.AIMLTagHandlers
                 {
                     try
                     {
-                        Unifiable part = Proc.processNode(childNode, query, request, result, user);
+                        Unifiable part = Proc.processNode(childNode, query, request, result, user, this);
                         templateResult.Append(part);
                     }
                     catch (Exception e)
@@ -60,7 +60,7 @@ namespace RTParser.AIMLTagHandlers
                 {
                     try
                     {
-                        Unifiable part = Proc.processNode(childNode, query, request, result, user);
+                        Unifiable part = Proc.processNode(childNode, query, request, result, user, this);
                         templateResult.Append(part);
                     }
                     catch (Exception e)

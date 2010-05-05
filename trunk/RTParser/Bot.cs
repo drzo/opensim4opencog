@@ -11,6 +11,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Reflection;
 using System.Net.Mail;
 using AIMLbot;
+using RTParser.AIMLTagHandlers;
 using RTParser.Normalize;
 using RTParser.Utils;
 using org.opencyc.api;
@@ -888,7 +889,10 @@ namespace RTParser
                 // process the templates into appropriate output
                 foreach (SubQuery query in result.SubQueries)
                 {
-                    if (processTemplate(query, request, result)) ;
+                    if (processTemplate(query, request, result, null))
+                    {
+                        
+                    }
                 }
             }
             else
@@ -910,7 +914,7 @@ namespace RTParser
         /// <param name="request"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        private bool processTemplate(SubQuery query, Request request, Result result)
+        private bool processTemplate(SubQuery query, Request request, Result result, AIMLTagHandler handler)
         {
             UList queryTemplate = query.Template;
             if (queryTemplate != null && queryTemplate.Count > 0)
@@ -922,7 +926,7 @@ namespace RTParser
                         this.writeToLog("WARNING! Giving up on input: " + request.rawInput);
                         return false;
                     }
-                    return processTemplateUlocked(queryTemplate, query, request, result);
+                    return processTemplateUlocked(queryTemplate, query, request, result, handler);
                 }
                 finally
                 {
@@ -933,7 +937,7 @@ namespace RTParser
             return false;
         }
 
-        private bool processTemplateUlocked(UList queryTemplate, SubQuery query, Request request, Result result)
+        private bool processTemplateUlocked(UList queryTemplate, SubQuery query, Request request, Result result, AIMLTagHandler handler)
         {
             bool found = false;
             if (queryTemplate != null && queryTemplate.Count > 0)
@@ -943,7 +947,7 @@ namespace RTParser
                     try
                     {
                         bool found0;
-                        if (proccessResponse(query, request, result, s.Output, s.Guard, out found0)) break;
+                        if (proccessResponse(query, request, result, s.Output, s.Guard, out found0, handler)) break;
                         if (found0) found = true;
                     }
                     catch (Exception e)
@@ -973,7 +977,7 @@ namespace RTParser
             return defaultIfEmpty;
         }
 
-        public bool proccessResponse(SubQuery query, Request request, Result result, XmlNode sOutput, GuardInfo sGuard, out bool found)
+        public bool proccessResponse(SubQuery query, Request request, Result result, XmlNode sOutput, GuardInfo sGuard, out bool found, AIMLTagHandler handler)
         {
             found = false;
             //XmlNode guardNode = AIMLTagHandler.getNode(s.Guard.InnerXml);
@@ -987,8 +991,9 @@ namespace RTParser
                     output = "<template>" + sGuard.InnerXml + " GUARDBOM " + output.Substring(10);
                 }
             }
-            XmlNode templateNode = AIMLTagHandler.getNode(output);
-            string outputSentence = this.processNode(templateNode, query, request, result, request.user);
+            LineInfoElement templateNode = AIMLTagHandler.getNode(output, sOutput);
+
+            string outputSentence = this.processNode(templateNode, query, request, result, request.user, handler);
             int f = outputSentence.IndexOf("GUARDBOM");
             if (f < 0)
             {
@@ -1050,7 +1055,7 @@ namespace RTParser
         /// <param name="result">the result to be sent to the user</param>
         /// <param name="user">the user who originated the request</param>
         /// <returns>the output Unifiable</returns>
-        public Unifiable processNode(XmlNode node, SubQuery query, Request request, Result result, User user)
+        public Unifiable processNode(XmlNode node, SubQuery query, Request request, Result result, User user, AIMLTagHandler parent)
         {
             // check for timeout (to avoid infinite loops)
             if (request != null && request.StartedOn.AddMilliseconds(request.Proccessor.TimeOut) < DateTime.Now)
@@ -1063,16 +1068,29 @@ namespace RTParser
             }
 
             // process the node
-            AIMLTagHandler tagHandler = GetTagHandler(user, query, request, result, node);
-            if (object.Equals(null, tagHandler))
+            AIMLTagHandler tagHandler = GetTagHandler(user, query, request, result, node, parent);
+            if (object.ReferenceEquals(null, tagHandler))
             {
-                return node.InnerText;
+                if (node.NodeType == XmlNodeType.Comment) return Unifiable.Empty;
+                string s = node.InnerText.Trim();
+                if (String.IsNullOrEmpty(s))
+                {
+                    return Unifiable.Empty;           
+                }
+                return s;
             }
+            tagHandler.SetParent(parent);
             return tagHandler.CompleteProcess();
         }
 
 
-        internal AIMLTagHandler GetTagHandler(User user, SubQuery query, Request request, Result result, XmlNode node)
+        internal AIMLTagHandler GetTagHandler(User user, SubQuery query, Request request, Result result, XmlNode node, AIMLTagHandler handler)
+        {
+            var tag = GetTagHandler0(user, query, request, result, node);
+            if (tag!=null) tag.SetParent(handler);
+            return tag;
+        }
+        internal AIMLTagHandler GetTagHandler0(User user, SubQuery query, Request request, Result result, XmlNode node)
         {
             AIMLTagHandler tagHandler = this.getBespokeTags(user, query, request, result, node);
             if (object.Equals(null, tagHandler))
@@ -1237,7 +1255,8 @@ namespace RTParser
                     case "soundcode":
                         tagHandler = new AIMLTagHandlers.soundcode(this, user, query, request, result, node);
                         break;
-
+                    case "#comment":
+                        return null;
                     default:
                         tagHandler = null;
                         break;
@@ -1560,7 +1579,7 @@ The AIMLbot program.
         private object EvalAIMLHandler(string cmd, Request user)
         {
             XmlNode node =AIMLTagHandler.getNode("<template>" + cmd + "</template>");
-            var res = ImmediateAiml(node, BotAsRequest, Loader);
+            var res = ImmediateAiml(node, BotAsRequest, Loader, null);
             return res;
         }
 
@@ -1629,9 +1648,9 @@ The AIMLbot program.
             return result;
         }
 
-        internal Unifiable processNodeInside(XmlNode templateNode, SubQuery query, Request request, Result result, User user)
+        internal Unifiable processNodeInside(XmlNode templateNode, SubQuery query, Request request, Result result, User user, AIMLTagHandler handler)
         {
-            return processNode(templateNode, query, request, result, user);
+            return processNode(templateNode, query, request, result, user, handler);
         }
 
         internal bool IsaFilter(Unifiable term, Unifiable filter)
@@ -1726,7 +1745,7 @@ The AIMLbot program.
             return (Unifiable)GlobalSettings.grabSetting(name);
         }
 
-        public AIMLbot.Result ImmediateAiml(XmlNode templateNode, Request request0, AIMLLoader loader)
+        public AIMLbot.Result ImmediateAiml(XmlNode templateNode, Request request0, AIMLLoader loader, AIMLTagHandler handler)
         {
             Request request = new Request(templateNode.OuterXml, request0.user, request0.Proccessor);
             request.depth = request0.depth + 1;
@@ -1734,14 +1753,14 @@ The AIMLbot program.
             if (true)
             {
                 bool found0;
-                proccessResponse(null, request, result, templateNode, null, out found0);
+                proccessResponse(null, request, result, templateNode, null, out found0, handler);
                 return result;
             }
             if (true)
             {
                 UPath path = loader.generatePath("no stars", request.user.getLastBotOutput(),request.Flags, request.Topic, true);
                 Utils.SubQuery query = new SubQuery(path, result);
-                string outputSentence = this.processNode(templateNode, query, request, result, request.user);
+                string outputSentence = this.processNode(templateNode, query, request, result, request.user, handler);
                 return result;
 
             }
@@ -1772,7 +1791,10 @@ The AIMLbot program.
                 // process the templates into appropriate output
                 foreach (SubQuery query in result.SubQueries)
                 {
-                    if (processTemplate(query, request, result)) ;
+                    if (processTemplate(query, request, result, handler))
+                    {
+                        
+                    }
                 }
             }
             //else

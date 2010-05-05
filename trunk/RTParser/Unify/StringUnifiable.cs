@@ -282,7 +282,7 @@ namespace RTParser
             Request request = result.request;
             User user = result.user;
             RTPBot bot = request.Proccessor;
-            return bot.GetTagHandler(user, subquery, request, result, node);
+            return bot.GetTagHandler(user, subquery, request, result, node, null);
         }
 
         public virtual XmlNode GetNode()
