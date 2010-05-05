@@ -68,7 +68,7 @@ namespace RTParser
 
         public override string AsString()
         {
-            return str.Trim();
+            return str.Trim().Replace("  "," ");
         }
 
         public override Unifiable ToCaseInsenitive()
