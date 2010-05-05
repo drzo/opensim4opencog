@@ -74,6 +74,30 @@ namespace RTParser
             }
         }
 
+
+        public IEnumerable<Unifiable> BotOutputs
+        {
+            get
+            {
+                var raws = new List<Unifiable>();
+                int added = 0;
+                if (this.Results.Count > 0)
+                {
+                    foreach (var result in Results)
+                    {
+                        raws.Add(result.RawOutput); 
+                        added++;
+                        if (added > 2) return raws;
+                    }
+                }
+                else
+                {
+                    raws.Add(Unifiable.STAR);
+                }
+                return raws;
+            }
+        }
+
 		#endregion
 		
 		#region Methods
@@ -164,9 +188,9 @@ namespace RTParser
             if ((n >= 0) & (n < this.Results.Count))
             {
                 Result historicResult = (Result)this.Results[n];
-                if ((sentence >= 0) & (sentence < historicResult.OutputSentences.Count))
+                if ((sentence >= 0) & (sentence < historicResult.OutputSentenceCount))
                 {
-                    return (Unifiable)historicResult.OutputSentences[sentence];
+                    return (Unifiable)historicResult.GetOutputSentence(sentence);
                 }
             }
             return Unifiable.Empty;
@@ -210,6 +234,7 @@ namespace RTParser
             return Unifiable.Empty;
         }
 
+        static public int MaxResultsSaved = 5;
         /// <summary>
         /// Adds the latest result from the bot to the Results collection
         /// </summary>
@@ -217,6 +242,11 @@ namespace RTParser
         public void addResult(Result latestResult)
         {
             this.Results.Insert(0, latestResult);
+            int rc = this.Results.Count;
+            if (rc > MaxResultsSaved)
+            {
+                this.Results.RemoveRange(MaxResultsSaved, rc - MaxResultsSaved);
+            }
         }
         #endregion
     }

@@ -13,6 +13,25 @@ namespace RTParser
     /// </summary>
     public class Result
     {
+        public void AddOutputSentences(Unifiable unifiable)
+        {
+#if false
+            if (unifiable==null || unifiable=="*" || unifiable==Unifiable.Empty)
+            {
+                return;
+            }
+            int found = OutputSentences.IndexOf(unifiable);
+            int c = OutputSentences.Count - 1;
+            if (found == c) return;
+            if (found < 1)
+            {
+                OutputSentences.Add(unifiable);
+                return;
+            }
+            OutputSentences.RemoveAt(found);
+#endif
+            OutputSentences.Add(unifiable);
+        }
 
         public Result()
         {
@@ -113,6 +132,11 @@ namespace RTParser
             }
         }
 
+        public decimal OutputSentenceCount
+        {
+            get { return OutputSentences.Count;  }
+        }
+
         /// <summary>
         /// The subQueries processed by the bot's graphmaster that contain the templates that 
         /// are to be converted into the collection of Sentences
@@ -122,7 +146,7 @@ namespace RTParser
         /// <summary>
         /// The individual sentences produced by the bot that form the complete response
         /// </summary>
-        public List<Unifiable> OutputSentences = new List<Unifiable>();
+        private List<Unifiable> OutputSentences = new List<Unifiable>();
 
         /// <summary>
         /// The individual sentences that constitute the raw input from the user
@@ -167,6 +191,11 @@ namespace RTParser
                 }
             }
             return false;
+        }
+
+        public Unifiable GetOutputSentence(int sentence)
+        {
+            return OutputSentences[sentence];
         }
     }
 }
