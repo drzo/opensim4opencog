@@ -119,6 +119,34 @@ namespace AIMLBotModule
             }
         }
 
+        object BotExecHandlerNew(string cmd, Request request)
+        {
+            User prev = MyUser;
+            try
+            {
+                MyUser = request.user;
+                StringWriter sw = new StringWriter();
+                {
+                    CmdResult s;
+                    if (cmd.StartsWith("anim") || cmd.StartsWith("thread anim 4"))
+                    {
+                        AddAnimToNextResponse(sw.ToString());
+                        s = new CmdResult("", true);
+                    }
+                    else
+                    {
+                        s = client.ExecuteCommand(cmd, sw.WriteLine);
+                    }
+                    return String.Format("{0}{1}", sw, s);
+                }
+            }
+            finally
+            {
+                MyUser = prev;
+
+            }
+        }
+
         object LispExecHandler(string cmd, Request request)
         {
             User prev = MyUser;
@@ -249,9 +277,10 @@ namespace AIMLBotModule
             string name = source.GetName();
             if (string.IsNullOrEmpty(name)) return;
             User user = GetMyUser(name);
-            user.Predicates.addSetting("it", targetid.ToString());
-            user.Predicates.addSetting("what", targetid.ToString());
-            user.Predicates.addSetting("object", targetid.ToString());
+            SettingsDictionary myUserPredicates = user.Predicates;
+            myUserPredicates.addSetting("it", targetid.ToString());
+            myUserPredicates.addSetting("what", targetid.ToString());
+            myUserPredicates.addSetting("object", targetid.ToString());
         }
 
 
@@ -408,7 +437,8 @@ namespace AIMLBotModule
             }
 
             User myUser = GetMyUser(im.FromAgentName);
-            myUser.Predicates.addSetting("host", im.FromAgentID.ToString());
+            SettingsDictionary myUserPredicates = myUser.Predicates;
+            myUserPredicates.addSetting("host", im.FromAgentID.ToString());
             // myUser.Predicates.addObjectFields(im);
             if (im.Dialog == InstantMessageDialog.GroupNotice || im.Dialog==InstantMessageDialog.SessionSend)
             {
@@ -857,10 +887,12 @@ namespace AIMLBotModule
                 client.Self.AnimationStop(Animations.TYPE, false);
             }
         }
-        StringWriter AddedToNextResponse = new StringWriter();
+
+        private string AddedToNextResponse = "";// new StringWriter();
         private void AddAnimToNextResponse(string s)
         {
-            AddedToNextResponse.WriteLine("\r\n"+s);
+            if (AddedToNextResponse.Contains(s)) return;
+            AddedToNextResponse += "\r\n" + s;
         }
         public SUnifiable AIMLInterp(string input)
         {
@@ -872,8 +904,8 @@ namespace AIMLBotModule
         }
         public SUnifiable AIMLInterp(string input, User myUser)
         {
-            StringWriter old = AddedToNextResponse;
-            AddedToNextResponse = new StringWriter();
+            var old = AddedToNextResponse;
+            AddedToNextResponse = "";
             try
             {
                 SUnifiable result = AIMLInterp0(input, myUser);
