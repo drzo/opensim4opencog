@@ -240,8 +240,9 @@ namespace RTParser.Utils
         /// <param name="matchstate">The part of the input path the node represents</param>
         /// <param name="wildcard">The contents of the user input absorbed by the AIML wildcards "_" and "*"</param>
         /// <returns>The template to process to generate the output</returns>
-        public UList evaluate(Unifiable path, SubQuery query, Request request, MatchState matchstate, Unifiable wildcard)
+        public UList evaluate(UPath upath, SubQuery query, Request request, MatchState matchstate, Unifiable wildcard)
         {
+            Unifiable path = upath.LegacyPath;
             // check for timeout
             if (request.StartedOn.AddMilliseconds(request.Proccessor.TimeOut) < DateTime.Now)
             {
@@ -281,7 +282,7 @@ namespace RTParser.Utils
             Unifiable firstWord = Normalize.MakeCaseInsensitive.TransformInput(first);
 
             // and concatenate the rest of the input into a new path for child nodes
-            Unifiable newPath = path.Rest();// Unifiable.Join(" ", splitPath0, 1, splitPath0.Length - 1);// path.Rest();// Substring(firstWord.Length, path.Length - firstWord.Length);
+            Unifiable newPath = UPath.MakePath(path.Rest()).LegacyPath;// Unifiable.Join(" ", splitPath0, 1, splitPath0.Length - 1);// path.Rest();// Substring(firstWord.Length, path.Length - firstWord.Length);
 
             // first option is to see if this node has a child denoted by the "_" 
             // wildcard. "_" comes first in precedence in the AIML alphabet
@@ -296,7 +297,7 @@ namespace RTParser.Utils
                 this.storeWildCard(first, newWildcard);
 
                 // move down into the identified branch of the GraphMaster structure
-                var result = childNode.evaluate(newPath, query, request, matchstate, newWildcard);
+                var result = childNode.evaluate(UPath.MakePath(newPath), query, request, matchstate, newWildcard);
 
                 // and if we get a result from the branch process the wildcard matches and return 
                 // the result
@@ -342,7 +343,7 @@ namespace RTParser.Utils
                 // move down into the identified branch of the GraphMaster structure using the new
                 // matchstate
                 Unifiable newWildcard = Unifiable.CreateAppendable();
-                var result = childNode.evaluate(newPath, query, request, newMatchstate, newWildcard);
+                var result = childNode.evaluate(UPath.MakePath(newPath), query, request, newMatchstate, newWildcard);
                 // and if we get a result from the child return it
                 if (ResultStateReady(result, newWildcard, matchstate, query)) return result;
 
@@ -366,7 +367,7 @@ namespace RTParser.Utils
                 if (childNodeWord.Unify(first, query) == 0)
                 {
                     this.storeWildCard(first, newWildcard);
-                    result = childNode.evaluate(newPath, query, request, matchstate, newWildcard);
+                    result = childNode.evaluate(UPath.MakePath(newPath), query, request, matchstate, newWildcard);
                     if (ResultStateReady(result, newWildcard, matchstate, query)) return result;
                 }
                 else
@@ -379,7 +380,7 @@ namespace RTParser.Utils
                         if (childNodeWord.Unify(firstAndSecond, query) == 0)
                         {
                             this.storeWildCard(firstAndSecond, newWildcard);
-                            result = childNode.evaluate(newPath.Rest(), query,
+                            result = childNode.evaluate(UPath.MakePath(newPath.Rest()), query,
                                                         request, matchstate, newWildcard);
                             if (ResultStateReady(result, newWildcard, matchstate, query)) return result;
                         }
@@ -394,7 +395,7 @@ namespace RTParser.Utils
             if (this.word.IsWildCard())
             {
                 this.storeWildCard(first, wildcard);
-                return this.evaluate(newPath, query, request, matchstate, wildcard);
+                return this.evaluate(UPath.MakePath(newPath), query, request, matchstate, wildcard);
             }
 
             // If we get here then we're at a dead end so return an empty Unifiable. Hopefully, if the
@@ -462,5 +463,41 @@ namespace RTParser.Utils
         #endregion
 
         #endregion
+    }
+
+    public class UPath
+    {
+        private Unifiable lp;
+
+        private UPath(Unifiable unifiable)
+        {
+            lp = unifiable;
+        }
+
+        public Unifiable LegacyPath
+        {
+            get
+            {
+                return lp;
+            }
+        }
+        static public bool operator ==(UPath t, UPath s)
+        {
+            return t.LegacyPath == s.LegacyPath;
+        }
+
+        public static bool operator !=(UPath t, UPath s)
+        {
+            return !(t == s);
+        }
+        public override string ToString()
+        {
+            return lp.ToString();
+        }
+
+        public static UPath MakePath(Unifiable unifiable)
+        {
+            return new UPath(unifiable);
+        }
     }
 }

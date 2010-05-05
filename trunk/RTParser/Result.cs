@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using RTParser;
+using RTParser.Utils;
 
 namespace RTParser
 {
@@ -44,7 +45,7 @@ namespace RTParser
         /// <summary>
         /// The normalized sentence(s) (paths) fed into the graphmaster
         /// </summary>
-        public List<Unifiable> NormalizedPaths = new List<Unifiable>();
+        public List<UPath> NormalizedPaths = new List<UPath>();
 
         /// <summary>
         /// The amount of time the request took to process
@@ -74,10 +75,10 @@ namespace RTParser
                     else
                     {
                         Unifiable paths = Unifiable.CreateAppendable();
-                        foreach (Unifiable pattern in this.NormalizedPaths)
+                        foreach (UPath pattern in this.NormalizedPaths)
                         {
                             //return pattern;
-                            paths.Append(pattern + Environment.NewLine);
+                            paths.Append(pattern.LegacyPath + Environment.NewLine);
                         }
                         this.bot.writeToLog("The bot could not find any response for the input: " + this.RawInput + " with the path(s): " +
                             Environment.NewLine + paths.AsNodeXML() + " from the user with an id: " + this.user.UserID.ToValue());
