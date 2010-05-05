@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
@@ -12,6 +13,8 @@ namespace RTParser
     public class Request
     {
         #region Attributes
+
+        public int depth = 0;
         /// <summary>
         /// The raw input from the user
         /// </summary>
@@ -51,6 +54,11 @@ namespace RTParser
         public readonly int framesAtStart;
 
         #endregion
+
+        public override string ToString()
+        {
+           return user.UserID + ": " + rawInput;
+        }
 
         /// <summary>
         /// Ctor
@@ -94,6 +102,16 @@ namespace RTParser
                 }
                 _topic = value;
             }
+        }
+
+        public IEnumerable<Unifiable> Topics
+        {
+            get { return new List<Unifiable>(){Topic}; }
+        }
+
+        public IEnumerable<Unifiable> BotOutputs
+        {
+            get { return user.BotOutputs; }
         }
 
         public int GetCurrentDepth()

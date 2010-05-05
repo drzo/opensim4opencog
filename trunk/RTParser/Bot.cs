@@ -362,7 +362,7 @@ namespace RTParser
             UseCyc = true;
             this.setup();
             BotAsUser = new User("Self", this);
-            BotAsRequest = new Request("", BotAsUser, this);
+            BotAsRequest = new Request("-bank-input-", BotAsUser, this);
         }
 
         #region Settings methods
@@ -852,8 +852,26 @@ namespace RTParser
                 foreach (Unifiable sentence in rawSentences)
                 {
                     result.InputSentences.Add(sentence);
-                    UPath path = loader.generatePath(sentence, request.user.getLastBotOutput(),request.Flags, request.Topic, true);
-                    result.NormalizedPaths.Add(path);
+                    int topicNum = 0;
+                    foreach (Unifiable topic in request.Topics)
+                    {
+                        topicNum++;
+                        int thatNum = 0;
+                        foreach (Unifiable that in request.BotOutputs)
+                        {
+                            thatNum++;
+                            UPath path = loader.generatePath(sentence, //thatNum + " " +
+                                                             that, request.Flags,
+                                                             //topicNum + " " +
+                                                             topic, true);
+                            result.NormalizedPaths.Add(path);
+                        }
+                    }
+                }
+                int NormalizedPathsCount = result.NormalizedPaths.Count;
+                if (NormalizedPathsCount > 1)
+                {
+                    writeToLog("NormalizedPaths.Count = " + NormalizedPathsCount);
                 }
 
                 // grab the templates for the various sentences from the graphmaster
@@ -875,7 +893,7 @@ namespace RTParser
             }
             else
             {
-                result.OutputSentences.Add(this.NotAcceptingUserInputMessage);
+                result.AddOutputSentences(this.NotAcceptingUserInputMessage);
             }
 
             // populate the Result object
@@ -976,7 +994,7 @@ namespace RTParser
             {
                 if (outputSentence.Length > 0)
                 {
-                    result.OutputSentences.Add(outputSentence.Trim().Replace("  ", " ").Replace("  ", " "));
+                    result.AddOutputSentences(outputSentence.Trim().Replace("  ", " ").Replace("  ", " "));
                     found = true;
                 }
                 return false;
@@ -1011,7 +1029,7 @@ namespace RTParser
                 outputSentence = outputSentence.Substring(f + 9);
                 if (outputSentence.Length > 0)
                 {
-                    result.OutputSentences.Add(outputSentence);
+                    result.AddOutputSentences(outputSentence);
                     found = true;
                     return true;
                 }
@@ -1711,6 +1729,7 @@ The AIMLbot program.
         public AIMLbot.Result ImmediateAiml(XmlNode templateNode, Request request0, AIMLLoader loader)
         {
             Request request = new Request(templateNode.OuterXml, request0.user, request0.Proccessor);
+            request.depth = request0.depth + 1;
             AIMLbot.Result result = new AIMLbot.Result(request.user, this, request);
             if (true)
             {
