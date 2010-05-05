@@ -564,7 +564,10 @@ namespace RTParser.Utils
             Unifiable normalizedTopic;// = Unifiable.STAR;
             bool UseRawUserInput = RawUserInput;
             string patString = " "+ pattern.AsString() + " ";
-            if (patString.Contains(" exec ") || patString.Contains(" aiml ") || patString.Contains(" lisp ") || patString.Contains(" tag "))
+            if (patString.Contains(" exec ") || patString.Contains(" aiml ")
+                || patString.Contains(" lisp ") || patString.Contains(" tag ")
+                || patString.Contains("<") || patString.Contains(">")
+                || patString.Contains("\"") || patString.Contains("="))
             {
                 UseRawUserInput = true;
             }

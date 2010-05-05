@@ -62,15 +62,18 @@ namespace RTParser.Utils
         }
 
         public Result Result;
+        public Request Request;
         /// <summary>
         /// Ctor
         /// </summary>
         /// <param name="fullPath">The path that this query relates to</param>
-        public SubQuery(UPath fullPath, Result req)
+        public SubQuery(UPath fullPath, Result res , Request request)
         {
-            Result = req;
+            Result = res;
+            Request = request;
             this.FullPath = fullPath;
         }
+
     }
 
     public class UList : IEnumerable<TemplateInfo>

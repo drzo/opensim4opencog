@@ -24,7 +24,7 @@ namespace RTParser
         /// <summary>
         /// The raw input from the user
         /// </summary>
-        public Request parent;
+        public Request ParentRequest;
 
         /// <summary>
         /// The time at which this request was created within the system
@@ -84,7 +84,7 @@ namespace RTParser
             get
             {
                 if (_topic != null) return _topic;
-                if (parent != null) return parent.Topic;
+                if (ParentRequest != null) return ParentRequest.Topic;
                 return user.TopicSetting;
             }
             set
@@ -96,9 +96,9 @@ namespace RTParser
                     _topic = value;
                     return;
                 }
-                if (parent != null)
+                if (ParentRequest != null)
                 {
-                    parent.Topic = value;
+                    ParentRequest.Topic = value;
                     return;
                 }
                 _topic = value;

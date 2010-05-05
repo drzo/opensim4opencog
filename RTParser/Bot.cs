@@ -916,7 +916,7 @@ namespace RTParser
                 // grab the templates for the various sentences from the graphmaster
                 foreach (UPath path in result.NormalizedPaths)
                 {
-                    Utils.SubQuery query = new SubQuery(path, result);
+                    Utils.SubQuery query = new SubQuery(path, result, request);
                     query.Templates = this.GraphMaster.evaluate(path, query, request, MatchState.UserInput, Unifiable.CreateAppendable());
                     result.SubQueries.Add(query);
                 }
@@ -1821,7 +1821,7 @@ The AIMLbot program.
             if (true)
             {
                 UPath path = loader.generatePath("no stars", request.user.getLastBotOutput(),request.Flags, request.Topic, true);
-                Utils.SubQuery query = new SubQuery(path, result);
+                Utils.SubQuery query = new SubQuery(path, result, request);
                 string outputSentence = this.processNode(templateNode, query, request, result, request.user, handler);
                 return result;
 
@@ -1842,7 +1842,7 @@ The AIMLbot program.
                 // grab the templates for the various sentences from the graphmaster
                 foreach (UPath path in result.NormalizedPaths)
                 {
-                    Utils.SubQuery query = new SubQuery(path, result);
+                    Utils.SubQuery query = new SubQuery(path, result, request);
                     query.Templates = this.GraphMaster.evaluate(path, query, request, MatchState.UserInput, Unifiable.CreateAppendable());
                     result.SubQueries.Add(query);
                 }
