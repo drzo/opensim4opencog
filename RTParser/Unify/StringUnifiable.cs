@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Xml;
+using java.io;
 using RTParser.AIMLTagHandlers;
 using RTParser.Utils;
+using Console=System.Console;
 
 namespace RTParser
 {
@@ -172,6 +174,10 @@ namespace RTParser
 
         public override void Append(Unifiable p)
         {
+            if (!IsAppendable)
+            {
+                throw new InvalidObjectException("this " + AsString() + " cannot be appended with " + p);
+            }
             if (p==null) return;
             if (str == "")
                 str = p.AsString().Trim();
@@ -293,6 +299,14 @@ namespace RTParser
         public override bool IsEmpty
         {
             get { return string.IsNullOrEmpty(str); }
+        }
+
+        private bool ppendable;
+
+        public bool IsAppendable
+        {
+            get { return ppendable; }
+            set { ppendable=value; }
         }
 
         public override void Clear()

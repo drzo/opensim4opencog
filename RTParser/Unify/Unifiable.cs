@@ -193,7 +193,9 @@ namespace RTParser
 
         internal static Unifiable CreateAppendable()
         {
-            return new StringUnifiable();
+            var u = new StringUnifiable();
+            u.IsAppendable = true;
+            return u;
         }
 
         public static Unifiable ThatTag = Create("TAG-THAT");
