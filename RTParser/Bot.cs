@@ -846,23 +846,13 @@ namespace RTParser
             return this.Chat(request);
         }
 
-        /// <summary>
-        /// Given a request containing user input, produces a result from the Proccessor
-        /// </summary>
-        /// <param name="request">the request from the user</param>
-        /// <returns>the result to be output to the user</returns>
-        public AIMLbot.Result Chat(Request request)
-        {
-            AIMLbot.Result result = new AIMLbot.Result(request.user, this, request);
 
-            if (this.isAcceptingUserInput)
+        private void LoadInputPaths(Request request, AIMLLoader loader, Unifiable[] rawSentences, AIMLbot.Result result)
+        {
+            int maxInputs = 1;
+            int numInputs = 0;
+            string lastInput = "";
             {
-                // Normalize the input
-                AIMLLoader loader = new AIMLLoader(this, request);
-                Loader = loader;
-                //RTParser.Normalize.SplitIntoSentences splitter = new RTParser.Normalize.SplitIntoSentences(this);
-                Unifiable[] rawSentences = new Unifiable[] { request.rawInput };//splitter.Transform(request.rawInput);
-                string lastInput = "";
                 foreach (Unifiable sentence0 in rawSentences)
                 {
                     string sentence = sentence0;
@@ -883,15 +873,15 @@ namespace RTParser
                         }
                         int thatNum = 0;
                         foreach (Unifiable that in request.BotOutputs)
-                        {                            
+                        {
                             thatNum++;
                             Unifiable path = loader.generatePath(sentence, //thatNum + " " +
-                                                             that, request.Flags,
-                                                             //topicNum + " " +
-                                                             topic, true);
+                                                                 that, request.Flags,
+                                //topicNum + " " +
+                                                                 topic, true);
                             if (that.IsWildCard())
                             {
-                                if (thatNum>1)
+                                if (thatNum > 1)
                                 {
                                     continue;
                                 }
@@ -901,12 +891,35 @@ namespace RTParser
                                 }
                             }
                             string thisInput = path.LegacyPath.AsString().Trim().ToUpper();
-                            if (thisInput==lastInput) continue;
+                            if (thisInput == lastInput) continue;
                             lastInput = thisInput;
+                            numInputs++;
                             result.NormalizedPaths.Add(path);
+                            if (numInputs >= maxInputs) return;
+
                         }
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Given a request containing user input, produces a result from the Proccessor
+        /// </summary>
+        /// <param name="request">the request from the user</param>
+        /// <returns>the result to be output to the user</returns>
+        public AIMLbot.Result Chat(Request request)
+        {
+            AIMLbot.Result result = new AIMLbot.Result(request.user, this, request);
+
+            if (this.isAcceptingUserInput)
+            {
+                // Normalize the input
+                AIMLLoader loader = new AIMLLoader(this, request);
+                Loader = loader;
+                //RTParser.Normalize.SplitIntoSentences splitter = new RTParser.Normalize.SplitIntoSentences(this);
+                Unifiable[] rawSentences = new Unifiable[] { request.rawInput };//splitter.Transform(request.rawInput);
+                LoadInputPaths(request, loader, rawSentences, result);
                 int NormalizedPathsCount = result.NormalizedPaths.Count;
                 if (NormalizedPathsCount != 1)
                 {
