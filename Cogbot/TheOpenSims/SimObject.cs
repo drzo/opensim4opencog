@@ -1439,10 +1439,12 @@ namespace cogbot.TheOpenSims
             {
                 if (WasKilled) return false;
                 if (!HasPrim) return false;
+                Primitive Prim = null;
                 lock (HasPrimLock)
                 {
 
                     if (!HasPrim) return false;
+                    Prim = _Prim0;
                     if (_Prim0.RegionHandle == 0)
                     {
                         return false;
