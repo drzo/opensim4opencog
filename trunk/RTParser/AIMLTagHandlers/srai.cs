@@ -61,7 +61,7 @@ namespace RTParser.AIMLTagHandlers
                         AIMLbot.Request subRequest = new AIMLbot.Request(templateNodeInnerText, this.user, this.Proc);
                         depth = subRequest.depth = request.depth + 1;
                         subRequest.Topic = top;
-                        subRequest.parent = this.request;
+                        subRequest.ParentRequest = this.request;
                         subRequest.StartedOn = this.request.StartedOn;
                         // make sure we don't keep adding time to the request
                         bool showDebug = true;
@@ -70,28 +70,32 @@ namespace RTParser.AIMLTagHandlers
                         {
                             showDebug = false;
                         }
-                        if (showDebug) 
+                        if (showDebug)
                             Console.WriteLine(" SRAI--> (" + depth + ")" + subRequestrawInput + " <----- @ " +
-                                          LineNumberTextInfo());
+                                              LineNumberTextInfo());
                         if (depth > 200)
                         {
-                            Console.WriteLine("WARNING Depth pretty deep " + templateNode + " returning empty for " + subRequestrawInput);
+                            Console.WriteLine(" SRAI TOOOO DEEEEP <-- (" + depth + ")" + subRequestrawInput +
+                                              " <----- @ " +
+                                              LineNumberTextInfo());
                             return Unifiable.Empty;
                         }
-                        AIMLbot.Result subQuery = this.Proc.Chat(subRequest);
+                        AIMLbot.Result subResult = this.Proc.Chat(subRequest);
                         this.request.hasTimedOut = subRequest.hasTimedOut;
-                        var subQueryRawOutput = subQuery.RawOutput.ToValue().Trim();
+                        var subQueryRawOutput = subResult.RawOutput.ToValue().Trim();
                         if (Unifiable.IsNullOrEmpty(subQueryRawOutput))
                         {
-                            if (showDebug) Console.WriteLine(" SRAI<-- (" + depth + ") MISSING <----- @ " + LineNumberTextInfo());
+                            if (showDebug)
+                                Console.WriteLine(" SRAI<-- (" + depth + ") MISSING <----- @ " + LineNumberTextInfo());
                             return Unifiable.Empty;
                         }
                         else
                         {
-                            if (showDebug) Console.WriteLine(" SRAI<-- (" + depth + ")" + subQueryRawOutput + " @ " + LineNumberTextInfo());
+                            if (showDebug)
+                                Console.WriteLine(" SRAI<-- (" + depth + ")" + subQueryRawOutput + " @ " + LineNumberTextInfo());
                         }
 
-                        return subQuery.Output;
+                        return subResult.Output;
                     }
                 }
                 return Unifiable.Empty;
