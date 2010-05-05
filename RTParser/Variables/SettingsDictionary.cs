@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Xml;
 using System.IO;
+using RTParser;
 using RTParser.Normalize;
+using RTParser.Utils;
 
 namespace RTParser.Utils
 {
@@ -96,7 +98,7 @@ namespace RTParser.Utils
                     XmlNode item = result.CreateNode(XmlNodeType.Element, "item", "");
                     XmlAttribute name = result.CreateAttribute("name");
                     name.Value = key;
-                    XmlAttribute value = result.CreateAttribute( "value");
+                    XmlAttribute value = result.CreateAttribute("value");
                     value.Value = (Unifiable)this.settingsHash[key];
                     item.Attributes.Append(name);
                     item.Attributes.Append(value);
@@ -115,7 +117,7 @@ namespace RTParser.Utils
         public SettingsDictionary(RTParser.RTPBot bot, ParentProvider parent)
         {
             this.bot = bot;
-            if (parent!=null) _parent.Add(parent);
+            if (parent != null) _parent.Add(parent);
         }
 
         #region Methods
@@ -235,6 +237,21 @@ namespace RTParser.Utils
             return true;
         }
 
+        public bool addListSetting(string name, Unifiable value)
+        {
+            lock (orderedKeys)
+            {
+                string key = MakeCaseInsensitive.TransformInput(Unifiable.Create(name));
+                if (key.Length > 0)
+                {
+                    this.removeSetting(key);
+                    this.orderedKeys.Add(key);
+                    this.settingsHash.Add(MakeCaseInsensitive.TransformInput(key), value);
+                }
+            }
+            return true;
+        }
+
         /// <summary>
         /// Removes the named setting from this class
         /// </summary>
@@ -284,7 +301,7 @@ namespace RTParser.Utils
             }
             foreach (var parent in Parents)
             {
-                parent.updateSetting(name, value);                
+                parent.updateSetting(name, value);
             }
             return true;
         }
@@ -313,7 +330,7 @@ namespace RTParser.Utils
                 string normalizedName = MakeCaseInsensitive.TransformInput(name);
                 if (this.containsSettingCalled(normalizedName))
                 {
-                    return (Unifiable) this.settingsHash[normalizedName];
+                    return (Unifiable)this.settingsHash[normalizedName];
                 }
                 else
                 {
@@ -325,7 +342,7 @@ namespace RTParser.Utils
                             if (v != null && !Unifiable.IsFalse(v)) return v;
                         }
                     }
-                    if (Parents.Count>0)
+                    if (Parents.Count > 0)
                     {
                         return Parents[0].grabSetting(name);
                     }
@@ -406,23 +423,23 @@ namespace RTParser.Utils
         {
             foreach (var hash in obj.GetType().GetProperties())
             {
-                addObjectProperty(obj,hash);
+                addObjectProperty(obj, hash);
             }
         }
 
         public void AddObjectProperty(object o, String name)
         {
-            addGetSet(new PropertySetter(name, name, o));
+            addGetSet(new ObjectPropertyDictionary(name, name, o));
         }
 
 
         private void addObjectProperty(object o, PropertyInfo info)
         {
             string name = info.Name;
-            addGetSet(new PropertySetter(name,name,o));
+            addGetSet(new ObjectPropertyDictionary(name, name, o));
         }
 
-        private void addGetSet(PropertySetter o)
+        private void addGetSet(ObjectPropertyDictionary o)
         {
             InsertProvider(() => { return o; });
         }
@@ -431,72 +448,17 @@ namespace RTParser.Utils
         {
             _parent.Insert(0, provider);
         }
-    }
 
-    internal class PropertySetter : ISettingsDictionary
-    {
-        readonly private object obj;
-        readonly private string named;
-        private object oldValue = null;
-        public PropertySetter(string name, string pname, object o)
+        public void AddGetSetProperty(string topic, GetUnifiable getter, Action<Unifiable> setter)
         {
-            obj = o;
-            named = name;
-        }
-        private void propSet(object p)
-        {
-            PropertyInfo info = obj.GetType().GetProperty(named);
-            info.SetValue(obj, p, null);
-        }
-        private object propGet()
-        {
-            PropertyInfo info = obj.GetType().GetProperty(named);
-            return info.GetValue(obj, null);
+            var prov = new GetSetDictionary(topic, new GetSetProperty(getter, setter));
+            InsertProvider(() => prov);
         }
 
-
-        #region ISettingsDictionary Members
-
-        public bool addSetting(string name, Unifiable value)
+        internal void AddGetSetProperty(string p, CollectionProperty v)
         {
-            if (!containsSettingCalled(name)) return false;
-            oldValue = propGet();
-            propSet(value);
-            return true;
+            GetSetDictionary prov = new GetSetDictionary(p, v.GetProvider());
+            InsertProvider(() => prov);
         }
-
-        public bool removeSetting(string name)
-        {
-            if (!containsSettingCalled(name)) return false;
-            propSet(oldValue);
-            return true;
-        }
-
-        public bool updateSetting(string name, Unifiable value)
-        {
-            if (containsSettingCalled(name))
-            {
-                oldValue = propGet();
-                propSet(value);
-                return true;
-            }
-            return false;
-        }
-
-        public Unifiable grabSetting(string name)
-        {
-            if (containsSettingCalled(name))
-            {
-                return Unifiable.Create(propGet());
-            }
-            return Unifiable.Empty;
-        }
-
-        public bool containsSettingCalled(string name)
-        {
-            return named.ToLower() == name.ToLower();
-        }
-
-        #endregion
     }
 }

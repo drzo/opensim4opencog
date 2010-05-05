@@ -1,0 +1,67 @@
+namespace RTParser.Utils
+{
+    internal class GetSetDictionary : ISettingsDictionary
+    {
+        readonly private GetSetProperty info;
+        readonly private string named;
+        private object oldValue = null;
+        public GetSetDictionary(string name, GetSetProperty gs)
+        {    
+            named = name;
+            info = gs;
+        }
+        private void propSet(object p)
+        {
+            info.SetValue(oldValue, p, null);
+        }
+        private object propGet()
+        {
+            return info.GetValue(oldValue, null);
+        }
+
+
+        #region ISettingsDictionary Members
+
+        public bool addSetting(string name, Unifiable value)
+        {
+            if (!containsSettingCalled(name)) return false;
+            oldValue = propGet();
+            propSet(value);
+            return true;
+        }
+
+        public bool removeSetting(string name)
+        {
+            if (!containsSettingCalled(name)) return false;
+            propSet(oldValue);
+            return true;
+        }
+
+        public bool updateSetting(string name, Unifiable value)
+        {
+            if (containsSettingCalled(name))
+            {
+                oldValue = propGet();
+                propSet(value);
+                return true;
+            }
+            return false;
+        }
+
+        public Unifiable grabSetting(string name)
+        {
+            if (containsSettingCalled(name))
+            {
+                return Unifiable.Create(propGet());
+            }
+            return Unifiable.Empty;
+        }
+
+        public bool containsSettingCalled(string name)
+        {
+            return named.ToLower() == name.ToLower();
+        }
+
+        #endregion
+    }
+}
