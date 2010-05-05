@@ -370,7 +370,7 @@ namespace RTParser.Utils
             Unifiable topicName, XmlNode outerNode)
         {
             XmlNode guardnode = FindNode("guard", cateNode, FindNode("guard", outerNode, null));
-            GuardInfo guard = guardnode == null ? null : new GuardInfo(guardnode);
+            GuardInfo guard = guardnode == null ? null : GuardInfo.GetGuardInfo(guardnode);
 
 
             XmlNode newPattern;
@@ -545,6 +545,16 @@ namespace RTParser.Utils
         {
             return UPath.MakePath(generateCPath(pattern, that, flag, topicName, isUserInput));
         }
+
+        /// <summary>
+        /// Generates a path from the passed arguments
+        /// </summary>
+        /// <param name="pattern">the pattern</param>
+        /// <param name="that">the that</param>
+        /// <param name="topicName">the topic</param>
+        /// <param name="isUserInput">marks the path to be created as originating from user input - so
+        /// normalize out the * and _ wildcards used by AIML</param>
+        /// <returns>The appropriately processed path</returns>
         public Unifiable generateCPath(Unifiable pattern, Unifiable that, Unifiable flag, Unifiable topicName, bool isUserInput)
         {
             // to hold the normalized path to be entered into the graphmaster

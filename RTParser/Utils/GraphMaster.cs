@@ -120,7 +120,7 @@ namespace RTParser.Utils
 
         public CategoryInfo FindCategoryInfo(PatternInfo info, XmlNode node, LoaderOptions filename)
         {
-            return new CategoryInfo(info, node, filename);
+            return CategoryInfo.MakeCategoryInfo(info, node, filename);
         }
 
 

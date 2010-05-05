@@ -29,5 +29,19 @@ namespace RTParser.Utils
             }
             return s;
         }
+
+        public static TemplateInfo GetTemplateInfo(XmlNode template, GuardInfo guard, Node node, CategoryInfo category)
+        {
+            bool prev = NoInfo;
+            try
+            {
+                NoInfo = false;
+                return new TemplateInfo(template, guard, node, category);
+            }
+            finally 
+            {
+                NoInfo = prev;               
+            }
+        }
     }
 }

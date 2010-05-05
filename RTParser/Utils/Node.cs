@@ -129,11 +129,19 @@ namespace RTParser.Utils
                     }
 
                 // last in first out addition
-                TemplateInfo newTemplateInfo = new TemplateInfo(outTemplate, guard, this, category);
-                PatternInfo pat = category.Pattern;
+                TemplateInfo newTemplateInfo = TemplateInfo.GetTemplateInfo(outTemplate, guard, this, category);
+                PatternInfo pat = pi;
+                if (category!=null)
+                {
+                    category.AddTemplate(newTemplateInfo);
+                    pat = category.Pattern;
+                }
+                if (pat != null)
+                {
                 pat.GraphmasterNode = this;
-                pat.AddCategory(category);
-                category.AddTemplate(newTemplateInfo);
+                    if (category != null) pat.AddCategory(category);
+                }
+
                 master.AddTemplate(newTemplateInfo);
                 if (pat!=pi)
                 {
