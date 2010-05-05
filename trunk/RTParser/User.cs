@@ -81,19 +81,22 @@ namespace RTParser
             {
                 var raws = new List<Unifiable>();
                 int added = 0;
+                string lastOutput = "";
                 if (this.Results.Count > 0)
                 {
                     foreach (var result in Results)
                     {
+                        string thisOutput = result.RawOutput.AsString();
+                        if (thisOutput=="*") continue;
+                        if (thisOutput==lastOutput) continue;
+                        lastOutput = thisOutput;
                         raws.Add(result.RawOutput); 
                         added++;
-                        if (added > 2) return raws;
+                        if (added > 2) break;
                     }
                 }
-                else
-                {
-                    raws.Add(Unifiable.STAR);
-                }
+                if (raws.Count == 0) raws.Add("HELLO"); //since nothing is known yet!
+                if (raws.Count == 0) raws.Add(Unifiable.STAR);
                 return raws;
             }
         }

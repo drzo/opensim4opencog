@@ -64,24 +64,31 @@ namespace RTParser.AIMLTagHandlers
                         subRequest.parent = this.request;
                         subRequest.StartedOn = this.request.StartedOn;
                         // make sure we don't keep adding time to the request
+                        bool showDebug = true;
+                        string subRequestrawInput = subRequest.rawInput;
+                        if (subRequestrawInput.Contains("SYSTEMANIM") || subRequestrawInput.Contains("HANSANIM"))
+                        {
+                            showDebug = false;
+                        }
+                        if (showDebug) 
+                            Console.WriteLine(" SRAI--> (" + depth + ")" + subRequestrawInput + " <----- @ " +
+                                          LineNumberTextInfo());
                         if (depth > 200)
                         {
-                            Console.WriteLine("WARNING Depth pretty deep " + templateNode + " returning empty");
+                            Console.WriteLine("WARNING Depth pretty deep " + templateNode + " returning empty for " + subRequestrawInput);
                             return Unifiable.Empty;
                         }
-                        Console.WriteLine(" SRAI--> (" + depth + ")" + subRequest.rawInput + " <----- @ " +
-                                          LineNumberTextInfo());
                         AIMLbot.Result subQuery = this.Proc.Chat(subRequest);
                         this.request.hasTimedOut = subRequest.hasTimedOut;
                         var subQueryRawOutput = subQuery.RawOutput.ToValue().Trim();
                         if (Unifiable.IsNullOrEmpty(subQueryRawOutput))
                         {
-                            Console.WriteLine(" SRAI<-- (" + depth + ") MISSING <----- @ " + LineNumberTextInfo());
+                            if (showDebug) Console.WriteLine(" SRAI<-- (" + depth + ") MISSING <----- @ " + LineNumberTextInfo());
                             return Unifiable.Empty;
                         }
                         else
                         {
-                            Console.WriteLine(" SRAI<-- (" + depth + ")" + subQueryRawOutput + " @ " + LineNumberInfo());
+                            if (showDebug) Console.WriteLine(" SRAI<-- (" + depth + ")" + subQueryRawOutput + " @ " + LineNumberTextInfo());
                         }
 
                         return subQuery.Output;

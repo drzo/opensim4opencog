@@ -22,7 +22,7 @@ namespace RTParser.Utils
         /// <summary>
         /// The template found from searching the graphmaster brain with the path 
         /// </summary>
-        public UList Template = new UList();
+        public UList Templates = new UList();
 
         /// <summary>
         /// If the raw input matches a wildcard then this attribute will contain the block of 
@@ -45,6 +45,21 @@ namespace RTParser.Utils
         public List<Unifiable> GuardStar = new List<Unifiable>();
 
         #endregion
+
+        public override string ToString()
+        {
+            string s = "SubQuery '" + FullPath + "'";
+            if (Templates == null)
+            {
+                s += " -NO-TEMPLATES- ";
+            }
+            else
+                foreach (var path in Templates)
+                {
+                    s += "\r\n t: " + path;
+                }
+            return s + " \r\n   Result: " + Result;
+        }
 
         public Result Result;
         /// <summary>

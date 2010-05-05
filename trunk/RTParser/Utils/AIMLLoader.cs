@@ -65,7 +65,7 @@ namespace RTParser.Utils
             {
                 this.loadAIMLURI(path, options, request);
             }
-            Console.WriteLine("*** Loaded AIMLFiles From Location: '{0}' ***", path);
+            this.RProcessor.writeToLog("*** Loaded AIMLFiles From Location: '{0}' ***", path);
 
         }
 
@@ -174,7 +174,7 @@ namespace RTParser.Utils
                     }
                 }
 
-                Console.WriteLine("Loaded AIMLFile: '{0}'", filename);
+                this.RProcessor.writeToLog("Loaded AIMLFile: '{0}'", filename);
                 return;
             }
             catch (Exception e)
@@ -205,7 +205,7 @@ namespace RTParser.Utils
                 {
                     String s = "which causes loadAIMLString '" + input + "' " + filename + " charpos " + tr;
                     s = s + "\n" + e2.Message + "\n" + e2.StackTrace + "\n" + s;
-                    System.Console.WriteLine(s);
+                    this.RProcessor.writeToLog(s);
                     throw e2;
                 }
 
@@ -235,7 +235,7 @@ namespace RTParser.Utils
                 {
                     String s = "which causes loadAIMLStream '" + input + "' " + filename + " charpos=" + input.Position;
                     s = s + "\n" + e2.Message + "\n" + e2.StackTrace + "\n" + s;
-                    System.Console.WriteLine(s);
+                    this.RProcessor.writeToLog(s);
                     //System.Console.Flush();
                     if (!xtr.Read())
                     {
