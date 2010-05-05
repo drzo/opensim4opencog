@@ -392,7 +392,7 @@ namespace RTParser.Utils
                     throw new InvalidOperationException(cateNode.OuterXml);
                 }
             }
-            Unifiable categoryPath = generatePath(patternText, that, cond ,topicName, false);
+            Unifiable categoryPath = generateCPath(patternText, that, cond ,topicName, false);
             PatternInfo patternInfo = PatternInfo.GetPattern(filename, patternNode, categoryPath);
             TopicInfo topicInfo = TopicInfo.FindTopic(filename,topicName);
 
@@ -540,7 +540,11 @@ namespace RTParser.Utils
         /// <param name="isUserInput">marks the path to be created as originating from user input - so
         /// normalize out the * and _ wildcards used by AIML</param>
         /// <returns>The appropriately processed path</returns>
-        public Unifiable generatePath(Unifiable pattern, Unifiable that, Unifiable flag, Unifiable topicName, bool isUserInput)
+        public UPath generatePath(Unifiable pattern, Unifiable that, Unifiable flag, Unifiable topicName, bool isUserInput)
+        {
+            return UPath.MakePath(generateCPath(pattern, that, flag, topicName, isUserInput));
+        }
+        public Unifiable generateCPath(Unifiable pattern, Unifiable that, Unifiable flag, Unifiable topicName, bool isUserInput)
         {
             // to hold the normalized path to be entered into the graphmaster
             Unifiable normalizedPath = Unifiable.CreateAppendable();

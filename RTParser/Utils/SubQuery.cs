@@ -15,7 +15,7 @@ namespace RTParser.Utils
         /// <summary>
         /// The path that this query relates to
         /// </summary>
-        public Unifiable FullPath;
+        public UPath FullPath;
 
         /// <summary>
         /// The template found from searching the graphmaster brain with the path 
@@ -49,7 +49,7 @@ namespace RTParser.Utils
         /// Ctor
         /// </summary>
         /// <param name="fullPath">The path that this query relates to</param>
-        public SubQuery(Unifiable fullPath, Result req)
+        public SubQuery(UPath fullPath, Result req)
         {
             Result = req;
             this.FullPath = fullPath;

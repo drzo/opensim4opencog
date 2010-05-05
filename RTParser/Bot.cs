@@ -851,12 +851,12 @@ namespace RTParser
                 foreach (Unifiable sentence in rawSentences)
                 {
                     result.InputSentences.Add(sentence);
-                    Unifiable path = loader.generatePath(sentence, request.user.getLastBotOutput(),request.Flags, request.Topic, true);
+                    UPath path = loader.generatePath(sentence, request.user.getLastBotOutput(),request.Flags, request.Topic, true);
                     result.NormalizedPaths.Add(path);
                 }
 
                 // grab the templates for the various sentences from the graphmaster
-                foreach (Unifiable path in result.NormalizedPaths)
+                foreach (UPath path in result.NormalizedPaths)
                 {
                     Utils.SubQuery query = new SubQuery(path, result);
                     query.Template = this.GraphMaster.evaluate(path, query, request, MatchState.UserInput, Unifiable.CreateAppendable());
@@ -1395,9 +1395,9 @@ The AIMLbot program.
             message = message.Replace("*RAWINPUT*", request.rawInput);
             message = message.Replace("*USER*", request.user.UserID);
             Unifiable paths = Unifiable.CreateAppendable();
-            foreach (Unifiable path in request.result.NormalizedPaths)
+            foreach (UPath path in request.result.NormalizedPaths)
             {
-                paths.Append(path + Environment.NewLine);
+                paths.Append(path.LegacyPath + Environment.NewLine);
             }
             message = message.Replace("*PATHS*", paths.ToString());
             msg.Body = message;
@@ -1719,7 +1719,7 @@ The AIMLbot program.
             }
             if (true)
             {
-                Unifiable path = loader.generatePath("no stars", request.user.getLastBotOutput(),request.Flags, request.Topic, true);
+                UPath path = loader.generatePath("no stars", request.user.getLastBotOutput(),request.Flags, request.Topic, true);
                 Utils.SubQuery query = new SubQuery(path, result);
                 string outputSentence = this.processNode(templateNode, query, request, result, request.user);
                 return result;
@@ -1733,13 +1733,13 @@ The AIMLbot program.
                 //foreach (Unifiable sentence in rawSentences)
                 {
                     result.InputSentences.Add(sentence);
-                    Unifiable path = loader.generatePath(sentence, request.user.getLastBotOutput(), request.Flags,
+                    UPath path = loader.generatePath(sentence, request.user.getLastBotOutput(), request.Flags,
                                                          request.Topic, true);
                     result.NormalizedPaths.Add(path);
                 }
 
                 // grab the templates for the various sentences from the graphmaster
-                foreach (Unifiable path in result.NormalizedPaths)
+                foreach (UPath path in result.NormalizedPaths)
                 {
                     Utils.SubQuery query = new SubQuery(path, result);
                     query.Template = this.GraphMaster.evaluate(path, query, request, MatchState.UserInput, Unifiable.CreateAppendable());
