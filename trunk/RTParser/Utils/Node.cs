@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Xml;
+using UPath = RTParser.Unifiable;
 
 namespace RTParser.Utils
 {
@@ -464,7 +465,7 @@ namespace RTParser.Utils
 
         #endregion
     }
-
+#if false
     public class UPath
     {
         private Unifiable lp;
@@ -500,4 +501,5 @@ namespace RTParser.Utils
             return new UPath(unifiable);
         }
     }
+    #endif
 }
