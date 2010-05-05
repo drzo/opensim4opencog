@@ -23,7 +23,7 @@ namespace RTParser.Utils
         /// <summary>
         /// Allow all chars in RawUserInput
         /// </summary>
-        public bool RawUserInput = true;
+        public bool RawUserInput = false;
         #endregion
 
         /// <summary>
@@ -562,8 +562,13 @@ namespace RTParser.Utils
             string normalizedPattern;// = Unifiable.Empty;
             Unifiable normalizedThat;// = Unifiable.STAR;
             Unifiable normalizedTopic;// = Unifiable.STAR;
-
-            if ((this.RProcessor.TrustAIML) & (!isUserInput || RawUserInput))
+            bool UseRawUserInput = RawUserInput;
+            string patString = " "+ pattern.AsString() + " ";
+            if (patString.Contains(" exec ") || patString.Contains(" aiml ") || patString.Contains(" lisp ") || patString.Contains(" tag "))
+            {
+                UseRawUserInput = true;
+            }
+            if ((this.RProcessor.TrustAIML) & (!isUserInput || UseRawUserInput))
             {
 
                 normalizedPattern = pattern.Trim();
@@ -628,15 +633,7 @@ namespace RTParser.Utils
         public Unifiable Normalize(string input, bool isUserInput)
         {
             input = input.Trim();
-            while (input.EndsWith("?"))
-            {
-                input = input.Substring(0, input.Length - 1).Trim();
-            }
-            while (input.EndsWith("."))
-            {
-                input = input.Substring(0, input.Length - 1).Trim();
-            }
-            while (input.EndsWith("!"))
+            while (input.EndsWith("?") || input.EndsWith(".")||input.EndsWith("!"))
             {
                 input = input.Substring(0, input.Length - 1).Trim();
             }

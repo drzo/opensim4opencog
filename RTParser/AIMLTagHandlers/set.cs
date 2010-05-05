@@ -57,14 +57,14 @@ namespace RTParser.AIMLTagHandlers
                     if (!templateNodeInnerText.IsEmpty)
                     {
                         if (!Unifiable.IsNull(gName)) gUser.Predicates.addSetting(gName, templateNodeInnerText);
-                        this.user.Predicates.addSetting(name, templateNodeInnerText);
-                        return this.user.Predicates.grabSetting(name);
+                        this.request.Predicates.addSetting(name, templateNodeInnerText);
+                        return this.request.Predicates.grabSetting(name);
                     }
                     else
                     {
                         // remove the predicate
                         if (!Unifiable.IsNull(gName)) gUser.Predicates.removeSetting(gName);
-                        this.user.Predicates.removeSetting(name);
+                        this.request.Predicates.removeSetting(name);
                         return Unifiable.Empty;
                     }
                 }
@@ -77,12 +77,12 @@ namespace RTParser.AIMLTagHandlers
                     Unifiable joined = nv.Rest();// Unifiable.Join(" ", fsp, 1, fsp.Length - 1);
                     if (joined.IsEmpty)
                     {
-                        this.user.Predicates.removeSetting(name);
+                        this.request.Predicates.removeSetting(name);
                         return Unifiable.Empty;
                     }
                     if (!Unifiable.IsNull(gName)) gUser.Predicates.addSetting(gName, templateNodeInnerText);
-                    this.user.Predicates.addSetting(name, joined);
-                    return this.user.Predicates.grabSetting(name);
+                    this.request.Predicates.addSetting(name, joined);
+                    return this.request.Predicates.grabSetting(name);
                 }
             }
             return Unifiable.Empty;

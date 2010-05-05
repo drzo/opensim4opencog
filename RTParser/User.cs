@@ -133,6 +133,7 @@ namespace RTParser
                 this.Predicates = new RTParser.Utils.SettingsDictionary(this.bot, provider);
                 this.bot.DefaultPredicates.Clone(this.Predicates);
                 this.Predicates.addSetting("topic", Unifiable.STAR);
+                this.Predicates.addSetting("topic", "NOTOPIC");
             }
             else
             {
