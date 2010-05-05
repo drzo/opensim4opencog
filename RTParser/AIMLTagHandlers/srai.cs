@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Xml;
 using System.Text;
+using RTParser.Utils;
 
 namespace RTParser.AIMLTagHandlers
 {
@@ -58,6 +59,7 @@ namespace RTParser.AIMLTagHandlers
                     {
                         Unifiable top = GetAttribValue("topic", request.Topic);
                         AIMLbot.Request subRequest = new AIMLbot.Request(templateNodeInnerText, this.user, this.Proc);
+                        depth = subRequest.depth = request.depth + 1;
                         subRequest.Topic = top;
                         subRequest.parent = this.request;
                         subRequest.StartedOn = this.request.StartedOn;
@@ -67,10 +69,20 @@ namespace RTParser.AIMLTagHandlers
                             Console.WriteLine("WARNING Depth pretty deep " + templateNode + " returning empty");
                             return Unifiable.Empty;
                         }
-                        Console.WriteLine(" SRAI--> (" + depth + ")" + subRequest.rawInput);
+                        Console.WriteLine(" SRAI--> (" + depth + ")" + subRequest.rawInput + " <----- @ " +
+                                          LineNumberTextInfo());
                         AIMLbot.Result subQuery = this.Proc.Chat(subRequest);
                         this.request.hasTimedOut = subRequest.hasTimedOut;
-                        Console.WriteLine(" SRAI <-- (" + depth + ")" + subQuery.RawOutput);
+                        var subQueryRawOutput = subQuery.RawOutput.ToValue().Trim();
+                        if (Unifiable.IsNullOrEmpty(subQueryRawOutput))
+                        {
+                            Console.WriteLine(" SRAI<-- (" + depth + ") MISSING <----- @ " + LineNumberTextInfo());
+                            return Unifiable.Empty;
+                        }
+                        else
+                        {
+                            Console.WriteLine(" SRAI<-- (" + depth + ")" + subQueryRawOutput + " @ " + LineNumberInfo());
+                        }
 
                         return subQuery.Output;
                     }

@@ -196,7 +196,7 @@ namespace RTParser.Utils
             {
                 try
                 {
-                    XmlDocumentLineInfo doc = new XmlDocumentLineInfo(tr);
+                    XmlDocumentLineInfo doc = new XmlDocumentLineInfo("From " + filename);
                     doc.Load(xtr);
                     if (doc.DocumentElement == null) continue;
                     this.loadAIMLNode(doc.DocumentElement, filename, request);
@@ -226,7 +226,7 @@ namespace RTParser.Utils
             {
                 try
                 {
-                    XmlDocumentLineInfo doc = new XmlDocumentLineInfo(input);
+                    XmlDocumentLineInfo doc = new XmlDocumentLineInfo(input, " from " + filename);
                     doc.Load(xtr);
                     if (doc.DocumentElement == null) continue;
                     this.loadAIMLNode(doc.DocumentElement, filename, request);
@@ -294,7 +294,7 @@ namespace RTParser.Utils
                 {
                     try
                     {
-                        RProcessor.ImmediateAiml(currentNode, request, this);
+                        RProcessor.ImmediateAiml(currentNode, request, this, null);
                     }
                     catch (Exception e)
                     {
@@ -465,8 +465,8 @@ namespace RTParser.Utils
                     throw new NotImplementedException("generatePathExtractWhat: " + patternString);                    
                 }
                 patternString = patternString.Replace(thatString, "").Replace("  ", " ").Trim();
-                var newLineInfoPattern = AIMLTagHandler.getNode("<pattern>" + patternString + "</pattern>");
-                newLineInfoPattern.SetFromParent((LineInfoElement)patternNode);
+                var newLineInfoPattern = AIMLTagHandler.getNode("<pattern>" + patternString + "</pattern>", patternNode);
+                newLineInfoPattern.SetParentFromNode((LineInfoElement)patternNode);
                 patternNode = newLineInfoPattern;
                 patternText = Unifiable.Create(patternNode);//.InnerXml;
             }
@@ -701,26 +701,37 @@ namespace RTParser.Utils
             }
             base.Load(reader);
         }
+        public override void Load(TextReader reader)
+        {
+            base.Load(new XmlTextReader(reader));
+        }
 
+        public override string ToString()
+        {
+            return InfoString ?? base.ToString();
+        }
         private Stream LineInfoReader;
         public IXmlLineInfo LineTracker;
-        private StringReader stringReader;
-        public XmlDocumentLineInfo(Stream lineInfoReader)
+        public string InfoString;
+        public XmlDocumentLineInfo(Stream lineInfoReader, string toString)
         {
+            InfoString = toString;
             LineInfoReader = lineInfoReader;
         }
-        public XmlDocumentLineInfo(StringReader lineInfoReader)
+        public XmlDocumentLineInfo(string toString)
         {
-            stringReader = lineInfoReader;
+            InfoString = toString;
         }
-        public XmlDocumentLineInfo(IXmlLineInfo lineInfoReader)
+        public XmlDocumentLineInfo(IXmlLineInfo lineInfoReader, string toString)
         {
+            InfoString = toString;
             LineTracker = lineInfoReader;
         }
         public override void LoadXml(string xml)
         {
             base.Load(new XmlTextReader(new StringReader(xml)));
         }
+
         public override XmlElement CreateElement(string prefix, string localname, string nsURI)
         {
             LineInfoElement elem = new LineInfoElement(prefix, localname, nsURI, this);
@@ -774,13 +785,15 @@ namespace RTParser.Utils
             charPos = position;
         }
 
-        internal void SetFromParent(LineInfoElement xmlNode)
+        internal void SetParentFromNode(XmlNode xmlNode)
         {
-            lParent = (LineInfoElement) xmlNode.ParentNode;
-            lineNumber = xmlNode.LineNumber;
-            linePosition = xmlNode.linePosition;
-            charPos = xmlNode.charPos;
+            LineInfoElement lie = (LineInfoElement) xmlNode;
+            lParent = (LineInfoElement)xmlNode.ParentNode;
+            lineNumber = lie.LineNumber;
+            linePosition = lie.linePosition;
+            charPos = lie.charPos;
         }
+
         public override XmlNode ParentNode
         {
             get

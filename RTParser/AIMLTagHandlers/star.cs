@@ -65,7 +65,7 @@ namespace RTParser.AIMLTagHandlers
                                 string srch = (" " + with.ToValue() + " ").ToUpper();
                                 return ((" " + childNode.InnerText + " ").ToUpper().Equals(srch)) ? STAR_TRUE : STAR_FALSE;
                             }
-                            AIMLTagHandler part = Proc.GetTagHandler(user, query, request, result, childNode);
+                            AIMLTagHandler part = Proc.GetTagHandler(user, query, request, result, childNode, this);
                             if (part.CanUnify(with)>0) return STAR_FALSE;
                         }
                         catch (Exception e)

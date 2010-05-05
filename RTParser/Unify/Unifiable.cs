@@ -158,6 +158,15 @@ namespace RTParser
             return tf.IsFalse();
         }
 
+        public static bool IsNullOrEmpty(Object name)
+        {
+            if (Object.ReferenceEquals(name, null)) return true;
+            if (name is String)
+            {
+                return String.IsNullOrEmpty((String)name);
+            }
+            return (name is Unifiable && ((Unifiable)name).Raw == null);
+        }
         public static bool IsNull(Object name)
         {
             if (Object.ReferenceEquals(name, null)) return true;
