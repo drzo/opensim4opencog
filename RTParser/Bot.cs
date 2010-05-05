@@ -15,6 +15,7 @@ using RTParser.Normalize;
 using RTParser.Utils;
 using org.opencyc.api;
 using org.opencyc.cycobject;
+using UPath = RTParser.Unifiable;
 
 namespace RTParser
 {

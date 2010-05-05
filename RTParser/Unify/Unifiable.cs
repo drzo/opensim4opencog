@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using System.Xml;
 using RTParser.Utils;
+using UPath = RTParser.Unifiable;
 
 namespace RTParser
 {
@@ -198,6 +199,12 @@ namespace RTParser
                 return string.IsNullOrEmpty(ToValue());
             }
         }
+
+        public Unifiable LegacyPath
+        {
+            get { return this; }
+        }
+
         protected virtual bool IsFalse()
         {
             return IsEmpty;            
@@ -278,6 +285,11 @@ namespace RTParser
         public abstract bool IsShort();
 
         public abstract object AsNodeXML();
+
+        public static UPath MakePath(Unifiable unifiable)
+        {
+            return unifiable;
+        }
     }
 }
 
