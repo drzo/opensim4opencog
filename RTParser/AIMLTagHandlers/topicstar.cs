@@ -42,9 +42,9 @@ namespace RTParser.AIMLTagHandlers
                 try
                 {
                     int result = Convert.ToInt32(GetAttribValue("index", "1"));
-                    if (result >= 0)
+                    if (result <= query.TopicStar.Count)
                     {
-                        if (result < query.TopicStar.Count)
+                        if (result >= 0)
                         {
                             return (Unifiable)this.query.TopicStar[result - 1];
                         }
@@ -55,9 +55,11 @@ namespace RTParser.AIMLTagHandlers
                     }
                     return GetAttribValue("default", Unifiable.Empty);
                 }
-                catch
+                catch (Exception e)
                 {
-                    this.Proc.writeToLog("ERROR! A TopicStar tag with a bady formed index (" + this.templateNode.OuterXml + ") was encountered processing the input: " + this.request.rawInput);
+                    this.Proc.writeToLog("ERROR! A TopicStar tag with a bady formed index (" +
+                                         this.LineNumberTextInfo() + ") was encountered processing the input: " +
+                                         this.request.rawInput + " " + e);
                 }
             }
             return Unifiable.Empty;
