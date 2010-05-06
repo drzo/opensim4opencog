@@ -8,7 +8,7 @@ namespace RTParser.Utils
 
         public static LoaderOptions GetDefault(Request r)
         {
-            LoaderOptions ops = new LoaderOptions(r.Proccessor.GraphMaster);
+            LoaderOptions ops = new LoaderOptions(r.Graph);
             ops.request = r;
             return ops;
         }

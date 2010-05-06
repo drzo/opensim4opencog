@@ -88,7 +88,7 @@ namespace RTParser.Utils
                         RProcessor.writeToLog("Error in loadAIMLFile " + ee);
                     }
                 }
-                this.RProcessor.writeToLog("Finished processing the AIML files. " + Convert.ToString(this.RProcessor.Size) + " categories processed.");
+                this.RProcessor.writeToLog("Finished processing the AIML files. " + Convert.ToString(request.Graph.Size) + " categories processed.");
             }
             else
             {
@@ -191,12 +191,12 @@ namespace RTParser.Utils
         public void loadAIMLString(string input, LoaderOptions filename, Request request)
         {
             var tr = new StringReader(input);
-            XmlTextReader xtr = new XmlTextReader(tr);
+            var xtr = XmlDocumentLineInfo.CreateXmlTextReader(tr);
             while (!xtr.EOF)
             {
                 try
                 {
-                    XmlDocumentLineInfo doc = new XmlDocumentLineInfo("From " + filename);
+                    XmlDocumentLineInfo doc = new XmlDocumentLineInfo("" + filename);
                     doc.Load(xtr);
                     if (doc.DocumentElement == null) continue;
                     this.loadAIMLNode(doc.DocumentElement, filename, request);
@@ -221,14 +221,13 @@ namespace RTParser.Utils
         public void loadAIMLStream(Stream input, LoaderOptions filename, Request request)
         {
 
-            var xtr = new XmlTextReader(input);
+            var xtr = XmlDocumentLineInfo.CreateXmlTextReader(input);
             while (!xtr.EOF)
             {
                 try
                 {
-                    XmlDocumentLineInfo doc = new XmlDocumentLineInfo(input, " from " + filename);
+                    XmlDocumentLineInfo doc = new XmlDocumentLineInfo(input, "" + filename);
                     doc.Load(xtr);
-                    if (doc.DocumentElement == null) continue;
                     this.loadAIMLNode(doc.DocumentElement, filename, request);
                 }
                 catch (Exception e2)
@@ -403,7 +402,7 @@ namespace RTParser.Utils
                 try
                 {
                     CategoryInfo categoryInfo = CategoryInfo.GetCategoryInfo(patternInfo, cateNode, filename);
-                    this.RProcessor.GraphMaster.addCategoryTag(categoryPath, patternInfo,
+                    filename.Graph.addCategoryTag(categoryPath, patternInfo,
                                                                categoryInfo,
                                                                outerNode,templateNode, guard);
                 }
@@ -743,6 +742,41 @@ namespace RTParser.Utils
             }
             return elem;
         }
+
+        public static XmlReader CreateXmlTextReader(Stream stream)
+        {
+            return XmlTextReader.Create(stream, DefaultSettings);
+        }
+        internal static XmlReader CreateXmlTextReader(StringReader tr)
+        {
+            XmlTextReader xmlTextReader = new XmlTextReader(tr);
+            return XmlTextReader.Create(tr, DefaultSettings);
+        }
+
+
+        /***
+         
+         This document already has a 'DocumentElement' node.
+          at System.Xml.XmlDocument.IsValidChildType(XmlNodeType type)
+          at System.Xml.XmlDocument.AppendChildForLoad(XmlNode newChild, XmlDocument doc)
+          at System.Xml.XmlLoader.LoadDocSequence(XmlDocument parentDoc)
+          at System.Xml.XmlLoader.Load(XmlDocument doc, XmlReader reader, Boolean preserveWhitespace)
+          at System.Xml.XmlDocument.Load(XmlReader reader)
+                 
+         */
+
+        protected static XmlReaderSettings DefaultSettings
+        {
+            get
+            {
+                XmlReaderSettings settings = new XmlReaderSettings();
+                settings.ConformanceLevel = ConformanceLevel.Fragment;
+                settings.IgnoreWhitespace = true;
+                settings.IgnoreComments = true;
+                return settings;
+            }
+        }
+
     }
 
     public class LineInfoElement : XmlElement, IXmlLineInfo
