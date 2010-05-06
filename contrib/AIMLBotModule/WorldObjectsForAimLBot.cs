@@ -71,6 +71,14 @@ namespace AIMLBotModule
         /// </summary>
         public static bool UseLookAttention = true;
         /// <summary>
+        /// Turn towards interesting objects
+        /// </summary>
+        public static bool UseNameAttention = false;
+        /// <summary>
+        /// Turn towards interesting objects
+        /// </summary>
+        public static bool UseMessageTurnsOnChat = false;
+        /// <summary>
         /// Move towards interesting objects
         /// </summary>
         public static bool UseMoveAttention = false;
@@ -728,12 +736,14 @@ namespace AIMLBotModule
 
         private bool MessageTurnsOnChat(string message)
         {
+            if (!UseMessageTurnsOnChat) return false;
             message = message.ToLower();
             if (message.Contains("chat on")) return true;
             string n = client.Self.Name;
             if (string.IsNullOrEmpty(n)) return false;
             n = n.ToLower().Trim();
             if (n == "") return false;
+            if (!UseNameAttention) return false;
             if (message.Contains(n)) return true;
             foreach (var c in n.Split(' '))
             {
