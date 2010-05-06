@@ -1906,5 +1906,10 @@ The AIMLbot program.
         {
             get { return GlobalSettings.grabSetting("notopic"); }
         }
+
+        public void HeardSelfSay(string message)
+        {
+           
+        }
     }
 }
