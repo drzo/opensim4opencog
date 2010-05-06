@@ -33,7 +33,7 @@ namespace cogbot.ScriptEngines
         {
             eventName = eventName.ToLower();
             Command o;
-            BotClient.Commands.TryGetValue(eventName,out o);
+            BotClient.Commands.TryGetValue(eventName, out o);
             return o;
         }
 
@@ -58,7 +58,7 @@ namespace cogbot.ScriptEngines
             System.IO.FileStream f = System.IO.File.OpenRead(filename);
             StreamReader r = new StreamReader(f);
             r.BaseStream.Seek(0, SeekOrigin.Begin);
-            return Read(filename, new StringReader(r.ReadToEnd()),WriteLine) != null;
+            return Read(filename, new StringReader(r.ReadToEnd()), WriteLine) != null;
         }
 
         /// <summary>
@@ -290,9 +290,9 @@ namespace cogbot.ScriptEngines
             }
         }
 
-        private void WriteLine(string s,params object[] args)
+        private void WriteLine(string s, params object[] args)
         {
-           BotClient.WriteLine(s,args);
+            BotClient.WriteLine(s, args);
         }
 
         public string xEndElement(string strURI, string strName, Hashtable attributes, int depth, Hashtable[] attributeStack)
@@ -528,18 +528,27 @@ namespace cogbot.ScriptEngines
 
         public CmdResult ExecuteXmlCommand(string cmd, OutputDelegate outputDelegate)
         {
+            outputDelegate = outputDelegate ?? WriteLine;
+            CmdResult res = null;
             outputDelegate("<xml>");
             outputDelegate("<cmdtext>" + cmd + "</cmdtext>"); //strinbg
             outputDelegate("<output>"); //string
-            CmdResult res = BotClient.ExecuteCommand(cmd, outputDelegate);
-            outputDelegate("\n</output>");
-            outputDelegate("<message>" + res.Message + "</message>"); //string
-            outputDelegate("<success>" + res.Success + "</success>"); //True/False
-            outputDelegate("<invalidArgs>" + res.InvalidArgs + "</invalidArgs>"); //True/False
-            outputDelegate("<completedSynchronously>" + res.CompletedSynchronously + "</completedSynchronously>");
+            try
+            {
+                res = BotClient.ExecuteCommand(cmd, outputDelegate);
+            }
+            finally
+            {
+                res = res ?? new CmdResult("cannot process " + cmd, false);
+                outputDelegate("\n</output>");
+                outputDelegate("<message>" + res.Message + "</message>"); //string
+                outputDelegate("<success>" + res.Success + "</success>"); //True/False
+                outputDelegate("<invalidArgs>" + res.InvalidArgs + "</invalidArgs>"); //True/False
+                outputDelegate("<completedSynchronously>" + res.CompletedSynchronously + "</completedSynchronously>");
                 //True/False
-            outputDelegate("<isCompleted>" + res.IsCompleted + "</isCompleted>"); //True/False
-            outputDelegate("</xml>");
+                outputDelegate("<isCompleted>" + res.IsCompleted + "</isCompleted>"); //True/False
+                outputDelegate("</xml>");
+            }
             return res;
         }
     }
