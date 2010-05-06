@@ -36,7 +36,7 @@ namespace RTParser.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "learn")
             {
-                LoaderOptions opts = new LoaderOptions(this.Proc.GraphMaster);
+                LoaderOptions opts = new LoaderOptions(request.Graph);
 
                 opts.recurse = Unifiable.IsLogicTF(GetAttribValue("recurse", Unifiable.Empty));
                 //recurse here?

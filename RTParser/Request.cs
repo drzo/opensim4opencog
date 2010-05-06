@@ -51,6 +51,7 @@ namespace RTParser
         /// </summary>
         public bool hasTimedOut = false;
 
+        public GraphMaster Graph;
 
         public readonly int framesAtStart;
 
@@ -73,6 +74,7 @@ namespace RTParser
             this.user = user;
             this.Proccessor = bot;
             this.StartedOn = DateTime.Now;
+            this.Graph = bot.GraphMaster;
             this.framesAtStart = new StackTrace().FrameCount;
         }
 
