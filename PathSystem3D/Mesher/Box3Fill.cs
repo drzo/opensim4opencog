@@ -371,7 +371,14 @@ namespace PathSystem3D.Mesher
 
         public static List<Box3Fill> Simplify(List<Box3Fill> simpl)
         {
-           return Simplify1(simpl);
+            try
+            {
+                return Simplify1(simpl);
+            }
+            catch (Exception)
+            {
+                return simpl;
+            }
             int bc = simpl.Count;
             int t0 = Environment.TickCount;
             List<Box3Fill> s0 = Simplify0(new List<Box3Fill>(simpl));
