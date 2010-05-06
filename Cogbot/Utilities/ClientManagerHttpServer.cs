@@ -18,20 +18,30 @@ namespace cogbot.Utilities
     public class WriteLineToResponse
     {
         public IHttpResponse response;
-        public WriteLineToResponse(IHttpResponse r)
+        private ClientManagerHttpServer Server;
+        public WriteLineToResponse(ClientManagerHttpServer server, IHttpResponse r)
         {
             response = r;
+            Server = server;
         }
         public void WriteLine(string str, object[] args)
         {
-            string s = string.Format(str, args);
-            if (response != null)
+            try
             {
-                response.AddToBody(s + Environment.NewLine);
-            }
-            else
+
+                string s = string.Format(str, args);
+                if (response != null)
+                {
+                    response.AddToBody(s + Environment.NewLine);
+                }
+                else
+                {
+                    Server.LogInfo("no respnse object for " + s);
+                }
+            } catch(Exception e)
             {
-                Console.WriteLine("no respnse object for " + s);
+                Console.WriteLine("" + e);
+                Server.LogInfo("WriteLine exception" + e);
             }
         }
     }
@@ -56,7 +66,7 @@ namespace cogbot.Utilities
             try
             {
                 _listener.Start(10);
-                Console.WriteLine("Ready for HTTPD port " + _port);
+                LogInfo("Ready for HTTPD port " + _port);
                 _botClient.WriteLine("Ready for HTTPD port " + _port);
             }
             catch (Exception e)
@@ -72,13 +82,25 @@ namespace cogbot.Utilities
                 TcpClient client = new TcpClient();
                 client.Connect("localhost", _port);
             }
-            catch
+            catch (Exception exception)
             {
-
+                LogInfo("Listener workarround: " + exception.Message);
             }
         }
 
         private void _listener_404(IHttpClientContext context, IHttpRequest request, IHttpResponse response)
+        {
+            try
+            {
+                _listener_4040(context, request, response);
+            }
+            catch (Exception exception)
+            {
+                LogInfo("Listener exception: " + exception);
+            }
+        }
+
+        private void _listener_4040(IHttpClientContext context, IHttpRequest request, IHttpResponse response)
         {
             UUID capsID;
 
@@ -86,13 +108,13 @@ namespace cogbot.Utilities
 
             string path = request.Uri.PathAndQuery;//.TrimEnd('/');
             string pathd = HttpUtility.UrlDecode(request.Uri.PathAndQuery);//.TrimEnd('/');
-            Console.WriteLine("_listener " + path + " from " + request.RemoteEndPoint);
+            LogInfo("_listener " + path + " from " + request.RemoteEndPoint);
             if (request.UriPath.EndsWith(".ico"))
             {
                 response.Status = HttpStatusCode.NotFound;
                 response.Send();
             }
-            var wrresp = new WriteLineToResponse(response);
+            var wrresp = new WriteLineToResponse(this, response);
 
             // Micro-posterboard
             if (pathd.StartsWith("/posterboard"))
@@ -103,7 +125,7 @@ namespace cogbot.Utilities
                 {
                     value = (string)_botClient.PosterBoard[slot];
                     _botClient.PosterBoard.Remove(slot); // consume the data from the queue
-                    if (value.Length > 0) { Console.WriteLine(" board response: {0} = {1}", slot, value); }
+                    if (value.Length > 0) { LogInfo(String.Format(" board response: {0} = {1}", slot, value)); }
                 }
                 AddToBody(response, "<xml>");
                 AddToBody(response, "<slot>");
@@ -217,8 +239,19 @@ namespace cogbot.Utilities
             {
                 wrresp.response = null;
                 response.Status = HttpStatusCode.OK;
-                response.Send();
+                try
+                {
+                    response.Send();
+                } catch(Exception e)
+                {
+                    LogInfo("Exception sening respose: " + e);
+                }
             }
+        }
+
+        public void LogInfo(string s)
+        {
+            Console.WriteLine("[HTTP SERVER] " + s);
         }
 
         static public void AddToBody(IHttpResponse response, string text)
@@ -244,7 +277,7 @@ namespace cogbot.Utilities
 
         private void _listener_Accepted(object sender, ClientAcceptedEventArgs e)
         {
-            Console.WriteLine("_listener_Accepted " + e.Socket);
+            LogInfo("_listener_Accepted " + e.Socket);
         }
     }
 }
