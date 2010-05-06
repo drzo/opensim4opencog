@@ -350,7 +350,8 @@ namespace cogbot
                 catch (Exception) { }
             try
             {
-                config.saveConfig();
+                //TODO maybe add back after we have config settings
+                // config.saveConfig();
             }
             catch (Exception e)
             {
