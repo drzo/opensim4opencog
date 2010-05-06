@@ -35,7 +35,7 @@ namespace RTParser.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "size")
             {
-                return Convert.ToString(this.Proc.Size);
+                return Convert.ToString(request.Graph.Size);
             }
             return Unifiable.Empty;
         }
