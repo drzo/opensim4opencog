@@ -11,7 +11,6 @@ using cogbot.Actions.Scripting;
 using cogbot.Actions.System;
 using cogbot.Actions.WebUtil;
 using cogbot.Utilities;
-using com.sun.org.apache.xalan.@internal.xsltc.compiler.util;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using OpenMetaverse.Utilities;
