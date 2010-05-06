@@ -1831,6 +1831,7 @@ namespace cogbot
             return XmlInterp.ExecuteXmlCommand(cmd, line);
         }
 
+
         /// <summary>
         /// Example text: <sapi> <silence msec="100" /> <bookmark mark="anim:hello.csv"/> Hi there </sapi>
         /// </summary>
@@ -1840,12 +1841,12 @@ namespace cogbot
         {
             if (true)
             {
-              //  SendCleanText(text);
-               // return;
+                //  SendCleanText(text);
+                // return;
             }
             try
             {
-                
+
                 if (!text.Trim().StartsWith("<sapi"))
                 {
                     text = "<sapi>" + text + "</sapi>";
@@ -1854,7 +1855,7 @@ namespace cogbot
                 }
                 // var sr = new StringReader("<xml>" + text + "</xml>");
                 String toSay = "";
-                String toAnimate = "";
+                HashSet<String> toAnimate = new HashSet<string>();
                 // var reader = new XmlTextReader(sr);
                 //while (reader.Read())
                 {
@@ -1885,9 +1886,7 @@ namespace cogbot
                             if (!String.IsNullOrEmpty(toSay))
                                 TalkExact(toSay);
                             toSay = String.Empty;
-                            toAnimate = node.Attributes["mark"].Value;
-                            DoAnimation(toAnimate);
-                            
+                            toAnimate.Add(node.Attributes["mark"].Value);
                             continue;
                         }
                         if (node.NodeType == XmlNodeType.Text)
@@ -1901,10 +1900,18 @@ namespace cogbot
                 toSay = toSay.Trim();
                 if (!String.IsNullOrEmpty(toSay))
                     TalkExact(toSay);
+                int maxAnims = 2;
+                foreach (var animation in toAnimate)
+                {
+                    if (maxAnims <= 0) return;
+                    maxAnims--;
+                    DoAnimation(animation);
+                }
                 return;
             }
             catch (Exception e)
             {
+                LogException("XMlTalk " + text, e);
                 // example fragment
                 // <sapi> <silence msec="100" /> <bookmark mark="anim:hello.csv"/> Hi there </sapi>
                 Talk(text);
