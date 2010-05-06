@@ -849,7 +849,7 @@ namespace RTParser
 
         private void LoadInputPaths(Request request, AIMLLoader loader, Unifiable[] rawSentences, AIMLbot.Result result)
         {
-            int maxInputs = 1;
+            int maxInputs = 2;
             int numInputs = 0;
             string lastInput = "";
             {
@@ -863,6 +863,17 @@ namespace RTParser
                         sentence = sentence.Substring(0, sentence.Length - 1).Trim();
                     }
                     int topicNum = 0;
+                    if (true)
+                    {
+                        Unifiable path = loader.generatePath(sentence, //thatNum + " " +
+                                     request.user.getLastBotOutput(), request.Flags,
+                            //topicNum + " " +
+                                     request.user.TopicSetting, true);
+                        numInputs++;
+                        result.NormalizedPaths.Add(path);
+                        if (numInputs >= maxInputs) return;
+                        continue;
+                    }
                     foreach (Unifiable topic0 in request.Topics)
                     {
                         Unifiable topic = topic0;

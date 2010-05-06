@@ -66,7 +66,8 @@ namespace RTParser
         {
             get
             {
-                return this.Predicates.grabSetting("topic");
+                var t = this.Predicates.grabSetting("topic");
+                return t;
             }
             set
             {
@@ -155,8 +156,8 @@ namespace RTParser
                 this.bot = bot;
                 this.Predicates = new RTParser.Utils.SettingsDictionary(this.bot, provider);
                 this.bot.DefaultPredicates.Clone(this.Predicates);
-                this.Predicates.AddGetSetProperty("topic", new CollectionProperty(_topics, () => bot.NOTOPIC));
-                //this.Predicates.addSetting("topic", Unifiable.STAR);
+                //this.Predicates.AddGetSetProperty("topic", new CollectionProperty(_topics, () => bot.NOTOPIC));
+                this.Predicates.addSetting("topic", bot.NOTOPIC);
                 //this.Predicates.addSetting("topic", "NOTOPIC");
             }
             else

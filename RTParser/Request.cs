@@ -83,13 +83,31 @@ namespace RTParser
         {
             get
             {
+                return user.TopicSetting;
                 if (_topic != null) return _topic;
                 if (ParentRequest != null) return ParentRequest.Topic;
                 return user.TopicSetting;
             }
             set
             {
+                if(true)
+                {
+                    user.TopicSetting = value;
+                    return;
+                }
                 Unifiable prev = Topic;
+                user.TopicSetting = value;
+                if (value == Proccessor.NOTOPIC)
+                {
+                    if (_topic != null)
+                    {
+                        _topic = null;
+                    }
+                    else
+                    {
+
+                    }
+                }
                 if (prev == value) return;
                 if (_topic != null)
                 {
