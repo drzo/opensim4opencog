@@ -232,6 +232,7 @@ namespace AIMLBotModule
                 client.Avatars.ViewerEffectPointAt += AIML_OnPointAt;
                 client.Avatars.ViewerEffectLookAt += AIML_OnLookAt;
                 client.Avatars.ViewerEffect += AINL_OnEffect;
+                client.OnInstantMessageSent += OnSelfSentIM;
 
                 if (EventsToAIML)
                 {
@@ -249,6 +250,11 @@ namespace AIMLBotModule
             {
                 WriteLine("" + e);
             }
+        }
+
+        private void OnSelfSentIM(object sender, IMessageSentEventArgs args)
+        {
+            HeardMyselfSay(args.TargetID, args.Message);
         }
 
         private void AINL_OnEffect(object sender, ViewerEffectEventArgs e)
@@ -438,12 +444,21 @@ namespace AIMLBotModule
             {
                 return;
             }
+            if (im.FromAgentID == client.Self.AgentID)
+            {
+                HeardMyselfSay(im.ToAgentID, im.Message);
+                return;
+            }
+            if (im.FromAgentName == GetName())
+            {
+                HeardMyselfSay(im.ToAgentID, im.Message);
+                return;
+            }
             if (im.FromAgentName == "System" || im.FromAgentName == "Second Life") return;
-            if (im.FromAgentID == UUID.Zero || im.FromAgentID == client.Self.AgentID)
+            if (im.FromAgentID == UUID.Zero)
             {
                 return;
             }
-
             User myUser = GetMyUser(im.FromAgentName);
             SettingsDictionary myUserPredicates = myUser.Predicates;
             myUserPredicates.addSetting("host", im.FromAgentID.ToString());
@@ -559,7 +574,7 @@ namespace AIMLBotModule
                                                                    UUID.Zero, Utils.EmptyBytes);
 
                                     }
-
+                                    HeardMyselfSay(im.IMSessionID, tsing);
                                     client.Self.InstantMessage(im.FromAgentID, tsing, im.IMSessionID);
                                 }
                                 UseRealism = false;
@@ -612,7 +627,11 @@ namespace AIMLBotModule
 
             if (String.IsNullOrEmpty(message) || message.Length < 2) return;
             if (sourcetype == ChatSourceType.System) return;
-            if (fromname == GetName()) return;
+            if (fromname == GetName())
+            {
+                HeardMyselfSay(UUID.Zero, message);
+                return;
+            }
             if (string.IsNullOrEmpty(fromname))
             {
                 Primitive prim = WorldSystem.GetPrimitive(id, e.Simulator);
@@ -674,6 +693,11 @@ namespace AIMLBotModule
                             StringChat(resp, type);
                             myUser.LastResponseGivenTime = Environment.TickCount;
                         }, "AIML_OnChat: " + myUser + ": " + message);
+        }
+
+        public void HeardMyselfSay(UUID uuid, string message)
+        {
+            if (MyBot != null) MyBot.HeardSelfSay(message);
         }
 
         static bool MessageTurnsOffChat(string message)
