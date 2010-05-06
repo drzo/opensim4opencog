@@ -119,11 +119,24 @@ namespace cogbot
                 Network.Login(BotLoginParams.FirstName, BotLoginParams.LastName,
                               BotLoginParams.Password, "OnRez", BotLoginParams.Start, "UNR");
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-
+                LogException("Login", ex);
             }
 
+        }
+
+        private void LogException(string p, Exception ex)
+        {
+            Logger.Log(GetName() + ": Exception " + p + "\n" + ex, Helpers.LogLevel.Error, ex);
+            WriteLine("!Exception: " + ex.GetBaseException().Message);
+            WriteLine("error occured: " + ex.Message);
+            WriteLine("        Stack: " + ex.StackTrace.ToString());
+            Exception inner = ex.InnerException;
+            if (inner!=null && inner!=ex)
+            {
+                LogException("Inner of " + p, inner);
+            }
         }
 
         readonly int thisTcpPort;
@@ -214,11 +227,37 @@ namespace cogbot
             get { return WorldSystem.IsRegionMaster; }
         }
 
+        private Radegast.RadegastInstance _TheRadegastInstance;
         public Radegast.RadegastInstance TheRadegastInstance
         {
-            get;
-            set;
+            get { return _TheRadegastInstance; }
+            set
+            {
+                if (_TheRadegastInstance == value) return;
+                if (_TheRadegastInstance!=null)
+                {
+                    var nc = _TheRadegastInstance.Netcom;
+                    if (nc != null) nc.InstantMessageSent -= IMSent;
+                }
+                _TheRadegastInstance = value;
+                value.Netcom.InstantMessageSent += IMSent;
+            }
         }
+
+        private void IMSent(object sender, InstantMessageSentEventArgs e)
+        {
+            if (OnInstantMessageSent!=null)
+                try
+                {
+                    OnInstantMessageSent(this, new IMessageSentEventArgs(e.Message, e.TargetID, e.SessionID, e.Timestamp));
+                }
+                catch (Exception ex)
+                {
+                    LogException("ImSent", ex);
+                }
+        }
+
+        public event InstantMessageSentArgs OnInstantMessageSent; 
 
         public VoiceManager VoiceManager;
         // Shell-like inventory commands need to be aware of the 'current' inventory folder.
@@ -469,9 +508,7 @@ namespace cogbot
                 }
                 catch (Exception e)
                 {
-                    WriteLine("!Exception: " + e.GetBaseException().Message);
-                    WriteLine("error occured: " + e.Message);
-                    WriteLine("        Stack: " + e.StackTrace.ToString());
+                    LogException("LoadTaskInterperter", e);
                 }
         }
 
@@ -487,7 +524,7 @@ namespace cogbot
                 }
                 catch (Exception ex)
                 {
-                    Logger.Log(GetName() + " exception " + ex, Helpers.LogLevel.Error, ex);
+                    LogException("StartupClientLisp",ex);
                 }
             }
         }
@@ -777,8 +814,9 @@ namespace cogbot
                 WriteLine("Bad Names: " + BoringNamesCount);
                 WriteLine("Good Names: " + GoodNamesCount);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                LogException("Network_OnDisconnected", ex);
             }
             EnsureConnectedCheck(reason);
         }
@@ -826,6 +864,7 @@ namespace cogbot
             }
             catch (Exception e)
             {
+                LogException("Network-On-Connected", e);
             }
         }
 
@@ -1120,9 +1159,7 @@ namespace cogbot
             }
             catch (Exception e)
             {
-                WriteLine("!Exception: " + e.GetBaseException().Message);
-                WriteLine("error occured: " + e.Message);
-                WriteLine("        Stack: " + e.StackTrace.ToString());
+                LogException("evalLispInterp stringCodeReader", e);
                 throw e;
             }
         }
@@ -1168,9 +1205,7 @@ namespace cogbot
             }
             catch (Exception e)
             {
-                WriteLine("!Exception: " + e.GetBaseException().Message);
-                WriteLine("error occured: " + e.Message);
-                WriteLine("        Stack: " + e.StackTrace.ToString());
+                LogException("evalLispInterp lispCode=" + lispCode, e);
                 throw e;
             }
         }
@@ -1192,9 +1227,7 @@ namespace cogbot
             }
             catch (Exception e)
             {
-                WriteLine("!Exception: " + e.GetBaseException().Message);
-                WriteLine("error occured: " + e.Message);
-                WriteLine("        Stack: " + e.StackTrace.ToString());
+                LogException("evalLispInterp lispCode=" + lispCode, e);
                 throw e;
             }
         }
@@ -1470,9 +1503,8 @@ namespace cogbot
                     }
                     catch (Exception e)
                     {
-
-                        WriteLine("" + e);
-                        return new CmdResult("excetion " + e, false);
+                        LogException("ExecuteBotCommand " + text, e);
+                        return new CmdResult("ExecuteBotCommand " + text + "cuased " + e, false);
                     }
                 }
                 else
@@ -1486,7 +1518,7 @@ namespace cogbot
             }
             catch (Exception e)
             {
-                WriteLine("" + e);
+                LogException("ExecuteBotCommand " + text, e);
                 return null;
             }
         }
@@ -1564,7 +1596,7 @@ namespace cogbot
                         }
                         catch (Exception e)
                         {
-                            WriteLine("RegisterCommand: " + e.ToString() + "\n" + e.InnerException + "\n In " + t.Name);
+                            LogException("RegisterCommand " + t.Name, e);
                         }
                     }
                 }
@@ -1952,7 +1984,45 @@ namespace cogbot
                 TalkExact(text);
         }
     }
-        /// <summary>
+
+    public delegate void InstantMessageSentArgs(object sender, IMessageSentEventArgs args);
+    public class IMessageSentEventArgs : EventArgs
+    {
+        private string message;
+        private UUID targetID;
+        private UUID sessionID;
+        private DateTime timestamp;
+
+        public IMessageSentEventArgs(string message, UUID targetID, UUID sessionID, DateTime timestamp)
+        {
+            this.message = message;
+            this.targetID = targetID;
+            this.sessionID = sessionID;
+            this.timestamp = timestamp;
+        }
+
+        public string Message
+        {
+            get { return message; }
+        }
+
+        public UUID TargetID
+        {
+            get { return targetID; }
+        }
+
+        public UUID SessionID
+        {
+            get { return sessionID; }
+        }
+
+        public DateTime Timestamp
+        {
+            get { return timestamp; }
+        }
+    }
+
+    /// <summary>
     ///  
     /// </summary>
     [Flags]
