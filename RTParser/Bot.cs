@@ -28,8 +28,8 @@ namespace RTParser
     /// </summary>
     public class RTPBot
     {
-        public readonly User BotAsUser;
-        public readonly Request BotAsRequest;
+        public User BotAsUser;
+        public Request BotAsRequest;
         public AIMLLoader Loader;
         #region Attributes
         public List<CrossAppDomainDelegate> ReloadHooks = new List<CrossAppDomainDelegate>();
@@ -363,6 +363,7 @@ namespace RTParser
             UseCyc = true;
             this.setup();
             BotAsUser = new User("Self", this);
+            BotAsUser.Predicates = GlobalSettings;
             BotAsRequest = new Request("-bank-input-", BotAsUser, this);
         }
 
@@ -945,7 +946,7 @@ namespace RTParser
                 foreach (Unifiable path in result.NormalizedPaths)
                 {
                     Utils.SubQuery query = new SubQuery(path, result, request);
-                    query.Templates = this.GraphMaster.evaluate(path, query, request, MatchState.UserInput, Unifiable.CreateAppendable());
+                    query.Templates = request.Graph.evaluate(path, query, request, MatchState.UserInput, Unifiable.CreateAppendable());
                     result.SubQueries.Add(query);
                 }
 
@@ -1411,7 +1412,7 @@ namespace RTParser
         /// <param name="path">the path to the file for saving</param>
         public void saveToBinaryFile(Unifiable path)
         {
-            GraphMaster.saveToBinaryFile(path);
+            this.BotAsRequest.Graph.saveToBinaryFile(path);
         }
 
         /// <summary>
@@ -1420,7 +1421,7 @@ namespace RTParser
         /// <param name="path">the path to the dump file</param>
         public void loadFromBinaryFile(Unifiable path)
         {
-            GraphMaster.loadFromBinaryFile(path);
+            this.BotAsRequest.Graph.loadFromBinaryFile(path);
         }
 
         #endregion
@@ -1838,6 +1839,7 @@ The AIMLbot program.
         public AIMLbot.Result ImmediateAiml(XmlNode templateNode, Request request0, AIMLLoader loader, AIMLTagHandler handler)
         {
             Request request = new Request(templateNode.OuterXml, request0.user, request0.Proccessor);
+            request.Graph = request0.Graph;
             request.depth = request0.depth + 1;
             AIMLbot.Result result = new AIMLbot.Result(request.user, this, request);
             if (true)
@@ -1871,7 +1873,7 @@ The AIMLbot program.
                 foreach (Unifiable path in result.NormalizedPaths)
                 {
                     Utils.SubQuery query = new SubQuery(path, result, request);
-                    query.Templates = this.GraphMaster.evaluate(path, query, request, MatchState.UserInput, Unifiable.CreateAppendable());
+                    query.Templates = request.Graph.evaluate(path, query, request, MatchState.UserInput, Unifiable.CreateAppendable());
                     result.SubQueries.Add(query);
                 }
 
