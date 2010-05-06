@@ -1553,7 +1553,7 @@ namespace cogbot.TheOpenSims
                             throw Error("GetSimPosition !IsRegionAttached: " + this);
                             return thisPrim.Position;
                         }
-                        if (outerPrim == thisPrim || outerPrim == this.Prim)
+                        if (outerPrim == thisPrim || outerPrim == this._Prim0)
                         {
                             throw Error("GetSimPosition Loop: " + this);
                         }
