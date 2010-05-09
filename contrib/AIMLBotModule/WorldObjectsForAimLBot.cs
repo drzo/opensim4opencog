@@ -212,13 +212,13 @@ namespace AIMLBotModule
             try
             {
                 MyBot = new RTPBot();
+                MyBot.isAcceptingUserInput = false;
                 MyBot.AddExcuteHandler("bot", BotExecHandler);
                 MyBot.AddExcuteHandler("lisp", LispExecHandler);
                 MyBot.loadSettings();
                 //MyBot.GlobalSettings.addSetting("name", client.BotLoginParams.FirstName+ " " + client.BotLoginParams.LastName);
                 MyUser = new User("AIMLInterp", MyBot);
                 MyUser.InsertProvider(new ParentProvider(() => this));
-                MyBot.isAcceptingUserInput = false;
                 MyBot.loadAIMLFromDefaults();
                 MyBot.isAcceptingUserInput = true;
                 MyBot.outputDelegate = WriteLine;
@@ -574,8 +574,7 @@ namespace AIMLBotModule
                                                                    UUID.Zero, Utils.EmptyBytes);
 
                                     }
-                                    HeardMyselfSay(im.IMSessionID, tsing);
-                                    client.Self.InstantMessage(im.FromAgentID, tsing, im.IMSessionID);
+                                    client.InstantMessage(im.FromAgentID, tsing, im.IMSessionID);
                                 }
                                 UseRealism = false;
 
@@ -1133,6 +1132,11 @@ namespace AIMLBotModule
             var v = WorldSystem.ResolveCollection(name.ToLower(), out argsUsed, this);
             return (v != null && v.Count > 0);
 
+        }
+
+        public string NameSpace
+        {
+            get { return "botmod"; }
         }
 
         public void SetDefaultUser(string user)
