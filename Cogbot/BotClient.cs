@@ -1990,6 +1990,24 @@ namespace cogbot
             if (!String.IsNullOrEmpty(text))
                 TalkExact(text);
         }
+
+        /// <summary>
+        /// Sends instance message via radegast system
+        /// </summary>
+        /// <param name="text"></param>
+        /// <param name="gate"></param>
+        public void InstantMessage(UUID target, String text, UUID session)
+        {
+            if (text == null) return;
+            if (text.EndsWith("Meta !-->")) return;
+            if (TheRadegastInstance==null)
+            {
+                this.Self.InstantMessage(target, text, session);
+                return;
+            }
+            TheRadegastInstance.Netcom.SendInstantMessage(text, target, session);
+        }
+
     }
 
     public delegate void InstantMessageSentArgs(object sender, IMessageSentEventArgs args);
