@@ -251,7 +251,7 @@ namespace cogbot.Utilities
 
         public void LogInfo(string s)
         {
-            Console.WriteLine("[HTTP SERVER] " + s);
+            // Console.WriteLine("[HTTP SERVER] " + s);
         }
 
         static public void AddToBody(IHttpResponse response, string text)
