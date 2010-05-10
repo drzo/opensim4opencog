@@ -66,6 +66,7 @@ namespace RTParser
         {
             get
             {
+                if (!this.Predicates.containsSettingCalled("topic")) return bot.NOTOPIC;
                 var t = this.Predicates.grabSetting("topic");
                 return t;
             }
@@ -152,12 +153,14 @@ namespace RTParser
         {
             if (UserID.Length > 0)
             {
+                this.ShortName = UserID.ToLower().Replace(" ", ""); 
                 this.id = UserID;
                 this.bot = bot;
-                this.Predicates = new RTParser.Utils.SettingsDictionary(this.bot, provider);
+                this.Predicates = new RTParser.Utils.SettingsDictionary(ShortName + ".predicates", this.bot, provider);
                 this.bot.DefaultPredicates.Clone(this.Predicates);
                 //this.Predicates.AddGetSetProperty("topic", new CollectionProperty(_topics, () => bot.NOTOPIC));
                 this.Predicates.addSetting("topic", bot.NOTOPIC);
+                this.Predicates.InsertFallback(() => bot.DefaultPredicates);
                 //this.Predicates.addSetting("topic", "NOTOPIC");
             }
             else
@@ -264,6 +267,8 @@ namespace RTParser
         }
 
         static public int MaxResultsSaved = 5;
+        public string ShortName;
+
         /// <summary>
         /// Adds the latest result from the bot to the Results collection
         /// </summary>

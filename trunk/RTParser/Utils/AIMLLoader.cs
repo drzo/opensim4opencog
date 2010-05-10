@@ -228,6 +228,11 @@ namespace RTParser.Utils
                 {
                     XmlDocumentLineInfo doc = new XmlDocumentLineInfo(input, "" + filename);
                     doc.Load(xtr);
+                    if (doc.DocumentElement == null)
+                    {
+                        RProcessor.writeToLog("No Document at " + filename);
+                        continue;
+                    }
                     this.loadAIMLNode(doc.DocumentElement, filename, request);
                 }
                 catch (Exception e2)
@@ -259,12 +264,23 @@ namespace RTParser.Utils
                 // the <topic> nodes will contain more <category> nodes
                 if (currentNode.Name == "aiml")
                 {
-                    // process each of these child nodes
-                    foreach (XmlNode child in currentNode.ChildNodes)
+                    string botname = RTPBot.GetAttribValue(currentNode, "bot", null);
+                    GraphMaster g = request.Graph;
+                    GraphMaster g2 = RProcessor.GetGraph(botname);
+                    request.Graph = g2;
+                    try
                     {
-                        loadAIMLNode(child, filename, request);
+                        // process each of these child nodes
+                        foreach (XmlNode child in currentNode.ChildNodes)
+                        {
+                            loadAIMLNode(child, filename, request);
+                        }
+                        return;
                     }
-                    return;
+                    finally
+                    {
+                        request.Graph = g;                        
+                    }
                 }
                 if (currentNode.Name == "root")
                 {
@@ -679,6 +695,35 @@ namespace RTParser.Utils
             return result.ToString().Replace("  ", " "); // make sure the whitespace is neat
         }
         #endregion
+
+        public static bool AimlSame(string xml1, string xml2)
+        {
+            if (xml1 == xml2) return true;
+            xml1 = CleanWhitepaces(xml1);
+            xml2 = CleanWhitepaces(xml2);
+            if (xml1 != xml2) return false;
+            return true;
+        }
+
+        private static string CleanWhitepaces(string xml2)
+        {
+            String s = "";
+            foreach (var c0 in xml2.ToLower().ToCharArray())
+            {
+                char c = c0;
+                if (c < 32) c = ' ';
+                s += c;
+            }
+            s.Replace(" <", "<").Replace("< ", "<").Replace(" >", ">").Replace(" >", ">").Replace("  ", " ").Replace("<star index=\"1\"", "<star").Replace(" index=\"1\"", "").Trim();
+            return s;
+        }
+
+        public static bool ContainsAiml(Unifiable unifiable)
+        {
+            String s = unifiable.AsString();
+            if (s.Contains(">") && s.Contains("<")) return true;
+            return false;
+        }
     }
 
     public class XmlDocumentLineInfo : XmlDocument

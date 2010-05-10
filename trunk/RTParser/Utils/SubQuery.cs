@@ -74,6 +74,22 @@ namespace RTParser.Utils
             this.FullPath = fullPath;
         }
 
+
+        internal Unifiable grabSetting(string name)
+        {
+            var v = Request.grabSetting(name);
+            name = name.ToLower();
+            if (name.Equals("dog") || name.Equals("father"))
+            {
+                Console.WriteLine("dog=" + v);
+            }
+            return v;
+        }
+
+        public void addSetting(Unifiable name, Unifiable value)
+        {
+            Request.addSetting(name, value);
+        }
     }
 
     public class UList : IEnumerable<TemplateInfo>

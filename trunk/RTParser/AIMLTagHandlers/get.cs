@@ -47,7 +47,7 @@ namespace RTParser.AIMLTagHandlers
             {
                 string name = GetAttribValue("name", templateNodeInnerText.Trim());
                 Unifiable defaultVal = GetAttribValue("default", Unifiable.Empty);
-                Unifiable resultGet = this.request.Predicates.grabSetting(name).Trim();
+                Unifiable resultGet = this.query.grabSetting(name).Trim();
                 if (resultGet.ToValue().ToUpper() == "UNKNOWN") return resultGet + " " + name;
                 // if ((!String.IsNullOrEmpty(result)) && (!result.IsWildCard())) return result; // we have a local one
                 

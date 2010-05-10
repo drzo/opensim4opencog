@@ -154,5 +154,16 @@ namespace RTParser
             int here = new StackTrace().FrameCount - framesAtStart;
             return here / 6;
         }
+
+        public Unifiable grabSetting(string name)
+        {
+            return Predicates.grabSetting(name);
+        }
+
+        public void addSetting(Unifiable name, Unifiable value)
+        {
+            Predicates.addSetting(name, value);
+        }
+
     }
 }

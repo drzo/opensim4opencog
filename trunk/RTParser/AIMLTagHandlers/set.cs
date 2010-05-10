@@ -41,7 +41,7 @@ namespace RTParser.AIMLTagHandlers
             : base(bot, user, query, request, result, templateNode)
         {
         }
-
+        //i been writeing a new language for AI trickery.. i am a little assumed but not enough to stop writting it.. and I handling cuts.. by the fact 
         protected override Unifiable ProcessChange()
         {
             if (this.templateNode.Name.ToLower() == "set")
@@ -57,8 +57,8 @@ namespace RTParser.AIMLTagHandlers
                     if (!templateNodeInnerText.IsEmpty)
                     {
                         if (!Unifiable.IsNull(gName)) gUser.Predicates.addSetting(gName, templateNodeInnerText);
-                        this.request.Predicates.addSetting(name, templateNodeInnerText);
-                        return this.request.Predicates.grabSetting(name);
+                        this.query.addSetting(name, templateNodeInnerText);
+                        return this.query.grabSetting(name);
                     }
                     else
                     {
@@ -81,8 +81,8 @@ namespace RTParser.AIMLTagHandlers
                         return Unifiable.Empty;
                     }
                     if (!Unifiable.IsNull(gName)) gUser.Predicates.addSetting(gName, templateNodeInnerText);
-                    this.request.Predicates.addSetting(name, joined);
-                    return this.request.Predicates.grabSetting(name);
+                    this.query.addSetting(name, joined);
+                    return this.query.grabSetting(name);
                 }
             }
             return Unifiable.Empty;

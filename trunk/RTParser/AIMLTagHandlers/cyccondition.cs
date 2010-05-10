@@ -144,7 +144,7 @@ namespace RTParser.AIMLTagHandlers
 
                     if ((name.Length > 0) & (!value.IsEmpty))
                     {
-                        Unifiable actualValue = this.request.Predicates.grabSetting(name);
+                        Unifiable actualValue = this.query.grabSetting(name);
                         //Regex matcher = new Regex(value.Replace(" ", "\\s").Replace("*", "[\\sA-Z0-9]+"), RegexOptions.IgnoreCase);
                         //if (matcher.IsMatch(actualValue))
                         if (value.IsMatch(actualValue))
@@ -166,7 +166,7 @@ namespace RTParser.AIMLTagHandlers
                                 {
                                     if (childLINode.Attributes[0].Name.ToLower() == "value")
                                     {
-                                        Unifiable actualValue = this.request.Predicates.grabSetting(name);
+                                        Unifiable actualValue = this.query.grabSetting(name);
                                         Unifiable value = childLINode.Attributes[0].Value;
                                         //Regex matcher = new Regex(value.Replace(" ", "\\s").Replace("*", "[\\sA-Z0-9]+"), RegexOptions.IgnoreCase);
                                         //if (matcher.IsMatch(actualValue))
@@ -214,7 +214,7 @@ namespace RTParser.AIMLTagHandlers
 
                                 if ((name.Length > 0) & (!value.IsEmpty))
                                 {
-                                    Unifiable actualValue = this.request.Predicates.grabSetting(name);
+                                    Unifiable actualValue = this.query.grabSetting(name);
                                     if (value.IsMatch(actualValue))
                                     {
                                         return Unifiable.InnerXmlText(childLINode);

@@ -71,16 +71,26 @@ namespace RTParser.AIMLTagHandlers
                             showDebug = false;
                         }
                         if (showDebug)
-                            Console.WriteLine(" SRAI--> (" + depth + ")" + subRequestrawInput + " <----- @ " +
+                            Console.WriteLine(" SRAI-- (" + depth + ")" + subRequestrawInput + " ----- @ " +
                                               LineNumberTextInfo());
                         if (depth > 200)
                         {
                             Console.WriteLine(" SRAI TOOOO DEEEEP <-- (" + depth + ")" + subRequestrawInput +
-                                              " <----- @ " +
+                                              " ----- @ " +
                                               LineNumberTextInfo());
                             return Unifiable.Empty;
                         }
-                        AIMLbot.Result subResult = this.Proc.Chat(subRequest);
+                        AIMLbot.Result subResult = null;
+                        var prev = this.Proc.isAcceptingUserInput;
+                        try
+                        {
+                            this.Proc.isAcceptingUserInput = true;
+                            subResult = this.Proc.Chat(subRequest);
+                        }
+                        finally
+                        {
+                            this.Proc.isAcceptingUserInput = prev;
+                        }
                         this.request.hasTimedOut = subRequest.hasTimedOut;
                         var subQueryRawOutput = subResult.RawOutput.ToValue().Trim();
                         if (Unifiable.IsNullOrEmpty(subQueryRawOutput))
