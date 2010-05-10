@@ -1,7 +1,15 @@
+using System;
+
 namespace RTParser.Utils
 {
     internal class GetSetDictionary : ISettingsDictionary
     {
+        public string NameSpace
+        {
+            // TODO: need a prepend?
+            get { return named; }
+        }
+
         readonly private GetSetProperty info;
         readonly private string named;
         private object oldValue = null;

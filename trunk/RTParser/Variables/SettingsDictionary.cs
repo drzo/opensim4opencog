@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Xml;
 using System.IO;
+using System.Xml.Serialization;
 using RTParser;
 using RTParser.Normalize;
 using RTParser.Utils;
@@ -43,6 +44,8 @@ namespace RTParser.Utils
         /// <param name="name">The setting name to check</param>
         /// <returns>Existential truth value</returns>
         bool containsSettingCalled(string name);
+
+        string NameSpace { get; }
     }
 
     /// <summary>
@@ -64,11 +67,18 @@ namespace RTParser.Utils
         /// </summary>
         readonly private List<string> orderedKeys = new List<string>();
 
+        // prechecks and uses if settings exist
+        private List<ParentProvider> _overides = new List<ParentProvider>();
+        // parallel updates (therefore inherits)
+        private List<ParentProvider> _contributers = new List<ParentProvider>();
+        // fallbacks
         private List<ParentProvider> _parent = new List<ParentProvider>();
         /// <summary>
-        /// The bot this dictionary is associated with
+        /// The bot this dictionary is associated with (only for writting log)
         /// </summary>
         protected RTParser.RTPBot bot;
+
+        private string theNameSpace;
 
         /// <summary>
         /// The number of items in the dictionary
@@ -79,6 +89,17 @@ namespace RTParser.Utils
             {
                 return this.orderedKeys.Count;
             }
+        }
+
+       public string NameSpace
+       {
+           get { return theNameSpace; }
+           set { theNameSpace = value; }
+       }
+
+        public override string ToString()
+        {
+            return theNameSpace + "(" + Count + ")";
         }
 
         /// <summary>
@@ -92,6 +113,8 @@ namespace RTParser.Utils
                 XmlDeclaration dec = result.CreateXmlDeclaration("1.0", "UTF-8", "");
                 result.AppendChild(dec);
                 XmlNode root = result.CreateNode(XmlNodeType.Element, "root", "");
+                XmlAttribute newAttr = result.CreateAttribute("name");
+                newAttr.Value = NameSpace;
                 result.AppendChild(root);
                 foreach (string key in this.orderedKeys)
                 {
@@ -114,8 +137,9 @@ namespace RTParser.Utils
         /// Ctor
         /// </summary>
         /// <param name="bot">The bot for whom this is a settings dictionary</param>
-        public SettingsDictionary(RTParser.RTPBot bot, ParentProvider parent)
+        public SettingsDictionary(String name, RTParser.RTPBot bot, ParentProvider parent)
         {
+            theNameSpace = name;
             this.bot = bot;
             if (parent != null) _parent.Add(parent);
         }
@@ -224,6 +248,7 @@ namespace RTParser.Utils
         /// <param name="value">The value associated with this setting</param>
         public bool addSetting(string name, Unifiable value)
         {
+            name = name.Trim();
             lock (orderedKeys)
             {
                 string key = MakeCaseInsensitive.TransformInput(Unifiable.Create(name));
@@ -289,6 +314,13 @@ namespace RTParser.Utils
         /// <param name="value">the new value</param>
         public bool updateSetting(string name, Unifiable value)
         {
+            name = name.Trim();
+            bool overriden = false;
+            foreach (var parent in _overides)
+            {
+                if (parent().updateSetting(name, value)) overriden = true;
+            }
+            if (overriden) return true;
             lock (orderedKeys)
             {
                 string key = MakeCaseInsensitive.TransformInput(name);
@@ -301,9 +333,9 @@ namespace RTParser.Utils
             }
             foreach (var parent in Parents)
             {
-                parent.updateSetting(name, value);
+                if (parent.updateSetting(name, value)) return true;
             }
-            return true;
+            return false;
         }
 
         /// <summary>
@@ -325,14 +357,15 @@ namespace RTParser.Utils
         /// <returns>the value of the setting</returns>
         public Unifiable grabSetting(string name)
         {
+            name = name.Trim();
             lock (orderedKeys)
             {
                 string normalizedName = MakeCaseInsensitive.TransformInput(name);
                 if (this.containsSettingCalled(normalizedName))
                 {
-                    return (Unifiable)this.settingsHash[normalizedName];
+                    return this.settingsHash[normalizedName];
                 }
-                else
+                else if (Parents.Count > 0)
                 {
                     foreach (var list in Parents)
                     {
@@ -342,12 +375,10 @@ namespace RTParser.Utils
                             if (v != null && !Unifiable.IsFalse(v)) return v;
                         }
                     }
-                    if (Parents.Count > 0)
-                    {
-                        return Parents[0].grabSetting(name);
-                    }
-                    return Unifiable.Empty;
+                    return Parents[0].grabSetting(name);
                 }
+                return Unifiable.Empty;
+
             }
         }
 
@@ -358,6 +389,7 @@ namespace RTParser.Utils
         /// <returns>Existential truth value</returns>
         public bool containsSettingCalled(string name)
         {
+            name = name.Trim();
             lock (orderedKeys)
             {
                 string normalizedName = MakeCaseInsensitive.TransformInput(name);
@@ -442,6 +474,16 @@ namespace RTParser.Utils
         private void addGetSet(ObjectPropertyDictionary o)
         {
             InsertProvider(() => { return o; });
+        }
+
+        public void InsertFallback(ParentProvider provider)
+        {
+            _parent.Insert(0, provider);
+        }
+
+        public void InsertOverrides(ParentProvider provider)
+        {
+            _overides.Insert(0, provider);
         }
 
         public void InsertProvider(ParentProvider provider)

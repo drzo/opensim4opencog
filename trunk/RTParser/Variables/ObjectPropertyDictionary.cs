@@ -4,6 +4,12 @@ namespace RTParser.Utils
 {
     internal class ObjectPropertyDictionary : ISettingsDictionary
     {
+        public string NameSpace
+        {
+            // TODO: need a prepend?
+            get { return named; }
+        }
+
         readonly private object obj;
         readonly private string named;
         private object oldValue = null;
