@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using System.Xml;
+using java.io;
 using RTParser.Utils;
 using UPath = RTParser.Unifiable;
 
@@ -191,10 +192,9 @@ namespace RTParser
             return new StringUnifiable(p.ToString());
         }
 
-        internal static Unifiable CreateAppendable()
+        internal static StringAppendableUnifiable CreateAppendable()
         {
-            var u = new StringUnifiable();
-            u.IsAppendable = true;
+            var u = new StringAppendableUnifiable();
             return u;
         }
 
@@ -300,6 +300,36 @@ namespace RTParser
         public static UPath MakePath(Unifiable unifiable)
         {
             return unifiable;
+        }
+    }
+
+    internal class StringAppendableUnifiable : StringUnifiable
+    {
+        public StringAppendableUnifiable()
+        {
+            IsAppendable = true;
+        }
+
+        public override string AsString()
+        {
+            return str.Trim().Replace("  ", " ");
+        }
+
+        public override void Append(Unifiable p)
+        {
+            if (!IsAppendable)
+            {
+                throw new InvalidObjectException("this " + AsString() + " cannot be appended with " + p);
+            }
+            if (p == null) return;
+            if (str == "")
+                str = p.AsString().Trim();
+            else
+            {
+                str += " ";
+                str += p.AsString().Trim();
+            }
+            str = str.Replace("  ", " ");
         }
     }
 }

@@ -105,8 +105,8 @@ namespace RTParser.Utils
                                                       var categoryinfo1 = category;
                                                       var categoryinfo2 = temp.CategoryInfo;
                                                       string oldGuard = temp.Guard != null ? temp.Guard.OuterXml : null;
-                                                      if (newStr == temp.Output.OuterXml)
-                                                          if (newGuard == oldGuard)
+                                                      if (AIMLLoader.AimlSame(newStr, temp.Output.OuterXml))
+                                                          if (AIMLLoader.AimlSame(newGuard, oldGuard))
                                                           {
                                                               if (dupes == null) dupes = new List<TemplateInfo>();
                                                               dupes.Add(temp);
@@ -116,8 +116,6 @@ namespace RTParser.Utils
                         {
                             dupes.ForEach(delegate(TemplateInfo temp)
                             {
-                                //System.Console.WriteLine("removing " + temp.CategoryInfo.ToString());
-
                                 if (true)
                                 {
                                     master.RemoveTemplate(temp);

@@ -185,6 +185,7 @@ namespace RTParser.Utils
 
         public void RemoveTemplate(TemplateInfo templateInfo)
         {
+            //System.Console.WriteLine("removing " + templateInfo.CategoryInfo.ToString());
             Templates.Remove(templateInfo);
         }
     }

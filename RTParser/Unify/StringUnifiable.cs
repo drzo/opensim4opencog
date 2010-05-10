@@ -70,7 +70,7 @@ namespace RTParser
 
         public override string AsString()
         {
-            return str.Trim().Replace("  "," ");
+            return str;
         }
 
         public override Unifiable ToCaseInsenitive()
@@ -174,6 +174,8 @@ namespace RTParser
 
         public override void Append(Unifiable p)
         {
+            throw new InvalidObjectException("this " + AsString() + " cannot be appended with " + p);
+
             if (!IsAppendable)
             {
                 throw new InvalidObjectException("this " + AsString() + " cannot be appended with " + p);

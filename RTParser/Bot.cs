@@ -28,8 +28,8 @@ namespace RTParser
     /// </summary>
     public class RTPBot
     {
-        public User BotAsUser;
-        public Request BotAsRequest;
+        readonly public User BotAsUser;
+        readonly public Request BotAsRequest;
         public AIMLLoader Loader;
         #region Attributes
         public List<CrossAppDomainDelegate> ReloadHooks = new List<CrossAppDomainDelegate>();
@@ -207,6 +207,7 @@ namespace RTParser
         {
             get
             {
+                if (!this.GlobalSettings.containsSettingCalled("islogging")) return false;
                 Unifiable islogging = this.GlobalSettings.grabSetting("islogging");
                 if (Unifiable.IsTrue(islogging))
                 {
@@ -303,13 +304,21 @@ namespace RTParser
         /// </summary>
         public int Size
         {
-            get { return GraphMaster.Size; }
+            get { return GraphMaster.Size + HeardSelfSayGraph.Size; }
         }
 
         /// <summary>
         /// The "brain" of the Proccessor
         /// </summary>
-        public GraphMaster GraphMaster;
+        public GraphMaster GraphMaster
+        {
+            get { return GetGraph("default"); }
+        }
+
+        public GraphMaster HeardSelfSayGraph
+        {
+            get { return GetGraph("HeardSelfSay"); }
+        }
 
 
         /// <summary>
@@ -360,7 +369,7 @@ namespace RTParser
         /// </summary>
         public RTPBot()
         {
-            UseCyc = true;
+            UseCyc = false;
             this.setup();
             BotAsUser = new User("Self", this);
             BotAsUser.Predicates = GlobalSettings;
@@ -374,9 +383,19 @@ namespace RTParser
         /// </summary>
         public void loadAIMLFromDefaults()
         {
-            AIMLLoader loader = new AIMLLoader(this, BotAsRequest);
-            Loader = loader;
-            loader.loadAIML(BotAsRequest);
+            var prev = isAcceptingUserInput;
+            try
+            {
+                isAcceptingUserInput = false;
+                AIMLLoader loader = new AIMLLoader(this, BotAsRequest);
+                Loader = loader;
+                loader.loadAIML(BotAsRequest);
+
+            }
+            finally
+            {
+                isAcceptingUserInput = prev;
+            }
         }
 
         /// <summary>
@@ -384,7 +403,16 @@ namespace RTParser
         /// </summary>
         public void loadAIMLFromURI(string path, Request request)
         {
-            loadAIMLFromURI(path, LoaderOptions.GetDefault(request), request);
+            var prev = isAcceptingUserInput;
+            try
+            {
+                isAcceptingUserInput = false;
+                loadAIMLFromURI(path, LoaderOptions.GetDefault(request), request);
+            }
+            finally
+            {
+                isAcceptingUserInput = prev;
+            }
         }
 
 
@@ -393,13 +421,22 @@ namespace RTParser
         /// </summary>
         public void loadAIMLFromURI(string path, LoaderOptions options, Request request)
         {
-            options.request = request;
-            AIMLLoader loader = new AIMLLoader(this, request);
-            Loader = loader;
-            loader.loadAIML(path, options, request);
-            // maybe loads settings files if they are there
-            string settings = Path.Combine(path, "Settings.xml");
-            if (File.Exists(settings)) loadSettings(settings);
+            var prev = isAcceptingUserInput;
+            try
+            {
+                isAcceptingUserInput = false;
+                options.request = request;
+                AIMLLoader loader = new AIMLLoader(this, request);
+                Loader = loader;
+                loader.loadAIML(path, options, request);
+                // maybe loads settings files if they are there
+                string settings = Path.Combine(path, "Settings.xml");
+                if (File.Exists(settings)) loadSettings(settings);
+            }
+            finally
+            {
+                isAcceptingUserInput = prev;
+            }
         }
 
         /// <summary>
@@ -409,8 +446,19 @@ namespace RTParser
         /// <param name="filename">The originator of the XML document</param>
         public void loadAIMLFromXML(XmlDocument newAIML, LoaderOptions filename, Request r)
         {
-            AIMLLoader loader = new AIMLLoader(this, r);
-            loader.loadAIMLNode(newAIML.DocumentElement, filename, r);
+            var prev = isAcceptingUserInput;
+            try
+            {
+                isAcceptingUserInput = false;
+
+                AIMLLoader loader = new AIMLLoader(this, r);
+                loader.loadAIMLNode(newAIML.DocumentElement, filename, r);
+            }
+            finally
+            {
+                isAcceptingUserInput = prev;
+            }
+
         }
 
         /// <summary>
@@ -418,65 +466,76 @@ namespace RTParser
         /// </summary>
         private void setup()
         {
-            this.GlobalSettings = new SettingsDictionary(this, null);
-            ParentProvider provider = new ParentProvider(() => GlobalSettings);
-            this.GenderSubstitutions = new SettingsDictionary(this, provider);
-            this.Person2Substitutions = new SettingsDictionary(this, provider);
-            this.PersonSubstitutions = new SettingsDictionary(this, provider);
-            this.Substitutions = new SettingsDictionary(this, provider);
-            this.DefaultPredicates = new SettingsDictionary(this, provider);
-            this.CustomTags = new Dictionary<string, TagHandler>();
-            this.GraphMaster = new GraphMaster();
-            loadCustomTagHandlers("AIMLbot.dll");
-
-            string names_str = "markovx.trn 5ngram.ngm";
-            string[] nameset = names_str.Split(' ');
-            foreach (string name in nameset)
+            var prev = isAcceptingUserInput;
+            try
             {
+                isAcceptingUserInput = false;
+                this.GlobalSettings = new SettingsDictionary("bot.globalsettings", this, null);
+                ParentProvider provider = new ParentProvider(() => GlobalSettings);
+                this.GenderSubstitutions = new SettingsDictionary("bot.gendersubstitutions", this, null);
+                this.Person2Substitutions = new SettingsDictionary("bot.person2substitutions", this, null);
+                this.PersonSubstitutions = new SettingsDictionary("bot.personsubstitutions", this, null);
+                this.Substitutions = new SettingsDictionary("bot.substitutions", this, null);
+                this.DefaultPredicates = new SettingsDictionary("bot.defaultpredicates", this, null);
+                this.CustomTags = new Dictionary<string, TagHandler>();
+                //this.GraphMaster = new GraphMaster();
+                //this.HeardSelfSayGraph = new GraphMaster();
+                loadCustomTagHandlers("AIMLbot.dll");
 
-                int loadcount = 0;
-                string file = Path.Combine("trn", name);
-                if (File.Exists(file))
+                string names_str = "markovx.trn 5ngram.ngm";
+                string[] nameset = names_str.Split(' ');
+                foreach (string name in nameset)
                 {
-                    StreamReader sr = new StreamReader(file);
-                    writeToLog(" **** Markovian Brain LoadMarkovLTM: '{0}'****", file);
-                    this.MBrain.Learn(sr);
-                    sr.Close();
-                    writeToLog(" **** Markovian Brain initialized.: '{0}' **** ", file);
-                    loadcount++;
+
+                    int loadcount = 0;
+                    string file = Path.Combine("trn", name);
+                    if (File.Exists(file))
+                    {
+                        StreamReader sr = new StreamReader(file);
+                        writeToLog(" **** Markovian Brain LoadMarkovLTM: '{0}'****", file);
+                        this.MBrain.Learn(sr);
+                        sr.Close();
+                        writeToLog(" **** Markovian Brain initialized.: '{0}' **** ", file);
+                        loadcount++;
+                    }
+
+                    file = Path.Combine("ngm", name);
+                    if (File.Exists(file))
+                    {
+                        StreamReader sr = new StreamReader(file);
+                        writeToLog(" **** Markovian Brain LoadMarkovLTM: '{0}'**** ", file);
+                        this.MBrain.LearnNgram(sr);
+                        sr.Close();
+                        writeToLog(" **** Markovian Brain N-Gram initialized '{0}'. **** ", file);
+                        loadcount++;
+                    }
+
+                    if (loadcount == 0)
+                    {
+                        writeToLog(" **** WARNING: No Markovian Brain Training nor N-Gram file found for '{0}' . **** ", name);
+                    }
                 }
 
-                file = Path.Combine("ngm", name);
-                if (File.Exists(file))
+                if (pHMM.hmmCorpusLoaded == 0)
                 {
-                    StreamReader sr = new StreamReader(file);
-                    writeToLog(" **** Markovian Brain LoadMarkovLTM: '{0}'**** ", file);
-                    this.MBrain.LearnNgram(sr);
-                    sr.Close();
-                    writeToLog(" **** Markovian Brain N-Gram initialized '{0}'. **** ", file);
-                    loadcount++;
-                }
-
-                if (loadcount == 0)
-                {
-                    writeToLog(" **** WARNING: No Markovian Brain Training nor N-Gram file found for '{0}' . **** ", name);
+                    string file = Path.Combine("bgm", "corpus.txt");
+                    //if (Directory.Exists(file))
+                    if (File.Exists(file))
+                    {
+                        writeToLog("Load Corpus Bigrams: '{0}'", file);
+                        StreamReader sr = new StreamReader(file);
+                        pHMM.LearnBigramFile(sr);
+                        sr.Close();
+                        pHMM.hmmCorpusLoaded++;
+                        writeToLog("Loaded Corpus Bigrams: '{0}'", file);
+                    }
                 }
             }
-
-            if (pHMM.hmmCorpusLoaded == 0)
+            finally
             {
-                string file = Path.Combine("bgm", "corpus.txt");
-                //if (Directory.Exists(file))
-                if (File.Exists(file))
-                {
-                    writeToLog("Load Corpus Bigrams: '{0}'", file);
-                    StreamReader sr = new StreamReader(file);
-                    pHMM.LearnBigramFile(sr);
-                    sr.Close();
-                    pHMM.hmmCorpusLoaded++;
-                    writeToLog("Loaded Corpus Bigrams: '{0}'", file);
-                }
+                isAcceptingUserInput = prev;
             }
+
 
         }
 
@@ -915,13 +974,11 @@ namespace RTParser
             }
         }
 
-        /// <summary>
-        /// Given a request containing user input, produces a result from the Proccessor
-        /// </summary>
-        /// <param name="request">the request from the user</param>
-        /// <returns>the result to be output to the user</returns>
-        public AIMLbot.Result Chat(Request request)
+        public AIMLbot.Result HeardSelfSay(string message)
         {
+            return null;/// todo
+            AIMLbot.Request request = new AIMLbot.Request(message, BotAsUser, this);
+            request.Graph = HeardSelfSayGraph;
             AIMLbot.Result result = new AIMLbot.Result(request.user, this, request);
 
             if (this.isAcceptingUserInput)
@@ -936,7 +993,98 @@ namespace RTParser
                 if (NormalizedPathsCount != 1)
                 {
                     writeToLog("NormalizedPaths.Count = " + NormalizedPathsCount);
-                    foreach (Unifiable path in  result.NormalizedPaths)
+                    foreach (Unifiable path in result.NormalizedPaths)
+                    {
+                        writeToLog("  i: " + path.LegacyPath);
+                    }
+                }
+
+                // grab the templates for the various sentences from the graphmaster
+                foreach (Unifiable path in result.NormalizedPaths)
+                {
+                    Utils.SubQuery query = new SubQuery(path, result, request);
+                    query.Templates = request.Graph.evaluate(path, query, request, MatchState.UserInput, Unifiable.CreateAppendable());
+                    result.SubQueries.Add(query);
+                }
+
+                //todo pick and chose the queries
+                if (result.SubQueries.Count != 1)
+                {
+                    if (false)
+                    {
+                        writeToLog("SubQueries.Count = " + result.SubQueries.Count);
+                        foreach (var path in result.SubQueries)
+                        {
+                            writeToLog(" sq: " + path.FullPath);
+                        }
+                    }
+                }
+
+                // process the templates into appropriate output
+                foreach (SubQuery query in result.SubQueries)
+                {
+                    if (processTemplate(query, request, result, null))
+                    {
+
+                    }
+                }
+                if (true || result.SubQueries.Count != 1)
+                {
+                    writeToLog("SubQueries.Count = " + result.SubQueries.Count);
+                    foreach (var path in result.SubQueries)
+                    {
+                        writeToLog("\r\n tt: " + path.ToString().Replace("\n", " ").Replace("\r", " ").Replace("  ", " "));
+                    }
+                }
+            }
+            else
+            {
+                result.AddOutputSentences(this.NotAcceptingUserInputMessage);
+            }
+
+            // populate the Result object
+            result.Duration = DateTime.Now - request.StartedOn;
+            request.user.addResult(result);
+
+            return result;
+        }
+
+
+        /// <summary>
+        /// Given a request containing user input, produces a result from the Proccessor
+        /// </summary>
+        /// <param name="request">the request from the user</param>
+        /// <returns>the result to be output to the user</returns>
+        public AIMLbot.Result Chat(Request request)
+        {
+            AIMLbot.Result result = new AIMLbot.Result(request.user, this, request);
+
+
+            if (AIMLLoader.ContainsAiml(request.rawInput))
+            {
+                try
+                {
+                    result = ImmediateAiml(AIMLTagHandler.getNode(request.rawInput), request, Loader, null);
+                    request.rawInput = result.Output;
+                } catch(Exception e)
+                {
+                    writeToLog("ImmediateAiml: " + e);
+                }
+            }
+
+            if (this.isAcceptingUserInput)
+            {
+                // Normalize the input
+                AIMLLoader loader = new AIMLLoader(this, request);
+                Loader = loader;
+                //RTParser.Normalize.SplitIntoSentences splitter = new RTParser.Normalize.SplitIntoSentences(this);
+                Unifiable[] rawSentences = new Unifiable[] { request.rawInput };//splitter.Transform(request.rawInput);
+                LoadInputPaths(request, loader, rawSentences, result);
+                int NormalizedPathsCount = result.NormalizedPaths.Count;
+                if (NormalizedPathsCount != 1)
+                {
+                    writeToLog("NormalizedPaths.Count = " + NormalizedPathsCount);
+                    foreach (Unifiable path in result.NormalizedPaths)
                     {
                         writeToLog("  i: " + path.LegacyPath);
                     }
@@ -969,7 +1117,7 @@ namespace RTParser
                 {
                     if (processTemplate(query, request, result, null))
                     {
-                        
+
                     }
                 }
                 if (true || result.SubQueries.Count != 1)
@@ -1016,7 +1164,7 @@ namespace RTParser
                 }
                 finally
                 {
-                   // Monitor.Exit(queryTemplate);
+                    // Monitor.Exit(queryTemplate);
                 }
 
             }
@@ -1161,7 +1309,7 @@ namespace RTParser
                 string s = node.InnerText.Trim();
                 if (String.IsNullOrEmpty(s))
                 {
-                    return Unifiable.Empty;           
+                    return Unifiable.Empty;
                 }
                 return s;
             }
@@ -1173,7 +1321,7 @@ namespace RTParser
         internal AIMLTagHandler GetTagHandler(User user, SubQuery query, Request request, Result result, XmlNode node, AIMLTagHandler handler)
         {
             var tag = GetTagHandler0(user, query, request, result, node);
-            if (tag!=null) tag.SetParent(handler);
+            if (tag != null) tag.SetParent(handler);
             return tag;
         }
         internal AIMLTagHandler GetTagHandler0(User user, SubQuery query, Request request, Result result, XmlNode node)
@@ -1554,6 +1702,7 @@ The AIMLbot program.
         {
             get
             {
+                if (!UseCyc) return false;
                 cycAccess = GetCycAccess;
                 return UseCyc;
             }
@@ -1658,7 +1807,7 @@ The AIMLbot program.
                 cycAccess = null;
             }
         }
-        
+
         private void populateFromCyc()
         {
             AddExcuteHandler("cycl", ExecCycQuery);
@@ -1669,7 +1818,7 @@ The AIMLbot program.
 
         private object EvalAIMLHandler(string cmd, Request user)
         {
-            XmlNode node =AIMLTagHandler.getNode("<template>" + cmd + "</template>");
+            XmlNode node = AIMLTagHandler.getNode("<template>" + cmd + "</template>");
             var res = ImmediateAiml(node, BotAsRequest, Loader, null);
             return res;
         }
@@ -1850,7 +1999,7 @@ The AIMLbot program.
             }
             if (true)
             {
-                Unifiable path = loader.generatePath("no stars", request.user.getLastBotOutput(),request.Flags, request.Topic, true);
+                Unifiable path = loader.generatePath("no stars", request.user.getLastBotOutput(), request.Flags, request.Topic, true);
                 Utils.SubQuery query = new SubQuery(path, result, request);
                 string outputSentence = this.processNode(templateNode, query, request, result, request.user, handler);
                 return result;
@@ -1888,7 +2037,7 @@ The AIMLbot program.
                 {
                     if (processTemplate(query, request, result, handler))
                     {
-                        
+
                     }
                 }
             }
@@ -1906,12 +2055,52 @@ The AIMLbot program.
 
         public Unifiable NOTOPIC
         {
-            get { return GlobalSettings.grabSetting("notopic"); }
+            get
+            {
+                if (!GlobalSettings.containsSettingCalled("notopic")) return "Nothing";
+                return GlobalSettings.grabSetting("notopic");
+            }
         }
 
-        public void HeardSelfSay(string message)
+
+        public Dictionary<string, GraphMaster> GraphsByName = new Dictionary<string, GraphMaster>();
+        public GraphMaster GetGraph(string botname)
         {
-           
+            botname = botname ?? "default";
+            botname = botname.ToLower();
+            GraphMaster g;
+            lock (GraphsByName)
+            {
+                if (!GraphsByName.TryGetValue(botname, out g))
+                {
+                    g = GraphsByName[botname] = new GraphMaster();
+                }
+            }
+            return g;
+        }
+        static void Main(string[] args)
+        {
+            Bot myBot = new Bot();
+            myBot.loadSettings();
+            User myUser = new User("consoleUser", myBot);
+            myBot.isAcceptingUserInput = false;
+            myBot.loadAIMLFromFiles();
+            myBot.isAcceptingUserInput = true;
+            while (true)
+            {
+                Console.Write("You: ");
+                string input = Console.ReadLine();
+                if (input.ToLower() == "quit")
+                {
+                    break;
+                }
+                else
+                {
+                    Request r = new Request(input, myUser, myBot);
+                    Result res = myBot.Chat(r);
+                    Console.WriteLine("Bot: " + res.Output);
+                }
+            }
         }
     }
 }

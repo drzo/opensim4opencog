@@ -13,8 +13,11 @@ namespace RTParser
     /// </summary>
     public class Result
     {
+        private string AlreadyUsed = "";
         public void AddOutputSentences(Unifiable unifiable)
         {
+            if (AlreadyUsed.Contains(unifiable)) return;
+            AlreadyUsed += unifiable;
 #if false
             if (unifiable==null || unifiable=="*" || unifiable==Unifiable.Empty)
             {
@@ -117,10 +120,9 @@ namespace RTParser
             get
             {
                 Unifiable result = Unifiable.CreateAppendable();
-                foreach (string sentence in OutputSentences)
+                foreach (var sentence in OutputSentences)
                 {
-                    return sentence;
-                    Unifiable sentenceForOutput = sentence.Trim();
+                    String sentenceForOutput = sentence.ToValue().Replace("  ", " ").Trim();
 
                     if (!this.checkEndsAsSentence(sentenceForOutput))
                     {

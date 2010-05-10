@@ -7,6 +7,10 @@ namespace AIMLbot
 {
     public class Bot : RTParser.RTPBot
     {
+        public void loadAIMLFromFiles()
+        {
+            base.loadAIMLFromDefaults();
+        }
     }
     public class User : RTParser.User
     {
