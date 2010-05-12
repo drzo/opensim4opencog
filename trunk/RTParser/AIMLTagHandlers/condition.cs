@@ -115,49 +115,32 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessChange()
         {
+            if (query.CurrentTemplate != null) query.CurrentTemplate.Rating *= 1.5;
             if (this.templateNode.Name.ToLower() == "condition")
             {
                 // heuristically work out the type of condition being processed
 
                 if (this.templateNode.Attributes.Count == 2) // block
                 {
-                    string name = String.Empty;
-                    Unifiable value = Unifiable.Empty;
-
-                    if (this.templateNode.Attributes[0].Name == "name")
-                    {
-                        name = this.templateNode.Attributes[0].Value;
-                    }
-                    else if (this.templateNode.Attributes[0].Name == "value")
-                    {
-                        value = this.templateNode.Attributes[0].Value;
-                    }
-
-                    if (this.templateNode.Attributes[1].Name == "name")
-                    {
-                        name = this.templateNode.Attributes[1].Value;
-                    }
-                    else if (this.templateNode.Attributes[1].Name == "value")
-                    {
-                        value = this.templateNode.Attributes[1].Value;
-                    }
-
+                    string name = GetAttribValue("name", String.Empty);
+                    Unifiable value = GetAttribValue("value", String.Empty);
                     if ((name.Length > 0) & (!value.IsEmpty))
                     {
                         Unifiable actualValue = this.query.grabSetting(name);
-                        //Regex matcher = new Regex(value.Replace(" ", "\\s").Replace("*", "[\\sA-Z0-9]+"), RegexOptions.IgnoreCase);
-                        //if (matcher.IsMatch(actualValue))
-                        if (value.IsMatch(actualValue))
+                        if (IsPredMatch(value, actualValue))
                         {
                             return Unifiable.InnerXmlText(templateNode);
                         }
+                        return Unifiable.Empty;
                     }
+                    UnknownCondition();
                 }
                 else if (this.templateNode.Attributes.Count == 1) // single predicate
                 {
                     if (this.templateNode.Attributes[0].Name == "name")
                     {
-                        string name = this.templateNode.Attributes[0].Value;
+                        string name = GetAttribValue("name", String.Empty);
+
                         foreach (XmlNode childLINode in this.templateNode.ChildNodes)
                         {
                             if (childLINode.Name.ToLower() == "li")
@@ -167,10 +150,8 @@ namespace RTParser.AIMLTagHandlers
                                     if (childLINode.Attributes[0].Name.ToLower() == "value")
                                     {
                                         Unifiable actualValue = this.query.grabSetting(name);
-                                        Unifiable value = childLINode.Attributes[0].Value;
-                                        //Regex matcher = new Regex(value.Replace(" ", "\\s").Replace("*", "[\\sA-Z0-9]+"), RegexOptions.IgnoreCase);
-                                        //if (matcher.IsMatch(actualValue))
-                                        if (value.IsMatch(actualValue))
+                                        Unifiable value = GetAttribValue(childLINode, "value", Unifiable.Empty);
+                                        if (IsPredMatch(value, actualValue))
                                         {
                                             return Unifiable.InnerXmlText(childLINode);
                                         }
@@ -192,33 +173,23 @@ namespace RTParser.AIMLTagHandlers
                         {
                             if (childLINode.Attributes.Count == 2)
                             {
-                                string name = string.Empty;
-                                Unifiable value = Unifiable.Empty;
-                                if (childLINode.Attributes[0].Name == "name")
-                                {
-                                    name = childLINode.Attributes[0].Value;
-                                }
-                                else if (childLINode.Attributes[0].Name == "value")
-                                {
-                                    value = childLINode.Attributes[0].Value;
-                                }
-
-                                if (childLINode.Attributes[1].Name == "name")
-                                {
-                                    name = childLINode.Attributes[1].Value;
-                                }
-                                else if (childLINode.Attributes[1].Name == "value")
-                                {
-                                    value = childLINode.Attributes[1].Value;
-                                }
-
+                                string name = GetAttribValue(childLINode, "name", string.Empty);
+                                Unifiable value = GetAttribValue(childLINode, "value", string.Empty);
                                 if ((name.Length > 0) & (!value.IsEmpty))
                                 {
                                     Unifiable actualValue = this.query.grabSetting(name);
-                                    if (value.IsMatch(actualValue))
+                                    if (IsPredMatch(value, actualValue))
                                     {
                                         return Unifiable.InnerXmlText(childLINode);
                                     }
+                                }
+                            }
+                            if (childLINode.Attributes.Count == 1)
+                            {
+                                string name = GetAttribValue(childLINode, "name", string.Empty);
+                                if ((name.Length > 0) && this.query.containsSettingCalled(name))
+                                {
+                                        return Unifiable.InnerXmlText(childLINode);
                                 }
                             }
                             else if (childLINode.Attributes.Count == 0)
@@ -230,6 +201,11 @@ namespace RTParser.AIMLTagHandlers
                 }
             }
             return Unifiable.Empty;
+        }
+
+        public void UnknownCondition()
+        {
+            Console.WriteLine("Unknown conditions " + LineNumberTextInfo());
         }
     }
 }

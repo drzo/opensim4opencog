@@ -9,6 +9,7 @@ namespace RTParser.Utils
         public GuardInfo Guard;
         public CategoryInfo CategoryInfo;
         public Node GraphmasterNode;
+        public double Rating = 1.0;
 
         public TemplateInfo(XmlNode template, GuardInfo guard, Node patternNode, CategoryInfo categoryInfo):base(template)
         {
