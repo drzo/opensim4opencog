@@ -112,7 +112,7 @@ namespace RTParser
             }
         }
 
-        public static int MaxResults = 2;
+        public static int MaxResults = 1;
         /// <summary>
         /// Returns the raw sentences without any logging 
         /// </summary>
