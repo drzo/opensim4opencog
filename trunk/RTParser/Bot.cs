@@ -125,7 +125,7 @@ namespace RTParser
         {
             get
             {
-                return Convert.ToDouble(this.GlobalSettings.grabSetting("timeout").ToValue());
+                return Convert.ToDouble(this.GlobalSettings.grabSettingNoDebug("timeout").ToValue());
             }
         }
 
@@ -158,7 +158,7 @@ namespace RTParser
         {
             get
             {
-                return new Regex(this.GlobalSettings.grabSetting("stripperregex"), RegexOptions.IgnorePatternWhitespace);
+                return new Regex(this.GlobalSettings.grabSettingNoDebug("stripperregex"), RegexOptions.IgnorePatternWhitespace);
             }
         }
 
@@ -207,8 +207,9 @@ namespace RTParser
         {
             get
             {
+                if (true) return false;
                 if (!this.GlobalSettings.containsSettingCalled("islogging")) return false;
-                Unifiable islogging = this.GlobalSettings.grabSetting("islogging");
+                Unifiable islogging = this.GlobalSettings.grabSettingNoDebug("islogging");
                 if (Unifiable.IsTrue(islogging))
                 {
                     return true;
@@ -579,7 +580,7 @@ namespace RTParser
             this.GenderSubstitutions.loadSettings(Path.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("gendersubstitutionsfile")));
             this.DefaultPredicates.loadSettings(Path.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("defaultpredicates")));
             this.Substitutions.loadSettings(Path.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("substitutionsfile")));
-
+            Person2Substitutions.NoDebug = PersonSubstitutions.NoDebug = GenderSubstitutions.NoDebug = Substitutions.NoDebug = true;
             // Grab the splitters for this Proccessor
             this.loadSplitters(Path.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("splittersfile")));
         }
@@ -1178,9 +1179,12 @@ namespace RTParser
             {
                 foreach (TemplateInfo s in queryTemplate)
                 {
+                    // Start each the same
+                    s.Rating = 1.0;
                     try
                     {
                         bool found0;
+                        query.CurrentTemplate = s;
                         if (proccessResponse(query, request, result, s.Output, s.Guard, out found0, handler)) break;
                         if (found0) found = true;
                     }
@@ -1206,7 +1210,10 @@ namespace RTParser
             attribName = attribName.ToLower();
             foreach (XmlAttribute attrib in templateNode.Attributes)
             {
-                if (attrib.Name.ToLower() == attribName) return attrib.Value;
+                if (attrib.Name.ToLower() == attribName)
+                {
+                    return attrib.Value;
+                }
             }
             return defaultIfEmpty;
         }
@@ -1997,14 +2004,14 @@ The AIMLbot program.
                 proccessResponse(null, request, result, templateNode, null, out found0, handler);
                 return result;
             }
-            if (true)
-            {
-                Unifiable path = loader.generatePath("no stars", request.user.getLastBotOutput(), request.Flags, request.Topic, true);
-                Utils.SubQuery query = new SubQuery(path, result, request);
-                string outputSentence = this.processNode(templateNode, query, request, result, request.user, handler);
-                return result;
+            //if (true)
+            //{
+            //    Unifiable path = loader.generatePath("no stars", request.user.getLastBotOutput(), request.Flags, request.Topic, true);
+            //    Utils.SubQuery query = new SubQuery(path, result, request);
+            //    string outputSentence = this.processNode(templateNode, query, request, result, request.user, handler);
+            //    return result;
 
-            }
+            //}
             //if (this.isAcceptingUserInput)
             {
                 string sentence = "aimlexec " + templateNode.OuterXml;
@@ -2101,6 +2108,12 @@ The AIMLbot program.
                     Console.WriteLine("Bot: " + res.Output);
                 }
             }
+        }
+
+        public string GetUserMt(User user)
+        {
+           //GetAttribValue("mt","");
+            return "#$BaseKB";
         }
     }
 }
