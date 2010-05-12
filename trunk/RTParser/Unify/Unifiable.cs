@@ -322,14 +322,34 @@ namespace RTParser
                 throw new InvalidObjectException("this " + AsString() + " cannot be appended with " + p);
             }
             if (p == null) return;
+            if (p == "") return;
             if (str == "")
                 str = p.AsString().Trim();
             else
             {
-                str += " ";
+                p = p.Trim();
+                if (!NoSpaceAfter(str) && !NoSpaceBefore(p))
+                    str += " ";
+                else
+                {
+                    str = str;
+                }
                 str += p.AsString().Trim();
+                str = str.Replace("  ", " ");
             }
-            str = str.Replace("  ", " ");
+        }
+
+        private bool NoSpaceAfter(string str)
+        {
+            if (str.EndsWith("\"")) return true;
+            if (str.EndsWith("\'")) return true;
+            return false;
+        }
+        private bool NoSpaceBefore(string str)
+        {
+            if (str.StartsWith("\"")) return true;
+            if (str.StartsWith("\'")) return true;
+            return false;
         }
     }
 }
