@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
+using System.Threading;
 using System.Xml;
 using System.IO;
 using System.Xml.Serialization;
@@ -56,6 +58,8 @@ namespace RTParser.Utils
     {
         #region Attributes
 
+        public bool NoDebug = false;
+
         /// <summary>
         /// Holds a dictionary of settings
         /// </summary>
@@ -69,9 +73,7 @@ namespace RTParser.Utils
 
         // prechecks and uses if settings exist
         private List<ParentProvider> _overides = new List<ParentProvider>();
-        // parallel updates (therefore inherits)
-        private List<ParentProvider> _contributers = new List<ParentProvider>();
-        // fallbacks
+        // fallbacks (therefore inherits)
         private List<ParentProvider> _parent = new List<ParentProvider>();
         /// <summary>
         /// The bot this dictionary is associated with (only for writting log)
@@ -226,17 +228,19 @@ namespace RTParser.Utils
         public void loadSettingNode(XmlNode myNode)
         {
             if (myNode.NodeType == XmlNodeType.Comment) return;
-            if ((myNode.Name == "item") & (myNode.Attributes.Count == 2))
+            if ((myNode.Name == "item"))
             {
-                if ((myNode.Attributes[0].Name == "name") & (myNode.Attributes[1].Name == "value"))
+                string name = RTPBot.GetAttribValue(myNode, "name", "").Trim();
+                if (name=="")
                 {
-                    string name = myNode.Attributes["name"].Value;
-                    Unifiable value = Unifiable.Create(myNode.Attributes["value"].Value);
-                    if (name.Length > 0)
-                    {
-                        this.addSetting(name, value);
-                    }
+                    return;
                 }
+                string value = RTPBot.GetAttribValue(myNode, "value", null);
+                if (value==null)
+                {
+                    value = myNode.InnerXml.Trim();
+                }
+                this.addSetting(name, value);
             }
         }
 
@@ -248,7 +252,7 @@ namespace RTParser.Utils
         /// <param name="value">The value associated with this setting</param>
         public bool addSetting(string name, Unifiable value)
         {
-            name = name.Trim();
+            name = name.Trim().ToLower();
             lock (orderedKeys)
             {
                 string key = MakeCaseInsensitive.TransformInput(Unifiable.Create(name));
@@ -264,6 +268,7 @@ namespace RTParser.Utils
 
         public bool addListSetting(string name, Unifiable value)
         {
+            name = name.Trim().ToLower();
             lock (orderedKeys)
             {
                 string key = MakeCaseInsensitive.TransformInput(Unifiable.Create(name));
@@ -283,6 +288,7 @@ namespace RTParser.Utils
         /// <param name="name">The name of the setting to remove</param>
         public bool removeSetting(string name)
         {
+            name = name.Trim().ToLower();
             lock (orderedKeys)
             {
                 string normalizedName = MakeCaseInsensitive.TransformInput(name);
@@ -299,6 +305,7 @@ namespace RTParser.Utils
         /// <param name="name">the key for the Dictionary<,></param>
         private void removeFromHash(string name)
         {
+            name = name.Trim().ToLower();
             lock (orderedKeys)
             {
                 string normalizedName = MakeCaseInsensitive.TransformInput(name);
@@ -314,19 +321,26 @@ namespace RTParser.Utils
         /// <param name="value">the new value</param>
         public bool updateSetting(string name, Unifiable value)
         {
-            name = name.Trim();
+            name = name.Trim().ToLower();
             bool overriden = false;
             foreach (var parent in _overides)
             {
-                if (parent().updateSetting(name, value)) overriden = true;
+                var p = parent();
+                if (p.updateSetting(name, value)) overriden = true;
             }
-            if (overriden) return true;
+            if (overriden)
+            {
+                SettingsLog("Sett override " + name + "=" + value);
+                return true;
+            }
             lock (orderedKeys)
             {
                 string key = MakeCaseInsensitive.TransformInput(name);
                 if (this.orderedKeys.Contains(key))
                 {
+                    var old = this.settingsHash[key];
                     this.removeFromHash(key);
+                    SettingsLog("Setting Local " + name + "=" + value);
                     this.settingsHash.Add(MakeCaseInsensitive.TransformInput(key), value);
                     return true;
                 }
@@ -357,13 +371,25 @@ namespace RTParser.Utils
         /// <returns>the value of the setting</returns>
         public Unifiable grabSetting(string name)
         {
-            name = name.Trim();
+            name = name.Trim().ToLower();
+            foreach (ParentProvider overide in _overides)
+            {
+                ISettingsDictionary dict = overide();
+                if (dict.containsSettingCalled(name))
+                {
+                    Unifiable v = dict.grabSetting(name);
+                    SettingsLog("Returning Override " + name + "=" + v);
+                    return v;
+                }
+            }
             lock (orderedKeys)
             {
                 string normalizedName = MakeCaseInsensitive.TransformInput(name);
                 if (this.containsSettingCalled(normalizedName))
                 {
-                    return this.settingsHash[normalizedName];
+                    Unifiable v = this.settingsHash[normalizedName];
+                    SettingsLog("Returning LocalSetting " + name + "=" + v);
+                    return v;
                 }
                 else if (Parents.Count > 0)
                 {
@@ -372,14 +398,25 @@ namespace RTParser.Utils
                         if (list.containsSettingCalled(name))
                         {
                             Unifiable v = list.grabSetting(name);
+                            SettingsLog("Returning Parent " + name + "=" + v);
                             if (v != null && !Unifiable.IsFalse(v)) return v;
                         }
                     }
-                    return Parents[0].grabSetting(name);
+                    var v0 = Parents[0].grabSetting(name);
+                    SettingsLog("Returning False " + name + "=" + v0);
+                    return v0;
                 }
+                SettingsLog("Returning Empty " + name);
                 return Unifiable.Empty;
 
             }
+        }
+
+        private void SettingsLog(string unifiable)
+        {
+            if (NoDebug) return;
+            var fc = new StackTrace().FrameCount;
+            Console.WriteLine("S: " + NameSpace + " ("+ fc + ")   " + unifiable);
         }
 
         /// <summary>
@@ -501,6 +538,15 @@ namespace RTParser.Utils
         {
             GetSetDictionary prov = new GetSetDictionary(p, v.GetProvider());
             InsertProvider(() => prov);
+        }
+
+        public Unifiable grabSettingNoDebug(string name)
+        {
+            if (NoDebug) return grabSetting(name);
+            NoDebug = true;
+            var v = grabSetting(name);
+            NoDebug = false;
+            return v;
         }
     }
 }
