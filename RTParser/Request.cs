@@ -160,9 +160,9 @@ namespace RTParser
             return Predicates.grabSetting(name);
         }
 
-        public void addSetting(Unifiable name, Unifiable value)
+        public bool addSetting(Unifiable name, Unifiable value)
         {
-            Predicates.addSetting(name, value);
+            return Predicates.addSetting(name, value);
         }
 
     }

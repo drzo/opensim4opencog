@@ -1,6 +1,7 @@
 using System;
 using System.Xml;
 using System.Text;
+using RTParser.Utils;
 
 namespace RTParser.AIMLTagHandlers
 {
@@ -45,9 +46,12 @@ namespace RTParser.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "get")
             {
+                if (query.CurrentTemplate != null) query.CurrentTemplate.Rating *= 1.5;
                 string name = GetAttribValue("name", templateNodeInnerText.Trim());
                 Unifiable defaultVal = GetAttribValue("default", Unifiable.Empty);
-                Unifiable resultGet = this.query.grabSetting(name).Trim();
+                ISettingsDictionary dict = query;
+                if (GetAttribValue("type", "") == "bot") dict = request.Proccessor.GlobalSettings;
+                Unifiable resultGet = dict.grabSetting(name).Trim();
                 if (resultGet.ToValue().ToUpper() == "UNKNOWN") return resultGet + " " + name;
                 // if ((!String.IsNullOrEmpty(result)) && (!result.IsWildCard())) return result; // we have a local one
                 
