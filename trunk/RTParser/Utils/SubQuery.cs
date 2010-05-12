@@ -11,7 +11,7 @@ namespace RTParser.Utils
     /// A container class for holding wildcard matches encountered during an individual path's 
     /// interrogation of the graphmaster.
     /// </summary>
-    public class SubQuery
+    public class SubQuery: ISettingsDictionary
     {
         #region Attributes
         /// <summary>
@@ -63,6 +63,8 @@ namespace RTParser.Utils
 
         public Result Result;
         public Request Request;
+        public TemplateInfo CurrentTemplate;
+
         /// <summary>
         /// Ctor
         /// </summary>
@@ -75,7 +77,43 @@ namespace RTParser.Utils
         }
 
 
-        internal Unifiable grabSetting(string name)
+        /// <summary>
+        /// Removes the named setting from this class
+        /// </summary>
+        /// <param name="name">The name of the setting to remove</param>
+        public bool removeSetting(string name)
+        {
+            return Request.Predicates.removeSetting(name);
+        }
+
+        /// <summary>
+        /// Updates the named setting with a new value whilst retaining the position in the
+        /// dictionary
+        /// </summary>
+        /// <param name="name">the name of the setting</param>
+        /// <param name="value">the new value</param>
+        public bool updateSetting(string name, Unifiable value)
+        {
+            return Request.Predicates.updateSetting(name, value);
+        }
+
+
+        /// <summary>
+        /// Checks to see if a setting of a particular name exists
+        /// </summary>
+        /// <param name="name">The setting name to check</param>
+        /// <returns>Existential truth value</returns>
+        public bool containsSettingCalled(string name)
+        {
+            return Request.Predicates.containsSettingCalled(name);
+        }
+
+        public string NameSpace
+        {
+            get { return Request.Predicates.NameSpace; }
+        }
+
+        public Unifiable grabSetting(string name)
         {
             var v = Request.grabSetting(name);
             name = name.ToLower();
@@ -86,9 +124,16 @@ namespace RTParser.Utils
             return v;
         }
 
-        public void addSetting(Unifiable name, Unifiable value)
+
+        /// <summary>
+        /// Adds a bespoke setting to the Settings class (accessed via the grabSettings(string name)
+        /// method.
+        /// </summary>
+        /// <param name="name">The name of the new setting</param>
+        /// <param name="value">The value associated with this setting</param>
+        public bool addSetting(string name, Unifiable value)
         {
-            Request.addSetting(name, value);
+            return Request.addSetting(name, value);
         }
     }
 
