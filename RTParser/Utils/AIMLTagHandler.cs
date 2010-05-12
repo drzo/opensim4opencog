@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml;
 
 namespace RTParser.Utils
@@ -11,6 +12,49 @@ namespace RTParser.Utils
     /// </summary>
     abstract public class AIMLTagHandler : TextTransformer
     {
+        public string ReduceStar(string name)
+        {
+            try
+            {
+                if (name.StartsWith("star_"))
+                {
+                    int i = Int32.Parse(name.Substring(5)) - 1;
+                    name = query.InputStar[i];
+                }
+                if (name.StartsWith("that_"))
+                {
+                    int i = Int32.Parse(name.Substring(5)) - 1;
+                    name = query.ThatStar[i];
+                }
+                if (name.StartsWith("topic_"))
+                {
+                    int i = Int32.Parse(name.Substring(6)) - 1;
+                    name = query.TopicStar[i];
+                }
+                if (name.StartsWith("guard_"))
+                {
+                    int i = Int32.Parse(name.Substring(6)) - 1;
+                    name = query.GuardStar[i];
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("" + e);
+            }
+            return name;
+        }
+
+
+        public static bool IsPredMatch(Unifiable value, Unifiable actualValue)
+        {
+            value = value.Trim();
+            actualValue = actualValue.Trim();
+            if (actualValue.IsMatch(value)) return true;
+            Regex matcher = new Regex(value.AsString().Replace(" ", "\\s").Replace("*", "[\\sA-Z0-9]+"),
+                                      RegexOptions.IgnoreCase);
+            if (matcher.IsMatch(actualValue)) return true;
+            return false;
+        }
 
         protected Unifiable templateNodeInnerText
         {
@@ -227,16 +271,20 @@ namespace RTParser.Utils
 
         #endregion
 
-        protected Unifiable GetAttribValue(string attribName,Unifiable defaultIfEmpty)
+        protected string GetAttribValue(string attribName,string defaultIfEmpty)
+        {
+            return GetAttribValue(templateNode, attribName, defaultIfEmpty);
+        }
+
+        public string GetAttribValue(XmlNode node, string attribName, string defaultIfEmpty)
         {
             attribName = attribName.ToLower();
-            foreach (XmlAttribute attrib in this.templateNode.Attributes)
+            foreach (XmlAttribute attrib in node.Attributes)
             {
-                if (attrib.Name.ToLower() == attribName) return attrib.Value;
+                if (attrib.Name.ToLower() == attribName) return ReduceStar(attrib.Value);
             }
             return defaultIfEmpty;
         }
-
 
         public virtual Unifiable CompleteProcess()
         {
