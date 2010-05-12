@@ -112,6 +112,7 @@ namespace RTParser
             }
         }
 
+        public static int MaxResults = 2;
         /// <summary>
         /// Returns the raw sentences without any logging 
         /// </summary>
@@ -119,6 +120,7 @@ namespace RTParser
         {
             get
             {
+                int resultsLeft = MaxResults;
                 Unifiable result = Unifiable.CreateAppendable();
                 foreach (var sentence in OutputSentences)
                 {
@@ -129,6 +131,8 @@ namespace RTParser
                         sentenceForOutput += ".";
                     }
                     result.Append(sentenceForOutput + " ");
+                    resultsLeft--;
+                    if (resultsLeft < 1) return result;
                 }
                 return result;//.Trim();
             }
@@ -190,9 +194,11 @@ namespace RTParser
         /// <returns>True if ends with an appropriate sentence splitter</returns>
         private bool checkEndsAsSentence(string sentence)
         {
+            sentence = sentence.Trim();
+            if (sentence.EndsWith("?")) return true;
             foreach (Unifiable splitter in this.bot.Splitters)
             {
-                if (sentence.Trim().EndsWith(splitter))
+                if (sentence.EndsWith(splitter ))
                 {
                     return true;
                 }
