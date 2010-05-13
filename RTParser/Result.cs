@@ -14,6 +14,7 @@ namespace RTParser
     public class Result
     {
         private string AlreadyUsed = "";
+        public int LinesToUse = 1;
         public void AddOutputSentences(Unifiable unifiable)
         {
             if (AlreadyUsed.Contains(unifiable)) return;

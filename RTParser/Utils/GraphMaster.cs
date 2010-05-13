@@ -15,6 +15,7 @@ namespace RTParser.Utils
 {
     public class GraphMaster
     {
+        readonly public List<GraphMaster> Parents = new List<GraphMaster>();
 
         /// <summary>
         /// All the &lt;category&gt;s (if any) associated with this database
@@ -169,7 +170,21 @@ namespace RTParser.Utils
 
         public UList evaluate(UPath unifiable, SubQuery query, Request request, MatchState state, Unifiable appendable)
         {
-            return RootNode.evaluate(unifiable, query, request, state, appendable);
+            var templs = RootNode.evaluate(unifiable, query, request, state, appendable);
+            if (templs == null || templs.Count == 0)
+            {
+                Console.WriteLine("no templates for " + this);
+                foreach (GraphMaster graphMaster in Parents)
+                {
+                    templs = graphMaster.evaluate(unifiable, query, request, state, appendable);
+                    if (templs!=null && templs.Count>0)
+                    {
+                        Console.WriteLine("ussing parent templates from " + templs);
+                        return templs;
+                    }
+                }
+            }
+            return templs;
         }
 
         public void AddTemplate(TemplateInfo templateInfo)

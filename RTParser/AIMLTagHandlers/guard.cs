@@ -51,7 +51,7 @@ namespace RTParser.AIMLTagHandlers
                 templateNodeInnerText = Recurse();
                 if (!templateNodeInnerText.IsEmpty)
                 {
-                    Unifiable res = Proc.EvalSubL(templateNodeInnerText, null);
+                    Unifiable res = Proc.TheCyc.EvalSubL(templateNodeInnerText, null);
                     return res;
                 }
             }

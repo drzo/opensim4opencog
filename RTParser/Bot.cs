@@ -12,10 +12,9 @@ using System.Reflection;
 using System.Net.Mail;
 using AIMLbot;
 using RTParser.AIMLTagHandlers;
+using RTParser.Database;
 using RTParser.Normalize;
 using RTParser.Utils;
-using org.opencyc.api;
-using org.opencyc.cycobject;
 using UPath = RTParser.Unifiable;
 
 namespace RTParser
@@ -370,11 +369,12 @@ namespace RTParser
         /// </summary>
         public RTPBot()
         {
-            UseCyc = false;
             this.setup();
             BotAsUser = new User("Self", this);
             BotAsUser.Predicates = GlobalSettings;
             BotAsRequest = new Request("-bank-input-", BotAsUser, this);
+            AddExcuteHandler("aiml", EvalAIMLHandler);
+            this.TheCyc = new CycDatabase(this);
         }
 
         #region Settings methods
@@ -1700,251 +1700,16 @@ The AIMLbot program.
             }
         }
         #endregion
-
-        #region CYC Interaction
-
-
-        private CycAccess cycAccess;
-        public bool CycEnabled
-        {
-            get
-            {
-                if (!UseCyc) return false;
-                cycAccess = GetCycAccess;
-                return UseCyc;
-            }
-            set
-            {
-                UseCyc = value;
-            }
-        }
-
-        private bool UseCyc = false;
-        public CycAccess GetCycAccess
-        {
-            get
-            {
-                if (!UseCyc) return null;
-                if (!isCycAccessCorrect())
-                {
-                    try
-                    {
-                        if (cycAccess == null) cycAccess = CycAccess.current();
-                    }
-                    catch (Exception) { }
-                    try
-                    {
-                        if (!isCycAccessCorrect())
-                        {
-                            cycAccess = new CycAccess(CycHostName, CycBasePort);
-                            CycAccess.setSharedCycAccessInstance(cycAccess);
-                        }
-                        TestConnection();
-                        populateFromCyc();
-                    }
-                    catch (Exception e)
-                    {
-                        UseCyc = false;
-                    }
-                    //if (cycAccess.isClosed()) cycAccess.persistentConnection = true;
-                }
-                return cycAccess;
-            }
-            set { cycAccess = value; }
-        }
-
-        private void TestConnection()
-        {
-            try
-            {
-                cycAccess.converseInt("(+ 1 1)");
-                cycAccess.createIndividual("AimlContextMt",
-                                           "#$AimlContextMt contains storage location in OpenCyc for AIML variables",
-                                           "UniversalVocabularyMt", "DataMicrotheory");
-
-            }
-            catch (Exception e)
-            {
-                UseCyc = false;
-            }
-        }
-
-        private bool isCycAccessCorrect()
-        {
-            if (cycAccess == null) return false;
-            if (cycAccess.isClosed()) return false;
-            if (cycAccess.getCycConnection().getHostName() != CycHostName) return false;
-            if (cycAccess.getCycConnection().getBasePort() != CycBasePort) return false;
-            return true;
-        }
-
-        private int cycBasePort = -1;
-        public int CycBasePort
-        {
-            get
-            {
-                if (cycBasePort > 0) return cycBasePort;
-                if (cycAccess != null) return cycBasePort = cycAccess.getCycConnection().getBasePort();
-                return cycBasePort = CycConnection.DEFAULT_BASE_PORT;
-            }
-            set
-            {
-                if (cycBasePort == -1) cycBasePort = value;
-                if (CycBasePort == value) return;
-                cycBasePort = value;
-                cycAccess = null;
-            }
-        }
-
-        // So people dont have to use their own cyc instance (unless they set it)
-        private String cycHostName = "daxcyc.gotdns.org";
-        public string CycHostName
-        {
-            get
-            {
-                if (cycHostName != null) return cycHostName;
-                if (cycAccess != null) return cycHostName = cycAccess.getCycConnection().getHostName();
-                return cycHostName = CycConnection.DEFAULT_HOSTNAME;
-            }
-            set
-            {
-                if (cycHostName == null) cycHostName = value;
-                if (cycHostName == value) return;
-                cycHostName = value;
-                cycAccess = null;
-            }
-        }
-
-        private void populateFromCyc()
-        {
-            AddExcuteHandler("cycl", ExecCycQuery);
-            AddExcuteHandler("subl", EvalSubLHandler);
-            AddExcuteHandler("aiml", EvalAIMLHandler);
-            //cycAccess.setCyclist("CycAdministrator");
-        }
-
         private object EvalAIMLHandler(string cmd, Request user)
         {
             XmlNode node = AIMLTagHandler.getNode("<template>" + cmd + "</template>");
             var res = ImmediateAiml(node, BotAsRequest, Loader, null);
             return res;
         }
-
-        private object ExecCycQuery(string cmd, Request user)
-        {
-            try
-            {
-                Unifiable ss = EvalSubL("(cyc-query '" + cmd + " #$EverythingPSC)", null);
-                if (Unifiable.IsFalse(ss))
-                {
-                    return Unifiable.Empty;
-                }
-                return ss;
-            }
-            catch (Exception e)
-            {
-                string s = "" + e;
-                Console.WriteLine(s);
-                writeToLog(s);
-                return null;
-            }
-        }
-        private object EvalSubLHandler(string cmd, Request user)
-        {
-            try
-            {
-                return EvalSubL(cmd, null);
-            }
-            catch (Exception e)
-            {
-                string s = "" + e;
-                Console.WriteLine(s);
-                writeToLog(s);
-                return null;
-            }
-        }
-
-        public Unifiable EvalSubL(Unifiable cmd, Unifiable filter)
-        {
-            Unifiable result = "(EVAL-SUBL " + cmd + ")";
-            CycAccess access = GetCycAccess;
-            Console.Write(result);
-            Console.Out.Flush();
-            if (!UseCyc) return result;
-            try
-            {
-                string str = "(list " + cmd + ")";
-                Object oresult = access.converseList(str).first();
-                writeToLog(str + " => " + oresult);
-                result = "" + oresult;
-                if (oresult is CycObject)
-                {
-                    result = ((CycObject)oresult).cyclifyWithEscapeChars();
-                }
-                if (!String.IsNullOrEmpty(filter) && filter == "paraphrase")
-                {
-                    return this.Paraphrase(result);
-                }
-            }
-            catch (Exception e)
-            {
-                writeToLog("" + e);
-                Console.Out.Flush();
-                return null;
-            }
-            return result;
-        }
-
         internal Unifiable processNodeInside(XmlNode templateNode, SubQuery query, Request request, Result result, User user, AIMLTagHandler handler)
         {
             return processNode(templateNode, query, request, result, user, handler);
         }
-
-        internal bool IsaFilter(Unifiable term, Unifiable filter)
-        {
-            if (term.IsEmpty) return false;
-            if (term == "NIL") return false;
-            if (!filter.IsEmpty)
-            {
-                if (Unifiable.IsFalse(filter)) return true;
-                if (this.EvalSubL(String.Format("(ask-template 'T `(#$isa {0} {1}) #$EverythingPSC)", term, Cyclify(filter)), null) == "NIL")
-                    return false;
-            }
-            return true;
-        }
-
-        internal Unifiable Paraphrase(string text)
-        {
-            text = Cyclify(text);
-            if (text.StartsWith("("))
-            {   //todo is a list then?
-                text = String.Format("'{0}", text);
-            }
-            //return text;
-            try
-            {
-                string res = EvalSubL(String.Format("(generate-phrase {0})", text), null);
-                if (String.IsNullOrEmpty(res)) return text;
-                return res;
-            }
-            catch (System.Exception ex)
-            {
-                return text;
-            }
-        }
-
-        internal Unifiable Cyclify(string mt)
-        {
-            if (mt == "NIL") return "NIL";
-            mt = mt.Trim();
-            if (mt.Length < 3) return mt;
-            if (Char.IsLetter(mt.ToCharArray()[0])) return "#$" + mt;
-            if (Char.IsDigit(mt.ToCharArray()[0])) return mt;
-            if (mt.StartsWith("(") || mt.StartsWith("#$")) return mt;
-            return "#$" + mt;
-        }
-
-        #endregion
 
         internal Unifiable SystemExecute(Unifiable cmd, Unifiable langu, Request user)
         {
@@ -1968,7 +1733,6 @@ The AIMLbot program.
                     return Unifiable.Empty;
                 }
             }
-            if (langu == "subl") return EvalSubL(cmd, null);
             return s;
 
         }
@@ -2071,6 +1835,8 @@ The AIMLbot program.
 
 
         public Dictionary<string, GraphMaster> GraphsByName = new Dictionary<string, GraphMaster>();
+        public CycDatabase TheCyc;
+
         public GraphMaster GetGraph(string botname)
         {
             botname = botname ?? "default";
