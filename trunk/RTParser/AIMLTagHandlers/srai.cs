@@ -57,10 +57,12 @@ namespace RTParser.AIMLTagHandlers
                 {
                     if (!templateNodeInnerText.IsEmpty)
                     {
-                        Unifiable top = GetAttribValue("topic", request.Topic);
+                        Unifiable tempTopic = GetAttribValue("topic", request.Topic);
                         AIMLbot.Request subRequest = new AIMLbot.Request(templateNodeInnerText, this.user, this.Proc);
+                        String gn = GetAttribValue("bot", null);
+                        if (gn != null) subRequest.Graph = Proc.GetGraph(gn);
                         depth = subRequest.depth = request.depth + 1;
-                        subRequest.Topic = top;
+                        subRequest.Topic = tempTopic;
                         subRequest.ParentRequest = this.request;
                         subRequest.StartedOn = this.request.StartedOn;
                         // make sure we don't keep adding time to the request
