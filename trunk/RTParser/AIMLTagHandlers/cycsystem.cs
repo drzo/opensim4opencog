@@ -5,7 +5,7 @@ namespace RTParser.AIMLTagHandlers
     /// <summary>
     /// &lt;cycsystem&gt; executes a CycL statement and returns the result 
     /// </summary>
-    public class cycsystem : RTParser.Utils.AIMLTagHandler
+    public class cycsystem : RTParser.Database.CycTagHandler
     {
         /// <summary>
         /// Ctor
@@ -37,7 +37,7 @@ namespace RTParser.AIMLTagHandlers
                 Unifiable filter = base.GetAttribValue("filter", null);
                 if (!templateNodeInnerText.IsEmpty)
                 {
-                    Unifiable result = this.Proc.EvalSubL(Recurse(),filter);
+                    Unifiable result = this.TheCyc.EvalSubL(Recurse(),filter);
                     return result;
                 }
             }

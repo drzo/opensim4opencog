@@ -286,7 +286,7 @@ namespace RTParser.Utils
             Unifiable first = path.First();
 
             // get the first word of the sentence
-            Unifiable firstWord = Normalize.MakeCaseInsensitive.TransformInput(first);
+            Unifiable firstWord = first;//Normalize.MakeCaseInsensitive.TransformInput(first);
 
             // and concatenate the rest of the input into a new path for child nodes
             Unifiable newPath = UPath.MakePath(path.Rest()).LegacyPath;// Unifiable.Join(" ", splitPath0, 1, splitPath0.Length - 1);// path.Rest();// Substring(firstWord.Length, path.Length - firstWord.Length);

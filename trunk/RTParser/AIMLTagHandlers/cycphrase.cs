@@ -8,7 +8,7 @@ namespace RTParser.AIMLTagHandlers
     /// <summary>
     /// &lt;cycphrase&gt; translates a Cyc symbol into an English word/phrase
     /// </summary>
-    public class cycphrase : RTParser.Utils.AIMLTagHandler
+    public class cycphrase : RTParser.Database.CycTagHandler
     {
         /// <summary>                    s
         /// Ctor
@@ -36,7 +36,7 @@ namespace RTParser.AIMLTagHandlers
             {
                 if (!templateNodeInnerText.IsEmpty)
                 {
-                    return this.Proc.Paraphrase(Recurse());
+                    return this.TheCyc.Paraphrase(Recurse());
                 }
             }
             return Unifiable.Empty;

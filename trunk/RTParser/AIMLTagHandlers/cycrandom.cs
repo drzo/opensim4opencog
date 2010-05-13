@@ -10,7 +10,7 @@ namespace RTParser.AIMLTagHandlers
     /// elements cyc randomly. The cycrandom element must contain one or more li elements of type 
     /// defaultListItem, and cannot contain any other elements.
     /// </summary>
-    public class cycrandom : RTParser.Utils.AIMLTagHandler
+    public class cycrandom : RTParser.Database.CycTagHandler
     {
         /// <summary>
         /// Ctor
@@ -44,7 +44,7 @@ namespace RTParser.AIMLTagHandlers
                 if (!templateNodeInnerText.IsEmpty)
                 {
                     return
-                        this.Proc.EvalSubL(
+                        this.TheCyc.EvalSubL(
                             String.Format(
                                 "(clet ((list {0})) (nth (random (length list)) list))",
                                 base.Recurse()), filter);

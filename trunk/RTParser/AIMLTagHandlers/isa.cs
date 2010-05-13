@@ -33,7 +33,7 @@ namespace RTParser.AIMLTagHandlers
         {
             if (templateNode.NodeType==XmlNodeType.Text)
             {
-                return Proc.IsaFilter(with, templateNode.InnerText) ? ISA_TRUE : ISA_FALSE;
+                return Proc.TheCyc.IsaFilter(with, templateNode.InnerText) ? ISA_TRUE : ISA_FALSE;
             }
             if (templateNode.HasChildNodes)
             {
@@ -44,9 +44,9 @@ namespace RTParser.AIMLTagHandlers
                     {
                         if (childNode.NodeType == XmlNodeType.Text)
                         {
-                            return Proc.IsaFilter(with, childNode.InnerText) ? ISA_TRUE : ISA_FALSE;
+                            return Proc.TheCyc.IsaFilter(with, childNode.InnerText) ? ISA_TRUE : ISA_FALSE;
                         }
-                        if (!Proc.IsaFilter(with, childNode.InnerText)) return ISA_FALSE;
+                        if (!Proc.TheCyc.IsaFilter(with, childNode.InnerText)) return ISA_FALSE;
                     }
                     catch (Exception e)
                     {

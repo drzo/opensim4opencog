@@ -8,7 +8,7 @@ namespace RTParser.AIMLTagHandlers
     /// <summary>
     /// &lt;cycassert&gt; simple way to assert a CycL statement
     /// </summary>
-    public class cycassert : RTParser.Utils.AIMLTagHandler
+    public class cycassert : RTParser.Database.CycTagHandler
     {
         /// <summary>
         /// Ctor
@@ -36,8 +36,8 @@ namespace RTParser.AIMLTagHandlers
                 if (!templateNodeInnerText.IsEmpty)
                 {
                     String sent = Recurse();
-                    string mt = Proc.Cyclify(GetAttribValue("mt",Proc.GetUserMt(user)));
-                    return this.Proc.EvalSubL(String.Format("(eval (subseq `(cyc-assert '{0} {1} ) 0 3) )", sent,mt), null);
+                    string mt = TheCyc.Cyclify(GetAttribValue("mt", Proc.GetUserMt(user)));
+                    return this.TheCyc.EvalSubL(String.Format("(eval (subseq `(cyc-assert '{0} {1} ) 0 3) )", sent, mt), null);
                 }
             }
             return Unifiable.Empty;
