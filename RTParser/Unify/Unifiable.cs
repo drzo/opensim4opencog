@@ -97,9 +97,9 @@ namespace RTParser
         }
 
 
-        public static Unifiable Join(string p, Unifiable[] fsp, int p_3, int p_4)
+        public static Unifiable Join(string sep, Unifiable[] values, int startIndex, int count)
         {
-            return string.Join(p, FromArrayOf(fsp), p_3, p_4);
+            return string.Join(sep, FromArrayOf(values), startIndex, count);
         }
 
         public static Unifiable[] arrayOf(string[] strs)
@@ -186,7 +186,10 @@ namespace RTParser
         public static Unifiable Create(object p)
         {
             if (p is Unifiable) return (Unifiable) p;
-            if (p is string) return new StringUnifiable((string) p);
+            if (p is string)
+            {
+                return new StringUnifiable((string) p);
+            }
             // TODO
             if (p is XmlNode) return new StringUnifiable(InnerXmlText((XmlNode) p));
             return new StringUnifiable(p.ToString());
@@ -305,6 +308,11 @@ namespace RTParser
 
     internal class StringAppendableUnifiable : StringUnifiable
     {
+        public override Unifiable Frozen()
+        {
+            return "" + ToValue();
+        }
+
         public StringAppendableUnifiable()
         {
             IsAppendable = true;
