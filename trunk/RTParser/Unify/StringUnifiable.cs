@@ -146,11 +146,17 @@ namespace RTParser
                 doc.LoadXml("<node>" + strTrim + "</node>");
                 foreach (XmlNode node in doc.FirstChild.ChildNodes)
                 {
+                    if (node.NodeType == XmlNodeType.Comment) continue;
                     if (node.NodeType == XmlNodeType.Whitespace) continue;
                     if (node.NodeType == XmlNodeType.Text)
                     {
-                        string splitMe = node.OuterXml.Trim();
+                        string splitMe = node.Value.Trim();
                         u.AddRange(Splitter(splitMe));
+                    }
+                    else if (node.NodeType == XmlNodeType.Element)
+                    {
+                        string splitMe = node.OuterXml.Trim();
+                        u.Add(splitMe);
                     }
                     else
                     {
