@@ -375,6 +375,7 @@ namespace RTParser
             BotAsRequest = new Request("-bank-input-", BotAsUser, this);
             AddExcuteHandler("aiml", EvalAIMLHandler);
             this.TheCyc = new CycDatabase(this);
+            var v = TheCyc.GetCycAccess;
         }
 
         #region Settings methods
@@ -924,7 +925,7 @@ namespace RTParser
                         sentence = sentence.Substring(0, sentence.Length - 1).Trim();
                     }
                     int topicNum = 0;
-                    if (true)
+                    if (false)
                     {
                         Unifiable path = loader.generatePath(sentence, //thatNum + " " +
                                      request.user.getLastBotOutput(), request.Flags,
@@ -1084,11 +1085,11 @@ namespace RTParser
                 int NormalizedPathsCount = result.NormalizedPaths.Count;
                 if (NormalizedPathsCount != 1)
                 {
-                    writeToLog("NormalizedPaths.Count = " + NormalizedPathsCount);
                     foreach (Unifiable path in result.NormalizedPaths)
                     {
                         writeToLog("  i: " + path.LegacyPath);
                     }
+                    writeToLog("NormalizedPaths.Count = " + NormalizedPathsCount);
                 }
 
                 // grab the templates for the various sentences from the graphmaster
@@ -1836,6 +1837,11 @@ The AIMLbot program.
 
         public Dictionary<string, GraphMaster> GraphsByName = new Dictionary<string, GraphMaster>();
         public CycDatabase TheCyc;
+        public bool CycEnabled
+        {
+            get { return TheCyc.CycEnabled; }
+            set { TheCyc.CycEnabled = value; }
+        }
 
         public GraphMaster GetGraph(string botname)
         {
@@ -1878,8 +1884,21 @@ The AIMLbot program.
 
         public string GetUserMt(User user)
         {
-           //GetAttribValue("mt","");
+            var ret = user.Predicates.grabSettingNoDebug("mt");
+            if (!Unifiable.IsNullOrEmpty(ret))
+            {
+                string v = ret.ToValue();
+                if (v != null && v.Length > 1) return TheCyc.Cyclify(v);
+            }
+            //GetAttribValue("mt","");
             return "#$BaseKB";
+        }
+
+        public void WriteConfig()
+        {
+            TheCyc.WriteConfig();
+            GraphMaster.WriteConfig();
+            Console.WriteLine("Bot loaded");
         }
     }
 }

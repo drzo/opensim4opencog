@@ -22,7 +22,7 @@ namespace RTParser.AIMLTagHandlers
     /// 
     /// The template-side guard element does not have any content. 
     /// </summary>
-    public class guard : RTParser.Utils.AIMLTagHandler
+    public class guard : RTParser.Database.CycTagHandler
     {
         /// <summary>
         /// Ctor
@@ -51,7 +51,7 @@ namespace RTParser.AIMLTagHandlers
                 templateNodeInnerText = Recurse();
                 if (!templateNodeInnerText.IsEmpty)
                 {
-                    Unifiable res = Proc.TheCyc.EvalSubL(templateNodeInnerText, null);
+                    Unifiable res = this.TheCyc.EvalSubL(templateNodeInnerText, null);
                     return res;
                 }
             }

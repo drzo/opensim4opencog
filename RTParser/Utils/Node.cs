@@ -65,7 +65,7 @@ namespace RTParser.Utils
         /// <param name="path">the path for the category</param>
         /// <param name="template">the template to find at the end of the path</param>
         /// <param name="filename">the file that was the source of this category</param>
-        public void addCategoryTag(Unifiable path, PatternInfo patternInfo, CategoryInfo category, XmlNode outTemplate, XmlNode templateNode, GuardInfo guard, GraphMaster master)
+        public void addCategoryTag(Unifiable path, PatternInfo patternInfo, CategoryInfo category, XmlNode outTemplate, XmlNode templateNode, GuardInfo guard, ThatInfo thatInfo, GraphMaster master)
         {
             if (outTemplate == null)
             {
@@ -73,7 +73,7 @@ namespace RTParser.Utils
                                        " has an empty template tag. ABORTING");
             }
             //String ts = outTemplate.OuterXml;
-            addCategoryTagChild(path, patternInfo, category, outTemplate, templateNode, guard, master);
+            addCategoryTagChild(path, patternInfo, category, outTemplate, templateNode, guard, thatInfo, master);
         }
 
         /// <summary>
@@ -82,7 +82,7 @@ namespace RTParser.Utils
         /// <param name="path">the path for the category</param>
         /// <param name="outTemplate">the outTemplate to find at the end of the path</param>
         /// <param name="filename">the file that was the source of this category</param>
-        public void addCategoryTagChild(Unifiable path, PatternInfo pi, CategoryInfo category, XmlNode outerNode, XmlNode outTemplate, GuardInfo guard, GraphMaster master)
+        public void addCategoryTagChild(Unifiable path, PatternInfo pi, CategoryInfo category, XmlNode outerNode, XmlNode outTemplate, GuardInfo guard, ThatInfo thatInfo, GraphMaster master)
         {
             
             // check we're not at the leaf node
@@ -127,7 +127,9 @@ namespace RTParser.Utils
                     }
 
                 // last in first out addition
-                TemplateInfo newTemplateInfo = TemplateInfo.GetTemplateInfo(outTemplate, guard, this, category);
+                TemplateInfo newTemplateInfo = TemplateInfo.GetTemplateInfo(outTemplate, guard, thatInfo, this, category);
+                newTemplateInfo.That = thatInfo;
+                this.That = thatInfo;
                 PatternInfo pat = pi;
                 if (category!=null)
                 {
@@ -190,7 +192,7 @@ namespace RTParser.Utils
                 if (c.Key.AsString() == firstWord.AsString())
                 {
                     Node childNode = c.Value;
-                    childNode.addCategoryTagChild(newPath, pi, category, outerNode, outTemplate, guard, master);
+                    childNode.addCategoryTagChild(newPath, pi, category, outerNode, outTemplate, guard, thatInfo, master);
                     found = true;
                     break;
                 }
@@ -199,7 +201,7 @@ namespace RTParser.Utils
             {
                 Node childNode = new Node(this);
                 childNode.word = firstWord;
-                childNode.addCategoryTagChild(newPath, pi, category, outerNode, outTemplate, guard, master);
+                childNode.addCategoryTagChild(newPath, pi, category, outerNode, outTemplate, guard, thatInfo, master);
                 this.children.Add(childNode.word, childNode);
             }
         }
@@ -207,6 +209,8 @@ namespace RTParser.Utils
         #endregion
 
         public static bool AlwaysFail = true;
+        public ThatInfo That;
+
         #region Evaluate Node
 
 
@@ -450,6 +454,17 @@ namespace RTParser.Utils
                     }
                 }
                 return true;
+            }
+            switch (matchstate)
+            {
+                case MatchState.UserInput:
+                    break;
+                case MatchState.That:
+                    break;
+                case MatchState.Topic:
+                    break;
+                case MatchState.Flag:
+                    break;
             }
             return false;
         }

@@ -7,17 +7,19 @@ namespace RTParser.Utils
     public class TemplateInfo : OutputInfo
     {
         public GuardInfo Guard;
+        public ThatInfo That;
         public CategoryInfo CategoryInfo;
         public Node GraphmasterNode;
         public double Rating = 1.0;
 
-        public TemplateInfo(XmlNode template, GuardInfo guard, Node patternNode, CategoryInfo categoryInfo):base(template)
+        public TemplateInfo(XmlNode template, GuardInfo guard, ThatInfo that, Node patternNode, CategoryInfo categoryInfo):base(template)
         {
             if (template.Name != "template")
             {
                 throw new UnauthorizedAccessException();
             }
             Guard = guard;
+            That = that;
             GraphmasterNode = patternNode;
             CategoryInfo = categoryInfo;
         }
@@ -31,13 +33,13 @@ namespace RTParser.Utils
             return s;
         }
 
-        public static TemplateInfo GetTemplateInfo(XmlNode template, GuardInfo guard, Node node, CategoryInfo category)
+        public static TemplateInfo GetTemplateInfo(XmlNode template, GuardInfo guard, ThatInfo thatInfo, Node node, CategoryInfo category)
         {
             bool prev = NoInfo;
             try
             {
                 NoInfo = false;
-                return new TemplateInfo(template, guard, node, category);
+                return new TemplateInfo(template, guard, thatInfo, node, category);
             }
             finally 
             {
