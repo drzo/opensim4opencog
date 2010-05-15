@@ -182,7 +182,8 @@ namespace RTParser
         {
             if (this.Results.Count > 0)
             {
-                return ((Result)Results[0]).RawOutput;
+                var v =  ((Result)Results[0]).RawOutput;
+                return v;
             }
             else
             {

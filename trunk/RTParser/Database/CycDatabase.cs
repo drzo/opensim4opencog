@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Xml;
 using org.opencyc.api;
@@ -9,7 +10,7 @@ using RTParser.Utils;
 
 namespace RTParser.Database
 {
-    public class CycTagHandler:AIMLTagHandler
+    abstract public class CycTagHandler:AIMLTagHandler
     {
         protected CycTagHandler(RTParser.RTPBot bot,
                         RTParser.User user,
@@ -25,16 +26,14 @@ namespace RTParser.Database
         {
             get { return Proc.TheCyc; }
         }
+
         #region Overrides of TextTransformer
 
         /// <summary>
         /// The method that does the actual processing of the text.
         /// </summary>
         /// <returns>The resulting processed text</returns>
-        protected override Unifiable ProcessChange()
-        {
-            throw new NotImplementedException();
-        }
+        protected abstract override Unifiable ProcessChange();
 
         #endregion
     }
@@ -43,7 +42,7 @@ namespace RTParser.Database
         private RTPBot TheBot;
         public CycDatabase(RTPBot bot)
         {
-            
+            TheBot = bot;   
         }
         #region CYC Interaction
 
@@ -63,7 +62,7 @@ namespace RTParser.Database
             }
         }
 
-        private bool UseCyc = false;
+        private bool UseCyc = true;
         public CycAccess GetCycAccess
         {
             get
@@ -268,6 +267,29 @@ namespace RTParser.Database
         {
             TheBot.AddExcuteHandler("cycl", ExecCycQuery);
             TheBot.AddExcuteHandler("subl", EvalSubLHandler);
+
+            int id = 1;
+            FileStream f = File.Open("nodes.txt",FileMode.Create);
+            TextWriter tw = new StreamWriter(f);
+            foreach (var item in cycAccess.converseList("(ask-template '?R '(#$and (#$genls ?R #$Communicating)(#$not (#$isa ?R #$NonVerbalCommunicating))) #$EverythingPSC)"))
+            {
+                string text = item.ToString();
+                string s =
+                    "<Shape ID='" + id++ +
+                    "' NameU='Decision' Type='Shape' Master='0'><XForm><PinX>0.984251968503937</PinX><PinY>11.02362204724409</PinY><Width Unit='MM' F='Inh'>0.984251968503937</Width><Height Unit='MM' F='Inh'>0.5905511811023623</Height><LocPinX Unit='MM' F='Inh'>0.4921259842519685</LocPinX><LocPinY Unit='MM' F='Inh'>0.2952755905511811</LocPinY><Angle F='Inh'>0</Angle><FlipX F='Inh'>0</FlipX><FlipY F='Inh'>0</FlipY><ResizeMode F='Inh'>0</ResizeMode></XForm><Event><TheData F='No Formula'>0</TheData><TheText F='No Formula'>0</TheText><EventDblClick F='Inh'>0</EventDblClick><EventXFMod F='No Formula'>0</EventXFMod><EventDrop F='No Formula'>0</EventDrop></Event><vx:Event xmlns:vx='http://schemas.microsoft.com/visio/2006/extension'><vx:EventMultiDrop F='No Formula'>0</vx:EventMultiDrop></vx:Event><LayerMem><LayerMember>0</LayerMember></LayerMem><Text>" +
+                    text + "</Text></Shape>";
+                tw.WriteLine(s);
+              
+            }
+            tw.Close();
+            try
+            {
+                f.Close();
+            }
+            catch (Exception)
+            {                
+            }
+            Console.WriteLine("!NonVerbalCommunicating = " + id);
             //cycAccess.setCyclist("CycAdministrator");
         }
 
@@ -388,5 +410,10 @@ namespace RTParser.Database
 
         #endregion
 
+
+        public void WriteConfig()
+        {
+            Console.WriteLine("Cyc loaded");
+        }
     }
 }

@@ -410,7 +410,8 @@ namespace RTParser.Utils
             }
             Unifiable categoryPath = generateCPath(patternText, that, cond ,topicName, false);
             PatternInfo patternInfo = PatternInfo.GetPattern(filename, patternNode, categoryPath);
-            TopicInfo topicInfo = TopicInfo.FindTopic(filename,topicName);
+            TopicInfo topicInfo = TopicInfo.FindTopic(filename, topicName);
+            ThatInfo thatInfo = ThatInfo.GetPattern(filename, that);
 
             // o.k., add the processed AIML to the GraphMaster structure
             if (!categoryPath.IsEmpty)
@@ -419,8 +420,8 @@ namespace RTParser.Utils
                 {
                     CategoryInfo categoryInfo = CategoryInfo.GetCategoryInfo(patternInfo, cateNode, filename);
                     filename.Graph.addCategoryTag(categoryPath, patternInfo,
-                                                               categoryInfo,
-                                                               outerNode,templateNode, guard);
+                                                  categoryInfo,
+                                                  outerNode, templateNode, guard, thatInfo);
                 }
                 catch (Exception e)
                 {
@@ -479,7 +480,7 @@ namespace RTParser.Utils
                 {
                     throw new NotImplementedException("generatePathExtractWhat: " + patternString);                    
                 }
-                patternString = patternString.Replace(thatString, "").Replace("  ", " ").Trim();
+                patternString = MatchKeyClean(patternString.Replace(thatString, ""));
                 var newLineInfoPattern = AIMLTagHandler.getNode("<pattern>" + patternString + "</pattern>", patternNode);
                 newLineInfoPattern.SetParentFromNode((LineInfoElement)patternNode);
                 patternNode = newLineInfoPattern;
@@ -595,8 +596,9 @@ namespace RTParser.Utils
                     normalizedPattern = normalizedPattern.Substring(0, normalizedPattern.Length - 1).Trim();
                 }
 
-                normalizedThat = that.Trim();
-                normalizedTopic = topicName.Trim();
+                normalizedPattern = MatchKeyClean(normalizedPattern);
+                normalizedThat = MatchKeyClean(that);
+                normalizedTopic = MatchKeyClean(topicName);
             }
             else
             {
@@ -639,6 +641,21 @@ namespace RTParser.Utils
             {
                 return Unifiable.Empty;
             }
+        }
+        public static string MatchKeyClean(Unifiable unifiable)
+        {
+            return MatchKeyClean(unifiable.AsString());
+        }
+
+        public static string MatchKeyClean(string s)
+        {
+            s = CleanWhitepaces(s).Trim();
+            s = s.Replace("  ", " ");
+            if (s == "")
+            {
+                return "*";
+            }
+            return s;
         }
 
         /// <summary>
@@ -705,7 +722,7 @@ namespace RTParser.Utils
             return true;
         }
 
-        private static string CleanWhitepaces(string xml2)
+        public static string CleanWhitepaces(string xml2)
         {
             String s = "";
             foreach (var c0 in xml2.ToLower().ToCharArray())

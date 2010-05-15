@@ -44,6 +44,8 @@ namespace RTParser.Utils
 
         public List<Unifiable> GuardStar = new List<Unifiable>();
 
+        public List<Unifiable> Flags = new List<Unifiable>();
+
         #endregion
 
         public override string ToString()

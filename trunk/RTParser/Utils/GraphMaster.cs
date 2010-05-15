@@ -51,7 +51,7 @@ namespace RTParser.Utils
 
         public PatternInfo FindPattern(XmlNode pattern, Unifiable unifiable)
         {
-            string pats = unifiable.AsString();
+            string pats = MakeMatchKey(unifiable);
             int skip = pats.IndexOf("TAG-THAT");
             if (skip > 0) pats = pats.Substring(0, skip - 1);
             PatternInfo pi;
@@ -72,13 +72,13 @@ namespace RTParser.Utils
 
         public ThatInfo FindThat(Unifiable topicName)
         {
-            string pats = topicName.AsString();
+            string pats = MakeMatchKey(topicName);
             ThatInfo pi;
             lock (Thats)
             {
                 if (!Thats.TryGetValue(pats, out pi))
                 {
-                    Thats[pats] = pi = new ThatInfo(Utils.AIMLTagHandler.getNode("<pattern>" + topicName + "</pattern>"), topicName);
+                    Thats[pats] = pi = new ThatInfo(Utils.AIMLTagHandler.getNode("<that>" + topicName + "</that>"), topicName);
                 }
                 else
                 {
@@ -89,9 +89,19 @@ namespace RTParser.Utils
             return pi;
         }
 
+        private string MakeMatchKey(Unifiable pattern)
+        {
+            var v = AIMLLoader.MatchKeyClean(pattern.AsString()).ToUpper();
+            if (v.Length < 1)
+            {
+                return "*";
+            }
+            return v;
+        }
+
         private void CheckMismatch(MatchInfo info, string pats)
         {
-            if (info.FullPath.AsNodeXML().ToString() != pats)
+            if (info.FullPath.AsNodeXML().ToString().ToUpper() != pats.ToUpper())
             {
                 string s = "CheckMismatch " + info.FullPath.AsNodeXML().ToString() + "!=" + pats;
                 Console.WriteLine(s);
@@ -102,7 +112,7 @@ namespace RTParser.Utils
 
         public TopicInfo FindTopic(Unifiable topicName)
         {
-            string pats = topicName.AsString();
+            string pats = MakeMatchKey(topicName);
             TopicInfo pi;
             lock (Topics)
             {
@@ -161,9 +171,9 @@ namespace RTParser.Utils
 
         }
 
-        public void addCategoryTag(Unifiable generatedPath, PatternInfo patternInfo, CategoryInfo category, XmlNode outerNode, XmlNode templateNode, GuardInfo guard)
+        public void addCategoryTag(Unifiable generatedPath, PatternInfo patternInfo, CategoryInfo category, XmlNode outerNode, XmlNode templateNode, GuardInfo guard, ThatInfo thatInfo)
         {
-            RootNode.addCategoryTag(generatedPath, patternInfo, category, outerNode, templateNode, guard, this);
+            RootNode.addCategoryTag(generatedPath, patternInfo, category, outerNode, templateNode, guard, thatInfo, this);
             // keep count of the number of categories that have been processed
             this.Size++;
         }
@@ -202,6 +212,21 @@ namespace RTParser.Utils
         {
             //System.Console.WriteLine("removing " + templateInfo.CategoryInfo.ToString());
             Templates.Remove(templateInfo);
+        }
+
+        internal void WriteConfig()
+        {
+            lock (Topics)
+            {
+                foreach (KeyValuePair<string, TopicInfo> info in Topics)
+                {
+                    Console.WriteLine("topic = " + info.Key);
+                }
+                foreach (KeyValuePair<string, ThatInfo> info in Thats)
+                {
+                    Console.WriteLine("that = " + info.Key);
+                }
+            }
         }
     }
 }
