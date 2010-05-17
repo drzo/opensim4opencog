@@ -173,7 +173,8 @@ namespace RTParser.Utils
 
         public void addCategoryTag(Unifiable generatedPath, PatternInfo patternInfo, CategoryInfo category, XmlNode outerNode, XmlNode templateNode, GuardInfo guard, ThatInfo thatInfo)
         {
-            RootNode.addCategoryTag(generatedPath, patternInfo, category, outerNode, templateNode, guard, thatInfo, this);
+            Node.addCategoryTag(RootNode, generatedPath, patternInfo, category, outerNode, templateNode, guard, thatInfo,
+                                this);
             // keep count of the number of categories that have been processed
             this.Size++;
         }
