@@ -583,7 +583,8 @@ namespace RTParser.Utils
             if (patString.Contains(" exec ") || patString.Contains(" aiml ")
                 || patString.Contains(" lisp ") || patString.Contains(" tag ")
                 || patString.Contains("<") || patString.Contains(">")
-                || patString.Contains("\"") || patString.Contains("="))
+                || patString.Contains("\"") || patString.Contains("=") || patString.Contains("#$")
+                || patString.Contains("~"))
             {
                 UseRawUserInput = true;
             }
@@ -628,8 +629,11 @@ namespace RTParser.Utils
 
                 // o.k. build the path
                 normalizedPath.Append(Unifiable.Create(normalizedPattern));
-                normalizedPath.Append(Unifiable.ThatTag);
-                normalizedPath.Append(normalizedThat);
+                if (RProcessor.UseInlineThat)
+                {
+                    normalizedPath.Append(Unifiable.ThatTag);
+                    normalizedPath.Append(normalizedThat);
+                }
                 normalizedPath.Append(Unifiable.FlagTag);
                 normalizedPath.Append(flag);
                 normalizedPath.Append(Unifiable.TopicTag);
@@ -667,7 +671,8 @@ namespace RTParser.Utils
         /// <returns>The normalized Unifiable</returns>
         public Unifiable Normalize(string input, bool isUserInput)
         {
-            input = input.Trim();
+
+            input = CleanWhitepaces(input);
             while (input.EndsWith("?") || input.EndsWith(".")||input.EndsWith("!"))
             {
                 input = input.Substring(0, input.Length - 1).Trim();
@@ -718,8 +723,13 @@ namespace RTParser.Utils
             if (xml1 == xml2) return true;
             xml1 = CleanWhitepaces(xml1);
             xml2 = CleanWhitepaces(xml2);
-            if (xml1 != xml2) return false;
-            return true;
+            if (xml1.Length != xml2.Length) return false;
+            if (xml1 == xml2) return true;
+            if (xml1.ToUpper() == xml2.ToUpper())
+            {
+                return true;
+            }
+            return false;
         }
 
         public static string CleanWhitepaces(string xml2)

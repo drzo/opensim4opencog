@@ -124,7 +124,12 @@ namespace RTParser
         {
             get
             {
-                return Convert.ToDouble(this.GlobalSettings.grabSettingNoDebug("timeout").ToValue());
+                if (!this.GlobalSettings.containsSettingCalled("timeout"))
+                {
+                    return 60000;
+                }
+                String s = this.GlobalSettings.grabSettingNoDebug("timeout").ToValue();
+                return Convert.ToDouble(s);
             }
         }
 
@@ -1837,6 +1842,8 @@ The AIMLbot program.
 
         public Dictionary<string, GraphMaster> GraphsByName = new Dictionary<string, GraphMaster>();
         public CycDatabase TheCyc;
+        public bool UseInlineThat = true;
+
         public bool CycEnabled
         {
             get { return TheCyc.CycEnabled; }
