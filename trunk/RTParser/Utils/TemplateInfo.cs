@@ -11,6 +11,7 @@ namespace RTParser.Utils
         public CategoryInfo CategoryInfo;
         public Node GraphmasterNode;
         public double Rating = 1.0;
+        public SubQuery Query;
 
         public TemplateInfo(XmlNode template, GuardInfo guard, ThatInfo that, Node patternNode, CategoryInfo categoryInfo):base(template)
         {
