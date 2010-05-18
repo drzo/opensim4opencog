@@ -487,7 +487,8 @@ namespace RTParser
                 this.CustomTags = new Dictionary<string, TagHandler>();
                 //this.GraphMaster = new GraphMaster();
                 //this.HeardSelfSayGraph = new GraphMaster();
-                loadCustomTagHandlers("AIMLbot.dll");
+                if (File.Exists("AIMLbot.dll")) loadCustomTagHandlers("AIMLbot.dll");
+                if (File.Exists("AIMLbot.exe")) loadCustomTagHandlers("AIMLbot.exe");
 
                 string names_str = "markovx.trn 5ngram.ngm";
                 string[] nameset = names_str.Split(' ');
@@ -1011,7 +1012,7 @@ namespace RTParser
                 {
                     Utils.SubQuery query = new SubQuery(path, result, request);
                     //query.Templates = 
-                        request.Graph.evaluate(path, query, request, MatchState.UserInput, Unifiable.CreateAppendable());
+                    request.Graph.evaluate(path, query, request, MatchState.UserInput, Unifiable.CreateAppendable());
                     result.SubQueries.Add(query);
                 }
 
@@ -1074,7 +1075,8 @@ namespace RTParser
                 {
                     result = ImmediateAiml(AIMLTagHandler.getNode(request.rawInput), request, Loader, null);
                     request.rawInput = result.Output;
-                } catch(Exception e)
+                }
+                catch (Exception e)
                 {
                     writeToLog("ImmediateAiml: " + e);
                 }
@@ -1103,7 +1105,7 @@ namespace RTParser
                 {
                     Utils.SubQuery query = new SubQuery(path, result, request);
                     //query.Templates = 
-                        request.Graph.evaluate(path, query, request, MatchState.UserInput, Unifiable.CreateAppendable());
+                    request.Graph.evaluate(path, query, request, MatchState.UserInput, Unifiable.CreateAppendable());
                     result.SubQueries.Add(query);
                 }
 
@@ -1802,7 +1804,7 @@ The AIMLbot program.
                 {
                     Utils.SubQuery query = new SubQuery(path, result, request);
                     //query.Templates = 
-                        request.Graph.evaluate(path, query, request, MatchState.UserInput, Unifiable.CreateAppendable());
+                    request.Graph.evaluate(path, query, request, MatchState.UserInput, Unifiable.CreateAppendable());
                     result.SubQueries.Add(query);
                 }
 
@@ -1871,17 +1873,23 @@ The AIMLbot program.
         {
             Bot myBot = new Bot();
             myBot.loadSettings();
+            string myName = "Nephrael Rae";
+            if (args != null && args.Length > 0)
+            {
+                myName = String.Join(" ", args);
+            }
             User myUser = new User("consoleUser", myBot);
             myBot.isAcceptingUserInput = false;
             myBot.loadAIMLFromFiles();
+            myBot.LoadPersonalDirectories(myName);
             myBot.isAcceptingUserInput = true;
             while (true)
             {
                 Console.Write("You: ");
                 string input = Console.ReadLine();
-                if (input.ToLower() == "quit")
+                if (input==null || input.ToLower() == "quit")
                 {
-                    break;
+                   Environment.Exit(0);
                 }
                 else
                 {
@@ -1909,6 +1917,59 @@ The AIMLbot program.
             TheCyc.WriteConfig();
             GraphMaster.WriteConfig();
             Console.WriteLine("Bot loaded");
+        }
+        public bool LoadPersonalDirectory(string myName)
+        {
+            bool loaded = false;
+            string file = Path.Combine("config", myName);
+            if (Directory.Exists(file))
+            {
+                writeToLog("LoadPersonalDirectories: '{0}'", file);
+                loaded = true;
+                loadSettings(Path.Combine(file, "Settings.xml"));
+            }
+            file = Path.Combine("aiml", myName);
+            if (Directory.Exists(file))
+            {
+                writeToLog("LoadPersonalDirectories: '{0}'", file);
+                loaded = true;
+                isAcceptingUserInput = false;
+                loadAIMLFromURI(file, BotAsRequest);
+                isAcceptingUserInput = true;
+            }
+
+            file = Path.Combine(myName, "config");
+            if (Directory.Exists(file))
+            {
+                writeToLog("LoadPersonalDirectories: '{0}'", file);
+                loaded = true;
+                loadSettings(Path.Combine(file, "Settings.xml"));
+            }
+
+            file = Path.Combine(myName, "aiml");
+            if (Directory.Exists(file))
+            {
+                writeToLog("LoadPersonalDirectories: '{0}'", file);
+                loaded = true;
+                isAcceptingUserInput = false;
+                loadAIMLFromURI(file, BotAsRequest);
+                isAcceptingUserInput = true;
+            }
+            return loaded;
+        }
+
+        public void LoadPersonalDirectories(string myName)
+        {
+            bool loaded = LoadPersonalDirectory(myName);
+            if (!loaded)
+            {
+                myName = myName.Replace(" ", "_").ToLower();
+                loaded = LoadPersonalDirectory(myName);
+            }
+            if (!loaded)
+            {
+                writeToLog("Didnt find personal directories with stem: '{0}'", myName);
+            }
         }
     }
 }
