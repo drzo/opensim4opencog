@@ -11,6 +11,7 @@ namespace RTParser.Utils
     /// A container class for holding wildcard matches encountered during an individual path's 
     /// interrogation of the graphmaster.
     /// </summary>
+    [Serializable]
     public class SubQuery: ISettingsDictionary
     {
         #region Attributes
@@ -137,12 +138,23 @@ namespace RTParser.Utils
         {
             return Request.addSetting(name, value);
         }
+
+        internal SubQuery CopyOf()
+        {
+            SubQuery sq = new SubQuery(FullPath,Result,Request);
+            sq.InputStar.AddRange(InputStar);
+            sq.ThatStar.AddRange(ThatStar);
+            sq.GuardStar.AddRange(GuardStar);
+            sq.Flags.AddRange(Flags);
+            sq.TopicStar.AddRange(TopicStar);
+            return sq;
+        }
     }
 
     public class UList : IEnumerable<TemplateInfo>
     {
-        private List<TemplateInfo> root = new List<TemplateInfo>();
-        public decimal Count
+        public List<TemplateInfo> root = new List<TemplateInfo>();
+        public int Count
         {
             get { lock (root) return root.Count; }
         }
@@ -188,6 +200,17 @@ namespace RTParser.Utils
                 next.AddRange(root);
             }
             return next.GetEnumerator();
+        }
+
+        public void AddRange(UList infos)
+        {
+            lock (root)
+            {
+                lock (infos.root)
+                {
+                    root.AddRange(infos.root);                    
+                }
+            }
         }
     }
 }

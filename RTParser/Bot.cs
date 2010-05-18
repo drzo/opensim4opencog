@@ -916,7 +916,7 @@ namespace RTParser
 
         private void LoadInputPaths(Request request, AIMLLoader loader, Unifiable[] rawSentences, AIMLbot.Result result)
         {
-            int maxInputs = 2;
+            int maxInputs = 1;
             int numInputs = 0;
             string lastInput = "";
             {
@@ -1010,7 +1010,8 @@ namespace RTParser
                 foreach (Unifiable path in result.NormalizedPaths)
                 {
                     Utils.SubQuery query = new SubQuery(path, result, request);
-                    query.Templates = request.Graph.evaluate(path, query, request, MatchState.UserInput, Unifiable.CreateAppendable());
+                    //query.Templates = 
+                        request.Graph.evaluate(path, query, request, MatchState.UserInput, Unifiable.CreateAppendable());
                     result.SubQueries.Add(query);
                 }
 
@@ -1101,7 +1102,8 @@ namespace RTParser
                 foreach (Unifiable path in result.NormalizedPaths)
                 {
                     Utils.SubQuery query = new SubQuery(path, result, request);
-                    query.Templates = request.Graph.evaluate(path, query, request, MatchState.UserInput, Unifiable.CreateAppendable());
+                    //query.Templates = 
+                        request.Graph.evaluate(path, query, request, MatchState.UserInput, Unifiable.CreateAppendable());
                     result.SubQueries.Add(query);
                 }
 
@@ -1799,7 +1801,8 @@ The AIMLbot program.
                 foreach (Unifiable path in result.NormalizedPaths)
                 {
                     Utils.SubQuery query = new SubQuery(path, result, request);
-                    query.Templates = request.Graph.evaluate(path, query, request, MatchState.UserInput, Unifiable.CreateAppendable());
+                    //query.Templates = 
+                        request.Graph.evaluate(path, query, request, MatchState.UserInput, Unifiable.CreateAppendable());
                     result.SubQueries.Add(query);
                 }
 

@@ -181,21 +181,22 @@ namespace RTParser.Utils
 
         public UList evaluate(UPath unifiable, SubQuery query, Request request, MatchState state, Unifiable appendable)
         {
-            var templs = RootNode.evaluate(unifiable, query, request, state, appendable);
-            if (templs == null || templs.Count == 0)
+            QueryList ql = new QueryList();
+            var templs = RootNode.evaluate(unifiable, query, request, state, appendable, ql);
+            if (!templs)
             {
                 Console.WriteLine("no templates for " + this);
                 foreach (GraphMaster graphMaster in Parents)
                 {
-                    templs = graphMaster.evaluate(unifiable, query, request, state, appendable);
-                    if (templs!=null && templs.Count>0)
+                    var templs2 = graphMaster.evaluate(unifiable, query, request, state, appendable);
+                    if (templs!=null)
                     {
-                        Console.WriteLine("ussing parent templates from " + templs);
-                        return templs;
+                        Console.WriteLine("using parent templates from " + templs);
+                        return templs2;
                     }
                 }
             }
-            return templs;
+            return ql.ToUList();
         }
 
         public void AddTemplate(TemplateInfo templateInfo)
