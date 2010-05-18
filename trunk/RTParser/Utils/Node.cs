@@ -557,15 +557,15 @@ namespace RTParser.Utils
                     switch (matchstate)
                     {
                         case MatchState.UserInput:
-                            query.InputStar.Add(newWildcard.Frozen());
+                            query.InputStar.Insert(0, newWildcard.Frozen());
                             // added due to this match being the end of the line
                             newWildcard.Clear();
                             break;
                         case MatchState.That:
-                            query.ThatStar.Add(newWildcard.Frozen());
+                            query.ThatStar.Insert(0, newWildcard.Frozen());
                             break;
                         case MatchState.Topic:
-                            query.TopicStar.Add(newWildcard.Frozen());
+                            query.TopicStar.Insert(0, newWildcard.Frozen());
                             break;
                         case MatchState.Flag:
                             // query.TopicStar.Add(newWildcard.Frozen());

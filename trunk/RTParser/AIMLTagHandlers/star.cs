@@ -88,11 +88,12 @@ namespace RTParser.AIMLTagHandlers
                     int index = Convert.ToInt32(GetAttribValue("index", "1"));
                     try
                     {
-                        index--;
-                        if ((index >= 0) & (index < this.query.InputStar.Count))
+                        if (index <= query.InputStar.Count)
                         {
-                            index = this.query.InputStar.Count - 1 - index;
-                            return (Unifiable)this.query.InputStar[index];
+                            if (index >= 0)
+                            {
+                                return (Unifiable)this.query.InputStar[index - 1];
+                            }
                         }
                         else
                         {
