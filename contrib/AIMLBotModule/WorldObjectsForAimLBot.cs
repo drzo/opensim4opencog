@@ -223,6 +223,7 @@ namespace AIMLBotModule
                 MyBot.isAcceptingUserInput = true;
                 MyBot.outputDelegate = WriteLine;
                 LoadPersonalConfig();
+                MyBot.WriteConfig();
                 // wont get here unless there was no problem
                 client.Self.ChatFromSimulator += AIML_OnChat;
                 client.Self.IM += AIML_OnInstantMessage;
@@ -344,60 +345,9 @@ namespace AIMLBotModule
             LoadPersonalDirectories(myName);
         }
 
-        public void LoadPersonalDirectories(string myName)
+        private void LoadPersonalDirectories(string myName)
         {
-            bool loaded = false;
-            string file = Path.Combine("config", myName);
-            if (Directory.Exists(file))
-            {
-                WriteLine("LoadPersonalDirectories: '{0}'", file);
-                loaded = true;
-                MyBot.loadSettings(Path.Combine(file, "Settings.xml"));
-            }
-            file = Path.Combine("aiml", myName);
-            if (Directory.Exists(file))
-            {
-                WriteLine("LoadPersonalDirectories: '{0}'", file);
-                loaded = true;
-                MyBot.isAcceptingUserInput = false;
-                MyBot.loadAIMLFromURI(file, MyBot.BotAsRequest);
-                MyBot.isAcceptingUserInput = true;
-            }
-
-            file = Path.Combine(myName, "config");
-            if (Directory.Exists(file))
-            {
-                WriteLine("LoadPersonalDirectories: '{0}'", file);
-                loaded = true;
-                MyBot.loadSettings(Path.Combine(file, "Settings.xml"));
-            }
-
-            file = Path.Combine(myName, "aiml");
-            if (Directory.Exists(file))
-            {
-                WriteLine("LoadPersonalDirectories: '{0}'", file);
-                loaded = true;
-                MyBot.isAcceptingUserInput = false;
-                MyBot.loadAIMLFromURI(file, MyBot.BotAsRequest);
-                MyBot.isAcceptingUserInput = true;
-            }
-
-            if (!loaded)
-            {
-                file = myName;
-                if (Directory.Exists(file))
-                {
-                    WriteLine("LoadPersonalDirectories: '{0}'", file);
-                    loaded = true;
-                    MyBot.isAcceptingUserInput = false;
-                    MyBot.loadAIMLFromURI(file, MyBot.BotAsRequest);
-                    MyBot.isAcceptingUserInput = true;
-                }
-            }
-            if (!loaded)
-            {
-                WriteLine("Didnt find personal directories with stem: '{0}'", myName);
-            }
+            MyBot.LoadPersonalDirectories(myName);
         }
 
         public void SetChatOnOff(string username, bool value)
