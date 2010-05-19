@@ -934,7 +934,7 @@ namespace RTParser
                     if (false)
                     {
                         Unifiable path = loader.generatePath(sentence, //thatNum + " " +
-                                     request.user.getLastBotOutput(), request.Flags,
+                                      request.user.getLastBotOutput(), request.Flags,
                             //topicNum + " " +
                                      request.user.TopicSetting, true);
                         numInputs++;
@@ -1840,7 +1840,7 @@ The AIMLbot program.
             get
             {
                 if (!GlobalSettings.containsSettingCalled("notopic")) return "Nothing";
-                return GlobalSettings.grabSetting("notopic");
+                return GlobalSettings.grabSettingNoDebug("notopic");
             }
         }
 
