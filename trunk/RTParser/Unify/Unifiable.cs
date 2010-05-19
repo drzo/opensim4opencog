@@ -304,9 +304,11 @@ namespace RTParser
         {
             return unifiable;
         }
+
+        public abstract Unifiable[] ToArray();
     }
 
-    internal class StringAppendableUnifiable : StringUnifiable
+    public class StringAppendableUnifiable : StringUnifiable
     {
         public override Unifiable Frozen()
         {

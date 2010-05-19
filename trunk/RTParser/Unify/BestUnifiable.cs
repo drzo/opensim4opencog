@@ -143,6 +143,16 @@ namespace RTParser
             throw noBest();
         }
 
+        public override Unifiable[] ToArray()
+        {
+            if (best != null) return best.ToArray();
+            foreach (var u in List)
+            {
+                return u.ToArray();
+            }
+            throw noBest();
+        }
+
         private Exception noBest()
         {
             throw new NotImplementedException();

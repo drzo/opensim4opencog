@@ -128,12 +128,12 @@ namespace RTParser
             return (str.Contains("*") || str.Contains("_") || str.Contains("<"));
         }
 
-        public Unifiable[] ToArray()
+        public override Unifiable[] ToArray()
         {
             return Splitter(str); 
         }
 
-        static Unifiable[] Splitter(string str)
+        public static Unifiable[] Splitter(string str)
         {
             string strTrim = str.Trim().Replace("  "," ").Replace("  "," ");
             if (!strTrim.Contains("<"))
@@ -259,6 +259,7 @@ namespace RTParser
         public override bool IsLongWildCard()
         {
             if (str == ("*")) return true;
+            if (str == ("^")) return true;
             if (this.IsMarkerTag()) return false;
             if (IsLazyStar()) return true;
             return false;

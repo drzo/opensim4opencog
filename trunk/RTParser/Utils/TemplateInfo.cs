@@ -31,6 +31,10 @@ namespace RTParser.Utils
             {
                 s = s + Guard.ToString();
             }
+            if (That != null)
+            {
+                s = s +  That.OuterXml;
+            }
             return s;
         }
 

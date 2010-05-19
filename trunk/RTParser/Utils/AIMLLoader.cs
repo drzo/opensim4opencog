@@ -615,6 +615,13 @@ namespace RTParser.Utils
                 {
                     normalizedThat = Unifiable.STAR;
                 }
+                else
+                {
+                    if (!normalizedThat.IsWildCard())
+                    {
+                        normalizedThat = "* " + normalizedThat;
+                    }
+                }
                 if (normalizedTopic.IsEmpty)
                 {
                     normalizedTopic = Unifiable.STAR;

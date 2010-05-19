@@ -54,6 +54,11 @@ namespace RTParser.Utils
             string pats = MakeMatchKey(unifiable);
             int skip = pats.IndexOf("TAG-THAT");
             if (skip > 0) pats = pats.Substring(0, skip - 1);
+            else
+            {
+                skip = pats.IndexOf("TAG-FLAG");
+                if (skip > 0) pats = pats.Substring(0, skip - 1);
+            }
             PatternInfo pi;
             lock (Patterns)
             {
