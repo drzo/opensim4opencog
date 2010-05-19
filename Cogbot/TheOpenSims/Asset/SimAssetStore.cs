@@ -1508,6 +1508,9 @@ namespace cogbot.TheOpenSims
                         case AssetType.Landmark:
                             anim = new SimLandmark(uUID, null);
                             break;
+                        case AssetType.Link:
+                            anim = new SimLandmark(uUID, null);
+                            break;
                         default:
                             throw new NotImplementedException("FindOrCreateAsset " + type);
                             break;
