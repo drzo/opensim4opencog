@@ -30,6 +30,18 @@ namespace AIMLBotModule
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
+            try
+            {
+                return Execute0(args, fromAgentID, WriteLine);
+            }
+            catch (Exception e)
+            {
+                return Failure("" + e);               
+            }
+        }
+
+        private CmdResult Execute0(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        {
             if (args.Length == 0) return Failure(Usage);
             string s = args[0].ToLower();
             if (s == "on")
@@ -76,7 +88,9 @@ namespace AIMLBotModule
                 int lastIndex = joined.IndexOf("-");
                 joined = joined.Substring(lastIndex + 1).Trim();
             }
-            return Success(WorldSystemModule.AIMLInterp(joined, defaultAIMLUser));
+            String ss = WorldSystemModule.AIMLInterp(joined, defaultAIMLUser);
+            if (String.IsNullOrEmpty(ss)) ss = "Interesting.";
+            return Success(ss);
         }
     }
 
