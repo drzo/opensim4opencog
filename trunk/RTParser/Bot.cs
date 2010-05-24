@@ -124,6 +124,7 @@ namespace RTParser
         {
             get
             {
+                return 60000;
                 if (!this.GlobalSettings.containsSettingCalled("timeout"))
                 {
                     return 60000;
@@ -312,17 +313,22 @@ namespace RTParser
             get { return GraphMaster.Size + HeardSelfSayGraph.Size; }
         }
 
+
+        GraphMaster _g = new GraphMaster();
+
+        private GraphMaster _h = new GraphMaster();
+
         /// <summary>
         /// The "brain" of the Proccessor
         /// </summary>
         public GraphMaster GraphMaster
         {
-            get { return GetGraph("default"); }
+            get { return GetGraph("default", _g); }
         }
 
         public GraphMaster HeardSelfSayGraph
         {
-            get { return GetGraph("HeardSelfSay"); }
+            get { return GetGraph("HeardSelfSay", _h); }
         }
 
 
@@ -374,6 +380,8 @@ namespace RTParser
         /// </summary>
         public RTPBot()
         {
+            GraphsByName.Add("default", _g);
+            GraphsByName.Add("HeardSelfSay", _h);
             this.setup();
             BotAsUser = new User("Self", this);
             BotAsUser.Predicates = GlobalSettings;
@@ -946,7 +954,7 @@ namespace RTParser
                     {
                         Unifiable topic = topic0;
                         topicNum++;
-                        if (topic.IsWildCard())
+                        if (topic.IsLongWildCard())
                         {
                             topic = NOTOPIC;
                         }
@@ -958,13 +966,13 @@ namespace RTParser
                                                                  that, request.Flags,
                                 //topicNum + " " +
                                                                  topic, true);
-                            if (that.IsWildCard())
+                            if (that.IsLongWildCard())
                             {
                                 if (thatNum > 1)
                                 {
                                     continue;
                                 }
-                                if (topic.IsWildCard())
+                                if (topic.IsLongWildCard())
                                 {
                                     topic = "NOTHAT";
                                 }
@@ -984,7 +992,24 @@ namespace RTParser
 
         public AIMLbot.Result HeardSelfSay(string message)
         {
-            return null;/// todo
+            currentEar.AddMore(message);
+            if (!currentEar.IsReady())
+            {
+                return null;
+            }
+            message = currentEar.GetMessage();
+            currentEar = new JoinedTextBuffer();
+            message = swapPerson(message);
+            return HeardSelfSay0(message);
+        }
+        private JoinedTextBuffer currentEar = new JoinedTextBuffer();
+
+        public AIMLbot.Result HeardSelfSay0(string message)
+        {
+            Console.WriteLine("HEARDSELF SWAP: " + message);
+            return Chat(new AIMLbot.Request(message, BotAsUser, this));
+            return null;
+            //return Chat(message,BotAsUser.ID);
             AIMLbot.Request request = new AIMLbot.Request(message, BotAsUser, this);
             request.Graph = HeardSelfSayGraph;
             AIMLbot.Result result = new AIMLbot.Result(request.user, this, request);
@@ -1019,7 +1044,7 @@ namespace RTParser
                 //todo pick and chose the queries
                 if (result.SubQueries.Count != 1)
                 {
-                    if (false)
+                    if (true)
                     {
                         writeToLog("SubQueries.Count = " + result.SubQueries.Count);
                         foreach (var path in result.SubQueries)
@@ -1056,6 +1081,14 @@ namespace RTParser
             request.user.addResult(result);
 
             return result;
+        }
+
+        private string swapPerson(string inputString)
+        {
+            string temp = Loader.Normalize(inputString, true);
+            //temp = ApplySubstitutions.Substitute(this, this.PersonSubstitutions, temp);
+            temp = ApplySubstitutions.Substitute(this, this.Person2Substitutions, temp);
+            return temp;
         }
 
 
@@ -1723,12 +1756,12 @@ The AIMLbot program.
 
         internal Unifiable SystemExecute(Unifiable cmd, Unifiable langu, Request user)
         {
-            if (String.IsNullOrEmpty(langu))
+            if (Unifiable.IsNullOrEmpty(langu))
             {
                 langu = "bot";
             }
-            Unifiable s = "<The system tag should be doing '" + cmd + "' lang=" + langu + ">";
-            writeToLog(s);
+            Unifiable s = "The system tag should be doing '" + cmd + "' lang=" + langu ;
+            writeToLog(s.AsString());
             SystemExecHandler handler = null;
             if (ExecuteHandlers.ContainsKey(langu))
             {
@@ -1855,10 +1888,21 @@ The AIMLbot program.
             set { TheCyc.CycEnabled = value; }
         }
 
-        public GraphMaster GetGraph(string botname)
+        public GraphMaster GetGraph(string botname, GraphMaster current)
         {
-            botname = botname ?? "default";
+            if (botname == null)
+            {
+                return current;
+            }
             botname = botname.ToLower();
+            if (botname == "current")
+            {
+                return current;
+            }
+            if (botname == "parent")
+            {
+                return current.Parent;
+            }
             GraphMaster g;
             lock (GraphsByName)
             {
@@ -1873,7 +1917,7 @@ The AIMLbot program.
         {
             Bot myBot = new Bot();
             myBot.loadSettings();
-            string myName = "Nephrael Rae";
+            string myName = "BinaBot Daxeline";
             if (args != null && args.Length > 0)
             {
                 myName = String.Join(" ", args);
@@ -1970,6 +2014,43 @@ The AIMLbot program.
             {
                 writeToLog("Didnt find personal directories with stem: '{0}'", myName);
             }
+        }
+    }
+
+    internal class JoinedTextBuffer
+    {
+        static int count(string s,string t)
+        {
+            int f = s.IndexOf(t);
+            if (f < 0) return 0;
+            return 1 + count(s.Substring(f + 1), t);
+        }
+        private String message = "";
+        public void AddMore(string m)
+        {
+            if (Noise(m)) return;
+            message += " " + m;
+            message = message.Trim().Replace("  ", " ");
+        }
+
+        private bool Noise(string s)
+        {
+            if (s == "you know,") return true;
+            if (message.EndsWith(s)) return true;
+            return false;
+        }
+
+        public bool IsReady()
+        {
+            if (message.EndsWith(",")) return false;
+            if (message.EndsWith(".")) return true;
+            if (count(message, " ") > 4) return true;
+            return false;           
+        }
+
+        public string GetMessage()
+        {
+            return message;
         }
     }
 }

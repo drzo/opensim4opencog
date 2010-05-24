@@ -266,8 +266,12 @@ namespace RTParser.Utils
                 {
                     string botname = RTPBot.GetAttribValue(currentNode, "bot", null);
                     GraphMaster g = request.Graph;
-                    GraphMaster g2 = RProcessor.GetGraph(botname);
-                    request.Graph = g2;
+                    if (botname != null)
+                    {
+                        GraphMaster g2 = RProcessor.GetGraph(botname, g);
+                        request.Graph = g2;
+                        filename.Graph = g2;
+                    }
                     try
                     {
                         // process each of these child nodes
@@ -279,7 +283,8 @@ namespace RTParser.Utils
                     }
                     finally
                     {
-                        request.Graph = g;                        
+                        request.Graph = g;
+                        filename.Graph = g;
                     }
                 }
                 if (currentNode.Name == "root")
@@ -619,13 +624,16 @@ namespace RTParser.Utils
                 {
                     if (!normalizedThat.IsWildCard())
                     {
-                        normalizedThat = "* " + normalizedThat;
+                       // normalizedThat = "* " + normalizedThat;
                     }
                 }
                 if (normalizedTopic.IsEmpty)
                 {
                     normalizedTopic = Unifiable.STAR;
                 }
+
+                //if (!isUserInput) 
+                    normalizedThat = "* " + normalizedThat;
 
                 // This check is in place to avoid huge "that" elements having to be processed by the 
                 // graphmaster. 
@@ -748,7 +756,7 @@ namespace RTParser.Utils
                 if (c < 32) c = ' ';
                 s += c;
             }
-            s.Replace(" <", "<").Replace("< ", "<").Replace(" >", ">").Replace(" >", ">").Replace("  ", " ").Replace("<star index=\"1\"", "<star").Replace(" index=\"1\"", "").Trim();
+            s.Replace("  ", " ").Replace(" <", "<").Replace("< ", "<").Replace(" >", ">").Replace(" >", ">").Replace(" />", "/>").Replace("<star index=\"1\"", "<star").Replace(" index=\"1\"", "").Trim();
             return s;
         }
 
