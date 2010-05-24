@@ -142,6 +142,25 @@ namespace RTParser.Utils
 
         public Node RootNode = new RTParser.Utils.Node(null);
         public int Size;
+        private GraphMaster _parent = null;
+        public GraphMaster Parent 
+        {
+            get
+            {
+                if (_parent == null)
+                {
+                    if (Parents.Count > 0)
+                    {
+                        _parent = Parents[0];
+                    }
+                    else
+                    {
+                        _parent = new GraphMaster();
+                    }
+                }
+                return _parent;
+            }
+        }
 
         /// <summary>
         /// Saves the graphmaster node (and children) to a binary file to avoid processing the AIML each time the 
@@ -187,21 +206,36 @@ namespace RTParser.Utils
         public UList evaluate(UPath unifiable, SubQuery query, Request request, MatchState state, Unifiable appendable)
         {
             QueryList ql = new QueryList();
-            var templs = RootNode.evaluate(unifiable, query, request, state, appendable, ql);
-            if (!templs)
+            GraphMaster p = Parent;
+            if (p != null)
+            {
+                GraphMaster g = request.Graph;
+                try
+                {
+                    request.Graph = p;
+                    var silent = p.RootNode.evaluateOLDY(unifiable, query, request, state, appendable,new QueryList());
+                }
+                finally
+                {
+                    request.Graph = g;
+                }
+            }
+            var templs = RootNode.evaluateOLDY(unifiable, query, request, state, appendable, ql);
+            var qr = ql.ToUList();
+            if (qr.Count==0)
             {
                 Console.WriteLine("no templates for " + this);
                 foreach (GraphMaster graphMaster in Parents)
                 {
                     var templs2 = graphMaster.evaluate(unifiable, query, request, state, appendable);
-                    if (templs!=null)
+                    if (templs2.Count>0)
                     {
                         Console.WriteLine("using parent templates from " + templs);
                         return templs2;
                     }
                 }
             }
-            return ql.ToUList();
+            return qr;
         }
 
         public void AddTemplate(TemplateInfo templateInfo)

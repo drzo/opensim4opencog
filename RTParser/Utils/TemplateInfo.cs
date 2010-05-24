@@ -12,7 +12,18 @@ namespace RTParser.Utils
         public Node GraphmasterNode;
         public double Rating = 1.0;
         public SubQuery Query;
-
+        public bool IsSilent
+        {
+            get
+            {
+                string s = InnerXml;
+                if (s.StartsWith("<think") && s.EndsWith("k/>"))
+                {
+                    return true;
+                }
+                return false;
+            }
+        }
         public TemplateInfo(XmlNode template, GuardInfo guard, ThatInfo that, Node patternNode, CategoryInfo categoryInfo):base(template)
         {
             if (template.Name != "template")

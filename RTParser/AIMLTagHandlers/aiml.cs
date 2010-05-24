@@ -42,10 +42,25 @@ namespace RTParser.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "aiml")
             {
-                // process each of these child "settings"? nodes
-                foreach (XmlNode child in this.templateNode.ChildNodes)
+                GraphMaster g = request.Graph;
+                var g0 = g;
+                String gn = GetAttribValue("bot", null);
+                if (gn != null)
                 {
-                    Proc.Loader.loadAIMLNode(child, LoaderOptions.GetDefault(this.request), request);
+                    g = Proc.GetGraph(gn, request.Graph);
+                }
+                request.Graph = g;
+                try
+                {
+                    // process each of these child "settings"? nodes
+                    foreach (XmlNode child in this.templateNode.ChildNodes)
+                    {
+                        Proc.Loader.loadAIMLNode(child, LoaderOptions.GetDefault(this.request), request);
+                    }
+                }
+                finally
+                {
+                    request.Graph = g0;   
                 }
             }
             return Unifiable.Empty;

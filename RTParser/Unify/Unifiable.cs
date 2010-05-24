@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Xml;
 using java.io;
@@ -60,14 +61,20 @@ namespace RTParser
             return value.AsString();
         }
 
+        static Dictionary<string,Unifiable> internedUnifiables = new Dictionary<string,Unifiable>();
         public static implicit operator Unifiable(string value)
         {
             if (value == null) return null;
-            Unifiable u = new StringUnifiable(value);
-            if (u.IsWildCard())
+            Unifiable u;
+            if (false) lock (internedUnifiables)
             {
-                
+                if (!internedUnifiables.TryGetValue(value, out u))
+                {
+                    u = internedUnifiables[value] = new StringUnifiable(value);
+                }
+                return u;
             }
+            u = new StringUnifiable(value);
             return u;
         }
         public static Unifiable Empty = new EmptyUnifiable();

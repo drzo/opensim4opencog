@@ -40,23 +40,38 @@ namespace RTParser.AIMLTagHandlers
 
                 opts.recurse = Unifiable.IsLogicTF(GetAttribValue("recurse", Unifiable.Empty));
                 //recurse here?
-                Unifiable templateNodeInnerText = Recurse();
-                if (!templateNodeInnerText.IsEmpty)
+                GraphMaster g = request.Graph;
+                var g0 = g;
+                String gn = GetAttribValue("bot", null);
+                if (gn != null)
                 {
-                    Unifiable path = templateNodeInnerText;
-                    try
-                    {
-                        opts.Filename = path;
-                        Proc.loadAIMLFromURI(path, opts, request);
-                    }
-                    catch (Exception e2)
-                    {
-                        String s =
-                            "ERROR! Attempted (but failed) to <learn> some new AIML from the following URI: " + path + " error " + e2;
-                        this.Proc.writeToLog(s);
-                    }
-
+                    g = Proc.GetGraph(gn, request.Graph);
                 }
+                request.Graph = g;
+                try
+                {
+                    Unifiable templateNodeInnerText = Recurse();
+                    if (!templateNodeInnerText.IsEmpty)
+                    {
+                        Unifiable path = templateNodeInnerText;
+                        try
+                        {
+                            opts.Filename = path;
+                            Proc.loadAIMLFromURI(path, opts, request);
+                        }
+                        catch (Exception e2)
+                        {
+                            String s =
+                                "ERROR! Attempted (but failed) to <learn> some new AIML from the following URI: " + path + " error " + e2;
+                            this.Proc.writeToLog(s);
+                        }
+
+                    }
+                }
+                finally
+                {
+                    request.Graph = g0;
+                } 
             }
             return Unifiable.Empty;
         }

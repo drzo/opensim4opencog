@@ -178,19 +178,33 @@ namespace RTParser.Utils
         public static LineInfoElement getNode(string outerXML)
         {
             var sr = new StringReader(outerXML);
-            XmlDocumentLineInfo temp = new XmlDocumentLineInfo("From " + outerXML);
-            temp.Load(sr);
-            return (LineInfoElement)temp.FirstChild;
+            try
+            {
+                XmlDocumentLineInfo temp = new XmlDocumentLineInfo("From " + outerXML);
+                temp.Load(sr);
+                return (LineInfoElement)temp.FirstChild;
+            }
+            catch (Exception exception)
+            {
+                throw exception;
+            }
         }
         public static LineInfoElement getNode(string outerXML, XmlNode templateNode)
         {
             var sr = new StringReader(outerXML);
-            XmlDocumentLineInfo temp =
-                new XmlDocumentLineInfo("From '" + templateNode.OwnerDocument??" NODOC " + "' " + templateNode.OuterXml);
-            temp.Load(sr);
-            LineInfoElement li = (LineInfoElement) temp.FirstChild;
-            li.SetParentFromNode(templateNode);
-            return li;
+            try
+            {
+                XmlDocumentLineInfo temp =
+                    new XmlDocumentLineInfo("From '" + templateNode.OwnerDocument ?? " NODOC " + "' " + templateNode.OuterXml);
+                temp.Load(sr);
+                LineInfoElement li = (LineInfoElement)temp.FirstChild;
+                li.SetParentFromNode(templateNode);
+                return li;
+            }
+            catch (Exception exception)
+            {
+                throw exception;
+            }
         }
         public override string ToString()
         {
