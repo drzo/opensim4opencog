@@ -33,14 +33,15 @@ namespace RTParser.AIMLTagHandlers
             {
                 try
                 {
-                    string name = GetAttribValue("name", null);
-                    string machine = GetAttribValue("machine", null);
+                    string state = GetAttribValue("name", null);
+                    string machine = GetAttribValue("machine", this.user.bot.pMSM.lastDefMachine);
                     string init_prob_str = GetAttribValue("init_prob", "0.1");
                     string self_prob_str = GetAttribValue("self_prob", "0.1");
                     double init_prob = double.Parse(init_prob_str);
                     double self_prob = double.Parse(self_prob_str);
+                    this.user.bot.pMSM.lastDefState = state;
 
-                    this.user.bot.pMSM.defState(machine, name, init_prob, self_prob);
+                    this.user.bot.pMSM.defState(machine, state, init_prob, self_prob);
                 }
                 catch
                 {

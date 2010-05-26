@@ -353,6 +353,8 @@ namespace RTParser
         // emission and transition stored as double hash tables
         public actMSM pMSM { get { return botMSM; } }
         actMSM botMSM = new actMSM();
+        //public string lastDefMSM;
+        //public string lastDefState;
 
         /// <summary>
         /// If set to false the input from AIML files will undergo the same normalization process that

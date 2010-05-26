@@ -35,8 +35,8 @@ namespace RTParser.AIMLTagHandlers
             {
                 try
                 {
-                    string machine = GetAttribValue("machine", null);
-                    string name = GetAttribValue("name", null);
+                    string machine = GetAttribValue("machine", this.user.bot.pMSM.lastDefMachine);
+                    string name = GetAttribValue("name", this.user.bot.pMSM.lastDefState);
                     string cur_prob_str = GetAttribValue("prob", "0.1");
                     double cur_prob = double.Parse(cur_prob_str);
 

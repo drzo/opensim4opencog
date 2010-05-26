@@ -38,8 +38,8 @@ namespace RTParser.AIMLTagHandlers
                 {
                     string payload = templateNodeInnerText.ToValue();
 
-                    string machine = GetAttribValue("machine", null);
-                    string myState = GetAttribValue("state", null);
+                    string machine = GetAttribValue("machine", this.user.bot.pMSM.lastDefMachine);
+                    string myState = GetAttribValue("state", this.user.bot.pMSM.lastDefState);
                     string myTopic = GetAttribValue("topic", null);
                     string prob_str = GetAttribValue("prob", "0.1");
                     double prob = double.Parse(prob_str);
