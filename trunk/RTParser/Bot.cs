@@ -348,6 +348,13 @@ namespace RTParser
         PhoneticHmm phoneHMM = new PhoneticHmm();
 
         /// <summary>
+        /// Proccessor for action Markov State Machine
+        /// </summary>
+        // emission and transition stored as double hash tables
+        public actMSM pMSM { get { return botMSM; } }
+        actMSM botMSM = new actMSM();
+
+        /// <summary>
         /// If set to false the input from AIML files will undergo the same normalization process that
         /// user input goes through. If true the Proccessor will assume the AIML is correct. Defaults to true.
         /// </summary>
@@ -1145,8 +1152,21 @@ namespace RTParser
         /// </summary>
         /// <param name="request">the request from the user</param>
         /// <returns>the result to be output to the user</returns>
+        /// 
+        public StreamWriter chatTrace;
+        public int streamDepth = 0;
+
         public AIMLbot.Result Chat(Request request)
         {
+            //chatTrace = null;
+            if (chatTrace == null)
+            {
+                chatTrace = new StreamWriter("bgm\\chatTrace.dot");
+                chatTrace.WriteLine("digraph G {");
+                streamDepth=0;
+            }
+            streamDepth++;
+
             AIMLbot.Result result = new AIMLbot.Result(request.user, this, request);
 
 
@@ -1218,6 +1238,14 @@ namespace RTParser
                     foreach (var path in result.SubQueries)
                     {
                         writeToLog("\r\n tt: " + path.ToString().Replace("\n", " ").Replace("\r", " ").Replace("  ", " "));
+                        if (chatTrace != null)
+                        {
+                            //chatTrace.WriteLine("\"L{0}\" -> \"{1}\" ;\n", result.SubQueries.Count, path.FullPath.ToString());
+                            chatTrace.WriteLine("\"L{0}\" -> \"L{1}\" ;\n", result.SubQueries.Count - 1, result.SubQueries.Count);
+                            chatTrace.WriteLine("\"L{0}\" -> \"REQ:{1}\" ;\n", result.SubQueries.Count, request.ToString());
+                            chatTrace.WriteLine("\"REQ:{0}\" -> \"PATH:{1}\" [label=\"{2}\"];\n", request.ToString(), result.SubQueries.Count, path.FullPath.ToString());
+                            chatTrace.WriteLine("\"REQ:{0}\" -> \"RPY:{1}\" ;\n", request.ToString(), result.RawOutput.ToString());
+                        }
                     }
                 }
             }
@@ -1229,6 +1257,14 @@ namespace RTParser
             // populate the Result object
             result.Duration = DateTime.Now - request.StartedOn;
             request.user.addResult(result);
+            streamDepth--;
+
+            if (streamDepth<=0 && chatTrace != null)
+                {
+                    chatTrace.WriteLine("}");
+                    chatTrace.Close();
+                    chatTrace = null;
+                }
 
             return result;
         }
@@ -1585,6 +1621,36 @@ namespace RTParser
                     case "soundcode":
                         tagHandler = new AIMLTagHandlers.soundcode(this, user, query, request, result, node);
                         break;
+
+                    // MSM
+                    case "msm":
+                        tagHandler = new AIMLTagHandlers.msm(this, user, query, request, result, node);
+                        break;
+                    case "processmsm":
+                        tagHandler = new AIMLTagHandlers.process_msm(this, user, query, request, result, node);
+                        break;
+                    case "setstate":
+                        tagHandler = new AIMLTagHandlers.setstate(this, user, query, request, result, node);
+                        break;
+                    case "state":
+                        tagHandler = new AIMLTagHandlers.state(this, user, query, request, result, node);
+                        break;
+                    case "transition":
+                        tagHandler = new AIMLTagHandlers.transition(this, user, query, request, result, node);
+                        break;
+                    case "setevidence":
+                        tagHandler = new AIMLTagHandlers.setevidence(this, user, query, request, result, node);
+                        break;
+                    case "evidenceassoc":
+                        tagHandler = new AIMLTagHandlers.evidence_assoc(this, user, query, request, result, node);
+                        break;
+                    case "evidencepattern":
+                        tagHandler = new AIMLTagHandlers.evidence_pattern(this, user, query, request, result, node);
+                        break;
+                    case "responsetopic":
+                        tagHandler = new AIMLTagHandlers.response_topic(this, user, query, request, result, node);
+                        break;
+
                     case "#text":
                         return null;
                     case "#comment":

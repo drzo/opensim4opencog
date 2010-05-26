@@ -1,6 +1,7 @@
 using System;
 using System.Xml;
 using System.Text;
+using System.IO;
 
 namespace RTParser.AIMLTagHandlers
 {
@@ -35,6 +36,8 @@ namespace RTParser.AIMLTagHandlers
             : base(bot, user, query, request, result, templateNode)
         {
         }
+        
+        public StreamWriter chatTrace;
 
         protected override Unifiable ProcessChange()
         {
