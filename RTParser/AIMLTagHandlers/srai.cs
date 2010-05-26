@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Xml;
 using System.Text;
+using System.IO;
 using RTParser.Utils;
 
 namespace RTParser.AIMLTagHandlers
@@ -17,6 +18,7 @@ namespace RTParser.AIMLTagHandlers
     /// </summary>
     public class srai : RTParser.Utils.AIMLTagHandler
     {
+        RTParser.RTPBot mybot;
         /// <summary>
         /// Ctor
         /// </summary>
@@ -34,6 +36,7 @@ namespace RTParser.AIMLTagHandlers
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
+            mybot = bot;
         }
 
         private static int depth = 0;
@@ -75,6 +78,18 @@ namespace RTParser.AIMLTagHandlers
                         if (showDebug)
                             Console.WriteLine(" SRAI-- (" + depth + ")" + subRequestrawInput + " ----- @ " +
                                               LineNumberTextInfo());
+
+                       
+                        if (mybot.chatTrace != null)
+                        {
+                           //  mybot.chatTrace.WriteLine("\"L{0}\" -> \"S{1}\" ;\n", depth - 1, depth-1);
+                          // mybot.chatTrace.WriteLine("\"L{0}\" -> \"S{1}\" ;\n", depth, depth);
+                            //mybot.chatTrace.WriteLine("\"S{0}\" -> \"SRC:{1}\" ;\n", depth, LineNumberTextInfo());
+
+                            //mybot.chatTrace.WriteLine("\"S{0}\" -> \"S{1}\" ;\n", depth - 1, depth);
+                            //mybot.chatTrace.WriteLine("\"S{0}\" -> \"SIN:{1}\" ;\n", depth, subRequestrawInput);
+                            //mybot.chatTrace.WriteLine("\"SIN:{0}\" -> \"LN:{1}\" ;\n", subRequestrawInput, LineNumberTextInfo());
+                        }
                         if (depth > 200)
                         {
                             Console.WriteLine(" SRAI TOOOO DEEEEP <-- (" + depth + ")" + subRequestrawInput +
@@ -99,6 +114,17 @@ namespace RTParser.AIMLTagHandlers
                         {
                             if (showDebug)
                                 Console.WriteLine(" SRAI<-- (" + depth + ") MISSING <----- @ " + LineNumberTextInfo());
+                            if (mybot.chatTrace != null)
+                            {
+                                mybot.chatTrace.WriteLine("\"L{0}\" -> \"S{1}\" ;\n", depth, depth);
+                                mybot.chatTrace.WriteLine("\"S{0}\" -> \"SIN:{1}\" ;\n", depth, subRequestrawInput);
+                                //mybot.chatTrace.WriteLine("\"SIN:{0}\" -> \"LN:{1}\" ;\n", subRequestrawInput, LineNumberTextInfo());
+                                mybot.chatTrace.WriteLine("\"SIN:{0}\" -> \"PATH:{1}\" [label=\"{2}\"] ;\n", subRequestrawInput, depth,subResult.NormalizedPaths);
+                                mybot.chatTrace.WriteLine("\"PATH:{0}\" -> \"LN:{1}\" [label=\"{2}\"] ;\n", depth, depth, LineNumberTextInfo());
+                                
+                                mybot.chatTrace.WriteLine("\"LN:{0}\" -> \"RPY:MISSING({1})\" ;\n", depth, depth);
+                            }
+
                             return Unifiable.Empty;
                         }
                         else
@@ -107,6 +133,14 @@ namespace RTParser.AIMLTagHandlers
                                 Console.WriteLine(" SRAI<-- (" + depth + ")" + subQueryRawOutput + " @ " + LineNumberTextInfo());
                         }
 
+                        if (mybot.chatTrace != null)
+                        {
+                            mybot.chatTrace.WriteLine("\"L{0}\" -> \"S{1}\" ;\n", depth, depth);
+                            mybot.chatTrace.WriteLine("\"S{0}\" -> \"SIN:{1}\" ;\n", depth, subRequestrawInput);
+                            mybot.chatTrace.WriteLine("\"SIN:{0}\" -> \"PATH:{1}\" [label=\"{2}\"] ;\n", subRequestrawInput, depth, subResult.NormalizedPaths);
+                            mybot.chatTrace.WriteLine("\"PATH:{0}\" -> \"LN:{1}\" [label=\"{2}\"] ;\n", depth, depth, LineNumberTextInfo());
+                            mybot.chatTrace.WriteLine("\"LN:{0}\" -> \"RPY:{1}\" ;\n", depth, subQueryRawOutput);
+                        }
                         return subResult.Output;
                     }
                 }

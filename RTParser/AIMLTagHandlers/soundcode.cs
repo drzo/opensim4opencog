@@ -42,6 +42,7 @@ namespace RTParser.AIMLTagHandlers
                 string[] lineSet = line.Split(' ');
                 string soundLine = "";
                 string lastLineWord = "<SXQX>";
+                string prevLastLineWord = "";
 
                 if (this.user.bot.pHMM.hmmCorpusLoaded == 0)
                 {
@@ -68,13 +69,37 @@ namespace RTParser.AIMLTagHandlers
                     {
                         string scode = this.user.bot.pHMM.getSoundCode(lineWord);
                         soundLine += scode + " ";
+                        
                         // one emission for (lineWord->mcode)=0.9
                         this.user.bot.pHMM.addEmission(lineWord, scode, 0.9);
 
                         // one transition from (lastLineWord -> lineWord)=0.9
                         this.user.bot.pHMM.incrTransition(lastLineWord, lineWord, 10 * smoother);
-                        this.user.bot.pHMM.incrTransition(lastLineWord, "nullx", 50 * smoother);
-                        lastLineWord = lineWord;
+
+                        // insert null transitions paths
+                        // if we delete this word, would the results be a valid bigram ?
+                        string first_observedSymbol = this.user.bot.pHMM.getSoundCode(lastLineWord);
+                        string next_observedSymbol = scode; // this.user.bot.pHMM.getSoundCode(lineWord);
+
+                        Hashtable first_emitter = ((Hashtable)this.user.bot.pHMM.emissionProbability[first_observedSymbol]);
+                        Hashtable next_emitter = ((Hashtable)this.user.bot.pHMM.emissionProbability[next_observedSymbol]);
+                        foreach (string nextStateKey in next_emitter.Keys)
+                        {
+                            foreach (string stateKey in first_emitter.Keys)
+                            {
+
+                                string skipAtomic = stateKey + " " + nextStateKey;
+                                if ((this.user.bot.pHMM.atomicTransitionCount.ContainsKey(skipAtomic))&&(this.user.bot.pHMM.transitionCounts.ContainsKey(prevLastLineWord)))
+                                {
+                                    double skipTransP = (double)this.user.bot.pHMM.atomicTransitionCount[skipAtomic] / (double)this.user.bot.pHMM.transitionCounts[prevLastLineWord];
+                                    // fixed at a discount
+                                    this.user.bot.pHMM.addTransition(lastLineWord, "<nullx>", skipTransP * 0.2);
+                                    this.user.bot.pHMM.addTransition("<nullx>", lineWord, skipTransP * 0.2);
+                                }
+                                prevLastLineWord = lastLineWord;
+                                lastLineWord = lineWord;
+                            }
+                        }
                     }
                 }
                 string guess = "";
@@ -97,6 +122,7 @@ namespace RTParser.AIMLTagHandlers
 
                 guess = guess.Replace("<SXQX>", "");
                 guess = guess.Replace("<FNXS>", "");
+                guess = guess.Replace("<nullx>", "");
                 //Unifiable result = soundLine +" "+guess;
                 Unifiable result = guess;
 
@@ -1114,6 +1140,7 @@ public class PhoneticHmm
 
 
     }
+
     public void LearnBigrams(string line)
     {
         string learnline = "";
@@ -1125,6 +1152,9 @@ public class PhoneticHmm
             {
                 // it came pre-wrapped
                 learnline =fields[0].ToLower();
+                learnline = learnline.Replace("<sxqx>", "<SXQX>");
+                learnline = learnline.Replace("<fnxs>", "<FNXS>");
+
             }
             else
             {
@@ -1155,6 +1185,26 @@ public class PhoneticHmm
                 lastLearnWord = learnWord;
             }
         }
+        // Insert Nulls
+        return;
+
+        lastLearnWord = "<SXQX>";
+        foreach (string learnWord in learnSet)
+        {
+            if (lastLearnWord.Length > 0)
+            {
+                string scode = getSoundCode(learnWord);
+                // one emission for (lineWord->mcode)=0.9
+                addEmission("<nullx>", scode, 0.1);
+
+                // one transition from (lastLineWord -> lineWord)=0.9
+                //incrTransition(lastLearnWord, learnWord, 0.1 * mult);
+                addTransition(lastLearnWord, "<nullx>", 1 / transSum);
+                addTransition("<nullx>", learnWord,  1 / transSum);
+                lastLearnWord = learnWord;
+            }
+        }
+
 
     }
 
@@ -1200,6 +1250,8 @@ public class PhoneticHmm
 
         // Implementation inspired by the bigram based decoder at http://en.wikipedia.org/wiki/Viterbi_algorithm
         // Modifed to operate with variable sized hashtables as storage
+        StreamWriter decodeTrace = new StreamWriter("bgm\\decodeTrace.dot");
+        decodeTrace.WriteLine("digraph G {");
 
         foreach (string sound in soundSet)
         {
@@ -1248,9 +1300,16 @@ public class PhoneticHmm
             //nextStateVP.Clear();
 
             Console.WriteLine("\nTesting hypothesis {0} ({1})", output, cur_observedSymbol);
+
+            decodeTrace.WriteLine("\"t{0}\" -> \"t{1}\" ;", output , output + 1);
+            decodeTrace.WriteLine("\"t{0}\" -> \"snd({1})\" ;", output, cur_observedSymbol);
+            decodeTrace.WriteLine("\"t{0}\" -> \"snd({1})\" ;", output + 1, next_observedSymbol);
+
             // Get emission table
             Hashtable cur_emitter = ((Hashtable)emissionProbability[cur_observedSymbol]);
             Hashtable next_emitter = ((Hashtable)emissionProbability[next_observedSymbol]);
+            if (!cur_emitter.ContainsKey("<nullx>")) { cur_emitter.Add("<nullx>",(double)0.1); }
+            if (!next_emitter.ContainsKey("<nullx>"))    {                next_emitter.Add("<nullx>", (double)0.1);            }
             double highest = 0;
             double nextSum = 0.00001;
             foreach (string nextStateKey in next_emitter.Keys)
@@ -1301,11 +1360,21 @@ public class PhoneticHmm
                     {
                         transP = (double)atomicTransitionCount[atomicKey] / (double)transitionCounts[stateKey];
                         Console.WriteLine(" P({0}) = {1}", atomicKey, transP);
+                        decodeTrace.WriteLine("\"{0}\" -> \"{1}\" ;",stateKey,nextStateKey);
+                        decodeTrace.WriteLine("\"{0}\" -> \"{1}\" ;", cur_observedSymbol, stateKey);
+                        decodeTrace.WriteLine("\"{0}\" -> \"{1}\" ;", next_observedSymbol, nextStateKey);
+                        decodeTrace.WriteLine("\"{0}\" -> \"{1}\" ;", cur_observedSymbol, atomicKey);
+                        decodeTrace.WriteLine("\"{0}\" -> \"{1}\" ;", next_observedSymbol, atomicKey);
+
                     }
                     else
                     {
                         // use default smoother
                         transP = smoother;
+                        if ((stateKey == "<nullx>") || (nextStateKey == "<nullx>")) 
+                        { 
+                            transP = transP * 3; 
+                        }
                     }
 
                     double p =  eP* transP * scaleFactor;
@@ -1325,12 +1394,12 @@ public class PhoneticHmm
                         vPath[output] = nextStateKey;
                         vProbs[output] = v_prob;
                     }
-
                 }// for state
                 //Console.WriteLine(" Fin NextState :{0}", nextStateKey);
                 nextStateP[nextStateKey] = total;
                 nextStatePath[nextStateKey] = argMaxKey; // lastStatePath[argMaxKey] + " " + argMaxKey;
                 nextStateVP[nextStateKey] = valMax;
+                
             }
             //Console.WriteLine(" Fin outputstep  :{0} [{1}]", output,vPath[output]);
             lastStateP = nextStateP;
@@ -1338,12 +1407,16 @@ public class PhoneticHmm
             lastStateVP = nextStateVP;
             Console.WriteLine("The highest probability was {0} in state {1} [{2}](scale factor of {3}^{4})", highest, vPath[output], (string)lastStatePath[vPath[output]], scaleFactor, output + 1);
             guessPath = (string)lastStatePath[vPath[output]]; //+= vPath[output] + " ";
+            decodeTrace.WriteLine("\"m{0}\" -> \"{1}\" ;", output, vPath[output]);
+            decodeTrace.WriteLine("\"m{0}\" -> \"m{1}\" ;", output,output+1);
         }
         Console.WriteLine(" Guess = [{0}]", guessPath);
 
         // optionally use this guess as an training input to adjust the 
         // model towards the current discussion
         LearnBigrams(guessPath);
+        decodeTrace.WriteLine("}");
+        decodeTrace.Close();
 
         return guessPath;
     }
