@@ -197,29 +197,37 @@ namespace RTParser.Utils
 
         public void addCategoryTag(Unifiable generatedPath, PatternInfo patternInfo, CategoryInfo category, XmlNode outerNode, XmlNode templateNode, GuardInfo guard, ThatInfo thatInfo)
         {
+            var RootNode = this.RootNode;
+            if(SilentTag(templateNode))
+            {
+                GraphMaster Parent = new GraphMaster();
+                this.Parents.Add(Parent);
+                RootNode = Parent.RootNode;
+                System.Console.WriteLine("" + category);
+            }
             Node.addCategoryTag(RootNode, generatedPath, patternInfo, category, outerNode, templateNode, guard, thatInfo,
                                 this);
             // keep count of the number of categories that have been processed
             this.Size++;
         }
 
-        public UList evaluate(UPath unifiable, SubQuery query, Request request, MatchState state, Unifiable appendable)
+        public static bool SilentTag(XmlNode node)
         {
-            QueryList ql = new QueryList();
-            GraphMaster p = Parent;
-            if (p != null)
+            string s = node.InnerXml;
+            if (s.StartsWith("<think>"))
             {
-                GraphMaster g = request.Graph;
-                try
+                if (s.EndsWith("</think>"))
                 {
-                    request.Graph = p;
-                    var silent = p.RootNode.evaluateOLDY(unifiable, query, request, state, appendable,new QueryList());
-                }
-                finally
-                {
-                    request.Graph = g;
+                    return true;
                 }
             }
+            return false;
+        }
+
+        public UList evaluate(UPath unifiable, SubQuery query, Request request, MatchState state, Unifiable appendable)
+        {
+            DoParentEval(request, unifiable, query, state, appendable);
+            QueryList ql = new QueryList();
             var templs = RootNode.evaluateOLDY(unifiable, query, request, state, appendable, ql);
             var qr = ql.ToUList();
             if (qr.Count==0)
@@ -236,6 +244,26 @@ namespace RTParser.Utils
                 }
             }
             return qr;
+        }
+
+        private void DoParentEval(Request request, Unifiable unifiable, SubQuery query, MatchState state, Unifiable appendable)
+        {
+            GraphMaster g = request.Graph;
+            foreach (var p in Parents)
+            {
+                if (p != null)
+                {
+                    try
+                    {
+                        request.Graph = p;
+                        var silent = p.RootNode.evaluateOLDY(unifiable, query, request, state, appendable, new QueryList());
+                    }
+                    finally
+                    {
+                        request.Graph = g;
+                    }
+                }                
+            }
         }
 
         public void AddTemplate(TemplateInfo templateInfo)
