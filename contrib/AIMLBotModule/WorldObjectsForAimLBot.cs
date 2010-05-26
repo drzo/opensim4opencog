@@ -217,7 +217,7 @@ namespace AIMLBotModule
                 MyBot.AddExcuteHandler("lisp", LispExecHandler);
                 MyBot.loadSettings();
                 //MyBot.GlobalSettings.addSetting("name", client.BotLoginParams.FirstName+ " " + client.BotLoginParams.LastName);
-                MyUser = new User("AIMLInterp", MyBot);
+                MyUser = MyBot.FindOrCreateUser(null);
                 MyUser.InsertProvider(new ParentProvider(() => this));
                 MyBot.loadAIMLFromDefaults();
                 MyBot.isAcceptingUserInput = true;
