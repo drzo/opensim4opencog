@@ -876,6 +876,7 @@ namespace RTParser
 
         public User FindOrCreateUser(string fromname)
         {
+            fromname = fromname ?? "UNKNOWN_PARTNER";
             bool b;
             return FindOrCreateUser(fromname, out b);
         }
@@ -894,6 +895,12 @@ namespace RTParser
                 myUser.Predicates.addSetting("name", fromname);
                 return myUser;
             }
+        }
+
+        public void AddAiml(string aimlText)
+        {
+            Request request = BotAsRequest;
+            Loader.loadAIMLString("<aiml>"+aimlText+"</aiml>",LoaderOptions.GetDefault(request), request);
         }
 
         #region Conversation methods
@@ -992,6 +999,67 @@ namespace RTParser
 
         public AIMLbot.Result HeardSelfSay(string message)
         {
+<<<<<<< .mine
+            currentEar.AddMore(message);
+            if (!currentEar.IsReady())
+            {
+                return null;
+            }
+            message = currentEar.GetMessage();
+            currentEar = new JoinedTextBuffer();
+            message = swapPerson(message);
+            RunTask(() => HeardSelfSay0(message), "heardSelfSay: " + message, 500);
+            return null;
+        }
+
+        List<Thread> ThreadList = new List<Thread>();
+
+        private void RunTask(ThreadStart action, string name, int maxTime)
+        {
+            Thread t = RunTask(action, name);      
+        }
+
+        private Thread RunTask(ThreadStart action, string name)
+        {
+            Thread tr = new Thread(() =>
+            {
+                try
+                {
+                    try
+                    {
+                        action();
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("ERROR " + name + " " + e);
+                    }
+                }
+                finally
+                {
+                    lock (ThreadList) ThreadList.Remove(Thread.CurrentThread);
+                }
+            }) { Name = name };
+            lock (ThreadList) ThreadList.Add(tr);
+            tr.Start();
+            return tr;
+        }
+
+        private JoinedTextBuffer currentEar = new JoinedTextBuffer();
+
+        public AIMLbot.Result HeardSelfSay0(string message)
+        {
+            Console.WriteLine("HEARDSELF SWAP: " + message);
+            try
+            {
+                return Chat(new AIMLbot.Request(message, BotAsUser, this));
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("" + e);
+                return null;
+            }
+            //return Chat(message,BotAsUser.ID);
+=======
             currentEar.AddMore(message);
             if (!currentEar.IsReady())
             {
@@ -1010,6 +1078,7 @@ namespace RTParser
             return Chat(new AIMLbot.Request(message, BotAsUser, this));
             return null;
             //return Chat(message,BotAsUser.ID);
+>>>>>>> .r1063
             AIMLbot.Request request = new AIMLbot.Request(message, BotAsUser, this);
             request.Graph = HeardSelfSayGraph;
             AIMLbot.Result result = new AIMLbot.Result(request.user, this, request);
@@ -1895,6 +1964,11 @@ The AIMLbot program.
                 return current;
             }
             botname = botname.ToLower();
+<<<<<<< .mine
+            if (botname == "default")
+            {
+                return _g;
+            }
             if (botname == "current")
             {
                 return current;
@@ -1903,6 +1977,16 @@ The AIMLbot program.
             {
                 return current.Parent;
             }
+=======
+            if (botname == "current")
+            {
+                return current;
+            }
+            if (botname == "parent")
+            {
+                return current.Parent;
+            }
+>>>>>>> .r1063
             GraphMaster g;
             lock (GraphsByName)
             {
@@ -1917,31 +2001,84 @@ The AIMLbot program.
         {
             Bot myBot = new Bot();
             myBot.loadSettings();
+<<<<<<< .mine
+            string myName = "BinaBot Daxeline";
+            if (args != null && args.Length > 0)
+            {
+                myName = String.Join(" ", args);
+            }
+            User myUser = myBot.FindOrCreateUser(null);
+=======
             string myName = "BinaBot Daxeline";
             if (args != null && args.Length > 0)
             {
                 myName = String.Join(" ", args);
             }
             User myUser = new User("consoleUser", myBot);
+>>>>>>> .r1063
             myBot.isAcceptingUserInput = false;
             myBot.loadAIMLFromFiles();
             myBot.LoadPersonalDirectories(myName);
             myBot.isAcceptingUserInput = true;
+            String s = null;
             while (true)
             {
                 Console.Write("You: ");
+                Console.Out.Flush();
                 string input = Console.ReadLine();
+<<<<<<< .mine
+                if (input == null || input.ToLower() == "quit")
+=======
                 if (input==null || input.ToLower() == "quit")
+>>>>>>> .r1063
                 {
+<<<<<<< .mine
+                    Environment.Exit(0);
+=======
                    Environment.Exit(0);
+>>>>>>> .r1063
                 }
-                else
+                if (String.IsNullOrEmpty(input))
                 {
-                    Request r = new Request(input, myUser, myBot);
-                    Result res = myBot.Chat(r);
-                    Console.WriteLine("Bot: " + res.Output);
+                    Console.WriteLine("Bot: " + s);
+                    continue;
+                }
+                if (input == "set")
+                {
+                    Console.WriteLine(myBot.GlobalSettings.ToString());
+                    Console.WriteLine(myUser.Predicates.ToString());                    
+                    Console.WriteLine("Bot: " + s);
+                    continue;
+                }
+
+
+                try
+                {
+                    if (input.StartsWith("load"))
+                    {
+                        s = input.Substring(4).Trim();
+                        myBot.Loader.loadAIML(s);
+                    }
+                    if (input.StartsWith("self"))
+                    {
+                        s = input.Substring(4).Trim();
+                        myBot.HeardSelfSay0(s);
+                        Console.WriteLine("Bot: " + s);
+                    }
+                    else
+                    {
+                        Request r = new Request(input, myUser, myBot);
+                        Result res = myBot.Chat(r);
+                        s = res.Output;
+                    }
+                    Console.WriteLine("Bot> " + s);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Error: " + e);
                 }
             }
+
         }
 
         public string GetUserMt(User user)
@@ -2016,6 +2153,45 @@ The AIMLbot program.
             }
         }
     }
+<<<<<<< .mine
+
+    internal class JoinedTextBuffer
+    {
+        static int count(string s,string t)
+        {
+            int f = s.IndexOf(t);
+            if (f < 0) return 0;
+            return 1 + count(s.Substring(f + 1), t);
+        }
+        private String message = "";
+        public void AddMore(string m)
+        {
+            if (Noise(m)) return;
+            message += " " + m;
+            message = message.Trim().Replace("  ", " ");
+        }
+
+        private bool Noise(string s)
+        {
+            if (s == "you know,") return true;
+            if (message.EndsWith(s)) return true;
+            return false;
+        }
+
+        public bool IsReady()
+        {
+            if (message.EndsWith(",")) return false;
+            if (message.EndsWith(".")) return true;
+            if (count(message, " ") > 2) return true;
+            return false;           
+        }
+
+        public string GetMessage()
+        {
+            return message;
+        }
+    }
+=======
 
     internal class JoinedTextBuffer
     {
@@ -2053,4 +2229,5 @@ The AIMLbot program.
             return message;
         }
     }
+>>>>>>> .r1063
 }

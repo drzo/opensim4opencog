@@ -45,6 +45,11 @@ namespace RTParser.Utils
             this.loadAIML(this.RProcessor.PathToAIML, LoaderOptions.GetDefault(request), request);
         }
 
+        public void loadAIML(string path)
+        {
+            this.RProcessor.loadAIMLFromURI(path, null);
+        }
+
         /// <summary>
         /// Loads the AIML from files found in the path
         /// </summary>

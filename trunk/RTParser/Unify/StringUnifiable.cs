@@ -273,8 +273,8 @@ namespace RTParser
 
         public virtual bool IsMarkerTag()
         {
-            string test = str.Trim().ToUpper();
-            return test.StartsWith("TAG-");
+            //string test = str.Trim().ToUpper();
+            return str.StartsWith("TAG-");
         }
 
 

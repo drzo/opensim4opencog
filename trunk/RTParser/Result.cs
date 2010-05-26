@@ -34,7 +34,7 @@ namespace RTParser
             }
             OutputSentences.RemoveAt(found);
 #endif
-            OutputSentences.Add(unifiable);
+            lock (OutputSentences) OutputSentences.Add(unifiable);
         }
 
         public Result()
@@ -84,7 +84,7 @@ namespace RTParser
         {
             get
             {
-                if (OutputSentences.Count > 0)
+                lock (OutputSentences) if (OutputSentences.Count > 0)
                 {
                     return this.RawOutput.AsString().Trim().Replace("  "," ");
                 }
@@ -123,7 +123,7 @@ namespace RTParser
             {
                 int resultsLeft = MaxResults;
                 Unifiable result = Unifiable.CreateAppendable();
-                foreach (var sentence in OutputSentences)
+                lock (OutputSentences) foreach (var sentence in OutputSentences)
                 {
                     String sentenceForOutput = sentence.ToValue().Replace("  ", " ").Trim();
 
@@ -141,7 +141,7 @@ namespace RTParser
 
         public decimal OutputSentenceCount
         {
-            get { return OutputSentences.Count;  }
+            get { lock (OutputSentences) return OutputSentences.Count; }
         }
 
         public SettingsDictionary Predicates
@@ -209,7 +209,7 @@ namespace RTParser
 
         public Unifiable GetOutputSentence(int sentence)
         {
-            return OutputSentences[sentence];
+            lock (OutputSentences) return OutputSentences[sentence];
         }
     }
 }

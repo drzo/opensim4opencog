@@ -101,7 +101,7 @@ namespace RTParser.Utils
 
         public override string ToString()
         {
-            return theNameSpace + "(" + Count + ")";
+            return theNameSpace + "(" + Count + ") " + DictionaryAsXML.DocumentElement.InnerXml;
         }
 
         /// <summary>
@@ -330,7 +330,7 @@ namespace RTParser.Utils
             }
             if (overriden)
             {
-                SettingsLog("Sett override " + name + "=" + value);
+                SettingsLog("UPDATE Sett override " + name + "=" + value);
                 return true;
             }
             lock (orderedKeys)
@@ -340,7 +340,7 @@ namespace RTParser.Utils
                 {
                     var old = this.settingsHash[key];
                     this.removeFromHash(key);
-                    SettingsLog("Setting Local " + name + "=" + value);
+                    SettingsLog("UPDATE Setting Local " + name + "=" + value);
                     this.settingsHash.Add(MakeCaseInsensitive.TransformInput(key), value);
                     return true;
                 }
@@ -416,7 +416,13 @@ namespace RTParser.Utils
         {
             if (NoDebug) return;
             var fc = new StackTrace().FrameCount;
-            Console.WriteLine("S: " + NameSpace + " ("+ fc + ")   " + unifiable);
+            Console.WriteLine("S: " + NameSpace + " (" + fc + ")   " + unifiable);
+            if (fc > 200)
+            {
+                //throw new 
+                Console.WriteLine("OVERFLOWING: " + NameSpace + " (" + fc + ")   " + unifiable);
+                //Console.ReadLine();
+            }
         }
 
         /// <summary>

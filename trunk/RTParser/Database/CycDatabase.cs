@@ -231,7 +231,7 @@ namespace RTParser.Database
                     return true;
                 }
             }
-            term = EvalSubL(String.Format("(car (denots-of-Unifiable \"{0}\"))", text), null);
+            term = EvalSubL(String.Format("(car (denots-of-string \"{0}\"))", text), null);
             if (Unifiable.IsTrue(term))
             {
                 if (IsaFilter(term, filter))
