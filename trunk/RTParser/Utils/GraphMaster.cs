@@ -226,7 +226,7 @@ namespace RTParser.Utils
 
         public UList evaluate(UPath unifiable, SubQuery query, Request request, MatchState state, Unifiable appendable)
         {
-            DoParentEval(request, unifiable, query, state, appendable);
+            DoParentEval(request, unifiable, query, state);
             QueryList ql = new QueryList();
             var templs = RootNode.evaluateOLDY(unifiable, query, request, state, appendable, ql);
             var qr = ql.ToUList();
@@ -246,8 +246,10 @@ namespace RTParser.Utils
             return qr;
         }
 
-        private void DoParentEval(Request request, Unifiable unifiable, SubQuery query, MatchState state, Unifiable appendable)
+        private void DoParentEval(Request request, Unifiable unifiable, SubQuery query, MatchState state)
         {
+            RTPBot proc = request.Proccessor;
+            AIMLbot.Result result = new AIMLbot.Result(request.user, proc, request);
             GraphMaster g = request.Graph;
             foreach (var p in Parents)
             {
@@ -255,8 +257,38 @@ namespace RTParser.Utils
                 {
                     try
                     {
+                        QueryList ql = new QueryList();
+                        query = query.CopyOf();
                         request.Graph = p;
-                        var silent = p.RootNode.evaluateOLDY(unifiable, query, request, state, appendable, new QueryList());
+                        var silent = p.RootNode.evaluateOLDY(unifiable, query, request, state, Unifiable.CreateAppendable(), ql);
+                        if (ql.Count>0)
+                        {
+                            bool found0 = false;
+                            UList v = ql.ToUList();
+                            foreach (TemplateInfo s in v)
+                            {
+                                string st = "" + s;
+                                // Start each the same
+                                s.Rating = 1.0;
+                                try
+                                {
+                                    query.CurrentTemplate = s;
+                                    if (proc.proccessResponse(query, request, result, s.Output, s.Guard, out found0, null))
+                                    {
+                                        found0 = true;
+                                    }
+                                }
+                                catch (Exception e)
+                                {
+                                    proc.writeToLog("" + e);
+                                    proc.writeToLog("WARNING! A problem was encountered when trying to process the input: " +
+                                                    request.rawInput + " with the template: \"" + s + "\"");
+                                }
+                                Console.WriteLine(st);                                
+                                //if (found0) break;
+                            }
+
+                        }
                     }
                     finally
                     {

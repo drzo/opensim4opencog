@@ -256,6 +256,7 @@ namespace RTParser.Utils
             lock (orderedKeys)
             {
                 string key = MakeCaseInsensitive.TransformInput(Unifiable.Create(name));
+                SettingsLog("ADD Setting Local " + name + "=" + value);
                 if (key.Length > 0)
                 {
                     this.removeSetting(key);

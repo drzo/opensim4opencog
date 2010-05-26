@@ -1240,7 +1240,7 @@ namespace RTParser
         /// <param name="request"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        private bool processTemplate(SubQuery query, Request request, Result result, AIMLTagHandler handler)
+        public bool processTemplate(SubQuery query, Request request, Result result, AIMLTagHandler handler)
         {
             UList queryTemplate = query.Templates;
             if (queryTemplate != null && queryTemplate.Count > 0)

@@ -139,7 +139,7 @@ namespace RTParser.Utils
             return Request.addSetting(name, value);
         }
 
-        internal SubQuery CopyOf()
+        public SubQuery CopyOf()
         {
             SubQuery sq = new SubQuery(FullPath,Result,Request);
             sq.InputStar.AddRange(InputStar);
