@@ -37,9 +37,9 @@ namespace RTParser.AIMLTagHandlers
                 {
                     string payload = templateNodeInnerText.ToValue();
 
-                    string machine = GetAttribValue("machine", null);
-                    string myState = GetAttribValue("state", null);
-                    string myEvidence = GetAttribValue("evidence", null);
+                    string machine = GetAttribValue("machine", this.user.bot.pMSM.lastDefMachine);
+                    string myState = GetAttribValue("state", this.user.bot.pMSM.lastDefState);
+                    string myEvidence = GetAttribValue("evidence", this.user.bot.pMSM.lastDefEvidence);
                     string prob_str = GetAttribValue("prob", "0.1");
                     double prob = double.Parse(prob_str);
                     this.user.bot.pMSM.addEmission(machine, myState, myEvidence, prob);

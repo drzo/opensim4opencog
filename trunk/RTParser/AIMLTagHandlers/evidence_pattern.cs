@@ -37,7 +37,7 @@ namespace RTParser.AIMLTagHandlers
                 {
                     string payload = templateNodeInnerText.ToValue();
 
-                    string evidence = GetAttribValue("evidence", null);
+                    string evidence = GetAttribValue("evidence", this.user.bot.pMSM.lastDefEvidence );
                     string prob_str = GetAttribValue("prob", "1.0");
                     double prob = double.Parse(prob_str);
 

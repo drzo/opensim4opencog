@@ -33,6 +33,9 @@ namespace RTParser.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "processmsm")
             {
+                string machine = GetAttribValue("name", null);
+                //this.user.bot.pMSM.lastDefMachine = machine;
+                this.user.bot.pMSM.addMachine(machine);
             }
             return Unifiable.Empty;
 
@@ -56,6 +59,9 @@ namespace RTParser.AIMLTagHandlers
         public Hashtable next_machineStateVal = new Hashtable();
 
         public double transSum = 0.0001;
+        public string lastDefMachine = "m1";
+        public string lastDefState="s1";
+        public string lastDefEvidence = "e1";
 
         static actMSM()
         {
@@ -65,6 +71,7 @@ namespace RTParser.AIMLTagHandlers
         {
             Console.WriteLine("MSM: addMachine({0})", machine);
             machines[machine] = 1;
+            lastDefMachine = machine;
         }
 
         public void setState(string machine, string state, double prob)
@@ -77,6 +84,7 @@ namespace RTParser.AIMLTagHandlers
         {
             Console.WriteLine("MSM:   defState({0},{1},{2},{3})", machine, state, initProb, selfProb);
             machines[machine] = 1;
+            lastDefState = state;
             string machineState = machine + ":" + state;
             setState(machine, state, initProb);
             addTransition(machine, state, state, selfProb);
@@ -181,6 +189,8 @@ namespace RTParser.AIMLTagHandlers
         public void addEmission(string machine, string srcState, string evidence, double prob)
         {
             Console.WriteLine("MSM: addEmission({0},{1},{2},{3})", machine, srcState, evidence, prob);
+            lastDefEvidence = evidence;
+
             string machineSrcState = machine + ":" + srcState;
             try
             {
