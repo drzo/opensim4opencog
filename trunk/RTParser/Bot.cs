@@ -999,7 +999,6 @@ namespace RTParser
 
         public AIMLbot.Result HeardSelfSay(string message)
         {
-<<<<<<< .mine
             currentEar.AddMore(message);
             if (!currentEar.IsReady())
             {
@@ -1059,26 +1058,6 @@ namespace RTParser
                 return null;
             }
             //return Chat(message,BotAsUser.ID);
-=======
-            currentEar.AddMore(message);
-            if (!currentEar.IsReady())
-            {
-                return null;
-            }
-            message = currentEar.GetMessage();
-            currentEar = new JoinedTextBuffer();
-            message = swapPerson(message);
-            return HeardSelfSay0(message);
-        }
-        private JoinedTextBuffer currentEar = new JoinedTextBuffer();
-
-        public AIMLbot.Result HeardSelfSay0(string message)
-        {
-            Console.WriteLine("HEARDSELF SWAP: " + message);
-            return Chat(new AIMLbot.Request(message, BotAsUser, this));
-            return null;
-            //return Chat(message,BotAsUser.ID);
->>>>>>> .r1063
             AIMLbot.Request request = new AIMLbot.Request(message, BotAsUser, this);
             request.Graph = HeardSelfSayGraph;
             AIMLbot.Result result = new AIMLbot.Result(request.user, this, request);
@@ -1964,7 +1943,6 @@ The AIMLbot program.
                 return current;
             }
             botname = botname.ToLower();
-<<<<<<< .mine
             if (botname == "default")
             {
                 return _g;
@@ -1977,16 +1955,6 @@ The AIMLbot program.
             {
                 return current.Parent;
             }
-=======
-            if (botname == "current")
-            {
-                return current;
-            }
-            if (botname == "parent")
-            {
-                return current.Parent;
-            }
->>>>>>> .r1063
             GraphMaster g;
             lock (GraphsByName)
             {
@@ -2001,21 +1969,12 @@ The AIMLbot program.
         {
             Bot myBot = new Bot();
             myBot.loadSettings();
-<<<<<<< .mine
             string myName = "BinaBot Daxeline";
             if (args != null && args.Length > 0)
             {
                 myName = String.Join(" ", args);
             }
             User myUser = myBot.FindOrCreateUser(null);
-=======
-            string myName = "BinaBot Daxeline";
-            if (args != null && args.Length > 0)
-            {
-                myName = String.Join(" ", args);
-            }
-            User myUser = new User("consoleUser", myBot);
->>>>>>> .r1063
             myBot.isAcceptingUserInput = false;
             myBot.loadAIMLFromFiles();
             myBot.LoadPersonalDirectories(myName);
@@ -2026,17 +1985,9 @@ The AIMLbot program.
                 Console.Write("You: ");
                 Console.Out.Flush();
                 string input = Console.ReadLine();
-<<<<<<< .mine
                 if (input == null || input.ToLower() == "quit")
-=======
-                if (input==null || input.ToLower() == "quit")
->>>>>>> .r1063
                 {
-<<<<<<< .mine
                     Environment.Exit(0);
-=======
-                   Environment.Exit(0);
->>>>>>> .r1063
                 }
                 if (String.IsNullOrEmpty(input))
                 {
@@ -2050,14 +2001,13 @@ The AIMLbot program.
                     Console.WriteLine("Bot: " + s);
                     continue;
                 }
-
-
                 try
                 {
                     if (input.StartsWith("load"))
                     {
                         s = input.Substring(4).Trim();
                         myBot.Loader.loadAIML(s);
+                        continue;
                     }
                     if (input.StartsWith("self"))
                     {
@@ -2153,7 +2103,6 @@ The AIMLbot program.
             }
         }
     }
-<<<<<<< .mine
 
     internal class JoinedTextBuffer
     {
@@ -2191,43 +2140,4 @@ The AIMLbot program.
             return message;
         }
     }
-=======
-
-    internal class JoinedTextBuffer
-    {
-        static int count(string s,string t)
-        {
-            int f = s.IndexOf(t);
-            if (f < 0) return 0;
-            return 1 + count(s.Substring(f + 1), t);
-        }
-        private String message = "";
-        public void AddMore(string m)
-        {
-            if (Noise(m)) return;
-            message += " " + m;
-            message = message.Trim().Replace("  ", " ");
-        }
-
-        private bool Noise(string s)
-        {
-            if (s == "you know,") return true;
-            if (message.EndsWith(s)) return true;
-            return false;
-        }
-
-        public bool IsReady()
-        {
-            if (message.EndsWith(",")) return false;
-            if (message.EndsWith(".")) return true;
-            if (count(message, " ") > 4) return true;
-            return false;           
-        }
-
-        public string GetMessage()
-        {
-            return message;
-        }
-    }
->>>>>>> .r1063
 }
