@@ -1,137 +1,137 @@
 <xml>
-<alias to="EXPRESS_AFRAID" type="Animation"><from>emot_afraid_x_01.csv</from><from>emot_afraid_x_02.csv</from><from>emot_afraid_x_03.csv</from></alias>		
-<alias to="AIM_R_BAZOOKA" type="Animation"><from>emot_aggressive_x_01.csv</from><from>emot_angry_x_02.csv</from><from>emot_angry_x_03.csv</from><from>emot_offended_x_01.csv</from></alias>		
-<alias to="AIM_L_BOW" type="Animation"><from>head_nod_yes_01.csv</from><from>emot_aggressive_x_01.csv</from><from>head_nod_yes_03.csv</from><from>emot_irritated_x_05.csv</from></alias>		
-<alias to="AIM_R_HANDGUN" type="Animation"><from>emot_irritated_x_02.csv</from><from>emot_irritated_x_01.csv</from><from>emot_offended_x_01.csv</from><from>emot_irritated_very_01.csv</from></alias>		
-<alias to="AIM_R_RIFLE" type="Animation"><from>emot_irritated_x_02.csv</from><from>emot_irritated_x_01.csv</from><from>emot_aggressive_x_01.csv</from></alias>		
-<alias to="EXPRESS_ANGER" type="Animation"><from>emot_angry_x_01.csv</from><from>emot_angry_x_02.csv</from><from>emot_angry_x_03.csv</from><from>emot_irritated_x_05.csv</from><from>emot_irritated_very_01.csv</from><from>look_thinking_downleftirritated_01.csv</from></alias>		
-<alias to="AWAY" type="Animation"><from>look_faces_left_03.csv</from><from>look_faces_right_02.csv</from></alias>		
-<alias to="BACKFLIP" type="Animation"><from>head_shake_no_04.csv</from><from>look_thinking_downrighthappy_01.csv</from><from>look_thinking_uprighthappy_01.csv</from></alias>		
-<alias to="EXPRESS_LAUGH" type="Animation"><from>emot_laughing_x_03.csv</from><from>emot_laughing_x_01.csv</from><from>emot_laughing_x_02.csv</from><from>look_thinking_uprighthappy_01.csv</from></alias>		
-<alias to="BLOWKISS" type="Animation"><from>emot_amused_x_03.csv</from><from>emot_amused_nod_01.csv</from><from>emot_appreciative_x_01.csv</from><from>look_thinking_downrighthappy_01.csv</from></alias>		
-<alias to="EXPRESS_BORED" type="Animation"><from>misc_yawn_x_02.csv</from><from>misc_tired_x_03.csv</from></alias>		
-<alias to="BOW" type="Animation"><from>head_nod_yes_01.csv</from><from>head_nod_yes_02.csv</from><from>head_nod_yes_03.csv</from><from>look_thinking_downamused_01.csv</from></alias>		
-<alias to="BRUSH" type="Animation"><from>misc_eyeroll_x_02.csv</from></alias>		
-<!--_<alias to="busy</pattern><template><think><srai>SYSTEMANIM_<random-->		
-<alias to="CLAP" type="Animation"><from>emot_amused_x_02.csv</from><from>emot_amused_nod_01.csv</from><from>look_thinking_downrighthappy_01.csv</from></alias>		
-<alias to="COURTBOW" type="Animation"><from>head_nod_yes_01.csv</from><from>head_nod_yes_02.csv</from><from>head_nod_yes_03.csv</from></alias>		
-<alias to="CROUCH" type="Animation"><from>emot_skeptical_x_02.csv</from><from>emot_concentrating_x_03.csv</from></alias>		
-<alias to="CROUCHWALK" type="Animation"><from>emot_concentrating_x_02.csv</from><from>emot_skeptical_x_05.csv</from></alias>		
-<alias to="EXPRESS_CRY" type="Animation"><from>emot_sad_x_01.csv</from><from>emot_sad_x_03.csv</from><from>emot_sad_x_02.csv</from><from>look_thinking_downsad_01.csv</from></alias>		
-<alias to="TURN_180" type="Animation"><from>look_faces_left_04.csv</from><from>look_faces_right_04.csv</from><from>look_faces_left_05.csv</from><from>look_faces_right_03.csv</from><from>look_thinking_left_02.csv</from></alias>		
-<alias to="TURNBACK_180" type="Animation"><from>look_faces_left_01.csv</from><from>look_faces_right_01.csv</from><from>look_faces_left_02.csv</from><from>look_faces_right_02.csv</from><from>look_thinking_left_01.csv</from></alias>		
-<alias to="DANCE1" type="Animation"><from>misc_dancing_x_01.csv</from></alias>		
-<alias to="DANCE2" type="Animation"><from>misc_dancing_x_02.csv</from></alias>		
-<alias to="DANCE3" type="Animation"><from>misc_dancing_x_03.csv</from></alias>		
-<alias to="DANCE4" type="Animation"><from>misc_dancing_x_04.csv</from></alias>		
-<alias to="DANCE5" type="Animation"><from>misc_dancing_x_02.csv</from></alias>		
-<alias to="DANCE6" type="Animation"><from>misc_dancing_x_01.csv</from></alias>		
-<alias to="DANCE7" type="Animation"><from>misc_dancing_x_02.csv</from></alias>		
-<alias to="DANCE8" type="Animation"><from>misc_dancing_x_03.csv</from></alias>		
-<alias to="DEAD" type="Animation"><from>misc_tired_x_01.csv</from><from>misc_tired_x_02.csv</from><from>misc_tired_x_03.csv</from></alias>		
-<alias to="DRINK" type="Animation"><from>emot_amused_x_02.csv</from><from>emot_amused_x_01.csv</from><from>emot_amused_nod_01.csv</from></alias>		
-<alias to="EXPRESS_EMBARRASED" type="Animation"><from>emot_embarrassed_x_01.csv</from><from>look_thinking_downleftfrown_01.csv</from><from>emot_shy_x_01.csv</from><from>look_thinking_downleftfrown_01.csv</from></alias>		
-<alias to="EXPRESS_AFRAID_EMOTE" type="Animation"><from>emot_afraid_x_01.csv</from><from>emot_afraid_x_02.csv</from><from>emot_afraid_x_03.csv</from></alias>		
-<alias to="EXPRESS_ANGER_EMOTE" type="Animation"><from>emot_angry_x_01.csv</from><from>emot_angry_x_02.csv</from><from>emot_angry_x_03.csv</from><from>emot_irritated_very_01.csv</from><from>emot_irritated_x_05.csv</from></alias>		
-<alias to="EXPRESS_BORED_EMOTE" type="Animation"><from>misc_yawn_x_01.csv</from><from>misc_yawn_x_02.csv</from><from>misc_yawn_x_03.csv</from><from>misc_tired_x_01.csv</from><from>misc_tired_x_02.csv</from><from>misc_tired_x_03.csv</from></alias>		
-<alias to="EXPRESS_CRY_EMOTE" type="Animation"><from>emot_sad_x_01.csv</from><from>emot_sad_x_02.csv</from><from>emot_sad_x_03.csv</from><from>5.look_down_like_thinking_soething_sad.csv</from></alias>		
-<alias to="EXPRESS_DISDAIN" type="Animation"><from>emot_offended_x_01.csv</from><from>misc_eyeroll_x_01.csv</from><from>misc_eyeroll_x_02.csv</from><from>misc_eyeroll_x_02.csv</from><from>emot_skeptical_x_01.csv</from><from>emot_skeptical_x_02.csv</from><from>emot_skeptical_x_03.csv</from><from>emot_disgusted_x_01.csv</from><from>emot_disgusted_x_02.csv</from><from>emot_irritated_very_01.csv</from><from>look_thinking_downleftirritated_01.csv</from><from>look_thinking_upleftsneer_01.csv</from></alias>		
-<alias to="EXPRESS_EMBARRASSED_EMOTE" type="Animation"><from>emot_embarrassed_x_01.csv</from><from>emot_shy_x_01.csv</from><from>emot_shy_x_02.csv</from><from>emot_shy_x_03.csv</from><from>look_thinking_downleftfrown_01.csv</from><from>look_thinking_downsad_01.csv</from></alias>		
-<alias to="EXPRESS_FROWN" type="Animation"><from>emot_sad_x_02.csv</from><from>emot_sad_x_03.csv</from><from>emot_irritated_x_01.csv</from><from>emot_irritated_x_02.csv</from><from>emot_irritated_x_03.csv</from><from>emot_irritated_x_04.csv</from><from>emot_irritated_very_01.csv</from><from>look_thinking_downsad_01.csv</from></alias>		
-<alias to="EXPRESS_KISS" type="Animation"><from>emot_amused_x_01.csv</from><from>emot_amused_x_02.csv</from><from>emot_amused_x_03.csv</from><from>emot_confident_x_01.csv</from></alias>		
-<alias to="EXPRESS_LAUGH_EMOTE" type="Animation"><from>emot_laughing_x_01.csv</from><from>emot_laughing_x_02.csv</from><from>emot_laughing_x_03.csv</from><from>emot_laughing_x_04.csv</from><from>look_thinking_uprightamused_01.csv</from><from>look_thinking_uprighthappy_01.csv</from></alias>		
-<alias to="EXPRESS_OPEN_MOUTH" type="Animation"><from>misc_yawn_x_01.csv</from><from>misc_yawn_x_02.csv</from><from>emot_surprised_x_01.csv</from><from>emot_surprised_x_02.csv</from><from>emot_surprised_x_03.csv</from><from>emot_surprised_x_04.csv</from><from>look_thinking_downleftsurprised_01.csv</from><from>look_thinking_uprightsurprise_01.csv</from></alias>		
-<alias to="EXPRESS_REPULSED_EMOTE" type="Animation"><from>emot_disgusted_x_01.csv</from><from>emot_disgusted_x_02.csv</from><from>emot_skeptical_x_06.csv</from><from>look_thinking_downleftirritated_01.csv</from></alias>		
-<alias to="EXPRESS_SAD_EMOTE" type="Animation"><from>emot_sad_x_01.csv</from><from>emot_sad_x_02.csv</from><from>emot_sad_x_03.csv</from><from>look_thinking_downsad_01.csv</from></alias>		
-<alias to="EXPRESS_SHRUG_EMOTE" type="Animation"><from>head_shake_no_01.csv</from><from>head_shake_no_02.csv</from><from>head_shake_no_03.csv</from><from>head_shake_no_04.csv</from></alias>		
-<alias to="EXPRESS_SMILE" type="Animation"><from>emot_happy_x_01.csv</from><from>emot_happy_x_02.csv</from><from>emot_happy_x_03.csv</from><from>emot_happy_very_01.csv</from><from>emot_happy_very_02.csv</from><from>look_thinking_uplefttamused_01.csv</from><from>look_thinking_downleftsmile_01.csv</from><from>look_thinking_downrighthappy_01.csv</from><from>look_thinking_downrightsmile_01.csv</from><from>look_thinking_uplefttamused_01.csv</from><from>look_thinking_uprightamused_01.csv</from><from>look_thinking_uprighthappy_01.csv</from></alias>		
-<alias to="EXPRESS_SURPRISE_EMOTE" type="Animation"><from>emot_surprised_x_01.csv</from><from>emot_surprised_x_02.csv</from><from>emot_surprised_x_03.csv</from><from>emot_surprised_x_04.csv</from><from>look_thinking_uprightsurprise_01.csv</from></alias>		
-<alias to="EXPRESS_TONGUE_OUT" type="Animation"><from>misc_eyeroll_x_01.csv</from><from>misc_eyeroll_x_02.csv</from><from>misc_eyeroll_x_02.csv</from><from>emot_disgusted_x_01.csv</from><from>emot_disgusted_x_02.csv</from></alias>		
-<alias to="EXPRESS_TOOTHSMILE" type="Animation"><from>emot_happy_very_01.csv</from><from>emot_happy_very_02.csv</from><from>emot_happy_x_03.csv</from><from>emot_laughing_x_04.csv</from><from>look_thinking_uprighthappy_01.csv</from></alias>		
-<alias to="EXPRESS_WINK_EMOTE" type="Animation"><from>emot_amused_x_01.csv</from><from>emot_amused_x_02.csv</from><from>emot_amused_x_03.csv</from><from>emot_amused_nod_01.csv</from><from>look_thinking_uplefttamused_01.csv</from><from>look_thinking_uplefttamused_01.csv</from><from>look_thinking_uprightamused_01.csv</from></alias>		
-<alias to="EXPRESS_WORRY_EMOTE" type="Animation"><from>emot_anxious_x_01.csv</from><from>emot_confused_x_03.csv</from><from>emot_skeptical_x_05.csv</from><from>emot_skeptical_x_06.csv</from><from>look_thinking_uprightsurprise_01.csv</from></alias>		
-<alias to="FALLDOWN" type="Animation"><from>emot_confused_x_02</from><from>emot_confused_x_01</from><from>look_thinking_down_02.csv</from></alias>		
-<alias to="FEMALE_WALK" type="Animation"><from>emot_confident_x_01.csv</from><from>look_thinking_uprightamused_01.csv</from></alias>		
-<alias to="ANGRY_FINGERWAG" type="Animation"><from>emot_irritated_x_01.csv</from><from>emot_angry_x_01.csv</from><from>emot_irritated_x_05.csv</from><from>look_thinking_upleftsneer_01.csv</from></alias>		
-<alias to="FIST_PUMP" type="Animation"><from>emot_confident_x_01.csv</from></alias>		
-<alias to="FLY" type="Animation"><from>emot_concentrating_x_02.csv</from></alias>		
-<alias to="FLYSLOW" type="Animation"><from>emot_concentrating_x_01.csv</from></alias>		
-<alias to="HELLO" type="Animation"><from>head_nod_yes_01.csv</from><from>emot_appreciative_x_01.csv</from><from>emot_happy_x_03.csv</from><from>emot_amused_nod_01.csv</from><from>head_eyesupdownblink_x_01.csv</from></alias>		
-<!--<alias to="HOLD_R_BAZOOKA</pattern><template><think><srai>SYSTEMANIM_<random-->		
-<!--<alias to="HOLD_L_BOW</pattern><template><think><srai>SYSTEMANIM_<random-->		
-<!--<alias to="HOLD_R_HANDGUN</pattern><template><think><srai>SYSTEMANIM_<random-->
-<!--<alias to="HOLD_R_RIFLE</pattern><template><think><srai>SYSTEMANIM_<random-->		
-<!--<alias to="HOLD_THROW_R</pattern><template><think><srai>SYSTEMANIM_<random-->		
-<!--<alias to="HOVER</pattern><template><think><srai>SYSTEMANIM_<random-->		
-<!--<alias to="hover_down</pattern><template><think><srai>SYSTEMANIM_<random-->		
-<!--<alias to="hover_up</pattern><template><think><srai>SYSTEMANIM_<random-->		
-<alias to="IMPATIENT" type="Animation"><from>emot_irritated_x_01.csv</from><from>emot_irritated_x_02.csv</from><from>emot_irritated_x_03.csv</from><from>look_thinking_upleftsneer_01.csv</from></alias>		
-<!--<alias to="jump</pattern><template><think><srai>SYSTEMANIM_<random-->		
-<alias to="JUMPFORJOY" type="Animation"><from>emot_happy_very_01.csv</from><from>emot_happy_very_02.csv</from><from>emot_surprised_x_04.csv</from></alias>		
-<alias to="KISSMYBUTT" type="Animation"><from>emot_offended_x_01.csv</from><from>misc_yawn_x_03.csv</from><from>look_thinking_upleftsneer_01.csv</from></alias>		
-<!--<alias to="land</pattern><template><think><srai>SYSTEMANIM_<random-->		
-<alias to="LAUGH_SHORT" type="Animation"><from>emot_laughing_x_01.csv</from><from>emot_laughing_x_01.csv</from><from>emot_laughing_x_02.csv</from></alias>		
-<!--<alias to="soft_land</pattern><template><think><srai>SYSTEMANIM_<random-->		
-<!--<alias to="motorcycle_sit</pattern><template><think><srai>SYSTEMANIM_<random-->		
-<!--<alias to="musclebeach</pattern><template><think><srai>SYSTEMANIM_<random-->		
-<alias to="NO_HEAD" type="Animation"><from>head_shake_no_01.csv</from><from>head_shake_no_02.csv</from><from>head_shake_no_03.csv</from><from>head_shake_no_04.csv</from></alias>		
-<alias to="NO_UNHAPPY" type="Animation"><from>head_shake_no_01.csv</from><from>head_shake_no_02.csv</from><from>head_shake_no_03.csv</from><from>head_shake_no_04.csv</from></alias>		
-<alias to="NYANYA" type="Animation"><from>emot_amused_x_01.csv</from><from>look_thinking_uplefttamused_01.csv</from></alias>		
-<alias to="PUNCH_ONETWO" type="Animation"><from>emot_amused_x_01.csv</from><from>emot_amused_nod_01.csv</from></alias>		
-<alias to="PEACE" type="Animation"><from>emot_confident_x_01.csv</from><from>emot_appreciative_x_01.csv</from></alias>		
-<alias to="POINT_ME" type="Animation"><from>head_nod_yes_03.csv</from></alias>		
-<alias to="POINT_YOU" type="Animation"><from>head_nod_yes_02.csv</from></alias>		
-<alias to="PREJUMP" type="Animation"><from>emot_concentrating_x_02.csv</from></alias>		
-<alias to="PUNCH_L" type="Animation"><from>emot_concentrating_x_03.csv</from><from>emot_skeptical_x_03.csv</from></alias>		
-<alias to="PUNCH_R" type="Animation"><from>emot_concentrating_x_02.csv</from><from>emot_skeptical_x_01.csv</from></alias>		
-<alias to="EXPRESS_REPULSED" type="Animation"><from>emot_disgusted_x_01.csv.csv</from><from>emot_disgusted_x_02.csv</from><from>emot_skeptical_x_06.csv</from><from>look_thinking_downleftirritated_01.csv</from></alias>		
-<alias to="KICK_ROUNDHOUSE_R" type="Animation"><from>emot_concentrating_x_03.csv</from></alias>		
-<alias to="RPS_COUNTDOWN" type="Animation"><from>emot_concentrating_x_02.csv</from></alias>		
-<alias to="RPS_PAPER" type="Animation"><from>emot_concentrating_x_02.csv</from></alias>		
-<alias to="RPS_ROCK" type="Animation"><from>>	emot_concentrating_x_03.csv</from></alias>		
-<alias to="RPS_SCISSORS" type="Animation"><from>emot_concentrating_x_02.csv</from></alias>		
-<!--<alias to="RUN</pattern><template><think><srai>SYSTEMANIM_<random-->		
-<alias to="EXPRESS_SAD" type="Animation"><from>emot_sad_x_01.csv</from><from>emot_sad_x_02.csv</from><from>emot_sad_x_03.csv</from><from>look_thinking_downsad_01.csv</from></alias>		
-<alias to="SALUTE" type="Animation"><from>head_nod_yes_03.csv</from><from>head_nod_yes_02.csv</from></alias>		
-<alias to="SHOOT_L_BOW" type="Animation"><from>emot_concentrating_x_02.csv</from><from>emot_concentrating_x_03.csv</from></alias>		
-<alias to="SHOUT" type="Animation"><from>misc_yawn_x_01.csv</from><from>misc_yawn_x_02.csv</from></alias>		
-<alias to="EXPRESS_SHRUG" type="Animation"><from>misc_yawn_x_03.csv</from><from>misc_yawn_x_04.csv</from><from>emot_confused_x_01</from><from>look_thinking_down_05.csv</from></alias>		
-<alias to="SIT" type="Animation"><from>emot_amused_x_01.csv</from><from>emot_concentrating_x_03.csv</from><from>look_thinking_down_06.csv</from></alias>		
-<alias to="SIT_FEMALE" type="Animation"><from>emot_amused_x_02.csv</from><from>emot_concentrating_x_03.csv</from><from>emot_amused_nod_01.csv</from></alias>		
-<alias to="SIT_GROUND" type="Animation"><from>emot_amused_x_03.csv</from><from>emot_concentrating_x_03.csv</from><from>look_thinking_down_04.csv</from></alias>		
-<alias to="SIT_GROUND_CONSTRAINED" type="Animation"><from>emot_amused_x_04.csv</from><from>emot_concentrating_x_03.csv</from><from>emot_amused_nod_01.csv</from></alias>		
-<alias to="SIT_GENERIC" type="Animation"><from>emot_amused_x_05.csv</from><from>emot_concentrating_x_03.csv</from><from>look_thinking_down_03.csv</from></alias>		
-<alias to="SIT_TO_STAND" type="Animation"><from>emot_amused_x_06.csv</from><from>emot_concentrating_x_03.csv</from><from>look_thinking_up_01.csv</from></alias>		
-<alias to="SLEEP" type="Animation"><from>misc_yawn_x_01.csv</from><from>misc_yawn_x_02.csv</from><from>misc_yawn_x_03.csv</from><from>misc_tired_x_01.csv</from><from>misc_tired_x_02.csv</from><from>misc_tired_x_03.csv</from></alias>		
-<alias to="SMOKE_IDLE" type="Animation"><from>misc_yawn_x_01.csv</from><from>misc_yawn_x_02.csv</from><from>misc_yawn_x_03.csv_</from></alias>		
-<alias to="SMOKE_INHALE" type="Animation"><from>emot_concentrating_x_03.csv</from></alias>		
-<alias to="SMOKE_THROW_DOWN" type="Animation"><from>emot_disgusted_x_01.csv</from><from>look_thinking_down_06.csv</from></alias>		
-<alias to="SNAPSHOT" type="Animation"><from>emot_happy_very_02.csv</from><from>emot_happy_very_01.csv</from></alias>		
-<alias to="STAND" type="Animation"><from>emot_concentrating_x_01.csv</from></alias>		
-<alias to="STANDUP" type="Animation"><from>emot_concentrating_x_02.csv</from></alias>		
-<alias to="STAND_1" type="Animation"><from>emot_concentrating_x_03.csv</from></alias>		
-<alias to="STAND_2" type="Animation"><from>emot_concentrating_x_01.csv</from></alias>		
-<alias to="STAND_3" type="Animation"><from>emot_concentrating_x_02.csv</from></alias>		
-<alias to="STAND_4" type="Animation"><from>emot_concentrating_x_03.csv</from></alias>		
-<alias to="STRETCH" type="Animation"><from>misc_yawn_x_01.csv</from><from>misc_yawn_x_02.csv</from><from>misc_yawn_x_03.csv</from></alias>		
-<alias to="STRIDE" type="Animation"><from>emot_concentrating_x_01.csv</from></alias>		
-<alias to="SURF" type="Animation"><from>emot_concentrating_x_02.csv</from><from>look_thinking_downamused_01.csv</from></alias>		
-<alias to="EXPRESS_SURPRISE" type="Animation"><from>emot_surprised_x_01.csv</from><from>emot_surprised_x_02.csv</from><from>emot_surprised_x_03.csv</from><from>look_thinking_downleftsurprised_01.csv</from></alias>		
-<alias to="SWORD_STRIKE_R" type="Animation"><from>emot_concentrating_x_03.csv</from></alias>		
-<alias to="TALK" type="Animation"><from>talk_x_x_01.csv</from><from>talk_x_x_02.csv</from><from>talk_x_x_03.csv</from><from>talk_x_x_04.csv</from></alias>		
-<alias to="ANGRY_TANTRUM" type="Animation"><from>emot_angry_x_01.csv</from><from>emot_angry_x_02.csv</from><from>emot_angry_x_03.csv</from></alias>		
-<alias to="THROW_R" type="Animation"><from>emot_concentrating_x_03.csv</from></alias>		
-<alias to="TRYON_SHIRT" type="Animation"><from>emot_happy_x_01.csv</from><from>emot_happy_x_03.csv</from></alias>		
-<alias to="TURNLEFT" type="Animation"><from>look_faces_left_06.csv</from><from>look_thinking_left_01.csv</from><from>look_thinking_left_02.csv</from></alias>		
-<alias to="TURNRIGHT" type="Animation"><from>look_faces_left_05.csv</from><from>look_thinking_right_01.csv</from><from>look_thinking_right_02.csv</from></alias>		
-<alias to="TYPE" type="Animation"><from>emot_concentrating_x_01.csv</from></alias>		
-<alias to="WALK" type="Animation"><from>emot_concentrating_x_03.csv</from></alias>		
-<alias to="WHISPER" type="Animation"><from>emot_shy_x_03.csv</from><from>emot_shy_x_01.csv</from><from>misc_tired_x_01.csv</from></alias>		
-<alias to="WHISTLE" type="Animation"><from>emot_happy_x_01.csv</from><from>emot_amused_x_01.csv</from><from>emot_amused_x_02.csv</from><from>emot_amused_x_03.csv</from><from>emot_amused_x_04.csv</from><from>emot_amused_x_05.csv</from><from>emot_amused_x_06.csv	_	emot_amused_nod_01.csv	_</from></alias>		
-<alias to="EXPRESS_WINK" type="Animation"><from>emot_amused_x_02.csv</from><from>head_nod_yes_03.csv</from><from>emot_amused_nod_01.csv</from><from>look_thinking_uprighthappy_01.csv</from></alias>		
-<alias to="WINK_HOLLYWOOD" type="Animation"><from>emot_happy_x_01.csv</from><from>emot_happy_x_03.csv</from><from>emot_amused_nod_01.csv</from><from>emot_happy_x_04.csv</from></alias>		
-<alias to="EXPRESS_WORRY" type="Animation"><from>emot_anxious_x_01.csv</from><from>look_thinking_downleftfrown_01.csv</from><from>emot_confused_x_03.csv</from><from>emot_skeptical_x_03.csv</from><from>emot_skeptical_x_04.csv</from></alias>		
-<alias to="YES_HEAD" type="Animation"><from>head_nod_yes_03.csv</from><from>head_nod_yes_02.csv</from></alias>		
-<alias to="YES_HAPPY" type="Animation"><from>head_nod_yes_03.csv</from><from>emot_amused_nod_01.csv</from><from>emot_amused_x_04.csv</from><from>emot_laughing_x_01.csv</from><from>emot_amused_x_06.csv</from></alias>		
-<alias to="YOGA_FLOAT" type="Animation"><from>emot_amused_x_04.csv</from><from>emot_appreciative_x_01.csv</from><from>look_thinking_uplefttamused_01.csv</from></alias>			
+<alias to="express_afraid" type="animation"><from>emot_afraid_x_01.csv</from><from>emot_afraid_x_02.csv</from><from>emot_afraid_x_03.csv</from></alias>		
+<alias to="aim_r_bazooka" type="animation"><from>emot_aggressive_x_01.csv</from><from>emot_angry_x_02.csv</from><from>emot_angry_x_03.csv</from><from>emot_offended_x_01.csv</from></alias>		
+<alias to="aim_l_bow" type="animation"><from>head_nod_yes_01.csv</from><from>emot_aggressive_x_01.csv</from><from>head_nod_yes_03.csv</from><from>emot_irritated_x_05.csv</from></alias>		
+<alias to="aim_r_handgun" type="animation"><from>emot_irritated_x_02.csv</from><from>emot_irritated_x_01.csv</from><from>emot_offended_x_01.csv</from><from>emot_irritated_very_01.csv</from></alias>		
+<alias to="aim_r_rifle" type="animation"><from>emot_irritated_x_02.csv</from><from>emot_irritated_x_01.csv</from><from>emot_aggressive_x_01.csv</from></alias>		
+<alias to="express_anger" type="animation"><from>emot_angry_x_01.csv</from><from>emot_angry_x_02.csv</from><from>emot_angry_x_03.csv</from><from>emot_irritated_x_05.csv</from><from>emot_irritated_very_01.csv</from><from>look_thinking_downleftirritated_01.csv</from></alias>		
+<alias to="away" type="animation"><from>look_faces_left_03.csv</from><from>look_faces_right_02.csv</from></alias>		
+<alias to="backflip" type="animation"><from>head_shake_no_04.csv</from><from>look_thinking_downrighthappy_01.csv</from><from>look_thinking_uprighthappy_01.csv</from></alias>		
+<alias to="express_laugh" type="animation"><from>emot_laughing_x_03.csv</from><from>emot_laughing_x_01.csv</from><from>emot_laughing_x_02.csv</from><from>look_thinking_uprighthappy_01.csv</from></alias>		
+<alias to="blowkiss" type="animation"><from>emot_amused_x_03.csv</from><from>emot_amused_nod_01.csv</from><from>emot_appreciative_x_01.csv</from><from>look_thinking_downrighthappy_01.csv</from></alias>		
+<alias to="express_bored" type="animation"><from>misc_yawn_x_02.csv</from><from>misc_tired_x_03.csv</from></alias>		
+<alias to="bow" type="animation"><from>head_nod_yes_01.csv</from><from>head_nod_yes_02.csv</from><from>head_nod_yes_03.csv</from><from>look_thinking_downamused_01.csv</from></alias>		
+<alias to="brush" type="animation"><from>misc_eyeroll_x_02.csv</from></alias>		
+<!-- <alias to="busy" type="animation"><from></from></alias> !-->
+<alias to="clap" type="animation"><from>emot_amused_x_02.csv</from><from>emot_amused_nod_01.csv</from><from>look_thinking_downrighthappy_01.csv</from></alias>		
+<alias to="courtbow" type="animation"><from>head_nod_yes_01.csv</from><from>head_nod_yes_02.csv</from><from>head_nod_yes_03.csv</from></alias>		
+<alias to="crouch" type="animation"><from>emot_skeptical_x_02.csv</from><from>emot_concentrating_x_03.csv</from></alias>		
+<alias to="crouchwalk" type="animation"><from>emot_concentrating_x_02.csv</from><from>emot_skeptical_x_05.csv</from></alias>		
+<alias to="express_cry" type="animation"><from>emot_sad_x_01.csv</from><from>emot_sad_x_03.csv</from><from>emot_sad_x_02.csv</from><from>look_thinking_downsad_01.csv</from></alias>		
+<alias to="turn_180" type="animation"><from>look_faces_left_04.csv</from><from>look_faces_right_04.csv</from><from>look_faces_left_05.csv</from><from>look_faces_right_03.csv</from><from>look_thinking_left_02.csv</from></alias>		
+<alias to="turnback_180" type="animation"><from>look_faces_left_01.csv</from><from>look_faces_right_01.csv</from><from>look_faces_left_02.csv</from><from>look_faces_right_02.csv</from><from>look_thinking_left_01.csv</from></alias>		
+<alias to="dance1" type="animation"><from>misc_dancing_x_01.csv</from></alias>		
+<alias to="dance2" type="animation"><from>misc_dancing_x_02.csv</from></alias>		
+<alias to="dance3" type="animation"><from>misc_dancing_x_03.csv</from></alias>		
+<alias to="dance4" type="animation"><from>misc_dancing_x_04.csv</from></alias>		
+<alias to="dance5" type="animation"><from>misc_dancing_x_02.csv</from></alias>		
+<alias to="dance6" type="animation"><from>misc_dancing_x_01.csv</from></alias>		
+<alias to="dance7" type="animation"><from>misc_dancing_x_02.csv</from></alias>		
+<alias to="dance8" type="animation"><from>misc_dancing_x_03.csv</from></alias>		
+<alias to="dead" type="animation"><from>misc_tired_x_01.csv</from><from>misc_tired_x_02.csv</from><from>misc_tired_x_03.csv</from></alias>		
+<alias to="drink" type="animation"><from>emot_amused_x_02.csv</from><from>emot_amused_x_01.csv</from><from>emot_amused_nod_01.csv</from></alias>		
+<alias to="express_embarrased" type="animation"><from>emot_embarrassed_x_01.csv</from><from>look_thinking_downleftfrown_01.csv</from><from>emot_shy_x_01.csv</from><from>look_thinking_downleftfrown_01.csv</from></alias>		
+<alias to="express_afraid_emote" type="animation"><from>emot_afraid_x_01.csv</from><from>emot_afraid_x_02.csv</from><from>emot_afraid_x_03.csv</from></alias>		
+<alias to="express_anger_emote" type="animation"><from>emot_angry_x_01.csv</from><from>emot_angry_x_02.csv</from><from>emot_angry_x_03.csv</from><from>emot_irritated_very_01.csv</from><from>emot_irritated_x_05.csv</from></alias>		
+<alias to="express_bored_emote" type="animation"><from>misc_yawn_x_01.csv</from><from>misc_yawn_x_02.csv</from><from>misc_yawn_x_03.csv</from><from>misc_tired_x_01.csv</from><from>misc_tired_x_02.csv</from><from>misc_tired_x_03.csv</from></alias>		
+<alias to="express_cry_emote" type="animation"><from>emot_sad_x_01.csv</from><from>emot_sad_x_02.csv</from><from>emot_sad_x_03.csv</from><from>5.look_down_like_thinking_soething_sad.csv</from></alias>		
+<alias to="express_disdain" type="animation"><from>emot_offended_x_01.csv</from><from>misc_eyeroll_x_01.csv</from><from>misc_eyeroll_x_02.csv</from><from>misc_eyeroll_x_02.csv</from><from>emot_skeptical_x_01.csv</from><from>emot_skeptical_x_02.csv</from><from>emot_skeptical_x_03.csv</from><from>emot_disgusted_x_01.csv</from><from>emot_disgusted_x_02.csv</from><from>emot_irritated_very_01.csv</from><from>look_thinking_downleftirritated_01.csv</from><from>look_thinking_upleftsneer_01.csv</from></alias>		
+<alias to="express_embarrassed_emote" type="animation"><from>emot_embarrassed_x_01.csv</from><from>emot_shy_x_01.csv</from><from>emot_shy_x_02.csv</from><from>emot_shy_x_03.csv</from><from>look_thinking_downleftfrown_01.csv</from><from>look_thinking_downsad_01.csv</from></alias>		
+<alias to="express_frown" type="animation"><from>emot_sad_x_02.csv</from><from>emot_sad_x_03.csv</from><from>emot_irritated_x_01.csv</from><from>emot_irritated_x_02.csv</from><from>emot_irritated_x_03.csv</from><from>emot_irritated_x_04.csv</from><from>emot_irritated_very_01.csv</from><from>look_thinking_downsad_01.csv</from></alias>		
+<alias to="express_kiss" type="animation"><from>emot_amused_x_01.csv</from><from>emot_amused_x_02.csv</from><from>emot_amused_x_03.csv</from><from>emot_confident_x_01.csv</from></alias>		
+<alias to="express_laugh_emote" type="animation"><from>emot_laughing_x_01.csv</from><from>emot_laughing_x_02.csv</from><from>emot_laughing_x_03.csv</from><from>emot_laughing_x_04.csv</from><from>look_thinking_uprightamused_01.csv</from><from>look_thinking_uprighthappy_01.csv</from></alias>		
+<alias to="express_open_mouth" type="animation"><from>misc_yawn_x_01.csv</from><from>misc_yawn_x_02.csv</from><from>emot_surprised_x_01.csv</from><from>emot_surprised_x_02.csv</from><from>emot_surprised_x_03.csv</from><from>emot_surprised_x_04.csv</from><from>look_thinking_downleftsurprised_01.csv</from><from>look_thinking_uprightsurprise_01.csv</from></alias>		
+<alias to="express_repulsed_emote" type="animation"><from>emot_disgusted_x_01.csv</from><from>emot_disgusted_x_02.csv</from><from>emot_skeptical_x_06.csv</from><from>look_thinking_downleftirritated_01.csv</from></alias>		
+<alias to="express_sad_emote" type="animation"><from>emot_sad_x_01.csv</from><from>emot_sad_x_02.csv</from><from>emot_sad_x_03.csv</from><from>look_thinking_downsad_01.csv</from></alias>		
+<alias to="express_shrug_emote" type="animation"><from>head_shake_no_01.csv</from><from>head_shake_no_02.csv</from><from>head_shake_no_03.csv</from><from>head_shake_no_04.csv</from></alias>		
+<alias to="express_smile" type="animation"><from>emot_happy_x_01.csv</from><from>emot_happy_x_02.csv</from><from>emot_happy_x_03.csv</from><from>emot_happy_very_01.csv</from><from>emot_happy_very_02.csv</from><from>look_thinking_uplefttamused_01.csv</from><from>look_thinking_downleftsmile_01.csv</from><from>look_thinking_downrighthappy_01.csv</from><from>look_thinking_downrightsmile_01.csv</from><from>look_thinking_uplefttamused_01.csv</from><from>look_thinking_uprightamused_01.csv</from><from>look_thinking_uprighthappy_01.csv</from></alias>		
+<alias to="express_surprise_emote" type="animation"><from>emot_surprised_x_01.csv</from><from>emot_surprised_x_02.csv</from><from>emot_surprised_x_03.csv</from><from>emot_surprised_x_04.csv</from><from>look_thinking_uprightsurprise_01.csv</from></alias>		
+<alias to="express_tongue_out" type="animation"><from>misc_eyeroll_x_01.csv</from><from>misc_eyeroll_x_02.csv</from><from>misc_eyeroll_x_02.csv</from><from>emot_disgusted_x_01.csv</from><from>emot_disgusted_x_02.csv</from></alias>		
+<alias to="express_toothsmile" type="animation"><from>emot_happy_very_01.csv</from><from>emot_happy_very_02.csv</from><from>emot_happy_x_03.csv</from><from>emot_laughing_x_04.csv</from><from>look_thinking_uprighthappy_01.csv</from></alias>		
+<alias to="express_wink_emote" type="animation"><from>emot_amused_x_01.csv</from><from>emot_amused_x_02.csv</from><from>emot_amused_x_03.csv</from><from>emot_amused_nod_01.csv</from><from>look_thinking_uplefttamused_01.csv</from><from>look_thinking_uplefttamused_01.csv</from><from>look_thinking_uprightamused_01.csv</from></alias>		
+<alias to="express_worry_emote" type="animation"><from>emot_anxious_x_01.csv</from><from>emot_confused_x_03.csv</from><from>emot_skeptical_x_05.csv</from><from>emot_skeptical_x_06.csv</from><from>look_thinking_uprightsurprise_01.csv</from></alias>		
+<alias to="falldown" type="animation"><from>emot_confused_x_02</from><from>emot_confused_x_01</from><from>look_thinking_down_02.csv</from></alias>		
+<alias to="female_walk" type="animation"><from>emot_confident_x_01.csv</from><from>look_thinking_uprightamused_01.csv</from></alias>		
+<alias to="angry_fingerwag" type="animation"><from>emot_irritated_x_01.csv</from><from>emot_angry_x_01.csv</from><from>emot_irritated_x_05.csv</from><from>look_thinking_upleftsneer_01.csv</from></alias>		
+<alias to="fist_pump" type="animation"><from>emot_confident_x_01.csv</from></alias>		
+<alias to="fly" type="animation"><from>emot_concentrating_x_02.csv</from></alias>		
+<alias to="flyslow" type="animation"><from>emot_concentrating_x_01.csv</from></alias>		
+<alias to="hello" type="animation"><from>head_nod_yes_01.csv</from><from>emot_appreciative_x_01.csv</from><from>emot_happy_x_03.csv</from><from>emot_amused_nod_01.csv</from><from>head_eyesupdownblink_x_01.csv</from></alias>		
+<!--<alias to="hold_r_bazooka</pattern><template><think><srai>systemanim_<random-->		
+<!--<alias to="hold_l_bow</pattern><template><think><srai>systemanim_<random-->		
+<!--<alias to="hold_r_handgun</pattern><template><think><srai>systemanim_<random-->
+<!--<alias to="hold_r_rifle</pattern><template><think><srai>systemanim_<random-->		
+<!--<alias to="hold_throw_r</pattern><template><think><srai>systemanim_<random-->		
+<!--<alias to="hover</pattern><template><think><srai>systemanim_<random-->		
+<!--<alias to="hover_down</pattern><template><think><srai>systemanim_<random-->		
+<!--<alias to="hover_up</pattern><template><think><srai>systemanim_<random-->		
+<alias to="impatient" type="animation"><from>emot_irritated_x_01.csv</from><from>emot_irritated_x_02.csv</from><from>emot_irritated_x_03.csv</from><from>look_thinking_upleftsneer_01.csv</from></alias>		
+<!--<alias to="jump</pattern><template><think><srai>systemanim_<random-->		
+<alias to="jumpforjoy" type="animation"><from>emot_happy_very_01.csv</from><from>emot_happy_very_02.csv</from><from>emot_surprised_x_04.csv</from></alias>		
+<alias to="kissmybutt" type="animation"><from>emot_offended_x_01.csv</from><from>misc_yawn_x_03.csv</from><from>look_thinking_upleftsneer_01.csv</from></alias>		
+<!--<alias to="land</pattern><template><think><srai>systemanim_<random-->		
+<alias to="laugh_short" type="animation"><from>emot_laughing_x_01.csv</from><from>emot_laughing_x_01.csv</from><from>emot_laughing_x_02.csv</from></alias>		
+<!--<alias to="soft_land</pattern><template><think><srai>systemanim_<random-->		
+<!--<alias to="motorcycle_sit</pattern><template><think><srai>systemanim_<random-->		
+<!--<alias to="musclebeach</pattern><template><think><srai>systemanim_<random-->		
+<alias to="no_head" type="animation"><from>head_shake_no_01.csv</from><from>head_shake_no_02.csv</from><from>head_shake_no_03.csv</from><from>head_shake_no_04.csv</from></alias>		
+<alias to="no_unhappy" type="animation"><from>head_shake_no_01.csv</from><from>head_shake_no_02.csv</from><from>head_shake_no_03.csv</from><from>head_shake_no_04.csv</from></alias>		
+<alias to="nyanya" type="animation"><from>emot_amused_x_01.csv</from><from>look_thinking_uplefttamused_01.csv</from></alias>		
+<alias to="punch_onetwo" type="animation"><from>emot_amused_x_01.csv</from><from>emot_amused_nod_01.csv</from></alias>		
+<alias to="peace" type="animation"><from>emot_confident_x_01.csv</from><from>emot_appreciative_x_01.csv</from></alias>		
+<alias to="point_me" type="animation"><from>head_nod_yes_03.csv</from></alias>		
+<alias to="point_you" type="animation"><from>head_nod_yes_02.csv</from></alias>		
+<alias to="prejump" type="animation"><from>emot_concentrating_x_02.csv</from></alias>		
+<alias to="punch_l" type="animation"><from>emot_concentrating_x_03.csv</from><from>emot_skeptical_x_03.csv</from></alias>		
+<alias to="punch_r" type="animation"><from>emot_concentrating_x_02.csv</from><from>emot_skeptical_x_01.csv</from></alias>		
+<alias to="express_repulsed" type="animation"><from>emot_disgusted_x_01.csv.csv</from><from>emot_disgusted_x_02.csv</from><from>emot_skeptical_x_06.csv</from><from>look_thinking_downleftirritated_01.csv</from></alias>		
+<alias to="kick_roundhouse_r" type="animation"><from>emot_concentrating_x_03.csv</from></alias>		
+<alias to="rps_countdown" type="animation"><from>emot_concentrating_x_02.csv</from></alias>		
+<alias to="rps_paper" type="animation"><from>emot_concentrating_x_02.csv</from></alias>		
+<alias to="rps_rock" type="animation"><from>>	emot_concentrating_x_03.csv</from></alias>		
+<alias to="rps_scissors" type="animation"><from>emot_concentrating_x_02.csv</from></alias>		
+<!--<alias to="run</pattern><template><think><srai>systemanim_<random-->		
+<alias to="express_sad" type="animation"><from>emot_sad_x_01.csv</from><from>emot_sad_x_02.csv</from><from>emot_sad_x_03.csv</from><from>look_thinking_downsad_01.csv</from></alias>		
+<alias to="salute" type="animation"><from>head_nod_yes_03.csv</from><from>head_nod_yes_02.csv</from></alias>		
+<alias to="shoot_l_bow" type="animation"><from>emot_concentrating_x_02.csv</from><from>emot_concentrating_x_03.csv</from></alias>		
+<alias to="shout" type="animation"><from>misc_yawn_x_01.csv</from><from>misc_yawn_x_02.csv</from></alias>		
+<alias to="express_shrug" type="animation"><from>misc_yawn_x_03.csv</from><from>misc_yawn_x_04.csv</from><from>emot_confused_x_01</from><from>look_thinking_down_05.csv</from></alias>		
+<alias to="sit" type="animation"><from>emot_amused_x_01.csv</from><from>emot_concentrating_x_03.csv</from><from>look_thinking_down_06.csv</from></alias>		
+<alias to="sit_female" type="animation"><from>emot_amused_x_02.csv</from><from>emot_concentrating_x_03.csv</from><from>emot_amused_nod_01.csv</from></alias>		
+<alias to="sit_ground" type="animation"><from>emot_amused_x_03.csv</from><from>emot_concentrating_x_03.csv</from><from>look_thinking_down_04.csv</from></alias>		
+<alias to="sit_ground_constrained" type="animation"><from>emot_amused_x_04.csv</from><from>emot_concentrating_x_03.csv</from><from>emot_amused_nod_01.csv</from></alias>		
+<alias to="sit_generic" type="animation"><from>emot_amused_x_05.csv</from><from>emot_concentrating_x_03.csv</from><from>look_thinking_down_03.csv</from></alias>		
+<alias to="sit_to_stand" type="animation"><from>emot_amused_x_06.csv</from><from>emot_concentrating_x_03.csv</from><from>look_thinking_up_01.csv</from></alias>		
+<alias to="sleep" type="animation"><from>misc_yawn_x_01.csv</from><from>misc_yawn_x_02.csv</from><from>misc_yawn_x_03.csv</from><from>misc_tired_x_01.csv</from><from>misc_tired_x_02.csv</from><from>misc_tired_x_03.csv</from></alias>		
+<alias to="smoke_idle" type="animation"><from>misc_yawn_x_01.csv</from><from>misc_yawn_x_02.csv</from><from>misc_yawn_x_03.csv_</from></alias>		
+<alias to="smoke_inhale" type="animation"><from>emot_concentrating_x_03.csv</from></alias>		
+<alias to="smoke_throw_down" type="animation"><from>emot_disgusted_x_01.csv</from><from>look_thinking_down_06.csv</from></alias>		
+<alias to="snapshot" type="animation"><from>emot_happy_very_02.csv</from><from>emot_happy_very_01.csv</from></alias>		
+<alias to="stand" type="animation"><from>emot_concentrating_x_01.csv</from></alias>		
+<alias to="standup" type="animation"><from>emot_concentrating_x_02.csv</from></alias>		
+<alias to="stand_1" type="animation"><from>emot_concentrating_x_03.csv</from></alias>		
+<alias to="stand_2" type="animation"><from>emot_concentrating_x_01.csv</from></alias>		
+<alias to="stand_3" type="animation"><from>emot_concentrating_x_02.csv</from></alias>		
+<alias to="stand_4" type="animation"><from>emot_concentrating_x_03.csv</from></alias>		
+<alias to="stretch" type="animation"><from>misc_yawn_x_01.csv</from><from>misc_yawn_x_02.csv</from><from>misc_yawn_x_03.csv</from></alias>		
+<alias to="stride" type="animation"><from>emot_concentrating_x_01.csv</from></alias>		
+<alias to="surf" type="animation"><from>emot_concentrating_x_02.csv</from><from>look_thinking_downamused_01.csv</from></alias>		
+<alias to="express_surprise" type="animation"><from>emot_surprised_x_01.csv</from><from>emot_surprised_x_02.csv</from><from>emot_surprised_x_03.csv</from><from>look_thinking_downleftsurprised_01.csv</from></alias>		
+<alias to="sword_strike_r" type="animation"><from>emot_concentrating_x_03.csv</from></alias>		
+<alias to="talk" type="animation"><from>talk_x_x_01.csv</from><from>talk_x_x_02.csv</from><from>talk_x_x_03.csv</from><from>talk_x_x_04.csv</from></alias>		
+<alias to="angry_tantrum" type="animation"><from>emot_angry_x_01.csv</from><from>emot_angry_x_02.csv</from><from>emot_angry_x_03.csv</from></alias>		
+<alias to="throw_r" type="animation"><from>emot_concentrating_x_03.csv</from></alias>		
+<alias to="tryon_shirt" type="animation"><from>emot_happy_x_01.csv</from><from>emot_happy_x_03.csv</from></alias>		
+<alias to="turnleft" type="animation"><from>look_faces_left_06.csv</from><from>look_thinking_left_01.csv</from><from>look_thinking_left_02.csv</from></alias>		
+<alias to="turnright" type="animation"><from>look_faces_left_05.csv</from><from>look_thinking_right_01.csv</from><from>look_thinking_right_02.csv</from></alias>		
+<alias to="type" type="animation"><from>emot_concentrating_x_01.csv</from></alias>		
+<alias to="walk" type="animation"><from>emot_concentrating_x_03.csv</from></alias>		
+<alias to="whisper" type="animation"><from>emot_shy_x_03.csv</from><from>emot_shy_x_01.csv</from><from>misc_tired_x_01.csv</from></alias>		
+<alias to="whistle" type="animation"><from>emot_happy_x_01.csv</from><from>emot_amused_x_01.csv</from><from>emot_amused_x_02.csv</from><from>emot_amused_x_03.csv</from><from>emot_amused_x_04.csv</from><from>emot_amused_x_05.csv</from><from>emot_amused_x_06.csv	_	emot_amused_nod_01.csv	_</from></alias>		
+<alias to="express_wink" type="animation"><from>emot_amused_x_02.csv</from><from>head_nod_yes_03.csv</from><from>emot_amused_nod_01.csv</from><from>look_thinking_uprighthappy_01.csv</from></alias>		
+<alias to="wink_hollywood" type="animation"><from>emot_happy_x_01.csv</from><from>emot_happy_x_03.csv</from><from>emot_amused_nod_01.csv</from><from>emot_happy_x_04.csv</from></alias>		
+<alias to="express_worry" type="animation"><from>emot_anxious_x_01.csv</from><from>look_thinking_downleftfrown_01.csv</from><from>emot_confused_x_03.csv</from><from>emot_skeptical_x_03.csv</from><from>emot_skeptical_x_04.csv</from></alias>		
+<alias to="yes_head" type="animation"><from>head_nod_yes_03.csv</from><from>head_nod_yes_02.csv</from></alias>		
+<alias to="yes_happy" type="animation"><from>head_nod_yes_03.csv</from><from>emot_amused_nod_01.csv</from><from>emot_amused_x_04.csv</from><from>emot_laughing_x_01.csv</from><from>emot_amused_x_06.csv</from></alias>		
+<alias to="yoga_float" type="animation"><from>emot_amused_x_04.csv</from><from>emot_appreciative_x_01.csv</from><from>look_thinking_uplefttamused_01.csv</from></alias>			
 </xml>
