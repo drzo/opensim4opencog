@@ -129,6 +129,12 @@
   <item name="WASNT" value=" was not " />
   <item name="HADN'T" value=" had not " />
   <item name=" HADN T " value=" had not " />
+
+  <!--dmiles added these  -->
+  <item name=" HAD BEEN " value=" was " />
+  <item name=" HAD NOT BEEN " value=" was not " />
+  <item name=" LL " value=" WILL " />
+
   <item name="WOULDN'T" value=" would not " />
   <item name=" WOULDN T " value=" would not " />
   <item name="WOULDNT" value=" would not " />

@@ -13,27 +13,7 @@
 (def-macro (enqueue lispTask)
     `(thisClient.enqueueLispTask ~lispTask))
 
-;;;; CREATE EVENTS;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; (avatar  "Maria BraveNewBot")
-(def (avatar id &rest notused) (thilient.WorldSystem.GetPrimitive (vector id ) 1))
-;; eval (on-heard "hello there" "Maria BraveNewBot")
-(def (on-heard message agent)
-     (let (av () id () pos ())
-        (setj av (avatar (str agent)))
-        (setj pos (if av (.Position av) (.GetSimPosition thisClient.WorldSystem.TheSimAvatar)))
-        (setj id (if av (.ID av) OpenMetaverse:UUID:Zero))
-        (thisClient.Self.ChatFromSimulator thisClient
-         (.ChatEventArgs thisClient.Network.CurrentSim  (str message) 
-            ChatAudibleLevel:Fully 
-            ChatType:Normal 
-            ChatSourceType:Agent 
-            (str agent) 
-            id
-            id
-            pos	 ))
-       )
-)
-        
+
 ;----------------------------------
 ; Login and Network events
 ;----------------------------------
@@ -47,7 +27,7 @@
 
 (def (on-login-success  login description)
   (progn
-    (thisClient.output (@"fromLispExample: (on-login-success {0} {1})" (str login)(str description)) )
+    ;; (thisClient.output (@"fromLispExample: (on-login-success {0} {1})" (str login)(str description)) )
     )
  )
 
@@ -56,6 +36,13 @@
    ;; too early for snything usefull
    )
     
+ (def (on-network-disconnected reason message)
+  (progn
+    (thisClient.output (@"fromLispExample: (on-network-disconnected {0} {1})" (str reason)(str message)) )
+    (thisClient.output (@"Why am I disconnected ???"))
+    (thisClient.ExecuteCommand @"login")
+    )
+ )
  ;;Nephrael Rae: [on-object-animation '(avatar "Candie Brooks") "TALK"][on-object-animation '(avatar "Candie Brooks") "STAND_1"][on-object-animation '(avatar "Candie Brooks") "e45fbdc9-af8f-9408-f742-fcb8c341d2c8"]
  ;--------------------------------------
  ; Here the bot is officially connected (I think), so you could 
@@ -64,13 +51,18 @@
  (def (on-first-sim-connected &opt reason message)
   (progn
     ;; (thisClient.output (@"fromLispExample: (on-network-connected )" ) )
-    ;; annoys people sometimes in SL  (thisClient.ExecuteCommand (@"say Hello World"))   
+    ;; annoys people sometimes in SL  
+    ;; (thisClient.ExecuteCommand (@"thread say {0} joins the sim." (str Client.Self.Name)) )   
     ;;(thisClient.ExecuteCommand (@"teleport Nakama/128.08/111.95/22.06"))
     ;; this works but the next is faster (thisClient.ExecuteCommand (@"use HMG to wear"))
+    ;;   (thisClient.ExecuteCommand (@"wear Clothing/CBC"))
     ;; interesting places
     ;; (thisClient.ExecuteCommand (@"teleport Desperation Andromeda/175/211/330"))
     ;;(thisClient.ExecuteCommand (@"thread appearance"))
     ;;(thisClient.ExecuteCommand (@"thread wear bake Clothing/Default/IRobot"))
+    ;;(thisClient.ExecuteCommand (@"wear Clothing/NASA Vex"))
+    ;; (thisClient.ExecuteCommand (@"thread wear Clothing/EXOGURL3"))
+
     )
  )
 
@@ -81,6 +73,12 @@
     )
  )
  
+;;  OpenMetaverse.Simulator OpenMetaverse.NetworkManager+DisconnectType
+(def (on-sim-disconnected &opt who simulator reason who2)
+ (progn 
+   (thisClient.WriteLine (@"fromLispExample:  {0} {1}"  simulator reason))
+   (thisClient.ExecuteCommand "login")
+   ))
 
 ;----------------------------------
 ; Avatars and objects
@@ -113,6 +111,45 @@
 ; In World Events
 ;-----------------------------
 ;  (on-chat agent message) -> "(heard (agent) message)";
+(def (nop) )
+
+
+;Kotoko Irata: [on-chat "hello" "Fully" "Normal" "Agent" "Daxxon Kinoc" '(avatar "Daxxon Kinoc") '(avatar "Daxxon Kinoc") '(Vector3 24.30815 101.2793 30.89464)]
+
+(def (on-heardx message agent)
+     (thisClient.Self.OnChat 
+           (str message) 
+            ChatAudibleLevel.Fully 
+            ChatType.Normal 
+            ChatSourceType.Agent 
+            (str agent) 
+            (.ID (avatar (str agent))) 
+            (.ID (avatar (str agent)))
+            (.GetSimPosition thisClient.WorldSystem.TheSimAvatar)
+       )
+)
+;;;; CREATE EVENTS;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; (avatar  "Maria BraveNewBot")
+(def (avatar id &rest notused) (thisClient.WorldSystem.GetPrimitive (vector id ) 1))
+;; eval (on-heard "hello there" "Maria BraveNewBot")
+(def (on-heard message agent)
+     (let (av () id () pos ())
+        (setj av (avatar (str agent)))
+        (setj pos (if av (.Position av) (.GetSimPosition thisClient.WorldSystem.TheSimAvatar)))
+        (setj id (if av (.ID av) OpenMetaverse:UUID:Zero))
+        (thisClient.Self.OnChat 
+           (str message) 
+            OpenMetaverse:ChatAudibleLevel:Fully 
+            OpenMetaverse:ChatType:Normal 
+            OpenMetaverse:ChatSourceType:Agent 
+            (str agent) 
+            id
+            id
+            pos	 )
+       )
+)
+
+;;(def (on-chat  message a1 a2 a3 agent ~rest)
 ;;  System.String OpenMetaverse.ChatAudibleLevel OpenMetaverse.ChatType OpenMetaverse.ChatSourceType System.String OpenMetaverse.UUID OpenMetaverse.UUID OpenMetaverse.Vector3
 (def (on-chat agent message audible type sourceType  position)
     ;; (thisClient.output (@"fromLispExample: (heard {0} '{1}')" (notme agent)(str message)))
@@ -120,27 +157,47 @@
     ;(thisClient.ExecuteCommand (@"say I heard {0} '{1}')" (str agent)(str message))
     ; (thisClient.ExecuteCommand (@"{0}" (str message)))
   (setj agent (str agent))
+ (progn    ;; end this progn
+
   (if
    (notme agent)
     (progn
+    
     (setj message (str message))
     ; (setj messageList (into nil (message.Split(" "))))     
     ; (when (member messageList wamo ) (thisClient.ExecuteCommand "say I just saw wamo"))
      (if (>= (message.IndexOf "hello" ) 0)
         (thisClient.ExecuteCommand (@"say Hello there {0} !!!" (str agent)))
+      )
      
      (if (>= (message.IndexOf "use" ) 0) 
         (thisClient.ExecuteCommand (@"{0}" (str message)))
+      )
      
      (if (>= (message.IndexOf "follow" ) 0) 
         (thisClient.ExecuteCommand (@"{0}" (str message)))
+	  )
 
      (if (>= (message.IndexOf "cogbot" ) 0)
        (progn
         (setj mycommand (str message))
         (setj mycommand1 (mycommand.Replace "cogbot " ""))
-        (thisClient.ExecuteCommand  mycommand1 )))))))))
+        (thisClient.ExecuteCommand  mycommand1 )
+        )
+     )
         
+     (when (and (>= (message.IndexOf "solr" ) 0)  (>= (agent.IndexOf "Daxxon" ) 0))
+       (progn 
+        (setj mycommand (str message))
+        (setj mycommand1 (mycommand.Replace "solr " ""))
+        (thisClient.XML2Lisp2 "http://daxhub.selfip.net/solrwiki2/cogbot.php?q="  mycommand1 )
+       )
+     )
+       
+    )
+    )
+   )
+ )
  
  ;  (on-instantmessage agent message) -> "(heard (agent) message)";
 (def (on-instant-message im simulator)
