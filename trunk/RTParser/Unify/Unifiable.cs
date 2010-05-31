@@ -151,7 +151,13 @@ namespace RTParser
                 return false;
             }
 
-            return t.AsString().ToLower() == s.AsString().ToLower() || t.ToValue().ToLower() == s.ToValue().ToLower();
+            if (t.AsString().ToLower() == s.AsString().ToLower()) return true;
+            if (t.ToValue().ToLower() == s.ToValue().ToLower())
+            {
+                return true;
+            }
+
+            return false;
         }
 
         public static bool operator !=(Unifiable t, Unifiable s)
@@ -338,8 +344,7 @@ namespace RTParser
             {
                 throw new InvalidObjectException("this " + AsString() + " cannot be appended with " + p);
             }
-            if (p == null) return;
-            if (p == "") return;
+            if (Unifiable.IsNullOrEmpty(p)) return;
             if (str == "")
                 str = p.AsString().Trim();
             else
