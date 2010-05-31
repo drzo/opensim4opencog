@@ -53,6 +53,8 @@ namespace RTParser.Utils
             Regex matcher = new Regex(value.AsString().Replace(" ", "\\s").Replace("*", "[\\sA-Z0-9]+"),
                                       RegexOptions.IgnoreCase);
             if (matcher.IsMatch(actualValue)) return true;
+            if (value == "unknown") return actualValue.AsString() == "";
+            if (actualValue == "unknown") return value.AsString() == "";
             return false;
         }
 
