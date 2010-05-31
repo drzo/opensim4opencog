@@ -53,9 +53,31 @@ namespace RTParser.Utils
             Regex matcher = new Regex(value.AsString().Replace(" ", "\\s").Replace("*", "[\\sA-Z0-9]+"),
                                       RegexOptions.IgnoreCase);
             if (matcher.IsMatch(actualValue)) return true;
-            if (value == "unknown") return actualValue.AsString() == "";
-            if (actualValue == "unknown") return value.AsString() == "";
+            if (MeansUnknown(value) && (MeansUnknown(actualValue))) return true;
             return false;
+        }
+
+        private static bool MeansUnknown(Unifiable unifiable)
+        {
+            if (Unifiable.IsNullOrEmpty(unifiable)) return true;
+            string s = unifiable.AsString().ToLower();
+            switch (s)
+            {
+                case "":
+                    return true;
+                case "unknown":
+                    return true;
+                case "nothing":
+                    return true;
+                case "*":
+                    return true;
+                case "_":
+                    return true;
+                case "undefined":
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         protected Unifiable templateNodeInnerText
