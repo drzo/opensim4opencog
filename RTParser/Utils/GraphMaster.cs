@@ -224,7 +224,7 @@ namespace RTParser.Utils
             return false;
         }
 
-        public UList evaluate(UPath unifiable, SubQuery query, Request request, MatchState state, Unifiable appendable)
+        public UList evaluate(UPath unifiable, SubQuery query, Request request, List<Unifiable> state, Unifiable appendable)
         {
             DoParentEval(request, unifiable, query, state);
             QueryList ql = new QueryList();
@@ -246,10 +246,9 @@ namespace RTParser.Utils
             return qr;
         }
 
-        private void DoParentEval(Request request, Unifiable unifiable, SubQuery query, MatchState state)
+        private void DoParentEval(Request request, Unifiable unifiable, SubQuery query, List<Unifiable> state)
         {
             RTPBot proc = request.Proccessor;
-            AIMLbot.Result result = new AIMLbot.Result(request.user, proc, request);
             GraphMaster g = request.Graph;
             foreach (var p in Parents)
             {
@@ -259,8 +258,9 @@ namespace RTParser.Utils
                     {
                         QueryList ql = new QueryList();
                         query = query.CopyOf();
+                        AIMLbot.Result result = new AIMLbot.Result(request.user, proc, request);
                         request.Graph = p;
-                        var silent = p.RootNode.evaluateOLDY(unifiable, query, request, state, Unifiable.CreateAppendable(), ql);
+                        var silent = p.RootNode.evaluateOLDY(unifiable, query, request, new List<Unifiable>(), Unifiable.CreateAppendable(), ql);
                         if (ql.Count>0)
                         {
                             bool found0 = false;

@@ -1094,7 +1094,7 @@ namespace RTParser
                 {
                     Utils.SubQuery query = new SubQuery(path, result, request);
                     //query.Templates = 
-                    request.Graph.evaluate(path, query, request, MatchState.UserInput, Unifiable.CreateAppendable());
+                    request.Graph.evaluate(path, query, request, query.InputStar, Unifiable.CreateAppendable());
                     result.SubQueries.Add(query);
                 }
 
@@ -1208,7 +1208,7 @@ namespace RTParser
                 {
                     Utils.SubQuery query = new SubQuery(path, result, request);
                     //query.Templates = 
-                    request.Graph.evaluate(path, query, request, MatchState.UserInput, Unifiable.CreateAppendable());
+                    request.Graph.evaluate(path, query, request, query.InputStar, Unifiable.CreateAppendable());
                     result.SubQueries.Add(query);
                 }
 
@@ -1953,7 +1953,7 @@ The AIMLbot program.
                 {
                     Utils.SubQuery query = new SubQuery(path, result, request);
                     //query.Templates = 
-                    request.Graph.evaluate(path, query, request, MatchState.UserInput, Unifiable.CreateAppendable());
+                    request.Graph.evaluate(path, query, request, query.InputStar, Unifiable.CreateAppendable());
                     result.SubQueries.Add(query);
                 }
 
