@@ -981,7 +981,7 @@ namespace AIMLBotModule
             {
                 return SUnifiable.Empty;
             }
-            Request r = new Request(input, myUser, MyBot);
+            Request r = new AIMLbot.Request(input, myUser, MyBot);
             Result res = MyBot.Chat(r);
             return res.Output;
         }
