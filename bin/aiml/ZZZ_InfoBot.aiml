@@ -8,7 +8,7 @@
      </template>   
 </category>
 
-<aiml bot="hidden">  
+<aiml graph="hidden">  
 
 <category><pattern>MY _ <or>IS ARE WAS</or> *</pattern><template><think><set><star index="1"/> <star index="3"/></set></think>Tell me more about your <star index="1"/></template></category>
 <category><pattern><or>WHO WHAT WHEN WHERE WHOM HOW WHY</or> <or>IS ARE WAS</or> MY _</pattern><template>Your <star index="3"/> <star index="2"/> <get><star index="3"/></get></template></category>

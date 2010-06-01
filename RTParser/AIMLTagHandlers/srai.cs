@@ -63,7 +63,7 @@ namespace RTParser.AIMLTagHandlers
                         Unifiable templateNodeInnerValue = Recurse();
                         Unifiable tempTopic = GetAttribValue("topic", request.Topic);
                         AIMLbot.Request subRequest = new AIMLbot.Request(templateNodeInnerValue, this.user, this.Proc, (AIMLbot.Request)request);
-                        String gn = GetAttribValue("bot", null);
+                        String gn = GetAttribValue("graph", null);
                         if (gn != null) subRequest.Graph = Proc.GetGraph(gn,request.Graph);
                         depth = subRequest.depth = request.depth + 1;
                         tempTopic = tempTopic.ToValue();

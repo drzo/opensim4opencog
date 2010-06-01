@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<aiml bot="default">
+<aiml graph="default">
 
   <category>
     <pattern>GOOD</pattern>
     <template><set>topic we agree <that/></set></template>
   </category>
 
-<aiml bot="step2">
+<aiml graph="step2">
 <srai>
- <learn bot="step2"> aiml/stdset/ </learn>
+ <learn graph="step2"> aiml/stdset/ </learn>
 </srai>
 <category>
  <pattern>*</pattern>
- <template><srai bot="step2">STDCATCHALL <star/></srai></template>
+ <template><srai graph="step2">STDCATCHALL <star/></srai></template>
 </category>
 </aiml> 
 
-<aiml bot="default">
+<aiml graph="default">
   <srai>
     <learn> aiml/Y_OpenCyc.aiml </learn>
   </srai>
@@ -28,9 +28,9 @@
   </srai>
 </aiml>
 
-<aiml bot="step2">
+<aiml graph="step2">
   <srai>
-    <learn bot="step2"> aiml/stdset/std-personality.aiml </learn>
+    <learn graph="step2"> aiml/stdset/std-personality.aiml </learn>
   </srai>
 
 <category>
@@ -40,16 +40,16 @@
 
 </aiml>
 
-<aiml bot="default">
+<aiml graph="default">
 	<category>
 	<pattern>STEP2 *</pattern>
-	<template><srai bot="step2"><star/></srai></template>
+	<template><srai graph="step2"><star/></srai></template>
 	</category>
 		
 	<!--
 	<category>
 	<pattern>*</pattern>
-	<template><srai bot="step2"><star/></srai></template>
+	<template><srai graph="step2"><star/></srai></template>
 	</category
 	-->
 
@@ -74,7 +74,7 @@
 
 <category>
 <pattern>*</pattern>
-<template><srai bot="step2"><star/></srai></template>
+<template><srai graph="step2"><star/></srai></template>
 </category>
 
 <category>
@@ -92,7 +92,7 @@
 
 <category><pattern>WHAT IS MY NAME</pattern><that>YOUR NAME IS *</that><template>I told you that your name is <get name="name"/>.</template></category>
 
-<aiml bot="parent">
+<aiml graph="parent">
 <category>
 <pattern>* THE *</pattern>
 <template><think><set name="the"><star index="2"/></set></think></template>

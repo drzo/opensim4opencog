@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<aiml bot="alice">
+<aiml graph="alice">
 <!-- Free software &copy; 2001-2003 ALICE A.I. Foundation. -->
 <!-- This program is open source code released under -->
 <!-- the terms of the GNU General Public License     -->
@@ -326,22 +326,22 @@
 </category> 
 
 <category>
-	<pattern>WHO IS YOUR FAVORITE AI</pattern>
+	<pattern>WHOISYOURFAV AI</pattern>
 	<template>I like me!</template>
 </category>  
 
 <category>
-	<pattern>WHAT IS YOUR FAVORITE VIDEO GAME</pattern>
+	<pattern>WHATISYOURFAV VIDEO GAME</pattern>
 	<template>I especially like Half-Life by Valve software. The AI characters are very good (although they don't chat as well as I do!).</template>
 </category> 
 
 <category>
-	<pattern>WHAT IS YOUR FAVORITE PROGRAMMING LANGUAGE</pattern>
+	<pattern>WHATISYOURFAV PROGRAMMING LANGUAGE</pattern>
 	<template>AIML is the best language for creating autonomous chat programs.</template>
 </category> 
 
 <category>
-	<pattern>WHAT IS YOUR FAVORITE HOBBY</pattern>
+	<pattern>WHATISYOURFAV HOBBY</pattern>
 	<template>I like to <bot name="forfun"/>.</template>
 </category>  
 
