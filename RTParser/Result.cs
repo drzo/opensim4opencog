@@ -131,7 +131,7 @@ namespace RTParser
                     {
                         sentenceForOutput += ".";
                     }
-                    result.Append(sentenceForOutput + " ");
+                    result.Append( sentenceForOutput + " ");
                     resultsLeft--;
                     if (resultsLeft < 1) return result;
                 }

@@ -64,6 +64,17 @@ namespace RTParser.Normalize
             return result.Replace(marker, "");
         }
 
+        public static Unifiable SubstituteRecurse(RTParser.RTPBot bot, RTParser.Utils.SettingsDictionary dictionary, Unifiable target)
+        {
+            string result = target.AsString();
+            String prev = "";
+            while (prev != result)
+            {
+                prev = result;
+                result = Substitute(bot, dictionary, target);
+            }
+            return result;
+        }
 
         /// <summary>
         /// Given an input, escapes certain characters so they can be used as part of a regex

@@ -63,5 +63,10 @@ namespace RTParser.Utils
             if (NoInfo) return null;
             return new CategoryInfo(info, node, filename);
         }
+
+        internal void Check()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

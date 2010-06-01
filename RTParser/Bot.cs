@@ -27,6 +27,7 @@ namespace RTParser
     /// </summary>
     public class RTPBot
     {
+        public User LastUser;
         readonly public User BotAsUser;
         readonly public Request BotAsRequest;
         public AIMLLoader Loader;
@@ -124,7 +125,7 @@ namespace RTParser
         {
             get
             {
-                return 60000;
+                return 20000;
                 if (!this.GlobalSettings.containsSettingCalled("timeout"))
                 {
                     return 60000;
@@ -394,7 +395,7 @@ namespace RTParser
             this.setup();
             BotAsUser = new User("Self", this);
             BotAsUser.Predicates = GlobalSettings;
-            BotAsRequest = new Request("-bank-input-", BotAsUser, this);
+            BotAsRequest = new AIMLbot.Request("-bank-input-", BotAsUser, this, null);
             AddExcuteHandler("aiml", EvalAIMLHandler);
             this.TheCyc = new CycDatabase(this);
             var v = TheCyc.GetCycAccess;
@@ -427,6 +428,7 @@ namespace RTParser
         /// </summary>
         public void loadAIMLFromURI(string path, Request request)
         {
+            request = request ?? this.BotAsRequest;
             var prev = isAcceptingUserInput;
             try
             {
@@ -922,7 +924,7 @@ namespace RTParser
         /// <returns>the result to be output to the user</returns>        
         public string ChatString(string rawInput, string username)
         {
-            return Chat(new AIMLbot.Request(rawInput, FindOrCreateUser(username), this)).Output;
+            return Chat(new AIMLbot.Request(rawInput, FindOrCreateUser(username), this, null)).Output;
         }
 
 
@@ -934,7 +936,7 @@ namespace RTParser
         /// <returns>the result to be output to the user</returns>
         public Result Chat(Unifiable rawInput, Unifiable UserGUID)
         {
-            AIMLbot.Request request = new AIMLbot.Request(rawInput, new User(UserGUID, this), this);
+            AIMLbot.Request request = new AIMLbot.Request(rawInput, new User(UserGUID, this), this, null);
             return this.Chat(request);
         }
 
@@ -978,8 +980,9 @@ namespace RTParser
                         foreach (Unifiable that in request.BotOutputs)
                         {
                             thatNum++;
+                            string thats = that.AsString();
                             Unifiable path = loader.generatePath(sentence, //thatNum + " " +
-                                                                 that, request.Flags,
+                                                                 thats, request.Flags,
                                 //topicNum + " " +
                                                                  topic, true);
                             if (that.IsLongWildCard())
@@ -1015,6 +1018,11 @@ namespace RTParser
             }
             message = currentEar.GetMessage();
             currentEar = new JoinedTextBuffer();
+            if (LastUser!=null)
+            {
+                if (LastUser.LastResult != null)
+                    LastUser.LastResult.AddOutputSentences(message);
+            }
             message = swapPerson(message);
             RunTask(() => HeardSelfSay0(message), "heardSelfSay: " + message, 500);
             return null;
@@ -1059,7 +1067,7 @@ namespace RTParser
             Console.WriteLine("HEARDSELF SWAP: " + message);
             try
             {
-                return Chat(new AIMLbot.Request(message, BotAsUser, this));
+                return Chat(new AIMLbot.Request(message, BotAsUser, this, null));
             }
             catch (Exception e)
             {
@@ -1067,7 +1075,7 @@ namespace RTParser
                 return null;
             }
             //return Chat(message,BotAsUser.ID);
-            AIMLbot.Request request = new AIMLbot.Request(message, BotAsUser, this);
+            AIMLbot.Request request = new AIMLbot.Request(message, BotAsUser, this, null);
             request.Graph = HeardSelfSayGraph;
             AIMLbot.Result result = new AIMLbot.Result(request.user, this, request);
 
@@ -1160,6 +1168,7 @@ namespace RTParser
 
         public AIMLbot.Result Chat(Request request)
         {
+            LastUser = request.user ?? LastUser;
             //chatTrace = null;
             if (chatTrace == null)
             {
@@ -1171,7 +1180,7 @@ namespace RTParser
 
             AIMLbot.Result result = new AIMLbot.Result(request.user, this, request);
 
-
+            var orig = request.BotOutputs;
             if (AIMLLoader.ContainsAiml(request.rawInput))
             {
                 try
@@ -1917,7 +1926,7 @@ The AIMLbot program.
 
         public AIMLbot.Result ImmediateAiml(XmlNode templateNode, Request request0, AIMLLoader loader, AIMLTagHandler handler)
         {
-            Request request = new Request(templateNode.OuterXml, request0.user, request0.Proccessor);
+            Request request = new AIMLbot.Request(templateNode.OuterXml, request0.user, request0.Proccessor, (AIMLbot.Request)request0);
             request.Graph = request0.Graph;
             request.depth = request0.depth + 1;
             AIMLbot.Result result = new AIMLbot.Result(request.user, this, request);
@@ -2085,7 +2094,7 @@ The AIMLbot program.
                     }
                     else
                     {
-                        Request r = new Request(input, myUser, myBot);
+                        Request r = new AIMLbot.Request(input, myUser, myBot, null);
                         Result res = myBot.Chat(r);
                         s = res.Output;
                     }

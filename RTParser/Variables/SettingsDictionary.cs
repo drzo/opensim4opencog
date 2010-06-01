@@ -101,7 +101,7 @@ namespace RTParser.Utils
 
         public override string ToString()
         {
-            return theNameSpace + "(" + Count + ") " + DictionaryAsXML.DocumentElement.InnerXml;
+            return theNameSpace + "(" + Count + ") " + DictionaryAsXML.DocumentElement.InnerXml.Replace("<item name=", "\n<item name =");
         }
 
         /// <summary>
@@ -255,6 +255,10 @@ namespace RTParser.Utils
             name = name.Trim().ToLower();
             lock (orderedKeys)
             {
+                if (value.AsString().Contains("<"))
+                {
+                    Console.WriteLine("BAD INPUT? " + value);
+                }
                 string key = MakeCaseInsensitive.TransformInput(Unifiable.Create(name));
                 SettingsLog("ADD Setting Local " + name + "=" + value);
                 if (key.Length > 0)

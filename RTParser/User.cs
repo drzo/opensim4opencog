@@ -38,7 +38,16 @@ namespace RTParser
         /// <summary>
         /// A collection of all the result objects returned to the user in this session
         /// </summary>
-        private List<Result> Results = new List<Result>();
+        private readonly List<Result> _Results = new List<Result>();
+
+        List<Result> Results
+        {
+            get
+            {
+                return  _Results;
+            }
+        }
+        
 
         List<Unifiable>  _topics = new List<Unifiable>();
         public IList<Unifiable> Topics
@@ -269,6 +278,7 @@ namespace RTParser
 
         static public int MaxResultsSaved = 5;
         public string ShortName;
+        public bool SuspendAdd;
 
         /// <summary>
         /// Adds the latest result from the bot to the Results collection
@@ -276,6 +286,11 @@ namespace RTParser
         /// <param name="latestResult">the latest result from the bot</param>
         public void addResult(Result latestResult)
         {
+            if (SuspendAdd)
+            {
+                Console.WriteLine("Skipping " + latestResult);
+                return;
+            }
             this.Results.Insert(0, latestResult);
             int rc = this.Results.Count;
             if (rc > MaxResultsSaved)

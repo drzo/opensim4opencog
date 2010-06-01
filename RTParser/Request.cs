@@ -11,9 +11,13 @@ namespace RTParser
     /// <summary>
     /// Encapsulates all sorts of information about a request to the Proccessor for processing
     /// </summary>
-    public class Request
+    abstract public class Request
     {
         #region Attributes
+
+        public Proof Proof;
+
+        private Request parent;
 
         public int depth = 0;
         /// <summary>
@@ -68,8 +72,16 @@ namespace RTParser
         /// <param name="rawInput">The raw input from the user</param>
         /// <param name="user">The user who made the request</param>
         /// <param name="bot">The bot to which this is a request</param>
-        public Request(Unifiable rawInput, User user, RTPBot bot)
+        public Request(Unifiable rawInput, User user, RTPBot bot, Request parent)
         {
+            if (parent != null)
+            {
+                Proof = parent.Proof;
+                this.parent = parent;
+            } else
+            {
+                Proof = new Proof();
+            }
             this.rawInput = rawInput;
             this.user = user;
             this.Proccessor = bot;
@@ -165,5 +177,30 @@ namespace RTParser
             return Predicates.addSetting(name, value);
         }
 
+    }
+
+    public class Proof
+    {
+        /// <summary>
+        /// Categories uses life a "proof"
+        /// Also used ot prevent looping
+        /// </summary>
+        public readonly HashSet<object> Proof1 = new HashSet<object>();
+        /// <summary>
+        /// Also used ot prevent looping
+        /// </summary>
+        public readonly HashSet<object> Proof2 = new HashSet<object>();
+
+        public bool Add(Node node)
+        {
+            if (!Proof1.Add(node))
+            {
+                if (!Proof2.Add(node))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
     }
 }
