@@ -224,18 +224,18 @@ namespace RTParser.Utils
             return false;
         }
 
-        public UList evaluate(UPath unifiable, SubQuery query, Request request, List<Unifiable> state, Unifiable appendable)
+        public UList evaluate(UPath unifiable, SubQuery query, Request request, List<Unifiable> state, MatchState matchState, int index, Unifiable appendable)
         {
             DoParentEval(request, unifiable, query, state);
             QueryList ql = new QueryList();
-            var templs = RootNode.evaluateOLDY(unifiable, query, request, state, appendable, ql);
+            var templs = RootNode.evaluate(unifiable, query, request, state, matchState,index, appendable, ql);
             var qr = ql.ToUList();
             if (qr.Count==0)
             {
                 Console.WriteLine("no templates for " + this);
                 foreach (GraphMaster graphMaster in Parents)
                 {
-                    var templs2 = graphMaster.evaluate(unifiable, query, request, state, appendable);
+                    var templs2 = graphMaster.evaluate(unifiable, query, request, state, matchState, index, appendable);
                     if (templs2.Count>0)
                     {
                         Console.WriteLine("using parent templates from " + templs);
@@ -256,45 +256,64 @@ namespace RTParser.Utils
                 {
                     try
                     {
-                        QueryList ql = new QueryList();
-                        query = query.CopyOf();
-                        AIMLbot.Result result = new AIMLbot.Result(request.user, proc, request);
-                        request.Graph = p;
-                        var silent = p.RootNode.evaluateOLDY(unifiable, query, request, new List<Unifiable>(), Unifiable.CreateAppendable(), ql);
-                        if (ql.Count>0)
+                        if (false)
                         {
-                            bool found0 = false;
-                            UList v = ql.ToUList();
-                            foreach (TemplateInfo s in v)
-                            {
-                                string st = "" + s;
-                                // Start each the same
-                                s.Rating = 1.0;
-                                try
-                                {
-                                    query.CurrentTemplate = s;
-                                    if (proc.proccessResponse(query, request, result, s.Output, s.Guard, out found0, null))
-                                    {
-                                        found0 = true;
-                                    }
-                                }
-                                catch (Exception e)
-                                {
-                                    proc.writeToLog("" + e);
-                                    proc.writeToLog("WARNING! A problem was encountered when trying to process the input: " +
-                                                    request.rawInput + " with the template: \"" + s + "\"");
-                                }
-                                Console.WriteLine(st);                                
-                                //if (found0) break;
-                            }
-
+                            request.Graph = p;
+                            proc.Chat(request, p);
                         }
+                        else
+                        {
+                            QueryList ql = new QueryList();
+                            AIMLbot.Result result = new AIMLbot.Result(request.user, proc, request);
+                            var subquery = query; // new SubQuery(request.rawInput, result, request);
+                            request.Graph = p;
+                            var silent = p.RootNode.evaluate(unifiable, subquery, request, subquery.InputStar,
+                                                             MatchState.UserInput, 0, Unifiable.CreateAppendable(), ql);
+                            if (ql.Count > 0)
+                            {
+                                bool found0 = false;
+                                UList v = ql.ToUList();
+                                foreach (TemplateInfo s in v)
+                                {
+                                    subquery = s.Query ?? subquery;
+                                    string st = "" + s;
+                                    // Start each the same
+                                    s.Rating = 1.0;
+                                    try
+                                    {
+                                        subquery.CurrentTemplate = s;
+                                        if (proc.proccessResponse(subquery, request, result, s.Output, s.Guard,
+                                                                  out found0,
+                                                                  null))
+                                        {
+                                            found0 = true;
+                                        }
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        proc.writeToLog("" + e);
+                                        proc.writeToLog(
+                                            "WARNING! A problem was encountered when trying to process the input: " +
+                                            request.rawInput + " with the template: \"" + s + "\"");
+                                    }
+                                    Console.WriteLine(st);
+                                    //if (found0) break;
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        proc.writeToLog("" + e);
+                        proc.writeToLog(
+                            "WARNING! A problem was encountered when trying to process the input: " +
+                            request.rawInput + " with the template: \"" + p + "\"");
                     }
                     finally
                     {
                         request.Graph = g;
                     }
-                }                
+                }
             }
         }
 

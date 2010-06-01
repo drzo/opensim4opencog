@@ -74,7 +74,7 @@ namespace RTParser.Utils
             }
             //String ts = outTemplate.OuterXml;
             Node thiz = start.addPathNodeChilds(path);
-            thiz.addTerminal(templateNode, category,  guard, thatInfo, master, patternInfo);
+            thiz.addTerminal(templateNode, category, guard, thatInfo, master, patternInfo);
         }
 
         private void addTerminal(XmlNode templateNode, CategoryInfo category, GuardInfo guard, ThatInfo thatInfo, GraphMaster master, PatternInfo patternInfo)
@@ -134,17 +134,32 @@ namespace RTParser.Utils
             }
             if (pat != null)
             {
+                if (thatInfo == null || thatInfo.FullPath.AsString() == "*")
+                {
+                    if (patternInfo.LoopsFrom(newTemplateInfo))
+                    {
+                        Console.WriteLine("SKIPPING! " + pat + "==" + newTemplateInfo + "");
+                        if (this.TemplateInfos.Count == 0)
+                        {
+                            this.TemplateInfos = null;
+                        }
+                        return;
+                    }
+                    Unifiable from;
+                    Unifiable to;
+                    if (false && patternInfo.DivergesFrom(newTemplateInfo, out from, out to))
+                    {
+                        Console.WriteLine("SKIPPING! " + pat + "==" + newTemplateInfo + "");
+                        if (this.TemplateInfos.Count == 0)
+                        {
+                            this.TemplateInfos = null;
+                        }
+                        return;
+                    }
+                }
                 pat.GraphmasterNode = this;
                 if (category != null) pat.AddCategory(category);
-                if (patternInfo.LoopsFrom(newTemplateInfo) &&(thatInfo == null || thatInfo.FullPath.AsString()=="*"))
-                {
-                    Console.WriteLine("SKIPPING! " + pat + "==" + newTemplateInfo + "");
-                    if (this.TemplateInfos.Count==0)
-                    {
-                        this.TemplateInfos = null;
-                    }
-                    return;
-                }
+
             }
 
             master.AddTemplate(newTemplateInfo);
@@ -251,477 +266,16 @@ namespace RTParser.Utils
             return word;
         }
 
-
-        /// <summary>
-        /// Navigates this node (and recursively into child nodes) for a match to the path passed as an argument
-        /// whilst processing the referenced request
-        /// </summary>
-        /// <param name="path">The normalized path derived from the user's input</param>
-        /// <param name="query">The query that this search is for</param>
-        /// <param name="request">An encapsulation of the request from the user</param>
-        /// <param name="matchstate">The part of the input path the node represents</param>
-        /// <param name="wildcard">The contents of the user input absorbed by the AIML wildcards "_" and "*"</param>
-        /// <returns>The template to process to generate the output</returns>
-        public UList evaluateNew(UPath upath, SubQuery query, Request request, MatchState matchstate, Unifiable wildcard)
-        {
-            throw new NotSupportedException("");
-            UList template = new UList();
-            var v = evaluateNew(upath, query, request, matchstate, wildcard);
-            return template;
-        }
-
-
-        /// <summary>
-        /// Navigates this node (and recursively into child nodes) for a match to the path passed as an argument
-        /// whilst processing the referenced request
-        /// </summary>
-        /// <param name="path">The normalized path derived from the user's input</param>
-        /// <param name="query">The query that this search is for</param>
-        /// <param name="request">An encapsulation of the request from the user</param>
-        /// <param name="matchstate">The part of the input path the node represents</param>
-        /// <param name="wildcard">The contents of the user input absorbed by the AIML wildcards "_" and "*"</param>
-        /// <returns>The template to process to generate the output</returns>
-        public UList evaluate(UPath upath, SubQuery query, Request request, MatchState matchstate, Unifiable wildcard)
-        {
-            //throw new NotSupportedException("");
-            Unifiable path = upath.LegacyPath;
-            // check for timeout
-            if (request.StartedOn.AddMilliseconds(request.Proccessor.TimeOut) < DateTime.Now)
-            {
-                request.Proccessor.writeToLog("WARNING! Request timeout. User: " + request.user.UserID + " raw input: \"" + request.rawInput + "\"");
-                request.hasTimedOut = true;
-                return null;// Unifiable.Empty;
-            }
-
-            // so we still have time!
-            path = path.Trim();
-
-            // check if this is the end of a branch in the GraphMaster 
-            // return the cCategory for this node
-            if (this.children.Count == 0)
-            {
-                if (!path.IsEmpty)
-                {
-                    // if we get here it means that there is a wildcard in the user input part of the
-                    // path.
-                    this.storeWildCard(path, wildcard);
-                }
-                return this.TemplateInfos;
-            }
-
-            // if we've matched all the words in the input sentence and this is the end
-            // of the line then return the cCategory for this node
-            if (path.IsEmpty)
-            {
-                return this.TemplateInfos;
-            }
-
-            // otherwise split the input into it's component words
-            //  Unifiable[] splitPath0 = path.Split();
-            Unifiable first = path.First();
-
-            // get the first word of the sentence
-            Unifiable firstWord = Normalize.MakeCaseInsensitive.TransformInput(first);
-
-            // and concatenate the rest of the input into a new path for child nodes
-            Unifiable newPath = UPath.MakePath(path.Rest()).LegacyPath;// Unifiable.Join(" ", splitPath0, 1, splitPath0.Length - 1);// path.Rest();// Substring(firstWord.Length, path.Length - firstWord.Length);
-
-            // first option is to see if this node has a child denoted by the "_" 
-            // wildcard. "_" comes first in precedence in the AIML alphabet
-            foreach (KeyValuePair<Unifiable, Node> childNodeKV in this.children)
-            {
-                Unifiable childNodeWord = childNodeKV.Key;
-                if (!childNodeWord.IsShortWildCard()) continue;
-                if (childNodeWord.Unify(first, query) > 0) continue;
-                Node childNode = childNodeKV.Value;
-                // add the next word to the wildcard match 
-                Unifiable newWildcard = Unifiable.CreateAppendable();
-                this.storeWildCard(first, newWildcard);
-
-                // move down into the identified branch of the GraphMaster structure
-                var result = childNode.evaluate(UPath.MakePath(newPath), query, request, matchstate, newWildcard);
-
-                // and if we get a result from the branch process the wildcard matches and return 
-                // the result
-                string freezit = newWildcard.Frozen();
-                if (ResultStateReadyGood(result, newWildcard, matchstate, query))
-                {
-                    if (freezit.Contains(" "))
-                    {
-                        // cannot match input containing spaces
-                        continue;
-                    }
-                    return result;
-                }
-            }
-
-            // second option - the nodemapper may have contained a "_" child, but led to no match
-            // or it didn't contain a "_" child at all. So get the child nodemapper from this 
-            // nodemapper that matches the first word of the input sentence.
-            foreach (var childNodeKV in this.children)
-            {
-                Node childNode = childNodeKV.Value;
-                if (childNode.word.IsWildCard()) continue;
-                if (childNode.word.Unify(firstWord, query) > 0) continue;
-                // process the matchstate - this might not make sense but the matchstate is working
-                // with a "backwards" path: "topic <topic> that <that> user input"
-                // the "classic" path looks like this: "user input <that> that <topic> topic"
-                // but having it backwards is more efficient for searching purposes
-                MatchState newMatchstate = matchstate;
-                if (firstWord.IsTag("THAT"))
-                {
-                    newMatchstate = MatchState.That;
-                }
-                else if (firstWord.IsTag("TOPIC"))
-                {
-                    newMatchstate = MatchState.Topic;
-                }
-                else if (firstWord.IsTag("FLAG"))
-                {
-                    newMatchstate = MatchState.Flag;
-                }
-
-                //Node childNode = (Node)this.children[firstWord];
-                // move down into the identified branch of the GraphMaster structure using the new
-                // matchstate
-                Unifiable newWildcard = Unifiable.CreateAppendable();
-                var result = childNode.evaluate(UPath.MakePath(newPath), query, request, newMatchstate, newWildcard);
-                // and if we get a result from the child return it
-                if (ResultStateReadyGood(result, newWildcard, matchstate, query)) return result;
-
-            }
-
-            // third option - the input part of the path might have been matched so far but hasn't
-            // returned a match, so check to see it contains the "*" wildcard. "*" comes last in
-            // precedence in the AIML alphabet.
-            foreach (var childNodeKV in this.children)
-            {
-                Unifiable childNodeWord = childNodeKV.Key;
-                int matchLen = 0;
-                if (!childNodeWord.IsLongWildCard()) continue;
-                Node childNode = childNodeKV.Value;
-                // o.k. look for the path in the child node denoted by "*"
-                //Node childNode = (Node)this.children["*"];
-                UList result = null;
-                // add the next word to the wildcard match 
-                Unifiable newWildcard = Unifiable.CreateAppendable();
-                // normal * and LazyMatch on first word
-                if (childNodeWord.Unify(first, query) == 0)
-                {
-                    this.storeWildCard(first, newWildcard);
-                    result = childNode.evaluate(UPath.MakePath(newPath), query, request, matchstate, newWildcard);
-                    if (ResultStateReadyGood(result, newWildcard, matchstate, query)) return result;
-                }
-                else
-                {
-                    // some lazy matches take two words
-                    Unifiable second = newPath.First();
-                    if (!second.IsEmpty && childNodeWord.IsLazyStar())
-                    {
-                        Unifiable firstAndSecond = first + " " + second;
-                        if (childNodeWord.Unify(firstAndSecond, query) == 0)
-                        {
-                            this.storeWildCard(firstAndSecond, newWildcard);
-                            result = childNode.evaluate(UPath.MakePath(newPath.Rest()), query,
-                                                        request, matchstate, newWildcard);
-                            if (ResultStateReadyGood(result, newWildcard, matchstate, query)) return result;
-                        }
-                    }
-                }
-            }
-
-            // o.k. if the nodemapper has failed to match at all: the input contains neither 
-            // a "_", the sFirstWord text, or "*" as a means of denoting a child node. However, 
-            // if this node is itself representing a wildcard then the search continues to be
-            // valid if we proceed with the tail.
-            if (this.word.IsWildCard())
-            {
-                this.storeWildCard(first, wildcard);
-                return this.evaluate(UPath.MakePath(newPath), query, request, matchstate, wildcard);
-            }
-
-            // If we get here then we're at a dead end so return an empty Unifiable. Hopefully, if the
-            // AIML files have been set up to include a "* <that> * <topic> *" catch-all this
-            // state won't be reached. Remember to empty the surplus to requirements wildcard matches
-            //wildcard.Clear();// = new Unifiable();
-            return null;// Unifiable.Empty;
-        }
-
         /// <summary>
         // If we get a result from the branch process the wildcard matches and return 
         // the result
         /// </summary>
         /// <param name="result"></param>
         /// <param name="newWildcard"></param>
-        /// <param name="matchstate"></param>
+        /// <param name="mtchList"></param>
         /// <param name="query"></param>
         /// <returns></returns>
-        private static bool ResultStateReadyGood(UList result, Unifiable newWildcard, MatchState matchstate, SubQuery query)
-        {
-            // and if we get a result from the branch process and return it
-            if (result != null && result.Count > 0)
-            {
-                if (!newWildcard.IsEmpty)
-                {
-                    // capture and push the star content appropriate to the matchstate if it exists
-                    // and then clear it for subsequent wildcards
-
-                    switch (matchstate)
-                    {
-                        case MatchState.UserInput:
-                            query.InputStar.Add(newWildcard.Frozen());
-                            // added due to this match being the end of the line
-                            newWildcard.Clear();
-                            break;
-                        case MatchState.That:
-                            query.ThatStar.Add(newWildcard.Frozen());
-                            break;
-                        case MatchState.Topic:
-                            query.TopicStar.Add(newWildcard.Frozen());
-                            break;
-                        case MatchState.Flag:
-                            // query.TopicStar.Add(newWildcard.Frozen());
-                            break;
-                    }
-                }
-                return true;
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// Navigates this node (and recursively into child nodes) for a match to the path passed as an argument
-        /// whilst processing the referenced request
-        /// </summary>
-        /// <param name="path">The normalized path derived from the user's input</param>
-        /// <param name="query">The query that this search is for</param>
-        /// <param name="request">An encapsulation of the request from the user</param>
-        /// <param name="matchstate">The part of the input path the node represents</param>
-        /// <param name="wildcard">The contents of the user input absorbed by the AIML wildcards "_" and "*"</param>
-        /// <returns>The template to process to generate the output</returns>
-        public bool evaluateOLDX(UPath upath, SubQuery query, Request request, MatchState matchstate, Unifiable wildcard, QueryList res)
-        {
-            bool childTrue = false;
-            Unifiable path = upath.LegacyPath;
-            // check for timeout
-            if (request.StartedOn.AddMilliseconds(request.Proccessor.TimeOut) < DateTime.Now)
-            {
-                request.Proccessor.writeToLog("WARNING! Request timeout. User: " + request.user.UserID + " raw input: \"" + request.rawInput + "\"");
-                request.hasTimedOut = true;
-                return false;// Unifiable.Empty;
-            }
-
-            if (query.Request != request)
-            {
-                query.Request = request;
-            }
-
-            // so we still have time!
-            path = path.Trim();
-
-            // check if this is the end of a branch in the GraphMaster 
-            // return the cCategory for this node
-            if (this.children.Count == 0)
-            {
-                if (!path.IsEmpty)
-                {
-                    // if we get here it means that there is a wildcard in the user input part of the
-                    // path.
-                    this.storeWildCard(path, wildcard);
-                }
-                if (AddSubQueris(res, query, this)) childTrue = true;
-                return childTrue;
-            }
-
-            // if we've matched all the words in the input sentence and this is the end
-            // of the line then return the cCategory for this node
-            if (path.IsEmpty)
-            {
-                if (AddSubQueris(res, query, this)) childTrue = true;
-                return childTrue;
-            }
-
-            // otherwise split the input into it's component words
-            //  Unifiable[] splitPath0 = path.Split();
-            Unifiable first = path.First();
-
-            // get the first word of the sentence
-            Unifiable firstWord = first;//Normalize.MakeCaseInsensitive.TransformInput(first);
-
-            // and concatenate the rest of the input into a new path for child nodes
-            Unifiable newPath = UPath.MakePath(path.Rest()).LegacyPath;// Unifiable.Join(" ", splitPath0, 1, splitPath0.Length - 1);// path.Rest();// Substring(firstWord.Length, path.Length - firstWord.Length);
-
-            bool willReturn = false;
-
-            // first option is to see if this node has a child denoted by the "_" 
-            // wildcard. "_" comes first in precedence in the AIML alphabet
-            foreach (KeyValuePair<Unifiable, Node> childNodeKV in this.children)
-            {
-                Unifiable childNodeWord = childNodeKV.Key;
-                if (!childNodeWord.IsShortWildCard()) continue;
-                if (childNodeWord.Unify(first, query) > 0) continue;
-                Node childNode = childNodeKV.Value;
-                // add the next word to the wildcard match 
-                Unifiable newWildcard = Unifiable.CreateAppendable();
-                this.storeWildCard(first, newWildcard);
-
-                // move down into the identified branch of the GraphMaster structure
-                if (childNode.evaluateOLDX(UPath.MakePath(newPath), query, request, matchstate, newWildcard, res))
-                {
-                    //dmiles todo
-                    childTrue = true;
-                }
-
-                // and if we get a result from the branch process the wildcard matches and return 
-                // the result
-                string freezit = newWildcard.Frozen();
-                if (ResultStateReady(res, newWildcard, matchstate, query))
-                {
-                    if (freezit.Contains(" "))
-                    {
-                        // cannot match input containing spaces
-                        continue;
-                    }
-                    //dmiles todo
-                    return childTrue;
-                }
-            }
-
-
-            // second option - the nodemapper may have contained a "_" child, but led to no match
-            // or it didn't contain a "_" child at all. So get the child nodemapper from this 
-            // nodemapper that matches the first word of the input sentence.
-            foreach (var childNodeKV in this.children)
-            {
-                Node childNode = childNodeKV.Value;
-                if (childNode.word.IsWildCard()) continue;
-                if (childNode.word.Unify(firstWord, query) > 0) continue;
-                // process the matchstate - this might not make sense but the matchstate is working
-                // with a "backwards" path: "topic <topic> that <that> user input"
-                // the "classic" path looks like this: "user input <that> that <topic> topic"
-                // but having it backwards is more efficient for searching purposes
-                MatchState newMatchstate = matchstate;
-
-                if (firstWord.IsTag("THAT"))
-                {
-                    newMatchstate = MatchState.That;
-                }
-                else if (firstWord.IsTag("TOPIC"))
-                {
-                    newMatchstate = MatchState.Topic;
-                }
-                else if (firstWord.IsTag("FLAG"))
-                {
-                    newMatchstate = MatchState.Flag;
-                }
-
-                //Node childNode = (Node)this.children[firstWord];
-                // move down into the identified branch of the GraphMaster structure using the new
-                // matchstate
-                Unifiable newWildcard = Unifiable.CreateAppendable();
-                if (childNode.evaluateOLDX(UPath.MakePath(newPath), query, request, newMatchstate, newWildcard, res))
-                {
-                    childTrue = true;
-                }
-                // and if we get a result from the child return it
-                if (ResultStateReady(res, newWildcard, matchstate, query))
-                {
-                    willReturn = true;
-                    return childTrue;
-                }
-
-            }
-            //toood uncomment 
-            if (willReturn) return childTrue;
-
-            // third option - the input part of the path might have been matched so far but hasn't
-            // returned a match, so check to see it contains the "*" wildcard. "*" comes last in
-            // precedence in the AIML alphabet.
-            foreach (var childNodeKV in this.children)
-            {
-                Unifiable childNodeWord = childNodeKV.Key;
-                int matchLen = 0;
-                if (!childNodeWord.IsLongWildCard()) continue;
-                Node childNode = childNodeKV.Value;
-                // o.k. look for the path in the child node denoted by "*"
-                //Node childNode = (Node)this.children["*"];
-                //UList result = null;
-                // add the next word to the wildcard match 
-                Unifiable newWildcard = Unifiable.CreateAppendable();
-                // normal * and LazyMatch on first word
-                if (childNodeWord.Unify(first, query) == 0)
-                {
-                    this.storeWildCard(first, newWildcard);
-                    if (childNode.evaluateOLDX(UPath.MakePath(newPath), query, request, matchstate, newWildcard, res))
-                    {
-                        childTrue = true;
-                    }
-                    if (ResultStateReady(res, newWildcard, matchstate, query))
-                    {
-                        childTrue = true;
-                        willReturn = true;
-                        return true;
-                    }
-                }
-                else
-                {
-                    // some lazy matches take two words
-                    Unifiable second = newPath.First();
-                    if (!second.IsEmpty && childNodeWord.IsLazyStar())
-                    {
-                        Unifiable firstAndSecond = first + " " + second;
-                        if (childNodeWord.Unify(firstAndSecond, query) == 0)
-                        {
-                            this.storeWildCard(firstAndSecond, newWildcard);
-                            if (childNode.evaluateOLDX(UPath.MakePath(newPath.Rest()), query,
-                                                        request, matchstate, newWildcard, res))
-                            {
-                                childTrue = true;
-                            }
-                            if (ResultStateReady(res, newWildcard, matchstate, query))
-                            {
-                                willReturn = true;
-                                return childTrue;
-                            }
-                        }
-                    }
-                }
-            }
-            if (willReturn) return childTrue;
-
-            // o.k. if the nodemapper has failed to match at all: the input contains neither 
-            // a "_", the sFirstWord text, or "*" as a means of denoting a child node. However, 
-            // if this node is itself representing a wildcard then the search continues to be
-            // valid if we proceed with the tail.
-            if (this.word.IsWildCard())
-            {
-                this.storeWildCard(first, wildcard);
-                if (this.evaluateOLDX(UPath.MakePath(newPath), query, request, matchstate, wildcard, res))
-                {
-                    return true;
-                }
-                return false;
-            }
-
-            // If we get here then we're at a dead end so return an empty Unifiable. Hopefully, if the
-            // AIML files have been set up to include a "* <that> * <topic> *" catch-all this
-            // state won't be reached. Remember to empty the surplus to requirements wildcard matches
-            //wildcard.Clear();// = new Unifiable();
-            return childTrue;// Unifiable.Empty;
-        }
-
-
-
-        /// <summary>
-        // If we get a result from the branch process the wildcard matches and return 
-        // the result
-        /// </summary>
-        /// <param name="result"></param>
-        /// <param name="newWildcard"></param>
-        /// <param name="matchstate"></param>
-        /// <param name="query"></param>
-        /// <returns></returns>
-        static bool ResultStateReadyList(QueryList result0, Unifiable newWildcard, List<Unifiable> matchstate, SubQuery query)
+        static bool ResultStateReady(QueryList result0, Unifiable newWildcard, List<Unifiable> mtchList, MatchState matchstate, SubQuery query)
         {
             var result = result0;
             // and if we get a result from the branch process and return it
@@ -729,9 +283,9 @@ namespace RTParser.Utils
             {
                 if (!newWildcard.IsEmpty)
                 {
-                    // capture and push the star content appropriate to the matchstate if it exists
+                    // capture and push the star content appropriate to the mtchList if it exists
                     // and then clear it for subsequent wildcards
-                    matchstate.Insert(0, newWildcard.Frozen());
+                    mtchList.Insert(0, newWildcard.Frozen());
                 }
 
 
@@ -747,10 +301,10 @@ namespace RTParser.Utils
         /// <param name="path">The normalized path derived from the user's input</param>
         /// <param name="query">The query that this search is for</param>
         /// <param name="request">An encapsulation of the request from the user</param>
-        /// <param name="matchstate">The part of the input path the node represents</param>
+        /// <param name="mtchList">The part of the input path the node represents</param>
         /// <param name="wildcard">The contents of the user input absorbed by the AIML wildcards "_" and "*"</param>
         /// <returns>The template to process to generate the output</returns>
-        public bool evaluateOLDY(UPath upath, SubQuery query, Request request, List<Unifiable> matchstate, Unifiable wildcard, QueryList res)
+        public bool evaluate(UPath upath, SubQuery query, Request request, List<Unifiable> mtchList, MatchState matchstate, int index, Unifiable wildcard, QueryList res)
         {
             bool childTrue = false;
             Unifiable path = upath.LegacyPath;
@@ -764,6 +318,18 @@ namespace RTParser.Utils
 
             // so we still have time!
             path = path.Trim();
+
+            if (false && matchstate == MatchState.That)
+            {
+                if (path.IsEmpty)
+                {
+                    if (word.IsLongWildCard())
+                    {
+                        AddSubQueris(res, query, this);
+                        return true;
+                    }
+                }
+            }
 
             // check if this is the end of a branch in the GraphMaster 
             // return the cCategory for this node
@@ -823,7 +389,7 @@ namespace RTParser.Utils
                 this.storeWildCard(first, newWildcard);
 
                 // move down into the identified branch of the GraphMaster structure
-                if (childNode.evaluateOLDY(UPath.MakePath(newPath), query, request, matchstate, newWildcard, res))
+                if (childNode.evaluate(UPath.MakePath(newPath), query, request, mtchList, matchstate, index, newWildcard, res))
                 {
                     //dmiles todo
                     childTrue = true;
@@ -832,7 +398,7 @@ namespace RTParser.Utils
                 // and if we get a result from the branch process the wildcard matches and return 
                 // the result
                 string freezit = newWildcard.Frozen();
-                if (ResultStateReadyList(res, newWildcard, matchstate, query))
+                if (ResultStateReady(res, newWildcard, mtchList, matchstate, query))
                 {
                     if (freezit.Contains(" "))
                     {
@@ -853,39 +419,54 @@ namespace RTParser.Utils
                 Node childNode = childNodeKV.Value;
                 if (childNode.word.IsWildCard()) continue;
                 if (childNode.word.Unify(firstWord, query) > 0) continue;
-                // process the matchstate - this might not make sense but the matchstate is working
+                // process the mtchList - this might not make sense but the mtchList is working
                 // with a "backwards" path: "topic <topic> that <that> user input"
                 // the "classic" path looks like this: "user input <that> that <topic> topic"
                 // but having it backwards is more efficient for searching purposes
-                List<Unifiable> newMatchstate = matchstate;
+                List<Unifiable> newList = mtchList;
+                MatchState newMatchstate = matchstate;
+                var wasThat = matchstate == MatchState.That;
 
                 if (firstWord.IsTag("THAT"))
                 {
-                    newMatchstate = query.ThatStar;
+                    newList = query.ThatStar;
+                    newMatchstate = MatchState.That;
                 }
                 else if (firstWord.IsTag("TOPIC"))
                 {
-                    newMatchstate = query.TopicStar;
+                    newList = query.TopicStar;
+                    newMatchstate = MatchState.Topic;
                 }
                 else if (firstWord.IsTag("FLAG"))
                 {
-                    newMatchstate = query.Flags;
+                    newList = query.Flags;
+                    newMatchstate = MatchState.Flag;
                 }
                 else if (firstWord.IsTag("INPUT"))
                 {
-                    newMatchstate = query.InputStar;
+                    newList = query.InputStar;
+                    newMatchstate = MatchState.UserInput;
+                }
+
+                if (wasThat && newMatchstate != matchstate)
+                {
+                    var thats = query.ThatStar;
+                    if (thats.Count > 1)
+                    {
+                        Console.WriteLine("THATS: " + thats[1]);
+                    }
                 }
 
                 //Node childNode = (Node)this.children[firstWord];
                 // move down into the identified branch of the GraphMaster structure using the new
-                // matchstate
+                // mtchList
                 Unifiable newWildcard = Unifiable.CreateAppendable();
-                if (childNode.evaluateOLDY(UPath.MakePath(newPath), query, request, newMatchstate, newWildcard, res))
+                if (childNode.evaluate(UPath.MakePath(newPath), query, request, newList, newMatchstate, index, newWildcard, res))
                 {
                     childTrue = true;
                 }
                 // and if we get a result from the child return it
-                if (ResultStateReadyList(res, newWildcard, matchstate, query))
+                if (ResultStateReady(res, newWildcard, mtchList, matchstate, query))
                 {
                     willReturn = true;
                     return childTrue;
@@ -913,11 +494,11 @@ namespace RTParser.Utils
                 if (childNodeWord.Unify(first, query) == 0)
                 {
                     this.storeWildCard(first, newWildcard);
-                    if (childNode.evaluateOLDY(UPath.MakePath(newPath), query, request, matchstate, newWildcard, res))
+                    if (childNode.evaluate(UPath.MakePath(newPath), query, request, mtchList, matchstate, index, newWildcard, res))
                     {
                         childTrue = true;
                     }
-                    if (ResultStateReadyList(res, newWildcard, matchstate, query))
+                    if (ResultStateReady(res, newWildcard, mtchList, matchstate, query))
                     {
                         childTrue = true;
                         willReturn = true;
@@ -934,12 +515,12 @@ namespace RTParser.Utils
                         if (childNodeWord.Unify(firstAndSecond, query) == 0)
                         {
                             this.storeWildCard(firstAndSecond, newWildcard);
-                            if (childNode.evaluateOLDY(UPath.MakePath(newPath.Rest()), query,
-                                                        request, matchstate, newWildcard, res))
+                            if (childNode.evaluate(UPath.MakePath(newPath.Rest()), query,
+                                                        request, mtchList, matchstate, index, newWildcard, res))
                             {
                                 childTrue = true;
                             }
-                            if (ResultStateReadyList(res, newWildcard, matchstate, query))
+                            if (ResultStateReady(res, newWildcard, mtchList, matchstate, query))
                             {
                                 willReturn = true;
                                 return childTrue;
@@ -957,7 +538,7 @@ namespace RTParser.Utils
             if (this.word.IsWildCard())
             {
                 this.storeWildCard(first, wildcard);
-                if (this.evaluateOLDY(UPath.MakePath(newPath), query, request, matchstate, wildcard, res))
+                if (this.evaluate(UPath.MakePath(newPath), query, request, mtchList, matchstate, index, wildcard, res))
                 {
                     return true;
                 }
@@ -971,18 +552,13 @@ namespace RTParser.Utils
             return childTrue;// Unifiable.Empty;
         }
 
-         private bool CheckSubQueris(QueryList list, SubQuery infos, Node node)
-         {
-             return true;
-         }
-
         private bool AddSubQueris(QueryList list, SubQuery infos, Node node)
         {
             if (TemplateInfos == null || TemplateInfos.Count == 0) return false;
             Result rs = infos.Request.user.LastResult;
             lock (TemplateInfos)
             {
-                var sq =  infos.CopyOf();
+                var sq = infos.CopyOf();
                 foreach (TemplateInfo info in TemplateInfos)
                 {
                     if (!infos.Request.Proccessor.UseInlineThat)
@@ -992,9 +568,9 @@ namespace RTParser.Utils
                         {
                             if (t.FullPath != "*")
                             {
-                                if (rs==null) continue;
+                                if (rs == null) continue;
                                 var v = UnifyStars(t.FullPath, rs.RawOutput);
-                                if (v==null) continue;
+                                if (v == null) continue;
                                 sq.ThatStar = infos.ThatStar = v;
                             }
                             else
@@ -1065,62 +641,6 @@ namespace RTParser.Utils
         }
 
         /// <summary>
-        // If we get a result from the branch process the wildcard matches and return 
-        // the result
-        /// </summary>
-        /// <param name="result"></param>
-        /// <param name="newWildcard"></param>
-        /// <param name="matchstate"></param>
-        /// <param name="query"></param>
-        /// <returns></returns>
-        static bool ResultStateReady(QueryList result0, Unifiable newWildcard, MatchState matchstate, SubQuery query)
-        {
-            var result = result0;
-            // and if we get a result from the branch process and return it
-            if (result != null && result.Count > 0)
-            {
-                if (!newWildcard.IsEmpty)
-                {
-                    // capture and push the star content appropriate to the matchstate if it exists
-                    // and then clear it for subsequent wildcards
-
-                    switch (matchstate)
-                    {
-                        case MatchState.UserInput:
-                            query.InputStar.Insert(0, newWildcard.Frozen());
-                            // added due to this match being the end of the line
-                            newWildcard.Clear();
-                            break;
-                        case MatchState.That:
-                            query.ThatStar.Insert(0, newWildcard.Frozen());
-                            break;
-                        case MatchState.Topic:
-                            query.TopicStar.Insert(0, newWildcard.Frozen());
-                            break;
-                        case MatchState.Flag:
-                            // query.TopicStar.Add(newWildcard.Frozen());
-                            break;
-                    }
-                }
-                
-                return true;
-            }
-            switch (matchstate)
-            {
-                case MatchState.UserInput:
-                    break;
-                case MatchState.That:
-                    break;
-                case MatchState.Topic:
-                    break;
-                case MatchState.Flag:
-                    break;
-            }
-            return false;
-        }
-
-
-        /// <summary>
         /// Navigates this node (and recursively into child nodes) for a match to the path passed as an argument
         /// whilst processing the referenced request
         /// </summary>
@@ -1139,10 +659,10 @@ namespace RTParser.Utils
             path = path.Trim();
 
             //if (upath == word) return this;
-   
 
-                // check if this is the end of a branch in the GraphMaster 
-                // return the cCategory for this node
+
+            // check if this is the end of a branch in the GraphMaster 
+            // return the cCategory for this node
             if (this.children.Count == 0)
             {
                 if (!path.IsEmpty)
@@ -1171,7 +691,7 @@ namespace RTParser.Utils
 
             // and concatenate the rest of the input into a new path for child nodes
             Unifiable newPath = UPath.MakePath(path.Rest()).LegacyPath;
-                // Unifiable.Join(" ", splitPath0, 1, splitPath0.Length - 1);// path.Rest();// Substring(firstWord.Length, path.Length - firstWord.Length);
+            // Unifiable.Join(" ", splitPath0, 1, splitPath0.Length - 1);// path.Rest();// Substring(firstWord.Length, path.Length - firstWord.Length);
 
             Node childTrueTemp = null;
             Node childTrue = null;
@@ -1313,8 +833,8 @@ namespace RTParser.Utils
             {
                 if (!newWildcard.IsEmpty)
                 {
-                    matchstate.Insert(0,newWildcard);
-                  //  newWildcard.Clear();
+                    matchstate.Insert(0, newWildcard);
+                    //  newWildcard.Clear();
                 }
                 return true;
             }

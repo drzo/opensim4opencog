@@ -1102,7 +1102,7 @@ namespace RTParser
                 {
                     Utils.SubQuery query = new SubQuery(path, result, request);
                     //query.Templates = 
-                    request.Graph.evaluate(path, query, request, query.InputStar, Unifiable.CreateAppendable());
+                    request.Graph.evaluate(path, query, request, query.InputStar, MatchState.UserInput,0, Unifiable.CreateAppendable());
                     result.SubQueries.Add(query);
                 }
 
@@ -1168,6 +1168,11 @@ namespace RTParser
 
         public AIMLbot.Result Chat(Request request)
         {
+            return Chat(request, request.Graph ?? GraphMaster);
+        }
+
+        public AIMLbot.Result Chat(Request request, GraphMaster G)
+        {
             LastUser = request.user ?? LastUser;
             //chatTrace = null;
             if (chatTrace == null)
@@ -1217,7 +1222,7 @@ namespace RTParser
                 {
                     Utils.SubQuery query = new SubQuery(path, result, request);
                     //query.Templates = 
-                    request.Graph.evaluate(path, query, request, query.InputStar, Unifiable.CreateAppendable());
+                    G.evaluate(path, query, request, query.InputStar, MatchState.UserInput,0, Unifiable.CreateAppendable());
                     result.SubQueries.Add(query);
                 }
 
@@ -1962,7 +1967,7 @@ The AIMLbot program.
                 {
                     Utils.SubQuery query = new SubQuery(path, result, request);
                     //query.Templates = 
-                    request.Graph.evaluate(path, query, request, query.InputStar, Unifiable.CreateAppendable());
+                    request.Graph.evaluate(path, query, request, query.InputStar, MatchState.UserInput, 0, Unifiable.CreateAppendable());
                     result.SubQueries.Add(query);
                 }
 

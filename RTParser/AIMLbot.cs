@@ -21,6 +21,10 @@ namespace AIMLbot
     }
     public class Request : RTParser.Request
     {
+        public Request(String rawInput, RTParser.User user, RTPBot bot)
+            : base(rawInput, user, bot, null)
+        {
+        }
         public Request(String rawInput, RTParser.User user, RTPBot bot, Request r)
             : base(rawInput, user, bot, r)
         {
