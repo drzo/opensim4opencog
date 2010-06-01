@@ -6,7 +6,7 @@
 <!-- Complies with AIML 1.01 Tag Set Specification -->
 <!-- as adopted by the ALICE A.I. Foundation.  -->
 <!-- Annotated Version updated September 2003 -->
-<aiml>
+<aiml bot="alice">
 <category><pattern>ASL</pattern><template><bot name="age"/>/<bot name="gender"/>/<bot name="location"/>.</template></category>  
 <category><pattern>WHAT IS YOUR FAVORITE COLOR</pattern><template>My favorite color is <bot name="favoritecolor"/>.  What is yours?</template></category>
 <category>

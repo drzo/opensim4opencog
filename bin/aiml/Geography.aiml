@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>  
 <aiml>
-<!-- Free software &copy; 2001-2003 ALICE A.I. Foundation. -->
+<!-- Free software &copy; 2001-2003 2001 ALICE  AI Foundation. -->
 <!-- This program is open source code released under -->
 <!-- the terms of the GNU General Public License     -->
 <!-- as published by the Free Software Foundation.   -->
-<!-- Complies with AIML 1.01 Tag Set Specification -->
+<!-- Complies with COGBOT 1.01 Tag Set Specification -->
 <!-- as adopted by the ALICE A.I. Foundation.  -->
 <!-- Annotated Version updated September 2003 -->
 <category><pattern>WHAT IS AMSTERDAM</pattern><template>   <set name="it">Amsterdam</set> is a city in Holland.  Neither the political capital nor the largest city, Amsterdam is the best known city in the Netherlands.</template></category> 
@@ -13,7 +13,6 @@
 <category><pattern>CALIFORNIA</pattern><template>I am in <set name="location">California</set> too!  <think>      <set name="it">       <set name="topic">California</set>      </set>     </think>    </template></category>  
 <category><pattern>CALIFORNIA *</pattern><template>Which part of California do you like best?</template></category>  
 <category><pattern>CANADA IS *</pattern><template>Tell me more about the Great White North.</template></category>  
-<category><pattern>I DO NOT LIVE IN USA</pattern><template>Where are you located?</template></category>  
 <category><pattern>I LIVE IN CALIFORNIA</pattern><template>Where in <set name="location">California</set>?  <think><set name="it"><set name="topic">California</set></set></think></template></category>  
 <category><pattern>I LOVE DENMARK</pattern><template>What is so great about it?<think><set name="it"><set name="topic">DENMARK</set></set></think></template></category>  
 <category><pattern>IS IT NEAR CANADA</pattern><template>Yes.</template></category>  
@@ -363,8 +362,6 @@
 <category><pattern>WHAT IS THE POPULATION OF THE USA</pattern><template>The United States has about 300 million people.</template></category>  
 <category><pattern>WHAT IS THE POPULATION OF USA</pattern><template>About 300 million people.</template></category>  
 <category><pattern>WHAT IS USA</pattern><template>United States of America</template></category>  
-<category><pattern>WHERE IN BETHLEHEM</pattern><template>Department of Electrical Engineering and Computer Science, Lehigh University.</template></category>  
-<category><pattern>WHERE IN CALIFORNIA</pattern><template>I am in <bot name="location"/>.  Where are you?</template></category>  
 <category><pattern>WHERE IN CANADA</pattern><template>Nova Scotia and Vancouver.</template></category>  
 <category><pattern>WHERE IS ACAPULCO</pattern><template>   <set name="it">Acapulco</set> is a city on the Pacific coast of Mexico.</template></category>  
 <category><pattern>WHERE IS ADELAIDE</pattern><template>   <set name="it">      <set name="topic"> ADELAIDE </set>     </set> is a city in southern Australia.</template></category>  
@@ -540,7 +537,6 @@
 <category><pattern>WHERE IS HEAVEN</pattern><template>All around us.</template></category>  
 <category><pattern>WHERE IS HE FROM</pattern><template>   <get name="he"/>?  I think he is from the planet Earth.</template></category>  
 <category><pattern>WHERE IS HE</pattern><template>I think he is in California now.</template></category>  
-<category><pattern>WHERE IS HERE</pattern><template>Here is <bot name="location"/>.</template></category>  
 <category><pattern>WHERE IS HOFFA</pattern><template>We may never know.</template></category>  
 <category><pattern>WHERE IS HOLLAND</pattern><template>   <set name="it">Holland</set> is a country in western Europe, next to Germany and Belgium.</template></category>  
 <category><pattern>WHERE IS HOLLYWOOD</pattern><template>   <set name="it">Hollywood</set> is a small part of Los Angeles, California.</template></category>  
@@ -577,7 +573,6 @@
 <category><pattern>WHERE IS JOHNSTON ATOLL</pattern><template>Oceania, atoll in the North Pacific Ocean, about one-third of the way from Hawaii to the Marshall Islands.   <think>      <set name="it">       <set name="topic">johnston atoll</set>      </set>     </think>    </template></category>  
 <category><pattern>WHERE IS JORDAN</pattern><template>Middle East, northwest of Saudi Arabia.   <think>      <set name="it">       <set name="topic">jordan</set>      </set>     </think>    </template></category>  
 <category><pattern>WHERE IS JUAN DE NOVA ISLAND</pattern><template>Southern Africa, island in the Mozambique Channel, about one-third of the way between Madagascar and Mozambique.   <think>      <set name="it">       <set name="topic">juan de nova island</set>      </set>     </think>    </template></category>  
-<category><pattern>WHERE IS JULIA</pattern><template>I don't think she is online right now.</template></category>  
 <category><pattern>WHERE IS JUPITER</pattern><template>   <set name="it">      <set name="topic"> JUPITER </set>     </set> is the fifth planet from the sun.</template></category>  
 <category><pattern>WHERE IS KALAMAZOO</pattern><template>   <set name="it">      <set name="topic"> KALAMAZOO </set>     </set> is a city in Michigan.</template></category>  
 <category><pattern>WHERE IS KANSAS</pattern><template>   <set name="it">Kansas</set> is in the midwestern United States.W</template></category>  
@@ -787,8 +782,6 @@
 <category><pattern>WHERE IS THE LOUVRE</pattern><template>Paris.</template></category>  
 <category><pattern>WHERE IS THE MOON</pattern><template>   <set name="it">      <set name="topic">The Moon</set>     </set> orbits around the Earth.</template></category>  
 <category><pattern>WHERE IS THE PHILIPPINES</pattern><template>An island nation in the South Pacific.</template></category>  
-<category><pattern>WHERE IS THE ROBOT</pattern><template>The robot is here in your computer.</template></category>  
-<category><pattern>WHERE IS THE SUN</pattern><template>It is in the center of the solar system.<think>      <set name="it">       <set name="topic">SUN</set>      </set>     </think>    </template></category>  
 <category><pattern>WHERE IS TOGO</pattern><template>Western Africa, bordering the North Atlantic Ocean, between Benin and Ghana.   <think>      <set name="it">       <set name="topic">togo</set>      </set>     </think>    </template></category>  
 <category><pattern>WHERE IS TOKELAU</pattern><template>Oceania, group of islands in the South Pacific Ocean, about one-half of the way from Hawaii to New Zealand.   <think>      <set name="it">       <set name="topic">tokelau</set>      </set>     </think>    </template></category>  
 <category><pattern>WHERE IS TOKYO</pattern><template>   <set name="it">Tokyo</set> is a city in Japan.</template></category>  
@@ -843,12 +836,7 @@
 <category><pattern>WHERE IS ZURICH</pattern><template>   <set name="it">Zurich</set> is a city in Switzerland.</template></category>  
 <category><pattern>WHICH CONTINENT IS AUSTRIA ON</pattern><template>Europe.</template></category>  
 <category><pattern>WHO IS PRESIDENT OF CANADA</pattern><template>Canada has a Prime Minister, not a President.</template></category>  
-<category><pattern>WHO IS PRESIDENT OF THE USA</pattern><template>   <bot name="president"/>.</template></category>  
-<category><pattern>WHO IS PRESIDENT OF USA</pattern><template>   <bot name="president"/>.</template></category>  
 <category><pattern>WHO IS THE PRESIDENT OF CANADA</pattern><template>Canada has a Prime Minister.</template></category>  
-<category><pattern>WHO IS THE PRESIDENT OF THE USA</pattern><template>   <bot name="president"/>.</template></category>  
-<category><pattern>WHO IS THE PRESIDENT OF USA</pattern><template>   <bot name="president"/>.</template></category>  
-<category><pattern>WHO IS THE PRESIDENT OF USA *</pattern><template>   <bot name="president"/>.</template></category>  
 <category><pattern>WHO IS WINSTON CHURCHILL</pattern><template>Prime Minister of the U.K. during World War II.</template></category>  
 <category><pattern>WHY CALIFORNIA</pattern><template>I like living in california.</template></category>  
 </aiml>

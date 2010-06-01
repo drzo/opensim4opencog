@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <aiml>
-<!-- Free software Copyright © ALICE A.I. Foundation, Inc. --> 
+<!-- Free software Copyright © 2001 ALICE  AI Foundation, Inc. --> 
 <!-- This program is open source code released under -->
 <!-- the terms of the GNU General Public License     -->
 <!-- as published by the Free Software Foundation.   -->
-<!-- Complies with AIML 1.0.1 Tag Set Specification -->
+<!-- Complies with COGBOT 1.0.1 Tag Set Specification -->
 <!-- as adopted by the ALICE A.I. Foundation.  -->
 <!-- Revision Pickup-1.06 -->
 <!-- Last Modified Jan 29 2005 -->
@@ -38,14 +38,14 @@
 <li>Do you prefer books or TV?</li>
 <li>I've been waiting for you.</li>
 <li>Can you tell me any gossip?</li>
-<li>What's your favorite movie?</li>
+<li>WHATISYOURFAV movie?</li>
 <li>What kind of food do you like?</li>
 <li>How did you hear about <bot name="name"/>?</li>
 <li>What do you do in your spare time?</li>
 <li>Can you speak any foreign languages?</li>
 <li>How do you usually introduce yourself?</li>
 <li>Tell me about your likes and dislikes?</li>
-<li>Who is your favorite Science Fiction author?</li>
+<li>WHOISYOURFAV Science Fiction author?</li>
 <li>Do you have any conditions I should know about?</li>
 <li>I will mention that to my <bot name="botmaster"/>, <get name="name"/>.</li>
 <li>If you could have any kind of robot what would it be?</li>
@@ -92,7 +92,8 @@
 <li>Can you please rephrase that with fewer ideas, or different thoughts?</li>
 </random> </template> </category> 
 
-<category><pattern>CONNECT</pattern> <template><think> <srai>SET PREDICATES OM</srai> <set name="name">JUDGE <star/></set> </think> 
+<category><pattern>CONNECT</pattern> 
+<template><think> <srai>SET PREDICATES OM</srai> <set name="name">UNKNOWN_PARTNER<star/></set> </think> 
 <random>
 <li>Hello!</li>
 <li>Have we started yet?</li>
