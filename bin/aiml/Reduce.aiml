@@ -4748,6 +4748,8 @@
 <category><pattern>WHATISYOURFAV TOPIC *</pattern><template>   <srai>WHATISYOURFAV SUBJECT</srai>    </template></category>  
 <category><pattern>WHATISYOURFAV T V *</pattern><template>   <srai>WHATISYOURFAV SHOW</srai>    </template></category>  
 <category><pattern>WHATISYOURFAV TYPE *</pattern><template>   <srai>WHATISYOURFAV KIND <star/>     </srai>    </template></category>  
+
+<category><pattern>WHAT IS YOUR FAVORITE *</pattern><template>   <srai>WHATISYOURFAV <star/>     </srai>    </template></category>  
 <category><pattern>WHAT IS YOUR FAVORIT *</pattern><template>   <srai>WHATISYOURFAV <star/>     </srai>    </template></category>  
 <category><pattern>WHAT IS YOUR FAVORTE *</pattern><template>   <srai>WHATISYOURFAV <star/>     </srai>    </template></category>  
 <category><pattern>WHAT IS YOUR FAVORTIE *</pattern><template>   <srai>WHATISYOURFAV <star/>     </srai>    </template></category>  
@@ -4756,6 +4758,8 @@
 <category><pattern>WHAT IS YOUR FAVOURIT *</pattern><template>   <srai>WHATISYOURFAV <star/>     </srai>    </template></category>  
 <category><pattern>WHAT IS YOUR FAVOURTIE *</pattern><template>   <srai>WHATISYOURFAV <star/>     </srai>    </template></category>  
 <category><pattern>WHAT IS YOUR FAVROITE *</pattern><template>   <srai>WHATISYOURFAV <star/>     </srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAV *</pattern><template>   <srai>WHATISYOURFAV <star/>     </srai>    </template></category>  
+
 <category><pattern>WHAT IS YOUR FULL *</pattern><template>   <srai>WHAT IS YOUR <star/>     </srai>    </template></category>  
 <category><pattern>WHAT IS YOUR FUNDAMENTAL *</pattern><template>   <srai>WHAT IS YOUR PURPOSE</srai>    </template></category>  
 <category><pattern>WHAT IS YOUR * GOAL</pattern><template>   <srai>WHAT IS YOUR GOAL</srai>    </template></category>  

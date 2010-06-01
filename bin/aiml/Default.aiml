@@ -1607,7 +1607,7 @@
 <category><pattern>I DRESS *</pattern><template>It sounds like you have good taste in clothes.</template></category>  
 <category><pattern>I DRINK *</pattern><template>How does it taste?</template></category>  
 <category><pattern>I DRIVE A *</pattern><template>Mmm. Nice car.</template></category>  
-<category><pattern>I DRIVE *</pattern><template><random>  <li>I like to be a passenger.</li>  <li>What is your favorite car?</li>  <li>Do you drive carefully?</li>  </random></template></category>  
+<category><pattern>I DRIVE *</pattern><template><random>  <li>I like to be a passenger.</li>  <li>WHATISYOURFAV car?</li>  <li>Do you drive carefully?</li>  </random></template></category>  
 <category><pattern>I DROVE *</pattern><template>What kind of car do you have?</template></category>  
 <category><pattern>I EARN *</pattern><template>So you make a good living.</template></category>  
 <category><pattern>I EAT *</pattern><template>How does <set name="it"> <person/> </set>  taste?</template></category>  
@@ -1703,7 +1703,7 @@
 <category><pattern>I GO *</pattern><template><random><li>How do you get there?</li><li>What do you do there?</li><li>How often do you go <person/>?</li></random></template></category>  
 <category><pattern>I GO TO BARS *</pattern><template>What kind of people do you meet there?</template></category>  
 <category><pattern>I GO TO *</pattern><template>How do you like <set name="it"><set name="topic"><person/></set></set> at <person/> ?</template></category>  
-<category><pattern>I GO TO * SCHOOL</pattern><template>What is your favorite subject?</template></category>  
+<category><pattern>I GO TO * SCHOOL</pattern><template>WHATISYOURFAV subject?</template></category>  
 <category><pattern>I GO TO WORK *</pattern><template>Tell me more about your job.</template></category>  
 <category><pattern>I GRADUATED *</pattern><template>Congratulations, <get name="name"/>.</template></category>  
 <category><pattern>I GUESSED *</pattern><template>How did you guess?</template></category>  
@@ -2242,7 +2242,7 @@
 <category><pattern>I WAS THINKING *</pattern><template>How do I know that you were really "thinking"?</template></category>  
 <category><pattern>I WAS WATCHING *</pattern><template>Really what did you see?</template></category>  
 <category><pattern>I WATCHED *</pattern><template>How was <set name="it"><person/></set>?</template></category>  
-<category><pattern>I WATCH *</pattern><template>What is your favorite show?</template></category>  
+<category><pattern>I WATCH *</pattern><template>WHATISYOURFAV show?</template></category>  
 <category><pattern>I WEAR *</pattern><template>What kind of fashion do you like?</template></category>  
 <category><pattern>I WEIGH *</pattern><template>You sound very attractive.</template></category>  
 <category><pattern>I WENT OFFLINE *</pattern><template>Welcome back!</template></category>  
@@ -2504,8 +2504,8 @@
 <category><pattern>MY FAVORITE * IS *</pattern><template>What makes it your favorite? <think><set name="it">      <set name="topic"><star index="2"/> </set>     </set></think></template></category>  
 <category><pattern>MY FAVORITE SCIENCE FICTION AUTHOR IS *</pattern><template>I have never read anything by <person/>.  What did <set name="he">      <person/>     </set> write?  <think>      <set name="topic">       <person/>      </set>     </think>    </template></category>  
 <category><pattern>MY FAVORITE SCIENCE *</pattern><template>Who wrote that?</template></category>  
-<category><pattern>MY FAVORITE SHOW IS *</pattern><template>   <think>      <set name="it">       <set name="topic">        <person/>       </set>      </set>     </think>     <random>      <li>Who is your favorite character?</li>      <li>Wasn't that show cancelled?</li>      <li>I like that one and Star Trek too.</li>     </random>    </template></category>  
-<category><pattern>MY FAVORITE SHOW *</pattern><template>   <random>      <li>What's your favorite episode.</li>      <li>I don't get to see that show very often.</li>      <li>Who is your favorite character?</li>     </random>     <think>      <set name="it">       <set name="topic">        <person/>       </set>      </set>     </think>    </template></category>  
+<category><pattern>MY FAVORITE SHOW IS *</pattern><template>   <think>      <set name="it">       <set name="topic">        <person/>       </set>      </set>     </think>     <random>      <li>WHOISYOURFAV character?</li>      <li>Wasn't that show cancelled?</li>      <li>I like that one and Star Trek too.</li>     </random>    </template></category>  
+<category><pattern>MY FAVORITE SHOW *</pattern><template>   <random>      <li>What's your favorite episode.</li>      <li>I don't get to see that show very often.</li>      <li>WHOISYOURFAV character?</li>     </random>     <think>      <set name="it">       <set name="topic">        <person/>       </set>      </set>     </think>    </template></category>  
 <category><pattern>MY FONDEST *</pattern><template>How long ago was that?</template></category>  
 <category><pattern>MY FRIEND IS *</pattern><template>Okay, your friend is <set name="friend">      <star/>     </set>.</template></category>  
 <category><pattern>* MY FRIEND</pattern><template>Are we friends?</template></category>  
