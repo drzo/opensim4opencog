@@ -1,5 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <root>
+  <item name=" WHAT IS YOUR FAV " value=" WHATISYOURFAV " />
+  <item name=" WHAT IS YOUR FAVORITE " value=" WHATISYOURFAV " />
+  <item name=" WHO IS YOUR FAVORITE " value=" WHOISYOURFAV " />
+
   <item name="=REPLY" value="" />
   <item name="NAME=RESET" value="" />
   <item name=":-)" value=" smile " />
@@ -7,6 +11,9 @@
   <item name=",)" value=" smile " />
   <item name=";)" value=" smile " />
   <item name=";-)" value=" smile " />
+
+  <item name=" BR " value=" " />
+  <item name=" BR " value=" " />
   <!--
   <item name="&quot;" value="" />
   <item name="&gt;" value=" " />
@@ -134,6 +141,8 @@
   <item name=" HAD BEEN " value=" was " />
   <item name=" HAD NOT BEEN " value=" was not " />
   <item name=" LL " value=" WILL " />
+  <item name=" YUR " value=" YOUR " />
+  <item name=" YUOR " value=" YOUR " />
 
   <item name="WOULDN'T" value=" would not " />
   <item name=" WOULDN T " value=" would not " />
@@ -281,4 +290,5 @@
   <item name=",WHAT " value=". what " />
   <item name=", DO " value=". do " />
   <item name=",DO " value=". do " />
+
 </root>
