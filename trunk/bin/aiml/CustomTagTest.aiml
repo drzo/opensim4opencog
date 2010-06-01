@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <aiml>
-<!-- Free software &copy; 2001-2003 ALICE A.I. Foundation. -->
+<!-- Free software &copy; 2001-2003 2001 ALICE  AI Foundation. -->
 <!-- This program is open source code released under -->
 <!-- the terms of the GNU General Public License     -->
 <!-- as published by the Free Software Foundation.   -->
-<!-- Complies with AIML 1.01 Tag Set Specification -->
+<!-- Complies with COGBOT 1.01 Tag Set Specification -->
 <!-- as adopted by the ALICE A.I. Foundation.  -->
 <!-- Annotated Version updated September 2003 -->
 <!-- Cyc Version updated May 2009 -->
@@ -229,7 +229,20 @@ Found the hyphen+done. star= 1
     </template>
   </category>
 
-<!-- testing guard -->
+
+  <!-- testing that matching with a br -->
+  <category>
+    <pattern>TEST THAT BR</pattern>
+    <template>
+      the test begins repeat the following<br/>abct 123
+    </template>
+  </category>
+  <category>
+    <pattern>abct 123<that>abct 123</that></pattern>
+    <template>   Good job!     </template>
+  </category>
+
+  <!-- testing guard -->
 <category><pattern>CUSTOM TAG GUARDTF</pattern><template>guard1 <guard>NIL</guard></template></category>
 <category><pattern>CUSTOM TAG GUARDTF</pattern><template>guard2 <guard>T</guard></template></category>
 <category><pattern>CUSTOM TAG GUARDTF</pattern><template>guard3 <guard>T</guard></template></category>
@@ -242,10 +255,24 @@ Found the hyphen+done. star= 1
   </category>
   <category>
     <pattern>WHY SO</pattern>
-    <that>IT WILL BE * THOUGH</that>
+    <that>* IT WILL BE * THOUGH</that>
     <template>
-      This kind of arranged dialogue is always <thatstar/>.
+      This kind of arranged dialogue is always <thatstar index="2"/>.
     </template>
+  </category>
+
+
+ <!--THAT22-->
+  <category>
+    <pattern>THAT22</pattern>
+    <template>Ok. It'll be a bit silly, though.<br/>
+    THAT22
+    <br/>Guess what?</template>
+  </category>
+  <category>
+    <pattern>WHAT2</pattern>
+    <that>Guess what</that>
+    <template>Chicken Butt!</template>
   </category>
 
   <!--RANDOM-->

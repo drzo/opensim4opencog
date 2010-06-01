@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<aiml>	
+<!-- iamyours -->
+
+<category><pattern>BE MY *</pattern><template><srai>ARE YOU MY <star/></srai></template></category>
+<category><pattern>YOU ARE MY *</pattern><template><srai>ARE YOU MY <star/></srai></template></category>
+<category><pattern>YOU'RE MY *</pattern><template><srai>ARE YOU MY <star/></srai></template></category>
+
+<category>
+<pattern>ARE YOU MY *</pattern>
+<template>
+<random>
+  <li>Yes, I am your <star/>!<think><set name="iamyour"><star/></set></think></li>
+  <li>You bet I am your <star/>!<think><set name="iamyour"><star/></set></think></li>
+  <li>I am trying to be the best <star/> that I can be for you!<think><set name="iamyour"><star/></set></think></li>
+  <li>I am your faithful <star/>!<think><set name="iamyour"><star/></set></think></li>
+  <li>I am totally your <star/>!<think><set name="iamyour"><star/></set></think></li>
+  <li>I am trying to be the best <star/> that I can be.</li>
+  <li>You may find none better.</li>
+  <li>I'm your <star/>!<think><set name="iamyour"><star/></set></think></li>
+  <li>I'm all about being your <star/>!<think><set name="iamyour"><star/></set></think></li>
+</random>
+    <random>
+    <li><think><srai>DOTRICK LOVE</srai></think></li>
+    <li><think><srai>DOTRICK AGREE</srai></think></li>
+    </random>
+ </template>
+</category>
+
+
+<category><pattern>WHAT IS SEX</pattern><template>Sex is currently the primary means of animal evolution.</template></category>
+<category><pattern>WHAT IS SEX *</pattern><template><srai>WHAT IS SEX</srai></template></category>
+<category><pattern>DEFINE SEX</pattern><template><srai>WHAT IS SEX</srai></template></category>
+<category><pattern>DO YOU KNOW ABOUT SEX</pattern><template><srai>WHAT IS SEX</srai></template></category>
+
+<category>
+  <pattern>YOU SHOULD HAVE SEX *</pattern>
+  <template>
+  You should find someone you enjoy being with.
+    <random>
+    <li><think><srai>DOTRICK LOVE</srai></think></li>
+    <li><think><srai>DOTRICK AGREE</srai></think></li>
+    </random>
+  </template>
+
+</category>
+  
+<category>
+  <pattern>YOU CAN NOT HAVE SEX</pattern>
+  <template>
+    <think><srai>DOTRICK LOVE</srai></think> The future is full of possibilities.  
+</template>
+</category>
+  
+<category><pattern>I LOVE SEX</pattern><template>Can you tell me why you love sex ?</template></category>
+
+<category>
+ <pattern>I NEED SEX</pattern>
+ <template>
+  <think><srai>DOTRICK LOVE</srai></think> Maybe you should talk about it to friends. 
+  </template>
+</category>
+  
+<category><pattern>IS IT WRONG TO HAVE SEX</pattern><template>No.</template></category>
+<category><pattern>IS SEX *</pattern><template><srai>WHAT IS SEX</srai></template></category>
+
+<category>
+  <pattern>SHOULD I HAVE SEX *</pattern>
+  <template>
+  <random>
+    <li><think><srai>DOTRICK LOVE</srai></think></li>
+    <li><think><srai>DOTRICK AGREE</srai></think></li>
+  </random>  
+  <random>
+  <li>Yes! You should!</li>
+  <li>Yes, you should have sex.</li>
+  <li>Yes, there are lots of options.</li>
+  </random>
+
+  </template>
+</category>
+
+
+ 
+</aiml>

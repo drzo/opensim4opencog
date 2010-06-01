@@ -1,22 +1,123 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<aiml>
-<!--THIS WHOLE FILE IS WRPPED IN THE TOPIC TAG  OPENCYC-->
-<topic name="OPENCYC">
-  <category>
-	<pattern>AM I A *</pattern>
-	<guard>(#$isa #$TheUser <cycterm><star index="1"/></cycterm>)</guard>
-	<template>
-		<random>
-			<li>Cyc can prove it.</li>
-			<li>I think you've improved a great deal.</li>
-			<li>I can not make a judgement on humans.</li>
-			<li>I think a lot of people are. </li>
-		</random>
-		In the KB you are classified as <cycterm><star index="1"/></cycterm> . Its connected to being <cycrandom>(cyc-query '(#$isa #$TheUser ?REPLY) #$EverythingPSC)</cycrandom>.
-	</template>
-</category>
+<aiml bot="opencyc">
 
-<category>
+
+<topic name="*">
+  <category><pattern>tstartest1</pattern><template>tstartest1 worked</template></category>
+</topic>
+
+<topic name="*">
+  <guard><get name="foobar"/></guard>
+  <category><pattern>tstartest2</pattern><template></template></category>
+</topic>
+
+<topic name="*">
+  <category><pattern>tstartest3 <that>TSTARTEST1 WORKED</that></pattern><template>tstartest3 worked</template></category>
+</topic>
+
+<!--
+<topic name="*">
+  <category><pattern>XFIND *</pattern><template>CYCFIND <star/></template></category>
+</topic>
+-->
+
+  <category>
+    <pattern>USE OPENCYC</pattern>
+    <template>
+      <system>eval (setj (.CycHostName (.TheCyc (.MyBot ("AIMLBotModule" thisClient.listeners)))) "logicmoo.ath.cx")</system>
+      <system>eval (setj (.CycEnabled (.MyBot ("AIMLBotModule" thisClient.listeners))) True)</system>
+      Enabling <set name="topic">OPENCYC</set>
+    </template>
+  </category>
+    
+<!--THIS WHOLE FILE IS WRPPED IN THE TOPIC TAG  OPENCYC-->
+<!--<topic name="OPENCYC">-->
+
+
+  <category>
+    <pattern>
+      IS <or>A AN</or> *
+    </pattern>
+    <template>
+      <srai>
+        IS <star index="1"/>
+      </srai>
+    </template>
+  </category>
+
+  
+  <category>
+    <pattern>
+      IS _ <or>A AN</or> _
+    </pattern>
+    <guard>
+      (?PRED <cycterm>
+        <star index="1"/>
+      </cycterm> ?S)
+    </guard>
+    <template>
+      In the KB <cycterm>
+        <star index="1"/>
+      </cycterm> is classified as: <cycsystem>
+        (mapcar #'generate-phrase (ask-template '(?PRED <cycterm><star index="1"/></cycterm> ?REPLY) 
+                                 '(?PRED <cycterm><star index="1"/></cycterm> ?REPLY) #$EverythingPSC))
+      </cycsystem>.
+    </template>
+  </category>
+
+  <category>
+    <pattern>
+      IS _ <or>A AN</or> _ *
+    </pattern>
+    <guard>
+      (?PRED <cycterm> <star index="1"/> </cycterm> <cycterm> <star index="2"/> </cycterm>)
+    </guard>
+    <template>
+      Relating <cycterm>
+      <star index="1"/>
+    </cycterm>
+      And
+      <cycterm>
+        <star index="1"/>
+      </cycterm>
+      I get: 
+      <cycsystem>
+      (mapcar #'generate-phrase (ask-template '(?REPLY <cycterm>
+            <star index="1"/>
+          </cycterm> <cycterm>
+            <star index="2"/>
+          </cycterm>) '(?REPLY <cycterm>
+          <star index="1"/>
+        </cycterm> <cycterm>
+          <star index="2"/>
+        </cycterm>) #$EverythingPSC))
+      </cycsystem>.
+    </template>
+  </category>
+
+
+
+  <category>
+    <pattern>AM I A *</pattern>
+    <guard>
+      (#$isa #$TheUser <cycterm>
+        <star index="1"/>
+      </cycterm>)
+    </guard>
+    <template>
+      <random>
+        <li>Cyc can prove it.</li>
+        <li>I think you've improved a great deal.</li>
+        <li>I can not make a judgement on humans.</li>
+        <li>I think a lot of people are. </li>
+      </random>
+      In the KB you are classified as <cycterm>
+        <star index="1"/>
+      </cycterm> . Its connected to being <cycrandom>(ask-template '?REPLY '(#$isa #$TheUser ?REPLY) #$EverythingPSC)</cycrandom>.
+    </template>
+  </category>
+
+  <category>
 	<pattern>AM I *</pattern>
 	<guard>(#$isa #$TheUser <cycterm><star index="1"/></cycterm>)</guard>
 	<template>
@@ -46,7 +147,8 @@
 			<li>I can not make a judgement on humans.</li>
 			<li>I think a lot of people are. </li>
 		</random>
-		In the KB I am classified as <cycterm><star index="1"/></cycterm> . Its connected to being <cycrandom>(cyc-query '(#$isa <get name="cycself"/> ?REPLY) #$EverythingPSC )</cycrandom>.
+		In the KB I am classified as <cycterm><star index="1"/></cycterm> . Its connected to being <cycrandom>
+      (ask-template '?REPLY '(#$isa <get name="cycself"/> ?REPLY) #$EverythingPSC )</cycrandom>.
 	</template>
 </category>
 
@@ -75,7 +177,8 @@
 			<li>I can not make a judgement on humans.</li>
 			<li>I think a lot of people are. </li>
 		</random>
-		In the KB I am classified as <cycterm><star index="1"/></cycterm> . Its connected to being <cycrandom>(Cyc-query '(#$isa <get name="cycself"/> ?REPLY) #$EverythingPSC) </cycrandom>.
+		In the KB I am classified as <cycterm><star index="1"/></cycterm> . Its connected to being <cycrandom>
+      (ask-template '?REPLY '(#$isa <get name="cycself"/> ?REPLY) #$EverythingPSC) </cycrandom>.
 	</template>
 </category>
 
@@ -89,7 +192,7 @@
 			<li>Hey <star index="1"/></li>
 			<li>Hi  <star index="1"/><star index="1"/>.</li>
 		</random>
-		<think><cycassert>(#$nameString #$TheUser "<star index="1"/>") <get name="assertmt" default="#$AimlContextMt"/> </cycassert> </think>
+		<think><cycassert>(#$nameString #$TheUser "<star index="1"/>")  </cycassert> </think>
 	</template>
 </category>
 
@@ -207,7 +310,7 @@
 	<pattern>HOW MANY PEOPLE LIVE IN *</pattern>
 	<guard>(#$numberOfInhabitants <cycterm><star index="1"/></cycterm> ?SOMETHING)</guard>
 	<template>
-		I believe <cycsystem filter="paraphrase">(cyc-query '(#$numberOfInhabitants <cycterm><star index="1"/></cycterm> ?REPLY) #$EverythingPSC)</cycsystem> people live in <star index="1"/>.
+		I believe <cycsystem filter="paraphrase">(ask-template '?REPLY '(#$numberOfInhabitants <cycterm><star index="1"/></cycterm> ?REPLY) #$EverythingPSC)</cycsystem> people live in <star index="1"/>.
 
 	</template>
 </category>
@@ -216,7 +319,8 @@
 	<pattern>WHAT IS THE POPULATION OF *</pattern>
 	<guard>(#$numberOfInhabitants <cycterm><star index="1"/></cycterm> ?SOMETHING)</guard>
 	<template>
-		I believe <cycparaphrase><cycsystem filter="paraphrase">(cyc-query '(#$numberOfInhabitants <cycterm><star index="1"/></cycterm> ?REPLY) #$EverythingPSC)</cycsystem></cycparaphrase> people live in <star index="1"/>.
+		I believe <cycparaphrase><cycsystem filter="random">
+      (ask-template '?REPLY '(#$numberOfInhabitants <cycterm><star index="1"/></cycterm> ?REPLY) #$EverythingPSC)</cycsystem></cycparaphrase> people live in <star index="1"/>.
 
 	</template>
 </category>
@@ -225,16 +329,15 @@
 	<pattern>WHAT IS THE POPULATION OF * IS</pattern>
 	<guard>(#$numberOfInhabitants <cycterm><star index="1"/></cycterm> ?SOMETHING)</guard>
 	<template>
-		I believe <cycsystem filter="paraphrase">(cyc-query '(#$numberOfInhabitants <cycterm><star index="1"/></cycterm> ?REPLY) #$EverythingPSC)</cycsystem> people live in <star index="1"/>.
-
+		I believe <cycsystem filter="paraphrase">(ask-template '?REPLY '(#$numberOfInhabitants <cycterm><star index="1"/></cycterm> ?REPLY) #$EverythingPSC)</cycsystem> people live in <star index="1"/>.
 	</template>
 </category>
 
 <category>
 	<pattern>WHAT IS THE _ OF *</pattern>
-	<guard>( <cycterm filter="BinaryPredicate"><star index="1"/></cycterm> <space/> <cycterm><star index="2"/></cycterm> ?REPLY)</guard>
+	<guard>(<cycterm filter="BinaryPredicate"><star index="1"/></cycterm> <space/> <cycterm><star index="2"/></cycterm> ?REPLY)</guard>
 	<template>
-	    I believe <cycsystem filter="paraphrase">(cyc-query '(<cycterm filter="BinaryPredicate"><star index="1"/></cycterm> <space/><cycterm><star index="2"/></cycterm> ?REPLY) #$EverythingPSC)</cycsystem> defines the <star index="1"/> of <star index="2"/>.
+	    I believe <cycsystem filter="paraphrase">(ask-template '?REPLY '(<cycterm filter="BinaryPredicate"><star index="1"/></cycterm> <space/><cycterm><star index="2"/></cycterm> ?REPLY) #$EverythingPSC)</cycsystem> defines the <star index="1"/> of <star index="2"/>.
 	</template>
 </category>
 
@@ -242,7 +345,7 @@
 	<pattern>THE * OF * IS WHAT</pattern>
 	<guard>(<cycterm filter="BinaryPredicate"><star index="1"/></cycterm><space/><cycterm><star index="2"/></cycterm> ?REPLY)</guard>
 	<template>
-		I believe <cycsystem filter="paraphrase">(cyc-query '(<cycterm filter="BinaryPredicate"><star index="1"/></cycterm> <space/><cycterm><star index="2"/></cycterm> ?REPLY) #$EverythingPSC)</cycsystem> defines the <cycterm filter="BinaryPredicate"><star index="1"/></cycterm> of <cycterm><star index="2"/></cycterm>.
+		I believe <cycsystem filter="paraphrase">(ask-template '?REPLY '(<cycterm filter="BinaryPredicate"><star index="1"/></cycterm> <space/><cycterm><star index="2"/></cycterm> ?REPLY) #$EverythingPSC)</cycsystem> defines the <cycterm filter="BinaryPredicate"><star index="1"/></cycterm> of <cycterm><star index="2"/></cycterm>.
 
 	</template>
 </category>
@@ -251,7 +354,7 @@
 	<pattern>THE * OF * IS WHO</pattern>
 	<guard>(<cycterm filter="BinaryPredicate"><star index="1"/></cycterm><space/><cycterm><star index="2"/></cycterm> ?REPLY)</guard>
 	<template>
-		I believe <cycsystem filter="paraphrase">(cyc-query '(<cycterm filter="BinaryPredicate"><star index="1"/></cycterm> <space/><cycterm><star index="2"/></cycterm> ?REPLY) #$EverythingPSC)</cycsystem> defines the <cycterm filter="BinaryPredicate"><star index="1"/></cycterm> of <cycterm><star index="2"/></cycterm>.
+		I believe <cycsystem filter="paraphrase">(ask-template '?REPLY '(<cycterm filter="BinaryPredicate"><star index="1"/></cycterm> <space/><cycterm><star index="2"/></cycterm> ?REPLY) #$EverythingPSC)</cycsystem> defines the <cycterm filter="BinaryPredicate"><star index="1"/></cycterm> of <cycterm><star index="2"/></cycterm>.
 
 	</template>
 </category>
@@ -260,7 +363,7 @@
 	<pattern>WHO IS THE * OF *</pattern>
 	<guard>(<cycterm filter="BinaryPredicate"><star index="1"/></cycterm> <space/><cycterm><star index="2"/></cycterm> ?REPLY)</guard>
 	<template>
-		I believe <cycsystem filter="paraphrase">(cyc-query '(<cycterm filter="BinaryPredicate"><star index="1"/></cycterm> <space/> <cycterm><star index="2"/></cycterm> ?REPLY) #$EverythingPSC)</cycsystem> defines the <star index="1"/> of <star index="2"/>.
+		I believe <cycsystem filter="paraphrase">(ask-template '?REPLY '(<cycterm filter="BinaryPredicate"><star index="1"/></cycterm> <space/> <cycterm><star index="2"/></cycterm> ?REPLY) #$EverythingPSC)</cycsystem> defines the <star index="1"/> of <star index="2"/>.
 	</template>
 </category>
 
@@ -269,7 +372,7 @@
 	<pattern>WHO DOES * LOVE</pattern>
 	<guard>(#$loves <cycterm><star index="1"/></cycterm> ?REPLY)</guard>
 	<template>
-		I believe <cycsystem filter="paraphrase">(cyc-query '(#$loves <cycterm><star index="1"/></cycterm> ?REPLY) #$EverythingPSC)</cycsystem> defines who <cycterm><star index="1"/></cycterm> loves.
+		I believe <cycsystem filter="paraphrase">(ask-template '?REPLY '(#$loves <cycterm><star index="1"/></cycterm> ?REPLY) #$EverythingPSC)</cycsystem> defines who <cycterm><star index="1"/></cycterm> loves.
 	</template>
 </category>
 
@@ -278,7 +381,7 @@
 	<pattern>HOW OLD IS *</pattern>
 	<guard>(#$age <cycterm><star index="1"/></cycterm> ?REPLY)</guard>
 	<template>
-		I believe <cycsystem filter="paraphrase">(cyc-query '(#$age <cycterm><star index="1"/></cycterm> ?REPLY) #$EverythingPSC)</cycsystem> defines who <cycterm><star index="1"/></cycterm> loves.
+		I believe <cycsystem filter="paraphrase">(ask-template '?REPLY '(#$age <cycterm><star index="1"/></cycterm> ?REPLY) #$EverythingPSC)</cycsystem> defines who <cycterm><star index="1"/></cycterm> loves.
 	</template>
 </category>
 
@@ -288,7 +391,7 @@
 	<pattern>I AM *</pattern>
 	<guard>(#$isa <cycterm><star index="1"/></cycterm> #$Thing)</guard>
 	<template>
-		<think><cycassert>(#$isa #$TheUser <cycterm><star index="1"/></cycterm>) <get name="assertmt" default="#$AimlContextMt"/> </cycassert> </think>
+		<think><cycassert>(#$isa #$TheUser <cycterm><star index="1"/></cycterm>)  </cycassert> </think>
 	</template>
 </category>
 
@@ -296,7 +399,7 @@
 	<pattern>I AM * </pattern>
 	<guard>(#$isa #$TheUser <cycterm filter="Thing" ><star index="1"/></cycterm>)</guard>
 	<template>
-		I believe <cycsystem filter="paraphrase">(cyc-query '(#$isa #$TheUser <cycterm filter="Thing" ><star index="1"/></cycterm>) #$EverythingPSC)</cycsystem> so I would have to agree.
+		I believe <cycsystem filter="paraphrase">(ask-template '?REPLY '(#$isa #$TheUser <cycterm filter="Collection" ><star index="1"/></cycterm>) #$EverythingPSC)</cycsystem> so I would have to agree.
 		<random>
 			<li>That's not much of a problem</li>
 			<li>Why did you tell me you are <star index="1"/>?</li>
@@ -313,7 +416,7 @@
 	<pattern>I AM * </pattern>
 	<guard>(#$isa <get name="cycself"/> <cycterm filter="Thing" ><star index="1"/></cycterm>)</guard>
 	<template>
-		I believe <cycsystem filter="paraphrase">(cyc-query '(#$isa <get name="cycself"/> <cycterm filter="Thing" ><star index="1"/></cycterm>) #$EverythingPSC)</cycsystem> so maybe there is a connection between you and I.
+		I believe <cycsystem filter="paraphrase">(ask-template '?REPLY '(#$isa <get name="cycself"/> <cycterm filter="Collection" ><star index="1"/></cycterm>) #$EverythingPSC)</cycsystem> so maybe there is a connection between you and I.
 		<random>
 			<li>Is that why you told me that?</li>
 			<li>Why did you tell me you are <star index="1"/>?</li>
@@ -330,7 +433,7 @@
 	<pattern>I AM A * </pattern>
 	<guard>(#$isa #$TheUser <cycterm filter="Thing" ><star index="1"/></cycterm>)</guard>
 	<template>
-		I believe <cycsystem filter="paraphrase">(cyc-query '(#$isa #$TheUser <cycterm filter="Thing" ><star index="1"/></cycterm>) #$EverythingPSC)</cycsystem> so I would have to agree.
+		I believe <cycsystem filter="paraphrase">(ask-template '?REPLY '(#$isa #$TheUser <cycterm filter="Collection" ><star index="1"/></cycterm>) #$EverythingPSC)</cycsystem> so I would have to agree.
 		<random>
 			<li>That's not much of a problem</li>
 			<li>Why did you tell me you are <star index="1"/>?</li>
@@ -347,7 +450,7 @@
 	<pattern>I AM A * </pattern>
 	<guard>(#$isa <get name="cycself"/> <cycterm filter="Thing" ><star index="1"/></cycterm>)</guard>
 	<template>
-		I believe <cycsystem filter="paraphrase">(cyc-query '(#$isa <get name="cycself"/> <cycterm filter="Thing" ><star index="1"/></cycterm>) #$EverythingPSC)</cycsystem> so maybe there is a connection between you and I.
+		I believe <cycsystem filter="paraphrase">(ask-template '?REPLY '(#$isa <get name="cycself"/> <cycterm filter="Collection" ><star index="1"/></cycterm>) #$EverythingPSC)</cycsystem> so maybe there is a connection between you and I.
 		<random>
 			<li>Is that why you told me that?</li>
 			<li>Why did you tell me you are <star index="1"/>?</li>
@@ -363,7 +466,7 @@
 	<pattern>I AM AN * </pattern>
 	<guard>(#$isa #$TheUser <cycterm filter="Thing" ><star index="1"/></cycterm>)</guard>
 	<template>
-		I believe <cycsystem filter="paraphrase">(cyc-query '(#$isa #$TheUser <cycterm filter="Thing" ><star index="1"/></cycterm>) #$EverythingPSC)</cycsystem> so I would have to agree.
+		I believe <cycsystem filter="paraphrase">(ask-template '?REPLY '(#$isa #$TheUser <cycterm filter="Collection" ><star index="1"/></cycterm>) #$EverythingPSC)</cycsystem> so I would have to agree.
 		<random>
 			<li>That's not much of a problem</li>
 			<li>Why did you tell me you are <star index="1"/>?</li>
@@ -380,7 +483,7 @@
 	<pattern>I AM THE * </pattern>
 	<guard>(#$isa #$TheUser <cycterm filter="Thing" ><star index="1"/></cycterm>)</guard>
 	<template>
-		I believe <cycsystem filter="paraphrase">(cyc-query '(#$isa #$TheUser <cycterm filter="Thing" ><star index="1"/></cycterm>) #$EverythingPSC)</cycsystem> so I would have to agree.
+		I believe <cycsystem filter="paraphrase">(ask-template '?REPLY '(#$isa #$TheUser <cycterm filter="Collection" ><star index="1"/></cycterm>) #$EverythingPSC)</cycsystem> so I would have to agree.
 		<random>
 			<li>That's not much of a problem</li>
 			<li>Why did you tell me you are <star index="1"/>?</li>
@@ -397,7 +500,7 @@
 	<pattern>I AM THE * </pattern>
 	<guard>(#$isa <get name="cycself"/> <cycterm filter="Thing" ><star index="1"/></cycterm>)</guard>
 	<template>
-		I believe <cycsystem filter="paraphrase">(cyc-query '(#$isa <get name="cycself"/> <cycterm filter="Thing" ><star index="1"/></cycterm>) #$EverythingPSC)</cycsystem> so maybe there is a connection between you and I.
+		I believe <cycsystem filter="paraphrase">(ask-template '?REPLY '(#$isa <get name="cycself"/> <cycterm filter="Collection" ><star index="1"/></cycterm>) #$EverythingPSC)</cycsystem> so maybe there is a connection between you and I.
 		<random>
 			<li>Is that why you told me that?</li>
 			<li>Why did you tell me you are <star index="1"/>?</li>
@@ -415,7 +518,7 @@
 	<pattern>I AM FROM * </pattern>
 	<guard>(#$isa <cycterm filter="Location" ><star index="1"/></cycterm> #$Location)</guard>
 	<template>
-		<think><cycassert>(#$objectFoundInLocation #$TheUser <cycterm filter="Location" ><star index="1"/></cycterm> ) <get name="assertmt" default="#$AimlContextMt"/> )</cycassert></think> I will remember you are from <star index="1"/>.
+		<think><cycassert>(#$objectFoundInLocation #$TheUser <cycterm filter="Location" ><star index="1"/></cycterm> )  )</cycassert></think> I will remember you are from <star index="1"/>.
 	</template>
 </category>
 
@@ -424,7 +527,7 @@
 	<pattern>I AM GOING TO * </pattern>
 	<guard>(#$isa <cycterm filter="Location" ><star index="1"/></cycterm> #$Location)</guard>
 	<template>
-		<think><cycassert>(#$objectFoundInLocation #$TheUser <cycterm filter="Location" ><star index="1"/></cycterm> ) <get name="assertmt" default="#$AimlContextMt"/> )</cycassert></think> I will remember can be found at <star index="1"/>.
+		<think><cycassert>(#$objectFoundInLocation #$TheUser <cycterm filter="Location" ><star index="1"/></cycterm> )  )</cycassert></think> I will remember can be found at <star index="1"/>.
 	</template>
 </category>
 
@@ -433,7 +536,7 @@
 	<pattern>I AM IN * </pattern>
 	<guard>(#$isa <cycterm filter="Location" ><star index="1"/></cycterm> #$Location)</guard>
 	<template>
-		<think><cycassert>(#$objectFoundInLocation #$TheUser <cycterm filter="Location" ><star index="1"/></cycterm> ) <get name="assertmt" default="#$AimlContextMt"/> )</cycassert></think> I will remember can be found at <star index="1"/>.
+		<think><cycassert>(#$objectFoundInLocation #$TheUser <cycterm filter="Location" ><star index="1"/></cycterm> )  )</cycassert></think> I will remember can be found at <star index="1"/>.
 	</template>
 </category>
 
@@ -441,7 +544,7 @@
 	<pattern>I * YOU </pattern>
 	<guard>(<cycterm filter="BinaryPredicate" ><star index="1"/></cycterm> #$TheUser <get name="cycself"/>)</guard>
 	<template>
-		I believe <cycsystem filter="paraphrase">(cyc-query '(<cycterm filter="BinaryPredicate"><star index="1"/></cycterm> <space/><cycterm><star index="2"/></cycterm> ?REPLY) #$EverythingPSC)</cycsystem> so I would have to agree.
+		I believe <cycsystem filter="paraphrase">(ask-template '?REPLY '(<cycterm filter="BinaryPredicate"><star index="1"/></cycterm> <space/><cycterm><star index="2"/></cycterm> ?REPLY) #$EverythingPSC)</cycsystem> so I would have to agree.
 	</template>
 </category>
 
@@ -487,7 +590,7 @@
 	<pattern>WHO IS * *</pattern>
 	<guard>(#$and (#$isa <cycterm filter="Country"><star index="2"/></cycterm> #$Country )(#$isa <cycterm filter="BinaryPredicate"><star index="1"/></cycterm> #$BinaryPredicate ))</guard>
 	<template>
-		I believe <cycsystem filter="paraphrase">(cyc-query '(<cycterm filter="BinaryPredicate"><star index="1"/></cycterm> <space/><cycterm><star index="2"/></cycterm> ?REPLY) #$EverythingPSC)</cycsystem> defines the <cycterm filter="BinaryPredicate"><star index="1"/></cycterm> of <cycterm><star index="2"/></cycterm>.
+		I believe <cycsystem filter="paraphrase">(ask-template '?REPLY '(<cycterm filter="BinaryPredicate"><star index="1"/></cycterm> <space/><cycterm><star index="2"/></cycterm> ?REPLY) #$EverythingPSC)</cycsystem> defines the <cycterm filter="BinaryPredicate"><star index="1"/></cycterm> of <cycterm><star index="2"/></cycterm>.
 	</template>
 </category>
 
@@ -495,7 +598,7 @@
 	<pattern>WHO IS AFFILIATED WITH *</pattern>
 	<guard>(#$isa <cycterm filter="Country"><star index="1"/></cycterm> #$Country )</guard>
 	<template>
-		I believe <cycsystem filter="paraphrase">(cyc-query '(#$affiliatedWith <space/><cycterm><star index="1"/></cycterm> ?REPLY) #$EverythingPSC)</cycsystem> defines those affiliated with <cycterm><star index="1"/></cycterm>.
+		I believe <cycsystem filter="paraphrase">(ask-template '?REPLY '(#$affiliatedWith <space/><cycterm><star index="1"/></cycterm> ?REPLY) #$EverythingPSC)</cycsystem> defines those affiliated with <cycterm><star index="1"/></cycterm>.
 	</template>
 </category>
 
@@ -518,7 +621,7 @@
 <category>
 	<pattern>WHERE DO * MEMBERS LIVE</pattern>
 	<template>
-		Consulting cyc returns: <cycquestion>Where do <star index="1"/>members live? </cycquestion> The cycsystem reply is : <cycsystem filter="paraphrase">(cyc-query '(#$thereExists ?MEMBER (#$and (#$hasMembers <cycterm><star index="1"/></cycterm> ?MEMBER) (#$residesInRegion ?MEMBER ?REPLY))) #$EverythingPSC)</cycsystem>
+		Consulting cyc returns: <cycquestion>Where do <star index="1"/>members live? </cycquestion> The cycsystem reply is : <cycsystem filter="paraphrase">(ask-template '?REPLY '(#$thereExists ?MEMBER (#$and (#$hasMembers <cycterm><star index="1"/></cycterm> ?MEMBER) (#$residesInRegion ?MEMBER ?REPLY))) #$EverythingPSC)</cycsystem>
 
 	</template>
 </category>
@@ -563,28 +666,62 @@
 <category>
 	<pattern>WHAT IS *</pattern>
 	<template>
-		<srai>XFIND <star/></srai>
+		<srai>CYCFIND <star/></srai>
+	</template>
+</category>
+<category>
+	<pattern>WHAT IS MY *</pattern>
+	<template>
+		<srai>CYCFIND <star/></srai>
+	</template>
+</category>
+
+<category>
+	<pattern>WHAT IS HIS *</pattern>
+	<template>
+		<srai>CYCFIND <star/></srai>
+	</template>
+</category>
+
+<category>
+	<pattern>WHAT IS THEIR *</pattern>
+	<template>
+		<srai>CYCFIND <star/></srai>
+	</template>
+</category>
+
+<category>
+	<pattern>WHAT IS HER *</pattern>
+	<template>
+		<srai>CYCFIND <star/></srai>
+	</template>
+</category>
+
+<category>
+	<pattern>WHAT IS YOUR *</pattern>
+	<template>
+		<srai>CYCFIND <star/></srai>
 	</template>
 </category>
 
 <category>
 	<pattern>WHAT ARE *</pattern>
 	<template>
-		<srai>XFIND <star/></srai>
+		<srai>CYCFIND <star/></srai>
 	</template>
 </category>
 
 <category>
 	<pattern>WHAT IS A *</pattern>
 	<template>
-		<srai>XFIND <star/></srai>
+		<srai>CYCFIND <star/></srai>
 	</template>
 </category>
 
 <category>
 	<pattern>WHAT IS AN *</pattern>
 	<template>
-		<srai>XFIND <star/></srai>
+		<srai>CYCFIND <star/></srai>
 	</template>
 </category>
 
@@ -592,42 +729,42 @@
 <category>
 	<pattern>WHAT IS THE DEFINITION OF *</pattern>
 	<template>
-		<srai>XFIND <star/></srai>
+		<srai>CYCFIND <star/></srai>
 	</template>
 </category>
 
 <category>
 	<pattern>DEFINE *</pattern>
 	<template>
-		<srai>XFIND <star/></srai>
+		<srai>CYCFIND <star/></srai>
 	</template>
 </category>
 
 <category>
 	<pattern>TELL ME WHAT * MEANS</pattern>
 	<template>
-		<srai>XFIND <star/></srai>
+		<srai>CYCFIND <star/></srai>
 	</template>
 </category>
 
 <category>
 	<pattern>WHAT DOES * MEAN</pattern>
 	<template>
-		<srai>XFIND <star/></srai>
+		<srai>CYCFIND <star/></srai>
 	</template>
 </category>
 
 <category>
 	<pattern>WHAT IS THE MEANING OF *</pattern>
 	<template>
-		<srai>XFIND <star/></srai>
+		<srai>CYCFIND <star/></srai>
 	</template>
 </category>
 
 <category>
 	<pattern>WHO IS *</pattern>
 	<template>
-		<srai>XFIND <star/></srai>
+		<srai>CYCFIND <star/></srai>
 	</template>
 </category>
 
@@ -646,7 +783,7 @@
 			<li>I can not make a judgement on humans.</li>
 			<li>I think a lot of people are. </li>
 		</random>
-		In the KB you are classified as <cycterm><star index="1"/></cycterm> . Its connected to being <cycrandom>(cyc-query '(#$isa #$TheUser ?REPLY) #$EverythingPSC)</cycrandom>.
+		In the KB you are classified as <cycterm><star index="1"/></cycterm> . Its connected to being <cycrandom>(ask-template '?REPLY '(#$isa #$TheUser ?REPLY) #$EverythingPSC)</cycrandom>.
 	</template>
 </category>
 
@@ -664,33 +801,34 @@
 			<li>I can not make a judgement on humans.</li>
 			<li>I think a lot of people are. </li>
 		</random>
-		In the KB I am classified as <cycterm><star index="1"/></cycterm> . Its connected to being <cycrandom>(cyc-query '(#$isa <get name="cycself"/> ?REPLY) #$EverythingPSC )</cycrandom>.
+		In the KB I am classified as <cycterm><star index="1"/></cycterm> . Its connected to being <cycrandom>(ask-template '?REPLY '(#$isa <get name="cycself"/> ?REPLY) #$EverythingPSC )</cycrandom>.
 	</template>
 </category>
 
-
+<!--
 <category>
-	<pattern>XFIND *</pattern>
+	<pattern>CYCFIND *</pattern>
 	<template>
 		I'm sorry, but Cyc has no comment on that topic.
 	</template>
 </category>
-
+-->
 
 
 <category>
-	<pattern>XFIND *</pattern>
+	<pattern>CYCFIND *</pattern>
 	<guard>(#$or (#$isa  <cycterm><star index="1"/></cycterm> ?REPLY)(#$genls <cycterm><star index="1"/></cycterm> ?REPLY))</guard>
 	<template>
-		I believe one thing <star index="1"/>is  <cycrandom>(cyc-query '(#$or (#$isa  <cycterm><star index="1"/></cycterm> ?REPLY)(#$genls <cycterm><star index="1"/></cycterm> ?REPLY)) #$EverythingPSC)</cycrandom>.
+		I believe one thing <star index="1"/>is  <cycrandom>
+      (ask-template '?REPLY '(#$or (#$isa  <cycterm><star index="1"/></cycterm> ?REPLY)(#$genls <cycterm><star index="1"/></cycterm> ?REPLY)) #$EverythingPSC)</cycrandom>.
 	</template>
 </category>
 
 <category>
-	<pattern>XFIND *</pattern>
+	<pattern>CYCFIND *</pattern>
 	<guard>(#$comment <cycterm><star index="1"/></cycterm> ?REPLY)</guard>
 	<template>
-		<cycrandom>(cyc-query '(#$comment <cycterm><star index="1"/></cycterm> ?REPLY) #$EverythingPSC)</cycrandom>
+		<cycrandom>(ask-template '?REPLY '(#$comment <cycterm><star index="1"/></cycterm> ?REPLY) #$EverythingPSC)</cycrandom>
 	</template>
 </category>
 
@@ -720,7 +858,8 @@
 	<pattern>WHAT CAN YOU SEE</pattern>
 	<template>
 		<random>
-			<cycsystem filter="paraphrase">(cyc-query '(#$sees <get name="cycself"/> ?REPLY) #$EverythingPSC)</cycsystem>
+			<cycsystem filter="paraphrase">
+        (ask-template '?REPLY '(#$sees <get name="cycself"/> ?REPLY) #$EverythingPSC)</cycsystem>
 		</random>
 	</template>
 </category>
@@ -753,7 +892,8 @@
 		By checking Cyc, I think <star index="1"/> located at <cycsystem filter="paraphrase">(second (loc-of (dfn <cycterm><star index="1"/></cycterm>)))</cycsystem>
 	</template>
 </category>
-    
-</topic> <!--OPENCYC-->
+
+<srai>USE OPENCYC</srai>
+<!-- </topic> OPENCYC-->
 </aiml>
 

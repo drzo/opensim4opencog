@@ -1,18 +1,64 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <aiml>	
   <category>
-    <pattern>RELOAD AIML</pattern>
+    <pattern>RETURNCODE *</pattern>
     <template>
-        <system>aiml reload</system>
+      <random>
+        <li>I will think about it.</li>
+      </random>
     </template>
   </category>
+
+  <category>
+    <pattern>RELOAD AIML</pattern>
+    <template>
+      <think>
+        <srai>
+        <system>aiml reload</system>
+        </srai>
+      </think>
+      Reloading brain.
+    </template>
+  </category>
+
+  <category>
+    <pattern>ACTIVATE AIML</pattern>
+    <template>
+      <think>
+        <srai>
+          <system>aiml on</system>
+        </srai>
+      </think>
+      I am now friendly.
+    </template>
+  </category>
+
+  <category>
+    <pattern>DEACTIVATE AIML</pattern>
+    <template>
+      <think>
+        <srai>
+          <system>aiml off</system>
+        </srai>
+      </think>
+      I feel personal now.
+    </template>
+  </category>
+  
   <category>
     <pattern>evraj</pattern>
     <template>
       <system>evinfo rae</system>
     </template>
   </category>
-  
+
+  <category>
+    <pattern>evdata *</pattern>
+    <template>
+      <system>evinfo <star/></system>
+    </template>
+  </category>
+
   <!-- Sitting in secondlife -->
   <category>
     <pattern>SIT</pattern>
@@ -33,6 +79,7 @@
       </think>
     </template>
   </category>
+  
   <category>
     <pattern>
       SIT ON <optional>THE</optional> *
@@ -58,6 +105,29 @@
     </template>
   </category>
   
+ <category>
+    <pattern>
+      SIT ON <optional>THE</optional> *
+    </pattern>
+    <template>
+        <system>
+        sit on "<star/>" 1
+        </system>
+    </template>
+  </category>
+
+  <category>
+    <pattern>
+      SITON *
+    </pattern>
+    <template>
+      <system>
+        sit on "<star/>" 1
+      </system>
+    </template>
+  </category>
+
+
   <!-- Teleport in secondlife -->
   <category>
     <pattern>TELEPORT HERE</pattern>
@@ -85,6 +155,7 @@
       </think>Ok, I am on my own now.
     </template>
   </category>
+  
   <category>
     <pattern>FOLLOW ME</pattern>
     <template>
@@ -106,7 +177,47 @@
 
   <!-- Current action command -->
   <category>
-    <pattern>WHAT ARE YOU DOING</pattern>
+    <pattern>STOP FOLLOWING</pattern>
+    <template>
+      <think>
+        <system>stop-following</system>
+      </think>Ok, I am on my own now.
+    </template>
+  </category>
+  
+   <category>
+    <pattern>FOLLOW ME *</pattern>
+    <template>
+      <think>
+        <system>
+          follow "<get name="name"/>" 1
+        </system>
+      </think>Ok, I am following you <get name="name"/>
+    </template>
+  </category>
+  
+  <category>
+    <pattern>FOLLOW ME</pattern>
+    <template>
+      <think>
+        <system>
+          follow "<get name="name"/>" 1
+        </system>
+      </think>Ok, I am following you <get name="name"/>
+    </template>
+  </category>
+  
+  <category>
+    <pattern>WAIT HERE</pattern>
+    <template>
+      <think>
+        <system>stop-following</system>
+      </think>Ok, I am on my own now.
+    </template>
+  </category>
+  
+  <category>
+    <pattern>XXX WHAT ARE YOU DOING</pattern>
     <template>
       <system lang="lisp">thisClient.WorldSystem.TheSimAvatar.CurrentAction</system>
     </template>
