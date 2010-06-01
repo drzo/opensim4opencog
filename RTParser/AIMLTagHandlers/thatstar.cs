@@ -49,7 +49,7 @@ namespace RTParser.AIMLTagHandlers
                     {
                         if (result >= 0)
                         {
-                            return (Unifiable) this.query.ThatStar[result - 1];
+                            return (Unifiable) this.query.ThatStar[result];
                         }
                     }
                     else
