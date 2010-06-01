@@ -24,7 +24,7 @@ namespace RTParser.Utils
                 if (name.StartsWith("that_"))
                 {
                     int i = Int32.Parse(name.Substring(5)) - 1;
-                    name = query.ThatStar[i];
+                    name = query.ThatStar[i + 1];
                 }
                 if (name.StartsWith("topic_"))
                 {
@@ -201,15 +201,31 @@ namespace RTParser.Utils
         /// <returns>The XML node</returns>
         public static LineInfoElement getNode(string outerXML)
         {
-            var sr = new StringReader(outerXML);
+            var sr = new StringReader( outerXML);
             try
             {
-                XmlDocumentLineInfo temp = new XmlDocumentLineInfo("From " + outerXML);
-                temp.Load(sr);
-                return (LineInfoElement)temp.FirstChild;
+                XmlDocumentLineInfo doc = new XmlDocumentLineInfo("From " + outerXML);
+                doc.Load(sr);
+                if (doc.ChildNodes.Count == 0)
+                {
+                    Console.WriteLine("NULL outerXML=" + outerXML);
+                    return null;
+                }
+                if (doc.ChildNodes.Count != 1)
+                {
+                    Console.WriteLine("1 != outerXML=" + outerXML);
+                }
+                var temp = doc.FirstChild;
+                if (temp is LineInfoElement)
+                {
+                    LineInfoElement li = (LineInfoElement)temp;
+                    return (LineInfoElement)temp; //.FirstChild;}
+                }
+                return (LineInfoElement)temp; //.FirstChild;}
             }
-            catch (Exception exception)
+            catch (Exception exception)            
             {
+                Console.WriteLine("outerXML=" + outerXML);
                 throw exception;
             }
         }
@@ -218,15 +234,30 @@ namespace RTParser.Utils
             var sr = new StringReader(outerXML);
             try
             {
-                XmlDocumentLineInfo temp =
+                XmlDocumentLineInfo doc =
                     new XmlDocumentLineInfo("From '" + templateNode.OwnerDocument ?? " NODOC " + "' " + templateNode.OuterXml);
-                temp.Load(sr);
-                LineInfoElement li = (LineInfoElement)temp.FirstChild;
-                li.SetParentFromNode(templateNode);
-                return li;
+                doc.Load(sr);
+                if (doc.ChildNodes.Count == 0)
+                {
+                    Console.WriteLine("NULL outerXML=" + outerXML);
+                    return null;
+                }
+                if (doc.ChildNodes.Count != 1)
+                {
+                    Console.WriteLine("1 != outerXML=" + outerXML);
+                }
+                var temp = doc.FirstChild;
+                if (temp is LineInfoElement)
+                {
+                    LineInfoElement li = (LineInfoElement)temp;
+                    li.SetParentFromNode(templateNode);
+                    return (LineInfoElement)temp; //.FirstChild;}
+                }
+                return (LineInfoElement)temp; //.FirstChild;}
             }
             catch (Exception exception)
             {
+                Console.WriteLine("outerXML=" + outerXML);
                 throw exception;
             }
         }

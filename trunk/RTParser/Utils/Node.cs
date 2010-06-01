@@ -136,6 +136,15 @@ namespace RTParser.Utils
             {
                 pat.GraphmasterNode = this;
                 if (category != null) pat.AddCategory(category);
+                if (patternInfo.LoopsFrom(newTemplateInfo) &&(thatInfo == null || thatInfo.FullPath.AsString()=="*"))
+                {
+                    Console.WriteLine("SKIPPING! " + pat + "==" + newTemplateInfo + "");
+                    if (this.TemplateInfos.Count==0)
+                    {
+                        this.TemplateInfos = null;
+                    }
+                    return;
+                }
             }
 
             master.AddTemplate(newTemplateInfo);
@@ -502,6 +511,11 @@ namespace RTParser.Utils
                 return false;// Unifiable.Empty;
             }
 
+            if (query.Request != request)
+            {
+                query.Request = request;
+            }
+
             // so we still have time!
             path = path.Trim();
 
@@ -761,7 +775,14 @@ namespace RTParser.Utils
                     // path.
                     this.storeWildCard(path, wildcard);
                 }
-                if (AddSubQueris(res, query, this)) childTrue = true;
+                if (!request.Proof.Add(this))
+                {
+                    return false;
+                }
+                if (AddSubQueris(res, query, this))
+                {
+                    childTrue = true;
+                }
                 return childTrue;
             }
 
@@ -769,6 +790,10 @@ namespace RTParser.Utils
             // of the line then return the cCategory for this node
             if (path.IsEmpty)
             {
+                if (!request.Proof.Add(this))
+                {
+                    return false;
+                }
                 if (AddSubQueris(res, query, this)) childTrue = true;
                 return childTrue;
             }
@@ -981,7 +1006,7 @@ namespace RTParser.Utils
                                 }
                                 else
                                 {
-                                    sq.ThatStar.Insert(0, "*think*");
+                                    sq.ThatStar.Insert(0, "-think-");
                                 }
                             }
                         }

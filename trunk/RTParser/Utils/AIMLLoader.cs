@@ -637,8 +637,12 @@ namespace RTParser.Utils
                     normalizedTopic = Unifiable.STAR;
                 }
 
-                //if (!isUserInput) 
+                if (!isUserInput) 
                     normalizedThat = "* " + normalizedThat;
+                else
+                    normalizedThat = "* " + normalizedThat;
+                    //normalizedThat = "<br/> " + normalizedThat;
+                    
 
                 // This check is in place to avoid huge "that" elements having to be processed by the 
                 // graphmaster. 
@@ -708,7 +712,7 @@ namespace RTParser.Utils
             Normalize.ApplySubstitutions substitutor = new RTParser.Normalize.ApplySubstitutions(this.RProcessor);
             Normalize.StripIllegalCharacters stripper = new RTParser.Normalize.StripIllegalCharacters(this.RProcessor);
 
-            Unifiable substitutedInput = substitutor.Transform(input);
+            Unifiable substitutedInput = substitutor.Transform(" " +input + " ").Trim();
             // split the pattern into it's component words
             string[] substitutedWords = substitutedInput.AsString().Split(' ');
 
@@ -913,8 +917,16 @@ namespace RTParser.Utils
 
         internal void SetParentFromNode(XmlNode xmlNode)
         {
+            if (!(xmlNode is LineInfoElement))
+            {
+                return;
+            }
             LineInfoElement lie = (LineInfoElement) xmlNode;
-            lParent = (LineInfoElement)xmlNode.ParentNode;
+            var pn = xmlNode.ParentNode;
+            if (pn is LineInfoElement)
+            {
+                lParent = (LineInfoElement) pn;
+            }
             lineNumber = lie.LineNumber;
             linePosition = lie.linePosition;
             charPos = lie.charPos;

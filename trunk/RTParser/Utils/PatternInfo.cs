@@ -25,5 +25,22 @@ namespace RTParser.Utils
             if (NoInfo) return null;
             return loaderOptions.Graph.FindPattern(pattern, unifiable);
         }
+
+        internal bool LoopsFrom(TemplateInfo newTemplateInfo)
+        {
+            var p = FullPath.AsString().ToLower();
+            p = p.Replace("_", "*");
+            p = AIMLLoader.CleanWhitepaces(p);
+            p = "<srai>" + p + "</srai>";
+            var t = newTemplateInfo.InnerXml.ToLower();
+            t = AIMLLoader.CleanWhitepaces(t);
+            t = t.Replace("<star/>", "*");
+            t = t.Replace("<sr/>", "<srai>*</srai>");
+            if (t.Contains(p))
+            {
+                return true;
+            }
+            return false;
+        }
     }
 }

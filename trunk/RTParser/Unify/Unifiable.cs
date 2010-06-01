@@ -355,6 +355,7 @@ namespace RTParser
                 else
                 {
                     str = str;
+                    str += " ";
                 }
                 str += p.AsString().Trim();
                 str = str.Replace("  ", " ");

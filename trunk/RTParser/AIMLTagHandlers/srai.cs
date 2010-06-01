@@ -60,11 +60,13 @@ namespace RTParser.AIMLTagHandlers
                 {
                     if (!templateNodeInnerText.IsEmpty)
                     {
+                        Unifiable templateNodeInnerValue = Recurse();
                         Unifiable tempTopic = GetAttribValue("topic", request.Topic);
-                        AIMLbot.Request subRequest = new AIMLbot.Request(templateNodeInnerText, this.user, this.Proc);
+                        AIMLbot.Request subRequest = new AIMLbot.Request(templateNodeInnerValue, this.user, this.Proc, (AIMLbot.Request)request);
                         String gn = GetAttribValue("bot", null);
                         if (gn != null) subRequest.Graph = Proc.GetGraph(gn,request.Graph);
                         depth = subRequest.depth = request.depth + 1;
+                        tempTopic = tempTopic.ToValue();
                         subRequest.Topic = tempTopic;
                         subRequest.ParentRequest = this.request;
                         subRequest.StartedOn = this.request.StartedOn;
@@ -99,13 +101,18 @@ namespace RTParser.AIMLTagHandlers
                         }
                         AIMLbot.Result subResult = null;
                         var prev = this.Proc.isAcceptingUserInput;
+                        var prevSO = user.SuspendAdd;
                         try
                         {
                             this.Proc.isAcceptingUserInput = true;
+                            var newresult = new AIMLbot.Result(request.user, Proc, request);
+                            subRequest.result = newresult;
+                            user.SuspendAdd = true;
                             subResult = this.Proc.Chat(subRequest);
                         }
                         finally
                         {
+                            user.SuspendAdd = prevSO;
                             this.Proc.isAcceptingUserInput = prev;
                         }
                         this.request.hasTimedOut = subRequest.hasTimedOut;
