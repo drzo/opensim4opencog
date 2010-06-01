@@ -269,7 +269,7 @@ namespace RTParser.Utils
                 // the <topic> nodes will contain more <category> nodes
                 if (currentNode.Name == "aiml")
                 {
-                    string botname = RTPBot.GetAttribValue(currentNode, "bot", null);
+                    string botname = RTPBot.GetAttribValue(currentNode, "graph", null);
                     GraphMaster g = request.Graph;
                     if (botname != null)
                     {
