@@ -318,6 +318,7 @@ namespace OpenMetaverse.Voice
                             foreach (RenderDevice device in rsp.Results.RenderDevices)
                                 RenderDevices.Add(device.Device);
 
+                            if (rsp.Results.CurrentRenderDevice!=null)
                             OnAuxGetRenderDevicesResponse(
                                 rsp.InputXml.Request,
                                 new VoiceDevicesEventArgs(
