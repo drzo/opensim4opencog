@@ -42,7 +42,7 @@ namespace RTParser.AIMLTagHandlers
                 //recurse here?
                 GraphMaster g = request.Graph;
                 var g0 = g;
-                String gn = GetAttribValue("bot", null);
+                String gn = GetAttribValue("graph", null);
                 if (gn != null)
                 {
                     g = Proc.GetGraph(gn, request.Graph);

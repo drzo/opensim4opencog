@@ -3,7 +3,7 @@
 
 <!-- bot B_Reductions.aiml (45976623) mp=-1: WHO IS * -->
 
-<aiml bot="parent">
+<aiml graph="parent">
 <category><pattern>MY * IS *</pattern><template><think>
   <set name="star_1">
     <star index="2"/>
@@ -13,7 +13,7 @@
 </aiml>
 <category><pattern>WHO IS MY _</pattern><template>Your <star/> is <get><star/></get></template></category>
 
-<aiml bot="parent">
+<aiml graph="parent">
   <category><pattern>YOUR * IS *</pattern><template><think><set type="bot" name="star_1"><star index="2"/></set><set name="topic">my <star index="1"/></set></think></template></category>
 </aiml>
 
