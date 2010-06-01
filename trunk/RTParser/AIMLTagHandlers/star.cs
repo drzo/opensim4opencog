@@ -90,7 +90,7 @@ namespace RTParser.AIMLTagHandlers
                     {
                         if (index <= query.InputStar.Count)
                         {
-                            if (index >= 0)
+                            if (index > 0)
                             {
                                 return (Unifiable)this.query.InputStar[index - 1];
                             }
