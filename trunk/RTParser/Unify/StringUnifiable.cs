@@ -302,7 +302,13 @@ namespace RTParser
 
         public virtual XmlNode GetNode()
         {
-            return AIMLTagHandler.getNode(str);
+            try
+            {
+                return AIMLTagHandler.getNode(str);
+            } catch(Exception e)
+            {
+                return AIMLTagHandler.getNode("<template>" + str + "</template>");
+            }
         }
 
         public override bool IsEmpty
@@ -347,6 +353,10 @@ namespace RTParser
         public override bool IsLazyStar()
         {
             if (!IsLazy()) return false;
+            if (true)
+            {
+                return str.StartsWith("<s");
+            }
             return GetTagHandler() is star;
         }
     }
