@@ -42,5 +42,45 @@ namespace RTParser.Utils
             }
             return false;
         }
+        internal bool DivergesFrom(TemplateInfo newTemplateInfo,out Unifiable from,out Unifiable to)
+        {
+            var p = FullPath.AsString().ToLower();
+            p = p.Replace("_", "*");
+            p = AIMLLoader.CleanWhitepaces(p);
+            p = "<srai>" + p + "</srai>";
+            var t = newTemplateInfo.InnerXml.ToLower();
+            t = AIMLLoader.CleanWhitepaces(t);
+            t = t.Replace("<star/>", "*");
+            t = t.Replace("<sr/>", "<srai>*</srai>");
+
+            int firstTP = FirstMismatch(t, p);
+            int lastTP = LastMismatch(t, p);
+            int firstPT = FirstMismatch(p, t);
+            int lastPT = LastMismatch(p, t);
+            from = "";
+            to = "";
+            return false;
+        }
+
+        private int FirstMismatch(string s1, string s2)
+        {
+            int i = 0;
+            for(;i<s1.Length;i++)
+            {
+                if (s1[i]==s2[i]) continue;
+                return i - 1;
+            }
+            return i - 1;
+        }
+        private int LastMismatch(string s1, string s2)
+        {
+            int i = s1.Length - 1;
+            for (; i >= 0; i--)
+            {
+                if (s1[i] == s2[i]) continue;
+                return i - 1;
+            }
+            return i - 1;
+        }
     }
 }

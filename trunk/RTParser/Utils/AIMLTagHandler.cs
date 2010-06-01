@@ -26,6 +26,16 @@ namespace RTParser.Utils
                     int i = Int32.Parse(name.Substring(5)) - 1;
                     name = query.ThatStar[i + 1];
                 }
+                if (name.StartsWith("thatstar_"))
+                {
+                    int i = Int32.Parse(name.Substring(9)) - 1;
+                    name = query.ThatStar[i + 1];
+                }
+                if (name.StartsWith("topicstar_"))
+                {
+                    int i = Int32.Parse(name.Substring(10)) - 1;
+                    name = query.TopicStar[i];
+                }
                 if (name.StartsWith("topic_"))
                 {
                     int i = Int32.Parse(name.Substring(6)) - 1;
