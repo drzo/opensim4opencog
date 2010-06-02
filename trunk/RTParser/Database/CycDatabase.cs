@@ -333,7 +333,7 @@ namespace RTParser.Database
             CycAccess access = GetCycAccess;
             Console.Write(result);
             Console.Out.Flush();
-            if (!UseCyc) return result;
+            if (!UseCyc) return "NIL";
             try
             {
                 string str = "(list " + cmd + ")";
@@ -377,9 +377,28 @@ namespace RTParser.Database
             return true;
         }
 
-        internal Unifiable Paraphrase(string text)
+        public Unifiable CleanupCyc(string text)
+        {
+            text = text.Replace("  ", " ").Trim();
+            int i = text.IndexOf(" ");
+            if (i < 0)
+            {
+                if (text.StartsWith("#") || text.StartsWith("("))
+                {
+                    return Paraphrase0(text).AsString().Replace("#$", " ").Replace("  ", " ");
+                }
+                return text;
+            }
+            return text.Substring(0, i) + " " + CleanupCyc(text.Substring(i + 1));
+        }
+        public Unifiable Paraphrase(string text)
         {
             text = Cyclify(text);
+            return Paraphrase0(text);
+        }
+        internal Unifiable Paraphrase0(string text)
+        {
+            if (!CycEnabled) return text.Replace("#$", " ").Replace("  ", " ");
             if (text.StartsWith("("))
             {   //todo is a list then?
                 text = String.Format("'{0}", text);

@@ -983,7 +983,7 @@ namespace AIMLBotModule
             }
             Request r = new AIMLbot.Request(input, myUser, MyBot);
             Result res = MyBot.Chat(r);
-            return res.Output;
+            return MyBot.CleanupCyc(res.Output);
         }
 
         private string RemoveNameFromString(string input)
