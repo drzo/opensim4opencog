@@ -170,6 +170,8 @@ namespace RTParser
                 //this.Predicates.AddGetSetProperty("topic", new CollectionProperty(_topics, () => bot.NOTOPIC));
                 this.Predicates.addSetting("topic", bot.NOTOPIC);
                 this.Predicates.InsertFallback(() => bot.DefaultPredicates);
+                this.Predicates.InsertFallback(() => bot.HeardPredicates);
+                
                 //this.Predicates.addSetting("topic", "NOTOPIC");
             }
             else

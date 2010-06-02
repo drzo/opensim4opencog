@@ -64,6 +64,11 @@ namespace RTParser
         public SettingsDictionary DefaultPredicates;
 
         /// <summary>
+        /// The default predicates to set up for a user
+        /// </summary>
+        public SettingsDictionary HeardPredicates;
+
+        /// <summary>
         /// Holds information about the available custom tag handling classes (if loaded)
         /// Key = class name
         /// Value = TagHandler class that provides information about the class
@@ -503,6 +508,8 @@ namespace RTParser
                 this.PersonSubstitutions = new SettingsDictionary("bot.personsubstitutions", this, null);
                 this.Substitutions = new SettingsDictionary("bot.substitutions", this, null);
                 this.DefaultPredicates = new SettingsDictionary("bot.defaultpredicates", this, null);
+                this.HeardPredicates = new RTParser.Utils.SettingsDictionary("bot.heardpredicates", this, null);
+
                 this.CustomTags = new Dictionary<string, TagHandler>();
                 //this.GraphMaster = new GraphMaster();
                 //this.HeardSelfSayGraph = new GraphMaster();
@@ -911,7 +918,7 @@ namespace RTParser
         public void AddAiml(string aimlText)
         {
             Request request = BotAsRequest;
-            Loader.loadAIMLString("<aiml>"+aimlText+"</aiml>",LoaderOptions.GetDefault(request), request);
+            Loader.loadAIMLString("<aiml>" + aimlText + "</aiml>", LoaderOptions.GetDefault(request), request);
         }
 
         #region Conversation methods
@@ -1018,12 +1025,14 @@ namespace RTParser
             }
             message = currentEar.GetMessage();
             currentEar = new JoinedTextBuffer();
-            if (LastUser!=null)
+            if (LastUser != null)
             {
                 if (LastUser.LastResult != null)
                     LastUser.LastResult.AddOutputSentences(message);
             }
             message = swapPerson(message);
+            Console.WriteLine("HEARDSELF SWAP: " + message);
+            return null;
             RunTask(() => HeardSelfSay0(message), "heardSelfSay: " + message, 500);
             return null;
         }
@@ -1032,7 +1041,28 @@ namespace RTParser
 
         private void RunTask(ThreadStart action, string name, int maxTime)
         {
-            Thread t = RunTask(action, name);      
+            Thread t = RunTask(action, name);
+            Thread tr = new Thread(() =>
+                                       {
+                                           try
+                                           {
+                                               try
+                                               {
+                                                   Thread.Sleep(10000);
+                                                   lock (ThreadList) if (t.IsAlive) t.Interrupt();
+
+                                               }
+                                               catch (Exception e)
+                                               {
+                                                   //Console.WriteLine("ERROR " + name + " " + e);
+                                               }
+                                           }
+                                           finally
+                                           {
+                                               lock (ThreadList) ThreadList.Remove(Thread.CurrentThread);
+                                           }
+                                       }) { Name = "Killer of " + name };
+            tr.Start();
         }
 
         private Thread RunTask(ThreadStart action, string name)
@@ -1064,10 +1094,12 @@ namespace RTParser
 
         public AIMLbot.Result HeardSelfSay0(string message)
         {
-            Console.WriteLine("HEARDSELF SWAP: " + message);
+            AddHeardPreds(message, HeardPredicates);
+            Console.WriteLine("HEARDSELF: " + message);
+            return null;
             try
             {
-                return Chat(new AIMLbot.Request(message, BotAsUser, this, null));
+                return Chat(new AIMLbot.Request(message, BotAsUser, this, null), HeardSelfSayGraph);
             }
             catch (Exception e)
             {
@@ -1102,7 +1134,7 @@ namespace RTParser
                 {
                     Utils.SubQuery query = new SubQuery(path, result, request);
                     //query.Templates = 
-                    request.Graph.evaluate(path, query, request, query.InputStar, MatchState.UserInput,0, Unifiable.CreateAppendable());
+                    request.Graph.evaluate(path, query, request, query.InputStar, MatchState.UserInput, 0, Unifiable.CreateAppendable());
                     result.SubQueries.Add(query);
                 }
 
@@ -1148,6 +1180,21 @@ namespace RTParser
             return result;
         }
 
+        private void AddHeardPreds(string message, SettingsDictionary dictionary)
+        {
+            AddHeardPreds0(message, dictionary);
+            Console.WriteLine("" + dictionary.ToDebugString());
+        }
+        private void AddHeardPreds0(Unifiable unifiable, SettingsDictionary dictionary)
+        {
+            Unifiable first = unifiable.First();
+            if (first.IsEmpty) return;
+            Unifiable rest = unifiable.Rest();
+            if (rest.IsEmpty) return;
+            dictionary.addSetting(first, rest);
+            AddHeardPreds0(rest, dictionary);
+        }
+
         private string swapPerson(string inputString)
         {
             string temp = Loader.Normalize(inputString, true);
@@ -1168,7 +1215,14 @@ namespace RTParser
 
         public AIMLbot.Result Chat(Request request)
         {
-            return Chat(request, request.Graph ?? GraphMaster);
+            try
+            {
+                return Chat(request, request.Graph ?? GraphMaster);
+            }
+            finally
+            {
+                AddHeardPreds(request.rawInput, HeardPredicates);
+            }
         }
 
         public AIMLbot.Result Chat(Request request, GraphMaster G)
@@ -1179,7 +1233,7 @@ namespace RTParser
             {
                 chatTrace = new StreamWriter("bgm\\chatTrace.dot");
                 chatTrace.WriteLine("digraph G {");
-                streamDepth=0;
+                streamDepth = 0;
             }
             streamDepth++;
 
@@ -1222,7 +1276,7 @@ namespace RTParser
                 {
                     Utils.SubQuery query = new SubQuery(path, result, request);
                     //query.Templates = 
-                    G.evaluate(path, query, request, query.InputStar, MatchState.UserInput,0, Unifiable.CreateAppendable());
+                    G.evaluate(path, query, request, query.InputStar, MatchState.UserInput, 0, Unifiable.CreateAppendable());
                     result.SubQueries.Add(query);
                 }
 
@@ -1275,12 +1329,12 @@ namespace RTParser
             request.user.addResult(result);
             streamDepth--;
 
-            if (streamDepth<=0 && chatTrace != null)
-                {
-                    chatTrace.WriteLine("}");
-                    chatTrace.Close();
-                    chatTrace = null;
-                }
+            if (streamDepth <= 0 && chatTrace != null)
+            {
+                chatTrace.WriteLine("}");
+                chatTrace.Close();
+                chatTrace = null;
+            }
 
             return result;
         }
@@ -1890,7 +1944,7 @@ The AIMLbot program.
             {
                 langu = "bot";
             }
-            Unifiable s = "The system tag should be doing '" + cmd + "' lang=" + langu ;
+            Unifiable s = "The system tag should be doing '" + cmd + "' lang=" + langu;
             writeToLog(s.AsString());
             SystemExecHandler handler = null;
             if (ExecuteHandlers.ContainsKey(langu))
@@ -2078,8 +2132,9 @@ The AIMLbot program.
                 }
                 if (input == "set")
                 {
-                    Console.WriteLine(myBot.GlobalSettings.ToString());
-                    Console.WriteLine(myUser.Predicates.ToString());                    
+                    Console.WriteLine(myBot.HeardPredicates.ToDebugString());
+                    Console.WriteLine(myBot.GlobalSettings.ToDebugString());
+                    Console.WriteLine(myUser.Predicates.ToDebugString());
                     Console.WriteLine("Bot: " + s);
                     continue;
                 }
@@ -2102,6 +2157,7 @@ The AIMLbot program.
                         Request r = new AIMLbot.Request(input, myUser, myBot, null);
                         Result res = myBot.Chat(r);
                         s = res.Output;
+                        myBot.HeardSelfSay0(s);
                     }
                     Console.WriteLine("Bot> " + s);
                 }
@@ -2188,7 +2244,7 @@ The AIMLbot program.
 
     internal class JoinedTextBuffer
     {
-        static int count(string s,string t)
+        static int count(string s, string t)
         {
             int f = s.IndexOf(t);
             if (f < 0) return 0;
@@ -2214,7 +2270,7 @@ The AIMLbot program.
             if (message.EndsWith(",")) return false;
             if (message.EndsWith(".")) return true;
             if (count(message, " ") > 2) return true;
-            return false;           
+            return false;
         }
 
         public string GetMessage()

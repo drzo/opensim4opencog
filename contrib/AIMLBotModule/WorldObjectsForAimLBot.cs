@@ -897,7 +897,7 @@ namespace AIMLBotModule
                 {
                     result = AddToResult(result, append);
                 }
-                return result;
+                return result.Replace("ISYOURFAV", " IS YOUR FAVORITE").Replace("  ", " ");
             } finally
             {
                 AddedToNextResponse = old;
