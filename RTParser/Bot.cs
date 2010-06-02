@@ -1213,6 +1213,13 @@ namespace RTParser
         public StreamWriter chatTrace;
         public int streamDepth = 0;
 
+
+        public Unifiable CleanupCyc(string text)
+        {
+            if (TheCyc == null) return text.Replace("#$", " ").Replace("  ", " ");
+            return TheCyc.CleanupCyc(text);
+        }
+
         public AIMLbot.Result Chat(Request request)
         {
             try
