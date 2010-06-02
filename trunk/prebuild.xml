@@ -319,6 +319,7 @@
       <Reference name="System.Data" localCopy="false"/>
       <Reference name="System.Xml" localCopy="false"/>
       <Reference name="System.Web" localCopy="false"/>
+      <Reference name="System.Core"/>
       <Reference name="OpenCyc.dll" localCopy="false"/>
       <Reference name="IKVM.Runtime.dll" localCopy="false"/>
       <Reference name="IKVM.OpenJDK.ClassLibrary.dll" localCopy="false"/>
