@@ -108,7 +108,7 @@ namespace RTParser.AIMLTagHandlers
                             var newresult = new AIMLbot.Result(request.user, Proc, request);
                             subRequest.result = newresult;
                             user.SuspendAdd = true;
-                            subResult = this.Proc.Chat(subRequest);
+                            subResult = this.Proc.Chat(subRequest, subRequest.Graph);
                         }
                         finally
                         {

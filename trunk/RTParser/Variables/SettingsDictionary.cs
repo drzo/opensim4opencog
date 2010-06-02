@@ -99,10 +99,14 @@ namespace RTParser.Utils
            set { theNameSpace = value; }
        }
 
-        public override string ToString()
-        {
-            return theNameSpace + "(" + Count + ") " + DictionaryAsXML.DocumentElement.InnerXml.Replace("<item name=", "\n<item name =");
-        }
+       public override string ToString()
+       {
+           return theNameSpace + "(" + Count + ") " ;
+       }
+       public string ToDebugString()
+       {
+           return theNameSpace + "(" + Count + ") " + DictionaryAsXML.DocumentElement.InnerXml.Replace("<item name=", "\n<item name =");
+       }
 
         /// <summary>
         /// An XML representation of the contents of this dictionary
