@@ -381,15 +381,15 @@ namespace RTParser.Database
         {
             text = text.Replace("  ", " ").Trim();
             int i = text.IndexOf(" ");
-            if (i < 0)
+            if (i > 0)
             {
-                if (text.StartsWith("#") || text.StartsWith("("))
-                {
-                    return Paraphrase0(text).AsString().Replace("#$", " ").Replace("  ", " ");
-                }
-                return text;
+                return CleanupCyc(text.Substring(0, i)) + " " + CleanupCyc(text.Substring(i + 1));
             }
-            return text.Substring(0, i) + " " + CleanupCyc(text.Substring(i + 1));
+            if (text.StartsWith("#$") || text.StartsWith("(#$"))
+            {
+                return Paraphrase0(text).AsString().Replace("#$", " ").Replace("  ", " ").Trim();
+            }
+            return text.Replace("#$", " ").Replace("  ", " ").Trim();
         }
         public Unifiable Paraphrase(string text)
         {
