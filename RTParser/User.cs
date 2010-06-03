@@ -174,7 +174,7 @@ namespace RTParser
                 this.Predicates.addSetting("topic", bot.NOTOPIC);
                 this.Predicates.InsertFallback(() => bot.DefaultPredicates);
                 this.Predicates.InsertFallback(() => bot.HeardPredicates);
-                
+                Predicates.addSetting("id", UserID);
                 //this.Predicates.addSetting("topic", "NOTOPIC");
             }
             else
