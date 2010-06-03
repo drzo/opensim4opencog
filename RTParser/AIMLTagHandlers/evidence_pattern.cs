@@ -41,10 +41,11 @@ namespace RTParser.AIMLTagHandlers
                     string prob_str = GetAttribValue("prob", "1.0");
                     double prob = double.Parse(prob_str);
 
-                    string evidenceCode = "<category><pattern>"+payload+"</pattern>"+
-                                         "<template><think><setevidence evidence=\""+evidence+"\" prob="+prob_str+" />"+
-                                         "</think></template></category>";
+                    string evidenceCode = "<topic name=\"COLLECTEVIDENCEPATTERNS\"> <category><pattern>" + payload + "</pattern>" +
+                                         "<template><think><setevidence evidence=\""+evidence+"\" prob=\""+prob_str+"\" />"+
+                                         "</think></template></category></topic>";
                     this.user.bot.AddAiml(evidenceCode);
+                    
                     Console.WriteLine("MSM: evidence_pattern evidenceCode = {0}", evidenceCode);
 
                 }

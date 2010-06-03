@@ -43,7 +43,8 @@ namespace RTParser.AIMLTagHandlers
                     string myTopic = GetAttribValue("topic", null);
                     string prob_str = GetAttribValue("prob", "0.1");
                     double prob = double.Parse(prob_str);
-
+                    payload= payload.Replace("rcategory", "category");
+                    payload= payload.Replace("rpattern", "pattern");
                     string responseCode = "<topic name=\"" + myTopic + "\"> " + payload + " </topic>";
                     Console.WriteLine("MSM: response_topic ResponseCode = {0}", responseCode);
                     this.user.bot.AddAiml(responseCode);
