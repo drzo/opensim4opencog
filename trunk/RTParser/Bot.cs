@@ -1106,78 +1106,6 @@ namespace RTParser
                 Console.WriteLine("" + e);
                 return null;
             }
-            //return Chat(message,BotAsUser.ID);
-            AIMLbot.Request request = new AIMLbot.Request(message, BotAsUser, this, null);
-            request.Graph = HeardSelfSayGraph;
-            AIMLbot.Result result = new AIMLbot.Result(request.user, this, request);
-
-            if (this.isAcceptingUserInput)
-            {
-                // Normalize the input
-                AIMLLoader loader = new AIMLLoader(this, request);
-                Loader = loader;
-                //RTParser.Normalize.SplitIntoSentences splitter = new RTParser.Normalize.SplitIntoSentences(this);
-                Unifiable[] rawSentences = new Unifiable[] { request.rawInput };//splitter.Transform(request.rawInput);
-                LoadInputPaths(request, loader, rawSentences, result);
-                int NormalizedPathsCount = result.NormalizedPaths.Count;
-                if (NormalizedPathsCount != 1)
-                {
-                    writeToLog("NormalizedPaths.Count = " + NormalizedPathsCount);
-                    foreach (Unifiable path in result.NormalizedPaths)
-                    {
-                        writeToLog("  i: " + path.LegacyPath);
-                    }
-                }
-
-                // grab the templates for the various sentences from the graphmaster
-                foreach (Unifiable path in result.NormalizedPaths)
-                {
-                    Utils.SubQuery query = new SubQuery(path, result, request);
-                    //query.Templates = 
-                    request.Graph.evaluate(path, query, request, query.InputStar, MatchState.UserInput, 0, Unifiable.CreateAppendable());
-                    result.SubQueries.Add(query);
-                }
-
-                //todo pick and chose the queries
-                if (result.SubQueries.Count != 1)
-                {
-                    if (true)
-                    {
-                        writeToLog("SubQueries.Count = " + result.SubQueries.Count);
-                        foreach (var path in result.SubQueries)
-                        {
-                            writeToLog(" sq: " + path.FullPath);
-                        }
-                    }
-                }
-
-                // process the templates into appropriate output
-                foreach (SubQuery query in result.SubQueries)
-                {
-                    if (processTemplate(query, request, result, null))
-                    {
-
-                    }
-                }
-                if (true || result.SubQueries.Count != 1)
-                {
-                    writeToLog("SubQueries.Count = " + result.SubQueries.Count);
-                    foreach (var path in result.SubQueries)
-                    {
-                        writeToLog("\r\n tt: " + path.ToString().Replace("\n", " ").Replace("\r", " ").Replace("  ", " "));
-                    }
-                }
-            }
-            else
-            {
-                result.AddOutputSentences(this.NotAcceptingUserInputMessage);
-            }
-
-            // populate the Result object
-            result.Duration = DateTime.Now - request.StartedOn;
-            request.user.addResult(result);
-
-            return result;
         }
 
         private void AddHeardPreds(string message, SettingsDictionary dictionary)
@@ -2117,11 +2045,19 @@ The AIMLbot program.
             {
                 myName = String.Join(" ", args);
             }
-            User myUser = myBot.FindOrCreateUser(null);
+            User myUser = myBot.FindOrCreateUser(null); // UNKNOWN_PARTNER
             myBot.isAcceptingUserInput = false;
             myBot.loadAIMLFromFiles();
             myBot.LoadPersonalDirectories(myName);
             myBot.isAcceptingUserInput = true;
+
+            string evidenceCode = "<topic name=\"collectevidencepatterns\"> " +
+                                  "<category><pattern>HOW ARE YOU</pattern><template>" +
+                                  "<think><setevidence evidence=\"common-greeting\" prob=1.0 /></think>" +
+                                  "</template></category></topic>" +
+                                  "";
+            //Added from AIML content now
+            //myBot.AddAiml(evidenceCode);
             String s = null;
             while (true)
             {
@@ -2161,6 +2097,9 @@ The AIMLbot program.
                     }
                     else
                     {
+                        myUser.TopicSetting = "collectevidencepatterns";
+                        myBot.pMSM.clearEvidence();
+                        myBot.pMSM.clearNextStateValues();
                         Request r = new AIMLbot.Request(input, myUser, myBot, null);
                         Result res = myBot.Chat(r);
                         s = res.Output;
