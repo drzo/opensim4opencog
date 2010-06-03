@@ -122,7 +122,7 @@ namespace RTParser.Utils
             name = name.ToLower();
             if (name.Equals("dog") || name.Equals("father"))
             {
-                Console.WriteLine("dog=" + v);
+                RTPBot.writeDebugLine("dog=" + v);
             }
             return v;
         }

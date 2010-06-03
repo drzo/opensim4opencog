@@ -205,7 +205,7 @@ namespace RTParser.AIMLTagHandlers
 
         public void UnknownCondition()
         {
-            Console.WriteLine("Unknown conditions " + LineNumberTextInfo());
+            RTPBot.writeDebugLine("Unknown conditions " + LineNumberTextInfo());
         }
     }
 }

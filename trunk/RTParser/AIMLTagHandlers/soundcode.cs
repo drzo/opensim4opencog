@@ -50,12 +50,12 @@ namespace RTParser.AIMLTagHandlers
                     //if (Directory.Exists(file))
                     if (File.Exists(file))
                     {
-                        Console.WriteLine("Load Corpus Bigrams: '{0}'", file);
+                        RTPBot.writeDebugLine("Load Corpus Bigrams: '{0}'", file);
                         StreamReader sr = new StreamReader(file);
                         this.user.bot.pHMM.LearnBigramFile(sr);
                         sr.Close();
                         this.user.bot.pHMM.hmmCorpusLoaded++;
-                        Console.WriteLine("Loaded Corpus Bigrams: '{0}'", file);
+                        RTPBot.writeDebugLine("Loaded Corpus Bigrams: '{0}'", file);
                     }
                 }
 
@@ -113,10 +113,10 @@ namespace RTParser.AIMLTagHandlers
 
                     System.Diagnostics.StackFrame sf = st.GetFrame(0);
 
-                    Console.WriteLine("Method: "+sf.GetMethod().ToString());
-                    Console.WriteLine("Line: " + sf.GetFileLineNumber().ToString());
-                    Console.WriteLine("Column: " + sf.GetFileColumnNumber().ToString());
-                    Console.WriteLine("Exception : {0}", ex.StackTrace);
+                    RTPBot.writeDebugLine("Method: "+sf.GetMethod().ToString());
+                    RTPBot.writeDebugLine("Line: " + sf.GetFileLineNumber().ToString());
+                    RTPBot.writeDebugLine("Column: " + sf.GetFileColumnNumber().ToString());
+                    RTPBot.writeDebugLine("Exception : {0}", ex.StackTrace);
 
                 }
 
@@ -126,7 +126,7 @@ namespace RTParser.AIMLTagHandlers
                 //Unifiable result = soundLine +" "+guess;
                 Unifiable result = guess;
 
-                // Console.WriteLine(line);
+                // RTPBot.writeDebugLine(line);
                 return result;
             }
             return Unifiable.Empty;
@@ -1063,7 +1063,7 @@ public class PhoneticHmm
         }
         catch
         {
-            Console.WriteLine("addTransition fail {0} {1} {2}", srcState, dstState, prob);
+            RTPBot.writeDebugLine("addTransition fail {0} {1} {2}", srcState, dstState, prob);
         }
     }
 
@@ -1092,7 +1092,7 @@ public class PhoneticHmm
         }
         catch
         {
-            Console.WriteLine("incrTransition fail {0} {1} {2}", srcState, dstState, prob);
+            RTPBot.writeDebugLine("incrTransition fail {0} {1} {2}", srcState, dstState, prob);
         }
     }
 
@@ -1113,7 +1113,7 @@ public class PhoneticHmm
         }
         catch
         {
-            //Console.WriteLine("   missing Transition {0} -- {1} ", srcState, dstState);
+            //RTPBot.writeDebugLine("   missing Transition {0} -- {1} ", srcState, dstState);
             return (double)0.0001;
         }
     }
@@ -1135,7 +1135,7 @@ public class PhoneticHmm
         }
         catch
         {
-            Console.WriteLine("addEmission fail {0} {1} {2}", srcState, emitSymbol, prob);
+            RTPBot.writeDebugLine("addEmission fail {0} {1} {2}", srcState, emitSymbol, prob);
         }
 
 
@@ -1218,7 +1218,7 @@ public class PhoneticHmm
             while ((linecount < 5000000) && ((line = sr.ReadLine()) != null))
             {
                 linecount++;
-                if (linecount % 1000 == 0) { Console.WriteLine("Sound BG-learn {0}", linecount); }
+                if (linecount % 1000 == 0) { RTPBot.writeDebugLine("Sound BG-learn {0}", linecount); }
                 line = line.Trim();
                 if (line.Length != 0 && line[0] != '#')
                 {
@@ -1234,9 +1234,9 @@ public class PhoneticHmm
         }
         catch (Exception e)
         {
-            Console.WriteLine("Exception {0} {1}",e.Message , e.StackTrace);
+            RTPBot.writeDebugLine("Exception {0} {1}",e.Message , e.StackTrace);
         }
-        Console.WriteLine("Last Line NG-learn {0}", linecount);
+        RTPBot.writeDebugLine("Last Line NG-learn {0}", linecount);
 
     }
     public string guessFromSounds(string soundLine, string inLine)
@@ -1261,7 +1261,7 @@ public class PhoneticHmm
                 //if (Directory.Exists(file))
                 if (File.Exists(file))
                 {
-                    Console.WriteLine("Load Bigrams: '{0}'", file);
+                    RTPBot.writeDebugLine("Load Bigrams: '{0}'", file);
                     StreamReader sr = new StreamReader(file);
                     LearnBigramFile(sr);
                     sr.Close();
@@ -1299,7 +1299,7 @@ public class PhoneticHmm
             //nextStatePath.Clear();
             //nextStateVP.Clear();
 
-            Console.WriteLine("\nTesting hypothesis {0} ({1})", output, cur_observedSymbol);
+            RTPBot.writeDebugLine("\nTesting hypothesis {0} ({1})", output, cur_observedSymbol);
 
             decodeTrace.WriteLine("\"t{0}\" -> \"t{1}\" ;", output , output + 1);
             decodeTrace.WriteLine("\"t{0}\" -> \"snd({1})\" ;", output, cur_observedSymbol);
@@ -1334,13 +1334,13 @@ public class PhoneticHmm
                 string argMaxKey = "";
                 double valMax = 0;
                 //string nextStateKey = next_emitter.Keys.Count[nextState];
-                //Console.WriteLine("  Estimating probability for future state ({0})", nextStateKey);
+                //RTPBot.writeDebugLine("  Estimating probability for future state ({0})", nextStateKey);
                 //for (int state = 0; state < cur_emitter.Keys.Count; state++)
                 foreach (string stateKey in cur_emitter.Keys)
                 {
                     double em_p = 1;// (double)transitionCounts[stateKey] / frameSum;
                     //string stateKey = cur_emitter.Keys[state];
-                    //Console.WriteLine("    The testing state is {0} ", stateKey);
+                    //RTPBot.writeDebugLine("    The testing state is {0} ", stateKey);
                     double prob = (double)0.0001;
                     string v_path = (string)"";
                     double v_prob = (double)0.0001;
@@ -1359,7 +1359,7 @@ public class PhoneticHmm
                     if (atomicTransitionCount.ContainsKey(atomicKey))
                     {
                         transP = (double)atomicTransitionCount[atomicKey] / (double)transitionCounts[stateKey];
-                        Console.WriteLine(" P({0}) = {1}", atomicKey, transP);
+                        RTPBot.writeDebugLine(" P({0}) = {1}", atomicKey, transP);
                         decodeTrace.WriteLine("\"{0}\" -> \"{1}\" ;",stateKey,nextStateKey);
                         decodeTrace.WriteLine("\"{0}\" -> \"{1}\" ;", cur_observedSymbol, stateKey);
                         decodeTrace.WriteLine("\"{0}\" -> \"{1}\" ;", next_observedSymbol, nextStateKey);
@@ -1387,7 +1387,7 @@ public class PhoneticHmm
                         valMax = v_prob;
                         argMaxKey = v_path + " " + nextStateKey;
                     }
-                    //Console.WriteLine("    VProbability of {0} --{1} is {2} with scale {3}^{4}  ep={5} tp={6}",stateKey, nextStateKey, v_prob, scaleFactor, output + 1,eP,transP);
+                    //RTPBot.writeDebugLine("    VProbability of {0} --{1} is {2} with scale {3}^{4}  ep={5} tp={6}",stateKey, nextStateKey, v_prob, scaleFactor, output + 1,eP,transP);
                     if (v_prob > highest)
                     {
                         highest = v_prob;
@@ -1395,22 +1395,22 @@ public class PhoneticHmm
                         vProbs[output] = v_prob;
                     }
                 }// for state
-                //Console.WriteLine(" Fin NextState :{0}", nextStateKey);
+                //RTPBot.writeDebugLine(" Fin NextState :{0}", nextStateKey);
                 nextStateP[nextStateKey] = total;
                 nextStatePath[nextStateKey] = argMaxKey; // lastStatePath[argMaxKey] + " " + argMaxKey;
                 nextStateVP[nextStateKey] = valMax;
                 
             }
-            //Console.WriteLine(" Fin outputstep  :{0} [{1}]", output,vPath[output]);
+            //RTPBot.writeDebugLine(" Fin outputstep  :{0} [{1}]", output,vPath[output]);
             lastStateP = nextStateP;
             lastStatePath = nextStatePath;
             lastStateVP = nextStateVP;
-            Console.WriteLine("The highest probability was {0} in state {1} [{2}](scale factor of {3}^{4})", highest, vPath[output], (string)lastStatePath[vPath[output]], scaleFactor, output + 1);
+            RTPBot.writeDebugLine("The highest probability was {0} in state {1} [{2}](scale factor of {3}^{4})", highest, vPath[output], (string)lastStatePath[vPath[output]], scaleFactor, output + 1);
             guessPath = (string)lastStatePath[vPath[output]]; //+= vPath[output] + " ";
             decodeTrace.WriteLine("\"m{0}\" -> \"{1}\" ;", output, vPath[output]);
             decodeTrace.WriteLine("\"m{0}\" -> \"m{1}\" ;", output,output+1);
         }
-        Console.WriteLine(" Guess = [{0}]", guessPath);
+        RTPBot.writeDebugLine(" Guess = [{0}]", guessPath);
 
         // optionally use this guess as an training input to adjust the 
         // model towards the current discussion

@@ -53,7 +53,7 @@ namespace RTParser.AIMLTagHandlers
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine("" + e);
+                        RTPBot.writeDebugLine("" + e);
                     }
                 }
                 return OPT_FALSE;

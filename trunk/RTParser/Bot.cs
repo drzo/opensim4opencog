@@ -2190,6 +2190,15 @@ The AIMLbot program.
                 writeToLog("Didnt find personal directories with stem: '{0}'", myName);
             }
         }
+
+        static string lastOutput="";
+        internal static void writeDebugLine(string p, params object[] args)
+        {
+            string s = String.Format(p, args);
+            if (lastOutput==s) return;
+            lastOutput = s;
+            Console.WriteLine(s);
+        }
     }
 
     internal class JoinedTextBuffer
