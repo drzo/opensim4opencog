@@ -203,7 +203,7 @@ namespace RTParser.Utils
                 GraphMaster Parent = new GraphMaster();
                 this.Parents.Add(Parent);
                 RootNode = Parent.RootNode;
-                System.RTPBot.writeDebugLine("" + category);
+                RTPBot.writeDebugLine("" + category);
             }
             Node.addCategoryTag(RootNode, generatedPath, patternInfo, category, outerNode, templateNode, guard, thatInfo,
                                 this);
