@@ -46,7 +46,7 @@ namespace RTParser.AIMLTagHandlers
                                          "</think></template></category></topic>";
                     this.user.bot.AddAiml(evidenceCode);
                     
-                    Console.WriteLine("MSM: evidence_pattern evidenceCode = {0}", evidenceCode);
+                    RTPBot.writeDebugLine("MSM: evidence_pattern evidenceCode = {0}", evidenceCode);
 
                 }
                 catch

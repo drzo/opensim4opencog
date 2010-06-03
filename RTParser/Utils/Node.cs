@@ -138,7 +138,7 @@ namespace RTParser.Utils
                 {
                     if (patternInfo.LoopsFrom(newTemplateInfo))
                     {
-                        Console.WriteLine("SKIPPING! " + pat + "==" + newTemplateInfo + "");
+                        RTPBot.writeDebugLine("SKIPPING! " + pat + "==" + newTemplateInfo + "");
                         if (this.TemplateInfos.Count == 0)
                         {
                             this.TemplateInfos = null;
@@ -149,7 +149,7 @@ namespace RTParser.Utils
                     Unifiable to;
                     if (false && patternInfo.DivergesFrom(newTemplateInfo, out from, out to))
                     {
-                        Console.WriteLine("SKIPPING! " + pat + "==" + newTemplateInfo + "");
+                        RTPBot.writeDebugLine("SKIPPING! " + pat + "==" + newTemplateInfo + "");
                         if (this.TemplateInfos.Count == 0)
                         {
                             this.TemplateInfos = null;
@@ -165,7 +165,7 @@ namespace RTParser.Utils
             master.AddTemplate(newTemplateInfo);
             if (pat != patternInfo)
             {
-                Console.WriteLine("Wierd! " + pat);
+                RTPBot.writeDebugLine("Wierd! " + pat);
                 throw new InvalidCastException("weird");
             }
             this.TemplateInfos.Insert(0, newTemplateInfo);
@@ -254,7 +254,7 @@ namespace RTParser.Utils
             }
             if (useNext)
             {
-                //     Console.WriteLine(String.Format("Last key {0}", ToString()));
+                //     RTPBot.writeDebugLine(String.Format("Last key {0}", ToString()));
                 return Parent.GetNextNode();
             }
             return null;
@@ -453,7 +453,7 @@ namespace RTParser.Utils
                     var thats = query.ThatStar;
                     if (thats.Count > 1)
                     {
-                        Console.WriteLine("THATS: " + thats[1]);
+                        RTPBot.writeDebugLine("THATS: " + thats[1]);
                     }
                 }
 

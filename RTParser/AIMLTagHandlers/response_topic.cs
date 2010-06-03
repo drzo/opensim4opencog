@@ -46,7 +46,7 @@ namespace RTParser.AIMLTagHandlers
                     payload= payload.Replace("rcategory", "category");
                     payload= payload.Replace("rpattern", "pattern");
                     string responseCode = "<topic name=\"" + myTopic + "\"> " + payload + " </topic>";
-                    Console.WriteLine("MSM: response_topic ResponseCode = {0}", responseCode);
+                    RTPBot.writeDebugLine("MSM: response_topic ResponseCode = {0}", responseCode);
                     this.user.bot.AddAiml(responseCode);
                     // TODO: define machine-state -> topic
                     this.user.bot.pMSM.addResponse(machine, myState, myTopic, prob);

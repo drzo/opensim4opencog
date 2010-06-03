@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 //using System.Linq;
 using System.Text.RegularExpressions;
+using RTParser;
 
 
 namespace RTParser.AIMLTagHandlers
@@ -46,7 +47,7 @@ namespace RTParser.AIMLTagHandlers
                         //if (Directory.Exists(file))
                         if (File.Exists(file))
                         {
-                            Console.WriteLine("LoadMarkovSTM: '{0}'", file);
+                            RTPBot.writeDebugLine("LoadMarkovSTM: '{0}'", file);
                             StreamReader sr = new StreamReader(file);
                             this.user.bot.STM_Brain.WindowSize = 4;
                             this.user.bot.STM_Brain.Learn(sr);
@@ -57,7 +58,7 @@ namespace RTParser.AIMLTagHandlers
                         //if (Directory.Exists(file))
                         if (File.Exists(file))
                         {
-                            Console.WriteLine("LoadMarkovSTM: '{0}'", file);
+                            RTPBot.writeDebugLine("LoadMarkovSTM: '{0}'", file);
                             StreamReader sr = new StreamReader(file);
                             this.user.bot.STM_Brain.WindowSize = 3;
                             this.user.bot.STM_Brain.LearnNgram(sr);
@@ -78,7 +79,7 @@ namespace RTParser.AIMLTagHandlers
                         //if (Directory.Exists(file))
                         if (File.Exists(file))
                         {
-                            Console.WriteLine("LoadMarkovSTM: '{0}'", file);
+                            RTPBot.writeDebugLine("LoadMarkovSTM: '{0}'", file);
                             StreamReader sr = new StreamReader(file);
                             this.user.bot.STM_Brain.WindowSize = 4;
                             this.user.bot.STM_Brain.Learn(sr);
@@ -89,7 +90,7 @@ namespace RTParser.AIMLTagHandlers
                         //if (Directory.Exists(file))
                         if (File.Exists(file))
                         {
-                            Console.WriteLine("LoadMarkovSTM: '{0}'", file);
+                            RTPBot.writeDebugLine("LoadMarkovSTM: '{0}'", file);
                             StreamReader sr = new StreamReader(file);
                             this.user.bot.STM_Brain.WindowSize = 3;
                             this.user.bot.STM_Brain.LearnNgram(sr);
@@ -101,7 +102,7 @@ namespace RTParser.AIMLTagHandlers
                     line = this.user.bot.STM_Brain.GetResponse(line);
                     if (line == null) line = this.user.bot.STM_Brain.GetRandomResponse();
                     Unifiable result = line;
-                    // Console.WriteLine(line);
+                    // RTPBot.writeDebugLine(line);
                     return result;
 
                 }
@@ -112,7 +113,7 @@ namespace RTParser.AIMLTagHandlers
                     line = this.user.bot.MBrain.GetResponse(line);
                     if (line == null) line = this.user.bot.MBrain.GetRandomResponse();
                     Unifiable result = line;
-                    // Console.WriteLine(line);
+                    // RTPBot.writeDebugLine(line);
                     return result;
                 }
             }
@@ -665,13 +666,13 @@ public class MBrain
           if ((skewv == bestskew && myresp.Text.Length < bestResponse.Text.Length) || (skewv < bestskew))
           {
               bestd = diff; bestResponse = myresp; bestskew = skewv;
-             Console.WriteLine("MKOV: {0} to {1} -->{2} {3} | tg={4}| pb={5} sk={6} tx={7}", bestd,diff, boostcount, k, target, myresp.Probability,skewv,myresp.Text);
+             RTPBot.writeDebugLine("MKOV: {0} to {1} -->{2} {3} | tg={4}| pb={5} sk={6} tx={7}", bestd,diff, boostcount, k, target, myresp.Probability,skewv,myresp.Text);
 
           }
           //}
           duration = DateTime.Now - starttime ;
       } while ((Math.Abs(duration.TotalMilliseconds) < 7500)||(thinkticks<3000));
-      Console.WriteLine(" ----\n **** Markov generator thunk {0} turns in {1} milliseconds : {2} --> {3}@df={4} sk={5} tx={6}**** \n", thinkticks, duration.TotalMilliseconds, bestResponse.Keyword, bestResponse.Probability, bestd, bestskew,bestResponse.Text);
+      RTPBot.writeDebugLine(" ----\n **** Markov generator thunk {0} turns in {1} milliseconds : {2} --> {3}@df={4} sk={5} tx={6}**** \n", thinkticks, duration.TotalMilliseconds, bestResponse.Keyword, bestResponse.Probability, bestd, bestskew,bestResponse.Text);
       return lastReply = bestResponse.Text;
   }
 
@@ -753,7 +754,7 @@ public class MBrain
       text = text.Replace("<unk>", "something");
       text = text.Replace("<unk/>", "something");
 
-      //Console.WriteLine("NGram-Learn {0} -> {1}", text, occurances);
+      //RTPBot.writeDebugLine("NGram-Learn {0} -> {1}", text, occurances);
       string[] chunks = Tokenize(text, true);
       if (correctSpelling) CorrectSpelling(chunks);
 
@@ -777,11 +778,11 @@ public class MBrain
   while ((linecount < 80000) && ((line = tr.ReadLine()) != null))
     {
         linecount++;
-        if (linecount % 1000 == 0) { Console.WriteLine("Mlearn {0}", linecount); }
+        if (linecount % 1000 == 0) { RTPBot.writeDebugLine("Mlearn {0}", linecount); }
        line = line.Trim();
       if(line.Length!=0 && line[0]!='#') Learn(line, false);
     }
-    Console.WriteLine("Last Line Mlearn {0}", linecount);
+    RTPBot.writeDebugLine("Last Line Mlearn {0}", linecount);
   }
 
   public void LearnNgram(System.IO.TextReader tr)
@@ -793,7 +794,7 @@ public class MBrain
           while ((linecount < 8000000) && ((line = tr.ReadLine()) != null))
           {
               linecount++;
-              if (linecount % 1000 == 0) { Console.WriteLine("NG-learn {0}", linecount); }
+              if (linecount % 1000 == 0) { RTPBot.writeDebugLine("NG-learn {0}", linecount); }
               line = line.Trim();
               if (line.Length != 0 && line[0] != '#') LearnNGram(line, false);
           }
@@ -801,7 +802,7 @@ public class MBrain
       catch (Exception e)
       {
       }
-      Console.WriteLine("Last Line NG-learn {0}", linecount);
+      RTPBot.writeDebugLine("Last Line NG-learn {0}", linecount);
   }
 
   struct Response

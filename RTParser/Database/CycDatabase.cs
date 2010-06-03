@@ -289,7 +289,7 @@ namespace RTParser.Database
             catch (Exception)
             {                
             }
-            Console.WriteLine("!NonVerbalCommunicating = " + id);
+            RTPBot.writeDebugLine("!NonVerbalCommunicating = " + id);
             //cycAccess.setCyclist("CycAdministrator");
         }
 
@@ -307,7 +307,7 @@ namespace RTParser.Database
             catch (Exception e)
             {
                 string s = "" + e;
-                Console.WriteLine(s);
+                RTPBot.writeDebugLine(s);
                 writeToLog(s);
                 return null;
             }
@@ -321,7 +321,7 @@ namespace RTParser.Database
             catch (Exception e)
             {
                 string s = "" + e;
-                Console.WriteLine(s);
+                RTPBot.writeDebugLine(s);
                 writeToLog(s);
                 return null;
             }
@@ -432,7 +432,7 @@ namespace RTParser.Database
 
         public void WriteConfig()
         {
-            Console.WriteLine("Cyc loaded");
+            RTPBot.writeDebugLine("Cyc loaded");
         }
     }
 }
