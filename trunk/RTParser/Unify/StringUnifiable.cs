@@ -233,7 +233,10 @@ namespace RTParser
             if (String.IsNullOrEmpty(str)) return Unifiable.Empty;
             //int i = str.IndexOfAny(BRKCHARS);
             //if (i == -1) return Create(str);
-            return ToArray()[0];
+            var s = ToArray();
+            if (s == null) return null;
+            if (s.Length < 1) return Empty;
+            return s[0];
             //string rest = str.Substring(0, i - 1);
             //return Create(rest.Trim());
         }

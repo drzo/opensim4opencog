@@ -30,7 +30,7 @@ namespace cogbot.Actions.Agent
                 {
                     SimAvatar a = (SimAvatar)p;
                     Success("Showing " + a);
-                    TheBotClient.Invoke(() =>
+                    TheBotClient.InvokeGUI(() =>
                                         new Radegast.frmProfile(TheBotClient.TheRadegastInstance, a.GetName(), a.ID).Show());
                 }
             }            

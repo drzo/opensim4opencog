@@ -1120,6 +1120,7 @@ namespace RTParser
         }
         private void AddHeardPreds0(Unifiable unifiable, SettingsDictionary dictionary)
         {
+            if (unifiable.IsEmpty) return;
             Unifiable first = unifiable.First();
             if (first.IsEmpty) return;
             Unifiable rest = unifiable.Rest();
