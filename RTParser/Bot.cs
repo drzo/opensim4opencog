@@ -2061,7 +2061,7 @@ The AIMLbot program.
             String s = null;
             while (true)
             {
-                Console.Write("You: ");
+                Console.Write(myUser.ShortName+": ");
                 Console.Out.Flush();
                 string input = Console.ReadLine();
                 if (input == null || input.ToLower() == "quit")
@@ -2075,7 +2075,7 @@ The AIMLbot program.
                 }
                 if (input == "set")
                 {
-                    Console.WriteLine(myBot.HeardPredicates.ToDebugString());
+                    //Console.WriteLine(myBot.HeardPredicates.ToDebugString());
                     Console.WriteLine(myBot.GlobalSettings.ToDebugString());
                     Console.WriteLine(myUser.Predicates.ToDebugString());
                     Console.WriteLine("Bot: " + s);
