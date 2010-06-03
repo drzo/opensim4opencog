@@ -151,10 +151,41 @@
 <template><think><set name="favorite"><star index="1"/></set> = <set name="star_1"><star index="2"/></set></think></template>
 </category>
 
-<category>
-<pattern>XFIND *</pattern>
-<template><srai graph="opencyc">CYCFIND <star/></srai></template>
-</category>
+  <category>
+    <pattern>XFIND *</pattern>
+    <template>
+        <star/><get name="star_1"/> ... <srai graph="opencyc">CYCFIND <star/></srai>
+    </template>
+  </category>
+
+  <!-- 
+   MSMM to msm   
+   We are in graph="default"   
+  -->
+  
+  <category>
+    <pattern>TOMSM *</pattern>
+    <template>
+      <srai graph="msm">
+        <star/>
+      </srai>
+    </template>
+  </category>
+
+  <!-- 
+   TOMSM MSM HOW ARE YOU
+  -->
+  <aiml graph="msm">
+    <category>
+      <pattern>MSM *</pattern>
+      <template>
+        <processmsm name="main">
+          <star/>
+        </processmsm>
+      </template>
+    </category>
+  </aiml>
+
 </aiml>
 
 
