@@ -1110,7 +1110,12 @@ namespace RTParser
 
         private void AddHeardPreds(string message, SettingsDictionary dictionary)
         {
-            AddHeardPreds0(message, dictionary);
+            if (message == null) return;
+
+            foreach (var s in message.Trim().Split(new char[] {'!', '?', '.'}, StringSplitOptions.RemoveEmptyEntries))
+            {
+                AddHeardPreds0(s, dictionary);
+            }
             //RTPBot.writeDebugLine("" + dictionary.ToDebugString());
         }
         private void AddHeardPreds0(Unifiable unifiable, SettingsDictionary dictionary)
@@ -2061,11 +2066,11 @@ The AIMLbot program.
             String s = null;
             while (true)
             {
+                System.Console.WriteLine("-----------------------------------------------------------------");
+                System.Console.WriteLine("-----------------------------------------------------------------");
                 RTPBot.writeDebugLine("-----------------------------------------------------------------");
                 RTPBot.writeDebugLine("-----------------------------------------------------------------");
-                RTPBot.writeDebugLine("-----------------------------------------------------------------");
-                RTPBot.writeDebugLine("-----------------------------------------------------------------");
-                Console.Write(myUser.ShortName + ": ");
+                System.Console.Write(myUser.ShortName + ": ");
                 Console.Out.Flush();
                 string input = Console.ReadLine();
                 if (input == null || input.ToLower() == "quit")
@@ -2074,30 +2079,31 @@ The AIMLbot program.
                 }
                 if (String.IsNullOrEmpty(input))
                 {
-                    RTPBot.writeDebugLine("Bot: " + s);
+                    System.Console.WriteLine("Bot: " + s);
                     continue;
                 }
                 if (input == "set")
                 {
-                    RTPBot.writeDebugLine(myBot.HeardPredicates.ToDebugString());
-                    RTPBot.writeDebugLine(myBot.GlobalSettings.ToDebugString());
-                    RTPBot.writeDebugLine(myUser.Predicates.ToDebugString());
-                    RTPBot.writeDebugLine("Bot: " + s);
+                    System.Console.WriteLine(myBot.HeardPredicates.ToDebugString());
+                    System.Console.WriteLine(myBot.GlobalSettings.ToDebugString());
+                    System.Console.WriteLine(myUser.Predicates.ToDebugString());
+                    System.Console.WriteLine("Bot: " + s);
                     continue;
                 }
                 try
                 {
                     if (input.StartsWith("load"))
                     {
-                        s = input.Substring(4).Trim();
-                        myBot.Loader.loadAIML(s);
+                        string ss = input.Substring(4).Trim();
+                        myBot.Loader.loadAIML(ss);
+                        System.Console.WriteLine("Done with " + ss);
                         continue;
                     }
                     if (input.StartsWith("self"))
                     {
                         s = input.Substring(4).Trim();
                         myBot.HeardSelfSay0(s);
-                        RTPBot.writeDebugLine("Bot: " + s);
+                        System.Console.WriteLine("Bot: " + s);
                     }
                     else
                     {
@@ -2109,11 +2115,11 @@ The AIMLbot program.
                         s = res.Output;
                         myBot.HeardSelfSay0(s);
                     }
-                    RTPBot.writeDebugLine("Bot> " + s);
+                    System.Console.WriteLine("Bot> " + s);
                 }
                 catch (Exception e)
                 {
-                    RTPBot.writeDebugLine("Error: " + e);
+                    System.Console.WriteLine("Error: " + e);
                 }
             }
 
