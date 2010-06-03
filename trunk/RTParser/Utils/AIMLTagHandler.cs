@@ -49,7 +49,7 @@ namespace RTParser.Utils
             }
             catch (Exception e)
             {
-                Console.WriteLine("" + e);
+                RTPBot.writeDebugLine("" + e);
             }
             return name;
         }
@@ -218,12 +218,12 @@ namespace RTParser.Utils
                 doc.Load(sr);
                 if (doc.ChildNodes.Count == 0)
                 {
-                    Console.WriteLine("NULL outerXML=" + outerXML);
+                    RTPBot.writeDebugLine("NULL outerXML=" + outerXML);
                     return null;
                 }
                 if (doc.ChildNodes.Count != 1)
                 {
-                    Console.WriteLine("1 != outerXML=" + outerXML);
+                    RTPBot.writeDebugLine("1 != outerXML=" + outerXML);
                 }
                 var temp = doc.FirstChild;
                 if (temp is LineInfoElement)
@@ -235,7 +235,7 @@ namespace RTParser.Utils
             }
             catch (Exception exception)            
             {
-                Console.WriteLine("outerXML=" + outerXML);
+                RTPBot.writeDebugLine("outerXML=" + outerXML);
                 throw exception;
             }
         }
@@ -249,12 +249,12 @@ namespace RTParser.Utils
                 doc.Load(sr);
                 if (doc.ChildNodes.Count == 0)
                 {
-                    Console.WriteLine("NULL outerXML=" + outerXML);
+                    RTPBot.writeDebugLine("NULL outerXML=" + outerXML);
                     return null;
                 }
                 if (doc.ChildNodes.Count != 1)
                 {
-                    Console.WriteLine("1 != outerXML=" + outerXML);
+                    RTPBot.writeDebugLine("1 != outerXML=" + outerXML);
                 }
                 var temp = doc.FirstChild;
                 if (temp is LineInfoElement)
@@ -267,7 +267,7 @@ namespace RTParser.Utils
             }
             catch (Exception exception)
             {
-                Console.WriteLine("outerXML=" + outerXML);
+                RTPBot.writeDebugLine("outerXML=" + outerXML);
                 throw exception;
             }
         }

@@ -46,12 +46,12 @@ namespace RTParser.AIMLTagHandlers
                 int d = request.GetCurrentDepth();
                 if (d > 30)
                 {
-                    Console.WriteLine("WARNING Depth pretty deep " + f + " returning empty");
+                    RTPBot.writeDebugLine("WARNING Depth pretty deep " + f + " returning empty");
                     return Unifiable.Empty;
                 }
                 if (depth > 30)
                 {
-                    Console.WriteLine("WARNING Depth pretty deep " + f + " returning empty");
+                    RTPBot.writeDebugLine("WARNING Depth pretty deep " + f + " returning empty");
                     return Unifiable.Empty;
                 }
                 XmlNode node = new XmlDocument().ReadNode(new XmlTextReader(new System.IO.StringReader(f.ToString())));

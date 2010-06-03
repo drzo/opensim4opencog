@@ -109,7 +109,7 @@ namespace RTParser.Utils
             if (info.FullPath.AsNodeXML().ToString().ToUpper() != pats.ToUpper())
             {
                 string s = "CheckMismatch " + info.FullPath.AsNodeXML().ToString() + "!=" + pats;
-                Console.WriteLine(s);
+                RTPBot.writeDebugLine(s);
                 throw new InvalidObjectException(s);
 
             }
@@ -203,7 +203,7 @@ namespace RTParser.Utils
                 GraphMaster Parent = new GraphMaster();
                 this.Parents.Add(Parent);
                 RootNode = Parent.RootNode;
-                System.Console.WriteLine("" + category);
+                System.RTPBot.writeDebugLine("" + category);
             }
             Node.addCategoryTag(RootNode, generatedPath, patternInfo, category, outerNode, templateNode, guard, thatInfo,
                                 this);
@@ -232,13 +232,13 @@ namespace RTParser.Utils
             var qr = ql.ToUList();
             if (qr.Count==0)
             {
-                Console.WriteLine("no templates for " + this);
+                RTPBot.writeDebugLine("no templates for " + this);
                 foreach (GraphMaster graphMaster in Parents)
                 {
                     var templs2 = graphMaster.evaluate(unifiable, query, request, state, matchState, index, appendable);
                     if (templs2.Count>0)
                     {
-                        Console.WriteLine("using parent templates from " + templs);
+                        RTPBot.writeDebugLine("using parent templates from " + templs);
                         return templs2;
                     }
                 }
@@ -296,7 +296,7 @@ namespace RTParser.Utils
                                             "WARNING! A problem was encountered when trying to process the input: " +
                                             request.rawInput + " with the template: \"" + s + "\"");
                                     }
-                                    Console.WriteLine(st);
+                                    RTPBot.writeDebugLine(st);
                                     //if (found0) break;
                                 }
                             }
@@ -330,7 +330,7 @@ namespace RTParser.Utils
 
         public void RemoveTemplate(TemplateInfo templateInfo)
         {
-            //System.Console.WriteLine("removing " + templateInfo.CategoryInfo.ToString());
+            //System.RTPBot.writeDebugLine("removing " + templateInfo.CategoryInfo.ToString());
             Templates.Remove(templateInfo);
         }
 
@@ -340,11 +340,11 @@ namespace RTParser.Utils
             {
                 foreach (KeyValuePair<string, TopicInfo> info in Topics)
                 {
-                    Console.WriteLine("topic = " + info.Key);
+                    RTPBot.writeDebugLine("topic = " + info.Key);
                 }
                 foreach (KeyValuePair<string, ThatInfo> info in Thats)
                 {
-                    Console.WriteLine("that = " + info.Key);
+                    RTPBot.writeDebugLine("that = " + info.Key);
                 }
             }
         }
