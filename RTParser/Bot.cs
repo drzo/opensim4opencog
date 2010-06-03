@@ -2061,7 +2061,11 @@ The AIMLbot program.
             String s = null;
             while (true)
             {
-                Console.Write(myUser.ShortName+": ");
+                Console.WriteLine("-----------------------------------------------------------------");
+                Console.WriteLine("-----------------------------------------------------------------");
+                Console.WriteLine("-----------------------------------------------------------------");
+                Console.WriteLine("-----------------------------------------------------------------");
+                Console.Write(myUser.ShortName + ": ");
                 Console.Out.Flush();
                 string input = Console.ReadLine();
                 if (input == null || input.ToLower() == "quit")
