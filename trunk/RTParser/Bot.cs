@@ -1111,7 +1111,7 @@ namespace RTParser
         private void AddHeardPreds(string message, SettingsDictionary dictionary)
         {
             AddHeardPreds0(message, dictionary);
-            RTPBot.writeDebugLine("" + dictionary.ToDebugString());
+            //RTPBot.writeDebugLine("" + dictionary.ToDebugString());
         }
         private void AddHeardPreds0(Unifiable unifiable, SettingsDictionary dictionary)
         {
@@ -2079,7 +2079,7 @@ The AIMLbot program.
                 }
                 if (input == "set")
                 {
-                    //RTPBot.writeDebugLine(myBot.HeardPredicates.ToDebugString());
+                    RTPBot.writeDebugLine(myBot.HeardPredicates.ToDebugString());
                     RTPBot.writeDebugLine(myBot.GlobalSettings.ToDebugString());
                     RTPBot.writeDebugLine(myUser.Predicates.ToDebugString());
                     RTPBot.writeDebugLine("Bot: " + s);
