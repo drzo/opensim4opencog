@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using java.util;
 using RTParser;
 using RTParser.Utils;
 
@@ -138,7 +139,16 @@ namespace RTParser
             }
         }
 
-		#endregion
+        public string ShortName
+        {
+            get
+            {
+                if (this.Predicates != null && Predicates.containsSettingCalled("name")) return Predicates.grabSettingNoDebug("name");
+                return UserID.AsString().ToLower().Replace(" ", "_");
+            }            
+        }
+
+        #endregion
 		
 		#region Methods
 
@@ -165,7 +175,6 @@ namespace RTParser
         {
             if (UserID.Length > 0)
             {
-                this.ShortName = UserID.ToLower().Replace(" ", ""); 
                 this.id = UserID;
                 this.bot = bot;
                 this.Predicates = new RTParser.Utils.SettingsDictionary(ShortName + ".predicates", this.bot, provider);
@@ -282,7 +291,7 @@ namespace RTParser
         }
 
         static public int MaxResultsSaved = 5;
-        public string ShortName;
+
         public bool SuspendAdd;
 
         /// <summary>
