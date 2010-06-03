@@ -30,7 +30,7 @@ namespace cogbot.Actions
             List<Primitive> PS = new List<Primitive>();
             WorldSystem.AsPrimitives(PS,PSO);
             if (IsEmpty(PS)) return Failure("Cannot find objects from " + string.Join(" ", args));
-            TheBotClient.Invoke(() =>
+            TheBotClient.InvokeGUI(() =>
                                     {
                                         frmPrimWorkshop pw = new frmPrimWorkshop(TheBotClient.TheRadegastInstance);
                                         pw.loadPrims(PS);

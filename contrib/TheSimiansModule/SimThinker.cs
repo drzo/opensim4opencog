@@ -560,7 +560,7 @@ namespace TheSimiansModule
                 if (_debugWindow == null || _debugWindow.IsDisposed)
                 {
                     BotClient gc = Actor.GetGridClient();
-                    gc.Invoke((() =>
+                    gc.InvokeGUI((() =>
                                                     {
                                                         try
                                                         {

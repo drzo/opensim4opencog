@@ -32,7 +32,7 @@ namespace cogbot.Actions.Groups
             GroupUUID = Client.GroupName2UUID(GroupName);
             if (UUID.Zero != GroupUUID)
             {
-                TheBotClient.Invoke(() =>
+                TheBotClient.InvokeGUI(() =>
                 {
                     Group group = new Group { ID = GroupUUID };
                     TheBotClient.TheRadegastInstance.MainForm.ShowGroupProfile(group);

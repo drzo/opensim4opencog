@@ -32,7 +32,7 @@ namespace cogbot.Actions.SimExport
                 return Failure("Cant get asset from " + AssetID);
             }
 
-            TheBotClient.Invoke(() =>
+            TheBotClient.InvokeGUI(() =>
                                     {
                                         var v = new SLImageHandler(TheBotClient.TheRadegastInstance, AssetID,
                                                                    AssetID.ToString()) {Dock = DockStyle.Fill};

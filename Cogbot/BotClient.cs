@@ -757,7 +757,7 @@ namespace cogbot
 
         public void DisplayNotificationInChat(string str)
         {
-            Invoke(() =>
+            InvokeGUI(() =>
                        {
                            WriteLine(str);
                            ChatConsole cc = (ChatConsole)TheRadegastInstance.TabConsole.Tabs["chat"].Control;
@@ -1756,12 +1756,12 @@ namespace cogbot
 
         public void ShowTab(string name)
         {
-            Invoke(() => TheRadegastInstance.TabConsole.GetTab(name.ToLower()).Select());
+            InvokeGUI(() => TheRadegastInstance.TabConsole.GetTab(name.ToLower()).Select());
         }
 
         public void AddTab(string name, string label, UserControl _debugWindow, EventHandler CloseDebug)
         {
-            Invoke(() =>
+            InvokeGUI(() =>
                        {
                            RadegastTab tab = TheRadegastInstance.TabConsole.AddTab(name.ToLower(), label, _debugWindow);
                            tab.AllowDetach = true;
@@ -1782,6 +1782,12 @@ namespace cogbot
         }
 
         public void Invoke(ThreadStart o)
+        {
+            Thread t = new Thread(o);
+            botCommandThreads.Add(t);
+            t.Start();
+        }
+        public void InvokeGUI(ThreadStart o)
         {
             if (TheRadegastInstance.MainForm.InvokeRequired)
             {
