@@ -54,7 +54,7 @@ namespace RTParser
         {
             get
             {
-                if (_topics.Count == 0) return new List<Unifiable>() {bot.NOTOPIC};
+                if (_topics.Count == 0) return new List<Unifiable>() { Topic };
                 return _topics;
             }
         }
@@ -75,7 +75,10 @@ namespace RTParser
         {
             get
             {
-                if (!this.Predicates.containsSettingCalled("topic")) return bot.NOTOPIC;
+                if (!this.Predicates.containsSettingCalled("topic"))
+                {
+                    return bot.NOTOPIC;
+                }
                 var t = this.Predicates.grabSetting("topic");
                 return t;
             }
