@@ -2197,7 +2197,7 @@ The AIMLbot program.
             string s = String.Format(p, args);
             if (lastOutput==s) return;
             lastOutput = s;
-            RTPBot.writeDebugLine(s);
+            System.Console.WriteLine(s);
         }
     }
 
