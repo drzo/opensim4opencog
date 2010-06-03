@@ -168,7 +168,7 @@ namespace RTParser
             }
             catch (Exception e)
             {
-                Console.WriteLine("" + e.Message + ": " +strTrim);
+                RTPBot.writeDebugLine("" + e.Message + ": " +strTrim);
             }
             return arrayOf(strTrim.Split(BRKCHARS, StringSplitOptions.RemoveEmptyEntries));
         }
@@ -334,7 +334,7 @@ namespace RTParser
             if (IsLazy())
             {
                 //todo 
-                Console.WriteLine("TODO " + str);
+                RTPBot.writeDebugLine("TODO " + str);
             }
             return AsString();
         }

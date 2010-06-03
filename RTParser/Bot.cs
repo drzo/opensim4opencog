@@ -827,13 +827,13 @@ namespace RTParser
                 catch (Exception)
                 {
                 }
-                Console.WriteLine(message);
+                RTPBot.writeDebugLine(message);
             }
             else
             {
                 //string m = message.AsString().ToLower();
                 //if (m.Contains("error") || m.Contains("excep"))
-                Console.WriteLine(message);
+                RTPBot.writeDebugLine(message);
             }
             this.LastLogMessage = message;
             if (this.IsLogging)
@@ -1031,7 +1031,7 @@ namespace RTParser
                     LastUser.LastResult.AddOutputSentences(message);
             }
             message = swapPerson(message);
-            Console.WriteLine("HEARDSELF SWAP: " + message);
+            RTPBot.writeDebugLine("HEARDSELF SWAP: " + message);
             return null;
             RunTask(() => HeardSelfSay0(message), "heardSelfSay: " + message, 500);
             return null;
@@ -1054,7 +1054,7 @@ namespace RTParser
                                                }
                                                catch (Exception e)
                                                {
-                                                   //Console.WriteLine("ERROR " + name + " " + e);
+                                                   //RTPBot.writeDebugLine("ERROR " + name + " " + e);
                                                }
                                            }
                                            finally
@@ -1077,7 +1077,7 @@ namespace RTParser
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine("ERROR " + name + " " + e);
+                        RTPBot.writeDebugLine("ERROR " + name + " " + e);
                     }
                 }
                 finally
@@ -1095,7 +1095,7 @@ namespace RTParser
         public AIMLbot.Result HeardSelfSay0(string message)
         {
             AddHeardPreds(message, HeardPredicates);
-            Console.WriteLine("HEARDSELF: " + message);
+            RTPBot.writeDebugLine("HEARDSELF: " + message);
             return null;
             try
             {
@@ -1103,7 +1103,7 @@ namespace RTParser
             }
             catch (Exception e)
             {
-                Console.WriteLine("" + e);
+                RTPBot.writeDebugLine("" + e);
                 return null;
             }
         }
@@ -1111,7 +1111,7 @@ namespace RTParser
         private void AddHeardPreds(string message, SettingsDictionary dictionary)
         {
             AddHeardPreds0(message, dictionary);
-            Console.WriteLine("" + dictionary.ToDebugString());
+            RTPBot.writeDebugLine("" + dictionary.ToDebugString());
         }
         private void AddHeardPreds0(Unifiable unifiable, SettingsDictionary dictionary)
         {
@@ -1399,7 +1399,7 @@ namespace RTParser
                 catch (Exception e)
                 {
                     string s = "" + e;
-                    Console.WriteLine(s);
+                    RTPBot.writeDebugLine(s);
                     writeToLog(s);
                     return false;
                 }
@@ -2061,10 +2061,10 @@ The AIMLbot program.
             String s = null;
             while (true)
             {
-                Console.WriteLine("-----------------------------------------------------------------");
-                Console.WriteLine("-----------------------------------------------------------------");
-                Console.WriteLine("-----------------------------------------------------------------");
-                Console.WriteLine("-----------------------------------------------------------------");
+                RTPBot.writeDebugLine("-----------------------------------------------------------------");
+                RTPBot.writeDebugLine("-----------------------------------------------------------------");
+                RTPBot.writeDebugLine("-----------------------------------------------------------------");
+                RTPBot.writeDebugLine("-----------------------------------------------------------------");
                 Console.Write(myUser.ShortName + ": ");
                 Console.Out.Flush();
                 string input = Console.ReadLine();
@@ -2074,15 +2074,15 @@ The AIMLbot program.
                 }
                 if (String.IsNullOrEmpty(input))
                 {
-                    Console.WriteLine("Bot: " + s);
+                    RTPBot.writeDebugLine("Bot: " + s);
                     continue;
                 }
                 if (input == "set")
                 {
-                    //Console.WriteLine(myBot.HeardPredicates.ToDebugString());
-                    Console.WriteLine(myBot.GlobalSettings.ToDebugString());
-                    Console.WriteLine(myUser.Predicates.ToDebugString());
-                    Console.WriteLine("Bot: " + s);
+                    //RTPBot.writeDebugLine(myBot.HeardPredicates.ToDebugString());
+                    RTPBot.writeDebugLine(myBot.GlobalSettings.ToDebugString());
+                    RTPBot.writeDebugLine(myUser.Predicates.ToDebugString());
+                    RTPBot.writeDebugLine("Bot: " + s);
                     continue;
                 }
                 try
@@ -2097,7 +2097,7 @@ The AIMLbot program.
                     {
                         s = input.Substring(4).Trim();
                         myBot.HeardSelfSay0(s);
-                        Console.WriteLine("Bot: " + s);
+                        RTPBot.writeDebugLine("Bot: " + s);
                     }
                     else
                     {
@@ -2109,11 +2109,11 @@ The AIMLbot program.
                         s = res.Output;
                         myBot.HeardSelfSay0(s);
                     }
-                    Console.WriteLine("Bot> " + s);
+                    RTPBot.writeDebugLine("Bot> " + s);
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("Error: " + e);
+                    RTPBot.writeDebugLine("Error: " + e);
                 }
             }
 
@@ -2135,7 +2135,7 @@ The AIMLbot program.
         {
             TheCyc.WriteConfig();
             GraphMaster.WriteConfig();
-            Console.WriteLine("Bot loaded");
+            RTPBot.writeDebugLine("Bot loaded");
         }
         public bool LoadPersonalDirectory(string myName)
         {
@@ -2197,7 +2197,7 @@ The AIMLbot program.
             string s = String.Format(p, args);
             if (lastOutput==s) return;
             lastOutput = s;
-            Console.WriteLine(s);
+            RTPBot.writeDebugLine(s);
         }
     }
 

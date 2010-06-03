@@ -302,7 +302,7 @@ namespace RTParser
         {
             if (SuspendAdd)
             {
-                Console.WriteLine("Skipping " + latestResult);
+                RTPBot.writeDebugLine("Skipping " + latestResult);
                 return;
             }
             this.Results.Insert(0, latestResult);

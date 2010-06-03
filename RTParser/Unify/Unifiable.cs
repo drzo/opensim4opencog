@@ -265,7 +265,7 @@ namespace RTParser
                     }
                     catch (Exception e)
                     {
-                        //Console.WriteLine(""+e);
+                        //RTPBot.writeDebugLine(""+e);
                         return UNIFY_FALSE;
                     }
                 }

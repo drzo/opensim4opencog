@@ -89,7 +89,7 @@ namespace RTParser.Utils
                     }
                     catch (Exception ee)
                     {
-                        Console.WriteLine("" + ee);
+                        RTPBot.writeDebugLine("" + ee);
                         RProcessor.writeToLog("Error in loadAIMLFile " + ee);
                     }
                 }

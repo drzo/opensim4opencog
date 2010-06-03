@@ -198,7 +198,7 @@ namespace RTParser.Utils
 
         private void writeToLog(string s)
         {
-            if (bot != null) bot.writeToLog(s); else Console.WriteLine(s);
+            if (bot != null) bot.writeToLog(s); else RTPBot.writeDebugLine(s);
         }
 
         /// <summary>
@@ -261,7 +261,7 @@ namespace RTParser.Utils
             {
                 if (value.AsString().Contains("<"))
                 {
-                    Console.WriteLine("BAD INPUT? " + value);
+                    RTPBot.writeDebugLine("BAD INPUT? " + value);
                 }
                 string key = MakeCaseInsensitive.TransformInput(Unifiable.Create(name));
                 SettingsLog("ADD Setting Local " + name + "=" + value);
@@ -425,11 +425,11 @@ namespace RTParser.Utils
         {
             if (NoDebug) return;
             var fc = new StackTrace().FrameCount;
-            Console.WriteLine("S: " + NameSpace + " (" + fc + ")   " + unifiable);
+            RTPBot.writeDebugLine("S: " + NameSpace + " (" + fc + ")   " + unifiable);
             if (fc > 200)
             {
                 //throw new 
-                Console.WriteLine("OVERFLOWING: " + NameSpace + " (" + fc + ")   " + unifiable);
+                RTPBot.writeDebugLine("OVERFLOWING: " + NameSpace + " (" + fc + ")   " + unifiable);
                 //Console.ReadLine();
             }
         }
