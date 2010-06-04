@@ -15,6 +15,9 @@ namespace RTParser.Utils
 {
     public class GraphMaster
     {
+        private String graphName;
+        private RTPBot theBot;
+
         readonly public List<GraphMaster> Parents = new List<GraphMaster>();
 
         /// <summary>
@@ -48,6 +51,11 @@ namespace RTParser.Utils
         /// </summary>
         readonly public List<GuardInfo> Guards = new List<GuardInfo>();
 
+        public GraphMaster(string gn, RTPBot bot)
+        {
+            graphName = gn;
+            theBot = bot;
+        }
 
         public PatternInfo FindPattern(XmlNode pattern, Unifiable unifiable)
         {
@@ -141,8 +149,10 @@ namespace RTParser.Utils
 
 
         public Node RootNode = new RTParser.Utils.Node(null);
-        public int Size;
+        public int Size = 0;
         private GraphMaster _parent = null;
+        private int parent0 = 0;
+
         public GraphMaster Parent 
         {
             get
@@ -155,11 +165,19 @@ namespace RTParser.Utils
                     }
                     else
                     {
-                        _parent = new GraphMaster();
+                        _parent = makeParent();
                     }
                 }
                 return _parent;
             }
+        }
+
+        private GraphMaster makeParent()
+        {
+            var p = new GraphMaster("" + graphName + ".parent" + (parent0 == 0 ? "" : "" + parent0), theBot);
+            parent0++;
+            Parents.Add(p);
+            return p;
         }
 
         /// <summary>
@@ -200,7 +218,7 @@ namespace RTParser.Utils
             var RootNode = this.RootNode;
             if(SilentTag(templateNode))
             {
-                GraphMaster Parent = new GraphMaster();
+                GraphMaster Parent = makeParent();
                 this.Parents.Add(Parent);
                 RootNode = Parent.RootNode;
                 RTPBot.writeDebugLine("" + category);
@@ -224,13 +242,19 @@ namespace RTParser.Utils
             return false;
         }
 
+
+        public override string ToString()
+        {
+            return "(Graph: " + graphName + ":" + Size + "]";
+        }
+
         public UList evaluate(UPath unifiable, SubQuery query, Request request, List<Unifiable> state, MatchState matchState, int index, Unifiable appendable)
         {
             DoParentEval(request, unifiable, query, state);
             QueryList ql = new QueryList();
             var templs = RootNode.evaluate(unifiable, query, request, state, matchState,index, appendable, ql);
             var qr = ql.ToUList();
-            if (qr.Count==0)
+            if (qr.Count>0) return qr;
             {
                 RTPBot.writeDebugLine("no templates for " + this);
                 foreach (GraphMaster graphMaster in Parents)
