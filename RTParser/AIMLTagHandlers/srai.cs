@@ -82,15 +82,15 @@ namespace RTParser.AIMLTagHandlers
                                               LineNumberTextInfo());
 
                        
-                        if (mybot.chatTrace != null)
+                        if (mybot.chatTrace)
                         {
-                           //  mybot.chatTrace.WriteLine("\"L{0}\" -> \"S{1}\" ;\n", depth - 1, depth-1);
-                          // mybot.chatTrace.WriteLine("\"L{0}\" -> \"S{1}\" ;\n", depth, depth);
-                            //mybot.chatTrace.WriteLine("\"S{0}\" -> \"SRC:{1}\" ;\n", depth, LineNumberTextInfo());
+                           //  mybot.bot.writeChatTrace("\"L{0}\" -> \"S{1}\" ;\n", depth - 1, depth-1);
+                          // mybot.bot.writeChatTrace("\"L{0}\" -> \"S{1}\" ;\n", depth, depth);
+                            //mybot.bot.writeChatTrace("\"S{0}\" -> \"SRC:{1}\" ;\n", depth, LineNumberTextInfo());
 
-                            //mybot.chatTrace.WriteLine("\"S{0}\" -> \"S{1}\" ;\n", depth - 1, depth);
-                            //mybot.chatTrace.WriteLine("\"S{0}\" -> \"SIN:{1}\" ;\n", depth, subRequestrawInput);
-                            //mybot.chatTrace.WriteLine("\"SIN:{0}\" -> \"LN:{1}\" ;\n", subRequestrawInput, LineNumberTextInfo());
+                            //mybot.bot.writeChatTrace("\"S{0}\" -> \"S{1}\" ;\n", depth - 1, depth);
+                            //mybot.bot.writeChatTrace("\"S{0}\" -> \"SIN:{1}\" ;\n", depth, subRequestrawInput);
+                            //mybot.bot.writeChatTrace("\"SIN:{0}\" -> \"LN:{1}\" ;\n", subRequestrawInput, LineNumberTextInfo());
                         }
                         if (depth > 200)
                         {
@@ -121,15 +121,15 @@ namespace RTParser.AIMLTagHandlers
                         {
                             if (showDebug)
                                 RTPBot.writeDebugLine(" SRAI<-- (" + depth + ") MISSING <----- @ " + LineNumberTextInfo());
-                            if (mybot.chatTrace != null)
+                            if (mybot.chatTrace)
                             {
-                                mybot.chatTrace.WriteLine("\"L{0}\" -> \"S{1}\" ;\n", depth, depth);
-                                mybot.chatTrace.WriteLine("\"S{0}\" -> \"SIN:{1}\" ;\n", depth, subRequestrawInput);
-                                //mybot.chatTrace.WriteLine("\"SIN:{0}\" -> \"LN:{1}\" ;\n", subRequestrawInput, LineNumberTextInfo());
-                                mybot.chatTrace.WriteLine("\"SIN:{0}\" -> \"PATH:{1}\" [label=\"{2}\"] ;\n", subRequestrawInput, depth,subResult.NormalizedPaths);
-                                mybot.chatTrace.WriteLine("\"PATH:{0}\" -> \"LN:{1}\" [label=\"{2}\"] ;\n", depth, depth, LineNumberTextInfo());
+                                mybot.writeChatTrace("\"L{0}\" -> \"S{1}\" ;\n", depth, depth);
+                                mybot.writeChatTrace("\"S{0}\" -> \"SIN:{1}\" ;\n", depth, subRequestrawInput);
+                                //mybot.writeChatTrace("\"SIN:{0}\" -> \"LN:{1}\" ;\n", subRequestrawInput, LineNumberTextInfo());
+                                mybot.writeChatTrace("\"SIN:{0}\" -> \"PATH:{1}\" [label=\"{2}\"] ;\n", subRequestrawInput, depth,subResult.NormalizedPaths);
+                                mybot.writeChatTrace("\"PATH:{0}\" -> \"LN:{1}\" [label=\"{2}\"] ;\n", depth, depth, LineNumberTextInfo());
                                 
-                                mybot.chatTrace.WriteLine("\"LN:{0}\" -> \"RPY:MISSING({1})\" ;\n", depth, depth);
+                                mybot.writeChatTrace("\"LN:{0}\" -> \"RPY:MISSING({1})\" ;\n", depth, depth);
                             }
 
                             return Unifiable.Empty;
@@ -140,13 +140,13 @@ namespace RTParser.AIMLTagHandlers
                                 RTPBot.writeDebugLine(" SRAI<-- (" + depth + ")" + subQueryRawOutput + " @ " + LineNumberTextInfo());
                         }
 
-                        if (mybot.chatTrace != null)
+                        if (mybot.chatTrace)
                         {
-                            mybot.chatTrace.WriteLine("\"L{0}\" -> \"S{1}\" ;\n", depth, depth);
-                            mybot.chatTrace.WriteLine("\"S{0}\" -> \"SIN:{1}\" ;\n", depth, subRequestrawInput);
-                            mybot.chatTrace.WriteLine("\"SIN:{0}\" -> \"PATH:{1}\" [label=\"{2}\"] ;\n", subRequestrawInput, depth, subResult.NormalizedPaths);
-                            mybot.chatTrace.WriteLine("\"PATH:{0}\" -> \"LN:{1}\" [label=\"{2}\"] ;\n", depth, depth, LineNumberTextInfo());
-                            mybot.chatTrace.WriteLine("\"LN:{0}\" -> \"RPY:{1}\" ;\n", depth, subQueryRawOutput);
+                            mybot.writeChatTrace("\"L{0}\" -> \"S{1}\" ;\n", depth, depth);
+                            mybot.writeChatTrace("\"S{0}\" -> \"SIN:{1}\" ;\n", depth, subRequestrawInput);
+                            mybot.writeChatTrace("\"SIN:{0}\" -> \"PATH:{1}\" [label=\"{2}\"] ;\n", subRequestrawInput, depth, subResult.NormalizedPaths);
+                            mybot.writeChatTrace("\"PATH:{0}\" -> \"LN:{1}\" [label=\"{2}\"] ;\n", depth, depth, LineNumberTextInfo());
+                            mybot.writeChatTrace("\"LN:{0}\" -> \"RPY:{1}\" ;\n", depth, subQueryRawOutput);
                         }
                         return subResult.Output;
                     }
