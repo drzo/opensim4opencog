@@ -2042,7 +2042,7 @@ The AIMLbot program.
             }
             return g;
         }
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
             Bot myBot = new Bot();
             myBot.loadSettings();
