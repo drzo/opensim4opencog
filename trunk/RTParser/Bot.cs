@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using System.IO;
@@ -231,6 +232,8 @@ namespace RTParser
                 }
             }
         }
+
+        public Object LoggingLock = new object();
 
         /// <summary>
         /// Flag to denote if the Proccessor will email the botmaster using the AdminEmail setting should an error
@@ -813,9 +816,9 @@ namespace RTParser
             {
             }
             message = ("[" + DateTime.Now.ToString() + "]: " + message.Trim() + Environment.NewLine);
-            writeToLog0(Unifiable.Create(message));
+            writeToLog0(message);
         }
-        public void writeToLog0(Unifiable message)
+        public void writeToLog0(string message)
         {
 
             if (outputDelegate != null)
@@ -836,7 +839,8 @@ namespace RTParser
                 RTPBot.writeDebugLine(message);
             }
             this.LastLogMessage = message;
-            if (this.IsLogging)
+            if (!this.IsLogging) return;
+            lock (this.LoggingLock)
             {
                 //  this.LogBuffer.Add(DateTime.Now.ToString() + ": " + message + Environment.NewLine);
                 this.LogBuffer.Add(message);
@@ -1112,7 +1116,7 @@ namespace RTParser
         {
             if (message == null) return;
 
-            foreach (var s in message.Trim().Split(new char[] {'!', '?', '.'}, StringSplitOptions.RemoveEmptyEntries))
+            foreach (var s in message.Trim().Split(new char[] { '!', '?', '.' }, StringSplitOptions.RemoveEmptyEntries))
             {
                 AddHeardPreds0(s, dictionary);
             }
@@ -1138,22 +1142,18 @@ namespace RTParser
         }
 
 
-        /// <summary>
-        /// Given a request containing user input, produces a result from the Proccessor
-        /// </summary>
-        /// <param name="request">the request from the user</param>
-        /// <returns>the result to be output to the user</returns>
-        /// 
-        public int streamDepth = 0;
-        public StreamWriter chatTrace;
-
-
         public Unifiable CleanupCyc(string text)
         {
             if (TheCyc == null) return text.Replace("#$", " ").Replace("  ", " ");
             return TheCyc.CleanupCyc(text);
         }
 
+        /// <summary>
+        /// Given a request containing user input, produces a result from the Proccessor
+        /// </summary>
+        /// <param name="request">the request from the user</param>
+        /// <returns>the result to be output to the user</returns>
+        /// 
         public AIMLbot.Result Chat(Request request)
         {
             try
@@ -1170,12 +1170,7 @@ namespace RTParser
         {
             LastUser = request.user ?? LastUser;
             //chatTrace = null;
-            if (false && chatTrace == null)
-            {
-                chatTrace = new StreamWriter("bgm\\chatTrace.dot");
-                chatTrace.WriteLine("digraph G {");
-                streamDepth = 0;
-            }
+
             streamDepth++;
 
             AIMLbot.Result result = new AIMLbot.Result(request.user, this, request);
@@ -1249,13 +1244,13 @@ namespace RTParser
                     foreach (var path in result.SubQueries)
                     {
                         writeToLog("\r\n tt: " + path.ToString().Replace("\n", " ").Replace("\r", " ").Replace("  ", " "));
-                        if (chatTrace != null)
+                        if (chatTrace)
                         {
-                            //chatTrace.WriteLine("\"L{0}\" -> \"{1}\" ;\n", result.SubQueries.Count, path.FullPath.ToString());
-                            chatTrace.WriteLine("\"L{0}\" -> \"L{1}\" ;\n", result.SubQueries.Count - 1, result.SubQueries.Count);
-                            chatTrace.WriteLine("\"L{0}\" -> \"REQ:{1}\" ;\n", result.SubQueries.Count, request.ToString());
-                            chatTrace.WriteLine("\"REQ:{0}\" -> \"PATH:{1}\" [label=\"{2}\"];\n", request.ToString(), result.SubQueries.Count, path.FullPath.ToString());
-                            chatTrace.WriteLine("\"REQ:{0}\" -> \"RPY:{1}\" ;\n", request.ToString(), result.RawOutput.ToString());
+                            //bot.writeChatTrace("\"L{0}\" -> \"{1}\" ;\n", result.SubQueries.Count, path.FullPath.ToString());
+                            writeChatTrace("\"L{0}\" -> \"L{1}\" ;\n", result.SubQueries.Count - 1, result.SubQueries.Count);
+                            writeChatTrace("\"L{0}\" -> \"REQ:{1}\" ;\n", result.SubQueries.Count, request.ToString());
+                            writeChatTrace("\"REQ:{0}\" -> \"PATH:{1}\" [label=\"{2}\"];\n", request.ToString(), result.SubQueries.Count, path.FullPath.ToString());
+                            writeChatTrace("\"REQ:{0}\" -> \"RPY:{1}\" ;\n", request.ToString(), result.RawOutput.ToString());
                         }
                     }
                 }
@@ -1270,14 +1265,47 @@ namespace RTParser
             request.user.addResult(result);
             streamDepth--;
 
-            if (streamDepth <= 0 && chatTrace != null)
-            {
-                chatTrace.WriteLine("}");
-                chatTrace.Close();
-                chatTrace = null;
-            }
-
             return result;
+        }
+
+
+        public bool chatTrace = true;
+        private int streamDepth;
+        StreamWriter chatTraceW = null;
+        Object chatTraceO = new object();
+
+        public void writeChatTrace(string s, params object[] args)
+        {
+            if (!chatTrace) return;
+            try
+            {
+                lock (chatTraceO)
+                {
+                    if (chatTraceW == null)
+                    {
+                        chatTraceW = new StreamWriter("bgm\\chatTrace.dot");
+                        chatTraceW.WriteLine("digraph G {");
+                        streamDepth = 1;
+                    }
+                    if (streamDepth < 0) streamDepth = 0;
+                    int w = streamDepth;
+                    while (w-- < 0)
+                    {
+                        chatTraceW.Write("  ");
+                    }
+                    chatTraceW.WriteLine(String.Format(s, args));
+                    if (streamDepth <= 0 && chatTraceW != null)
+                    {
+                        chatTraceW.WriteLine("}");
+                        chatTraceW.Close();
+                        streamDepth = 0;
+                        chatTraceW = null;
+                    }
+                }
+            }
+            catch (Exception)
+            {
+            }
         }
 
         /// <summary>
@@ -2049,7 +2077,15 @@ The AIMLbot program.
             string myName = "BinaBot Daxeline";
             if (args != null && args.Length > 0)
             {
-                myName = String.Join(" ", args);
+                int si = 0;
+                int argsLeft = args.Length - si;
+                while (argsLeft > 0 && args[si].StartsWith("--"))
+                {
+                    si++;
+                    argsLeft--;
+                }
+                if (argsLeft > 0)
+                    myName = String.Join(" ", args, si, argsLeft);
             }
             User myUser = myBot.FindOrCreateUser(null); // UNKNOWN_PARTNER
             myBot.isAcceptingUserInput = false;
@@ -2198,13 +2234,29 @@ The AIMLbot program.
             }
         }
 
-        static string lastOutput="";
+        static string lastOutput = "";
         internal static void writeDebugLine(string p, params object[] args)
         {
-            string s = String.Format(p, args);
-            if (lastOutput==s) return;
-            lastOutput = s;
-            System.Console.WriteLine(s);
+            try
+            {
+                string s;
+                if (args == null || args.Length == 0)
+                {
+                    s = p;
+                }
+                else
+                {
+                    s = String.Format(p, args);
+                }
+
+                if (lastOutput == s) return;
+                lastOutput = s;
+                System.Console.WriteLine(s);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(p + " --> " + e);
+            }
         }
     }
 
