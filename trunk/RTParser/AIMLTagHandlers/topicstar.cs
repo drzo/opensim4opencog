@@ -51,13 +51,13 @@ namespace RTParser.AIMLTagHandlers
                     }
                     else
                     {
-                        this.Proc.writeToLog("ERROR! An out of bounds index " + result + " to TopicStar was encountered when processing the input: " + this.request.rawInput);
+                        writeToLog("ERROR! An out of bounds index " + result + " to TopicStar was encountered when processing the input: " + this.request.rawInput);
                     }
                     return GetAttribValue("default", Unifiable.Empty);
                 }
                 catch (Exception e)
                 {
-                    this.Proc.writeToLog("ERROR! A TopicStar tag with a bady formed index (" +
+                    writeToLog("ERROR! A TopicStar tag with a bady formed index (" +
                                          this.LineNumberTextInfo() + ") was encountered processing the input: " +
                                          this.request.rawInput + " " + e);
                 }

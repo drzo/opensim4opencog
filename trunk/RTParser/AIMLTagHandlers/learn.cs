@@ -63,7 +63,7 @@ namespace RTParser.AIMLTagHandlers
                         {
                             String s =
                                 "ERROR! Attempted (but failed) to <learn> some new AIML from the following URI: " + path + " error " + e2;
-                            this.Proc.writeToLog(s);
+                            writeToLog(s);
                         }
 
                     }

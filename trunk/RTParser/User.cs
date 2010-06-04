@@ -278,11 +278,11 @@ namespace RTParser
         }
 
         /// <summary>
-        /// Returns the identified sentence number from the output from the bot "n" steps ago
+        /// Returns the identified sentence number from the input from the bot "n" steps ago
         /// </summary>
         /// <param name="n">the number of steps back to go</param>
         /// <param name="sentence">the sentence number to return</param>
-        /// <returns>the identified sentence number from the output from the bot "n" steps ago</returns>
+        /// <returns>the identified sentence number from the input from the bot "n" steps ago</returns>
         public Unifiable getInputSentence(int n, int sentence)
         {
             if ((n >= 0) & (n < this.Results.Count))
