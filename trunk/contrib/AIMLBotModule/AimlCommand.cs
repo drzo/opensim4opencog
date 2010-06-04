@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Reflection;
+using System.Threading;
 using cogbot;
 using cogbot.Actions;
 using cogbot.Listeners;
@@ -24,7 +25,19 @@ namespace AIMLBotModule
         {
             get
             {
-                return (WorldObjectsForAimLBot)Client.listeners["AIMLBotModule"];
+                String mn = "AIMLBotModule";
+                Listener wmab;
+                var dict = Client.listeners;
+                while (true)
+                {
+                    lock (dict)
+                        if (dict.TryGetValue(mn, out wmab))
+                        {
+                            var v = (WorldObjectsForAimLBot)wmab;
+                            if (v.MyBot != null) return v;
+                        }
+                    Thread.Sleep(3000);
+                }
             }
         }
 
