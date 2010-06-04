@@ -7,8 +7,6 @@ using System.Text.RegularExpressions;
 using System.IO;
 using System.Threading;
 using System.Xml;
-using System.Text;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Reflection;
 using System.Net.Mail;
 using AIMLbot;
@@ -323,9 +321,10 @@ namespace RTParser
         }
 
 
-        GraphMaster _g = new GraphMaster();
+        private GraphMaster _g;
 
-        private GraphMaster _h = new GraphMaster();
+        private GraphMaster _h;
+
 
         /// <summary>
         /// The "brain" of the Proccessor
@@ -398,10 +397,13 @@ namespace RTParser
         /// </summary>
         public RTPBot()
         {
+            _g = new GraphMaster("default", this);
+            _h = new GraphMaster("HeardSelfSay", this);
             GraphsByName.Add("default", _g);
             GraphsByName.Add("HeardSelfSay", _h);
             this.setup();
             BotAsUser = new User("Self", this);
+            BotAsUser.ListeningGraph = HeardSelfSayGraph;
             BotAsUser.Predicates = GlobalSettings;
             BotAsRequest = new AIMLbot.Request("-bank-input-", BotAsUser, this, null);
             AddExcuteHandler("aiml", EvalAIMLHandler);
@@ -817,6 +819,12 @@ namespace RTParser
             }
             message = ("[" + DateTime.Now.ToString() + "]: " + message.Trim() + Environment.NewLine);
             writeToLog0(message);
+            if (message.ToUpper().Contains("ERROR"))
+            {
+                Console.WriteLine("-------------------");
+                Console.WriteLine(message);
+                Console.WriteLine("-------------------");
+            }
         }
         public void writeToLog0(string message)
         {
@@ -923,6 +931,14 @@ namespace RTParser
         {
             Request request = BotAsRequest;
             Loader.loadAIMLString("<aiml>" + aimlText + "</aiml>", LoaderOptions.GetDefault(request), request);
+        }
+        public void AddAiml(GraphMaster graph, string aimlText)
+        {
+            Request request = BotAsRequest;
+            request.Graph = graph;
+            LoaderOptions loader = LoaderOptions.GetDefault(request);
+            loader.Graph = graph;
+            Loader.loadAIMLString("<aiml>" + aimlText + "</aiml>", loader, request);
         }
 
         #region Conversation methods
@@ -1274,7 +1290,7 @@ namespace RTParser
         StreamWriter chatTraceW = null;
         Object chatTraceO = new object();
 
-        public void writeChatTrace(string s, params object[] args)
+        public void writeChatTrace(string message, params object[] args)
         {
             if (!chatTrace) return;
             try
@@ -1293,7 +1309,9 @@ namespace RTParser
                     {
                         chatTraceW.Write("  ");
                     }
-                    chatTraceW.WriteLine(String.Format(s, args));
+                    if (args != null && args.Length != 0) message = String.Format(message, args);
+                    chatTraceW.WriteLine(message);
+                    //writeDebugLine(message);
                     if (streamDepth <= 0 && chatTraceW != null)
                     {
                         chatTraceW.WriteLine("}");
@@ -2065,7 +2083,7 @@ The AIMLbot program.
             {
                 if (!GraphsByName.TryGetValue(botname, out g))
                 {
-                    g = GraphsByName[botname] = new GraphMaster();
+                    g = GraphsByName[botname] = new GraphMaster(botname, this);
                 }
             }
             return g;
@@ -2235,27 +2253,19 @@ The AIMLbot program.
         }
 
         static string lastOutput = "";
-        internal static void writeDebugLine(string p, params object[] args)
+        internal static void writeDebugLine(string message, params object[] args)
         {
             try
             {
-                string s;
-                if (args == null || args.Length == 0)
-                {
-                    s = p;
-                }
-                else
-                {
-                    s = String.Format(p, args);
-                }
 
-                if (lastOutput == s) return;
-                lastOutput = s;
-                System.Console.WriteLine(s);
+                if (args != null && args.Length != 0) message = String.Format(message, args);
+                if (lastOutput == message) return;
+                lastOutput = message;
+                System.Console.WriteLine(message);
             }
             catch (Exception e)
             {
-                Console.WriteLine(p + " --> " + e);
+                Console.WriteLine(message + " --> " + e);
             }
         }
     }

@@ -86,7 +86,7 @@ namespace RTParser
             this.user = user;
             this.Proccessor = bot;
             this.StartedOn = DateTime.Now;
-            this.Graph = bot.GraphMaster;
+            this.Graph = user.ListeningGraph ?? bot.GraphMaster;
             this.framesAtStart = new StackTrace().FrameCount;
         }
 

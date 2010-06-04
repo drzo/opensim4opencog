@@ -24,6 +24,11 @@ namespace RTParser.Utils
         /// </summary>
         private Dictionary<Unifiable, Node> children = new Dictionary<Unifiable, Node>();
 
+        public int Count
+        {
+            get { return children.Count; }
+        }
+
         /// <summary>
         /// The number of direct children (non-recursive) of this node
         /// </summary>

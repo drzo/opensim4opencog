@@ -29,6 +29,11 @@ namespace RTParser
         public RTParser.RTPBot bot;
 
         /// <summary>
+        /// The grahmaster this user is using
+        /// </summary>
+        public GraphMaster ListeningGraph;
+
+        /// <summary>
         /// The GUID that identifies this user to the bot
         /// </summary>
         public Unifiable UserID
@@ -173,6 +178,7 @@ namespace RTParser
         /// <param name="bot">the bot the user is connected to</param>
         public User(string UserID, RTParser.RTPBot bot, ParentProvider provider)
         {
+            ListeningGraph = bot.GraphMaster;
             if (UserID.Length > 0)
             {
                 this.id = UserID;
@@ -247,6 +253,44 @@ namespace RTParser
                 if ((sentence >= 0) & (sentence < historicResult.OutputSentenceCount))
                 {
                     return (Unifiable)historicResult.GetOutputSentence(sentence);
+                }
+            }
+            return Unifiable.Empty;
+        }
+
+        /// <summary>
+        /// Returns the first sentence of the last output from the bot
+        /// </summary>
+        /// <returns>the first sentence of the last output from the bot</returns>
+        public Unifiable getInputSentence()
+        {
+            return this.getInputSentence(0, 0);
+        }
+
+        /// <summary>
+        /// Returns the first sentence from the output from the bot "n" steps ago
+        /// </summary>
+        /// <param name="n">the number of steps back to go</param>
+        /// <returns>the first sentence from the output from the bot "n" steps ago</returns>
+        public Unifiable getInputSentence(int n)
+        {
+            return this.getInputSentence(n, 0);
+        }
+
+        /// <summary>
+        /// Returns the identified sentence number from the output from the bot "n" steps ago
+        /// </summary>
+        /// <param name="n">the number of steps back to go</param>
+        /// <param name="sentence">the sentence number to return</param>
+        /// <returns>the identified sentence number from the output from the bot "n" steps ago</returns>
+        public Unifiable getInputSentence(int n, int sentence)
+        {
+            if ((n >= 0) & (n < this.Inputs.Count))
+            {
+                Result historicInput = (Result)this.Results[n];
+                if ((sentence >= 0) & (sentence < historicInput.InputSentences.Count))
+                {
+                    return (Unifiable)historicInput.InputSentences[sentence];
                 }
             }
             return Unifiable.Empty;
