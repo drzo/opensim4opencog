@@ -1144,8 +1144,8 @@ namespace RTParser
         /// <param name="request">the request from the user</param>
         /// <returns>the result to be output to the user</returns>
         /// 
-        public StreamWriter chatTrace;
         public int streamDepth = 0;
+        public StreamWriter chatTrace;
 
 
         public Unifiable CleanupCyc(string text)
@@ -1170,7 +1170,7 @@ namespace RTParser
         {
             LastUser = request.user ?? LastUser;
             //chatTrace = null;
-            if (chatTrace == null)
+            if (false && chatTrace == null)
             {
                 chatTrace = new StreamWriter("bgm\\chatTrace.dot");
                 chatTrace.WriteLine("digraph G {");
