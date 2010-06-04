@@ -404,5 +404,10 @@ namespace RTParser.Utils
                 }
             }
         }
+
+        protected void writeToLog(String unifiable)
+        {
+            this.Proc.writeToLog(unifiable + " in " + ToString());
+        }
     }
 }
