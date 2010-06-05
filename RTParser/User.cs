@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 using java.util;
 using RTParser;
@@ -31,9 +32,31 @@ namespace RTParser
         /// <summary>
         /// The grahmaster this user is using
         /// </summary>
-        public GraphMaster ListeningGraph;
-
-        /// <summary>
+        public GraphMaster ListeningGraph
+        {
+            get
+            {
+                if (Predicates.containsSettingCalled("graphname"))
+                {
+                    var v = Predicates.grabSettingNoDebug("graphname");
+                    var g = bot.GetGraph(v, bot.GraphMaster);
+                    if (g != null) return g;
+                    bot.writeToLog("ERROR CANT FIND graphname");
+                    return bot.GraphMaster;
+                }
+                return bot.GraphMaster;
+            }
+            set
+            {
+                Predicates.addSetting("graphname", value.ScriptingName);
+                GraphMaster lg = ListeningGraph;
+                if (lg != value)
+                {
+                    bot.writeToLog("ERROR CANT FIND " + value.ScriptingName +" from " + lg);
+                }
+            }
+        }
+            /// <summary>
         /// The GUID that identifies this user to the bot
         /// </summary>
         public Unifiable UserID
@@ -178,13 +201,13 @@ namespace RTParser
         /// <param name="bot">the bot the user is connected to</param>
         public User(string UserID, RTParser.RTPBot bot, ParentProvider provider)
         {
-            ListeningGraph = bot.GraphMaster;
             if (UserID.Length > 0)
             {
                 this.id = UserID;
                 this.bot = bot;
                 this.Predicates = new RTParser.Utils.SettingsDictionary(ShortName + ".predicates", this.bot, provider);
                 this.bot.DefaultPredicates.Clone(this.Predicates);
+                ListeningGraph = bot.GraphMaster;
                 //this.Predicates.AddGetSetProperty("topic", new CollectionProperty(_topics, () => bot.NOTOPIC));
                 this.Predicates.addSetting("topic", bot.NOTOPIC);
                 this.Predicates.InsertFallback(() => bot.DefaultPredicates);

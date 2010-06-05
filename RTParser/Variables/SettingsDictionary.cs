@@ -45,6 +45,7 @@ namespace RTParser.Utils
         /// </summary>
         /// <param name="name">The setting name to check</param>
         /// <returns>Existential truth value</returns>
+        bool containsLocalCalled(string name);
         bool containsSettingCalled(string name);
 
         string NameSpace { get; }
@@ -265,6 +266,10 @@ namespace RTParser.Utils
                 }
                 string key = MakeCaseInsensitive.TransformInput(Unifiable.Create(name));
                 SettingsLog("ADD Setting Local " + name + "=" + value);
+                if (value=="")
+                {
+                    
+                }
                 if (key.Length > 0)
                 {
                     this.removeSetting(key);
@@ -335,11 +340,14 @@ namespace RTParser.Utils
             foreach (var parent in _overides)
             {
                 var p = parent();
-                if (p.updateSetting(name, value)) overriden = true;
+                if (p.updateSetting(name, value))
+                {
+                    SettingsLog("OVERRIDDEN UPDATE " + p + " " + name + "=" + value);
+                    overriden = true;
+                }
             }
             if (overriden)
             {
-                SettingsLog("UPDATE Sett override " + name + "=" + value);
                 return true;
             }
             lock (orderedKeys)
@@ -356,7 +364,11 @@ namespace RTParser.Utils
             }
             foreach (var parent in Parents)
             {
-                if (parent.updateSetting(name, value)) return true;
+                if (parent.updateSetting(name, value))
+                {
+                    SettingsLog("PARENT UPDATE " + parent + " " + name + "=" + value);
+                    return true;
+                }
             }
             return false;
         }
@@ -394,7 +406,7 @@ namespace RTParser.Utils
             lock (orderedKeys)
             {
                 string normalizedName = MakeCaseInsensitive.TransformInput(name);
-                if (this.containsSettingCalled(normalizedName))
+                if (this.containsLocalCalled(normalizedName))
                 {
                     Unifiable v = this.settingsHash[normalizedName];
                     SettingsLog("Returning LocalSetting " + name + "=" + v);
@@ -439,7 +451,7 @@ namespace RTParser.Utils
         /// </summary>
         /// <param name="name">The setting name to check</param>
         /// <returns>Existential truth value</returns>
-        public bool containsSettingCalled(string name)
+        public bool containsLocalCalled(string name)
         {
             name = name.Trim();
             lock (orderedKeys)
@@ -454,6 +466,12 @@ namespace RTParser.Utils
                     return false;
                 }
             }
+        }
+
+        public bool containsSettingCalled(string name)
+        {
+            var value = grabSettingNoDebug(name);
+            return !Unifiable.IsNullOrEmpty(value);
         }
 
         /// <summary>
@@ -478,7 +496,7 @@ namespace RTParser.Utils
             get
             {
                 var ps = new List<ISettingsDictionary>();
-                foreach (var hash in _parent)
+                lock (_parent) foreach (var hash in _parent)
                 {
                     ps.Add(hash());
 
@@ -559,9 +577,15 @@ namespace RTParser.Utils
         {
             if (NoDebug) return grabSetting(name);
             NoDebug = true;
-            var v = grabSetting(name);
-            NoDebug = false;
-            return v;
+            try
+            {
+                var v = grabSetting(name);
+                return v;
+            }
+            finally
+            {
+                NoDebug = false;                
+            }
         }
     }
 }

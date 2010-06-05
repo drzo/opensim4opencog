@@ -623,129 +623,46 @@ namespace RTParser
             this.loadSplitters(Path.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("splittersfile")));
         }
 
-        private void SetSaneGlobals(SettingsDictionary settings)
+        private void SetSaneGlobals(ISettingsDictionary settings)
         {
-            if (!settings.containsSettingCalled("notopic"))
+            SaneLocalSettings(settings,"notopic", "Nothing");
+            SaneLocalSettings(settings,"version", Environment.Version.ToString());
+            SaneLocalSettings(settings,"name", "Unknown");
+            SaneLocalSettings(settings,"botmaster", "Unknown");
+            SaneLocalSettings(settings,"author", "Nicholas H.Tollervey");
+            SaneLocalSettings(settings,"location", "Unknown");
+            SaneLocalSettings(settings,"gender", "-1");
+            SaneLocalSettings(settings,"birthday", "2006/11/08");
+            SaneLocalSettings(settings,"birthplace", "Towcester, Northamptonshire, UK");
+            SaneLocalSettings(settings,"website", "http://sourceforge.net/projects/aimlbot");
+            this.AdminEmail = SaneLocalSettings(settings, "adminemail", "");
+            SaneLocalSettings(settings,"islogging", "False");
+            SaneLocalSettings(settings,"willcallhome", "False");
+            SaneLocalSettings(settings,"timeout", "2000");
+            SaneLocalSettings(settings,"timeoutmessage", "ERROR: The request has timed out.");
+            SaneLocalSettings(settings,"culture", "en-US");
+            SaneLocalSettings(settings,"splittersfile", "Splitters.xml");
+            SaneLocalSettings(settings,"person2substitutionsfile", "Person2Substitutions.xml");
+            SaneLocalSettings(settings,"personsubstitutionsfile", "PersonSubstitutions.xml");
+            SaneLocalSettings(settings,"gendersubstitutionsfile", "GenderSubstitutions.xml");
+            SaneLocalSettings(settings,"defaultpredicates", "DefaultPredicates.xml");
+            SaneLocalSettings(settings,"substitutionsfile", "Substitutions.xml");
+            SaneLocalSettings(settings,"aimldirectory", "aiml");
+            SaneLocalSettings(settings,"configdirectory", "config");
+            SaneLocalSettings(settings,"logdirectory", "logs");
+            SaneLocalSettings(settings,"maxlogbuffersize", "64");
+            SaneLocalSettings(settings,"notacceptinguserinputmessage", "This Proccessor is currently set to not accept user input.");
+            SaneLocalSettings(settings,"stripperregex", "[^0-9a-zA-Z]");
+        }
+
+        private Unifiable SaneLocalSettings(ISettingsDictionary settings, string name, object value)
+        {
+            var res = settings.grabSetting(name);
+            if (!settings.containsLocalCalled(name))
             {
-                GlobalSettings.addSetting("notopic", "Nothing");
+                settings.addSetting(name, Unifiable.Create(value));
             }
-            if (!settings.containsSettingCalled("version"))
-            {
-                settings.addSetting("version", Environment.Version.ToString());
-            }
-            if (!settings.containsSettingCalled("name"))
-            {
-                settings.addSetting("name", "Unknown");
-            }
-            if (!settings.containsSettingCalled("botmaster"))
-            {
-                settings.addSetting("botmaster", "Unknown");
-            }
-            if (!settings.containsSettingCalled("master"))
-            {
-                settings.addSetting("botmaster", "Unknown");
-            }
-            if (!settings.containsSettingCalled("author"))
-            {
-                settings.addSetting("author", "Nicholas H.Tollervey");
-            }
-            if (!settings.containsSettingCalled("location"))
-            {
-                settings.addSetting("location", "Unknown");
-            }
-            if (!settings.containsSettingCalled("gender"))
-            {
-                settings.addSetting("gender", "-1");
-            }
-            if (!settings.containsSettingCalled("birthday"))
-            {
-                settings.addSetting("birthday", "2006/11/08");
-            }
-            if (!settings.containsSettingCalled("birthplace"))
-            {
-                settings.addSetting("birthplace", "Towcester, Northamptonshire, UK");
-            }
-            if (!settings.containsSettingCalled("website"))
-            {
-                settings.addSetting("website", "http://sourceforge.net/projects/aimlbot");
-            }
-            if (settings.containsSettingCalled("adminemail"))
-            {
-                Unifiable emailToCheck = settings.grabSetting("adminemail");
-                this.AdminEmail = emailToCheck;
-            }
-            else
-            {
-                settings.addSetting("adminemail", "");
-            }
-            if (!settings.containsSettingCalled("islogging"))
-            {
-                settings.addSetting("islogging", "False");
-            }
-            if (!settings.containsSettingCalled("willcallhome"))
-            {
-                settings.addSetting("willcallhome", "False");
-            }
-            if (!settings.containsSettingCalled("timeout"))
-            {
-                settings.addSetting("timeout", "2000");
-            }
-            if (!settings.containsSettingCalled("timeoutmessage"))
-            {
-                settings.addSetting("timeoutmessage", "ERROR: The request has timed out.");
-            }
-            if (!settings.containsSettingCalled("culture"))
-            {
-                settings.addSetting("culture", "en-US");
-            }
-            if (!settings.containsSettingCalled("splittersfile"))
-            {
-                settings.addSetting("splittersfile", "Splitters.xml");
-            }
-            if (!settings.containsSettingCalled("person2substitutionsfile"))
-            {
-                settings.addSetting("person2substitutionsfile", "Person2Substitutions.xml");
-            }
-            if (!settings.containsSettingCalled("personsubstitutionsfile"))
-            {
-                settings.addSetting("personsubstitutionsfile", "PersonSubstitutions.xml");
-            }
-            if (!settings.containsSettingCalled("gendersubstitutionsfile"))
-            {
-                settings.addSetting("gendersubstitutionsfile", "GenderSubstitutions.xml");
-            }
-            if (!settings.containsSettingCalled("defaultpredicates"))
-            {
-                settings.addSetting("defaultpredicates", "DefaultPredicates.xml");
-            }
-            if (!settings.containsSettingCalled("substitutionsfile"))
-            {
-                settings.addSetting("substitutionsfile", "Substitutions.xml");
-            }
-            if (!settings.containsSettingCalled("aimldirectory"))
-            {
-                settings.addSetting("aimldirectory", "aiml");
-            }
-            if (!settings.containsSettingCalled("configdirectory"))
-            {
-                settings.addSetting("configdirectory", "config");
-            }
-            if (!settings.containsSettingCalled("logdirectory"))
-            {
-                settings.addSetting("logdirectory", "logs");
-            }
-            if (!settings.containsSettingCalled("maxlogbuffersize"))
-            {
-                settings.addSetting("maxlogbuffersize", "64");
-            }
-            if (!settings.containsSettingCalled("notacceptinguserinputmessage"))
-            {
-                settings.addSetting("notacceptinguserinputmessage", "This Proccessor is currently set to not accept user input.");
-            }
-            if (!settings.containsSettingCalled("stripperregex"))
-            {
-                settings.addSetting("stripperregex", "[^0-9a-zA-Z]");
-            }
+            return res;
         }
 
         /// <summary>
@@ -1257,9 +1174,10 @@ namespace RTParser
                 if (true || result.SubQueries.Count != 1)
                 {
                     writeToLog("SubQueries.Count = " + result.SubQueries.Count);
-                    foreach (var path in result.SubQueries)
+                    foreach (SubQuery path in result.SubQueries)
                     {
-                        writeToLog("\r\n tt: " + path.ToString().Replace("\n", " ").Replace("\r", " ").Replace("  ", " "));
+
+                        writeToLog("\r\n tt: " + path.Request.Graph + " "+ path.ToString().Replace("\n", " ").Replace("\r", " ").Replace("  ", " "));
                         if (chatTrace)
                         {
                             //bot.writeChatTrace("\"L{0}\" -> \"{1}\" ;\n", result.SubQueries.Count, path.FullPath.ToString());
@@ -2122,7 +2040,6 @@ The AIMLbot program.
             while (true)
             {
                 System.Console.WriteLine("-----------------------------------------------------------------");
-                System.Console.WriteLine("-----------------------------------------------------------------");
                 RTPBot.writeDebugLine("-----------------------------------------------------------------");
                 RTPBot.writeDebugLine("-----------------------------------------------------------------");
                 System.Console.Write(myUser.ShortName + ": ");
@@ -2162,7 +2079,7 @@ The AIMLbot program.
                     }
                     else
                     {
-                        myUser.TopicSetting = "collectevidencepatterns";
+                        ///myUser.TopicSetting = "collectevidencepatterns";
                         myBot.pMSM.clearEvidence();
                         myBot.pMSM.clearNextStateValues();
                         Request r = new AIMLbot.Request(input, myUser, myBot, null);
@@ -2170,6 +2087,8 @@ The AIMLbot program.
                         s = res.Output;
                         myBot.HeardSelfSay0(s);
                     }
+                    System.Console.WriteLine("-----------------------------------------------------------------");
+                    Console.WriteLine("---------------------");
                     System.Console.WriteLine("Bot> " + s);
                 }
                 catch (Exception e)

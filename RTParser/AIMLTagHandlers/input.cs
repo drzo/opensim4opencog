@@ -51,7 +51,7 @@ namespace RTParser.AIMLTagHandlers
                 {
                     return this.user.getInputSentence();
                 }
-                var at1 = GetAttribValue("index", null);
+                var at1 = GetAttribValue("index", null).AsString();
                 if (at1 != null)
                 {
                     {

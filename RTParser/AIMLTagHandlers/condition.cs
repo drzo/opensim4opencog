@@ -122,9 +122,9 @@ namespace RTParser.AIMLTagHandlers
 
                 if (this.templateNode.Attributes.Count == 2) // block
                 {
-                    string name = GetAttribValue("name", String.Empty);
-                    Unifiable value = GetAttribValue("value", String.Empty);
-                    if ((name.Length > 0) & (!value.IsEmpty))
+                    Unifiable name = GetAttribValue("name", null);
+                    Unifiable value = GetAttribValue("value", null);
+                    if ((name != null) & (value != null))
                     {
                         Unifiable actualValue = this.query.grabSetting(name);
                         if (IsPredMatch(value, actualValue))
@@ -150,7 +150,7 @@ namespace RTParser.AIMLTagHandlers
                                     if (childLINode.Attributes[0].Name.ToLower() == "value")
                                     {
                                         Unifiable actualValue = this.query.grabSetting(name);
-                                        Unifiable value = GetAttribValue(childLINode, "value", Unifiable.Empty);
+                                        Unifiable value = GetAttribValue(childLINode, "value", Unifiable.Empty, query);
                                         if (IsPredMatch(value, actualValue))
                                         {
                                             return Unifiable.InnerXmlText(childLINode);
@@ -173,8 +173,8 @@ namespace RTParser.AIMLTagHandlers
                         {
                             if (childLINode.Attributes.Count == 2)
                             {
-                                string name = GetAttribValue(childLINode, "name", string.Empty);
-                                Unifiable value = GetAttribValue(childLINode, "value", string.Empty);
+                                string name = GetAttribValue(childLINode, "name", string.Empty, query);
+                                Unifiable value = GetAttribValue(childLINode, "value", string.Empty, query);
                                 if ((name.Length > 0) & (!value.IsEmpty))
                                 {
                                     Unifiable actualValue = this.query.grabSetting(name);
@@ -186,10 +186,10 @@ namespace RTParser.AIMLTagHandlers
                             }
                             if (childLINode.Attributes.Count == 1)
                             {
-                                string name = GetAttribValue(childLINode, "name", string.Empty);
+                                string name = GetAttribValue(childLINode, "name", string.Empty, query);
                                 if ((name.Length > 0) && this.query.containsSettingCalled(name))
                                 {
-                                        return Unifiable.InnerXmlText(childLINode);
+                                    return Unifiable.InnerXmlText(childLINode);
                                 }
                             }
                             else if (childLINode.Attributes.Count == 0)
@@ -205,7 +205,7 @@ namespace RTParser.AIMLTagHandlers
 
         public void UnknownCondition()
         {
-            RTPBot.writeDebugLine("Unknown conditions " + LineNumberTextInfo());
+            writeToLog("Unknown conditions " + LineNumberTextInfo());
         }
     }
 }

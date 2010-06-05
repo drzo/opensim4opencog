@@ -51,9 +51,9 @@ namespace RTParser.AIMLTagHandlers
                 {
                     return this.user.getThat();
                 }
-                else if (this.templateNode.Attributes.Count == 1)
+                //else if (this.templateNode.Attributes.Count == 1)
                 {
-                    var at1 = GetAttribValue("index", null);
+                    var at1 = GetAttribValue("index", null).AsString();
                     if (at1 != null)
                     {
                         if (at1.Length > 0)

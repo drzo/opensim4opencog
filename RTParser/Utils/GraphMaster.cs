@@ -172,6 +172,11 @@ namespace RTParser.Utils
             }
         }
 
+        public Unifiable ScriptingName
+        {
+            get { return graphName; }
+        }
+
         private GraphMaster makeParent()
         {
             var p = new GraphMaster("" + graphName + ".parent" + (parent0 == 0 ? "" : "" + parent0), theBot);
@@ -220,22 +225,30 @@ namespace RTParser.Utils
             {
                 GraphMaster Parent = makeParent();
                 this.Parents.Add(Parent);
+                Parent.Size++;
                 RootNode = Parent.RootNode;
-                RTPBot.writeDebugLine("" + category);
+                RTPBot.writeDebugLine("Adding to parent" + category);
+                return;
             }
             Node.addCategoryTag(RootNode, generatedPath, patternInfo, category, outerNode, templateNode, guard, thatInfo,
                                 this);
-            // keep count of the number of categories that have been processed
             this.Size++;
+            // keep count of the number of categories that have been processed
         }
 
         public static bool SilentTag(XmlNode node)
         {
+            //return false;
+            if (node.ChildNodes.Count != 1) return false;
             string s = node.InnerXml;
             if (s.StartsWith("<think>"))
             {
                 if (s.EndsWith("</think>"))
                 {
+                    if (node.ChildNodes.Count != 1)
+                    {
+                        return false;
+                    }
                     return true;
                 }
             }

@@ -1075,14 +1075,20 @@ namespace AIMLBotModule
             return new StringUnifiable(o.ToString());
         }
 
+        public bool containsLocalCalled(string name)
+        {
+            return name == "botmod";
+            int argsUsed;
+            var v = WorldSystem.ResolveCollection(name.ToLower(), out argsUsed, this);
+            return (v != null && v.Count > 0);
+        }
         public bool containsSettingCalled(string name)
         {
             return name == "botmod";
             int argsUsed;
             var v = WorldSystem.ResolveCollection(name.ToLower(), out argsUsed, this);
             return (v != null && v.Count > 0);
-
-        }
+        }        
 
         public string NameSpace
         {
