@@ -280,9 +280,10 @@ namespace RTParser.Utils
         /// <param name="mtchList"></param>
         /// <param name="query"></param>
         /// <returns></returns>
-        static bool ResultStateReady(QueryList result0, Unifiable newWildcard, List<Unifiable> mtchList, MatchState matchstate, SubQuery query)
+        bool ResultStateReady(QueryList result0, Unifiable newWildcard, List<Unifiable> mtchList, MatchState matchstate, SubQuery query)
         {
             var result = result0;
+            //if (TemplateInfos == null || TemplateInfos.Count == 0) return false;
             // and if we get a result from the branch process and return it
             if (result != null && result.Count > 0)
             {
@@ -474,7 +475,7 @@ namespace RTParser.Utils
                 if (ResultStateReady(res, newWildcard, mtchList, matchstate, query))
                 {
                     willReturn = true;
-                    return childTrue;
+                    //return childTrue;
                 }
 
             }
@@ -832,9 +833,10 @@ namespace RTParser.Utils
         /// <param name="matchstate"></param>
         /// <param name="query"></param>
         /// <returns></returns>
-        private static bool ResultStateReady2(Unifiable newWildcard, IList<Unifiable> matchstate)
+        private bool ResultStateReady2(Unifiable newWildcard, IList<Unifiable> matchstate)
         {
             // and if we get a result from the branch process and return it
+            if (TemplateInfos != null && TemplateInfos.Count > 0)
             {
                 if (!newWildcard.IsEmpty)
                 {

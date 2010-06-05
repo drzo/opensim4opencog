@@ -2079,7 +2079,7 @@ The AIMLbot program.
                     }
                     else
                     {
-                        ///myUser.TopicSetting = "collectevidencepatterns";
+                        myUser.TopicSetting = "collectevidencepatterns";
                         myBot.pMSM.clearEvidence();
                         myBot.pMSM.clearNextStateValues();
                         Request r = new AIMLbot.Request(input, myUser, myBot, null);

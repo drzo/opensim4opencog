@@ -238,7 +238,7 @@ namespace RTParser.Utils
 
         public static bool SilentTag(XmlNode node)
         {
-            //return false;
+            if (true) return false;
             if (node.ChildNodes.Count != 1) return false;
             string s = node.InnerXml;
             if (s.StartsWith("<think>"))
@@ -258,7 +258,7 @@ namespace RTParser.Utils
 
         public override string ToString()
         {
-            return "(Graph: " + graphName + ":" + Size + "]";
+            return "[Graph: " + graphName + ":" + Size + "]";
         }
 
         public UList evaluate(UPath unifiable, SubQuery query, Request request, List<Unifiable> state, MatchState matchState, int index, Unifiable appendable)
