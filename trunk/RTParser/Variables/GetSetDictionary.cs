@@ -27,12 +27,11 @@ namespace RTParser.Utils
             return info.GetValue(oldValue, null);
         }
 
-
         #region ISettingsDictionary Members
 
         public bool addSetting(string name, Unifiable value)
         {
-            if (!containsSettingCalled(name)) return false;
+            if (!containsLocalCalled(name)) return false;
             oldValue = propGet();
             propSet(value);
             return true;
@@ -40,14 +39,14 @@ namespace RTParser.Utils
 
         public bool removeSetting(string name)
         {
-            if (!containsSettingCalled(name)) return false;
+            if (!containsLocalCalled(name)) return false;
             propSet(oldValue);
             return true;
         }
 
         public bool updateSetting(string name, Unifiable value)
         {
-            if (containsSettingCalled(name))
+            if (containsLocalCalled(name))
             {
                 oldValue = propGet();
                 propSet(value);
@@ -58,13 +57,17 @@ namespace RTParser.Utils
 
         public Unifiable grabSetting(string name)
         {
-            if (containsSettingCalled(name))
+            if (containsLocalCalled(name))
             {
                 return Unifiable.Create(propGet());
             }
             return Unifiable.Empty;
         }
 
+        public bool containsLocalCalled(string name)
+        {
+            return named.ToLower() == name.ToLower();
+        }
         public bool containsSettingCalled(string name)
         {
             return named.ToLower() == name.ToLower();

@@ -100,7 +100,6 @@ namespace RTParser.Utils
             return Request.Predicates.updateSetting(name, value);
         }
 
-
         /// <summary>
         /// Checks to see if a setting of a particular name exists
         /// </summary>
@@ -108,7 +107,13 @@ namespace RTParser.Utils
         /// <returns>Existential truth value</returns>
         public bool containsSettingCalled(string name)
         {
-            return Request.Predicates.containsSettingCalled(name);
+            var value = grabSetting(name);
+            return !Unifiable.IsNullOrEmpty(value);
+        }
+
+        public bool containsLocalCalled(string name)
+        {
+            return Request.Predicates.containsLocalCalled(name);
         }
 
         public string NameSpace

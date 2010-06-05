@@ -12,7 +12,7 @@ namespace RTParser.Utils
     /// </summary>
     abstract public class AIMLTagHandler : TextTransformer
     {
-        public string ReduceStar(string name)
+        static public Unifiable ReduceStar(string name, SubQuery query)
         {
             try
             {
@@ -350,17 +350,17 @@ namespace RTParser.Utils
 
         #endregion
 
-        protected string GetAttribValue(string attribName,string defaultIfEmpty)
+        protected Unifiable GetAttribValue(string attribName, Unifiable defaultIfEmpty)
         {
-            return GetAttribValue(templateNode, attribName, defaultIfEmpty);
+            return GetAttribValue(templateNode, attribName, defaultIfEmpty, query);
         }
 
-        public string GetAttribValue(XmlNode node, string attribName, string defaultIfEmpty)
+        public Unifiable GetAttribValue(XmlNode node, string attribName, Unifiable defaultIfEmpty, SubQuery sq)
         {
             attribName = attribName.ToLower();
             foreach (XmlAttribute attrib in node.Attributes)
             {
-                if (attrib.Name.ToLower() == attribName) return ReduceStar(attrib.Value);
+                if (attrib.Name.ToLower() == attribName) return ReduceStar(attrib.Value, sq);
             }
             return defaultIfEmpty;
         }

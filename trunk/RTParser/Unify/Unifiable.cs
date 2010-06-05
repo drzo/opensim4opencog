@@ -198,6 +198,10 @@ namespace RTParser
 
         public static Unifiable Create(object p)
         {
+            if (p==null)
+            {
+                return null;
+            }
             if (p is Unifiable) return (Unifiable) p;
             if (p is string)
             {

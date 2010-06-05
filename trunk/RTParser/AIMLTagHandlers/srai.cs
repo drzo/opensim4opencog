@@ -46,14 +46,15 @@ namespace RTParser.AIMLTagHandlers
             {
                 depth++;
                 int d = request.GetCurrentDepth();
+                object prefix = "" + request.Graph + ":  ";
                 if (d > 30)
                 {
-                    RTPBot.writeDebugLine("WARNING Depth pretty deep " + templateNode + " returning empty");
+                    writeToLog(prefix + "WARNING Depth pretty deep " + templateNode + " returning empty");
                     return Unifiable.Empty;
                 }
                 if (depth > 30)
                 {
-                    RTPBot.writeDebugLine("WARNING Depth pretty deep " + templateNode + " returning empty");
+                    writeToLog(prefix + "WARNING Depth pretty deep " + templateNode + " returning empty");
                     return Unifiable.Empty;
                 }
                 if (this.templateNode.Name.ToLower() == "srai")
@@ -78,7 +79,7 @@ namespace RTParser.AIMLTagHandlers
                             showDebug = false;
                         }
                         if (showDebug)
-                            RTPBot.writeDebugLine(" SRAI-- (" + depth + ")" + subRequestrawInput + " ----- @ " +
+                            writeToLog(prefix + " SRAI-- (" + depth + ")" + subRequestrawInput + " ----- @ " +
                                               LineNumberTextInfo());
 
                        
@@ -94,9 +95,9 @@ namespace RTParser.AIMLTagHandlers
                         }
                         if (depth > 200)
                         {
-                            RTPBot.writeDebugLine(" SRAI TOOOO DEEEEP <-- (" + depth + ")" + subRequestrawInput +
-                                              " ----- @ " +
-                                              LineNumberTextInfo());
+                            writeToLog(prefix + " SRAI TOOOO DEEEEP <-- (" + depth + ")" + subRequestrawInput +
+                                       " ----- @ " +
+                                       LineNumberTextInfo());
                             return Unifiable.Empty;
                         }
                         AIMLbot.Result subResult = null;
@@ -120,7 +121,7 @@ namespace RTParser.AIMLTagHandlers
                         if (Unifiable.IsNullOrEmpty(subQueryRawOutput))
                         {
                             if (showDebug)
-                                RTPBot.writeDebugLine(" SRAI<-- (" + depth + ") MISSING <----- @ " + LineNumberTextInfo());
+                                writeToLog(prefix + " SRAI<-- (" + depth + ") MISSING <----- @ " + LineNumberTextInfo());
                             if (mybot.chatTrace)
                             {
                                 mybot.writeChatTrace("\"L{0}\" -> \"S{1}\" ;\n", depth, depth);
@@ -137,7 +138,7 @@ namespace RTParser.AIMLTagHandlers
                         else
                         {
                             if (showDebug)
-                                RTPBot.writeDebugLine(" SRAI<-- (" + depth + ")" + subQueryRawOutput + " @ " + LineNumberTextInfo());
+                                writeToLog(prefix + " SRAI<-- (" + depth + ")" + subQueryRawOutput + " @ " + LineNumberTextInfo());
                         }
 
                         if (mybot.chatTrace)
