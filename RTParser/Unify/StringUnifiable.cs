@@ -346,18 +346,22 @@ namespace RTParser
         public override bool IsMatch(Unifiable actualValue)
         {
             if (Object.ReferenceEquals(this, actualValue)) return true;
-            string that = actualValue.AsString();
-            string thiz = this.AsString();
+            string that = " " + actualValue.AsString() + " ";
+            string thiz = " " + this.AsString() + " ";
             if (thiz == that)
             {
                 return true;
             }
-            if  (TwoMatch(that, thiz))
+            if (thiz.ToLower() == that.ToLower())
             {
                 return true;
             }
-            that = actualValue.ToValue();
-            thiz = this.ToValue();
+            if (TwoMatch(that, thiz))
+            {
+                return true;
+            }
+            that = " " + actualValue.ToValue() + " ";
+            thiz = " " + this.ToValue() + " ";
             if (TwoMatch(that, thiz))
             {
                 return true;

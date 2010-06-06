@@ -747,6 +747,11 @@ namespace RTParser
         public void writeToLog0(string message)
         {
 
+            if (String.IsNullOrEmpty( message)) return;
+            if (message.Contains("SubQuery 'how are you TAG-T"))
+            {
+            }
+
             if (outputDelegate != null)
             {
                 try
@@ -848,15 +853,29 @@ namespace RTParser
         public void AddAiml(string aimlText)
         {
             Request request = BotAsRequest;
-            Loader.loadAIMLString("<aiml>" + aimlText + "</aiml>", LoaderOptions.GetDefault(request), request);
+            AddAiml(GraphMaster,aimlText);
         }
         public void AddAiml(GraphMaster graph, string aimlText)
         {
             Request request = BotAsRequest;
-            request.Graph = graph;
-            LoaderOptions loader = LoaderOptions.GetDefault(request);
-            loader.Graph = graph;
-            Loader.loadAIMLString("<aiml>" + aimlText + "</aiml>", loader, request);
+            var prev = request.Graph;
+            try
+            {
+                request.Graph = graph;
+                LoaderOptions loader = LoaderOptions.GetDefault(request);
+                loader.Graph = graph;
+                Loader.loadAIMLString("<aiml graph=\"" + graph.ScriptingName + "\">" + aimlText + "</aiml>", loader,
+                                      request);
+            } catch(Exception e)
+            {
+                writeDebugLine("" + e);
+                writeChatTrace("" + e);
+                throw e;
+            }
+            finally
+            {
+                request.Graph = prev;
+            }
         }
 
         #region Conversation methods
@@ -1102,12 +1121,22 @@ namespace RTParser
 
         public AIMLbot.Result Chat(Request request, GraphMaster G)
         {
+            var prev = request.Graph;
+            request.Graph = G;
+            var v = Chat0(request, G);
+            request.Graph = prev;
+            return v;
+        }
+
+        public AIMLbot.Result Chat0(Request request, GraphMaster G)
+        {
             LastUser = request.user ?? LastUser;
             //chatTrace = null;
 
             streamDepth++;
 
             AIMLbot.Result result = new AIMLbot.Result(request.user, this, request);
+      
 
             var orig = request.BotOutputs;
             if (AIMLLoader.ContainsAiml(request.rawInput))
@@ -2037,7 +2066,7 @@ The AIMLbot program.
                                   "</template></category></topic>" +
                                   "";
             //Added from AIML content now
-            //myBot.AddAiml(evidenceCode);
+            myBot.AddAiml(evidenceCode);
             String s = null;
             while (true)
             {
@@ -2047,7 +2076,12 @@ The AIMLbot program.
                 System.Console.Write(myUser.ShortName + ": ");
                 Console.Out.Flush();
                 string input = Console.ReadLine();
-                if (input == null || input.ToLower() == "quit")
+                if (input == null)
+                {
+                    Environment.Exit(0);
+                }
+                input = input.Trim();
+                if (input == "quit")
                 {
                     Environment.Exit(0);
                 }
@@ -2066,6 +2100,24 @@ The AIMLbot program.
                 }
                 try
                 {
+                    if (input.StartsWith("+ "))
+                    {
+                        string ss = input.Substring(2).Trim();
+                        myBot.AddAiml(ss);
+                        System.Console.WriteLine("Done with " + ss);
+                        continue;                        
+                    }
+                    if (input.StartsWith("+"))
+                    {
+                        string ss = input.Substring(1).Trim();
+                        int indexof = ss.IndexOf(" ");
+                        string gn = ss.Substring(0, indexof);
+                        ss = ss.Substring(indexof + 1).Trim();
+                        Utils.GraphMaster g = myBot.GetGraph(gn, myUser.ListeningGraph);
+                        myBot.AddAiml(ss);
+                        System.Console.WriteLine("Done with " + ss);
+                        continue;
+                    }
                     if (input.StartsWith("load"))
                     {
                         string ss = input.Substring(4).Trim();
@@ -2209,8 +2261,10 @@ The AIMLbot program.
 
         private bool Noise(string s)
         {
+            s = s.ToLower();
+            if (s == "um,") return true;
             if (s == "you know,") return true;
-            if (message.EndsWith(s)) return true;
+            if (message.ToLower().EndsWith(s)) return true;
             return false;
         }
 

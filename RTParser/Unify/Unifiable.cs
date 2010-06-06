@@ -60,7 +60,7 @@ namespace RTParser
             return value.AsString();
         }
 
-        static Dictionary<string,Unifiable> internedUnifiables = new Dictionary<string,Unifiable>();
+        static Dictionary<string,Unifiable> internedUnifiables = new Dictionary<string,Unifiable>(20000);
         public static implicit operator Unifiable(string value)
         {
             return MakeStringUnfiable(value);
@@ -281,11 +281,17 @@ namespace RTParser
                 }
                 return 0;
             }
-            if (other.IsWildCard())
+            if (false && other.IsWildCard())
             {
                 // return unifiable.Unify(this, query);
             }
-            return other.AsString().ToUpper() == AsString().ToUpper() ? UNIFY_TRUE : UNIFY_FALSE;
+            if (other.AsString().ToUpper() == AsString().ToUpper()) return UNIFY_TRUE;
+            if (IsMatch(other))
+            {
+                return UNIFY_FALSE;
+                return UNIFY_TRUE;
+            }
+            return UNIFY_FALSE;
         }
 
         public virtual Unifiable ToCaseInsenitive()
