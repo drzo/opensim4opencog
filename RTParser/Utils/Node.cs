@@ -507,7 +507,7 @@ namespace RTParser.Utils
                 if (ResultStateReady(res, newWildcard, mtchList, matchstate, query))
                 {
                     willReturn = true;
-                    return childTrue;
+                    //return childTrue;
                 }
 
             }
@@ -540,7 +540,7 @@ namespace RTParser.Utils
                     {
                         childTrue = true;
                         willReturn = true;
-                        return true;
+                        //return true;
                     }
                 }
                 else
