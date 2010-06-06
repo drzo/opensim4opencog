@@ -210,15 +210,15 @@ Found the hyphen+done. star= 1
 
   <!-- testing get star hack -->
   <category>
-    <pattern>CUSTOM TAG GET *</pattern>
+    <pattern>TAG GET *</pattern>
     <template>
-      GET found <star index="1"/> to be <get><star index="1"/></get>
+      <star index="1"/>=<get><star index="1"/></get>
     </template>
   </category>
 
   <!-- testing set star hack -->
   <category>
-    <pattern>CUSTOM TAG SET _ *</pattern>
+    <pattern>TAG SET _ *</pattern>
     <template>
       Setting <star index="1"/> was <get><star index="1"/></get>
       setting to 
