@@ -17,6 +17,7 @@ namespace RTParser.Utils
     {
         private String graphName;
         private RTPBot theBot;
+        public GraphMaster Srai;
 
         readonly public List<GraphMaster> Parents = new List<GraphMaster>();
 
@@ -55,6 +56,7 @@ namespace RTParser.Utils
         {
             graphName = gn;
             theBot = bot;
+            Srai = this;
         }
 
         public PatternInfo FindPattern(XmlNode pattern, Unifiable unifiable)
@@ -180,6 +182,7 @@ namespace RTParser.Utils
         private GraphMaster makeParent()
         {
             var p = new GraphMaster("" + graphName + ".parent" + (parent0 == 0 ? "" : "" + parent0), theBot);
+            p.Srai = this;
             parent0++;
             Parents.Add(p);
             return p;
@@ -238,7 +241,7 @@ namespace RTParser.Utils
 
         public static bool SilentTag(XmlNode node)
         {
-            if (true) return false;
+           // if (true) return false;
             if (node.ChildNodes.Count != 1) return false;
             string s = node.InnerXml;
             if (s.StartsWith("<think>"))

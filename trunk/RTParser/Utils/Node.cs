@@ -382,6 +382,39 @@ namespace RTParser.Utils
 
             bool willReturn = false;
 
+            // first option is to see if this node has a child not really a wildcard
+            if (false)foreach (KeyValuePair<Unifiable, Node> childNodeKV in this.children)
+            {
+                Unifiable childNodeWord = childNodeKV.Key;
+                if (childNodeWord.IsWildCard()) continue;
+                if (childNodeWord.Unify(first, query) > 0) continue;
+                Node childNode = childNodeKV.Value;
+                // add the next word to the wildcard match 
+                Unifiable newWildcard = Unifiable.CreateAppendable();
+                this.storeWildCard(first, newWildcard);
+
+                // move down into the identified branch of the GraphMaster structure
+                if (childNode.evaluate(UPath.MakePath(newPath), query, request, mtchList, matchstate, index, newWildcard, res))
+                {
+                    //dmiles todo
+                    childTrue = true;
+                }
+
+                // and if we get a result from the branch process the wildcard matches and return 
+                // the result
+                string freezit = newWildcard.Frozen();
+                if (ResultStateReady(res, newWildcard, mtchList, matchstate, query))
+                {
+                    if (freezit.Contains(" "))
+                    {
+                        // cannot match input containing spaces
+                        continue;
+                    }
+                    //dmiles todo
+                    return childTrue;
+                }
+            }
+
             // first option is to see if this node has a child denoted by the "_" 
             // wildcard. "_" comes first in precedence in the AIML alphabet
             foreach (KeyValuePair<Unifiable, Node> childNodeKV in this.children)
@@ -415,7 +448,6 @@ namespace RTParser.Utils
                     return childTrue;
                 }
             }
-
 
             // second option - the nodemapper may have contained a "_" child, but led to no match
             // or it didn't contain a "_" child at all. So get the child nodemapper from this 
@@ -475,7 +507,7 @@ namespace RTParser.Utils
                 if (ResultStateReady(res, newWildcard, mtchList, matchstate, query))
                 {
                     willReturn = true;
-                    //return childTrue;
+                    return childTrue;
                 }
 
             }
