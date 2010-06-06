@@ -1,5 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <root>
+  <item name="graphname" value="default"/>
+  <item name="heardselfsay" value="heardselfsay"/>
+  
   <item name="aimldirectory" value="aiml"/>
   <item name="configdirectory" value="config"/>
   <item name="logdirectory" value="logs"/>
