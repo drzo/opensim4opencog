@@ -39,6 +39,7 @@ namespace RTParser.AIMLTagHandlers
             if (this.templateNode.Name.ToLower() == "cycterm")
             {
                 Unifiable filter = base.GetAttribValue("filter", GetAttribValue("isa", "Thing"));
+                Unifiable pos = base.GetAttribValue("pos", null);
                 Unifiable r = Recurse();
                 Unifiable term;
                 if (Proc.TheCyc.Lookup(r, filter, out term))
