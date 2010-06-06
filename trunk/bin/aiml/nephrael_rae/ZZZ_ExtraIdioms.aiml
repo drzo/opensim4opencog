@@ -27,13 +27,22 @@
 
 <aiml graph="default">
   <srai>
-    <learn> aiml/Y_OpenCyc.aiml </learn>
+    <learn> aiml/programsharp/ </learn>
   </srai>
   <srai>
-    <learn> aiml/CustomTagTest.aiml </learn>
+    <learn> aiml/programsharp/Y_OpenCyc.aiml </learn>
+  </srai>
+  <srai>
+    <learn> aiml/programsharp/CustomTagTest.aiml </learn>
   </srai>
   <srai>
     <learn> aiml/stdchar/ </learn>
+  </srai>
+  <srai>
+    <learn graph="step2"> aiml/stdset/std-personality.aiml </learn>
+  </srai>
+  <srai>
+    <learn> aiml/stdmsm/ </learn>
   </srai>
 </aiml>
 
@@ -42,7 +51,7 @@
     <learn graph="step2"> aiml/stdset/std-personality.aiml </learn>
   </srai>
 
-<category>
+  <category>
  <pattern>STEP3 *</pattern>
  <template>STEP THREE <star/></template>
 </category>
