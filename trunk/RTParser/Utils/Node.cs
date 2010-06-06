@@ -300,6 +300,18 @@ namespace RTParser.Utils
             return false;
         }
 
+        
+        public static bool fullDepth = false;
+        public static bool fullDepthBorken = false;
+        public static bool fullDepthWerken = true;
+
+        public bool evaluate(UPath upath, SubQuery query, Request request, List<Unifiable> mtchList, MatchState matchstate, int index, Unifiable wildcard, QueryList res)
+        {
+            int resin = res.Count;
+            evaluate0(upath, query, request, mtchList, matchstate, index, wildcard, res);
+            return res.Count > resin;
+        }
+
         /// <summary>
         /// Navigates this node (and recursively into child nodes) for a match to the path passed as an argument
         /// whilst processing the referenced request
@@ -310,16 +322,17 @@ namespace RTParser.Utils
         /// <param name="mtchList">The part of the input path the node represents</param>
         /// <param name="wildcard">The contents of the user input absorbed by the AIML wildcards "_" and "*"</param>
         /// <returns>The template to process to generate the output</returns>
-        public bool evaluate(UPath upath, SubQuery query, Request request, List<Unifiable> mtchList, MatchState matchstate, int index, Unifiable wildcard, QueryList res)
+        public bool evaluate0(UPath upath, SubQuery query, Request request, List<Unifiable> mtchList, MatchState matchstate, int index, Unifiable wildcard, QueryList res)
         {
+
             bool childTrue = false;
             Unifiable path = upath.LegacyPath;
             // check for timeout
             if (request.StartedOn.AddMilliseconds(request.Proccessor.TimeOut) < DateTime.Now)
             {
                 request.Proccessor.writeToLog("WARNING! Request timeout. User: " + request.user.UserID + " raw input: \"" + request.rawInput + "\"");
-                request.hasTimedOut = true;
-                return false;// Unifiable.Empty;
+              //  request.hasTimedOut = true;
+              //  return false;// Unifiable.Empty;
             }
 
             // so we still have time!
@@ -355,7 +368,7 @@ namespace RTParser.Utils
                 {
                     childTrue = true;
                 }
-                return childTrue;
+                if (!fullDepthWerken) return childTrue;
             }
 
             // if we've matched all the words in the input sentence and this is the end
@@ -366,7 +379,10 @@ namespace RTParser.Utils
                 {
                     return false;
                 }
-                if (AddSubQueris(res, query, this)) childTrue = true;
+                if (AddSubQueris(res, query, this))
+                {
+                    childTrue = true;
+                }
                 return childTrue;
             }
 
@@ -411,7 +427,7 @@ namespace RTParser.Utils
                         continue;
                     }
                     //dmiles todo
-                    return childTrue;
+                    if (!fullDepthWerken) return childTrue;
                 }
             }
 
@@ -512,7 +528,7 @@ namespace RTParser.Utils
 
             }
             //toood uncomment 
-            if (willReturn) return childTrue;
+            if (!fullDepthBorken) if (willReturn) return childTrue;
 
             // third option - the input part of the path might have been matched so far but hasn't
             // returned a match, so check to see it contains the "*" wildcard. "*" comes last in
