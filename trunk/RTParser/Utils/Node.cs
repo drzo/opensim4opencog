@@ -561,7 +561,7 @@ namespace RTParser.Utils
                             if (ResultStateReady(res, newWildcard, mtchList, matchstate, query))
                             {
                                 willReturn = true;
-                                return childTrue;
+                                //return childTrue;
                             }
                         }
                     }
