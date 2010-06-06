@@ -329,6 +329,7 @@ namespace RTParser
 
         public override void Clear()
         {
+            throw new IndexOutOfRangeException();
             str = "";
         }
 
@@ -344,13 +345,36 @@ namespace RTParser
 
         public override bool IsMatch(Unifiable actualValue)
         {
-            return TwoMatch(actualValue.AsString(), this.AsString()) || TwoMatch(actualValue.ToValue(), this.ToValue());
+            if (Object.ReferenceEquals(this, actualValue)) return true;
+            string that = actualValue.AsString();
+            string thiz = this.AsString();
+            if (thiz == that)
+            {
+                return true;
+            }
+            if  (TwoMatch(that, thiz))
+            {
+                return true;
+            }
+            that = actualValue.ToValue();
+            thiz = this.ToValue();
+            if (TwoMatch(that, thiz))
+            {
+                return true;
+            }
+            return false;
         }
 
         static bool TwoMatch(string s1, string s2)
         {
+            if (s1 == s2) return true;
             Regex matcher = new Regex(s1.Replace(" ", "\\s").Replace("*", "[\\sA-Z0-9]+"), RegexOptions.IgnoreCase);
-            return matcher.IsMatch(s2);
+            bool b = matcher.IsMatch(s2);
+            if (b)
+            {
+                return true;
+            }
+            return b;
         }
 
         public override bool IsLazyStar()

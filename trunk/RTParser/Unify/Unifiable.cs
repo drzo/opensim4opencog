@@ -64,19 +64,26 @@ namespace RTParser
         static Dictionary<string,Unifiable> internedUnifiables = new Dictionary<string,Unifiable>();
         public static implicit operator Unifiable(string value)
         {
+            return MakeStringUnfiable(value);
+        }
+
+        private static Unifiable MakeStringUnfiable(string value)
+        {
             if (value == null) return null;
             Unifiable u;
-            if (false) lock (internedUnifiables)
-            {
-                if (!internedUnifiables.TryGetValue(value, out u))
+            if (true)
+                lock (internedUnifiables)
                 {
-                    u = internedUnifiables[value] = new StringUnifiable(value);
+                    if (!internedUnifiables.TryGetValue(value, out u))
+                    {
+                        u = internedUnifiables[value] = new StringUnifiable(value);
+                    }
+                    return u;
                 }
-                return u;
-            }
             u = new StringUnifiable(value);
             return u;
         }
+
         public static Unifiable Empty = new EmptyUnifiable();
 
 
@@ -84,7 +91,7 @@ namespace RTParser
         {
             get
             {
-                return new StringUnifiable("*");
+                return MakeStringUnfiable("*");
             }
         }
 
@@ -198,18 +205,18 @@ namespace RTParser
 
         public static Unifiable Create(object p)
         {
-            if (p==null)
+            if (p is string)
+            {
+                return MakeStringUnfiable((string)p);
+            }
+            if (p is Unifiable) return (Unifiable) p;
+            if (p is XmlNode) return MakeStringUnfiable(InnerXmlText((XmlNode)p));
+            // TODO
+            if (p == null)
             {
                 return null;
             }
-            if (p is Unifiable) return (Unifiable) p;
-            if (p is string)
-            {
-                return new StringUnifiable((string) p);
-            }
-            // TODO
-            if (p is XmlNode) return new StringUnifiable(InnerXmlText((XmlNode) p));
-            return new StringUnifiable(p.ToString());
+            return MakeStringUnfiable(p.ToString());
         }
 
         internal static StringAppendableUnifiable CreateAppendable()
