@@ -567,7 +567,7 @@ namespace RTParser.Utils
                     }
                 }
             }
-            if (willReturn) return childTrue;
+            //if (willReturn) return childTrue;
 
             // o.k. if the nodemapper has failed to match at all: the input contains neither 
             // a "_", the sFirstWord text, or "*" as a means of denoting a child node. However, 
@@ -578,6 +578,7 @@ namespace RTParser.Utils
                 this.storeWildCard(first, wildcard);
                 if (this.evaluate(UPath.MakePath(newPath), query, request, mtchList, matchstate, index, wildcard, res))
                 {
+                    if (willReturn) return childTrue;
                     return true;
                 }
                 return false;
