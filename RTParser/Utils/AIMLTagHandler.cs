@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -18,33 +19,33 @@ namespace RTParser.Utils
             {
                 if (name.StartsWith("star_"))
                 {
-                    int i = Int32.Parse(name.Substring(5)) - 1;
-                    name = query.InputStar[i];
+                    int i = Int32.Parse(name.Substring(5));
+                    name = GetDictData(query.InputStar, i);
                 }
                 if (name.StartsWith("that_"))
                 {
-                    int i = Int32.Parse(name.Substring(5)) - 1;
-                    name = query.ThatStar[i + 1];
+                    int i = Int32.Parse(name.Substring(5)) + 1;
+                    name = GetDictData(query.ThatStar, i);
                 }
                 if (name.StartsWith("thatstar_"))
                 {
-                    int i = Int32.Parse(name.Substring(9)) - 1;
-                    name = query.ThatStar[i + 1];
+                    int i = Int32.Parse(name.Substring(9)) + 1;
+                    name = GetDictData(query.ThatStar, i);
                 }
                 if (name.StartsWith("topicstar_"))
                 {
-                    int i = Int32.Parse(name.Substring(10)) - 1;
-                    name = query.TopicStar[i];
+                    int i = Int32.Parse(name.Substring(10));
+                    name = GetDictData(query.TopicStar, i);
                 }
                 if (name.StartsWith("topic_"))
                 {
-                    int i = Int32.Parse(name.Substring(6)) - 1;
-                    name = query.TopicStar[i];
+                    int i = Int32.Parse(name.Substring(6));
+                    name = GetDictData(query.TopicStar, i);
                 }
                 if (name.StartsWith("guard_"))
                 {
-                    int i = Int32.Parse(name.Substring(6)) - 1;
-                    name = query.GuardStar[i];
+                    int i = Int32.Parse(name.Substring(6));
+                    name = GetDictData(query.GuardStar, i);
                 }
             }
             catch (Exception e)
@@ -52,6 +53,11 @@ namespace RTParser.Utils
                 RTPBot.writeDebugLine("" + e);
             }
             return name;
+        }
+
+        private static string GetDictData(List<Unifiable> unifiables, int i)
+        {
+            return unifiables[i - 1];
         }
 
 

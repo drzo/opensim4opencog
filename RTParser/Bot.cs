@@ -1311,13 +1311,14 @@ namespace RTParser
             {
                 foreach (TemplateInfo s in queryTemplate)
                 {
+                    SubQuery subquery = s.Query ?? query.CopyOfBorken();
                     // Start each the same
                     s.Rating = 1.0;
                     try
                     {
                         bool found0;
                         query.CurrentTemplate = s;
-                        if (proccessResponse(query, request, result, s.Output, s.Guard, out found0, handler)) break;
+                        if (proccessResponse(subquery, request, result, s.Output, s.Guard, out found0, handler)) break;
                         if (found0) found = true;
                     }
                     catch (Exception e)
