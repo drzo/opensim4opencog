@@ -10,10 +10,19 @@
 <srai>
  <learn graph="step2"> aiml/stdset/ </learn>
 </srai>
-<category>
- <pattern>*</pattern>
- <template><srai graph="step2">STDCATCHALL <star/></srai></template>
-</category>
+  <category>
+    <pattern>HANSANIM *</pattern>
+    <template>
+    </template>
+  </category>
+  <category>
+    <pattern>*</pattern>
+    <template>
+      <srai graph="step2">
+        STDCATCHALL <star/>
+      </srai>
+    </template>
+  </category>
 </aiml> 
 
 <aiml graph="default">
@@ -162,13 +171,29 @@
    MSMM to msm   
    We are in graph="default"   
   -->
-  
+
   <category>
     <pattern>TOMSM *</pattern>
     <template>
       <srai graph="msm">
         <star/>
       </srai>
+    </template>
+  </category>
+
+  <category>
+    <pattern>TOGRAPH _ *</pattern>
+    <template>
+      <srai graph="star_1">
+        <star index="2"/>
+      </srai>
+    </template>
+  </category>
+
+  <category>
+    <pattern>SETGRAPH _</pattern>
+    <template>
+      <set name="graphname"><star/></set>
     </template>
   </category>
 
@@ -186,6 +211,20 @@
     </category>
   </aiml>
 
+  <category>
+    <pattern>* IS *</pattern>
+    <template>
+      <think><set><star/> IS <star index="2"/></set></think>
+    </template>
+  </category>
+  
+  
+  <category>
+  <pattern>DO YOU DO IT</pattern>
+  <template>
+    You mean, do I do <get name="it"/>?
+  </template>
+</category>
 </aiml>
 
 
