@@ -40,12 +40,19 @@ namespace RTParser.AIMLTagHandlers
                     string evidence = GetAttribValue("evidence", this.user.bot.pMSM.lastDefEvidence );
                     string prob_str = GetAttribValue("prob", "1.0");
                     double prob = double.Parse(prob_str);
+                    //string quote = "" + '\u0022' + "";
+                    string quote = "'";
+                    string evidenceCode =
+                                         //@"<aiml graph=" + quote + "msm" + quote + ">" +
+                                         @"<topic name=" + quote + "CEP" + quote + " > <category><pattern>" + payload + "</pattern>" +
+                                         @"<template><think><setevidence evidence=" + quote + evidence + quote +
+                                         @" prob=" + quote + prob_str + quote +
+                                         @" /></think>ep</template></category></topic>";
+                                         //@"</aiml>";
+                    //this.user.bot.AddAiml(evidenceCode);
+                    GraphMaster myGraph = Proc.GetGraph("msm", request.Graph);
+                    this.user.bot.AddAiml(myGraph, evidenceCode);
 
-                    string evidenceCode = "<topic name=\"COLLECTEVIDENCEPATTERNS\"> <category><pattern>" + payload + "</pattern>" +
-                                         "<template><think><setevidence evidence=\""+evidence+"\" prob=\""+prob_str+"\" />"+
-                                         "</think></template></category></topic>";
-                    this.user.bot.AddAiml(evidenceCode);
-                    
                     RTPBot.writeDebugLine("MSM: evidence_pattern evidenceCode = {0}", evidenceCode);
 
                 }

@@ -195,26 +195,21 @@ namespace RTParser.Utils
         /// <param name="filename">Where the XML document originated</param>
         public void loadAIMLString(string input, LoaderOptions filename, Request request)
         {
-            var tr = new StringReader(input);
-            var xtr = XmlDocumentLineInfo.CreateXmlTextReader(tr);
-            while (!xtr.EOF)
-            {
-                try
-                {
-                    XmlDocumentLineInfo doc = new XmlDocumentLineInfo("" + filename);
-                    doc.Load(xtr);
-                    if (doc.DocumentElement == null) continue;
-                    this.loadAIMLNode(doc.DocumentElement, filename, request);
-                }
-                catch (Exception e2)
-                {
-                    String s = "which causes loadAIMLString '" + input + "' " + filename + " charpos " + tr;
-                    s = s + "\n" + e2.Message + "\n" + e2.StackTrace + "\n" + s;
-                    this.RProcessor.writeToLog(s);
-                    throw e2;
-                }
 
+            try
+            {
+                byte[] byteArray = Encoding.ASCII.GetBytes( input ); 
+                MemoryStream stream = new MemoryStream( byteArray );
+                loadAIMLStream(stream, filename, request);
             }
+            catch (Exception e2)
+            {
+                String s = "which causes loadAIMLString '" + input + "' " + filename ;
+                s = s + "\n" + e2.Message + "\n" + e2.StackTrace + "\n" + s;
+                this.RProcessor.writeToLog(s);
+                throw e2;
+            }
+
             return;
         }
 

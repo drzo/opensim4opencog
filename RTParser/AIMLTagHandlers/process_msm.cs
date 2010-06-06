@@ -41,9 +41,9 @@ namespace RTParser.AIMLTagHandlers
                 // set topic to "collectevidencepatterns"
                 //this.user.bot.AddAiml("<set name='topic'>collectevidencepatters</set>");
                 //this.user.Predicates.updateSetting("topic", "collectevidencepatters");
-                this.user.TopicSetting = "COLLECTEVIDENCEPATTERNS";
+                this.user.TopicSetting = "CEP";
                 // Clear the evidence
-                this.user.bot.pMSM.clearEvidence();
+                //this.user.bot.pMSM.clearEvidence();
                 this.user.bot.pMSM.clearNextStateValues();
 
                 // process the input text
@@ -106,6 +106,11 @@ namespace RTParser.AIMLTagHandlers
             // snarf from "srai"
             Unifiable tempTopic = topic;
             AIMLbot.Request subRequest = new AIMLbot.Request(line, this.user, this.Proc, (AIMLbot.Request)request);
+            //String gn = GetAttribValue("graph", null);
+            string gn = "msm";
+            if (gn != null) subRequest.Graph = Proc.GetGraph(gn, request.Graph);
+            subRequest.depth = request.depth + 1;
+
             subRequest.Topic = tempTopic;
             subRequest.ParentRequest = this.request;
             subRequest.StartedOn = this.request.StartedOn;
@@ -385,7 +390,7 @@ namespace RTParser.AIMLTagHandlers
             string lastArgMax = "<idle>";
 
             // The storage mechanism
-            double smoother = 1 / transSum;
+            double smoother = 0.00001; // 1 / transSum;
 
             // ensure a transition count for each state
             foreach (string stateKey in statesHash.Keys)
@@ -434,7 +439,6 @@ namespace RTParser.AIMLTagHandlers
                     if (atomicTransitionCount.ContainsKey(atomicKey))
                     {
                         transP = (double)atomicTransitionCount[atomicKey] / (double)transitionCounts[curSrcMachineState];
-                        RTPBot.writeDebugLine(" P({0}) = {1}", atomicKey, transP);
 
                     }
                     else
@@ -444,6 +448,7 @@ namespace RTParser.AIMLTagHandlers
                     }
                     double p = transP * bf_prob;
 
+                    RTPBot.writeDebugLine(" Transition: P({0}) = {1}", atomicKey, p);
                     transitionChain += p;
                 }// for cur_state
 
@@ -460,6 +465,9 @@ namespace RTParser.AIMLTagHandlers
                     catch
                     {
                     }
+                    RTPBot.writeDebugLine(" Evidence: P({0}) = {1} ", evidenceToken,evidenceProb);
+                    RTPBot.writeDebugLine("      EMP: P({0} | {1}) = {2} ", evidenceToken, nextSrcMachineState, emitProb);
+                    RTPBot.writeDebugLine("        G: {0} ", (emitProb * evidenceProb));
 
                     evidenceChain = evidenceChain + (emitProb * evidenceProb);
                 }
