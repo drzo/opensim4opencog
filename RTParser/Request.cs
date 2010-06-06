@@ -181,6 +181,7 @@ namespace RTParser
 
     public class Proof
     {
+        public readonly HashSet<object> UsedTemplates =new HashSet<object>();
         /// <summary>
         /// Categories uses life a "proof"
         /// Also used ot prevent looping
@@ -201,6 +202,15 @@ namespace RTParser
                 }
             }
             return true;
+        }
+
+        public bool Add(TemplateInfo node)
+        {
+            return UsedTemplates.Add(node);
+        }
+        public bool Contains(TemplateInfo node)
+        {
+            return UsedTemplates.Contains(node);
         }
     }
 }
