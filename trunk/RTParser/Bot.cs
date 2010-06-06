@@ -2066,7 +2066,7 @@ The AIMLbot program.
                                   "</template></category></topic>" +
                                   "";
             //Added from AIML content now
-            myBot.AddAiml(evidenceCode);
+            // myBot.AddAiml(evidenceCode);
             String s = null;
             while (true)
             {
