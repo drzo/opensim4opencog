@@ -37,6 +37,9 @@ namespace RTParser.AIMLTagHandlers
                 try
                 {
                     string payload = templateNodeInnerText.ToValue();
+                    string payload2 = Recurse();
+                    string payload3 = templateNode.InnerXml;
+                    
 
                     string machine = GetAttribValue("machine", this.user.bot.pMSM.lastDefMachine);
                     string myState = GetAttribValue("state", this.user.bot.pMSM.lastDefState);
@@ -45,7 +48,7 @@ namespace RTParser.AIMLTagHandlers
                     double prob = double.Parse(prob_str);
                     payload= payload.Replace("rcategory", "category");
                     payload= payload.Replace("rpattern", "pattern");
-                    string responseCode = "<topic name=\"" + myTopic + "\"> " + payload + " </topic>";
+                    string responseCode = "<aiml graph=\"msm\"> <topic name=\"" + myTopic + "\"> " + payload + " </topic> </aiml>";
                     RTPBot.writeDebugLine("MSM: response_topic ResponseCode = {0}", responseCode);
                     this.user.bot.AddAiml(responseCode);
                     // TODO: define machine-state -> topic
