@@ -336,7 +336,7 @@ namespace RTParser
 
         public GraphMaster HeardSelfSayGraph
         {
-            get { return GetGraph("HeardSelfSay", _h); }
+            get { return GetGraph("heardselfsay", _h); }
         }
 
 
@@ -398,9 +398,10 @@ namespace RTParser
         public RTPBot()
         {
             _g = new GraphMaster("default", this);
-            _h = new GraphMaster("HeardSelfSay", this);
+            _h = new GraphMaster("heardselfsay", this);
             GraphsByName.Add("default", _g);
-            GraphsByName.Add("HeardSelfSay", _h);
+            GraphsByName.Add("heardselfsay", _h);
+            TheNLKB = new NatLangDb(this);
             this.setup();
             BotAsUser = new User("Self", this);
             BotAsUser.ListeningGraph = HeardSelfSayGraph;
@@ -1969,6 +1970,7 @@ The AIMLbot program.
 
         public Dictionary<string, GraphMaster> GraphsByName = new Dictionary<string, GraphMaster>();
         public CycDatabase TheCyc;
+        public NatLangDb TheNLKB;
         public bool UseInlineThat = true;
 
         public bool CycEnabled
