@@ -18,6 +18,7 @@ namespace RTParser.Utils
         private String graphName;
         private RTPBot theBot;
         public GraphMaster Srai;
+        public bool FullDepth = true;
 
         readonly public List<GraphMaster> Parents = new List<GraphMaster>();
 
@@ -51,6 +52,38 @@ namespace RTParser.Utils
         /// All the &lt;guard&gt;s (if any) associated with this database
         /// </summary>
         readonly public List<GuardInfo> Guards = new List<GuardInfo>();
+
+        public Node RootNode = new RTParser.Utils.Node(null);
+        public int Size = 0;
+        private GraphMaster _parent = null;
+        private int parent0 = 0;
+        public GraphMaster Parent
+        {
+            get
+            {
+                if (ScriptingName.AsString().Contains("parent"))
+                {
+                    return this;
+                }
+                if (_parent == null)
+                {
+                    if (Parents.Count > 0)
+                    {
+                        _parent = Parents[0];
+                    }
+                    else
+                    {
+                        _parent = makeParent();
+                    }
+                }
+                return _parent;
+            }
+        }
+
+        public Unifiable ScriptingName
+        {
+            get { return graphName; }
+        }
 
         public GraphMaster(string gn, RTPBot bot)
         {
@@ -147,36 +180,6 @@ namespace RTParser.Utils
         public CategoryInfo FindCategoryInfo(PatternInfo info, XmlNode node, LoaderOptions filename)
         {
             return CategoryInfo.MakeCategoryInfo(info, node, filename);
-        }
-
-
-        public Node RootNode = new RTParser.Utils.Node(null);
-        public int Size = 0;
-        private GraphMaster _parent = null;
-        private int parent0 = 0;
-
-        public GraphMaster Parent 
-        {
-            get
-            {
-                if (_parent == null)
-                {
-                    if (Parents.Count > 0)
-                    {
-                        _parent = Parents[0];
-                    }
-                    else
-                    {
-                        _parent = makeParent();
-                    }
-                }
-                return _parent;
-            }
-        }
-
-        public Unifiable ScriptingName
-        {
-            get { return graphName; }
         }
 
         private GraphMaster makeParent()
