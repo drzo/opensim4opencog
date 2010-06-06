@@ -597,9 +597,11 @@ namespace RTParser.Utils
             Result rs = infos.Request.user.LastResult;
             lock (TemplateInfos)
             {
-                var sq = infos.CopyOf();
+                var sq = infos.CopyOfBorken();
                 foreach (TemplateInfo info in TemplateInfos)
                 {
+                    info.Query = sq;
+                    info.Query.CurrentTemplate = info;
                     if (!infos.Request.Proccessor.UseInlineThat)
                     {
                         var t = info.That;
@@ -626,12 +628,12 @@ namespace RTParser.Utils
                             }
                         }
                     }
-                    info.Query = sq;
                     list.Templates.root.Add(info);
                     infos.Templates.root.Add(info);
 
                 }
             }
+            if (TemplateInfos == null || TemplateInfos.Count == 0) return false;
             return true;
         }
 

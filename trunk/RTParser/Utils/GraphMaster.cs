@@ -290,13 +290,14 @@ namespace RTParser.Utils
         {
             RTPBot proc = request.Proccessor;
             GraphMaster g = request.Graph;
+            query = query.CopyOf();
             foreach (var p in Parents)
             {
                 if (p != null)
                 {
                     try
                     {
-                        if (false)
+                        if (true)
                         {
                             request.Graph = p;
                             proc.Chat(request, p);
@@ -305,9 +306,9 @@ namespace RTParser.Utils
                         {
                             QueryList ql = new QueryList();
                             AIMLbot.Result result = new AIMLbot.Result(request.user, proc, request);
-                            var subquery = query; // new SubQuery(request.rawInput, result, request);
+                            query = query; // new SubQuery(request.rawInput, result, request);
                             request.Graph = p;
-                            var silent = p.RootNode.evaluate(unifiable, subquery, request, subquery.InputStar,
+                            var silent = p.RootNode.evaluate(unifiable, query, request, query.InputStar,
                                                              MatchState.UserInput, 0, Unifiable.CreateAppendable(), ql);
                             if (ql.Count > 0)
                             {
@@ -315,13 +316,14 @@ namespace RTParser.Utils
                                 UList v = ql.ToUList();
                                 foreach (TemplateInfo s in v)
                                 {
-                                    subquery = s.Query ?? subquery;
+                                    SubQuery subquery = s.Query ?? query.CopyOf();
                                     string st = "" + s;
                                     // Start each the same
                                     s.Rating = 1.0;
                                     try
                                     {
                                         subquery.CurrentTemplate = s;
+                                        query.CurrentTemplate = s;
                                         if (proc.proccessResponse(subquery, request, result, s.Output, s.Guard,
                                                                   out found0,
                                                                   null))
