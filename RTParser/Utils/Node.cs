@@ -358,7 +358,7 @@ namespace RTParser.Utils
                 {
                     // if we get here it means that there is a wildcard in the user input part of the
                     // path.
-                    this.storeWildCard(path, wildcard);
+                    if (path.StoreWildCard())  this.storeWildCard(path, wildcard);
                 }
                 if (!request.Proof.Add(this))
                 {
@@ -398,16 +398,20 @@ namespace RTParser.Utils
 
             bool willReturn = false;
 
-            // first option is to see if this node has a child not really a wildcard
-            if (false)foreach (KeyValuePair<Unifiable, Node> childNodeKV in this.children)
+            // first option is to see if this node has a child not really a wildcard but matches
+
+
+            // first option is to see if this node has a child denoted by the "_" 
+            // wildcard. "_" comes first in precedence in the AIML alphabet
+            foreach (KeyValuePair<Unifiable, Node> childNodeKV in this.children)
             {
                 Unifiable childNodeWord = childNodeKV.Key;
-                if (childNodeWord.IsWildCard()) continue;
+                if (!childNodeWord.IsShortWildCard()) continue;
                 if (childNodeWord.Unify(first, query) > 0) continue;
                 Node childNode = childNodeKV.Value;
                 // add the next word to the wildcard match 
                 Unifiable newWildcard = Unifiable.CreateAppendable();
-                this.storeWildCard(first, newWildcard);
+                if (childNodeWord.StoreWildCard()) this.storeWildCard(first, newWildcard);
 
                 // move down into the identified branch of the GraphMaster structure
                 if (childNode.evaluate(UPath.MakePath(newPath), query, request, mtchList, matchstate, index, newWildcard, res))
@@ -428,40 +432,6 @@ namespace RTParser.Utils
                     }
                     //dmiles todo
                     if (!fullDepthWerken) return childTrue;
-                }
-            }
-
-            // first option is to see if this node has a child denoted by the "_" 
-            // wildcard. "_" comes first in precedence in the AIML alphabet
-            foreach (KeyValuePair<Unifiable, Node> childNodeKV in this.children)
-            {
-                Unifiable childNodeWord = childNodeKV.Key;
-                if (!childNodeWord.IsShortWildCard()) continue;
-                if (childNodeWord.Unify(first, query) > 0) continue;
-                Node childNode = childNodeKV.Value;
-                // add the next word to the wildcard match 
-                Unifiable newWildcard = Unifiable.CreateAppendable();
-                this.storeWildCard(first, newWildcard);
-
-                // move down into the identified branch of the GraphMaster structure
-                if (childNode.evaluate(UPath.MakePath(newPath), query, request, mtchList, matchstate, index, newWildcard, res))
-                {
-                    //dmiles todo
-                    childTrue = true;
-                }
-
-                // and if we get a result from the branch process the wildcard matches and return 
-                // the result
-                string freezit = newWildcard.Frozen();
-                if (ResultStateReady(res, newWildcard, mtchList, matchstate, query))
-                {
-                    if (freezit.Contains(" "))
-                    {
-                        // cannot match input containing spaces
-                        continue;
-                    }
-                    //dmiles todo
-                    return childTrue;
                 }
             }
 
@@ -547,7 +517,7 @@ namespace RTParser.Utils
                 // normal * and LazyMatch on first word
                 if (childNodeWord.Unify(first, query) == 0)
                 {
-                    this.storeWildCard(first, newWildcard);
+                    if (childNodeWord.StoreWildCard()) this.storeWildCard(first, newWildcard);
                     if (childNode.evaluate(UPath.MakePath(newPath), query, request, mtchList, matchstate, index, newWildcard, res))
                     {
                         childTrue = true;
@@ -568,7 +538,7 @@ namespace RTParser.Utils
                         Unifiable firstAndSecond = first + " " + second;
                         if (childNodeWord.Unify(firstAndSecond, query) == 0)
                         {
-                            this.storeWildCard(firstAndSecond, newWildcard);
+                            if (childNodeWord.StoreWildCard()) this.storeWildCard(firstAndSecond, newWildcard);
                             if (childNode.evaluate(UPath.MakePath(newPath.Rest()), query,
                                                         request, mtchList, matchstate, index, newWildcard, res))
                             {
@@ -591,7 +561,7 @@ namespace RTParser.Utils
             // valid if we proceed with the tail.
             if (this.word.IsWildCard())
             {
-                this.storeWildCard(first, wildcard);
+                if (word.StoreWildCard())  this.storeWildCard(first, wildcard);
                 if (this.evaluate(UPath.MakePath(newPath), query, request, mtchList, matchstate, index, wildcard, res))
                 {
                     if (willReturn) return childTrue;

@@ -335,6 +335,11 @@ namespace RTParser
         }
 
         public abstract Unifiable[] ToArray();
+
+        public bool StoreWildCard()
+        {
+            return true;
+        }
     }
 }
 
