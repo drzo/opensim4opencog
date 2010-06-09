@@ -41,6 +41,7 @@ cp NullBuild.txt ./lib/LookingGlass-svn/src/LookingGlass/LookingGlass.exe.build
 cp NullBuild.txt ./lib/LookingGlass-svn/src/LookingGlass.Renderer.Ogre/LookingGlass.Renderer.Ogre.dll.build
 cp NullBuild.txt ./lib/LookingGlass-svn/src/LookingGlass.World.OS/LookingGlass.World.OS.dll.build
 cp NullBuild.txt ./lib/LookingGlass-svn/src/LookingGlass.World.Services/LookingGlass.World.Services.dll.build
+cp NullBuild.txt ./lib/xglore/xglore.exe.build
 
 rm -rf bin/LookingGlass*.*
 rm -rf bin/RadSpeechWin*.*
