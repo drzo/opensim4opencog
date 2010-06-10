@@ -52,16 +52,16 @@ namespace RTParser
                 GraphMaster lg = ListeningGraph;
                 if (lg != value)
                 {
-                    bot.writeToLog("ERROR CANT FIND " + value.ScriptingName +" from " + lg);
+                    bot.writeToLog("ERROR CANT FIND " + value.ScriptingName + " from " + lg);
                 }
             }
         }
-            /// <summary>
+        /// <summary>
         /// The GUID that identifies this user to the bot
         /// </summary>
         public Unifiable UserID
         {
-            get{return this.id;}
+            get { return this.id; }
         }
 
         /// <summary>
@@ -73,12 +73,12 @@ namespace RTParser
         {
             get
             {
-                return  _Results;
+                return _Results;
             }
         }
-        
 
-        List<Unifiable>  _topics = new List<Unifiable>();
+
+        List<Unifiable> _topics = new List<Unifiable>();
         public IList<Unifiable> Topics
         {
             get
@@ -88,9 +88,9 @@ namespace RTParser
             }
         }
 
-		/// <summary>
-		/// the value of the "topic" predicate
-		/// </summary>
+        /// <summary>
+        /// the value of the "topic" predicate
+        /// </summary>
         public Unifiable Topic
         {
             get
@@ -117,9 +117,9 @@ namespace RTParser
             }
         }
 
-		/// <summary>
-		/// the predicates associated with this particular user
-		/// </summary>
+        /// <summary>
+        /// the predicates associated with this particular user
+        /// </summary>
         public RTParser.Utils.SettingsDictionary Predicates;
 
         /// <summary>
@@ -153,10 +153,10 @@ namespace RTParser
                     foreach (var result in Results)
                     {
                         string thisOutput = result.RawOutput.AsString();
-                        if (thisOutput=="*") continue;
-                        if (thisOutput==lastOutput) continue;
+                        if (thisOutput == "*") continue;
+                        if (thisOutput == lastOutput) continue;
                         lastOutput = thisOutput;
-                        raws.Add(result.RawOutput); 
+                        raws.Add(result.RawOutput);
                         added++;
                         if (added > 2) break;
                     }
@@ -173,12 +173,12 @@ namespace RTParser
             {
                 if (this.Predicates != null && Predicates.containsSettingCalled("name")) return Predicates.grabSettingNoDebug("name");
                 return UserID.AsString().ToLower().Replace(" ", "_");
-            }            
+            }
         }
 
         #endregion
-		
-		#region Methods
+
+        #region Methods
 
         public void InsertProvider(ParentProvider pp)
         {
@@ -234,7 +234,7 @@ namespace RTParser
         {
             if (this.Results.Count > 0)
             {
-                var v =  ((Result)Results[0]).RawOutput;
+                var v = ((Result)Results[0]).RawOutput;
                 return v;
             }
             else
@@ -249,7 +249,7 @@ namespace RTParser
         /// <returns>the first sentence of the last output from the bot</returns>
         public Unifiable getThat()
         {
-            return this.getThat(0,0);
+            return this.getThat(0, 0);
         }
 
         /// <summary>
@@ -380,5 +380,32 @@ namespace RTParser
             }
         }
         #endregion
+
+        public string getLastBotOutputForThat()
+        {
+            if (this.Results.Count == 0) return Unifiable.STAR;
+            String sentence = ((Result)Results[0]).RawOutput;
+            string prev = "";
+            while (sentence != prev)
+            {
+                prev = sentence;
+                sentence = sentence.Trim();
+                int sl = sentence.Length - 1;
+                char c = sentence[sl];
+                if (char.IsPunctuation(c))
+                {
+                    sentence = sentence.Substring(0, sl);
+                }
+                sentence = sentence.Trim();
+            }
+            int sf = sentence.LastIndexOfAny(new[] { '.', '?', '!' });
+            if (sf>=0)
+            {
+                Console.WriteLine("REWRITE Q " + sentence);
+            }
+            String ssentence = bot.Loader.Normalize(sentence, true);
+
+            return sentence;
+        }
     }
 }
