@@ -501,6 +501,7 @@ namespace RTParser.Utils
         }
 
         protected static XmlNode PatternStar = AIMLTagHandler.getNode("<pattern name=\"*\">*</pattern>");
+        public bool ThatWideStar = false;
 
         /// <summary>
         /// Given a name will try to find a node named "name" in the childnodes or return null
@@ -632,12 +633,14 @@ namespace RTParser.Utils
                     normalizedTopic = Unifiable.STAR;
                 }
 
-                if (!isUserInput) 
-                    normalizedThat = "* " + normalizedThat;
-                else
-                    normalizedThat = "* " + normalizedThat;
+                if (ThatWideStar)
+                {
+                    if (!isUserInput)
+                        normalizedThat = "* " + normalizedThat;
+                    else
+                        normalizedThat = "* " + normalizedThat;
                     //normalizedThat = "<br/> " + normalizedThat;
-                    
+                }
 
                 // This check is in place to avoid huge "that" elements having to be processed by the 
                 // graphmaster. 

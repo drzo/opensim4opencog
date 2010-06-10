@@ -331,8 +331,8 @@ namespace RTParser.Utils
             if (request.StartedOn.AddMilliseconds(request.Proccessor.TimeOut) < DateTime.Now)
             {
                 request.Proccessor.writeToLog("WARNING! Request timeout. User: " + request.user.UserID + " raw input: \"" + request.rawInput + "\"");
-              //  request.hasTimedOut = true;
-              //  return false;// Unifiable.Empty;
+                request.hasTimedOut = true;
+                return false;// Unifiable.Empty;
             }
 
             // so we still have time!

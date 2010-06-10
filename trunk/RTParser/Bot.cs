@@ -921,10 +921,10 @@ namespace RTParser
                         sentence = sentence.Substring(0, sentence.Length - 1).Trim();
                     }
                     int topicNum = 0;
-                    if (false)
+                    if (true)
                     {
                         Unifiable path = loader.generatePath(sentence, //thatNum + " " +
-                                      request.user.getLastBotOutput(), request.Flags,
+                                      request.user.getLastBotOutputForThat(), request.Flags,
                             //topicNum + " " +
                                      request.user.TopicSetting, true);
                         numInputs++;

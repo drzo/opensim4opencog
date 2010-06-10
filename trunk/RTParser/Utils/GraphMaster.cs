@@ -300,7 +300,7 @@ namespace RTParser.Utils
                 {
                     try
                     {
-                        if (true)
+                        if (false)
                         {
                             request.Graph = p;
                             proc.Chat(request, p);
