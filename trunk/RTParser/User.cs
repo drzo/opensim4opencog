@@ -403,10 +403,9 @@ namespace RTParser
             if (sf > 0)
             {
                 String newClip = sentence.Substring(0, sf - 1);
-                Console.WriteLine("REWRITE Q " + sentence + " => " + newClip);
-                sentence = newClip;
+                Console.WriteLine(";;;;;REWRITE Q " + sentence + " => " + newClip);
+                if (newClip.Length > 4) sentence = newClip;
             }
-            int ill = sentence.Length;
             sentence = sentence.Trim(new char[] { '.', ' ', '!', '?' });
             sf = sentence.LastIndexOfAny(new[] {'.', '!'});
             if (sf > 0)
@@ -416,13 +415,10 @@ namespace RTParser
                 {
                     newClip = newClip.Substring(1).TrimStart();
                 }
-                Console.WriteLine("REWRITE NQ " + sentence + " => " + newClip);
-                sentence = newClip;
+                Console.WriteLine(";;;;;;REWRITE NQ " + sentence + " => " + newClip);
+                if (newClip.Length > 4) sentence = newClip;
             }
-            while (char.IsPunctuation(sentence[0]))
-            {
-                sentence = sentence.Substring(1);
-            }
+            sentence = sentence.Trim(new char[] { '.', ' ', '!', '?' });
             String ssentence = bot.Loader.Normalize(sentence, true);
             return sentence;
         }
