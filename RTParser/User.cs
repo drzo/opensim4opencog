@@ -399,12 +399,15 @@ namespace RTParser
                 sentence = sentence.TrimEnd();
             }
             int sf = sentence.LastIndexOfAny(new[] { '?' });
+
             if (sf > 0)
             {
                 String newClip = sentence.Substring(0, sf - 1);
                 Console.WriteLine("REWRITE Q " + sentence + " => " + newClip);
                 sentence = newClip;
             }
+            int ill = sentence.Length;
+            sentence = sentence.Trim(new char[] { '.', ' ', '!', '?' });
             sf = sentence.LastIndexOfAny(new[] {'.', '!'});
             if (sf > 0)
             {
