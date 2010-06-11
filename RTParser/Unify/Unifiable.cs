@@ -288,7 +288,7 @@ namespace RTParser
             if (other.AsString().ToUpper() == AsString().ToUpper()) return UNIFY_TRUE;
             if (IsMatch(other))
             {
-                return UNIFY_FALSE;
+                //return UNIFY_FALSE;
                 return UNIFY_TRUE;
             }
             return UNIFY_FALSE;
@@ -336,7 +336,7 @@ namespace RTParser
 
         public abstract Unifiable[] ToArray();
 
-        public bool StoreWildCard()
+        virtual public bool StoreWildCard()
         {
             return true;
         }

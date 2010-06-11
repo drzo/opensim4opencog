@@ -65,7 +65,7 @@ namespace RTParser.Database
             {
                 if (!StringCachePOSWORD.TryGetValue(s, out dict))
                 {
-                    StringCachePOSWORD[s] = GetWordInfo(s);
+                    dict = StringCachePOSWORD[s] = GetWordInfo(s);
                 }
             }
             return dict.Contains(wclass);
@@ -73,16 +73,18 @@ namespace RTParser.Database
 
         private static string GetWordInfo(string s)
         {
-            string ss;
+            Unifiable rs;
             if (IsStopWord(s))
-                ss =
+                rs =
                     bot.TheCyc.EvalSubL("(cconcatenate (pos-of-string \"" + s + "\")(words-of-string \"" + s + "\"))",
-                                        null).AsString();
+                                        null);
             else
-                ss =
+                rs =
                     bot.TheCyc.EvalSubL(
                         "(cconcatenate (pos-of-string \"" + s + "\")(words-of-string \"" + s +
-                        "\")(all-parsing-denotes-of-string \"" + s + "\"))", null).AsString();
+                        "\")(all-parsing-denots-of-string \"" + s + "\"))", null);
+
+            string ss = rs.AsString();
             if (ss.Contains("Pronoun"))
             {
                 ss = ss.Replace("Det", "");
