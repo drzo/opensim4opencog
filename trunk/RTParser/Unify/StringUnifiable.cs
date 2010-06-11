@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using java.io;
 using RTParser.AIMLTagHandlers;
+using RTParser.Database;
 using RTParser.Utils;
 using Console=System.Console;
 
@@ -271,6 +272,11 @@ namespace RTParser
         public override bool IsLazy()
         {
             if (this.IsMarkerTag()) return false;
+            if (str == "") return false;
+            if (str[0]=='~')
+            {
+                return true;
+            }
             return str.StartsWith("<");
         }
 
@@ -280,6 +286,10 @@ namespace RTParser
             return str.StartsWith("TAG-");
         }
 
+        override public bool StoreWildCard()
+        {
+            return !str.StartsWith("~");
+        }
 
 
         public override float UnifyLazy(Unifiable unifiable)
@@ -365,6 +375,17 @@ namespace RTParser
             if (TwoMatch(that, thiz))
             {
                 return true;
+            }
+            if (str.StartsWith("~"))
+            {
+                string type = str.Substring(1);
+                NatLangDb NatLangDb = NatLangDb.NatLangProc;
+                var b = NatLangDb.IsWordClass(actualValue, type);
+                if (b)
+                {
+                    return true;
+                }
+                return b;
             }
             return false;
         }
