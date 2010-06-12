@@ -196,6 +196,7 @@ namespace RTParser
         {
             if (!Proof1.Add(node))
             {
+                return false;
                 if (!Proof2.Add(node))
                 {
                     return false;
