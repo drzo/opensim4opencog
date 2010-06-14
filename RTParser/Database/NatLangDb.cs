@@ -14,7 +14,11 @@ namespace RTParser.Database
         {
             bot = p;
             NatLangProc = this;
+            StringCachePOSWORD["hello"] =
+                StringCachePOSWORD["hi"] = " # Interjection-SpeechPart # Hi-TheWord # Hello-TheWord ";
         }
+
+        private static readonly string Interjections = " hi hello yeah ";
         readonly static string StopWords =
           " a been get least our them whether about before getting left ourselves then which after being go" +
           " less out there while again between goes let over these who ago but going like per they whoever all by gone make" +
@@ -89,7 +93,7 @@ namespace RTParser.Database
             {
                 ss = ss.Replace("Det", "");
             }
-            if (ss.Contains("#$Determ"))
+            if (ss.Contains("#$Determ") || Interjections.Contains(" " + s + " "))
             {
                 ss = ss.Replace("Noun", "");
             }
