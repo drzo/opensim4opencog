@@ -43,7 +43,7 @@ namespace RTParser.AIMLTagHandlers
                 while (!rest.IsEmpty)
                 {
                    // Unifiable[] words = templateNodeInnerText.AsString().Split(new char[]{''});
-                    Unifiable word = templateNodeInnerText.First();
+                    Unifiable word = rest.First();
                     rest = rest.Rest();
                     {
                         Unifiable newWord = word.ToPropper();
