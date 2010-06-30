@@ -1,6 +1,6 @@
 ﻿<project schemaVersion="1.6.0.7">
     <assemblies>
-        <assembly assemblyPath="..\bin\Debug\SwiPlCs.dll" xmlCommentsPath="..\bin\Debug\SwiPlCs.xml" commentsOnly="False" />
+        <assembly assemblyPath="..\..\..\bin\SwiPlCs.dll" xmlCommentsPath="..\..\..\SwiPlCs.xml" commentsOnly="False" />
     </assemblies>
     <namespaceSummaries>
         <namespaceSummaryItem name="" isDocumented="False">The namespace SbsSW.SwiPlCs provides an .NET interface to &lt;a href='http://www.swi-prolog.org' &gt;SWI-Prolog&lt;/a&gt;</namespaceSummaryItem>
