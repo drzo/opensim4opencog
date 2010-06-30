@@ -1,0 +1,101 @@
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{8C8EFC28-3E9E-47BD-A6ED-4C36EA71B138}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>SbsSW.SwiPlCs</RootNamespace>
+    <AssemblyName>SwiPlCs</AssemblyName>
+    <SccProjectName>"%24/Komponenten/SWI-cs", CSFAAAAA</SccProjectName>
+    <SccLocalPath>..</SccLocalPath>
+    <SccAuxPath>
+    </SccAuxPath>
+    <SccProvider>MSSCCI:Microsoft Visual SourceSafe</SccProvider>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>2.0</OldToolsVersion>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>SBS_OpenSource_KeyPair.snk</AssemblyOriginatorKeyFile>
+    <TargetFrameworkSubset>
+    </TargetFrameworkSubset>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <DocumentationFile>SwiPlCs.XML</DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <DocumentationFile>SwiPlCs.XML</DocumentationFile>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release64|AnyCPU' ">
+    <OutputPath>bin\Release64\</OutputPath>
+    <DefineConstants>TRACE;_PL_X64</DefineConstants>
+    <DocumentationFile>SwiPlCs.XML</DocumentationFile>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\..\..\library\DesignByContract\DesignByContract.cs">
+      <Link>DesignByContract.cs</Link>
+    </Compile>
+    <Compile Include="SWI-cs-PlQuery.cs" />
+    <Compile Include="Exceptions.cs" />
+    <Compile Include="LibPl.cs" />
+    <Compile Include="NativeMethods.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SWI-cs.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram2.cd" />
+    <None Include="Help\sitemap.sitemap" />
+    <None Include="Help\SwiCsPl.shfb" />
+    <None Include="SBS_OpenSource_KeyPair.snk" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="ChangeLog.txt" />
+    <Content Include="FAQ.txt" />
+    <Content Include="Help\git_access_to_plweb.txt" />
+    <Content Include="Help\Intelligence.png" />
+    <Content Include="Help\introduction.htm" />
+    <Content Include="Help\Tooltip.png" />
+    <Content Include="Readme.txt" />
+    <Content Include="Readme_publish.txt" />
+    <Content Include="TODO.txt" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+  <PropertyGroup>
+    <PostBuildEvent>if exist $(SolutionDir)SwiPlCs-Documentation\SwiPlCs-Documentation.csproj copy $(ProjectDir)ChangeLog.txt $(SolutionDir)SwiPlCs-Documentation\Download</PostBuildEvent>
+  </PropertyGroup>
+</Project>
