@@ -351,7 +351,7 @@ namespace RTParser.Database
             }
             catch (Exception e)
             {
-                writeToLog("" + e);
+                Console.WriteLine("" + e);
                 Console.Out.Flush();
                 return null;
             }

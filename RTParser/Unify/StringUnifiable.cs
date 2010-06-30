@@ -87,7 +87,14 @@ namespace RTParser
         public override bool Equals(object obj)
         {
             if (obj is Unifiable) return ((Unifiable)obj) == this;
-            return str == astr(obj);
+            var os = astr(obj);
+            if (str == os) return true;
+            if (str.ToLower() == os.ToLower())
+            {
+                return true;
+            }
+            return false;
+                
         }
 
         public override object AsNodeXML()
@@ -131,7 +138,12 @@ namespace RTParser
 
         public override Unifiable[] ToArray()
         {
-            return Splitter(str); 
+            if (splitted != null)
+            {
+                return splitted;
+            }
+            if (splitted == null) splitted = Splitter(str);
+            return splitted;
         }
 
         public static Unifiable[] Splitter(string str)
@@ -216,9 +228,11 @@ namespace RTParser
             return newWord;
         }
 
+        protected Unifiable[] splitted = null;
         public override Unifiable Rest()
         {
-            Unifiable[] splitted = Splitter(str);
+
+            splitted = ToArray();
             return Join(" ", splitted, 1, splitted.Length - 1);
             if (String.IsNullOrEmpty(this.str)) return Unifiable.Empty;
             int i = str.IndexOfAny(BRKCHARS);
@@ -370,9 +384,15 @@ namespace RTParser
             {
                 return true;
             }
-            that = " " + actualValue.ToValue() + " ";
-            thiz = " " + this.ToValue() + " ";
+            string a1 = this.ToValue();
+            string a2 = actualValue.ToValue();
+            thiz = " " + a1 + " ";
+            that = " " + a2 + " ";
             if (TwoMatch(that, thiz))
+            {
+                return true;
+            }
+            if (TwoSemMatch(a1, a2))
             {
                 return true;
             }
@@ -386,6 +406,17 @@ namespace RTParser
                     return true;
                 }
                 return b;
+            }
+            return false;
+        }
+
+        private bool TwoSemMatch(string that, string thiz)
+        {
+            return false;
+            NatLangDb NatLangDb = NatLangDb.NatLangProc;
+            if (NatLangDb.IsWordClassCont(that, " determ") && NatLangDb.IsWordClassCont(thiz, " determ"))
+            {
+                return true;
             }
             return false;
         }

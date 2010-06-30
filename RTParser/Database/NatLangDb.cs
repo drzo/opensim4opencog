@@ -63,20 +63,32 @@ namespace RTParser.Database
         public static bool IsWordClass(string s, string wclass)
         {
             wclass = " " + wclass.ToLower() + " ";
+            return IsWordClassCont(s, wclass);
+        }
+
+        public static bool IsWordClassCont(string s, string wclass)
+        {
             s = s.ToLower();
             string dict;
             lock (StringCachePOSWORD)
             {
                 if (!StringCachePOSWORD.TryGetValue(s, out dict))
                 {
-                    dict = StringCachePOSWORD[s] = GetWordInfo(s);
+                    dict = StringCachePOSWORD[s] = " " + GetWordInfo(s) + " ";
+                    Console.WriteLine("" + s + " => " + dict);
                 }
             }
-            return dict.Contains(wclass);
+            var b = dict.Contains(wclass);
+            if (b)
+            {
+                return b;
+            }
+            return b;
         }
 
         private static string GetWordInfo(string s)
         {
+            s = ToLowerAnsii(s);
             Unifiable rs;
             if (IsStopWord(s))
                 rs =
@@ -99,6 +111,24 @@ namespace RTParser.Database
             }
             ss = ss.ToLower().Replace('(', ' ').Replace(')', ' ').Replace('$', ' ');
             return ss;
+        }
+
+        private static string ToLowerAnsii(string s)
+        {
+            s = s.ToLowerInvariant();
+            String s1 = "";
+            foreach (char c in s)
+            {
+                char c0 = c;
+
+                while (c0 > 128)
+                {
+                    c0 = (char)(c0 - 32);
+                }
+                s1 += c0;
+            }
+
+            return s1;
         }
     }
 }

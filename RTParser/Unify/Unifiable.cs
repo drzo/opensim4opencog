@@ -69,13 +69,15 @@ namespace RTParser
         private static Unifiable MakeStringUnfiable(string value)
         {
             if (value == null) return null;
+            value = value.Trim();//.ToLower();
+            string key = value.Trim();//.ToLower();
             Unifiable u;
             if (true)
                 lock (internedUnifiables)
                 {
-                    if (!internedUnifiables.TryGetValue(value, out u))
+                    if (!internedUnifiables.TryGetValue(key, out u))
                     {
-                        u = internedUnifiables[value] = new StringUnifiable(value);
+                        u = internedUnifiables[key] = new StringUnifiable(value);
                     }
                     return u;
                 }

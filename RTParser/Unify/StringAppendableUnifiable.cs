@@ -17,6 +17,7 @@ namespace RTParser
         public override void Clear()
         {
             str = "";
+            splitted = null;
         }
 
         public override string AsString()
@@ -43,6 +44,7 @@ namespace RTParser
                     str = str;
                     str += " ";
                 }
+                splitted = null;
                 str += p.AsString().Trim();
                 str = str.Replace("  ", " ");
             }
