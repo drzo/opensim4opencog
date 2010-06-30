@@ -468,6 +468,16 @@ namespace SbsSW.SwiPlCs
     /// </remarks>
     public struct PlTerm : IComparable, IEnumerable<PlTerm>// TODO, IList<PlTerm> // LISTS
     {
+
+        ///<summary>
+        ///</summary>
+        ///<param name="t"></param>
+        ///<returns></returns>
+        public static explicit operator uint(PlTerm t)
+        {
+            return t.TermRef;
+        }
+
         private uint _termRef; // term_t
         
         // Properties
@@ -1947,7 +1957,7 @@ namespace SbsSW.SwiPlCs
         /// <see href="http://gollem.science.uva.nl/SWI-Prolog/Manual/foreigninclude.html#PL_register_foreign_in_module()"/>
         /// </summary>
         /// <returns></returns>
-        private static bool RegisterForeign(string module, string name, int arity, Delegate method, Callback.PlForeignSwitches plForeign)
+        public static bool RegisterForeign(string module, string name, int arity, Delegate method, Callback.PlForeignSwitches plForeign)
         {
             return Convert.ToBoolean(libpl.PL_register_foreign_in_module(module, name, arity, method, (int)plForeign));
         }

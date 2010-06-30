@@ -106,10 +106,10 @@ namespace SbsSW.SwiPlCs
 
 
 	[ System.Security.SuppressUnmanagedCodeSecurityAttribute ]
-	internal static class SafeNativeMethods
+	public static class SafeNativeMethods
 	{
 		//private const string DllFileName = @"D:\Lesta\swi-pl\pl\bin\LibPl.dll";
-		private const string DllFileName	= "swipl.dll";
+	    private const string DllFileName = @"swipl.dll";//"libpl.dll" for 5.7.8; //was 
 
 		public static string DllFileName1
 		{
@@ -141,8 +141,6 @@ namespace SbsSW.SwiPlCs
         // int PL_register_foreign_in_module(const char *module, const char *name, int arity, foreign_t (*function)(), int flags)
         [DllImport(DllFileName, CallingConvention=CallingConvention.Cdecl, CharSet = CharSet.Ansi, BestFitMapping = false, ThrowOnUnmappableChar = true)]
         internal static extern int PL_register_foreign_in_module(string module, string name, int arity, Delegate function, int flags);
-
-
 
 		//	 ENGINES (MT-ONLY)
 		// TYPES :  PL_engine_t			-> void *
@@ -531,6 +529,22 @@ typedef struct io_stream{
         [DllImport(DllFileName)]
         internal static extern int PL_unify_stream(uint t, IntPtr iostream);
 
+
+
+        [DllImport(DllFileName)]
+        internal static extern int PL_foreign_control(IntPtr ptr);
+
+	    [DllImport(DllFileName)]
+        internal static extern int PL_foreign_context(IntPtr control);
+
+	    [DllImport(DllFileName)]
+        internal static extern void _PL_retry(int control);
+
+	    [DllImport(DllFileName)]
+        internal static extern void _PL_retry_address(IntPtr control);
+
+	    [DllImport(DllFileName)]
+        internal extern static IntPtr PL_foreign_context_address(IntPtr control);
 
 	} // class SafeNativeMethods
 

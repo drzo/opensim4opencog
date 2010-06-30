@@ -32,7 +32,7 @@ namespace SbsSW.SwiPlCs
 	* Wrapper libpl(cs) - DllFileName - D:\\Lesta\\swi-pl\\pl\\bin\\LibPlD.dll *
 	**********************************/
 	#region private Wraper classe libpl - MyLibPl mit constanten
-	internal static class libpl
+	public static class libpl
 	{
 
 		public const int PL_Q_NORMAL = 0x02;
@@ -509,6 +509,69 @@ namespace SbsSW.SwiPlCs
         internal static int PL_unify_stream(uint term_t, IntPtr iostream)
         { return SafeNativeMethods.PL_unify_stream(term_t, iostream); }
 
+
+        ///<summary>
+        /// int PL_foreign_control(control_t)
+        ///  Extracts the type of call from the control argument. 
+        /// The return values are described above. 
+        /// Note: that the function should be prepared to handle the PL_CUTTED case and 
+        /// Note: should be aware that the other arguments are not valid in this case.
+        ///</summary>
+        ///<param name="control"></param>
+        ///<returns></returns>
+        public static int PL_foreign_control(IntPtr control)
+        {
+            return SafeNativeMethods.PL_foreign_control(control);
+        }
+        ///<summary>
+        /// long PL_foreign_context(control_t)
+        ///  Extracts the context from the context argument. 
+        /// In the call type is PL_FIRST_CALL the context value is 0L. 
+        /// Otherwise it is the value returned by the last PL_retry() associated 
+        /// with this goal (both if the call type is PL_REDO as PL_CUTTED).
+        ///</summary>
+        ///<param name="control"></param>
+        ///<returns></returns>
+        public static int PL_foreign_context(IntPtr control)
+        {
+            return SafeNativeMethods.PL_foreign_context(control);
+        }
+
+        ///<summary>
+        /// void * PL_foreign_context_address(control_t)
+        ///    Extracts an address as passed in by PL_retry_address(). 
+        ///</summary>
+        ///<param name="control"></param>
+        ///<returns></returns>
+        public static IntPtr PL_foreign_context_address(IntPtr control)
+        {
+            return SafeNativeMethods.PL_foreign_context_address(control);
+        }
+
+        ///<summary>
+        /// void PL_retry(long)
+        /// The foreign function succeeds while leaving a choice point. 
+        /// On backtracking over this goal the foreign function will be called again, 
+        /// but the control argument now indicates it is a `Redo' call and the macro 
+        /// PL_foreign_context() will return the handle passed via PL_retry(). 
+        /// This handle is a 30 bits signed value (two bits are used for status indication).
+        ///</summary>
+        ///<param name="control"></param>
+        public static void PL_retry(int control)
+        {
+            SafeNativeMethods._PL_retry(control);
+        }
+
+        ///<summary>
+        /// void PL_retry_address(void *)
+        /// As PL_retry(), but ensures an address as returned by malloc() 
+        /// is correctly recovered by PL_foreign_context_address().
+        ///</summary>
+        ///<param name="control"></param>
+        public static void PL_retry_address(IntPtr control)
+        {
+            SafeNativeMethods._PL_retry_address(control);
+        }
 
 	} // libpl
 	#endregion
