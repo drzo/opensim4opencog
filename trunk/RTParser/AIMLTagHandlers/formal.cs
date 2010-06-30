@@ -47,7 +47,7 @@ namespace RTParser.AIMLTagHandlers
                     rest = rest.Rest();
                     {
                         Unifiable newWord = word.ToPropper();
-                        result.Append(newWord + " ");
+                        result.Append(newWord);
                     }
                 }
                 return result.ToString().Trim();

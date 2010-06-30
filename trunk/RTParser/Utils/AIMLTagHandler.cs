@@ -57,7 +57,22 @@ namespace RTParser.Utils
 
         private static string GetDictData(List<Unifiable> unifiables, int i)
         {
-            return unifiables[i - 1];
+            int ii = i - 1;
+            int uc = unifiables.Count;
+            if (uc == 0)
+            {
+                RTPBot.writeDebugLine(" -star underflow! " + i + "- ");
+                return String.Empty;
+            }
+            if (ii > uc)
+            {
+                return unifiables[ii];
+            }
+            if (ii < 0)
+            {
+                ii = 0;
+            }
+            return unifiables[ii];
         }
 
 
@@ -73,7 +88,7 @@ namespace RTParser.Utils
             return false;
         }
 
-        private static bool MeansUnknown(Unifiable unifiable)
+        public static bool MeansUnknown(Unifiable unifiable)
         {
             if (Unifiable.IsNullOrEmpty(unifiable)) return true;
             string s = unifiable.AsString().ToLower();

@@ -2009,31 +2009,31 @@ The AIMLbot program.
             set { TheCyc.CycEnabled = value; }
         }
 
-        public GraphMaster GetGraph(string botname, GraphMaster current)
+        public GraphMaster GetGraph(string graphPath, GraphMaster current)
         {
-            if (botname == null)
+            if (graphPath == null)
             {
                 return current;
             }
-            botname = botname.ToLower();
-            if (botname == "default")
+            graphPath = graphPath.ToLower();
+            if (graphPath == "default")
             {
                 return _g;
             }
-            if (botname == "current")
+            if (graphPath == "current")
             {
                 return current;
             }
-            if (botname == "parent")
+            if (graphPath == "parent")
             {
                 return current.Parent;
             }
             GraphMaster g;
             lock (GraphsByName)
             {
-                if (!GraphsByName.TryGetValue(botname, out g))
+                if (!GraphsByName.TryGetValue(graphPath, out g))
                 {
-                    g = GraphsByName[botname] = new GraphMaster(botname, this);
+                    g = GraphsByName[graphPath] = new GraphMaster(graphPath, this);
                 }
             }
             return g;
@@ -2069,12 +2069,13 @@ The AIMLbot program.
             //Added from AIML content now
             // myBot.AddAiml(evidenceCode);
             String s = null;
+            var userJustSaid = String.Empty;
             while (true)
-            {
+            {                
                 System.Console.WriteLine("-----------------------------------------------------------------");
                 RTPBot.writeDebugLine("-----------------------------------------------------------------");
                 RTPBot.writeDebugLine("-----------------------------------------------------------------");
-                System.Console.Write(myUser.ShortName + ": ");
+                System.Console.Write(myUser.ShortName + "> ");
                 Console.Out.Flush();
                 string input = Console.ReadLine();
                 if (input == null)
@@ -2088,7 +2089,7 @@ The AIMLbot program.
                 }
                 if (String.IsNullOrEmpty(input))
                 {
-                    System.Console.WriteLine("Bot: " + s);
+                    System.Console.WriteLine(myName + "> " + s);
                     continue;
                 }
                 if (input == "set")
@@ -2096,7 +2097,13 @@ The AIMLbot program.
                     System.Console.WriteLine(myBot.HeardPredicates.ToDebugString());
                     System.Console.WriteLine(myBot.GlobalSettings.ToDebugString());
                     System.Console.WriteLine(myUser.Predicates.ToDebugString());
-                    System.Console.WriteLine("Bot: " + s);
+                    System.Console.WriteLine(myName + "> " + s);
+                    continue;
+                }
+                if (input == "cd")
+                {
+                    string ss = input.Substring(2).Trim();
+                    myUser.ListeningGraph = myBot.GetGraph(ss, myUser.ListeningGraph);
                     continue;
                 }
                 try
@@ -2106,7 +2113,7 @@ The AIMLbot program.
                         string ss = input.Substring(2).Trim();
                         myBot.AddAiml(ss);
                         System.Console.WriteLine("Done with " + ss);
-                        continue;                        
+                        continue;
                     }
                     if (input.StartsWith("+"))
                     {
@@ -2130,11 +2137,12 @@ The AIMLbot program.
                     {
                         s = input.Substring(4).Trim();
                         myBot.HeardSelfSay0(s);
-                        System.Console.WriteLine("Bot: " + s);
+                        System.Console.WriteLine(myName + "> " + s);
                     }
                     else
                     {
-                        myUser.TopicSetting = "collectevidencepatterns";
+                        userJustSaid = input;
+                        //  myUser.TopicSetting = "collectevidencepatterns";
                         myBot.pMSM.clearEvidence();
                         myBot.pMSM.clearNextStateValues();
                         Request r = new AIMLbot.Request(input, myUser, myBot, null);
@@ -2144,7 +2152,9 @@ The AIMLbot program.
                     }
                     System.Console.WriteLine("-----------------------------------------------------------------");
                     Console.WriteLine("---------------------");
-                    System.Console.WriteLine("Bot> " + s);
+                    System.Console.WriteLine(myUser.ShortName + ": " + userJustSaid);
+                    Console.WriteLine("---------------------");
+                    System.Console.WriteLine(myName + ": " + s);
                 }
                 catch (Exception e)
                 {

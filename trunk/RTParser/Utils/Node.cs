@@ -217,7 +217,16 @@ namespace RTParser.Utils
             bool found = false;
             foreach (var c in this.children)
             {
-                if (c.Key.AsString() == firstWord.AsString())
+                string ks = c.Key.AsString();
+                string fs = firstWord.AsString();
+                if (ks == fs)
+                {
+                    Node childNode = c.Value;
+                    initial = childNode.addPathNodeChilds(newPath);
+                    found = true;
+                    break;
+                }
+                if (ks.ToLower().Trim() == fs.ToLower().Trim())
                 {
                     Node childNode = c.Value;
                     initial = childNode.addPathNodeChilds(newPath);

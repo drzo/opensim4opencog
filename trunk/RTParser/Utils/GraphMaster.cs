@@ -61,7 +61,7 @@ namespace RTParser.Utils
         {
             get
             {
-                if (ScriptingName.AsString().Contains("parent"))
+                if (ScriptingName.Contains("parent"))
                 {
                     return this;
                 }
@@ -80,7 +80,7 @@ namespace RTParser.Utils
             }
         }
 
-        public Unifiable ScriptingName
+        public String ScriptingName
         {
             get { return graphName; }
         }

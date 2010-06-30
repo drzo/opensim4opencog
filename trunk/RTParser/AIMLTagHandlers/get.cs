@@ -52,7 +52,7 @@ namespace RTParser.AIMLTagHandlers
                 ISettingsDictionary dict = query;
                 if (GetAttribValue("type", "") == "bot") dict = request.Proccessor.GlobalSettings;
                 Unifiable resultGet = dict.grabSetting(name).Trim();
-                if (resultGet.ToValue().ToUpper() == "UNKNOWN") return resultGet + " " + name;
+ 
                 // if ((!String.IsNullOrEmpty(result)) && (!result.IsWildCard())) return result; // we have a local one
                 
                 // try to use a global blackboard predicate
@@ -60,12 +60,15 @@ namespace RTParser.AIMLTagHandlers
                 RTParser.User gUser = this.user.bot.FindOrCreateUser("UNKNOWN_PARTNER", out newlyCreated);
                 Unifiable gResult = gUser.Predicates.grabSetting(name).Trim();
 
-                if ((String.IsNullOrEmpty(resultGet)) && (!String.IsNullOrEmpty(gResult)))
+                if ((MeansUnknown(resultGet)) && (!MeansUnknown(gResult)))
                 {
                     // result=nothing, gResult=something => return gResult
                     return gResult;
                 }
-
+                if (resultGet.ToValue().ToUpper() == "UNKNOWN")
+                {
+                    return resultGet + " " + name;
+                }
                 if (!String.IsNullOrEmpty(resultGet))
                 {
                     if (!String.IsNullOrEmpty(gResult))
