@@ -1112,13 +1112,20 @@ namespace cogbot.TheOpenSims
                         AssetType atype = AssetType.Unknown;
                         try
                         {
-                            atype = (AssetType) Enum.Parse(typeof (AssetType), type);
+                            try
+                            {
+                                atype = (AssetType)Enum.Parse(typeof(AssetType), type.Substring(0, 1).ToUpper() + type.Substring(1).ToLower());
+                            }
+                            catch (Exception)
+                            {
+                                atype = (AssetType)Enum.Parse(typeof(AssetType), type);
+                            }
                         }
                         catch (Exception)
                         {
                             try
                             {
-                                atype = (AssetType)Enum.Parse(typeof(AssetType),type.Substring(0,1).ToUpper()+type.Substring(1).ToLower());
+                                atype = (AssetType)Enum.Parse(typeof(AssetType), type.ToUpper());
                             }
                             catch (Exception)
                             {

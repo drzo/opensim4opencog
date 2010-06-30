@@ -13,7 +13,7 @@ using Radegast;
 
 namespace cogbot.ScriptEngines
 {
-    class ScriptEventListener : SimEventSubscriber, IDisposable
+    public class ScriptEventListener : SimEventSubscriber, IDisposable
     {
         readonly Queue<KeyValuePair<object, SimObjectEvent>> taskQueue = new Queue<KeyValuePair<object, SimObjectEvent>>();
         private ScriptInterpreter taskInterperter;
