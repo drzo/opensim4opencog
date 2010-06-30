@@ -78,7 +78,7 @@ public class Interpreter
                 symbolTable.internType(t);
             }
         } catch (Exception e) {
-            Console.WriteLine("WARNING: SKIPPING ASSEMBLY " + a + "  BECAUSE OF " + e + " (Only WARNING)");
+            Console.WriteLine("WARNING: SKIPPING ASSEMBLY " + a + "  BECAUSE OF " + e.Message + " (Only WARNING)");
         }
     }
 
