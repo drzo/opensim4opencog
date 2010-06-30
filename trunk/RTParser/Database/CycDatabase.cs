@@ -383,7 +383,8 @@ namespace RTParser.Database
             int i = text.IndexOf(" ");
             if (i > 0)
             {
-                return CleanupCyc(text.Substring(0, i)) + " " + CleanupCyc(text.Substring(i + 1));
+                String stext = CleanupCyc(text.Substring(0, i)).AsString() + " " + CleanupCyc(text.Substring(i + 1)).AsString();
+                return stext;
             }
             if (text.StartsWith("#$") || text.StartsWith("(#$"))
             {

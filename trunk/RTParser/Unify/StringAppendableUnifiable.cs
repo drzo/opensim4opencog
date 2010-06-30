@@ -32,6 +32,10 @@ namespace RTParser
                 throw new InvalidObjectException("this " + AsString() + " cannot be appended with " + p);
             }
             if (Unifiable.IsNullOrEmpty(p)) return;
+            if (p==" ")
+            {
+                
+            }
             if (str == "")
                 str = p.AsString().Trim();
             else
@@ -47,6 +51,10 @@ namespace RTParser
                 splitted = null;
                 str += p.AsString().Trim();
                 str = str.Replace("  ", " ");
+            }
+            if (str.Contains("othere"))
+            {
+                
             }
         }
 

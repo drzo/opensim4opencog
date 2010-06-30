@@ -1098,7 +1098,8 @@ namespace RTParser
         public Unifiable CleanupCyc(string text)
         {
             if (TheCyc == null) return text.Replace("#$", " ").Replace("  ", " ");
-            return TheCyc.CleanupCyc(text);
+            string str = TheCyc.CleanupCyc(text);
+            return str;
         }
 
         /// <summary>
