@@ -200,7 +200,7 @@ namespace SbsSW.SwiPlCs
 		internal static extern uint PL_new_term_ref();
 		//__pl_export void	PL_put_integer(term_t term, long i);
 		[DllImport(DllFileName)]
-		internal static extern void PL_put_integer(uint term, int i);
+		internal static extern void PL_put_integer(uint term, long i);
 		[DllImport(DllFileName)]
 		internal static extern void PL_put_float(uint term, double i);
 		// __pl_export void	PL_put_atom(term_t term, atom_t atom);
@@ -313,6 +313,10 @@ namespace SbsSW.SwiPlCs
 		internal static extern int PL_unify(uint t1,  uint t2);
         [DllImport(DllFileName)]
         internal static extern int PL_unify_integer(uint t1, Int32 n);
+        [DllImport(DllFileName)]
+        internal static extern int PL_unify_integer(uint t1, Int64 n);
+        [DllImport(DllFileName)]
+        internal static extern int PL_unify_float(uint t1, double n);
         [DllImport(DllFileName, CharSet = CharSet.Ansi, BestFitMapping = false, ThrowOnUnmappableChar = true)]
         internal static extern int PL_unify_atom_chars(uint t1, string atom);
 
@@ -532,7 +536,7 @@ typedef struct io_stream{
 
 
         [DllImport(DllFileName)]
-        internal static extern int PL_foreign_control(IntPtr ptr);
+        internal static extern FRG PL_foreign_control(IntPtr ptr);
 
 	    [DllImport(DllFileName)]
         internal static extern int PL_foreign_context(IntPtr control);
@@ -546,6 +550,8 @@ typedef struct io_stream{
 	    [DllImport(DllFileName)]
         internal extern static IntPtr PL_foreign_context_address(IntPtr control);
 
+        [DllImport(DllFileName)]
+        internal extern static int PL_toplevel();
 	} // class SafeNativeMethods
 
 } // namespace SbsSW.SwiPlCs
