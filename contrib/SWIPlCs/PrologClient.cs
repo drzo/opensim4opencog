@@ -51,6 +51,7 @@ namespace SbsSW.SwiPlCs
         {
             throw new NotImplementedException();
         }
+
         static void Main(string[] args)
         {
             string plhome = Environment.GetEnvironmentVariable("SWI_HOME_DIR");
@@ -101,9 +102,11 @@ namespace SbsSW.SwiPlCs
                 //PlQuery.PlCall("interactor");
                 //Delegate Foo0 = foo0;
                 PlForeignSwitches Nondeterministic = PlForeignSwitches.Nondeterministic | PlForeignSwitches.NoTrace;
-                PlEngine.RegisterForeign(null, "foo", 2, new DelegateParameterBacktrack(FooTwo), Nondeterministic);
+                PlEngine.RegisterForeign(null, "foo2", 2, new DelegateParameterBacktrack(FooTwo), Nondeterministic);
+                PlEngine.RegisterForeign(null, "foo", 2, new DelegateParameterBacktrackVarArgs(FooThree), Nondeterministic | PlForeignSwitches.VarArgs);
                 PlEngine.SetStreamFunctionRead(PlStreamType.Input, new DelegateStreamReadFunction(Sread));
                 PlAssert("tc:-foo(X,Y),writeq(f(X,Y)),nl,X=5");
+                PlAssert("tc2:-foo2(X,Y),writeq(f(X,Y)),nl,X=5");
                 libpl.PL_toplevel();
                 Console.WriteLine("press enter to exit");
                 Console.ReadLine();
@@ -112,7 +115,6 @@ namespace SbsSW.SwiPlCs
             }
 
         }
-        static string ref_string_read = "hello_dotnet_world_????.";     // The last 4 character are German umlauts.
 
         static internal long Sread(IntPtr handle, System.IntPtr buffer, long buffersize)
         {
@@ -179,7 +181,189 @@ typedef struct // define a context structure  { ... } context;
          foreign_t my_function(term_t a0, term_t a1, foreign_t handle) { struct context * ctxt; switch( PL_foreign_control(handle) ) { case PL_FIRST_CALL: ctxt = malloc(sizeof(struct context)); ... PL_retry_address(ctxt); case PL_REDO: ctxt = PL_foreign_context_address(handle); ... PL_retry_address(ctxt); case PL_CUTTED: free(ctxt); PL_succeed; } } 
          
          */
-        delegate int TypeFoo();
+
+        public static int FooTwo(PlTerm a0, PlTerm a1, IntPtr control)
+        {
+            var handle = control;
+            FRG fc = (FRG)(libpl.PL_foreign_control(control));
+
+            switch (fc)
+            {
+                case FRG.PL_FIRST_CALL:
+                    {
+                        var v = ObtainHandle(control);
+                        bool res = v.Setup(new PlTermV(a0, a1));
+                        bool more = v.HasMore();
+                        if (more)
+                        {
+                            libpl.PL_retry(v.Handle);
+                            return res ? 3 : 0;
+                        }
+                        return res ? 1 : 0;
+                    } break;
+                case FRG.PL_REDO:
+                    {
+                        var v = FindHandle(control);
+                        bool res = v.Call(new PlTermV(a0, a1));
+                        bool more = v.HasMore();
+                        if (more)
+                        {
+                            libpl.PL_retry(v.Handle);
+                            return res ? 3 : 0;
+                        }
+                        return res ? 1 : 0;
+                    } break;
+                case FRG.PL_CUTTED:
+                    {
+                        var v = FindHandle(control);
+                        bool res = v.Close(new PlTermV(a0, a1));
+                        ReleaseHandle(v);
+                        return res ? 1 : 0;
+                    } break;
+                default:
+                    {
+                        throw new PlException("no frg");
+                        return libpl.PL_fail;
+                    }
+                    break;
+            }
+        }
+
+        public static int FooThree(PlTerm a0, int arity, IntPtr control)
+        {
+            var handle = control;
+            FRG fc = (FRG)(libpl.PL_foreign_control(control));
+
+            switch (fc)
+            {
+                case FRG.PL_FIRST_CALL:
+                    {
+                        var v = ObtainHandle(control);
+                        bool res = v.Setup(new PlTermV(a0, arity));
+                        bool more = v.HasMore();
+                        if (more)
+                        {
+                            libpl.PL_retry(v.Handle);
+                            return res ? 3 : 0;
+                        }
+                        return res ? 1 : 0;
+                    } break;
+                case FRG.PL_REDO:
+                    {
+                        var v = FindHandle(control);
+                        bool res = v.Call(new PlTermV(a0, arity));
+                        bool more = v.HasMore();
+                        if (more)
+                        {
+                            libpl.PL_retry(v.Handle);
+                            return res ? 3 : 0;
+                        }
+                        return res ? 1 : 0;
+                    } break;
+                case FRG.PL_CUTTED:
+                    {
+                        var v = FindHandle(control);
+                        bool res = v.Close(new PlTermV(a0, arity));
+                        ReleaseHandle(v);
+                        return res ? 1 : 0;
+                    } break;
+                default:
+                    {
+                        throw new PlException("no frg");
+                        return libpl.PL_fail;
+                    }
+                    break;
+            }
+        }
+
+        //static NonDetHandle lastHandle;
+        public static NonDetHandle FindHandle(IntPtr context)
+        {
+            //if (context == (IntPtr)0) return lastHandle;
+            lock (NonDetHandle.HandleToObject) return NonDetHandle.ContextToObject[context];
+        }
+
+        private static int CountTo(PlTerm term, PlTerm term2, ref NonDetTest o)
+        {
+            try
+            {
+
+                var c = o.start;
+                bool succed = term.Unify("callnum" + c);
+                if (!succed)
+                {
+                    succed = term2.Unify("callnum" + c);
+                }
+
+                if (succed)
+                {
+                    succed = term2.Unify(term);
+                }
+                if (succed)
+                {
+                    return libpl.PL_succeed;
+                }
+                return libpl.PL_fail;
+            }
+            finally
+            {
+                o.start++;
+            }
+
+        }
+
+
+        static public void ReleaseHandle(NonDetHandle hnd)
+        {
+            lock (NonDetHandles)
+            {
+                NonDetHandle.ContextToObject.Remove(hnd.Context);
+                hnd.Context = (IntPtr)0;
+                NonDetHandles.AddLast(hnd);
+            }
+        }
+
+        static public NonDetHandle ObtainHandle(IntPtr context)
+        {
+            lock (NonDetHandles)
+            {
+                NonDetHandle hnd;
+                if (NonDetHandles.Count == 0)
+                {
+                    hnd = new NonDetHandle();
+                }
+                else
+                {
+                    hnd = NonDetHandles.First.Value;
+                    NonDetHandles.RemoveFirst();
+                }
+                hnd.Context = context;
+                lock (NonDetHandle.HandleToObject)
+                {
+                    NonDetHandle.ContextToObject[context] = hnd;
+                }
+                return hnd;
+            }
+        }
+
+        private static string ToCSString(PlTermV termV)
+        {
+            int s = termV.Size;
+
+            //var a0= termV.A0;
+            PlTerm v0 = termV[0];
+            PlTerm v1 = termV[1];
+            PlQuery.PlCall("write", new PlTermV(v0));
+            PlQuery.PlCall("nl");
+            PlQuery.PlCall("writeq", new PlTermV(v1));
+            PlQuery.PlCall("nl");
+            return "";
+        }
+
+        private static void PlAssert(string s)
+        {
+            PlQuery.PlCall("assert((" + s + "))");
+        }
 
         private static int callNum = 0;
 
@@ -270,7 +454,7 @@ typedef struct // define a context structure  { ... } context;
                     {
                         ndtp = new PinnedObject<NonDetTest>();
                         ndtp.managedObject.start = 1;
-                        ndtp.managedObject.stop = 4;
+                        ndtp.managedObject.stop = 3;
                         //ndtp.managedObject.fid = libpl.PL_open_foreign_frame();
 
                         ndtp.Recopy();
@@ -378,161 +562,20 @@ typedef struct // define a context structure  { ... } context;
             }
         }
 
-        public static int FooTwo(PlTerm a0, PlTerm a1, IntPtr control)
-        {
-            callNum++;
-            if (callNum > 10)
-            {
-                callNum = 0;
-                //return libpl.PL_fail;
-            }
-            var handle = control;
-            FRG fc = (FRG)(libpl.PL_foreign_control(control));
-
-            switch (fc)
-            {
-                case FRG.PL_FIRST_CALL:
-                    {
-                        var v = ObtainHandle(control);
-                        lock (NonDetHandle.HandleToObject)
-                        {
-                            NonDetHandle.ContextToObject[control] = v;
-                        }
-                        bool res = v.Setup(a0, a1);
-                        bool more = v.HasMore();
-                        if (more)
-                        {
-                            libpl.PL_retry(v.Handle);
-                            return res ? 3 : 0;
-                        }
-                        return res ? 1 : 0;
-                    } break;
-                case FRG.PL_REDO:
-                    {
-                        var v = FindHandle(control);
-                        bool res = v.Call(a0, a1);
-                        bool more = v.HasMore();
-                        if (more)
-                        {
-                            libpl.PL_retry(v.Handle);
-                            return res ? 3 : 0;
-                        }
-                        return res ? 1 : 0;
-                    } break;
-                case FRG.PL_CUTTED:
-                    {
-                        var v = FindHandle(control);
-                        bool res = v.Close(a0, a1);
-                        ReleaseHandle(v);
-                        return res ? 1 : 0;
-                    } break;
-                default:
-                    {
-                        throw new PlException("no frg");
-                        return libpl.PL_fail;
-                    }
-                    break;
-            }
-        }
-
-        static NonDetHandle lastHandle;
-        public static NonDetHandle FindHandle(IntPtr context)
-        {
-            //if (context == (IntPtr)0) return lastHandle;
-            lock (NonDetHandle.HandleToObject) return NonDetHandle.ContextToObject[context];
-        }
-
-        private static int CountTo(PlTerm term, PlTerm term2, ref NonDetTest o)
-        {
-            try
-            {
-
-                var c = o.start;
-                bool succed = term.Unify("callnum" + c);
-                if (!succed)
-                {
-                    succed = term2.Unify("callnum" + c);
-                }
-
-                if (succed)
-                {
-                    succed = term2.Unify(term);
-                }
-                if (succed)
-                {
-                    return libpl.PL_succeed;
-                }
-                return libpl.PL_fail;
-            }
-            finally
-            {
-                o.start++;
-            }
-
-        }
-
-
-        static public void ReleaseHandle(NonDetHandle hnd)
-        {
-            lock (NonDetHandles)
-            {
-                NonDetHandle.ContextToObject.Remove(hnd.Context);
-                hnd.Context = (IntPtr)0;
-
-                NonDetHandles.AddLast(hnd);
-            }
-        }
-        static public NonDetHandle ObtainHandle(IntPtr context)
-        {
-            lock (NonDetHandles)
-            {
-
-                if (NonDetHandles.Count == 0)
-                {
-                    lastHandle = new NonDetHandle();
-                    lastHandle.Context = context;
-                    return lastHandle;
-                }
-                NonDetHandle hnd = NonDetHandles.First.Value;
-                lastHandle = hnd;
-                lastHandle.Context = context;
-                NonDetHandles.RemoveFirst();
-                return hnd;
-            }
-        }
-
-        private static string ToCSString(PlTermV termV)
-        {
-            int s = termV.Size;
-
-            //var a0= termV.A0;
-            PlTerm v0 = termV[0];
-            PlTerm v1 = termV[1];
-            PlQuery.PlCall("write", new PlTermV(v0));
-            PlQuery.PlCall("nl");
-            PlQuery.PlCall("writeq", new PlTermV(v1));
-            PlQuery.PlCall("nl");
-            return "";
-        }
-
-        private static void PlAssert(string s)
-        {
-            PlQuery.PlCall("assert((" + s + "))");
-        }
     }
 
 
-    public class NonDetHandle : NondeterminsticMethod
+    public class NonDetHandle
     {
         public static Dictionary<int, NonDetHandle> HandleToObject = new Dictionary<int, NonDetHandle>();
         public static Dictionary<IntPtr, NonDetHandle> ContextToObject = new Dictionary<IntPtr, NonDetHandle>();
         public static int TotalHandles = 0;
         public readonly int Handle;
-        public NondeterminsticMethod NondeterminsticMethods;
+        public NondeterminsticMethod NonDetMethods;
         public IntPtr Context;
         public NonDetHandle()
         {
-            NondeterminsticMethods = new ForNext(1, 5);
+            NonDetMethods = new ForNext(1, 20);
             lock (HandleToObject)
             {
                 Handle = ++TotalHandles;
@@ -542,29 +585,29 @@ typedef struct // define a context structure  { ... } context;
 
         #region Overrides of NondeterminsticMethod
 
-        public override bool Setup(PlTerm a0, PlTerm a1)
+        public bool Setup(PlTermV a0)
         {
-            if (NondeterminsticMethods == null) return false;
-            return NondeterminsticMethods.Setup(a0, a1);
+            if (NonDetMethods == null) return false;
+            return NonDetMethods.Setup(a0);
         }
 
-        public override bool Call(PlTerm a0, PlTerm a1)
+        public bool Call(PlTermV a0)
         {
-            if (NondeterminsticMethods == null) return false;
-            return NondeterminsticMethods.Call(a0, a1);
+            if (NonDetMethods == null) return false;
+            return NonDetMethods.Call(a0);
         }
 
-        public override bool Close(PlTerm a0, PlTerm a1)
+        public bool Close(PlTermV a0)
         {
-            if (NondeterminsticMethods == null) return true;
-            return NondeterminsticMethods.Close(a0, a1);
+            if (NonDetMethods == null) return true;
+            return NonDetMethods.Close(a0);
         }
 
         #endregion
 
-        public override bool HasMore()
+        public bool HasMore()
         {
-            if (NondeterminsticMethods != null) return NondeterminsticMethods.HasMore();
+            if (NonDetMethods != null) return NonDetMethods.HasMore();
             return false;
         }
     }
@@ -581,25 +624,33 @@ typedef struct // define a context structure  { ... } context;
 
         #region Overrides of NondeterminsticMethod
 
-        public override bool Setup(PlTerm a0, PlTerm a1)
+        public override bool Setup(PlTermV a0)
         {
-            return Call(a0, a1);
+            return Call(a0);
         }
 
-        public override bool Call(PlTerm a0, PlTerm a1)
+        public override bool Call(PlTermV a0)
         {
+            bool success = false;
             try
             {
-                return a0.Unify(start) || a1.Unify(start);
+                for (int i = 0; i < a0.Size; i++)
+                {
+                    if (a0[i].Unify(start))
+                    {
+                        success = true;
+                    }
+                }
             }
             finally
             {
                 start++;
             }
+            return success;
 
         }
 
-        public override bool Close(PlTerm a0, PlTerm a1)
+        public override bool Close(PlTermV a0)
         {
             end = start + 1;
             return true;
@@ -618,9 +669,9 @@ typedef struct // define a context structure  { ... } context;
     abstract public class NondeterminsticMethod
     {
         private DelegateParameterBacktrack delegator;
-        public abstract bool Setup(PlTerm a0, PlTerm a1);
-        public abstract bool Call(PlTerm a0, PlTerm a1);
-        public abstract bool Close(PlTerm a0, PlTerm a1);
+        public abstract bool Setup(PlTermV a0);
+        public abstract bool Call(PlTermV a0);
+        public abstract bool Close(PlTermV a0);
         public abstract bool HasMore();
     }
 }
