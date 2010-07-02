@@ -220,6 +220,9 @@ namespace SbsSW.SwiPlCs.Callback
     [System.Runtime.InteropServices.UnmanagedFunctionPointerAttribute(System.Runtime.InteropServices.CallingConvention.Cdecl)]
     public delegate int DelegateParameterBacktrack(PlTerm term1, PlTerm term2, IntPtr control);
 
+    [System.Runtime.InteropServices.UnmanagedFunctionPointerAttribute(System.Runtime.InteropServices.CallingConvention.Cdecl)]
+    public delegate int DelegateParameterBacktrackVarArgs(PlTerm term1, int arity, IntPtr control);
+
     #endregion delagates for C# callbacks
 
 } // namespace SbsSW.SwiPlCs.Callback
@@ -1643,6 +1646,13 @@ namespace SbsSW.SwiPlCs
             _a0 = libpl.PL_new_term_refs(2);
             libpl.PL_put_term(_a0 + 0, term0.TermRef);
             libpl.PL_put_term(_a0 + 1, term1.TermRef);
+        }
+
+        public PlTermV(PlTerm terms, int arity)
+        {
+            _size = arity;
+            Check.Require(terms.TermRefIntern != 0);
+            _a0 = terms.TermRefIntern;
         }
 
         /// <inheritdoc cref="PlTermV(PlTerm, PlTerm)" />
