@@ -393,7 +393,11 @@ typedef struct // define a context structure  { ... } context;
             {
                 case FRG.PL_FIRST_CALL:
                     {
-                        var v = ObtainHandle();
+                        var v = ObtainHandle(control);
+                        lock (NonDetHandle.HandleToObject)
+                        {
+                            NonDetHandle.ContextToObject[control] = v;
+                        }
                         bool res = v.Setup(a0, a1);
                         bool more = v.HasMore();
                         if (more)
@@ -405,7 +409,7 @@ typedef struct // define a context structure  { ... } context;
                     } break;
                 case FRG.PL_REDO:
                     {
-                        var v = FindHandle(libpl.PL_foreign_context(control));
+                        var v = FindHandle(control);
                         bool res = v.Call(a0, a1);
                         bool more = v.HasMore();
                         if (more)
@@ -417,14 +421,9 @@ typedef struct // define a context structure  { ... } context;
                     } break;
                 case FRG.PL_CUTTED:
                     {
-                        var v = FindHandle(libpl.PL_foreign_context(control));
+                        var v = FindHandle(control);
                         bool res = v.Close(a0, a1);
-                        bool more = v.HasMore();
-                        if (more)
-                        {
-                            libpl.PL_retry(v.Handle);
-                            return res ? 3 : 0;
-                        }
+                        ReleaseHandle(v);
                         return res ? 1 : 0;
                     } break;
                 default:
@@ -436,9 +435,11 @@ typedef struct // define a context structure  { ... } context;
             }
         }
 
-        private static NonDetHandle FindHandle(int context)
+        static NonDetHandle lastHandle;
+        public static NonDetHandle FindHandle(IntPtr context)
         {
-            lock (NonDetHandle.HandleToObject) return NonDetHandle.HandleToObject[context];
+            //if (context == (IntPtr)0) return lastHandle;
+            lock (NonDetHandle.HandleToObject) return NonDetHandle.ContextToObject[context];
         }
 
         private static int CountTo(PlTerm term, PlTerm term2, ref NonDetTest o)
@@ -473,17 +474,28 @@ typedef struct // define a context structure  { ... } context;
 
         static public void ReleaseHandle(NonDetHandle hnd)
         {
-            lock (NonDetHandles) NonDetHandles.AddLast(hnd);
+            lock (NonDetHandles)
+            {
+                NonDetHandle.ContextToObject.Remove(hnd.Context);
+                hnd.Context = (IntPtr)0;
+
+                NonDetHandles.AddLast(hnd);
+            }
         }
-        static public NonDetHandle ObtainHandle()
+        static public NonDetHandle ObtainHandle(IntPtr context)
         {
             lock (NonDetHandles)
             {
+
                 if (NonDetHandles.Count == 0)
                 {
-                    return new NonDetHandle();
+                    lastHandle = new NonDetHandle();
+                    lastHandle.Context = context;
+                    return lastHandle;
                 }
                 NonDetHandle hnd = NonDetHandles.First.Value;
+                lastHandle = hnd;
+                lastHandle.Context = context;
                 NonDetHandles.RemoveFirst();
                 return hnd;
             }
@@ -513,9 +525,11 @@ typedef struct // define a context structure  { ... } context;
     public class NonDetHandle : NondeterminsticMethod
     {
         public static Dictionary<int, NonDetHandle> HandleToObject = new Dictionary<int, NonDetHandle>();
+        public static Dictionary<IntPtr, NonDetHandle> ContextToObject = new Dictionary<IntPtr, NonDetHandle>();
         public static int TotalHandles = 0;
         public readonly int Handle;
         public NondeterminsticMethod NondeterminsticMethods;
+        public IntPtr Context;
         public NonDetHandle()
         {
             NondeterminsticMethods = new ForNext(1, 5);
