@@ -127,7 +127,7 @@ namespace SbsSW.SwiPlCs.Callback
     /// Flags that are responsible for the foreign predicate parameters 
     /// </summary>
     [FlagsAttribute]
-    public enum PlForeignSwitches
+    public enum PlForeignSwitches:uint 
     {
         /// <summary>0 - PL_FA_NOTHING: no flags. </summary>
         None = 0,
@@ -138,8 +138,14 @@ namespace SbsSW.SwiPlCs.Callback
         /// <summary>4 - PL_FA_NONDETERMINISTIC: Predicate is non-deterministic. See also PL_retry().</summary>
         /// <seealso href="http://gollem.science.uva.nl/SWI-Prolog/Manual/foreigninclude.html#PL_retry()">PL_retry()</seealso>
         Nondeterministic = 4,
-        /// <summary>8 - PL_FA_VARARGS: (Default) Use alternative calling convention.</summary>
+        /// <summary>8 - PL_FA_VARARGS: (Default) Use alternative calling convention.   call using t0, ac, ctx </summary>
         VarArgs = 8,
+        /// <summary>16 - PL_FA_CREF:  /* call using t0, ac, ctx */.</summary>
+        CRef = 16,
+        /// <summary>
+        /// /* Internal: ISO core predicate */
+        /// </summary>
+        ISO = 32,
     }
     #endregion enum PlForeignSwitches
 
@@ -473,10 +479,10 @@ namespace SbsSW.SwiPlCs
         ///</summary>
         ///<param name="t"></param>
         ///<returns></returns>
-        public static explicit operator uint(PlTerm t)
-        {
-            return t.TermRef;
-        }
+        //public static explicit operator uint(PlTerm t)
+       // {
+         //   return t.TermRef;
+       // }
 
         private uint _termRef; // term_t
         
@@ -632,6 +638,11 @@ namespace SbsSW.SwiPlCs
         /// </summary>
         /// <param name="value">a integer value</param>
         public PlTerm(int value)
+        {
+            _termRef = libpl.PL_new_term_ref();
+            libpl.PL_put_integer(this.TermRef, value);
+        }
+        public PlTerm(long value)
         {
             _termRef = libpl.PL_new_term_ref();
             libpl.PL_put_integer(this.TermRef, value);
@@ -1230,11 +1241,28 @@ namespace SbsSW.SwiPlCs
             return 0 != libpl.PL_unify(this.TermRef, term.TermRef);
         }
 
+        public bool CanUnify(PlTerm term)
+        {
+
+            return 0 != libpl.PL_unify(this.TermRef, term.TermRef);
+        }
+
         /// <inheritdoc cref="Unify(PlTerm)"/>
         /// <param name="atom">A string to unify with</param>
         public bool Unify(string atom)
         {
             return 0 != libpl.PL_unify_atom_chars(this.TermRef, atom);
+        }
+
+        public bool Unify(long atom)
+        {
+            return 0 != libpl.PL_unify_integer(this.TermRef, atom);
+        }
+
+
+        public bool Unify(double atom)
+        {
+            return 0 != libpl.PL_unify_float(this.TermRef, atom);
         }
 
         /// <summary>
@@ -1814,6 +1842,11 @@ namespace SbsSW.SwiPlCs
         #endregion
 
         private uint m_fid; // fid_t
+
+        public uint FID
+        {
+            get { return m_fid; }
+        }
 
         /// <summary>
         /// Creating an instance of this class marks all term-references created afterwards to be valid only in the scope of this instance.

@@ -26,6 +26,7 @@ using SbsSW.SwiPlCs.Exceptions;         // in PlHalt
 
 using System.Runtime.InteropServices;	// marscall
 
+// ReSharper disable InconsistentNaming
 namespace SbsSW.SwiPlCs
 {
 	/**********************************
@@ -71,6 +72,8 @@ namespace SbsSW.SwiPlCs
 		public const int PL_ENGINE_INVAL = 2;			// engine doesn'termRef exist
 		public const int PL_ENGINE_INUSE = 3;			// engine is in use 
 
+        public const int PL_fail = 0;
+        public const int PL_succeed = 3;
 
 
 		/////////////////////////////
@@ -83,7 +86,7 @@ namespace SbsSW.SwiPlCs
 		static SafeLibraryHandle m_hLibrary;
 
 
-		private static bool IsValid
+	    private static bool IsValid
 		{
 			get { return m_hLibrary != null && !m_hLibrary.IsInvalid; }
 		}
@@ -330,7 +333,7 @@ namespace SbsSW.SwiPlCs
 		internal static uint PL_new_term_ref()
 		{ return SafeNativeMethods.PL_new_term_ref(); }
 
-		internal static void PL_put_integer(uint term, int i)
+		internal static void PL_put_integer(uint term, long i)
 		{ SafeNativeMethods.PL_put_integer(term, i); }
 
 		internal static void PL_put_float(uint term, double i)
@@ -453,8 +456,14 @@ namespace SbsSW.SwiPlCs
         internal static int PL_unify_atom_chars(uint t1, string atom)
         { return SafeNativeMethods.PL_unify_atom_chars(t1, atom); }
 
-        //internal static int PL_unify_integer(uint t1, Int32 n)
-		//{ return SafeNativeMethods.PL_unify_integer(t1, n); }
+        internal static int PL_unify_integer(uint t1, Int32 n)
+		{ return SafeNativeMethods.PL_unify_integer(t1, n); }
+
+        internal static int PL_unify_integer(uint t1, Int64 n)
+        { return SafeNativeMethods.PL_unify_integer(t1, n); }
+
+        internal static int PL_unify_float(uint t1, double n)
+        { return SafeNativeMethods.PL_unify_float(t1, n); }
 
 
 
@@ -519,7 +528,7 @@ namespace SbsSW.SwiPlCs
         ///</summary>
         ///<param name="control"></param>
         ///<returns></returns>
-        public static int PL_foreign_control(IntPtr control)
+        public static FRG PL_foreign_control(IntPtr control)
         {
             return SafeNativeMethods.PL_foreign_control(control);
         }
@@ -573,8 +582,32 @@ namespace SbsSW.SwiPlCs
             SafeNativeMethods._PL_retry_address(control);
         }
 
+	    public static int PL_toplevel()
+	    {
+            return SafeNativeMethods.PL_toplevel();
+	    }
+
 	} // libpl
 	#endregion
 
+    // *********************************
+    // * NON-DETERMINISTIC CALL/RETURN *
+    // *********************************
+
+    public enum FRG : int
+    {
+        PL_FIRST_CALL = 0,
+        PL_CUTTED = 1,
+        PL_REDO = 2,
+        
+    }
+
+    struct foreign_context
+    {
+        IntPtr context;        /* context value */
+        FRG control;   /* FRG_* action */
+        IntPtr engine; /* invoking engine */
+    }
 
 } // namespace SbsSW.SwiPlCs
+// ReSharper reenable InconsistentNaming

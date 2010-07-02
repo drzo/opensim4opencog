@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using cogbot;
-using cogbot.Actions;
 using cogbot.ScriptEngines;
 using Radegast;
+using SbsSW.SwiPlCs;
 
 namespace PrologScriptEngine
 {
@@ -73,7 +73,8 @@ namespace PrologScriptEngine
             while (stringCodeReader.Peek() != -1)
             {
                 line++;
-                res = prologClient.Read(stringCodeReader.ReadLine(), WriteLine);
+                TextWriter tw = new OutputDelegateWriter(WriteLine);
+                res = prologClient.Read(stringCodeReader.ReadLine(), tw);
             }
             return res;
         } // method: Read
@@ -157,6 +158,78 @@ namespace PrologScriptEngine
         public void StopPlugin(RadegastInstance inst)
         {
             throw new NotImplementedException();
+        }
+
+        #endregion
+    }
+
+    public class OutputDelegateWriter : TextWriter
+    {
+        private OutputDelegate output;
+        private StringWriter sw = new StringWriter();
+        private object locker;
+
+        public OutputDelegateWriter(OutputDelegate od)
+        {
+            output = od;
+            locker = od;
+        }
+
+        public override void Write(string format, params object[] arg)
+        {
+            lock (locker) sw.Write(format, arg);           
+        }
+        public override void Write(char value)
+        {
+            lock (locker) sw.Write(value);
+        }
+        public override void Write(char[] buffer, int index, int count)
+        {
+            lock (locker) sw.Write(buffer, index, count);
+        }
+        public override void Close()
+        {
+            //base.Close();
+            Flush();
+        }
+        public override void WriteLine(char[] buffer, int index, int count)
+        {
+            lock (locker)
+            {
+                sw.WriteLine(buffer, index, count);
+                Flush();
+            }
+        }
+        public override void WriteLine()
+        {
+            lock (locker)
+            {
+                WriteLine();
+                Flush();
+            }
+        }
+        public override void Flush()
+        {
+            lock (locker)
+            {
+                StringWriter s = sw;
+                sw = new StringWriter();
+                output(s.ToString().TrimEnd());                
+            }
+        }
+
+        #region Overrides of TextWriter
+
+        /// <summary>
+        /// When overridden in a derived class, returns the <see cref="T:System.Text.Encoding"/> in which the output is written.
+        /// </summary>
+        /// <returns>
+        /// The Encoding in which the output is written.
+        /// </returns>
+        /// <filterpriority>1</filterpriority>
+        public override Encoding Encoding
+        {
+            get { return sw.Encoding; }
         }
 
         #endregion

@@ -137,8 +137,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="PrologClient.cs">
-    </Compile>
     <Compile Include="PrologScriptInterpreter.cs">
     </Compile>
     <Compile Include="SwiPrologModule.cs">
