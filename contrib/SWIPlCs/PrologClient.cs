@@ -1,30 +1,127 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading;
 using SbsSW.SwiPlCs.Callback;
 using SbsSW.SwiPlCs.Exceptions;
 using SbsSW.SwiPlCs.Streams;
+using System.Windows.Forms;
 
 namespace SbsSW.SwiPlCs
 {
     public class PrologClient
     {
-        ///<summary>
-        ///</summary>
-        ///<param name="type"></param>
-        ///<exception cref="NotImplementedException"></exception>
-        public void InternType(Type type)
+        public delegate object AnyMethod(params object[] any);
+
+        public static void InternMethod(string module, string pn, AnyMethod d)
         {
-            throw new NotImplementedException();
+            InternMethod(module, pn, d.Method);
         }
+        public static void InternMethod(string module, string pn, MethodInfo list)
+        {
+            Type type = list.DeclaringType;
+            pn = pn ?? (type.Name + "." + list.Name);
+            ParameterInfo[] ps = list.GetParameters();
+            Type rt = list.ReturnType;
+            int arity = ps.Length;
+            bool nonvoid = rt != typeof (void);
+            Delegate del
+                = new DelegateParameterVarArgs((PlTermV termVector) =>
+                                                   {
+                                                       try
+                                                       {
+                                                           object[] newVariable = new object[arity];
+                                                           int argnum = 0;
+                                                           foreach (var o in newVariable)
+                                                           {
+                                                               newVariable[argnum] = ToVM(termVector[argnum], ps[argnum].ParameterType);
+                                                               argnum++;
+                                                           }
+                                                           if (nonvoid)
+                                                           {
+                                                               return
+                                                                   termVector[arity].Unify(
+                                                                       ToProlog(list.Invoke(null, newVariable)));
+                                                           }
+                                                           else
+                                                           {
+                                                               list.Invoke(null, newVariable);
+                                                           }
+                                                           return true;
+                                                       }
+                                                       catch (Exception e)
+                                                       {
+
+                                                           throw new PlException(e.Message, e);
+                                                       }
+                                                   });
+            libpl.PL_register_foreign_in_module(module, pn, arity + (nonvoid ? 1 : 0), del,
+                                                (int) PlForeignSwitches.VarArgs);
+
+        }
+
+        private static PlTerm ToProlog(object o)
+        {
+            return new PlTerm("" + o);
+        }
+
+        private static Object ToVM(PlTerm o, Type pt)
+        {
+            if (pt == typeof(PlTerm)) return o;
+            if (pt == typeof(string))
+            {
+                return (string) o;
+            }
+            switch (o.PlType)
+            {
+                case PlType.PlUnknown:
+                    {
+                        return (string)o;
+                    }
+                    break;
+                case PlType.PlVariable: {
+                    return o;}
+                    break;
+                case PlType.PlAtom:
+                    {
+                        return (string)o;
+                    }
+                    break;
+                case PlType.PlInteger:
+                    {
+                        return (long)o;
+                    }
+                    break;
+                case PlType.PlFloat:
+                    {
+                        return (double)o;
+                    }
+                    break;
+                case PlType.PlString:
+                    {
+                        return (string)o;
+                    }
+                    break;
+                case PlType.PlTerm:
+                    {
+                        return (string)o;
+                    }
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+            return o.ToString();
+        }
+
 
         ///<summary>
         ///</summary>
         ///<exception cref="NotImplementedException"></exception>
         public void Dispose()
         {
-            throw new NotImplementedException();
+            
         }
 
         public object Eval(object obj)
@@ -104,6 +201,8 @@ namespace SbsSW.SwiPlCs
                 PlForeignSwitches Nondeterministic = PlForeignSwitches.Nondeterministic | PlForeignSwitches.NoTrace;
                 PlEngine.RegisterForeign(null, "foo2", 2, new DelegateParameterBacktrack(FooTwo), Nondeterministic);
                 PlEngine.RegisterForeign(null, "foo", 2, new DelegateParameterBacktrackVarArgs(FooThree), Nondeterministic | PlForeignSwitches.VarArgs);
+                InternMethod(null, "cwl2", typeof(PrologClient).GetMethod("FooMethod"));
+                InternMethod(null, "cwl", typeof (Console).GetMethod("WriteLine", new Type[] {typeof (string)}));
                 PlEngine.SetStreamFunctionRead(PlStreamType.Input, new DelegateStreamReadFunction(Sread));
                 PlAssert("tc:-foo(X,Y),writeq(f(X,Y)),nl,X=5");
                 PlAssert("tc2:-foo2(X,Y),writeq(f(X,Y)),nl,X=5");
@@ -114,6 +213,11 @@ namespace SbsSW.SwiPlCs
                 Console.WriteLine("finshed!");
             }
 
+        }
+
+        public static void FooMethod(String print)
+        {
+            Console.WriteLine(print);
         }
 
         static internal long Sread(IntPtr handle, System.IntPtr buffer, long buffersize)

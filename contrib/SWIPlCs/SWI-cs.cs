@@ -1402,6 +1402,24 @@ namespace SbsSW.SwiPlCs
         }
 
         /// <summary>
+        /// Yields a long if the PlTerm is a Prolog integer or float that can be converted 
+        /// without loss to a long. Throws a PlTypeException exception otherwise
+        /// </summary>
+        /// <param name="term">A PlTerm is a Prolog integer or float that can be converted without loss to a long.</param>
+        /// <returns>A C# long</returns>
+        /// <exception cref="PlTypeException">Throws a PlTypeException exception if <see cref="PlType"/> 
+        /// is not a <see langword="PlType.PlInteger"/> or a <see langword="PlType.PlFloat"/>.</exception>
+        /// <exception cref="SbsSW.DesignByContract.PreconditionException">Is thrown if the operator is used on an uninitialized PlTerm</exception>
+        public static explicit operator long(PlTerm term)
+        {
+            Check.Require(term.TermRefIntern != 0);
+            long v = 0;
+            if (0 != libpl.PL_get_long(term.TermRef, ref v))
+                return v;
+            throw new PlTypeException("long", term);
+        }
+
+        /// <summary>
         /// Yields the value as a C# double if PlTerm represents a Prolog integer or float. 
         /// Throws a PlTypeException exception otherwise. 
         /// </summary>
@@ -1988,7 +2006,7 @@ namespace SbsSW.SwiPlCs
 
         // make public to activate the foreign predicated in named modules
         #region  privates
-        private static bool RegisterForeign(string module, Delegate method, Callback.PlForeignSwitches plForeign)
+        internal static bool RegisterForeign(string module, Delegate method, Callback.PlForeignSwitches plForeign)
         {
             string name = method.Method.Name;
             int arity = method.Method.GetParameters().Length;
