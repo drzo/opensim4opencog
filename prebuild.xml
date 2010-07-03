@@ -1544,6 +1544,9 @@ app -->
       <Reference name="protobuf-net.dll" />
       <Reference name="System.Windows.Forms" />
       <Reference name="System.Data" />
+      <Reference name="SwiPlCs" localCopy="false"/>
+      <Reference name="IKVM.Runtime.dll" localCopy="false"/>
+      <Reference name="IKVM.OpenJDK.ClassLibrary.dll" localCopy="false"/>
       
 
 <!--      <Reference name="LookingGlass.Comm"/>

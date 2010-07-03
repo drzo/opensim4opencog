@@ -140,7 +140,7 @@ namespace cogbot
         }
 
         readonly int thisTcpPort;
-        public OpenMetaverse.LoginParams BotLoginParams;// = null;
+        public LoginDetails BotLoginParams;// = null;
         private readonly SimEventPublisher botPipeline;
         public List<Thread> botCommandThreads = new ListAsSet<Thread>();
         public XmlScriptInterpreter XmlInterp = new XmlScriptInterpreter();
@@ -227,19 +227,31 @@ namespace cogbot
             get { return WorldSystem.IsRegionMaster; }
         }
 
-        private Radegast.RadegastInstance _TheRadegastInstance;
+        private Radegast.RadegastInstance __TheRadegastInstance;
         public Radegast.RadegastInstance TheRadegastInstance
         {
-            get { return _TheRadegastInstance; }
+            get
+            {
+
+                if (__TheRadegastInstance == null)
+                {
+                    Console.WriteLine("setting radgast null");
+                }
+                return __TheRadegastInstance;
+            }
             set
             {
-                if (_TheRadegastInstance == value) return;
-                if (_TheRadegastInstance!=null)
+                if (value == null)
                 {
-                    var nc = _TheRadegastInstance.Netcom;
+                    Console.WriteLine("setting radgast null");
+                }
+                if (__TheRadegastInstance == value) return;
+                if (__TheRadegastInstance!=null)
+                {
+                    var nc = __TheRadegastInstance.Netcom;
                     if (nc != null) nc.InstantMessageSent -= IMSent;
                 }
-                _TheRadegastInstance = value;
+                __TheRadegastInstance = value;
                 value.Netcom.InstantMessageSent += IMSent;
             }
         }
@@ -315,12 +327,13 @@ namespace cogbot
         /// <summary>
         /// 
         /// </summary>
-        public BotClient(ClientManager manager, GridClient g, LoginParams lp)
+        public BotClient(ClientManager manager, GridClient g, LoginDetails lp)
         {
             ClientManager = manager;
             XmlInterp.BotClient = this;
             gridClient = g;
             BotLoginParams = lp;
+            lp.Client = this;
             manager.LastBotClient = this;
             updateTimer = new System.Timers.Timer(500);
             updateTimer.Elapsed += new System.Timers.ElapsedEventHandler(updateTimer_Elapsed);
@@ -2014,6 +2027,10 @@ namespace cogbot
             TheRadegastInstance.Netcom.SendInstantMessage(text, target, session);
         }
 
+        public string NameKey()
+        {
+            return string.Format(BotLoginParams.FirstName, BotLoginParams.LastName).ToLower();
+        }
     }
 
     public delegate void InstantMessageSentArgs(object sender, IMessageSentEventArgs args);
