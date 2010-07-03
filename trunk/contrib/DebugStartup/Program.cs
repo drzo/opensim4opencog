@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
+using cogbot;
 using CommandLine.Utility;
 using OpenMetaverse;
 using Radegast;
@@ -102,7 +103,10 @@ namespace ABuildStartup
             Application.ThreadExit += HandleThreadExit;
             AppDomain.CurrentDomain.UnhandledException += HandleUnhandledException;
             AppDomain.CurrentDomain.ProcessExit += HandleProcessExit;
-
+            if (ClientManager.MainThread==null)
+            {
+                ClientManager.MainThread = Thread.CurrentThread;
+            }
             Arguments arguments = new Arguments(args);
             string[] oArgs;
             if (arguments.GetAfter("--aiml", out oArgs))

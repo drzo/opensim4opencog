@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using System.Threading;
 using System.Windows.Forms;
 using cogbot;
@@ -43,42 +44,76 @@ namespace cogbot.Actions.System
                 }
                 // )).Start();
             }
-            switch (args[0].ToLower())
+            string arg0 = args[0].ToLower();
+
+
+            switch (arg0)
             {
                 case "show":
                     {
                         //(new Thread(() => {
-                        PanelGUI.Invoke(new MethodInvoker(PanelGUI.Show));
+                        BeginInvoke(new MethodInvoker(() =>
+                        {
+                            PanelGUI.Visible = true;
+                            PanelGUI.Show();
+                        }));
                         //PanelGUI.Show();
                         //})).Start();
                         return Success("radegast shown");
                     }
+                case "hide":
+                    {
+                        if (!PanelGUI.IsHandleCreated) return Success("No handle to " + arg0);
+                        BeginInvoke(new MethodInvoker(() =>
+                        {
+                            PanelGUI.Visible = false;
+                        }));
+                        return Success("radegast " + arg0);
+                    }
                 case "maximize":
                     {
-                        PanelGUI.BeginInvoke(new MethodInvoker(() =>
+                        if (!PanelGUI.IsHandleCreated) return Success("No handle to " + arg0);
+                        BeginInvoke(new MethodInvoker(() =>
                         {
                             PanelGUI.WindowState = FormWindowState.Maximized;
+                            PanelGUI.Visible = true;
                         }));
-                        return Success("radegast " + args[0]);
+                        return Success("radegast " + arg0);
                     }
                 case "minimize":
                     {
-                        PanelGUI.BeginInvoke(new MethodInvoker(() =>
+                        if (!PanelGUI.IsHandleCreated) return Success("No handle to " + arg0);
+                        BeginInvoke(new MethodInvoker(() =>
                         {
                             PanelGUI.WindowState = FormWindowState.Minimized;
                         }));
-                        return Success("radegast " + args[0]);
+                        return Success("radegast " + arg0);
                     }
                 case "normal":
                     {
-                        PanelGUI.BeginInvoke(new MethodInvoker(() =>
+                        if (!PanelGUI.IsHandleCreated) return Success("No handle to " + arg0);
+                        BeginInvoke(new MethodInvoker(() =>
                         {
                             PanelGUI.WindowState = FormWindowState.Normal;
+                            PanelGUI.Visible = true;
                         }));
-                        return Success("radegast " + args[0]);
+                        return Success("radegast " + arg0);
                     }
                 default:
                     return Success("Unknow state");
+            }
+        }
+
+        private void BeginInvoke(MethodInvoker invoker)
+        {
+            if (!PanelGUI.InvokeRequired)
+            {
+                Success("No invoke required ");
+                invoker();
+            }
+            else
+            {
+                PanelGUI.BeginInvoke(invoker);
             }
         }
     }

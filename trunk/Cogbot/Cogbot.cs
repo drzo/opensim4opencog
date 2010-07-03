@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Windows.Forms;
 using CommandLine.Utility;
 using OpenMetaverse;
@@ -32,7 +33,11 @@ namespace cogbot
         [STAThread]
         public static void Main(string[] args)
         {
-          //  NativeMethods.AllocConsole();
+            if (ClientManager.MainThread == null)
+            {
+                ClientManager.MainThread = Thread.CurrentThread;
+            }
+            //  NativeMethods.AllocConsole();
            // Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
@@ -53,11 +58,22 @@ namespace cogbot
 
         public void WriteLine(ConsoleColor color, string format, params object[] args)
         {
-            throw new NotImplementedException();
+            try
+            {
+                if (color != ConsoleColor.White)
+                    System.Console.ForegroundColor = color;
+                Console.WriteLine(format, args);
+            }
+            finally
+            {
+                Console.ResetColor();                
+            }
         }
         public string CmdPrompt(string p)
         {
-            throw new NotImplementedException();
+            Console.Write(p);
+            Console.Out.Flush();
+            return Console.ReadLine();
         }
 
         public static void WriteLine(string str, object[] args)
