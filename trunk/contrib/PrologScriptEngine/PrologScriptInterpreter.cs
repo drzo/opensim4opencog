@@ -157,7 +157,7 @@ namespace PrologScriptEngine
         /// <param name="inst">RadegastInstance plugin is unloaded from</param>
         public void StopPlugin(RadegastInstance inst)
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
         }
 
         #endregion
