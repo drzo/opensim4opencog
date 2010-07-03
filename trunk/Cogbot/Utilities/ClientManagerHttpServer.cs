@@ -50,10 +50,17 @@ namespace cogbot.Utilities
     {
         HttpServer.HttpListener _listener;
         private int _port;
-        private BotClient _botClient;
-        public ClientManagerHttpServer(BotClient bc, int port)
+        private ClientManager clientManager;
+        private BotClient _botClient
         {
-            _botClient = bc;
+            get
+            {
+                return clientManager.LastBotClient;
+            }
+        }
+        public ClientManagerHttpServer(ClientManager bc, int port)
+        {
+            clientManager = bc;
             _port = port;
             Init();
         }
@@ -67,12 +74,17 @@ namespace cogbot.Utilities
             {
                 _listener.Start(10);
                 LogInfo("Ready for HTTPD port " + _port);
-                _botClient.WriteLine("Ready for HTTPD port " + _port);
+                WriteLine("Ready for HTTPD port " + _port);
             }
             catch (Exception e)
             {
-                _botClient.WriteLine("NOT OK for HTTPD port " + _port + "\n" + e);
+                WriteLine("NOT OK for HTTPD port " + _port + "\n" + e);
             }
+        }
+
+        private void WriteLine(string s)
+        {
+            clientManager.WriteLine(s);
         }
 
         private void workArroundReuse()

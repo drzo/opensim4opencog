@@ -75,7 +75,7 @@ namespace CogbotRadegastPluginModule
             else
             {
                 ClientManager.UsingCogbotFromRadgast = true;
-                clientManager = new ClientManager();
+                clientManager = ClientManager.SingleInstance ?? new ClientManager();
             }
             cogbotRadegastInterpreter = new CogbotRadegastInterpreter(clientManager);
             RadegastInstance.CommandsManager.LoadInterpreter(cogbotRadegastInterpreter);
@@ -89,7 +89,6 @@ namespace CogbotRadegastPluginModule
             if (ClientManager.UsingRadgastFromCogbot) return;
             inst.Client.Settings.MULTIPLE_SIMS = true;
             clientManager.outputDelegate = WriteLine;
-            clientManager.StartUpLisp();
             chatConsole = new CogbotTabWindow(inst, this)
                               {
                                   Dock = DockStyle.Fill,
@@ -113,7 +112,7 @@ namespace CogbotRadegastPluginModule
             ChatConsole rchatConsole = (ChatConsole)tab1.Control;
             rchatConsole.cbxInput.Enabled = true;
             rchatConsole.btnSay.Enabled = true;
-          //  rchatConsole.btnShout.Enabled = true;
+            //  rchatConsole.btnShout.Enabled = true;
             RadegastTab tab2 = RadegastInstance.TabConsole.GetTab("login");
             tab2.AllowDetach = true;
             //RadegastTab tab3 = RadegastInstance.TabConsole.GetTab("search");
@@ -124,6 +123,12 @@ namespace CogbotRadegastPluginModule
                 // Visible = false
             };
             tab = inst.TabConsole.AddTab("cogbotsearch", "CogbotSearch", sc);
+            clientManager.ProcessCommandArgs();
+            new Thread(() =>
+                           {
+                               clientManager.StartUpLisp();
+                               clientManager.EnsureManagerStarting();
+                           }).Start();
         }
 
         private void MainForm_Closing(object sender, CancelEventArgs e)
