@@ -52,7 +52,7 @@ namespace SbsSW.SwiPlCs
             throw new NotImplementedException();
         }
 
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
             string plhome = Environment.GetEnvironmentVariable("SWI_HOME_DIR");
             if (string.IsNullOrEmpty(plhome))
