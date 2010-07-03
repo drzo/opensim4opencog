@@ -30,7 +30,7 @@ namespace SbsSW.SwiPlCs
             ParameterInfo[] ps = list.GetParameters();
             Type rt = list.ReturnType;
             int arity = ps.Length;
-            bool nonvoid = rt != typeof (void);
+            bool nonvoid = rt != typeof(void);
             Delegate del
                 = new DelegateParameterVarArgs((PlTermV termVector) =>
                                                    {
@@ -62,7 +62,7 @@ namespace SbsSW.SwiPlCs
                                                        }
                                                    });
             libpl.PL_register_foreign_in_module(module, pn, arity + (nonvoid ? 1 : 0), del,
-                                                (int) PlForeignSwitches.VarArgs);
+                                                (int)PlForeignSwitches.VarArgs);
 
         }
 
@@ -76,7 +76,7 @@ namespace SbsSW.SwiPlCs
             if (pt == typeof(PlTerm)) return o;
             if (pt == typeof(string))
             {
-                return (string) o;
+                return (string)o;
             }
             switch (o.PlType)
             {
@@ -85,8 +85,10 @@ namespace SbsSW.SwiPlCs
                         return (string)o;
                     }
                     break;
-                case PlType.PlVariable: {
-                    return o;}
+                case PlType.PlVariable:
+                    {
+                        return o;
+                    }
                     break;
                 case PlType.PlAtom:
                     {
@@ -125,7 +127,7 @@ namespace SbsSW.SwiPlCs
         ///<exception cref="NotImplementedException"></exception>
         public void Dispose()
         {
-            
+
         }
 
         public object Eval(object obj)
@@ -153,8 +155,13 @@ namespace SbsSW.SwiPlCs
             throw new NotImplementedException();
         }
 
-        public static void Main(string[] args)
-        {   
+        static public void load_swiplcs()
+        {
+            
+        }
+
+        private static void SetupProlog()
+        {
             string plhome = Environment.GetEnvironmentVariable("SWI_HOME_DIR");
             if (string.IsNullOrEmpty(plhome))
             {
@@ -172,72 +179,83 @@ namespace SbsSW.SwiPlCs
             string libpath = "";
             libpath += ".";
             //libpath += ";";
-            //libpath = "c:\\Program Files (x86)\\pl\\bin";
+            //libpath += "c:\\Program Files (x86)\\pl\\bin";
             //libpath += ";";
             //libpath += "c:\\development\\opensim4opencog\\bin";
             java.lang.System.setProperty("java.library.path", libpath);
-            if (jpl.fli.Prolog.initialise())
-            {
-               // DoQuery(new Query(new jpl.Compound("member", new Term[] { new jpl.Integer(1), new jpl.Variable("H") })));
-                //DoQuery(new Query(new jpl.Atom("interactor")));
 
-                DoQuery(new Query(new jpl.Compound("writeq", new Term[] { new jpl.Integer(1) })));
-                DoQuery(new Query("ensure_loaded(library(jpl))."));
-                DoQuery(new Query("asserta(fff(1))."));
-                DoQuery(new Query("asserta(fff(9))."));
-                DoQuery(new Query(new jpl.Atom("nl")));
-                DoQuery(new Query(new jpl.Atom("flush")));
-            }
-
-            if (!PlEngine.IsInitialized)
+            try
             {
-                String[] param = { "-q" };  // suppressing informational and banner messages
-                try
+                jpl.fli.Prolog.initialise();
+                if (!PlEngine.IsInitialized)
                 {
+                    String[] param = { "-q" }; // suppressing informational and banner messages
                     PlEngine.Initialize(param);
                 }
-                catch (Exception exception)
-                {
-                    Console.WriteLine("SWIPL: " + exception);
-                    return;
-                }
-                PlAssert("father(martin, inka)");
-                PlQuery.PlCall("assert(father(uwe, gloria))");
-                PlQuery.PlCall("assert(father(uwe, melanie))");
-                PlQuery.PlCall("assert(father(uwe, ayala))");
-                using (PlQuery q = new PlQuery("father(P, C), atomic_list_concat([P,' is_father_of ',C], L)"))
-                {
-                    foreach (PlTermV v in q.Solutions)
-                        Console.WriteLine(ToCSString(v));
-
-                    foreach (PlQueryVariables v in q.SolutionVariables)
-                        Console.WriteLine(v["L"].ToString());
-
-
-                    Console.WriteLine("all child's from uwe:");
-                    q.Variables["P"].Unify("uwe");
-                    foreach (PlQueryVariables v in q.SolutionVariables)
-                        Console.WriteLine(v["C"].ToString());
-                }
-                //PlQuery.PlCall("ensure_loaded(library(thread_util))");
-                //Warning: [Thread 2] Thread running "thread_run_interactor" died on exception: thread_util:attach_console/0: Undefined procedure: thread_util:win_open_console/5
-                //PlQuery.PlCall("interactor");
-                //Delegate Foo0 = foo0;
-                PlForeignSwitches Nondeterministic = PlForeignSwitches.Nondeterministic | PlForeignSwitches.NoTrace;
-                PlEngine.RegisterForeign(null, "foo2", 2, new DelegateParameterBacktrack(FooTwo), Nondeterministic);
-                PlEngine.RegisterForeign(null, "foo", 2, new DelegateParameterBacktrackVarArgs(FooThree), Nondeterministic | PlForeignSwitches.VarArgs);
-                InternMethod(null, "cwl2", typeof(PrologClient).GetMethod("FooMethod"));
-                InternMethod(null, "cwl", typeof (Console).GetMethod("WriteLine", new Type[] {typeof (string)}));
                 PlEngine.SetStreamFunctionRead(PlStreamType.Input, new DelegateStreamReadFunction(Sread));
-                PlAssert("tc:-foo(X,Y),writeq(f(X,Y)),nl,X=5");
-                PlAssert("tc2:-foo2(X,Y),writeq(f(X,Y)),nl,X=5");
-                libpl.PL_toplevel();
-                Console.WriteLine("press enter to exit");
-                Console.ReadLine();
-                PlEngine.PlCleanup();
-                Console.WriteLine("finshed!");
+                PlAssert("jpl:jvm_ready");
+                PlAssert("module_transparent(jvm_ready)");
             }
+            catch (Exception exception)
+            {
+                WriteException(exception);
+                return;
+            }
+        }
 
+        public static void Main(string[] args)
+        {
+            SetupProlog();
+                
+            DoQuery(new Query("asserta(fff(1))"));
+            DoQuery(new Query("asserta(fff(9))"));
+            DoQuery(new Query(new jpl.Atom("nl")));
+            DoQuery(new Query(new jpl.Atom("flush")));
+
+            
+
+            PlAssert("father(martin, inka)");
+            PlQuery.PlCall("assert(father(uwe, gloria))");
+            PlQuery.PlCall("assert(father(uwe, melanie))");
+            PlQuery.PlCall("assert(father(uwe, ayala))");
+            using (PlQuery q = new PlQuery("father(P, C), atomic_list_concat([P,' is_father_of ',C], L)"))
+            {
+                foreach (PlTermV v in q.Solutions)
+                    Console.WriteLine(ToCSString(v));
+
+                foreach (PlQueryVariables v in q.SolutionVariables)
+                    Console.WriteLine(v["L"].ToString());
+
+
+                Console.WriteLine("all child's from uwe:");
+                q.Variables["P"].Unify("uwe");
+                foreach (PlQueryVariables v in q.SolutionVariables)
+                    Console.WriteLine(v["C"].ToString());
+            }
+            //PlQuery.PlCall("ensure_loaded(library(thread_util))");
+            //Warning: [Thread 2] Thread running "thread_run_interactor" died on exception: thread_util:attach_console/0: Undefined procedure: thread_util:win_open_console/5
+            //PlQuery.PlCall("interactor");
+            //Delegate Foo0 = foo0;
+            RegisterPLCSForiegns();
+
+            PlAssert("tc:-foo(X,Y),writeq(f(X,Y)),nl,X=5");
+            PlAssert("tc2:-foo2(X,Y),writeq(f(X,Y)),nl,X=5");
+            libpl.PL_toplevel();
+            Console.WriteLine("press enter to exit");
+            Console.ReadLine();
+            PlEngine.PlCleanup();
+            Console.WriteLine("finshed!");
+
+
+        }
+
+        private static void RegisterPLCSForiegns()
+        {
+            PlForeignSwitches Nondeterministic = PlForeignSwitches.Nondeterministic;
+            PlEngine.RegisterForeign(null, "foo2", 2, new DelegateParameterBacktrack2(FooTwo), Nondeterministic);
+            PlEngine.RegisterForeign(null, "foo3", 2, new DelegateParameterBacktrackVarArgs(FooThree), Nondeterministic | PlForeignSwitches.VarArgs);
+            InternMethod(null, "cwl2", typeof(PrologClient).GetMethod("FooMethod"));
+            InternMethod(null, "cwl", typeof(Console).GetMethod("WriteLine", new Type[] { typeof(string) }));
         }
 
         private static void DoQuery(Query query)
@@ -258,14 +276,19 @@ namespace SbsSW.SwiPlCs
             }
             catch (Exception exception)
             {
-                java.lang.Exception ex = exception as java.lang.Exception;
-                if (ex!=null)
-                {
-                    ex.printStackTrace();
-                }
-                Console.WriteLine("" + exception);
+                WriteException(exception);
             }
 
+        }
+
+        private static void WriteException(Exception exception)
+        {
+            java.lang.Exception ex = exception as java.lang.Exception;
+            if (ex != null)
+            {
+                ex.printStackTrace();
+            }
+            Console.WriteLine("SWIPL: " + exception);
         }
 
         private static IEnumerable ToEnumer(Enumeration enumeration)
@@ -273,7 +296,7 @@ namespace SbsSW.SwiPlCs
             List<object> list = new List<object>();
             while (enumeration.hasMoreElements())
             {
-                list.Add(enumeration.nextElement());                
+                list.Add(enumeration.nextElement());
             }
             return list;
         }
@@ -289,6 +312,18 @@ namespace SbsSW.SwiPlCs
 
         public static void FooMethod(String print)
         {
+            //DoQuery(new Query("asserta(jpl:jvm_ready)."));
+            //DoQuery(new Query("asserta(jpl:jpl_c_lib_version(3-3-3-3))."));
+
+            //DoQuery(new Query("module(jpl)."));
+            JplSafeNativeMethods.install();
+            DoQuery(new Query("ensure_loaded(library(jpl))."));
+            DoQuery(new Query("module(user)."));
+            //DoQuery(new Query("load_foreign_library(foreign(jpl))."));
+            // DoQuery(new Query(new jpl.Compound("member", new Term[] { new jpl.Integer(1), new jpl.Variable("H") })));
+            //DoQuery(new Query(new jpl.Atom("interactor")));
+            //DoQuery(new Query(new jpl.Compound("writeq", new Term[] { new jpl.Integer(1) })));
+
             Console.WriteLine(print);
         }
 
@@ -367,7 +402,7 @@ typedef struct // define a context structure  { ... } context;
             {
                 case FRG.PL_FIRST_CALL:
                     {
-                        var v = ObtainHandle(control);
+                        var v = NonDetHandle.ObtainHandle(control);
                         bool res = v.Setup(new PlTermV(a0, a1));
                         bool more = v.HasMore();
                         if (more)
@@ -379,7 +414,7 @@ typedef struct // define a context structure  { ... } context;
                     } break;
                 case FRG.PL_REDO:
                     {
-                        var v = FindHandle(control);
+                        var v = NonDetHandle.FindHandle(control);
                         bool res = v.Call(new PlTermV(a0, a1));
                         bool more = v.HasMore();
                         if (more)
@@ -391,9 +426,9 @@ typedef struct // define a context structure  { ... } context;
                     } break;
                 case FRG.PL_CUTTED:
                     {
-                        var v = FindHandle(control);
+                        var v = NonDetHandle.FindHandle(control);
                         bool res = v.Close(new PlTermV(a0, a1));
-                        ReleaseHandle(v);
+                        NonDetHandle.ReleaseHandle(v);
                         return res ? 1 : 0;
                     } break;
                 default:
@@ -414,7 +449,7 @@ typedef struct // define a context structure  { ... } context;
             {
                 case FRG.PL_FIRST_CALL:
                     {
-                        var v = ObtainHandle(control);
+                        var v = NonDetHandle.ObtainHandle(control);
                         bool res = v.Setup(new PlTermV(a0, arity));
                         bool more = v.HasMore();
                         if (more)
@@ -426,7 +461,7 @@ typedef struct // define a context structure  { ... } context;
                     } break;
                 case FRG.PL_REDO:
                     {
-                        var v = FindHandle(control);
+                        var v = NonDetHandle.FindHandle(control);
                         bool res = v.Call(new PlTermV(a0, arity));
                         bool more = v.HasMore();
                         if (more)
@@ -438,9 +473,9 @@ typedef struct // define a context structure  { ... } context;
                     } break;
                 case FRG.PL_CUTTED:
                     {
-                        var v = FindHandle(control);
+                        var v = NonDetHandle.FindHandle(control);
                         bool res = v.Close(new PlTermV(a0, arity));
-                        ReleaseHandle(v);
+                        NonDetHandle.ReleaseHandle(v);
                         return res ? 1 : 0;
                     } break;
                 default:
@@ -450,13 +485,6 @@ typedef struct // define a context structure  { ... } context;
                     }
                     break;
             }
-        }
-
-        //static NonDetHandle lastHandle;
-        public static NonDetHandle FindHandle(IntPtr context)
-        {
-            //if (context == (IntPtr)0) return lastHandle;
-            lock (NonDetHandle.HandleToObject) return NonDetHandle.ContextToObject[context];
         }
 
         private static int CountTo(PlTerm term, PlTerm term2, ref NonDetTest o)
@@ -488,39 +516,6 @@ typedef struct // define a context structure  { ... } context;
 
         }
 
-
-        static public void ReleaseHandle(NonDetHandle hnd)
-        {
-            lock (NonDetHandles)
-            {
-                NonDetHandle.ContextToObject.Remove(hnd.Context);
-                hnd.Context = (IntPtr)0;
-                NonDetHandles.AddLast(hnd);
-            }
-        }
-
-        static public NonDetHandle ObtainHandle(IntPtr context)
-        {
-            lock (NonDetHandles)
-            {
-                NonDetHandle hnd;
-                if (NonDetHandles.Count == 0)
-                {
-                    hnd = new NonDetHandle();
-                }
-                else
-                {
-                    hnd = NonDetHandles.First.Value;
-                    NonDetHandles.RemoveFirst();
-                }
-                hnd.Context = context;
-                lock (NonDetHandle.HandleToObject)
-                {
-                    NonDetHandle.ContextToObject[context] = hnd;
-                }
-                return hnd;
-            }
-        }
 
         private static string ToCSString(PlTermV termV)
         {
@@ -609,7 +604,6 @@ typedef struct // define a context structure  { ... } context;
         }
 
 
-        static LinkedList<NonDetHandle> NonDetHandles = new LinkedList<NonDetHandle>();
         static private PinnedObject<NonDetTest> ndtp;
         // foo(X,Y),writeq(f(X,Y)),nl,X=5.
         public static int Foo(PlTerm t0, PlTerm term2, IntPtr control)
@@ -743,12 +737,61 @@ typedef struct // define a context structure  { ... } context;
 
     public class NonDetHandle
     {
+        static LinkedList<NonDetHandle> NonDetHandles = new LinkedList<NonDetHandle>();
+
+        static public void ReleaseHandle(NonDetHandle hnd)
+        {
+            lock (NonDetHandles)
+            {
+                NonDetHandle.ContextToObject.Remove(hnd.Context);
+                hnd.Context = (IntPtr)0;
+                NonDetHandles.AddLast(hnd);
+            }
+        }
+
+        public delegate NonDetHandle HandleMaker();
+        static public NonDetHandle ObtainHandle(IntPtr context, HandleMaker maker, NondeterminsticMethod value)
+        {
+            lock (NonDetHandles)
+            {
+                NonDetHandle hnd;
+                if (NonDetHandles.Count == 0)
+                {
+                    hnd = maker();
+                }
+                else
+                {
+                    hnd = NonDetHandles.First.Value;
+                    NonDetHandles.RemoveFirst();
+                }
+                hnd.Context = context;
+                hnd.NonDetMethods = value;
+                lock (NonDetHandle.HandleToObject)
+                {
+                    NonDetHandle.ContextToObject[context] = hnd;
+                }
+                return hnd;
+            }
+        }
+
+        static public NonDetHandle ObtainHandle(IntPtr context)
+        {
+            return ObtainHandle(context, () => new NonDetHandle(), null);
+        }
+        //static NonDetHandle lastHandle;
+        public static NonDetHandle FindHandle(IntPtr context)
+        {
+            //if (context == (IntPtr)0) return lastHandle;
+            lock (NonDetHandle.HandleToObject) return NonDetHandle.ContextToObject[context];
+        }
+
         public static Dictionary<int, NonDetHandle> HandleToObject = new Dictionary<int, NonDetHandle>();
         public static Dictionary<IntPtr, NonDetHandle> ContextToObject = new Dictionary<IntPtr, NonDetHandle>();
         public static int TotalHandles = 0;
         public readonly int Handle;
         public NondeterminsticMethod NonDetMethods;
         public IntPtr Context;
+
         public NonDetHandle()
         {
             NonDetMethods = new ForNext(1, 20);
@@ -786,6 +829,20 @@ typedef struct // define a context structure  { ... } context;
             if (NonDetMethods != null) return NonDetMethods.HasMore();
             return false;
         }
+    }
+
+    [System.Security.SuppressUnmanagedCodeSecurityAttribute]
+    public static class JplSafeNativeMethods
+    {
+        //private const string DllFileName = @"D:\Lesta\swi-pl\pl\bin\LibPl.dll";
+        private const string DllFileName = @"jpl.dll";//"libpl.dll" for 5.7.8; //was 
+
+        public static string DllFileName1
+        {
+            get { return DllFileName; }
+        }
+        [DllImport(DllFileName)]
+        public static extern void install();
     }
 
     public class ForNext : NondeterminsticMethod
@@ -842,9 +899,77 @@ typedef struct // define a context structure  { ... } context;
 
     public delegate int NonDetDelegate(PlTerm term, PlTerm term2);
 
-    abstract public class NondeterminsticMethod
+    abstract public class NondeterminsticMethod: IDisposable
     {
-        private DelegateParameterBacktrack delegator;
+        protected NondeterminsticMethod()
+        {
+            del = BackrackImpl;
+        }
+        public virtual void Register()
+        {
+            libpl.PL_register_foreign_in_module(Module, Name, Arity, del,
+                                                (int)(PlForeignSwitches.Nondeterministic | PlForeignSwitches.VarArgs));
+        }
+
+        private DelegateParameterBacktrackVarArgs del;
+        protected string Module;
+        protected string Name;
+        protected int Arity;
+
+
+        public virtual void Dispose()
+        {
+         //   libpl.PL_register_foreign_in_module(Module, Name, Arity, del,
+           //                                     (int)(PlForeignSwitches.Nondeterministic | PlForeignSwitches.VarArgs));
+        }
+
+        public virtual int BackrackImpl(PlTerm a0, int arity, IntPtr control)
+        {
+            var handle = control;
+            FRG fc = (FRG)(libpl.PL_foreign_control(control));
+
+            switch (fc)
+            {
+                case FRG.PL_FIRST_CALL:
+                    {
+                        var v = NonDetHandle.ObtainHandle(control, () => new NonDetHandle(), this);
+                        bool res = v.Setup(new PlTermV(a0, arity));
+                        bool more = v.HasMore();
+                        if (more)
+                        {
+                            libpl.PL_retry(v.Handle);
+                            return res ? 3 : 0;
+                        }
+                        return res ? 1 : 0;
+                    } break;
+                case FRG.PL_REDO:
+                    {
+                        var v = NonDetHandle.FindHandle(control);
+                        bool res = v.Call(new PlTermV(a0, arity));
+                        bool more = v.HasMore();
+                        if (more)
+                        {
+                            libpl.PL_retry(v.Handle);
+                            return res ? 3 : 0;
+                        }
+                        return res ? 1 : 0;
+                    } break;
+                case FRG.PL_CUTTED:
+                    {
+                        var v = NonDetHandle.FindHandle(control);
+                        bool res = v.Close(new PlTermV(a0, arity));
+                        NonDetHandle.ReleaseHandle(v);
+                        return res ? 1 : 0;
+                    } break;
+                default:
+                    {
+                        throw new PlException("no frg");
+                        return libpl.PL_fail;
+                    }
+                    break;
+            }
+        }
+
         public abstract bool Setup(PlTermV a0);
         public abstract bool Call(PlTermV a0);
         public abstract bool Close(PlTermV a0);
