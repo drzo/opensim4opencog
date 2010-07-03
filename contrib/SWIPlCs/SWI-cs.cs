@@ -63,6 +63,7 @@
 using System;
 using System.Collections;		        // IEnumerable PlTail
 using System.Collections.Generic;		// IEnumerable ( PlQuery )
+using System.Runtime.InteropServices;
 using System.Text;						// ToStringAsListFormat
 using SbsSW.DesignByContract;
 using SbsSW.SwiPlCs.Exceptions;
@@ -218,7 +219,10 @@ namespace SbsSW.SwiPlCs.Callback
     /// <para>See "t_backtrack" in TestSwiPl.CallbackForeigenPredicate.cs</para>
     /// </example>
     [System.Runtime.InteropServices.UnmanagedFunctionPointerAttribute(System.Runtime.InteropServices.CallingConvention.Cdecl)]
-    public delegate int DelegateParameterBacktrack(PlTerm term1, PlTerm term2, IntPtr control);
+    public delegate int DelegateParameterBacktrack1(PlTerm term1, IntPtr control);
+
+    [System.Runtime.InteropServices.UnmanagedFunctionPointerAttribute(System.Runtime.InteropServices.CallingConvention.Cdecl)]
+    public delegate int DelegateParameterBacktrack2(PlTerm term1, PlTerm term2, IntPtr control);
 
     [System.Runtime.InteropServices.UnmanagedFunctionPointerAttribute(System.Runtime.InteropServices.CallingConvention.Cdecl)]
     public delegate int DelegateParameterBacktrackVarArgs(PlTerm term1, int arity, IntPtr control);
@@ -1985,9 +1989,14 @@ namespace SbsSW.SwiPlCs
         /// <param name="module">the name of a prolog module <see href="http://gollem.science.uva.nl/SWI-Prolog/Manual/modules.html">Using Modules</see></param>
         public static bool RegisterForeign(string module, Delegate method)
         {
-            if (method is Callback.DelegateParameterBacktrack)
-                return RegisterForeign(module, method, Callback.PlForeignSwitches.Nondeterministic);
-            return RegisterForeign(module, method, Callback.PlForeignSwitches.None);
+            Callback.PlForeignSwitches flags = Callback.PlForeignSwitches.None;
+
+            if (method is Callback.DelegateParameterBacktrack2 || method is Callback.DelegateParameterBacktrack1)
+                flags |= Callback.PlForeignSwitches.Nondeterministic;
+
+            if (method is Callback.DelegateParameterVarArgs || method is Callback.DelegateParameterBacktrackVarArgs)
+                flags |= Callback.PlForeignSwitches.VarArgs;
+            return RegisterForeign(module, method, flags);
         }
 
         /// <inheritdoc cref="RegisterForeign(string, Delegate)" />
@@ -2107,7 +2116,19 @@ namespace SbsSW.SwiPlCs
         /// <remarks>Use this method only at the last call before run program ends</remarks>
         static public void PlCleanup()
         {
-            libpl.PL_cleanup(0);
+            unsafe
+            {
+                try
+                {
+                    libpl.PL_cleanup(0);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    if (e is Exception) throw (Exception)e;
+                    throw new Exception("SPECIAL: " + e);
+                }
+            }
         }
 
         /// <summary>Stops the PlEngine and <b>the program</b></summary>
