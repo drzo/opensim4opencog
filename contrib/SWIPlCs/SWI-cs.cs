@@ -1380,6 +1380,8 @@ namespace SbsSW.SwiPlCs
             {
                 return s;
             }
+            if (0 != libpl.PL_get_chars(term.TermRef, ref s, libpl.CVT_ALL | libpl.CVT_WRITE | libpl.REP_UTF8 | libpl.BUF_RING | libpl.CVT_VARIABLE))
+                return s;
             throw new PlTypeException("text", term);
         }
 

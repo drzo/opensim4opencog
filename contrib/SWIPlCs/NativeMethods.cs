@@ -553,8 +553,11 @@ typedef struct io_stream{
 	    [DllImport(DllFileName)]
         internal extern static IntPtr PL_foreign_context_address(IntPtr control);
 
-        [DllImport(DllFileName)]
         internal extern static int PL_toplevel();
+
+	    [DllImport(DllFileName)]
+	    internal static extern int PL_write_term(IntPtr iostream, uint term, int precedence, int flags);
+
 	} // class SafeNativeMethods
 
 } // namespace SbsSW.SwiPlCs

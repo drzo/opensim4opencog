@@ -1,13 +1,17 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
+using java.util;
+using jpl;
 using SbsSW.SwiPlCs.Callback;
 using SbsSW.SwiPlCs.Exceptions;
 using SbsSW.SwiPlCs.Streams;
 using System.Windows.Forms;
+using Hashtable=java.util.Hashtable;
 
 namespace SbsSW.SwiPlCs
 {
@@ -150,7 +154,7 @@ namespace SbsSW.SwiPlCs
         }
 
         public static void Main(string[] args)
-        {
+        {   
             string plhome = Environment.GetEnvironmentVariable("SWI_HOME_DIR");
             if (string.IsNullOrEmpty(plhome))
             {
@@ -165,6 +169,26 @@ namespace SbsSW.SwiPlCs
             if (path != null)
                 if (!path.ToLower().StartsWith(plhome.ToLower()))
                     Environment.SetEnvironmentVariable("PATH", plhome + "\\bin;" + path);
+            string libpath = "";
+            libpath += ".";
+            //libpath += ";";
+            //libpath = "c:\\Program Files (x86)\\pl\\bin";
+            //libpath += ";";
+            //libpath += "c:\\development\\opensim4opencog\\bin";
+            java.lang.System.setProperty("java.library.path", libpath);
+            if (jpl.fli.Prolog.initialise())
+            {
+               // DoQuery(new Query(new jpl.Compound("member", new Term[] { new jpl.Integer(1), new jpl.Variable("H") })));
+                //DoQuery(new Query(new jpl.Atom("interactor")));
+
+                DoQuery(new Query(new jpl.Compound("writeq", new Term[] { new jpl.Integer(1) })));
+                DoQuery(new Query("ensure_loaded(library(jpl))."));
+                DoQuery(new Query("asserta(fff(1))."));
+                DoQuery(new Query("asserta(fff(9))."));
+                DoQuery(new Query(new jpl.Atom("nl")));
+                DoQuery(new Query(new jpl.Atom("flush")));
+            }
+
             if (!PlEngine.IsInitialized)
             {
                 String[] param = { "-q" };  // suppressing informational and banner messages
@@ -175,6 +199,7 @@ namespace SbsSW.SwiPlCs
                 catch (Exception exception)
                 {
                     Console.WriteLine("SWIPL: " + exception);
+                    return;
                 }
                 PlAssert("father(martin, inka)");
                 PlQuery.PlCall("assert(father(uwe, gloria))");
@@ -213,6 +238,53 @@ namespace SbsSW.SwiPlCs
                 Console.WriteLine("finshed!");
             }
 
+        }
+
+        private static void DoQuery(Query query)
+        {
+            try
+            {
+
+                //if (!query.isOpen()) query.open();
+                while (query.hasMoreSolutions())
+                {
+                    Hashtable ht = query.nextSolution();
+                    foreach (var list in ToEnumer(ht.elements()))
+                    {
+                        string s = "" + list;
+                        Console.WriteLine(s);
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                java.lang.Exception ex = exception as java.lang.Exception;
+                if (ex!=null)
+                {
+                    ex.printStackTrace();
+                }
+                Console.WriteLine("" + exception);
+            }
+
+        }
+
+        private static IEnumerable ToEnumer(Enumeration enumeration)
+        {
+            List<object> list = new List<object>();
+            while (enumeration.hasMoreElements())
+            {
+                list.Add(enumeration.nextElement());                
+            }
+            return list;
+        }
+        private static IEnumerable ToEnumer(Iterator enumeration)
+        {
+            List<object> list = new List<object>();
+            while (enumeration.hasNext())
+            {
+                list.Add(enumeration.next());
+            }
+            return list;
         }
 
         public static void FooMethod(String print)
