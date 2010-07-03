@@ -127,7 +127,6 @@ namespace CogbotRadegastPluginModule
             new Thread(() =>
                            {
                                clientManager.StartUpLisp();
-                               clientManager.EnsureManagerStarting();
                            }).Start();
         }
 

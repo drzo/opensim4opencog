@@ -526,18 +526,24 @@ namespace cogbot
         }
 
         private LispEventProducer lispEventProducer;
-
+        public bool RunStartupClientLisp = true;
+        public object RunStartupClientLisplock = new object();
         public void StartupClientLisp()
         {
-            if (ClientManager.config.startupClientLisp.Length > 1)
+            lock (RunStartupClientLisplock)
             {
-                try
+                if (!RunStartupClientLisp) return;
+                RunStartupClientLisp = false;
+                if (ClientManager.config.startupClientLisp.Length > 1)
                 {
-                    evalLispString("(progn " + ClientManager.config.startupClientLisp + ")");
-                }
-                catch (Exception ex)
-                {
-                    LogException("StartupClientLisp",ex);
+                    try
+                    {
+                        evalLispString("(progn " + ClientManager.config.startupClientLisp + ")");
+                    }
+                    catch (Exception ex)
+                    {
+                        LogException("StartupClientLisp", ex);
+                    }
                 }
             }
         }
@@ -1382,20 +1388,26 @@ namespace cogbot
         public void Dispose()
         {
             //scriptEventListener.
-            logout();
-            updateTimer.Enabled = false;
-            updateTimer.Close();
-            //botPipeline.Shut
-            botPipeline.Dispose();
-            lispEventProducer.Dispose();
-            WorldSystem.Dispose();
-            //thrJobQueue.Abort();
-            //lock (lBotMsgSubscribers)
-            //{   
-            LispTaskInterperter.Dispose();
-            foreach (var ms in listeners.Values)
+            lock (this)
             {
-                ms.Dispose();
+                if (!Running) return;
+                Running = false;
+                logout();
+                updateTimer.Enabled = false;
+                updateTimer.Close();
+                //botPipeline.Shut
+                botPipeline.Dispose();
+                lispEventProducer.Dispose();
+                WorldSystem.Dispose();
+                //thrJobQueue.Abort();
+                //lock (lBotMsgSubscribers)
+                //{   
+                LispTaskInterperter.Dispose();
+                foreach (var ms in listeners.Values)
+                {
+                    ms.Dispose();
+                }
+                ClientManager.Remove(this);
             }
         }
 
@@ -1802,11 +1814,22 @@ namespace cogbot
         }
         public void InvokeGUI(ThreadStart o)
         {
-            if (TheRadegastInstance.MainForm.InvokeRequired)
+            try
             {
-                TheRadegastInstance.MainForm.Invoke(o);
+                var mf = TheRadegastInstance.MainForm;
+                if (mf.IsHandleCreated)
+                {
+                }
+                if (mf.InvokeRequired)
+                {
+                    mf.Invoke(o);
+                }
+                else o();
             }
-            else o();
+            catch (Exception e)
+            {
+                WriteLine("InvokeGUI " + e);
+            }
         }
 
         public BotPermissions GetSecurityLevel(UUID uuid)
@@ -2029,7 +2052,7 @@ namespace cogbot
 
         public string NameKey()
         {
-            return string.Format(BotLoginParams.FirstName, BotLoginParams.LastName).ToLower();
+            return BotLoginParams.BotLName;
         }
     }
 

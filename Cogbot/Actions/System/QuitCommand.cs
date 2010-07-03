@@ -16,9 +16,19 @@ namespace cogbot.Actions.System
 		}
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
-		{
+        {
             // This is a dummy command. Calls to it should be intercepted and handled specially
-            return Failure("This command should not be executed directly");
-		}
+            CmdResult r = Success("This command should not be executed directly");
+            try
+            {
+                Client.Dispose();
+            }
+            catch (Exception e0)
+            {
+
+            }
+            return r;
+
+        }
     }
 }

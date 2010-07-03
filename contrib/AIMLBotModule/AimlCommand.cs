@@ -37,6 +37,7 @@ namespace AIMLBotModule
                             if (v.MyBot != null) return v;
                         }
                     Thread.Sleep(3000);
+                    Console.WriteLine("waiting on " + mn);
                 }
             }
         }

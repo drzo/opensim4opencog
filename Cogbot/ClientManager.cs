@@ -189,28 +189,31 @@ namespace cogbot
         }
 
         public static BotClient GetBotByName(string CurrentBotClient)
-        {         
-            if (BotByName.ContainsKey(CurrentBotClient))
-                return BotByName[CurrentBotClient];
-            else
+        {
+            lock (OneAtATime)
             {
-                String lCurrentBotClient = CurrentBotClient.ToLower();
-                foreach (string name in BotByName.Keys)
+                if (BotByName.ContainsKey(CurrentBotClient))
+                    return BotByName[CurrentBotClient];
+                else
                 {
-                    if (name.ToLower() == lCurrentBotClient)
+                    String lCurrentBotClient = CurrentBotClient.ToLower();
+                    foreach (string name in BotByName.Keys)
                     {
-                        return BotByName[name];
+                        if (name.ToLower() == lCurrentBotClient)
+                        {
+                            return BotByName[name];
+                        }
+                    }
+                    foreach (string name in BotByName.Keys)
+                    {
+                        if (name.ToLower().Contains(lCurrentBotClient))
+                        {
+                            return BotByName[name];
+                        }
                     }
                 }
-                foreach (string name in BotByName.Keys)
-                {
-                    if (name.ToLower().Contains(lCurrentBotClient))
-                    {
-                        return BotByName[name];
-                    }
-                }
+                return null;
             }
-            return null;
         }
 
 
@@ -317,6 +320,11 @@ namespace cogbot
 
         public void ShutDown()
         {
+            foreach (BotClient client in BotClients)
+            {
+                if (client.Network.Connected)
+                    client.Network.Logout();
+            }
             try
             {
                 logout();
@@ -377,7 +385,10 @@ namespace cogbot
             }
             else
             {
-                Console.WriteLine(str, args);
+                if (outputDelegate != cogbot.Program.WriteLine)
+                {
+                    Console.WriteLine(str, args);
+                }
                 outputDelegate(str, args);
             }
         }
@@ -393,13 +404,17 @@ namespace cogbot
         ScriptEventListener _scriptEventListener = null;
         ScriptInterpreter _lispTaskInterperter;
         public readonly object LispTaskInterperterLock = new object();
+        public bool LispTaskInterperterNeedLoad = true;
 
         public ScriptInterpreter initTaskInterperter()
         {
             lock (LispTaskInterperterLock)
             {
+
                 if (_lispTaskInterperter == null)
                 {
+                    if (!LispTaskInterperterNeedLoad) throw new NullReferenceException("_lispTaskInterperter");
+                    LispTaskInterperterNeedLoad = false;
                     try
                     {
                         WriteLine("Start Loading Main TaskInterperter ... '" + taskInterperterType + "' \n");
@@ -437,7 +452,10 @@ namespace cogbot
         {
             try
             {
-                if (!Running) return "No running";
+                if (!Running)
+                {
+                    return "No running";
+                }
                 if (string.IsNullOrEmpty(lispCode)) return null;
                 initTaskInterperter();
                 //lispCode = "(load-assembly \"libsecondlife\")\r\n" + lispCode;                
@@ -493,7 +511,13 @@ namespace cogbot
         static private readonly LoginDetails DefaultAccount = new LoginDetails(null);
 
         public BotClient LastBotClient = null;
-        readonly static object OneAtATime = new object();
+        static object OneAtATime
+        {
+           get
+           {
+               return BotByName;
+           }    
+        } //= new object();
         private bool _wasFirstGridClient = true;
         private readonly object _wasFirstGridClientLock = new object();
         public void CreateBotClient(string first, string last, string passwd, string simurl, string location)
@@ -511,25 +535,51 @@ namespace cogbot
                 if (bc!=null)
                 {
                     WriteLine(";; Reusing {0}", fullName);
-                    EnsureStarting(bc);
+                    AddTypesToBotClient(bc);
+                    BotByName[bc.NameKey()] = bc;
                     return;// bc;                    
                 }
                 LoginDetails BotLoginParams = GetBotLoginParams(first, last, passwd, simurl, location);
             }
         }
 
-        private void EnsureAcct(LoginDetails details, BotClient bc)
+        private void EnsureRunning(LoginDetails details, BotClient bc)
         {
             lock (OneAtATime)
             {
                 lock (_wasFirstGridClientLock)
                 {
-                    GridClient gridClient;
-                    RadegastInstance inst;
+                    GridClient gridClient = null;
+                    RadegastInstance inst = null;
+                    if (bc != null)
+                    {
+                        gridClient = bc.gridClient;
+                        inst = bc.TheRadegastInstance;
+                    }
                     if (_wasFirstGridClient)
                     {
                         _wasFirstGridClient = false;
-                        inst = RadegastInstance.GlobalInstance;
+                        if (ClientManager.UsingCogbotFromRadgast)
+                            inst = RadegastInstance.GlobalInstance;
+                        else
+                        {
+                            if (gridClient == null)
+                            {
+                                if (bc != null)
+                                {
+                                    gridClient = bc.gridClient;
+                                    if (gridClient == null) gridClient = new GridClient();
+                                }
+                                else
+                                {
+                                    gridClient = new GridClient();
+                                }
+                            }
+                            if (inst == null)
+                            {
+                                inst = new RadegastInstance(gridClient);
+                            }
+                        }
                         gridClient = inst.Client;
                         bc.TheRadegastInstance = inst;
                     }
@@ -547,79 +597,92 @@ namespace cogbot
                     }
                     if (bc == null)
                     {
-                        bc = new BotClient(this, gridClient,details);
+                        bc = new BotClient(this, gridClient, details);
                         bc.TheRadegastInstance = inst;
                     }
-                }
-                string fullName = details.BotLName;
-                Thread t = new Thread(new ThreadStart(() =>
-                {
-                    // Thread.CurrentThread.SetApartmentState(ApartmentState.STA);
-                    try
-                    {
 
-                        if (bc.TheRadegastInstance.MainForm.IsHandleCreated)
-                        {
-                            //bc.TheRadegastInstance.MainForm.Visible = false;
-                        }
-                        else
-                        {
-                            Application.Run(bc.TheRadegastInstance.MainForm);
-                        }
-                        bc.SetRadegastLoginOptions();
-                        EnsureStarting(bc);
-                    }
-                    catch (Exception e)
+                    string fullName = details.BotLName;
+                    bc.SetRadegastLoginOptions();
+                    AddTypesToBotClient(bc);
+                    InSTAThread(new ThreadStart(() =>
                     {
-                        Console.WriteLine(fullName + " " + e);
-                    }
-                }));
-                t.Name = "MainThread " + fullName;
-                try
-                {
-                    t.SetApartmentState(ApartmentState.STA);
+                        EnsureMainForm(inst);
+                    }), fullName);
+                    InSTAThread(new ThreadStart(() =>
+                                                    {
+                                                        EnsureStarting(bc);
+                                                    }), "worker " + fullName);
+                    
+
+                    // return bc;
                 }
-                catch (Exception)
-                {
-                }
-                t.Start();
-                // return bc;
             }
+
         }
 
+        void InSTAThread(ThreadStart invoker, string fullName) {
 
+            Thread t = new Thread(new ThreadStart(() =>
+            {
+                Thread.CurrentThread.SetApartmentState(
+                    ApartmentState.STA);
+                try
+                {
+                    invoker();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(fullName + " " + e);
+                }
+            }));
+            t.Name = "MainThread " + fullName;
+            try
+            {
+                t.SetApartmentState(ApartmentState.STA);
+            }
+            catch (Exception)
+            {
+                               
+            }
+            t.Start();
+
+        }
+    
         public LoginDetails GetBotLoginParams(string first, string last, string passwd, string simurl, string location)
         {
-            String fullName = KeyFromName(first, last);
-            BotClient bc =  GetBotByName(fullName);
-            if (bc != null)
+            lock (OneAtATime)
             {
-                return bc.BotLoginParams;
-            }
+                String fullName = KeyFromName(first, last);
+                BotClient bc = GetBotByName(fullName);
+                if (bc != null)
+                {
+                    return bc.BotLoginParams;
+                }
 
-            LoginDetails BotLoginParams = FindOrCreateAccount(first, last);
-            if (!String.IsNullOrEmpty(first))
-            {
-                BotLoginParams.FirstName = first;
+                LoginDetails BotLoginParams = FindOrCreateAccount(first, last);
+                if (!String.IsNullOrEmpty(first))
+                {
+                    BotLoginParams.FirstName = first;
+                }
+                if (!String.IsNullOrEmpty(last))
+                {
+                    BotLoginParams.LastName = last;
+                }
+                if (!String.IsNullOrEmpty(passwd))
+                {
+                    BotLoginParams.Password = passwd;
+                }
+                if (!String.IsNullOrEmpty(simurl))
+                {
+                    BotLoginParams.URI = simurl;
+                }
+                if (String.IsNullOrEmpty(location))
+                {
+                    location = "last";
+                }
+                BotLoginParams.Start = location;
+                return BotLoginParams;
             }
-            if (!String.IsNullOrEmpty(last))
-            {
-                BotLoginParams.LastName = last;
-            }
-            if (!String.IsNullOrEmpty(passwd))
-            {
-                BotLoginParams.Password = passwd;
-            }
-            if (!String.IsNullOrEmpty(simurl))
-            {
-                BotLoginParams.URI = simurl;
-            }
-            if (String.IsNullOrEmpty(location))
-            {
-                location = "last";
-            }
-            BotLoginParams.Start = location;
-            return BotLoginParams;
         }
 
         public static string KeyFromName(string first, string last)
@@ -637,16 +700,19 @@ namespace cogbot
         private void EnsureStarting(BotClient client)
         {
             AddTypesToBotClient(client);
-            client.StartupClientLisp();
+            client.StartupClientLisp();            
         }
 
         private void AddTypesToBotClient(BotClient bc)
         {
-            BotByName[bc.NameKey()] = bc;
-            lock (registrationTypes) foreach (Type t in registrationTypes)
-                {
-                    bc.RegisterType(t);
-                }
+            lock (OneAtATime)
+            {
+                lock (registrationTypes)
+                    foreach (Type t in registrationTypes)
+                    {
+                        bc.RegisterType(t);
+                    }
+            }
         }
 
         public Utilities.BotTcpServer CreateHttpServer(int port, string botname)
@@ -694,25 +760,33 @@ namespace cogbot
         public void StartUpLisp()
         {
             initTaskInterperter();
-            if (config.startupLisp.Length > 1)
+            EnsureAutoExec();
+            if (!StarupLispCreatedBotClients)
             {
-                EnsureAutoExec();
-                if (!StarupLispCreatedBotClients)
-                {
-                    LastBotClient = new BotClient(this, RadegastInstance.GlobalInstance.Client, DefaultLoginParams());
-                    LastBotClient.TheRadegastInstance = RadegastInstance.GlobalInstance;
-                    // LastBotClient.SetRadegastLoginOptions();
-                    AddTypesToBotClient(LastBotClient);
-                    LastBotClient.Network.LoginProgress += (s, e) =>
+                LastBotClient = new BotClient(this, RadegastInstance.GlobalInstance.Client, DefaultLoginParams());
+                LastBotClient.TheRadegastInstance = RadegastInstance.GlobalInstance;
+                // LastBotClient.SetRadegastLoginOptions();
+                AddTypesToBotClient(LastBotClient);
+                LastBotClient.Network.LoginProgress += (s, e) =>
+                                                           {
+                                                               if (e.Status == LoginStatus.Success)
                                                                {
-                                                                   if (e.Status == LoginStatus.Success)
-                                                                   {
-                                                                       LastBotClient.StartupClientLisp();
-                                                                   }
-                                                               };
-                }
-
+                                                                   EnsureStarting(LastBotClient);
+                                                               }
+                                                           };
             }
+            // Login the accounts and run the input loop
+            lock (Accounts)
+                foreach (LoginDetails ld in Accounts.Values)
+                {
+                    BotClient bc = BotClientForAcct(ld);
+                }
+            lock (Accounts)
+                foreach (var bc in BotClients)
+                {
+                    LoginDetails ld = bc.BotLoginParams;
+                    EnsureRunning(ld, bc);
+                }
         }
 
         /// <summary>
@@ -722,86 +796,145 @@ namespace cogbot
         /// <returns></returns>
         public BotClient BotClientForAcct(LoginDetails account)
         {
-            // Check if this CurrentClient is already logged in
-            foreach (BotClient c in BotClients)
+            lock (OneAtATime)
             {
-                if (c.Self.FirstName == account.FirstName && c.Self.LastName == account.LastName)
+                RadegastInstance inst = null;
+                // Check if this CurrentClient is already logged in
+                foreach (BotClient c in BotClients)
                 {
-                    Logout(c);
-                    break;
+                    if (c.Self.FirstName == account.FirstName && c.Self.LastName == account.LastName)
+                    {
+                        Logout(c);
+                        break;
+                    }
                 }
-            }
+                if (account.Client != null) return account.Client;
 
-            GridClient gc;
-            if (ClientManager.UsingCogbotFromRadgast)
+                BotClient client = GetBotByName(account.BotLName);
+                if (client!=null)
+                {
+                    account.Client = client;
+                }
+                GridClient gc = null;
+                if (ClientManager.UsingCogbotFromRadgast)
+                {
+                    gc = Radegast.RadegastInstance.GlobalInstance.Client;
+                }
+
+                if (ClientManager.UsingRadgastFromCogbot)
+                {
+                    if (client != null)
+                    {
+                        gc = client.gridClient;
+                        inst = client.TheRadegastInstance;
+                        if (inst == null) inst = new RadegastInstance(gc);
+                        client.TheRadegastInstance = inst;
+                    }
+                    else
+                    {
+                        if (gc == null) gc = new GridClient();
+                        inst = new RadegastInstance(gc);
+                        if (inst == null) inst = Radegast.RadegastInstance.GlobalInstance;
+                        gc = inst.Client;
+                    }
+                }
+                
+                
+                
+
+                if (inst != null) gc = inst.Client;
+                if (gc == null) gc = new GridClient();
+
+                // Optimize the throttle
+                gc.Throttle.Wind = 0;
+                gc.Throttle.Cloud = 0;
+                gc.Throttle.Land = 1000000;
+                gc.Throttle.Task = 1000000;
+
+                LoginParams loginParams = gc.Network.DefaultLoginParams(account.FirstName, account.LastName,
+                                                                        account.Password, "BotClient", version);
+                account.UseNetworkDefaults(loginParams);
+
+                if (!String.IsNullOrEmpty(account.StartLocation))
+                    loginParams.Start = account.StartLocation;
+
+                if (!String.IsNullOrEmpty(account.URI))
+                    loginParams.URI = account.URI;
+
+                if (client == null)
+                {
+                    client = new BotClient(this, gc, account);               
+                    BotByName[account.BotLName] = client;
+                }
+                account.Client = client;
+                if (inst != null)
+                {
+                    client.TheRadegastInstance = inst;
+                    //EnsureMainForm(inst);
+                }
+                client.GroupCommands = account.GroupCommands;
+                if (!string.IsNullOrEmpty(account.MasterName)) client.MasterName = account.MasterName;
+                if (account.MasterKey != UUID.Zero) client.MasterKey = account.MasterKey;
+                //client.AllowObjectMaster = client.MasterKey != UUID.Zero; // Require UUID for object master.
+
+                // TODO confirm the set/get of the Master system does what it needs
+                //if (client.Network.Login(loginParams))
+                //{
+                //    if (client.MasterKey == UUID.Zero && !string.IsNullOrEmpty(client.MasterName))
+                //    {
+                //        UUID query = UUID.Zero;
+                //        EventHandler<DirPeopleReplyEventArgs> peopleDirCallback =
+                //           delegate(object sender, DirPeopleReplyEventArgs e)
+                //            {
+                //                if (e.QueryID == query)
+                //                {
+                //                    if (e.MatchedPeople.Count != 1)
+                //                    {
+                //                        Logger.Log("Unable to resolve master key from " + client.MasterName,
+                //                                   Helpers.LogLevel.Warning);
+                //                    }
+                //                    else
+                //                    {
+                //                        client.MasterKey = e.MatchedPeople[0].AgentID;
+                //                        Logger.Log("Master key resolved to " + client.MasterKey, Helpers.LogLevel.Info);
+                //                    }
+                //                }
+                //            };
+
+                //        client.Directory.DirPeopleReply += peopleDirCallback;
+                //        client.Directory.StartPeopleSearch(client.MasterName, 0);
+                //    }
+
+                //    Logger.Log("Logged in " + client.ToString(), Helpers.LogLevel.Info);
+                //}
+                //else
+                //{
+                //    Logger.Log("Failed to login " + account.FirstName + " " + account.LastName + ": " +
+                //        client.Network.LoginMessage, Helpers.LogLevel.Warning);
+                //}
+
+                return client;
+            }
+        }
+
+        private void EnsureMainForm(RadegastInstance instance)
+        {
+            var mf = instance.MainForm;
+            if (!mf.IsHandleCreated)
             {
-                gc = Radegast.RadegastInstance.GlobalInstance.Client;
+               // mf.Visible = false;
+              //  mf.Show();
+                //mf.Visible = false;
+
+                Application.Run(mf);
             }
             else
             {
-                gc = new GridClient();
+              if(false)
+              {
+                  Application.Run(mf);
+              }  
             }
-
-            // Optimize the throttle
-            gc.Throttle.Wind = 0;
-            gc.Throttle.Cloud = 0;
-            gc.Throttle.Land = 1000000;
-            gc.Throttle.Task = 1000000;
-
-            LoginParams loginParams = gc.Network.DefaultLoginParams(account.FirstName, account.LastName, account.Password, "BotClient", version);
-            account.UseNetworkDefaults(loginParams);
-
-            if (!String.IsNullOrEmpty(account.StartLocation))
-                loginParams.Start = account.StartLocation;
-
-            if (!String.IsNullOrEmpty(account.URI))
-                loginParams.URI = account.URI;
-
-            BotClient client = new BotClient(this, gc, account);
-            account.Client = client;
-            BotByName[account.BotLName] = client;
-            client.GroupCommands = account.GroupCommands;
-            if (!string.IsNullOrEmpty(account.MasterName)) client.MasterName = account.MasterName;
-            if (account.MasterKey != UUID.Zero) client.MasterKey = account.MasterKey;
-            //client.AllowObjectMaster = client.MasterKey != UUID.Zero; // Require UUID for object master.
-
-            // TODO confirm the set/get of the Master system does what it needs
-            //if (client.Network.Login(loginParams))
-            //{
-            //    if (client.MasterKey == UUID.Zero && !string.IsNullOrEmpty(client.MasterName))
-            //    {
-            //        UUID query = UUID.Zero;
-            //        EventHandler<DirPeopleReplyEventArgs> peopleDirCallback =
-            //           delegate(object sender, DirPeopleReplyEventArgs e)
-            //            {
-            //                if (e.QueryID == query)
-            //                {
-            //                    if (e.MatchedPeople.Count != 1)
-            //                    {
-            //                        Logger.Log("Unable to resolve master key from " + client.MasterName,
-            //                                   Helpers.LogLevel.Warning);
-            //                    }
-            //                    else
-            //                    {
-            //                        client.MasterKey = e.MatchedPeople[0].AgentID;
-            //                        Logger.Log("Master key resolved to " + client.MasterKey, Helpers.LogLevel.Info);
-            //                    }
-            //                }
-            //            };
-
-            //        client.Directory.DirPeopleReply += peopleDirCallback;
-            //        client.Directory.StartPeopleSearch(client.MasterName, 0);
-            //    }
-
-            //    Logger.Log("Logged in " + client.ToString(), Helpers.LogLevel.Info);
-            //}
-            //else
-            //{
-            //    Logger.Log("Failed to login " + account.FirstName + " " + account.LastName + ": " +
-            //        client.Network.LoginMessage, Helpers.LogLevel.Warning);
-            //}
-
-            return client;
         }
 
         /// <summary>
@@ -844,40 +977,24 @@ namespace cogbot
         public void Run()
         {
             //   WriteLine("Type quit to exit.  Type help for a command list.");
-            EnsureManagerStarting();
+            StartUpLisp();
 
             while (Running)
             {
                 ;
                 string input = Program.consoleBase.CmdPrompt(GetPrompt());
                 if (string.IsNullOrEmpty(input)) continue;
-                outputDelegate(ExecuteCommand(input, outputDelegate).ToString());
+                CmdResult executeCommand = ExecuteCommand(input, WriteLine);
+                if (executeCommand==null) continue;
+                WriteLine(executeCommand.ToString());
             }
-
-            foreach (BotClient client in BotClients)
-            {
-                if (client.Network.Connected)
-                    client.Network.Logout();
-            }
-        }
-
-        public void EnsureManagerStarting()
-        {
-
-            ClientManager manager = this;
-            EnsureAutoExec();
-
-            // Login the accounts and run the input loop
-            lock (Accounts) foreach (LoginDetails ld in Accounts.Values)
-            {
-                BotClient bc = manager.BotClientForAcct(ld);
-                EnsureAcct(ld,bc);
-            }
+            Dispose();
         }
 
         private static bool RanAutoExec = false;
         private static object RunningAutoExec = new object();
         public static bool NoLoadConfig;
+        public static Thread MainThread;
 
         private void EnsureAutoExec()
         {
@@ -996,6 +1113,43 @@ namespace cogbot
         public void Logout(BotClient client)
         {
             client.Network.Logout();
+        }
+
+
+        public void Remove(BotClient client)
+        {
+            if (client==null) return;
+            string name = client.NameKey();
+            lock(OneAtATime)
+            {
+                lock (BotByName)
+                {
+                    BotClient bc0;
+                    if (BotByName.TryGetValue(name, out bc0))
+                    {
+                        if (!Object.ReferenceEquals(bc0, client))
+                        {
+                            WriteLine("BotClient != " + bc0.GetName() + " and " + client.GetName());
+                        }
+                        BotByName.Remove(name);
+                        bc0.Dispose();
+                    }
+                }
+                lock (Accounts)
+                {
+                    LoginDetails param;
+                    if (Accounts.TryGetValue(name, out param))
+                    {
+                        BotClient pc = param.Client;
+                        if (pc!=null)
+                        {
+                            param.Client = null;
+                        }
+                        Accounts.Remove(name);
+                    }
+                }
+            }
+
         }
 
         /// <summary>
