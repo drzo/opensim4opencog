@@ -393,8 +393,8 @@ typedef struct // define a context structure  { ... } context;
          
          */
 
-        // test with foo2(X,Y)->writeln(p(X,Y));writeln(p(X,Y)).
-        // test with foo2(X,Y) *->writeln(p(X,Y));writeln(p(X,Y)).
+        // test with (foo2(X,Y)->writeln(p(X,Y));writeln(p(X,Y))),!.
+        // test with (foo2(X,Y) *->writeln(p(X,Y));writeln(p(X,Y)),!).
         public static int FooTwo(PlTerm a0, PlTerm a1, IntPtr control)
         {
             var handle = control;
@@ -760,7 +760,7 @@ typedef struct // define a context structure  { ... } context;
             start = i;
             end = ii;
         }
-
+     
         public override AbstractNondetMethod Clone()
         {
             return new ForNext(start, end);
