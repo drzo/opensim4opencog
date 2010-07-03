@@ -522,7 +522,6 @@ namespace cogbot
         private readonly object _wasFirstGridClientLock = new object();
         public void CreateBotClient(string first, string last, string passwd, string simurl, string location)
         {
-            StarupLispCreatedBotClients = true;
             lock (OneAtATime)
             {
                 string fullName = string.Format("{0} {1}", first, last);
@@ -531,6 +530,7 @@ namespace cogbot
                     WriteLine(";; DoNotCreateBotClientsFromLispScript: {0}", fullName);
                     return;
                 }
+                StarupLispCreatedBotClients = true;
                 BotClient bc = GetBotByName(fullName);
                 if (bc!=null)
                 {
@@ -771,7 +771,13 @@ namespace cogbot
                                                            {
                                                                if (e.Status == LoginStatus.Success)
                                                                {
-                                                                   EnsureStarting(LastBotClient);
+                                                                   InSTAThread(() =>
+                                                                                   {
+                                                                                       EnsureStarting(LastBotClient);
+                                                                                   }, LastBotClient.GetName());
+                                                                   
+
+                                                                   
                                                                }
                                                            };
             }
@@ -784,6 +790,7 @@ namespace cogbot
             lock (Accounts)
                 foreach (var bc in BotClients)
                 {
+                    LastBotClient = bc;
                     LoginDetails ld = bc.BotLoginParams;
                     EnsureRunning(ld, bc);
                 }
