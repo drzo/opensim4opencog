@@ -16,7 +16,7 @@
     <DefaultTargetSchema>IE50</DefaultTargetSchema>
     <DelaySign>false</DelaySign>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
-    <OutputType>Library</OutputType>
+    <OutputType>Exe</OutputType>
     <AppDesignerFolder>
     </AppDesignerFolder>
     <RootNamespace>SWIPlCs</RootNamespace>
@@ -57,7 +57,7 @@
     <DebugSymbols>True</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
     <Optimize>False</Optimize>
-    <OutputPath>..\..\bin\</OutputPath>
+    <OutputPath>..\..\..\..\Program Files %28x86%29\pl\bin\</OutputPath>
     <RegisterForComInterop>False</RegisterForComInterop>
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
     <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
@@ -69,11 +69,7 @@
   <ItemGroup>
     <Reference Include="ICSharpCode.SharpZipLib, Version=0.84.0.0, Culture=neutral, PublicKeyToken=1b03e6acf1164f73" />
     <Reference Include="IKVM.AWT.WinForms, Version=0.36.0.11, Culture=neutral, PublicKeyToken=13235d27fcbfff58" />
-    <Reference Include="IKVM.OpenJDK.ClassLibrary, Version=0.36.0.11, Culture=neutral, PublicKeyToken=13235d27fcbfff58" />
-    <Reference Include="IKVM.Runtime, Version=0.36.0.11, Culture=neutral, PublicKeyToken=13235d27fcbfff58" />
-    <Reference Include="jpl, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <ExecutableExtension>.exe</ExecutableExtension>
-    </Reference>
+    <Reference Include="IKVM.OpenJDK.Core, Version=0.43.3824.0, Culture=neutral, processorArchitecture=MSIL" />
     <Reference Include="SWIJPL, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL" />
     <Reference Include="System">
       <Name>System</Name>
