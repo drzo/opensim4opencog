@@ -111,6 +111,7 @@
     </Compile>
     <Compile Include="NativeMethods.cs">
     </Compile>
+    <Compile Include="NondetContextHandle.cs" />
     <Compile Include="PrologClient.cs">
     </Compile>
     <Compile Include="SWI-cs-PlQuery.cs">

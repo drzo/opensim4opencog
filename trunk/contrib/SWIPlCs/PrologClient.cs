@@ -236,10 +236,10 @@ namespace SbsSW.SwiPlCs
             //Warning: [Thread 2] Thread running "thread_run_interactor" died on exception: thread_util:attach_console/0: Undefined procedure: thread_util:win_open_console/5
             //PlQuery.PlCall("interactor");
             //Delegate Foo0 = foo0;
-            RegisterPLCSForiegns();
+            RegisterPLCSForeigns();
 
-            PlAssert("tc:-foo(X,Y),writeq(f(X,Y)),nl,X=5");
             PlAssert("tc2:-foo2(X,Y),writeq(f(X,Y)),nl,X=5");
+            PlAssert("tc3:-foo3(X,Y),writeq(f(X,Y)),nl,X=5");
             libpl.PL_toplevel();
             Console.WriteLine("press enter to exit");
             Console.ReadLine();
@@ -249,7 +249,7 @@ namespace SbsSW.SwiPlCs
 
         }
 
-        private static void RegisterPLCSForiegns()
+        private static void RegisterPLCSForeigns()
         {
             PlForeignSwitches Nondeterministic = PlForeignSwitches.Nondeterministic;
             PlEngine.RegisterForeign(null, "foo2", 2, new DelegateParameterBacktrack2(FooTwo), Nondeterministic);
@@ -393,6 +393,8 @@ typedef struct // define a context structure  { ... } context;
          
          */
 
+        // test with foo2(X,Y)->writeln(p(X,Y));writeln(p(X,Y)).
+        // test with foo2(X,Y) *->writeln(p(X,Y));writeln(p(X,Y)).
         public static int FooTwo(PlTerm a0, PlTerm a1, IntPtr control)
         {
             var handle = control;
@@ -402,7 +404,7 @@ typedef struct // define a context structure  { ... } context;
             {
                 case FRG.PL_FIRST_CALL:
                     {
-                        var v = NonDetHandle.ObtainHandle(control);
+                        var v = NondetContextHandle.ObtainHandle(control, new ForNext(1, 3));
                         bool res = v.Setup(new PlTermV(a0, a1));
                         bool more = v.HasMore();
                         if (more)
@@ -414,7 +416,7 @@ typedef struct // define a context structure  { ... } context;
                     } break;
                 case FRG.PL_REDO:
                     {
-                        var v = NonDetHandle.FindHandle(control);
+                        var v = NondetContextHandle.FindHandle(control);
                         bool res = v.Call(new PlTermV(a0, a1));
                         bool more = v.HasMore();
                         if (more)
@@ -426,9 +428,9 @@ typedef struct // define a context structure  { ... } context;
                     } break;
                 case FRG.PL_CUTTED:
                     {
-                        var v = NonDetHandle.FindHandle(control);
+                        var v = NondetContextHandle.FindHandle(control);
                         bool res = v.Close(new PlTermV(a0, a1));
-                        NonDetHandle.ReleaseHandle(v);
+                        NondetContextHandle.ReleaseHandle(v);
                         return res ? 1 : 0;
                     } break;
                 default:
@@ -449,7 +451,7 @@ typedef struct // define a context structure  { ... } context;
             {
                 case FRG.PL_FIRST_CALL:
                     {
-                        var v = NonDetHandle.ObtainHandle(control);
+                        var v = NondetContextHandle.ObtainHandle(control);
                         bool res = v.Setup(new PlTermV(a0, arity));
                         bool more = v.HasMore();
                         if (more)
@@ -461,7 +463,7 @@ typedef struct // define a context structure  { ... } context;
                     } break;
                 case FRG.PL_REDO:
                     {
-                        var v = NonDetHandle.FindHandle(control);
+                        var v = NondetContextHandle.FindHandle(control);
                         bool res = v.Call(new PlTermV(a0, arity));
                         bool more = v.HasMore();
                         if (more)
@@ -473,9 +475,9 @@ typedef struct // define a context structure  { ... } context;
                     } break;
                 case FRG.PL_CUTTED:
                     {
-                        var v = NonDetHandle.FindHandle(control);
+                        var v = NondetContextHandle.FindHandle(control);
                         bool res = v.Close(new PlTermV(a0, arity));
-                        NonDetHandle.ReleaseHandle(v);
+                        NondetContextHandle.ReleaseHandle(v);
                         return res ? 1 : 0;
                     } break;
                 default:
@@ -735,102 +737,6 @@ typedef struct // define a context structure  { ... } context;
     }
 
 
-    public class NonDetHandle
-    {
-        static LinkedList<NonDetHandle> NonDetHandles = new LinkedList<NonDetHandle>();
-
-        static public void ReleaseHandle(NonDetHandle hnd)
-        {
-            lock (NonDetHandles)
-            {
-                NonDetHandle.ContextToObject.Remove(hnd.Context);
-                hnd.Context = (IntPtr)0;
-                NonDetHandles.AddLast(hnd);
-            }
-        }
-
-        public delegate NonDetHandle HandleMaker();
-        static public NonDetHandle ObtainHandle(IntPtr context, HandleMaker maker, NondeterminsticMethod value)
-        {
-            lock (NonDetHandles)
-            {
-                NonDetHandle hnd;
-                if (NonDetHandles.Count == 0)
-                {
-                    hnd = maker();
-                }
-                else
-                {
-                    hnd = NonDetHandles.First.Value;
-                    NonDetHandles.RemoveFirst();
-                }
-                hnd.Context = context;
-                hnd.NonDetMethods = value;
-                lock (NonDetHandle.HandleToObject)
-                {
-                    NonDetHandle.ContextToObject[context] = hnd;
-                }
-                return hnd;
-            }
-        }
-
-        static public NonDetHandle ObtainHandle(IntPtr context)
-        {
-            return ObtainHandle(context, () => new NonDetHandle(), null);
-        }
-        //static NonDetHandle lastHandle;
-        public static NonDetHandle FindHandle(IntPtr context)
-        {
-            //if (context == (IntPtr)0) return lastHandle;
-            lock (NonDetHandle.HandleToObject) return NonDetHandle.ContextToObject[context];
-        }
-
-        public static Dictionary<int, NonDetHandle> HandleToObject = new Dictionary<int, NonDetHandle>();
-        public static Dictionary<IntPtr, NonDetHandle> ContextToObject = new Dictionary<IntPtr, NonDetHandle>();
-        public static int TotalHandles = 0;
-        public readonly int Handle;
-        public NondeterminsticMethod NonDetMethods;
-        public IntPtr Context;
-
-        public NonDetHandle()
-        {
-            NonDetMethods = new ForNext(1, 20);
-            lock (HandleToObject)
-            {
-                Handle = ++TotalHandles;
-                HandleToObject[Handle] = this;
-            }
-        }
-
-        #region Overrides of NondeterminsticMethod
-
-        public bool Setup(PlTermV a0)
-        {
-            if (NonDetMethods == null) return false;
-            return NonDetMethods.Setup(a0);
-        }
-
-        public bool Call(PlTermV a0)
-        {
-            if (NonDetMethods == null) return false;
-            return NonDetMethods.Call(a0);
-        }
-
-        public bool Close(PlTermV a0)
-        {
-            if (NonDetMethods == null) return true;
-            return NonDetMethods.Close(a0);
-        }
-
-        #endregion
-
-        public bool HasMore()
-        {
-            if (NonDetMethods != null) return NonDetMethods.HasMore();
-            return false;
-        }
-    }
-
     [System.Security.SuppressUnmanagedCodeSecurityAttribute]
     public static class JplSafeNativeMethods
     {
@@ -845,7 +751,7 @@ typedef struct // define a context structure  { ... } context;
         public static extern void install();
     }
 
-    public class ForNext : NondeterminsticMethod
+    public class ForNext : AbstractNondetMethod
     {
         private int start = 0;
         private int end = 0;
@@ -855,7 +761,12 @@ typedef struct // define a context structure  { ... } context;
             end = ii;
         }
 
-        #region Overrides of NondeterminsticMethod
+        public override AbstractNondetMethod Clone()
+        {
+            return new ForNext(start, end);
+        }
+
+        #region Overrides of AbstractNondetMethod
 
         public override bool Setup(PlTermV a0)
         {
@@ -899,80 +810,4 @@ typedef struct // define a context structure  { ... } context;
 
     public delegate int NonDetDelegate(PlTerm term, PlTerm term2);
 
-    abstract public class NondeterminsticMethod: IDisposable
-    {
-        protected NondeterminsticMethod()
-        {
-            del = BackrackImpl;
-        }
-        public virtual void Register()
-        {
-            libpl.PL_register_foreign_in_module(Module, Name, Arity, del,
-                                                (int)(PlForeignSwitches.Nondeterministic | PlForeignSwitches.VarArgs));
-        }
-
-        private DelegateParameterBacktrackVarArgs del;
-        protected string Module;
-        protected string Name;
-        protected int Arity;
-
-
-        public virtual void Dispose()
-        {
-         //   libpl.PL_register_foreign_in_module(Module, Name, Arity, del,
-           //                                     (int)(PlForeignSwitches.Nondeterministic | PlForeignSwitches.VarArgs));
-        }
-
-        public virtual int BackrackImpl(PlTerm a0, int arity, IntPtr control)
-        {
-            var handle = control;
-            FRG fc = (FRG)(libpl.PL_foreign_control(control));
-
-            switch (fc)
-            {
-                case FRG.PL_FIRST_CALL:
-                    {
-                        var v = NonDetHandle.ObtainHandle(control, () => new NonDetHandle(), this);
-                        bool res = v.Setup(new PlTermV(a0, arity));
-                        bool more = v.HasMore();
-                        if (more)
-                        {
-                            libpl.PL_retry(v.Handle);
-                            return res ? 3 : 0;
-                        }
-                        return res ? 1 : 0;
-                    } break;
-                case FRG.PL_REDO:
-                    {
-                        var v = NonDetHandle.FindHandle(control);
-                        bool res = v.Call(new PlTermV(a0, arity));
-                        bool more = v.HasMore();
-                        if (more)
-                        {
-                            libpl.PL_retry(v.Handle);
-                            return res ? 3 : 0;
-                        }
-                        return res ? 1 : 0;
-                    } break;
-                case FRG.PL_CUTTED:
-                    {
-                        var v = NonDetHandle.FindHandle(control);
-                        bool res = v.Close(new PlTermV(a0, arity));
-                        NonDetHandle.ReleaseHandle(v);
-                        return res ? 1 : 0;
-                    } break;
-                default:
-                    {
-                        throw new PlException("no frg");
-                        return libpl.PL_fail;
-                    }
-                    break;
-            }
-        }
-
-        public abstract bool Setup(PlTermV a0);
-        public abstract bool Call(PlTermV a0);
-        public abstract bool Close(PlTermV a0);
-        public abstract bool HasMore();
-    }
 }
