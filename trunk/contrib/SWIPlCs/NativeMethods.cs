@@ -212,10 +212,13 @@ namespace SbsSW.SwiPlCs
         [DllImport(DllFileName, CharSet = CharSet.Ansi, BestFitMapping = false, ThrowOnUnmappableChar = true)]
         internal static extern int PL_get_chars(uint term, [In, Out]ref IntPtr s, uint flags);
 
-		// __pl_export int		PL_get_long(term_t term, long *i);
-		[DllImport(DllFileName)]
-		internal static extern int PL_get_long(uint term, [In, Out] ref int i);
-		// __pl_export int		PL_get_float(term_t term, double *f);
+        // __pl_export int		PL_get_long(term_t term, long *i);
+        [DllImport(DllFileName)]
+        internal static extern int PL_get_long(uint term, [In, Out] ref int i);
+        // __pl_export int		PL_get_long(term_t term, long *i);
+        [DllImport(DllFileName)]
+        internal static extern int PL_get_long(uint term, [In, Out] ref long i);
+        // __pl_export int		PL_get_float(term_t term, double *f);
 		[DllImport(DllFileName)]
 		internal static extern int PL_get_float(uint term, [In, Out] ref double i);
 		// __pl_export int		PL_get_atom(term_t term, atom_t *atom);

@@ -352,10 +352,13 @@ namespace SbsSW.SwiPlCs
             return iRet;
         }
 
-		internal static int PL_get_long(uint term, ref int i)
-		{ return SafeNativeMethods.PL_get_long(term, ref i); }
+        internal static int PL_get_long(uint term, ref int i)
+        { return SafeNativeMethods.PL_get_long(term, ref i); }
 
-		internal static int PL_get_float(uint term, ref double i)
+        internal static int PL_get_long(uint term, ref long i)
+        { return SafeNativeMethods.PL_get_long(term, ref i); }
+
+        internal static int PL_get_float(uint term, ref double i)
 		{ return SafeNativeMethods.PL_get_float(term, ref i); }
 
 		internal static int PL_get_atom(uint term, ref uint atom_t)
