@@ -73,7 +73,7 @@ namespace SbsSW.SwiPlCs
             }
         }
 
-        private int Call0(NondetContextHandle handle, PlTermV termV)
+        public virtual int Call0(NondetContextHandle handle, PlTermV termV)
         {
             bool res = handle.Call(termV);
             bool more = handle.HasMore();
