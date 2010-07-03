@@ -553,6 +553,7 @@ typedef struct io_stream{
 	    [DllImport(DllFileName)]
         internal extern static IntPtr PL_foreign_context_address(IntPtr control);
 
+        [DllImport(DllFileName)]
         internal extern static int PL_toplevel();
 
 	    [DllImport(DllFileName)]
