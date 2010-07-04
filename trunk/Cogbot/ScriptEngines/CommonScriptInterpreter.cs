@@ -8,10 +8,34 @@ namespace cogbot.ScriptEngines
 {
     abstract public class CommonScriptInterpreter : ScriptInterpreter
     {
-        protected CommonScriptInterpreter()
+        public virtual object Self
         {
-            ScriptManager.Interpreters.Add(this); 
+            get { return GetSymbol("this"); }
+            set { Intern("this", value); }
         }
+
+        public readonly object OriginalSelf;
+        protected CommonScriptInterpreter(object self)
+        {
+            OriginalSelf = self;
+            // ReSharper disable DoNotCallOverridableMethodsInConstructor
+            Init();
+            Self = self ?? this;
+            // ReSharper restore DoNotCallOverridableMethodsInConstructor
+            ScriptManager.AddInterpreter(this);
+        }
+
+        private CommonScriptInterpreter()
+        {
+// ReSharper disable DoNotCallOverridableMethodsInConstructor
+            Init();
+            Self = this;
+// ReSharper restore DoNotCallOverridableMethodsInConstructor
+            ScriptManager.AddInterpreter(this);
+        }
+
+        public abstract void Init();
+
         public object ConvertArgToLisp(object code)
         {
             return ScriptEventListener.argString(code);
@@ -31,9 +55,19 @@ namespace cogbot.ScriptEngines
             return LoadsFileType(filenameorext);
         }
 
-        public virtual bool LoadsFileType(string filename)
+        public abstract bool LoadsFileType(string filenameorext);
+
+        public virtual bool LoadsFileType0(string filename)
         {
-             return GetType().Name.Contains(filename);
+            filename = filename.ToLower();
+            string myname = GetType().Name.ToLower();
+            if (myname == filename) return true;
+            bool b = myname.StartsWith(filename);
+            if (b)
+            {
+                ScriptManager.WriteLine("LoadsFileType0 " + GetType() + " => " + filename);                
+            }
+            return b;
         }
 
         public virtual Object EvalForObject(Object lispCode, OutputDelegate output)

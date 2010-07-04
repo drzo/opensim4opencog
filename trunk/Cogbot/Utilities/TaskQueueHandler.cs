@@ -19,6 +19,15 @@ namespace cogbot.Utilities
         private ulong LastBusy = 0;
         readonly int WAIT_AFTER;
         public bool IsDisposing = false;
+
+        public bool IsRunning
+        {
+            get
+            {
+                if (IsDisposing) return false;
+                return EventQueueHandler != null && EventQueueHandler.IsAlive;
+            }
+        }
         readonly object EventQueueLock = new object();
         AutoResetEvent WaitingOn = new AutoResetEvent(false);
         readonly LinkedList<ThreadStart> EventQueue = new LinkedList<ThreadStart>();
@@ -36,11 +45,11 @@ namespace cogbot.Utilities
             WAIT_AFTER = msWaitBetween;
             EventQueuePing = new Thread(EventQueue_Ping) { Name = str + " debug", Priority = ThreadPriority.Lowest };
             if (autoStart) Start();
-            EventQueuePing.Start();
         }
 
         public void Start()
         {
+            if (EventQueuePing != null && !EventQueuePing.IsAlive) EventQueuePing.Start();
             if (EventQueueHandler==null) EventQueueHandler = new Thread(EventQueue_Handler);
             if (!EventQueueHandler.IsAlive)
             {

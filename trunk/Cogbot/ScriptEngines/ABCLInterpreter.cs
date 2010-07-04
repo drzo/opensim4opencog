@@ -100,7 +100,7 @@ namespace cogbot.ScriptEngines
     }
 
 
-    public class ABCLInterpreter : CommonScriptInterpreter
+    public class ABCLInterpreter : LispInterpreter
     {
         public override void Dispose()
         {
@@ -161,7 +161,7 @@ namespace cogbot.ScriptEngines
             return isr;
         }
 
-        LispObject lastPackage = Symbol.NIL;
+        LispObject lastPackage = Lisp.NIL;
         Symbol varPackage = null;
 
         private Interpreter interpreter = Interpreter.getInstance();
@@ -172,11 +172,17 @@ namespace cogbot.ScriptEngines
 
 
         // 
-        public ABCLInterpreter()
+        public ABCLInterpreter(object self)
+            : base(self)
+        {
+        }
+
+        public override void Init()
         {
             buffer = new TextReaderStringBuffer(this);
             COMMON_ABCLInterpreter = this;
         }
+
         //
         readonly static public String VersionString = "Winform REPL";
         internal void AddToPath(string p)
@@ -202,7 +208,7 @@ namespace cogbot.ScriptEngines
         internal void ExecuteFile(string p)
         {
             getInterpreter();
-            Lisp.eval(new Cons(Symbol.LOAD, new Cons(new SimpleString(p), Symbol.NIL)));
+            Lisp.eval(new Cons(Symbol.LOAD, new Cons(new SimpleString(p), Lisp.NIL)));
         }
 
         internal void WriteText(string p)
@@ -269,7 +275,7 @@ namespace cogbot.ScriptEngines
 
         public override bool LoadsFileType(string filename)
         {
-            return filename.EndsWith("lisp") || base.LoadsFileType(filename);
+            return filename.EndsWith("lisp") || base.LoadsFileType0(filename);
         }
 
         public override object Read(string p, TextReader stringCodeReader, OutputDelegate WriteLine)
@@ -303,7 +309,7 @@ namespace cogbot.ScriptEngines
         public override void InternType(Type t)
         {
             java.lang.Class ic = ikvm.runtime.Util.getInstanceTypeFromClass(t);
-            Intern(null, null, allExceptFor, ic, 2);
+            Intern(null , null, allExceptFor, ic, 2);
 
           //  dotLispInterpreter.InternType(t);
         }
@@ -311,6 +317,11 @@ namespace cogbot.ScriptEngines
         public Symbol Intern(string p, object globalcogbotTextForm, List<object> exceptFor, java.lang.Class ic, int depth)
         {
             Package pkg = CurrentPackage();
+            if (p == null)
+            {
+                p = ic.getName();
+                p = p.ToString();
+            }
             p = p.ToUpper();
             Symbol s = Lisp.intern(p, pkg);
             LispObject sv = s.getSymbolValue();
@@ -325,14 +336,14 @@ namespace cogbot.ScriptEngines
                 allExceptFor.Add(mask);
                 LispObject vtemp = s.getSymbolValue();
                 s.setSymbolValue(s);
-                JavaObject jclass = new JavaObject(ic);
+                JavaObject jclass =  Lisp.makeNewJavaObject(ic);
                 Lisp.eval(Lisp.list4(fun, new SimpleString(p),s,jclass));
                 s.setSymbolValue(vtemp);
                 depth++;
             }
             if (globalcogbotTextForm != null)
             {
-                JavaObject jo = new JavaObject(globalcogbotTextForm);
+                JavaObject jo = Lisp.makeNewJavaObject(globalcogbotTextForm);
                 s.setSymbolValue(jo);
 
                 if (exceptFor.Contains(globalcogbotTextForm)) return s;
@@ -427,7 +438,7 @@ namespace cogbot.ScriptEngines
 
         private Package CurrentPackage()
         {
-            lastPackage = Package.getCurrentPackage();
+            lastPackage = org.armedbear.lisp.Lisp.getCurrentPackage();
             return (Package)lastPackage;
         }
 
@@ -633,12 +644,12 @@ namespace cogbot.ScriptEngines
 
                 s = s.Substring(indexOf + 1);
                 Object o = clojExecute(target, s, args);
-                return new JavaObject(o);
+                return Lisp.makeNewJavaObject(o);
             } else {
             String s1 = s;
             target = findSymbol(target, s1);
             Object o = clojExecute(target, "", args);
-            return new JavaObject(o);
+            return Lisp.makeNewJavaObject(o);
             }
         }
     }

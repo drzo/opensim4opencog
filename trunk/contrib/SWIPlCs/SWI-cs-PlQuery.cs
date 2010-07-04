@@ -72,7 +72,7 @@ namespace SbsSW.SwiPlCs
     {
         /// <summary>The name of a variable in a Query</summary>
         public string Name { get; internal set; }
-        /// <summary>The Value (PlTerm) of a variable in a Query</summary>
+        /// <summary>The ManagedObject (PlTerm) of a variable in a Query</summary>
         public PlTerm Value { get; internal set; }
         internal PlQueryVar(string name, PlTerm val)
         {

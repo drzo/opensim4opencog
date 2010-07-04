@@ -5,13 +5,18 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
-using java.util;
+using IKVM.Internal;
+using ikvm.runtime;
+using java.net;
 using jpl;
 using SbsSW.SwiPlCs.Callback;
 using SbsSW.SwiPlCs.Exceptions;
 using SbsSW.SwiPlCs.Streams;
 using System.Windows.Forms;
 using Hashtable=java.util.Hashtable;
+using ClassLoader = java.lang.ClassLoader;
+using Class = java.lang.Class;
+using sun.reflect.misc;
 
 namespace SbsSW.SwiPlCs
 {
@@ -137,7 +142,7 @@ namespace SbsSW.SwiPlCs
 
         public void Intern(string varname, object value)
         {
-            throw new NotImplementedException();
+         //   throw new NotImplementedException();
         }
 
         public bool IsDefined(string name)
@@ -162,6 +167,7 @@ namespace SbsSW.SwiPlCs
 
         private static void SetupProlog()
         {
+            string cogbothome = "c:\\development\\opensim4opencog\\bin";
             string plhome = Environment.GetEnvironmentVariable("SWI_HOME_DIR");
             if (string.IsNullOrEmpty(plhome))
             {
@@ -175,17 +181,46 @@ namespace SbsSW.SwiPlCs
             String path = Environment.GetEnvironmentVariable("PATH");
             if (path != null)
                 if (!path.ToLower().StartsWith(plhome.ToLower()))
-                    Environment.SetEnvironmentVariable("PATH", plhome + "\\bin;" + path);
+                {
+                    Environment.SetEnvironmentVariable("PATH", plhome + "\\bin;" + cogbothome + ";" + path);
+                }
             string libpath = "";
-            libpath += ".";
-            //libpath += ";";
-            //libpath += "c:\\Program Files (x86)\\pl\\bin";
-            //libpath += ";";
-            //libpath += "c:\\development\\opensim4opencog\\bin";
-            java.lang.System.setProperty("java.library.path", libpath);
 
+
+            libpath += ".";
+            libpath += ";";
+            libpath += plhome + "\\bin";
+            libpath += ";";
+            libpath += cogbothome;
+
+            string LD_LIBRARY_PATH = Environment.GetEnvironmentVariable("LD_LIBRARY_PATH");
+            if (String.IsNullOrEmpty(LD_LIBRARY_PATH))
+            {
+                LD_LIBRARY_PATH = libpath;
+                Environment.SetEnvironmentVariable("LD_LIBRARY_PATH", LD_LIBRARY_PATH);
+            }
+
+
+            string CLASSPATH = java.lang.System.getProperty("java.class.path");
+            string CLASSPATH0 = Environment.GetEnvironmentVariable("CLASSPATH");
+
+            if (String.IsNullOrEmpty(CLASSPATH))
+            {
+                CLASSPATH = CLASSPATH0;
+            }
+            string jplcp = clasPathOf(new jpl.JPL());
+           
+            CLASSPATH = cogbothome + "\\SWIJPL.dll" + ";" + cogbothome + "\\SWIJPL.jar;" + CLASSPATH0;
+
+            Environment.SetEnvironmentVariable("CLASSPATH", CLASSPATH);
+            java.lang.System.setProperty("java.class.path", CLASSPATH);
+            java.lang.System.setProperty("java.library.path", libpath);
             try
             {
+                JPL.setNativeLibraryDir(plhome + "\\bin");
+                JPL.loadNativeLibrary();
+                SafelyRun(() => TestClassLoader());
+
                 jpl.fli.Prolog.initialise();
                 if (!PlEngine.IsInitialized)
                 {
@@ -193,8 +228,8 @@ namespace SbsSW.SwiPlCs
                     PlEngine.Initialize(param);
                 }
                 PlEngine.SetStreamFunctionRead(PlStreamType.Input, new DelegateStreamReadFunction(Sread));
-                PlAssert("jpl:jvm_ready");
-                PlAssert("module_transparent(jvm_ready)");
+//                PlAssert("jpl:jvm_ready");
+//                PlAssert("module_transparent(jvm_ready)");
             }
             catch (Exception exception)
             {
@@ -202,8 +237,129 @@ namespace SbsSW.SwiPlCs
                 return;
             }
         }
+        public class ScriptingClassLoader : URLClassLoader
+        {
+            readonly IList<ClassLoader> lc = new List<ClassLoader>();
+            IList<AppDomainAssemblyClassLoader> AppDomainAssemblyClassLoaders = new List<AppDomainAssemblyClassLoader>();
+            IList<AssemblyClassLoader> AssemblyClassLoaders = new List<AssemblyClassLoader>();
+            IList<ClassPathAssemblyClassLoader> ClassPathAssemblyClassLoaders = new List<ClassPathAssemblyClassLoader>();
+            IList<URLClassLoader> URLClassLoaders = new List<URLClassLoader>();
+            IList<MethodUtil> MethodUtils = new List<MethodUtil>();
 
-        public static void Main(string[] args)
+            public ScriptingClassLoader(ClassLoader cl)
+                : base(new URL[0], cl)
+            {
+                AddLoader(cl);
+            }
+
+            public void AddLoader(ClassLoader cl)
+            {
+                lock (lc)
+                {
+                    if (cl != null)
+                    {
+                        if (lc.Contains(cl)) return;
+                        lc.Add(cl);
+                        bool added = false;
+                        if (cl is AppDomainAssemblyClassLoader)
+                        {
+                            AppDomainAssemblyClassLoaders.Add((AppDomainAssemblyClassLoader)cl);
+                            added = true;
+                        }
+                        if (cl is AssemblyClassLoader)
+                        {
+                            AssemblyClassLoaders.Add((AssemblyClassLoader)cl);
+                            added = true;
+                        }
+                        if (cl is ClassPathAssemblyClassLoader)
+                        {
+                            ClassPathAssemblyClassLoaders.Add((ClassPathAssemblyClassLoader)cl);
+                            added = true;
+                        }
+                        if (!added)
+                        {
+                            if (cl is MethodUtil)
+                            {
+                                MethodUtils.Add((MethodUtil)cl);
+                                added = true;
+                            } else
+                            if (cl is URLClassLoader)
+                            {
+                                URLClassLoaders.Add((URLClassLoader)cl);
+                                added = true;
+                            }
+                        }
+                        AddLoader(cl.getParent());
+                    }
+                }
+            }
+
+            public static void Check()
+            {
+
+            }
+
+            public string FindLibrary(string libname)
+            {
+                return base.findLibrary(libname);
+            }
+            public Class LoadClass(string name, bool resolve)
+            {
+                return base.loadClass(name, resolve);
+            }
+            public java.lang.Class ResolveClass(java.lang.Class clz)
+            {
+                base.resolveClass(clz);
+                return clz;
+            }
+        }
+
+        private static void TestClassLoader()
+        {
+            //using java.lang;
+            //IKVM.Internal.BootstrapClassLoader()
+            ScriptingClassLoader cl = new ScriptingClassLoader(ClassLoader.getSystemClassLoader());
+        
+            string s = "jpl.fli.term_t";
+            var c = cl.loadClass(s);
+            foreach (var s1 in new jpl.JPL().GetType().Assembly.GetTypes())
+            {
+                c = ikvm.runtime.Util.getFriendlyClassFromType(s1);
+                if (c != null)
+                {
+                    Console.WriteLine("" + c);
+                    continue;
+                }
+                Console.WriteLine("cant get " + s1.FullName);
+            }
+            return;
+        }
+
+        private static string clasPathOf(JPL jpl1)
+        {
+            string s = null;
+            var cl = jpl1.getClass().getClassLoader();
+            if (cl != null)
+            {
+                var r = cl.getResource(".");
+                if (r != null)
+                {
+                    s = r.getFile();
+                }
+                else
+                {
+                    var a = jpl1.GetType().Assembly;
+                    if (a != null)
+                    {
+                        s = a.Location;
+                    }
+                }
+            }
+            return s;
+        }
+
+        //[MTAThread]
+        public static void Main(string[] args0)
         {
             SetupProlog();
                 
@@ -239,33 +395,126 @@ namespace SbsSW.SwiPlCs
             RegisterPLCSForeigns();
 
             PlAssert("tc2:-foo2(X,Y),writeq(f(X,Y)),nl,X=5");
-            PlAssert("tc3:-foo3(X,Y),writeq(f(X,Y)),nl,X=5");
-            libpl.PL_toplevel();
+            PlAssert("tc3:-foo3(X,Y,Z),Z,writeln(f(X,Y,Z)),X=5");
+
+            ClassFile.ThrowFormatErrors = false;
+            libpl.NoToString = true;
+            //SafelyRun((() => PlCall("jpl0")));            
+            //SafelyRun((() => DoQuery(new Query(new jpl.Atom("jpl0")))));
+            libpl.NoToString = false;
+            ClassFile.ThrowFormatErrors = true;
+
+            // loops on exception
+            while (!SafelyRun((() => libpl.PL_toplevel()))) ;
+           
+           
+
             Console.WriteLine("press enter to exit");
             Console.ReadLine();
-            PlEngine.PlCleanup();
+            SafelyRun((() => PlEngine.PlCleanup()));
+            
             Console.WriteLine("finshed!");
 
 
         }
 
-        private static void RegisterPLCSForeigns()
-        {
-            PlForeignSwitches Nondeterministic = PlForeignSwitches.Nondeterministic;
-            PlEngine.RegisterForeign(null, "foo2", 2, new DelegateParameterBacktrack2(FooTwo), Nondeterministic);
-            PlEngine.RegisterForeign(null, "foo3", 2, new DelegateParameterBacktrackVarArgs(FooThree), Nondeterministic | PlForeignSwitches.VarArgs);
-            InternMethod(null, "cwl2", typeof(PrologClient).GetMethod("FooMethod"));
-            InternMethod(null, "cwl", typeof(Console).GetMethod("WriteLine", new Type[] { typeof(string) }));
-        }
-
-        private static void DoQuery(Query query)
+        private static bool SafelyRun(MethodInvoker invoker)
         {
             try
             {
+                invoker();
+                return true;
+            }
+            catch (Exception e)
+            {
+                WriteException(e);
+                return false;
+            }
+        }
 
+        private static void RegisterPLCSForeigns()
+        {
+            PlForeignSwitches Nondeterministic = PlForeignSwitches.Nondeterministic;           
+            Fn015.Register();
+            PlEngine.RegisterForeign(null, "foo2", 2, new DelegateParameterBacktrack2(FooTwo), Nondeterministic | PlForeignSwitches.VarArgs);
+            PlEngine.RegisterForeign(null, "foo3", 3, new DelegateParameterBacktrackVarArgs(FooThree), Nondeterministic | PlForeignSwitches.VarArgs);
+            
+            InternMethod(null, "cwl2", typeof(PrologClient).GetMethod("FooMethod"));
+            InternMethod(null, "cwl", typeof(Console).GetMethod("WriteLine", new Type[] { typeof(string) }));
+            RegisterJPLForeigns();
+        }
+
+        private static void RegisterJPLForeigns()
+        {
+            PlEngine.RegisterForeign("jpl", "link_swiplcs", 1, new DelegateParameter1(link_swiplcs), PlForeignSwitches.None);
+            //DoQuery(new Query("ensure_loaded(library(jpl))."));
+            /*
+             
+             
+jpl_jlist_demo :-
+	jpl_new( 'javax.swing.JFrame', ['modules'], F),
+	jpl_new( 'javax.swing.DefaultListModel', [], DLM),
+	jpl_new( 'javax.swing.JList', [DLM], L),
+	jpl_call( F, getContentPane, [], CP),
+	jpl_call( CP, add, [L], _),
+	(	current_module( M),
+		jpl_call( DLM, addElement, [M], _),
+		fail
+	;	true
+	),
+	jpl_call( F, pack, [], _),
+	jpl_call( F, getHeight, [], H),
+	jpl_call( F, setSize, [150,H], _),
+	jpl_call( F, setVisible, [@(true)], _).
+
+
+% this directive runs the above demo
+
+:- jpl_jlist_demo.
+
+             */
+            PlCall("use_module(library(jpl)).");
+            PlAssert("jpl0 :- jpl_new( 'java.lang.String', ['hi'], DLM),writeln(DLM)");
+            PlAssert("jpl1 :- jpl_new( 'javax.swing.DefaultListModel', [], DLM),writeln(DLM)");
+        }
+
+        public static bool PlCall(string s)
+        {
+            try
+            {
+                if (true)
+                {
+                    if (!s.EndsWith(".")) s = s + ".";
+                    var t = jpl.Util.textToTerm(s);
+                    return DoQuery(new jpl.Query(t));
+                }
+              return PlQuery.PlCall(s);
+            }
+            catch (Exception e)
+            {          
+                WriteException(e);
+                throw e;
+            }
+        }
+
+        private static bool link_swiplcs(PlTerm term)
+        {
+            Console.WriteLine("JplSafeNativeMethods to " + term);
+            JplSafeNativeMethods.install();
+            //var v = new PlTerm("_1");
+            //JplSafeNativeMethods.jpl_c_lib_version_1_plc(v.TermRef);
+            return true;
+        }
+
+        private static bool DoQuery(Query query)
+        {
+            try
+            {
+                bool any = false;
                 //if (!query.isOpen()) query.open();
                 while (query.hasMoreSolutions())
                 {
+                    any = true;
                     Hashtable ht = query.nextSolution();
                     foreach (var list in ToEnumer(ht.elements()))
                     {
@@ -273,10 +522,12 @@ namespace SbsSW.SwiPlCs
                         Console.WriteLine(s);
                     }
                 }
+                return any;
             }
             catch (Exception exception)
             {
                 WriteException(exception);
+                return false;
             }
 
         }
@@ -288,10 +539,20 @@ namespace SbsSW.SwiPlCs
             {
                 ex.printStackTrace();
             }
-            Console.WriteLine("SWIPL: " + exception);
+            else
+            {
+                Exception inner = exception.InnerException;
+                if (inner != null && inner != exception)
+                {
+                    WriteException(inner);
+                }
+                Console.WriteLine("ST: " + exception.StackTrace);
+            }
+
+            Console.WriteLine("PrologClient: " + exception);
         }
 
-        private static IEnumerable ToEnumer(Enumeration enumeration)
+        private static IEnumerable ToEnumer(java.util.Enumeration enumeration)
         {
             List<object> list = new List<object>();
             while (enumeration.hasMoreElements())
@@ -300,7 +561,7 @@ namespace SbsSW.SwiPlCs
             }
             return list;
         }
-        private static IEnumerable ToEnumer(Iterator enumeration)
+        private static IEnumerable ToEnumer(java.util.Iterator enumeration)
         {
             List<object> list = new List<object>();
             while (enumeration.hasNext())
@@ -392,6 +653,7 @@ typedef struct // define a context structure  { ... } context;
          foreign_t my_function(term_t a0, term_t a1, foreign_t handle) { struct context * ctxt; switch( PL_foreign_control(handle) ) { case PL_FIRST_CALL: ctxt = malloc(sizeof(struct context)); ... PL_retry_address(ctxt); case PL_REDO: ctxt = PL_foreign_context_address(handle); ... PL_retry_address(ctxt); case PL_CUTTED: free(ctxt); PL_succeed; } } 
          
          */
+        static public  AbstractNondetMethod Fn015 = new ForNext(0,15);
 
         // test with (foo2(X,Y)->writeln(p(X,Y));writeln(p(X,Y))),!.
         // test with (foo2(X,Y) *->writeln(p(X,Y));writeln(p(X,Y)),!).
@@ -737,6 +999,8 @@ typedef struct // define a context structure  { ... } context;
     }
 
 
+
+
     [System.Security.SuppressUnmanagedCodeSecurityAttribute]
     public static class JplSafeNativeMethods
     {
@@ -749,6 +1013,12 @@ typedef struct // define a context structure  { ... } context;
         }
         [DllImport(DllFileName)]
         public static extern void install();
+
+        //[DllImport(DllFileName)]
+        //public static extern java.lang.Thread jni_env();
+
+        //[DllImport(DllFileName)]
+        //public static extern int jpl_c_lib_version_1_plc(uint term_t);
     }
 
     public class ForNext : AbstractNondetMethod

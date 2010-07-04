@@ -320,10 +320,10 @@ namespace cogbot
 
         public void ShutDown()
         {
-            foreach (BotClient client in BotClients)
+            lock (RunningLock)
             {
-                if (client.Network.Connected)
-                    client.Network.Logout();
+                if (!Running) return;
+                Running = false;
             }
             try
             {
@@ -341,8 +341,16 @@ namespace cogbot
                     Console.WriteLine("" + e);
                 }
             }
-            _scriptEventListener.Dispose();
-            _lispTaskInterperter.Dispose();
+            try
+            {
+                _scriptEventListener.Dispose();
+            }
+            catch (Exception) { }
+            try
+            {
+                _lispTaskInterperter.Dispose();
+            }
+            catch (Exception) { }
         }
 
 
@@ -406,14 +414,18 @@ namespace cogbot
         public readonly object LispTaskInterperterLock = new object();
         public bool LispTaskInterperterNeedLoad = true;
 
-        public ScriptInterpreter initTaskInterperter()
+        public void initTaskInterperter()
         {
             lock (LispTaskInterperterLock)
             {
 
                 if (_lispTaskInterperter == null)
                 {
-                    if (!LispTaskInterperterNeedLoad) throw new NullReferenceException("_lispTaskInterperter");
+                    if (!LispTaskInterperterNeedLoad)
+                    {
+                        return;
+                        throw new NullReferenceException("_lispTaskInterperter");
+                    }
                     LispTaskInterperterNeedLoad = false;
                     try
                     {
@@ -437,10 +449,10 @@ namespace cogbot
                 }
                 else
                 {
-                    return _lispTaskInterperter;
+                    return;// _lispTaskInterperter;
                 }
             }
-            return _lispTaskInterperter;
+            return;// _lispTaskInterperter;
         }
 
         public void enqueueLispTask(object p)
@@ -454,7 +466,7 @@ namespace cogbot
             {
                 if (!Running)
                 {
-                    return "No running";
+                    return "Not running!";
                 }
                 if (string.IsNullOrEmpty(lispCode)) return null;
                 initTaskInterperter();
@@ -527,9 +539,10 @@ namespace cogbot
                 string fullName = string.Format("{0} {1}", first, last);
                 if (DoNotCreateBotClientsFromLispScript)
                 {
-                    WriteLine(";; DoNotCreateBotClientsFromLispScript: {0}", fullName);
+                    WriteLine("DoNotCreateBotClientsFromLispScript: {0}", fullName);
                     return;
                 }
+                WriteLine("CreateBotClient: {0}", fullName);
                 StarupLispCreatedBotClients = true;
                 BotClient bc = GetBotByName(fullName);
                 if (bc!=null)
@@ -733,6 +746,7 @@ namespace cogbot
         //public Dictionary<Simulator, Dictionary<uint, Primitive>> SimPrims = new Dictionary<Simulator, Dictionary<uint, Primitive>>();
 
         public bool Running = true;
+        public object RunningLock = new object();
         public bool GetTextures = true; //needed for iniminfo
 
         string version = "1.0.0";
@@ -759,12 +773,40 @@ namespace cogbot
 
         public void StartUpLisp()
         {
+            lock (OneAtATime)
+            {
+                StartUpLisp0();
+            }
+        }
+        public void StartUpLisp0()
+        {
             initTaskInterperter();
             EnsureAutoExec();
             if (!StarupLispCreatedBotClients)
             {
-                LastBotClient = new BotClient(this, RadegastInstance.GlobalInstance.Client, DefaultLoginParams());
-                LastBotClient.TheRadegastInstance = RadegastInstance.GlobalInstance;
+                WriteLine("StarupLisp Created no BotClients");
+                LoginDetails acct = null;
+                if (Accounts.Count == 0)
+                {
+                    acct = DefaultLoginParams();
+                    WriteLine("Adding default acct with params " + acct);
+                    Accounts.Add(acct.BotLName, acct);
+                } else
+                {
+                    // grab first acct
+                    foreach (var account in Accounts.Values)
+                    {
+                        acct = account;
+                        WriteLine("Using acct with params " + acct);
+                        break;
+                    }
+                }
+                LastBotClient = BotClientForAcct(acct);
+                if (false)
+                {
+                    LastBotClient = new BotClient(this, RadegastInstance.GlobalInstance.Client, acct);
+                    LastBotClient.TheRadegastInstance = RadegastInstance.GlobalInstance;
+                }
                 // LastBotClient.SetRadegastLoginOptions();
                 AddTypesToBotClient(LastBotClient);
                 LastBotClient.Network.LoginProgress += (s, e) =>
@@ -1011,7 +1053,7 @@ namespace cogbot
                 if (RanAutoExec) return;
                 RanAutoExec = true;
                 ClientManager manager = this;
-                var ti = manager.initTaskInterperter();
+                manager.initTaskInterperter();
                 //manager.StartUpLisp();
                 var config = manager.config;
                 if (config.startupLisp.Length > 1)
@@ -1164,11 +1206,6 @@ namespace cogbot
         /// </summary>
         public void Quit()
         {
-            foreach (BotClient client in BotClients)
-            {
-                client.Dispose();
-            }
-            Running = false;
             ShutDown();
             // TODO: It would be really nice if we could figure out a way to abort the ReadLine here in so that Run() will exit.
         }
@@ -1206,11 +1243,16 @@ namespace cogbot
 
         public bool RegisterType(Type t)
         {
-            bool newType = !registrationTypes.Contains(t);
-            if (newType)
+            bool newType;
+            lock (registrationTypes)
             {
-                registrationTypes.Add(t);
+                newType = !registrationTypes.Contains(t);
+                if (newType)
+                {
+                    registrationTypes.Add(t);
+                }
             }
+            if (newType) ScriptManager.AddType(t);
             if (typeof(SystemApplicationCommand).IsAssignableFrom(t))
             {
                 if (!registeredSystemApplicationCommandTypes.Contains(t))

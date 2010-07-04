@@ -4,9 +4,8 @@ using System.Text;
 
 namespace cogbot.ScriptEngines
 {
-    public class ClojureInterpreter : CommonScriptInterpreter
+    public class ClojureInterpreter : DotLispInterpreter
     {
-        DotLisp.Interpreter dotLispInterpreter;
 
         public override void Dispose()
         {
@@ -29,10 +28,11 @@ namespace cogbot.ScriptEngines
             return false;
         }
 
-        public ClojureInterpreter()
+        public ClojureInterpreter(object self)
+            : base(self)
         {
-            dotLispInterpreter = new DotLisp.Interpreter();
         }
+
         /// <summary>
         /// 
         /// 
@@ -124,7 +124,7 @@ namespace cogbot.ScriptEngines
         /// <returns></returns>
         public override ScriptInterpreter newInterpreter(object self)
         {
-            var v = new DotLispInterpreter();
+            var v = new DotLispInterpreter(self);
             v.Intern("*SELF*", self);
             return v;
         } // method: newInterpreter

@@ -32,8 +32,7 @@ namespace cogbot.ScriptEngines
        
         void InternType(Type t);
 
-
-
+        object Self { get; set; }
     }
     //------------------------------------ 
     // OUR NANO LISP JOB QUEUE SYSTEM

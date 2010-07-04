@@ -14,11 +14,17 @@ namespace cogbot.ScriptEngines
         public override bool LoadsFileType(string filename)
         {
             return filename.EndsWith("bot") || filename.EndsWith("txt") || filename.EndsWith("note") ||
-                   base.LoadsFileType(filename);
+                   base.LoadsFileType0(filename);
         }
 
         public override void InternType(Type t)
         {
+            if (BotClient == null)
+            {
+                if (OriginalSelf != null) return;
+                ScriptManager.WriteLine(this + "cannot intern type " + t);
+                return;
+            }
             BotClient.InternType(t);
         }
 
@@ -40,10 +46,23 @@ namespace cogbot.ScriptEngines
             return GetSymbol(eventName) != null;
         }
 
-        public BotScriptInterpreter()
+        public BotScriptInterpreter(object bc)
+            : base(bc)
         {
-
+            if (bc is ClientManager) bc = ((ClientManager)bc).LastBotClient ?? bc;
+            BotClient = bc as BotClient;
         }
+
+        public override object Self
+        {
+            get { return BotClient; }
+            set { if (value is BotClient) BotClient = value as BotClient; }
+        }
+
+        public override void Init()
+        {
+        }        
+        
         /// <summary>
         /// 
         /// 
@@ -130,10 +149,16 @@ namespace cogbot.ScriptEngines
         /// <returns></returns>
         public override ScriptInterpreter newInterpreter(object thiz)
         {
+
+            if (thiz is ClientManager) thiz = ((ClientManager)thiz).LastBotClient ?? thiz;
+
+            BotClient bc = thiz as BotClient;
+            if (bc == null) bc = BotClient;
+
             BotScriptInterpreter si;
-            if (BotClient == null || BotClient == thiz) si = this;
+            if (BotClient == null || BotClient == bc) si = this;
             else
-                si = new BotScriptInterpreter();
+                si = new BotScriptInterpreter(thiz);
             si.BotClient = thiz as BotClient;
             return si;
         } // method: newInterpreter

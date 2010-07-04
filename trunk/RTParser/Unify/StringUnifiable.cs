@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Xml;
-using java.io;
 using RTParser.AIMLTagHandlers;
 using RTParser.Database;
 using RTParser.Utils;
@@ -193,11 +192,11 @@ namespace RTParser
 
         public override void Append(Unifiable p)
         {
-            throw new InvalidObjectException("this " + AsString() + " cannot be appended with " + p);
+            throw new Exception("this " + AsString() + " cannot be appended with " + p);
 
             if (!IsAppendable)
             {
-                throw new InvalidObjectException("this " + AsString() + " cannot be appended with " + p);
+                throw new Exception("this " + AsString() + " cannot be appended with " + p);
             }
             if (p==null) return;
             if (str == "")

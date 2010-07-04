@@ -13,12 +13,30 @@ namespace SbsSW.SwiPlCs
         bool HasMore();
     }
 
-    abstract public class AbstractNondetMethod : IDisposable, SCCH
+
+    public interface NDCCH : SCCH
+    {
+        bool HasMore();
+    }
+
+    public interface NDCCHBOX : SCCH
+    {
+        bool Setup(PlTermV a0);
+        bool Call(PlTermV a0);
+        bool Close(PlTermV a0);
+        bool HasMore();
+
+        NDCCH New(ContextHandle handle, PlTermV a0);
+        int Call0(ContextHandle handle, PlTermV termV);
+        bool Close(ContextHandle handle, PlTermV a0);
+    }
+
+    abstract public class AbstractNondetMethod : IDisposable, NDCCHBOX
     {
         readonly private DelegateParameterBacktrackVarArgs del;
-        protected string Module;
+        protected string Module = null;
         protected string Name;
-        protected int Arity;
+        protected int Arity = -1;
 
         protected AbstractNondetMethod()
         {
@@ -27,6 +45,11 @@ namespace SbsSW.SwiPlCs
 
         public virtual void Register()
         {
+            if (Name == null) Name = GetType().Name.ToLower();
+            if (Arity < 0)
+            {
+                Arity = 1;
+            }
             libpl.PL_register_foreign_in_module(Module, Name, Arity, del,
                                                 (int)(PlForeignSwitches.Nondeterministic | PlForeignSwitches.VarArgs));
         }
@@ -39,31 +62,33 @@ namespace SbsSW.SwiPlCs
 
         public int BackrackImpl(PlTerm a0, int arity, IntPtr control)
         {
-            var handle = control;
-            FRG fc = (FRG)(libpl.PL_foreign_control(control));
-            NondetContextHandle v;
+            FRG fc = (FRG) (libpl.PL_foreign_control(control));
+            ContextHandle handle;
             switch (fc)
             {
                 case FRG.PL_FIRST_CALL:
                     {
-                        v = NondetContextHandle.ObtainHandle(control, Clone());
-                        bool res = v.Setup(new PlTermV(a0, arity));
-                        return Call0(v, new PlTermV(a0, arity));
-
-                    } break;
+                        handle = NondetContextHandle.ObtainHandle(control, Clone());
+                        var av = new PlTermV(a0, arity);
+                        handle.ManagedObject = New(handle, av);
+                        return Call0(handle, av);
+                    }
+                    break;
                 case FRG.PL_REDO:
                     {
-                        v = NondetContextHandle.FindHandle(control);
-                        return Call0(v, new PlTermV(a0, arity));
-
-                    } break;
+                        handle = NondetContextHandle.FindHandle(control);
+                        return Call0(handle, new PlTermV(a0, arity));
+                    }
+                    break;
                 case FRG.PL_CUTTED:
                     {
-                        v = NondetContextHandle.FindHandle(control);
-                        bool res = v.Close(new PlTermV(a0, arity));
-                        NondetContextHandle.ReleaseHandle(v);
+                        handle = NondetContextHandle.FindHandle(control);
+                        var av = new PlTermV(a0, arity);
+                        bool res = Close(handle, av);
+                        NondetContextHandle.ReleaseHandle(handle);
                         return res ? 1 : 0;
-                    } break;
+                    }
+                    break;
                 default:
                     {
                         throw new PlException("no frg");
@@ -73,7 +98,13 @@ namespace SbsSW.SwiPlCs
             }
         }
 
-        public virtual int Call0(NondetContextHandle handle, PlTermV termV)
+        public virtual NDCCH New(ContextHandle handle, PlTermV a0)
+        {
+            handle.Setup(a0);
+            return (NDCCH)handle.ManagedObject;
+        }
+
+        public virtual int Call0(ContextHandle handle, PlTermV termV)
         {
             bool res = handle.Call(termV);
             bool more = handle.HasMore();
@@ -85,6 +116,12 @@ namespace SbsSW.SwiPlCs
             return res ? 1 : 0;
         }
 
+        public virtual bool Close(ContextHandle handle, PlTermV a0)
+        {
+            bool res = handle.Close(a0);
+            return res;
+        }
+
         public abstract AbstractNondetMethod Clone();
 
         public abstract bool Setup(PlTermV a0);
@@ -93,11 +130,11 @@ namespace SbsSW.SwiPlCs
         public abstract bool HasMore();
     }
 
-    public class NondetContextHandle
+    public class NondetContextHandle : ContextHandle
     {
-        static readonly LinkedList<NondetContextHandle> NonDetHandles = new LinkedList<NondetContextHandle>();
+        static readonly LinkedList<ContextHandle> NonDetHandles = new LinkedList<ContextHandle>();
 
-        static public void ReleaseHandle(NondetContextHandle hnd)
+        static public void ReleaseHandle(ContextHandle hnd)
         {
             lock (NonDetHandles)
             {
@@ -108,11 +145,11 @@ namespace SbsSW.SwiPlCs
         }
 
         public delegate NondetContextHandle HandleMaker();
-        static public NondetContextHandle ObtainHandle(IntPtr context, SCCH value)
+        static public ContextHandle ObtainHandle(IntPtr context, SCCH value)
         {
             lock (NonDetHandles)
             {
-                NondetContextHandle hnd;
+                ContextHandle hnd;
                 if (NonDetHandles.Count == 0)
                 {
                     hnd = new NondetContextHandle();
@@ -123,7 +160,7 @@ namespace SbsSW.SwiPlCs
                     NonDetHandles.RemoveFirst();
                 }
                 hnd.Context = context;
-                hnd.NonDetMethods = value;
+                hnd.ManagedObject = value;
                 lock (NondetContextHandle.HandleToObject)
                 {
                     NondetContextHandle.ContextToObject[context] = hnd;
@@ -132,67 +169,78 @@ namespace SbsSW.SwiPlCs
             }
         }
 
-        static public NondetContextHandle ObtainHandle(IntPtr context)
+        static public ContextHandle ObtainHandle(IntPtr context)
         {
             return ObtainHandle(context, null);
         }
         //static NondetContextHandle lastHandle;
-        public static NondetContextHandle FindHandle(IntPtr context)
+        public static ContextHandle FindHandle(IntPtr context)
         {
             //if (context == (IntPtr)0) return lastHandle;
             lock (NondetContextHandle.HandleToObject) return NondetContextHandle.ContextToObject[context];
         }
 
-        public static Dictionary<int, NondetContextHandle> HandleToObject = new Dictionary<int, NondetContextHandle>();
-        public static Dictionary<IntPtr, NondetContextHandle> ContextToObject = new Dictionary<IntPtr, NondetContextHandle>();
-        public static int TotalHandles = 0;
-
-        public SCCH NonDetMethods;
-        public readonly int Handle;
-        public IntPtr Context;
-
         public NondetContextHandle()
         {
-            NonDetMethods = new ForNext(1, 20);
+            ManagedObject = new ForNext(1, 20);
+        }
+
+        #region Overrides of AbstractNondetMethod
+
+        public override bool Setup(PlTermV a0)
+        {
+            if (MissingImpl()) return false;
+            return ManagedObject.Setup(a0);
+        }
+
+        private bool MissingImpl()
+        {
+            if (ManagedObject == null) throw new PlException("not impl");
+            return ManagedObject == null;
+        }
+
+        public override bool Call(PlTermV a0)
+        {
+            if (MissingImpl()) return false;
+            return ManagedObject.Call(a0);
+        }
+
+        public override bool Close(PlTermV a0)
+        {
+            if (MissingImpl()) return false;
+            return ManagedObject.Close(a0);
+        }
+
+        public override bool  HasMore()
+        {
+            if (ManagedObject != null) return ManagedObject.HasMore();
+            return false;
+        }
+
+        #endregion
+    }
+
+    abstract public class ContextHandle
+    {
+        public static Dictionary<int, ContextHandle> HandleToObject = new Dictionary<int, ContextHandle>();
+        public static Dictionary<IntPtr, ContextHandle> ContextToObject = new Dictionary<IntPtr, ContextHandle>();
+        public static int TotalHandles = 0;
+        public ContextHandle()
+        {
             lock (HandleToObject)
             {
                 Handle = ++TotalHandles;
                 HandleToObject[Handle] = this;
             }
+
         }
+        public readonly int Handle;
+        public IntPtr Context;
+        public SCCH ManagedObject;
 
-       #region Overrides of AbstractNondetMethod
-
-        public bool Setup(PlTermV a0)
-        {
-            if (MissingImpl()) return false;
-            return NonDetMethods.Setup(a0);
-        }
-
-        private bool MissingImpl()
-        {
-            if (NonDetMethods == null) throw new PlException("not impl");
-            return NonDetMethods == null;
-        }
-
-        public bool Call(PlTermV a0)
-        {
-            if (MissingImpl()) return false;
-            return NonDetMethods.Call(a0);
-        }
-
-        public bool Close(PlTermV a0)
-        {
-            if (MissingImpl()) return false;
-            return NonDetMethods.Close(a0);
-        }
-
-        public bool HasMore()
-        {
-            if (NonDetMethods != null) return NonDetMethods.HasMore();
-            return false;
-        }
-
-       #endregion
+        public abstract bool Call(PlTermV termV);
+        public abstract bool Close(PlTermV termV);
+        public abstract bool Setup(PlTermV a0);
+        public abstract bool HasMore();
     }
 }
