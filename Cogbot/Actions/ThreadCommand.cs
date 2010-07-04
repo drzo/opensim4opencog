@@ -26,9 +26,10 @@ namespace cogbot.Actions
             if (args.Length == 1 && args[0] == "list")
             {
                 int n = 0;
-                lock (Client.botCommandThreads)
+                var botCommandThreads = Client.GetBotCommandThreads();
+                lock (botCommandThreads)
                 {
-                    foreach (Thread t in Client.botCommandThreads)
+                    foreach (Thread t in botCommandThreads)
                     {
                         n++;
                         //System.Threading.ThreadStateException: Thread is dead; state cannot be accessed.
@@ -39,7 +40,7 @@ namespace cogbot.Actions
                 return Success("Total threads: " + n);
             }
             String cmd = String.Join(" ", args);
-            Thread thread = new Thread(() =>
+            ThreadStart thread = () =>
                                            {
                                                try
                                                {
@@ -56,17 +57,15 @@ namespace cogbot.Actions
                                                {
                                                    try
                                                    {
-                                                       lock (Client.botCommandThreads)
-                                                           TheBotClient.botCommandThreads.Remove(Thread.CurrentThread);
+                                                           TheBotClient.RemoveThread(Thread.CurrentThread);
                                                    }
                                                    catch (OutOfMemoryException){}catch (StackOverflowException){}catch (Exception){}
                                                    WriteLine("done with " + cmd);
                                                }
-                                           });
-            thread.Name = "ThreadCommnand for " + cmd;
-            lock (Client.botCommandThreads) Client.botCommandThreads.Add(thread);
-            thread.Start();
-            return Success(thread.Name);
+                                           };
+            String threadName = "ThreadCommnand for " + cmd;
+            TheBotClient.Invoke(threadName,thread);
+            return Success(threadName);
         }
     }
 }

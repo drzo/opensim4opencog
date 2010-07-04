@@ -550,29 +550,17 @@ namespace AIMLBotModule
                         }, "AIML_OnInstantMessage: " + myUser + ": " + message);
         }
 
-        List<Thread> ThreadList
+        IEnumerable<Thread> ThreadList
         {
             get
             {
-                return WorldSystem.client.botCommandThreads;
+                return WorldSystem.client.GetBotCommandThreads();
             }
         }
 
         private void RunTask(ThreadStart action, string name)
         {
-            Thread tr = new Thread(() =>
-                                       {
-                                           try
-                                           {
-                                               action();
-                                           }
-                                           finally
-                                           {
-                                               ThreadList.Remove(Thread.CurrentThread);
-                                           }
-                                       }) {Name = name};
-            ThreadList.Add(tr);
-            tr.Start();
+            client.Invoke(name, action);
         }
 
         public WorldObjectsForAimLBot(BotClient testClient)

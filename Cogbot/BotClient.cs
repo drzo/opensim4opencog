@@ -142,7 +142,28 @@ namespace cogbot
         readonly int thisTcpPort;
         public LoginDetails BotLoginParams;// = null;
         private readonly SimEventPublisher botPipeline;
-        public List<Thread> botCommandThreads = new ListAsSet<Thread>();
+        public IEnumerable<Thread> GetBotCommandThreads()
+        {
+            lock (botCommandThreads) return botCommandThreads;
+        }
+
+        public void AddThread(Thread thread)
+        {
+            lock (botCommandThreads)
+            {
+                botCommandThreads.Add(thread);
+            }
+        }
+
+        public void RemoveThread(Thread thread)
+        {
+            lock (botCommandThreads)
+            {
+                botCommandThreads.Remove(thread);
+            }
+        }
+
+        private List<Thread> botCommandThreads = new ListAsSet<Thread>();
         readonly public XmlScriptInterpreter XmlInterp;
         public UUID GroupID = UUID.Zero;
         public Dictionary<UUID, GroupMember> GroupMembers = null; // intialized from a callback
@@ -1318,7 +1339,7 @@ namespace cogbot
                         try
                         {
                             found = true;
-                            Invoke(() =>
+                            Invoke("LoadAssembly "+assembly ,() =>
                                        {
                                            Listener command = (Listener)info.Invoke(new object[] { this });
                                            RegisterListener(command);
@@ -1600,7 +1621,7 @@ namespace cogbot
         private void RegisterListener(Listener listener)
         {
             // listeners[listener.GetModuleName()] = listener;
-            Invoke(() => listener.StartupListener());
+            Invoke("StartupListener " + listener, () => listener.StartupListener());
 
         }
 
@@ -1808,11 +1829,38 @@ namespace cogbot
                        });
         }
 
-        public void Invoke(ThreadStart o)
+        public Thread Invoke(String name, ThreadStart action)
         {
-            Thread t = new Thread(o);
-            botCommandThreads.Add(t);
-            t.Start();
+            lock (botCommandThreads)
+            {
+                Thread tr = new Thread(() =>
+                                           {
+                                               try
+                                               {
+                                                   try
+                                                   {
+                                                       action();
+                                                   }
+                                                   catch (Exception e)
+                                                   {
+                                                       WriteLine("Exception in " + name + ": " + e);                                                      
+                                                   }
+                                               } 
+                                               finally
+                                               {
+                                                   try
+                                                   {
+                                                       RemoveThread(Thread.CurrentThread);
+                                                   }
+                                                   catch (OutOfMemoryException) { }
+                                                   catch (StackOverflowException) { }
+                                                   catch (Exception) { } 
+                                               }
+                                           }) {Name = name};
+                AddThread(tr);
+                tr.Start();
+                return tr;
+            }
         }
         public void InvokeGUI(ThreadStart o)
         {
