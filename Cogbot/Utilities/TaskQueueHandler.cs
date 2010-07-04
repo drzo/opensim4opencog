@@ -49,7 +49,6 @@ namespace cogbot.Utilities
 
         public void Start()
         {
-            if (EventQueuePing != null && !EventQueuePing.IsAlive) EventQueuePing.Start();
             if (EventQueueHandler==null) EventQueueHandler = new Thread(EventQueue_Handler);
             if (!EventQueueHandler.IsAlive)
             {
@@ -57,6 +56,7 @@ namespace cogbot.Utilities
                 EventQueueHandler.Priority = ThreadPriority.BelowNormal;
                 EventQueueHandler.Start();
             }
+            if (EventQueuePing != null && !EventQueuePing.IsAlive) EventQueuePing.Start();
         }
 
         private bool _noQueue;
@@ -175,7 +175,9 @@ namespace cogbot.Utilities
                 if (EventQueueHandler != null)
                     if (!EventQueueHandler.IsAlive)
                     {
-                        Console.WriteLine("Dead " + this); 
+                        Console.WriteLine("Dead " + this);
+                        Thread.Sleep(PING_TIME);
+                        continue;
                     }
                 Thread.Sleep(PING_TIME);
                 if (_noQueue) continue;
