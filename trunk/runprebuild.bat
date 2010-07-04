@@ -5,6 +5,7 @@ REM IF NO COMAND LINE ARG IS SPECIFIED use Vsiaul Studio 2008
 IF "%1"=="" SET PREBUILDTARGET=vs2008
 
 bin\Prebuild.exe  prebuild.xml /target %PREBUILDTARGET%
+
 copy lib\Radegast\assemblies\*.* bin\
 copy lib\Radegast\*.dll bin\
 copy lib\Radegast\*.pdb bin\
@@ -19,7 +20,7 @@ del lib\LookingGlass-svn\bin\OpenMetav*.*
 copy lib\LookingGlass-svn\bin\*.* bin\
 pause
 
-exit 0
+exit /b 0
 
 @REM REST OF THESE ARE FOR IKVM REBUILDIGN STUFF 
 
