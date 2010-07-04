@@ -46,18 +46,18 @@ namespace cogbot.TheOpenSims
             //Client.Self.Movement.SendUpdate(false);
 
             // start if not already started
-            var list = TheBot.GetGridClient().botCommandThreads;
+            BotClient bc = TheBot.GetGridClient();
             if (!FollowThread.IsAlive)
             {
                 try
                 {
-                    list.Add(FollowThread);
+                    bc.AddThread(FollowThread);
                     FollowThread.Start();
                     FollowThread.Join();
                 }
                 finally
                 {
-                    list.Remove(FollowThread);
+                    bc.RemoveThread(FollowThread);
                     DeRegCallback();
                 }
             }

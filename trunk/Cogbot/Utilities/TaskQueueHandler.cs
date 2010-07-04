@@ -15,7 +15,7 @@ namespace cogbot.Utilities
         ulong sequence = 1;
         ulong failures = 0;
         private ulong GoodPings = 0;
-        private bool Busy;
+        public bool Busy;
         private ulong LastBusy = 0;
         readonly int WAIT_AFTER;
         public bool IsDisposing = false;

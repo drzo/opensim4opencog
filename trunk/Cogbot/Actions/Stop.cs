@@ -29,7 +29,10 @@ namespace cogbot.Actions
                 {
                     //WriteLine(action + ": " + Client.Commands[action].makeHelpString());
                 }
-                lock (Client.botCommandThreads) foreach (Thread t in Client.botCommandThreads)
+
+                var botCommandThreads = Client.GetBotCommandThreads();
+
+                lock (botCommandThreads) foreach (Thread t in botCommandThreads)
                     {
 
                         try
@@ -42,12 +45,9 @@ namespace cogbot.Actions
                             t.Join();
                         }
                         catch (Exception) { }
+                        Client.RemoveThread(t);
 
                     }
-                lock (Client.botCommandThreads)
-                {
-                    Client.botCommandThreads.Clear();
-                }
             }
             if (WorldSystem.TheSimAvatar.CurrentAction!=null)
             {
