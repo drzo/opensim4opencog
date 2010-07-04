@@ -209,8 +209,9 @@ namespace SbsSW.SwiPlCs
                 CLASSPATH = CLASSPATH0;
             }
             string jplcp = clasPathOf(new jpl.JPL());
-           
-            CLASSPATH = cogbothome + "\\SWIJPL.dll" + ";" + cogbothome + "\\SWIJPL.jar;" + CLASSPATH0;
+
+            if (!JplDisabled) 
+                CLASSPATH = cogbothome + "\\SWIJPL.dll" + ";" + cogbothome + "\\SWIJPL.jar;" + CLASSPATH0;
 
             Environment.SetEnvironmentVariable("CLASSPATH", CLASSPATH);
             java.lang.System.setProperty("java.class.path", CLASSPATH);
@@ -218,16 +219,35 @@ namespace SbsSW.SwiPlCs
             try
             {
                 JPL.setNativeLibraryDir(plhome + "\\bin");
-                JPL.loadNativeLibrary();
+                try
+                {
+                    JPL.loadNativeLibrary();
+                } catch(Exception e)
+                {
+                    WriteException(e);
+                    JplDisabled = true;
+                }
+                if (!JplDisabled)
+                {
+                    SafelyRun(() => jpl.fli.Prolog.initialise());
+                }
                 SafelyRun(() => TestClassLoader());
 
-                jpl.fli.Prolog.initialise();
-                if (!PlEngine.IsInitialized)
+                try
                 {
-                    String[] param = { "-q" }; // suppressing informational and banner messages
-                    PlEngine.Initialize(param);
+                    if (!PlEngine.IsInitialized)
+                    {
+                        String[] param = { "-q" }; // suppressing informational and banner messages
+                        PlEngine.Initialize(param);
+                    }
+                    PlEngine.SetStreamFunctionRead(PlStreamType.Input, new DelegateStreamReadFunction(Sread));
+                    PlQuery.PlCall("nl.");
                 }
-                PlEngine.SetStreamFunctionRead(PlStreamType.Input, new DelegateStreamReadFunction(Sread));
+                catch (Exception e)
+                {
+                    WriteException(e);
+                    PlCsDisabled = true;
+                }
 //                PlAssert("jpl:jvm_ready");
 //                PlAssert("module_transparent(jvm_ready)");
             }
@@ -363,36 +383,39 @@ namespace SbsSW.SwiPlCs
         {
             SetupProlog();
                 
-            DoQuery(new Query("asserta(fff(1))"));
-            DoQuery(new Query("asserta(fff(9))"));
-            DoQuery(new Query(new jpl.Atom("nl")));
-            DoQuery(new Query(new jpl.Atom("flush")));
+            DoQuery("asserta(fff(1))");
+            DoQuery("asserta(fff(9))");
+            DoQuery("nl");
+            DoQuery("flush");
 
             
 
             PlAssert("father(martin, inka)");
-            PlQuery.PlCall("assert(father(uwe, gloria))");
-            PlQuery.PlCall("assert(father(uwe, melanie))");
-            PlQuery.PlCall("assert(father(uwe, ayala))");
-            using (PlQuery q = new PlQuery("father(P, C), atomic_list_concat([P,' is_father_of ',C], L)"))
+            if (!PlCsDisabled)
             {
-                foreach (PlTermV v in q.Solutions)
-                    Console.WriteLine(ToCSString(v));
+                PlQuery.PlCall("assert(father(uwe, gloria))");
+                PlQuery.PlCall("assert(father(uwe, melanie))");
+                PlQuery.PlCall("assert(father(uwe, ayala))");
+                using (PlQuery q = new PlQuery("father(P, C), atomic_list_concat([P,' is_father_of ',C], L)"))
+                {
+                    foreach (PlTermV v in q.Solutions)
+                        Console.WriteLine(ToCSString(v));
 
-                foreach (PlQueryVariables v in q.SolutionVariables)
-                    Console.WriteLine(v["L"].ToString());
+                    foreach (PlQueryVariables v in q.SolutionVariables)
+                        Console.WriteLine(v["L"].ToString());
 
 
-                Console.WriteLine("all child's from uwe:");
-                q.Variables["P"].Unify("uwe");
-                foreach (PlQueryVariables v in q.SolutionVariables)
-                    Console.WriteLine(v["C"].ToString());
+                    Console.WriteLine("all child's from uwe:");
+                    q.Variables["P"].Unify("uwe");
+                    foreach (PlQueryVariables v in q.SolutionVariables)
+                        Console.WriteLine(v["C"].ToString());
+                }
+                //PlQuery.PlCall("ensure_loaded(library(thread_util))");
+                //Warning: [Thread 2] Thread running "thread_run_interactor" died on exception: thread_util:attach_console/0: Undefined procedure: thread_util:win_open_console/5
+                //PlQuery.PlCall("interactor");
+                //Delegate Foo0 = foo0;
+                RegisterPLCSForeigns();
             }
-            //PlQuery.PlCall("ensure_loaded(library(thread_util))");
-            //Warning: [Thread 2] Thread running "thread_run_interactor" died on exception: thread_util:attach_console/0: Undefined procedure: thread_util:win_open_console/5
-            //PlQuery.PlCall("interactor");
-            //Delegate Foo0 = foo0;
-            RegisterPLCSForeigns();
 
             PlAssert("tc2:-foo2(X,Y),writeq(f(X,Y)),nl,X=5");
             PlAssert("tc3:-foo3(X,Y,Z),Z,writeln(f(X,Y,Z)),X=5");
@@ -404,8 +427,17 @@ namespace SbsSW.SwiPlCs
             libpl.NoToString = false;
             ClassFile.ThrowFormatErrors = true;
 
-            // loops on exception
-            while (!SafelyRun((() => libpl.PL_toplevel()))) ;
+            if (!JplDisabled)
+            {
+                var q = new Query(new jpl.Atom("prolog"));
+                DoQuery(q);
+            }
+            else
+            {
+                if (!PlCsDisabled)
+                    // loops on exception
+                    while (!SafelyRun((() => libpl.PL_toplevel()))) ;
+            }
            
            
 
@@ -482,16 +514,19 @@ jpl_jlist_demo :-
         {
             try
             {
-                if (true)
+                if (!JplDisabled)
                 {
-                    if (!s.EndsWith(".")) s = s + ".";
-                    var t = jpl.Util.textToTerm(s);
-                    return DoQuery(new jpl.Query(t));
+                    return DoQuery(s);
                 }
-              return PlQuery.PlCall(s);
+                if (PlCsDisabled)
+                {
+                    WriteDebug("Disabled PlCall " + s); 
+                    return false;
+                }
+                return PlQuery.PlCall(s);
             }
             catch (Exception e)
-            {          
+            {
                 WriteException(e);
                 throw e;
             }
@@ -504,6 +539,22 @@ jpl_jlist_demo :-
             //var v = new PlTerm("_1");
             //JplSafeNativeMethods.jpl_c_lib_version_1_plc(v.TermRef);
             return true;
+        }
+
+        private static bool DoQuery(string query)
+        {
+            if (JplDisabled) return PlCall(query);
+            Query q;
+            try
+            {
+                q = new Query(query);
+            }
+            catch (Exception e)
+            {
+                WriteException(e);
+                return false;
+            }
+            return DoQuery(q);
         }
 
         private static bool DoQuery(Query query)
@@ -578,8 +629,8 @@ jpl_jlist_demo :-
 
             //DoQuery(new Query("module(jpl)."));
             JplSafeNativeMethods.install();
-            DoQuery(new Query("ensure_loaded(library(jpl))."));
-            DoQuery(new Query("module(user)."));
+            DoQuery("ensure_loaded(library(jpl)).");
+            DoQuery("module(user).");
             //DoQuery(new Query("load_foreign_library(foreign(jpl))."));
             // DoQuery(new Query(new jpl.Compound("member", new Term[] { new jpl.Integer(1), new jpl.Variable("H") })));
             //DoQuery(new Query(new jpl.Atom("interactor")));
@@ -797,7 +848,17 @@ typedef struct // define a context structure  { ... } context;
 
         private static void PlAssert(string s)
         {
+            if (PlCsDisabled)
+            {
+                WriteDebug("Disabled PlAssert " + s);
+                return;
+            }
             PlQuery.PlCall("assert((" + s + "))");
+        }
+
+        private static void WriteDebug(string s)
+        {
+            Console.WriteLine(s);
         }
 
         private static int callNum = 0;
@@ -869,6 +930,8 @@ typedef struct // define a context structure  { ... } context;
 
 
         static private PinnedObject<NonDetTest> ndtp;
+        public static bool JplDisabled = false;
+        public static bool PlCsDisabled = false;
         // foo(X,Y),writeq(f(X,Y)),nl,X=5.
         public static int Foo(PlTerm t0, PlTerm term2, IntPtr control)
         {
