@@ -97,7 +97,7 @@
         <Reference name="System"/>
         <Reference name="System.Core"/>
         <Reference name="System.Xml"/>
-        <Reference name="PrimMesher.dll" />
+        <Reference name="PrimMesher.dll" localCopy="false"/>
         <Files>
           <Match pattern="*.cs" recurse="true"/>
         </Files>
@@ -176,7 +176,7 @@
         <Reference name="OpenMetaverseTypes"/>
         <Reference name="OpenMetaverse.StructuredData"/>
         <Reference name="OpenMetaverse.Http"/>
-        <Reference name="PrimMesher.dll" />
+        <Reference name="PrimMesher.dll" localCopy="false"/>
         <Reference name="XMLRPC"/>
         <Files>
           <Match pattern="*.cs" recurse="true"/>
@@ -227,7 +227,7 @@
         <Reference name="System.Drawing"/>        
         <Reference name="OpenMetaverse"/>
         <Reference name="OpenMetaverseTypes"/>
-        <Reference name="PrimMesher.dll" />
+        <Reference name="PrimMesher.dll" localCopy="false"/>
         <Files>
           <Match pattern="*.cs" recurse="true"/>
         </Files>
@@ -322,7 +322,7 @@
       <Reference name="System.Core"/>
       <Reference name="OpenCyc.dll" localCopy="false"/>
       <Reference name="IKVM.Runtime.dll" localCopy="false"/>
-      <Reference name="IKVM.OpenJDK.ClassLibrary.dll" localCopy="false"/>
+      <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
       <Files>
           <Match path="." pattern="*.cs" recurse="true" subType="Code"><Exclude name="AssemblyInfo.cs"/><Exclude name="Program.cs"/></Match>
       </Files>
@@ -484,7 +484,7 @@
        <Reference name="OpenCyc.dll" localCopy="false"/>
        <Reference name="ABCL.Net.dll" localCopy="false"/>
        <Reference name="IKVM.Runtime.dll" localCopy="false"/>
-       <Reference name="IKVM.OpenJDK.ClassLibrary.dll" localCopy="false"/>
+       <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
        <Reference name="Radegast.exe" localCopy="false"/>
          <!--   
        <Reference name=" Khendys.Controls.ExRichTextBox.dll" localCopy="false"/>
@@ -536,7 +536,7 @@
       <Reference name="System.Core" localCopy="false"/>
       <Reference name="OpenCyc.dll" localCopy="false"/>
        <Reference name="IKVM.Runtime.dll" localCopy="false"/>
-      <Reference name="IKVM.OpenJDK.ClassLibrary.dll" localCopy="false"/>
+      <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
       <Files>
           <Match path="." pattern="*.cs"  recurse="true"  subType="Form"/>
           <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
@@ -572,6 +572,36 @@
      </Files>
 </Project>
 
+ <Project name="IKVM.Runtime.JNI" path="lib/IKVM.JNI" type="Library" frameworkVersion="v3_5">
+     <Configuration name="Debug">
+       <Options>
+           <OutputPath>../../bin/</OutputPath>
+       </Options>
+     </Configuration>
+     <Configuration name="Release">
+       <Options>
+           <OutputPath>../../bin/</OutputPath>
+       </Options>
+     </Configuration>
+
+     <ReferencePath>../../bin/</ReferencePath>
+     <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
+     <Reference name="IKVM.Runtime.dll" localCopy="false"/>
+     <Reference name="System" localCopy="false"/>
+     <Reference name="System.Core" localCopy="false"/>
+     <Reference name="System.Data" localCopy="false"/>
+     <Reference name="System.Data.DataSetExtensions" localCopy="false"/>
+     <Reference name="System.Deployment" localCopy="false"/>
+     <Reference name="System.Drawing" localCopy="false"/>
+     <Reference name="System.Windows.Forms" localCopy="false"/>
+     <Reference name="System.Xml" localCopy="false"/>
+     <Reference name="System.Xml.Linq" localCopy="false"/>
+     <Files>
+         <Match path="." pattern="*.cs"  recurse="true"  subType="Form"> </Match>
+         <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource">  <Exclude name="AssemblyInfo.cs"/><Exclude name="Plugins/"/></Match>
+     </Files>
+</Project>
+
  <Project name="SWIPlCs" path="contrib/SWIPlCs" type="Library" frameworkVersion="v3_5">
      <Configuration name="Debug">
        <Options>
@@ -585,6 +615,10 @@
      </Configuration>
 
      <ReferencePath>../../bin/</ReferencePath>
+     <Reference name="SWIJPL.dll" localCopy="false"/>
+     <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
+     <Reference name="IKVM.Runtime.dll" localCopy="false"/>
+     <Reference name="IKVM.Runtime.JNI.dll" localCopy="false"/>
      <Reference name="System" localCopy="false"/>
      <Reference name="System.Core" localCopy="false"/>
      <Reference name="System.Data" localCopy="false"/>
@@ -594,6 +628,7 @@
      <Reference name="System.Windows.Forms" localCopy="false"/>
      <Reference name="System.Xml" localCopy="false"/>
      <Reference name="System.Xml.Linq" localCopy="false"/>
+     <Reference name="SwiPlCs" localCopy="false"/>
      <Files>
          <Match path="." pattern="*.cs"  recurse="true"  subType="Form">  <Exclude name="AssemblyInfo.cs"/><Exclude name="Plugins/"/></Match>
          <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource">  <Exclude name="AssemblyInfo.cs"/><Exclude name="Plugins/"/></Match>
@@ -650,7 +685,7 @@
       <Reference name="System.Core" localCopy="false"/>
       <Reference name="OpenCyc.dll" localCopy="false"/>
        <Reference name="IKVM.Runtime.dll" localCopy="false"/>
-      <Reference name="IKVM.OpenJDK.ClassLibrary.dll" localCopy="false"/>
+      <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
 
 
  <Project name="GraphvizDot" path="lib/xglore/Plugins/GraphvizDot" type="Library" frameworkVersion="v3_5">
@@ -676,7 +711,7 @@
       <Reference name="System.Core" localCopy="false"/>
       <Reference name="OpenCyc.dll" localCopy="false"/>
        <Reference name="IKVM.Runtime.dll" localCopy="false"/>
-      <Reference name="IKVM.OpenJDK.ClassLibrary.dll" localCopy="false"/>
+      <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
       <Files>
           <Match path="." pattern="*.cs"  recurse="true"  subType="Form"/>
           <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
@@ -709,7 +744,7 @@
      <Reference name="DotLisp" localCopy="false"/>
      <Reference name="OpenCyc.dll" localCopy="false"/>
       <Reference name="IKVM.Runtime.dll" localCopy="false"/>
-     <Reference name="IKVM.OpenJDK.ClassLibrary.dll" localCopy="false"/>
+     <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
      <Files>
          <Match path="." pattern="*.cs"  recurse="true"  subType="Form"/>
          <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
@@ -749,7 +784,7 @@
      <Reference name="DotLisp" localCopy="false"/>
      <Reference name="OpenCyc.dll" localCopy="false"/>
       <Reference name="IKVM.Runtime.dll" localCopy="false"/>
-     <Reference name="IKVM.OpenJDK.ClassLibrary.dll" localCopy="false"/>
+     <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
      <Files>
          <Match path="." pattern="*.cs"  recurse="true"  subType="Form"/>
          <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
@@ -782,7 +817,7 @@
      <Reference name="DotLisp" localCopy="false"/>
      <Reference name="OpenCyc.dll" localCopy="false"/>
       <Reference name="IKVM.Runtime.dll" localCopy="false"/>
-     <Reference name="IKVM.OpenJDK.ClassLibrary.dll" localCopy="false"/>
+     <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
      <Files>
          <Match path="." pattern="*.cs"  recurse="true"  subType="Form"/>
          <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
@@ -843,7 +878,7 @@
      <Reference name="DotLisp" localCopy="false"/>
      <Reference name="OpenCyc.dll" localCopy="false"/>
       <Reference name="IKVM.Runtime.dll" localCopy="false"/>
-     <Reference name="IKVM.OpenJDK.ClassLibrary.dll" localCopy="false"/>
+     <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
      <Files>
          <Match path="." pattern="*.cs"  recurse="true"  subType="Form"/>
          <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
@@ -868,7 +903,7 @@
          <Reference name="OpenMetaverse.StructuredData"/>
 
          <Reference name="Radegast.exe" />
-         <Reference name="fmodex-dotnet.dll" />
+         <Reference name="fmodex-dotnet.dll" localCopy="false"/>
          <Reference name="System" />
          <Reference name="System.Core"/>
          <Reference name="System.Drawing"/>
@@ -968,8 +1003,8 @@
          <Reference name="Radegast" />
          <Reference name="Radegast.exe" />
          <Reference name="Radegast.Plugin.Speech" />
-         <Reference name="Assemblies/Monobjc.dll" />
-         <Reference name="Assemblies/Monobjc.Cocoa.dll" />
+         <Reference name="Assemblies/Monobjc.dll" localCopy="false"/>
+         <Reference name="Assemblies/Monobjc.Cocoa.dll" localCopy="false"/>
          
          <Reference name="System" />
          <Reference name="System.Core"/>
@@ -1002,20 +1037,20 @@
     <Reference name="System" localCopy="false"/>
     <Reference name="System.Drawing" localCopy="false"/>
     <Reference name="System.Xml"/>
-    <Reference name="Mono.Addins.dll" />
-    <Reference name="XMLRPC.dll"/>
-    <Reference name="Nini.dll" />
-    <Reference name="fmodex-dotnet.dll" />
-    <Reference name="log4net.dll" />
-    <Reference name="Irrlicht.NET.dll" />
-    <Reference name="Irrlicht.Extensions.dll" />
-    <Reference name="jabber-net.dll" />
-    <Reference name="muzzle.dll" />
+    <Reference name="Mono.Addins.dll" localCopy="false"/>
+    <Reference name="XMLRPC.dll" localCopy="false"/>
+    <Reference name="Nini.dll" localCopy="false"/>
+    <Reference name="fmodex-dotnet.dll" localCopy="false"/>
+    <Reference name="log4net.dll" localCopy="false"/>
+    <Reference name="Irrlicht.NET.dll" localCopy="false"/>
+    <Reference name="Irrlicht.Extensions.dll" localCopy="false"/>
+    <Reference name="jabber-net.dll" localCopy="false"/>
+    <Reference name="muzzle.dll" localCopy="false"/>
     <Reference name="OpenMetaverse" />
     <Reference name="OpenMetaverseTypes" />
-    <Reference name="PrimMesher.dll" />
-    <Reference name="MXP.dll" />
-    <Reference name="protobuf-net.dll" />
+    <Reference name="PrimMesher.dll" localCopy="false"/>
+    <Reference name="MXP.dll" localCopy="false"/>
+    <Reference name="protobuf-net.dll" localCopy="false"/>
     <Reference name="System.Windows.Forms" />
     <Reference name="System.Data" />
     <Reference name="RadegastSpeech" localCopy="false"/>
@@ -1089,7 +1124,7 @@ app -->
       <Reference name="System.Data"/>
       <Reference name="System.Windows.Forms"/>
       <Reference name="System.Xml"/>
-      <Reference name="log4net.dll"/>
+      <Reference name="log4net.dll" localCopy="false"/>
       <Reference name="OpenMetaverse"/>
       <Reference name="OpenMetaverseTypes"/>
       <Reference name="OpenMetaverse.StructuredData"/>
@@ -1151,7 +1186,7 @@ app -->
       <Reference name="LookingGlass.Comm"/>
       <Reference name="LookingGlass.Comm.LLLP"/>
       <Reference name="LookingGlass.Framework"/>
-      <Reference name="LookingGlass.Renderer.dll"/>
+      <Reference name="LookingGlass.Renderer.dll" localCopy="false"/>
       <Reference name="LookingGlass.World"/>
       <Reference name="LookingGlass.World.OS"/>
       <Reference name="Radegast.exe"/>
@@ -1189,7 +1224,7 @@ app -->
       <Reference name="OpenMetaverse"/>
       <Reference name="OpenMetaverse.StructuredData"/>
       <Reference name="OpenMetaverseTypes"/>
-      <Reference name="HttpServer.dll"/>
+      <Reference name="HttpServer.dll" localCopy="false"/>
       <Files>
         <Match pattern="*.cs" recurse="false"/>
       </Files>
@@ -1218,7 +1253,7 @@ app -->
       <Reference name="LookingGlass.World"/>
       <Reference name="OpenMetaverse"/>
       <Reference name="OpenMetaverseTypes"/>
-      <Reference name="PrimMesher.dll"/>
+      <Reference name="PrimMesher.dll" localCopy="false"/>
       <Files>
         <Match pattern="*.cs" recurse="false"/>
         <Match path="Mesher" pattern="*.cs" recurse="false"/>
@@ -1245,10 +1280,10 @@ app -->
       <Reference name="System.Windows.Forms"/>
       <Reference name="System.Xml"/>
       <Reference name="LookingGlass.Framework"/>
-      <Reference name="LookingGlass.Renderer.dll"/>
-      <Reference name="LookingGlass.Rest.dll"/>
-      <Reference name="LookingGlass.World.dll"/>
-      <Reference name="LookingGlass.World.LL.dll"/>
+      <Reference name="LookingGlass.Renderer.dll" localCopy="false"/>
+      <Reference name="LookingGlass.Rest.dll" localCopy="false"/>
+      <Reference name="LookingGlass.World.dll" localCopy="false"/>
+      <Reference name="LookingGlass.World.LL.dll" localCopy="false"/>
       <Reference name="OpenMetaverse"/>
       <Reference name="OpenMetaverse.StructuredData"/>
       <Reference name="OpenMetaverseTypes"/>
@@ -1276,7 +1311,7 @@ app -->
       <Reference name="System.Drawing"/>
       <Reference name="System.Windows.Forms"/>
       <Reference name="LookingGlass.Framework"/>
-      <Reference name="LookingGlass.Renderer.dll"/>
+      <Reference name="LookingGlass.Renderer.dll" localCopy="false"/>
       <Reference name="LookingGlass.World"/>
       <Reference name="LookingGlass.Rest"/>
       <Reference name="OpenMetaverse"/>
@@ -1307,12 +1342,12 @@ app -->
       <Reference name="System.Windows.Forms"/>
       <Reference name="System.Xml"/>
       <Reference name="LookingGlass.Framework"/>
-      <Reference name="LookingGlass.Renderer.dll"/>
-      <Reference name="LookingGlass.World.dll"/>
+      <Reference name="LookingGlass.Renderer.dll" localCopy="false"/>
+      <Reference name="LookingGlass.World.dll" localCopy="false"/>
       <Reference name="OpenMetaverse"/>
       <Reference name="OpenMetaverseTypes"/>
       <Reference name="OpenMetaverse.StructuredData"/>
-      <Reference name="HttpServer.dll"/>
+      <Reference name="HttpServer.dll" localCopy="false"/>
       <Files>
         <Match pattern="*.cs" recurse="false"/>
       </Files>
@@ -1426,7 +1461,7 @@ app -->
       <Reference name="LookingGlass.Framework"/>
       <Reference name="LookingGlass.World"/>
       <Reference name="LookingGlass.Rest"/>
-      <Reference name="HttpServer.dll"/>
+      <Reference name="HttpServer.dll" localCopy="false"/>
       <Reference name="OpenMetaverse"/>
       <Reference name="OpenMetaverse.StructuredData"/>
       <Reference name="OpenMetaverseTypes"/>
@@ -1502,51 +1537,52 @@ app -->
       <PlatformTarget>x86</PlatformTarget>
     </Options>
   </Configuration>
-      <Reference name="HttpServer" />
-      <Reference name="OpenMetaverseTypes" />
-      <Reference name="OpenMetaverse.StructuredData" />
-      <Reference name="OpenMetaverse.Http" />
-      <Reference name="OpenMetaverse" />
-      <Reference name="OpenMetaverse.Utilities" />
-      <Reference name="OpenMetaverse.Rendering.Meshmerizer" />
-      <Reference name="DotLisp" />
+      <!--<Reference name="Mono.Addins.dll" localCopy="false"/>-->
       <Reference name="AIMLbot" />
-      <Reference name="PathSystem3D" />
-      <Reference name="Radegast.exe" />
-      <Reference name="Cogbot" />
       <Reference name="AIMLBotModule" />
-      <Reference name="TheSimiansModule" />
-      <Reference name="CycWorldModule" />
-      <Reference name="FashionBotModule" />
-      <Reference name="IrcRegionModule" />
+      <Reference name="Cogbot" />
       <Reference name="CogbotRadegastPluginModule" />
+      <Reference name="CycWorldModule" />
+      <Reference name="DotLisp" />
+      <Reference name="FashionBotModule" />
+      <Reference name="fmodex-dotnet.dll" localCopy="false"/>
+      <Reference name="HttpServer" />
       <Reference name="IdealistRadegastPlugin" />
+      <Reference name="IdealistViewer" />
+      <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
+      <Reference name="IKVM.Runtime.dll" localCopy="false"/>
+      <Reference name="IrcRegionModule" />
+      <Reference name="Irrlicht.Extensions.dll" localCopy="false"/>
+      <Reference name="Irrlicht.NET.dll" localCopy="false"/>
+      <Reference name="jabber-net.dll" localCopy="false"/>
+      <Reference name="log4net.dll" localCopy="false"/>
+      <Reference name="muzzle.dll" localCopy="false"/>
+      <Reference name="MXP.dll" localCopy="false"/>
+      <Reference name="Nini.dll" localCopy="false"/>
+      <Reference name="OpenMetaverse" />
+      <Reference name="OpenMetaverse.Http" />
+      <Reference name="OpenMetaverse.Rendering.Meshmerizer" />
+      <Reference name="OpenMetaverse.StructuredData" />
+      <Reference name="OpenMetaverse.Utilities" />
+      <Reference name="OpenMetaverseTypes" />
+      <Reference name="PathSystem3D" />
+      <Reference name="PrimMesher.dll" localCopy="false"/>
+      <Reference name="PrologScriptEngine" />
+      <Reference name="protobuf-net.dll" localCopy="false"/>
+      <Reference name="Radegast.exe" />
       <Reference name="RadegastSpeech" />
       <Reference name="RadSpeechLin" />
       <Reference name="RadSpeechWin" />
-      <Reference name="IdealistViewer" />
-      <Reference name="System" localCopy="false"/>
-      <Reference name="System.Drawing" localCopy="false"/>
-      <Reference name="System.Xml"/>
-      <!--<Reference name="Mono.Addins.dll" />-->
-      <Reference name="XMLRPC.dll"/>
-      <Reference name="Nini.dll" />
-      <Reference name="fmodex-dotnet.dll" />
-      <Reference name="log4net.dll" />
-      <Reference name="Irrlicht.NET.dll" />
-      <Reference name="Irrlicht.Extensions.dll" />
-      <Reference name="jabber-net.dll" />
-      <Reference name="muzzle.dll" />
-      <Reference name="OpenMetaverse" />
-      <Reference name="OpenMetaverseTypes" />
-      <Reference name="PrimMesher.dll" />
-      <Reference name="MXP.dll" />
-      <Reference name="protobuf-net.dll" />
-      <Reference name="System.Windows.Forms" />
-      <Reference name="System.Data" />
       <Reference name="SwiPlCs" localCopy="false"/>
-      <Reference name="IKVM.Runtime.dll" localCopy="false"/>
-      <Reference name="IKVM.OpenJDK.ClassLibrary.dll" localCopy="false"/>
+      <Reference name="System" localCopy="false"/>
+      <Reference name="System.Data" />
+      <Reference name="System.Drawing" localCopy="false"/>
+      <Reference name="System.Windows.Forms" />
+      <Reference name="System.Xml"/>
+      <Reference name="SWIPLCs" />
+      <Reference name="SWIJPL.dll" localCopy="false"/>
+      <Reference name="TheSimiansModule" />
+      <Reference name="XMLRPC.dll" localCopy="false"/>
       
 
 <!--      <Reference name="LookingGlass.Comm"/>

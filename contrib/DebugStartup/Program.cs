@@ -11,14 +11,18 @@ using SbsSW.SwiPlCs;
 
 namespace ABuildStartup
 {
-    class Program
+    public class Program
     {
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main()
+        public static void Main()
         {
+            if (ClientManager.MainThread == null)
+            {
+                ClientManager.MainThread = Thread.CurrentThread;
+            }
             string[] use = Environment.GetCommandLineArgs() ?? new string[0];
 
             if (use.Length>0)
@@ -90,7 +94,7 @@ namespace ABuildStartup
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main0(string[] args)
+        public static void Main0(string[] args)
         {
             args = args ?? new string[0];
             Application.EnableVisualStyles();
@@ -167,8 +171,13 @@ namespace ABuildStartup
         }
 
         private static void HandleProcessExit(object sender, EventArgs e)
-        {
+        {            
             DebugWrite("HandleProcessExit");
+            var v = ClientManager.SingleInstance;
+            if (v != null)
+            {
+                v.Quit();
+            }
         }
 
         private static void HandleEnterThreadModal(object sender, EventArgs e)
@@ -188,11 +197,17 @@ namespace ABuildStartup
         private static void DebugWrite(string handlethreadexit)
         {
             Console.WriteLine(handlethreadexit);
+            bool wasMain = (Thread.CurrentThread == ClientManager.MainThread);
         }
 
         private static void HandleAppExit(object sender, EventArgs e)
         {
             DebugWrite("HandleAppExit");
+            var v = ClientManager.SingleInstance;
+            if (v != null)
+            {
+                v.Quit();
+            } 
             Environment.Exit(0);
         }
 

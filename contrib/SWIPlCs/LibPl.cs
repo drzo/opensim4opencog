@@ -85,6 +85,7 @@ namespace SbsSW.SwiPlCs
 
         // Unmanaged resource. CLR will ensure SafeHandles get freed, without requiring a finalizer on this class.
         static SafeLibraryHandle m_hLibrary;
+        public static bool NoToString = false;
 
 
         private static bool IsValid

@@ -5,13 +5,11 @@ using DotLisp;
 
 namespace cogbot.ScriptEngines
 {
-    class CycInterpreter : CommonScriptInterpreter
+    class CycInterpreter : DotLispInterpreter
     {
-        DotLisp.Interpreter dotLispInterpreter;
-
         public override bool LoadsFileType(string filename)
         {
-            return filename.EndsWith("subl") || base.LoadsFileType(filename);
+            return filename.EndsWith("subl");
         }
 
         public override void InternType(Type t)
@@ -37,10 +35,11 @@ namespace cogbot.ScriptEngines
             return false;
         }
 
-        public CycInterpreter()
+        public CycInterpreter(object self)
+            : base(self)
         {
-            dotLispInterpreter = new DotLisp.Interpreter();
         }
+
         /// <summary>
         /// 
         /// 
@@ -125,7 +124,7 @@ namespace cogbot.ScriptEngines
         /// <returns></returns>
         public override ScriptInterpreter newInterpreter(object self)
         {
-            var v = new CycInterpreter();
+            var v = new CycInterpreter(self);
             v.Intern("*SELF*", self);
             return v;
         } // method: newInterpreter

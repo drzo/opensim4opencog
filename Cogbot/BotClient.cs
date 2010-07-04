@@ -143,7 +143,7 @@ namespace cogbot
         public LoginDetails BotLoginParams;// = null;
         private readonly SimEventPublisher botPipeline;
         public List<Thread> botCommandThreads = new ListAsSet<Thread>();
-        public XmlScriptInterpreter XmlInterp = new XmlScriptInterpreter();
+        readonly public XmlScriptInterpreter XmlInterp;
         public UUID GroupID = UUID.Zero;
         public Dictionary<UUID, GroupMember> GroupMembers = null; // intialized from a callback
         public Dictionary<UUID, AvatarAppearancePacket> Appearances = new Dictionary<UUID, AvatarAppearancePacket>();
@@ -330,7 +330,6 @@ namespace cogbot
         public BotClient(ClientManager manager, GridClient g, LoginDetails lp)
         {
             ClientManager = manager;
-            XmlInterp.BotClient = this;
             gridClient = g;
             BotLoginParams = lp;
             lp.Client = this;
@@ -459,6 +458,8 @@ namespace cogbot
 
             describeNext = true;
 
+            XmlInterp = new XmlScriptInterpreter(this);
+            XmlInterp.BotClient = this;
             LoadTaskInterpreter();
 
             // Start the server
@@ -1592,7 +1593,8 @@ namespace cogbot
 
         public void InternType(Type t)
         {
-            LispTaskInterperter.InternType(t);
+//          LispTaskInterperter.InternType(t);
+            ScriptManager.AddType(t);
         }
 
         private void RegisterListener(Listener listener)

@@ -27,7 +27,15 @@ namespace cogbot.TheOpenSims
 
         internal readonly BotClient Client;
 
-        internal readonly TaskQueueHandler taskQueue = new TaskQueueHandler("SimAssetStore", 1, false);
+        static private readonly TaskQueueHandler taskQueue = new TaskQueueHandler("SimAssetStore", 1, false);
+
+        public static void TaskQueueStart()
+        {
+            lock (taskQueue)
+            {
+                if (!taskQueue.IsRunning) taskQueue.Start();
+            }
+        }
         private InventoryManager Manager;
         private OpenMetaverse.Inventory Inventory;
 
@@ -53,12 +61,12 @@ namespace cogbot.TheOpenSims
 
         private void Store_OnInventoryObjectUpdated(object sender, InventoryObjectUpdatedEventArgs e)
         {
-            taskQueue.Enqueue(() =>LoadItemOrFolder(e.NewObject));
+            Enqueue(() =>LoadItemOrFolder(e.NewObject));
         }
 
         private void Store_OnInventoryObjectAdded(object sender, InventoryObjectAddedEventArgs e)
         {
-            taskQueue.Enqueue(() =>LoadItemOrFolder(e.Obj));
+            Enqueue(() =>LoadItemOrFolder(e.Obj));
         }
 
         private void Inventory_OnFolderUpdated(object sender, FolderUpdatedEventArgs e)
@@ -84,7 +92,7 @@ namespace cogbot.TheOpenSims
             if (folderid == UUID.Zero) return;
             lock (BusyUpdating) if (BusyUpdating.Contains(folderid)) return;
             lock (BusyUpdating) BusyUpdating.Add(folderid);
-            taskQueue.Enqueue(() =>
+            Enqueue(() =>
                                   {
                                       List<InventoryBase> contents = Client.Inventory.FolderContents(folderid,
                                                                                                      Client.Self.AgentID,
@@ -99,7 +107,7 @@ namespace cogbot.TheOpenSims
 
         private void Inventory_OnItemReceived(object sender, ItemReceivedEventArgs e)
         {
-            taskQueue.Enqueue(() => LoadItemOrFolder(e.Item));
+            Enqueue(() => LoadItemOrFolder(e.Item));
         }
 
         private bool downloadedAssetFolders = false;
@@ -112,7 +120,7 @@ namespace cogbot.TheOpenSims
             Inventory.InventoryObjectAdded += Store_OnInventoryObjectAdded;
             Inventory.InventoryObjectUpdated += Store_OnInventoryObjectUpdated;
             Inventory.InventoryObjectRemoved += Store_OnInventoryObjectRemoved;
-            taskQueue.Enqueue((DownloadAssetFolders));
+            Enqueue((DownloadAssetFolders));
 
         }
 
@@ -1562,6 +1570,11 @@ namespace cogbot.TheOpenSims
             uuid = GetAssetUUID(animate, AssetType.Gesture);
             if (uuid != UUID.Zero) return FindAsset(uuid);
             return null;
+        }
+
+        public void Enqueue(Action action)
+        {
+            taskQueue.Enqueue(new ThreadStart(action));
         }
     }
 

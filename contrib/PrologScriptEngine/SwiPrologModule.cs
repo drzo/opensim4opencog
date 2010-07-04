@@ -16,12 +16,14 @@ namespace PrologScriptEngine
     {
         #region ISettingsDictionary Members
 
+        public PrologScriptInterpreter PLScriptInterpreter;
         ///<summary>
         ///</summary>
         ///<param name="parent"></param>
         public SwiPrologModule(BotClient parent)
             : base(parent)
         {
+            PLScriptInterpreter = new PrologScriptInterpreter(parent);   
         }
 
         /// <summary>
@@ -74,7 +76,7 @@ namespace PrologScriptEngine
         ///<exception cref="NotImplementedException"></exception>
         public string NameSpace
         {
-            get { throw new NotImplementedException(); }
+            get { return "plugin." + GetModuleName(); }
         }
 
         #endregion
@@ -87,7 +89,7 @@ namespace PrologScriptEngine
         /// <returns></returns>
         public override string GetModuleName()
         {
-            throw new NotImplementedException();
+            return GetType().Name;
         }
 
         ///<summary>
@@ -95,7 +97,7 @@ namespace PrologScriptEngine
         ///<exception cref="NotImplementedException"></exception>
         public override void StartupListener()
         {
-            throw new NotImplementedException();
+            ScriptManager.AddInterpreter(PLScriptInterpreter);
         }
 
         /// <summary>
@@ -104,7 +106,7 @@ namespace PrologScriptEngine
         /// <filterpriority>2</filterpriority>
         public override void Dispose()
         {
-            throw new NotImplementedException();
+            ScriptManager.RemoveInterpreter(PLScriptInterpreter);
         }
 
         #endregion

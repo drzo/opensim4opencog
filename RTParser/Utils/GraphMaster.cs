@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
 using System.Xml;
-using java.io;
 using RTParser.AIMLTagHandlers;
 using RTParser.Utils;
 using Console=System.Console;
@@ -153,7 +152,7 @@ namespace RTParser.Utils
             {
                 string s = "CheckMismatch " + info.FullPath.AsNodeXML().ToString() + "!=" + pats;
                 RTPBot.writeDebugLine(s);
-                throw new InvalidObjectException(s);
+                throw new Exception(s);
 
             }
         }

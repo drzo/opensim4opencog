@@ -208,6 +208,7 @@ namespace SbsSW.SwiPlCs.Exceptions
                 return "A PlException was thrown but it can't formatted because PlEngine is not Initialized.";
 
 			string strRet = "[ERROR: Failed to generate message.  Internal error]\n";
+            if (libpl.NoToString) return "[ERROR: Failed to generate message.  NoToString presently]\n";
             using (PlFrame fr = new PlFrame())
             {
 

@@ -4,9 +4,9 @@ using System.Text;
 
 namespace cogbot.ScriptEngines
 {
-    class DotLispInterpreter : CommonScriptInterpreter
+    public class DotLispInterpreter : LispInterpreter
     {
-        DotLisp.Interpreter dotLispInterpreter;
+        public DotLisp.Interpreter dotLispInterpreter;
 
         public override void Dispose()
         {
@@ -15,7 +15,7 @@ namespace cogbot.ScriptEngines
 
         public override bool LoadsFileType(string filename)
         {
-            return filename.EndsWith("lisp") || base.LoadsFileType(filename);
+            return filename.EndsWith("lisp") || base.LoadsFileType0(filename);
         }
 
         public override bool IsSubscriberOf(string eventName)
@@ -36,9 +36,14 @@ namespace cogbot.ScriptEngines
         public override void InternType(Type t)
         {
             dotLispInterpreter.InternType(t);
+            ScriptManager.AddType(t);
         }
 
-        public DotLispInterpreter()
+        public DotLispInterpreter(object self):base(self)
+        {
+        }
+
+        sealed public override void Init()
         {
             dotLispInterpreter = new DotLisp.Interpreter();
         }

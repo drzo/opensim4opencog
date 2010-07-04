@@ -1,5 +1,6 @@
-using java.io;
 
+
+using System;
 namespace RTParser
 {
     public class StringAppendableUnifiable : StringUnifiable
@@ -29,7 +30,7 @@ namespace RTParser
         {
             if (!IsAppendable)
             {
-                throw new InvalidObjectException("this " + AsString() + " cannot be appended with " + p);
+                throw new Exception("this " + AsString() + " cannot be appended with " + p);
             }
             if (Unifiable.IsNullOrEmpty(p)) return;
             if (p==" ")

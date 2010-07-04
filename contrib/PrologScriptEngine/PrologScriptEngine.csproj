@@ -3,7 +3,7 @@
     <ProjectType>Local</ProjectType>
     <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{B0F6285D-9C05-42C7-A703-ACAFF06A9EAC}</ProjectGuid>
+    <ProjectGuid>{EF9720AD-CFBB-4DD3-BFA3-A028C41BD63B}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon></ApplicationIcon>
@@ -97,37 +97,37 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Cogbot\Cogbot.csproj">
       <Name>Cogbot</Name>
-      <Project>{B07779BF-5778-4D7D-8EC3-11A5C53E772E}</Project>
+      <Project>{0BCBB287-045B-4873-9F76-A5939A9E3DA6}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\PathSystem3D\PathSystem3D.csproj">
       <Name>PathSystem3D</Name>
-      <Project>{D5248A41-D819-4F72-9935-C78B78515D4A}</Project>
+      <Project>{3C49ACA3-BBD0-48C7-A008-4D3AADA78EEC}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\lib\OpenMetaverse\OpenMetaverse.csproj">
       <Name>OpenMetaverse</Name>
-      <Project>{E7FD7062-5925-4233-9ACD-1E3108F388FC}</Project>
+      <Project>{D82542A5-B9B0-43BD-96B5-4F2F7E5220E0}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\lib\OpenMetaverseTypes\OpenMetaverseTypes.csproj">
       <Name>OpenMetaverseTypes</Name>
-      <Project>{DAD72A20-C513-4076-A9A6-2CDF9A33E43B}</Project>
+      <Project>{214D265A-8AAE-44D2-9C9B-2A250B3E8AFC}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\dotlisp\DotLisp.csproj">
       <Name>DotLisp</Name>
-      <Project>{9311F27D-3C02-4BB1-8B6A-3DB82473B9DC}</Project>
+      <Project>{C9E6B824-72E9-493A-8647-61B4DF896D02}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\RTParser\AIMLbot.csproj">
       <Name>AIMLbot</Name>
-      <Project>{8C4EEC72-AE72-4DA3-A27E-165512CD210C}</Project>
+      <Project>{FEA27074-6230-48BF-AD81-BA292D39948C}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\lib\Radegast\Radegast.csproj">
       <Name>Radegast</Name>
-      <Project>{DFB9E14A-96B8-4DE4-889B-8ED96DC426C7}</Project>
+      <Project>{E1D415AA-8D6C-4582-9AF8-BA8A17AA96BF}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
   </ItemGroup>

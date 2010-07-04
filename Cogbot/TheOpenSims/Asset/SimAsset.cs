@@ -49,7 +49,7 @@ namespace cogbot.TheOpenSims
                         else
                         {              
                            // PullServerAsset = false;
-                            Store.taskQueue.Enqueue(() =>
+                            Store.Enqueue(() =>
                                                         {
                                                             Thread.Sleep(10);                                                       
                                                             var v = ServerAsset;

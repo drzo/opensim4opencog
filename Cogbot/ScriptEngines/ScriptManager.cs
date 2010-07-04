@@ -1,60 +1,189 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
+using System.Windows.Forms;
 
 namespace cogbot.ScriptEngines
 {
     public class ScriptManager
     {
-        static public HashSet<ScriptInterpreter> Interpreters = new HashSet<ScriptInterpreter>();
+        static public List<ScriptInterpreter> _Interpreters = new List<ScriptInterpreter>();
+        static public HashSet<Type> _Types = new HashSet<Type>();
+        static public object Lock = new object();
+
+        static public bool AddType(Type type)
+        {
+            lock (Lock)
+            {
+                if (_Types.Add(type))
+                {
+                    foreach (var set in _Interpreters)
+                    {
+                        set.InternType(type);
+                    }
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        public static ScriptInterpreter LoadScriptInterpreter(string type, object self)
+        {
+            try
+            {
+                return LoadScriptInterpreter0(type, self);
+            }
+            catch (Exception e)
+            {
+                WriteLine("LoadScriptInterpreter: " + e);
+                throw e;
+            }
+        }
+        public static bool SafelyDo(string msg, MethodInvoker self)
+        {
+            try
+            {
+                self();
+                return true;
+            }
+            catch (Exception e)
+            {
+                WriteLine("LoadScriptInterpreter: " + msg + " - " + e);
+                return false;
+            }
+        }
         /// <summary>
         /// 
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        public static ScriptInterpreter LoadScriptInterpreter(string type, object self)
+        public static ScriptInterpreter LoadScriptInterpreter0(string type, object self)
         {
-            if (Interpreters.Count==0)
+            var Interpreters = _Interpreters;
+            lock (Interpreters)
             {
-                BotScriptInterpreter newBotScriptInterpreter = new BotScriptInterpreter();
-                newBotScriptInterpreter = (BotScriptInterpreter) newBotScriptInterpreter.newInterpreter(self);
-                Interpreters.Add(newBotScriptInterpreter);
-                DotLispInterpreter dotLispInterpreter = new DotLispInterpreter();
-                dotLispInterpreter = (DotLispInterpreter) dotLispInterpreter.newInterpreter(self);
-                Interpreters.Add(dotLispInterpreter);
-            }
-            foreach (var set in Interpreters)
-            {
-                if (set.LoadsFileType(type, self))
+                if (Interpreters.Count == 0)
                 {
-                    if (set is BotScriptInterpreter)
+                    foreach (var a in AppDomain.CurrentDomain.GetAssemblies())
                     {
-                        if (self is BotClient)
-                        {
-                            ((BotScriptInterpreter) set).BotClient = self as BotClient;
-                        }
+                        Assembly assembly = a;
+                        SafelyDo("load assemly " + a, () => ScanAssemblyForScriptInterpretors(assembly, self));
                     }
-                    return set;
+                    if (false)
+                    {
+
+                        //if (self is ClientManager) self = ((ClientManager)self).LastBotClient ?? self;
+                        BotScriptInterpreter newBotScriptInterpreter = new BotScriptInterpreter(self);
+                        newBotScriptInterpreter = (BotScriptInterpreter) newBotScriptInterpreter.newInterpreter(self);
+                        AddInterpreter(newBotScriptInterpreter);
+                        DotLispInterpreter dotLispInterpreter = new DotLispInterpreter(self);
+                        dotLispInterpreter = (DotLispInterpreter) dotLispInterpreter.newInterpreter(self);
+                        AddInterpreter(dotLispInterpreter);
+                    }
                 }
-            }
-            if (type != null)
+                foreach (var set in Interpreters)
+                {
+                    if (set.LoadsFileType(type, self))
+                    {
+                        if (set is BotScriptInterpreter)
+                        {
+                            if (self is BotClient)
+                            {
+                                ((BotScriptInterpreter)set).BotClient = self as BotClient;
+                            }
+                        }
+                        return set;
+                    }
+                }
+                if (type != null)
+                {
+                    type = type.ToLower();
+                    if (type.StartsWith("dotlisp"))
+                    {
+                        return new DotLispInterpreter(self);
+                    }
+                    if (type.StartsWith("cyc"))
+                    {
+                        return new CycInterpreter(self);
+                    }
+                    if (type.StartsWith("abcl"))
+                    {
+                        return new ABCLInterpreter(self);
+                    }
+                }
+                //default
+                return new DotLispInterpreter(self);
+            } // method: LoadScriptInterpreter
+        }
+
+        private static void ScanAssemblyForScriptInterpretors(Assembly a, object self)
+        {
+            Type bt = typeof (object);
+            if (!ReferenceEquals(self, null))
             {
-                type = type.ToLower();
-                if (type.StartsWith("dotlisp"))
+                bt = self.GetType();
+            }
+
+            foreach (var list in a.GetTypes())
+            {
+                if (list.IsAbstract) continue;
+                if (typeof (ScriptInterpreter).IsAssignableFrom(list))
                 {
-                    return new DotLispInterpreter();
-                }
-                if (type.StartsWith("cyc"))
-                {
-                    return new CycInterpreter();
-                }
-                if (type.StartsWith("abcl"))
-                {
-                    return new ABCLInterpreter();
+                    SafelyDo("load type " + list, () =>
+                                                      {
+                                                          var mi = list.GetConstructor(new Type[] {bt});
+                                                          if (mi == null)
+                                                              mi = list.GetConstructor(new Type[] {typeof (object)});
+                                                          if (mi != null)
+                                                          {
+                                                              ScriptInterpreter si =
+                                                                  (ScriptInterpreter) mi.Invoke(new object[] {self});
+                                                              AddInterpreter(si);
+                                                          }
+                                                          else
+                                                          {
+                                                              mi = list.GetConstructor(new Type[0]);
+                                                              ScriptInterpreter si =
+                                                                  (ScriptInterpreter) mi.Invoke(new object[0]);
+                                                              si.Self = self;
+                                                              AddInterpreter(si);
+                                                          }
+                                                      });
                 }
             }
-            //default
-            return new DotLispInterpreter();
-        } // method: LoadScriptInterpreter
+
+        }
+
+        public static void AddInterpreter(ScriptInterpreter interpreter)
+        {
+            lock (Lock)
+            {
+                if (!_Interpreters.Contains(interpreter))
+                {
+                    _Interpreters.Add(interpreter);
+                    foreach (var set in _Types)
+                    {
+                        interpreter.InternType(set);
+                    }
+                }
+            }
+        }
+
+        public static void RemoveInterpreter(ScriptInterpreter interpreter)
+        {
+            lock (Lock)
+            {
+                if (!_Interpreters.Contains(interpreter))
+                {
+                    _Interpreters.Remove(interpreter);
+                }
+            }
+        }
+
+        public static void WriteLine(string msg, params object[] args)
+        {
+            Console.WriteLine(msg, args);
+        }
     }
 }

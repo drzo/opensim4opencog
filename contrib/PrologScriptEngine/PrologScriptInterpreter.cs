@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using cogbot;
 using cogbot.ScriptEngines;
@@ -9,23 +10,48 @@ using SbsSW.SwiPlCs;
 
 namespace PrologScriptEngine
 {
-    public class PrologScriptInterpreter : CommonScriptInterpreter, IRadegastPlugin
+    public class PrologScriptInterpreter : CommonScriptInterpreter
     {
+        public void Main(string[] args)
+        {
+            _reachAllTypes = true;
+            PrologClient.Main(args);
+        }
         ///<summary>
         ///</summary>
         public PrologClient prologClient;
 
         public override bool LoadsFileType(string filename)
         {
-            return filename.EndsWith("bot") || filename.EndsWith("txt") || filename.EndsWith("note") ||
-                   base.LoadsFileType(filename);
+            return filename.EndsWith("pl") || filename.EndsWith("swi") || filename.EndsWith("prolog") ||
+                   base.LoadsFileType0(filename);
         }
-
-        public override void InternType(Type t)
+        static HashSet<Type> _types = new HashSet<Type>();
+        private static bool _reachAllTypes = false;
+        ///<summary>
+        ///</summary>
+        ///<param name="type"></param>
+        ///<exception cref="NotImplementedException"></exception>
+        public override void InternType(Type type)
         {
-            prologClient.InternType(t);
+            if (!_reachAllTypes) return;
+            InternTypeS(type);
         }
 
+        static void InternTypeS(Type type)
+        {
+            lock (_types)
+            {
+                if (!_types.Add(type))
+                {
+                    string module = type.Namespace;
+                    foreach (var list in type.GetMethods(BindingFlags.Static | BindingFlags.NonPublic))
+                    {
+                        PrologClient.InternMethod(module, null, list);
+                    }
+                }
+            }
+        }
         public override void Dispose()
         {
             prologClient.Dispose();
@@ -41,9 +67,13 @@ namespace PrologScriptEngine
             return prologClient.IsDefined(eventName);
         }
 
-        public PrologScriptInterpreter()
+        public PrologScriptInterpreter(object self):base(self)
         {
 
+        }
+        public override void Init()
+        {
+            prologClient = new PrologClient();
         }
         /// <summary>
         /// 
@@ -135,32 +165,10 @@ namespace PrologScriptEngine
             PrologScriptInterpreter si;
             if (prologClient == null || prologClient == thiz) si = this;
             else
-                si = new PrologScriptInterpreter();
+                si = new PrologScriptInterpreter(thiz);
             si.prologClient = thiz as PrologClient;
             return si;
         } // method: newInterpreter
-
-        #region Implementation of IRadegastPlugin
-
-        /// <summary>
-        /// Called in plugin initialization
-        /// </summary>
-        /// <param name="inst">RadegastInstance plugin is loaded into</param>
-        public void StartPlugin(RadegastInstance inst)
-        {
-            // throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Called on plugin shutdown
-        /// </summary>
-        /// <param name="inst">RadegastInstance plugin is unloaded from</param>
-        public void StopPlugin(RadegastInstance inst)
-        {
-            //throw new NotImplementedException();
-        }
-
-        #endregion
     }
 
     public class OutputDelegateWriter : TextWriter
