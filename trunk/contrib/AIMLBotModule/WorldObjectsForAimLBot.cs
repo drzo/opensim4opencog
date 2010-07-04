@@ -193,8 +193,15 @@ namespace AIMLBotModule
 
         public RTPBot MyBot;
         public User MyUser;
+        TaskQueueHandler handler = new TaskQueueHandler("AIML Bot ", 1, true);
 
         public override void StartupListener()
+        {
+            handler.Start();
+            handler.Enqueue(() => StartupListener0());
+        }
+
+        public void StartupListener0()
         {
             lock (RegisterTalkToCmdLock)
             {
@@ -234,7 +241,10 @@ namespace AIMLBotModule
                 client.Avatars.ViewerEffectLookAt += AIML_OnLookAt;
                 client.Avatars.ViewerEffect += AINL_OnEffect;
                 client.OnInstantMessageSent += OnSelfSentIM;
-
+                if (client.Network.Connected)
+                {
+                    ReadSimSettings0();
+                }
                 if (EventsToAIML)
                 {
                     SimEventSubscriber evtSub = new AIMLEventSubscriber(MyBot, this);
@@ -277,8 +287,12 @@ namespace AIMLBotModule
             if (e.SourceID == client.Self.AgentID) return;
             SetInterest(e.SourceID, e.TargetID, true);
         }
-
+        // handler.Enqueue(() => 
         private void SetInterest(UUID sourceid, UUID targetid, bool forced)
+        {
+            SetInterest0(sourceid, targetid, forced);
+        }
+        private void SetInterest0(UUID sourceid, UUID targetid, bool forced)
         {
             if (targetid == client.Self.AgentID) AttendTo(null, sourceid, PCode.Avatar);
             else AttendTo(null, targetid, PCode.None);
@@ -314,11 +328,14 @@ namespace AIMLBotModule
         {
             if (e.Status == LoginStatus.Success)
             {
-                ReadSimSettings();
+               ReadSimSettings();
             }
         }
-
         private void ReadSimSettings()
+        {
+            handler.Enqueue(() => ReadSimSettings0());
+        }
+        private void ReadSimSettings0()
         {
             client.InternType(this.GetType());
             string myName = GetName().Trim();
