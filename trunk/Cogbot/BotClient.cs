@@ -142,7 +142,7 @@ namespace cogbot
         readonly int thisTcpPort;
         public LoginDetails BotLoginParams;// = null;
         private readonly SimEventPublisher botPipeline;
-        public IEnumerable<Thread> GetBotCommandThreads()
+        public IList<Thread> GetBotCommandThreads()
         {
             lock (botCommandThreads) return botCommandThreads;
         }

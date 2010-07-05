@@ -29,25 +29,38 @@ namespace cogbot.Actions
                 {
                     //WriteLine(action + ": " + Client.Commands[action].makeHelpString());
                 }
-
+                int n = 0;
                 var botCommandThreads = Client.GetBotCommandThreads();
-
-                lock (botCommandThreads) foreach (Thread t in botCommandThreads)
+                lock (botCommandThreads)
+                {
+                    int num = botCommandThreads.Count;
+                    foreach (Thread t in botCommandThreads)
                     {
-
-                        try
+                        n++;
+                        num--;
+                        //System.Threading.ThreadStateException: Thread is dead; state cannot be accessed.
+                        //  at System.Threading.Thread.IsBackgroundNative()
+                        if (!t.IsAlive)
                         {
-                            if (t.IsAlive)
-                            {
-                                aborted++;
-                                t.Abort();
-                            }
-                            t.Join();
+                            WriteLine("Removing {0}: {1} IsAlive={2}", num, t.Name, t.IsAlive);
                         }
-                        catch (Exception) { }
+                        else
+                        {
+                            WriteLine("Killing/Removing {0}: {1} IsAlive={2}", num, t.Name, t.IsAlive);
+                            try
+                            {
+                                if (t.IsAlive)
+                                {
+                                    aborted++;
+                                    t.Abort();
+                                }
+                                t.Join();
+                            }
+                            catch (Exception) { }
+                        }
                         Client.RemoveThread(t);
-
                     }
+                }
             }
             if (WorldSystem.TheSimAvatar.CurrentAction!=null)
             {

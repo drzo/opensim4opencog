@@ -27,15 +27,29 @@ namespace cogbot.Actions
             {
                 int n = 0;
                 var botCommandThreads = Client.GetBotCommandThreads();
+                List<string> list = new List<string>();
                 lock (botCommandThreads)
                 {
+                    int num = botCommandThreads.Count;
                     foreach (Thread t in botCommandThreads)
                     {
                         n++;
+                        num--;
                         //System.Threading.ThreadStateException: Thread is dead; state cannot be accessed.
                         //  at System.Threading.Thread.IsBackgroundNative()
-                        WriteLine("" + n + ": " + t.Name + " alive=" + t.IsAlive);
+                        if (!t.IsAlive)
+                        {
+                            list.Add(string.Format("{0}: {1} IsAlive={2}", num, t.Name, t.IsAlive));
+                        }
+                        else
+                        {
+                            list.Insert(0, string.Format("{0}: {1} IsAlive={2}", num, t.Name, t.IsAlive));
+                        }
                     }
+                }
+                foreach (var s in list)
+                {
+                    WriteLine(s);
                 }
                 return Success("Total threads: " + n);
             }
