@@ -19,7 +19,7 @@ namespace SbsSW.SwiPlCs
         bool HasMore();
     }
 
-    public interface NDCCHBOX : SCCH
+    public interface NDCCHBOX : NDCCH
     {
         bool Setup(PlTermV a0);
         bool Call(PlTermV a0);

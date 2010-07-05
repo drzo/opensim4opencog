@@ -429,8 +429,9 @@ namespace SbsSW.SwiPlCs
 
             if (!JplDisabled)
             {
-                var q = new Query(new jpl.Atom("prolog"));
-                DoQuery(q);
+                var run = new jpl.Atom("prolog");
+                while (!IsHalted) SafelyRun(() => DoQuery(new Query(run)));
+
             }
             else
             {
@@ -438,8 +439,8 @@ namespace SbsSW.SwiPlCs
                     // loops on exception
                     while (!SafelyRun((() => libpl.PL_toplevel()))) ;
             }
-           
-           
+
+
 
             Console.WriteLine("press enter to exit");
             Console.ReadLine();
@@ -969,6 +970,7 @@ typedef struct // define a context structure  { ... } context;
         public static string SwiHomeDir;
         public static bool JplSafeNativeMethodsDisabled = false;
         public static bool JplSafeNativeMethodsCalled = false;
+        public static bool IsHalted = false;
 
         // foo(X,Y),writeq(f(X,Y)),nl,X=5.
         public static int Foo(PlTerm t0, PlTerm term2, IntPtr control)
