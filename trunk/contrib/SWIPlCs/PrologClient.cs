@@ -167,31 +167,31 @@ namespace SbsSW.SwiPlCs
 
         private static void SetupProlog()
         {
-            string cogbothome = "c:\\development\\opensim4opencog\\bin";
-            string plhome = Environment.GetEnvironmentVariable("SWI_HOME_DIR");
-            if (string.IsNullOrEmpty(plhome))
+            CogbotHome = "c:\\development\\opensim4opencog\\bin";
+            SwiHomeDir = Environment.GetEnvironmentVariable("SWI_HOME_DIR");
+            if (string.IsNullOrEmpty(SwiHomeDir))
             {
-                plhome = "c:\\Program Files (x86)\\pl";
-                Environment.SetEnvironmentVariable("SWI_HOME_DIR", plhome);
+                SwiHomeDir = "c:\\Program Files (x86)\\pl";
+                Environment.SetEnvironmentVariable("SWI_HOME_DIR", SwiHomeDir);
             }
-            if (!File.Exists(plhome + "\\boot32.prc") && !File.Exists(plhome + "\\boot.prc") && !File.Exists(plhome + "\\boot64.prc"))
+            if (!File.Exists(SwiHomeDir + "\\boot32.prc") && !File.Exists(SwiHomeDir + "\\boot.prc") && !File.Exists(SwiHomeDir + "\\boot64.prc"))
             {
                 Console.WriteLine("RC file missing!");
             }
             String path = Environment.GetEnvironmentVariable("PATH");
             if (path != null)
-                if (!path.ToLower().StartsWith(plhome.ToLower()))
+                if (!path.ToLower().StartsWith(SwiHomeDir.ToLower()))
                 {
-                    Environment.SetEnvironmentVariable("PATH", plhome + "\\bin;" + cogbothome + ";" + path);
+                    Environment.SetEnvironmentVariable("PATH", SwiHomeDir + "\\bin;" + CogbotHome + ";" + path);
                 }
             string libpath = "";
 
 
             libpath += ".";
             libpath += ";";
-            libpath += plhome + "\\bin";
+            libpath += SwiHomeDir + "\\bin";
             libpath += ";";
-            libpath += cogbothome;
+            libpath += CogbotHome;
 
             string LD_LIBRARY_PATH = Environment.GetEnvironmentVariable("LD_LIBRARY_PATH");
             if (String.IsNullOrEmpty(LD_LIBRARY_PATH))
@@ -211,14 +211,14 @@ namespace SbsSW.SwiPlCs
             string jplcp = clasPathOf(new jpl.JPL());
 
             if (!JplDisabled) 
-                CLASSPATH = cogbothome + "\\SWIJPL.dll" + ";" + cogbothome + "\\SWIJPL.jar;" + CLASSPATH0;
+                CLASSPATH = CogbotHome + "\\SWIJPL.dll" + ";" + CogbotHome + "\\SWIJPL.jar;" + CLASSPATH0;
 
             Environment.SetEnvironmentVariable("CLASSPATH", CLASSPATH);
             java.lang.System.setProperty("java.class.path", CLASSPATH);
             java.lang.System.setProperty("java.library.path", libpath);
             try
             {
-                JPL.setNativeLibraryDir(plhome + "\\bin");
+                JPL.setNativeLibraryDir(SwiHomeDir + "\\bin");
                 try
                 {
                     JPL.loadNativeLibrary();
@@ -478,6 +478,22 @@ namespace SbsSW.SwiPlCs
 
         private static void RegisterJPLForeigns()
         {
+            // backup old jpl.pl and copy over it
+            if (!JplDisabled)
+                SafelyRun(() =>
+                              {
+                                  if (File.Exists(CogbotHome + "\\jpl_for_ikvm.phps"))
+                                  {
+                                      if (!File.Exists(SwiHomeDir + "\\library\\jpl.pl.old"))
+                                      {
+                                          File.Copy(SwiHomeDir + "\\library\\jpl.pl",
+                                                    SwiHomeDir + "\\library\\jpl.pl.old",
+                                                    true);
+                                      }
+                                      File.Copy(CogbotHome + "\\jpl_for_ikvm.phps", SwiHomeDir + "\\library\\jpl.pl", true);
+                                  }
+                              });
+            
             PlEngine.RegisterForeign("jpl", "link_swiplcs", 1, new DelegateParameter1(link_swiplcs), PlForeignSwitches.None);
             //DoQuery(new Query("ensure_loaded(library(jpl))."));
             /*
@@ -534,11 +550,28 @@ jpl_jlist_demo :-
 
         private static bool link_swiplcs(PlTerm term)
         {
-            Console.WriteLine("JplSafeNativeMethods to " + term);
-            JplSafeNativeMethods.install();
-            //var v = new PlTerm("_1");
-            //JplSafeNativeMethods.jpl_c_lib_version_1_plc(v.TermRef);
-            return true;
+            try
+            {
+                if (JplSafeNativeMethodsCalled)
+                {
+                    bool enabled = !JplSafeNativeMethodsDisabled;
+                    SafelyRun(
+                        () => Console.WriteLine("JplSafeNativeMethods called again from " + term + " result=" + enabled));
+                    return enabled;
+                }
+                JplSafeNativeMethodsCalled = true;
+                SafelyRun(() => Console.WriteLine("JplSafeNativeMethods call first time from " + term));
+                JplSafeNativeMethods.install();
+                //var v = new PlTerm("_1");
+                //JplSafeNativeMethods.jpl_c_lib_version_1_plc(v.TermRef);
+                return true;
+            }
+            catch (Exception e)
+            {
+                JplSafeNativeMethodsDisabled = true;
+                WriteException(e);
+                return false;
+            }
         }
 
         private static bool DoQuery(string query)
@@ -932,6 +965,11 @@ typedef struct // define a context structure  { ... } context;
         static private PinnedObject<NonDetTest> ndtp;
         public static bool JplDisabled = false;
         public static bool PlCsDisabled = false;
+        public static string CogbotHome;
+        public static string SwiHomeDir;
+        public static bool JplSafeNativeMethodsDisabled = false;
+        public static bool JplSafeNativeMethodsCalled = false;
+
         // foo(X,Y),writeq(f(X,Y)),nl,X=5.
         public static int Foo(PlTerm t0, PlTerm term2, IntPtr control)
         {
