@@ -308,8 +308,25 @@ namespace cogbot.ScriptEngines
 
         public override void InternType(Type t)
         {
-            java.lang.Class ic = ikvm.runtime.Util.getInstanceTypeFromClass(t);
-            Intern(null , null, allExceptFor, ic, 2);
+            try
+            {
+               if (false)
+               {
+                   java.lang.Class ic = ikvm.runtime.Util.getInstanceTypeFromClass(t);
+                   Intern(null, null, allExceptFor, ic, 2);
+               }
+            }
+            catch (Exception e)
+            {
+                try
+                {
+                    WriteText("InternType " + t + " " + e + "\n");
+                }
+                catch (Exception e2)
+                {
+                    WriteText(" e2" + e2.GetType());
+                }
+            }
 
           //  dotLispInterpreter.InternType(t);
         }

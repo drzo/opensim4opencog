@@ -51,6 +51,8 @@ namespace cogbot.Utilities
         HttpServer.HttpListener _listener;
         private int _port;
         private ClientManager clientManager;
+        private string defaultUser = "UNKNOWN_PARTNER";
+
         private BotClient _botClient
         {
             get
@@ -230,7 +232,7 @@ namespace cogbot.Utilities
                     if (String.IsNullOrEmpty(username))
                     {
                         //res = _botClient.ExecuteCommand(cmd + " " + text, wrresp.WriteLine);
-                        res = _botClient.ExecuteCommand("aiml @ UNKNOWN_PARTNER - " + text, wrresp.WriteLine);
+                        res = _botClient.ExecuteCommand("aiml @ " + defaultUser + " - " + text, wrresp.WriteLine);
                     }
                     else
                     {

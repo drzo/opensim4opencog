@@ -13,7 +13,8 @@ namespace AIMLBotModule
 {
     public class AimlCommand : cogbot.Actions.Command, BotPersonalCommand
     {
-        private string defaultAIMLUser;
+        public static string UNKNOWN_PARTENER = "UNKNOWN_PARTENR";
+        private string lastKnownUser;
         public AimlCommand(BotClient testClient)
         {
             Name = "aiml";
@@ -50,12 +51,13 @@ namespace AIMLBotModule
             }
             catch (Exception e)
             {
-                return Failure("" + e);               
+                return Failure("" + e);
             }
         }
 
         private CmdResult Execute0(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
+            string defaultAIMLUser;
             if (args.Length == 0) return Failure(Usage);
             string s = args[0].ToLower();
             if (s == "on")
@@ -67,7 +69,7 @@ namespace AIMLBotModule
             if (s == "user")
             {
                 defaultAIMLUser = String.Join(" ", args, 1, args.Length - 1);
-                WorldSystemModule.SetDefaultUser(defaultAIMLUser);
+                SetUser(String.Join(" ", args, 1, args.Length - 1));
                 return Success("WorldObjects.SetDefaultUser = " + defaultAIMLUser + ";");
             }
             if (s == "off")
@@ -95,16 +97,80 @@ namespace AIMLBotModule
                 int lastIndex = joined.IndexOf("-");
                 defaultAIMLUser = joined.Substring(0, lastIndex).Trim();
                 s = "-";
-                WorldSystemModule.SetDefaultUser(defaultAIMLUser);
+                SetUser(defaultAIMLUser);
             }
-            if (s=="-")
+            if (s == "@rename")
+            {
+                try
+                {
+                    joined = joined.TrimStart(new[] {'@', ' '});
+                    int lastIndex = joined.IndexOf("-");
+                    defaultAIMLUser = joined.Substring(0, lastIndex).Trim();
+                    s = "-";
+                    lastIndex = joined.IndexOf("-");
+                    joined = joined.Substring(lastIndex + 1).Trim();
+                    WorldSystemModule.RenameUser(lastKnownUser, joined);
+                    return Success("done: " + defaultAIMLUser + " is nown known to be " + joined);
+                }
+                catch (Exception e)
+                {
+                    return Failure("" + e);
+                }
+            }
+            if (s == "-")
             {
                 int lastIndex = joined.IndexOf("-");
                 joined = joined.Substring(lastIndex + 1).Trim();
             }
-            String ss = WorldSystemModule.AIMLInterp(joined, defaultAIMLUser);
+            String ss = WorldSystemModule.AIMLInterp(joined, lastKnownUser);
             if (String.IsNullOrEmpty(ss)) ss = "Interesting.";
             return Success(ss);
+        }
+
+        public void SetUser(string user)
+        {
+            string setUser;
+            Console.WriteLine("<- SetUser=" + user + " lastKnownUser=" + lastKnownUser);
+            if (RTPBot.UnknowableName(user))
+            {
+                if (RTPBot.UnknowableName(lastKnownUser))
+                {
+                    Console.WriteLine("THEREFORE Same persom with still unknown name (make one up)");
+                    setUser = lastKnownUser = UNKNOWN_PARTENER;
+                }
+                else
+                {
+                    Console.WriteLine("THEREFORE New Person with unknown name");
+                    setUser = lastKnownUser = user;
+                }
+            }
+            else
+            {
+                if (RTPBot.UnknowableName(lastKnownUser))
+                {
+                    Console.WriteLine("THEREFORE Same Person now known name");
+                    WorldSystemModule.RenameUser(lastKnownUser, user);
+                    setUser = lastKnownUser = user;
+                }
+                else
+                {
+                    if (WorldSystemModule.SameUser(lastKnownUser, user))
+                    {
+                        Console.WriteLine("THEREFORE Different Person with known name");
+                        setUser = user;
+                        lastKnownUser = user;
+                    }
+                    else
+                    {
+                        Console.WriteLine("THEREFORE New Person with known name");
+                        setUser = user;
+                        lastKnownUser = user;
+                    }
+                }
+            }
+            user = setUser;
+            Console.WriteLine("-> SetUser=" + user + " lastKnownUser=" + lastKnownUser);
+            WorldSystemModule.SetDefaultUser(user);
         }
     }
 
@@ -153,7 +219,7 @@ namespace AIMLBotModule
             if (arg == null) return "null";
             if (arg is String)
             {
-                return arg.ToString().Replace("  "," ");
+                return arg.ToString().Replace("  ", " ");
             }
             Type type = arg.GetType();
             if (arg is Simulator)
