@@ -1,19 +1,78 @@
-%:-include('logicmoo_utils_header.pl').
+% ===================================================================
+% File 'logicmoo_module_aiml.pl'
+% Purpose: An Implementation in SWI-Prolog of AIML
+% Maintainer: Douglas Miles
+% Contact: $Author: dmiles $@users.sourceforge.net ;
+% Version: 'logicmoo_module_aiml.pl' 1.0.0
+% Revision:  $Revision: 1.7 $
+% Revised At:   $Date: 2002/07/11 21:57:28 $
+% ===================================================================
+
+%:-module()
+%:-include('logicmoo_utils_header.pl'). %<?
 :- style_check(-singleton).
 :- style_check(-discontiguous).
 :- style_check(-atom).
 :- style_check(-string).
 
-%:-['jllykifsh.ailml.pl'].
-%:-['cyc'].
+:-multifile(what/3).
+:-multifile(response/2).
+
+run_chat_tests:-
+   test_call(alicebot('Hi')),
+   test_call(alicebot('What is your name')),
+   test_call(alicebot('My name is Fred.')),
+   test_call(alicebot('what is my name?')).
+
+test_call(G):-writeln(G),ignore(once(catch(G,E,writeln(E)))).
+
+main_loop1(Atom):- current_input(In),!,
+            read_line_with_nl(In,Codes,[]),!,
+            atom_codes(Atom,Codes),!,
+            alicebot(Atom),!.
+
+main_loop:-repeat,main_loop1(Atom),catch(atom_to_term(Atom,Term,Vars),_,fail),
+      once(callInteractive(Term,Vars)),fail.
+
+% callInteractive(Term,V):-
+callInteractive(Term,Var):-callInteractive0(Term,Var).
+
+callInteractive0(Term,Var):-atom(Term),!,catch(((Term,writeln(called(Term)))),_,fail),!.
+callInteractive0(Term,_):-catch((call(Term),writeq(Term),nl,fail),_,fail).
+callInteractive0(Term,_):-!.
+
 % ===============================================================================================
 % ALICE IN PROLOG
 % ===============================================================================================
 
+%getWordTokens(WORDS,TOKENS):-concat_atom(TOKENS,' ',WORDS).
+%is_string(S):-string(S).
+
+convert_to_string(I,ISO):-
+                term_to_string(I,IS),!,
+		string_to_list(IS,LIST),!,
+		list_replace(LIST,92,[92,92],LISTM),
+		list_replace(LISTM,34,[92,34],LISTO),
+		string_to_atom(ISO,LISTO),!.
+
+list_replace(List,Char,Replace,NewList):-
+	append(Left,[Char|Right],List),
+	append(Left,Replace,NewLeft),
+	list_replace(Right,Char,Replace,NewRight),
+	append(NewLeft,NewRight,NewList),!.
+list_replace(List,_Char,_Replace,List):-!.
+
+
+term_to_string(I,IS):- catch(string_to_atom(IS,I),_,(term_to_atom(I,A),string_to_atom(IS,A))),!.
+%well i played with a couple few differnt environment impls.. they have their pros cons.. one impl.. that was unique is that an array of "binding pairs" live in an arraylist.. to be "in" an environment it meant that you held an "index" into the arry list that as you went backwards you'd find your bindings.. each symbol had a java int field "lastBindingIndex" .. that was a "hint" to where you could fastforward the backwards search .. end named binding context also had a "index" to when you leave a named block.. you could quickly reset the top of an index.
+
+say(X):-format(user_output,'~q~n',X),flush_output(user_output).
+
+
 alicebot(Input):-
-   getCycLTokens(Input,Tokens),
-   alicebot(Tokens,Resp),
+   alicebot(Input,Resp),
    say(Resp).
+alicebot(Input):-say('-no response-').
    
 
 removePMark(UCase,Atoms):-append(AtomsPre,[Last],UCase),member(Last,[?,('.'),(',')]),!,removePMark(AtomsPre,Atoms).
@@ -21,20 +80,30 @@ removePMark(Atoms,Atoms).
 
 
 
-clean_out_atom(X,X).
+%clean_out_atom(X,X).
 
 randomPick(List,Ele):-length(List,Len),Pick is random(Len),nth0(Pick,List,Ele),!.
 
 all_upper_atom(X):-toUppercase(X,N),N=X.
-default_channel("#logicmoo").
 
-say(Say):-writeq(Say),nl.
+:-dynamic(default_channel/1).
+:-dynamic(default_user/1).
+
+%default_channel( "#logicmoo").
+%default_user(    "default_user").         
+
+% say(Say):-writeq(Say),nl.
 toCodes(B,A):-cyc:stringToCodelist(B,AO),(is_list(A) -> A=AO ; string_to_list(AO,A)),!.
-dumpList(B):-say(  dumpList(B)).
-default_user(    "default_user").         
 
-alicebot(Input,Resp):-	
-   toUppercase(Input,UCase),
+
+dumpList([]):-!.
+dumpList([A|B]):-say(A),dumpList(B),!.
+
+dumpList(B):-say(  dumpList(B)).
+
+alicebot(Input,Resp):-
+   getWordTokens(Input,Tokens),
+   toUppercase(Tokens,UCase),
    removePMark(UCase,Atoms),
    alicebot2(Atoms,Resp).
 
@@ -42,9 +111,8 @@ alicebot2(Atoms,Resp):-
    retractall(posibleResponse(_,_)),
    flag(a_answers,_,0),!,
    ignore((
-   call_with_depth_limit(computeAnswer(1,srai(Atoms),O,N),10000,DL),
-	 ignore((nonvar(N),nonvar(O),savePosibleResponse(N,O))),
-	 flag(a_answers,X,X+1),X>100)),!,
+   call_with_depth_limit(computeAnswer(1,srai(Atoms),O,N),8000,DL),
+	 ignore((nonvar(N),nonvar(O),savePosibleResponse(N,O))),flag(a_answers,X,X+1),X>3)),!,
    findall(NR-OR,posibleResponse(NR,OR),L),!,
    %format('~n-> ~w~n',[L]),
    keysort(L,S),
@@ -59,7 +127,7 @@ alicebot2(Atoms,Resp):-
 % ===============================================================================================
 :-dynamic(posibleResponse/2).
 
-savePosibleResponse(N,O):-posibleResponse(_,O).
+savePosibleResponse(N,O):-posibleResponse(_,O),!.
 savePosibleResponse(N,O):-
    findall(1,degraded(O),L),!,
    length(L,K),
@@ -69,16 +137,19 @@ savePosibleResponse(N,O):-
 % ===============================================================================================
 % Compute Answer Probilities
 % ===============================================================================================
+from_atom_codes(Atom,Atom):-atom(Atom),!.
+from_atom_codes(Atom,Codes):-convert_to_string(Codes,Atom),!.
+from_atom_codes(Atom,Codes):-atom_codes(Atom,Codes).
 
 computeAnswer(Votes,[],[],Votes):-!.
 computeAnswer(Votes,['.'],[],Votes):-!.
 computeAnswer(Votes,I,_,_):-(Votes>20;Votes<0.3),!,fail.
-computeAnswer(Votes,nick,A,Votes):-!,default_user(B),!,atom_codes(A,B),!.
-computeAnswer(Votes,person,A,Votes):-!,default_user(B),!,atom_codes(A,B),!.
+computeAnswer(Votes,nick,A,Votes):-!,default_user(B),!,from_atom_codes(A,B),!.
+computeAnswer(Votes,person,A,Votes):-!,default_user(B),!,from_atom_codes(A,B),!.
 computeAnswer(Votes,botnick,'jllykifsh',Votes):-!.
 computeAnswer(Votes,mynick,'jllykifsh',Votes):-!.
 computeAnswer(Votes,name=name,'jllykifsh',Votes):-!.
-computeAnswer(Votes,mychan,A,Votes):-!,default_channel(B),!,atom_codes(A,B),!.
+computeAnswer(Votes,mychan,A,Votes):-!,default_channel(B),!,from_atom_codes(A,B),!.
 computeAnswer(Votes,randomsentence,O,VotesO):-!, choose_randomsentence(X),!,computeAnswer(Votes,X,O,VotesO).
 computeAnswer(Votes,Resp,Resp,Votes):-atomic(Resp),!.
 computeAnswer(Votes,srai(Input),O,VotesO):- !,flatten([Input],Flat),computeSRAI(Votes,Flat,Mid,VotesM),computeAnswer(VotesM,Mid,O,VotesO).
@@ -86,8 +157,8 @@ computeAnswer(Votes,li(List),AA,VotesO):-!,computeAnswer(Votes,List,AA,VotesO).
 computeAnswer(Votes,random(List),AA,VotesO):-!,randomPick(List,Pick),computeAnswer(Votes,Pick,AA,VotesO).
 computeAnswer(Votes,condition(List),AA,VotesO):-!,member(Pick,List),computeAnswer(Votes,Pick,AA,VotesO).
 computeAnswer(Votes,String,Atom,Votes):-string(String),!,string_to_atom(String,Atom).
-computeAnswer(Votes,String,Atom,Votes):-is_string(String),toCodes(String,Codes),!,atom_codes(Atom,Codes).
-computeAnswer(Votes,'$stringCodes'(List),AA,Votes):-!,trace,atom_codes(AA,List).
+computeAnswer(Votes,String,Atom,Votes):-is_string(String),toCodes(String,Codes),!,from_atom_codes(Atom,Codes).
+computeAnswer(Votes,'$stringCodes'(List),AA,Votes):-!,from_atom_codes(AA,List).
 computeAnswer(Votes,gossip(Thought),O,VotesO):-!,computeAnswer(Votes,Thought,O,VotesO).
 computeAnswer(Votes,think(Thought),[],VotesO):-!,computeAnswer(Votes,Thought,O,VotesO).
 computeAnswer(Votes,get([X]),Resp,VotesO):-getAliceMem(X,E),!,computeAnswer(Votes,E,Resp,VotesM),VotesO is VotesM * 1.1.
@@ -120,7 +191,9 @@ computeSRAI(Votes,Input,TopicStarO,VotesO):-
 	 flatten([Next],NextO),
 	 subst(NextO,topicstar,TopicStar,TopicStarO),
 	 VotesO is Votes * (Voted + TopicVote).
-computeSRAI(Votes,[B|Flat],[B|TopicStarO],VotesO):-computeSRAI(Votes,Flat,TopicStarO,VotesO).
+
+% this next line is what it does on fallback
+%computeSRAI(Votes,[B|Flat],[B|TopicStarO],VotesO):-computeSRAI(Votes,Flat,TopicStarO,VotesO).
 
 set_matchit([Input|_],[Input|_]).
 set_matchit([Input|_],[_,Input|_]).
@@ -130,8 +203,8 @@ set_matchit([_,Input|_],[_,Input|_]).
 get_aiml_what(What,Match,Out):-what(What, Match,Out).
 get_aiml_what([*],Match,Out):-response(Match,Out).
 
-get_aiml_cyc([*],[String|ListO],[Obj,*]):-poStr(Obj,[String|List]),append(List,[*],ListO).
-get_aiml_cyc([*],[String,*],[Obj,*]):-poStr(Obj,String).
+%get_aiml_cyc([*],[String|ListO],[Obj,*]):-poStr(Obj,[String|List]),append(List,[*],ListO).
+%get_aiml_cyc([*],[String,*],[Obj,*]):-poStr(Obj,String).
 
 
 % ===============================================================================================
@@ -175,9 +248,9 @@ choose_randomsentence(X):-
 
 getAliceMem(X,E):-isAliceMem(X,E),!.
  
-setAliceMem(X,[E]):-!,setAliceMem(X,E).
+setAliceMem(X,[E]):-!,setAliceMem(X,E),!.
 setAliceMem(X,'nick').
-setAliceMem(X,E):-retractall(isAliceMem(X,_)),asserta(isAliceMem(X,E)).
+setAliceMem(X,E):-retractall(isAliceMem(X,_)),asserta(isAliceMem(X,E)),writeln(debug(isAliceMem(X,E))),!.
 :-dynamic(isAliceMem/2).
 
 % ===============================================================================================
@@ -205,47 +278,64 @@ degrade(OR):-asserta(degraded(OR)).
 % =================================================================================
 % AIML Loading
 % =================================================================================
-load_aiml:-catch([t],_,fail),!.
-load_aiml:-
-%   expand_file_name('../world/*.aiml',X),!,load_aiml(X),!,
-   tell(t),
-   expand_file_name('../world/aiml/*.aiml',Y),!,load_aiml(Y),!,
-   told,[t].
+load_aiml_files:-load_aiml_files('*.aiml'),!.
+
+load_aiml_files([]).
+load_aiml_files([H|T]):-
+   load_aiml_files(H),!,
+   load_aiml_files(T).
+load_aiml_files(F):-atom(F),
+   expand_file_name(F,[F]),!,
+   load_aiml_file(F).
+load_aiml_files(F):-atom(F),expand_file_name(F,FILES),!,load_aiml_files(FILES).
+
+aiml_files(F,Files):-atom_concat(F,'/',WithSlashes),expand_file_name(WithSlashes,WithOneSlash,[relative_to('./')]),
+                    atom_concat(WithOneSlash,'/*.aiml',Mask),expand_file_name(Mask,Files).
+
+load_aiml_file(F):- exists_directory(F), aiml_files(F,Files),!,load_aiml_files(Files).
+load_aiml_file(F):- file_name_extension(F,'aiml',Aiml).
+
+create_aiml_file(F):-
+create_aiml_file(F):-
+   atom_concat(F,'.pl',PLNAME),
+   time_file(PLNAME,PLTime), % fails on non-existent
+   time_file(F,FTime),
+   PLTime > FTime,!,
+   [PLNAME],!.
+
+create_aiml_file(F):-
+   atom_concat(F,'.pl',PLNAME),
+   tell(PLNAME),
+   (format(user_error,'%~w~n',[F])),
+   load_structure(F,X,[space(remove)]),!,
+   load_aiml_structure(notopic,X),!,
+   told,[PLNAME],!.
 
 
-load_aiml([]).
-load_aiml([H|T]):-
-   load_aiml(H),!,
-   load_aiml(T).
-load_aiml(F):-
-   format(user_error,'%~w~n',[F]),
-    load_structure(F,X,[space(remove)]),!,
-   load_aiml(notopic,X),!.
-
-load_aiml(_,O):-ignore_aiml(O),!.
-load_aiml(N,[X|L]):-load_aiml(N,X),!,load_aiml(N,L),!.
+load_aiml_structure(_,O):-ignore_aiml(O),!.
+load_aiml_structure(N,[X|L]):-load_aiml_structure(N,X),!,load_aiml_structure(N,L),!.
    
-load_aiml(N,element(aiml,L,T)):-!,load_aiml(N,T).
-load_aiml(N,element(a,L,T)):-!,load_aiml(N,T).
-load_aiml(N,element(substitute,[name=Catalog, find=Find, replace=Replace],[])):-!,
-	 load_aiml(N,substitute(Catalog,Find,Replace)).
-load_aiml(N,element(substitute,[name=Catalog, find=Find, replace=Replace],Stuff)):-!,
-	 load_aiml(N,substitute(Catalog,Find,Replace,Stuff)).
-load_aiml(N,element(topic,[name=Name],T)):-!,load_topic(Name,T),!.
+load_aiml_structure(N,element(aiml,L,T)):-!,load_aiml_structure(N,T).
+load_aiml_structure(N,element(a,L,T)):-!,load_aiml_structure(N,T).
+load_aiml_structure(N,element(substitute,[name=Catalog, find=Find, replace=Replace],[])):-!,
+	 load_aiml_structure(N,substitute(Catalog,Find,Replace)).
+load_aiml_structure(N,element(substitute,[name=Catalog, find=Find, replace=Replace],Stuff)):-!,
+	 load_aiml_structure(N,substitute(Catalog,Find,Replace,Stuff)).
+load_aiml_structure(N,element(topic,[name=Name],T)):-!,load_topic(Name,T),!.
 
 load_topic(_,L):-ignore_aiml(L).
 load_topic(Name,[H|T]):-
-      load_aiml(Name,H),!,
+      load_aiml_structure(Name,H),!,
       load_topic(Name,T).
 
-load_aiml(N,element(category,[],T)):-!,load_category(N,T),!.
-load_aiml(N,element(startup,_,T)):-!.
+load_aiml_structure(N,element(category,[],T)):-!,load_category(N,T),!.
+load_aiml_structure(N,element(startup,_,T)):-!.
 
-load_aiml(N,substitute(Dict,Find,Replace)):-
+load_aiml_structure(N,substitute(Dict,Find,Replace)):-
       atomSplit(Find,F),atomSplit(Replace,Resp),!,
-      load_aiml(N,dict(Dict,F,Resp)).
+      load_aiml_structure(N,dict(Dict,F,Resp)).
 
-load_aiml(N,X):-format('~q.~n',[X]).
+load_aiml_structure(N,X):-format('~q.~n',[X]).
 %      saveFAttribute(F,A),
      % 
       %(catch(X,_,fail);asserta(X)),!.
@@ -263,6 +353,7 @@ saveFAttribute(F,A):-asserta(saveDFAttribute(F,A)),dynamic(F/A).
 ignore_aiml([]).
 ignore_aiml(A):-atom(A),atom_codes(A,C),clean_codes(C,[]).
 
+%clean_codes(X,X).
 
 
 aiml_classify([],[]).
@@ -308,16 +399,16 @@ load_category(Topic,IA,IB,PA,PB,TA,TB):-
 load_category(Topic,IA,IB,PA,PB,TA,TB):-trace.
 
 parse_category(notopic,[],[],[],PB,[],TB):-!,
-      load_aiml(N,response(PB,TB)).
+      load_aiml_structure(N,response(PB,TB)).
 
 parse_category(notopic, [],What, [], A, [], B):-!,
-      load_aiml(N,what(What,A,B)).
+      load_aiml_structure(N,what(What,A,B)).
 
 parse_category(Topic,[],[],[],PB,[],TB):-!,
-   load_aiml(N,topic_resp(Topic,PB,TB)).
+   load_aiml_structure(N,topic_resp(Topic,PB,TB)).
 
 parse_category(Topic,IA,IB,PA,PB,TA,TB):-!,
-   load_aiml(N,category(Topic,IA,IB,PA,PB,TA,TB)).
+   load_aiml_structure(N,category(Topic,IA,IB,PA,PB,TA,TB)).
       
 
 
@@ -375,6 +466,10 @@ convert_ele(A,W):-atom(A),clean_out_atom(A,B),
 convert_ele(O,O).
 
 
-:-load_aiml.
+:-load_aiml_files.
 
+
+%:-debug,run_chat_tests.
+
+:-main_loop.
 
