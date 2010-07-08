@@ -26,6 +26,10 @@ namespace RTParser
     /// </summary>
     public class RTPBot
     {
+        /// <summary>
+        /// Will ensure the same loader options are used between loaders
+        /// </summary>
+        public bool StaticLoader = true;
         public User LastUser;
         readonly public User BotAsUser;
         readonly public Request BotAsRequest;
@@ -423,7 +427,11 @@ namespace RTParser
             try
             {
                 isAcceptingUserInput = false;
-                AIMLLoader loader = new AIMLLoader(this, BotAsRequest);
+                AIMLLoader loader = Loader;
+                if (!StaticLoader || loader == null)
+                {
+                    loader = new AIMLLoader(this, BotAsRequest);
+                }
                 Loader = loader;
                 loader.loadAIML(BotAsRequest);
 
@@ -460,10 +468,14 @@ namespace RTParser
         {
             var prev = isAcceptingUserInput;
             try
-            {
+            {                
                 isAcceptingUserInput = false;
                 options.request = request;
-                AIMLLoader loader = new AIMLLoader(this, request);
+                AIMLLoader loader = Loader;
+                if (!StaticLoader || loader == null)
+                {
+                    loader = new AIMLLoader(this, request);
+                }
                 Loader = loader;
                 loader.loadAIML(path, options, request);
                 // maybe loads settings files if they are there
@@ -487,8 +499,11 @@ namespace RTParser
             try
             {
                 isAcceptingUserInput = false;
-
-                AIMLLoader loader = new AIMLLoader(this, r);
+                AIMLLoader loader = Loader;
+                if (!StaticLoader || loader == null)
+                {
+                    loader = new AIMLLoader(this, r);
+                }
                 loader.loadAIMLNode(newAIML.DocumentElement, filename, r);
             }
             finally
@@ -1241,7 +1256,11 @@ namespace RTParser
             if (this.isAcceptingUserInput)
             {
                 // Normalize the input
-                AIMLLoader loader = new AIMLLoader(this, request);
+                AIMLLoader loader = Loader;
+                if (!StaticLoader || loader == null)
+                {
+                    loader = new AIMLLoader(this, request);
+                }
                 Loader = loader;
                 //RTParser.Normalize.SplitIntoSentences splitter = new RTParser.Normalize.SplitIntoSentences(this);
                 Unifiable[] rawSentences = new Unifiable[] { request.rawInput };//splitter.Transform(request.rawInput);
