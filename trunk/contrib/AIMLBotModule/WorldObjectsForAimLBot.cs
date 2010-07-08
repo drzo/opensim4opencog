@@ -37,6 +37,8 @@ namespace AIMLBotModule
 
             }
         }
+
+        public static string UNKNOWN_PARTNER = RTPBot.UNKNOWN_PARTNER;
         /// <summary>
         ///  false = wont respond to user until they say something like "turn chat on" 
         ///  See next function to change the keywords
@@ -877,6 +879,9 @@ namespace AIMLBotModule
         }
 
         private string AddedToNextResponse = "";// new StringWriter();
+        private string firstUser = null;
+        private string lastKnownUser = null;
+
         private void AddAnimToNextResponse(string s)
         {
             if (AddedToNextResponse.Contains(s)) return;
@@ -1103,6 +1108,22 @@ namespace AIMLBotModule
         public void SetDefaultUser(string user)
         {
             MyUser = GetMyUser(user);
+        }
+
+        public void RenameUser(string old, string newUser)
+        {
+            if (MyBot == null) return;
+            MyBot.RenameUser(old, newUser);
+        }
+
+        public bool SameUser(string old, string next)
+        {
+            old = old ?? "";
+            next = next ?? "";
+            old = old.ToLower().Trim();
+            next = next.ToLower().Trim();
+            if (MyBot == null) return old == next;
+            return MyBot.SameUser(old, next);
         }
     }
 }

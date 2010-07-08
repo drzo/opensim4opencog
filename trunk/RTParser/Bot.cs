@@ -626,34 +626,34 @@ namespace RTParser
 
         private void SetSaneGlobals(ISettingsDictionary settings)
         {
-            SaneLocalSettings(settings,"notopic", "Nothing");
-            SaneLocalSettings(settings,"version", Environment.Version.ToString());
-            SaneLocalSettings(settings,"name", "Unknown");
-            SaneLocalSettings(settings,"botmaster", "Unknown");
-            SaneLocalSettings(settings,"author", "Nicholas H.Tollervey");
-            SaneLocalSettings(settings,"location", "Unknown");
-            SaneLocalSettings(settings,"gender", "-1");
-            SaneLocalSettings(settings,"birthday", "2006/11/08");
-            SaneLocalSettings(settings,"birthplace", "Towcester, Northamptonshire, UK");
-            SaneLocalSettings(settings,"website", "http://sourceforge.net/projects/aimlbot");
+            SaneLocalSettings(settings, "notopic", "Nothing");
+            SaneLocalSettings(settings, "version", Environment.Version.ToString());
+            SaneLocalSettings(settings, "name", "Unknown");
+            SaneLocalSettings(settings, "botmaster", "Unknown");
+            SaneLocalSettings(settings, "author", "Nicholas H.Tollervey");
+            SaneLocalSettings(settings, "location", "Unknown");
+            SaneLocalSettings(settings, "gender", "-1");
+            SaneLocalSettings(settings, "birthday", "2006/11/08");
+            SaneLocalSettings(settings, "birthplace", "Towcester, Northamptonshire, UK");
+            SaneLocalSettings(settings, "website", "http://sourceforge.net/projects/aimlbot");
             this.AdminEmail = SaneLocalSettings(settings, "adminemail", "");
-            SaneLocalSettings(settings,"islogging", "False");
-            SaneLocalSettings(settings,"willcallhome", "False");
-            SaneLocalSettings(settings,"timeout", "2000");
-            SaneLocalSettings(settings,"timeoutmessage", "ERROR: The request has timed out.");
-            SaneLocalSettings(settings,"culture", "en-US");
-            SaneLocalSettings(settings,"splittersfile", "Splitters.xml");
-            SaneLocalSettings(settings,"person2substitutionsfile", "Person2Substitutions.xml");
-            SaneLocalSettings(settings,"personsubstitutionsfile", "PersonSubstitutions.xml");
-            SaneLocalSettings(settings,"gendersubstitutionsfile", "GenderSubstitutions.xml");
-            SaneLocalSettings(settings,"defaultpredicates", "DefaultPredicates.xml");
-            SaneLocalSettings(settings,"substitutionsfile", "Substitutions.xml");
-            SaneLocalSettings(settings,"aimldirectory", "aiml");
-            SaneLocalSettings(settings,"configdirectory", "config");
-            SaneLocalSettings(settings,"logdirectory", "logs");
-            SaneLocalSettings(settings,"maxlogbuffersize", "64");
-            SaneLocalSettings(settings,"notacceptinguserinputmessage", "This Proccessor is currently set to not accept user input.");
-            SaneLocalSettings(settings,"stripperregex", "[^0-9a-zA-Z]");
+            SaneLocalSettings(settings, "islogging", "False");
+            SaneLocalSettings(settings, "willcallhome", "False");
+            SaneLocalSettings(settings, "timeout", "2000");
+            SaneLocalSettings(settings, "timeoutmessage", "ERROR: The request has timed out.");
+            SaneLocalSettings(settings, "culture", "en-US");
+            SaneLocalSettings(settings, "splittersfile", "Splitters.xml");
+            SaneLocalSettings(settings, "person2substitutionsfile", "Person2Substitutions.xml");
+            SaneLocalSettings(settings, "personsubstitutionsfile", "PersonSubstitutions.xml");
+            SaneLocalSettings(settings, "gendersubstitutionsfile", "GenderSubstitutions.xml");
+            SaneLocalSettings(settings, "defaultpredicates", "DefaultPredicates.xml");
+            SaneLocalSettings(settings, "substitutionsfile", "Substitutions.xml");
+            SaneLocalSettings(settings, "aimldirectory", "aiml");
+            SaneLocalSettings(settings, "configdirectory", "config");
+            SaneLocalSettings(settings, "logdirectory", "logs");
+            SaneLocalSettings(settings, "maxlogbuffersize", "64");
+            SaneLocalSettings(settings, "notacceptinguserinputmessage", "This Proccessor is currently set to not accept user input.");
+            SaneLocalSettings(settings, "stripperregex", "[^0-9a-zA-Z]");
         }
 
         private Unifiable SaneLocalSettings(ISettingsDictionary settings, string name, object value)
@@ -747,7 +747,7 @@ namespace RTParser
         public void writeToLog0(string message)
         {
 
-            if (String.IsNullOrEmpty( message)) return;
+            if (String.IsNullOrEmpty(message)) return;
             if (message.Contains("SubQuery 'how are you TAG-T"))
             {
             }
@@ -829,9 +829,24 @@ namespace RTParser
 
         public User FindOrCreateUser(string fromname)
         {
-            fromname = fromname ?? "UNKNOWN_PARTNER";
-            bool b;
-            return FindOrCreateUser(fromname, out b);
+            lock (BotUsers)
+            {
+
+                fromname = fromname ?? UNKNOWN_PARTNER;
+                bool b;
+                return FindOrCreateUser(fromname, out b);
+            }
+        }
+
+        public User FindUser(string fromname)
+        {
+            if (String.IsNullOrEmpty(fromname)) return null;
+            string key = fromname.ToLower().Trim();
+            lock (BotUsers)
+            {
+                if (BotUsers.ContainsKey(fromname)) return BotUsers[fromname];
+                return null;
+            }
         }
 
         public User FindOrCreateUser(string fromname, out bool newlyCreated)
@@ -839,21 +854,90 @@ namespace RTParser
             newlyCreated = false;
             lock (BotUsers)
             {
-                if (BotUsers.ContainsKey(fromname)) return BotUsers[fromname];
+                fromname = CleanupFromname(fromname);
+                User myUser = FindUser(fromname);
+                if (myUser != null) return myUser;
                 newlyCreated = true;
-                AIMLbot.User myUser = new AIMLbot.User(fromname, this);
-                BotUsers[fromname] = myUser;
-                //AIMLbot.Request r = new AIMLbot.Request("My name is " + fromname, myUser, this);
-                //AIMLbot.Result res = Chat(r);
+                myUser = new AIMLbot.User(fromname, this);
+                BotUsers[fromname.ToLower()] = myUser;
+                if (!UnknowableName(fromname))
+                {
+                    myUser.Predicates.addSetting("name", fromname);
+                }
                 myUser.Predicates.addSetting("name", fromname);
                 return myUser;
             }
         }
 
+        public void RenameUser(string old, string user)
+        {
+            lock (BotUsers)
+            {
+
+                old = CleanupFromname(old);
+                user = CleanupFromname(user);
+
+                User f = FindUser(old);
+                if (f == null)
+                {
+                    User u = FindOrCreateUser(user);
+                }
+                else
+                {
+                    BotUsers[user] = f;
+                }
+            }
+        }
+
+        public static bool UnknowableName(string user)
+        {
+            if (String.IsNullOrEmpty(user)) return true;
+            return user.ToUpper().Contains("UNKNOWN");
+        }
+
+        public bool IsExistingUsername(string fromname)
+        {
+            lock (BotUsers)
+            {
+                if (null == fromname)
+                {
+                    return false;
+                }
+                else
+                {
+                    fromname = fromname.Trim();
+                }
+                if (string.IsNullOrEmpty(fromname))
+                {
+                    return false;
+                }
+                fromname = fromname.ToLower();
+                return BotUsers.ContainsKey(fromname);
+            }
+        }
+
+
+        public static string CleanupFromname(string fromname)
+        {
+            if (null == fromname)
+            {
+                fromname = UNKNOWN_PARTNER;
+            }
+            else
+            {
+                fromname = fromname.Trim();
+            }
+            if (string.IsNullOrEmpty(fromname))
+            {
+                fromname = UNKNOWN_PARTNER;
+            }
+            return fromname;
+        }
+
         public void AddAiml(string aimlText)
         {
             Request request = BotAsRequest;
-            AddAiml(GraphMaster,aimlText);
+            AddAiml(GraphMaster, aimlText);
         }
         public void AddAiml(GraphMaster graph, string aimlText)
         {
@@ -866,7 +950,8 @@ namespace RTParser
                 loader.Graph = graph;
                 Loader.loadAIMLString("<aiml graph=\"" + graph.ScriptingName + "\">" + aimlText + "</aiml>", loader,
                                       request);
-            } catch(Exception e)
+            }
+            catch (Exception e)
             {
                 writeDebugLine("" + e);
                 writeChatTrace("" + e);
@@ -1137,7 +1222,7 @@ namespace RTParser
             streamDepth++;
 
             AIMLbot.Result result = new AIMLbot.Result(request.user, this, request);
-      
+
 
             var orig = request.BotOutputs;
             if (AIMLLoader.ContainsAiml(request.rawInput))
@@ -1208,7 +1293,7 @@ namespace RTParser
                     foreach (SubQuery path in result.SubQueries)
                     {
 
-                        writeToLog("\r\n tt: " + path.Request.Graph + " "+ path.ToString().Replace("\n", " ").Replace("\r", " ").Replace("  ", " "));
+                        writeToLog("\r\n tt: " + path.Request.Graph + " " + path.ToString().Replace("\n", " ").Replace("\r", " ").Replace("  ", " "));
                         if (chatTrace)
                         {
                             //bot.writeChatTrace("\"L{0}\" -> \"{1}\" ;\n", result.SubQueries.Count, path.FullPath.ToString());
@@ -2010,6 +2095,8 @@ The AIMLbot program.
             set { TheCyc.CycEnabled = value; }
         }
 
+        public static string UNKNOWN_PARTNER = "UNKNOWN_PARTNER";
+
         public GraphMaster GetGraph(string graphPath, GraphMaster current)
         {
             if (graphPath == null)
@@ -2072,7 +2159,7 @@ The AIMLbot program.
             String s = null;
             var userJustSaid = String.Empty;
             while (true)
-            {                
+            {
                 System.Console.WriteLine("-----------------------------------------------------------------");
                 RTPBot.writeDebugLine("-----------------------------------------------------------------");
                 RTPBot.writeDebugLine("-----------------------------------------------------------------");
@@ -2252,6 +2339,14 @@ The AIMLbot program.
             {
                 Console.WriteLine(message + " --> " + e);
             }
+        }
+        public bool SameUser(string old, string next)
+        {
+            old = old ?? "";
+            next = next ?? "";
+            old = old.ToLower().Trim();
+            next = next.ToLower().Trim();
+            return FindUser(old) == FindUser(next);
         }
     }
 
