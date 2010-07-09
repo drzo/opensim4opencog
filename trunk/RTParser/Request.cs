@@ -55,6 +55,8 @@ namespace RTParser
         /// </summary>
         public bool hasTimedOut = false;
 
+        public bool processMultipleTemplates = true;
+
         public GraphMaster Graph;
 
         public readonly int framesAtStart;

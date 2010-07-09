@@ -1427,6 +1427,8 @@ namespace RTParser
                         query.CurrentTemplate = s;
                         if (proccessResponse(subquery, request, result, s.Output, s.Guard, out found0, handler)) break;
                         if (found0) found = true;
+                         //break; // KHC: single vs. Multiple
+                       if ((found0)&&(request.processMultipleTemplates ==false)) break;
                     }
                     catch (Exception e)
                     {
@@ -2166,6 +2168,7 @@ The AIMLbot program.
             Bot myBot = new Bot();
             myBot.loadSettings();
             string myName = "BinaBot Daxeline";
+            myName = "Kotoko Irata";
             if (args != null && args.Length > 0)
             {
                 int si = 0;
@@ -2269,6 +2272,7 @@ The AIMLbot program.
                         myBot.pMSM.clearEvidence();
                         myBot.pMSM.clearNextStateValues();
                         Request r = new AIMLbot.Request(input, myUser, myBot, null);
+                        r.processMultipleTemplates = false;
                         Result res = myBot.Chat(r);
                         s = res.Output;
                         myBot.HeardSelfSay0(s);
