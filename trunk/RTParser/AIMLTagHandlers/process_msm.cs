@@ -35,21 +35,25 @@ namespace RTParser.AIMLTagHandlers
             {
                 string machine = GetAttribValue("name", null);
                 string line = templateNodeInnerText.ToValue();
-                RTPBot.writeDebugLine("\n\n PROCESSMSM : |{0}|", line);
+                RTPBot.writeDebugLine("\n\n >>>>>>>>>>>>>>>>>>>>>> PROCESSMSM : |{0}|<<<<<<<<<<<<<<<<<<<<", line);
                 //this.user.bot.pMSM.lastDefMachine = machine;
                 this.user.bot.pMSM.addMachine(machine);
                 // set topic to "collectevidencepatterns"
                 //this.user.bot.AddAiml("<set name='topic'>collectevidencepatters</set>");
                 //this.user.Predicates.updateSetting("topic", "collectevidencepatters");
                 this.user.TopicSetting = "CEP";
-                // Clear the evidence
-                //this.user.bot.pMSM.clearEvidence();
+                
+                // Clear the evidence and next state
+                this.user.bot.pMSM.clearEvidence();
                 this.user.bot.pMSM.clearNextStateValues();
+
+                // estimate what evidence can be gleaned from the current state
+                this.user.bot.pMSM.inspectEvidenceStates();
 
                 // process the input text
 
                 //string evidenceReply = this.user.bot.ChatString(line, this.user.UserID);
-                string evidenceReply = subChat(line, this.user.TopicSetting, request);
+                string evidenceReply = subChat(line, this.user.TopicSetting, request,true);
 
                 RTPBot.writeDebugLine("MSM: WithEvidence {0} ", this.user.bot.pMSM.ToString());
 
@@ -68,9 +72,12 @@ namespace RTParser.AIMLTagHandlers
 
                 // For each machine set the appropriate topic, and process the input text
                 string totalReply = "";
+                double strongestVal = -9999;
                 foreach (string actingMachine in machinesTopState.Keys)
                 {
                     string actionState = (string) machinesTopState[actingMachine];
+                    double actp = (double) this.user.bot.pMSM.cur_machineStateVal[actionState];
+
                     Hashtable topicHt = (Hashtable)this.user.bot.pMSM.machineStateResponses[actionState];
 
                     if ((topicHt != null) && (topicHt.Count >0))
@@ -87,20 +94,29 @@ namespace RTParser.AIMLTagHandlers
                             //actionReply = this.user.bot.ChatString(line, this.user.UserID);
 
 
-                            actionReply = subChat(line, responseTopicUp, request);
-                            totalReply += " " + actionReply;
+                            actionReply = subChat(line, responseTopicUp, request,false);
+                            
+                            // Append or use non-null response with the most certainty
+                            //totalReply += " " + actionReply;
+                            RTPBot.writeDebugLine("MSM:[[ PossReply m:{0} s:{1} p:{2} RT: {3} REPLY:{4} ]]  <<< * * * * * *", actingMachine, actionState,actp,responseTopicUp, actionReply.Trim());
+
+                            if ((actp > strongestVal) && (actionReply.Trim().Length >0))
+                            {
+                                strongestVal = actp;
+                                totalReply = actionReply;
+                            }
                         }
                     }
                 }
                 Unifiable result = totalReply.Trim();
-
+                RTPBot.writeDebugLine("MSM: FinalReply :{0}",totalReply.Trim());
                 return result;
             }
             return Unifiable.Empty;
 
         }
 
-        public string subChat(string line, string topic, RTParser.Request request)
+        public string subChat(string line, string topic, RTParser.Request request,bool allowMultiplesTemplates)
         {
             //----------------------
             // snarf from "srai"
@@ -114,6 +130,8 @@ namespace RTParser.AIMLTagHandlers
             subRequest.Topic = tempTopic;
             subRequest.ParentRequest = this.request;
             subRequest.StartedOn = this.request.StartedOn;
+            subRequest.processMultipleTemplates = allowMultiplesTemplates;
+
             AIMLbot.Result subResult = null;
             var prev = this.Proc.isAcceptingUserInput;
             var prevSO = user.SuspendAdd;
@@ -143,6 +161,8 @@ namespace RTParser.AIMLTagHandlers
         public Hashtable machines = new Hashtable(); // just the machines
         public Hashtable machineStates = new Hashtable(); // [machine]->hashtable[states]
         public Hashtable emissionProbability = new Hashtable(); // evidence -> hashtable[machine:srcState] =prob
+        public Hashtable evidenceStateProbability = new Hashtable(); // evidence -> hashtable[machine:srcState] =prob
+
         public Hashtable transitionCounts = new Hashtable(); // machine:srcState
         public Hashtable stateToEvidence = new Hashtable(); // [machine:state] -> evidence, prob
         public Hashtable atomicTransitionCount = new Hashtable(); // ["machine:srcState machine:dstState"]=count
@@ -175,15 +195,25 @@ namespace RTParser.AIMLTagHandlers
             {
                 s += "machine:" + m+"\n";
              }
-            foreach (string ev in currentEvidence.Keys)
+            ArrayList a = new ArrayList();
+            foreach (string ev in currentEvidence.Keys){ a.Add(ev);}  a.Sort();
+            foreach(string ev in a)
+            //foreach (string ev in currentEvidence.Keys)
             {
                 s += " evidence " + ev + "=" + (double)currentEvidence[ev] + "\n";
             }
-            foreach (string st in cur_machineStateVal.Keys)
+            a.Clear();
+            foreach (string st in cur_machineStateVal.Keys) { a.Add(st); } a.Sort();
+            foreach (string st in a)
+             //foreach (string st in cur_machineStateVal.Keys)
             {
                 s += " cur_val " + st + "=" + (double)cur_machineStateVal[st] + "\n";
             }
-            foreach (string st in next_machineStateVal.Keys)
+
+            a.Clear();
+            foreach (string st in next_machineStateVal.Keys) { a.Add(st); } a.Sort();
+            foreach (string st in a)
+            // foreach (string st in next_machineStateVal.Keys)
             {
                 s += " next_val " + st + "=" + (double)next_machineStateVal[st] + "\n";
             }
@@ -365,6 +395,93 @@ namespace RTParser.AIMLTagHandlers
 
         }
 
+        public void addEvidenceState(string machine, string srcState, string evidence, double prob)
+        {
+            RTPBot.writeDebugLine("MSM: addEvidenceState({0},{1},{2},{3})", machine, srcState, evidence, prob);
+            lastDefEvidence = evidence;
+
+            string machineSrcState = machine + ":" + srcState;
+            addMachineState(machine, srcState);
+            try
+            {
+                if (evidenceStateProbability.ContainsKey(evidence))
+                {
+                    ((Hashtable)evidenceStateProbability[evidence])[machineSrcState] = prob;
+                }
+                else
+                {
+                    Hashtable emitter = new Hashtable();
+                    emitter.Add(machineSrcState, prob);
+                    evidenceStateProbability.Add(evidence, emitter);
+                }
+            }
+            catch
+            {
+                RTPBot.writeDebugLine("addEvidenceState fail {0} {1} {2}", machineSrcState, evidence, prob);
+            }
+
+
+        }
+
+        public void inspectEvidenceStates()
+        {
+            foreach (string evidence in evidenceStateProbability.Keys)
+            {
+                double evidenceSum = 0;
+                Hashtable machineStateTable = ((Hashtable)evidenceStateProbability[evidence]);
+                foreach (string state in machineStateTable.Keys)
+                {
+                    double eprob = (double)machineStateTable[state];
+                    double stateprob = 0.00001;
+                    try
+                    {
+                        stateprob = (double)cur_machineStateVal[state];
+                    }
+                    catch
+                    {
+                    }
+                    double cprob = stateprob * eprob;
+                    evidenceSum += cprob;
+                }
+                setEvidence(evidence, evidenceSum);
+                // compute the negative evidence
+                string negEvidence = "not-" + evidence;
+                setEvidence(negEvidence, 1 - evidenceSum);
+            }
+        }
+
+        public void machineDependency(string dependentMachine,string intialState, string controlmachine, string controlstate, double prob)
+        {
+            string disableState ="disabledstate";
+            string disableMachineState = dependentMachine + ":" + disableState;
+            string controlMachineState = controlmachine + ":" + controlstate;
+            string controlEvidence = "evidence-disable-" + dependentMachine;
+            string negcontrolEvidence = "not-evidence-disable-" + dependentMachine;
+
+            // Create initial disable state and link to control state in foreign machine
+            defState(dependentMachine, disableState, 0.9, 0.9);
+            
+            addEvidenceState(controlmachine, controlstate, controlEvidence, prob);
+
+            addEmission(dependentMachine, disableState, controlEvidence, prob);
+            addEmission(dependentMachine, intialState, negcontrolEvidence, 1-prob);
+
+            addTransition(dependentMachine, disableState, intialState, 0.1);
+            // Add transitions from each state to disabled state
+            if (machineStates.ContainsKey(dependentMachine))
+            {
+
+                Hashtable statesHash = ((Hashtable)machineStates[dependentMachine]);
+                foreach (string state in statesHash.Keys)
+                {
+                    //string machineState = dependentMachine + ":" + state;
+                    //addTransition(dependentMachine, machineState, disableState, 0.1);
+                    addTransition(dependentMachine, state, disableState, 0.1);
+                }
+            }
+            
+        }
+
         public void clearNextStateValues()
         {
             next_machineStateVal = new Hashtable();
@@ -416,14 +533,26 @@ namespace RTParser.AIMLTagHandlers
             double bestVal = 0;
             string bestGuess = "";
             double Nsum = 0;
-            foreach (string next_state in statesHash.Keys)
-            {
-                string nextSrcMachineState = machine + ":" + next_state;
-                double transitionChain = smoother;
-                foreach (string cur_state in statesHash.Keys)
-                {
-                    string curSrcMachineState = machine + ":" + cur_state;
 
+            ArrayList stateKeys = new ArrayList();
+            foreach (string astate in statesHash.Keys)
+            {
+                string machineState = machine + ":" + astate;
+                stateKeys.Add(machineState);
+            }
+
+            //foreach (string next_state in statesHash.Keys)
+            //{
+            //    string nextSrcMachineState = machine + ":" + next_state;
+
+            foreach (string nextSrcMachineState in stateKeys)
+            {
+                double transitionChain = smoother;
+                //foreach (string cur_state in statesHash.Keys)
+                //{
+                //    string curSrcMachineState = machine + ":" + cur_state;
+                  foreach (string curSrcMachineState in stateKeys)
+                  {
                     double bf_prob = smoother;
                     try
                     {
@@ -448,7 +577,7 @@ namespace RTParser.AIMLTagHandlers
                     }
                     double p = transP * bf_prob;
 
-                    RTPBot.writeDebugLine(" Transition: P({0}) = {1}", atomicKey, p);
+                    //RTPBot.writeDebugLine(" Transition: P({0}) = {1}", atomicKey, p);
                     transitionChain += p;
                 }// for cur_state
 
@@ -465,9 +594,9 @@ namespace RTParser.AIMLTagHandlers
                     catch
                     {
                     }
-                    RTPBot.writeDebugLine(" Evidence: P({0}) = {1} ", evidenceToken,evidenceProb);
-                    RTPBot.writeDebugLine("      EMP: P({0} | {1}) = {2} ", evidenceToken, nextSrcMachineState, emitProb);
-                    RTPBot.writeDebugLine("        G: {0} ", (emitProb * evidenceProb));
+                    //RTPBot.writeDebugLine(" Evidence: P({0}) = {1} ", evidenceToken,evidenceProb);
+                    //RTPBot.writeDebugLine("      EMP: P({0} | {1}) = {2} ", evidenceToken, nextSrcMachineState, emitProb);
+                    //RTPBot.writeDebugLine("        G: {0} ", (emitProb * evidenceProb));
 
                     evidenceChain = evidenceChain + (emitProb * evidenceProb);
                 }
@@ -475,7 +604,7 @@ namespace RTParser.AIMLTagHandlers
                 double rawBeliefInNextState = evidenceChain * transitionChain;
                 next_machineStateVal[nextSrcMachineState] = rawBeliefInNextState;
                 Nsum += rawBeliefInNextState;
-                RTPBot.writeDebugLine(" Next Raw P({0}) = {1} from tcp={2} and ecp={3}", nextSrcMachineState, rawBeliefInNextState, transitionChain, evidenceChain);
+                //RTPBot.writeDebugLine(" Next Raw P({0}) = {1} from tcp={2} and ecp={3}", nextSrcMachineState, rawBeliefInNextState, transitionChain, evidenceChain);
 
                 if (rawBeliefInNextState > bestVal)
                 {
@@ -485,17 +614,61 @@ namespace RTParser.AIMLTagHandlers
             }//for next_state
 
             // Normalize
-            if (Nsum != 0)
-            {
-                foreach (string next_state in statesHash.Keys)
-                {
-                    string nextSrcMachineState = machine + ":" + next_state;
-                    next_machineStateVal[nextSrcMachineState] = (double)next_machineStateVal[nextSrcMachineState]/Nsum;
-                }
-            }
+            //if (Nsum != 0)
+            //{
+            //    foreach (string next_state in statesHash.Keys)
+            //    {
+            //        string nextSrcMachineState = machine + ":" + next_state;
+            //       next_machineStateVal[nextSrcMachineState] = (double)next_machineStateVal[nextSrcMachineState]/Nsum;
+            //    }
+            //}
+            normalizeMachineNextState(machine);
+
             RTPBot.writeDebugLine("MSM: The highest probability for machine {0} in state {1} [{2}]", machine, bestGuess, next_machineStateVal[bestGuess]);
             RTPBot.writeDebugLine("MSM: Guess = [{0}]", bestGuess);
             return bestGuess ;
+        }
+
+        public void normalizeMachineCurState(string machine)
+        {
+            if (!machineStates.ContainsKey(machine)) return;
+            Hashtable statesHash = ((Hashtable)machineStates[machine]);
+            double NSum = 0;
+            foreach (string state in statesHash.Keys)
+            {
+                string machineState = machine + ":" + state;
+                NSum += (double)cur_machineStateVal[machineState];
+            }
+            if (NSum != 0)
+            {
+                foreach (string state in statesHash.Keys)
+                {
+                    string machineState = machine + ":" + state;
+                    cur_machineStateVal[machineState] = (double)cur_machineStateVal[machineState] / NSum;
+                }
+
+            }
+        }
+
+        public void normalizeMachineNextState(string machine)
+        {
+            if (!machineStates.ContainsKey(machine)) return;
+            Hashtable statesHash = ((Hashtable)machineStates[machine]);
+            double NSum = 0;
+            foreach (string state in statesHash.Keys)
+            {
+                string machineState = machine + ":" + state;
+                NSum += (double)next_machineStateVal[machineState];
+            }
+            if (NSum != 0)
+            {
+                foreach (string state in statesHash.Keys)
+                {
+                    string machineState = machine + ":" + state;
+                    next_machineStateVal[machineState] = (double)next_machineStateVal[machineState] / NSum;
+                }
+
+            }
         }
 
     }
