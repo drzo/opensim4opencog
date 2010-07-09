@@ -14,10 +14,10 @@ using RTParser.Utils;
 
 namespace RTParser.AIMLTagHandlers
 {
-    public class state : RTParser.Utils.AIMLTagHandler
+    public class evidencestate : RTParser.Utils.AIMLTagHandler
     {
 
-        public state(RTParser.RTPBot bot,
+        public evidencestate(RTParser.RTPBot bot,
                 RTParser.User user,
                 RTParser.Utils.SubQuery query,
                 RTParser.Request request,
@@ -27,27 +27,23 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
+
+
         protected override Unifiable ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "state")
+            if (this.templateNode.Name.ToLower() == "evidencestate")
             {
                 try
                 {
                     string payload = templateNodeInnerText.ToValue();
-                    string payload3 = templateNode.InnerXml;
 
-                    string state = GetAttribValue("name", null);
-                    string machine = GetAttribValue("machine", this.user.bot.pMSM.lastDefMachine);
-                    string init_prob_str = GetAttribValue("init_prob", "0.1");
-                    string self_prob_str = GetAttribValue("self_prob", "0.1");
-                    double init_prob = double.Parse(init_prob_str);
-                    double self_prob = double.Parse(self_prob_str);
-                    this.user.bot.pMSM.lastDefState = state;
+                    string myMachine = GetAttribValue("machine", this.user.bot.pMSM.lastDefMachine);
+                    string myState = GetAttribValue("state", this.user.bot.pMSM.lastDefState);
+                    string myEvidence = GetAttribValue("evidence", this.user.bot.pMSM.lastDefEvidence);
+                    string prob_str = GetAttribValue("prob", "0.1");
+                    double prob = double.Parse(prob_str);
+                    this.user.bot.pMSM.addEvidenceState(myMachine, myState, myEvidence, prob);
 
-                    this.user.bot.pMSM.defState(machine, state, init_prob, self_prob);
-
-                    string responseCode = "<aiml graph=\"msm\"> " + payload3 + " </aiml>";
-                    this.user.bot.AddAiml(responseCode);
                 }
                 catch
                 {

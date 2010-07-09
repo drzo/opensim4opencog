@@ -368,6 +368,8 @@ namespace RTParser
         //public string lastDefMSM;
         //public string lastDefState;
 
+        public Stack <string> conversationStack = new Stack<string>();
+        
         /// <summary>
         /// If set to false the input from AIML files will undergo the same normalization process that
         /// user input goes through. If true the Proccessor will assume the AIML is correct. Defaults to true.
@@ -1758,9 +1760,23 @@ namespace RTParser
                     case "evidencepattern":
                         tagHandler = new AIMLTagHandlers.evidence_pattern(this, user, query, request, result, node);
                         break;
+                    case "evidencestate":
+                        tagHandler = new AIMLTagHandlers.evidencestate(this, user, query, request, result, node);
+                        break;
+                    case "dependentmachine":
+                        tagHandler = new AIMLTagHandlers.dependentmachine(this, user, query, request, result, node);
+                        break;
                     case "responsetopic":
                         tagHandler = new AIMLTagHandlers.response_topic(this, user, query, request, result, node);
                         break;
+
+                    case "push":
+                        tagHandler = new AIMLTagHandlers.push(this, user, query, request, result, node);
+                        break;
+                    case "pop":
+                        tagHandler = new AIMLTagHandlers.pop(this, user, query, request, result, node);
+                        break;
+
 
                     case "#text":
                         return null;

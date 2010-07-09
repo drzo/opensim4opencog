@@ -47,7 +47,7 @@ namespace RTParser.AIMLTagHandlers
                                          @"<topic name=" + quote + "CEP" + quote + " > <category><pattern>" + payload + "</pattern>" +
                                          @"<template><think><setevidence evidence=" + quote + evidence + quote +
                                          @" prob=" + quote + prob_str + quote +
-                                         @" /></think>ep</template></category></topic>";
+                                         @" /></think>ep "+evidence+"</template></category></topic>";
                                          //@"</aiml>";
                     //this.user.bot.AddAiml(evidenceCode);
                     GraphMaster myGraph = Proc.GetGraph("msm", request.Graph);
