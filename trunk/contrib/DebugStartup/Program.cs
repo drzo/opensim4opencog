@@ -7,6 +7,7 @@ using CommandLine.Utility;
 using OpenMetaverse;
 using Radegast;
 using System.Windows.Forms;
+using RTParser;
 using SbsSW.SwiPlCs;
 
 namespace ABuildStartup
@@ -62,16 +63,16 @@ namespace ABuildStartup
             }
             finally
             {
-                Console.WriteLine("ExitCode: " + ExitCode + " for " + Environment.CommandLine);
+                FilteredWriteLine("ExitCode: " + ExitCode + " for " + Environment.CommandLine);
             }
             if (_appException != null)
             {
-                Console.WriteLine("" + _appException);
+                FilteredWriteLine("" + _appException);
                 if (ExitCode == 0) ExitCode = 1;
             }
             if (ExitCode != 0)
             {
-                Console.WriteLine("ExitCode: " + ExitCode + " for " + Environment.CommandLine);
+                FilteredWriteLine("ExitCode: " + ExitCode + " for " + Environment.CommandLine);
             }
             Application.Exit();
             Environment.Exit(ExitCode);
@@ -90,6 +91,19 @@ namespace ABuildStartup
                 Environment.ExitCode = value;
             }
         }
+
+        private static TextFilter filter = new TextFilter() {"+*"};
+        static public void FilteredWriteLine(string str, params object[] args)
+        {
+
+            RTPBot.OutputDelegate del = new RTPBot.OutputDelegate(ClientManager.Real ?? Console.WriteLine);
+            if (ClientManager.Filter == null)
+            {
+                ClientManager.Filter = new OutputDelegate(del);
+            }
+            filter.writeDebugLine(del, str, args);
+        }
+
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
@@ -146,6 +160,7 @@ namespace ABuildStartup
             {
                 arguments = new Arguments(oArgs);
                 cogbot.ClientManager.NoLoadConfig = true;
+                //cogbot.ClientManager.consoleDelegate = FilteredWriteLine;
             }
 
             bool noRadgast = arguments.GetWithout("--nogui", out oArgs);
@@ -196,7 +211,7 @@ namespace ABuildStartup
 
         private static void DebugWrite(string handlethreadexit)
         {
-            Console.WriteLine(handlethreadexit);
+            FilteredWriteLine(handlethreadexit);
             bool wasMain = (Thread.CurrentThread == ClientManager.MainThread);
         }
 
@@ -251,13 +266,13 @@ namespace ABuildStartup
         static void HandleThreadException(object sender, ThreadExceptionEventArgs e)
         {
             _appException = (Exception)e.Exception;
-            Console.WriteLine("!!HandleThreadException!! " + e.Exception);
+            FilteredWriteLine("!!HandleThreadException!! " + e.Exception);
         }
 
         static void HandleUnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             _appException = (Exception)e.ExceptionObject;
-            Console.WriteLine("!!HandleUnhandledException!! " + e.ExceptionObject);
+            FilteredWriteLine("!!HandleUnhandledException!! " + e.ExceptionObject);
         }
     }
 }
