@@ -1145,13 +1145,13 @@ namespace AIMLBotModule
         internal bool DoBotDirective(string[] args, UUID fromAgentID, OutputDelegate writeLine)
         {
             string s = args[0];
-            if (s == "on")
+            if (s == "on" || s == "@on")
             {
                 RespondToChatByDefaultAllUsers = true;
                 SetChatOnOff(String.Join(" ", args, 1, args.Length - 1), true);
                 writeLine("WorldObjects.RespondToChatByDefaultAllUsers = true;");
             }
-            if (s == "off")
+            if (s == "off" || s == "@off")
             {
                 RespondToChatByDefaultAllUsers = false;
                 SetChatOnOff(String.Join(" ", args, 1, args.Length - 1), false);
