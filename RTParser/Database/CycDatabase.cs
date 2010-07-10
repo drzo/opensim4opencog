@@ -63,62 +63,76 @@ namespace RTParser.Database
         }
 
         private bool UseCyc = true;
+        static object UseCycLock = new object();
+
         public CycAccess GetCycAccess
         {
             get
             {
-                if (!UseCyc) return null;
-                if (!isCycAccessCorrect())
+                lock (UseCycLock)
                 {
-                    try
+                    if (!UseCyc) return null;
+                    if (!isCycAccessCorrect())
                     {
-                        if (cycAccess == null) cycAccess = CycAccess.current();
-                    }
-                    catch (Exception) { }
-                    try
-                    {
-                        if (!isCycAccessCorrect())
+                        try
                         {
-                            cycAccess = new CycAccess(CycHostName, CycBasePort);
-                            CycAccess.setSharedCycAccessInstance(cycAccess);
+                            if (cycAccess == null) cycAccess = CycAccess.current();
                         }
-                        TestConnection();
-                        populateFromCyc();
+                        catch (Exception)
+                        {
+                        }
+                        try
+                        {
+                            if (!isCycAccessCorrect())
+                            {
+                                cycAccess = new CycAccess(CycHostName, CycBasePort);
+                                CycAccess.setSharedCycAccessInstance(cycAccess);
+                            }
+                            TestConnection();
+                            populateFromCyc();
+                        }
+                        catch (Exception e)
+                        {
+                            writeToLog("UseCyc==false " + e.Message + "\n " + e.StackTrace + "\n " + e.InnerException);
+                            UseCyc = false;
+                        }
+                        //if (cycAccess.isClosed()) cycAccess.persistentConnection = true;
                     }
-                    catch (Exception e)
-                    {
-                        UseCyc = false;
-                    }
-                    //if (cycAccess.isClosed()) cycAccess.persistentConnection = true;
+                    return cycAccess;
                 }
-                return cycAccess;
             }
             set { cycAccess = value; }
         }
 
         private void TestConnection()
         {
-            try
+            lock (UseCycLock)
             {
-                cycAccess.converseInt("(+ 1 1)");
-                cycAccess.createIndividual("AimlContextMt",
-                                           "#$AimlContextMt contains storage location in OpenCyc for AIML variables",
-                                           "UniversalVocabularyMt", "DataMicrotheory");
+                try
+                {
+                    cycAccess.converseInt("(+ 1 1)");
+                    cycAccess.createIndividual("AimlContextMt",
+                                               "#$AimlContextMt contains storage location in OpenCyc for AIML variables",
+                                               "UniversalVocabularyMt", "DataMicrotheory");
 
-            }
-            catch (Exception e)
-            {
-                UseCyc = false;
+                }
+                catch (Exception e)
+                {
+                    UseCyc = false;
+                }
             }
         }
 
         private bool isCycAccessCorrect()
         {
-            if (cycAccess == null) return false;
-            if (cycAccess.isClosed()) return false;
-            if (cycAccess.getCycConnection().getHostName() != CycHostName) return false;
-            if (cycAccess.getCycConnection().getBasePort() != CycBasePort) return false;
-            return true;
+            lock (UseCycLock)
+            {
+                if (cycAccess == null) return false;
+                if (cycAccess.isClosed()) return false;
+                if (cycAccess.getCycConnection().getHostName() != CycHostName) return false;
+                if (cycAccess.getCycConnection().getBasePort() != CycBasePort) return false;
+                return true;
+            }
         }
 
         private int cycBasePort = -1;
@@ -126,16 +140,22 @@ namespace RTParser.Database
         {
             get
             {
-                if (cycBasePort > 0) return cycBasePort;
-                if (cycAccess != null) return cycBasePort = cycAccess.getCycConnection().getBasePort();
-                return cycBasePort = CycConnection.DEFAULT_BASE_PORT;
+                lock (UseCycLock)
+                {
+                    if (cycBasePort > 0) return cycBasePort;
+                    if (cycAccess != null) return cycBasePort = cycAccess.getCycConnection().getBasePort();
+                    return cycBasePort = CycConnection.DEFAULT_BASE_PORT;
+                }
             }
             set
             {
-                if (cycBasePort == -1) cycBasePort = value;
-                if (CycBasePort == value) return;
-                cycBasePort = value;
-                cycAccess = null;
+                lock (UseCycLock)
+                {
+                    if (cycBasePort == -1) cycBasePort = value;
+                    if (CycBasePort == value) return;
+                    cycBasePort = value;
+                    cycAccess = null;
+                }
             }
         }
 
@@ -145,16 +165,22 @@ namespace RTParser.Database
         {
             get
             {
-                if (cycHostName != null) return cycHostName;
-                if (cycAccess != null) return cycHostName = cycAccess.getCycConnection().getHostName();
-                return cycHostName = CycConnection.DEFAULT_HOSTNAME;
+                lock (UseCycLock)
+                {
+                    if (cycHostName != null) return cycHostName;
+                    if (cycAccess != null) return cycHostName = cycAccess.getCycConnection().getHostName();
+                    return cycHostName = CycConnection.DEFAULT_HOSTNAME;
+                }
             }
             set
             {
-                if (cycHostName == null) cycHostName = value;
-                if (cycHostName == value) return;
-                cycHostName = value;
-                cycAccess = null;
+                lock (UseCycLock)
+                {
+                    if (cycHostName == null) cycHostName = value;
+                    if (cycHostName == value) return;
+                    cycHostName = value;
+                    cycAccess = null;
+                }
             }
         }
 
@@ -172,7 +198,20 @@ namespace RTParser.Database
                     return true;
                 }
                 bool t = lookup0(textIn, filter, out term);
-                if (term == null) term = NILTerm;
+                bool meansFalse = Unifiable.IsFalse(term);
+                if (t != meansFalse)
+                {
+                    if (meansFalse)
+                    {
+                        writeToLog("NILTerm true=" + t + " term=" + term + " textIn" + textIn);
+                        term = NILTerm;
+                    }
+                    else
+                    {
+                        string paraphrase = Paraphrase(term);
+                        writeToLog("true={0} term={1} textIn{2}  paraPhrase={3}", t, term, textIn, paraphrase);
+                    }
+                }
                 stringTOResult.Add(key, term);
                 return t;                
             }
@@ -192,11 +231,12 @@ namespace RTParser.Database
                 return true;
             }
             filter = Cyclify(filter);
+            bool nospaces = !text.Contains(" ");
             Unifiable ptext = textIn.ToPropper();
             if(false
             || lookupCycTerm("(#$nameString ?CYCOBJECT \"%s\")", text, filter, out term)
-            || lookupCycTerm("(#$denotation #$%s-TheWord ?TEXT ?TYPE ?CYCOBJECT)", ptext, filter, out term)
-            || lookupCycTerm("(#$denotationRelatedTo #$%s-TheWord ?TEXT ?TYPE ?CYCOBJECT)", ptext, filter,out term)
+            || (nospaces && (lookupCycTerm("(#$denotation #$%s-TheWord ?TEXT ?TYPE ?CYCOBJECT)", ptext, filter, out term)
+            || lookupCycTerm("(#$denotationRelatedTo #$%s-TheWord ?TEXT ?TYPE ?CYCOBJECT)", ptext, filter, out term)))
             || lookupCycTerm("(#$initialismString ?CYCOBJECT \"%s\")", text, filter,out term)
             || lookupCycTerm("(#$abbreviationString-PN ?CYCOBJECT \"%s\")", text, filter,out term)
             || lookupCycTerm("(#$preferredNameString ?CYCOBJECT \"%s\")", text, filter,out term)
@@ -211,7 +251,7 @@ namespace RTParser.Database
             || lookupCycTerm("(#$preferredTermStrings ?CYCOBJECT \"%s\")", text, filter, out term)
             || lookupCycTerm("(#$and (#$isa ?P #$ProperNamePredicate-Strict)(?P ?CYCOBJECT \"%s\"))", text, filter, out term)
             || lookupCycTerm("(#$and (#$isa ?P #$ProperNamePredicate-General)(?P ?CYCOBJECT \"%s\"))", text, filter, out term)
-            || lookupCycTerm("(#$preferredGenUnit ?CYCOBJECT ?POS #$%s-TheWord )", ptext, filter, out term)
+            || (nospaces && lookupCycTerm("(#$preferredGenUnit ?CYCOBJECT ?POS #$%s-TheWord )", ptext, filter, out term))
             || lookupCycTerm("(#$and (#$wordStrings ?WORD \"%s\") (#$or (#$denotation ?WORD ?TEXT ?TYPE ?CYCOBJECT) (#$denotationRelatedTo ?WORD ?TEXT ?TYPE ?CYCOBJECT) ))", text, filter,out term))            
                 return true;
             term = EvalSubL(String.Format("(car (fi-complete \"{0}\"))", text),null);
@@ -306,7 +346,8 @@ namespace RTParser.Database
             }
             catch (Exception e)
             {
-                string s = "" + e;
+                TheBot.writeToLog(e);
+                string s = "ExecCycQuery: " + e;
                 RTPBot.writeDebugLine(s);
                 writeToLog(s);
                 return null;
@@ -320,7 +361,8 @@ namespace RTParser.Database
             }
             catch (Exception e)
             {
-                string s = "" + e;
+                TheBot.writeToLog(e);
+                string s = "EvalSubLHandler: " + e;
                 RTPBot.writeDebugLine(s);
                 writeToLog(s);
                 return null;
@@ -333,7 +375,10 @@ namespace RTParser.Database
             CycAccess access = GetCycAccess;
             Console.Write(result);
             Console.Out.Flush();
-            if (!UseCyc) return "NIL";
+            if (!UseCyc)
+            {
+                return null;// "NIL";
+            }
             try
             {
                 string str = "(list " + cmd + ")";
@@ -351,16 +396,17 @@ namespace RTParser.Database
             }
             catch (Exception e)
             {
-                Console.WriteLine("" + e);
+                TheBot.writeToLog(e);
+                Console.WriteLine("\n" + e);
                 Console.Out.Flush();
                 return null;
             }
             return result;
         }
 
-        private void writeToLog(string s)
+        private void writeToLog(string s, params object[] p)
         {
-            TheBot.writeToLog(s);
+            TheBot.writeToLog("CYCTRACE: " + s, p);
         }
 
 
@@ -380,10 +426,27 @@ namespace RTParser.Database
         public Unifiable CleanupCyc(string text)
         {
             text = text.Replace("  ", " ").Trim();
+            string s = CleanupCyc0(text);
+            if (s=="NIL")
+            {
+                writeToLog("became nil: " + text);
+            }
+            return s;
+        }
+        private Unifiable CleanupCyc0(string text)
+        {
+            text = text.Replace("  ", " ").Trim();
+            int l_1 = text.Length - 1;
+            if (l_1 < 2) return text;
+            char c = text[l_1];
+            if (char.IsPunctuation(c))
+            {
+                return CleanupCyc0(text.Substring(0, l_1)) + c;
+            }
             int i = text.IndexOf(" ");
             if (i > 0)
             {
-                String stext = CleanupCyc(text.Substring(0, i)).AsString() + " " + CleanupCyc(text.Substring(i + 1)).AsString();
+                String stext = CleanupCyc0(text.Substring(0, i)).AsString() + " " + CleanupCyc0(text.Substring(i + 1)).AsString();
                 return stext;
             }
             if (text.StartsWith("#$") || text.StartsWith("(#$"))
@@ -394,7 +457,15 @@ namespace RTParser.Database
         }
         public Unifiable Paraphrase(string text)
         {
-            text = Cyclify(text);
+            try
+            {
+                text = Cyclify(text);
+            }
+            catch (Exception e)
+            {
+                TheBot.writeToLog(e);
+                writeToLog("couldnt CYCLIFY " + text);
+            }
             return Paraphrase0(text);
         }
         internal Unifiable Paraphrase0(string text)
@@ -407,6 +478,14 @@ namespace RTParser.Database
             //return text;
             try
             {
+                while (text.EndsWith("."))
+                {
+
+                }
+                if (text.Trim().Length==0)
+                {
+                    
+                }
                 string res = EvalSubL(String.Format("(generate-phrase {0})", text), null);
                 if (String.IsNullOrEmpty(res)) return text;
                 return res;

@@ -30,7 +30,9 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessChange()
         {
-            return this.Proc.SystemExecute(Recurse(),GetAttribValue("lang","bot"),request);
+            var v = Recurse();
+            templateNodeInnerText = this.Proc.SystemExecute(v, GetAttribValue("lang", "bot"), request);            
+            return templateNodeInnerText;
         }
     }
 }

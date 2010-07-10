@@ -97,20 +97,21 @@ namespace RTParser.AIMLTagHandlers
                         }
                         else
                         {
-                            writeToLog("InputStar out of bounds reference caused by input: " + this.request.rawInput);
+                            writeToLogWarn("InputStar out of bounds reference caused by input: " + this.request.rawInput);
                         }
                     }
                     catch
                     {
-                        writeToLog("Index set to non-integer value whilst processing star tag in response to the input: " + this.request.rawInput);
+                        writeToLogWarn("Index set to non-integer value whilst processing star tag in response to the input: " + this.request.rawInput);
                     }
                 }
                 else
                 {
-                    writeToLog("A star tag tried to reference an empty InputStar collection when processing the input: " + this.request.rawInput);
+                    writeToLogWarn("A star tag tried to reference an empty InputStar collection when processing the input: " + this.request.rawInput);
                 }
             }
             return Unifiable.Empty;
         }
+
     }
 }

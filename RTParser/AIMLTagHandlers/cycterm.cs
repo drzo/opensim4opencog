@@ -40,10 +40,22 @@ namespace RTParser.AIMLTagHandlers
             {
                 Unifiable filter = base.GetAttribValue("filter", GetAttribValue("isa", "Thing"));
                 Unifiable pos = base.GetAttribValue("pos", null);
+                int maxWords = int.Parse(base.GetAttribValue("maxwords", "1"));
                 Unifiable r = Recurse();
+                if (Unifiable.IsNullOrEmpty(r)) return Unifiable.Empty;
+                string s = r.ToValue();
+                if (s.Split(' ').Length > maxWords)
+                {
+                    return Unifiable.Empty;
+                }
                 Unifiable term;
                 if (Proc.TheCyc.Lookup(r, filter, out term))
                 {
+                    s = term.AsString();
+                    if (s.Length<2)
+                    {
+                        writeToLog("CYCTERM: " + r + "=>" + s);
+                    }
                     return term;
                 }
                 return Unifiable.Empty;

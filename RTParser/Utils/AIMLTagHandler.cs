@@ -11,7 +11,7 @@ namespace RTParser.Utils
     /// The template for all classes that handle the AIML tags found within template nodes of a
     /// category.
     /// </summary>
-    abstract public class AIMLTagHandler : TextTransformer
+    abstract public class AIMLTagHandler : TextTransformer, IXmlLineInfo
     {
         static public Unifiable ReduceStar(string name, SubQuery query)
         {
@@ -114,7 +114,18 @@ namespace RTParser.Utils
         protected Unifiable templateNodeInnerText
         {
             get { return templateNode.InnerText.Trim(); }
-            set { templateNode.InnerText = value.Trim(); }
+            set
+            {
+                if (AIMLLoader.ContainsAiml(value))
+                {
+                    writeToLogWarn("ContainsAiml = " + value);
+                }
+                if (Unifiable.IsNullOrEmpty(value))
+                {
+                    writeToLog("templateNodeInnerText = " + value);
+                }
+                templateNode.InnerText = value.Trim();
+            }
         }
 
         /// <summary>
@@ -182,9 +193,13 @@ namespace RTParser.Utils
         public AIMLTagHandler Parent;
         public void SetParent(AIMLTagHandler handler)
         {
-            if (handler==this)
+            if (handler == this)
             {
                 throw new InvalidOperationException("same");
+            }
+            else if (handler == null)
+            {
+                //throw new InvalidOperationException("no parent handler");                
             }
             Parent = handler;
         }
@@ -206,7 +221,7 @@ namespace RTParser.Utils
                         Unifiable found = Proc.processNode(childNode, query, request, result, user, this);
                         if (Unifiable.IsFalse(found))
                         {
-                        //    return Unifiable.Empty;
+                            // until it beomes true once ?   return Unifiable.Empty;
                         }
                         templateResult.Append(found);
                     }
@@ -217,7 +232,7 @@ namespace RTParser.Utils
             else
             {
                 Unifiable before = Unifiable.InnerXmlText(this.templateNode);//.InnerXml;               
-                return before;                
+                return before;
             }
 
         }
@@ -232,7 +247,7 @@ namespace RTParser.Utils
         /// <returns>The XML node</returns>
         public static LineInfoElement getNode(string outerXML)
         {
-            var sr = new StringReader( outerXML);
+            var sr = new StringReader(outerXML);
             try
             {
                 XmlDocumentLineInfo doc = new XmlDocumentLineInfo("From " + outerXML);
@@ -254,7 +269,7 @@ namespace RTParser.Utils
                 }
                 return (LineInfoElement)temp; //.FirstChild;}
             }
-            catch (Exception exception)            
+            catch (Exception exception)
             {
                 RTPBot.writeDebugLine("outerXML=" + outerXML);
                 throw exception;
@@ -305,8 +320,7 @@ namespace RTParser.Utils
             string s = templateNode.OuterXml.Trim();
             if (String.IsNullOrEmpty(s))
             {
-
-                LineInfoElement li = (LineInfoElement) templateNode;
+                LineInfoElement li = (LineInfoElement)templateNode;
                 s = s + " " + li.OwnerDocument.ToString();
                 if (Parent != null && Parent != this)
                 {
@@ -326,7 +340,7 @@ namespace RTParser.Utils
             string s = "";
             if (templateNode is LineInfoElement)
             {
-                LineInfoElement li = (LineInfoElement) templateNode;
+                LineInfoElement li = (LineInfoElement)templateNode;
                 if (li.lineNumber == 0)
                 {
                     s = s + " " + li.OwnerDocument.ToString();
@@ -361,7 +375,7 @@ namespace RTParser.Utils
         {
             string w = with.ToValue();
             Unifiable t1 = ProcessChange();
-            float score1 = t1.Unify(with,query);
+            float score1 = t1.Unify(with, query);
             if (score1 == 0) return score1;
             Unifiable t2 = CompleteProcess();
             float score2 = t2.Unify(with, query);
@@ -426,9 +440,68 @@ namespace RTParser.Utils
             }
         }
 
-        protected void writeToLog(String unifiable)
+        protected void writeToLogWarn(string unifiable, params object[] objs)
         {
-            this.Proc.writeToLog(unifiable + " in " + ToString());
+            writeToLog("WARNING: " + unifiable, objs);
         }
+
+        protected void writeToLog(string unifiable, params object[] objs)
+        {
+            if (unifiable.ToUpper().StartsWith("ERROR"))
+            {
+                writeToLogWarn("BAD " + unifiable, objs);
+                return;
+            }
+            this.Proc.writeToLog("AIMLTRACE: " + unifiable + " in " + LineNumberTextInfo(), objs);
+        }
+
+        #region Implementation of IXmlLineInfo
+
+        /// <summary>
+        /// Gets a value indicating whether the class can return line information.
+        /// </summary>
+        /// <returns>
+        /// true if <see cref="P:System.Xml.IXmlLineInfo.LineNumber"/> and <see cref="P:System.Xml.IXmlLineInfo.LinePosition"/> can be provided; otherwise, false.
+        /// </returns>
+        public bool HasLineInfo()
+        {
+            if (templateNode is IXmlLineInfo) return true;
+            if (Parent != null && Parent != this) return Parent.HasLineInfo();
+            return false;
+        }
+
+        /// <summary>
+        /// Gets the current line number.
+        /// </summary>
+        /// <returns>
+        /// The current line number or 0 if no line information is available (for example, <see cref="M:System.Xml.IXmlLineInfo.HasLineInfo"/> returns false).
+        /// </returns>
+        public int LineNumber
+        {
+            get
+            {
+                IXmlLineInfo ix = (templateNode as IXmlLineInfo) ?? Parent ?? this;
+                if (ix != this) return ix.LineNumber;
+                //throw new NotImplementedException();
+                return 0;
+            }
+        }
+
+        /// <summary>
+        /// Gets the current line position.
+        /// </summary>
+        /// <returns>
+        /// The current line position or 0 if no line information is available (for example, <see cref="M:System.Xml.IXmlLineInfo.HasLineInfo"/> returns false).
+        /// </returns>
+        public int LinePosition
+        {
+            get
+            {
+                IXmlLineInfo ix = (templateNode as IXmlLineInfo) ?? Parent ?? this;
+                if (ix != this) return ix.LinePosition;
+                return 0;
+            }
+        }
+        #endregion
     }
 }

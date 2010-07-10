@@ -258,6 +258,16 @@ namespace RTParser
         public abstract bool IsLongWildCard();
         public abstract bool IsShortWildCard();
 
+
+        public enum MatchWidth : byte
+        {
+            ONLY_ONE,
+            ONE_OR_TWO,
+            MORE_THAN_ONE,       
+        } 
+
+        public abstract MatchWidth Width { get; }
+
         static public SubQuery subquery;
         public abstract bool IsLazy();
 

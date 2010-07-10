@@ -198,13 +198,13 @@ namespace RTParser.Utils
 
             try
             {
-                byte[] byteArray = Encoding.ASCII.GetBytes( input ); 
-                MemoryStream stream = new MemoryStream( byteArray );
+                byte[] byteArray = Encoding.ASCII.GetBytes(input);
+                MemoryStream stream = new MemoryStream(byteArray);
                 loadAIMLStream(stream, filename, request);
             }
             catch (Exception e2)
             {
-                String s = "which causes loadAIMLString '" + input + "' " + filename ;
+                String s = "which causes loadAIMLString '" + input + "' " + filename;
                 s = s + "\n" + e2.Message + "\n" + e2.StackTrace + "\n" + s;
                 this.RProcessor.writeToLog(s);
                 throw e2;
@@ -243,7 +243,7 @@ namespace RTParser.Utils
                     //System.Console.Flush();
                     if (!xtr.Read())
                     {
-                        throw e2; 
+                        throw e2;
                     }
                     // 
                 }
@@ -318,7 +318,10 @@ namespace RTParser.Utils
                     }
                     catch (Exception e)
                     {
-                        RProcessor.writeToLog("ImmediateAiml: " + e);
+                        RProcessor.writeToLog(e);
+                        RProcessor.writeToLog("ImmediateAiml: ERROR: " + e);
+                        string s = LineNumberTextInfo(currentNode);
+                        RProcessor.writeToLog("ERROR PARSING: " + s);
                     }
                 }
             }
@@ -364,7 +367,7 @@ namespace RTParser.Utils
         /// <param name="cateNode">the XML node containing the category</param>
         /// <param name="topicName">the topic to be used</param>
         /// <param name="filename">the file from which this category was taken</param>
-        private void processCategoryWithTopic(XmlNode cateNode, Unifiable topicName, XmlNode outerNode,  LoaderOptions filename)
+        private void processCategoryWithTopic(XmlNode cateNode, Unifiable topicName, XmlNode outerNode, LoaderOptions filename)
         {
             // reference and check the required nodes
             List<XmlNode> patterns = FindNodes("pattern", cateNode);
@@ -383,10 +386,10 @@ namespace RTParser.Utils
                     }
                     addCatNode(cateNode, pattern, filename, template, topicName, outerNode);
                 }
-            }            
+            }
         }
 
-        private void addCatNode(XmlNode cateNode, XmlNode patternNode, LoaderOptions filename, XmlNode templateNode, 
+        private void addCatNode(XmlNode cateNode, XmlNode patternNode, LoaderOptions filename, XmlNode templateNode,
             Unifiable topicName, XmlNode outerNode)
         {
             XmlNode guardnode = FindNode("guard", cateNode, FindNode("guard", outerNode, null));
@@ -413,7 +416,7 @@ namespace RTParser.Utils
                     throw new InvalidOperationException(cateNode.OuterXml);
                 }
             }
-            Unifiable categoryPath = generateCPath(patternText, that, cond ,topicName, false);
+            Unifiable categoryPath = generateCPath(patternText, that, cond, topicName, false);
             PatternInfo patternInfo = PatternInfo.GetPattern(filename, patternNode, categoryPath);
             TopicInfo topicInfo = TopicInfo.FindTopic(filename, topicName);
             ThatInfo thatInfo = ThatInfo.GetPattern(filename, that);
@@ -455,7 +458,7 @@ namespace RTParser.Utils
         /// <param name="isUserInput">marks the path to be created as originating from user input - so
         /// normalize out the * and _ wildcards used by AIML</param>
         /// <returns>The appropriately processed path</returns>
-        static XmlNode extractThat(XmlNode patternNode,String tagname, XmlNode cateNode, out Unifiable patternText, out XmlNode newPattern)
+        static XmlNode extractThat(XmlNode patternNode, String tagname, XmlNode cateNode, out Unifiable patternText, out XmlNode newPattern)
         {
             // get the nodes that we need
             XmlNode that = FindNodeOrHigher(tagname, cateNode, null);
@@ -473,17 +476,17 @@ namespace RTParser.Utils
 
             string patternString = patternNode.InnerXml;
             int f = patternString.IndexOf("<" + tagname);
-            if (f>=0)
+            if (f >= 0)
             {
                 that = FindNode(tagname, patternNode, null);
-                if (that==null)
+                if (that == null)
                 {
-                    throw new NotImplementedException("generatePathExtractWhat: " + patternString);                    
+                    throw new NotImplementedException("generatePathExtractWhat: " + patternString);
                 }
                 string thatString = that.OuterXml;
                 if (!patternString.Contains(thatString))
                 {
-                    throw new NotImplementedException("generatePathExtractWhat: " + patternString);                    
+                    throw new NotImplementedException("generatePathExtractWhat: " + patternString);
                 }
                 patternString = MatchKeyClean(patternString.Replace(thatString, ""));
                 var newLineInfoPattern = AIMLTagHandler.getNode("<pattern>" + patternString + "</pattern>", patternNode);
@@ -585,7 +588,7 @@ namespace RTParser.Utils
             Unifiable normalizedThat;// = Unifiable.STAR;
             Unifiable normalizedTopic;// = Unifiable.STAR;
             bool UseRawUserInput = RawUserInput;
-            string patString = " "+ pattern.AsString() + " ";
+            string patString = " " + pattern.AsString() + " ";
             if (patString.Contains(" exec ") || patString.Contains(" aiml ")
                 || patString.Contains(" lisp ") || patString.Contains(" tag ")
                 || patString.Contains("<") || patString.Contains(">")
@@ -625,7 +628,7 @@ namespace RTParser.Utils
                 {
                     if (!normalizedThat.IsWildCard())
                     {
-                       // normalizedThat = "* " + normalizedThat;
+                        // normalizedThat = "* " + normalizedThat;
                     }
                 }
                 if (normalizedTopic.IsEmpty)
@@ -695,7 +698,7 @@ namespace RTParser.Utils
         {
 
             input = CleanWhitepaces(input);
-            while (input.EndsWith("?") || input.EndsWith(".")||input.EndsWith("!"))
+            while (input.EndsWith("?") || input.EndsWith(".") || input.EndsWith("!"))
             {
                 input = input.Substring(0, input.Length - 1).Trim();
             }
@@ -710,7 +713,7 @@ namespace RTParser.Utils
             Normalize.ApplySubstitutions substitutor = new RTParser.Normalize.ApplySubstitutions(this.RProcessor);
             Normalize.StripIllegalCharacters stripper = new RTParser.Normalize.StripIllegalCharacters(this.RProcessor);
 
-            Unifiable substitutedInput = substitutor.Transform(" " +input + " ").Trim();
+            Unifiable substitutedInput = substitutor.Transform(" " + input + " ").Trim();
             // split the pattern into it's component words
             string[] substitutedWords = substitutedInput.AsString().Split(' ');
 
@@ -756,8 +759,14 @@ namespace RTParser.Utils
 
         public static string CleanWhitepaces(string xml2)
         {
+            if (xml2 == null) return xml2;
+            const int maxCleanSize = 2 ^ 12;
+            if (xml2.Length > maxCleanSize)
+            {
+                return xml2;
+            }
             String s = "";
-            foreach (var c0 in xml2.ToLower().ToCharArray())
+            foreach (var c0 in xml2.ToLower())
             {
                 char c = c0;
                 if (c < 32) c = ' ';
@@ -772,6 +781,65 @@ namespace RTParser.Utils
             String s = unifiable.AsString();
             if (s.Contains(">") && s.Contains("<")) return true;
             return false;
+        }
+
+        static public string LineNumberTextInfo(XmlNode element)
+        {
+            XmlNode elementParentNode = element.ParentNode;
+            return LineTextInfo(element) + " " + LineNumberInfo(element);
+        }
+
+        private static string LineNumberInfo(XmlNode templateNode)
+        {
+
+            string s = "";
+            if (templateNode is LineInfoElement)
+            {
+                LineInfoElement li = (LineInfoElement)templateNode;
+                if (li.lineNumber == 0)
+                {
+                    XmlNode Parent = templateNode.ParentNode;
+                    s = s + " " + li.OwnerDocument.ToString();
+                    if (Parent != null && Parent != templateNode)
+                    {
+                        s = s + " " + LineNumberInfo(Parent);
+                    }
+                    else
+                    {
+                        s = s + " (" + li.lineNumber + ":" + li.linePosition + ")";
+                    }
+                }
+                else
+                {
+                    s = s + " (" + li.OwnerDocument.ToString() + ":line " + li.lineNumber + "," + li.linePosition + ") ";
+                }
+            }
+            else
+            {
+                return s;
+            }
+            return s;
+        }
+
+        private static object LineTextInfo(XmlNode templateNode)
+        {
+            XmlNode textNode = templateNode;//.ParentNode ?? templateNode;
+            string s = CleanWhitepaces(textNode.OuterXml);
+            if (String.IsNullOrEmpty(s))
+            {
+                XmlNode Parent = textNode.ParentNode;
+                LineInfoElement li = (LineInfoElement)templateNode;
+                s = s + " " + li.OwnerDocument.ToString();
+                if (Parent != null && Parent != templateNode)
+                {
+                    s = s + " " + LineTextInfo(Parent);
+                }
+                else
+                {
+                    return s;
+                }
+            }
+            return s;
         }
     }
 

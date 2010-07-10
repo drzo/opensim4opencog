@@ -84,6 +84,19 @@ namespace RTParser
             return true;
         }
 
+        public override MatchWidth Width
+        {
+            get
+            {
+                if (IsLongWildCard())
+                {
+                    return MatchWidth.MORE_THAN_ONE;
+                }
+                if (IsShortWildCard()) return MatchWidth.ONE_OR_TWO;
+                return MatchWidth.ONLY_ONE;
+            }
+        }
+
         public override bool IsLazy()
         {
             foreach (var list in List)

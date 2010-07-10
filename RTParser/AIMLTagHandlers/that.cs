@@ -72,7 +72,7 @@ namespace RTParser.AIMLTagHandlers
                                     }
                                     else
                                     {
-                                        writeToLog("ERROR! An input tag with a bady formed index (" + at1 + ") was encountered processing the input: " + this.request.rawInput);
+                                        writeToLogWarn("ERROR! An input tag with a bady formed index (" + at1 + ") was encountered processing the input: " + this.request.rawInput);
                                     }
                                 }
                                 else
@@ -84,13 +84,14 @@ namespace RTParser.AIMLTagHandlers
                                     }
                                     else
                                     {
-                                        writeToLog("ERROR! An input tag with a bady formed index (" + at1 + ") was encountered processing the input: " + this.request.rawInput);
+                                        writeToLogWarn("ERROR! An input tag with a bady formed index (" + at1 + ") was encountered processing the input: " + this.request.rawInput);
                                     }
                                 }
                             }
-                            catch
+                            catch (Exception exception)
                             {
-                                writeToLog("ERROR! An input tag with a bady formed index (" + at1 + ") was encountered processing the input: " + this.request.rawInput);
+                                writeToLogWarn("ERROR! An input tag with a bady formed index (" 
+                                    + at1 + ") was encountered processing the input: " + this.request.rawInput + " " + exception);
                             }
                         }
                     }

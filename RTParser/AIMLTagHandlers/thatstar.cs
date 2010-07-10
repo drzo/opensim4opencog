@@ -58,9 +58,10 @@ namespace RTParser.AIMLTagHandlers
                     }
                     return GetAttribValue("default", Unifiable.Empty);
                 }
-                catch
+                catch (Exception exception)
                 {
-                    writeToLog("ERROR! A thatstar tag with a bady formed index (" + this.templateNode.OuterXml + ") was encountered processing the input: " + this.request.rawInput);
+                    writeToLog("ERROR! A thatstar tag with a bady formed index (" + this.templateNode.OuterXml +
+                               ") was encountered processing the input: " + this.request.rawInput + " " + exception);
                 }
             }
             return Unifiable.Empty;

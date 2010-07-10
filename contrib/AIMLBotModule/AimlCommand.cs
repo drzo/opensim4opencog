@@ -60,57 +60,32 @@ namespace AIMLBotModule
             string defaultAIMLUser;
             if (args.Length == 0) return Failure(Usage);
             string s = args[0].ToLower();
-            if (s == "on")
-            {
-                WorldSystemModule.RespondToChatByDefaultAllUsers = true;
-                WorldSystemModule.SetChatOnOff(String.Join(" ", args, 1, args.Length - 1), true);
-                return Success("WorldObjects.RespondToChatByDefaultAllUsers = true;");
-            }
-            if (s == "user")
+            if (s == "load" || s == "user" || s == "help") s = "@" + s;
+            string joined = String.Join(" ", args);
+            if (s == "@user")
             {
                 defaultAIMLUser = String.Join(" ", args, 1, args.Length - 1);
-                SetUser(String.Join(" ", args, 1, args.Length - 1));
+                SetUser(defaultAIMLUser);
                 return Success("WorldObjects.SetDefaultUser = " + defaultAIMLUser + ";");
             }
-            if (s == "off")
-            {
-                WorldSystemModule.RespondToChatByDefaultAllUsers = false;
-                WorldSystemModule.SetChatOnOff(String.Join(" ", args, 1, args.Length - 1), false);
-                return Success("WorldObjects.RespondToChatByDefaultAllUsers = false;");
-            }
-            if (s == "reload")
-            {
-                WorldSystemModule.MyBot.ReloadAll();
-                return Success("WorldSystemModule.MyBot.ReloadAll();");
-            }
-            if (s == "load")
-            {
-                if (args.Length < 2) return Failure(Usage);
-                string stringJoin = String.Join(" ", args, 1, args.Length - 1);
-                WorldSystemModule.MyBot.loadAIMLFromURI(stringJoin, WorldSystemModule.MyBot.BotAsRequest);
-                return Success("aiml loaded " + stringJoin);
-            }
-            string joined = String.Join(" ", args);
             if (s == "@")
             {
-                joined = joined.TrimStart(new[] { '@', ' ' });
+                joined = joined.TrimStart(new[] {'@', ' '});
                 int lastIndex = joined.IndexOf("-");
                 defaultAIMLUser = joined.Substring(0, lastIndex).Trim();
                 s = "-";
                 SetUser(defaultAIMLUser);
             }
-            if (s == "@rename")
+            else if (s.StartsWith("@"))
             {
                 try
                 {
-                    joined = joined.TrimStart(new[] {'@', ' '});
-                    int lastIndex = joined.IndexOf("-");
-                    defaultAIMLUser = joined.Substring(0, lastIndex).Trim();
-                    s = "-";
-                    lastIndex = joined.IndexOf("-");
-                    joined = joined.Substring(lastIndex + 1).Trim();
-                    WorldSystemModule.RenameUser(lastKnownUser, joined);
-                    return Success("done: " + defaultAIMLUser + " is nown known to be " + joined);
+                    bool res = WorldSystemModule.DoBotDirective(args, fromAgentID, WriteLine);
+                    if (!res)
+                    {
+                        Failure("WARN from AIML " + joined);
+                    }
+                    return Success("aiml returned: " + joined);
                 }
                 catch (Exception e)
                 {

@@ -41,8 +41,22 @@ namespace RTParser.AIMLTagHandlers
             : base(bot, user, query, request, result, templateNode)
         {
         }
-
         protected override Unifiable ProcessChange()
+        {
+            Unifiable u = ProcessChange0();
+            if (u.IsEmpty) return u;
+            string s = u.ToValue();
+            if (s.Contains(" ")) return s;
+            if (s.ToLower().StartsWith("unknown"))
+            {
+                s = s.Substring(7);
+                writeToLog("SETTINGS UNKNOWN " + s);
+                return "unknown " + s;
+            }
+            return u;
+        }
+
+        protected Unifiable ProcessChange0()
         {
             if (this.templateNode.Name.ToLower() == "get")
             {
@@ -63,11 +77,13 @@ namespace RTParser.AIMLTagHandlers
                 if ((MeansUnknown(resultGet)) && (!MeansUnknown(gResult)))
                 {
                     // result=nothing, gResult=something => return gResult
+                    writeToLog("SETTINGS OVERRIDE " + gResult);
                     return gResult;
                 }
-                if (resultGet.ToValue().ToUpper() == "UNKNOWN")
+                string sresultGet = resultGet.ToValue().Trim();
+                if (sresultGet.ToUpper() == "UNKNOWN")
                 {
-                    return resultGet + " " + name;
+                    return sresultGet + " " + name;
                 }
                 if (!String.IsNullOrEmpty(resultGet))
                 {

@@ -368,7 +368,12 @@ namespace RTParser
         {
             if (SuspendAdd)
             {
-                RTPBot.writeDebugLine("Skipping " + latestResult);
+                Request r = latestResult.request;
+                if (r!=null)
+                {
+                    if (r.IsTraced)
+                        RTPBot.writeDebugLine("AIMLTRACE: skipping result " + latestResult);
+                } 
                 return;
             }
             this.Results.Insert(0, latestResult);
@@ -420,6 +425,37 @@ namespace RTParser
             sentence = sentence.Trim(new char[] { '.', ' ', '!', '?' });
             String ssentence = bot.Loader.Normalize(sentence, true);
             return sentence;
+        }
+
+        public bool DoUserCommand(string input, RTPBot.OutputDelegate console)
+        {
+            if (input == null) return false;
+            input = input.Trim();
+            if (input.StartsWith("@"))
+            {
+                input = input.TrimStart(new[] { ' ', '@' });
+            }
+            if (input == "") return false;
+            int firstWhite = input.IndexOf(' ');
+            string var = input.Substring(1, firstWhite);
+            string value = input.Substring(firstWhite + 1).Trim();
+            if (var == "")
+            {
+                console(Predicates.ToDebugString());
+                return true;
+            }
+            if (value == "")
+            {
+                console(var + " = " + Predicates.grabSettingNoDebug(var));
+                return true;
+            }
+            console("addSetting: " + Predicates.addSetting(var, value));
+            return true;
+        }
+
+        public void WriteLine(string s, object[] objects)
+        {
+            throw new NotImplementedException();
         }
     }
 }

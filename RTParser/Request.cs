@@ -61,6 +61,9 @@ namespace RTParser
 
         public readonly int framesAtStart;
 
+
+        public bool IsTraced = false;
+
         #endregion
 
         public override string ToString()
@@ -179,6 +182,17 @@ namespace RTParser
             return Predicates.addSetting(name, value);
         }
 
+        public void WriteLine(string s, object[] args)
+        {
+            if (result != null)
+            {
+                result.WriteLine(s, args);
+            }
+            else
+            {
+                Proccessor.writeToLog(s, args);
+            }
+        }
     }
 
     public class Proof

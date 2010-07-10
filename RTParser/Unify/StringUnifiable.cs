@@ -273,6 +273,19 @@ namespace RTParser
             return false;
         }
 
+        public override MatchWidth Width
+        {
+            get
+            {
+                if (IsLongWildCard())
+                {
+                    return MatchWidth.MORE_THAN_ONE;
+                }
+                if (IsShortWildCard()) return MatchWidth.ONE_OR_TWO;
+                return MatchWidth.ONLY_ONE;
+            }
+        }
+
         public override bool IsLongWildCard()
         {
             if (str == ("*")) return true;
@@ -358,7 +371,7 @@ namespace RTParser
 
         public override string ToValue()
         {
-            if (IsLazy())
+            if (false && IsLazy())
             {
                 //todo 
                 RTPBot.writeDebugLine("TODO " + str);
