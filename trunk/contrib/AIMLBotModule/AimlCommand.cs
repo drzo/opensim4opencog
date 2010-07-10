@@ -60,7 +60,6 @@ namespace AIMLBotModule
             string defaultAIMLUser;
             if (args.Length == 0) return Failure(Usage);
             string s = args[0].ToLower();
-            if (s == "load" || s == "user" || s == "help") s = "@" + s;
             string joined = String.Join(" ", args);
             if (s == "@user")
             {
@@ -76,7 +75,7 @@ namespace AIMLBotModule
                 s = "-";
                 SetUser(defaultAIMLUser);
             }
-            else if (s.StartsWith("@"))
+            else if (s.StartsWith("@") || (args.Length == 1 && " on off help reload ".Contains(" " + s + " ")))
             {
                 try
                 {

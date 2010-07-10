@@ -185,6 +185,7 @@ namespace AIMLBotModule
         }
         private void TalkToObject0(SimActor av, SimObject obj)
         {
+            if (MyBotNullWarning()) return;
             string objName = obj.GetName();
             MyUser = GetMyUser(objName);
             MyUser.RespondToChat = true;
@@ -296,6 +297,7 @@ namespace AIMLBotModule
         }
         private void SetInterest0(UUID sourceid, UUID targetid, bool forced)
         {
+            if (MyBotNullWarning()) return;
             if (targetid == client.Self.AgentID) AttendTo(null, sourceid, PCode.Avatar);
             else AttendTo(null, targetid, PCode.None);
             if (sourceid == UUID.Zero) return;
@@ -342,6 +344,7 @@ namespace AIMLBotModule
             client.InternType(this.GetType());
             string myName = GetName().Trim();
             String[] sname = myName.Split(' ');
+            if (MyBotNullWarning()) return;
             MyBot.GlobalSettings.addSetting("name", String.Format("{0}", myName));
             MyBot.GlobalSettings.addSetting("firstname", sname[0]);
             MyBot.GlobalSettings.addSetting("lastname", sname[1]);
@@ -357,6 +360,7 @@ namespace AIMLBotModule
 
         private void LoadPersonalConfig()
         {
+            if (MyBotNullWarning()) return;
             if (!NeedPersonalConfig) return;
             string myName = GetName().ToLower().Trim().Replace(" ", "_");
             if (string.IsNullOrEmpty(myName)) return;
@@ -366,11 +370,13 @@ namespace AIMLBotModule
 
         private void LoadPersonalDirectories(string myName)
         {
+            if (MyBotNullWarning()) return;
             MyBot.LoadPersonalDirectories(myName);
         }
 
         public void SetChatOnOff(string username, bool value)
         {
+            if (MyBotNullWarning()) return;
             MyBot.SetChatOnOff(username, value);
         }
 
@@ -381,6 +387,7 @@ namespace AIMLBotModule
                 fromname = "UNKNOWN_PARTNER";
             }
             bool newlyCreated;
+            if (MyBotNullWarning()) return MyUser;
             User user = MyBot.FindOrCreateUser(fromname, out newlyCreated);
             if (newlyCreated)
             {
@@ -653,7 +660,8 @@ namespace AIMLBotModule
 
         public void HeardMyselfSay(UUID uuid, string message)
         {
-            if (MyBot != null) MyBot.HeardSelfSay(message);
+            if (MyBotNullWarning()) return;
+            MyBot.HeardSelfSay(message);
         }
 
         static bool MessageTurnsOffChat(string message)
@@ -993,6 +1001,11 @@ namespace AIMLBotModule
             {
                 return SUnifiable.Empty;
             }
+            if (MyBot==null)
+            {
+                Console.WriteLine(GetModuleName() + ": not Bot is instenaced yet!!");
+                return "";
+            }
             Request r = new AIMLbot.Request(input, myUser, MyBot);
             r.IsTraced = true;
             Result res = MyBot.Chat(r);
@@ -1115,7 +1128,7 @@ namespace AIMLBotModule
 
         public void RenameUser(string old, string newUser)
         {
-            if (MyBot == null) return;
+            if (MyBotNullWarning()) return;
             MyBot.RenameUser(old, newUser);
         }
 
@@ -1125,7 +1138,7 @@ namespace AIMLBotModule
             next = next ?? "";
             old = old.ToLower().Trim();
             next = next.ToLower().Trim();
-            if (MyBot == null) return old == next;
+            if (MyBotNullWarning()) return old == next;
             return MyBot.SameUser(old, next);
         }
 
@@ -1144,10 +1157,21 @@ namespace AIMLBotModule
                 SetChatOnOff(String.Join(" ", args, 1, args.Length - 1), false);
                 writeLine("WorldObjects.RespondToChatByDefaultAllUsers = false;");
             }
-            if (MyBot == null) return false;
+            if (MyBotNullWarning())
+            {
+                return false;
+            }
             string stringJoin = String.Join(" ", args, 0, args.Length);
+            if (MyBotNullWarning()) return false;
             return MyBot.BotDirective(MyUser, stringJoin, new RTPBot.OutputDelegate(writeLine));
         }
 
+        private bool MyBotNullWarning()
+        {
+            if (MyBot != null) return false;
+            Console.WriteLine("WARNING! MyBOt NULL");
+            client.WriteLine("WARNING! MyBOt NULL");
+            return true;
+        }
     }
 }
