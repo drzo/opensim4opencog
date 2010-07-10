@@ -523,6 +523,10 @@ namespace RTParser
         /// </summary>
         private void setup()
         {
+            if (Loader == null)
+            {
+                Loader = new AIMLLoader(this, BotAsRequest);
+            }
             var prev = isAcceptingUserInput;
             try
             {
@@ -2437,6 +2441,10 @@ The AIMLbot program.
             if (showHelp) console("@load <uri>");
             if (cmd == "load")
             {
+                if (Loader == null)
+                {
+                    Loader = new AIMLLoader(this, BotAsRequest);
+                }
                 Loader.loadAIML(args);
                 console("Done with " + args);
                 return true;
