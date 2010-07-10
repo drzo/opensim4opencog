@@ -2581,7 +2581,11 @@ The AIMLbot program.
                 lastOutput = message;
                 string msgTest = message.ToUpper();
                 bool printIt = message.StartsWith("-");
-                if (!printIt)
+                if (printIt)
+                {
+                    message = message.Substring(1);
+                }
+                else
                 {
                     lock (LoggedWords)
                         foreach (string s in LoggedWords)
@@ -2615,7 +2619,6 @@ The AIMLbot program.
                                 break;
                             }
                         }
-                    message = message.Substring(1);
                 }
                 if (printIt)
                 {
@@ -2634,6 +2637,7 @@ The AIMLbot program.
                 Console.WriteLine(message + " --> " + e);
             }
         }
+
         public bool SameUser(string old, string next)
         {
             old = old ?? "";
