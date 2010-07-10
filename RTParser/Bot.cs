@@ -31,7 +31,7 @@ namespace RTParser
         /// </summary>
         public bool StaticLoader = true;
 
-        public static TextFilter LoggedWords = new TextFilter() { "+*" }; //maybe should be ERROR", "STARTUP
+        public static TextFilter LoggedWords = new TextFilter() { "*" }; //maybe should be ERROR", "STARTUP
         public User LastUser;
         readonly public User BotAsUser;
         readonly public Request BotAsRequest;
@@ -2289,7 +2289,7 @@ The AIMLbot program.
                                   "";
             //Added from AIML content now
             // myBot.AddAiml(evidenceCode);
-            myBot.BotDirective(myUser, "@log clear -spam +error +aimltrace +cyc list +*", Console.Error.WriteLine);
+            myBot.BotDirective(myUser, "@log clear -spam +error +aimltrace +cyc", Console.Error.WriteLine);
             writeLine("-----------------------------------------------------------------");
             myBot.BotDirective(myUser, "help", writeLine);
             writeLine("-----------------------------------------------------------------");
@@ -2481,12 +2481,7 @@ The AIMLbot program.
             if (showHelp) console("@log clear -spam +error +aimltrace +cyc list");
             if (cmd.StartsWith("log"))
             {
-                foreach (var ss in args.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries))
-                {
-                    string s = ss;
-                    s = "+" + s;
-                    TextFilter.ListEdit(LoggedWords, s.ToUpper(), console);
-                }
+                TextFilter.ListEdit(LoggedWords, args, console);
                 return true;
             }
             if (showHelp) return true;
