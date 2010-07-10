@@ -61,6 +61,7 @@ namespace AIMLBotModule
             if (args.Length == 0) return Failure(Usage);
             string s = args[0].ToLower();
             string joined = String.Join(" ", args);
+            bool legacyCmd = " on off help reload ".Contains(" " + s + " ");
             if (s == "@user")
             {
                 defaultAIMLUser = String.Join(" ", args, 1, args.Length - 1);
@@ -75,10 +76,11 @@ namespace AIMLBotModule
                 s = "-";
                 SetUser(defaultAIMLUser);
             }
-            else if (s.StartsWith("@") || (args.Length == 1 && " on off help reload ".Contains(" " + s + " ")))
+            else if (s.StartsWith("@") || (args.Length == 1 && legacyCmd))
             {
                 try
                 {
+                    if (legacyCmd) args[0] = "@" + s;
                     bool res = WorldSystemModule.DoBotDirective(args, fromAgentID, WriteLine);
                     if (!res)
                     {
