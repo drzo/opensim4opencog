@@ -73,7 +73,7 @@ namespace cogbot
         //public InventoryFolder CurrentDirectory = null;
 
         //public BotClient CurrentClient;
-        public OutputDelegate outputDelegate;
+        //public OutputDelegate outputDelegate;
         ///public Dictionary<string, DescribeDelegate> describers;
 
         public List<Type> registrationTypes;
@@ -338,7 +338,7 @@ namespace cogbot
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("" + e);
+                    GlobalWriteLine("" + e);
                 }
             }
             try
@@ -370,7 +370,7 @@ namespace cogbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("" + e);
+                GlobalWriteLine("" + e);
             }
         }
 
@@ -389,13 +389,13 @@ namespace cogbot
             }
             if (outputDelegate == null || outputDelegate == WriteLine)
             {
-                Console.WriteLine(str, args);
+                GlobalWriteLine(str, args);
             }
             else
             {
                 if (outputDelegate != cogbot.Program.WriteLine)
                 {
-                    Console.WriteLine(str, args);
+                    GlobalWriteLine(str, args);
                 }
                 outputDelegate(str, args);
             }
@@ -645,7 +645,7 @@ namespace cogbot
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(fullName + " " + e);
+                    GlobalWriteLine(fullName + " " + e);
                 }
             }));
             t.Name = "MainThread " + fullName;
@@ -1045,6 +1045,33 @@ namespace cogbot
         public static bool NoLoadConfig;
         public static Thread MainThread;
 
+        public static OutputDelegate Filter = null;
+        public static OutputDelegate Real = Console.WriteLine;
+        public OutputDelegate outputDelegate
+        {
+            get
+            {
+                return GlobalWriteLine;
+            }
+            set
+            {
+                if (value == Filter) return;
+                Real = value;
+            }
+        }
+
+        public static void GlobalWriteLine(string str, params object[] args)
+        {
+            if (Filter != null)
+            {
+                Filter(str, args);
+            }
+            else
+            {
+                Real(str, args);
+            }
+        }
+
         private void EnsureAutoExec()
         {
             lock (RunningAutoExec)
@@ -1338,7 +1365,7 @@ namespace cogbot
                     return false;
                 }
                 if (!String.IsNullOrEmpty(scriptFile))
-                    DoCommandAll(String.Format("script {0}", scriptFile), UUID.Zero, Console.WriteLine);
+                    DoCommandAll(String.Format("script {0}", scriptFile), UUID.Zero, GlobalWriteLine);
                 // Then Run the ClientManager normally
             }
 

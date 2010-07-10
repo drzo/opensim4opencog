@@ -9,6 +9,80 @@ namespace RTParser
 {
     public class TextFilter: ICollection<string>
     {
+        private string lastOutput = "";
+        public void writeDebugLine(RTPBot.OutputDelegate console, string message, params object[] args)
+        {
+            console = console ?? Console.WriteLine;
+            lock (this)
+                try
+                {
+                    if (args != null && args.Length != 0) message = String.Format(message, args);
+                    if (lastOutput == message) return;
+                    if (lastOutput.Contains(message))
+                    {
+                        return;
+                    }
+                    lastOutput = message;
+                    string msgTest = message.ToUpper();
+                    bool printIt = message.StartsWith("-");
+                    if (printIt)
+                    {
+                        message = message.Substring(1);
+                    }
+                    else
+                    {
+                        lock (AllOf)
+                            foreach (string s in AllOf)
+                            {
+                                if (s.StartsWith("-"))
+                                {
+                                    if (s == "-*")
+                                    {
+                                        printIt = false;
+                                    }
+                                    else if (message.Contains(s.Substring(1)))
+                                    {
+                                        printIt = false;
+                                        break;
+                                    }
+                                }
+                                else if (s.StartsWith("+"))
+                                {
+                                    if ((s == "+*"))
+                                    {
+                                        printIt = true;
+                                    }
+                                    else if (message.Contains(s.Substring(1)))
+                                    {
+                                        printIt = true;
+                                        break;
+                                    }
+                                }
+                                else if (message.Contains(s) || s == "*")
+                                {
+                                    break;
+                                }
+                            }
+                    }
+                    if (printIt)
+                    {
+                        bool doHeader = message.Contains("!");
+
+                        if (doHeader) writeDebugLine(console, "---------------------------------------------------------------");
+                        message = message.Replace("\r\n", "<br/>");
+                        message = message.Replace("\n", "<br/>");
+                        message = message.Replace("<br/>", " " + Environment.NewLine);
+                        System.Console.WriteLine(message);
+                        if (doHeader)
+                            writeDebugLine(console,"----------------------------------------------------------------");
+                    }
+                }
+                catch (Exception e)
+                {
+                    console(message + " --> " + e);
+                }
+        }
+
         private HashSet<string> AllOf = new HashSet<string>();
         private HashSet<string> ExceptFor = new HashSet<string>();
         

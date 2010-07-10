@@ -31,7 +31,7 @@ namespace RTParser
         /// </summary>
         public bool StaticLoader = true;
 
-        public static ICollection<String> LoggedWords = new HashSet<string>() { "+*" }; //maybe should be ERROR", "STARTUP
+        public static TextFilter LoggedWords = new TextFilter() { "+*" }; //maybe should be ERROR", "STARTUP
         public User LastUser;
         readonly public User BotAsUser;
         readonly public Request BotAsRequest;
@@ -2570,72 +2570,7 @@ The AIMLbot program.
 
         internal static void writeDebugLine(string message, params object[] args)
         {
-            try
-            {
-                if (args != null && args.Length != 0) message = String.Format(message, args);
-                if (lastOutput == message) return;
-                if (lastOutput.Contains(message))
-                {
-                    return;
-                }
-                lastOutput = message;
-                string msgTest = message.ToUpper();
-                bool printIt = message.StartsWith("-");
-                if (printIt)
-                {
-                    message = message.Substring(1);
-                }
-                else
-                {
-                    lock (LoggedWords)
-                        foreach (string s in LoggedWords)
-                        {
-                            if (s.StartsWith("-"))
-                            {
-                                if (s == "-*")
-                                {
-                                    printIt = false;
-                                }
-                                else if (message.Contains(s.Substring(1)))
-                                {
-                                    printIt = false;
-                                    break;
-                                }
-                            }
-                            else if (s.StartsWith("+"))
-                            {
-                                if ((s == "+*"))
-                                {
-                                    printIt = true;
-                                }
-                                else if (message.Contains(s.Substring(1)))
-                                {
-                                    printIt = true;
-                                    break;
-                                }
-                            }
-                            else if (message.Contains(s) || s == "*")
-                            {
-                                break;
-                            }
-                        }
-                }
-                if (printIt)
-                {
-                    bool doHeader = message.Contains("!");
-
-                    if (doHeader) writeDebugLine("---------------------------------------------------------------");
-                    message = message.Replace("\r\n", "<br/>");
-                    message = message.Replace("\n", "<br/>");
-                    message = message.Replace("<br/>", " " + Environment.NewLine);
-                    System.Console.WriteLine(message);
-                    if (doHeader) writeDebugLine("----------------------------------------------------------------");
-                }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(message + " --> " + e);
-            }
+            lock (LoggedWords) LoggedWords.writeDebugLine(Console.WriteLine, message, args);
         }
 
         public bool SameUser(string old, string next)
