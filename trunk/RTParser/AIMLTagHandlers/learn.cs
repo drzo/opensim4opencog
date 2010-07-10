@@ -61,9 +61,8 @@ namespace RTParser.AIMLTagHandlers
                         }
                         catch (Exception e2)
                         {
-                            String s =
-                                "ERROR! Attempted (but failed) to <learn> some new AIML from the following URI: " + path + " error " + e2;
-                            writeToLog(s);
+                            Proc.writeToLog(e2);
+                            writeToLogWarn("ERROR! Attempted (but failed) to <learn> some new AIML from the following URI: {0} error {1}", path, e2);
                         }
 
                     }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using System.Xml;
@@ -114,7 +115,15 @@ namespace RTParser.Utils
                                                    });
                     if (dupes != null)
                     {
-                        dupes.ForEach(delegate(TemplateInfo temp)
+                        if (TemplateInfos.Count == 1)
+                        {
+                            if (true) return;
+                            // no side effect!
+                            TemplateInfo temp = dupes[0];
+                            master.RemoveTemplate(temp);
+                            TemplateInfos = null;
+                        } else
+                            dupes.ForEach(delegate(TemplateInfo temp)
                                           {
                                               if (true)
                                               {
@@ -294,7 +303,7 @@ namespace RTParser.Utils
             var result = result0;
             //if (TemplateInfos == null || TemplateInfos.Count == 0) return false;
             // and if we get a result from the branch process and return it
-            if (result != null && result.Count > 0)
+            if (result != null && result.TemplateCount > 0)
             {
                 if (!newWildcard.IsEmpty)
                 {
@@ -314,11 +323,57 @@ namespace RTParser.Utils
         public static bool fullDepthBorken = false;
         public static bool fullDepthWerken = true;
 
-        public bool evaluate(UPath upath, SubQuery query, Request request, List<Unifiable> mtchList, MatchState matchstate, int index, Unifiable wildcard, QueryList res)
+        private bool evaluate(UPath upath, SubQuery query, Request request, List<Unifiable> mtchList, MatchState matchstate, int index, Unifiable wildcard, QueryList res)
         {
-            int resin = res.Count;
-            evaluate0(upath, query, request, mtchList, matchstate, index, wildcard, res);
-            return res.Count > resin;
+            int resin = res.TemplateCount;
+            bool b = evaluate0(upath, query, request, mtchList, matchstate, index, wildcard, res);
+            bool h = res.TemplateCount > resin;
+            if (h)
+            {
+            }
+            return h;
+        }
+
+        public bool getQueries(UPath upath, Request request, MatchState matchstate, int index, Unifiable wildcard, QueryList topLevel)
+        {
+            int resin = topLevel.TemplateCount;
+            int patternCountChanged = 0;
+            int tried = 0;
+            while (true)
+            {
+                tried++;
+                int patternCount = topLevel.PatternCount;
+                topLevel.Bubble = false;
+                SubQuery query = new SubQuery(upath, request.result, request);
+                query.TopLevel = topLevel;
+                List<Unifiable> mtchList = query.GetMatchList(matchstate);
+                evaluate(upath, query, request, mtchList, matchstate, index, wildcard, topLevel);
+                if (topLevel.PatternCount == patternCount)
+                {
+                    break;
+                }
+                patternCountChanged++;
+
+                if (topLevel.PatternCount >= topLevel.MaxPatterns)
+                {
+                    break;
+                }
+                if (topLevel.TemplateCount >= topLevel.MaxTemplates)
+                {
+                    break;
+                }
+                if (topLevel.BindingCount >= topLevel.MaxBindings)
+                {
+                    break;
+                }
+            }
+            bool f = topLevel.TemplateCount > resin;
+            bool sc = patternCountChanged > 0;
+            if (f != sc)
+            {
+                RTPBot.writeDebugLine("AIMLNODE" + tried + " pc=" + patternCountChanged + ": " + f + "  " + request);
+            }
+            return f;
         }
 
         /// <summary>
@@ -333,13 +388,28 @@ namespace RTParser.Utils
         /// <returns>The template to process to generate the output</returns>
         public bool evaluate0(UPath upath, SubQuery query, Request request, List<Unifiable> mtchList, MatchState matchstate, int index, Unifiable wildcard, QueryList res)
         {
-
+            if (res.Bubble)
+            {
+                return false;
+            }
+            if (res.ContainsPattern(this))
+            {
+                res.Bubble = true;
+                request.Proccessor.writeToLog("BUBBLE! User: " +
+                    request.user.UserID + " raw input: \"" +
+                    request.rawInput + "\" in " + this);
+                request.IsTraced = true;
+                return false;
+            }
             bool childTrue = false;
             Unifiable path = upath.LegacyPath;
             // check for timeout
             if (request.StartedOn.AddMilliseconds(request.Proccessor.TimeOut) < DateTime.Now)
             {
-                request.Proccessor.writeToLog("WARNING! Request timeout. User: " + request.user.UserID + " raw input: \"" + request.rawInput + "\"");
+                request.Proccessor.writeToLog("TIMEOUT! User: " +
+                    request.user.UserID + " raw input: \"" +
+                    request.rawInput + "\" in " + this);
+                request.IsTraced = true;
                 request.hasTimedOut = true;
                 return false;// Unifiable.Empty;
             }
@@ -586,49 +656,32 @@ namespace RTParser.Utils
             return childTrue;// Unifiable.Empty;
         }
 
-        private bool AddSubQueris(QueryList list, SubQuery infos, Node node)
+        static bool AddSubQueris(QueryList toplevel, SubQuery query, Node pattern)
         {
-            if (TemplateInfos == null || TemplateInfos.Count == 0) return false;
-            Result rs = infos.Request.user.LastResult;
-            lock (TemplateInfos)
+            var tmplateInfos = pattern.TemplateInfos;
+            if (tmplateInfos == null || tmplateInfos.Count == 0) return false;
+            Result rs = query.Request.user.LastResult;
+            lock (tmplateInfos)
             {
-                var sq = infos.CopyOfBorken();
-                foreach (TemplateInfo info in TemplateInfos)
+                if (toplevel.IsNewType)
                 {
-                    info.Query = sq;
-                    info.Query.CurrentTemplate = info;
-                    if (!infos.Request.Proccessor.UseInlineThat)
+                    if (toplevel.ContainsPattern(pattern))
                     {
-                        var t = info.That;
-                        if (t != null)
-                        {
-                            if (t.FullPath != "*")
-                            {
-                                if (rs == null) continue;
-                                var v = UnifyStars(t.FullPath, rs.RawOutput);
-                                if (v == null) continue;
-                                sq.ThatStar = infos.ThatStar = v;
-                            }
-                            else
-                            {
-                                if (rs != null)
-                                {
-                                    sq.ThatStar.Insert(0, rs.RawOutput);
-                                    //                                    continue;
-                                }
-                                else
-                                {
-                                    sq.ThatStar.Insert(0, "-think-");
-                                }
-                            }
-                        }
+                        toplevel.Bubble = true;
+                        return true;
                     }
-                    list.Templates.root.Add(info);
-                    infos.Templates.root.Add(info);
-
+                    query.Pattern = pattern;
+                    toplevel.AddPattern(pattern);
+                    toplevel.AddBindingSet(query);
+                }
+                foreach (TemplateInfo sol in tmplateInfos)
+                {
+                    sol.Query = query;
+                    query.CurrentTemplate = sol;
+                    query.Templates.root.Add(sol);
+                    toplevel.AddTemplate(sol);
                 }
             }
-            if (TemplateInfos == null || TemplateInfos.Count == 0) return false;
             return true;
         }
 
@@ -899,14 +952,56 @@ namespace RTParser.Utils
 
     public class QueryList
     {
-        public int Count
+        public int TemplateCount
         {
-            get { return Templates.Count; }
+            get { return Templates == null ? 0 : Templates.Count; }
         }
-        public UList Templates = new UList();
-        public UList ToUList()
+
+        public decimal BindingCount
+        {
+            get { return Bindings == null ? 0 : Bindings.Count; }
+        }
+
+        private List<TemplateInfo> Templates = null;
+        private List<Node> Patterns;
+        private List<SubQuery> Bindings;
+        public bool Bubble;
+        public bool Value;
+        public int PatternCount;
+        public int MaxPatterns = 3;
+        public int MaxTemplates = 30;
+        public int MaxBindings = 20;
+        public bool IsNewType = true;
+
+        public List<TemplateInfo> ToUList()
         {
             return Templates;
+        }
+        public void AddPattern(Node node)
+        {
+            if (Patterns == null) Patterns = new List<Node>();
+            Patterns.Add(node);
+        }
+        public void AddTemplate(TemplateInfo info)
+        {
+            if (Templates == null) Templates = new List<TemplateInfo>();
+            Templates.Add(info);
+        }
+
+        public bool ContainsPattern(Node node)
+        {
+            return Patterns != null && Patterns.Contains(node);
+        }
+
+        public void AddBindingSet(SubQuery query)
+        {
+            if (Bindings == null) Bindings = new List<SubQuery>();
+            Bindings.Add(query);
+        }
+
+        public IEnumerable<SubQuery> GetBindings()
+        {
+            return Bindings;
         }
     }
 

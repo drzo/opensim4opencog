@@ -12,9 +12,11 @@ namespace RTParser.Utils
     /// interrogation of the graphmaster.
     /// </summary>
     [Serializable]
-    public class SubQuery: ISettingsDictionary
+    public class SubQuery : ISettingsDictionary
     {
         #region Attributes
+
+        public GraphMaster Graph = null;
         /// <summary>
         /// The path that this query relates to
         /// </summary>
@@ -51,31 +53,31 @@ namespace RTParser.Utils
 
         public override string ToString()
         {
-            string s = "SubQuery '" + FullPath + "'";
-            if (Templates == null)
+            string s = string.Format("SubQuery '{0}' I={1} TH={2} TP={3} G={4} TC={5}",
+                                     FullPath, InputStar.Count, ThatStar.Count, TopicStar.Count,
+                                     GuardStar.Count, Templates == null ? 0 : Templates.Count);
+            foreach (var path in Templates)
             {
-                s += " -NO-TEMPLATES- ";
+                s += "\r\n t: " + path;
             }
-            else
-                foreach (var path in Templates)
-                {
-                    s += "\r\n t: " + path;
-                }
-            return s + " \r\n   Result: " + Result;
+            return s + " \r\n   Result: " + Result ?? "-no-result-";
         }
 
         public Result Result;
         public Request Request;
         public TemplateInfo CurrentTemplate;
+        public Node Pattern;
+        public QueryList TopLevel;
 
         /// <summary>
         /// Ctor
         /// </summary>
         /// <param name="fullPath">The path that this query relates to</param>
-        public SubQuery(UPath fullPath, Result res , Request request)
+        public SubQuery(UPath fullPath, Result res, Request request)
         {
             Result = res;
             Request = request;
+            Graph = request.Graph;
             this.FullPath = fullPath;
         }
 
@@ -154,10 +156,32 @@ namespace RTParser.Utils
             SubQuery sq = new SubQuery(FullPath, Result, Request);
             sq.InputStar.AddRange(InputStar);
             sq.ThatStar.AddRange(ThatStar);
+            sq.TopicStar.AddRange(TopicStar);
             sq.GuardStar.AddRange(GuardStar);
             sq.Flags.AddRange(Flags);
-            sq.TopicStar.AddRange(TopicStar);
+            sq.Graph = Graph;
             return sq;
+        }
+
+        public List<Unifiable> GetMatchList(MatchState matchstate)
+        {
+            switch (matchstate)
+            {
+                case MatchState.UserInput:
+                    return InputStar;
+                    break;
+                case MatchState.That:
+                    return ThatStar;
+                    break;
+                case MatchState.Topic:
+                    return TopicStar;
+                    break;
+                case MatchState.Flag:
+                    return Flags;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException("matchstate");
+            }
         }
     }
 

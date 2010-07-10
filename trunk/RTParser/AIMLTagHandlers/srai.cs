@@ -83,8 +83,7 @@ namespace RTParser.AIMLTagHandlers
                             showDebug = false;
                         }
                         if (showDebug)
-                            writeToLog(prefix + " SRAI-- (" + depth + ")" + subRequestrawInput + " ----- @ " +
-                                              LineNumberTextInfo());
+                            writeToLog(prefix + " SRAI-- (" + depth + ")" + subRequestrawInput + " ----- ");
 
                        
                         if (mybot.chatTrace)
@@ -100,8 +99,7 @@ namespace RTParser.AIMLTagHandlers
                         if (depth > 200)
                         {
                             writeToLog(prefix + " SRAI TOOOO DEEEEP <-- (" + depth + ")" + subRequestrawInput +
-                                       " ----- @ " +
-                                       LineNumberTextInfo());
+                                       " ----- @ ");
                             return Unifiable.Empty;
                         }
                         AIMLbot.Result subResult = null;
@@ -110,9 +108,10 @@ namespace RTParser.AIMLTagHandlers
                         try
                         {
                             this.Proc.isAcceptingUserInput = true;
-                            var newresult = new AIMLbot.Result(request.user, Proc, request);
-                            subRequest.result = newresult;
+                            //var newresult = new AIMLbot.Result(request.user, Proc, request);
+                            //subRequest.result = newresult;
                             user.SuspendAdd = true;
+                            if (request.IsTraced) subRequest.IsTraced = !showDebug;
                             subResult = this.Proc.Chat(subRequest, subRequest.Graph);
                         }
                         finally
@@ -125,7 +124,7 @@ namespace RTParser.AIMLTagHandlers
                         if (Unifiable.IsNullOrEmpty(subQueryRawOutput))
                         {
                             if (showDebug)
-                                writeToLog(prefix + " SRAI<-- (" + depth + ") MISSING <----- @ " + LineNumberTextInfo());
+                                writeToLog(prefix + " SRAI<-- (" + depth + ") MISSING <----- @ ");
                             if (mybot.chatTrace)
                             {
                                 mybot.writeChatTrace("\"L{0}\" -> \"S{1}\" ;\n", depth, depth);

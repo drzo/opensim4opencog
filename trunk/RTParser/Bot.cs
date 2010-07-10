@@ -30,6 +30,8 @@ namespace RTParser
         /// Will ensure the same loader options are used between loaders
         /// </summary>
         public bool StaticLoader = true;
+
+        public static ICollection<String> LoggedWords = new HashSet<string>() { "+*" }; //maybe should be ERROR", "STARTUP
         public User LastUser;
         readonly public User BotAsUser;
         readonly public Request BotAsRequest;
@@ -368,8 +370,8 @@ namespace RTParser
         //public string lastDefMSM;
         //public string lastDefState;
 
-        public Stack <string> conversationStack = new Stack<string>();
-        
+        public Stack<string> conversationStack = new Stack<string>();
+
         /// <summary>
         /// If set to false the input from AIML files will undergo the same normalization process that
         /// user input goes through. If true the Proccessor will assume the AIML is correct. Defaults to true.
@@ -414,6 +416,7 @@ namespace RTParser
             BotAsUser.Predicates = GlobalSettings;
             BotAsRequest = new AIMLbot.Request("-bank-input-", BotAsUser, this, null);
             AddExcuteHandler("aiml", EvalAIMLHandler);
+            AddExcuteHandler("bot", LightWeigthBotDirective);
             this.TheCyc = new CycDatabase(this);
             var v = TheCyc.GetCycAccess;
         }
@@ -470,7 +473,7 @@ namespace RTParser
         {
             var prev = isAcceptingUserInput;
             try
-            {                
+            {
                 isAcceptingUserInput = false;
                 options.request = request;
                 AIMLLoader loader = Loader;
@@ -737,6 +740,16 @@ namespace RTParser
 
         public delegate void OutputDelegate(string s, params object[] args);
 
+        public void writeToLog(Exception e)
+        {
+            if (e==null) return;
+            string s = "ERROR: " + e.Message + " " + e.StackTrace;
+            Exception inner = e.InnerException;
+            if (inner != null && inner != e)
+                writeToLog(inner);
+            writeDebugLine(s);
+        }
+
         /// <summary>
         /// Writes a (timestamped) message to the Processor's log.
         /// 
@@ -745,30 +758,18 @@ namespace RTParser
         /// <param name="message">The message to log</param>
         public void writeToLog(string message, params object[] args)
         {
+            bool writeToConsole = outputDelegate == null;
             try
             {
                 if (args != null && args.Length != 0) message = String.Format(message, args);
             }
             catch (Exception)
             {
+                writeToConsole = true;
             }
-            message = ("[" + DateTime.Now.ToString() + "]: " + message.Trim() + Environment.NewLine);
-            writeToLog0(message);
-            if (message.ToUpper().Contains("ERROR"))
-            {
-                Console.WriteLine("-------------------");
-                Console.WriteLine(message);
-                Console.WriteLine("-------------------");
-            }
-        }
-        public void writeToLog0(string message)
-        {
-
             if (String.IsNullOrEmpty(message)) return;
-            if (message.Contains("SubQuery 'how are you TAG-T"))
-            {
-            }
 
+            message = message.Trim() + Environment.NewLine;
             if (outputDelegate != null)
             {
                 try
@@ -777,15 +778,25 @@ namespace RTParser
                 }
                 catch (Exception)
                 {
+                    writeToConsole = true;
                 }
-                RTPBot.writeDebugLine(message);
+                if (writeToConsole) writeDebugLine(message);
+                message = string.Format("[{0}]: {1}", DateTime.Now.ToString(), message.Trim());
             }
             else
             {
+                if (writeToConsole) writeDebugLine(message);
+                //                message = string.Format("[{0}]: {1}{2}", DateTime.Now.ToString(), message.Trim(), Environment.NewLine);
+                message = string.Format("[{0}]: {1}", DateTime.Now.ToString(), message.Trim());
                 //string m = message.AsString().ToLower();
                 //if (m.Contains("error") || m.Contains("excep"))
-                RTPBot.writeDebugLine(message);
             }
+            writeToLog0(message);
+        }
+
+        public void writeToLog0(string message)
+        {
+
             this.LastLogMessage = message;
             if (!this.IsLogging) return;
             lock (this.LoggingLock)
@@ -990,7 +1001,9 @@ namespace RTParser
         /// <returns>the result to be output to the user</returns>        
         public string ChatString(string rawInput, string username)
         {
-            return Chat(new AIMLbot.Request(rawInput, FindOrCreateUser(username), this, null)).Output;
+            var r = new AIMLbot.Request(rawInput, FindOrCreateUser(username), this, null);
+            r.IsTraced = true;
+            return Chat(r).Output;
         }
 
 
@@ -1003,6 +1016,7 @@ namespace RTParser
         public Result Chat(Unifiable rawInput, Unifiable UserGUID)
         {
             AIMLbot.Request request = new AIMLbot.Request(rawInput, new User(UserGUID, this), this, null);
+            request.IsTraced = true;
             return this.Chat(request);
         }
 
@@ -1090,7 +1104,7 @@ namespace RTParser
                     LastUser.LastResult.AddOutputSentences(message);
             }
             message = swapPerson(message);
-            RTPBot.writeDebugLine("HEARDSELF SWAP: " + message);
+            writeDebugLine("HEARDSELF SWAP: " + message);
             return null;
             RunTask(() => HeardSelfSay0(message), "heardSelfSay: " + message, 500);
             return null;
@@ -1155,14 +1169,15 @@ namespace RTParser
         {
             AddHeardPreds(message, HeardPredicates);
             RTPBot.writeDebugLine("HEARDSELF: " + message);
+            writeDebugLine("-----------------------------------------------------------------");
             return null;
             try
             {
-                return Chat(new AIMLbot.Request(message, BotAsUser, this, null), HeardSelfSayGraph);
+                return Chat0(new AIMLbot.Request(message, BotAsUser, this, null), HeardSelfSayGraph);
             }
             catch (Exception e)
             {
-                RTPBot.writeDebugLine("" + e);
+                writeToLog(e);
                 return null;
             }
         }
@@ -1170,11 +1185,12 @@ namespace RTParser
         private void AddHeardPreds(string message, SettingsDictionary dictionary)
         {
             if (message == null) return;
-
+            writeDebugLine("-----------------------------------------------------------------");
             foreach (var s in message.Trim().Split(new char[] { '!', '?', '.' }, StringSplitOptions.RemoveEmptyEntries))
             {
                 AddHeardPreds0(s, dictionary);
             }
+            writeDebugLine("-----------------------------------------------------------------");
             //RTPBot.writeDebugLine("" + dictionary.ToDebugString());
         }
         private void AddHeardPreds0(Unifiable unifiable, SettingsDictionary dictionary)
@@ -1199,9 +1215,22 @@ namespace RTParser
 
         public Unifiable CleanupCyc(string text)
         {
-            if (TheCyc == null) return text.Replace("#$", " ").Replace("  ", " ");
-            string str = TheCyc.CleanupCyc(text);
-            return str;
+            if (text == null) return null;
+            if (text == "")
+            {
+                return null;
+            }
+            text = text.Trim();
+            if (text == "")
+            {
+                writeToLog(" had white string ");
+                return null;
+            }
+            if (TheCyc != null)
+            {
+                text = TheCyc.CleanupCyc(text);
+            }
+            return text.Replace("#$", " ").Replace("  ", " ").Trim();
         }
 
         /// <summary>
@@ -1226,32 +1255,54 @@ namespace RTParser
         {
             var prev = request.Graph;
             request.Graph = G;
-            var v = Chat0(request, G);
-            request.Graph = prev;
-            return v;
+            try
+            {
+
+                var v = Chat0(request, G);
+                return v;
+            }
+            finally
+            {
+                request.Graph = prev;
+
+            }
         }
 
         public AIMLbot.Result Chat0(Request request, GraphMaster G)
         {
+            bool isTraced = request.IsTraced || G == null;
+
             LastUser = request.user ?? LastUser;
             //chatTrace = null;
 
             streamDepth++;
 
             AIMLbot.Result result = new AIMLbot.Result(request.user, this, request);
+            if (chatTrace) result.IsTraced = isTraced;
 
+            string rawInputString = request.rawInput.AsString();
+            if (rawInputString.StartsWith("@"))
+            {
+                bool myBotBotDirective = BotDirective(request.user, rawInputString, result.WriteLine);
+                if (myBotBotDirective)
+                {
+                    return result;
+                }
+            }
 
             var orig = request.BotOutputs;
-            if (AIMLLoader.ContainsAiml(request.rawInput))
+            if (AIMLLoader.ContainsAiml(rawInputString))
             {
                 try
                 {
-                    result = ImmediateAiml(AIMLTagHandler.getNode(request.rawInput), request, Loader, null);
+                    result = ImmediateAiml(AIMLTagHandler.getNode(rawInputString), request, Loader, null);
                     request.rawInput = result.Output;
                 }
                 catch (Exception e)
                 {
-                    writeToLog("ImmediateAiml: " + e);
+                    isTraced = true;
+                    writeToLog(e);
+                    writeToLog("ImmediateAiml: ERROR: " + e);
                 }
             }
 
@@ -1268,10 +1319,12 @@ namespace RTParser
                 Unifiable[] rawSentences = new Unifiable[] { request.rawInput };//splitter.Transform(request.rawInput);
                 LoadInputPaths(request, loader, rawSentences, result);
                 int NormalizedPathsCount = result.NormalizedPaths.Count;
-                if (NormalizedPathsCount != 1)
+
+                if (isTraced && NormalizedPathsCount != 1)
                 {
                     foreach (Unifiable path in result.NormalizedPaths)
                     {
+
                         writeToLog("  i: " + path.LegacyPath);
                     }
                     writeToLog("NormalizedPaths.Count = " + NormalizedPathsCount);
@@ -1280,16 +1333,17 @@ namespace RTParser
                 // grab the templates for the various sentences from the graphmaster
                 foreach (Unifiable path in result.NormalizedPaths)
                 {
-                    Utils.SubQuery query = new SubQuery(path, result, request);
-                    //query.Templates = 
-                    G.evaluate(path, query, request, query.InputStar, MatchState.UserInput, 0, Unifiable.CreateAppendable());
-                    result.SubQueries.Add(query);
+                    var ql = G.gatherQueries(path, request, MatchState.UserInput);
+                    if (ql.BindingCount > 0)
+                    {
+                        result.AddSubqueries(ql);
+                    }
                 }
 
                 //todo pick and chose the queries
-                if (result.SubQueries.Count != 1)
+                // if (result.SubQueries.Count != 1)
                 {
-                    if (false)
+                    if (isTraced)
                     {
                         string s = "SubQueries.Count = " + result.SubQueries.Count;
                         foreach (var path in result.SubQueries)
@@ -1297,6 +1351,7 @@ namespace RTParser
                             s += "\r\n" + path.FullPath;
                         }
                         writeToLog(s);
+                        Console.Out.Flush();
                     }
                 }
 
@@ -1308,7 +1363,7 @@ namespace RTParser
 
                     }
                 }
-                if (true || result.SubQueries.Count != 1)
+                if (isTraced && result.SubQueries.Count != 1)
                 {
                     writeToLog("SubQueries.Count = " + result.SubQueries.Count);
                     foreach (SubQuery path in result.SubQueries)
@@ -1328,12 +1383,15 @@ namespace RTParser
             }
             else
             {
-                result.AddOutputSentences(this.NotAcceptingUserInputMessage);
+                string nai = NotAcceptingUserInputMessage;
+                if (isTraced)
+                    writeToLog("ERROR {0} getting back {1}", request, nai);
+                result.AddOutputSentences(nai);
             }
 
             // populate the Result object
             result.Duration = DateTime.Now - request.StartedOn;
-            request.user.addResult(result);
+            if (request.user != null) request.user.addResult(result);
             streamDepth--;
 
             return result;
@@ -1427,8 +1485,8 @@ namespace RTParser
                         query.CurrentTemplate = s;
                         if (proccessResponse(subquery, request, result, s.Output, s.Guard, out found0, handler)) break;
                         if (found0) found = true;
-                         //break; // KHC: single vs. Multiple
-                       if ((found0)&&(request.processMultipleTemplates ==false)) break;
+                        //break; // KHC: single vs. Multiple
+                        if ((found0) && (request.processMultipleTemplates == false)) break;
                     }
                     catch (Exception e)
                     {
@@ -1463,6 +1521,7 @@ namespace RTParser
         public bool proccessResponse(SubQuery query, Request request, Result result, XmlNode sOutput, GuardInfo sGuard, out bool found, AIMLTagHandler handler)
         {
             found = false;
+            bool isTraced = request.IsTraced || result.IsTraced || !isAcceptingUserInput;
             //XmlNode guardNode = AIMLTagHandler.getNode(s.Guard.InnerXml);
             string output = sOutput.OuterXml;
             bool usedGuard = sGuard != null;
@@ -1480,11 +1539,16 @@ namespace RTParser
             int f = outputSentence.IndexOf("GUARDBOM");
             if (f < 0)
             {
-                if (outputSentence.Length > 0)
+                string o = AsOutputSentence(outputSentence);
+                if (IsOutputSentence(o))
                 {
-                    result.AddOutputSentences(outputSentence.Trim().Replace("  ", " ").Replace("  ", " "));
+                    if (isTraced)
+                        writeToLog("AIMLTRACE '{0}' TEMPLATE={1}", o, AIMLLoader.LineNumberTextInfo(templateNode));
+                    result.AddOutputSentences(o);
                     found = true;
                 }
+                if (!found && isTraced && isAcceptingUserInput)
+                    writeToLog("UNUSED '{0}' TEMPLATE={1}", o, AIMLLoader.LineNumberTextInfo(templateNode));
                 return false;
             }
 
@@ -1503,30 +1567,54 @@ namespace RTParser
                     Unifiable ss = SystemExecute(left, lang, request);
                     if (Unifiable.IsFalse(ss))
                     {
+                        if (isTraced)
+                            writeToLog("GUARD FALSE '{0}' TEMPLATE={1}", request, AIMLLoader.LineNumberTextInfo(templateNode));
                         return false;
                     }
                 }
                 catch (Exception e)
                 {
-                    string s = "" + e;
-                    RTPBot.writeDebugLine(s);
-                    writeToLog(s);
+                    writeToLog(e);
                     return false;
                 }
 
+                //part the BOM
                 outputSentence = outputSentence.Substring(f + 9);
-                if (outputSentence.Length > 0)
+                string o = AsOutputSentence(outputSentence);
+                if (IsOutputSentence(o))
                 {
-                    result.AddOutputSentences(outputSentence);
-                    found = true;
+                    if (isTraced)
+                        writeToLog(query.Graph + ": GUARD SUCCESS '{0}' TEMPLATE={1}", o, AIMLLoader.LineNumberTextInfo(templateNode));
+                    result.AddOutputSentences(o); found = true;
                     return true;
                 }
+                else
+                {
+                    writeToLog("GUARD SKIP '{0}' TEMPLATE={1}", outputSentence,
+                               AIMLLoader.LineNumberTextInfo(templateNode));
+                }
+
                 return false;
             }
             catch (System.Exception ex)
             {
+                writeToLog(ex);
                 return false;
             }
+        }
+
+        private bool IsOutputSentence(string sentence)
+        {
+            if (sentence == null) return false;
+            string o = AsOutputSentence(sentence);
+            if (o == null) return false;
+            return o.Length > 0;
+        }
+
+        public string AsOutputSentence(string sentence)
+        {
+            if (sentence == null) return null;
+            return CleanupCyc(sentence);
         }
 
         /// <summary>
@@ -1545,7 +1633,7 @@ namespace RTParser
             {
                 request.Proccessor.writeToLog("WARNING! Request timeout. User: " + request.user.UserID +
                                               " raw input: \"" + request.rawInput + "\" processing template: \"" +
-                                              query.Templates + "\"");
+                                              (query == null ? " NOQUERY " : query.Templates + "\""));
                 request.hasTimedOut = true;
                 return Unifiable.Empty;
             }
@@ -1836,7 +1924,7 @@ namespace RTParser
                 }
                 catch (Exception e)
                 {
-                    writeToLog("getBespokeTags: " + e);
+                    writeToLog("ERROR getBespokeTags: " + e);
                     return null;
                 }
             }
@@ -2005,22 +2093,22 @@ The AIMLbot program.
             }
             Unifiable s = "The system tag should be doing '" + cmd + "' lang=" + langu;
             writeToLog(s.AsString());
-            SystemExecHandler handler = null;
-            if (ExecuteHandlers.ContainsKey(langu))
+            SystemExecHandler handler;
+            if (ExecuteHandlers.TryGetValue(langu, out handler))
             {
-                handler = ExecuteHandlers[langu];
                 try
                 {
-                    return "" + handler(cmd, user);
+                    object o = handler(cmd, user);
+                    return Unifiable.Create(o);
                 }
                 catch (Exception e)
                 {
-                    writeToLog("" + e);
+                    writeToLog(e);
                     return Unifiable.Empty;
                 }
             }
-            return s;
-
+            writeToLog(s);
+            return Unifiable.Empty;
         }
 
 
@@ -2078,10 +2166,8 @@ The AIMLbot program.
                 // grab the templates for the various sentences from the graphmaster
                 foreach (Unifiable path in result.NormalizedPaths)
                 {
-                    Utils.SubQuery query = new SubQuery(path, result, request);
-                    //query.Templates = 
-                    request.Graph.evaluate(path, query, request, query.InputStar, MatchState.UserInput, 0, Unifiable.CreateAppendable());
-                    result.SubQueries.Add(query);
+                    GraphMaster requestGraph = request.Graph;
+                    result.AddSubqueries(requestGraph.gatherQueries(path, request, MatchState.UserInput));
                 }
 
                 //todo pick and chose the queries
@@ -2163,12 +2249,19 @@ The AIMLbot program.
             }
             return g;
         }
+
+        static void MainConsoleWriteLn(string fmt,params object[] ps)
+        {
+            writeDebugLine("-" + fmt, ps);  
+        }
         public static void Main(string[] args)
         {
-            Bot myBot = new Bot();
+            OutputDelegate writeLine = MainConsoleWriteLn;           
+            RTPBot myBot = new Bot();
             myBot.loadSettings();
             string myName = "BinaBot Daxeline";
-            myName = "Kotoko Irata";
+            //myName = "Kotoko Irata";
+            //myName = "Nephrael Rae";
             if (args != null && args.Length > 0)
             {
                 int si = 0;
@@ -2181,9 +2274,11 @@ The AIMLbot program.
                 if (argsLeft > 0)
                     myName = String.Join(" ", args, si, argsLeft);
             }
+            writeLine(Environment.NewLine);
             User myUser = myBot.FindOrCreateUser(null); // UNKNOWN_PARTNER
             myBot.isAcceptingUserInput = false;
-            myBot.loadAIMLFromFiles();
+            myBot.loadAIMLFromDefaults();
+            writeLine("-----------------------------------------------------------------");
             myBot.LoadPersonalDirectories(myName);
             myBot.isAcceptingUserInput = true;
 
@@ -2194,13 +2289,16 @@ The AIMLbot program.
                                   "";
             //Added from AIML content now
             // myBot.AddAiml(evidenceCode);
+            myBot.BotDirective(myUser, "@log clear -spam +error +aimltrace +cyc list +*", Console.Error.WriteLine);
+            writeLine("-----------------------------------------------------------------");
+            myBot.BotDirective(myUser, "help", writeLine);
+            writeLine("-----------------------------------------------------------------");
+
             String s = null;
             var userJustSaid = String.Empty;
             while (true)
             {
-                System.Console.WriteLine("-----------------------------------------------------------------");
-                RTPBot.writeDebugLine("-----------------------------------------------------------------");
-                RTPBot.writeDebugLine("-----------------------------------------------------------------");
+                writeLine("-----------------------------------------------------------------");
                 System.Console.Write(myUser.ShortName + "> ");
                 Console.Out.Flush();
                 string input = Console.ReadLine();
@@ -2213,82 +2311,187 @@ The AIMLbot program.
                 {
                     Environment.Exit(0);
                 }
+                writeLine("-----------------------------------------------------------------");
                 if (String.IsNullOrEmpty(input))
                 {
-                    System.Console.WriteLine(myName + "> " + s);
-                    continue;
-                }
-                if (input == "set")
-                {
-                    System.Console.WriteLine(myBot.HeardPredicates.ToDebugString());
-                    System.Console.WriteLine(myBot.GlobalSettings.ToDebugString());
-                    System.Console.WriteLine(myUser.Predicates.ToDebugString());
-                    System.Console.WriteLine(myName + "> " + s);
-                    continue;
-                }
-                if (input == "cd")
-                {
-                    string ss = input.Substring(2).Trim();
-                    myUser.ListeningGraph = myBot.GetGraph(ss, myUser.ListeningGraph);
+                    writeLine(myName + "> " + s);
                     continue;
                 }
                 try
                 {
-                    if (input.StartsWith("+ "))
+                    bool myBotBotDirective = false;
+                    if (input.StartsWith("@"))
                     {
-                        string ss = input.Substring(2).Trim();
-                        myBot.AddAiml(ss);
-                        System.Console.WriteLine("Done with " + ss);
-                        continue;
+                        myBotBotDirective = myBot.BotDirective(myUser, input, writeLine);
+                        if (!myBotBotDirective) continue;
                     }
-                    if (input.StartsWith("+"))
-                    {
-                        string ss = input.Substring(1).Trim();
-                        int indexof = ss.IndexOf(" ");
-                        string gn = ss.Substring(0, indexof);
-                        ss = ss.Substring(indexof + 1).Trim();
-                        Utils.GraphMaster g = myBot.GetGraph(gn, myUser.ListeningGraph);
-                        myBot.AddAiml(ss);
-                        System.Console.WriteLine("Done with " + ss);
-                        continue;
-                    }
-                    if (input.StartsWith("load"))
-                    {
-                        string ss = input.Substring(4).Trim();
-                        myBot.Loader.loadAIML(ss);
-                        System.Console.WriteLine("Done with " + ss);
-                        continue;
-                    }
-                    if (input.StartsWith("self"))
-                    {
-                        s = input.Substring(4).Trim();
-                        myBot.HeardSelfSay0(s);
-                        System.Console.WriteLine(myName + "> " + s);
-                    }
-                    else
+                    if (!myBotBotDirective)
                     {
                         userJustSaid = input;
                         //  myUser.TopicSetting = "collectevidencepatterns";
                         myBot.pMSM.clearEvidence();
                         myBot.pMSM.clearNextStateValues();
                         Request r = new AIMLbot.Request(input, myUser, myBot, null);
+                        r.IsTraced = true;
                         r.processMultipleTemplates = false;
+                        writeLine("-----------------------------------------------------------------");
                         Result res = myBot.Chat(r);
-                        s = res.Output;
-                        myBot.HeardSelfSay0(s);
+                        if (!res.IsEmpty)
+                        {
+                            s = res.Output;
+                            writeLine("-----------------------------------------------------------------");
+                            myBot.HeardSelfSay0(s);
+                            writeLine("-----------------------------------------------------------------");
+
+                        }
+                        else
+                        {
+                            s = "NULL";
+                        }
                     }
-                    System.Console.WriteLine("-----------------------------------------------------------------");
-                    Console.WriteLine("---------------------");
-                    System.Console.WriteLine(myUser.ShortName + ": " + userJustSaid);
-                    Console.WriteLine("---------------------");
-                    System.Console.WriteLine(myName + ": " + s);
+                    writeLine("-----------------------------------------------------------------");
+                    writeLine("{0}: {1}", myUser.ShortName, userJustSaid);
+                    writeLine("---------------------");
+                    writeLine("{0}: {1}", myName, s);
+                    writeLine("-----------------------------------------------------------------");
                 }
                 catch (Exception e)
                 {
-                    System.Console.WriteLine("Error: " + e);
+                    writeLine("Error: {0}", e);
                 }
             }
 
+        }
+
+        public object LightWeigthBotDirective(string input, Request request)
+        {
+            var sw = new StringWriter();
+            bool b = BotDirective(request.user, input, request.WriteLine);
+            var sws = sw.ToString();
+            writeDebugLine(sws);
+            return Unifiable.Empty;
+        }
+
+        public bool BotDirective(User myUser, string input, OutputDelegate console)
+        {
+            if (input == null) return false;
+            input = input.Trim();
+            if (input == "") return false;
+            if (input.StartsWith("@"))
+            {
+                input = input.TrimStart(new[] { ' ', '@' });
+            }
+            int firstWhite = input.IndexOf(' ');
+            if (firstWhite == -1) firstWhite = input.Length - 1;
+            string cmd = input.Substring(0, firstWhite + 1).Trim().ToLower();
+            string args = input.Substring(firstWhite + 1).Trim();
+            bool showHelp = false;
+            if (cmd == "help")
+            {
+                showHelp = true;
+                console("Commands are prefixed with @cmd");
+                console("@help shows help -- command help comming soon!");
+            }
+
+            if (showHelp) console("@rename <olduser> <newname>");
+            if (cmd == "rename")
+            {
+                int lastIndex = args.IndexOf("-");
+                string user = args.Substring(0, lastIndex).Trim();
+                string value = args.Substring(lastIndex + 1).Trim();
+                RenameUser(user, value);
+                console("Renamed: " + user + " is now known to be " + value);
+                return true;
+            }
+
+            if (showHelp) console("@withuser <user> - <text>");
+            if (cmd == "withuser" || cmd == "@")
+            {
+                int lastIndex = args.IndexOf("-");
+                string user = args.Substring(0, lastIndex).Trim();
+                string value = args.Substring(lastIndex + 1).Trim();
+                console(ChatString(value, user));
+                return true;
+            }
+
+            if (showHelp) console("@aimladd <aiml/>");
+            if (cmd == "aimladd")
+            {
+                int indexof = args.IndexOf(" ");
+                string gn = args.Substring(0, indexof);
+                args = args.Substring(indexof + 1).Trim();
+                GraphMaster g = GetGraph(gn, myUser.ListeningGraph);
+                AddAiml(g, args);
+                console("Done with " + args);
+                return true;
+            }
+
+            if (showHelp) console("@reload");
+            if (cmd == "reload")
+            {
+                ReloadAll();
+                return true;
+                //                return;//Success("WorldSystemModule.MyBot.ReloadAll();");
+            }
+
+            if (showHelp) console("@load <uri>");
+            if (cmd == "load")
+            {
+                Loader.loadAIML(args);
+                console("Done with " + args);
+                return true;
+            }
+            if (showHelp) console("@self <heard>");
+            if (cmd == "self")
+            {
+                HeardSelfSay0(args);
+                console("self> " + args);
+                return true;
+            }
+
+            if (showHelp) console("@set [var [value]]");
+            if (cmd == "set")
+            {
+                console(HeardPredicates.ToDebugString());
+                console(GlobalSettings.ToDebugString());
+                console(DefaultPredicates.ToDebugString());
+                return myUser.DoUserCommand(args, console);
+                return true;
+            }
+
+            if (showHelp) console("@bot [var [value]]");
+            if (cmd == "bot")
+            {
+                return BotAsUser.DoUserCommand(args, console);
+            }
+
+            if (showHelp) console("@user [var [value]]");
+            if (cmd == "user")
+            {
+                return myUser.DoUserCommand(args, console);
+            }
+
+            if (showHelp) console("@graph <graph>");
+            if (cmd == "graph")
+            {
+                myUser.ListeningGraph = GetGraph(args, myUser.ListeningGraph);
+                return true;
+            }
+
+            if (showHelp) console("@log clear -spam +error +aimltrace +cyc list");
+            if (cmd.StartsWith("log"))
+            {
+                foreach (var ss in args.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    string s = ss;
+                    s = "+" + s;
+                    TextFilter.ListEdit(LoggedWords, s.ToUpper(), console);
+                }
+                return true;
+            }
+            if (showHelp) return true;
+            console("unknown: @" + input);
+            return false;
         }
 
         public string GetUserMt(User user)
@@ -2364,15 +2567,67 @@ The AIMLbot program.
         }
 
         static string lastOutput = "";
+
         internal static void writeDebugLine(string message, params object[] args)
         {
             try
             {
-
                 if (args != null && args.Length != 0) message = String.Format(message, args);
                 if (lastOutput == message) return;
+                if (lastOutput.Contains(message))
+                {
+                    return;
+                }
                 lastOutput = message;
-                System.Console.WriteLine(message);
+                string msgTest = message.ToUpper();
+                bool printIt = message.StartsWith("-");
+                if (!printIt)
+                {
+                    lock (LoggedWords)
+                        foreach (string s in LoggedWords)
+                        {
+                            if (s.StartsWith("-"))
+                            {
+                                if (s == "-*")
+                                {
+                                    printIt = false;
+                                }
+                                else if (message.Contains(s.Substring(1)))
+                                {
+                                    printIt = false;
+                                    break;
+                                }
+                            }
+                            else if (s.StartsWith("+"))
+                            {
+                                if ((s == "+*"))
+                                {
+                                    printIt = true;
+                                }
+                                else if (message.Contains(s.Substring(1)))
+                                {
+                                    printIt = true;
+                                    break;
+                                }
+                            }
+                            else if (message.Contains(s) || s == "*")
+                            {
+                                break;
+                            }
+                        }
+                    message = message.Substring(1);
+                }
+                if (printIt)
+                {
+                    bool doHeader = message.Contains("!");
+
+                    if (doHeader) writeDebugLine("---------------------------------------------------------------");
+                    message = message.Replace("\r\n", "<br/>");
+                    message = message.Replace("\n", "<br/>");
+                    message = message.Replace("<br/>", " " + Environment.NewLine);
+                    System.Console.WriteLine(message);
+                    if (doHeader) writeDebugLine("----------------------------------------------------------------");
+                }
             }
             catch (Exception e)
             {

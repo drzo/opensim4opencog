@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using RTParser;
+using RTParser.Utils;
 
 namespace AIMLbot
 {

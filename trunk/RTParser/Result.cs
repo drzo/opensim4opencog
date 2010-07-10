@@ -13,6 +13,29 @@ namespace RTParser
     /// </summary>
     public class Result
     {
+        private bool Started = false;
+        public void AddSubqueries(QueryList queries)
+        {
+            if (queries.BindingCount == 0)
+            {
+                return;
+            }
+                var o = Console.Out;
+            var queriesGetBindings = queries.GetBindings();
+            foreach (SubQuery query in queriesGetBindings)
+            {
+                if (IsTraced)
+                {
+                    bot.writeChatTrace("AIMLTRACE SQ: " + query);
+                    o.Flush();
+                }
+                SubQueries.Add(query);
+            }
+            Started = true;
+        }
+
+        public bool IsTraced = false;
+
         private string AlreadyUsed = "";
         public int LinesToUse = 1;
         public void AddOutputSentences(Unifiable unifiable)
@@ -35,6 +58,11 @@ namespace RTParser
             OutputSentences.RemoveAt(found);
 #endif
             lock (OutputSentences) OutputSentences.Add(unifiable);
+        }
+
+        public void WriteLine(string format, object[] args)
+        {
+            lock (OutputSentences) OutputSentences.Add(string.Format(format,args));
         }
 
         public Result()
@@ -121,6 +149,10 @@ namespace RTParser
         {
             get
             {
+                if (IsEmpty)
+                {
+
+                }
                 int resultsLeft = MaxResults;
                 Unifiable result = Unifiable.CreateAppendable();
                 lock (OutputSentences) foreach (var sentence in OutputSentences)
@@ -138,6 +170,8 @@ namespace RTParser
                 return result;//.Trim();
             }
         }
+
+        public bool IsEmpty { get { return OutputSentenceCount == 0; } }
 
         public decimal OutputSentenceCount
         {
@@ -185,6 +219,12 @@ namespace RTParser
         /// <returns>The raw output from the bot</returns>
         public override string ToString()
         {
+            if (!Started)
+            {
+                return "-no-started-subqueries=" + SubQueries.Count;
+                if (IsEmpty) return "";
+            }
+            if (IsEmpty) return "";
             return this.Output;
         }
 

@@ -315,7 +315,7 @@ namespace AIMLBotModule
         }
 
 
-        private void AIML_OnFriendshipOffered(object sender,FriendshipOfferedEventArgs e)
+        private void AIML_OnFriendshipOffered(object sender, FriendshipOfferedEventArgs e)
         {
             if (AcceptFriends) client.Friends.AcceptFriendship(e.AgentID, e.SessionID);
             //else client.Friends.DeclineFriendship(agentid, imsessionid);
@@ -330,7 +330,7 @@ namespace AIMLBotModule
         {
             if (e.Status == LoginStatus.Success)
             {
-               ReadSimSettings();
+                ReadSimSettings();
             }
         }
         private void ReadSimSettings()
@@ -349,7 +349,7 @@ namespace AIMLBotModule
             client.WorldSystem.TheSimAvatar["AIMLBotModule"] = this;
             client.WorldSystem.TheSimAvatar["MyBot"] = MyBot;
             client.WorldSystem.AddGroupProvider(this);
-           
+
 
             LoadPersonalConfig();
 
@@ -408,7 +408,7 @@ namespace AIMLBotModule
             object sessionObject = WorldSystem.GetObject(im.IMSessionID);
             //if (sessionObject != null) Console.WriteLine("SessionID=" + sessionObject.GetType());            
 
-            
+
             if (im.Dialog == InstantMessageDialog.StartTyping || im.Dialog == InstantMessageDialog.StopTyping)
             {
                 return;
@@ -432,7 +432,7 @@ namespace AIMLBotModule
             SettingsDictionary myUserPredicates = myUser.Predicates;
             myUserPredicates.addSetting("host", im.FromAgentID.ToString());
             // myUser.Predicates.addObjectFields(im);
-            if (im.Dialog == InstantMessageDialog.GroupNotice || im.Dialog==InstantMessageDialog.SessionSend)
+            if (im.Dialog == InstantMessageDialog.GroupNotice || im.Dialog == InstantMessageDialog.SessionSend)
             {
                 im.GroupIM = true;
             }
@@ -451,9 +451,9 @@ namespace AIMLBotModule
             if (im.GroupIM)
             {
                 SimGroup g = sessionObject as SimGroup;
-                if (g!=null)
+                if (g != null)
                 {
-                    groupName = g.Group.Name;                    
+                    groupName = g.Group.Name;
                 }
                 WriteLine("Group IM {0}", groupName);
             }
@@ -633,7 +633,7 @@ namespace AIMLBotModule
                                 (60000 / myUser.MaxRespondToChatPerMinute))
                             {
                                 WriteLine("AIML_OnChat Reply is too fast {0}: {1}->{2}", myUser, message, resp);
-                                
+
                                 return; //too early to respond.. but still listened
                             }
                             if (!myUser.RespondToChat)
@@ -798,7 +798,7 @@ namespace AIMLBotModule
             }
         }
 
-        static readonly TaskQueueHandler writeLock = new TaskQueueHandler("AIMLBot Console Writer",0);
+        static readonly TaskQueueHandler writeLock = new TaskQueueHandler("AIMLBot Console Writer", 0);
         public void WriteLine(string s, params object[] args)
         {
             if (args == null || args.Length == 0)
@@ -806,13 +806,14 @@ namespace AIMLBotModule
                 args = new object[] { s };
                 s = "{0}";
             }
-            if (Monitor.TryEnter(writeLock,1000))
+            if (Monitor.TryEnter(writeLock, 1000))
             {
-                writeLock.Enqueue(()=> Logger.DebugLog(string.Format(string.Format("[AIMLBOT] {0} {1}", GetName(), s), args)));
+                writeLock.Enqueue(() => Logger.DebugLog(string.Format(string.Format("[AIMLBOT] {0} {1}", GetName(), s), args)));
                 Monitor.Exit(writeLock);
-            } else
+            }
+            else
             {
-              Console.WriteLine("cant even get a Enqueue! " + MethodInfo.GetCurrentMethod());  
+                Console.WriteLine("cant even get a Enqueue! " + MethodInfo.GetCurrentMethod());
             }
         }
 
@@ -903,12 +904,13 @@ namespace AIMLBotModule
             {
                 SUnifiable result = AIMLInterp0(input, myUser);
                 String append = AddedToNextResponse.ToString().Trim();
-                if (append.Length>0)
+                if (append.Length > 0)
                 {
                     result = AddToResult(result, append);
                 }
                 return result.Replace("ISYOURFAV", " IS YOUR FAVORITE").Replace("  ", " ");
-            } finally
+            }
+            finally
             {
                 AddedToNextResponse = old;
             }
@@ -992,6 +994,7 @@ namespace AIMLBotModule
                 return SUnifiable.Empty;
             }
             Request r = new AIMLbot.Request(input, myUser, MyBot);
+            r.IsTraced = true;
             Result res = MyBot.Chat(r);
             return MyBot.CleanupCyc(res.Output);
         }
@@ -1067,7 +1070,7 @@ namespace AIMLBotModule
             BestUnifiable us = new BestUnifiable();
             SUnifiable uu = null;
             int c = 0;
-            foreach(var u in v)
+            foreach (var u in v)
             {
                 c++;
                 uu = ObjectUnifiable(u);
@@ -1081,7 +1084,7 @@ namespace AIMLBotModule
         private SUnifiable ObjectUnifiable(object o)
         {
             if (o is SimObject) o = ((SimObject)o).ID;
-//            if (o is SimPosition) o = ((SimPosition) o).GlobalPosition;
+            //            if (o is SimPosition) o = ((SimPosition) o).GlobalPosition;
             return new StringUnifiable(o.ToString());
         }
 
@@ -1098,7 +1101,7 @@ namespace AIMLBotModule
             int argsUsed;
             var v = WorldSystem.ResolveCollection(name.ToLower(), out argsUsed, this);
             return (v != null && v.Count > 0);
-        }        
+        }
 
         public string NameSpace
         {
@@ -1125,5 +1128,26 @@ namespace AIMLBotModule
             if (MyBot == null) return old == next;
             return MyBot.SameUser(old, next);
         }
+
+        internal bool DoBotDirective(string[] args, UUID fromAgentID, OutputDelegate writeLine)
+        {
+            string s = args[0];
+            if (s == "on")
+            {
+                RespondToChatByDefaultAllUsers = true;
+                SetChatOnOff(String.Join(" ", args, 1, args.Length - 1), true);
+                writeLine("WorldObjects.RespondToChatByDefaultAllUsers = true;");
+            }
+            if (s == "off")
+            {
+                RespondToChatByDefaultAllUsers = false;
+                SetChatOnOff(String.Join(" ", args, 1, args.Length - 1), false);
+                writeLine("WorldObjects.RespondToChatByDefaultAllUsers = false;");
+            }
+            if (MyBot == null) return false;
+            string stringJoin = String.Join(" ", args, 0, args.Length);
+            return MyBot.BotDirective(MyUser, stringJoin, new RTPBot.OutputDelegate(writeLine));
+        }
+
     }
 }

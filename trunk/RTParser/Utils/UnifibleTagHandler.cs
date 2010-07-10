@@ -1,3 +1,4 @@
+using System;
 using System.Xml;
 
 namespace RTParser.Utils
@@ -14,6 +15,7 @@ namespace RTParser.Utils
         internal const float ISA_FALSE = 1;
         internal const float AND_TRUE = 0;
         internal const float AND_FALSE = 1;
+
 
         /// <summary>
         /// Ctor

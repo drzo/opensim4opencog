@@ -65,7 +65,7 @@ namespace RTParser.AIMLTagHandlers
                     }
                     catch (Exception e)
                     {
-                        RTPBot.writeDebugLine("" + e);
+                        RTPBot.writeDebugLine("ERROR: " + e);
                     }
                 }
             }

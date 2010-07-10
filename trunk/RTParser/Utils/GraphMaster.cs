@@ -56,6 +56,8 @@ namespace RTParser.Utils
         public int Size = 0;
         private GraphMaster _parent = null;
         private int parent0 = 0;
+        private bool UnTraced = false;
+
         public GraphMaster Parent
         {
             get
@@ -186,6 +188,7 @@ namespace RTParser.Utils
             var p = new GraphMaster("" + graphName + ".parent" + (parent0 == 0 ? "" : "" + parent0), theBot);
             p.Srai = this;
             parent0++;
+            p.UnTraced = true;
             Parents.Add(p);
             return p;
         }
@@ -263,102 +266,87 @@ namespace RTParser.Utils
 
         public override string ToString()
         {
+            if (graphName.Contains("parent"))
+            {
+                
+            }
             return "[Graph: " + graphName + ":" + Size + "]";
         }
+        //query.Templates = 
 
-        public UList evaluate(UPath unifiable, SubQuery query, Request request, List<Unifiable> state, MatchState matchState, int index, Unifiable appendable)
+        public QueryList gatherQueries(Unifiable path, Request request, MatchState state)
         {
-            DoParentEval(request, unifiable, query, state);
             QueryList ql = new QueryList();
-            var templs = RootNode.evaluate(unifiable, query, request, state, matchState,index, appendable, ql);
-            var qr = ql.ToUList();
-            if (qr.Count>0) return qr;
+            var templs2 = evaluateQL(path, request, state, ql);
+            if (templs2.TemplateCount == 0)
             {
-                RTPBot.writeDebugLine("no templates for " + this);
-                foreach (GraphMaster graphMaster in Parents)
+                bool trace = request.IsTraced && !UnTraced;
+                if (trace)
+                    RTPBot.writeDebugLine(this + " returned no results for " + path);
+                return templs2;
+            }
+            return templs2;
+        }
+
+        private QueryList evaluateQL(UPath unifiable, Request request, MatchState matchState, QueryList ql)
+        {
+            DoParentEval(Parents, request, unifiable);
+            bool trace = request.IsTraced && !UnTraced;
+            var templs = RootNode.getQueries(unifiable, request, matchState, 0, Unifiable.CreateAppendable(), ql);
+            if (ql.TemplateCount == 0)
+            {
+                if (trace) RTPBot.writeDebugLine("no templates for " + this);
+                var fallbacks = FallBacks(request.user);
+                if (fallbacks == null) return ql;
+                foreach (GraphMaster graphMaster in fallbacks)
                 {
-                    var templs2 = graphMaster.evaluate(unifiable, query, request, state, matchState, index, appendable);
-                    if (templs2.Count>0)
+                    var templs2 = graphMaster.evaluateQL(unifiable, request, matchState, ql);
+                    if (templs2.TemplateCount > 0)
                     {
-                        RTPBot.writeDebugLine("using parent templates from " + templs);
+                        if (trace)
+                            RTPBot.writeDebugLine("using parent templates from " + templs2);
                         return templs2;
                     }
                 }
             }
-            return qr;
+            return ql;
         }
 
-        private void DoParentEval(Request request, Unifiable unifiable, SubQuery query, List<Unifiable> state)
+        private IEnumerable<GraphMaster> FallBacks(User user)
         {
+            return null;
+        }
+
+        private List<Result> DoParentEval(List<GraphMaster> totry, Request request, Unifiable unifiable)
+        {
+            List<Result> pl = new List<Result>();
             RTPBot proc = request.Proccessor;
             GraphMaster g = request.Graph;
-            query = query.CopyOf();
-            foreach (var p in Parents)
+            bool userTracing = request.IsTraced;
+            foreach (var p in totry)
             {
                 if (p != null)
                 {
+                    bool wasUntraced = p.UnTraced;
                     try
                     {
-                        if (false)
-                        {
-                            request.Graph = p;
-                            proc.Chat(request, p);
-                        }
-                        else
-                        {
-                            QueryList ql = new QueryList();
-                            AIMLbot.Result result = new AIMLbot.Result(request.user, proc, request);
-                            query = query; // new SubQuery(request.rawInput, result, request);
-                            request.Graph = p;
-                            var silent = p.RootNode.evaluate(unifiable, query, request, query.InputStar,
-                                                             MatchState.UserInput, 0, Unifiable.CreateAppendable(), ql);
-                            if (ql.Count > 0)
-                            {
-                                bool found0 = false;
-                                UList v = ql.ToUList();
-                                foreach (TemplateInfo s in v)
-                                {
-                                    SubQuery subquery = s.Query ?? query.CopyOf();
-                                    string st = "" + s;
-                                    // Start each the same
-                                    s.Rating = 1.0;
-                                    try
-                                    {
-                                        subquery.CurrentTemplate = s;
-                                        query.CurrentTemplate = s;
-                                        if (proc.proccessResponse(subquery, request, result, s.Output, s.Guard,
-                                                                  out found0,
-                                                                  null))
-                                        {
-                                            found0 = true;
-                                        }
-                                    }
-                                    catch (Exception e)
-                                    {
-                                        proc.writeToLog("" + e);
-                                        proc.writeToLog(
-                                            "WARNING! A problem was encountered when trying to process the input: " +
-                                            request.rawInput + " with the template: \"" + s + "\"");
-                                    }
-                                    RTPBot.writeDebugLine(st);
-                                    //if (found0) break;
-                                }
-                            }
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        proc.writeToLog("" + e);
-                        proc.writeToLog(
-                            "WARNING! A problem was encountered when trying to process the input: " +
-                            request.rawInput + " with the template: \"" + p + "\"");
+                        p.UnTraced = true;
+                        if (wasUntraced)
+                            request.IsTraced = false;
+                        request.Graph = p;
+                        request.result = null;
+                        var r = proc.Chat0(request, p);
+                        if (!r.IsEmpty) pl.Add(r);
                     }
                     finally
                     {
+                        p.UnTraced = wasUntraced;
                         request.Graph = g;
+                        request.IsTraced = userTracing;
                     }
                 }
             }
+            return pl;
         }
 
         public void AddTemplate(TemplateInfo templateInfo)
@@ -392,5 +380,6 @@ namespace RTParser.Utils
                 }
             }
         }
+
     }
 }
