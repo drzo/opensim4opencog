@@ -445,7 +445,7 @@ namespace RTParser.Utils
             writeToLog("WARNING: " + unifiable, objs);
         }
 
-        protected void writeToLog(string unifiable, params object[] objs)
+        public virtual void writeToLog(string unifiable, params object[] objs)
         {
             if (unifiable.ToUpper().StartsWith("ERROR"))
             {

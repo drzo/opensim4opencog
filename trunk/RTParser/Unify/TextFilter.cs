@@ -1,164 +1,212 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using RTParser;
 
 namespace RTParser
 {
-    public class TextFilter: ICollection<string>
+    public class TextFilter : ICollection<string>
     {
-        private HashSet<string> AnyOf = new HashSet<string>() {"ERROR"};
-        private HashSet<string> ExceptFor = new HashSet<string>() {};
+        private HashSet<string> AnyOf = new HashSet<string>() { "ERROR" };
+        private HashSet<string> ExceptFor = new HashSet<string>() { };
         bool addMode = true;
-        bool remMode = true;
+        bool remMode = false;
         public TextFilter()
         {
-            
+
         }
-        private string lastOutput = "";
+        private string lastOutput = "xoxoxoxoxoxoxoxoxoxoxoxoxdo";
         public void writeDebugLine(RTPBot.OutputDelegate console, string message, params object[] args)
         {
             console = console ?? Console.WriteLine;
-            lock (this)
-                try
+            try
+            {
+                bool printIt;
+                if (args != null && args.Length != 0)
                 {
-                    if (args != null && args.Length != 0) message = String.Format(message, args);
+                    try
+                    {
+                        message = String.Format(message, args);
+                    }
+                    catch (Exception exception)
+                    {
+                        writeDebugLine(console, "BAD FORMAT " + exception.Message + " " + exception.StackTrace);
+                        throw exception;
+                    }
+                }
+                lock (this)
+                {
                     if (lastOutput == message) return;
                     if (lastOutput.Contains(message))
                     {
                         return;
                     }
+                    else
+                    {
+                        if (lastOutput.Length > 10) if (message.Contains(lastOutput)) return;
+                    }
                     lastOutput = message;
-                    string msgTest = message.ToUpper();
-                    bool printIt = message.StartsWith("-");
+                    printIt = message.StartsWith("-");
                     if (printIt)
                     {
                         message = message.Substring(1);
                     }
                     else
                     {
-                        bool foundOne = false;
-                        lock (AnyOf)
-                            foreach (string s in AnyOf)
-                            {
-                                if (s == "*") printIt = true;
-                                else if (msgTest.Contains(s))
-                                {
-                                    foundOne = true;
-                                    printIt = true;
-                                    break;
-                                }
-                            }
-                        if (printIt)
+                        printIt = ShouldPrint(message);
+                    }
+
+                }
+                if (printIt)
+                {
+                    message = PrintMessage(console, message);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                console(message + " --> " + e);
+            }
+        }
+
+        private string PrintMessage(RTPBot.OutputDelegate console, string message)
+        {
+            bool doHeader = message.Contains("!");
+
+            if (doHeader)
+                writeDebugLine(console, "---------------------------------------------------------------");
+            lastOutput = message;
+            message = message.Replace("\r\n", "<br/>");
+            message = message.Replace("\n", "<br/>");
+            message = message.Replace("(From '", "<br/>     (From '");            
+            message = message.Replace("<br/>", "  " + Environment.NewLine);
+            console(message);
+            if (doHeader)
+                writeDebugLine(console, "----------------------------------------------------------------");
+            return message;
+        }
+
+        public bool ShouldPrint(string message)
+        {
+            if (message == null) return true;
+            string msgTest = message.ToUpper();
+            bool printIt = false;
+            lock (AnyOf)
+                foreach (string s in AnyOf)
+                {
+                    if (s == "*") printIt = true;
+                    else if (msgTest.Contains(s))
+                    {
+                        printIt = true;
+                        break;
+                    }
+                }
+            if (printIt)
+            {
+                lock (ExceptFor)
+                    foreach (string s in ExceptFor)
+                    {
+                        if (s == "*")
                         {
-                            lock (ExceptFor)
-                                foreach (string s in ExceptFor)
-                                {
-                                    if (s == "*")
-                                    {
-                                        printIt = false;
-                                        break;
-                                    }
-                                    if (msgTest.Contains(s))
-                                    {
-                                        printIt = false;
-                                        break;
-                                    }
-                                }
+                            printIt = false;
+                            break;
+                        }
+                        if (msgTest.Contains(s))
+                        {
+                            printIt = false;
+                            break;
                         }
                     }
-                    if (printIt)
-                    {
-                        bool doHeader = message.Contains("!");
-
-                        if (doHeader)
-                            writeDebugLine(console, "---------------------------------------------------------------");
-                        message = message.Replace("\r\n", "<br/>");
-                        message = message.Replace("\n", "<br/>");
-                        message = message.Replace("<br/>", " " + Environment.NewLine);
-                        System.Console.WriteLine(message);
-                        if (doHeader)
-                            writeDebugLine(console, "----------------------------------------------------------------");
-
-                    }
-                }
-                catch (Exception e)
-                {
-                    console(message + " --> " + e);
-                }
+            }
+            return printIt;
         }
 
         public void UpateLogging(string sa, RTPBot.OutputDelegate od)
         {
+            od = CheckOutput(od);
+            sa = sa.Trim().ToLower();
             while (sa != null && sa.Trim().Length > 0)
             {
-                sa = sa.Trim().ToLower();
-                if (sa.StartsWith("clear-"))
+                sa = sa.Trim();
+                if (sa.StartsWith("reset"))
                 {
                     addMode = true;
                     remMode = false;
                     ExceptFor.Clear();
-                    od("Clearing -");
-                    sa = sa.Substring(6);
+                    od("reset");
+                    sa = sa.Substring(5);
                     continue;
                 }
-                if (sa.StartsWith("clear+"))
+                if (sa.StartsWith("clear"))
                 {
-                    addMode = true;
-                    remMode = false;
                     ExceptFor.Clear();
-                    od("Clearing +");
-                    sa = sa.Substring(6);
-                    continue;
-                }
-                if ((sa + " ").StartsWith("clear "))
-                {
-                    addMode = false;
-                    remMode = false;
-                    AnyOf.Clear();
-                    ExceptFor.Clear();
-                    od("Clearing +/-");
-                    sa = sa.Substring(6);
+                    od("Clearing");
+                    sa = sa.Substring(5);
                     continue;
                 }
                 if (sa.StartsWith("+"))
                 {
                     addMode = true;
+                    remMode = false;
                     sa = sa.Substring(1);
                     continue;
                 }
                 if (sa.StartsWith("-"))
                 {
                     remMode = true;
+                    addMode = false;
                     sa = sa.Substring(1);
                     continue;
                 }
-                int f = (sa + "\n").IndexOfAny(new char[] {'+', '-', '\n'});
+                int f = (sa + "\n").IndexOfAny(new char[] { '+', '-', '\n' });
                 string w = sa.Substring(0, f).ToUpper().Trim();
                 if (addMode)
                 {
                     AnyOf.Add(w);
                 }
-                else if (remMode)
+                if (remMode)
                 {
                     ExceptFor.Add(w);
                 }
                 sa = sa.Substring(f);
             }
-            foreach (var of in AnyOf)
+            od(ToString());
+        }
+        public override string ToString()
+        {
+            StringWriter sw = new StringWriter();
+            RTPBot.OutputDelegate od = sw.WriteLine;
+            lock (AnyOf) foreach (var of in AnyOf)
+                {
+                    od("+" + of);
+                }
+            lock (ExceptFor) foreach (var of in ExceptFor)
+                {
+                    od("-" + of);
+                }
+            return sw.ToString();
+        }
+
+        public static RTPBot.OutputDelegate CheckOutput(RTPBot.OutputDelegate od)
+        {
+            if (od != null) return od;
+            TextWriter tw = Console.Out ?? Console.Error;
+            if (tw != null)
             {
-                od("AnyOf: " + of);
+                return tw.WriteLine;
             }
-            foreach (var of in ExceptFor)
-            {
-                od("ExceptFor: " + of);
-            }
+            return Console.WriteLine;
+            od = (new StringWriter()).WriteLine;
+            return od;
         }
 
         public static bool ListEdit(ICollection<string> collection, string ss, RTPBot.OutputDelegate console)
         {
+            console = CheckOutput(console);
             if (ss == null || null == collection) return false;
             lock (collection)
             {
@@ -263,8 +311,14 @@ namespace RTParser
         ///                 </exception>
         public void Add(string item)
         {
-            ExceptFor.Remove(item);
-            AnyOf.Add(item);
+            lock (this)
+            {
+                UpateLogging(item, DEVNULL);
+            }
+        }
+
+        static void DEVNULL(string s, object[] args)
+        {
         }
 
         /// <summary>
@@ -274,8 +328,13 @@ namespace RTParser
         ///                 </exception>
         public void Clear()
         {
-            AnyOf.Clear();
-            ExceptFor.Clear();
+            lock (this)
+            {
+                lock (ExceptFor) ExceptFor.Clear();
+                lock (AnyOf) AnyOf.Clear();
+                remMode = false;
+                addMode = true;
+            }
         }
 
         /// <summary>
@@ -311,7 +370,7 @@ namespace RTParser
             }
             return false;
         }
-  
+
 
         private bool CanBe(string item)
         {
@@ -349,8 +408,20 @@ namespace RTParser
         ///                 </exception>
         public bool Remove(string item)
         {
-            AnyOf.Remove(item);
-            return ExceptFor.Add(item);
+            bool bR = remMode;
+            bool bA = addMode;
+
+
+            remMode = true;
+            addMode = false;
+
+            Add(item.Replace("+", "&").Replace("-", "+").Replace("&", "-"));
+
+            remMode = bR;
+            addMode = bA;
+
+            return true;
+
         }
 
         /// <summary>
@@ -362,6 +433,43 @@ namespace RTParser
         public int Count
         {
             get { return AnyOf.Count + ExceptFor.Count; }
+        }
+
+        public static string ReadLineFromInput(RTPBot.OutputDelegate outputDelegate, string prompt)
+        {
+            TextWriter w = (Console.Out ?? Console.Error) ?? new StringWriter();
+            MethodInfo rm = null;
+            object ro = null;
+            if (outputDelegate != null)
+            {
+                var mi = outputDelegate.Method;
+                ro = outputDelegate.Target;
+                if (mi != null)
+                {
+                    var i = mi.DeclaringType;
+                    rm = i.GetMethod("ReadLine", new Type[0]);
+                    if (rm == null)
+                    {
+                        i = mi.ReflectedType;
+                        rm = i.GetMethod("ReadLine", new Type[0]);
+                    }
+                }
+            }
+            outputDelegate = outputDelegate ?? w.Write;
+            outputDelegate(prompt);
+            w.Flush();
+
+            if (rm == null)
+            {
+                TextReader r = Console.In;
+                if (r == null)
+                {
+                    outputDelegate("SYSTEM: No Input");
+                    return null;
+                }
+                return r.ReadLine();
+            }
+            return "" + rm.Invoke(ro, new object[0]);
         }
 
         /// <summary>

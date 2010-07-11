@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading;
 using cogbot;
 using CommandLine.Utility;
@@ -12,6 +13,11 @@ using SbsSW.SwiPlCs;
 
 namespace ABuildStartup
 {
+    internal static class NativeMethods
+    {
+        [DllImport("kernel32.dll")]
+        internal static extern Boolean AllocConsole();
+    }
     public class Program
     {
         /// <summary>
@@ -20,11 +26,13 @@ namespace ABuildStartup
         [STAThread]
         public static void Main()
         {
+            string[] use = Environment.GetCommandLineArgs() ?? new string[0];
+
             if (ClientManager.MainThread == null)
             {
                 ClientManager.MainThread = Thread.CurrentThread;
+                NativeMethods.AllocConsole();
             }
-            string[] use = Environment.GetCommandLineArgs() ?? new string[0];
 
             if (use.Length>0)
             {

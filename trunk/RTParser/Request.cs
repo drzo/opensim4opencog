@@ -11,13 +11,11 @@ namespace RTParser
     /// <summary>
     /// Encapsulates all sorts of information about a request to the Proccessor for processing
     /// </summary>
-    abstract public class Request
+    abstract public class Request: RequestSettings
     {
         #region Attributes
 
         public Proof Proof;
-
-        private Request parent;
 
         public int depth = 0;
         /// <summary>
@@ -55,14 +53,8 @@ namespace RTParser
         /// </summary>
         public bool hasTimedOut = false;
 
-        public bool processMultipleTemplates = true;
-
-        public GraphMaster Graph;
-
         public readonly int framesAtStart;
 
-
-        public bool IsTraced = false;
 
         #endregion
 
@@ -79,10 +71,15 @@ namespace RTParser
         /// <param name="bot">The bot to which this is a request</param>
         public Request(Unifiable rawInput, User user, RTPBot bot, Request parent)
         {
+            if (user!=null)
+            {
+                base.ApplySettings(user);
+            }
             if (parent != null)
             {
+                this.ApplySettings(parent);
                 Proof = parent.Proof;
-                this.parent = parent;
+                this.ParentRequest = parent;
             } else
             {
                 Proof = new Proof();
@@ -192,42 +189,6 @@ namespace RTParser
             {
                 Proccessor.writeToLog(s, args);
             }
-        }
-    }
-
-    public class Proof
-    {
-        public readonly HashSet<object> UsedTemplates =new HashSet<object>();
-        /// <summary>
-        /// Categories uses life a "proof"
-        /// Also used ot prevent looping
-        /// </summary>
-        public readonly HashSet<object> Proof1 = new HashSet<object>();
-        /// <summary>
-        /// Also used ot prevent looping
-        /// </summary>
-        public readonly HashSet<object> Proof2 = new HashSet<object>();
-
-        public bool Add(Node node)
-        {
-            if (!Proof1.Add(node))
-            {
-                return false;
-                if (!Proof2.Add(node))
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        public bool Add(TemplateInfo node)
-        {
-            return UsedTemplates.Add(node);
-        }
-        public bool Contains(TemplateInfo node)
-        {
-            return UsedTemplates.Contains(node);
         }
     }
 }

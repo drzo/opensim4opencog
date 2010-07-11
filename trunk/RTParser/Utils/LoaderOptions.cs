@@ -24,10 +24,12 @@ namespace RTParser.Utils
         public Request request;
         public string Filename;
         public int LineOffset = 0;
+        public bool DebugFiles;
 
         public LoaderOptions(GraphMaster g)
         {
             Graph = g;
+
         }
 
         public override string ToString()
