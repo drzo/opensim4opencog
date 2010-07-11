@@ -20,7 +20,7 @@ namespace RTParser.Utils
         /// <summary>
         /// The path that this query relates to
         /// </summary>
-        public UPath FullPath;
+        public string FullPath;
 
         /// <summary>
         /// The template found from searching the graphmaster brain with the path 

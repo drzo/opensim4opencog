@@ -130,7 +130,7 @@ namespace RTParser.AIMLTagHandlers
             subRequest.Topic = tempTopic;
             subRequest.ParentRequest = this.request;
             subRequest.StartedOn = this.request.StartedOn;
-            subRequest.processMultipleTemplates = allowMultiplesTemplates;
+            subRequest.ProcessMultipleTemplates = allowMultiplesTemplates;
 
             AIMLbot.Result subResult = null;
             var prev = this.Proc.isAcceptingUserInput;
@@ -151,7 +151,7 @@ namespace RTParser.AIMLTagHandlers
             }
             //this.request.hasTimedOut = subRequest.hasTimedOut;
             //----------------------
-            return subResult.RawOutput.ToValue().Trim();
+            return subResult.RawOutput.Trim();
         }
     }
 

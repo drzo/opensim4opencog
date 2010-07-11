@@ -433,11 +433,11 @@ namespace RTParser.Utils
         {
             if (NoDebug) return;
             var fc = new StackTrace().FrameCount;
-            RTPBot.writeDebugLine("S: " + NameSpace + " (" + fc + ")   " + unifiable);
+            RTPBot.writeDebugLine("DICTLOG: " + NameSpace + " (" + fc + ")   " + unifiable);
             if (fc > 200)
             {
                 //throw new 
-                RTPBot.writeDebugLine("OVERFLOWING: " + NameSpace + " (" + fc + ")   " + unifiable);
+                RTPBot.writeDebugLine("DICTLOG OVERFLOWING: " + NameSpace + " (" + fc + ")   " + unifiable);
                 //Console.ReadLine();
             }
         }

@@ -10,7 +10,7 @@ namespace RTParser
     /// <summary>
     /// Encapsulates information and history of a user who has interacted with the bot
     /// </summary>
-    public class User
+    public class User : RequestSettings
     {
         #region Attributes
 
@@ -38,8 +38,11 @@ namespace RTParser
                 if (Predicates.containsSettingCalled("graphname"))
                 {
                     var v = Predicates.grabSettingNoDebug("graphname");
-                    var g = bot.GetGraph(v, bot.GraphMaster);
-                    if (g != null) return g;
+                    Graph = bot.GetGraph(v, bot.GraphMaster) ?? Graph;
+                    if (Graph != null)
+                    {
+                        return Graph;
+                    }
                     bot.writeToLog("ERROR CANT FIND graphname");
                     return bot.GraphMaster;
                 }
@@ -151,7 +154,7 @@ namespace RTParser
                 {
                     foreach (var result in Results)
                     {
-                        string thisOutput = result.RawOutput.AsString();
+                        string thisOutput = result.RawOutput;
                         if (thisOutput == "*") continue;
                         if (thisOutput == lastOutput) continue;
                         lastOutput = thisOutput;

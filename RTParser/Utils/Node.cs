@@ -27,7 +27,7 @@ namespace RTParser.Utils
 
         public int Count
         {
-            get { return children.Count; }
+            get { lock (children)return children.Count; }
         }
 
         /// <summary>
@@ -37,7 +37,7 @@ namespace RTParser.Utils
         {
             get
             {
-                return this.children.Count;
+                lock (children) return this.children.Count;
             }
         }
 
@@ -224,6 +224,7 @@ namespace RTParser.Utils
             // if we do then pass the handling of this sentence down the branch to the 
             // child nodemapper otherwise the child nodemapper doesn't yet exist, so create a new one  \
             bool found = false;
+            lock (children)
             foreach (var c in this.children)
             {
                 string ks = c.Key.AsString();
@@ -248,7 +249,7 @@ namespace RTParser.Utils
                 Node childNode = new Node(this);
                 childNode.word = firstWord;
                 initial = childNode.addPathNodeChilds(newPath);
-                this.children.Add(childNode.word, childNode);
+                lock (children) this.children.Add(childNode.word, childNode);
 
             }
             if (initial == null) throw new NullReferenceException("no child node: " + this);
@@ -267,7 +268,7 @@ namespace RTParser.Utils
         {
             if (Parent == null) return null;
             bool useNext = false;
-            foreach (KeyValuePair<Unifiable, Node> v in Parent.children)
+            lock (children) foreach (KeyValuePair<Unifiable, Node> v in Parent.children)
             {
                 if (useNext) return v.Value;
                 if (v.Value == this)
@@ -431,7 +432,7 @@ namespace RTParser.Utils
 
             // check if this is the end of a branch in the GraphMaster 
             // return the cCategory for this node
-            if (this.children.Count == 0)
+            lock (children) if (this.children.Count == 0)
             {
                 if (!path.IsEmpty)
                 {
@@ -482,7 +483,7 @@ namespace RTParser.Utils
 
             // first option is to see if this node has a child denoted by the "_" 
             // wildcard. "_" comes first in precedence in the AIML alphabet
-            foreach (KeyValuePair<Unifiable, Node> childNodeKV in this.children)
+            lock (children) foreach (KeyValuePair<Unifiable, Node> childNodeKV in this.children)
             {
                 Unifiable childNodeWord = childNodeKV.Key;
                 if (!childNodeWord.IsShortWildCard()) continue;
@@ -517,7 +518,7 @@ namespace RTParser.Utils
             // second option - the nodemapper may have contained a "_" child, but led to no match
             // or it didn't contain a "_" child at all. So get the child nodemapper from this 
             // nodemapper that matches the first word of the input sentence.
-            foreach (var childNodeKV in this.children)
+            lock (children) foreach (var childNodeKV in this.children)
             {
                 Node childNode = childNodeKV.Value;
                 if (childNode.word.IsWildCard()) continue;
@@ -582,7 +583,7 @@ namespace RTParser.Utils
             // third option - the input part of the path might have been matched so far but hasn't
             // returned a match, so check to see it contains the "*" wildcard. "*" comes last in
             // precedence in the AIML alphabet.
-            foreach (var childNodeKV in this.children)
+            lock (children) foreach (var childNodeKV in this.children)
             {
                 Unifiable childNodeWord = childNodeKV.Key;
                 int matchLen = 0;
@@ -752,7 +753,7 @@ namespace RTParser.Utils
 
             // check if this is the end of a branch in the GraphMaster 
             // return the cCategory for this node
-            if (this.children.Count == 0)
+            lock (children) if (this.children.Count == 0)
             {
                 if (!path.IsEmpty)
                 {
@@ -786,7 +787,7 @@ namespace RTParser.Utils
             Node childTrue = null;
             // first option is to see if this node has a child denoted by the "_" 
             // wildcard. "_" comes first in precedence in the AIML alphabet
-            foreach (KeyValuePair<Unifiable, Node> childNodeKV in this.children)
+            lock (children) foreach (KeyValuePair<Unifiable, Node> childNodeKV in this.children)
             {
                 Unifiable childNodeWord = childNodeKV.Key;
                 if (!childNodeWord.IsShortWildCard()) continue;
@@ -820,7 +821,7 @@ namespace RTParser.Utils
             // second option - the nodemapper may have contained a "_" child, but led to no match
             // or it didn't contain a "_" child at all. So get the child nodemapper from this 
             // nodemapper that matches the first word of the input sentence.
-            foreach (var childNodeKV in this.children)
+            lock (children) foreach (var childNodeKV in this.children)
             {
                 Node childNode = childNodeKV.Value;
                 if (childNode.word.IsWildCard()) continue;
@@ -844,7 +845,7 @@ namespace RTParser.Utils
             // third option - the input part of the path might have been matched so far but hasn't
             // returned a match, so check to see it contains the "*" wildcard. "*" comes last in
             // precedence in the AIML alphabet.
-            foreach (var childNodeKV in this.children)
+            lock (children) foreach (var childNodeKV in this.children)
             {
                 Unifiable childNodeWord = childNodeKV.Key;
                 int matchLen = 0;
@@ -948,61 +949,6 @@ namespace RTParser.Utils
         #endregion
 
         #endregion
-    }
-
-    public class QueryList
-    {
-        public int TemplateCount
-        {
-            get { return Templates == null ? 0 : Templates.Count; }
-        }
-
-        public decimal BindingCount
-        {
-            get { return Bindings == null ? 0 : Bindings.Count; }
-        }
-
-        private List<TemplateInfo> Templates = null;
-        private List<Node> Patterns;
-        private List<SubQuery> Bindings;
-        public bool Bubble;
-        public bool Value;
-        public int PatternCount;
-        public int MaxPatterns = 3;
-        public int MaxTemplates = 1;
-        public int MaxBindings = 20;
-        public bool IsNewType = true;
-
-        public List<TemplateInfo> ToUList()
-        {
-            return Templates;
-        }
-        public void AddPattern(Node node)
-        {
-            if (Patterns == null) Patterns = new List<Node>();
-            Patterns.Add(node);
-        }
-        public void AddTemplate(TemplateInfo info)
-        {
-            if (Templates == null) Templates = new List<TemplateInfo>();
-            Templates.Add(info);
-        }
-
-        public bool ContainsPattern(Node node)
-        {
-            return Patterns != null && Patterns.Contains(node);
-        }
-
-        public void AddBindingSet(SubQuery query)
-        {
-            if (Bindings == null) Bindings = new List<SubQuery>();
-            Bindings.Add(query);
-        }
-
-        public IEnumerable<SubQuery> GetBindings()
-        {
-            return Bindings;
-        }
     }
 
 #if false

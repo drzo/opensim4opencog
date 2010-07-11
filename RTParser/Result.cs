@@ -114,7 +114,7 @@ namespace RTParser
             {
                 lock (OutputSentences) if (OutputSentences.Count > 0)
                 {
-                    return this.RawOutput.AsString().Trim().Replace("  "," ");
+                    return this.RawOutput.Trim().Replace("  "," ");
                 }
                 else
                 {
@@ -145,7 +145,7 @@ namespace RTParser
         /// <summary>
         /// Returns the raw sentences without any logging 
         /// </summary>
-        public Unifiable RawOutput
+        public string RawOutput
         {
             get
             {
@@ -192,7 +192,7 @@ namespace RTParser
         /// <summary>
         /// The individual sentences produced by the bot that form the complete response
         /// </summary>
-        private List<Unifiable> OutputSentences = new List<Unifiable>();
+        public List<Unifiable> OutputSentences = new List<Unifiable>();
 
         /// <summary>
         /// The individual sentences that constitute the raw input from the user

@@ -22,9 +22,9 @@ namespace RTParser.Utils
             get { return AIMLLoader.FindNode("topic", Category, null); }
         }
 
-        public XmlNode What
+        public XmlNode That
         {
-            get { return AIMLLoader.FindNode("what", Category, null); }
+            get { return AIMLLoader.FindNode("that", Category, null); }
         }
 
         public PatternInfo Pattern;

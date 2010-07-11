@@ -14,11 +14,14 @@ namespace RTParser.Utils
 {
     public class GraphMaster
     {
+        public static bool DefaultSilentTagsInPutParent = false;
+
         private String graphName;
         private RTPBot theBot;
         public GraphMaster Srai;
+        public bool NoIndexing = true;
         public bool FullDepth = true;
-
+        public bool SilentTagsInPutParent = DefaultSilentTagsInPutParent;
         readonly public List<GraphMaster> Parents = new List<GraphMaster>();
 
         /// <summary>
@@ -95,6 +98,7 @@ namespace RTParser.Utils
 
         public PatternInfo FindPattern(XmlNode pattern, Unifiable unifiable)
         {
+            if (NoIndexing) return null;
             string pats = MakeMatchKey(unifiable);
             int skip = pats.IndexOf("TAG-THAT");
             if (skip > 0) pats = pats.Substring(0, skip - 1);
@@ -121,6 +125,7 @@ namespace RTParser.Utils
 
         public ThatInfo FindThat(Unifiable topicName)
         {
+            if (NoIndexing) return null;
             string pats = MakeMatchKey(topicName);
             ThatInfo pi;
             lock (Thats)
@@ -161,6 +166,7 @@ namespace RTParser.Utils
 
         public TopicInfo FindTopic(Unifiable topicName)
         {
+            if (NoIndexing) return null;
             string pats = MakeMatchKey(topicName);
             TopicInfo pi;
             lock (Topics)
@@ -229,7 +235,7 @@ namespace RTParser.Utils
         public void addCategoryTag(Unifiable generatedPath, PatternInfo patternInfo, CategoryInfo category, XmlNode outerNode, XmlNode templateNode, GuardInfo guard, ThatInfo thatInfo)
         {
             var RootNode = this.RootNode;
-            if(SilentTag(templateNode))
+            if (SilentTagsInPutParent && SilentTag(templateNode))
             {
                 GraphMaster Parent = makeParent();
                 this.Parents.Add(Parent);
@@ -238,8 +244,8 @@ namespace RTParser.Utils
                 RTPBot.writeDebugLine("Adding to parent" + category);
                 return;
             }
-            Node.addCategoryTag(RootNode, generatedPath, patternInfo, category, outerNode, templateNode, guard, thatInfo,
-                                this);
+            Node.addCategoryTag(RootNode, generatedPath, patternInfo,
+                                category, outerNode, templateNode, guard, thatInfo, this);
             this.Size++;
             // keep count of the number of categories that have been processed
         }
@@ -266,17 +272,13 @@ namespace RTParser.Utils
 
         public override string ToString()
         {
-            if (graphName.Contains("parent"))
-            {
-                
-            }
             return "[Graph: " + graphName + ":" + Size + "]";
         }
         //query.Templates = 
 
         public QueryList gatherQueries(Unifiable path, Request request, MatchState state)
         {
-            QueryList ql = new QueryList();
+            QueryList ql = new QueryList(request);
             var templs2 = evaluateQL(path, request, state, ql);
             if (templs2.TemplateCount == 0)
             {

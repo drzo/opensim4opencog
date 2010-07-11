@@ -39,6 +39,18 @@ namespace RTParser.AIMLTagHandlers
             mybot = bot;
         }
 
+        public override void writeToLog(string unifiable, params object[] objs)
+        {
+            if (Parent != null && Parent != this)
+            {
+                Parent.writeToLog(unifiable, objs);
+            }
+            else
+            {
+                base.writeToLog(unifiable, objs);
+            }
+        }
+
         private static int depth = 0;
         protected override Unifiable ProcessChange()
         {
@@ -46,7 +58,7 @@ namespace RTParser.AIMLTagHandlers
             {
                 depth++;
                 int d = request.GetCurrentDepth();
-                object prefix = "" + request.Graph + ":  ";
+                object prefix = string.Format("{0}: SRAI({1}/{2})", request.Graph, depth, d);
                 if (d > 30)
                 {
                     writeToLog(prefix + "WARNING Depth pretty deep " + templateNode + " returning empty");
@@ -82,24 +94,24 @@ namespace RTParser.AIMLTagHandlers
                         {
                             showDebug = false;
                         }
+
                         if (showDebug)
-                            writeToLog(prefix + " SRAI-- (" + depth + ")" + subRequestrawInput + " ----- ");
+                            writeToLog(prefix + " CALLING '" + subRequestrawInput + "'");
 
                        
                         if (mybot.chatTrace)
                         {
                            //  mybot.bot.writeChatTrace("\"L{0}\" -> \"S{1}\" ;\n", depth - 1, depth-1);
                           // mybot.bot.writeChatTrace("\"L{0}\" -> \"S{1}\" ;\n", depth, depth);
-                            //mybot.bot.writeChatTrace("\"S{0}\" -> \"SRC:{1}\" ;\n", depth, LineNumberTextInfo());
+                            //mybot.bot.writeChatTrace("\"S{0}\" -> \"SRC:{1}\" ;\n", depth, CatTextInfo());
 
                             //mybot.bot.writeChatTrace("\"S{0}\" -> \"S{1}\" ;\n", depth - 1, depth);
                             //mybot.bot.writeChatTrace("\"S{0}\" -> \"SIN:{1}\" ;\n", depth, subRequestrawInput);
-                            //mybot.bot.writeChatTrace("\"SIN:{0}\" -> \"LN:{1}\" ;\n", subRequestrawInput, LineNumberTextInfo());
+                            //mybot.bot.writeChatTrace("\"SIN:{0}\" -> \"LN:{1}\" ;\n", subRequestrawInput, CatTextInfo());
                         }
                         if (depth > 200)
                         {
-                            writeToLog(prefix + " SRAI TOOOO DEEEEP <-- (" + depth + ")" + subRequestrawInput +
-                                       " ----- @ ");
+                            writeToLog(prefix + " FAILING TOOOO DEEEEP '" + subRequestrawInput + "'");
                             return Unifiable.Empty;
                         }
                         AIMLbot.Result subResult = null;
@@ -120,16 +132,16 @@ namespace RTParser.AIMLTagHandlers
                             this.Proc.isAcceptingUserInput = prev;
                         }
                         this.request.hasTimedOut = subRequest.hasTimedOut;
-                        var subQueryRawOutput = subResult.RawOutput.ToValue().Trim();
+                        var subQueryRawOutput = subResult.RawOutput.Trim();
                         if (Unifiable.IsNullOrEmpty(subQueryRawOutput))
                         {
                             if (showDebug)
-                                writeToLog(prefix + " SRAI<-- (" + depth + ") MISSING <----- @ ");
+                                writeToLog(prefix + " MISSING RETURN ");
                             if (mybot.chatTrace)
                             {
                                 mybot.writeChatTrace("\"L{0}\" -> \"S{1}\" ;\n", depth, depth);
                                 mybot.writeChatTrace("\"S{0}\" -> \"SIN:{1}\" ;\n", depth, subRequestrawInput);
-                                //mybot.writeChatTrace("\"SIN:{0}\" -> \"LN:{1}\" ;\n", subRequestrawInput, LineNumberTextInfo());
+                                //mybot.writeChatTrace("\"SIN:{0}\" -> \"LN:{1}\" ;\n", subRequestrawInput, CatTextInfo());
                                 mybot.writeChatTrace("\"SIN:{0}\" -> \"PATH:{1}\" [label=\"{2}\"] ;\n", subRequestrawInput, depth,subResult.NormalizedPaths);
                                 mybot.writeChatTrace("\"PATH:{0}\" -> \"LN:{1}\" [label=\"{2}\"] ;\n", depth, depth, LineNumberTextInfo());
                                 
@@ -141,7 +153,7 @@ namespace RTParser.AIMLTagHandlers
                         else
                         {
                             if (showDebug)
-                                writeToLog(prefix + " SRAI<-- (" + depth + ")" + subQueryRawOutput + " @ " + LineNumberTextInfo());
+                                writeToLog(prefix + " SUCCESS RETURN '" + subQueryRawOutput + "'");
                         }
 
                         if (mybot.chatTrace)

@@ -31,7 +31,8 @@ namespace RTParser
         /// </summary>
         public bool StaticLoader = true;
 
-        public static TextFilter LoggedWords = new TextFilter() { "*" }; //maybe should be ERROR", "STARTUP
+        public static string AIMLDEBUGSETTINGS = "clear -spam +error +aimltrace +cyc -dictlog";
+        readonly public static TextFilter LoggedWords = new TextFilter() { "*", "-dictlog" }; //maybe should be ERROR", "STARTUP
         public User LastUser;
         readonly public User BotAsUser;
         readonly public Request BotAsRequest;
@@ -411,7 +412,7 @@ namespace RTParser
             GraphsByName.Add("heardselfsay", _h);
             TheNLKB = new NatLangDb(this);
             this.setup();
-            BotAsUser = new User("Self", this);
+            BotAsUser = new User("MySelf", this);
             BotAsUser.ListeningGraph = HeardSelfSayGraph;
             BotAsUser.Predicates = GlobalSettings;
             BotAsRequest = new AIMLbot.Request("-bank-input-", BotAsUser, this, null);
@@ -774,6 +775,7 @@ namespace RTParser
             if (String.IsNullOrEmpty(message)) return;
 
             message = message.Trim() + Environment.NewLine;
+
             if (outputDelegate != null)
             {
                 try
@@ -801,6 +803,10 @@ namespace RTParser
         public void writeToLog0(string message)
         {
 
+            if (message.Contains("rocreate by cloning, or software copy"))
+            {
+                
+            }
             this.LastLogMessage = message;
             if (!this.IsLogging) return;
             lock (this.LoggingLock)
@@ -1171,7 +1177,9 @@ namespace RTParser
 
         public AIMLbot.Result HeardSelfSay0(string message)
         {
+            writeDebugLine("-----------------------------------------------------------------");
             AddHeardPreds(message, HeardPredicates);
+            writeDebugLine("-----------------------------------------------------------------");
             RTPBot.writeDebugLine("HEARDSELF: " + message);
             writeDebugLine("-----------------------------------------------------------------");
             return null;
@@ -1349,10 +1357,11 @@ namespace RTParser
                 {
                     if (isTraced)
                     {
-                        string s = "SubQueries.Count = " + result.SubQueries.Count;
+                        string s = "AIMLTRACE: SubQueries.Count = " + result.SubQueries.Count;
                         foreach (var path in result.SubQueries)
                         {
-                            s += "\r\n" + path.FullPath;
+                            s += Environment.NewLine;
+                            s += "  " + path.FullPath;
                         }
                         writeToLog(s);
                         Console.Out.Flush();
@@ -1367,13 +1376,27 @@ namespace RTParser
 
                     }
                 }
-                if (isTraced && result.SubQueries.Count != 1)
+                if (isTraced || result.OutputSentenceCount != 1)
                 {
-                    writeToLog("SubQueries.Count = " + result.SubQueries.Count);
+                    if (isTraced)
+                    {
+                        Console.Out.Flush();
+                        string s = "AIMLTRACE: result.OutputSentenceCount = " + result.OutputSentenceCount;
+                        foreach (var path in result.OutputSentences)
+                        {
+                            s += Environment.NewLine;
+                            s += "  " + path;
+                        }
+                        s += Environment.NewLine;
+                        writeToLog(s);
+                        Console.Out.Flush();
+                    }
+ 
                     foreach (SubQuery path in result.SubQueries)
                     {
+                        //string s = "AIMLTRACE QUERY:  " + path.FullPath;
 
-                        writeToLog("\r\n tt: " + path.Request.Graph + " " + path.ToString().Replace("\n", " ").Replace("\r", " ").Replace("  ", " "));
+                        //writeToLog("\r\n tt: " + path.Request.Graph);
                         if (chatTrace)
                         {
                             //bot.writeChatTrace("\"L{0}\" -> \"{1}\" ;\n", result.SubQueries.Count, path.FullPath.ToString());
@@ -1490,7 +1513,7 @@ namespace RTParser
                         if (proccessResponse(subquery, request, result, s.Output, s.Guard, out found0, handler)) break;
                         if (found0) found = true;
                         //break; // KHC: single vs. Multiple
-                        if ((found0) && (request.processMultipleTemplates == false)) break;
+                        if ((found0) && (request.ProcessMultipleTemplates == false)) break;
                     }
                     catch (Exception e)
                     {
@@ -1547,12 +1570,12 @@ namespace RTParser
                 if (IsOutputSentence(o))
                 {
                     if (isTraced)
-                        writeToLog("AIMLTRACE '{0}' TEMPLATE={1}", o, AIMLLoader.LineNumberTextInfo(templateNode));
+                        writeToLog("AIMLTRACE '{0}' TEMPLATE={1}", o, AIMLLoader.CatTextInfo(templateNode));
                     result.AddOutputSentences(o);
                     found = true;
                 }
                 if (!found && isTraced && isAcceptingUserInput)
-                    writeToLog("UNUSED '{0}' TEMPLATE={1}", o, AIMLLoader.LineNumberTextInfo(templateNode));
+                    writeToLog("UNUSED '{0}' TEMPLATE={1}", o, AIMLLoader.CatTextInfo(templateNode));
                 return false;
             }
 
@@ -1572,7 +1595,8 @@ namespace RTParser
                     if (Unifiable.IsFalse(ss))
                     {
                         if (isTraced)
-                            writeToLog("GUARD FALSE '{0}' TEMPLATE={1}", request, AIMLLoader.LineNumberTextInfo(templateNode));
+                            writeToLog("GUARD FALSE '{0}' TEMPLATE={1}", request,
+                                       AIMLLoader.CatTextInfo(templateNode));
                         return false;
                     }
                 }
@@ -1588,14 +1612,14 @@ namespace RTParser
                 if (IsOutputSentence(o))
                 {
                     if (isTraced)
-                        writeToLog(query.Graph + ": GUARD SUCCESS '{0}' TEMPLATE={1}", o, AIMLLoader.LineNumberTextInfo(templateNode));
+                        writeToLog(query.Graph + ": GUARD SUCCESS '{0}' TEMPLATE={1}", o, AIMLLoader.CatTextInfo(templateNode));
                     result.AddOutputSentences(o); found = true;
                     return true;
                 }
                 else
                 {
                     writeToLog("GUARD SKIP '{0}' TEMPLATE={1}", outputSentence,
-                               AIMLLoader.LineNumberTextInfo(templateNode));
+                               AIMLLoader.CatTextInfo(templateNode));
                 }
 
                 return false;
@@ -2293,9 +2317,9 @@ The AIMLbot program.
                                   "";
             //Added from AIML content now
             // myBot.AddAiml(evidenceCode);
-            myBot.BotDirective(myUser, "@log clear -spam +error +aimltrace +cyc", Console.Error.WriteLine);
+            myBot.BotDirective(myUser,"@log " + AIMLDEBUGSETTINGS, Console.Error.WriteLine);
             writeLine("-----------------------------------------------------------------");
-            myBot.BotDirective(myUser, "help", writeLine);
+            myBot.BotDirective(myUser, "@help", writeLine);
             writeLine("-----------------------------------------------------------------");
 
             String s = null;
@@ -2303,9 +2327,7 @@ The AIMLbot program.
             while (true)
             {
                 writeLine("-----------------------------------------------------------------");
-                System.Console.Write(myUser.ShortName + "> ");
-                Console.Out.Flush();
-                string input = Console.ReadLine();
+                string input = TextFilter.ReadLineFromInput(Console.Write, myUser.ShortName + "> ");
                 if (input == null)
                 {
                     Environment.Exit(0);
@@ -2337,7 +2359,7 @@ The AIMLbot program.
                         myBot.pMSM.clearNextStateValues();
                         Request r = new AIMLbot.Request(input, myUser, myBot, null);
                         r.IsTraced = true;
-                        r.processMultipleTemplates = false;
+                        r.ProcessMultipleTemplates = false;
                         writeLine("-----------------------------------------------------------------");
                         Result res = myBot.Chat(r);
                         if (!res.IsEmpty)
@@ -2366,6 +2388,7 @@ The AIMLbot program.
             }
 
         }
+
 
         public object LightWeigthBotDirective(string input, Request request)
         {
@@ -2486,7 +2509,7 @@ The AIMLbot program.
                 return true;
             }
 
-            if (showHelp) console("@log clear -spam +error +aimltrace +cyc list");
+            if (showHelp) console("@log " + AIMLDEBUGSETTINGS);
             if (cmd.StartsWith("log"))
             {
                 TextFilter.ListEdit(LoggedWords, args, console);
@@ -2569,8 +2592,6 @@ The AIMLbot program.
             }
         }
 
-        static string lastOutput = "";
-
         internal static void writeDebugLine(string message, params object[] args)
         {
             lock (LoggedWords) LoggedWords.writeDebugLine(Console.WriteLine, message, args);
@@ -2583,45 +2604,6 @@ The AIMLbot program.
             old = old.ToLower().Trim();
             next = next.ToLower().Trim();
             return FindUser(old) == FindUser(next);
-        }
-    }
-
-    internal class JoinedTextBuffer
-    {
-        static int count(string s, string t)
-        {
-            int f = s.IndexOf(t);
-            if (f < 0) return 0;
-            return 1 + count(s.Substring(f + 1), t);
-        }
-        private String message = "";
-        public void AddMore(string m)
-        {
-            if (Noise(m)) return;
-            message += " " + m;
-            message = message.Trim().Replace("  ", " ");
-        }
-
-        private bool Noise(string s)
-        {
-            s = s.ToLower();
-            if (s == "um,") return true;
-            if (s == "you know,") return true;
-            if (message.ToLower().EndsWith(s)) return true;
-            return false;
-        }
-
-        public bool IsReady()
-        {
-            if (message.EndsWith(",")) return false;
-            if (message.EndsWith(".")) return true;
-            if (count(message, " ") > 2) return true;
-            return false;
-        }
-
-        public string GetMessage()
-        {
-            return message;
         }
     }
 }
