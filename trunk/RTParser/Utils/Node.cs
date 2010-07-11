@@ -969,7 +969,7 @@ namespace RTParser.Utils
         public bool Value;
         public int PatternCount;
         public int MaxPatterns = 3;
-        public int MaxTemplates = 30;
+        public int MaxTemplates = 1;
         public int MaxBindings = 20;
         public bool IsNewType = true;
 
