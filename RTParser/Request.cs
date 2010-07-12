@@ -190,5 +190,11 @@ namespace RTParser
                 Proccessor.writeToLog(s, args);
             }
         }
+
+        public bool IsComplete(Result result1)
+        {
+            if (result1.OutputSentenceCount >= MaxOutputs) return true;
+            return false;
+        }
     }
 }

@@ -747,7 +747,7 @@ namespace RTParser
 
         public void writeToLog(Exception e)
         {
-            if (e==null) return;
+            if (e == null) return;
             string s = "ERROR: " + e.Message + " " + e.StackTrace;
             Exception inner = e.InnerException;
             if (inner != null && inner != e)
@@ -805,7 +805,7 @@ namespace RTParser
 
             if (message.Contains("rocreate by cloning, or software copy"))
             {
-                
+
             }
             this.LastLogMessage = message;
             if (!this.IsLogging) return;
@@ -1110,8 +1110,9 @@ namespace RTParser
             currentEar = new JoinedTextBuffer();
             if (LastUser != null)
             {
-                if (LastUser.LastResult != null)
-                    LastUser.LastResult.AddOutputSentences(message);
+                var LR = LastUser.LastResult;
+                if (LR != null)
+                    LR.AddOutputSentences(null, message);
             }
             message = swapPerson(message);
             writeDebugLine("HEARDSELF SWAP: " + message);
@@ -1342,15 +1343,19 @@ namespace RTParser
                     writeToLog("NormalizedPaths.Count = " + NormalizedPathsCount);
                 }
 
+                G = G ?? GraphMaster;
                 // grab the templates for the various sentences from the graphmaster
                 foreach (Unifiable path in result.NormalizedPaths)
                 {
-                    var ql = G.gatherQueries(path, request, MatchState.UserInput);
-                    if (ql.BindingCount > 0)
+                    QueryList ql = G.gatherQueriesFromGraph(path, request, MatchState.UserInput);
+                    if (ql.TemplateCount>0)
                     {
-                        result.AddSubqueries(ql);
+                        result.AddSubqueries(ql);                        
                     }
                 }
+
+
+
 
                 //todo pick and chose the queries
                 // if (result.SubQueries.Count != 1)
@@ -1369,13 +1374,11 @@ namespace RTParser
                 }
 
                 // process the templates into appropriate output
-                foreach (SubQuery query in result.SubQueries)
-                {
-                    if (processTemplate(query, request, result, null))
-                    {
+                int solutions;
+                bool hasMoreSolutions;
+                ProccessTemplates(request, result, out solutions, out hasMoreSolutions);
 
-                    }
-                }
+
                 if (isTraced || result.OutputSentenceCount != 1)
                 {
                     if (isTraced)
@@ -1391,7 +1394,7 @@ namespace RTParser
                         writeToLog(s);
                         Console.Out.Flush();
                     }
- 
+
                     foreach (SubQuery path in result.SubQueries)
                     {
                         //string s = "AIMLTRACE QUERY:  " + path.FullPath;
@@ -1413,7 +1416,7 @@ namespace RTParser
                 string nai = NotAcceptingUserInputMessage;
                 if (isTraced)
                     writeToLog("ERROR {0} getting back {1}", request, nai);
-                result.AddOutputSentences(nai);
+                result.AddOutputSentences(null, nai);
             }
 
             // populate the Result object
@@ -1422,6 +1425,55 @@ namespace RTParser
             streamDepth--;
 
             return result;
+        }
+
+
+        private void ProccessTemplates(Request request, Result result, out int solutions, out bool hasMoreSolutions)
+        {
+            hasMoreSolutions = true;
+            solutions = 0;
+            foreach (SubQuery query in result.SubQueries)
+            {
+                UList queryTemplate = query.Templates;
+                if (queryTemplate != null && queryTemplate.Count > 0)
+                {
+                    foreach (TemplateInfo s in queryTemplate)
+                    {
+                        // Start each the same
+                        s.Rating = 1.0;
+                        try
+                        {
+                            query.CurrentTemplate = s;
+                            bool createdOutput;
+                            bool templateSucceeded;
+                            proccessResponse(query, request, result, s.Output, s.Guard, out createdOutput,
+                                             out templateSucceeded, null, s);
+
+
+                            if (createdOutput) solutions++;
+                            if (request.IsComplete(result))
+                            {
+                                hasMoreSolutions = false;
+                                return;
+                            }
+
+                            //break; // KHC: single vs. Multiple
+                            if ((createdOutput) && (request.ProcessMultipleTemplates == false)) break;
+                        }
+                        catch (Exception e)
+                        {
+                            writeToLog("" + e);
+                            if (this.WillCallHome)
+                            {
+                                this.phoneHome(e.Message, request);
+                            }
+                            this.writeToLog("WARNING! A problem was encountered when trying to process the input: " +
+                                            request.rawInput + " with the template: \"" + s + "\"");
+                        }
+
+                    }
+                }
+            }
         }
 
 
@@ -1466,72 +1518,6 @@ namespace RTParser
             }
         }
 
-        /// <summary>
-        /// Return false if the guard fails
-        /// </summary>
-        /// <param name="query"></param>
-        /// <param name="request"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        public bool processTemplate(SubQuery query, Request request, Result result, AIMLTagHandler handler)
-        {
-            UList queryTemplate = query.Templates;
-            if (queryTemplate != null && queryTemplate.Count > 0)
-            {
-                try
-                {
-                    if (false && !Monitor.TryEnter(queryTemplate, 4000))
-                    {
-                        this.writeToLog("WARNING! Giving up on input: " + request.rawInput);
-                        return false;
-                    }
-                    return processTemplateUlocked(queryTemplate, query, request, result, handler);
-                }
-                finally
-                {
-                    // Monitor.Exit(queryTemplate);
-                }
-
-            }
-            return false;
-        }
-
-        private bool processTemplateUlocked(UList queryTemplate, SubQuery query, Request request, Result result, AIMLTagHandler handler)
-        {
-            bool found = false;
-            if (queryTemplate != null && queryTemplate.Count > 0)
-            {
-                foreach (TemplateInfo s in queryTemplate)
-                {
-                    SubQuery subquery = s.Query ?? query.CopyOfBorken();
-                    // Start each the same
-                    s.Rating = 1.0;
-                    try
-                    {
-                        bool found0;
-                        query.CurrentTemplate = s;
-                        if (proccessResponse(subquery, request, result, s.Output, s.Guard, out found0, handler)) break;
-                        if (found0) found = true;
-                        //break; // KHC: single vs. Multiple
-                        if ((found0) && (request.ProcessMultipleTemplates == false)) break;
-                    }
-                    catch (Exception e)
-                    {
-                        writeToLog("" + e);
-                        if (this.WillCallHome)
-                        {
-                            this.phoneHome(e.Message, request);
-                        }
-                        this.writeToLog("WARNING! A problem was encountered when trying to process the input: " +
-                                        request.rawInput + " with the template: \"" + s + "\"");
-                        return false;
-                    }
-
-                }
-            }
-            return found;
-        }
-
         public static Unifiable GetAttribValue(XmlNode templateNode, string attribName, Unifiable defaultIfEmpty)
         {
             attribName = attribName.ToLower();
@@ -1545,9 +1531,24 @@ namespace RTParser
             return defaultIfEmpty;
         }
 
-        public bool proccessResponse(SubQuery query, Request request, Result result, XmlNode sOutput, GuardInfo sGuard, out bool found, AIMLTagHandler handler)
+
+        public AIMLbot.Result ImmediateAiml(XmlNode templateNode, Request request0, AIMLLoader loader, AIMLTagHandler handler)
         {
-            found = false;
+            Request request = new AIMLbot.Request(templateNode.OuterXml, request0.user, request0.Proccessor,
+                                                  (AIMLbot.Request)request0);
+            request.Graph = request0.Graph;
+            request.depth = request0.depth + 1;
+            AIMLbot.Result result = new AIMLbot.Result(request.user, this, request);
+
+            bool templateSucceeded;
+            bool createdOutput;           
+            proccessResponse(null, request, result, templateNode, null, out createdOutput, out templateSucceeded,
+                             handler, null);
+            return result;
+        }
+
+        public void proccessResponse(SubQuery query, Request request, Result result, XmlNode sOutput, GuardInfo sGuard, out bool createdOutput, out bool templateSucceeded, AIMLTagHandler handler, TemplateInfo templateInfo)
+        {
             bool isTraced = request.IsTraced || result.IsTraced || !isAcceptingUserInput;
             //XmlNode guardNode = AIMLTagHandler.getNode(s.Guard.InnerXml);
             string output = sOutput.OuterXml;
@@ -1563,6 +1564,8 @@ namespace RTParser
             LineInfoElement templateNode = AIMLTagHandler.getNode(output, sOutput);
 
             string outputSentence = this.processNode(templateNode, query, request, result, request.user, handler);
+            templateSucceeded = !Unifiable.IsFalse(outputSentence);
+
             int f = outputSentence.IndexOf("GUARDBOM");
             if (f < 0)
             {
@@ -1571,21 +1574,27 @@ namespace RTParser
                 {
                     if (isTraced)
                         writeToLog("AIMLTRACE '{0}' TEMPLATE={1}", o, AIMLLoader.CatTextInfo(templateNode));
-                    result.AddOutputSentences(o);
-                    found = true;
+                    createdOutput = true;
+                    templateSucceeded = true;
+                    result.AddOutputSentences(templateInfo, o);
                 }
-                if (!found && isTraced && isAcceptingUserInput)
+                else
+                {
+                    createdOutput = false;
+                }
+                if (!createdOutput && isTraced && isAcceptingUserInput)
                     writeToLog("UNUSED '{0}' TEMPLATE={1}", o, AIMLLoader.CatTextInfo(templateNode));
-                return false;
+                return;
             }
 
             try
             {
                 string left = outputSentence.Substring(0, f).Trim();
-
-                if (Unifiable.IsFalse(left))
+                templateSucceeded = !Unifiable.IsFalse(left);
+                if (!templateSucceeded)
                 {
-                    return false;
+                    createdOutput = false;
+                    return;
                 }
                 string lang = GetAttribValue(sGuard.Output, "lang", "cycl").AsString().ToLower();
 
@@ -1597,13 +1606,21 @@ namespace RTParser
                         if (isTraced)
                             writeToLog("GUARD FALSE '{0}' TEMPLATE={1}", request,
                                        AIMLLoader.CatTextInfo(templateNode));
-                        return false;
+                        templateSucceeded = false;
+                        createdOutput = false;
+                        return;
+                    }
+                    else
+                    {
+                        templateSucceeded = true;
                     }
                 }
                 catch (Exception e)
                 {
                     writeToLog(e);
-                    return false;
+                    templateSucceeded = false;
+                    createdOutput = false;
+                    return;
                 }
 
                 //part the BOM
@@ -1613,21 +1630,26 @@ namespace RTParser
                 {
                     if (isTraced)
                         writeToLog(query.Graph + ": GUARD SUCCESS '{0}' TEMPLATE={1}", o, AIMLLoader.CatTextInfo(templateNode));
-                    result.AddOutputSentences(o); found = true;
-                    return true;
+                    templateSucceeded = true;
+                    createdOutput = true;
+                    result.AddOutputSentences(templateInfo, o);
+                    return;
                 }
                 else
                 {
                     writeToLog("GUARD SKIP '{0}' TEMPLATE={1}", outputSentence,
                                AIMLLoader.CatTextInfo(templateNode));
                 }
-
-                return false;
+                templateSucceeded = false;
+                createdOutput = false;
+                return;
             }
             catch (System.Exception ex)
             {
                 writeToLog(ex);
-                return false;
+                templateSucceeded = false;
+                createdOutput = false;
+                return;
             }
         }
 
@@ -1685,11 +1707,27 @@ namespace RTParser
 
         internal AIMLTagHandler GetTagHandler(User user, SubQuery query, Request request, Result result, XmlNode node, AIMLTagHandler handler)
         {
-            var tag = GetTagHandler0(user, query, request, result, node);
-            if (tag != null) tag.SetParent(handler);
+            var tag = GetTagHandler00(user, query, request, result, node);
+            if (tag != null)
+            {
+                tag.SetParent(handler);
+                TemplateInfo ti = tag.templateInfo;
+                if (ti == null && query != null)
+                {
+                    ti = query.CurrentTemplate;
+                }
+                if (ti == null && handler != null)
+                {
+                    ti = handler.GetTemplateInfo();
+                }
+                if (ti != null)
+                {
+                    tag.templateInfo = ti;
+                }
+            }
             return tag;
         }
-        internal AIMLTagHandler GetTagHandler0(User user, SubQuery query, Request request, Result result, XmlNode node)
+        internal AIMLTagHandler GetTagHandler00(User user, SubQuery query, Request request, Result result, XmlNode node)
         {
             AIMLTagHandler tagHandler = this.getBespokeTags(user, query, request, result, node);
             if (Equals(null, tagHandler))
@@ -2108,10 +2146,6 @@ The AIMLbot program.
             var res = ImmediateAiml(node, BotAsRequest, Loader, null);
             return res;
         }
-        internal Unifiable processNodeInside(XmlNode templateNode, SubQuery query, Request request, Result result, User user, AIMLTagHandler handler)
-        {
-            return processNode(templateNode, query, request, result, user, handler);
-        }
 
         internal Unifiable SystemExecute(Unifiable cmd, Unifiable langu, Request user)
         {
@@ -2156,73 +2190,6 @@ The AIMLbot program.
         public Unifiable GetBotSetting(Unifiable name)
         {
             return (Unifiable)GlobalSettings.grabSetting(name);
-        }
-
-        public AIMLbot.Result ImmediateAiml(XmlNode templateNode, Request request0, AIMLLoader loader, AIMLTagHandler handler)
-        {
-            Request request = new AIMLbot.Request(templateNode.OuterXml, request0.user, request0.Proccessor, (AIMLbot.Request)request0);
-            request.Graph = request0.Graph;
-            request.depth = request0.depth + 1;
-            AIMLbot.Result result = new AIMLbot.Result(request.user, this, request);
-            if (true)
-            {
-                bool found0;
-                proccessResponse(null, request, result, templateNode, null, out found0, handler);
-                return result;
-            }
-            //if (true)
-            //{
-            //    Unifiable path = loader.generatePath("no stars", request.user.getLastBotOutput(), request.Flags, request.Topic, true);
-            //    Utils.SubQuery query = new SubQuery(path, result, request);
-            //    string outputSentence = this.processNode(templateNode, query, request, result, request.user, handler);
-            //    return result;
-
-            //}
-            //if (this.isAcceptingUserInput)
-            {
-                string sentence = "aimlexec " + templateNode.OuterXml;
-                //RTParser.Normalize.SplitIntoSentences splitter = new RTParser.Normalize.SplitIntoSentences(this);
-                //Unifiable[] rawSentences = new Unifiable[] { request.rawInput };//splitter.Transform(request.rawInput);
-                //foreach (Unifiable sentence in rawSentences)
-                {
-                    result.InputSentences.Add(sentence);
-                    Unifiable path = loader.generatePath(sentence, request.user.getLastBotOutput(), request.Flags,
-                                                         request.Topic, true);
-                    result.NormalizedPaths.Add(path);
-                }
-
-                // grab the templates for the various sentences from the graphmaster
-                foreach (Unifiable path in result.NormalizedPaths)
-                {
-                    GraphMaster requestGraph = request.Graph;
-                    result.AddSubqueries(requestGraph.gatherQueries(path, request, MatchState.UserInput));
-                }
-
-                //todo pick and chose the queries
-                if (result.SubQueries.Count != 1)
-                {
-                    writeToLog("Found " + result.SubQueries.Count + " queries");
-                }
-
-                // process the templates into appropriate output
-                foreach (SubQuery query in result.SubQueries)
-                {
-                    if (processTemplate(query, request, result, handler))
-                    {
-
-                    }
-                }
-            }
-            //else
-            {
-                //  result.OutputSentences.Add(this.NotAcceptingUserInputMessage);
-            }
-
-            // populate the Result object
-            result.Duration = DateTime.Now - request.StartedOn;
-            request.user.addResult(result);
-
-            return result;
         }
 
         public Unifiable NOTOPIC
@@ -2278,13 +2245,13 @@ The AIMLbot program.
             return g;
         }
 
-        static void MainConsoleWriteLn(string fmt,params object[] ps)
+        static void MainConsoleWriteLn(string fmt, params object[] ps)
         {
-            writeDebugLine("-" + fmt, ps);  
+            writeDebugLine("-" + fmt, ps);
         }
         public static void Main(string[] args)
         {
-            OutputDelegate writeLine = MainConsoleWriteLn;           
+            OutputDelegate writeLine = MainConsoleWriteLn;
             RTPBot myBot = new Bot();
             myBot.loadSettings();
             string myName = "BinaBot Daxeline";
@@ -2317,7 +2284,7 @@ The AIMLbot program.
                                   "";
             //Added from AIML content now
             // myBot.AddAiml(evidenceCode);
-            myBot.BotDirective(myUser,"@log " + AIMLDEBUGSETTINGS, Console.Error.WriteLine);
+            myBot.BotDirective(myUser, "@log " + AIMLDEBUGSETTINGS, Console.Error.WriteLine);
             writeLine("-----------------------------------------------------------------");
             myBot.BotDirective(myUser, "@help", writeLine);
             writeLine("-----------------------------------------------------------------");

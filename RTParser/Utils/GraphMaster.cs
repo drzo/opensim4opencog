@@ -276,7 +276,7 @@ namespace RTParser.Utils
         }
         //query.Templates = 
 
-        public QueryList gatherQueries(Unifiable path, Request request, MatchState state)
+        public QueryList gatherQueriesFromGraph(Unifiable path, Request request, MatchState state)
         {
             QueryList ql = new QueryList(request);
             var templs2 = evaluateQL(path, request, state, ql);
@@ -287,10 +287,11 @@ namespace RTParser.Utils
                     RTPBot.writeDebugLine(this + " returned no results for " + path);
                 return templs2;
             }
+            lock (request.user.AllQueries) request.user.AllQueries.Add(ql);
             return templs2;
         }
 
-        private QueryList evaluateQL(UPath unifiable, Request request, MatchState matchState, QueryList ql)
+        private QueryList evaluateQL(Unifiable unifiable, Request request, MatchState matchState, QueryList ql)
         {
             DoParentEval(Parents, request, unifiable);
             bool trace = request.IsTraced && !UnTraced;

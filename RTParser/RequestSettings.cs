@@ -5,6 +5,7 @@ namespace RTParser
 {
     public class RequestSettings
     {
+        public static int DefaultMaxOutputs = 1;
         public static int DefaultMaxPatterns = 1;
         public static int DefaultMaxTemplates = 1;
         public static int DefaultMaxBindings = 20;
@@ -14,10 +15,14 @@ namespace RTParser
 
         public bool ProcessMultipleTemplates = DefualtProcessMultipleTemplates;
         public GraphMaster Graph;
+
         public bool IsTraced = false;
+
         public int MaxPatterns = DefaultMaxPatterns;
         public int MaxTemplates = DefaultMaxTemplates;
         public int MaxBindings = DefaultMaxBindings;
+        public int MaxOutputs = DefaultMaxOutputs;
+        public int MinOutputs = 1;
 
         public void ApplySettings(RequestSettings user)
         {
