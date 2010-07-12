@@ -14,6 +14,8 @@ namespace RTParser
     {
         #region Attributes
 
+        public List<QueryList> AllQueries = new List<QueryList>();
+
         public int LastResponseGivenTime = 0;
         public bool RespondToChat = true;
         public int MaxRespondToChatPerMinute = 10;

@@ -14,7 +14,12 @@ namespace RTParser.Utils
             get { return Templates == null ? 0 : Templates.Count; }
         }
 
-        public decimal BindingCount
+        public int BindingCount
+        {
+            get { return Bindings == null ? 0 : Bindings.Count; }
+        }
+
+        public int PatternCount
         {
             get { return Bindings == null ? 0 : Bindings.Count; }
         }
@@ -24,7 +29,6 @@ namespace RTParser.Utils
         private List<SubQuery> Bindings;
         public RequestSettings TheRequest;
         public bool Bubble;
-        public int PatternCount;
         public bool IsNewType = true;
 
         public void AddPattern(Node node)
@@ -33,7 +37,6 @@ namespace RTParser.Utils
             {
                 Patterns = new List<Node>();
             }
-            PatternCount++;
             Patterns.Add(node);
         }
 

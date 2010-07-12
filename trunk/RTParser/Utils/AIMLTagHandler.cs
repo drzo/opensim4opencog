@@ -13,6 +13,19 @@ namespace RTParser.Utils
     /// </summary>
     abstract public class AIMLTagHandler : TextTransformer, IXmlLineInfo
     {
+        public TemplateInfo templateInfo;
+        public TemplateInfo GetTemplateInfo()
+        {
+            if (templateInfo == null)
+            {
+                if (Parent != null && Parent != this)
+                {
+                    templateInfo = Parent.GetTemplateInfo();
+                }
+            }
+            return templateInfo;
+        }
+
         static public Unifiable ReduceStar(string name, SubQuery query)
         {
             try

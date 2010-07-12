@@ -146,11 +146,6 @@ namespace RTParser.Utils
             return Request.addSetting(name, value);
         }
 
-        public SubQuery CopyOfBorken()
-        {
-            return this;
-        }
-
         public SubQuery CopyOf()
         {
             SubQuery sq = new SubQuery(FullPath, Result, Request);

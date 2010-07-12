@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Xml;
 using System.Text;
+using RTParser.Utils;
 
 namespace RTParser.AIMLTagHandlers
 {
@@ -55,9 +56,11 @@ namespace RTParser.AIMLTagHandlers
                     return Unifiable.Empty;
                 }
                 XmlNode node = new XmlDocument().ReadNode(new XmlTextReader(new System.IO.StringReader(f.ToString())));
-                bool found0;
-                
-                Proc.proccessResponse(query, request, result, (XmlNode) node, null, out found0, this);
+                bool templateSucceeded;
+                bool createdOutput;
+                templateInfo = GetTemplateInfo();
+                Proc.proccessResponse(query, request, result, (XmlNode) node, templateInfo.Guard, out createdOutput,
+                                      out templateSucceeded, this, templateInfo);
                 return Unifiable.Empty;
             }
             finally

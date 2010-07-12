@@ -38,8 +38,17 @@ namespace RTParser
 
         private string AlreadyUsed = "";
         public int LinesToUse = 1;
-        public void AddOutputSentences(Unifiable unifiable)
+        public void AddOutputSentences(TemplateInfo ti, Unifiable unifiable)
         {
+            if (ti != null)
+                lock (UsedTemplates)
+                {
+                    UsedTemplates.Add(ti);
+                }
+            if (unifiable.IsEmpty)
+            {
+                return;
+            }
             if (AlreadyUsed.Contains(unifiable)) return;
             AlreadyUsed += unifiable;
 #if false
@@ -198,6 +207,8 @@ namespace RTParser
         /// The individual sentences that constitute the raw input from the user
         /// </summary>
         public List<Unifiable> InputSentences = new List<Unifiable>();
+
+        public List<TemplateInfo> UsedTemplates = new List<TemplateInfo>();
 
         /// <summary>
         /// Ctor
