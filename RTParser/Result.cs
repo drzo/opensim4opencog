@@ -58,6 +58,19 @@ namespace RTParser
 
         private string AlreadyUsed = "xtxtxtxtxtxtxtxtxxt";
         public int LinesToUse = 1;
+
+        public string SetOutput
+        {
+            set
+            {
+                lock (OutputSentences)
+                {
+                    AlreadyUsed = value;
+                    OutputSentences.Clear();
+                    OutputSentences.Add(value);                    
+                }
+            }
+        }
         public void AddOutputSentences(TemplateInfo ti, Unifiable unifiable)
         {
             if (AlreadyUsed.Contains(unifiable)) return;

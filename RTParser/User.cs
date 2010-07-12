@@ -390,6 +390,14 @@ namespace RTParser
         {
             if (this.Results.Count == 0) return Unifiable.STAR;
             String sentence = ((Result)Results[0]).RawOutput;
+            sentence = MainSentence(sentence);
+            sentence = sentence.Trim(new char[] { '.', ' ', '!', '?' });
+            String ssentence = bot.Loader.Normalize(sentence, true);
+            return ssentence;
+        }
+
+        static string MainSentence(string sentence)
+        {
             string prev = "";
             while (sentence != prev)
             {
@@ -423,8 +431,6 @@ namespace RTParser
                 Console.WriteLine(";;;;;;REWRITE NQ " + sentence + " => " + newClip);
                 if (newClip.Length > 4) sentence = newClip;
             }
-            sentence = sentence.Trim(new char[] { '.', ' ', '!', '?' });
-            String ssentence = bot.Loader.Normalize(sentence, true);
             return sentence;
         }
 
@@ -491,6 +497,12 @@ namespace RTParser
                 if (i >= Results.Count) return null;
                 return Results[i];
             }
+        }
+
+        public void SetOutputSentences(string args)
+        {
+            Result result = LastResult;
+            result.SetOutput = args;
         }
     }
 }

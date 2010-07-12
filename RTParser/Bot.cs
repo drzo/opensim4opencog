@@ -792,7 +792,8 @@ namespace RTParser
             }
             else
             {
-                if (writeToConsole) writeDebugLine(message);
+                //if (writeToConsole)
+                    writeDebugLine(message);
                 //                message = string.Format("[{0}]: {1}{2}", DateTime.Now.ToString(), message.Trim(), Environment.NewLine);
                 message = string.Format("[{0}]: {1}", DateTime.Now.ToString(), message.Trim());
                 //string m = message.AsString().ToLower();
@@ -1946,6 +1947,11 @@ namespace RTParser
                         break;
 
 
+                    case "regex":
+                        tagHandler = new AIMLTagHandlers.regex(this, user, query, request, result, node);
+                        break;
+
+
                     case "#text":
                         return null;
                     case "#comment":
@@ -2303,8 +2309,10 @@ The AIMLbot program.
 
             String s = null;
             var userJustSaid = String.Empty;
+            myBot.LastUser = myUser;
             while (true)
             {
+                myUser = myBot.LastUser;
                 writeLine("-----------------------------------------------------------------");
                 string input = TextFilter.ReadLineFromInput(Console.Write, myUser.ShortName + "> ");
                 if (input == null)
@@ -2451,19 +2459,18 @@ The AIMLbot program.
                 console("Done with " + args);
                 return true;
             }
-            if (showHelp) console("@self <heard>");
+            if (showHelp) console("@self <text> - fakes that the bot just said it");
             if (cmd == "self")
             {
                 HeardSelfSay0(args);
                 console("self> " + args);
+                myUser.SetOutputSentences(args);
                 return true;
             }
 
             if (showHelp) console("@set [var [value]]");
             if (cmd == "set")
             {
-                console(HeardPredicates.ToDebugString());
-                console(GlobalSettings.ToDebugString());
                 console(DefaultPredicates.ToDebugString());
                 return myUser.DoUserCommand(args, console);
                 return true;
@@ -2472,11 +2479,12 @@ The AIMLbot program.
             if (showHelp) console("@bot [var [value]]");
             if (cmd == "bot")
             {
+                console(HeardPredicates.ToDebugString());
                 return BotAsUser.DoUserCommand(args, console);
             }
 
 
-            if (showHelp) console("@proof <cmd>");
+            if (showHelp) console("@proof [[clear]|[save [filename.aiml]]] - clears or prints a content buffer being used");
             if (cmd == "proof")
             {
 
@@ -2484,9 +2492,13 @@ The AIMLbot program.
                 var ur = GetRequest(args, myUser.ShortName);
                 int i;
                 Result r = myUser.LastResult;
-                if (args == "all")
+                if (args.StartsWith("save"))
                 {
-
+                    args = args.Substring(4).Trim();
+                    string hide = GetTemplateSource(myUser.UsedTemplates);
+                    console(hide);
+                    if (args.Length > 0) File.AppendAllText(args, hide + "\n");
+                    return true;
                 }
                 if (int.TryParse(args, out i))
                 {
@@ -2501,7 +2513,32 @@ The AIMLbot program.
                     console("-----------------------------------------------------------------");
                     QueryList.PrintTemplates(CI, console);
                     if (args == "clear") CI.Clear();
-                    console("-----------------------------------------------------------------");                   
+                    console("-----------------------------------------------------------------");
+                }
+
+                return true;
+            }
+
+
+            if (showHelp) console("@query <text> - conducts a findall using all tags");
+            if (cmd == "query")
+            {
+
+                console("-----------------------------------------------------------------");
+                var ur = GetRequest(args, myUser.ShortName);
+                ur.MaxOutputs = 99;
+                ur.MaxPatterns = 99;
+                ur.MaxTemplates = 99;
+                ur.ProcessMultiplePatterns = true;
+                Chat0(ur, myUser.ListeningGraph);
+                int i;
+                Result r = myUser.LastResult;
+                {
+                    List<TemplateInfo> CI = myUser.UsedTemplates;
+                    console("-----------------------------------------------------------------");
+                    QueryList.PrintTemplates(CI, console);
+                    if (args == "clear") CI.Clear();
+                    console("-----------------------------------------------------------------");
                 }
 
                 return true;
@@ -2513,7 +2550,14 @@ The AIMLbot program.
                 return myUser.DoUserCommand(args, console);
             }
 
-            if (showHelp) console("@graph <graph>");
+            if (showHelp) console("@setuser <full name>");
+            if (cmd == "setuser")
+            {
+                LastUser = FindOrCreateUser(args);
+                return true;
+            }
+
+            if (showHelp) console("@graph <graph> - changes the users graph");
             if (cmd == "graph")
             {
                 myUser.ListeningGraph = GetGraph(args, myUser.ListeningGraph);
@@ -2529,6 +2573,19 @@ The AIMLbot program.
             if (showHelp) return true;
             console("unknown: @" + input);
             return false;
+        }
+
+        static string GetTemplateSource(List<TemplateInfo> CI)
+        {
+            string hide = "";
+            foreach (var ci in CI)
+            {
+                CategoryInfo c = ci.CategoryInfo;
+                string ss = "" + c + "\n";
+                if (hide.Contains(ss)) continue;
+                hide += ss;
+            }
+            return hide;
         }
 
         public string GetUserMt(User user)

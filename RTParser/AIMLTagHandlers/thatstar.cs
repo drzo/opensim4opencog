@@ -44,7 +44,7 @@ namespace RTParser.AIMLTagHandlers
             {
                 try
                 {
-                    int result = Convert.ToInt32(GetAttribValue("index", "1"));
+                    int result = Convert.ToInt32(GetAttribValue("index", "1")) - 1;
                     if (result <= query.ThatStar.Count)
                     {
                         if (result >= 0)
