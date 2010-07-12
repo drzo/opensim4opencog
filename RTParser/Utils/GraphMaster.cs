@@ -279,40 +279,55 @@ namespace RTParser.Utils
         public QueryList gatherQueriesFromGraph(Unifiable path, Request request, MatchState state)
         {
             QueryList ql = new QueryList(request);
-            var templs2 = evaluateQL(path, request, state, ql);
-            if (templs2.TemplateCount == 0)
+            ql.ApplySettings(request);
+            request.TopLevel = ql;
+            evaluateQL(path, request, state, ql);
+            if (ql.TemplateCount == 0)
             {
                 bool trace = request.IsTraced && !UnTraced;
                 if (trace)
                     RTPBot.writeDebugLine(this + " returned no results for " + path);
-                return templs2;
+                return ql;
             }
-            lock (request.user.AllQueries) request.user.AllQueries.Add(ql);
-            return templs2;
+            lock (request.user.AllQueries)
+            {
+                request.user.AllQueries.Add(ql);
+            }
+            return ql;
         }
 
-        private QueryList evaluateQL(Unifiable unifiable, Request request, MatchState matchState, QueryList ql)
+        private void evaluateQL(Unifiable unifiable, Request request, MatchState matchState, QueryList ql)
         {
             DoParentEval(Parents, request, unifiable);
             bool trace = request.IsTraced && !UnTraced;
-            var templs = RootNode.getQueries(unifiable, request, matchState, 0, Unifiable.CreateAppendable(), ql);
+            while(RootNode.getQueries(unifiable, request, matchState, 0, Unifiable.CreateAppendable(), ql))
+            {
+                if (ql.IsMaxedOut)
+                {
+                    break;
+                }
+                if (!request.ProcessMultiplePatterns)
+                {
+                    break;
+                }
+            }
             if (ql.TemplateCount == 0)
             {
                 if (trace) RTPBot.writeDebugLine("no templates for " + this);
                 var fallbacks = FallBacks(request.user);
-                if (fallbacks == null) return ql;
+                if (fallbacks == null) return;
                 foreach (GraphMaster graphMaster in fallbacks)
                 {
-                    var templs2 = graphMaster.evaluateQL(unifiable, request, matchState, ql);
-                    if (templs2.TemplateCount > 0)
+                    graphMaster.evaluateQL(unifiable, request, matchState, ql);
+                    if (ql.TemplateCount > 0)
                     {
                         if (trace)
-                            RTPBot.writeDebugLine("using parent templates from " + templs2);
-                        return templs2;
+                            RTPBot.writeDebugLine("using parent templates from " + ql);
+                        return;
                     }
                 }
             }
-            return ql;
+            return;
         }
 
         private IEnumerable<GraphMaster> FallBacks(User user)

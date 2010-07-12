@@ -30,10 +30,10 @@ namespace RTParser.Utils
         {
             var p = FullPath.AsString().ToLower();
             p = p.Replace("_", "*");
-            p = AIMLLoader.CleanWhitepaces(p);
+            p = AIMLLoader.CleanWhitepacesLower(p);
             p = "<srai>" + p + "</srai>";
             var t = newTemplateInfo.InnerXml.ToLower();
-            t = AIMLLoader.CleanWhitepaces(t);
+            t = AIMLLoader.CleanWhitepacesLower(t);
             t = t.Replace("<star/>", "*");
             t = t.Replace("<sr/>", "<srai>*</srai>");
             if (t.Contains(p))
@@ -46,10 +46,10 @@ namespace RTParser.Utils
         {
             var p = FullPath.AsString().ToLower();
             p = p.Replace("_", "*");
-            p = AIMLLoader.CleanWhitepaces(p);
+            p = AIMLLoader.CleanWhitepacesLower(p);
             p = "<srai>" + p + "</srai>";
             var t = newTemplateInfo.InnerXml.ToLower();
-            t = AIMLLoader.CleanWhitepaces(t);
+            t = AIMLLoader.CleanWhitepacesLower(t);
             t = t.Replace("<star/>", "*");
             t = t.Replace("<sr/>", "<srai>*</srai>");
 

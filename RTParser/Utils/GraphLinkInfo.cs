@@ -20,7 +20,7 @@ namespace RTParser.Utils
         }
         public override string ToString()
         {
-            return srcNode.OuterXml;
+            return srcNode.OuterXml + " " + AIMLLoader.LineNumberInfo(srcNode);
         }
         public string InnerXml
         {

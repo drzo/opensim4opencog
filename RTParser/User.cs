@@ -14,6 +14,8 @@ namespace RTParser
     {
         #region Attributes
 
+        public List<TemplateInfo> UsedTemplates = new List<TemplateInfo>();
+
         public List<QueryList> AllQueries = new List<QueryList>();
 
         public int LastResponseGivenTime = 0;
@@ -71,15 +73,7 @@ namespace RTParser
         /// <summary>
         /// A collection of all the result objects returned to the user in this session
         /// </summary>
-        private readonly List<Result> _Results = new List<Result>();
-
-        List<Result> Results
-        {
-            get
-            {
-                return _Results;
-            }
-        }
+        private readonly List<Result> Results = new List<Result>();
 
 
         List<Unifiable> _topics = new List<Unifiable>();
@@ -133,14 +127,14 @@ namespace RTParser
         {
             get
             {
-                if (this.Results.Count > 0)
-                {
-                    return (Result)this.Results[0];
-                }
-                else
-                {
-                    return null;
-                }
+                lock (Results) if (this.Results.Count > 0)
+                    {
+                        return (Result)this.Results[0];
+                    }
+                    else
+                    {
+                        return null;
+                    }
             }
         }
 
@@ -209,6 +203,7 @@ namespace RTParser
             {
                 this.id = UserID;
                 this.bot = bot;
+                this.ApplySettings(bot.LastUser ?? bot.BotAsUser);
                 this.Predicates = new RTParser.Utils.SettingsDictionary(ShortName + ".predicates", this.bot, provider);
                 this.bot.DefaultPredicates.Clone(this.Predicates);
                 ListeningGraph = bot.GraphMaster;
@@ -276,7 +271,7 @@ namespace RTParser
         {
             if ((n >= 0) & (n < this.Results.Count))
             {
-                Result historicResult = (Result)this.Results[n];
+                Result historicResult = GetResult(n);
                 if ((sentence >= 0) & (sentence < historicResult.OutputSentenceCount))
                 {
                     return (Unifiable)historicResult.GetOutputSentence(sentence);
@@ -314,7 +309,7 @@ namespace RTParser
         {
             if ((n >= 0) & (n < this.Results.Count))
             {
-                Result historicInput = (Result)this.Results[n];
+                Result historicInput = GetResult(n);
                 if ((sentence >= 0) & (sentence < historicInput.InputSentences.Count))
                 {
                     return (Unifiable)historicInput.InputSentences[sentence];
@@ -352,7 +347,7 @@ namespace RTParser
         {
             if ((n >= 0) & (n < this.Results.Count))
             {
-                Result historicResult = (Result)this.Results[n];
+                Result historicResult = GetResult(n);
                 if ((sentence >= 0) & (sentence < historicResult.InputSentences.Count))
                 {
                     return (Unifiable)historicResult.InputSentences[sentence];
@@ -374,11 +369,11 @@ namespace RTParser
             if (SuspendAdd)
             {
                 Request r = latestResult.request;
-                if (r!=null)
+                if (r != null)
                 {
                     if (r.IsTraced)
                         RTPBot.writeDebugLine("AIMLTRACE: skipping result " + latestResult);
-                } 
+                }
                 return;
             }
             this.Results.Insert(0, latestResult);
@@ -387,6 +382,7 @@ namespace RTParser
             {
                 this.Results.RemoveRange(MaxResultsSaved, rc - MaxResultsSaved);
             }
+            addResultTemplates(latestResult);
         }
         #endregion
 
@@ -416,7 +412,7 @@ namespace RTParser
                 if (newClip.Length > 4) sentence = newClip;
             }
             sentence = sentence.Trim(new char[] { '.', ' ', '!', '?' });
-            sf = sentence.LastIndexOfAny(new[] {'.', '!'});
+            sf = sentence.LastIndexOfAny(new[] { '.', '!' });
             if (sf > 0)
             {
                 String newClip = sentence.Substring(sf).Trim();
@@ -461,6 +457,40 @@ namespace RTParser
         public void WriteLine(string s, object[] objects)
         {
             throw new NotImplementedException();
+        }
+
+        public void addResultTemplates(Result result)
+        {
+            lock (UsedTemplates)
+            {
+                lock (result.UsedTemplates)
+                    UsedTemplates.AddRange(result.UsedTemplates);
+            }
+        }
+
+        public void addResultTemplates(Request request)
+        {
+            lock (UsedTemplates)
+            {
+                lock (request.UsedResults)
+                {
+                    foreach (var list in request.UsedResults)
+                    {
+                        addResultTemplates(list);
+
+                    }
+                }
+            }
+        }
+
+        public Result GetResult(int i)
+        {
+            if (i == -1) return null;
+            lock (Results)
+            {
+                if (i >= Results.Count) return null;
+                return Results[i];
+            }
         }
     }
 }

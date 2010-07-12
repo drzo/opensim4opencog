@@ -15,6 +15,7 @@ using RTParser.Database;
 using RTParser.Normalize;
 using RTParser.Utils;
 using UPath = RTParser.Unifiable;
+using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
 
 namespace RTParser
 {
@@ -786,7 +787,7 @@ namespace RTParser
                 {
                     writeToConsole = true;
                 }
-                if (writeToConsole) writeDebugLine(message);
+                if (writeToConsole || true) writeDebugLine(message);
                 message = string.Format("[{0}]: {1}", DateTime.Now.ToString(), message.Trim());
             }
             else
@@ -1011,11 +1012,18 @@ namespace RTParser
         /// <returns>the result to be output to the user</returns>        
         public string ChatString(string rawInput, string username)
         {
-            var r = new AIMLbot.Request(rawInput, FindOrCreateUser(username), this, null);
+            var r = GetRequest(rawInput, username);
             r.IsTraced = true;
             return Chat(r).Output;
         }
 
+
+        public Request GetRequest(string rawInput, string username)
+        {
+            var r = new AIMLbot.Request(rawInput, FindOrCreateUser(username), this, null);
+            r.IsTraced = true;
+            return r;
+        }
 
         /// <summary>
         /// Given some raw input and a unique ID creates a response for a new user
@@ -1023,7 +1031,7 @@ namespace RTParser
         /// <param name="rawInput">the raw input</param>
         /// <param name="UserGUID">an ID for the new user (referenced in the result object)</param>
         /// <returns>the result to be output to the user</returns>
-        public Result Chat(Unifiable rawInput, Unifiable UserGUID)
+        public Result Chat(string rawInput, string UserGUID)
         {
             AIMLbot.Request request = new AIMLbot.Request(rawInput, new User(UserGUID, this), this, null);
             request.IsTraced = true;
@@ -1350,6 +1358,7 @@ namespace RTParser
                     QueryList ql = G.gatherQueriesFromGraph(path, request, MatchState.UserInput);
                     if (ql.TemplateCount>0)
                     {
+                        request.TopLevel = ql;
                         result.AddSubqueries(ql);                        
                     }
                 }
@@ -1421,9 +1430,10 @@ namespace RTParser
 
             // populate the Result object
             result.Duration = DateTime.Now - request.StartedOn;
-            if (request.user != null) request.user.addResult(result);
+            User popu = request.user ?? result.user;
+            popu.addResult(result);
+            popu.addResultTemplates(request);
             streamDepth--;
-
             return result;
         }
 
@@ -1456,7 +1466,6 @@ namespace RTParser
                                 hasMoreSolutions = false;
                                 return;
                             }
-
                             //break; // KHC: single vs. Multiple
                             if ((createdOutput) && (request.ProcessMultipleTemplates == false)) break;
                         }
@@ -2461,6 +2470,38 @@ The AIMLbot program.
             if (cmd == "bot")
             {
                 return BotAsUser.DoUserCommand(args, console);
+            }
+
+
+            if (showHelp) console("@proof <cmd>");
+            if (cmd == "proof")
+            {
+
+                console("-----------------------------------------------------------------");
+                var ur = GetRequest(args, myUser.ShortName);
+                int i;
+                Result r = myUser.LastResult;
+                if (args == "all")
+                {
+
+                }
+                if (int.TryParse(args, out i))
+                {
+                    r = myUser.GetResult(i);
+                    console("-----------------------------------------------------------------");
+                    if (r != null)
+                        QueryList.PrintTemplates(r, console);
+                }
+                else
+                {
+                    List<TemplateInfo> CI = myUser.UsedTemplates;
+                    console("-----------------------------------------------------------------");
+                    QueryList.PrintTemplates(CI, console);
+                    if (args == "clear") CI.Clear();
+                    console("-----------------------------------------------------------------");                   
+                }
+
+                return true;
             }
 
             if (showHelp) console("@user [var [value]]");

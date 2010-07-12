@@ -114,7 +114,7 @@ namespace RTParser.AIMLTagHandlers
                             writeToLog(prefix + " FAILING TOOOO DEEEEP '" + subRequestrawInput + "'");
                             return Unifiable.Empty;
                         }
-                        AIMLbot.Result subResult = null;
+                        AIMLbot.Result subResult;
                         var prev = this.Proc.isAcceptingUserInput;
                         var prevSO = user.SuspendAdd;
                         try
@@ -152,8 +152,11 @@ namespace RTParser.AIMLTagHandlers
                         }
                         else
                         {
+                            string sss = result.ToString();
                             if (showDebug)
                                 writeToLog(prefix + " SUCCESS RETURN '" + subQueryRawOutput + "'");
+                            this.request.AddSubResult(result);
+                            this.request.AddSubResult(subResult);
                         }
 
                         if (mybot.chatTrace)

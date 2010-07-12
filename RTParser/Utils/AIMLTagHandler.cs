@@ -350,7 +350,7 @@ namespace RTParser.Utils
 
         public string LineNumberInfo()
         {
-            string s = "";
+            string s = "<!--";
             if (templateNode is LineInfoElement)
             {
                 LineInfoElement li = (LineInfoElement)templateNode;
@@ -371,11 +371,7 @@ namespace RTParser.Utils
                     s = s + " (" + li.OwnerDocument.ToString() + ":line " + li.lineNumber + "," + li.linePosition + ") ";
                 }
             }
-            else
-            {
-                return s;
-            }
-            return s;
+            return s + "-->";
         }
 
 

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using AIMLbot;
 using UPath = RTParser.Unifiable;
+using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
 
 
 namespace RTParser.Utils
@@ -56,10 +57,11 @@ namespace RTParser.Utils
             string s = string.Format("SubQuery '{0}' I={1} TH={2} TP={3} G={4} TC={5}",
                                      FullPath, InputStar.Count, ThatStar.Count, TopicStar.Count,
                                      GuardStar.Count, Templates == null ? 0 : Templates.Count);
-            foreach (var path in Templates)
-            {
-                s += "\r\n t: " + path;
-            }
+            if (Templates!=null)
+                foreach (var path in Templates)
+                {
+                    s += "\r\n t: " + path;
+                }
             return s + " \r\n   Result: " + Result ?? "-no-result-";
         }
 
@@ -179,7 +181,7 @@ namespace RTParser.Utils
             }
         }
     }
-
+#if _FALSE_
     public class UList : IEnumerable<TemplateInfo>
     {
         public List<TemplateInfo> root = new List<TemplateInfo>();
@@ -242,4 +244,5 @@ namespace RTParser.Utils
             }
         }
     }
+#endif
 }

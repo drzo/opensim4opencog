@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.Xml;
 using UPath = RTParser.Unifiable;
+using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
+
 
 namespace RTParser.Utils
 {
@@ -340,6 +342,11 @@ namespace RTParser.Utils
             int resin = topLevel.TemplateCount;
             int patternCountChanged = 0;
             int tried = 0;
+            bool doIt = !request.IsComplete(request.result);
+            if (!doIt)
+            {
+                return false;
+            }
             while (true)
             {
                 tried++;
@@ -359,11 +366,7 @@ namespace RTParser.Utils
                 {
                     break;
                 }
-                if (topLevel.TemplateCount >= topLevel.MaxTemplates)
-                {
-                    break;
-                }
-                if (topLevel.BindingCount >= topLevel.MaxBindings)
+                if (topLevel.IsMaxedOut)
                 {
                     break;
                 }
@@ -372,7 +375,7 @@ namespace RTParser.Utils
             bool sc = patternCountChanged > 0;
             if (f != sc)
             {
-                RTPBot.writeDebugLine("AIMLNODE" + tried + " pc=" + patternCountChanged + ": " + f + "  " + request);
+                RTPBot.writeDebugLine("AIMLNODE: " + tried + " pc=" + patternCountChanged + ": " + f + "  " + request);
             }
             return f;
         }
@@ -672,14 +675,13 @@ namespace RTParser.Utils
                         return true;
                     }
                     query.Pattern = pattern;
-                    toplevel.AddPattern(pattern);
                     toplevel.AddBindingSet(query);
                 }
                 foreach (TemplateInfo sol in tmplateInfos)
                 {
                     sol.Query = query;
                     query.CurrentTemplate = sol;
-                    query.Templates.root.Add(sol);
+                    query.Templates.Add(sol);
                     toplevel.AddTemplate(sol);
                 }
             }

@@ -6,12 +6,13 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using RTParser;
+using RTParser.Utils;
 
 namespace RTParser
 {
     public class TextFilter : ICollection<string>
     {
-        private HashSet<string> AnyOf = new HashSet<string>() { "ERROR" };
+        private HashSet<string> AnyOf = new HashSet<string>() {"ERROR", "LOADER"};
         private HashSet<string> ExceptFor = new HashSet<string>() { };
         bool addMode = true;
         bool remMode = false;
@@ -38,7 +39,7 @@ namespace RTParser
                         throw exception;
                     }
                 }
-                lock (this)
+               // lock (this)
                 {
                     if (lastOutput == message) return;
                     if (lastOutput.Contains(message))
@@ -92,7 +93,7 @@ namespace RTParser
 
         public bool ShouldPrint(string message)
         {
-            if (message == null) return true;
+            if (message == null) return false;
             string msgTest = message.ToUpper();
             bool printIt = false;
             lock (AnyOf)
