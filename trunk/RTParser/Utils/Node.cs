@@ -345,7 +345,8 @@ namespace RTParser.Utils
             bool doIt = !request.IsComplete(request.result);
             if (!doIt)
             {
-                return false;
+                RTPBot.writeDebugLine("AIMLTRACE DOIT: " + tried + " pc=" + patternCountChanged + ": " + false + "  " + request);
+             //   return false;
             }
             while (true)
             {
@@ -356,6 +357,11 @@ namespace RTParser.Utils
                 query.TopLevel = topLevel;
                 List<Unifiable> mtchList = query.GetMatchList(matchstate);
                 evaluate(upath, query, request, mtchList, matchstate, index, wildcard, topLevel);
+                if (topLevel.Bubble)
+                {
+
+                   // break;
+                }
                 if (topLevel.PatternCount == patternCount)
                 {
                     break;
