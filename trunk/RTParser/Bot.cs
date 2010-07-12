@@ -899,6 +899,7 @@ namespace RTParser
                 if (myUser != null) return myUser;
                 newlyCreated = true;
                 myUser = new AIMLbot.User(fromname, this);
+                writeDebugLine("USERTRACE: New User " + fromname);
                 BotUsers[fromname.ToLower()] = myUser;
                 if (!UnknowableName(fromname))
                 {
@@ -916,6 +917,8 @@ namespace RTParser
 
                 old = CleanupFromname(old);
                 user = CleanupFromname(user);
+
+                writeDebugLine("USERTRACE: Rename User " + old + " -> " + user);
 
                 User f = FindUser(old);
                 if (f == null)
@@ -1117,15 +1120,7 @@ namespace RTParser
             }
             message = currentEar.GetMessage();
             currentEar = new JoinedTextBuffer();
-            if (LastUser != null)
-            {
-                var LR = LastUser.LastResult;
-                if (LR != null)
-                    LR.AddOutputSentences(null, message);
-            }
-            message = swapPerson(message);
-            writeDebugLine("HEARDSELF SWAP: " + message);
-            return null;
+            //return null;
             RunTask(() => HeardSelfSay0(message), "heardSelfSay: " + message, 500);
             return null;
         }
@@ -1187,6 +1182,24 @@ namespace RTParser
 
         public AIMLbot.Result HeardSelfSay0(string message)
         {
+            if (message == null) return null;
+            message = message.Trim();
+            if (message == "") return null;
+            if (message.StartsWith("<"))
+            {
+                var v = AIMLTagHandler.getNode("<pre>" + message + "</pre>");
+                writeDebugLine("AIMLTRACE: " + message + " -> " + v.InnerText);
+                message = v.InnerText;
+            }
+            //message = swapPerson(message);
+            //writeDebugLine("HEARDSELF SWAP: " + message);
+            if (LastUser != null)
+            {
+                var LR = LastUser.LastResult;
+                if (LR != null)
+                    LR.AddOutputSentences(null, message);
+            }           
+
             writeDebugLine("-----------------------------------------------------------------");
             AddHeardPreds(message, HeardPredicates);
             writeDebugLine("-----------------------------------------------------------------");
@@ -2269,8 +2282,12 @@ The AIMLbot program.
         }
         public static void Main(string[] args)
         {
-            OutputDelegate writeLine = MainConsoleWriteLn;
             RTPBot myBot = new Bot();
+            OutputDelegate writeLine = MainConsoleWriteLn;
+            Main(args, myBot, writeLine);            
+        }
+        public static void Main(string[] args, RTPBot myBot, OutputDelegate writeLine)
+        {
             myBot.loadSettings();
             string myName = "BinaBot Daxeline";
             // myName = "Kotoko Irata";
@@ -2395,6 +2412,7 @@ The AIMLbot program.
             {
                 input = input.TrimStart(new[] { ' ', '@' });
             }
+            myUser = myUser ?? LastUser ?? FindOrCreateUser(null);
             int firstWhite = input.IndexOf(' ');
             if (firstWhite == -1) firstWhite = input.Length - 1;
             string cmd = input.Substring(0, firstWhite + 1).Trim().ToLower();
@@ -2459,11 +2477,11 @@ The AIMLbot program.
                 console("Done with " + args);
                 return true;
             }
-            if (showHelp) console("@self <text> - fakes that the bot just said it");
-            if (cmd == "self")
+            if (showHelp) console("@say <text> - fakes that the bot just said it");
+            if (cmd == "say")
             {
-                HeardSelfSay0(args);
-                console("self> " + args);
+                HeardSelfSay(args);
+                console("say> " + args);
                 myUser.SetOutputSentences(args);
                 return true;
             }

@@ -1,15 +1,21 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
+using AIMLbot;
 using cogbot;
+using cogbot.Actions;
+using cogbot.Utilities;
 using CommandLine.Utility;
 using OpenMetaverse;
 using Radegast;
 using System.Windows.Forms;
 using RTParser;
 using SbsSW.SwiPlCs;
+using User=RTParser.User;
 
 namespace ABuildStartup
 {
@@ -138,7 +144,7 @@ namespace ABuildStartup
             if (arguments.GetAfter("--aiml", out oArgs))
             {
                 string[] newArgs = oArgs;
-                DoAndExit(() => RTParser.RTPBot.Main(newArgs));
+                DoAndExit(() => RTPBotMain(oArgs));
             }
             if (arguments.GetAfter("--swipl", out oArgs))
             {
@@ -191,6 +197,21 @@ namespace ABuildStartup
                               }
                           })
                 ;
+        }
+
+        private static void RTPBotMain(string[] args)
+        {
+            RTPBot.OutputDelegate writeLine = Console.WriteLine;
+            string[] oArgs;
+            bool usedHttpd = true ;//|| (args.GetAfter("http", out oArgs));
+            RTPBot myBot = new Bot();
+
+            if (usedHttpd)
+            {
+                ScriptExecutorGetter geter = new ScriptExecutorGetterImpl(myBot);
+                new ClientManagerHttpServer(geter, 5580);
+            }
+            Bot.Main(args, myBot, writeLine);
         }
 
         private static void HandleProcessExit(object sender, EventArgs e)
@@ -282,5 +303,72 @@ namespace ABuildStartup
             _appException = (Exception)e.ExceptionObject;
             FilteredWriteLine("!!HandleUnhandledException!! " + e.ExceptionObject);
         }
+    }
+
+    internal class ScriptExecutorGetterImpl : ScriptExecutorGetter, ScriptExecutor
+    {
+        #region Implementation of ScriptExecutorGetter
+
+        private RTPBot TheBot;
+        private User myUser;
+
+        public ScriptExecutorGetterImpl(RTPBot bot)
+        {
+            TheBot = bot;
+        }
+        public ScriptExecutor GetScriptExecuter(object o)
+        {
+            return this;
+        }
+
+        public void WriteLine(string s, params object[] args)
+        {
+            //TheBot.writeChatTrace(s, args);
+            Console.WriteLine(s,args);
+        }
+
+        #endregion
+
+        #region Implementation of ScriptExecutor
+
+        public CmdResult ExecuteCommand(string s, OutputDelegate outputDelegate)
+        {
+            StringWriter sw = new StringWriter();
+            if (s.StartsWith("aiml"))
+            {
+                s = s.Substring(4).Trim();
+                if (s.StartsWith("@ "))
+                    s = "@withuser" + s.Substring(1);
+            }
+            if (s.StartsWith("say")) s = "@" + s;
+            sw.WriteLine("AIMLTRACE " + s);
+            myUser = TheBot.LastUser;
+            bool r = TheBot.BotDirective(myUser, s, sw.WriteLine);
+            s = sw.ToString();
+            WriteLine(s);
+            return new CmdResult(s, r);
+        }
+
+        public CmdResult ExecuteXmlCommand(string s, OutputDelegate outputDelegate)
+        {
+            return ExecuteCommand(s, outputDelegate);
+        }
+
+        public string GetName()
+        {
+            return TheBot.GlobalSettings.grabSettingNoDebug("NAME");
+        }
+
+        public object getPosterBoard(object slot)
+        {
+            string sslot = "" + slot;
+            sslot = sslot.ToLower();
+            var u = TheBot.GlobalSettings.grabSetting(sslot);
+            if (Unifiable.IsNull(u)) return null;
+            if (u.IsEmpty) return "";
+            return u.ToValue();
+        }
+
+        #endregion
     }
 }

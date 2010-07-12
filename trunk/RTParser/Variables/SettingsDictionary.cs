@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
@@ -64,7 +65,7 @@ namespace RTParser.Utils
         /// <summary>
         /// Holds a dictionary of settings
         /// </summary>
-        readonly private Dictionary<string, Unifiable> settingsHash = new Dictionary<string, Unifiable>();
+        readonly public Dictionary<string, Unifiable> settingsHash = new Dictionary<string, Unifiable>();
 
         /// <summary>
         /// Contains an ordered collection of all the keys (unfortunately Dictionary<,>s are
