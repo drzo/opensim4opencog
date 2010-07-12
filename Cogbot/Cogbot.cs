@@ -33,6 +33,7 @@ namespace cogbot
         [STAThread]
         public static void Main(string[] args)
         {
+            NativeMethods.AllocConsole();
             if (ClientManager.MainThread == null)
             {
                 ClientManager.MainThread = Thread.CurrentThread;

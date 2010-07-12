@@ -21,7 +21,7 @@ namespace cogbot
     enum Modes { normal, tutorial };
     public delegate void OutputDelegate(string str, params object[] args);
 
-    public class ClientManager : IDisposable
+    public class ClientManager : IDisposable,ScriptExecutorGetter
     {
         static private ClientManagerHttpServer clientManagerHttpServer;
         public void AddTool(string name, string text, EventHandler threadStart)
@@ -378,6 +378,12 @@ namespace cogbot
         public void output(string txt)
         {
             WriteLine(txt);
+        }
+
+        public ScriptExecutor GetScriptExecuter(object o)
+        {
+            if (o==null) return LastBotClient;
+            return GetBotByName("" + o);
         }
 
         public void WriteLine(string str, params object[] args)

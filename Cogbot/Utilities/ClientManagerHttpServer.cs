@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -48,19 +49,13 @@ namespace cogbot.Utilities
 
     public class ClientManagerHttpServer
     {
+        private ScriptExecutorGetter getter;
         HttpServer.HttpListener _listener;
         private int _port;
-        private ClientManager clientManager;
+        private ScriptExecutorGetter clientManager;
         private string defaultUser = "UNKNOWN_PARTNER";
 
-        private BotClient _botClient
-        {
-            get
-            {
-                return clientManager.LastBotClient;
-            }
-        }
-        public ClientManagerHttpServer(ClientManager bc, int port)
+        public ClientManagerHttpServer(ScriptExecutorGetter bc, int port)
         {
             clientManager = bc;
             _port = port;
@@ -117,7 +112,6 @@ namespace cogbot.Utilities
         private void _listener_4040(IHttpClientContext context, IHttpRequest request, IHttpResponse response)
         {
             UUID capsID;
-
             bool success;
 
             string path = request.Uri.PathAndQuery;//.TrimEnd('/');
@@ -130,21 +124,22 @@ namespace cogbot.Utilities
             }
             var wrresp = new WriteLineToResponse(this, response);
 
+            string botname = GetVariable(request, "bot", GetVariable(request, "botid", null));
+
+            ScriptExecutor _botClient = clientManager.GetScriptExecuter(botname);
+
             // Micro-posterboard
             if (pathd.StartsWith("/posterboard"))
             {
                 string slot = path;
                 string value = "";
-                if (_botClient.PosterBoard.Contains(slot))
-                {
-                    value = (string)_botClient.PosterBoard[slot];
-                    _botClient.PosterBoard.Remove(slot); // consume the data from the queue
+                value = _botClient.getPosterBoard(slot) as string;
+                if (value!=null)                    
                     if (value.Length > 0) { LogInfo(String.Format(" board response: {0} = {1}", slot, value)); }
-                }
                 AddToBody(response, "<xml>");
                 AddToBody(response, "<slot>");
-                AddToBody(response, "<path>" + path + "</path>"); 
-                AddToBody(response, "<value>" + value + "</value>");
+                AddToBody(response, "<path>" + path + "</path>");
+                AddToBody(response, "<value>" + (value ?? "") + "</value>");
                 AddToBody(response, "</slot>");
                 AddToBody(response, "</xml>");
 
@@ -173,7 +168,7 @@ namespace cogbot.Utilities
                 {
                     AddToBody(response, "<html>");
                     AddToBody(response, "<head>");
-                    string botname = GetVariable(request, "bot", _botClient.GetName());
+                    botname = GetVariable(request, "bot", _botClient.GetName());
 
                     AddToBody(response, "<title>" + botname + "</title>");
                     AddToBody(response, "</head>");
@@ -293,5 +288,19 @@ namespace cogbot.Utilities
         {
             LogInfo("_listener_Accepted " + e.Socket);
         }
+    }
+
+    public interface ScriptExecutorGetter
+    {
+        ScriptExecutor GetScriptExecuter(object o);
+        void WriteLine(string s, params object[] args);
+    }
+
+    public interface ScriptExecutor
+    {
+        CmdResult ExecuteCommand(string s, OutputDelegate outputDelegate);
+        CmdResult ExecuteXmlCommand(string s, OutputDelegate outputDelegate);
+        string GetName();
+        object getPosterBoard(object slot);
     }
 }

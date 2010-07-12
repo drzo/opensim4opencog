@@ -106,6 +106,27 @@ namespace CommandLine.Utility
                 if (!ContainsKey(Parameter))
                     AddTrue(Parameter);
             }
+            checkKVs();
+        }
+
+        private void checkKVs()
+        {
+            return;
+            string[] s = GetAfterIndex(0);
+            Action<String> d =  Console.WriteLine;
+            foreach (var a in s)
+            {
+                d(a);
+            }
+            foreach (var a in Original)
+            {
+                d(a);
+            }
+            Console.Out.Flush();
+            if(s.Length == Original.Length)
+            {
+                
+            }
         }
 
         private bool ContainsKey(string k)
@@ -159,7 +180,7 @@ namespace CommandLine.Utility
             int i = IndexOf(k);
             if (i == -1)
             {
-                Keys[Count] = ToKey(k);
+                Keys[Count] = k;
                 Values[Count] = v;
                 Count++;
             }
@@ -283,7 +304,17 @@ namespace CommandLine.Utility
 
             int i = IndexOf(key);
             args = Original;
-            if (i == -1) return false;
+            if (i == -1)
+            {
+                return false;
+            }
+            args = GetAfterIndex(i);
+            return true;
+
+        }
+
+        private string[] GetAfterIndex(int i)
+        {
             var p = new List<string>();
             for (int j = i + 1; j < Count; j++)
             {
@@ -297,10 +328,7 @@ namespace CommandLine.Utility
                     p.Add(Values[j]);
                 }
             }
-
-            args = p.ToArray();
-            return true;
-
+            return p.ToArray();
         }
 
         public bool GetBoolean(string key, ref bool value)
@@ -318,6 +346,11 @@ namespace CommandLine.Utility
                 return true;                
             }
             return false;
+        }
+
+        public string[] ToArray()
+        {
+            return Original;
         }
     }
 }

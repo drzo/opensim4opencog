@@ -37,7 +37,7 @@ using Type=System.Type;
 
 namespace cogbot
 {
-    public class BotClient : SimEventSubscriber, IDisposable
+    public class BotClient : SimEventSubscriber, IDisposable, ScriptExecutor
     {
 
         public static implicit operator GridClient(BotClient m)
@@ -173,6 +173,18 @@ namespace cogbot
         public bool GroupCommands = true;
         private string _masterName = string.Empty;
         public Hashtable PosterBoard = new Hashtable();
+
+        public object getPosterBoard(object slot)
+        {
+            lock (PosterBoard)
+            {   
+                if (!PosterBoard.Contains(slot)) return null;
+                object v = PosterBoard[slot];                    
+                PosterBoard.Remove(slot); // consume the data from the queue
+                return v;
+            }
+        }
+
         public string MasterName
         {
             get
@@ -2040,6 +2052,11 @@ namespace cogbot
         }
         public void Talk(string text, int channel, ChatType type)
         {
+            if (!Network.Connected)
+            {
+                TheRadegastInstance.TabConsole.DisplayNotificationInChat("Not actually connected");
+                TheRadegastInstance.Netcom.SendInstantMessage(text, UUID.Zero, UUID.Zero);
+            }
             text = text.Replace("<sapi>", "");
             text = text.Replace("</sapi>", "");
             text = text.Trim();

@@ -22,6 +22,9 @@ namespace RTParser
         public bool RespondToChat = true;
         public int MaxRespondToChatPerMinute = 10;
 
+        public static int DefaultMaxResultsSaved = 10;
+        public int MaxResultsSaved = DefaultMaxResultsSaved;
+
         /// <summary>
         /// The local instance of the GUID that identifies this user to the bot
         /// </summary>
@@ -356,8 +359,6 @@ namespace RTParser
             return Unifiable.Empty;
         }
 
-        static public int MaxResultsSaved = 5;
-
         public bool SuspendAdd;
 
         /// <summary>
@@ -502,7 +503,12 @@ namespace RTParser
         public void SetOutputSentences(string args)
         {
             Result result = LastResult;
-            result.SetOutput = args;
+            if (result != null)
+                result.SetOutput = args;
+            else
+            {
+                bot.writeToLog("no last result in SetOutputSentences " + args + " for " + this);
+            }
         }
     }
 }
