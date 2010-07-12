@@ -1941,6 +1941,9 @@ namespace RTParser
                     case "pop":
                         tagHandler = new AIMLTagHandlers.pop(this, user, query, request, result, node);
                         break;
+                    case "peekstack":
+                        tagHandler = new AIMLTagHandlers.peekstack(this, user, query, request, result, node);
+                        break;
 
 
                     case "#text":
@@ -2264,7 +2267,7 @@ The AIMLbot program.
             RTPBot myBot = new Bot();
             myBot.loadSettings();
             string myName = "BinaBot Daxeline";
-            //myName = "Kotoko Irata";
+            // myName = "Kotoko Irata";
             //myName = "Nephrael Rae";
             if (args != null && args.Length > 0)
             {
