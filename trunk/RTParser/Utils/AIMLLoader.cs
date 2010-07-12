@@ -693,7 +693,7 @@ namespace RTParser.Utils
 
         public static string MatchKeyClean(string s)
         {
-            s = CleanWhitepaces(s).Trim();
+            s = CleanWhitepacesLower(s).Trim();
             s = s.Replace("  ", " ");
             if (s == "")
             {
@@ -712,7 +712,7 @@ namespace RTParser.Utils
         public Unifiable Normalize(string input, bool isUserInput)
         {
 
-            input = CleanWhitepaces(input);
+            input = CleanWhitepacesLower(input);
             while (input.EndsWith("?") || input.EndsWith(".") || input.EndsWith("!"))
             {
                 input = input.Substring(0, input.Length - 1).Trim();
@@ -761,8 +761,8 @@ namespace RTParser.Utils
         public static bool AimlSame(string xml1, string xml2)
         {
             if (xml1 == xml2) return true;
-            xml1 = CleanWhitepaces(xml1);
-            xml2 = CleanWhitepaces(xml2);
+            xml1 = CleanWhitepacesLower(xml1);
+            xml2 = CleanWhitepacesLower(xml2);
             if (xml1.Length != xml2.Length) return false;
             if (xml1 == xml2) return true;
             if (xml1.ToUpper() == xml2.ToUpper())
@@ -771,6 +771,7 @@ namespace RTParser.Utils
             }
             return false;
         }
+
 
         public static string CleanWhitepaces(string xml2)
         {
@@ -781,7 +782,7 @@ namespace RTParser.Utils
                 return xml2;
             }
             String s = "";
-            foreach (var c0 in xml2.ToLower())
+            foreach (var c0 in xml2)
             {
                 char c = c0;
                 if (c < 32) c = ' ';
@@ -789,6 +790,12 @@ namespace RTParser.Utils
             }
             s.Replace("  ", " ").Replace(" <", "<").Replace("< ", "<").Replace(" >", ">").Replace(" >", ">").Replace(" />", "/>").Replace("<star index=\"1\"", "<star").Replace(" index=\"1\"", "").Trim();
             return s;
+        }
+
+        public static string CleanWhitepacesLower(string xml2)
+        {
+            if (xml2 == null) return xml2;
+            return CleanWhitepaces(xml2).ToLower();
         }
 
         public static bool ContainsAiml(Unifiable unifiable)
@@ -801,7 +808,7 @@ namespace RTParser.Utils
         public static string LineNumberInfo(XmlNode templateNode)
         {
 
-            string s = "";
+            string s = "<!-- ";
             if (templateNode is LineInfoElement)
             {
                 LineInfoElement li = (LineInfoElement)templateNode;
@@ -823,11 +830,7 @@ namespace RTParser.Utils
                     s = s + " (" + li.OwnerDocument.ToString() + ":line " + li.lineNumber + "," + li.linePosition + ") ";
                 }
             }
-            else
-            {
-                return s;
-            }
-            return s;
+            return s + " -->";
         }
 
         public static object LineTextInfo(XmlNode templateNode)

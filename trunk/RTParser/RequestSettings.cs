@@ -5,22 +5,22 @@ namespace RTParser
 {
     public class RequestSettings
     {
-        public static int DefaultMaxOutputs = 1;
+        public static int DefaultMaxOutputs = 2;
         public static int DefaultMaxPatterns = 1;
         public static int DefaultMaxTemplates = 1;
-        public static int DefaultMaxBindings = 20;
         public static int DefaultMaxRecursion = 10;
         public static bool DefualtProcessMultipleTemplates = true;
+        public static bool DefualtProcessMultipleBindings = true;
 
 
         public bool ProcessMultipleTemplates = DefualtProcessMultipleTemplates;
+        public bool ProcessMultiplePatterns = DefualtProcessMultipleBindings;
         public GraphMaster Graph;
 
         public bool IsTraced = false;
 
         public int MaxPatterns = DefaultMaxPatterns;
         public int MaxTemplates = DefaultMaxTemplates;
-        public int MaxBindings = DefaultMaxBindings;
         public int MaxOutputs = DefaultMaxOutputs;
         public int MinOutputs = 1;
 
@@ -31,8 +31,9 @@ namespace RTParser
             Graph = user.Graph ?? Graph;
             MaxTemplates = user.MaxTemplates;
             MaxPatterns = user.MaxPatterns;
-            MaxBindings = user.MaxBindings;
+            MaxOutputs = user.MaxOutputs;
             ProcessMultipleTemplates = user.ProcessMultipleTemplates;
+            ProcessMultiplePatterns = user.ProcessMultiplePatterns;
         }
     }
 

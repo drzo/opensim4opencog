@@ -90,10 +90,13 @@ namespace RTParser
             this.StartedOn = DateTime.Now;
             this.Graph = user.ListeningGraph ?? bot.GraphMaster;
             this.framesAtStart = new StackTrace().FrameCount;
+            this.ProcessMultiplePatterns = true;
+            this.ProcessMultipleTemplates = true;
         }
 
         private Unifiable _topic;
         public Unifiable Flags = "no flags";
+        public QueryList TopLevel;
 
         public Unifiable Topic
         {
@@ -193,8 +196,29 @@ namespace RTParser
 
         public bool IsComplete(Result result1)
         {
-            if (result1.OutputSentenceCount >= MaxOutputs) return true;
+            if (result1.OutputSentenceCount >= MaxOutputs)
+            {
+                return true;
+            }
+
+            if (result1.SubQueries.Count >= MaxPatterns)
+            {
+                return true;
+            }
+            if (result1.UsedTemplates.Count >= MaxTemplates)
+            {
+                //return false;
+            }
             return false;
+        }
+
+        public List<Result> UsedResults = new List<Result>();
+        public void AddSubResult(Result subResult)
+        {
+            lock (UsedResults)
+            {
+                UsedResults.Add(subResult);
+            }
         }
     }
 }

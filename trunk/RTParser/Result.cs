@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using RTParser;
 using RTParser.Utils;
 using UPath = RTParser.Unifiable;
@@ -13,14 +14,33 @@ namespace RTParser
     /// </summary>
     public class Result
     {
+
+        public QueryList TopLevel
+        {
+           get
+           {
+               if (request != null) return request.TopLevel;
+               return request.TopLevel;               
+           }
+        }
+
+        public static int MaxPrintResults = 1;
+        public List<TemplateInfo> UsedTemplates = new List<TemplateInfo>();
+
+        /// <summary>
+        /// The subQueries processed by the bot's graphmaster that contain the templates that 
+        /// are to be converted into the collection of Sentences
+        /// </summary>
+        public List<Utils.SubQuery> SubQueries = new List<Utils.SubQuery>();
+
         private bool Started = false;
         public void AddSubqueries(QueryList queries)
         {
-            if (queries.BindingCount == 0)
+            if (queries.PatternCount == 0)
             {
                 return;
             }
-                var o = Console.Out;
+            var o = Console.Out;
             var queriesGetBindings = queries.GetBindings();
             foreach (SubQuery query in queriesGetBindings)
             {
@@ -36,20 +56,24 @@ namespace RTParser
 
         public bool IsTraced = false;
 
-        private string AlreadyUsed = "";
+        private string AlreadyUsed = "xtxtxtxtxtxtxtxtxxt";
         public int LinesToUse = 1;
         public void AddOutputSentences(TemplateInfo ti, Unifiable unifiable)
         {
+            if (AlreadyUsed.Contains(unifiable)) return;
             if (ti != null)
                 lock (UsedTemplates)
                 {
+                    if (unifiable.IsEmpty)
+                    {
+                        throw new Exception("EmptyUnmif for " + ti);
+                    }
                     UsedTemplates.Add(ti);
                 }
             if (unifiable.IsEmpty)
             {
                 return;
             }
-            if (AlreadyUsed.Contains(unifiable)) return;
             AlreadyUsed += unifiable;
 #if false
             if (unifiable==null || unifiable=="*" || unifiable==Unifiable.Empty)
@@ -71,12 +95,12 @@ namespace RTParser
 
         public void WriteLine(string format, object[] args)
         {
-            lock (OutputSentences) OutputSentences.Add(string.Format(format,args));
+            lock (OutputSentences) OutputSentences.Add(string.Format(format, args));
         }
 
         public Result()
         {
-            
+
         }
         /// <summary>
         /// The bot that is providing the answer
@@ -122,35 +146,34 @@ namespace RTParser
             get
             {
                 lock (OutputSentences) if (OutputSentences.Count > 0)
-                {
-                    return this.RawOutput.Trim().Replace("  "," ");
-                }
-                else
-                {
-                    if (this.request.hasTimedOut)
                     {
-
-                        this.bot.writeToLog("ERROR: TIMEOUT on " + this.RawInput + " from the user with an id: " + this.user.UserID);
-                        return Unifiable.Empty;
-                        return this.bot.TimeOutMessage;
+                        return this.RawOutput.Trim().Replace("  ", " ");
                     }
                     else
                     {
-                        Unifiable paths = Unifiable.CreateAppendable();
-                        foreach (UPath pattern in this.NormalizedPaths)
+                        if (this.request.hasTimedOut)
                         {
-                            //return pattern;
-                            paths.Append(pattern.LegacyPath + Environment.NewLine);
+
+                            this.bot.writeToLog("ERROR: TIMEOUT on " + this.RawInput + " from the user with an id: " + this.user.UserID);
+                            return Unifiable.Empty;
+                            return this.bot.TimeOutMessage;
                         }
-                        this.bot.writeToLog("The bot could not find any response for the input: " + this.RawInput + " with the path(s): " +
-                            Environment.NewLine + paths.AsNodeXML() + " from the user with an id: " + this.user.UserID.ToValue());
-                        return Unifiable.Empty;
+                        else
+                        {
+                            Unifiable paths = Unifiable.CreateAppendable();
+                            foreach (UPath pattern in this.NormalizedPaths)
+                            {
+                                //return pattern;
+                                paths.Append(pattern.LegacyPath + Environment.NewLine);
+                            }
+                            this.bot.writeToLog("The bot could not find any response for the input: " + this.RawInput + " with the path(s): " +
+                                Environment.NewLine + paths.AsNodeXML() + " from the user with an id: " + this.user.UserID.ToValue());
+                            return Unifiable.Empty;
+                        }
                     }
-                }
             }
         }
 
-        public static int MaxResults = 1;
         /// <summary>
         /// Returns the raw sentences without any logging 
         /// </summary>
@@ -162,27 +185,27 @@ namespace RTParser
                 {
 
                 }
-                int resultsLeft = MaxResults;
+                int resultsLeft = MaxPrintResults;
                 Unifiable result = Unifiable.CreateAppendable();
                 lock (OutputSentences) foreach (var sentence in OutputSentences)
-                {
-                    String sentenceForOutput = sentence.ToValue().Replace("  ", " ").Trim();
-
-                    if (!this.checkEndsAsSentence(sentenceForOutput))
                     {
-                        sentenceForOutput += ".";
+                        String sentenceForOutput = sentence.ToValue().Replace("  ", " ").Trim();
+
+                        if (!this.checkEndsAsSentence(sentenceForOutput))
+                        {
+                            sentenceForOutput += ".";
+                        }
+                        result.Append(sentenceForOutput + " ");
+                        resultsLeft--;
+                        if (resultsLeft < 1) return result;
                     }
-                    result.Append( sentenceForOutput + " ");
-                    resultsLeft--;
-                    if (resultsLeft < 1) return result;
-                }
                 return result;//.Trim();
             }
         }
 
         public bool IsEmpty { get { return OutputSentenceCount == 0; } }
 
-        public decimal OutputSentenceCount
+        public int OutputSentenceCount
         {
             get { lock (OutputSentences) return OutputSentences.Count; }
         }
@@ -193,12 +216,6 @@ namespace RTParser
         }
 
         /// <summary>
-        /// The subQueries processed by the bot's graphmaster that contain the templates that 
-        /// are to be converted into the collection of Sentences
-        /// </summary>
-        public List<Utils.SubQuery> SubQueries = new List<Utils.SubQuery>();
-
-        /// <summary>
         /// The individual sentences produced by the bot that form the complete response
         /// </summary>
         public List<Unifiable> OutputSentences = new List<Unifiable>();
@@ -207,8 +224,6 @@ namespace RTParser
         /// The individual sentences that constitute the raw input from the user
         /// </summary>
         public List<Unifiable> InputSentences = new List<Unifiable>();
-
-        public List<TemplateInfo> UsedTemplates = new List<TemplateInfo>();
 
         /// <summary>
         /// Ctor
@@ -250,7 +265,7 @@ namespace RTParser
             if (sentence.EndsWith("?")) return true;
             foreach (Unifiable splitter in this.bot.Splitters)
             {
-                if (sentence.EndsWith(splitter ))
+                if (sentence.EndsWith(splitter))
                 {
                     return true;
                 }

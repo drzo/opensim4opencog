@@ -200,8 +200,8 @@ namespace AIMLBotModule
 
         public override void StartupListener()
         {
-            handler.Start();
             handler.Enqueue(() => StartupListener0());
+            handler.Start();
         }
 
         public void StartupListener0()
@@ -232,6 +232,7 @@ namespace AIMLBotModule
                 MyBot.loadAIMLFromDefaults();
                 MyBot.isAcceptingUserInput = true;
                 MyBot.outputDelegate = WriteLine;
+                String ss = client.GetName();
                 LoadPersonalConfig();
                 MyBot.WriteConfig();
                 // wont get here unless there was no problem

@@ -40,7 +40,7 @@ namespace RTParser.Utils
 
         public override string ToString()
         {
-            return XMLInfo() + " " + Filename;
+            return Category.OuterXml + " " + AIMLLoader.LineNumberInfo(Category);
         }
 
         public string XMLInfo()
