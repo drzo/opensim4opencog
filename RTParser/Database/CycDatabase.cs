@@ -514,5 +514,10 @@ namespace RTParser.Database
         {
             RTPBot.writeDebugLine("Cyc loaded");
         }
+
+        public Unifiable WhenTrue(Unifiable unifiable)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

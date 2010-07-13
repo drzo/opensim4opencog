@@ -12,6 +12,8 @@ namespace RTParser.Utils
         public Node GraphmasterNode;
         public double Rating = 1.0;
         public SubQuery Query;
+        public Unifiable TextSaved;
+
         public bool IsSilent
         {
             get

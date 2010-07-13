@@ -13,6 +13,22 @@ namespace RTParser.Utils
     /// </summary>
     abstract public class AIMLTagHandler : TextTransformer, IXmlLineInfo
     {
+
+        public bool WhenTrue(Unifiable unifiable)
+        {
+            if (!Unifiable.IsNullOrEmpty(unifiable))
+            {
+                if (Unifiable.IsFalse(unifiable)) return false;
+                if (!Unifiable.IsTrue(unifiable))
+                {
+                    writeToLog("DEBUG: !WhenTrue " + unifiable);
+                }
+                templateNodeInnerText = unifiable;
+                return true;
+            }
+            return false;
+        }
+
         public TemplateInfo templateInfo;
         public TemplateInfo GetTemplateInfo()
         {
@@ -135,7 +151,7 @@ namespace RTParser.Utils
                 }
                 if (Unifiable.IsNullOrEmpty(value))
                 {
-                    writeToLog("templateNodeInnerText = " + value);
+                    writeToLog("ERROR ?!?! templateNodeInnerText = " + value);
                 }
                 templateNode.InnerText = value.Trim();
             }

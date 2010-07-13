@@ -989,6 +989,50 @@ namespace AIMLBotModule
             {
                 if (input.Contains(" "))
                 {
+                    string[] split = input.Split(new char[] {' '}, StringSplitOptions.RemoveEmptyEntries);
+                    if (myName.StartsWith(split[0].ToLower()))
+                    {
+                        input = string.Join(" ", split, 1, split.Length - 1);
+                    }
+
+                }
+            }
+            input = input.Trim();
+            if (input.Length == 0)
+            {
+                return SUnifiable.Empty;
+            }
+            if (MyBot == null)
+            {
+                Console.WriteLine(GetModuleName() + ": not Bot is instenaced yet!!");
+                return "";
+            }
+            Request r = new AIMLbot.Request(input, myUser, MyBot);
+            r.IsTraced = true;
+            Result res = MyBot.Chat(r);
+            string useOut = MyBot.CleanupCyc(res.Output);
+            return useOut;
+        }
+
+        public SUnifiable AIMLInterpScored(string input, User myUser, out double scored)
+        {
+            scored = 0.0;
+            // set a global
+            MyUser = myUser;
+            if (input == null) return SUnifiable.Empty;
+            input = input.Trim().Replace("  ", " ");
+            if (string.IsNullOrEmpty(input)) return SUnifiable.Empty;
+            string removeName = RemoveNameFromString(input);
+            string myName = GetName().ToLower();
+            if (!string.IsNullOrEmpty(removeName))
+            {
+                if (!myName.Contains(removeName.ToLower())) return SUnifiable.Empty;
+                input = input.Substring(removeName.Length);
+            }
+            else
+            {
+                if (input.Contains(" "))
+                {
                     string[] split = input.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     if (myName.StartsWith(split[0].ToLower()))
                     {
@@ -1002,7 +1046,7 @@ namespace AIMLBotModule
             {
                 return SUnifiable.Empty;
             }
-            if (MyBot==null)
+            if (MyBot == null)
             {
                 Console.WriteLine(GetModuleName() + ": not Bot is instenaced yet!!");
                 return "";
@@ -1010,7 +1054,9 @@ namespace AIMLBotModule
             Request r = new AIMLbot.Request(input, myUser, MyBot);
             r.IsTraced = true;
             Result res = MyBot.Chat(r);
-            return MyBot.CleanupCyc(res.Output);
+            scored = res.Score;
+            string useOut = MyBot.CleanupCyc(res.Output);
+            return useOut;
         }
 
         private string RemoveNameFromString(string input)

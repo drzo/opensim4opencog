@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Reflection;
 using OpenMetaverse;
@@ -27,7 +28,18 @@ namespace cogbot.Actions.System
 		    string loadfilename = filename;
             if (!filename.EndsWith(".dll") && !filename.EndsWith(".exe"))
             {
-                loadfilename += ".dll";
+                if (!File.Exists(loadfilename + "."))
+                {
+                    foreach (var s in new[] {"dll", "exe", "jar", "lib", "dynlib"})
+                    {
+                       if(File.Exists(loadfilename + "." + s))
+                       {
+                           loadfilename += ("." + s);
+                           break;
+                       }
+
+                    }
+                }
             }
             try
             {

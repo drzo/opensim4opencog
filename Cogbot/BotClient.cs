@@ -83,6 +83,7 @@ namespace cogbot
         /// for specific data stream types</summary>
         public AgentThrottle Throttle { get { return gridClient.Throttle; } }
 
+        readonly TaskQueueHandler BotStartupQueue;
         readonly public GridClient gridClient;
         // TODO's
         // Play Animations
@@ -129,14 +130,16 @@ namespace cogbot
         private void LogException(string p, Exception ex)
         {
             Logger.Log(GetName() + ": Exception " + p + "\n" + ex, Helpers.LogLevel.Error, ex);
-            WriteLine("!Exception: " + ex.GetBaseException().Message);
-            WriteLine("error occured: " + ex.Message);
-            WriteLine("        Stack: " + ex.StackTrace.ToString());
+            StringWriter sw = new StringWriter();
+            sw.WriteLine("ERROR !Exception: " + ex.GetBaseException().Message);
+            sw.WriteLine("error occured: " + ex.Message);
+            sw.WriteLine("        Stack: " + ex.StackTrace.ToString());
             Exception inner = ex.InnerException;
             if (inner!=null && inner!=ex)
             {
                 LogException("Inner of " + p, inner);
             }
+            WriteLine("{0}", sw.ToString());
         }
 
         readonly int thisTcpPort;
@@ -407,6 +410,7 @@ namespace cogbot
             //manager.AddBotClientToTextForm(this);
 
             botPipeline = new SimEventMulticastPipeline(GetName());
+            BotStartupQueue = new TaskQueueHandler("BotStartupQueue " + GetName(), 100, true);
             botPipeline.AddSubscriber(new SimEventTextSubscriber(WriteLine, this));
             // SingleInstance = this;
             ///this = this;// new GridClient();
@@ -1351,15 +1355,16 @@ namespace cogbot
                         try
                         {
                             found = true;
-                            Invoke("LoadAssembly "+assembly ,() =>
+                            InvokeNext("LoadAssembly " + assembly, () =>
                                        {
                                            Listener command = (Listener)info.Invoke(new object[] { this });
                                            RegisterListener(command);
                                        });
+
                         }
                         catch (Exception e)
                         {
-                            WriteLine("RegisterListener: " + e + "\n In " + t.Name);
+                            LogException("ERROR! RegisterListener: " + e + "\n In " + t.Name, e);
                         }
                     }
                 }
@@ -1500,11 +1505,26 @@ namespace cogbot
 
         public CmdResult ExecuteCommand(string text)
         {
-            return ExecuteCommand(text, WriteLine);
+            InvokeJoin("ExecuteCommand " + text);
+            return ExecuteCommand(text, WriteLine); 
+        }
+
+        private void InvokeJoin(string s)
+        {
+            BotStartupQueue.InvokeJoin(s);
+        }
+
+        private void InvokeNext(string s, ThreadStart e)
+        {
+            BotStartupQueue.Enqueue(() =>
+                                        {
+                                            e();
+                                        });
         }
 
         public CmdResult ExecuteCommand(string text, OutputDelegate WriteLine)
         {
+            InvokeJoin("ExecuteCommand " + text);
             CmdResult res = ExecuteBotCommand(text, WriteLine);
             if (res != null) return res;
             res = ClientManager.ExecuteSystemCommand(text, WriteLine);
@@ -1516,6 +1536,7 @@ namespace cogbot
 
         public CmdResult ExecuteBotCommand(string text, OutputDelegate WriteLine)
         {
+            InvokeJoin("ExecuteBotCommand " + text);
             if (text == null)
             {
                 return null;
@@ -1615,6 +1636,13 @@ namespace cogbot
                 Console.WriteLine("!!NOTE!! skipping saying " + str);
                 return;
             }
+            if (!Network.Connected)
+            {
+                if (OnInstantMessageSent != null)
+                {
+                    OnInstantMessageSent(this, new IMessageSentEventArgs(str, UUID.Zero, UUID.Zero, DateTime.Now));
+                }
+            }
             Self.Chat(str, 0, ChatType.Normal);
         }
 
@@ -1633,8 +1661,7 @@ namespace cogbot
         private void RegisterListener(Listener listener)
         {
             // listeners[listener.GetModuleName()] = listener;
-            Invoke("StartupListener " + listener, () => listener.StartupListener());
-
+            BotStartupQueue.Enqueue(() => listener.StartupListener());
         }
 
         internal void RegisterType(Type t)
@@ -1663,7 +1690,7 @@ namespace cogbot
             }
             catch (Exception e)
             {
-                WriteLine(e.ToString());
+                LogException("RegisterType! " + t, e);
             }
         }
 
@@ -1890,7 +1917,7 @@ namespace cogbot
             }
             catch (Exception e)
             {
-                WriteLine("InvokeGUI " + e);
+                WriteLine("ERROR! InvokeGUI " + e);
             }
         }
 
@@ -2052,11 +2079,6 @@ namespace cogbot
         }
         public void Talk(string text, int channel, ChatType type)
         {
-            if (!Network.Connected)
-            {
-                TheRadegastInstance.TabConsole.DisplayNotificationInChat("Not actually connected");
-                TheRadegastInstance.Netcom.SendInstantMessage(text, UUID.Zero, UUID.Zero);
-            }
             text = text.Replace("<sapi>", "");
             text = text.Replace("</sapi>", "");
             text = text.Trim();

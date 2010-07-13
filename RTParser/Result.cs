@@ -33,6 +33,18 @@ namespace RTParser
         /// </summary>
         public List<Utils.SubQuery> SubQueries = new List<Utils.SubQuery>();
 
+
+        public double Score
+        {
+            get
+            {
+                return TemplateRating;
+            }
+        }
+
+        public double TemplateRating = 0.0d;
+        public TemplateInfo TemplateOfRating;
+
         private bool Started = false;
         public void AddSubqueries(QueryList queries)
         {
@@ -75,35 +87,63 @@ namespace RTParser
         {
             if (AlreadyUsed.Contains(unifiable)) return;
             if (ti != null)
+            {
                 lock (UsedTemplates)
                 {
+
+                    if (UsedTemplates.Contains(ti)) return;
+                    double ThisRating = ti.Rating;
+                    if (TemplateOfRating == null || TemplateRating < ThisRating)
+                    {
+                        TemplateOfRating = ti;
+                        TemplateRating = ThisRating;
+                        bot.writeChatTrace("AIMLTRACE TI: " + ti + "---- U: " + unifiable);
+
+                    }
+                    if (!unifiable.IsEmpty)
+                    {
+                        ti.TextSaved = unifiable;
+                    }
+                    else
+                    {
+                        ti.TextSaved = Unifiable.Empty;
+                        return;
+                    }
+
                     if (unifiable.IsEmpty)
                     {
                         throw new Exception("EmptyUnmif for " + ti);
                     }
                     UsedTemplates.Add(ti);
                 }
+            }
             if (unifiable.IsEmpty)
             {
                 return;
             }
             AlreadyUsed += unifiable;
+            lock (OutputSentences)
+            {
 #if false
-            if (unifiable==null || unifiable=="*" || unifiable==Unifiable.Empty)
-            {
-                return;
-            }
-            int found = OutputSentences.IndexOf(unifiable);
-            int c = OutputSentences.Count - 1;
-            if (found == c) return;
-            if (found < 1)
-            {
-                OutputSentences.Add(unifiable);
-                return;
-            }
-            OutputSentences.RemoveAt(found);
+                if (unifiable == null || unifiable == "*" || unifiable == Unifiable.Empty)
+                {
+                    return;
+                }
+                int found = OutputSentences.IndexOf(unifiable);
+                int c = OutputSentences.Count - 1;
+                if (found == c)
+                {
+                    return;
+                }
+                if (found < 1)
+                {
+                    OutputSentences.Add(unifiable);
+                    return;
+                }
+                OutputSentences.RemoveAt(found);
 #endif
-            lock (OutputSentences) OutputSentences.Add(unifiable);
+                OutputSentences.Add(unifiable);
+            }
         }
 
         public void WriteLine(string format, object[] args)

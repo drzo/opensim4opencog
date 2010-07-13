@@ -39,7 +39,11 @@ namespace RTParser.AIMLTagHandlers
                 string mt = TheCyc.Cyclify(GetAttribValue("mt", /*Proc.GetUserMt(user)*/ "#$EverythingPSC"));
                 if (!templateNodeInnerText.IsEmpty)
                 {
-                    return this.TheCyc.EvalSubL(String.Format("(ask-template '{0} `{1} {2})", varname, sent, mt), filter);
+                    if (WhenTrue(this.TheCyc.EvalSubL(String.Format("(ask-template '{0} `{1} {2})", varname, sent, mt), filter)))
+                    {                     
+                        if (query.CurrentTemplate != null) query.CurrentTemplate.Rating *= 1.5;
+                        return templateNodeInnerText;
+                    }
                 }
             }
             return Unifiable.Empty;

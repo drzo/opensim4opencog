@@ -1,3 +1,4 @@
+using System;
 using System.Xml;
 
 namespace RTParser.AIMLTagHandlers
@@ -37,8 +38,11 @@ namespace RTParser.AIMLTagHandlers
                 Unifiable filter = base.GetAttribValue("filter", null);
                 if (!templateNodeInnerText.IsEmpty)
                 {
-                    Unifiable result = this.TheCyc.EvalSubL(Recurse(),filter);
-                    return result;
+                    if (WhenTrue(this.TheCyc.EvalSubL(Recurse(), filter)))
+                    {
+                        if (query.CurrentTemplate != null) query.CurrentTemplate.Rating *= 1.5;
+                        return templateNodeInnerText;
+                    }
                 }
             }
             return Unifiable.Empty;
