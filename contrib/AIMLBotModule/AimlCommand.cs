@@ -105,7 +105,8 @@ namespace AIMLBotModule
             double scored = ratng*10;
             WorldSystemModule.MyBot.writeToLog("REALWORLD AIMLTRACE! '" + joined + "' " + scored + " '" + useOut + "'");
             if (String.IsNullOrEmpty(useOut)) useOut = "Interesting.";
-            return Success(useOut + " mene value=\"" + scored + "\"");
+            if (!useOut.Contains("mene value=")) useOut = useOut + " mene value=" + (int)scored;
+            return Success(useOut + " mene value=" + (int)scored);
         }
 
         public void SetUser(string user)

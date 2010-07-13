@@ -1051,6 +1051,10 @@ namespace AIMLBotModule
                 Console.WriteLine(GetModuleName() + ": not Bot is instenaced yet!!");
                 return "";
             }
+            if (!MyBot.isAcceptingUserInput)
+            {
+                return "";
+            }
             Request r = new AIMLbot.Request(input, myUser, MyBot);
             r.IsTraced = true;
             Result res = MyBot.Chat(r);
