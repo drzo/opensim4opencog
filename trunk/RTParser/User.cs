@@ -377,11 +377,14 @@ namespace RTParser
                 }
                 return;
             }
-            this.Results.Insert(0, latestResult);
-            int rc = this.Results.Count;
-            if (rc > MaxResultsSaved)
+            lock (Results)
             {
-                this.Results.RemoveRange(MaxResultsSaved, rc - MaxResultsSaved);
+                this.Results.Insert(0, latestResult);
+                int rc = this.Results.Count;
+                if (rc > MaxResultsSaved)
+                {
+                    this.Results.RemoveRange(MaxResultsSaved, rc - MaxResultsSaved);
+                }
             }
             addResultTemplates(latestResult);
         }
@@ -389,7 +392,7 @@ namespace RTParser
 
         public string getLastBotOutputForThat()
         {
-            if (this.Results.Count == 0) return Unifiable.STAR;
+            if (this.Results.Count == 0) return "nothing";// Unifiable.STAR;
             String sentence = ((Result)Results[0]).RawOutput;
             sentence = MainSentence(sentence);
             sentence = sentence.Trim(new char[] { '.', ' ', '!', '?' });
@@ -463,7 +466,14 @@ namespace RTParser
 
         public void WriteLine(string s, object[] objects)
         {
-            throw new NotImplementedException();
+            try
+            {
+                bot.writeToLog("USERTRACE: " + string.Format(s, objects));
+            }
+            catch(Exception exception)
+            {
+                bot.writeToLog(exception);
+            }
         }
 
         public void addResultTemplates(Result result)
@@ -484,7 +494,6 @@ namespace RTParser
                     foreach (var list in request.UsedResults)
                     {
                         addResultTemplates(list);
-
                     }
                 }
             }

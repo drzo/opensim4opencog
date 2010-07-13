@@ -1111,20 +1111,6 @@ namespace RTParser
             }
         }
 
-        public AIMLbot.Result HeardSelfSay(string message)
-        {
-            currentEar.AddMore(message);
-            if (!currentEar.IsReady())
-            {
-                return null;
-            }
-            message = currentEar.GetMessage();
-            currentEar = new JoinedTextBuffer();
-            //return null;
-            RunTask(() => HeardSelfSay0(message), "heardSelfSay: " + message, 500);
-            return null;
-        }
-
         List<Thread> ThreadList = new List<Thread>();
 
         private void RunTask(ThreadStart action, string name, int maxTime)
@@ -1179,8 +1165,21 @@ namespace RTParser
         }
 
         private JoinedTextBuffer currentEar = new JoinedTextBuffer();
+        public AIMLbot.Result HeardSelfSay(string message)
+        {
+            currentEar.AddMore(message);
+            if (!currentEar.IsReady())
+            {
+                return null;
+            }
+            message = currentEar.GetMessage();
+            currentEar = new JoinedTextBuffer();
+            //return null;
+            RunTask(() => HeardSelfSayNow(message), "heardSelfSay: " + message, 500);
+            return null;
+        }
 
-        public AIMLbot.Result HeardSelfSay0(string message)
+        public AIMLbot.Result HeardSelfSayNow(string message)
         {
             if (message == null) return null;
             message = message.Trim();
@@ -1474,7 +1473,10 @@ namespace RTParser
                                              out templateSucceeded, null, s);
 
 
-                            if (createdOutput) solutions++;
+                            if (createdOutput)
+                            {                                
+                                solutions++;
+                            }
                             if (request.IsComplete(result))
                             {
                                 hasMoreSolutions = false;
@@ -1974,10 +1976,36 @@ namespace RTParser
                     case "p":
                         return new AIMLTagHandlers.verbatum("\n\n", this, user, query, request, result, node);
                     default:
-                        tagHandler = new AIMLTagHandlers.verbatum(node.OuterXml, this, user, query, request, result, node);
-                        writeToLog("Verbatum: " + node.OuterXml);
                         break;
                 }
+            }
+            if (tagHandler==null)
+            {
+                // "bot", "favorite", "fav" 
+                foreach (KeyValuePair<string, string> prefix in new[]
+                                                                    {
+                                                                        new KeyValuePair<string, string>("get", "get"),
+                                                                        new KeyValuePair<string, string>("get_", "get"),
+                                                                        new KeyValuePair<string, string>("set_", "set"),
+                                                                        new KeyValuePair<string, string>("set", "set"),
+                                                                        new KeyValuePair<string, string>("bot_", "bot"),
+                                                                        new KeyValuePair<string, string>("bot", "bot"),
+                                                                        new KeyValuePair<string, string>("favorite_", "bot"),
+                                                                        new KeyValuePair<string, string>("favorite", "bot"),
+                                                                        new KeyValuePair<string, string>("fav_", "bot"),
+                                                                        new KeyValuePair<string, string>("fav", "bot"),
+                                                                    })
+                {
+                    if (node.Name.StartsWith(prefix.Key) && node.Name.Length > prefix.Key.Length)
+                    {
+                        string name = node.Name.Substring(prefix.Key.Length);
+                        var pn = node.ParentNode;
+                        string outside = node.OuterXml.Replace("<" + prefix.Key + name, "<" + prefix.Value + " name=\"" + name + "\"");
+                        writeToLog("AIMLLOADER: ! convert " + node.OuterXml + " -> " + outside);
+                    }                    
+                }
+                tagHandler = new AIMLTagHandlers.verbatum(node.OuterXml, this, user, query, request, result, node);
+                writeToLog("AIMLLOADER:  Verbatum: " + node.OuterXml);
             }
             return tagHandler;
         }
@@ -2324,7 +2352,7 @@ The AIMLbot program.
             myBot.BotDirective(myUser, "@help", writeLine);
             writeLine("-----------------------------------------------------------------");
 
-            String s = null;
+            String botJustSaid = null;
             var userJustSaid = String.Empty;
             myBot.LastUser = myUser;
             while (true)
@@ -2344,7 +2372,7 @@ The AIMLbot program.
                 writeLine("-----------------------------------------------------------------");
                 if (String.IsNullOrEmpty(input))
                 {
-                    writeLine(myName + "> " + s);
+                    writeLine(myName + "> " + botJustSaid);
                     continue;
                 }
                 try
@@ -2368,21 +2396,21 @@ The AIMLbot program.
                         Result res = myBot.Chat(r);
                         if (!res.IsEmpty)
                         {
-                            s = res.Output;
+                            botJustSaid = res.Output;
                             writeLine("-----------------------------------------------------------------");
-                            myBot.HeardSelfSay0(s);
+                            myBot.HeardSelfSayNow(botJustSaid);
                             writeLine("-----------------------------------------------------------------");
 
                         }
                         else
                         {
-                            s = "NULL";
+                            botJustSaid = "NULL";
                         }
                     }
                     writeLine("-----------------------------------------------------------------");
                     writeLine("{0}: {1}", myUser.ShortName, userJustSaid);
                     writeLine("---------------------");
-                    writeLine("{0}: {1}", myName, s);
+                    writeLine("{0}: {1}", myName, botJustSaid);
                     writeLine("-----------------------------------------------------------------");
                 }
                 catch (Exception e)
@@ -2480,7 +2508,7 @@ The AIMLbot program.
             if (showHelp) console("@say <text> - fakes that the bot just said it");
             if (cmd == "say")
             {
-                HeardSelfSay(args);
+                HeardSelfSayNow(args);
                 console("say> " + args);
                 myUser.SetOutputSentences(args);
                 return true;

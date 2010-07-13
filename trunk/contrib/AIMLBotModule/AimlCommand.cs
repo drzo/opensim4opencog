@@ -13,12 +13,12 @@ namespace AIMLBotModule
 {
     public class AimlCommand : cogbot.Actions.Command, BotPersonalCommand
     {
-        public static string UNKNOWN_PARTENER = "UNKNOWN_PARTENR";
+        public static string UNKNOWN_PARTENER = "UNKNOWN_PARTNER";
         private string lastKnownUser;
         public AimlCommand(BotClient testClient)
         {
             Name = "aiml";
-            Description = "Usage: aiml [[on|off|reload|learn]|text|user]";
+            Description = "Usage: aiml [[on|off|reload|learn]|text|setuser]";
             Category = CommandCategory.Communication;
         }
 
@@ -98,9 +98,14 @@ namespace AIMLBotModule
                 int lastIndex = joined.IndexOf("-");
                 joined = joined.Substring(lastIndex + 1).Trim();
             }
-            String ss = WorldSystemModule.AIMLInterp(joined, lastKnownUser);
-            if (String.IsNullOrEmpty(ss)) ss = "Interesting.";
-            return Success(ss);
+
+            double ratng;
+            var MyBot = WorldSystemModule.MyBot;
+            String useOut = WorldSystemModule.AIMLInterpScored(joined, MyBot.FindOrCreateUser(lastKnownUser), out ratng);
+            double scored = ratng*10;
+            WorldSystemModule.MyBot.writeToLog("REALWORLD AIMLTRACE! '" + joined + "' " + scored + " '" + useOut + "'");
+            if (String.IsNullOrEmpty(useOut)) useOut = "Interesting.";
+            return Success(useOut + " mene value=\"" + scored + "\"");
         }
 
         public void SetUser(string user)

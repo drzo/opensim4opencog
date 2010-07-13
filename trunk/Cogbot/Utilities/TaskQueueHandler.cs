@@ -276,5 +276,21 @@ namespace cogbot.Utilities
             }
             Set();
         }
+
+        public bool InvokeJoin(string s)
+        {
+            AutoResetEvent are = new AutoResetEvent(false);
+            Enqueue(() =>
+                        {
+                            try
+                            {
+                                are.Set();
+                            }
+                            catch
+                            {
+                            }
+                        });
+            return are.WaitOne();
+        }
     }
 }
