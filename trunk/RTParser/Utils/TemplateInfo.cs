@@ -26,7 +26,8 @@ namespace RTParser.Utils
                 return false;
             }
         }
-        public TemplateInfo(XmlNode template, GuardInfo guard, ThatInfo that, Node patternNode, CategoryInfo categoryInfo):base(template)
+        public TemplateInfo(XmlNode template, GuardInfo guard, ThatInfo that, Node patternNode, CategoryInfo categoryInfo)
+            : base(template)
         {
             if (template.Name != "template")
             {
@@ -36,7 +37,15 @@ namespace RTParser.Utils
             That = that;
             GraphmasterNode = patternNode;
             CategoryInfo = categoryInfo;
+            try
+            {
+                Rating = double.Parse(RTPBot.GetAttribValue(template, "score", "1.0"));
+            }
+            catch
+            {
+            }
         }
+
         public override string ToString()
         {
             string s = base.ToString();
