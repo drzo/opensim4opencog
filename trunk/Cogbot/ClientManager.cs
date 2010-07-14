@@ -23,6 +23,26 @@ namespace cogbot
 
     public class ClientManager : IDisposable,ScriptExecutorGetter
     {
+        private static readonly TaskQueueHandler OneAtATimeQueue = new TaskQueueHandler("ClientManager OneAtATime", 10, true);
+        public static object SingleInstanceLock = new object();
+
+        private bool InvokeJoin(string s)
+        {
+            return OneAtATimeQueue.InvokeJoin(s, -1);
+        }
+        private bool InvokeJoin(string s, int millisecondsTimeout)
+        {
+            return OneAtATimeQueue.InvokeJoin(s, millisecondsTimeout);
+        }
+
+        private void InvokeNext(string s, ThreadStart e)
+        {
+            OneAtATimeQueue.Enqueue(() =>
+            {
+                e();
+            });
+        }
+
         static private ClientManagerHttpServer clientManagerHttpServer;
         public void AddTool(string name, string text, EventHandler threadStart)
         {
@@ -102,11 +122,16 @@ namespace cogbot
 
         public ClientManager()
         {
-            if (SingleInstance!=null)
+            lock (SingleInstanceLock)
             {
-                throw new AbandonedMutexException();
+                if (SingleInstance != null)
+                {
+                    Exception e = new Exception("Only one instance of Client Manafger please!!");
+                    GlobalWriteLine("" + e);
+                    throw e;
+                }
+                SingleInstance = this;                
             }
-            SingleInstance = this;
             config = new Configuration();
             config.loadConfig();
             DefaultAccount.LoadFromConfig(config);
@@ -176,7 +201,7 @@ namespace cogbot
 
         public void SetOnlyOneCurrentBotClient(string currentBotClient)
         {
-            if (String.IsNullOrEmpty(currentBotClient))
+            if (string.IsNullOrEmpty(currentBotClient))
             {
                 OnlyOneCurrentBotClient = null;
                 return;
@@ -219,12 +244,13 @@ namespace cogbot
 
         public CmdResult ExecuteCommand(string text, OutputDelegate WriteLine)
         {
-            if (String.IsNullOrEmpty(text)) return null;
+            if (string.IsNullOrEmpty(text)) return null;
+            text = text.Trim();
             while (text.StartsWith("/"))
             {
-                text = text.Substring(1);
+                text = text.Substring(1).TrimStart();
             }
-            if (String.IsNullOrEmpty(text)) return null;
+            if (string.IsNullOrEmpty(text)) return null;
             WriteLine("textform> {0}", text);
             CmdResult res = ExecuteBotsCommand(text, WriteLine);
             if (res != null && res.Success) return res;
@@ -240,8 +266,7 @@ namespace cogbot
             text = text.Trim();
             while (text.StartsWith("/"))
             {
-                text = text.Substring(1);
-                text = text.Trim();
+                text = text.Substring(1).TrimStart();
             }
             if (string.IsNullOrEmpty(text)) return null;
             if (BotByName.Count == 0 && LastBotClient != null) return LastBotClient.ExecuteBotCommand(text, WriteLine);
@@ -266,7 +291,7 @@ namespace cogbot
                         failure++;
                     }
                     res += t.ToString();
-                    if (!String.IsNullOrEmpty(res))
+                    if (!string.IsNullOrEmpty(res))
                     {
                         res += "\n";
                     }
@@ -292,8 +317,7 @@ namespace cogbot
                     text = text.Trim();
                     while (text.StartsWith("/"))
                     {
-                        text = text.Substring(1);
-                        text = text.Trim();
+                        text = text.Substring(1).TrimStart();
                     }
                     if (string.IsNullOrEmpty(text)) return null;
 
@@ -383,23 +407,27 @@ namespace cogbot
         public ScriptExecutor GetScriptExecuter(object o)
         {
             if (o==null) return LastBotClient;
-            return GetBotByName("" + o);
+            ScriptExecutor bbn = GetBotByName("" + o);
+            return bbn ?? LastBotClient;
         }
 
+        static  string lastStr = "";
         public void WriteLine(string str, params object[] args)
         {
+
             if (args == null || args.Length == 0)
             {
                 args = new object[] { str };
                 str = "{0}";
             }
+            
             if (outputDelegate == null || outputDelegate == WriteLine)
             {
                 GlobalWriteLine(str, args);
             }
             else
             {
-                if (outputDelegate != cogbot.Program.WriteLine)
+                if (outputDelegate != GlobalWriteLine)
                 {
                     GlobalWriteLine(str, args);
                 }
@@ -679,23 +707,23 @@ namespace cogbot
                 }
 
                 LoginDetails BotLoginParams = FindOrCreateAccount(first, last);
-                if (!String.IsNullOrEmpty(first))
+                if (!string.IsNullOrEmpty(first))
                 {
                     BotLoginParams.FirstName = first;
                 }
-                if (!String.IsNullOrEmpty(last))
+                if (!string.IsNullOrEmpty(last))
                 {
                     BotLoginParams.LastName = last;
                 }
-                if (!String.IsNullOrEmpty(passwd))
+                if (!string.IsNullOrEmpty(passwd))
                 {
                     BotLoginParams.Password = passwd;
                 }
-                if (!String.IsNullOrEmpty(simurl))
+                if (!string.IsNullOrEmpty(simurl))
                 {
                     BotLoginParams.URI = simurl;
                 }
-                if (String.IsNullOrEmpty(location))
+                if (string.IsNullOrEmpty(location))
                 {
                     location = "last";
                 }
@@ -712,14 +740,20 @@ namespace cogbot
 
         static LoginDetails DefaultLoginParams()
         {
-            LoginDetails BotLoginParams = new LoginDetails(DefaultAccount);
-            return BotLoginParams;
+            lock (OneAtATime)
+            {
+                LoginDetails BotLoginParams = new LoginDetails(DefaultAccount);
+                return BotLoginParams;                
+            }
         }
 
         private void EnsureStarting(BotClient client)
         {
-            AddTypesToBotClient(client);
-            client.StartupClientLisp();            
+            lock (OneAtATime)
+            {
+                AddTypesToBotClient(client);
+                client.StartupClientLisp();
+            }
         }
 
         private void AddTypesToBotClient(BotClient bc)
@@ -736,16 +770,18 @@ namespace cogbot
 
         public Utilities.BotTcpServer CreateHttpServer(int port, string botname)
         {
-
-            BotClient cl = LastBotClient;
-            foreach (BotClient bc in BotClients)
+            lock (OneAtATime)
             {
-                if (bc.GetName().Equals(botname))
+                BotClient cl = LastBotClient;
+                foreach (BotClient bc in BotClients)
                 {
-                    cl = bc;
+                    if (bc.GetName().Equals(botname))
+                    {
+                        cl = bc;
+                    }
                 }
+                return new Utilities.BotTcpServer(port, cl);
             }
-            return new Utilities.BotTcpServer(port, cl);
         }
 
         //    public Dictionary<UUID, BotClient> Clients = new Dictionary<UUID, BotClient>();
@@ -770,11 +806,13 @@ namespace cogbot
         public ClientManager(IEnumerable<LoginDetails> accounts, bool getTextures)
             : this()
         {
+            lock (OneAtATime)
+            {
+                GetTextures = getTextures;
 
-            GetTextures = getTextures;
-
-            foreach (LoginDetails account in accounts)
-                BotClientForAcct(account);
+                foreach (LoginDetails account in accounts)
+                    BotClientForAcct(account);
+            }
         }
 
         public void StartUpLisp()
@@ -910,10 +948,10 @@ namespace cogbot
                                                                         account.Password, "BotClient", version);
                 account.UseNetworkDefaults(loginParams);
 
-                if (!String.IsNullOrEmpty(account.StartLocation))
+                if (!string.IsNullOrEmpty(account.StartLocation))
                     loginParams.Start = account.StartLocation;
 
-                if (!String.IsNullOrEmpty(account.URI))
+                if (!string.IsNullOrEmpty(account.URI))
                     loginParams.URI = account.URI;
 
                 if (client == null)
@@ -1068,6 +1106,16 @@ namespace cogbot
 
         public static void GlobalWriteLine(string str, params object[] args)
         {
+            string check = string.Format(str, args);
+            if (lastStr == check)
+            {
+                return;
+            }
+            else
+            {
+                lastStr = check;
+            }
+
             if (Filter != null)
             {
                 Filter(str, args);
@@ -1124,7 +1172,7 @@ namespace cogbot
                 return;
 
             string firstToken = tokens[0].ToLower();
-            if (String.IsNullOrEmpty(firstToken))
+            if (string.IsNullOrEmpty(firstToken))
                 return;
 
             string[] args = new string[tokens.Length - 1];
@@ -1346,7 +1394,7 @@ namespace cogbot
             if (arguments["loginuri"] != null)
                 DefaultAccount.URI = LoginURI = arguments["loginuri"];
 
-            if (String.IsNullOrEmpty(LoginURI))
+            if (string.IsNullOrEmpty(LoginURI))
                 LoginURI = Settings.AGNI_LOGIN_SERVER;
 
             Logger.Log("Using login URI " + LoginURI, Helpers.LogLevel.Info);
@@ -1370,7 +1418,7 @@ namespace cogbot
                     Logger.Log(String.Format("File {0} Does not exist", scriptFile), Helpers.LogLevel.Error);
                     return false;
                 }
-                if (!String.IsNullOrEmpty(scriptFile))
+                if (!string.IsNullOrEmpty(scriptFile))
                     DoCommandAll(String.Format("script {0}", scriptFile), UUID.Zero, GlobalWriteLine);
                 // Then Run the ClientManager normally
             }

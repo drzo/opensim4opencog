@@ -83,7 +83,7 @@ namespace cogbot
         /// for specific data stream types</summary>
         public AgentThrottle Throttle { get { return gridClient.Throttle; } }
 
-        readonly TaskQueueHandler BotStartupQueue;
+        readonly TaskQueueHandler OneAtATimeQueue;
         readonly public GridClient gridClient;
         // TODO's
         // Play Animations
@@ -410,7 +410,7 @@ namespace cogbot
             //manager.AddBotClientToTextForm(this);
 
             botPipeline = new SimEventMulticastPipeline(GetName());
-            BotStartupQueue = new TaskQueueHandler("BotStartupQueue " + GetName(), 100, true);
+            OneAtATimeQueue = new TaskQueueHandler("BotStartupQueue " + GetName(), 100, true);
             botPipeline.AddSubscriber(new SimEventTextSubscriber(WriteLine, this));
             // SingleInstance = this;
             ///this = this;// new GridClient();
@@ -1509,14 +1509,18 @@ namespace cogbot
             return ExecuteCommand(text, WriteLine); 
         }
 
-        private void InvokeJoin(string s)
+        private bool InvokeJoin(string s)
         {
-            BotStartupQueue.InvokeJoin(s);
+            return InvokeJoin(s, -1);
+        }
+        private bool InvokeJoin(string s, int millisecondsTimeout)
+        {
+            return OneAtATimeQueue.InvokeJoin(s, millisecondsTimeout);
         }
 
         private void InvokeNext(string s, ThreadStart e)
         {
-            BotStartupQueue.Enqueue(() =>
+            OneAtATimeQueue.Enqueue(() =>
                                         {
                                             e();
                                         });
@@ -1524,7 +1528,13 @@ namespace cogbot
 
         public CmdResult ExecuteCommand(string text, OutputDelegate WriteLine)
         {
-            InvokeJoin("ExecuteCommand " + text);
+            if (string.IsNullOrEmpty(text)) return null;
+            text = text.Trim();
+            while (text.StartsWith("/"))
+            {
+                text = text.Substring(1).TrimStart();
+            }
+            if (string.IsNullOrEmpty(text)) return null;
             CmdResult res = ExecuteBotCommand(text, WriteLine);
             if (res != null) return res;
             res = ClientManager.ExecuteSystemCommand(text, WriteLine);
@@ -1541,7 +1551,8 @@ namespace cogbot
             {
                 return null;
             }
-            text = text.TrimStart();
+            text = text.Trim();
+            while (text.StartsWith("/")) text = text.Substring(1).TrimStart();
             if (text.Length == 0)
             {
                 return null;
@@ -1577,9 +1588,9 @@ namespace cogbot
                     {
                         CmdResult res;
                         if (text.Length > verb.Length)
-                            return act.acceptInputWrapper(verb, text.Substring(verb.Length + 1), WriteLine);
+                            return DoCmdAct(act, verb, text.Substring(verb.Length + 1), WriteLine);
                         else
-                            return act.acceptInputWrapper(verb, "", WriteLine);
+                            return DoCmdAct(act, verb, "", WriteLine);
                     }
                     catch (Exception e)
                     {
@@ -1590,9 +1601,9 @@ namespace cogbot
                 else
                 {
                     UUID assetID = WorldSystem.SimAssetSystem.GetAssetUUID(text, AssetType.Gesture);
-                    if (assetID != UUID.Zero) return ExecuteCommand("gesture " + assetID);
+                    if (assetID != UUID.Zero) return ExecuteBotCommand("gesture " + assetID,WriteLine);
                     assetID = WorldSystem.SimAssetSystem.GetAssetUUID(text, AssetType.Animation);
-                    if (assetID != UUID.Zero) return ExecuteCommand("anim " + assetID);
+                    if (assetID != UUID.Zero) return ExecuteBotCommand("anim " + assetID, WriteLine);
                     return null;
                 }
             }
@@ -1601,6 +1612,12 @@ namespace cogbot
                 LogException("ExecuteBotCommand " + text, e);
                 return null;
             }
+        }
+
+        private CmdResult DoCmdAct(Command command, string verb, string args, OutputDelegate del)
+        {
+            InvokeJoin("ExecuteBotCommand " + verb + " " + args);
+            return command.acceptInputWrapper(verb, args, del);
         }
 
         public string GetName()
@@ -1642,6 +1659,7 @@ namespace cogbot
                 {
                     OnInstantMessageSent(this, new IMessageSentEventArgs(str, UUID.Zero, UUID.Zero, DateTime.Now));
                 }
+                return;
             }
             Self.Chat(str, 0, ChatType.Normal);
         }
@@ -1661,7 +1679,7 @@ namespace cogbot
         private void RegisterListener(Listener listener)
         {
             // listeners[listener.GetModuleName()] = listener;
-            BotStartupQueue.Enqueue(() => listener.StartupListener());
+            OneAtATimeQueue.Enqueue(() => listener.StartupListener());
         }
 
         internal void RegisterType(Type t)
@@ -2051,6 +2069,11 @@ namespace cogbot
 
         private void DoAnimation(string animate)
         {
+            if (Self.AgentID == UUID.Zero)
+            {
+                WriteLine(";; DEBUG NOT ONLINE! anim: " + animate);
+                return;
+            }
             SimAvatarImpl av = WorldSystem.TheSimAvatar as SimAvatarImpl;
             if (av != null)
             {

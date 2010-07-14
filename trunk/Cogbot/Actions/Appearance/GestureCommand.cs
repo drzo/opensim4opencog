@@ -51,8 +51,13 @@ namespace cogbot.Actions.Appearance
             {
                 return Failure("Unknown gesture " + a);
             }
+            a = WorldSystem.SimAssetSystem.GetAssetName(gesture) + " " + a;
+            if (!Client.Network.Connected)
+            {
+                return Success("ERROR NotConnected gesture " + a);
+            }
             Client.Self.PlayGesture(gesture);
-            return Success("Started gesture: " + WorldSystem.SimAssetSystem.GetAssetName(gesture));
+            return Success("Started gesture: " + a);
 ;
         }
     }

@@ -19,6 +19,9 @@ namespace cogbot.Utilities
         private ulong LastBusy = 0;
         readonly int WAIT_AFTER;
         public bool IsDisposing = false;
+        private string WaitingString = "";
+        private object WaitingStringLock = new object();
+        public OutputDelegate debugOutput;
 
         public bool IsRunning
         {
@@ -83,9 +86,25 @@ namespace cogbot.Utilities
 
         public override string ToString()
         {
+            string WaitingS = "Not waiting";
+            lock (WaitingStringLock)
+            {
+                if (WaitingString.Length>=0)
+                {
+                    WaitingS = "WaitingOn: " + WaitingString;
+                }
+            }
+            if (IsDisposing) WaitingS += " IsDisposing";
+            if (!IsRunning) WaitingS += " NOT RUNNING";
             return String.Format(
-                "{0} {1} Todo={2} Complete={3} {4} {5}",
-                Busy ? "Busy" : "Idle", Name, EventQueue.Count, processed, failures > 0 ? failures + " failures " : "", _noQueue ? "NoQueue" : "");
+                "{0} {1} Todo={2} Complete={3} {4} {5} {6}",
+                Busy ? "Busy" : "Idle", 
+                Name,
+                EventQueue.Count, 
+                processed,
+                failures > 0 ? failures + " failures " : "",
+                _noQueue ? "NoQueue" : "",
+                WaitingS);
         }
 
         public void Dispose()
@@ -175,7 +194,7 @@ namespace cogbot.Utilities
                 if (EventQueueHandler != null)
                     if (!EventQueueHandler.IsAlive)
                     {
-                        Console.WriteLine("Dead " + this);
+                        WriteLine("Dead " + this);
                         Thread.Sleep(PING_TIME);
                         continue;
                     }
@@ -186,8 +205,8 @@ namespace cogbot.Utilities
                     if (LastBusy == sequence)
                     {
                         TimeSpan t = DateTime.UtcNow - BusyStart;
-                        if (DebugQueue) Console.WriteLine("\n[TASK {0}] TOOK LONGER THAN {1} secs = {2} in Queue={3}",
-                                          Name, PING_TIME.TotalSeconds, t.TotalSeconds, EventQueue.Count);
+                        if (DebugQueue) WriteLine("TOOK LONGER THAN {0} secs = {1} in Queue={2}",
+                                           PING_TIME.TotalSeconds, t.TotalSeconds, EventQueue.Count);
                     }
                     LastBusy = sequence;
                     continue;
@@ -208,13 +227,13 @@ namespace cogbot.Utilities
                     double secs = timeSpan.TotalSeconds;
                     if (secs < 2)
                     {
-                        // Console.WriteLine("PONG: " + Name + " " + timeSpan.TotalMilliseconds + " ms");
+                        // WriteLine("PONG: " + Name + " " + timeSpan.TotalMilliseconds + " ms");
                         GoodPings++;
                     }
                     else
                     {
-                        if (DebugQueue) Console.WriteLine("[TASK {0}] {1} secs for {2} after {3} GoodPing(s)",
-                                          Name, timeSpan.TotalSeconds, count, GoodPings);
+                        if (DebugQueue) WriteLine("{0} secs for {1} after {3} GoodPing(s)",
+                                           timeSpan.TotalSeconds, count, GoodPings);
                         GoodPings = 0;
                     }
                 }
@@ -238,13 +257,23 @@ namespace cogbot.Utilities
             catch (Exception e)
             {
                 failures++;
-                Console.WriteLine("" + e);
+                WriteLine("ERROR! " + ToString() + " was " + e + " in " + Thread.CurrentThread);
             }
             finally
             {
                 sequence++;
                 Busy = false;
             }
+        }
+
+        public void WriteLine(string s, params object[] parms)
+        {
+            s = "\n[TASK " + Name + "] " + s;
+            if (debugOutput != Console.WriteLine)
+            {
+                Console.WriteLine(s, parms);
+            }
+            if (debugOutput != null) debugOutput(s, parms);
         }
 
         public void Enqueue(ThreadStart evt)
@@ -277,20 +306,60 @@ namespace cogbot.Utilities
             Set();
         }
 
-        public bool InvokeJoin(string s)
+        public bool InvokeJoin(string s, int millisecondsTimeout)
         {
-            AutoResetEvent are = new AutoResetEvent(false);
+            lock(WaitingStringLock)
+            {
+                if (WaitingString.Length>0)
+                {
+                    WaitingString += "\n" + s; 
+                }
+                else
+                {
+                    WaitingString = "\n" + s;
+                }
+            }
+            ManualResetEvent are = new ManualResetEvent(false);
             Enqueue(() =>
                         {
                             try
                             {
-                                are.Set();
+                                lock (WaitingStringLock)
+                                {
+                                    if (WaitingString.Contains("\n" + s))
+                                    {
+                                        WaitingString = WaitingString.Replace("\n" + s, "");
+                                    }
+                                }
+                                lock (WaitingStringLock)
+                                {
+                                    are.Set();                                    
+                                }
                             }
                             catch
                             {
                             }
                         });
-            return are.WaitOne();
+            if (millisecondsTimeout == -1)
+            {
+                // three minutes
+                millisecondsTimeout = 180000;
+            }
+            bool success  = are.WaitOne(millisecondsTimeout);
+            if (!success)
+            {
+                WriteLine("ERROR! TIMOUT " + s + " for " + ToString() + " in " + Thread.CurrentThread);
+            }
+            {
+                lock (WaitingStringLock)
+                {
+                    if (WaitingString.Contains("\n" + s))
+                    {
+                        WaitingString = WaitingString.Replace("\n" + s, "");
+                    }
+                }
+            }
+            return success;
         }
     }
 }

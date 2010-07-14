@@ -41,7 +41,12 @@ namespace cogbot.Utilities
         readonly private SimEventFilterSubscriber filter;
         readonly protected BotClient botclient;        
         bool quitRequested = false;
-        
+
+        public override string ToString()
+        {
+            return "SingleBotTcpClient for " + botclient.GetName() + " for " + tcp_client;
+        }
+
         public SingleBotTcpClient(TcpClient this_client, BotTcpServer server)
         {
             tcp_client = this_client;
@@ -365,13 +370,19 @@ namespace cogbot.Utilities
             // The thread that accepts the Client and awaits messages
 
             thrSvr = new Thread(tcpSrv);
-            thrSvr.Name = "BotTcpServer for " + client;
+            thrSvr.Name = ToString();
             // The thread calls the tcpSvr() method
 
             thrSvr.Start();
 
 
 
+        }
+
+        public override string ToString()
+        {
+            if (parent == null) return "BotTcpServer for NULL " + GetHashCode();
+            return "BotTcpServer for " + parent.GetName();
         }
         //------------------------------------ 
         // External XML socket server
@@ -405,7 +416,7 @@ namespace cogbot.Utilities
                             var clt = new SingleBotTcpClient(ClientHandle, this);
                             singleBotTcpClients.Add(clt);
                             Thread t = new Thread(new ThreadStart(clt.DoLoop));
-                            t.Name = "ClientHandle thread for " + ClientHandle;
+                            t.Name = "ClientHandle thread for " + ClientHandle + " " + ToString();
                             t.Start();
 
                         }

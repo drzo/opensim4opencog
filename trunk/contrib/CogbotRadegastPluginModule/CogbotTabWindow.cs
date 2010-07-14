@@ -133,7 +133,7 @@ namespace CogbotRadegastPluginModule
 
             //Alice = new AIMLbot.Bot();
             //Alice.isAcceptingUserInput = false;
-
+            
             //try {
             //    Alice.loadSettings();
             //    AIMLbot.Utils.AIMLLoader loader = new AIMLbot.Utils.AIMLLoader(Alice);
@@ -147,6 +147,7 @@ namespace CogbotRadegastPluginModule
            // ApplyConfig(this.instance.Config.CurrentConfig);
             //ClientManager.SingleInstance.Clients[]
             //BotClien.OnlyOneCurrentBotClient
+            this.cbxInput.Enabled = true;
         }
 
         void ChatConsole_Disposed(object sender, EventArgs e)
@@ -424,14 +425,16 @@ namespace CogbotRadegastPluginModule
             BotClient bc = ClientManager.SingleInstance.LastBotClient;
             if (bc != null)
             {
-                WriteLine(ClientManager.SingleInstance.LastBotClient.ExecuteCommand(s, WriteLine).ToString());
+                WriteLine("cogbot> " + s);
+                WriteLine("" + bc.ExecuteCommand(s, WriteLine));
                 ClearChatInput();
                 return;
             }
             WorldObjects gm = GridMaster;
-            if (gm!=null)
+            if (gm != null)
             {
-                WriteLine(gm.client.ExecuteCommand(s, WriteLine).ToString());
+                WriteLine("gridmaster> " + s);
+                WriteLine("" + gm.client.ExecuteCommand(s, WriteLine));
                 ClearChatInput();
                 return;
             }
