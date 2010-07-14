@@ -54,7 +54,7 @@ namespace RTParser.AIMLTagHandlers
                     return defaultVal;
                 }
                 if (value.ToValue(query).ToUpper() == "UNKNOWN") return ("unknown " + name);
-                Succeed();
+                if (name != "name") Succeed();
                 return value;
             }
             return Unifiable.Empty;
