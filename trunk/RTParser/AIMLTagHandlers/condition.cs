@@ -115,7 +115,6 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessChange()
         {
-            if (query.CurrentTemplate != null) query.CurrentTemplate.Rating *= 1.5;
             if (this.templateNode.Name.ToLower() == "condition")
             {
                 // heuristically work out the type of condition being processed
@@ -127,8 +126,9 @@ namespace RTParser.AIMLTagHandlers
                     if ((name != null) & (value != null))
                     {
                         Unifiable actualValue = this.query.grabSetting(name);
-                        if (IsPredMatch(value, actualValue))
+                        if (IsPredMatch(value, actualValue, query))
                         {
+                            Succeed();
                             return Unifiable.InnerXmlText(templateNode);
                         }
                         return Unifiable.Empty;
@@ -151,14 +151,16 @@ namespace RTParser.AIMLTagHandlers
                                     {
                                         Unifiable actualValue = this.query.grabSetting(name);
                                         Unifiable value = GetAttribValue(childLINode, "value", Unifiable.Empty, query);
-                                        if (IsPredMatch(value, actualValue))
+                                        if (IsPredMatch(value, actualValue, query))
                                         {
+                                            Succeed();
                                             return Unifiable.InnerXmlText(childLINode);
                                         }
                                     }
                                 }
                                 else if (childLINode.Attributes.Count == 0)
                                 {
+                                    Succeed();
                                     return Unifiable.InnerXmlText(childLINode);
                                 }
                             }
@@ -178,8 +180,9 @@ namespace RTParser.AIMLTagHandlers
                                 if ((name.Length > 0) & (!value.IsEmpty))
                                 {
                                     Unifiable actualValue = this.query.grabSetting(name);
-                                    if (IsPredMatch(value, actualValue))
+                                    if (IsPredMatch(value, actualValue, query))
                                     {
+                                        Succeed();
                                         return Unifiable.InnerXmlText(childLINode);
                                     }
                                 }
@@ -189,11 +192,13 @@ namespace RTParser.AIMLTagHandlers
                                 string name = GetAttribValue(childLINode, "name", string.Empty, query);
                                 if ((name.Length > 0) && this.query.containsSettingCalled(name))
                                 {
+                                    Succeed();
                                     return Unifiable.InnerXmlText(childLINode);
                                 }
                             }
                             else if (childLINode.Attributes.Count == 0)
                             {
+                                Succeed();
                                 return Unifiable.InnerXmlText(childLINode);
                             }
                         }

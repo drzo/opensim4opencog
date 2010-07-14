@@ -33,7 +33,7 @@ namespace RTParser.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "soundcode")
             {
-                string line = "<SXQX> "+ templateNodeInnerText.ToValue().ToLower()+" <FNXS>";
+                string line = "<SXQX> "+ templateNodeInnerText.ToValue(query).ToLower()+" <FNXS>";
                 line = line.Replace(".", " ");
                 line = line.Replace("!", " ");
                 line = line.Replace("?", " ");

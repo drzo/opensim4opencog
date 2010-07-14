@@ -83,6 +83,7 @@ namespace RTParser.Utils
         protected RTParser.RTPBot bot;
 
         private string theNameSpace;
+        public bool TrimKeys = true;
 
         /// <summary>
         /// The number of items in the dictionary
@@ -148,6 +149,7 @@ namespace RTParser.Utils
         public SettingsDictionary(String name, RTParser.RTPBot bot, ParentProvider parent)
         {
             theNameSpace = name;
+            TrimKeys = !name.Contains("subst");
             this.bot = bot;
             if (parent != null) _parent.Add(parent);
         }
@@ -236,7 +238,7 @@ namespace RTParser.Utils
             if (myNode.NodeType == XmlNodeType.Comment) return;
             if ((myNode.Name == "item"))
             {
-                string name = RTPBot.GetAttribValue(myNode, "name", "").Trim();
+                string name = RTPBot.GetAttribValue(myNode, "name", "");
                 if (name=="")
                 {
                     return;
@@ -246,7 +248,7 @@ namespace RTParser.Utils
                 {
                     value = myNode.InnerXml.Trim();
                 }
-                this.addSetting(name, value);
+                this.addSetting(name, new StringUnifiable(value));
             }
         }
 
@@ -258,20 +260,19 @@ namespace RTParser.Utils
         /// <param name="value">The value associated with this setting</param>
         public bool addSetting(string name, Unifiable value)
         {
-            name = name.Trim().ToLower();
             lock (orderedKeys)
             {
                 if (value.AsString().Contains("<"))
                 {
-                    RTPBot.writeDebugLine("BAD INPUT? " + value);
+                    RTPBot.writeDebugLine("ERROR BAD INPUT? " + value);
                 }
-                string key = MakeCaseInsensitive.TransformInput(Unifiable.Create(name));
-                SettingsLog("ADD Setting Local " + name + "=" + value);
+                string key = TransformKey(name);
+                SettingsLog("ADD Setting Local '" + name + "'=" + str(value) + " ");
                 if (key.Length > 0)
                 {
                     this.removeSetting(key);
                     this.orderedKeys.Add(key);
-                    this.settingsHash.Add(MakeCaseInsensitive.TransformInput(key), value);
+                    this.settingsHash.Add(TransformKey(key), value);
                 }
             }
             return true;
@@ -279,15 +280,14 @@ namespace RTParser.Utils
 
         public bool addListSetting(string name, Unifiable value)
         {
-            name = name.Trim().ToLower();
             lock (orderedKeys)
             {
-                string key = MakeCaseInsensitive.TransformInput(Unifiable.Create(name));
+                string key = TransformKey(name);
                 if (key.Length > 0)
                 {
                     this.removeSetting(key);
                     this.orderedKeys.Add(key);
-                    this.settingsHash.Add(MakeCaseInsensitive.TransformInput(key), value);
+                    this.settingsHash.Add(TransformKey(key), value);
                 }
             }
             return true;
@@ -299,15 +299,20 @@ namespace RTParser.Utils
         /// <param name="name">The name of the setting to remove</param>
         public bool removeSetting(string name)
         {
-            name = name.Trim().ToLower();
             lock (orderedKeys)
             {
-                string normalizedName = MakeCaseInsensitive.TransformInput(name);
+                string normalizedName = TransformKey(name);
                 bool ret = orderedKeys.Contains(normalizedName);
                 this.orderedKeys.Remove(normalizedName);
                 this.removeFromHash(normalizedName);
                 return ret;
             }
+        }
+
+        public string TransformKey(string name)
+        {
+            if (TrimKeys) name = name.Trim();
+            return MakeCaseInsensitive.TransformInput(name);
         }
 
         /// <summary>
@@ -316,10 +321,9 @@ namespace RTParser.Utils
         /// <param name="name">the key for the Dictionary<,></param>
         private void removeFromHash(string name)
         {
-            name = name.Trim().ToLower();
             lock (orderedKeys)
             {
-                string normalizedName = MakeCaseInsensitive.TransformInput(name);
+                string normalizedName = TransformKey(name);
                 this.settingsHash.Remove(normalizedName);
             }
         }
@@ -332,14 +336,13 @@ namespace RTParser.Utils
         /// <param name="value">the new value</param>
         public bool updateSetting(string name, Unifiable value)
         {
-            name = name.Trim().ToLower();
             bool overriden = false;
             foreach (var parent in _overides)
             {
                 var p = parent();
                 if (p.updateSetting(name, value))
                 {
-                    SettingsLog("OVERRIDDEN UPDATE " + p + " " + name + "=" + value);
+                    SettingsLog("OVERRIDDEN UPDATE " + p + " '" + name + "'=" + str(value));
                     overriden = true;
                 }
             }
@@ -349,13 +352,13 @@ namespace RTParser.Utils
             }
             lock (orderedKeys)
             {
-                string key = MakeCaseInsensitive.TransformInput(name);
+                string key = TransformKey(name);
                 if (this.orderedKeys.Contains(key))
                 {
                     var old = this.settingsHash[key];
                     this.removeFromHash(key);
-                    SettingsLog("UPDATE Setting Local " + name + "=" + value);
-                    this.settingsHash.Add(MakeCaseInsensitive.TransformInput(key), value);
+                    SettingsLog("UPDATE Setting Local '" + name + "'=" + str(value));
+                    this.settingsHash.Add(TransformKey(key), value);
                     return true;
                 }
             }
@@ -363,11 +366,16 @@ namespace RTParser.Utils
             {
                 if (parent.updateSetting(name, value))
                 {
-                    SettingsLog("PARENT UPDATE " + parent + " " + name + "=" + value);
+                    SettingsLog("PARENT UPDATE " + parent + " '" + name + "'=" + str(value));
                     return true;
                 }
             }
             return false;
+        }
+
+        static string str(Unifiable unifiable)
+        {
+            return "'" + Unifiable.ToVMString(unifiable) + "'";
         }
 
         /// <summary>
@@ -389,24 +397,23 @@ namespace RTParser.Utils
         /// <returns>the value of the setting</returns>
         public Unifiable grabSetting(string name)
         {
-            name = name.Trim().ToLower();
             foreach (ParentProvider overide in _overides)
             {
                 ISettingsDictionary dict = overide();
                 if (dict.containsSettingCalled(name))
                 {
                     Unifiable v = dict.grabSetting(name);
-                    SettingsLog("Returning Override " + name + "=" + v);
+                    SettingsLog("Returning Override '" + name + "'=" + str(v));
                     return v;
                 }
             }
             lock (orderedKeys)
             {
-                string normalizedName = MakeCaseInsensitive.TransformInput(name);
+                string normalizedName = TransformKey(name);
                 if (this.containsLocalCalled(normalizedName))
                 {
                     Unifiable v = this.settingsHash[normalizedName];
-                    SettingsLog("Returning LocalSetting " + name + "=" + v);
+                    SettingsLog("Returning LocalSetting '" + name + "'=" + str(v));
                     return v;
                 }
                 else if (Parents.Count > 0)
@@ -416,12 +423,12 @@ namespace RTParser.Utils
                         if (list.containsSettingCalled(name))
                         {
                             Unifiable v = list.grabSetting(name);
-                            SettingsLog("Returning Parent " + name + "=" + v);
+                            SettingsLog("Returning Parent '" + name + "'=" + str(v));
                             if (v != null && !Unifiable.IsFalse(v)) return v;
                         }
                     }
                     var v0 = Parents[0].grabSetting(name);
-                    SettingsLog("Returning False " + name + "=" + v0);
+                    SettingsLog("Returning False '" + name + "'=" + v0);
                     return v0;
                 }
                 SettingsLog("Returning Empty " + name);
@@ -453,7 +460,7 @@ namespace RTParser.Utils
             name = name.Trim();
             lock (orderedKeys)
             {
-                string normalizedName = MakeCaseInsensitive.TransformInput(name);
+                string normalizedName = TransformKey(name);
                 if (normalizedName.Length > 0)
                 {
                     return this.orderedKeys.Contains(normalizedName);
@@ -583,6 +590,40 @@ namespace RTParser.Utils
             {
                 NoDebug = false;                
             }
+        }
+
+        public static Unifiable grabSettingDefualt(ISettingsDictionary dictionary, string name, out string realName)
+        {
+            string[] chops = new string[] {"favorite.", "favorite", "fav"};
+            realName = name;
+            var un = dictionary.grabSetting(name);
+            if (Unifiable.IsNull(un))
+            {
+                foreach (var chop in chops)
+                {
+                    if (name.StartsWith(chop))
+                    {
+                        string newName = name.Substring(chop.Length);
+                        return grabSettingDefualt(dictionary, newName, out newName);
+                    }
+                }
+                foreach (var chop in chops)
+                {
+
+                    realName = chop + name;
+                    if (dictionary is SettingsDictionary)
+                    {
+                        SettingsDictionary sd = (SettingsDictionary) dictionary;
+                        un = sd.grabSettingNoDebug(realName);
+                    }
+                    else
+                    {
+                        un = dictionary.grabSetting(realName);                        
+                    }
+                    if (!Unifiable.IsNull(un)) return un;
+                }
+            }
+            return un;
         }
     }
 }

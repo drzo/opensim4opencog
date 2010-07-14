@@ -60,7 +60,8 @@ namespace RTParser
 
         public override string ToString()
         {
-           return user.UserID + ": " + rawInput;
+            string s = user.UserID;
+            return s + ": " + Unifiable.ToVMString(rawInput);
         }
 
         /// <summary>

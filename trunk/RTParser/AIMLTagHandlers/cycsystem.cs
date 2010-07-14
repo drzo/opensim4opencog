@@ -40,7 +40,7 @@ namespace RTParser.AIMLTagHandlers
                 {
                     if (WhenTrue(this.TheCyc.EvalSubL(Recurse(), filter)))
                     {
-                        if (query.CurrentTemplate != null) query.CurrentTemplate.Rating *= 1.5;
+                        base.Succeed();
                         return templateNodeInnerText;
                     }
                 }

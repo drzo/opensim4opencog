@@ -44,6 +44,10 @@ namespace RTParser.Utils
             catch
             {
             }
+            if (Rating!=1.0)
+            {
+                RTPBot.writeDebugLine("score=" + Rating + " for " + OuterXml);
+            }
         }
 
         public override string ToString()

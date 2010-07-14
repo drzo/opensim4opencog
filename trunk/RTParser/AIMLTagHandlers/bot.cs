@@ -2,6 +2,7 @@ using System;
 using System.Xml;
 using System.Text;
 using System.IO;
+using RTParser.Utils;
 
 namespace RTParser.AIMLTagHandlers
 {
@@ -45,10 +46,16 @@ namespace RTParser.AIMLTagHandlers
             {
                 string name = GetAttribValue("name", templateNodeInnerText.Trim());
                 Unifiable defaultVal = GetAttribValue("default", Unifiable.Empty);
-                Unifiable result = this.Proc.GlobalSettings.grabSettingNoDebug(name).Trim();
-                if (result.ToValue().ToUpper() == "UNKNOWN") return result + " " + name;
-                if (!String.IsNullOrEmpty(result)) return result;
-                return defaultVal;
+                string realName;
+                Unifiable value = SettingsDictionary.grabSettingDefualt(Proc.GlobalSettings, name ,out realName);
+                
+                if (Unifiable.IsNullOrEmpty(value))
+                {
+                    return defaultVal;
+                }
+                if (value.ToValue(query).ToUpper() == "UNKNOWN") return ("unknown " + name);
+                Succeed();
+                return value;
             }
             return Unifiable.Empty;
         }

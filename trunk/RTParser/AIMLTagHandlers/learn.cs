@@ -38,7 +38,7 @@ namespace RTParser.AIMLTagHandlers
             {
                 LoaderOptions opts = new LoaderOptions(request.Graph);
 
-                opts.recurse = Unifiable.IsLogicTF(GetAttribValue("recurse", Unifiable.Empty));
+                opts.recurse = Unifiable.IsLogicTF(GetAttribValue("recurse", Unifiable.Empty), query);
                 //recurse here?
                 GraphMaster g = request.Graph;
                 var g0 = g;

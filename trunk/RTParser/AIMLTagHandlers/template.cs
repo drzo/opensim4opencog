@@ -53,6 +53,10 @@ namespace RTParser.AIMLTagHandlers
         public override Unifiable CompleteProcess()
         {
             Unifiable templateResult = Unifiable.CreateAppendable();
+            if (query.CurrentTemplate != null)
+            {
+                Succeed();
+            }
             if (templateNode.HasChildNodes)
             {
                 // recursively check

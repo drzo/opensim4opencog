@@ -12,6 +12,9 @@ namespace RTParser
     /// </summary>
     public class User : RequestSettings
     {
+
+        public readonly object QueryLock = new object();
+
         #region Attributes
 
         public List<TemplateInfo> UsedTemplates = new List<TemplateInfo>();

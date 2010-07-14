@@ -288,7 +288,7 @@ namespace RTParser.Utils
 
         public override string ToString()
         {
-            if (Parent != null) return String.Format("{0} {1}", Parent, word);
+            if (Parent != null) return String.Format("{0} {1}", Parent, Unifiable.ToVMString(word));
             return word;
         }
 
@@ -312,7 +312,7 @@ namespace RTParser.Utils
                 {
                     // capture and push the star content appropriate to the mtchList if it exists
                     // and then clear it for subsequent wildcards
-                    mtchList.Insert(0, newWildcard.Frozen());
+                    mtchList.Insert(0, newWildcard.Frozen(query));
                 }
 
 
@@ -495,8 +495,21 @@ namespace RTParser.Utils
             lock (children) foreach (KeyValuePair<Unifiable, Node> childNodeKV in this.children)
             {
                 Unifiable childNodeWord = childNodeKV.Key;
-                if (!childNodeWord.IsShortWildCard()) continue;
-                if (childNodeWord.Unify(first, query) > 0) continue;
+                
+                if (!childNodeWord.IsFiniteWildCard()) continue;
+                Unifiable right;
+                Unifiable left;
+                if (childNodeWord.ConsumeFirst(path, out left, out right, query))
+                {
+                    first = left;
+                    newPath = right;
+                }
+                else
+                {
+                    //Unifiable rest = childNodeWord.ConsumeFirst(path);
+                    if (!childNodeWord.WillUnify(first, query)) continue;
+                }
+
                 Node childNode = childNodeKV.Value;
                 // add the next word to the wildcard match 
                 Unifiable newWildcard = Unifiable.CreateAppendable();
@@ -511,7 +524,7 @@ namespace RTParser.Utils
 
                 // and if we get a result from the branch process the wildcard matches and return 
                 // the result
-                string freezit = newWildcard.Frozen();
+                string freezit = newWildcard.Frozen(query);
                 if (ResultStateReady(res, newWildcard, mtchList, matchstate, query))
                 {
                     if (freezit.Contains(" "))
@@ -530,8 +543,21 @@ namespace RTParser.Utils
             lock (children) foreach (var childNodeKV in this.children)
             {
                 Node childNode = childNodeKV.Value;
-                if (childNode.word.IsWildCard()) continue;
-                if (childNode.word.Unify(firstWord, query) > 0) continue;
+                Unifiable childNodeWord = childNodeKV.Key;
+                
+                if (childNodeWord.IsWildCard()) continue;
+
+                Unifiable right;
+                Unifiable left;
+                if (childNodeWord.ConsumeFirst(path, out left, out right, query))
+                {
+                    first = left;
+                    newPath = right;
+                }
+                else
+                {
+                    if (!childNodeWord.WillUnify(firstWord, query)) continue;
+                }
                 // process the mtchList - this might not make sense but the mtchList is working
                 // with a "backwards" path: "topic <topic> that <that> user input"
                 // the "classic" path looks like this: "user input <that> that <topic> topic"
@@ -604,7 +630,7 @@ namespace RTParser.Utils
                 // add the next word to the wildcard match 
                 Unifiable newWildcard = Unifiable.CreateAppendable();
                 // normal * and LazyMatch on first word
-                if (childNodeWord.Unify(first, query) == 0)
+                if (childNodeWord.WillUnify(first, query))
                 {
                     if (childNodeWord.StoreWildCard()) this.storeWildCard(first, newWildcard);
                     if (childNode.evaluate(UPath.MakePath(newPath), query, request, mtchList, matchstate, index, newWildcard, res))
@@ -624,7 +650,7 @@ namespace RTParser.Utils
                     Unifiable second = newPath.First();
                     if (!second.IsEmpty && childNodeWord.IsLazyStar())
                     {
-                        Unifiable firstAndSecond = first + " " + second;
+                        string firstAndSecond =  first + " " + second;
                         if (childNodeWord.Unify(firstAndSecond, query) == 0)
                         {
                             if (childNodeWord.StoreWildCard()) this.storeWildCard(firstAndSecond, newWildcard);
@@ -693,8 +719,8 @@ namespace RTParser.Utils
             }
             return true;
         }
-
-        private static List<Unifiable> UnifyStars(Unifiable rawOutput, Unifiable fullPath)
+#if false
+        private static List<Unifiable> UnifyStars(Unifiable rawOutput, Unifiable fullPath, SubQuery query)
         {
             Unifiable[] source = StringUnifiable.Splitter(rawOutput);
             Unifiable[] target = StringUnifiable.Splitter(fullPath);
@@ -706,7 +732,7 @@ namespace RTParser.Utils
             {
                 var split = target[sindex];
                 tindex++;
-                if (split.IsShortWildCard())
+                if (split.IsFiniteWildCard())
                 {
                     ins.Add(source[sindex]);
                     sindex++;
@@ -716,7 +742,7 @@ namespace RTParser.Utils
                 {
                     appendable.Append(source[sindex++]);
                     int windex = sindex;
-                    while (target[tindex + 1].UnifyLazy(source[windex + 1]) != 0)
+                    while (target[tindex + 1].UnifyLazy(source[windex + 1], query) != 0)
                     {
                         windex++;
                         if (windex >= source.Length) break;
@@ -728,7 +754,7 @@ namespace RTParser.Utils
                     tindex++;
                     continue;
                 }
-                if (split.UnifyLazy(source[sindex]) == 0)
+                if (split.UnifyLazy(source[sindex],query) == 0)
                 {
                     ins.Add(source[sindex++]);
                     continue;
@@ -737,6 +763,7 @@ namespace RTParser.Utils
             }
             return ins;
         }
+#endif
 
         /// <summary>
         /// Navigates this node (and recursively into child nodes) for a match to the path passed as an argument
@@ -798,7 +825,7 @@ namespace RTParser.Utils
             lock (children) foreach (KeyValuePair<Unifiable, Node> childNodeKV in this.children)
             {
                 Unifiable childNodeWord = childNodeKV.Key;
-                if (!childNodeWord.IsShortWildCard()) continue;
+                if (!childNodeWord.IsFiniteWildCard()) continue;
                 if (childNodeWord.Unify(first, query) > 0) continue;
                 Node childNode = childNodeKV.Value;
                 // add the next word to the wildcard match 
@@ -814,7 +841,7 @@ namespace RTParser.Utils
 
                 // and if we get a result from the branch process the wildcard matches and return 
                 // the result
-                string freezit = newWildcard.Frozen();
+                string freezit = newWildcard.Frozen(query);
                 if (ResultStateReady2(newWildcard, matchstate))
                 {
                     if (freezit.Contains(" "))

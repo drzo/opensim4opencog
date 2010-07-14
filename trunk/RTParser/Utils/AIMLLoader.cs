@@ -317,11 +317,11 @@ namespace RTParser.Utils
                 }
                 else if (currentNodeName == "srai")
                 {
-                    EvalNode(currentNode, request);
+                    EvalNode(currentNode, request, filename);
                 }
                 else
                 {
-                    EvalNode(currentNode, request);
+                    EvalNode(currentNode, request, filename);
                 }
             }
             finally
@@ -330,7 +330,7 @@ namespace RTParser.Utils
             }
         }
 
-        private void EvalNode(XmlNode currentNode, Request request)
+        private void EvalNode(XmlNode currentNode, Request request, LoaderOptions filename)
         {
             try
             {
@@ -486,7 +486,7 @@ namespace RTParser.Utils
             }
             else
             {
-                patternText = Unifiable.Create(patternNode);//.InnerXml;
+                patternText = Unifiable.Create(Unifiable.InnerXmlText(patternNode));
             }
 
             string patternString = patternNode.InnerXml;
@@ -507,7 +507,7 @@ namespace RTParser.Utils
                 var newLineInfoPattern = AIMLTagHandler.getNode("<pattern>" + patternString + "</pattern>", patternNode);
                 newLineInfoPattern.SetParentFromNode((LineInfoElement)patternNode);
                 patternNode = newLineInfoPattern;
-                patternText = Unifiable.Create(patternNode);//.InnerXml;
+                patternText = Unifiable.Create(Unifiable.InnerXmlText(patternNode));
             }
 
             newPattern = patternNode;
@@ -751,10 +751,10 @@ namespace RTParser.Utils
                         normalizedWord = stripper.Transform(word);
                     }
                 }
-                result.Append(normalizedWord.Trim() + " ");
+                result.Append(normalizedWord);
             }
 
-            return result.ToString().Replace("  ", " "); // make sure the whitespace is neat
+            return  Unifiable.ToVMString(result).Replace("  ", " "); // make sure the whitespace is neat
         }
         #endregion
 

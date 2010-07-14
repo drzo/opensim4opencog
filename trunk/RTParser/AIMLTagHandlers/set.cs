@@ -46,7 +46,6 @@ namespace RTParser.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "set")
             {
-                if (query.CurrentTemplate != null) query.CurrentTemplate.Rating *= 0.6;
                 Unifiable name = GetAttribValue("name", null);
                 Unifiable gName = GetAttribValue("global_name", null);
                 // try to use a global blackboard predicate

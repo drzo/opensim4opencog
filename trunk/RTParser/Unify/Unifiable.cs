@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Text.RegularExpressions;
 using System.Xml;
 using RTParser.Utils;
 using UPath = RTParser.Unifiable;
@@ -35,6 +36,11 @@ namespace RTParser
 
         public static string InnerXmlText(XmlNode templateNode)
         {
+            return InnerXmlText0(templateNode).Trim();
+        }
+
+        static string InnerXmlText0(XmlNode templateNode)
+        {
             if (templateNode.NodeType == XmlNodeType.Text)
             {
                 if (templateNode.InnerXml.Length>0)
@@ -66,11 +72,16 @@ namespace RTParser
             return MakeStringUnfiable(value);
         }
 
-        private static Unifiable MakeStringUnfiable(string value)
+        private static StringUnifiable MakeStringUnfiable(string value)
         {
             if (value == null) return null;
-            value = value.Trim();//.ToLower();
             string key = value.Trim();//.ToLower();
+            if (value != key)
+            {
+                writeToLog("Triming? '" + value + "'");
+                return new StringUnifiable(value);
+            }
+            value = value.Trim();//.ToLower();
             Unifiable u;
             if (true)
                 lock (internedUnifiables)
@@ -79,10 +90,10 @@ namespace RTParser
                     {
                         u = internedUnifiables[key] = new StringUnifiable(value);
                     }
-                    return u;
+                    return (StringUnifiable)u;
                 }
             u = new StringUnifiable(value);
-            return u;
+            return (StringUnifiable)u;
         }
 
         public static Unifiable Empty = new EmptyUnifiable();
@@ -101,10 +112,10 @@ namespace RTParser
             return !IsFalse(v);
         }
 
-        static public bool IsLogicTF(Unifiable v)
+        static public bool IsLogicTF(Unifiable v, SubQuery subquery)
         {
             if (IsFalse(v)) return false;
-            String value = v.ToValue().ToLower();
+            String value = v.ToValue(subquery).ToLower();
             if (value.Length == 0) return false;
             char c = value[0];
             if (c == 'n' || c == 'f') return false;
@@ -114,6 +125,10 @@ namespace RTParser
 
         public static Unifiable Join(string sep, Unifiable[] values, int startIndex, int count)
         {
+            if (count == 1)
+            {
+                return values[startIndex];
+            }
             return string.Join(sep, FromArrayOf(values), startIndex, count);
         }
 
@@ -159,10 +174,11 @@ namespace RTParser
                 return false;
             }
 
-            if (t.AsString().ToLower() == s.AsString().ToLower()) return true;
-            if (t.ToValue().ToLower() == s.ToValue().ToLower())
+            if (t.ToUpper() == s.ToUpper()) return true;
+            if (t.ToValue(null).ToLower() == s.ToValue(null).ToLower())
             {
-                return true;
+                writeToLog("==({0},{1})", t.AsString(), s.AsString());
+                return false;
             }
 
             return false;
@@ -182,12 +198,12 @@ namespace RTParser
 
         public static bool IsNullOrEmpty(Object name)
         {
-            if (Object.ReferenceEquals(name, null)) return true;
             if (name is String)
             {
-                return String.IsNullOrEmpty((String)name);
+                return ((String) name).Trim().Length == 0;
             }
-            return (name is Unifiable && ((Unifiable)name).Raw == null);
+            if (IsNull(name)) return true;
+            return (name is Unifiable && ((Unifiable)name).IsEmpty);
         }
         public static bool IsNull(Object name)
         {
@@ -195,13 +211,22 @@ namespace RTParser
             return (name is Unifiable && ((Unifiable)name).Raw == null);
         }
 
+        public static Unifiable operator +(string u, Unifiable more)
+        {
+            if (u.Length == 0) return more;
+            string moreAsString = more.AsString();
+            if (moreAsString.Length == 0) return u;
+            return MakeStringUnfiable(u + more.AsString());
+        }
         public static Unifiable operator +(Unifiable u, string more)
         {
-            return u.AsString() + more;
+            return MakeStringUnfiable("" + u.AsString() + more);
         }
         public static Unifiable operator +(Unifiable u, Unifiable more)
         {
-            return u.AsString() + more.AsString();
+            string moreAsString = more.AsString();
+            if (moreAsString.Length == 0) return u;
+            return MakeStringUnfiable(u.AsString() + " " + moreAsString);
         }
 
         public static Unifiable Create(object p)
@@ -211,13 +236,27 @@ namespace RTParser
                 return MakeStringUnfiable((string)p);
             }
             if (p is Unifiable) return (Unifiable) p;
-            if (p is XmlNode) return MakeStringUnfiable(InnerXmlText((XmlNode)p));
+            if (p is XmlNode)
+            {
+                var n = (XmlNode) p;
+                string inner = InnerXmlText(n);
+                writeToLog("MAking XML Node " + n.OuterXml + " -> " + inner);
+                StringUnifiable unifiable = MakeStringUnfiable(inner);
+                unifiable.node = (XmlNode)p;
+
+            }
             // TODO
             if (p == null)
             {
                 return null;
             }
             return MakeStringUnfiable(p.ToString());
+        }
+
+        public override string ToString()
+        {
+            writeToLog("ToSTring");
+            return  GetType().Name + "={" + Raw + "}";//Raw.ToString();}
         }
 
         internal static StringAppendableUnifiable CreateAppendable()
@@ -235,7 +274,15 @@ namespace RTParser
         {
             get
             {
-                return string.IsNullOrEmpty(ToValue());
+                string s = AsString();
+                if (string.IsNullOrEmpty(s)) return true;
+                s = s.Trim();
+                if (s.Length != 0)
+                {
+                    Unifiable.writeToLog("was IsEmpty");
+                    return false;
+                }
+                return true;
             }
         }
 
@@ -249,14 +296,13 @@ namespace RTParser
             return IsEmpty;            
         }
         public abstract bool IsTag(string s);
-        public abstract bool IsMatch(Unifiable unifiable);
         public virtual bool IsWildCard()
         {
             return true;
         }
         public abstract bool IsLazyStar();
         public abstract bool IsLongWildCard();
-        public abstract bool IsShortWildCard();
+        public abstract bool IsFiniteWildCard();
 
 
         public enum MatchWidth : byte
@@ -268,53 +314,129 @@ namespace RTParser
 
         public abstract MatchWidth Width { get; }
 
-        static public SubQuery subquery;
         public abstract bool IsLazy();
+        public abstract bool IsLitteral();
 
-        public abstract float UnifyLazy(Unifiable other);
-
-        public virtual float Unify(Unifiable other, SubQuery query)
+        public static void writeToLog(string message, params object[] args)
         {
-            if (IsShortWildCard()) if (other.AsString().Contains(" ")) return UNIFY_FALSE;
-            subquery = query;
-            if (IsWildCard())
+            RTPBot.writeDebugLine("UNIFYABLETRACE: " + message, args);
+        }
+
+        public abstract bool ConsumeFirst(Unifiable fullpath, out Unifiable left, out Unifiable right, SubQuery query);
+
+        public bool WillUnify(Unifiable other, SubQuery query)
+        {
+            string su = ToUpper();
+            if (su == "*") return !other.IsEmpty;
+            if (su == "_") return other.IsShort();
+            return Unify(other, query) == UNIFY_TRUE;
+        }
+
+        public bool CanUnify(Unifiable other, SubQuery query)
+        {
+            string su = ToUpper();
+            if (su == "*") return !other.IsEmpty;
+            if (su == "_") return other.IsShort();
+            return Unify(other, query) == UNIFY_TRUE;
+        }
+
+        public abstract float Unify(Unifiable unifiable, SubQuery query);
+
+        public static bool IsStringMatch(string s, string u)
+        {
+            if (s == u) return true;
+            if (s.ToUpper().Trim() == u.ToUpper().Trim())
             {
-                if (IsLazy())
+                return true;
+            }
+            return IsMatch2(s, u);
+        }
+
+        static public bool IsMatch2(string st, string actualValue)
+        {
+            if (Object.ReferenceEquals(st, actualValue)) return true;
+            string that = " " + actualValue + " ";
+            string thiz = " " + st + " ";
+            if (thiz == that)
+            {
+                return true;
+            }
+            if (thiz.ToLower() == that.ToLower())
+            {
+                return true;
+            }
+            if (TwoMatch(that, thiz))
+            {
+                return true;
+            }
+            string a1 = st;
+            string a2 = actualValue;
+            thiz = " " + a1 + " ";
+            that = " " + a2 + " ";
+            if (TwoMatch(that, thiz))
+            {
+                return true;
+            }
+            if (TwoSemMatch(a1, a2))
+            {
+                return true;
+            }
+            if (st.StartsWith("~"))
+            {
+                string type = st.Substring(1);
+                var b = Database.NatLangDb.IsWordClass(actualValue, type);
+                if (b)
                 {
-                    try
-                    {
-                        return UnifyLazy(other);
-                    }
-                    catch (Exception e)
-                    {
-                        //RTPBot.writeDebugLine(""+e);
-                        return UNIFY_FALSE;
-                    }
+                    return true;
                 }
-                return 0;
+                return b;
             }
-            if (false && other.IsWildCard())
+            return false;
+        }
+
+
+        static bool TwoSemMatch(string that, string thiz)
+        {
+            return false;
+            if (Database.NatLangDb.IsWordClassCont(that, " determ") && Database.NatLangDb.IsWordClassCont(thiz, " determ"))
             {
-                // return unifiable.Unify(this, query);
+                return true;
             }
-            if (other.AsString().ToUpper() == AsString().ToUpper()) return UNIFY_TRUE;
-            if (IsMatch(other))
+            return false;
+        }
+
+        static bool TwoMatch(string s1, string s2)
+        {
+            if (s1 == s2) return true;
+            Regex matcher = new Regex(s1.Replace(" ", "\\s").Replace("*", "[\\sA-Z0-9]+"), RegexOptions.IgnoreCase);
+            bool b = matcher.IsMatch(s2);
+            if (b)
             {
-                //return UNIFY_FALSE;
-                return UNIFY_TRUE;
+                return true;
             }
-            return UNIFY_FALSE;
+            return b;
+        }
+
+
+        string upper;
+        public string ToUpper()
+        {
+            if (upper==null)
+            {
+                upper = AsString().ToUpper().Trim().Replace("  ", " ");
+            }
+            return upper;
         }
 
         public virtual Unifiable ToCaseInsenitive()
         {
             return this;
         }
-        public virtual Unifiable Frozen()
+        public virtual Unifiable Frozen(SubQuery subquery)
         {
-            return ToValue();
+            return ToValue(subquery);
         }
-        public abstract string ToValue();
+        public abstract string ToValue(SubQuery subquery);
         public abstract string AsString();
         public virtual Unifiable ToPropper()
         {
@@ -331,6 +453,7 @@ namespace RTParser
 
         // join functions
         public abstract void Append(Unifiable part);
+        public abstract void Append(string part);
         public abstract void Clear();
 
         public abstract Unifiable First();
@@ -351,6 +474,19 @@ namespace RTParser
         virtual public bool StoreWildCard()
         {
             return true;
+        }
+
+        public static string ToVMString(object unifiable)
+        {
+            if (unifiable is Unifiable)
+            {
+                return ((Unifiable) unifiable).AsString();
+            }
+            if (Object.ReferenceEquals(null,unifiable))
+            {
+                return "-NULL-";
+            }
+            return "" + unifiable;
         }
     }
 }

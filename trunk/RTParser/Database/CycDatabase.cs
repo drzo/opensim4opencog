@@ -187,7 +187,7 @@ namespace RTParser.Database
         
         static private Dictionary<string, Unifiable> stringTOResult = new Dictionary<string, Unifiable>();
         static private Unifiable NILTerm = "NIL";
-        public bool Lookup(Unifiable textIn,Unifiable filter,out Unifiable term)
+        public bool Lookup(Unifiable textIn,Unifiable filter,out Unifiable term, SubQuery subquery)
         {
             lock (stringTOResult)
             {
@@ -197,7 +197,7 @@ namespace RTParser.Database
                     if (term == NILTerm) return false;
                     return true;
                 }
-                bool t = lookup0(textIn, filter, out term);
+                bool t = lookup0(textIn, filter, out term, subquery);
                 bool meansFalse = Unifiable.IsFalse(term);
                 if (t != meansFalse)
                 {
@@ -217,9 +217,9 @@ namespace RTParser.Database
             }
         }
 
-        private bool lookup0(Unifiable textIn, Unifiable filter, out Unifiable term)
+        private bool lookup0(Unifiable textIn, Unifiable filter, out Unifiable term, SubQuery subquery)
         {
-            string text = textIn.ToValue();
+            string text = textIn.ToValue(subquery);
             if (text.Length < 2)
             {
                 term = text;

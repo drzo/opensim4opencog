@@ -36,7 +36,7 @@ namespace RTParser.AIMLTagHandlers
                 if (!templateNodeInnerText.IsEmpty)
                 {
                     String sent = Recurse();
-                    string mt = TheCyc.Cyclify(GetAttribValue("mt", Proc.GetUserMt(user)));
+                    string mt = TheCyc.Cyclify(GetAttribValue("mt", Proc.GetUserMt(user, query)));
                     return this.TheCyc.EvalSubL(String.Format("(eval (subseq `(cyc-assert '{0} {1} ) 0 3) )", sent, mt), null);
                 }
             }

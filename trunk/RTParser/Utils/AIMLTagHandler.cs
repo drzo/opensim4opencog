@@ -13,6 +13,16 @@ namespace RTParser.Utils
     /// </summary>
     abstract public class AIMLTagHandler : TextTransformer, IXmlLineInfo
     {
+        protected void Succeed()
+        {
+            if (query.CurrentTemplate != null)
+            {
+                double score = GetAttribValue(templateNode, "score", 1.2, query);
+                writeToLog("TSCORE {3} {0}*{1}->{2} ",
+                           score, query.CurrentTemplate.Rating,
+                           query.CurrentTemplate.Rating *= score, GetType().Name);
+            }
+        }
 
         public bool WhenTrue(Unifiable unifiable)
         {
@@ -105,11 +115,11 @@ namespace RTParser.Utils
         }
 
 
-        public static bool IsPredMatch(Unifiable value, Unifiable actualValue)
+        public static bool IsPredMatch(Unifiable value, Unifiable actualValue, SubQuery subquery)
         {
             value = value.Trim();
             actualValue = actualValue.Trim();
-            if (actualValue.IsMatch(value)) return true;
+            if (actualValue.WillUnify(value, subquery)) return true;
             Regex matcher = new Regex(value.AsString().Replace(" ", "\\s").Replace("*", "[\\sA-Z0-9]+"),
                                       RegexOptions.IgnoreCase);
             if (matcher.IsMatch(actualValue)) return true;
@@ -235,6 +245,7 @@ namespace RTParser.Utils
 
         protected Unifiable Recurse()
         {
+            Unifiable templateNodeInnerText;//= this.templateNodeInnerText;
             Unifiable templateResult = Unifiable.CreateAppendable();
             if (this.templateNode.HasChildNodes)
             {
@@ -243,7 +254,7 @@ namespace RTParser.Utils
                 {
                     if (childNode.NodeType == XmlNodeType.Text)
                     {
-                        templateResult.Append(childNode.InnerText);
+                        templateResult.Append(childNode.InnerText.Trim());
                     }
                     else
                     {
@@ -255,7 +266,7 @@ namespace RTParser.Utils
                         templateResult.Append(found);
                     }
                 }
-                templateNodeInnerText = templateResult;//.ToString();
+                //templateNodeInnerText = templateResult;//.ToString();
                 return templateResult;
             }
             else
@@ -398,7 +409,7 @@ namespace RTParser.Utils
         /// <returns>The XML node</returns>
         public virtual float CanUnify(Unifiable with)
         {
-            string w = with.ToValue();
+            string w = with.ToValue(query);
             Unifiable t1 = ProcessChange();
             float score1 = t1.Unify(with, query);
             if (score1 == 0) return score1;
@@ -415,12 +426,34 @@ namespace RTParser.Utils
             return GetAttribValue(templateNode, attribName, defaultIfEmpty, query);
         }
 
-        public Unifiable GetAttribValue(XmlNode node, string attribName, Unifiable defaultIfEmpty, SubQuery sq)
+        static public Unifiable GetAttribValue(XmlNode node, string attribName, Unifiable defaultIfEmpty, SubQuery sq)
         {
             attribName = attribName.ToLower();
             foreach (XmlAttribute attrib in node.Attributes)
             {
                 if (attrib.Name.ToLower() == attribName) return ReduceStar(attrib.Value, sq);
+            }
+            return defaultIfEmpty;
+        }
+
+        static public double GetAttribValue(XmlNode node, string attribName, double defaultIfEmpty, SubQuery sq)
+        {
+            attribName = attribName.ToLower();
+            foreach (XmlAttribute attrib in node.Attributes)
+            {
+                if (attrib.Name.ToLower() == attribName)
+                {
+                    Unifiable reduceStar = ReduceStar(attrib.Value, sq);
+                    try
+                    {
+                        return double.Parse(reduceStar);
+                    }
+                    catch (Exception exception)
+                    {
+
+                         RTPBot.writeDebugLine("AIMLTRACE: DECIMAL " + reduceStar + " " + exception);
+                    }
+                }
             }
             return defaultIfEmpty;
         }
@@ -447,7 +480,7 @@ namespace RTParser.Utils
             else
             {
                 Unifiable resultNodeInnerXML = tagHandler.Transform();
-                XmlNode resultNode = getNode(String.Format("<node>{0}</node>", resultNodeInnerXML), templateNode);
+                XmlNode resultNode = getNode(String.Format("<node>{0}</node>", Unifiable.ToVMString(resultNodeInnerXML)), templateNode);
                 if (resultNode.HasChildNodes)
                 {
                     Unifiable recursiveResult = Unifiable.CreateAppendable();
@@ -528,5 +561,12 @@ namespace RTParser.Utils
             }
         }
         #endregion
+
+        protected bool CheckNode(string name)
+        {
+            if (this.templateNode.Name.ToLower() == name) return true;
+            writeToLog("CheckNode change " + name + " -> " + templateNode.Name);
+            return true;
+        }
     }
 }

@@ -222,6 +222,7 @@ namespace AIMLBotModule
             try
             {
                 MyBot = new RTPBot();
+                MyBot.outputDelegate = WriteLine;
                 MyBot.isAcceptingUserInput = false;
                 MyBot.AddExcuteHandler("bot", BotExecHandler);
                 MyBot.AddExcuteHandler("lisp", LispExecHandler);
@@ -817,7 +818,10 @@ namespace AIMLBotModule
             }
             if (Monitor.TryEnter(writeLock, 1000))
             {
-                writeLock.Enqueue(() => Logger.DebugLog(string.Format(string.Format("[AIMLBOT] {0} {1}", GetName(), s), args)));
+                writeLock.Enqueue(() => {
+                    if (logAimlToClient && client!=null) client.WriteLine(s, args);
+                    Logger.DebugLog(string.Format(string.Format("[AIMLBOT] {0} {1}", GetName(), s), args));
+                });
                 Monitor.Exit(writeLock);
             }
             else
@@ -891,6 +895,7 @@ namespace AIMLBotModule
         private string AddedToNextResponse = "";// new StringWriter();
         private string firstUser = null;
         private string lastKnownUser = null;
+        public static bool logAimlToClient = false;
 
         private void AddAnimToNextResponse(string s)
         {

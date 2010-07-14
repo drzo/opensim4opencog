@@ -35,7 +35,7 @@ namespace RTParser.AIMLTagHandlers
             {
                 try
                 {
-                    string payload = templateNodeInnerText.ToValue();
+                    string payload = templateNodeInnerText.ToValue(query);
                 //<dependentmachine dependentmachine=""  initialstate="" 
                 //                        controlmachine="" controlstate="" controlprob=""/>
 
