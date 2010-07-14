@@ -34,7 +34,7 @@ namespace RTParser.AIMLTagHandlers
             if (this.templateNode.Name.ToLower() == "processmsm")
             {
                 string machine = GetAttribValue("name", null);
-                string line = templateNodeInnerText.ToValue();
+                string line = templateNodeInnerText.ToValue(query);
                 RTPBot.writeDebugLine("\n\n >>>>>>>>>>>>>>>>>>>>>> PROCESSMSM : |{0}|<<<<<<<<<<<<<<<<<<<<", line);
                 //this.user.bot.pMSM.lastDefMachine = machine;
                 this.user.bot.pMSM.addMachine(machine);

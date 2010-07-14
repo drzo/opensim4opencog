@@ -50,13 +50,18 @@ namespace RTParser.AIMLTagHandlers
                 templateNodeInnerText = Recurse();
             }
             var matcher = new Regex(re);
-            if (matcher.IsMatch(with.ToValue())) return AND_TRUE;
+            if (matcher.IsMatch(with.ToValue(query))) return AND_TRUE;
             return AND_FALSE;
         }
 
         protected override Unifiable ProcessChange()
         {
-            return Unifiable.Empty;
+            return templateNodeInnerText;
+        }
+
+        public override Unifiable CompleteProcess()
+        {
+            return base.CompleteProcess();
         }
     }
 }

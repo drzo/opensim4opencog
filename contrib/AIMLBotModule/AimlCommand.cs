@@ -62,10 +62,26 @@ namespace AIMLBotModule
             string s = args[0].ToLower();
             string joined = String.Join(" ", args);
             bool legacyCmd = " on off help reload ".Contains(" " + s + " ");
-            if (s == "@user")
+            if (s == "@user" || s == "@chuser")
             {
                 defaultAIMLUser = String.Join(" ", args, 1, args.Length - 1);
+
+                int lastIndex = defaultAIMLUser.IndexOf("-");
+                if (lastIndex > 0)
+                {
+                    string oldUser = defaultAIMLUser.Substring(lastIndex + 1).Trim();
+                    defaultAIMLUser = defaultAIMLUser.Substring(0, lastIndex - 1);
+                }
                 SetUser(defaultAIMLUser);
+                if (s == "@chuser")
+                {
+                    bool res = WorldSystemModule.DoBotDirective(args, fromAgentID, WriteLine);
+                    if (!res)
+                    {
+                        Failure("ERROR from AIML " + joined);
+                    }
+                    return Success("REAL WORLD returned: " + joined);
+                }
                 return Success("WorldObjects.SetDefaultUser = " + defaultAIMLUser + ";");
             }
             if (s == "@")
@@ -102,11 +118,11 @@ namespace AIMLBotModule
             double ratng;
             var MyBot = WorldSystemModule.MyBot;
             String useOut = WorldSystemModule.AIMLInterpScored(joined, MyBot.FindOrCreateUser(lastKnownUser), out ratng);
-            double scored = ratng*10;
+            double scored = ratng*14;
             WorldSystemModule.MyBot.writeToLog("REALWORLD AIMLTRACE! '" + joined + "' " + scored + " '" + useOut + "'");
             if (String.IsNullOrEmpty(useOut)) useOut = "Interesting.";
-            if (!useOut.Contains("mene value=")) useOut = useOut + " mene value=" + (int)scored;
-            return Success(useOut + " mene value=" + (int)scored);
+            if (!useOut.Contains("mene value=")) useOut = useOut.Replace(" _", " ") + " mene value=" + (int) scored;
+            return Success(useOut);
         }
 
         public void SetUser(string user)

@@ -33,7 +33,7 @@ namespace RTParser.CycNLTagHandlers
         {
             if (templateNode.NodeType==XmlNodeType.Text)
             {
-                string srch = (" " + with.ToValue() + " ").ToUpper();
+                string srch = (" " + with.ToValue(query) + " ").ToUpper();
                 return ((" " + templateNode.InnerText + " ").ToUpper().Contains(srch)) ? OR_TRUE : OR_FALSE;
             }
             if (templateNode.HasChildNodes)
@@ -45,7 +45,7 @@ namespace RTParser.CycNLTagHandlers
                     {
                         if (childNode.NodeType == XmlNodeType.Text)
                         {
-                            string srch = (" " + with.ToValue() + " ").ToUpper();
+                            string srch = (" " + with.ToValue(query) + " ").ToUpper();
                             return ((" " + childNode.InnerText + " ").ToUpper().Contains(srch)) ? OR_TRUE : OR_FALSE;
                         }
                         AIMLTagHandler part = Proc.GetTagHandler(user, query, request, result, childNode, this);

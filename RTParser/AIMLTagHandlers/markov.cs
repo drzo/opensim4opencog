@@ -65,7 +65,7 @@ namespace RTParser.AIMLTagHandlers
                             sr.Close();
                         }
                     }
-                    String line = templateNodeInnerText.ToValue();
+                    String line = templateNodeInnerText.ToValue(query);
 
                     // This section splits the line into words and looks for the words as files
                     // in each directory and loads them if found. Probably should be non-stopwords.
@@ -109,7 +109,7 @@ namespace RTParser.AIMLTagHandlers
                 else
                 {
                     // Use the generic load
-                    String line = templateNodeInnerText.ToValue();
+                    String line = templateNodeInnerText.ToValue(query);
                     line = this.user.bot.MBrain.GetResponse(line);
                     if (line == null) line = this.user.bot.MBrain.GetRandomResponse();
                     Unifiable result = line;

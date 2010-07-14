@@ -28,11 +28,26 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
+        private Unifiable finalResult;
         protected override Unifiable ProcessChange()
         {
-            var v = Recurse();
-            templateNodeInnerText = this.Proc.SystemExecute(v, GetAttribValue("lang", "bot"), request);            
-            return templateNodeInnerText;
+            if (finalResult == null)
+            {
+                var v = Recurse();
+                var r  = this.Proc.SystemExecute(v, GetAttribValue("lang", "bot"), request);
+                if (Unifiable.IsFalse(r))
+                {
+                    //finalResult = r;
+                    return Unifiable.Empty;
+                }
+                else if (Unifiable.IsTrue(r))
+                {
+                    finalResult = r;
+                    templateNodeInnerText = v;
+                }
+                return r;
+            }
+            return finalResult;
         }
     }
 }

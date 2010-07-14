@@ -142,7 +142,7 @@ namespace RTParser
                 {
                     return 60000;
                 }
-                String s = this.GlobalSettings.grabSettingNoDebug("timeout").ToValue();
+                String s = this.GlobalSettings.grabSettingNoDebug("timeout").ToValue(null);
                 return Convert.ToDouble(s);
             }
         }
@@ -861,7 +861,7 @@ namespace RTParser
             {
                 foreach (var u in BotUsers.Values)
                 {
-                    if (u.UserID.ToValue().Contains(username) || username.Contains(u.UserID))
+                    if (u.UserID.AsString().Contains(username) || username.Contains(u.UserID))
                         u.RespondToChat = value;
                 }
             }
@@ -928,6 +928,7 @@ namespace RTParser
                 else
                 {
                     BotUsers[user] = f;
+                    f.Predicates.addSetting("name", user);
                 }
             }
         }
@@ -1194,9 +1195,12 @@ namespace RTParser
             //writeDebugLine("HEARDSELF SWAP: " + message);
             if (LastUser != null)
             {
-                var LR = LastUser.LastResult;
-                if (LR != null)
-                    LR.AddOutputSentences(null, message);
+                lock(LastUser.QueryLock)
+                {
+                    var LR = LastUser.LastResult;
+                    if (LR != null)
+                        LR.AddOutputSentences(null, message);
+                }          
             }           
 
             writeDebugLine("-----------------------------------------------------------------");
@@ -1204,15 +1208,24 @@ namespace RTParser
             writeDebugLine("-----------------------------------------------------------------");
             RTPBot.writeDebugLine("HEARDSELF: " + message);
             writeDebugLine("-----------------------------------------------------------------");
-            return null;
             try
             {
-                return Chat0(new AIMLbot.Request(message, BotAsUser, this, null), HeardSelfSayGraph);
-            }
-            catch (Exception e)
-            {
-                writeToLog(e);
                 return null;
+                try
+                {
+                    Request r = new AIMLbot.Request(message, BotAsUser, this, null);
+                    r.IsTraced = false;
+                    return Chat0(r, HeardSelfSayGraph);
+                }
+                catch (Exception e)
+                {
+                    writeToLog(e);
+                    return null;
+                }
+            }
+            finally
+            {
+                BotAsUser.Predicates.addSetting("lastsaid", message);
             }
         }
 
@@ -1305,8 +1318,17 @@ namespace RTParser
         public AIMLbot.Result Chat0(Request request, GraphMaster G)
         {
             bool isTraced = request.IsTraced || G == null;
+            User user = request.user ?? LastUser;
+            lock (user.QueryLock)
+            {
+                return Chat0(request, user, G);
+            }
+        }
 
-            LastUser = request.user ?? LastUser;
+        public AIMLbot.Result Chat0(Request request, User user, GraphMaster G)
+        {
+            LastUser = user;
+            bool isTraced = request.IsTraced || G == null;
             //chatTrace = null;
 
             streamDepth++;
@@ -1388,7 +1410,7 @@ namespace RTParser
                         foreach (var path in result.SubQueries)
                         {
                             s += Environment.NewLine;
-                            s += "  " + path.FullPath;
+                            s += "  " + Unifiable.ToVMString(path.FullPath);
                         }
                         writeToLog(s);
                         Console.Out.Flush();
@@ -1410,7 +1432,7 @@ namespace RTParser
                         foreach (var path in result.OutputSentences)
                         {
                             s += Environment.NewLine;
-                            s += "  " + path;
+                            s += "  " + Unifiable.ToVMString(path);
                         }
                         s += Environment.NewLine;
                         writeToLog(s);
@@ -1443,9 +1465,12 @@ namespace RTParser
 
             // populate the Result object
             result.Duration = DateTime.Now - request.StartedOn;
-            User popu = request.user ?? result.user;
-            popu.addResult(result);
-            popu.addResultTemplates(request);
+            if (RTPBot.SaveProofs || true)
+            {
+                User popu = request.user ?? result.user;
+                popu.addResult(result);
+                popu.addResultTemplates(request);
+            }
             streamDepth--;
             return result;
         }
@@ -1543,7 +1568,7 @@ namespace RTParser
             }
         }
 
-        public static Unifiable GetAttribValue(XmlNode templateNode, string attribName, Unifiable defaultIfEmpty)
+        public static string GetAttribValue(XmlNode templateNode, string attribName, string defaultIfEmpty)
         {
             attribName = attribName.ToLower();
             foreach (XmlAttribute attrib in templateNode.Attributes)
@@ -1621,7 +1646,7 @@ namespace RTParser
                     createdOutput = false;
                     return;
                 }
-                string lang = GetAttribValue(sGuard.Output, "lang", "cycl").AsString().ToLower();
+                string lang = GetAttribValue(sGuard.Output, "lang", "cycl").ToLower();
 
                 try
                 {
@@ -1701,14 +1726,15 @@ namespace RTParser
         /// <param name="result">the result to be sent to the user</param>
         /// <param name="user">the user who originated the request</param>
         /// <returns>the output Unifiable</returns>
-        public Unifiable processNode(XmlNode node, SubQuery query, Request request, Result result, User user, AIMLTagHandler parent)
+        public string processNode(XmlNode node, SubQuery query, Request request, Result result, User user, AIMLTagHandler parent)
         {
             // check for timeout (to avoid infinite loops)
             if (request != null && request.StartedOn.AddMilliseconds(request.Proccessor.TimeOut) < DateTime.Now)
             {
-                request.Proccessor.writeToLog("WARNING! Request timeout. User: " + request.user.UserID +
-                                              " raw input: \"" + request.rawInput + "\" processing template: \"" +
-                                              (query == null ? " NOQUERY " : query.Templates + "\""));
+                request.Proccessor.writeToLog(
+                    "WARNING! Request timeout. User: {0} raw input: \"{1}\" processing template: \"{2}\"",
+                                  request.user.UserID, request.rawInput,
+                                  (query == null ? "-NOQUERY-" : query.Templates.Count.ToString()));
                 request.hasTimedOut = true;
                 return Unifiable.Empty;
             }
@@ -2273,6 +2299,7 @@ The AIMLbot program.
         }
 
         public static string UNKNOWN_PARTNER = "UNKNOWN_PARTNER";
+        public static bool SaveProofs;
 
         public GraphMaster GetGraph(string graphPath, GraphMaster current)
         {
@@ -2602,6 +2629,25 @@ The AIMLbot program.
                 LastUser = FindOrCreateUser(args);
                 return true;
             }
+            if (showHelp) console("@chuser <full name> [- <old user>]");
+            if (cmd == "chuser")
+            {
+                string oldUser = null;// myUser ?? LastUser.ShortName ?? "";
+                int lastIndex = args.IndexOf("-");
+                if (lastIndex > 0)
+                {
+                    oldUser = args.Substring(lastIndex + 1).Trim();
+                    args = args.Substring(0, lastIndex - 1);
+                }
+                if (oldUser != null)
+                {
+                    RenameUser(oldUser, args);
+                }
+                LastUser = FindOrCreateUser(args);
+
+                return true;
+            }
+
 
             if (showHelp) console("@graph <graph> - changes the users graph");
             if (cmd == "graph")
@@ -2634,12 +2680,12 @@ The AIMLbot program.
             return hide;
         }
 
-        public string GetUserMt(User user)
+        public string GetUserMt(User user, SubQuery subquery)
         {
             var ret = user.Predicates.grabSettingNoDebug("mt");
             if (!Unifiable.IsNullOrEmpty(ret))
             {
-                string v = ret.ToValue();
+                string v = ret.ToValue(subquery);
                 if (v != null && v.Length > 1) return TheCyc.Cyclify(v);
             }
             //GetAttribValue("mt","");

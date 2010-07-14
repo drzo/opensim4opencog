@@ -34,7 +34,7 @@ namespace RTParser.CycNLTagHandlers
         {
             if (templateNode.NodeType==XmlNodeType.Text)
             {
-                if (double.TryParse(with.ToValue(), out _val))
+                if (double.TryParse(with.ToValue(query), out _val))
                 {
                     return ISA_TRUE;
                 }

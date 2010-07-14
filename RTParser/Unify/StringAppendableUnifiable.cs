@@ -1,13 +1,15 @@
 
 
 using System;
+using RTParser.Utils;
+
 namespace RTParser
 {
     public class StringAppendableUnifiable : StringUnifiable
     {
-        public override Unifiable Frozen()
+        public override Unifiable Frozen(SubQuery subquery)
         {
-            return "" + ToValue();
+            return "" + ToValue(subquery);
         }
 
         public StringAppendableUnifiable()
@@ -19,44 +21,42 @@ namespace RTParser
         {
             str = "";
             splitted = null;
+            rest = null;
         }
 
         public override string AsString()
         {
             return str.Trim().Replace("  ", " ");
         }
-
-        public override void Append(Unifiable p)
+        public override void Append(string p)
         {
+            splitted = null;
+            rest = null;
             if (!IsAppendable)
             {
                 throw new Exception("this " + AsString() + " cannot be appended with " + p);
             }
             if (Unifiable.IsNullOrEmpty(p)) return;
-            if (p==" ")
+            if (IsEmpty)
             {
-                
+                str = p;
+                return;
             }
-            if (str == "")
-                str = p.AsString().Trim();
             else
             {
                 p = p.Trim();
                 if (!NoSpaceAfter(str) && !NoSpaceBefore(p))
-                    str += " ";
-                else
                 {
-                    str = str;
                     str += " ";
                 }
-                splitted = null;
-                str += p.AsString().Trim();
+                str += p;
                 str = str.Replace("  ", " ");
             }
-            if (str.Contains("othere"))
-            {
-                
-            }
+        }
+
+        public override void Append(Unifiable p)
+        {
+            Append(p.AsString());
         }
 
         private bool NoSpaceAfter(string str)

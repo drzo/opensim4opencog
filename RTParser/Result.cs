@@ -83,7 +83,7 @@ namespace RTParser
                 }
             }
         }
-        public void AddOutputSentences(TemplateInfo ti, Unifiable unifiable)
+        public void AddOutputSentences(TemplateInfo ti, string unifiable)
         {
             if (AlreadyUsed.Contains(unifiable)) return;
             if (ti != null)
@@ -97,10 +97,10 @@ namespace RTParser
                     {
                         TemplateOfRating = ti;
                         TemplateRating = ThisRating;
-                        bot.writeChatTrace("AIMLTRACE TI: " + ti + "---- U: " + unifiable);
+                        bot.writeChatTrace("AIMLTRACE RATING=" + ThisRating + " TI: " + ti + "---- U: " + unifiable);
 
                     }
-                    if (!unifiable.IsEmpty)
+                    if (!Unifiable.IsNullOrEmpty(unifiable))
                     {
                         ti.TextSaved = unifiable;
                     }
@@ -110,14 +110,14 @@ namespace RTParser
                         return;
                     }
 
-                    if (unifiable.IsEmpty)
+                    if (Unifiable.IsNullOrEmpty(unifiable))
                     {
                         throw new Exception("EmptyUnmif for " + ti);
                     }
                     UsedTemplates.Add(ti);
                 }
             }
-            if (unifiable.IsEmpty)
+            if (Unifiable.IsNullOrEmpty(unifiable))
             {
                 return;
             }
@@ -220,7 +220,7 @@ namespace RTParser
                                 paths.Append(pattern.LegacyPath + Environment.NewLine);
                             }
                             this.bot.writeToLog("The bot could not find any response for the input: " + this.RawInput + " with the path(s): " +
-                                Environment.NewLine + paths.AsNodeXML() + " from the user with an id: " + this.user.UserID.ToValue());
+                                Environment.NewLine + paths.AsNodeXML() + " from the user with an id: " + this.user.UserID.AsString());
                             return Unifiable.Empty;
                         }
                     }
@@ -240,9 +240,9 @@ namespace RTParser
                 }
                 int resultsLeft = MaxPrintResults;
                 Unifiable result = Unifiable.CreateAppendable();
-                lock (OutputSentences) foreach (var sentence in OutputSentences)
+                lock (OutputSentences) foreach (string sentence in OutputSentences)
                     {
-                        String sentenceForOutput = sentence.ToValue().Replace("  ", " ").Trim();
+                        String sentenceForOutput = sentence.Replace("  ", " ").Trim();
 
                         if (!this.checkEndsAsSentence(sentenceForOutput))
                         {

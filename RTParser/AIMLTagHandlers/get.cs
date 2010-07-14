@@ -45,7 +45,7 @@ namespace RTParser.AIMLTagHandlers
         {
             Unifiable u = ProcessChange0();
             if (u.IsEmpty) return u;
-            string s = u.ToValue();
+            string s = u.ToValue(query);
             if (s.Contains(" ")) return s;
             if (s.ToLower().StartsWith("unknown"))
             {
@@ -60,19 +60,19 @@ namespace RTParser.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "get")
             {
-                if (query.CurrentTemplate != null) query.CurrentTemplate.Rating *= 1.5;
                 string name = GetAttribValue("name", templateNodeInnerText.Trim());
                 Unifiable defaultVal = GetAttribValue("default", Unifiable.Empty);
                 ISettingsDictionary dict = query;
                 if (GetAttribValue("type", "") == "bot") dict = request.Proccessor.GlobalSettings;
-                Unifiable resultGet = dict.grabSetting(name).Trim();
+                string realName;
+                Unifiable resultGet = SettingsDictionary.grabSettingDefualt(dict, name, out realName);
  
                 // if ((!String.IsNullOrEmpty(result)) && (!result.IsWildCard())) return result; // we have a local one
                 
                 // try to use a global blackboard predicate
                 bool newlyCreated;
                 RTParser.User gUser = this.user.bot.FindOrCreateUser("UNKNOWN_PARTNER", out newlyCreated);
-                Unifiable gResult = gUser.Predicates.grabSetting(name).Trim();
+                Unifiable gResult = SettingsDictionary.grabSettingDefualt(gUser.Predicates, name, out realName).Trim();
 
                 if ((MeansUnknown(resultGet)) && (!MeansUnknown(gResult)))
                 {
@@ -80,7 +80,7 @@ namespace RTParser.AIMLTagHandlers
                     writeToLog("SETTINGS OVERRIDE " + gResult);
                     return gResult;
                 }
-                string sresultGet = resultGet.ToValue().Trim();
+                string sresultGet = resultGet.ToValue(query).Trim();
                 if (sresultGet.ToUpper() == "UNKNOWN")
                 {
                     return sresultGet + " " + name;
@@ -91,7 +91,7 @@ namespace RTParser.AIMLTagHandlers
                     {
                         // result=*, gResult=something => return gResult
                         if (resultGet.IsWildCard()) return gResult;
-
+                        Succeed();
                         // result=something, gResult=something => return result
                         return resultGet;
                     }

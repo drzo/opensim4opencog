@@ -73,17 +73,20 @@ namespace RTParser.AIMLTagHandlers
                 {
                     if (!templateNodeInnerText.IsEmpty)
                     {
-                        Unifiable templateNodeInnerValue = Recurse();
                         Unifiable tempTopic = GetAttribValue("topic", request.Topic);
-                        AIMLbot.Request subRequest = new AIMLbot.Request(templateNodeInnerValue, this.user, this.Proc, (AIMLbot.Request)request);
                         String gn = GetAttribValue("graph", null);
+
+                        Unifiable templateNodeInnerValue = Recurse();
+
+                        AIMLbot.Request subRequest = new AIMLbot.Request(templateNodeInnerValue, this.user, this.Proc, (AIMLbot.Request)request);
+
                         subRequest.Graph = request.Graph.Srai;
                         if (gn != null)
                         {
                             subRequest.Graph = Proc.GetGraph(gn, request.Graph);
                         }
                         depth = subRequest.depth = request.depth + 1;
-                        tempTopic = tempTopic.ToValue();
+                        tempTopic = tempTopic.ToValue(query);
                         subRequest.Topic = tempTopic;
                         subRequest.ParentRequest = this.request;
                         subRequest.StartedOn = this.request.StartedOn;
@@ -124,7 +127,7 @@ namespace RTParser.AIMLTagHandlers
                             //subRequest.result = newresult;
                             user.SuspendAdd = true;
                             if (request.IsTraced) subRequest.IsTraced = !showDebug;
-                            subResult = this.Proc.Chat(subRequest, subRequest.Graph);
+                            subResult = this.Proc.Chat0(subRequest, subRequest.Graph);
                         }
                         finally
                         {
@@ -154,9 +157,19 @@ namespace RTParser.AIMLTagHandlers
                         {
                             string sss = result.ToString();
                             if (showDebug)
-                                writeToLog(prefix + " SUCCESS RETURN '" + subQueryRawOutput + "'");
+                                writeToLog("{0} SUCCESS RETURN {1} '{2}'", prefix, subResult.Score, subQueryRawOutput);
                             this.request.AddSubResult(result);
                             this.request.AddSubResult(subResult);
+                            if (query!=null)
+                            {
+                                if (query.CurrentTemplate!=null)
+                                {
+                                    writeToLog("SCORE {0}*{1}->{2} ",
+                                               subResult.Score, query.CurrentTemplate.Rating,
+                                               query.CurrentTemplate.Rating *= subResult.Score);
+                                    
+                                }
+                            }
                         }
 
                         if (mybot.chatTrace)

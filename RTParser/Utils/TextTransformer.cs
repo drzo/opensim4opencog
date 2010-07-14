@@ -18,6 +18,7 @@ namespace RTParser.Utils
         /// Instance of the input Unifiable
         /// </summary>
         protected Unifiable inputString;
+        public string initialString;
 
         /// <summary>
         /// The Proc that this transformation is connected with
@@ -51,6 +52,7 @@ namespace RTParser.Utils
         {
             this.Proc = bot;
             this.inputString = inputString;
+            initialString = inputString.AsString();
         }
 
         /// <summary>
@@ -77,9 +79,9 @@ namespace RTParser.Utils
         /// </summary>
         /// <param name="input">The Unifiable to be transformed</param>
         /// <returns>The resulting output</returns>
-        public Unifiable Transform(Unifiable input)
+        public Unifiable Transform(string input)
         {
-            this.inputString = input;
+            this.inputString = new StringUnifiable(input);
             return this.Transform();
         }
 

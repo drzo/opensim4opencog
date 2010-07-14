@@ -147,7 +147,7 @@ namespace RTParser.AIMLTagHandlers
                         Unifiable actualValue = this.query.grabSetting(name);
                         //Regex matcher = new Regex(value.Replace(" ", "\\s").Replace("*", "[\\sA-Z0-9]+"), RegexOptions.IgnoreCase);
                         //if (matcher.IsMatch(actualValue))
-                        if (value.IsMatch(actualValue))
+                        if (value.WillUnify(actualValue, query))
                         {
                             return Unifiable.InnerXmlText(templateNode);
                         }
@@ -170,7 +170,7 @@ namespace RTParser.AIMLTagHandlers
                                         Unifiable value = childLINode.Attributes[0].Value;
                                         //Regex matcher = new Regex(value.Replace(" ", "\\s").Replace("*", "[\\sA-Z0-9]+"), RegexOptions.IgnoreCase);
                                         //if (matcher.IsMatch(actualValue))
-                                        if (value.IsMatch(actualValue))
+                                        if (value.WillUnify(actualValue, query))
                                         {
                                             return Unifiable.InnerXmlText(childLINode);
                                         }
@@ -215,7 +215,7 @@ namespace RTParser.AIMLTagHandlers
                                 if ((name.Length > 0) & (!value.IsEmpty))
                                 {
                                     Unifiable actualValue = this.query.grabSetting(name);
-                                    if (value.IsMatch(actualValue))
+                                    if (value.WillUnify(actualValue, query))
                                     {
                                         return Unifiable.InnerXmlText(childLINode);
                                     }

@@ -33,7 +33,7 @@ namespace RTParser.AIMLTagHandlers
             {
                 try
                 {
-                    string payload = templateNodeInnerText.ToValue();
+                    string payload = templateNodeInnerText.ToValue(query);
                     string payload3 = templateNode.InnerXml;
 
                     string state = GetAttribValue("name", null);

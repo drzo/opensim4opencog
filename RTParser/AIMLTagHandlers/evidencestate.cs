@@ -35,7 +35,7 @@ namespace RTParser.AIMLTagHandlers
             {
                 try
                 {
-                    string payload = templateNodeInnerText.ToValue();
+                    string payload = templateNodeInnerText.ToValue(query);
 
                     string myMachine = GetAttribValue("machine", this.user.bot.pMSM.lastDefMachine);
                     string myState = GetAttribValue("state", this.user.bot.pMSM.lastDefState);

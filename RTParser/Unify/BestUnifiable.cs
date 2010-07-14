@@ -7,6 +7,18 @@ namespace RTParser
     public class BestUnifiable : Unifiable
 
     {
+        public override bool IsLitteral()
+        {
+            foreach (var u in List)
+            {
+                if (!u.IsLitteral())
+                {
+                    return false;
+                }
+            }
+            return true;   
+        }
+
         private Unifiable best;
         public List<Unifiable> List = new List<Unifiable>();
 
@@ -31,12 +43,12 @@ namespace RTParser
             }
             return false;
         }
-
-        public override bool IsMatch(Unifiable unifiable)
+        /*
+        public bool CanUnify(Unifiable unifiable, SubQuery subquery)
         {
             foreach (var u in List)
             {
-                if (u.IsMatch(unifiable))
+                if (u.IsMatch(unifiable, subquery))
                 {
                     best = u;
                     return true;
@@ -44,7 +56,7 @@ namespace RTParser
             }
             return false;
         }
-
+        */
         public override bool IsLazyStar()
         {
             foreach (var u in List)
@@ -71,11 +83,11 @@ namespace RTParser
             return false;
         }
 
-        public override bool IsShortWildCard()
+        public override bool IsFiniteWildCard()
         {
             foreach (var u in List)
             {
-                if (u.IsShortWildCard())
+                if (u.IsFiniteWildCard())
                 {
                     best = u;
                     return true;
@@ -92,7 +104,7 @@ namespace RTParser
                 {
                     return MatchWidth.MORE_THAN_ONE;
                 }
-                if (IsShortWildCard()) return MatchWidth.ONE_OR_TWO;
+                if (IsFiniteWildCard()) return MatchWidth.ONE_OR_TWO;
                 return MatchWidth.ONLY_ONE;
             }
         }
@@ -109,20 +121,21 @@ namespace RTParser
             }
             return false;
         }
+        /*
 
-        public override float UnifyLazy(Unifiable unifiable)
+        public override float UnifyLazy(Unifiable unifiable, SubQuery query)
         {
             best = null;
             float bestf = 0;
             foreach (var u in List)
             {
-                float b = u.UnifyLazy(unifiable);
+                float b = u.UnifyLazy(unifiable ,query);
                 if (b > bestf) best = u;
             }
-            return unifiable.UnifyLazy(best);
+            return unifiable.UnifyLazy(best, query);
             //return bestf;
         }
-
+        */
         public override float Unify(Unifiable unifiable, SubQuery query)
         {
             best = null;
@@ -136,12 +149,46 @@ namespace RTParser
             //return bestf;
         }
 
-        public override string ToValue()
+        public override bool ConsumeFirst(Unifiable fullpath, out Unifiable left, out Unifiable right, SubQuery query)
         {
-            if (best != null) return best.ToValue();
+
+            left = null;
+            right = null;
+            if (best != null)
+            {
+                bool res = best.ConsumeFirst(fullpath, out left, out right, query);
+                if (res) return true;
+            }
             foreach (var u in List)
             {
-                return u.ToValue();
+                if (object.ReferenceEquals(best, u)) continue;
+                bool res = u.ConsumeFirst(fullpath, out left, out right, query);
+                if (res)
+                {
+                    best = u;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+
+        public override string ToValue(SubQuery subquery)
+        {
+            if (best != null)
+            {
+                string res = best.ToValue(subquery);
+                if (res != null && res.Trim().Length > 0) return res;
+            }
+            foreach (var u in List)
+            {
+                if (object.ReferenceEquals(best,u)) continue;
+                string res = u.ToValue(subquery);
+                if (res != null && res.Trim().Length > 0)
+                {
+                    best = u;
+                    return res;
+                }
             }
             throw noBest();
         }
@@ -182,6 +229,14 @@ namespace RTParser
         }
 
         public override void Append(Unifiable part)
+        {
+            foreach (var u in List)
+            {
+                u.Append(part);
+            }
+        }
+
+        public override void Append(string part)
         {
             foreach (var u in List)
             {

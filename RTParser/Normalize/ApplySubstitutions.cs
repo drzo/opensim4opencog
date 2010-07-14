@@ -50,8 +50,8 @@ namespace RTParser.Normalize
         /// <returns>The processed Unifiable</returns>
         public static Unifiable Substitute(RTParser.RTPBot bot, RTParser.Utils.SettingsDictionary dictionary, Unifiable target)
         {
-            Unifiable marker = ApplySubstitutions.getMarker(5);
-            string result = target.AsString();
+            string marker = ApplySubstitutions.getMarker(5);
+            string result = Unifiable.ToVMString(target);
             foreach (string pattern in dictionary.SettingNames)
             {
                 string p2 = ApplySubstitutions.makeRegexSafe(pattern);
@@ -61,19 +61,19 @@ namespace RTParser.Normalize
                 result = Regex.Replace(result, match, replacement, RegexOptions.IgnoreCase);
             }
 
-            return result.Replace(marker, "");
+            return new StringUnifiable(result.Replace(marker, ""));
         }
 
         public static Unifiable SubstituteRecurse(RTParser.RTPBot bot, RTParser.Utils.SettingsDictionary dictionary, Unifiable target)
         {
-            string result = target.AsString();
+            string result = Unifiable.ToVMString(target);
             String prev = "";
             while (prev != result)
             {
                 prev = result;
                 result = Substitute(bot, dictionary, target);
             }
-            return result;
+            return  new StringUnifiable(result);
         }
 
         /// <summary>
