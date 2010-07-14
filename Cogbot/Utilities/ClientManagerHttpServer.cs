@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Web;
 using cogbot;
 using cogbot.Actions;
@@ -97,19 +98,33 @@ namespace cogbot.Utilities
             }
         }
 
+        readonly public static object HttpLock = new object ();
         private void _listener_404(IHttpClientContext context, IHttpRequest request, IHttpResponse response)
+        {
+            // 10 second wait
+            if (Monitor.TryEnter(HttpLock, 10000))
+            {
+                _listener_4040(context, request, response);
+                Monitor.Exit(HttpLock);
+            }
+            else
+            {
+                _listener_4040(context, request, response);
+            } 
+        }
+        private void _listener_4040(IHttpClientContext context, IHttpRequest request, IHttpResponse response)
         {
             try
             {
-                _listener_4040(context, request, response);
+                _listener_4040_errable(context, request, response);
             }
             catch (Exception exception)
             {
                 LogInfo("Listener exception: " + exception);
-            }
+            }            
         }
 
-        private void _listener_4040(IHttpClientContext context, IHttpRequest request, IHttpResponse response)
+        private void _listener_4040_errable(IHttpClientContext context, IHttpRequest request, IHttpResponse response)
         {
             UUID capsID;
             bool success;
@@ -127,6 +142,11 @@ namespace cogbot.Utilities
             string botname = GetVariable(request, "bot", GetVariable(request, "botid", null));
 
             ScriptExecutor _botClient = clientManager.GetScriptExecuter(botname);
+            if (_botClient==null){
+                response.Status = HttpStatusCode.ServiceUnavailable;
+                response.Send();
+                return;
+            }
 
             // Micro-posterboard
             if (pathd.StartsWith("/posterboard"))
