@@ -366,7 +366,7 @@ namespace ABuildStartup
             var u = TheBot.GlobalSettings.grabSetting(sslot);
             if (Unifiable.IsNull(u)) return null;
             if (u.IsEmpty) return "";
-            return u.ToValue();
+            return u.ToValue(null);
         }
 
         #endregion

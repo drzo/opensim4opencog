@@ -79,9 +79,9 @@ namespace RTParser
             if (value != key)
             {
                 writeToLog("Triming? '" + value + "'");
-                return new StringUnifiable(value);
+                key = value;
+                //return new StringUnifiable(value);
             }
-            value = value.Trim();//.ToLower();
             Unifiable u;
             if (true)
                 lock (internedUnifiables)
