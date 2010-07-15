@@ -118,6 +118,7 @@ namespace RTParser.Utils
                                                            if (AIMLLoader.AimlSame(newGuard, oldGuard))
                                                                if (AIMLLoader.AimlSame(newThat, oldThat))
                                                                {
+                                                                   if (true) return;
                                                                    if (count==1)
                                                                    {
                                                                        // writeToLog("AIMLTRACE REDUNDANT " + TemplateInfos[0]);
@@ -365,29 +366,36 @@ namespace RTParser.Utils
             }
             while (true)
             {
-                tried++;
                 int patternCount = topLevel.PatternCount;
-                topLevel.Bubble = false;
+                topLevel.Bubble = null;
                 SubQuery query = new SubQuery(upath, request.result, request);
                 query.TopLevel = topLevel;
                 List<Unifiable> mtchList = query.GetMatchList(matchstate);
                 evaluate(upath, query, request, mtchList, matchstate, index, wildcard, topLevel);
-                if (topLevel.Bubble)
+                if (topLevel.Bubble!=null)
                 {
-
-                   // break;
+                    writeToLog("BUBBLE=" + topLevel.Bubble);
                 }
-                if (topLevel.PatternCount == patternCount)
+                if (topLevel.PatternCount != patternCount)
                 {
-                    break;
+                    patternCountChanged++;
+                } else
+                {
+                    tried++;
                 }
-                patternCountChanged++;
-
                 if (topLevel.PatternCount >= topLevel.MaxPatterns)
                 {
                     break;
                 }
                 if (topLevel.IsMaxedOut)
+                {
+                    break;
+                }
+                if (tried>100)
+                {
+                    break;
+                }
+                if (request.hasTimedOut)
                 {
                     break;
                 }
@@ -413,19 +421,6 @@ namespace RTParser.Utils
         /// <returns>The template to process to generate the output</returns>
         public bool evaluate0(UPath upath, SubQuery query, Request request, List<Unifiable> mtchList, MatchState matchstate, int index, Unifiable wildcard, QueryList res)
         {
-            if (res.Bubble)
-            {
-                return false;
-            }
-            if (res.ContainsPattern(this))
-            {
-                res.Bubble = true;
-                request.Proccessor.writeToLog("BUBBLE! User: " +
-                    request.user.UserID + " raw input: \"" +
-                    request.rawInput + "\" in " + this);
-                request.IsTraced = true;
-                return false;
-            }
             bool childTrue = false;
             Unifiable path = upath.LegacyPath;
             // check for timeout
@@ -509,6 +504,8 @@ namespace RTParser.Utils
             // wildcard. "_" comes first in precedence in the AIML alphabet
             lock (children) foreach (KeyValuePair<Unifiable, Node> childNodeKV in this.children)
             {
+                if (res.ContainsPattern(childNodeKV)) continue;
+                
                 Unifiable childNodeWord = childNodeKV.Key;
                 
                 if (!childNodeWord.IsFiniteWildCard()) continue;
@@ -557,6 +554,7 @@ namespace RTParser.Utils
             // nodemapper that matches the first word of the input sentence.
             lock (children) foreach (var childNodeKV in this.children)
             {
+                if (res.ContainsPattern(childNodeKV)) continue;
                 Node childNode = childNodeKV.Value;
                 Unifiable childNodeWord = childNodeKV.Key;
                 
@@ -635,6 +633,7 @@ namespace RTParser.Utils
             // precedence in the AIML alphabet.
             lock (children) foreach (var childNodeKV in this.children)
             {
+                if (res.ContainsPattern(childNodeKV)) continue;
                 Unifiable childNodeWord = childNodeKV.Key;
                 int matchLen = 0;
                 if (!childNodeWord.IsLongWildCard()) continue;
@@ -709,20 +708,20 @@ namespace RTParser.Utils
 
         static bool AddSubQueris(QueryList toplevel, SubQuery query, Node pattern)
         {
-            var tmplateInfos = pattern.TemplateInfos;
-            if (tmplateInfos == null || tmplateInfos.Count == 0) return false;
-            Result rs = query.Request.user.LastResult;
-            lock (tmplateInfos)
+            lock (toplevel)
             {
-                if (toplevel.IsNewType)
+                if (toplevel.ContainsPattern(pattern))
                 {
-                    if (toplevel.ContainsPattern(pattern))
-                    {
-                        toplevel.Bubble = true;
-                        return true;
-                    }
-                    query.Pattern = pattern;
-                    toplevel.AddBindingSet(query);
+                    toplevel.Bubble = pattern;
+                    return false;
+                }
+                query.Pattern = pattern;
+                toplevel.AddBindingSet(query);
+
+                var tmplateInfos = pattern.TemplateInfos;
+                if (tmplateInfos == null || tmplateInfos.Count == 0)
+                {
+                    return false;
                 }
                 foreach (TemplateInfo sol in tmplateInfos)
                 {
@@ -731,8 +730,8 @@ namespace RTParser.Utils
                     query.Templates.Add(sol);
                     toplevel.AddTemplate(sol);
                 }
+                return true;
             }
-            return true;
         }
 #if false
         private static List<Unifiable> UnifyStars(Unifiable rawOutput, Unifiable fullPath, SubQuery query)

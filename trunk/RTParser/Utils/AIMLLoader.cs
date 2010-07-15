@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Net;
 using System.Xml;
@@ -57,6 +58,7 @@ namespace RTParser.Utils
         /// <param name="path"></param>
         public void loadAIML(string path, LoaderOptions options, Request request)
         {
+            writeToLog("*** Begin loadAIML From Location: '{0}' ***", path);
             path = path.Trim();
             RProcessor.ReloadHooks.Add(() => loadAIML(path, options, request));
             if (Directory.Exists(path))
@@ -72,8 +74,7 @@ namespace RTParser.Utils
             {
                 this.loadAIMLURI(path, options, request);
             }
-            writeToLog("*** Loaded AIMLFiles From Location: '{0}' ***", path);
-
+            writeToLog("*** End loadAIML From Location: '{0}' ***", path);
         }
 
         private void loadAIMLDir(string path, LoaderOptions options, Request request)
@@ -87,6 +88,11 @@ namespace RTParser.Utils
                 {
                     try
                     {
+                        if (RProcessor.IsFileLoaded(filename))
+                        {
+                            // writeToLog("(skipping) " + filename);
+                            continue;
+                        }
                         this.loadAIMLFile(filename, options, request);
                     }
                     catch (Exception ee)
@@ -138,6 +144,7 @@ namespace RTParser.Utils
                     Stream stream = resp.GetResponseStream();
                     loadAIMLStream(stream, LoaderOptions.FromFilename(path, request), request);
                 }
+                writeToLog("Completed AIML URI: " + path);
             }
             catch (Exception e)
             {
@@ -155,9 +162,9 @@ namespace RTParser.Utils
         /// <param name="filename">The name of the file to process</param>
         public void loadAIMLFile(string filename, LoaderOptions opt, Request request)
         {
-            writeToLog("Processing AIML file: " + filename);
             if (Directory.Exists(filename))
             {
+                writeToLog("Processing directory: " + filename);
                 if (opt.recurse) loadAIMLDir(filename, opt, request);
                 return;
             }
@@ -165,11 +172,12 @@ namespace RTParser.Utils
             {
                 // load the document
                 string s = new FileInfo(filename).FullName;
-                if (!RProcessor.AddFileLoaded(s))
+                if (!RProcessor.AddFileLoaded(filename))
                 {
-                    writeToLog("Already loaded?!? (skipping) " + filename + " => " + s);
+                    writeToLog("Already loaded! " + filename + " => " + s);
                     return;
                 }
+                writeToLog("Processing AIML file: " + filename);
                 var tr = File.OpenRead(filename);
                 try
                 {
@@ -399,11 +407,11 @@ namespace RTParser.Utils
             {
                 foreach (var template in templates)
                 {
-                    if (object.Equals(null, pattern))
+                    if (Equals(null, pattern))
                     {
                         throw new XmlException("Missing pattern tag in a cateNode found in " + filename);
                     }
-                    if (object.Equals(null, template))
+                    if (Equals(null, template))
                     {
                         throw new XmlException("Missing template tag in the cateNode with pattern: " + pattern.InnerText + " found in " + filename);
                     }
@@ -494,7 +502,7 @@ namespace RTParser.Utils
 
             //Unifiable thatText = Unifiable.STAR;
 
-            if (object.Equals(null, patternNode))
+            if (Equals(null, patternNode))
             {
                 patternText = Unifiable.Empty;
             }
@@ -525,7 +533,7 @@ namespace RTParser.Utils
             }
 
             newPattern = patternNode;
-            if (!object.Equals(null, that))
+            if (!Equals(null, that))
             {
                 //thatText = that.InnerXml;
             }
@@ -596,9 +604,9 @@ namespace RTParser.Utils
         /// <param name="isUserInput">marks the path to be created as originating from user input - so
         /// normalize out the * and _ wildcards used by AIML</param>
         /// <returns>The appropriately processed path</returns>
-        public UPath generatePath(Unifiable pattern, Unifiable that, Unifiable flag, Unifiable topicName, bool isUserInput)
+        public Unifiable generatePath(Unifiable pattern, Unifiable that, Unifiable flag, Unifiable topicName, bool isUserInput)
         {
-            return UPath.MakePath(generateCPath(pattern, that, flag, topicName, isUserInput));
+            return Unifiable.MakePath(generateCPath(pattern, that, flag, topicName, isUserInput));
         }
 
         /// <summary>
@@ -776,6 +784,8 @@ namespace RTParser.Utils
         public static bool AimlSame(string xml1, string xml2)
         {
             if (xml1 == xml2) return true;
+            if (xml1 == null) return String.IsNullOrEmpty(xml2);
+            if (xml2 == null) return String.IsNullOrEmpty(xml1);
             xml1 = CleanWhitepacesLower(xml1);
             xml2 = CleanWhitepacesLower(xml2);
             if (xml1.Length != xml2.Length) return false;
@@ -803,19 +813,18 @@ namespace RTParser.Utils
                 if (c < 32) c = ' ';
                 s += c;
             }
-            s = s.Replace("\n", " ").Replace("\r", " ").Replace("  ", " ").Replace(" <", "<").Replace("< ", "<").
-                Replace(" >", ">").Replace(" >", ">").Replace(" />", "/>").Replace("<star index=\"1\"", "<star").Replace(" index=\"1\"", "").Trim();
-            if (s.Contains("pattern>HI</pattern><template>Hello ther"))
-            {
-                return s;
-            }
+            s = s.Replace("\n", " ").Replace("\r", " ").
+                Replace(" <", "<").Replace("< ", "<").
+                Replace(" >", ">").Replace("> ", ">").
+                Replace("  ", " ").
+                Replace(" />", "/>").Replace("<star index=\"1\"", "<star").Replace(" index=\"1\"", "").Trim();            
             return s;
         }
 
         public static string CleanWhitepacesLower(string xml2)
         {
             if (xml2 == null) return xml2;
-            return CleanWhitepaces(xml2).ToLower();
+            return CleanWhitepaces(xml2).ToLower().Replace(".", "").Replace("?", "").Replace("!", "");
         }
 
         public static bool ContainsAiml(Unifiable unifiable)
@@ -881,6 +890,60 @@ namespace RTParser.Utils
         public static string CatTextInfo(LineInfoElement element)
         {
             return LineTextInfo(element.ParentNode ?? element) + " " + LineNumberInfo(element);
+        }
+
+        public static void PrintResult(Result result, RTPBot.OutputDelegate console)
+        {
+            console("-----------------------------------------------------------------");
+            console("Result: " + result.Graph + " Request: " + result.request);
+            foreach (var s in result.InputSentences)
+            {
+                console("input: \"" + s + "\"");
+            }
+            PrintTemplates(result.UsedTemplates, console);
+            foreach (var s in result.SubQueries)
+            {
+                console("subqueries: " + s);
+            }
+            console("-");
+            foreach (var s in result.OutputSentences)
+            {
+                console("outputsentence: " + s);
+            }
+            console("-----------------------------------------------------------------");
+        }
+
+        public static string GetTemplateSource(IEnumerable<TemplateInfo> CI)
+        {
+            if (CI == null) return "";
+            string hide = "";
+            foreach (var ci in CI)
+            {
+                string c = ci.ToFileString();
+                string ss = "" + CleanWhitepaces(c) + "\n";
+                if (hide.Contains(ss)) continue;
+                hide += ss;
+            }
+            return hide;
+        }
+
+        public static void PrintTemplates(IList<TemplateInfo> templates, RTPBot.OutputDelegate console)
+        {                
+            console(" " + GetTemplateSource(templates));
+        }
+
+        public static string CleanWhitepaces(object info)
+        {
+            if (info is XmlNode)
+            {
+                XmlNode n = (XmlNode) info;
+                if (n.Name == "template") info = n.ParentNode;
+            }
+            if (info is TemplateInfo)
+            {
+                info = ((TemplateInfo)info).CategoryInfo;
+            }
+            return CleanWhitepaces("" + info);
         }
     }
 

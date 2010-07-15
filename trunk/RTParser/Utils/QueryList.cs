@@ -5,7 +5,7 @@ using System.Xml;
 
 namespace RTParser.Utils
 {
-    public class QueryList: RequestSettingsImpl
+    public class QueryList : RequestSettingsImpl
     {
 
         public override string ToString()
@@ -49,7 +49,7 @@ namespace RTParser.Utils
         private List<Node> PatternsUsed;
         private List<SubQuery> Bindings;
         public Request TheRequest;
-        public bool Bubble;
+        public Node Bubble;
         public bool IsNewType = true;
         public bool IsMaxedOut
         {
@@ -75,17 +75,27 @@ namespace RTParser.Utils
                 PatternsUsed = new List<Node>();
             }
             PatternsUsed.Add(node);
-            CheckConsistent(); 
+            if (PatternsUsed.Count > 1)
+            {
+                writeToLog("PatternsCount=" + PatternsUsed.Count);
+            }
+            CheckConsistent();
+        }
+
+        internal static void writeToLog(string message, params object[] args)
+        {
+            RTPBot.writeDebugLine("QUERYTRACE: " + message, args);
         }
 
         private void CheckConsistent()
         {
-            if (PatternCount!=0)
+            return;
+            if (PatternCount != 0)
             {
                 if (PatternCount != Bindings.Count)
                 {
                     throw new NotImplementedException();
-                }                
+                }
             }
         }
 
@@ -94,10 +104,15 @@ namespace RTParser.Utils
             if (Templates == null) Templates = new List<TemplateInfo>();
             Templates.Add(info);
         }
-        
+
         public bool ContainsPattern(Node node)
         {
-            return PatternsUsed != null && PatternsUsed.Contains(node);
+            bool b = PatternsUsed != null && PatternsUsed.Contains(node);
+            if (b)
+            {
+                writeToLog("Node=" + node);
+            }
+            return b;
         }
 
         public void AddBindingSet(SubQuery query)
@@ -112,48 +127,21 @@ namespace RTParser.Utils
             return Bindings;
         }
 
-        public static void PrintTemplates(Result templates, RTPBot.OutputDelegate console)
-        {
-            console("!REQUEST: {0}", templates.TopLevel);
-            PrintTemplates(templates.UsedTemplates, console);
-            console(" !Result: {0}", templates);
-        }
-
-        public static void PrintTemplates(IEnumerable<TemplateInfo> templates, RTPBot.OutputDelegate console)
-        {
-            if (templates == null) return;
-            foreach (var info in templates)
-            {
-                console(" {0}", CleanWhitepaces(info.CategoryInfo));
-            }
-        }
-
-
         private string ToString(string pre, ICollection c)
         {
             if (c == null || c.Count == 0) return Environment.NewLine;
             string s = "";
             foreach (object node in c)
             {
-                s += pre + CleanWhitepaces(node) + Environment.NewLine;
+                s += pre + AIMLLoader.CleanWhitepaces(node) + Environment.NewLine;
             }
             s += Environment.NewLine;
             return s;
         }
-        
-        public static string CleanWhitepaces(object info)
-        {
-            if (info is XmlNode)
-            {
-                XmlNode n = (XmlNode) info;
-                if (n.Name == "template") info = n.ParentNode;
-            }
-            if (info is TemplateInfo)
-            {
-                info = ((TemplateInfo)info).CategoryInfo;
-            }
-            return AIMLLoader.CleanWhitepaces("" + info);
-        }
 
+        public bool ContainsPattern(KeyValuePair<Unifiable, Node> pair)
+        {
+            return PatternsUsed != null && ContainsPattern(pair.Value);
+        }
     }
 }

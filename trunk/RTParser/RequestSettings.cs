@@ -33,7 +33,7 @@ namespace RTParser
             MaxTemplates = DefaultMaxTemplates;
             MaxOutputs = DefaultMaxOutputs;
             MinOutputs = 1;
-            IsTraced = true;
+            IsTraced = false;
         }
 
         public bool ProcessMultiplePatterns { get; set; }

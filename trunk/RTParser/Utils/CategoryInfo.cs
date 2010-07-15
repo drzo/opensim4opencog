@@ -68,5 +68,21 @@ namespace RTParser.Utils
         {
             throw new NotImplementedException();
         }
+
+        public string ToFileString()
+        {
+            string s = "";
+            bool hasTopic = Topic != null;
+            if (hasTopic)
+            {
+                s += "<topic name=\"";
+                var n = AIMLTagHandler.GetAttribValue(Topic, "name", null, null);
+                s += n;
+                s += "\">";
+            }
+            s += srcNode.OuterXml;
+            if (hasTopic) s += "</topic>";
+            return s;
+        }
     }
 }

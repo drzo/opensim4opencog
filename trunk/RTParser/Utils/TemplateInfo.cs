@@ -83,5 +83,11 @@ namespace RTParser.Utils
                 NoInfo = prev;               
             }
         }
+
+        public string ToFileString()
+        {
+            if (CategoryInfo != null) return CategoryInfo.ToFileString();
+            return ToString();
+        }
     }
 }
