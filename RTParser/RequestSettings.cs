@@ -1,9 +1,22 @@
 using System;
+using System.Collections.Generic;
 using RTParser.Utils;
 
 namespace RTParser
 {
-    public class RequestSettings
+    public interface QuerySettings
+    {
+        bool ProcessMultiplePatterns { get; }
+        bool ProcessMultipleTemplates { get; }
+        int MaxTemplates { get; }
+        int MaxPatterns { get; }
+        int MaxOutputs { get; }
+        GraphMaster Graph { get; }
+        bool IsTraced { get; }
+        int MinOutputs { get; }
+    }
+
+    public abstract class RequestSettingsImpl: QuerySettings
     {
         public static int DefaultMaxOutputs = 2;
         public static int DefaultMaxPatterns = 1;
@@ -12,23 +25,34 @@ namespace RTParser
         public static bool DefualtProcessMultipleTemplates = true;
         public static bool DefualtProcessMultipleBindings = true;
 
+        protected RequestSettingsImpl()
+        {
+            ProcessMultipleTemplates = DefualtProcessMultipleTemplates;    
+            ProcessMultiplePatterns = DefualtProcessMultipleBindings;
+            MaxPatterns = DefaultMaxPatterns;
+            MaxTemplates = DefaultMaxTemplates;
+            MaxOutputs = DefaultMaxOutputs;
+            MinOutputs = 1;
+            IsTraced = true;
+        }
 
-        public bool ProcessMultipleTemplates = DefualtProcessMultipleTemplates;
-        public bool ProcessMultiplePatterns = DefualtProcessMultipleBindings;
-        public GraphMaster Graph;
+        public bool ProcessMultiplePatterns { get; set; }
+        public bool ProcessMultipleTemplates { get; set; }
+        public int MaxTemplates { get; set; }
+        public int MaxPatterns { get; set; }
+        public int MaxOutputs { get; set; }
 
-        public bool IsTraced = false;
+        public abstract GraphMaster Graph { get; set; }
 
-        public int MaxPatterns = DefaultMaxPatterns;
-        public int MaxTemplates = DefaultMaxTemplates;
-        public int MaxOutputs = DefaultMaxOutputs;
-        public int MinOutputs = 1;
+        public bool IsTraced { get; set; }
 
-        public void ApplySettings(RequestSettings user)
+        public int MinOutputs { get; set; }
+
+        public void ApplySettings(QuerySettings user)
         {
             if (user==null) return;
             IsTraced = user.IsTraced || IsTraced;
-            Graph = user.Graph ?? Graph;
+            //Graph = user.Graph ?? Graph;
             MaxTemplates = user.MaxTemplates;
             MaxPatterns = user.MaxPatterns;
             MaxOutputs = user.MaxOutputs;

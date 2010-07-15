@@ -41,19 +41,58 @@ namespace RTParser
 
         static string InnerXmlText0(XmlNode templateNode)
         {
-            if (templateNode.NodeType == XmlNodeType.Text)
+            switch (templateNode.NodeType)
             {
-                if (templateNode.InnerXml.Length>0)
-                {
-                    return templateNode.InnerText + templateNode.InnerXml;                   
-                }
-                if (templateNode.InnerText.Length > 0)
-                {
-                    return templateNode.InnerText + templateNode.InnerXml;
-                }
-                return templateNode.InnerText;
+                case XmlNodeType.None:
+                    break;
+                case XmlNodeType.Element:
+                    return templateNode.InnerXml;
+                    break;
+                case XmlNodeType.Attribute:
+                    break;
+                case XmlNodeType.Text:
+                    if (templateNode.InnerXml.Length > 0)
+                    {
+                        return templateNode.InnerText + templateNode.InnerXml;
+                    }
+                    if (templateNode.InnerText.Length > 0)
+                    {
+                        return templateNode.InnerText + templateNode.InnerXml;
+                    }
+                    return templateNode.InnerText;
+                case XmlNodeType.CDATA:
+                    break;
+                case XmlNodeType.EntityReference:
+                    break;
+                case XmlNodeType.Entity:
+                    break;
+                case XmlNodeType.ProcessingInstruction:
+                    break;
+                case XmlNodeType.Comment:
+                    break;
+                case XmlNodeType.Document:
+                    break;
+                case XmlNodeType.DocumentType:
+                    break;
+                case XmlNodeType.DocumentFragment:
+                    break;
+                case XmlNodeType.Notation:
+                    break;
+                case XmlNodeType.Whitespace:
+                    break;
+                case XmlNodeType.SignificantWhitespace:
+                    break;
+                case XmlNodeType.EndElement:
+                    break;
+                case XmlNodeType.EndEntity:
+                    break;
+                case XmlNodeType.XmlDeclaration:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
-            return templateNode.InnerXml;
+            string s = string.Format("Unsurported Node Type {0} in {1}", templateNode.NodeType, templateNode.OuterXml);
+            throw new ArgumentOutOfRangeException(s);
         }
 
                 
@@ -78,8 +117,8 @@ namespace RTParser
             string key = value.Trim();//.ToLower();
             if (value != key)
             {
-                writeToLog("Triming? '" + value + "'");
-                key = value;
+             //   writeToLog("Triming? '" + value + "'");
+                value = value.Trim();
                 //return new StringUnifiable(value);
             }
             Unifiable u;
@@ -419,6 +458,9 @@ namespace RTParser
 
 
         string upper;
+
+        public static Unifiable NULL = new StringUnifiable(null);
+
         public string ToUpper()
         {
             if (upper==null)

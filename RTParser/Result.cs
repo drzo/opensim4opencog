@@ -12,20 +12,27 @@ namespace RTParser
     /// <summary>
     /// Encapsulates information about the result of a request to the bot
     /// </summary>
-    public class Result
+    abstract public class Result 
     {
+
+        public GraphMaster Graph
+        {
+            get { return request.Graph; }
+            set { request.Graph = value; }
+        }
 
         public QueryList TopLevel
         {
-           get
+            get
            {
                if (request != null) return request.TopLevel;
                return request.TopLevel;               
            }
+            set { throw new NotImplementedException(); }
         }
 
         public static int MaxPrintResults = 1;
-        public List<TemplateInfo> UsedTemplates = new List<TemplateInfo>();
+        private List<TemplateInfo> UsedTemplates1 = new List<TemplateInfo>();
 
         /// <summary>
         /// The subQueries processed by the bot's graphmaster that contain the templates that 
@@ -88,10 +95,10 @@ namespace RTParser
             if (AlreadyUsed.Contains(unifiable)) return;
             if (ti != null)
             {
-                lock (UsedTemplates)
+                lock (UsedTemplates1)
                 {
 
-                    if (UsedTemplates.Contains(ti)) return;
+                    if (UsedTemplates1.Contains(ti)) return;
                     double ThisRating = ti.Rating;
                     if (TemplateOfRating == null || TemplateRating < ThisRating)
                     {
@@ -114,7 +121,7 @@ namespace RTParser
                     {
                         throw new Exception("EmptyUnmif for " + ti);
                     }
-                    UsedTemplates.Add(ti);
+                    UsedTemplates1.Add(ti);
                 }
             }
             if (Unifiable.IsNullOrEmpty(unifiable))
@@ -142,6 +149,10 @@ namespace RTParser
                 }
                 OutputSentences.RemoveAt(found);
 #endif
+                if (unifiable.ToString().Contains("&"))
+                {
+                    OutputSentences.Remove(unifiable);                    
+                }
                 OutputSentences.Add(unifiable);
             }
         }
@@ -150,11 +161,11 @@ namespace RTParser
         {
             lock (OutputSentences) OutputSentences.Add(string.Format(format, args));
         }
-
+/*
         public Result()
         {
 
-        }
+        }*/
         /// <summary>
         /// The bot that is providing the answer
         /// </summary>
@@ -271,12 +282,15 @@ namespace RTParser
         /// <summary>
         /// The individual sentences produced by the bot that form the complete response
         /// </summary>
-        public List<Unifiable> OutputSentences = new List<Unifiable>();
+        public List<string> OutputSentences = new List<string>();
 
         /// <summary>
         /// The individual sentences that constitute the raw input from the user
         /// </summary>
         public List<Unifiable> InputSentences = new List<Unifiable>();
+
+        public SubQuery CurrentQuery;
+        private Result parent;
 
         /// <summary>
         /// Ctor
@@ -284,12 +298,13 @@ namespace RTParser
         /// <param name="user">The user for whom this is a result</param>
         /// <param name="bot">The bot providing the result</param>
         /// <param name="request">The request that originated this result</param>
-        public Result(User user, RTPBot bot, Request request)
+        public Result(User user, RTPBot bot, Request request, Result parent)
         {
             this.user = user;
             this.bot = bot;
             this.request = request;
-            this.request.result = this;
+            this.parent = parent;
+            // this.request.CurrentResult = this;
         }
 
         /// <summary>
@@ -329,6 +344,13 @@ namespace RTParser
         public Unifiable GetOutputSentence(int sentence)
         {
             lock (OutputSentences) return OutputSentences[sentence];
+        }
+        public IList<TemplateInfo> UsedTemplates
+        {
+            get
+            {
+                return UsedTemplates1;
+            }
         }
     }
 }

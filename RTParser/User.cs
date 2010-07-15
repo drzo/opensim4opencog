@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
+using com.hp.hpl.jena.graph;
 using RTParser;
 using RTParser.Utils;
 
@@ -10,9 +11,8 @@ namespace RTParser
     /// <summary>
     /// Encapsulates information and history of a user who has interacted with the bot
     /// </summary>
-    public class User : RequestSettings
+    abstract public class User : RequestSettingsImpl, QuerySettings
     {
-
         public readonly object QueryLock = new object();
 
         #region Attributes
@@ -47,11 +47,12 @@ namespace RTParser
             {
                 if (Predicates.containsSettingCalled("graphname"))
                 {
+                    GraphMaster _Graph = null;
                     var v = Predicates.grabSettingNoDebug("graphname");
-                    Graph = bot.GetGraph(v, bot.GraphMaster) ?? Graph;
-                    if (Graph != null)
+                    _Graph = bot.GetGraph(v, bot.GraphMaster) ?? _Graph;
+                    if (_Graph != null)
                     {
-                        return Graph;
+                        return _Graph;
                     }
                     bot.writeToLog("ERROR CANT FIND graphname");
                     return bot.GraphMaster;
@@ -68,6 +69,12 @@ namespace RTParser
                 }
             }
         }
+        public override GraphMaster Graph
+        {
+            get { return ListeningGraph;  }
+            set { ListeningGraph = value; }
+        }
+
         /// <summary>
         /// The GUID that identifies this user to the bot
         /// </summary>
@@ -209,7 +216,7 @@ namespace RTParser
             {
                 this.id = UserID;
                 this.bot = bot;
-                this.ApplySettings(bot.LastUser ?? bot.BotAsUser);
+                this.ApplySettings(bot.BotAsUser);
                 this.Predicates = new RTParser.Utils.SettingsDictionary(ShortName + ".predicates", this.bot, provider);
                 this.bot.DefaultPredicates.Clone(this.Predicates);
                 ListeningGraph = bot.GraphMaster;
@@ -423,7 +430,7 @@ namespace RTParser
             if (sf > 0)
             {
                 String newClip = sentence.Substring(0, sf - 1);
-                Console.WriteLine(";;;;;REWRITE Q " + sentence + " => " + newClip);
+                RTPBot.writeDebugLine("AIMLTRACE !REWRITE THAT QUESTION " + sentence + " => " + newClip);
                 if (newClip.Length > 4) sentence = newClip;
             }
             sentence = sentence.Trim(new char[] { '.', ' ', '!', '?' });
@@ -435,7 +442,7 @@ namespace RTParser
                 {
                     newClip = newClip.Substring(1).TrimStart();
                 }
-                Console.WriteLine(";;;;;;REWRITE NQ " + sentence + " => " + newClip);
+                RTPBot.writeDebugLine("AIMLTRACE !REWRITE THAT SENT " + sentence + " => " + newClip);
                 if (newClip.Length > 4) sentence = newClip;
             }
             return sentence;
@@ -450,6 +457,7 @@ namespace RTParser
                 input = input.TrimStart(new[] { ' ', '@' });
             }
             if (input == "") return false;
+            input = input + " ";
             int firstWhite = input.IndexOf(' ');
             string var = input.Substring(1, firstWhite);
             string value = input.Substring(firstWhite + 1).Trim();

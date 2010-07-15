@@ -15,6 +15,12 @@ namespace RTParser.Utils
     [Serializable]
     public class Node
     {
+
+        public void writeToLog(string message, params object[] args)
+        {
+            RTPBot.writeDebugLine("!NODE: " +  message + " in " +ToString(), args);
+        }
+
         private Node Parent;
         public Node(Node P)
         {
@@ -98,6 +104,7 @@ namespace RTParser.Utils
                 {
                     // search for old
                     string newStr = templateNode.OuterXml;
+                    int count = TemplateInfos.Count;
                     string newGuard = guard != null ? guard.OuterXml : null;
                     string newThat = thatInfo != null ? thatInfo.OuterXml : null;
                     List<TemplateInfo> dupes = null;
@@ -111,6 +118,11 @@ namespace RTParser.Utils
                                                            if (AIMLLoader.AimlSame(newGuard, oldGuard))
                                                                if (AIMLLoader.AimlSame(newThat, oldThat))
                                                                {
+                                                                   if (count==1)
+                                                                   {
+                                                                       // writeToLog("AIMLTRACE REDUNDANT " + TemplateInfos[0]);
+                                                                       return;
+                                                                   }
                                                                    if (dupes == null) dupes = new List<TemplateInfo>();
                                                                    dupes.Add(temp);
                                                                }
@@ -119,6 +131,7 @@ namespace RTParser.Utils
                     {
                         if (TemplateInfos.Count == 1)
                         {
+                            //writeToLog("AIMLTRACE REDUNDANT " + TemplateInfos[0]);
                             if (true) return;
                             // no side effect!
                             TemplateInfo temp = dupes[0];
@@ -129,11 +142,13 @@ namespace RTParser.Utils
                                           {
                                               if (true)
                                               {
+                                                //  writeToLog("AIMLTRACE REDUNDANT " + temp);
                                                   master.RemoveTemplate(temp);
                                                   this.TemplateInfos.Remove(temp);
                                               }
                                           });
                         dupes.Clear();
+                        dupes = null;
                     }
                 }
             }
@@ -154,7 +169,7 @@ namespace RTParser.Utils
                 {
                     if (patternInfo.LoopsFrom(newTemplateInfo))
                     {
-                        RTPBot.writeDebugLine("SKIPPING! " + pat + "==" + newTemplateInfo + "");
+                        writeToLog("SKIPPING! " + pat + "==" + newTemplateInfo + "");
                         if (this.TemplateInfos.Count == 0)
                         {
                             this.TemplateInfos = null;
@@ -165,7 +180,7 @@ namespace RTParser.Utils
                     Unifiable to;
                     if (false && patternInfo.DivergesFrom(newTemplateInfo, out from, out to))
                     {
-                        RTPBot.writeDebugLine("SKIPPING! " + pat + "==" + newTemplateInfo + "");
+                        writeToLog("SKIPPING! " + pat + "==" + newTemplateInfo + "");
                         if (this.TemplateInfos.Count == 0)
                         {
                             this.TemplateInfos = null;
@@ -181,7 +196,7 @@ namespace RTParser.Utils
             master.AddTemplate(newTemplateInfo);
             if (pat != patternInfo)
             {
-                RTPBot.writeDebugLine("Wierd! " + pat);
+                writeToLog("Wierd! " + pat);
                 throw new InvalidCastException("weird");
             }
             this.TemplateInfos.Insert(0, newTemplateInfo);
@@ -280,7 +295,7 @@ namespace RTParser.Utils
             }
             if (useNext)
             {
-                //     RTPBot.writeDebugLine(String.Format("Last key {0}", ToString()));
+                //     writeToLog(String.Format("Last key {0}", ToString()));
                 return Parent.GetNextNode();
             }
             return null;
@@ -345,7 +360,7 @@ namespace RTParser.Utils
             bool doIt = !request.IsComplete(request.result);
             if (!doIt)
             {
-                RTPBot.writeDebugLine("AIMLTRACE DOIT: " + tried + " pc=" + patternCountChanged + ": " + false + "  " + request);
+                writeToLog("AIMLTRACE DOIT: " + tried + " pc=" + patternCountChanged + ": " + false + "  " + request);
              //   return false;
             }
             while (true)
@@ -381,7 +396,7 @@ namespace RTParser.Utils
             bool sc = patternCountChanged > 0;
             if (f != sc)
             {
-                RTPBot.writeDebugLine("AIMLNODE: " + tried + " pc=" + patternCountChanged + ": " + f + "  " + request);
+                writeToLog("AIMLNODE: " + tried + " pc=" + patternCountChanged + ": " + f + "  " + request);
             }
             return f;
         }
@@ -592,7 +607,7 @@ namespace RTParser.Utils
                     var thats = query.ThatStar;
                     if (thats.Count > 1)
                     {
-                        RTPBot.writeDebugLine("THATS: " + thats[1]);
+                        writeToLog("THATS: " + thats[1]);
                     }
                 }
 

@@ -278,8 +278,14 @@ namespace RTParser.Utils
 
         public QueryList gatherQueriesFromGraph(Unifiable path, Request request, MatchState state)
         {
+            if (path.IsEmpty)
+            {
+                string s = "ERROR! path.IsEmpty  returned no results for " + state + " in " + this;
+                RTPBot.writeDebugLine(s);
+                throw new Exception(s);
+            }
             QueryList ql = new QueryList(request);
-            ql.ApplySettings(request);
+            ql.ApplySettings((QuerySettings)request);
             request.TopLevel = ql;
             evaluateQL(path, request, state, ql);
             if (ql.TemplateCount == 0)
@@ -352,7 +358,7 @@ namespace RTParser.Utils
                         if (wasUntraced)
                             request.IsTraced = false;
                         request.Graph = p;
-                        request.result = null;
+                        request.CurrentResult = null;
                         var r = proc.Chat0(request, p);
                         if (!r.IsEmpty) pl.Add(r);
                     }

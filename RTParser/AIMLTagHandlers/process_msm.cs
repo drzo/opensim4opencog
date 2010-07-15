@@ -121,7 +121,7 @@ namespace RTParser.AIMLTagHandlers
             //----------------------
             // snarf from "srai"
             Unifiable tempTopic = topic;
-            AIMLbot.Request subRequest = new AIMLbot.Request(line, this.user, this.Proc, (AIMLbot.Request)request);
+            Request subRequest = new AIMLbot.Request(line, this.user, this.Proc, (AIMLbot.Request)request);
             //String gn = GetAttribValue("graph", null);
             string gn = "msm";
             if (gn != null) subRequest.Graph = Proc.GetGraph(gn, request.Graph);
@@ -138,8 +138,8 @@ namespace RTParser.AIMLTagHandlers
             try
             {
                 this.Proc.isAcceptingUserInput = true;
-                var newresult = new AIMLbot.Result(request.user, Proc, request);
-                subRequest.result = newresult;
+                var newresult = request.CreateResult(subRequest);
+                subRequest.CurrentResult = newresult;
                 user.SuspendAdd = true;
                 subResult = this.Proc.Chat(subRequest, subRequest.Graph);
                // subResult = this.Proc.Chat(subRequest, request.Graph);

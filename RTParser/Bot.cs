@@ -27,6 +27,15 @@ namespace RTParser
     /// </summary>
     public class RTPBot
     {
+        public override string ToString()
+        {
+            string s = GetType().Name;
+            if (GlobalSettings!=null)
+            {
+                s += " name=" + GlobalSettings.grabSettingNoDebug("name");
+            }
+            return s;
+        }
         /// <summary>
         /// Will ensure the same loader options are used between loaders
         /// </summary>
@@ -36,7 +45,14 @@ namespace RTParser
         readonly public static TextFilter LoggedWords = new TextFilter() { "*", "-dictlog" }; //maybe should be ERROR", "STARTUP
         public User LastUser;
         readonly public User BotAsUser;
-        readonly public Request BotAsRequest;
+        //public Request BotAsRequestUsed = null;
+        public Request GetBotRequest(string s)
+        {
+            var r = new AIMLbot.Request(s, BotAsUser, this, null);
+            r.IsTraced = true;
+            r.StartedOn = DateTime.Now.AddMinutes(20);
+            return r;
+        }
         public AIMLLoader Loader;
         #region Attributes
         public List<CrossAppDomainDelegate> ReloadHooks = new List<CrossAppDomainDelegate>();
@@ -413,10 +429,10 @@ namespace RTParser
             GraphsByName.Add("heardselfsay", _h);
             TheNLKB = new NatLangDb(this);
             this.setup();
-            BotAsUser = new User("MySelf", this);
+            BotAsUser = new AIMLbot.User("MySelf", this);
             BotAsUser.ListeningGraph = HeardSelfSayGraph;
             BotAsUser.Predicates = GlobalSettings;
-            BotAsRequest = new AIMLbot.Request("-bank-input-", BotAsUser, this, null);
+//            BotAsRequestUsed = new AIMLbot.Request("-bank-input-", BotAsUser, this, null);
             AddExcuteHandler("aiml", EvalAIMLHandler);
             AddExcuteHandler("bot", LightWeigthBotDirective);
             this.TheCyc = new CycDatabase(this);
@@ -433,14 +449,15 @@ namespace RTParser
             var prev = isAcceptingUserInput;
             try
             {
+                Request getBotRequest = GetBotRequest("-loadAIMLFromDefaults-");
                 isAcceptingUserInput = false;
                 AIMLLoader loader = Loader;
                 if (!StaticLoader || loader == null)
                 {
-                    loader = new AIMLLoader(this, BotAsRequest);
+                    loader = new AIMLLoader(this, getBotRequest);
                 }
                 Loader = loader;
-                loader.loadAIML(BotAsRequest);
+                loader.loadAIML(getBotRequest);
 
             }
             finally
@@ -454,7 +471,7 @@ namespace RTParser
         /// </summary>
         public void loadAIMLFromURI(string path, Request request)
         {
-            request = request ?? this.BotAsRequest;
+            request = request ?? GetBotRequest("-loadAIMLFromURI-" + path + "-");
             var prev = isAcceptingUserInput;
             try
             {
@@ -527,7 +544,7 @@ namespace RTParser
         {
             if (Loader == null)
             {
-                Loader = new AIMLLoader(this, BotAsRequest);
+                Loader = new AIMLLoader(this, GetBotRequest("-bot setup-"));
             }
             var prev = isAcceptingUserInput;
             try
@@ -884,7 +901,7 @@ namespace RTParser
             string key = fromname.ToLower().Trim();
             lock (BotUsers)
             {
-                if (BotUsers.ContainsKey(fromname)) return BotUsers[fromname];
+                if (BotUsers.ContainsKey(key)) return BotUsers[key];
                 return null;
             }
         }
@@ -898,9 +915,10 @@ namespace RTParser
                 User myUser = FindUser(fromname);
                 if (myUser != null) return myUser;
                 newlyCreated = true;
+                string key = fromname.ToLower().Trim();
                 myUser = new AIMLbot.User(fromname, this);
                 writeDebugLine("USERTRACE: New User " + fromname);
-                BotUsers[fromname.ToLower()] = myUser;
+                BotUsers[key] = myUser;
                 if (!UnknowableName(fromname))
                 {
                     myUser.Predicates.addSetting("name", fromname);
@@ -980,12 +998,11 @@ namespace RTParser
 
         public void AddAiml(string aimlText)
         {
-            Request request = BotAsRequest;
             AddAiml(GraphMaster, aimlText);
         }
         public void AddAiml(GraphMaster graph, string aimlText)
         {
-            Request request = BotAsRequest;
+            Request request = GetBotRequest("Add aiml '" + aimlText + "' to " + graph);
             var prev = request.Graph;
             try
             {
@@ -1038,7 +1055,7 @@ namespace RTParser
         /// <returns>the result to be output to the user</returns>
         public Result Chat(string rawInput, string UserGUID)
         {
-            AIMLbot.Request request = new AIMLbot.Request(rawInput, new User(UserGUID, this), this, null);
+            Request request = GetRequest(rawInput, UserGUID);
             request.IsTraced = true;
             return this.Chat(request);
         }
@@ -1333,7 +1350,7 @@ namespace RTParser
 
             streamDepth++;
 
-            AIMLbot.Result result = new AIMLbot.Result(request.user, this, request);
+            AIMLbot.Result result = request.CreateResult(request);
             if (chatTrace) result.IsTraced = isTraced;
 
             string rawInputString = request.rawInput.AsString();
@@ -1482,15 +1499,17 @@ namespace RTParser
             solutions = 0;
             foreach (SubQuery query in result.SubQueries)
             {
-                UList queryTemplate = query.Templates;
-                if (queryTemplate != null && queryTemplate.Count > 0)
+                result.CurrentQuery = query;
+                UList queryTemplates = query.Templates;
+                if (queryTemplates != null && queryTemplates.Count > 0)
                 {
-                    foreach (TemplateInfo s in queryTemplate)
+                    foreach (TemplateInfo s in queryTemplates)
                     {
                         // Start each the same
                         s.Rating = 1.0;
                         try
                         {
+                            s.Query = query;
                             query.CurrentTemplate = s;
                             bool createdOutput;
                             bool templateSucceeded;
@@ -1584,20 +1603,79 @@ namespace RTParser
 
         public AIMLbot.Result ImmediateAiml(XmlNode templateNode, Request request0, AIMLLoader loader, AIMLTagHandler handler)
         {
-            Request request = new AIMLbot.Request(templateNode.OuterXml, request0.user, request0.Proccessor,
-                                                  (AIMLbot.Request)request0);
-            request.Graph = request0.Graph;
-            request.depth = request0.depth + 1;
-            AIMLbot.Result result = new AIMLbot.Result(request.user, this, request);
+            var prev = isAcceptingUserInput;
+            try
+            {
+                isAcceptingUserInput = true;
+                return ImmediateAIML0(request0, templateNode, handler);
+            }
+            finally
+            {
+                isAcceptingUserInput = prev;
+            }
+        }
 
+        private AIMLbot.Result ImmediateAIML0(Request parentRequest, XmlNode templateNode, AIMLTagHandler handler)
+        {
+            string requestName = "<aiml>" + templateNode.OuterXml + "</aiml>";
+            RTPBot request0Proccessor = this;
+            GuardInfo sGuard = null;
+            Request request = null;
+            User user = BotAsUser;
+            
+            if (parentRequest != null)
+            {
+                user = parentRequest.user;
+                requestName = parentRequest.rawInput;
+            }
+
+          //  if (request == null)
+
+            request = parentRequest;// new AIMLbot.Request(requestName, user, request0Proccessor, (AIMLbot.Request)parentRequest);
+
+            if (parentRequest!=null)
+            {
+                request.Graph = parentRequest.Graph;
+                request.depth = parentRequest.depth + 1;                
+            }
+
+            AIMLbot.Result result = request.CreateResult(request);
+            request.CurrentResult = result;
+            if (request.result != result)
+            {
+                writeToLog("ERROR did not set the result!");
+            }
+            if (request.Graph != result.Graph)
+            {
+                writeToLog("ERROR did not set the result!");
+            }
+            TemplateInfo templateInfo = null;//
+            if (false)
+            {
+                templateInfo = new TemplateInfo(templateNode, null, null, null, null);
+            }
             bool templateSucceeded;
-            bool createdOutput;           
-            proccessResponse(null, request, result, templateNode, null, out createdOutput, out templateSucceeded,
-                             handler, null);
+            bool createdOutput;
+            SubQuery query = request.CurrentQuery;
+            if (query == null)
+            {
+                query = new SubQuery(requestName, result, request);
+                request.IsTraced = true;
+            }
+            proccessResponse(query, request, result, templateNode,sGuard, out createdOutput, out templateSucceeded,
+                             handler, templateInfo);
             return result;
         }
 
-        public void proccessResponse(SubQuery query, Request request, Result result, XmlNode sOutput, GuardInfo sGuard, out bool createdOutput, out bool templateSucceeded, AIMLTagHandler handler, TemplateInfo templateInfo)
+        public void proccessResponse(SubQuery query, Request request, Result result, XmlNode templateNode, GuardInfo sGuard, out bool createdOutput, out bool templateSucceeded, AIMLTagHandler handler, TemplateInfo templateInfo)
+        {
+            request.CurrentResult = result;
+            query = query ?? request.CurrentQuery;
+            templateInfo = templateInfo ?? query.CurrentTemplate;
+            proccessResponse0(query, request, result, templateNode, sGuard, out createdOutput, out templateSucceeded,
+                             handler, templateInfo);
+        }
+        public void proccessResponse0(SubQuery query, Request request, Result result, XmlNode sOutput, GuardInfo sGuard, out bool createdOutput, out bool templateSucceeded, AIMLTagHandler handler, TemplateInfo templateInfo)
         {
             bool isTraced = request.IsTraced || result.IsTraced || !isAcceptingUserInput;
             //XmlNode guardNode = AIMLTagHandler.getNode(s.Guard.InnerXml);
@@ -1606,9 +1684,9 @@ namespace RTParser
             if (usedGuard)
             {
                 output = output.Trim();
-                if (output.StartsWith("<template>"))
+                if (output.StartsWith("<template"))
                 {
-                    output = "<template>" + sGuard.InnerXml + " GUARDBOM " + output.Substring(10);
+                    output = "<template" + sGuard.InnerXml + " GUARDBOM " + output.Substring(10);
                 }
             }
             LineInfoElement templateNode = AIMLTagHandler.getNode(output, sOutput);
@@ -1744,6 +1822,10 @@ namespace RTParser
             if (ReferenceEquals(null, tagHandler))
             {
                 if (node.NodeType == XmlNodeType.Comment) return Unifiable.Empty;
+                if (node.NodeType != XmlNodeType.Text)
+                {
+                    writeToLog("XML ?? " + node.NodeType + "  " + node.OuterXml);
+                }
                 string s = node.InnerText.Trim();
                 if (String.IsNullOrEmpty(s))
                 {
@@ -1752,7 +1834,8 @@ namespace RTParser
                 return s;
             }
             tagHandler.SetParent(parent);
-            return tagHandler.CompleteProcess();
+            var cp = tagHandler.CompleteProcess();
+            return cp;
         }
 
 
@@ -2092,7 +2175,7 @@ namespace RTParser
         /// <param name="path">the path to the file for saving</param>
         public void saveToBinaryFile(Unifiable path)
         {
-            this.BotAsRequest.Graph.saveToBinaryFile(path);
+            this.GraphMaster.saveToBinaryFile(path);
         }
 
         /// <summary>
@@ -2101,7 +2184,7 @@ namespace RTParser
         /// <param name="path">the path to the dump file</param>
         public void loadFromBinaryFile(Unifiable path)
         {
-            this.BotAsRequest.Graph.loadFromBinaryFile(path);
+            this.GraphMaster.loadFromBinaryFile(path);
         }
 
         #endregion
@@ -2227,8 +2310,9 @@ The AIMLbot program.
         #endregion
         private object EvalAIMLHandler(string cmd, Request user)
         {
-            XmlNode node = AIMLTagHandler.getNode("<template>" + cmd + "</template>");
-            var res = ImmediateAiml(node, BotAsRequest, Loader, null);
+            string evalTemplate = "<template>" + cmd + "</template>";
+            XmlNode node = AIMLTagHandler.getNode(evalTemplate);
+            var res = ImmediateAiml(node, user, Loader, null);
             return res;
         }
 
@@ -2380,6 +2464,7 @@ The AIMLbot program.
             writeLine("-----------------------------------------------------------------");
 
             String botJustSaid = null;
+            string meneValue = null;
             var userJustSaid = String.Empty;
             myBot.LastUser = myUser;
             while (true)
@@ -2424,6 +2509,7 @@ The AIMLbot program.
                         if (!res.IsEmpty)
                         {
                             botJustSaid = res.Output;
+                            meneValue = "" + res.Score * 14;
                             writeLine("-----------------------------------------------------------------");
                             myBot.HeardSelfSayNow(botJustSaid);
                             writeLine("-----------------------------------------------------------------");
@@ -2435,9 +2521,9 @@ The AIMLbot program.
                         }
                     }
                     writeLine("-----------------------------------------------------------------");
-                    writeLine("{0}: {1}", myUser.ShortName, userJustSaid);
+                    writeLine("{0}: {1}", myUser. ShortName, userJustSaid);
                     writeLine("---------------------");
-                    writeLine("{0}: {1}", myName, botJustSaid);
+                    writeLine("{0}: {1}   menevalue={2}", myName, botJustSaid, meneValue);
                     writeLine("-----------------------------------------------------------------");
                 }
                 catch (Exception e)
@@ -2526,7 +2612,7 @@ The AIMLbot program.
             {
                 if (Loader == null)
                 {
-                    Loader = new AIMLLoader(this, BotAsRequest);
+                    Loader = new AIMLLoader(this, GetBotRequest(cmd + " " +args));
                 }
                 Loader.loadAIML(args);
                 console("Done with " + args);
@@ -2560,7 +2646,6 @@ The AIMLbot program.
             if (showHelp) console("@proof [[clear]|[save [filename.aiml]]] - clears or prints a content buffer being used");
             if (cmd == "proof")
             {
-
                 console("-----------------------------------------------------------------");
                 var ur = GetRequest(args, myUser.ShortName);
                 int i;
@@ -2599,21 +2684,16 @@ The AIMLbot program.
 
                 console("-----------------------------------------------------------------");
                 var ur = GetRequest(args, myUser.ShortName);
+                ur.ProcessMultipleTemplates = true;
                 ur.MaxOutputs = 99;
                 ur.MaxPatterns = 99;
                 ur.MaxTemplates = 99;
                 ur.ProcessMultiplePatterns = true;
-                Chat0(ur, myUser.ListeningGraph);
-                int i;
-                Result r = myUser.LastResult;
-                {
-                    List<TemplateInfo> CI = myUser.UsedTemplates;
-                    console("-----------------------------------------------------------------");
-                    QueryList.PrintTemplates(CI, console);
-                    if (args == "clear") CI.Clear();
-                    console("-----------------------------------------------------------------");
-                }
-
+                console("-----------------------------------------------------------------");
+                var result = Chat0(ur, myUser.ListeningGraph);
+                console("-----------------------------------------------------------------");
+                DisplayResults(result, console);
+                console("-----------------------------------------------------------------");
                 return true;
             }
 
@@ -2667,6 +2747,36 @@ The AIMLbot program.
             return false;
         }
 
+        private void DisplayResults(AIMLbot.Result result, OutputDelegate console)
+        {            
+            console("-----------------------------------------------------------------");
+            console("Result: " + result.Graph + " Request: " + result.request);
+            foreach (var s in result.InputSentences)
+            {
+                console("input: \"" + s + "\"");
+            }
+            if (result.UsedTemplates.Count > 0)
+            {
+                console("<aiml>");
+                foreach (var s in result.UsedTemplates)
+                {
+                    console(" " + s);
+                }
+                console("</aiml>");
+            }
+            foreach (var s in result.SubQueries)
+            {
+                console("subqueries: " + s);
+            }
+            console("-");
+            foreach (var s in result.OutputSentences)
+            {
+                console("outputsentence: " + s);
+            }
+            console("-----------------------------------------------------------------");
+
+        }
+
         static string GetTemplateSource(List<TemplateInfo> CI)
         {
             string hide = "";
@@ -2711,11 +2821,8 @@ The AIMLbot program.
             file = Path.Combine("aiml", myName);
             if (Directory.Exists(file))
             {
-                writeToLog("LoadPersonalDirectories: '{0}'", file);
+                GetLoaded(file); ;
                 loaded = true;
-                isAcceptingUserInput = false;
-                loadAIMLFromURI(file, BotAsRequest);
-                isAcceptingUserInput = true;
             }
 
             file = Path.Combine(myName, "config");
@@ -2729,13 +2836,26 @@ The AIMLbot program.
             file = Path.Combine(myName, "aiml");
             if (Directory.Exists(file))
             {
-                writeToLog("LoadPersonalDirectories: '{0}'", file);
+                GetLoaded(file); ;
                 loaded = true;
-                isAcceptingUserInput = false;
-                loadAIMLFromURI(file, BotAsRequest);
-                isAcceptingUserInput = true;
             }
             return loaded;
+        }
+
+        private void GetLoaded(string file)
+        {
+            string s = string.Format("-LoadPersonalDirectories: '{0}'-", file);
+            writeToLog(s);
+            bool prev = isAcceptingUserInput;
+            try
+            {
+                isAcceptingUserInput = false;
+                loadAIMLFromURI(file, GetBotRequest(s));
+            }
+            finally
+            {
+                isAcceptingUserInput = prev;
+            }
         }
 
         public void LoadPersonalDirectories(string myName)
@@ -2764,6 +2884,13 @@ The AIMLbot program.
             old = old.ToLower().Trim();
             next = next.ToLower().Trim();
             return FindUser(old) == FindUser(next);
+        }
+
+        private HashSet<string> LoadedFiles = new HashSet<string>();
+        public bool AddFileLoaded(string filename)
+        {
+            return LoadedFiles.Add(filename);
+
         }
     }
 }

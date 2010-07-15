@@ -46,6 +46,7 @@ namespace RTParser.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "set")
             {
+                var templateNodeInnerText = Recurse();
                 Unifiable name = GetAttribValue("name", null);
                 Unifiable gName = GetAttribValue("global_name", null);
                 // try to use a global blackboard predicate

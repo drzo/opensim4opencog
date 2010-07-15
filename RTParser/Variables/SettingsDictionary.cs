@@ -262,11 +262,8 @@ namespace RTParser.Utils
         {
             lock (orderedKeys)
             {
-                if (value.AsString().Contains("<"))
-                {
-                    RTPBot.writeDebugLine("ERROR BAD INPUT? " + value);
-                }
                 string key = TransformKey(name);
+                value = TransformValue(value);
                 SettingsLog("ADD Setting Local '" + name + "'=" + str(value) + " ");
                 if (key.Length > 0)
                 {
@@ -276,6 +273,21 @@ namespace RTParser.Utils
                 }
             }
             return true;
+        }
+
+        private Unifiable TransformValue(Unifiable value)
+        {
+            if (value == null)
+            {
+               writeToLog("ERROR " + value + " NULL");
+               
+            }
+            string v = value.AsString();
+            if (v.Contains("<") || v.Contains("&"))
+            {
+                RTPBot.writeDebugLine("!@ERROR BAD INPUT? " + value);
+            }
+            return value;
         }
 
         public bool addListSetting(string name, Unifiable value)

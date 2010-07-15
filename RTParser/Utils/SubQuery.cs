@@ -54,9 +54,10 @@ namespace RTParser.Utils
 
         public override string ToString()
         {
-            string s = string.Format("SubQuery '{0}' I={1} TH={2} TP={3} G={4} TC={5}",
-                                     FullPath, InputStar.Count, ThatStar.Count, TopicStar.Count,
-                                     GuardStar.Count, Templates == null ? 0 : Templates.Count);
+            string s = string.Format("\nPATTERN='{0}' I={1} TH={2} TP={3} G={4} TC={5}\nINPUT = '{6}'",
+                                     Pattern, InputStar.Count, ThatStar.Count, TopicStar.Count,
+                                     GuardStar.Count, Templates == null ? 0 : Templates.Count,
+                                     FullPath);
             if (Templates!=null)
                 foreach (var path in Templates)
                 {
@@ -71,6 +72,10 @@ namespace RTParser.Utils
         public Node Pattern;
         public QueryList TopLevel;
 
+        public double GetSucceedReward(string type)
+        {
+            return 1.0;
+        }
         /// <summary>
         /// Ctor
         /// </summary>
