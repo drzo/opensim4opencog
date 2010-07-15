@@ -456,7 +456,7 @@ namespace RTParser
             {
                 input = input.TrimStart(new[] { ' ', '@' });
             }
-            if (input == "") return false;
+            //if (input == "") return false;
             input = input + " ";
             int firstWhite = input.IndexOf(' ');
             string var = input.Substring(1, firstWhite);

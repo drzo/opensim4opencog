@@ -288,6 +288,7 @@ namespace RTParser.Utils
             ql.ApplySettings((QuerySettings)request);
             request.TopLevel = ql;
             evaluateQL(path, request, state, ql);
+            evaluateQL(path, request, state, ql);
             if (ql.TemplateCount == 0)
             {
                 bool trace = request.IsTraced && !UnTraced;

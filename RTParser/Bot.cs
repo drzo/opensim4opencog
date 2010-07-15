@@ -2391,19 +2391,28 @@ The AIMLbot program.
             {
                 return current;
             }
-            graphPath = graphPath.ToLower();
+            graphPath = graphPath.ToLower().Trim();
+
+            if (graphPath == "current" || graphPath == "")
+            {
+                return current;
+            }
+
             if (graphPath == "default")
             {
                 return _g;
             }
-            if (graphPath == "current")
+            
+            if (graphPath == "heardselfsay")
             {
-                return current;
+                return _h;
             }
+
             if (graphPath == "parent")
             {
                 return current.Parent;
             }
+
             GraphMaster g;
             lock (GraphsByName)
             {
@@ -2653,7 +2662,7 @@ The AIMLbot program.
                 if (args.StartsWith("save"))
                 {
                     args = args.Substring(4).Trim();
-                    string hide = GetTemplateSource(myUser.UsedTemplates);
+                    string hide = AIMLLoader.GetTemplateSource(myUser.UsedTemplates);
                     console(hide);
                     if (args.Length > 0) File.AppendAllText(args, hide + "\n");
                     return true;
@@ -2663,13 +2672,13 @@ The AIMLbot program.
                     r = myUser.GetResult(i);
                     console("-----------------------------------------------------------------");
                     if (r != null)
-                        QueryList.PrintTemplates(r, console);
+                        AIMLLoader.PrintResult(r, console);
                 }
                 else
                 {
                     List<TemplateInfo> CI = myUser.UsedTemplates;
                     console("-----------------------------------------------------------------");
-                    QueryList.PrintTemplates(CI, console);
+                    AIMLLoader.PrintTemplates(CI, console);
                     if (args == "clear") CI.Clear();
                     console("-----------------------------------------------------------------");
                 }
@@ -2692,7 +2701,7 @@ The AIMLbot program.
                 console("-----------------------------------------------------------------");
                 var result = Chat0(ur, myUser.ListeningGraph);
                 console("-----------------------------------------------------------------");
-                DisplayResults(result, console);
+                AIMLLoader.PrintResult(result, console);
                 console("-----------------------------------------------------------------");
                 return true;
             }
@@ -2745,49 +2754,6 @@ The AIMLbot program.
             if (showHelp) return true;
             console("unknown: @" + input);
             return false;
-        }
-
-        private void DisplayResults(AIMLbot.Result result, OutputDelegate console)
-        {            
-            console("-----------------------------------------------------------------");
-            console("Result: " + result.Graph + " Request: " + result.request);
-            foreach (var s in result.InputSentences)
-            {
-                console("input: \"" + s + "\"");
-            }
-            if (result.UsedTemplates.Count > 0)
-            {
-                console("<aiml>");
-                foreach (var s in result.UsedTemplates)
-                {
-                    console(" " + s);
-                }
-                console("</aiml>");
-            }
-            foreach (var s in result.SubQueries)
-            {
-                console("subqueries: " + s);
-            }
-            console("-");
-            foreach (var s in result.OutputSentences)
-            {
-                console("outputsentence: " + s);
-            }
-            console("-----------------------------------------------------------------");
-
-        }
-
-        static string GetTemplateSource(List<TemplateInfo> CI)
-        {
-            string hide = "";
-            foreach (var ci in CI)
-            {
-                CategoryInfo c = ci.CategoryInfo;
-                string ss = "" + c + "\n";
-                if (hide.Contains(ss)) continue;
-                hide += ss;
-            }
-            return hide;
         }
 
         public string GetUserMt(User user, SubQuery subquery)
@@ -2886,11 +2852,20 @@ The AIMLbot program.
             return FindUser(old) == FindUser(next);
         }
 
+
+
         private HashSet<string> LoadedFiles = new HashSet<string>();
+
         public bool AddFileLoaded(string filename)
         {
-            return LoadedFiles.Add(filename);
+            string s = new FileInfo(filename).FullName;
+            lock (LoadedFiles) return LoadedFiles.Add(s);
+        }
 
+        public bool IsFileLoaded(string filename)
+        {
+            string s = new FileInfo(filename).FullName;
+            lock (LoadedFiles) return LoadedFiles.Contains(s);
         }
     }
 }

@@ -358,7 +358,13 @@ namespace RTParser
 
         public static void writeToLog(string message, params object[] args)
         {
-            RTPBot.writeDebugLine("UNIFYABLETRACE: " + message, args);
+            try
+            {
+                RTPBot.writeDebugLine("UNIFYABLETRACE: " + message, args);
+            }
+            catch
+            {
+            }
         }
 
         public abstract bool ConsumeFirst(Unifiable fullpath, out Unifiable left, out Unifiable right, SubQuery query);
@@ -388,6 +394,7 @@ namespace RTParser
             {
                 return true;
             }
+            if (MustBeFast) return false;
             return IsMatch2(s, u);
         }
 
@@ -404,7 +411,7 @@ namespace RTParser
             {
                 return true;
             }
-            if (TwoMatch(that, thiz))
+            if (TwoMatch0(that, thiz))
             {
                 return true;
             }
@@ -412,7 +419,7 @@ namespace RTParser
             string a2 = actualValue;
             thiz = " " + a1 + " ";
             that = " " + a2 + " ";
-            if (TwoMatch(that, thiz))
+            if (TwoMatch0(that, thiz))
             {
                 return true;
             }
@@ -444,9 +451,11 @@ namespace RTParser
             return false;
         }
 
-        static bool TwoMatch(string s1, string s2)
+        public static bool MustBeFast = true;
+        static bool TwoMatch0(string s1, string s2)
         {
             if (s1 == s2) return true;
+            if (MustBeFast) return false;
             Regex matcher = new Regex(s1.Replace(" ", "\\s").Replace("*", "[\\sA-Z0-9]+"), RegexOptions.IgnoreCase);
             bool b = matcher.IsMatch(s2);
             if (b)
