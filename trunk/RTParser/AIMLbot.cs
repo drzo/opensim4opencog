@@ -15,15 +15,19 @@ namespace AIMLbot
     }
     public class User : RTParser.User
     {
+        public User(string UserID, Bot bot)
+            : base(UserID, bot)
+        {
+        }
         public User(string UserID, RTPBot bot)
             : base(UserID, bot)
         {
         }
     }
-    public class Request : RTParser.Request
+    public class Request : RTParser.RequestImpl
     {
-        public Request(String rawInput, RTParser.User user, RTPBot bot)
-            : base(rawInput, user, bot, null)
+        private Request(String rawInput, RTParser.User user, RTPBot bot)
+            : this(rawInput, user, bot, null)
         {
         }
         public Request(String rawInput, RTParser.User user, RTPBot bot, Request r)
@@ -34,8 +38,8 @@ namespace AIMLbot
 
     public class Result : RTParser.Result
     {
-        public Result(RTParser.User user, RTPBot bot, RTParser.Request request)
-            : base(user, bot, request)
+        public Result(RTParser.User user, RTPBot bot, RTParser.Request request, RTParser.Result parent)
+            : base(user, bot, request, parent)
         {
 
         }
@@ -46,7 +50,7 @@ namespace AIMLbot
         public class AIMLLoader : RTParser.Utils.AIMLLoader
         {
             public AIMLLoader(RTPBot bot)
-                : base(bot,bot.BotAsRequest)
+                : base(bot, bot == null ? null : bot.GetBotRequest("-AIMLLoader-"))
             {
             }
         }

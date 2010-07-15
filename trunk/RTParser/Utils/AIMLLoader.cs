@@ -33,6 +33,7 @@ namespace RTParser.Utils
         public AIMLLoader(RTParser.RTPBot bot, Request request)
         {
             this.RProcessor = bot;
+            this.CurrentRequest = request;
         }
 
         #region Methods
@@ -56,6 +57,7 @@ namespace RTParser.Utils
         /// <param name="path"></param>
         public void loadAIML(string path, LoaderOptions options, Request request)
         {
+            path = path.Trim();
             RProcessor.ReloadHooks.Add(() => loadAIML(path, options, request));
             if (Directory.Exists(path))
             {
@@ -162,6 +164,12 @@ namespace RTParser.Utils
             try
             {
                 // load the document
+                string s = new FileInfo(filename).FullName;
+                if (!RProcessor.AddFileLoaded(s))
+                {
+                    writeToLog("Already loaded?!? (skipping) " + filename + " => " + s);
+                    return;
+                }
                 var tr = File.OpenRead(filename);
                 try
                 {
@@ -458,6 +466,12 @@ namespace RTParser.Utils
         public void writeToLog(string message, params object[] args)
         {
             this.RProcessor.writeToLog("LOADERTRACE: "+message, args);
+            try
+            {
+                Console.Out.Flush();
+                Console.Error.Flush();
+            }
+            catch { }
         }
 
         private static bool ContansNoInfo(Unifiable cond)
@@ -520,6 +534,7 @@ namespace RTParser.Utils
 
         protected static XmlNode PatternStar = AIMLTagHandler.getNode("<pattern name=\"*\">*</pattern>");
         public bool ThatWideStar = false;
+        private Request CurrentRequest;
 
         /// <summary>
         /// Given a name will try to find a node named "name" in the childnodes or return null
@@ -776,7 +791,7 @@ namespace RTParser.Utils
         public static string CleanWhitepaces(string xml2)
         {
             if (xml2 == null) return xml2;
-            const int maxCleanSize = 2 ^ 12;
+            const long maxCleanSize = 2 << 16;
             if (xml2.Length > maxCleanSize)
             {
                 return xml2;
@@ -788,7 +803,12 @@ namespace RTParser.Utils
                 if (c < 32) c = ' ';
                 s += c;
             }
-            s.Replace("  ", " ").Replace(" <", "<").Replace("< ", "<").Replace(" >", ">").Replace(" >", ">").Replace(" />", "/>").Replace("<star index=\"1\"", "<star").Replace(" index=\"1\"", "").Trim();
+            s = s.Replace("\n", " ").Replace("\r", " ").Replace("  ", " ").Replace(" <", "<").Replace("< ", "<").
+                Replace(" >", ">").Replace(" >", ">").Replace(" />", "/>").Replace("<star index=\"1\"", "<star").Replace(" index=\"1\"", "").Trim();
+            if (s.Contains("pattern>HI</pattern><template>Hello ther"))
+            {
+                return s;
+            }
             return s;
         }
 
@@ -802,6 +822,10 @@ namespace RTParser.Utils
         {
             String s = unifiable.AsString();
             if (s.Contains(">") && s.Contains("<")) return true;
+            if (s.Contains("&"))
+            {
+                return true;
+            }
             return false;
         }
 

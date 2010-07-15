@@ -19,7 +19,7 @@ namespace RTParser.Utils
             get
             {
                 string s = InnerXml;
-                if (s.StartsWith("<think") && s.EndsWith("k/>"))
+                if (s.StartsWith("<think") && s.EndsWith("k>"))
                 {
                     return true;
                 }
@@ -46,12 +46,18 @@ namespace RTParser.Utils
             }
             if (Rating!=1.0)
             {
-                RTPBot.writeDebugLine("score=" + Rating + " for " + OuterXml);
+                RTPBot.writeDebugLine("!! SCORE =" + Rating + " for " + OuterXml + " in " + categoryInfo);
             }
         }
 
         public override string ToString()
         {
+            XmlNode tryit = base.Output.ParentNode;
+            if (tryit!=null)
+            {
+                return "" + AIMLLoader.CleanWhitepaces(tryit.OuterXml) +
+                       AIMLLoader.LineNumberInfo(tryit);                
+            }
             string s = base.ToString();
             if (Guard!=null)
             {

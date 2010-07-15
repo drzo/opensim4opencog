@@ -5,7 +5,7 @@ using System.Xml;
 
 namespace RTParser.Utils
 {
-    public class QueryList: RequestSettings
+    public class QueryList: RequestSettingsImpl
     {
 
         public override string ToString()
@@ -21,11 +21,20 @@ namespace RTParser.Utils
             }
         }
 
-
-        public QueryList(RequestSettings request)
+        public QueryList(Request request)
         {
             TheRequest = request;
         }
+        #region Overrides of RequestSettingsImpl
+
+        public override GraphMaster Graph
+        {
+            get { return TheRequest.Graph; }
+            set { TheRequest.Graph = value; }
+        }
+
+        #endregion
+
         public int TemplateCount
         {
             get { return Templates == null ? 0 : Templates.Count; }
@@ -39,7 +48,7 @@ namespace RTParser.Utils
         private List<TemplateInfo> Templates;
         private List<Node> PatternsUsed;
         private List<SubQuery> Bindings;
-        public RequestSettings TheRequest;
+        public Request TheRequest;
         public bool Bubble;
         public bool IsNewType = true;
         public bool IsMaxedOut
@@ -145,5 +154,6 @@ namespace RTParser.Utils
             }
             return AIMLLoader.CleanWhitepaces("" + info);
         }
+
     }
 }

@@ -49,6 +49,10 @@ namespace RTParser.AIMLTagHandlers
             {
                 base.writeToLog(unifiable, objs);
             }
+            if (string.Format(unifiable,objs).Contains("&"))
+            {
+                base.writeToLog("!ERRROR");
+            }
         }
 
         private static int depth = 0;
@@ -71,14 +75,23 @@ namespace RTParser.AIMLTagHandlers
                 }
                 if (this.templateNode.Name.ToLower() == "srai")
                 {
+                    if (!Unifiable.IsNull(RecurseResult))
+                    {
+                        return RecurseResult;
+                    }
                     if (!templateNodeInnerText.IsEmpty)
                     {
                         Unifiable tempTopic = GetAttribValue("topic", request.Topic);
                         String gn = GetAttribValue("graph", null);
 
                         Unifiable templateNodeInnerValue = Recurse();
-
-                        AIMLbot.Request subRequest = new AIMLbot.Request(templateNodeInnerValue, this.user, this.Proc, (AIMLbot.Request)request);
+                        if (templateNodeInnerValue.IsEmpty)
+                        {
+                            writeToLog("InnerValue.IsEmpty! " + initialString);
+                            return templateNodeInnerValue;
+                        }
+                        AIMLbot.Request subRequest = request.CreateSubRequest(templateNodeInnerValue, this.user,
+                                                                              this.Proc, (AIMLbot.Request) request);
 
                         subRequest.Graph = request.Graph.Srai;
                         if (gn != null)
@@ -157,19 +170,21 @@ namespace RTParser.AIMLTagHandlers
                         {
                             string sss = result.ToString();
                             if (showDebug)
-                                writeToLog("{0} SUCCESS RETURN {1} '{2}'", prefix, subResult.Score, subQueryRawOutput);
-                            this.request.AddSubResult(result);
-                            this.request.AddSubResult(subResult);
-                            if (query!=null)
                             {
-                                if (query.CurrentTemplate!=null)
+                                writeToLog("{0} SUCCESS RETURN {1} '{2}'", prefix, subResult.Score, subQueryRawOutput);
+                                if (query != null)
                                 {
-                                    writeToLog("SCORE {0}*{1}->{2} ",
-                                               subResult.Score, query.CurrentTemplate.Rating,
-                                               query.CurrentTemplate.Rating *= subResult.Score);
-                                    
+                                    if (query.CurrentTemplate != null)
+                                    {
+                                        writeToLog("SCORE {0}*{1}->{2} ",
+                                                   subResult.Score, query.CurrentTemplate.Rating,
+                                                   query.CurrentTemplate.Rating *= subResult.Score);
+
+                                    }
                                 }
                             }
+                            this.request.AddSubResult(result);
+                            this.request.AddSubResult(subResult);
                         }
 
                         if (mybot.chatTrace)

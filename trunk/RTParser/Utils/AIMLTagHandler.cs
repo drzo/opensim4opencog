@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
+using RTParser.AIMLTagHandlers;
 
 namespace RTParser.Utils
 {
@@ -15,12 +16,14 @@ namespace RTParser.Utils
     {
         protected void Succeed()
         {
-            if (query.CurrentTemplate != null)
+            if (query != null && query.CurrentTemplate != null)
             {
-                double score = GetAttribValue(templateNode, "score", 1.2, query);
+                string type = GetType().Name;
+                double defualtReward = query.GetSucceedReward(type);
+                double score = GetAttribValue(templateNode, "score", defualtReward , query);
                 writeToLog("TSCORE {3} {0}*{1}->{2} ",
                            score, query.CurrentTemplate.Rating,
-                           query.CurrentTemplate.Rating *= score, GetType().Name);
+                           query.CurrentTemplate.Rating *= score, score);
             }
         }
 
@@ -152,7 +155,27 @@ namespace RTParser.Utils
 
         protected Unifiable templateNodeInnerText
         {
-            get { return templateNode.InnerText.Trim(); }
+            get
+            {
+                string s2;
+                if (!Unifiable.IsNull(RecurseResult))
+                {
+                    s2 = RecurseResult;
+                }
+                else
+                {
+                    s2 = Recurse();                    
+                }
+                string s0 = templateNode.InnerXml.Trim();
+                string s1 = Unifiable.InnerXmlText(templateNode);
+                string sr = s1;
+                if (s2.Contains("&"))
+                {
+                    writeToLogWarn("found xml: ");  
+                }
+                return sr;
+            }
+
             set
             {
                 if (AIMLLoader.ContainsAiml(value))
@@ -186,9 +209,10 @@ namespace RTParser.Utils
         {
             this.user = user;
             this.query = query;
-            this.request = request;
+            this._request = request;
             this.result = result;
             this.templateNode = templateNode;
+            inputString = templateNode.OuterXml;
             if (this.templateNode.Attributes != null) this.templateNode.Attributes.RemoveNamedItem("xmlns");
         }
 
@@ -217,12 +241,53 @@ namespace RTParser.Utils
         /// <summary>
         /// A representation of the input into the Proc made by the user
         /// </summary>
-        public RTParser.Request request;
+        public RTParser.Request _request;
+        public RTParser.Request request
+        {
+            get
+            {
+                if (query!=null)
+                {
+                    if (_request==query.Request)
+                    {
+                        return _request;
+                    }
+                    return query.Request;
+                }
+                return _request;
+            }
+            set
+            {
+                _request = value; 
+            }
+        }
 
         /// <summary>
         /// A representation of the result to be returned to the user
         /// </summary>
-        public RTParser.Result result;
+        private RTParser.Result _result0;
+        public RTParser.Result result
+        {
+            get
+            {
+                if (query != null)
+                {
+                    if (_result0 == query.Result)
+                    {
+                        return _result0;
+                    } else
+                    {
+                        return _result0;
+                    }
+                    return query.Result;
+                }
+                return _result0;
+            }
+            set
+            {
+                _result0 = value;
+            }
+        }
 
         /// <summary>
         /// The template node to be processed by the class
@@ -243,6 +308,7 @@ namespace RTParser.Utils
             Parent = handler;
         }
 
+        protected Unifiable RecurseResult = Unifiable.NULL;
         protected Unifiable Recurse()
         {
             Unifiable templateNodeInnerText;//= this.templateNodeInnerText;
@@ -267,11 +333,25 @@ namespace RTParser.Utils
                     }
                 }
                 //templateNodeInnerText = templateResult;//.ToString();
+                if (!templateResult.IsEmpty)
+                {
+                    if (templateResult.AsString().Contains("&"))
+                    {
+                        writeToLogWarn("XMLTRACE ");
+                        return templateResult;
+                    }
+                }
+                RecurseResult = templateResult;
                 return templateResult;
             }
             else
             {
-                Unifiable before = Unifiable.InnerXmlText(this.templateNode);//.InnerXml;               
+                Unifiable before = Unifiable.InnerXmlText(this.templateNode);//.InnerXml;        
+                if (before.AsString().Contains("&"))
+                {
+                    writeToLogWarn("XMLTRACE ");
+                    return before;
+                }
                 return before;
             }
 
@@ -353,7 +433,12 @@ namespace RTParser.Utils
         }
         public string LineNumberTextInfo()
         {
-            return LineTextInfo() + " " + LineNumberInfo();
+            string s = LineTextInfo() + " " + LineNumberInfo();
+            if (!s.Contains(initialString))
+            {
+                return "-WAS- '" + inputString + "' => " + s;
+            }
+            return s;
         }
         public string LineTextInfo()
         {
@@ -460,6 +545,10 @@ namespace RTParser.Utils
 
         public virtual Unifiable CompleteProcess()
         {
+            if (!Unifiable.IsNull(RecurseResult))
+            {
+                return RecurseResult;
+            }
             AIMLTagHandler tagHandler = this;
             XmlNode node = templateNode;
             if (tagHandler.isRecursive)
@@ -471,7 +560,7 @@ namespace RTParser.Utils
                     {
                         if (childNode.NodeType != XmlNodeType.Text)
                         {
-                            childNode.InnerText = Proc.processNode(childNode, query, request, result, user, this);
+                            SaveResultOnChild(childNode, Proc.processNode(childNode, query, request, result, user, this));
                         }
                     }
                 }
@@ -489,13 +578,36 @@ namespace RTParser.Utils
                     {
                         recursiveResult.Append(Proc.processNode(childNode, query, request, result, user, this));
                     }
+                    if (!recursiveResult.IsEmpty)
+                    {
+                        if (recursiveResult.AsString().Contains("&"))
+                        {
+                            writeToLogWarn("XMLTRACE ");
+                            return recursiveResult;
+                        }
+                    }
+                    RecurseResult = recursiveResult;
                     return recursiveResult;//.ToString();
                 }
                 else
                 {
-                    return resultNode.InnerXml;
+                    Unifiable before = Unifiable.InnerXmlText(resultNode);//.InnerXml;        
+                    if (before.AsString().Contains("&"))
+                    {
+                        writeToLogWarn("XMLTRACE ");
+                        return before;
+                    }
+                    return before;
                 }
             }
+        }
+
+        public static void SaveResultOnChild(XmlNode node, string value)
+        {
+            if (value == null) return;
+            if (value == "") return;
+            RTPBot.writeDebugLine("-!SaveResultOnChild AIMLTRACE " + value + " -> " + node.OuterXml);
+            node.InnerXml = value;
         }
 
         protected void writeToLogWarn(string unifiable, params object[] objs)
@@ -510,7 +622,7 @@ namespace RTParser.Utils
                 writeToLogWarn("BAD " + unifiable, objs);
                 return;
             }
-            this.Proc.writeToLog("AIMLTRACE: " + unifiable + " in " + LineNumberTextInfo(), objs);
+            this.Proc.writeToLog("AIMLTRACE: " + unifiable + " in " + GetType().Name + "  " + LineNumberTextInfo(), objs);
         }
 
         #region Implementation of IXmlLineInfo

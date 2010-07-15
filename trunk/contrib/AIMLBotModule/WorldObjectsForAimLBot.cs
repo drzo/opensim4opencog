@@ -1012,7 +1012,7 @@ namespace AIMLBotModule
                 Console.WriteLine(GetModuleName() + ": not Bot is instenaced yet!!");
                 return "";
             }
-            Request r = new AIMLbot.Request(input, myUser, MyBot);
+            Request r = new AIMLbot.Request(input, myUser, MyBot, null);
             r.IsTraced = true;
             Result res = MyBot.Chat(r);
             string useOut = MyBot.CleanupCyc(res.Output);
@@ -1060,7 +1060,7 @@ namespace AIMLBotModule
             {
                 return "";
             }
-            Request r = new AIMLbot.Request(input, myUser, MyBot);
+            Request r = new AIMLbot.Request(input, myUser, MyBot, null);
             r.IsTraced = true;
             Result res = MyBot.Chat(r);
             scored = res.Score;
