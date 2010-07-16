@@ -232,7 +232,7 @@ namespace cogbot.Utilities
                     }
                     else
                     {
-                        if (DebugQueue) WriteLine("{0} secs for {1} after {3} GoodPing(s)",
+                        if (DebugQueue) WriteLine("{0} secs for {1} after {2} GoodPing(s)",
                                            timeSpan.TotalSeconds, count, GoodPings);
                         GoodPings = 0;
                     }
