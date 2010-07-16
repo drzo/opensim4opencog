@@ -470,7 +470,7 @@ namespace RTParser
                 }
                 return r.ReadLine();
             }
-            return "" + rm.Invoke(ro, new object[0]);
+                return "" + rm.Invoke(ro, new object[0]);
         }
 
         /// <summary>

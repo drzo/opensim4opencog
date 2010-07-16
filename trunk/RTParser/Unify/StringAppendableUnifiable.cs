@@ -5,7 +5,7 @@ using RTParser.Utils;
 
 namespace RTParser
 {
-    public class StringAppendableUnifiable : StringUnifiable
+    public class StringAppendableUnifiable : StringUnifiable, UnifiableList
     {
         public override Unifiable Frozen(SubQuery subquery)
         {
@@ -14,44 +14,40 @@ namespace RTParser
 
         public StringAppendableUnifiable()
         {
-            IsAppendable = true;
+            Flags |= UFlags.APPENDABLE;
         }
 
         public override void Clear()
         {
-            str = "";
-            splitted = null;
-            rest = null;
+            _str = "";
+            base.SpoilCache();
         }
 
         public override string AsString()
         {
-            return str.Trim().Replace("  ", " ");
+            return str;
         }
+
+
         public override void Append(string p)
         {
-            splitted = null;
-            rest = null;
-            if (!IsAppendable)
-            {
-                throw new Exception("this " + AsString() + " cannot be appended with " + p);
-            }
-            if (Unifiable.IsNullOrEmpty(p)) return;
+            if (string.IsNullOrEmpty(p)) return;
+            base.SpoilCache();
             if (IsEmpty)
             {
                 str = p;
                 return;
             }
+            if (!NoSpaceAfter(str) && !NoSpaceBefore(p))
+            {
+                p = str + " " + p;
+            }
             else
             {
-                p = p.Trim();
-                if (!NoSpaceAfter(str) && !NoSpaceBefore(p))
-                {
-                    str += " ";
-                }
-                str += p;
-                str = str.Replace("  ", " ");
+                p = str + p;
             }
+            p = p.Replace("  ", " ").Trim();
+            _str = p;
         }
 
         public override void Append(Unifiable p)
@@ -71,5 +67,14 @@ namespace RTParser
             if (str.StartsWith("\'")) return true;
             return false;
         }
+
+        public int Length
+        {
+            get { return str.Length; }
+        }
+    }
+
+    public interface UnifiableList
+    {
     }
 }

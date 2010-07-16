@@ -153,7 +153,7 @@ namespace RTParser
         {
             get
             {
-                return 20000;
+                return 600000;
                 if (!this.GlobalSettings.containsSettingCalled("timeout"))
                 {
                     return 60000;
@@ -1672,6 +1672,13 @@ namespace RTParser
             request.CurrentResult = result;
             query = query ?? request.CurrentQuery;
             templateInfo = templateInfo ?? query.CurrentTemplate;
+            //request.CurrentQuery = query;
+            if (!request.CanUseTemplate(templateInfo, result))
+            {
+                templateSucceeded = false;
+                createdOutput = false;
+                return;
+            }
             proccessResponse0(query, request, result, templateNode, sGuard, out createdOutput, out templateSucceeded,
                              handler, templateInfo);
         }
@@ -2408,7 +2415,7 @@ The AIMLbot program.
                 return _h;
             }
 
-            if (graphPath == "parent")
+            if (graphPath == "ParentResult")
             {
                 return current.Parent;
             }
@@ -2606,6 +2613,12 @@ The AIMLbot program.
                 AddAiml(g, args);
                 console("Done with " + args);
                 return true;
+            }
+
+            if (showHelp) console("@prolog <load.pl>");
+            if (cmd == "prolog")
+            {
+                Prolog.CSPrologMain.Main(new string[] {args});
             }
 
             if (showHelp) console("@reload");

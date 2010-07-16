@@ -108,6 +108,7 @@ namespace RTParser.AIMLTagHandlers
                 else
                 {
                     writeToLogWarn("A star tag tried to reference an empty InputStar collection when processing the input: " + this.request.rawInput);
+                    return templateNodeInnerText;
                 }
             }
             return Unifiable.Empty;

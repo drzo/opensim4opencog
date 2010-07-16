@@ -42,14 +42,21 @@ namespace RTParser.Utils
             return false;
         }
 
-        public TemplateInfo templateInfo;
+
+        internal TemplateInfo templateInfo;
         public TemplateInfo GetTemplateInfo()
         {
             if (templateInfo == null)
             {
-                if (Parent != null && Parent != this)
+                if (query != null)
+                {
+                    templateInfo = query.CurrentTemplate;
+                }
+                if (templateInfo != null) return templateInfo;
+                if (Parent != null)
                 {
                     templateInfo = Parent.GetTemplateInfo();
+                    if (templateInfo != null) return templateInfo;
                 }
             }
             return templateInfo;
@@ -103,7 +110,7 @@ namespace RTParser.Utils
             int uc = unifiables.Count;
             if (uc == 0)
             {
-                RTPBot.writeDebugLine(" -star underflow! " + i + "- ");
+                RTPBot.writeDebugLine(" !ERROR -star underflow! " + i + "- ");
                 return String.Empty;
             }
             if (ii > uc)
@@ -169,11 +176,7 @@ namespace RTParser.Utils
                 string s0 = templateNode.InnerXml.Trim();
                 string s1 = Unifiable.InnerXmlText(templateNode);
                 string sr = s1;
-                if (s2.Contains("&"))
-                {
-                    writeToLogWarn("found xml: ");  
-                }
-                return sr;
+                return CheckValue(sr);
             }
 
             set
@@ -186,7 +189,7 @@ namespace RTParser.Utils
                 {
                     writeToLog("ERROR ?!?! templateNodeInnerText = " + value);
                 }
-                templateNode.InnerText = value.Trim();
+                templateNode.InnerText = CheckValue(value);
             }
         }
 
@@ -303,7 +306,7 @@ namespace RTParser.Utils
             }
             else if (handler == null)
             {
-                //throw new InvalidOperationException("no parent handler");                
+                //throw new InvalidOperationException("no ParentResult handler");                
             }
             Parent = handler;
         }
@@ -335,30 +338,46 @@ namespace RTParser.Utils
                 //templateNodeInnerText = templateResult;//.ToString();
                 if (!templateResult.IsEmpty)
                 {
-                    if (templateResult.AsString().Contains("&"))
-                    {
-                        writeToLogWarn("XMLTRACE ");
-                        return templateResult;
-                    }
+                    templateResult = CheckValue(templateResult);
+                    RecurseResult = templateResult;
                 }
-                RecurseResult = templateResult;
                 return templateResult;
             }
             else
             {
                 Unifiable before = Unifiable.InnerXmlText(this.templateNode);//.InnerXml;        
-                if (before.AsString().Contains("&"))
-                {
-                    writeToLogWarn("XMLTRACE ");
-                    return before;
-                }
-                return before;
+                return CheckValue(before);
             }
 
         }
 
 
         #region Helper methods
+
+
+        public Unifiable CheckValue(Unifiable value)
+        {
+            if (Object.ReferenceEquals(value, Unifiable.Empty)) return value;
+            if (value == null)
+            {
+                RTPBot.writeDebugLine("ERROR " + value + " NULL");
+                return null;
+            }
+            else
+            {
+                if (Unifiable.IsNullOrEmpty(value))
+                {
+                    return Unifiable.Empty;
+                    writeToLog("ERROR ?!?! templateNodeInnerText = " + value);
+                }
+                string v = value.AsString();
+                if (v.Contains("&"))
+                {
+                    RTPBot.writeDebugLine("!@ERROR BAD INPUT? " + value);
+                }
+                return value;
+            }
+        }
 
         /// <summary>
         /// Helper method that turns the passed Unifiable into an XML node
@@ -564,7 +583,8 @@ namespace RTParser.Utils
                         }
                     }
                 }
-                return tagHandler.Transform();
+                var v = tagHandler.Transform();
+                return CheckValue(v);
             }
             else
             {
@@ -580,34 +600,25 @@ namespace RTParser.Utils
                     }
                     if (!recursiveResult.IsEmpty)
                     {
-                        if (recursiveResult.AsString().Contains("&"))
-                        {
-                            writeToLogWarn("XMLTRACE ");
-                            return recursiveResult;
-                        }
+                        recursiveResult = CheckValue(recursiveResult);
+                        RecurseResult = recursiveResult;
                     }
-                    RecurseResult = recursiveResult;
                     return recursiveResult;//.ToString();
                 }
                 else
                 {
                     Unifiable before = Unifiable.InnerXmlText(resultNode);//.InnerXml;        
-                    if (before.AsString().Contains("&"))
-                    {
-                        writeToLogWarn("XMLTRACE ");
-                        return before;
-                    }
-                    return before;
+                    return CheckValue(before);
                 }
             }
         }
 
-        public static void SaveResultOnChild(XmlNode node, string value)
+        public void SaveResultOnChild(XmlNode node, string value)
         {
             if (value == null) return;
             if (value == "") return;
             RTPBot.writeDebugLine("-!SaveResultOnChild AIMLTRACE " + value + " -> " + node.OuterXml);
-            node.InnerXml = value;
+            node.InnerXml = CheckValue(value);
         }
 
         protected void writeToLogWarn(string unifiable, params object[] objs)
@@ -679,6 +690,6 @@ namespace RTParser.Utils
             if (this.templateNode.Name.ToLower() == name) return true;
             writeToLog("CheckNode change " + name + " -> " + templateNode.Name);
             return true;
-        }
+        }    
     }
 }

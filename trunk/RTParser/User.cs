@@ -475,7 +475,7 @@ namespace RTParser
             return true;
         }
 
-        public void WriteLine(string s, object[] objects)
+        public void WriteLine(string s, params object[] objects)
         {
             try
             {
@@ -529,6 +529,11 @@ namespace RTParser
             {
                 bot.writeToLog("no last result in SetOutputSentences " + args + " for " + this);
             }
+        }
+
+        public bool CanUseTemplate(TemplateInfo info, Result request)
+        {
+            return true;
         }
     }
 }

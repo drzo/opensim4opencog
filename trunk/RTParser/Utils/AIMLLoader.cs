@@ -337,6 +337,7 @@ namespace RTParser.Utils
                 }
                 else
                 {
+                    writeToLog("ImmediateAiml:: " + currentNode.OuterXml);
                     EvalNode(currentNode, request, filename);
                 }
             }
@@ -584,10 +585,11 @@ namespace RTParser.Utils
         }
         static public List<XmlNode> FindNodes(string name, XmlNode node)
         {
+            name = name.ToLower();
             List<XmlNode> nodes = new List<XmlNode>();
             foreach (XmlNode child in node.ChildNodes)
             {
-                if (child.Name == name)
+                if (child.Name.ToLower() == name)
                 {
                     nodes.Add(child);
                 }
@@ -631,7 +633,7 @@ namespace RTParser.Utils
                 || patString.Contains(" lisp ") || patString.Contains(" tag ")
                 || patString.Contains("<") || patString.Contains(">")
                 || patString.Contains("\"") || patString.Contains("=") || patString.Contains("#$")
-                || patString.Contains("~"))
+                || patString.Contains("~") || patString.Contains("*"))
             {
                 UseRawUserInput = true;
             }
@@ -716,7 +718,7 @@ namespace RTParser.Utils
 
         public static string MatchKeyClean(string s)
         {
-            s = CleanWhitepacesLower(s).Trim();
+            s = CleanWhitepaces(s).Trim();
             s = s.Replace("  ", " ");
             if (s == "")
             {
@@ -735,7 +737,7 @@ namespace RTParser.Utils
         public Unifiable Normalize(string input, bool isUserInput)
         {
 
-            input = CleanWhitepacesLower(input);
+            input = CleanWhitepaces(input);
             while (input.EndsWith("?") || input.EndsWith(".") || input.EndsWith("!"))
             {
                 input = input.Substring(0, input.Length - 1).Trim();
@@ -903,7 +905,7 @@ namespace RTParser.Utils
             PrintTemplates(result.UsedTemplates, console);
             foreach (var s in result.SubQueries)
             {
-                console("subqueries: " + s);
+                console("\n" + s);
             }
             console("-");
             foreach (var s in result.OutputSentences)
