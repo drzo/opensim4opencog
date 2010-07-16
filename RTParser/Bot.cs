@@ -1202,7 +1202,7 @@ namespace RTParser
             if (message == null) return null;
             message = message.Trim();
             if (message == "") return null;
-            if (message.StartsWith("<"))
+            if (message.Contains("<"))
             {
                 var v = AIMLTagHandler.getNode("<pre>" + message + "</pre>");
                 writeDebugLine("AIMLTRACE: " + message + " -> " + v.InnerText);
@@ -1227,7 +1227,8 @@ namespace RTParser
             writeDebugLine("-----------------------------------------------------------------");
             try
             {
-                return null;
+                if (message == null || message.Length < 4) return null;
+                //return null;
                 try
                 {
                     Request r = new AIMLbot.Request(message, BotAsUser, this, null);
@@ -2415,7 +2416,7 @@ The AIMLbot program.
                 return _h;
             }
 
-            if (graphPath == "ParentResult")
+            if (graphPath == "parent")
             {
                 return current.Parent;
             }
@@ -2764,6 +2765,10 @@ The AIMLbot program.
                 TextFilter.ListEdit(LoggedWords, args, console);
                 return true;
             }
+            if (cmd == "on" || cmd == "off")
+            {
+                return true;
+            }
             if (showHelp) return true;
             console("unknown: @" + input);
             return false;
@@ -2867,18 +2872,57 @@ The AIMLbot program.
 
 
 
-        private HashSet<string> LoadedFiles = new HashSet<string>();
+        private Dictionary<string, DateTime> LoadedFiles = new Dictionary<string, DateTime>();
 
         public bool AddFileLoaded(string filename)
         {
-            string s = new FileInfo(filename).FullName;
-            lock (LoadedFiles) return LoadedFiles.Add(s);
+            var fi = new FileInfo(filename);
+            string fullName = fi.FullName;
+            DateTime dt;
+            lock (LoadedFiles)
+            {
+                if (!LoadedFiles.TryGetValue(fullName, out dt))
+                {
+                    LoadedFiles[fullName] = fi.LastWriteTime;
+                    return true;
+                }
+                if (fi.LastWriteTime > dt)
+                {
+                    LoadedFiles[fi.FullName] = fi.LastWriteTime;
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        public bool RemoveFileLoaded(string filename)
+        {
+            var fi = new FileInfo(filename);
+            string fullName = fi.FullName;
+            DateTime dt;
+            lock (LoadedFiles)
+            {
+                return LoadedFiles.Remove(fullName);
+            }
         }
 
         public bool IsFileLoaded(string filename)
         {
-            string s = new FileInfo(filename).FullName;
-            lock (LoadedFiles) return LoadedFiles.Contains(s);
+            var fi = new FileInfo(filename);
+            string fullName = fi.FullName;
+            DateTime dt;
+            lock (LoadedFiles)
+            {
+                if (!LoadedFiles.TryGetValue(fullName, out dt))
+                {
+                    return false;
+                }
+                if (fi.LastWriteTime > dt)
+                {
+                    return false;
+                }
+                return true;
+            }
         }
     }
 }
