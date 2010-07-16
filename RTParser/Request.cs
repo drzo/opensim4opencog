@@ -48,6 +48,7 @@ namespace RTParser
         AIMLbot.Result CreateResult(Request res);
 
         AIMLbot.Request CreateSubRequest(Unifiable templateNodeInnerValue, User user, RTPBot rTPBot, AIMLbot.Request request);
+        bool CanUseTemplate(TemplateInfo info, Result request);
     }
 
     /// <summary>
@@ -313,16 +314,28 @@ namespace RTParser
             user = user ?? this.user;
             rTPBot = rTPBot ?? this.Proccessor;
             var subRequest = new AIMLbot.Request(templateNodeInnerValue, user, rTPBot, request);
-            if (false)
-            {
-                Result res = request.CurrentResult;
-                subRequest.CurrentResult = res;
-            }
+            Result res = request.CurrentResult;
+            subRequest.CurrentResult = res;
             subRequest.Graph = request.Graph;
             depth = subRequest.depth = request.depth + 1;
             subRequest.ParentRequest = request;
             subRequest.StartedOn = request.StartedOn;
             return subRequest;
+        }
+
+        public bool CanUseTemplate(TemplateInfo info, Result result)
+        {
+            if (!user.CanUseTemplate(info, result)) return false;
+            while (result != null)
+            {
+                if (result.UsedTemplates != null && result.UsedTemplates.Contains(info))
+                {
+                    //user.WriteLine("!CanUseTemplate ", info);
+                    return false;
+                }
+                result = result.ParentResult;
+            }
+            return true;
         }
 
         public IList<Result> UsedResults { get; set; }

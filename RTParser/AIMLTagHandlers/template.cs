@@ -30,7 +30,7 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessChange()
         {
-            Unifiable templateResult = new StringUnifiable();
+            Unifiable templateResult = Unifiable.CreateAppendable();
             if (templateNode.HasChildNodes)
             {
                 // recursively check

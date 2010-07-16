@@ -44,6 +44,7 @@ namespace RTParser.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "bot")
             {
+                if (RecurseResult != null) return RecurseResult;
                 string name = GetAttribValue("name", templateNodeInnerText.Trim());
                 Unifiable defaultVal = GetAttribValue("default", Unifiable.Empty);
                 string realName;
@@ -53,8 +54,15 @@ namespace RTParser.AIMLTagHandlers
                 {
                     return defaultVal;
                 }
-                if (value.ToValue(query).ToUpper() == "UNKNOWN") return ("unknown " + name);
+                if (value.ToUpper() == "UNKNOWN")
+                {
+                    return ("unknown " + name);
+                }
                 if (name != "name") Succeed();
+                if (Unifiable.IsNullOrEmpty(value))
+                {
+                    RecurseResult = value;
+                }
                 return value;
             }
             return Unifiable.Empty;

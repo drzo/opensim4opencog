@@ -11,6 +11,35 @@ namespace RTParser
     abstract public class Unifiable
     {
 
+        public UFlags Flags = UFlags.NO_FLAGS;
+        public bool IsFlag(UFlags f)
+        {
+            return (f & Flags) != 0;
+        }
+
+        [Flags]
+        public enum UFlags : uint
+        {
+            NO_FLAGS = 0,
+            IS_TRUE = 1,
+            IS_FALSE = 2,
+            IS_NULL = 4,
+            IS_EMPTY = 8,
+            IS_EXACT = 16,
+            BINDS_STARS = 32,
+            LONG_WILDCARD = 64,
+            SHORT_WILDCARD = 128,
+            LAZY_XML = 256,
+            REG_CLASS = 512,
+            ONLY_ONE = 1024,
+            ONE_OR_TWO = 2048,
+            MORE_THAN_ONE =4096,
+            IS_TAG = 8192,
+            IS_PUNCT = 16384,
+            APPENDABLE = 32768,
+            NO_BINDS_STARS = 65536,
+        }
+
         public const float UNIFY_TRUE = 0;
         public const float UNIFY_FALSE = 1;
 
@@ -51,9 +80,10 @@ namespace RTParser
                 case XmlNodeType.Attribute:
                     break;
                 case XmlNodeType.Text:
+                    writeToLog("XML INNER TEXT " + templateNode.OuterXml);
                     if (templateNode.InnerXml.Length > 0)
                     {
-                        return templateNode.InnerText + templateNode.InnerXml;
+                        return templateNode.InnerXml;
                     }
                     if (templateNode.InnerText.Length > 0)
                     {
@@ -92,6 +122,7 @@ namespace RTParser
                     throw new ArgumentOutOfRangeException();
             }
             string s = string.Format("Unsurported Node Type {0} in {1}", templateNode.NodeType, templateNode.OuterXml);
+            writeToLog(s);
             throw new ArgumentOutOfRangeException(s);
         }
 
@@ -214,6 +245,7 @@ namespace RTParser
             }
 
             if (t.ToUpper() == s.ToUpper()) return true;
+            return false;
             if (t.ToValue(null).ToLower() == s.ToValue(null).ToLower())
             {
                 writeToLog("==({0},{1})", t.AsString(), s.AsString());
@@ -253,6 +285,7 @@ namespace RTParser
         public static Unifiable operator +(string u, Unifiable more)
         {
             if (u.Length == 0) return more;
+            if (more == null) return u + " -NULL-";
             string moreAsString = more.AsString();
             if (moreAsString.Length == 0) return u;
             return MakeStringUnfiable(u + more.AsString());
@@ -281,8 +314,7 @@ namespace RTParser
                 string inner = InnerXmlText(n);
                 writeToLog("MAking XML Node " + n.OuterXml + " -> " + inner);
                 StringUnifiable unifiable = MakeStringUnfiable(inner);
-                unifiable.node = (XmlNode)p;
-
+                //unifiable.node = (XmlNode)p;
             }
             // TODO
             if (p == null)
@@ -343,16 +375,6 @@ namespace RTParser
         public abstract bool IsLongWildCard();
         public abstract bool IsFiniteWildCard();
 
-
-        public enum MatchWidth : byte
-        {
-            ONLY_ONE,
-            ONE_OR_TWO,
-            MORE_THAN_ONE,       
-        } 
-
-        public abstract MatchWidth Width { get; }
-
         public abstract bool IsLazy();
         public abstract bool IsLitteral();
 
@@ -368,6 +390,7 @@ namespace RTParser
         }
 
         public abstract bool ConsumeFirst(Unifiable fullpath, out Unifiable left, out Unifiable right, SubQuery query);
+        public abstract bool ConsumePath(string[] strings, out string fw, out int rw, SubQuery query);
 
         public bool WillUnify(Unifiable other, SubQuery query)
         {
@@ -466,18 +489,7 @@ namespace RTParser
         }
 
 
-        string upper;
-
         public static Unifiable NULL = new StringUnifiable(null);
-
-        public string ToUpper()
-        {
-            if (upper==null)
-            {
-                upper = AsString().ToUpper().Trim().Replace("  ", " ");
-            }
-            return upper;
-        }
 
         public virtual Unifiable ToCaseInsenitive()
         {
@@ -539,6 +551,10 @@ namespace RTParser
             }
             return "" + unifiable;
         }
+
+        public abstract bool IsAnyWord();
+
+        public abstract string ToUpper();
     }
 }
 

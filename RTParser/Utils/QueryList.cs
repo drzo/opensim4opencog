@@ -46,11 +46,12 @@ namespace RTParser.Utils
         }
 
         private List<TemplateInfo> Templates;
-        private List<Node> PatternsUsed;
+        public List<Node> PatternsUsed;
         private List<SubQuery> Bindings;
         public Request TheRequest;
-        public Node Bubble;
-        public bool IsNewType = true;
+
+        public bool NoMoreResults;
+
         public bool IsMaxedOut
         {
             get
@@ -68,18 +69,32 @@ namespace RTParser.Utils
         }
 
 
-        private void AddPattern(Node node)
+        public void AddPattern(Node node)
         {
-            if (PatternsUsed == null)
+            lock (this)
             {
-                PatternsUsed = new List<Node>();
+                if (PatternsUsed == null)
+                {
+                    PatternsUsed = new List<Node>();
+                    PatternsUsed.Add(node);
+                }
+                else
+                {
+                    if (!PatternsUsed.Contains(node))
+                    {
+                        PatternsUsed.Add(node);
+                        writeToLog("PatternsCount=" + PatternsUsed.Count);
+                        if (PatternsUsed.Count == 3)
+                        {
+                            foreach (var list in PatternsUsed)
+                            {
+                                writeToLog("Pattern=" + list);
+                            }
+                        }
+                    }
+                }
+                CheckConsistent();
             }
-            PatternsUsed.Add(node);
-            if (PatternsUsed.Count > 1)
-            {
-                writeToLog("PatternsCount=" + PatternsUsed.Count);
-            }
-            CheckConsistent();
         }
 
         internal static void writeToLog(string message, params object[] args)
@@ -107,19 +122,21 @@ namespace RTParser.Utils
 
         public bool ContainsPattern(Node node)
         {
-            bool b = PatternsUsed != null && PatternsUsed.Contains(node);
-            if (b)
+            lock (this)
             {
-                writeToLog("Node=" + node);
+                bool b = PatternsUsed != null && PatternsUsed.Contains(node);
+                return b;                
             }
-            return b;
         }
 
         public void AddBindingSet(SubQuery query)
         {
-            if (Bindings == null) Bindings = new List<SubQuery>();
-            Bindings.Add(query);
-            AddPattern(query.Pattern);
+            lock (this)
+            {
+                if (Bindings == null) Bindings = new List<SubQuery>();
+                Bindings.Add(query);
+                AddPattern(query.Pattern);
+            }
         }
 
         public IEnumerable<SubQuery> GetBindings()

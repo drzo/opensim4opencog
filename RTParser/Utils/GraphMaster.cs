@@ -14,48 +14,48 @@ namespace RTParser.Utils
 {
     public class GraphMaster
     {
-        public static bool DefaultSilentTagsInPutParent = false;
+        private static bool DefaultSilentTagsInPutParent = false;
 
         private String graphName;
         private RTPBot theBot;
         public GraphMaster Srai;
-        public bool NoIndexing = true;
-        public bool FullDepth = true;
-        public bool SilentTagsInPutParent = DefaultSilentTagsInPutParent;
-        readonly public List<GraphMaster> Parents = new List<GraphMaster>();
+        private bool NoIndexing = true;
+        private bool FullDepth = true;
+        private bool SilentTagsInPutParent = DefaultSilentTagsInPutParent;
+        readonly private List<GraphMaster> Parents = new List<GraphMaster>();
 
         /// <summary>
         /// All the &lt;category&gt;s (if any) associated with this database
         /// </summary>
-        readonly public List<CategoryInfo> CategoryInfos = new List<CategoryInfo>();
+        readonly private List<CategoryInfo> CategoryInfos = new List<CategoryInfo>();
 
         /// <summary>
         /// All the &lt;pattern&gt;s (if any) associated with this database
         /// </summary>
-        readonly public Dictionary<String, PatternInfo> Patterns = new Dictionary<string, PatternInfo>();
+        readonly private Dictionary<String, PatternInfo> Patterns = new Dictionary<string, PatternInfo>();
 
 
         /// <summary>
         /// All the &lt;that&gt;s (if any) associated with this database
         /// </summary>
-        readonly public Dictionary<String, ThatInfo> Thats = new Dictionary<string, ThatInfo>();
+        readonly private Dictionary<String, ThatInfo> Thats = new Dictionary<string, ThatInfo>();
 
         /// <summary>
         /// All the &lt;topic&gt;s (if any) associated with this database
         /// </summary>
-        readonly public Dictionary<String, TopicInfo> Topics = new Dictionary<string, TopicInfo>();
+        readonly private Dictionary<String, TopicInfo> Topics = new Dictionary<string, TopicInfo>();
 
         /// <summary>
         /// All the &lt;templates&gt;s (if any) associated with this database
         /// </summary>
-        readonly public List<TemplateInfo> Templates = new List<TemplateInfo>();
+        readonly private List<TemplateInfo> Templates = new List<TemplateInfo>();
 
         /// <summary>
         /// All the &lt;guard&gt;s (if any) associated with this database
         /// </summary>
-        readonly public List<GuardInfo> Guards = new List<GuardInfo>();
+        readonly private List<GuardInfo> Guards = new List<GuardInfo>();
 
-        public Node RootNode = new RTParser.Utils.Node(null);
+        private Node RootNode = new RTParser.Utils.Node(null);
         public int Size = 0;
         private GraphMaster _parent = null;
         private int parent0 = 0;
@@ -65,7 +65,7 @@ namespace RTParser.Utils
         {
             get
             {
-                if (ScriptingName.Contains("parent"))
+                if (ScriptingName.Contains("ParentResult"))
                 {
                     return this;
                 }
@@ -191,7 +191,7 @@ namespace RTParser.Utils
 
         private GraphMaster makeParent()
         {
-            var p = new GraphMaster("" + graphName + ".parent" + (parent0 == 0 ? "" : "" + parent0), theBot);
+            var p = new GraphMaster("" + graphName + ".ParentResult" + (parent0 == 0 ? "" : "" + parent0), theBot);
             p.Srai = this;
             parent0++;
             p.UnTraced = true;
@@ -241,7 +241,7 @@ namespace RTParser.Utils
                 this.Parents.Add(Parent);
                 Parent.Size++;
                 RootNode = Parent.RootNode;
-                RTPBot.writeDebugLine("Adding to parent" + category);
+                RTPBot.writeDebugLine("Adding to ParentResult" + category);
                 return;
             }
             Node.addCategoryTag(RootNode, generatedPath, patternInfo,
@@ -250,7 +250,7 @@ namespace RTParser.Utils
             // keep count of the number of categories that have been processed
         }
 
-        public static bool SilentTag(XmlNode node)
+        private static bool SilentTag(XmlNode node)
         {
            // if (true) return false;
             if (node.ChildNodes.Count != 1) return false;
@@ -288,7 +288,6 @@ namespace RTParser.Utils
             ql.ApplySettings((QuerySettings)request);
             request.TopLevel = ql;
             evaluateQL(path, request, state, ql);
-            evaluateQL(path, request, state, ql);
             if (ql.TemplateCount == 0)
             {
                 bool trace = request.IsTraced && !UnTraced;
@@ -307,7 +306,7 @@ namespace RTParser.Utils
         {
             DoParentEval(Parents, request, unifiable);
             bool trace = request.IsTraced && !UnTraced;
-            while(RootNode.getQueries(unifiable, request, matchState, 0, Unifiable.CreateAppendable(), ql))
+            while(getQueries(unifiable, request, matchState, 0, Unifiable.CreateAppendable(), ql))
             {
                 if (ql.IsMaxedOut)
                 {
@@ -329,12 +328,131 @@ namespace RTParser.Utils
                     if (ql.TemplateCount > 0)
                     {
                         if (trace)
-                            RTPBot.writeDebugLine("using parent templates from " + ql);
+                            RTPBot.writeDebugLine("using ParentResult templates from " + ql);
                         return;
                     }
                 }
             }
             return;
+        }
+
+
+        static bool IsStartStarStar(Node bubble)
+        {
+            string s = bubble.ToString();
+            bool b = s.Trim().StartsWith("* TAG-THAT * TAG-FLAG * TAG-TOPIC *");
+            if (!b) return false;
+            return b;
+        }
+
+        /// <summary>
+        // If we get a result from the branch process the wildcard matches and return 
+        // the result
+        /// </summary>
+        /// <param name="result"></param>
+        /// <param name="newWildcard"></param>
+        /// <param name="mtchList"></param>
+        /// <param name="query"></param>
+        /// <returns></returns>
+
+        private bool getQueries(UPath upath, Request request, MatchState matchstate, int index, StringAppendableUnifiable wildcard, QueryList toplevel)
+        {
+            int resin = toplevel.TemplateCount;
+            int patternCountChanged = 0;
+            int tried = 0;
+            bool doIt = !request.IsComplete(request.result);
+            if (!doIt)
+            {
+                writeToLog("AIMLTRACE DOIT: " + tried + " pc=" + patternCountChanged + ": " + false + "  " + request);
+                //   return false;
+            }
+            var Prf = new Proof();
+            request.Proof = Prf;
+
+            Node toplevelBubble;
+            while (!toplevel.NoMoreResults)
+            {
+                int patternCount = toplevel.PatternCount;
+                toplevelBubble = null;
+                SubQuery query = new SubQuery(upath, request.result, request);
+                query.TopLevel = toplevel;
+                var pattern = RootNode.evaluate00(upath.ToString(), query, request, matchstate, wildcard);
+                if (pattern != null)
+                {
+                    var tmplateInfos = pattern.TemplateInfos;
+                    if (toplevel.ContainsPattern(pattern))
+                    {
+                        toplevelBubble = pattern;
+                        writeToLog("p=" + pattern);
+                        toplevel.NoMoreResults = true;
+                    }
+                    else if (!pattern.disabled)
+                    {
+                        toplevelBubble = pattern;
+                        toplevel.AddPattern(pattern);
+                        pattern.disabled = true;
+                        if (tmplateInfos != null && tmplateInfos.Count != 0)
+                        {
+                            query.Pattern = pattern;
+                            toplevel.AddBindingSet(query);
+                            foreach (TemplateInfo sol in tmplateInfos)
+                            {
+                                sol.Query = query;
+                                query.CurrentTemplate = sol;
+                                query.Templates.Add(sol);
+                                toplevel.AddTemplate(sol);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        pattern.disabled = true;
+                    }
+                }
+                if (toplevelBubble != null)
+                {
+                    toplevelBubble.disabled = true;
+                    Prf.Add(toplevelBubble);
+                }
+                if (toplevel.PatternCount != patternCount)
+                {
+                    patternCountChanged++;
+                }
+                else
+                {
+                    tried++;
+                }
+                if (toplevel.PatternCount >= toplevel.MaxPatterns || toplevel.IsMaxedOut || tried > 100 ||
+                    request.hasTimedOut)
+                {
+                    break;
+                }
+                if (IsStartStarStar(toplevelBubble))
+                {
+                    toplevel.NoMoreResults = true;
+                    break;
+                }
+            }
+            {
+                bool f = toplevel.TemplateCount > resin;
+                bool sc = patternCountChanged > 0;
+                if (f != sc)
+                {
+                    writeToLog("AIMLNODE: " + tried + " pc=" + patternCountChanged + ": " + f + "  " + request);
+                }
+                var PU = toplevel.PatternsUsed;
+                if (PU != null)
+                    foreach (var list in PU)
+                    {
+                        list.disabled = false;
+                    }
+                return f;
+            }
+        }
+
+        private void writeToLog(string message, params object[] args)
+        {
+            RTPBot.writeDebugLine("!NODE: " + message + " in " + ToString(), args);
         }
 
         private IEnumerable<GraphMaster> FallBacks(User user)
@@ -380,7 +498,7 @@ namespace RTParser.Utils
             CategoryInfos.Add(templateInfo.CategoryInfo);
         }
 
-        public void AddCategory(CategoryInfo categoryInfo)
+        private void AddCategory(CategoryInfo categoryInfo)
         {
             CategoryInfos.Add(categoryInfo);
         }

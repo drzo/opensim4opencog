@@ -92,13 +92,15 @@ namespace RTParser
         }
         public void AddOutputSentences(TemplateInfo ti, string unifiable)
         {
+            if (Unifiable.IsNullOrEmpty(unifiable))
+            {
+                bot.writeToLog("ERROR assing null output " + ti);
+            }
             if (AlreadyUsed.Contains(unifiable)) return;
             if (ti != null)
             {
                 lock (UsedTemplates1)
                 {
-
-                    if (UsedTemplates1.Contains(ti)) return;
                     double ThisRating = ti.Rating;
                     if (TemplateOfRating == null || TemplateRating < ThisRating)
                     {
@@ -121,7 +123,7 @@ namespace RTParser
                     {
                         throw new Exception("EmptyUnmif for " + ti);
                     }
-                    UsedTemplates1.Add(ti);
+                    if (!UsedTemplates1.Contains(ti)) UsedTemplates1.Add(ti);
                 }
             }
             if (Unifiable.IsNullOrEmpty(unifiable))
@@ -290,7 +292,7 @@ namespace RTParser
         public List<Unifiable> InputSentences = new List<Unifiable>();
 
         public SubQuery CurrentQuery;
-        private Result parent;
+        public Result ParentResult;
 
         /// <summary>
         /// Ctor
@@ -303,7 +305,7 @@ namespace RTParser
             this.user = user;
             this.bot = bot;
             this.request = request;
-            this.parent = parent;
+            this.ParentResult = parent;
             // this.request.CurrentResult = this;
         }
 

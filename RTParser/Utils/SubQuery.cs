@@ -58,12 +58,26 @@ namespace RTParser.Utils
                                      Pattern, InputStar.Count, ThatStar.Count, TopicStar.Count,
                                      GuardStar.Count, Templates == null ? 0 : Templates.Count,
                                      FullPath);
-            if (Templates!=null)
+            if (Templates != null)
                 foreach (var path in Templates)
                 {
                     s += "\r\n t: " + path;
                 }
-            return s + " \r\n   Result: " + Result ?? "-no-result-";
+            s += " \r\n";
+            Result r = Result;
+            if (r == null) s += " Result: -no-result- ";
+            Request rq = Request;
+            int depth = 0;
+            {
+                while (rq != null)
+                {
+                    depth++;
+                    rq = rq.ParentRequest;
+                }
+            }
+            s += " depth: " + depth;
+            s += " " + Graph;
+            return s;
         }
 
         public Result Result;
@@ -71,6 +85,7 @@ namespace RTParser.Utils
         public TemplateInfo CurrentTemplate;
         public Node Pattern;
         public QueryList TopLevel;
+        private Dictionary<string, AIMLTagHandler> TagHandlers;
 
         public double GetSucceedReward(string type)
         {
@@ -183,6 +198,41 @@ namespace RTParser.Utils
                     break;
                 default:
                     throw new ArgumentOutOfRangeException("matchstate");
+            }
+        }
+
+        public AIMLTagHandler GetTagHandler(System.Xml.XmlNode node)
+        {
+            lock (this)
+            {
+
+                string str = node.OuterXml;
+                str = AIMLLoader.CleanWhitepaces(str).ToLower();
+                AIMLTagHandler handler;
+                if (TagHandlers == null)
+                {
+                    TagHandlers = new Dictionary<string, AIMLTagHandler>();
+                }
+                else if (TagHandlers.TryGetValue(str, out handler))
+                {
+                    return handler;
+                }
+                SubQuery subquery = this;
+                RTPBot bot = null;
+                User user = null;
+                Request request = null;
+                Result result = null;
+                // if (node.ChildNodes.Count == 0) ;         
+                {
+                    result = subquery.Result;
+                    request = subquery.Request ?? result.request;
+                    result = result ?? request.result;
+                    user = result.user;
+                    bot = request.Proccessor;
+                }
+                handler = bot.GetTagHandler(user, subquery, request, result, node, null);
+                TagHandlers[str] = handler;
+                return handler;
             }
         }
     }

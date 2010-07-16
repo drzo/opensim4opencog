@@ -96,17 +96,22 @@ namespace RTParser
             return true;
         }
 
-        public override MatchWidth Width
+        public override bool IsAnyWord()
         {
-            get
+            foreach (var u in List)
             {
-                if (IsLongWildCard())
+                if (u.IsAnyWord())
                 {
-                    return MatchWidth.MORE_THAN_ONE;
+                    best = u;
+                    return true;
                 }
-                if (IsFiniteWildCard()) return MatchWidth.ONE_OR_TWO;
-                return MatchWidth.ONLY_ONE;
             }
+            return true;
+        }
+
+        public override string ToUpper()
+        {
+            throw new NotImplementedException();
         }
 
         public override bool IsLazy()
@@ -172,6 +177,29 @@ namespace RTParser
             return false;
         }
 
+        public override bool ConsumePath(string[] fullpath, out string left, out int right, SubQuery query)
+        {
+
+            left = null;
+            right = 0;
+            if (best != null)
+            {
+                bool res = best.ConsumePath(fullpath, out left, out right, query);
+                if (res) return true;
+            }
+            foreach (var u in List)
+            {
+                if (object.ReferenceEquals(best, u)) continue;
+                bool res = u.ConsumePath(fullpath, out left, out right, query);
+                if (res)
+                {
+                    best = u;
+                    return true;
+                }
+            }
+            return false;
+        }
+
 
         public override string ToValue(SubQuery subquery)
         {
@@ -212,6 +240,7 @@ namespace RTParser
             }
             throw noBest();
         }
+
 
         private Exception noBest()
         {

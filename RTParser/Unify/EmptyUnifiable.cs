@@ -21,13 +21,6 @@ namespace RTParser
         public override void Append(Unifiable p)
         {
             throw new InvalidCastException("Empty Unifiable");
-            if (str == "")
-                str = p.AsString();
-            else
-            {
-                str += " ";
-                str += p.AsString();
-            }
         }
     }
 }

@@ -12,28 +12,149 @@ namespace RTParser
     public class StringUnifiable : Unifiable
     {
 
-        public string _str;
-        protected string str
+        protected void SpoilCache()
         {
-            get
-            {
-                return _str;
-            }
-             
-            set
-            {
-                _str = value;
-            }
+            splitted = null;
+            valueCache = null;
+            rest = null;
+            upper = null;
         }
 
-        public StringUnifiable()
+        public string str;
+        protected Unifiable[] splitted = null;
+        protected Unifiable rest = null;
+        public string upper;
+        private object valueCache;
+
+        protected string _str
+        {
+            set
+            {
+                Flags = FlagsForString(value);
+                str = value;
+            }
+            get { return str; }
+        }
+        public override string ToUpper()
+        {
+            if (upper == null)
+            {
+                upper = AsString().ToUpper().Trim().Replace("  ", " ");
+            }
+            return upper;
+        }
+
+        protected StringUnifiable()
         {
             str = "";
         }
 
         public StringUnifiable(string value)
         {
-            str = value;
+            _str = value;
+        }
+
+        static UFlags FlagsForString(string str)
+        {
+            if (str == null) return UFlags.IS_NULL;
+            else
+            {
+                int len = str.Length;
+                if (len == 0)
+                    return UFlags.IS_EMPTY | UFlags.IS_EXACT | UFlags.IS_FALSE;
+                else
+                {
+                    UFlags Flags = UFlags.NO_FLAGS;
+                    char c;
+                    str = str.Trim();
+                    if (str == "") return UFlags.IS_EMPTY | UFlags.IS_FALSE;
+                    c = str[0];
+
+                    switch (c)
+                    {
+                        case '_':
+                            Flags |= UFlags.SHORT_WILDCARD;
+                            break;
+                        case 'N':
+                            Flags |= UFlags.IS_FALSE | UFlags.IS_EXACT;
+                            break;
+                        case 'F':
+                            Flags |= UFlags.IS_FALSE | UFlags.IS_EXACT;
+                            break;
+                        case 'T':
+                            if (len > 3)
+                            {
+                                if (str.StartsWith("TAG-")) Flags |= UFlags.IS_TAG;
+                            }
+                            Flags |= UFlags.IS_TRUE | UFlags.IS_EXACT;
+                            break;
+                        case '*':
+                            Flags |= UFlags.LONG_WILDCARD;
+                            break;
+                        case '~':
+                            Flags |= UFlags.REG_CLASS | UFlags.NO_BINDS_STARS;
+                            break;
+                        case '^':
+                            Flags |= UFlags.REG_CLASS;
+                            break;
+                        case '#':
+                            Flags |= UFlags.REG_CLASS | UFlags.IS_TRUE | UFlags.IS_EXACT;
+                            break;
+                        default:
+                            if (len > 3)
+                            {
+                                if (c == '<')
+                                {
+                                    Flags |= UFlags.LAZY_XML;
+
+                                    if (UFlags.LAZY_XML == Flags)
+                                    {
+                                        if (str.Contains("_")) Flags |= UFlags.SHORT_WILDCARD;
+                                        else if (str.Contains("*")) Flags |= UFlags.LONG_WILDCARD;
+                                        else
+                                        {
+                                            Flags |= UFlags.NO_BINDS_STARS;
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    int wh = str.IndexOf(' ');
+                                    if (wh > 1) Flags |= UFlags.MORE_THAN_ONE;
+                                    else Flags |= UFlags.ONLY_ONE;
+                                    Flags |= UFlags.IS_EXACT;
+                                }
+                            }
+                            break;
+
+                    }
+
+
+                    c = str[str.Length - 1];
+                    if (c == '_')
+                        Flags |= UFlags.SHORT_WILDCARD | UFlags.BINDS_STARS;
+                    else if (c == '*')
+                        Flags |= UFlags.LONG_WILDCARD | UFlags.BINDS_STARS;
+                    else if (Flags == UFlags.NO_FLAGS)
+                    {
+                        if (char.IsLetter(c))
+                        {
+                            return UFlags.IS_EXACT;
+                        }
+                        else if (char.IsNumber(c) || c == '%')
+                        {
+                            return UFlags.IS_EXACT;
+                        }
+                        else if (char.IsPunctuation(c) || c == '%')
+                        {
+                            return UFlags.IS_PUNCT;
+                        }
+                        return UFlags.IS_EXACT;
+                    }
+                    return Flags;
+                }
+
+            }
         }
 
         //public int Length
@@ -63,8 +184,8 @@ namespace RTParser
 
         public override Unifiable Trim()
         {
-            string str2 = str.Trim().Replace("  "," ").Replace("  "," ");
-            if (str2==str) return this;
+            string str2 = str.Trim().Replace("  ", " ").Replace("  ", " ");
+            if (str2 == str) return this;
             return str.Trim();
         }
 
@@ -93,7 +214,7 @@ namespace RTParser
                 return true;
             }
             return false;
-                
+
         }
 
         public override object AsNodeXML()
@@ -129,18 +250,36 @@ namespace RTParser
 
         protected override bool IsFalse()
         {
-            if (String.IsNullOrEmpty(str)) return true;
+            if (IsFlag(UFlags.IS_FALSE)) return true;
+            if (IsFlag(UFlags.IS_TRUE)) return false;
+            if (String.IsNullOrEmpty(str))
+            {
+                Flags |= UFlags.IS_FALSE;
+                return true;
+            }
+
             string found = str.Trim().ToUpper();
-            return found == "" || found == "NIL" || found == "()" || found == "FALSE" || found == "NO" || found == "OFF";
+            if (found == "" || found == "NIL" || found == "()" || found == "FALSE" || found == "NO" || found == "OFF")
+            {
+                Flags |= UFlags.IS_FALSE;
+                return true;
+            }
+            return false;
         }
 
         public override bool IsWildCard()
         {
-            if (IsMarkerTag()) return false;
+            if (string.IsNullOrEmpty(str)) return false;
+            char c = str[str.Length - 1];
+            return c == '_' || c == '*';
+            return false;
+
             if (str == "*" || str == "_")
             {
                 return true;
             }
+            if (str.Contains("*") || str.Contains("_")) return true;
+            //if (IsMarkerTag()) return false;
             if (str.StartsWith("<"))
             {
                 return IsLazyStar();
@@ -160,7 +299,7 @@ namespace RTParser
 
         public static Unifiable[] Splitter(string str)
         {
-            string strTrim = str.Trim().Replace("  "," ").Replace("  "," ");
+            string strTrim = str.Trim().Replace("  ", " ").Replace("  ", " ");
             if (!strTrim.Contains("<"))
                 return arrayOf(strTrim.Split(BRKCHARS, StringSplitOptions.RemoveEmptyEntries));
             XmlDocument doc = new XmlDocument();
@@ -193,7 +332,7 @@ namespace RTParser
             }
             catch (Exception e)
             {
-                RTPBot.writeDebugLine("" + e.Message + ": " +strTrim);
+                RTPBot.writeDebugLine("" + e.Message + ": " + strTrim);
             }
             return arrayOf(strTrim.Split(BRKCHARS, StringSplitOptions.RemoveEmptyEntries));
         }
@@ -206,19 +345,6 @@ namespace RTParser
         public override void Append(Unifiable p)
         {
             throw new Exception("this " + AsString() + " cannot be appended with " + p);
-
-            if (!IsAppendable)
-            {
-                throw new Exception("this " + AsString() + " cannot be appended with " + p);
-            }
-            if (p==null) return;
-            if (str == "")
-                str = p.AsString().Trim();
-            else
-            {
-                str += " ";
-                str += p.AsString().Trim();
-            }
         }
 
         public override void Append(string part)
@@ -245,13 +371,12 @@ namespace RTParser
             return newWord;
         }
 
-        protected Unifiable[] splitted = null;
-        protected Unifiable rest = null;
         public override Unifiable Rest()
         {
 
             splitted = ToArray();
-            if (rest == null) rest = Join(" ", splitted, 1, splitted.Length - 1);
+            if (rest == null) 
+             return Join(" ", splitted, 1, splitted.Length - 1);
             return rest;
 
             if (String.IsNullOrEmpty(this.str)) return Unifiable.Empty;
@@ -294,21 +419,10 @@ namespace RTParser
             return false;
         }
 
-        public override MatchWidth Width
-        {
-            get
-            {
-                if (IsLongWildCard())
-                {
-                    return MatchWidth.MORE_THAN_ONE;
-                }
-                if (IsFiniteWildCard()) return MatchWidth.ONE_OR_TWO;
-                return MatchWidth.ONLY_ONE;
-            }
-        }
-
         public override bool IsLongWildCard()
         {
+            return str == "*";
+            return IsFlag(UFlags.LONG_WILDCARD);
             if (str == ("*")) return true;
             if (str == ("^")) return true;
             if (this.IsMarkerTag()) return false;
@@ -320,7 +434,7 @@ namespace RTParser
         {
             if (this.IsMarkerTag()) return false;
             if (str == "") return false;
-            if (str[0]=='~')
+            if (str[0] == '~')
             {
                 return true;
             }
@@ -337,8 +451,7 @@ namespace RTParser
 
         public virtual bool IsMarkerTag()
         {
-            //string test = str.Trim().ToUpper();
-            return str.StartsWith("TAG-");
+            return IsFlag(UFlags.IS_TAG);
         }
 
         override public bool StoreWildCard()
@@ -346,30 +459,36 @@ namespace RTParser
             return !str.StartsWith("~");
         }
 
+        public override bool IsAnyWord()
+        {
+            return str == "_";
+        }
+
         override public bool ConsumeFirst(Unifiable fullpath, out Unifiable left, out Unifiable right, SubQuery query)
         {
-            Unifiable[] array = fullpath.ToArray();
             left = Unifiable.Empty;
             right = fullpath;
+            return false;
+            Unifiable[] array = fullpath.ToArray();
             int len = array.Length;
             if (len == 0) return false;
             if (str == "_")
             {
                 if (len > 1)
                 {
-                  
+
                 }
                 return false;
             }
             Unifiable[] myA = ToArray();
             int upTo = myA.Length;
+            // if (upTo == 0) return false;
             int min = 1;
             Unifiable matchMe = this;
             if (!IsLazy())
             {
                 upTo = matchMe.ToUpper().Split(new char[] { ' ' }).Length;
                 min = upTo;
-                return false;
             }
             else
             {
@@ -394,6 +513,47 @@ namespace RTParser
                 }
             }
             return false;
+        }
+
+        public override bool ConsumePath(string[] strings, out string fw, out int rw, SubQuery query)
+        {
+            rw = strings.Length;
+            if (rw == 0)
+            {
+                fw = "";
+                return IsEmpty;
+            }
+            fw = strings[0];
+            rw = 1;
+            string fws = fw.ToUpper();
+            string su = ToUpper();
+            if (su == fws)
+            {
+                return true;
+            }
+            int minLen = LengthMin;
+            if (minLen > strings.Length)
+            {
+                return false;
+            }
+            if (fws == "NOTHING") return false;
+            Unifiable ovs = fws;
+            if (ovs.IsFlag(UFlags.IS_TAG | UFlags.IS_EMPTY)) return false;
+            if (ovs.IsFlag(UFlags.BINDS_STARS)) return false;
+            if (str.StartsWith("<"))
+            {
+                return UnifyTagHandler(ovs, query);
+            }
+            if (minLen > 1)
+            {
+                writeToLog("MinLen=" + minLen);
+            }
+            return false;
+        }
+
+        protected int LengthMin
+        {
+            get { return ToArray().Length; }
         }
 
         public override float Unify(Unifiable other, SubQuery query)
@@ -441,29 +601,7 @@ namespace RTParser
                 }
                 if (IsLazy())
                 {
-                    try
-                    {
-                        ///bot.GetTagHandler(templateNode, subquery, request, result, request.user);
-                        AIMLTagHandler tagHandler = GetTagHandler(query);
-                        if (tagHandler.CanUnify(other) == UNIFY_TRUE)
-                        {
-                            writeToLog("UnifyLazy: SUCCEED" + other + " in " + query);
-                            return UNIFY_TRUE;
-                        }
-                        Unifiable outputSentence = tagHandler.CompleteProcess();
-                        string value = outputSentence.AsString();
-                        if (ov.ToUpper() == value.ToUpper())
-                        {
-                            writeToLog("UnifyLazy: SUCCEED" + other + " in " + query);
-                            return UNIFY_TRUE;
-                        }
-                        return UNIFY_FALSE;
-                    }
-                    catch (Exception e)
-                    {
-                        writeToLog("UnifyLazy ERROR! " + e);
-
-                    }
+                    return UnifyTagHandler(other, query) ? UNIFY_TRUE : UNIFY_FALSE;
                 }
                 if (IsWildCard())
                 {
@@ -475,43 +613,72 @@ namespace RTParser
             }
         }
 
-        private SubQuery savedSQ;
-        AIMLTagHandler savedTagHandler;
-        public XmlNode node;
-        public AIMLTagHandler GetTagHandler(SubQuery subquery)
-        {
-            if (savedTagHandler != null)
-            {
-                if (savedSQ == subquery)
-                {
-                    return savedTagHandler;
-                }
-            }
-            if (node == null) node = GetNode();
-            RTPBot bot = null;
-            User user = null;
-            Request request = null;
-            Result result = null;
-            // if (node.ChildNodes.Count == 0) ;            
-            if (subquery != null)
-            {
-                result = subquery.Result;
-                request = subquery.Request ?? result.request;
-                result = result ?? request.result;
-                user = result.user;
-                bot = request.Proccessor;
-                savedTagHandler = bot.GetTagHandler(user, subquery, request, result, node, null);
-                savedSQ = subquery;
-            }
-            return savedTagHandler;
-        }
-
-        public virtual XmlNode GetNode()
+        private bool UnifyTagHandler(Unifiable ov, SubQuery query)
         {
             try
             {
+                var flags = ov.Flags;
+                ///bot.GetTagHandler(templateNode, subquery, request, result, request.user);
+                if (IsCachedMatch(ov,query))
+                {
+                    writeToLog("UnifyLazy: CACHED" + ov + " in " + query);
+                    return true;
+                }
+                valueCache = ToValue(query);
+                if (ov == valueCache)
+                {
+                    writeToLog("UnifyLazy: SUCCEED" + ov + " in " + query);
+                    return true;
+                }
+
+                var tagHandler = GetTagHandler(query);
+                if (tagHandler.CanUnify(ov) == UNIFY_TRUE)
+                {
+                    writeToLog("UnifyLazy: SUCCEED" + ov + " in " + query);
+                    return true;
+                }
+                Unifiable outputSentence = tagHandler.CompleteProcess();
+                string value = outputSentence.AsString();
+                if (ov.ToUpper() == value.ToUpper())
+                {
+                    writeToLog("UnifyLazy: SUCCEED" + ov + " in " + query);
+                    return true;
+                }
+                return false;
+            }
+            catch (Exception e)
+            {
+                writeToLog("UnifyLazy ERROR! " + e);
+                return false;
+            }
+        }
+
+        private bool IsCachedMatch(Unifiable unifiable, SubQuery query)
+        {
+            return false;
+        }
+
+        private void GetPos()
+        {
+            throw new NotImplementedException();
+        }
+
+        //private SubQuery savedSQ;
+        //AIMLTagHandler savedTagHandler;
+        //public XmlNode node;
+        public AIMLTagHandler GetTagHandler(SubQuery subquery)
+        {
+            if (valueCache is AIMLTagHandler) return (AIMLTagHandler)valueCache;
+            return subquery.GetTagHandler(GetNode());
+        }
+        public virtual XmlNode GetNode()
+        {
+            if (valueCache is XmlNode) return (XmlNode)valueCache;
+            try
+            {
                 return AIMLTagHandler.getNode(str);
-            } catch(Exception e)
+            }
+            catch (Exception e)
             {
                 return AIMLTagHandler.getNode("<template>" + str + "</template>");
             }
@@ -526,25 +693,22 @@ namespace RTParser
                 s = s.Trim();
                 if (s.Length != 0) return false;
                 writeToLog("IsEmpty: " + str);
-                return true;                 
+                return true;
             }
-        }
-
-        private bool ppendable;
-
-        public bool IsAppendable
-        {
-            get { return ppendable; }
-            set { ppendable=value; }
         }
 
         public override void Clear()
         {
             throw new IndexOutOfRangeException();
-            str = "";
+            _str = "";
         }
 
-        public override string ToValue(SubQuery query)
+        sealed public override string ToValue(SubQuery query)
+        {
+            if (valueCache==null) valueCache = ToValue0(query);
+            return "" + valueCache;
+        }
+       protected string ToValue0(SubQuery query)
         {
             if (IsLitteral()) return str;
             if (str.Length < 2) return str;
