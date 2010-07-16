@@ -339,6 +339,7 @@ namespace RTParser.Utils
 
         static bool IsStartStarStar(Node bubble)
         {
+            if (bubble == null) return false;
             string s = bubble.ToString();
             bool b = s.Trim().StartsWith("* TAG-THAT * TAG-FLAG * TAG-TOPIC *");
             if (!b) return false;
@@ -426,7 +427,7 @@ namespace RTParser.Utils
                     request.hasTimedOut)
                 {
                     break;
-                }
+                } 
                 if (IsStartStarStar(toplevelBubble))
                 {
                     toplevel.NoMoreResults = true;

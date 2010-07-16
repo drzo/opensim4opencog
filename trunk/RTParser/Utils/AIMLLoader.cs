@@ -90,13 +90,14 @@ namespace RTParser.Utils
                     {
                         if (RProcessor.IsFileLoaded(filename))
                         {
-                            // writeToLog("(skipping) " + filename);
+                            //writeToLog("(skipping) " + filename);
                             continue;
                         }
                         this.loadAIMLFile(filename, options, request);
                     }
                     catch (Exception ee)
                     {
+                        RProcessor.RemoveFileLoaded(filename);
                         RTPBot.writeDebugLine("" + ee);
                         RProcessor.writeToLog("Error in loadAIMLFile " + ee);
                     }
@@ -172,12 +173,13 @@ namespace RTParser.Utils
             {
                 // load the document
                 string s = new FileInfo(filename).FullName;
-                if (!RProcessor.AddFileLoaded(filename))
+                if (RProcessor.IsFileLoaded(filename))
                 {
                     writeToLog("Already loaded! " + filename + " => " + s);
                     return;
                 }
                 writeToLog("Processing AIML file: " + filename);
+                RProcessor.AddFileLoaded(filename);
                 var tr = File.OpenRead(filename);
                 try
                 {
@@ -200,6 +202,7 @@ namespace RTParser.Utils
             }
             catch (Exception e)
             {
+                RProcessor.RemoveFileLoaded(filename);
                 writeToLog("Error in AIML Stacktrace: " + filename + "\n  " + e.Message + "\n" + e.StackTrace);
                 writeToLog("Error in AIML file: " + filename + " Message " + e.Message);
             }

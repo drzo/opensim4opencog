@@ -418,6 +418,9 @@ namespace RTParser
                 prev = sentence;
                 sentence = sentence.Trim();
                 int sl = sentence.Length - 1;
+
+                if (sl < 0) return sentence;
+
                 char c = sentence[sl];
                 if (char.IsPunctuation(c))
                 {
