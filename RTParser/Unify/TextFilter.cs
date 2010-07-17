@@ -41,16 +41,6 @@ namespace RTParser
                 }
                // lock (this)
                 {
-                    if (lastOutput == message) return;
-                    if (lastOutput.Contains(message))
-                    {
-                        return;
-                    }
-                    else
-                    {
-                        if (lastOutput.Length > 10) if (message.Contains(lastOutput)) return;
-                    }
-                    lastOutput = message;
                     printIt = message.StartsWith("-");
                     if (printIt)
                     {
@@ -63,8 +53,8 @@ namespace RTParser
 
                 }
                 if (printIt)
-                {
-                    message = PrintMessage(console, message);
+                {                   
+                    PrintMessage(console, message);
                 }
             }
             catch (Exception e)
@@ -74,21 +64,32 @@ namespace RTParser
             }
         }
 
-        private string PrintMessage(RTPBot.OutputDelegate console, string message)
+        private void PrintMessage(RTPBot.OutputDelegate console, string message)
         {
             bool doHeader = message.Contains("!");
 
             if (doHeader)
-                writeDebugLine(console, "---------------------------------------------------------------");
-            lastOutput = message;
+                RealyPrintMessage(console, "---------------------------------------------------------------");
             message = message.Replace("\r\n", "<br/>");
             message = message.Replace("\n", "<br/>");
             message = message.Replace("(From '", "<br/>     (From '");            
             message = message.Replace("<br/>", "  " + Environment.NewLine);
-            console(message);
+            RealyPrintMessage(console, message);
             if (doHeader)
-                writeDebugLine(console, "----------------------------------------------------------------");
-            return message;
+                RealyPrintMessage(console, "----------------------------------------------------------------");
+        }
+
+        private void RealyPrintMessage(RTPBot.OutputDelegate console, string message)
+        {
+            if (message.Contains("-----------------"))
+            {
+                if (lastOutput == message) return;
+            }
+            if (lastOutput == message) return;
+            if (lastOutput.Contains(message)) return;
+            if (lastOutput.Length > 10 && message.Contains(lastOutput)) return;
+            console(message);
+            lastOutput = message;
         }
 
         public bool ShouldPrint(string message)
@@ -133,20 +134,27 @@ namespace RTParser
             while (sa != null && sa.Trim().Length > 0)
             {
                 sa = sa.Trim();
-                if (sa.StartsWith("reset"))
-                {
-                    addMode = true;
-                    remMode = false;
-                    ExceptFor.Clear();
-                    od("reset");
-                    sa = sa.Substring(5);
-                    continue;
-                }
                 if (sa.StartsWith("clear"))
                 {
                     ExceptFor.Clear();
-                    od("Clearing");
+                    AnyOf.Clear();
+                    od("Clearing all");
                     sa = sa.Substring(5);
+                    continue;
+                }
+                if (sa.StartsWith("reset"))
+                {
+                    sa = sa.Substring(5);
+                    if (addMode)
+                    {
+                        od("Clearing AnyOf");
+                        AnyOf.Clear();
+                    }
+                    if (remMode)
+                    {
+                        od("Clearing ExceptFor");
+                        ExceptFor.Clear();
+                    }
                     continue;
                 }
                 if (sa.StartsWith("+"))
@@ -163,7 +171,7 @@ namespace RTParser
                     sa = sa.Substring(1);
                     continue;
                 }
-                int f = (sa + "\n").IndexOfAny(new char[] { '+', '-', '\n' });
+                int f = (sa + "\n").IndexOfAny(new char[] {'+', '-', '\n'});
                 string w = sa.Substring(0, f).ToUpper().Trim();
                 if (addMode)
                 {

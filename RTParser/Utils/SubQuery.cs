@@ -17,7 +17,15 @@ namespace RTParser.Utils
     {
         #region Attributes
 
-        public GraphMaster Graph = null;
+        #region Overrides of QuerySettings
+
+        /// <summary>
+        /// The Graph to start the query on
+        /// </summary>
+        public GraphMaster Graph { get; set; }
+        
+        #endregion
+
         /// <summary>
         /// The path that this query relates to
         /// </summary>
@@ -66,6 +74,7 @@ namespace RTParser.Utils
             s += " \r\n";
             Result r = Result;
             if (r == null) s += " Result: -no-result- ";
+            else s += " result.Count=" + r.OutputSentenceCount;
             Request rq = Request;
             int depth = 0;
             {

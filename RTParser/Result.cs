@@ -12,7 +12,7 @@ namespace RTParser
     /// <summary>
     /// Encapsulates information about the result of a request to the bot
     /// </summary>
-    abstract public class Result 
+    abstract public class Result
     {
 
         public GraphMaster Graph
@@ -293,6 +293,15 @@ namespace RTParser
 
         public SubQuery CurrentQuery;
         public Result ParentResult;
+        public bool IsSailent
+        {
+            get
+            {
+                if (OutputSentenceCount == 0) return false;
+                if (RawOutput.Trim().Length == 0) return false;
+                return true;
+            }
+        }
 
         /// <summary>
         /// Ctor

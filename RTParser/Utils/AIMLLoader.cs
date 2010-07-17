@@ -950,6 +950,34 @@ namespace RTParser.Utils
             }
             return CleanWhitepaces("" + info);
         }
+
+        public static bool IsSilentTag(XmlNode node)
+        {
+            // if (true) return false;
+            if (node.Name == "think") return true;
+            if (node.NodeType == XmlNodeType.Text)
+            {
+                string innerText = node.InnerText;
+                if (innerText.Trim().Length == 0)
+                {
+                    return true;
+                }
+                return false;
+            }
+            if (node.Name == "template")
+            {
+                foreach (XmlNode xmlNode in node.ChildNodes)
+                {
+                    if (!IsSilentTag(xmlNode)) return false;
+                }
+                if (node.ChildNodes.Count!=1)
+                {
+                    return true;
+                }
+                return true;
+            }
+            return false;
+        }
     }
 
     public class XmlDocumentLineInfo : XmlDocument

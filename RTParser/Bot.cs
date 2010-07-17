@@ -25,12 +25,13 @@ namespace RTParser
     /// Encapsulates a Proccessor. If no settings.xml file is found or referenced the Proccessor will try to
     /// default to safe settings.
     /// </summary>
-    public class RTPBot
+    public class RTPBot : QuerySettings
     {
+        private bool ListeningToSelf = false;
         public override string ToString()
         {
             string s = GetType().Name;
-            if (GlobalSettings!=null)
+            if (GlobalSettings != null)
             {
                 s += " name=" + GlobalSettings.grabSettingNoDebug("name");
             }
@@ -41,7 +42,7 @@ namespace RTParser
         /// </summary>
         public bool StaticLoader = true;
 
-        public static string AIMLDEBUGSETTINGS = "clear -spam +error +aimltrace +cyc -dictlog";
+        public static string AIMLDEBUGSETTINGS = "clear -spam +error +aimltrace +cyc -dictlog -tscore";
         readonly public static TextFilter LoggedWords = new TextFilter() { "*", "-dictlog" }; //maybe should be ERROR", "STARTUP
         public User LastUser;
         readonly public User BotAsUser;
@@ -50,7 +51,9 @@ namespace RTParser
         {
             var r = new AIMLbot.Request(s, BotAsUser, this, null);
             r.IsTraced = true;
-            r.StartedOn = DateTime.Now.AddMinutes(20);
+            r.StartedOn = DateTime.Now;
+            // times out in 5 minutes
+            r.TimesOutAt = DateTime.Now + new TimeSpan(0, 5, 0);
             return r;
         }
         public AIMLLoader Loader;
@@ -422,6 +425,7 @@ namespace RTParser
         /// Ctor
         /// </summary>
         public RTPBot()
+            : base(QuerySettings.CogbotDefaults)
         {
             _g = new GraphMaster("default", this);
             _h = new GraphMaster("heardselfsay", this);
@@ -432,7 +436,7 @@ namespace RTParser
             BotAsUser = new AIMLbot.User("MySelf", this);
             BotAsUser.ListeningGraph = HeardSelfSayGraph;
             BotAsUser.Predicates = GlobalSettings;
-//            BotAsRequestUsed = new AIMLbot.Request("-bank-input-", BotAsUser, this, null);
+            //            BotAsRequestUsed = new AIMLbot.Request("-bank-input-", BotAsUser, this, null);
             AddExcuteHandler("aiml", EvalAIMLHandler);
             AddExcuteHandler("bot", LightWeigthBotDirective);
             this.TheCyc = new CycDatabase(this);
@@ -810,7 +814,7 @@ namespace RTParser
             else
             {
                 //if (writeToConsole)
-                    writeDebugLine(message);
+                writeDebugLine(message);
                 //                message = string.Format("[{0}]: {1}{2}", DateTime.Now.ToString(), message.Trim(), Environment.NewLine);
                 message = string.Format("[{0}]: {1}", DateTime.Now.ToString(), message.Trim());
                 //string m = message.AsString().ToLower();
@@ -1040,7 +1044,7 @@ namespace RTParser
         }
 
 
-        public Request GetRequest(string rawInput, string username)
+        public RequestImpl GetRequest(string rawInput, string username)
         {
             var r = new AIMLbot.Request(rawInput, FindOrCreateUser(username), this, null);
             r.IsTraced = true;
@@ -1212,17 +1216,23 @@ namespace RTParser
             //writeDebugLine("HEARDSELF SWAP: " + message);
             if (LastUser != null)
             {
-                lock(LastUser.QueryLock)
+                lock (LastUser.QueryLock)
                 {
                     var LR = LastUser.LastResult;
                     if (LR != null)
                         LR.AddOutputSentences(null, message);
-                }          
-            }           
+                }
+            }
 
             writeDebugLine("-----------------------------------------------------------------");
             AddHeardPreds(message, HeardPredicates);
             writeDebugLine("-----------------------------------------------------------------");
+            if (!ListeningToSelf)
+            {
+                writeDebugLine("SELF: " + message);
+                writeDebugLine("-----------------------------------------------------------------");
+                return null;
+            }
             RTPBot.writeDebugLine("HEARDSELF: " + message);
             writeDebugLine("-----------------------------------------------------------------");
             try
@@ -1409,10 +1419,10 @@ namespace RTParser
                 foreach (Unifiable path in result.NormalizedPaths)
                 {
                     QueryList ql = G.gatherQueriesFromGraph(path, request, MatchState.UserInput);
-                    if (ql.TemplateCount>0)
+                    if (ql.TemplateCount > 0)
                     {
                         request.TopLevel = ql;
-                        result.AddSubqueries(ql);                        
+                        result.AddSubqueries(ql);
                     }
                 }
 
@@ -1519,7 +1529,7 @@ namespace RTParser
 
 
                             if (createdOutput)
-                            {                                
+                            {
                                 solutions++;
                             }
                             if (request.IsComplete(result))
@@ -1532,7 +1542,7 @@ namespace RTParser
                         }
                         catch (Exception e)
                         {
-                            writeToLog("" + e);
+                            writeToLog(e);
                             if (this.WillCallHome)
                             {
                                 this.phoneHome(e.Message, request);
@@ -1623,21 +1633,21 @@ namespace RTParser
             GuardInfo sGuard = null;
             Request request = null;
             User user = BotAsUser;
-            
+
             if (parentRequest != null)
             {
                 user = parentRequest.user;
                 requestName = parentRequest.rawInput;
             }
 
-          //  if (request == null)
+            //  if (request == null)
 
             request = parentRequest;// new AIMLbot.Request(requestName, user, request0Proccessor, (AIMLbot.Request)parentRequest);
 
-            if (parentRequest!=null)
+            if (parentRequest != null)
             {
                 request.Graph = parentRequest.Graph;
-                request.depth = parentRequest.depth + 1;                
+                request.depth = parentRequest.depth + 1;
             }
 
             AIMLbot.Result result = request.CreateResult(request);
@@ -1663,7 +1673,7 @@ namespace RTParser
                 query = new SubQuery(requestName, result, request);
                 request.IsTraced = true;
             }
-            proccessResponse(query, request, result, templateNode,sGuard, out createdOutput, out templateSucceeded,
+            proccessResponse(query, request, result, templateNode, sGuard, out createdOutput, out templateSucceeded,
                              handler, templateInfo);
             return result;
         }
@@ -1815,12 +1825,12 @@ namespace RTParser
         public string processNode(XmlNode node, SubQuery query, Request request, Result result, User user, AIMLTagHandler parent)
         {
             // check for timeout (to avoid infinite loops)
-            if (request != null && request.StartedOn.AddMilliseconds(request.Proccessor.TimeOut) < DateTime.Now)
+            if (request != null && DateTime.Now > request.TimesOutAt)
             {
                 request.Proccessor.writeToLog(
                     "WARNING! Request timeout. User: {0} raw input: \"{1}\" processing template: \"{2}\"",
-                                  request.user.UserID, request.rawInput,
-                                  (query == null ? "-NOQUERY-" : query.Templates.Count.ToString()));
+                    request.user.UserID, request.rawInput,
+                    (query == null ? "-NOQUERY-" : query.Templates.Count.ToString()));
                 request.hasTimedOut = true;
                 return Unifiable.Empty;
             }
@@ -2096,7 +2106,7 @@ namespace RTParser
                         break;
                 }
             }
-            if (tagHandler==null)
+            if (tagHandler == null)
             {
                 // "bot", "favorite", "fav" 
                 foreach (KeyValuePair<string, string> prefix in new[]
@@ -2119,7 +2129,7 @@ namespace RTParser
                         var pn = node.ParentNode;
                         string outside = node.OuterXml.Replace("<" + prefix.Key + name, "<" + prefix.Value + " name=\"" + name + "\"");
                         writeToLog("AIMLLOADER: ! convert " + node.OuterXml + " -> " + outside);
-                    }                    
+                    }
                 }
                 tagHandler = new AIMLTagHandlers.verbatum(node.OuterXml, this, user, query, request, result, node);
                 writeToLog("AIMLLOADER:  Verbatum: " + node.OuterXml);
@@ -2410,7 +2420,7 @@ The AIMLbot program.
             {
                 return _g;
             }
-            
+
             if (graphPath == "heardselfsay")
             {
                 return _h;
@@ -2440,10 +2450,14 @@ The AIMLbot program.
         {
             RTPBot myBot = new Bot();
             OutputDelegate writeLine = MainConsoleWriteLn;
-            Main(args, myBot, writeLine);            
+            Main(args, myBot, writeLine);
         }
         public static void Main(string[] args, RTPBot myBot, OutputDelegate writeLine)
         {
+            myBot.outputDelegate = null;/// ?? Console.Out.WriteLine;
+
+           // writeLine = MainConsoleWriteLn;
+
             myBot.loadSettings();
             string myName = "BinaBot Daxeline";
             // myName = "Kotoko Irata";
@@ -2520,7 +2534,7 @@ The AIMLbot program.
                         myBot.pMSM.clearNextStateValues();
                         Request r = new AIMLbot.Request(input, myUser, myBot, null);
                         r.IsTraced = true;
-                        r.ProcessMultipleTemplates = false;
+                        ///r.ProcessMultipleTemplates = false; stored in user settings
                         writeLine("-----------------------------------------------------------------");
                         Result res = myBot.Chat(r);
                         if (!res.IsEmpty)
@@ -2538,7 +2552,7 @@ The AIMLbot program.
                         }
                     }
                     writeLine("-----------------------------------------------------------------");
-                    writeLine("{0}: {1}", myUser. ShortName, userJustSaid);
+                    writeLine("{0}: {1}", myUser.ShortName, userJustSaid);
                     writeLine("---------------------");
                     writeLine("{0}: {1}   menevalue={2}", myName, botJustSaid, meneValue);
                     writeLine("-----------------------------------------------------------------");
@@ -2619,7 +2633,7 @@ The AIMLbot program.
             if (showHelp) console("@prolog <load.pl>");
             if (cmd == "prolog")
             {
-                Prolog.CSPrologMain.Main(new string[] {args});
+                Prolog.CSPrologMain.Main(new string[] { args });
             }
 
             if (showHelp) console("@reload");
@@ -2635,7 +2649,7 @@ The AIMLbot program.
             {
                 if (Loader == null)
                 {
-                    Loader = new AIMLLoader(this, GetBotRequest(cmd + " " +args));
+                    Loader = new AIMLLoader(this, GetBotRequest(cmd + " " + args));
                 }
                 Loader.loadAIML(args);
                 console("Done with " + args);
@@ -2706,12 +2720,37 @@ The AIMLbot program.
             {
 
                 console("-----------------------------------------------------------------");
+                if (args == "")
+                {
+                    var ur0 = myUser;
+                    if (ur0.MinOutputs != UNLIMITED)
+                    {
+                        console("- query mode on -");
+                        QuerySettings.ApplySettings(QuerySettings.FindAll, myUser);
+                    }
+                    else
+                    {
+                        console("- query mode off -");
+                        QuerySettings.ApplySettings(QuerySettings.CogbotDefaults, myUser);
+                    }
+                    return true;
+                }
+
                 var ur = GetRequest(args, myUser.ShortName);
-                ur.ProcessMultipleTemplates = true;
-                ur.MaxOutputs = 99;
-                ur.MaxPatterns = 99;
-                ur.MaxTemplates = 99;
-                ur.ProcessMultiplePatterns = true;
+                // Adds findall to request
+                if (true)
+                {
+                    ApplySettings(QuerySettings.FindAll, ur);
+                }
+                else
+                {
+                    ur.ProcessMultipleTemplates = true;
+                    ur.MaxOutputs = 99;
+                    ur.MaxPatterns = 99;
+                    ur.MaxTemplates = 99;
+                    ur.ProcessMultiplePatterns = true;
+                }
+                ur.IsTraced = true;
                 console("-----------------------------------------------------------------");
                 var result = Chat0(ur, myUser.ListeningGraph);
                 console("-----------------------------------------------------------------");
@@ -2762,7 +2801,7 @@ The AIMLbot program.
             if (showHelp) console("@log " + AIMLDEBUGSETTINGS);
             if (cmd.StartsWith("log"))
             {
-                TextFilter.ListEdit(LoggedWords, args, console);
+                LoggedWords.UpateLogging(args, console);
                 return true;
             }
             if (cmd == "on" || cmd == "off")
@@ -2924,5 +2963,18 @@ The AIMLbot program.
                 return true;
             }
         }
+
+        #region Overrides of QuerySettings
+
+        /// <summary>
+        /// The Graph to start the query on
+        /// </summary>
+        public override GraphMaster Graph
+        {
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
+        }
+
+        #endregion
     }
 }

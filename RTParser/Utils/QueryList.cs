@@ -5,7 +5,7 @@ using System.Xml;
 
 namespace RTParser.Utils
 {
-    public class QueryList : RequestSettingsImpl
+    public class QueryList : QuerySettings
     {
 
         public override string ToString()
@@ -22,9 +22,11 @@ namespace RTParser.Utils
         }
 
         public QueryList(Request request)
+            : base(request)
         {
             TheRequest = request;
         }
+
         #region Overrides of RequestSettingsImpl
 
         public override GraphMaster Graph

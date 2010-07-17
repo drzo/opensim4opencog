@@ -12,16 +12,18 @@ using UPath = RTParser.Unifiable;
 
 namespace RTParser.Utils
 {
-    public class GraphMaster
+    public class GraphMaster : QuerySettings
     {
-        private static bool DefaultSilentTagsInPutParent = false;
+        public static bool DefaultSilentTagsInPutParent = false;
+
+        public bool SilentTagsInPutParent = DefaultSilentTagsInPutParent;
+        public bool DoParents = true;
 
         private String graphName;
         private RTPBot theBot;
         public GraphMaster Srai;
         private bool NoIndexing = true;
         private bool FullDepth = true;
-        private bool SilentTagsInPutParent = DefaultSilentTagsInPutParent;
         readonly private List<GraphMaster> Parents = new List<GraphMaster>();
 
         /// <summary>
@@ -65,7 +67,7 @@ namespace RTParser.Utils
         {
             get
             {
-                if (ScriptingName.Contains("ParentResult"))
+                if (ScriptingName.Contains("parent"))
                 {
                     return this;
                 }
@@ -90,6 +92,7 @@ namespace RTParser.Utils
         }
 
         public GraphMaster(string gn, RTPBot bot)
+            : base(bot)
         {
             graphName = gn;
             theBot = bot;
@@ -158,7 +161,7 @@ namespace RTParser.Utils
             if (info.FullPath.AsNodeXML().ToString().ToUpper() != pats.ToUpper())
             {
                 string s = "CheckMismatch " + info.FullPath.AsNodeXML().ToString() + "!=" + pats;
-                RTPBot.writeDebugLine(s);
+                writeToLog(s);
                 throw new Exception(s);
 
             }
@@ -191,7 +194,7 @@ namespace RTParser.Utils
 
         private GraphMaster makeParent()
         {
-            var p = new GraphMaster("" + graphName + ".ParentResult" + (parent0 == 0 ? "" : "" + parent0), theBot);
+            var p = new GraphMaster("" + graphName + ".parent" + (parent0 == 0 ? "" : "" + parent0), theBot);
             p.Srai = this;
             parent0++;
             p.UnTraced = true;
@@ -234,39 +237,19 @@ namespace RTParser.Utils
 
         public void addCategoryTag(Unifiable generatedPath, PatternInfo patternInfo, CategoryInfo category, XmlNode outerNode, XmlNode templateNode, GuardInfo guard, ThatInfo thatInfo)
         {
-            var RootNode = this.RootNode;
-            if (SilentTagsInPutParent && SilentTag(templateNode))
+            var node = this.RootNode;
+            if (SilentTagsInPutParent && AIMLLoader.IsSilentTag(templateNode))
             {
-                GraphMaster Parent = makeParent();
-                this.Parents.Add(Parent);
-                Parent.Size++;
-                RootNode = Parent.RootNode;
-                RTPBot.writeDebugLine("Adding to ParentResult" + category);
-                return;
+                GraphMaster parent1 = makeParent();
+                this.Parents.Add(parent1);
+                parent1.Size++;
+                node = parent1.RootNode;
+                writeToLog("Adding to Parent " + category);
             }
-            Node.addCategoryTag(RootNode, generatedPath, patternInfo,
+            Node.addCategoryTag(node, generatedPath, patternInfo,
                                 category, outerNode, templateNode, guard, thatInfo, this);
             this.Size++;
             // keep count of the number of categories that have been processed
-        }
-
-        private static bool SilentTag(XmlNode node)
-        {
-           // if (true) return false;
-            if (node.ChildNodes.Count != 1) return false;
-            string s = node.InnerXml;
-            if (s.StartsWith("<think>"))
-            {
-                if (s.EndsWith("</think>"))
-                {
-                    if (node.ChildNodes.Count != 1)
-                    {
-                        return false;
-                    }
-                    return true;
-                }
-            }
-            return false;
         }
 
 
@@ -281,18 +264,18 @@ namespace RTParser.Utils
             if (path.IsEmpty)
             {
                 string s = "ERROR! path.IsEmpty  returned no results for " + state + " in " + this;
-                RTPBot.writeDebugLine(s);
+                writeToLog(s);
                 throw new Exception(s);
             }
             QueryList ql = new QueryList(request);
-            ql.ApplySettings((QuerySettings)request);
+            ApplySettings(request, ql);
             request.TopLevel = ql;
             evaluateQL(path, request, state, ql);
             if (ql.TemplateCount == 0)
             {
                 bool trace = request.IsTraced && !UnTraced;
                 if (trace)
-                    RTPBot.writeDebugLine(this + " returned no results for " + path);
+                    writeToLog(this + " returned no results for " + path);
                 return ql;
             }
             lock (request.user.AllQueries)
@@ -304,9 +287,9 @@ namespace RTParser.Utils
 
         private void evaluateQL(Unifiable unifiable, Request request, MatchState matchState, QueryList ql)
         {
-            DoParentEval(Parents, request, unifiable);
+            if (DoParents) DoParentEval(Parents, request, unifiable);
             bool trace = request.IsTraced && !UnTraced;
-            while(getQueries(unifiable, request, matchState, 0, Unifiable.CreateAppendable(), ql))
+            while (getQueries(unifiable, request, matchState, 0, Unifiable.CreateAppendable(), ql))
             {
                 if (ql.IsMaxedOut)
                 {
@@ -319,7 +302,7 @@ namespace RTParser.Utils
             }
             if (ql.TemplateCount == 0)
             {
-                if (trace) RTPBot.writeDebugLine("no templates for " + this);
+                if (trace) writeToLog("no templates for " + this);
                 var fallbacks = FallBacks(request.user);
                 if (fallbacks == null) return;
                 foreach (GraphMaster graphMaster in fallbacks)
@@ -328,7 +311,7 @@ namespace RTParser.Utils
                     if (ql.TemplateCount > 0)
                     {
                         if (trace)
-                            RTPBot.writeDebugLine("using ParentResult templates from " + ql);
+                            writeToLog("using parent templates from " + ql);
                         return;
                     }
                 }
@@ -427,7 +410,7 @@ namespace RTParser.Utils
                     request.hasTimedOut)
                 {
                     break;
-                } 
+                }
                 if (IsStartStarStar(toplevelBubble))
                 {
                     toplevel.NoMoreResults = true;
@@ -453,7 +436,7 @@ namespace RTParser.Utils
 
         private void writeToLog(string message, params object[] args)
         {
-            RTPBot.writeDebugLine("!NODE: " + message + " in " + ToString(), args);
+            RTPBot.writeDebugLine("GRAPH: " + message + " in " + ToString(), args);
         }
 
         private IEnumerable<GraphMaster> FallBacks(User user)
@@ -506,7 +489,7 @@ namespace RTParser.Utils
 
         public void RemoveTemplate(TemplateInfo templateInfo)
         {
-            //System.RTPBot.writeDebugLine("removing " + templateInfo.CategoryInfo.ToString());
+            //System.writeToLog("removing " + templateInfo.CategoryInfo.ToString());
             Templates.Remove(templateInfo);
         }
 
@@ -516,14 +499,26 @@ namespace RTParser.Utils
             {
                 foreach (KeyValuePair<string, TopicInfo> info in Topics)
                 {
-                    RTPBot.writeDebugLine("topic = " + info.Key);
+                    writeToLog("topic = " + info.Key);
                 }
                 foreach (KeyValuePair<string, ThatInfo> info in Thats)
                 {
-                    RTPBot.writeDebugLine("that = " + info.Key);
+                    writeToLog("that = " + info.Key);
                 }
             }
         }
 
+        #region Overrides of QuerySettings
+
+        /// <summary>
+        /// The Graph to start the query on
+        /// </summary>
+        public override GraphMaster Graph
+        {
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
+        }
+
+        #endregion
     }
 }

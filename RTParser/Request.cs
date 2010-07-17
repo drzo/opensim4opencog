@@ -9,7 +9,7 @@ using RTParser.Utils;
 namespace RTParser
 {
 
-    public interface Request
+    public interface Request : QuerySettingsReadOnly
     {
         int depth { get; set; }
         Unifiable Topic { get; set; }
@@ -38,13 +38,14 @@ namespace RTParser
         Unifiable rawInput { get; set; }
         IList<Result> UsedResults { get; set; }
         IList<TemplateInfo> UsedTemplates { get; }
+        DateTime TimesOutAt { get; set; }
         void WriteLine(string s, object[] args);
         bool IsComplete(Result o);
         bool addSetting(string name, Unifiable unifiable);
         void AddSubResult(Result result);
         int GetCurrentDepth();
         Unifiable grabSetting(string name);
-        QuerySettings GetQuerySettings();
+        QuerySettingsSettable GetQuerySettings();
         AIMLbot.Result CreateResult(Request res);
 
         AIMLbot.Request CreateSubRequest(Unifiable templateNodeInnerValue, User user, RTPBot rTPBot, AIMLbot.Request request);
@@ -54,7 +55,7 @@ namespace RTParser
     /// <summary>
     /// Encapsulates all sorts of information about a request to the Proccessor for processing
     /// </summary>
-    abstract public class RequestImpl : RequestSettingsImpl, Request
+    abstract public class RequestImpl : QuerySettings, Request
     {
         #region Attributes
 
@@ -122,16 +123,16 @@ namespace RTParser
         /// <param name="user">The user who made the request</param>
         /// <param name="bot">The bot to which this is a request</param>
         public RequestImpl(Unifiable rawInput, User user, RTPBot bot, Request parent)
+            : base(user) // Get query settings intially from user
         {
             UsedResults = new List<Result>();
             Flags = "Nothing";
-            if (user != null)
-            {
-                base.ApplySettings(user);
-            }
+
+            ApplySettings(user, this);
+
             if (parent != null)
             {
-                this.ApplySettings((QuerySettings)parent);
+                ApplySettings(parent, this);
                 Proof = parent.Proof;
                 this.ParentRequest = parent;
                 Graph = parent.Graph;
@@ -145,9 +146,8 @@ namespace RTParser
             this.user = user;
             this.Proccessor = bot;
             this.StartedOn = DateTime.Now;
+            this.TimesOutAt = StartedOn.AddMilliseconds(Proccessor.TimeOut);
             this.framesAtStart = new StackTrace().FrameCount;
-            this.ProcessMultiplePatterns = true;
-            this.ProcessMultipleTemplates = true;
         }
 
         private GraphMaster ovGraph = null;
@@ -260,6 +260,8 @@ namespace RTParser
             get { return result.UsedTemplates; }
         }
 
+        public DateTime TimesOutAt { get; set;}
+
         public void WriteLine(string s, object[] args)
         {
             if (result != null)
@@ -278,7 +280,7 @@ namespace RTParser
             {
                 return false;
             }
-            QuerySettings qs = GetQuerySettings();
+            QuerySettingsReadOnly qs = GetQuerySettings();
             if (result1.OutputSentenceCount >= qs.MaxOutputs)
             {
                 return true;
@@ -295,7 +297,7 @@ namespace RTParser
             return false;
         }
 
-        public QuerySettings GetQuerySettings()
+        public QuerySettingsSettable GetQuerySettings()
         {
             return this;
         }
@@ -320,6 +322,7 @@ namespace RTParser
             depth = subRequest.depth = request.depth + 1;
             subRequest.ParentRequest = request;
             subRequest.StartedOn = request.StartedOn;
+            subRequest.TimesOutAt = request.TimesOutAt;
             return subRequest;
         }
 
