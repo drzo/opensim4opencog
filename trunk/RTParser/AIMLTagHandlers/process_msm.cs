@@ -130,6 +130,7 @@ namespace RTParser.AIMLTagHandlers
             subRequest.Topic = tempTopic;
             subRequest.ParentRequest = this.request;
             subRequest.StartedOn = this.request.StartedOn;
+            subRequest.TimesOutAt = this.request.TimesOutAt;
             subRequest.ProcessMultipleTemplates = allowMultiplesTemplates;
 
             AIMLbot.Result subResult = null;

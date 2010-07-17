@@ -313,14 +313,14 @@ namespace RTParser.Utils
         {
             // check for timeout
             // check for timeout
-            if (request.StartedOn.AddMilliseconds(request.Proccessor.TimeOut) < DateTime.Now)
+            if (DateTime.Now > request.TimesOutAt)
             {
                 request.Proccessor.writeToLog("TIMEOUT! User: " +
-                    request.user.UserID + " raw input: \"" +
-                    request.rawInput + "\" in " + this);
+                                              request.user.UserID + " raw input: \"" +
+                                              request.rawInput + "\" in " + this);
                 request.IsTraced = true;
                 request.hasTimedOut = true;
-                return null;// Unifiable.Empty;
+                return null; // Unifiable.Empty;
             }
 
             // so we still have time!

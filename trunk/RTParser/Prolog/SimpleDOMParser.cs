@@ -289,7 +289,7 @@ namespace RTParser.Prolog
                         isFormat = (value == "true");
                         break;
                     case "remove_attribute_prefixes": // Remove namespace prefixes from attributes when it
-                        // is the same as the prefix of the ParentResult element
+                        // is the same as the prefix of the parent element
                         isRemPrf = (value == "true");
                         break;
                     case "indent": // Indent the element content (2 spaces)

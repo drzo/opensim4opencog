@@ -306,7 +306,7 @@ namespace RTParser.Utils
             }
             else if (handler == null)
             {
-                //throw new InvalidOperationException("no ParentResult handler");                
+                //throw new InvalidOperationException("no parent handler");                
             }
             Parent = handler;
         }

@@ -11,7 +11,7 @@ namespace RTParser
     /// <summary>
     /// Encapsulates information and history of a user who has interacted with the bot
     /// </summary>
-    abstract public class User : RequestSettingsImpl, QuerySettings
+    abstract public class User : QuerySettings, QuerySettingsReadOnly
     {
         public readonly object QueryLock = new object();
 
@@ -85,6 +85,7 @@ namespace RTParser
 
         /// <summary>
         /// A collection of all the result objects returned to the user in this session
+        /// (in reverse order of time)
         /// </summary>
         private readonly List<Result> Results = new List<Result>();
 
@@ -140,14 +141,7 @@ namespace RTParser
         {
             get
             {
-                lock (Results) if (this.Results.Count > 0)
-                    {
-                        return (Result)this.Results[0];
-                    }
-                    else
-                    {
-                        return null;
-                    }
+                return GetResult(0);
             }
         }
 
@@ -159,7 +153,7 @@ namespace RTParser
                 var raws = new List<Unifiable>();
                 int added = 0;
                 string lastOutput = "";
-                if (this.Results.Count > 0)
+                if (this.SailentResultCount > 0)
                 {
                     foreach (var result in Results)
                     {
@@ -211,12 +205,14 @@ namespace RTParser
         /// <param name="UserID">The GUID of the user</param>
         /// <param name="bot">the bot the user is connected to</param>
         public User(string UserID, RTParser.RTPBot bot, ParentProvider provider)
+            : base(bot)
         {
             if (UserID.Length > 0)
             {
                 this.id = UserID;
                 this.bot = bot;
-                this.ApplySettings(bot.BotAsUser);
+                // we dont inherit the BotAsUser we inherit the bot's setings
+                // ApplySettings(bot.BotAsUser, this);
                 this.Predicates = new RTParser.Utils.SettingsDictionary(ShortName + ".predicates", this.bot, provider);
                 this.bot.DefaultPredicates.Clone(this.Predicates);
                 ListeningGraph = bot.GraphMaster;
@@ -242,11 +238,11 @@ namespace RTParser
         /// Returns the Unifiable to use for the next that part of a subsequent path
         /// </summary>
         /// <returns>the Unifiable to use for that</returns>
-        public Unifiable getLastBotOutput()
+        private Unifiable getLastBotOutput()
         {
-            if (this.Results.Count > 0)
+            if (this.SailentResultCount > 0)
             {
-                var v = ((Result)Results[0]).RawOutput;
+                var v = GetResult(0).RawOutput;
                 return v;
             }
             else
@@ -282,7 +278,7 @@ namespace RTParser
         /// <returns>the sentence numbered by "sentence" of the output "n" steps ago from the bot</returns>
         public Unifiable getThat(int n, int sentence)
         {
-            if ((n >= 0) & (n < this.Results.Count))
+            if ((n >= 0) & (n < this.SailentResultCount))
             {
                 Result historicResult = GetResult(n);
                 if ((sentence >= 0) & (sentence < historicResult.OutputSentenceCount))
@@ -320,7 +316,7 @@ namespace RTParser
         /// <returns>the identified sentence number from the input from the bot "n" steps ago</returns>
         public Unifiable getInputSentence(int n, int sentence)
         {
-            if ((n >= 0) & (n < this.Results.Count))
+            if ((n >= 0) & (n < this.SailentResultCount))
             {
                 Result historicInput = GetResult(n);
                 if ((sentence >= 0) & (sentence < historicInput.InputSentences.Count))
@@ -358,7 +354,7 @@ namespace RTParser
         /// <returns>the identified sentence number from the output from the bot "n" steps ago</returns>
         public Unifiable getResultSentence(int n, int sentence)
         {
-            if ((n >= 0) & (n < this.Results.Count))
+            if ((n >= 0) & (n < this.SailentResultCount))
             {
                 Result historicResult = GetResult(n);
                 if ((sentence >= 0) & (sentence < historicResult.InputSentences.Count))
@@ -370,6 +366,16 @@ namespace RTParser
         }
 
         public bool SuspendAdd;
+        private int SailentResultCount
+        {
+            get
+            {
+                lock (Results)
+                {
+                    return Results.Count;
+                }
+            }
+        }
 
         /// <summary>
         /// Adds the latest result from the bot to the Results collection
@@ -390,7 +396,7 @@ namespace RTParser
             lock (Results)
             {
                 this.Results.Insert(0, latestResult);
-                int rc = this.Results.Count;
+                int rc = this.SailentResultCount;
                 if (rc > MaxResultsSaved)
                 {
                     this.Results.RemoveRange(MaxResultsSaved, rc - MaxResultsSaved);
@@ -402,12 +408,24 @@ namespace RTParser
 
         public string getLastBotOutputForThat()
         {
-            if (this.Results.Count == 0) return "nothing";// Unifiable.STAR;
-            String sentence = ((Result)Results[0]).RawOutput;
-            sentence = MainSentence(sentence);
-            sentence = sentence.Trim(new char[] { '.', ' ', '!', '?' });
-            String ssentence = bot.Loader.Normalize(sentence, true);
-            return ssentence;
+            lock (Results)
+            {
+                int resltUsed = 0;
+                foreach (Result r in Results)
+                {
+                    resltUsed++;
+                    if (!r.IsSailent) continue;
+                    String sentence = r.RawOutput;
+                    sentence = MainSentence(sentence);
+                    sentence = sentence.Trim(new char[] {'.', ' ', '!', '?'});
+                    if (sentence.Length == 0) continue;
+                    String ssentence = bot.Loader.Normalize(sentence, true);
+                    if (sentence.Length == 0) continue;
+                    return sentence;
+                }
+
+            }
+            return "Nothing";// Unifiable.STAR;
         }
 
         static string MainSentence(string sentence)
@@ -513,14 +531,31 @@ namespace RTParser
             }
         }
 
-        public Result GetResult(int i)
+        public Result GetResult(int i, bool mustBeSalient)
         {
             if (i == -1) return null;
             lock (Results)
             {
                 if (i >= Results.Count) return null;
+                if (mustBeSalient)
+                {
+                    foreach (var r in Results)
+                    {
+                        if (r.IsSailent)
+                        {
+                            if (i == 0) return r;
+                            i--;
+                        }
+                    }
+                    return null;
+                }
                 return Results[i];
             }
+        }
+
+        public Result GetResult(int i)
+        {
+            return GetResult(i, false);
         }
 
         public void SetOutputSentences(string args)

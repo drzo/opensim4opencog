@@ -105,6 +105,7 @@ namespace RTParser.AIMLTagHandlers
                         subRequest.Topic = tempTopic;
                         subRequest.ParentRequest = this.request;
                         subRequest.StartedOn = this.request.StartedOn;
+                        subRequest.TimesOutAt = this.request.TimesOutAt;
                         // make sure we don't keep adding time to the request
                         bool showDebug = true;
                         string subRequestrawInput = subRequest.rawInput;
@@ -173,7 +174,7 @@ namespace RTParser.AIMLTagHandlers
                             string sss = result.ToString();
                             if (showDebug)
                             {
-                                writeToLog("{0} SUCCESS RETURN {1} '{2}'", prefix, subResult.Score, subQueryRawOutput);
+                                writeToLog("{0} SUCCESS RETURN {1}  {2} '{3}'", prefix, subRequestrawInput, subResult.Score, subQueryRawOutput);
                                 if (query != null)
                                 {
                                     if (query.CurrentTemplate != null)

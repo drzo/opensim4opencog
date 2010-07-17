@@ -294,7 +294,7 @@ namespace RTParser.Prolog
         *
         *  remove_attribute_prefixes(  <bool>) : Remove namespace prefixes from
         *                                     : attributes when it's the same as the
-        *                                     : prefix of the ParentResult element
+        *                                     : prefix of the parent element
         *                                     : ( default false).
         *
         *  [<bool> is one of 'true' or 'false']
