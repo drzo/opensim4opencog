@@ -48,11 +48,12 @@ namespace RTParser.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "guard")
             {
+                string language = GetAttribValue("lang", "cycl");
                 templateNodeInnerText = Recurse();
                 if (!templateNodeInnerText.IsEmpty)
                 {
-                    Unifiable res = this.TheCyc.EvalSubL(templateNodeInnerText, null);
-                    return res;
+                    Unifiable res = this.Proc.SystemExecute(templateNodeInnerText, language, request);
+                    if (!Unifiable.IsNullOrEmpty(res)) return res;
                 }
             }
             return Unifiable.Empty;

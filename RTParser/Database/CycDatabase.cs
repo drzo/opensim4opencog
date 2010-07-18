@@ -189,6 +189,23 @@ namespace RTParser.Database
         static private Unifiable NILTerm = "NIL";
         public bool Lookup(Unifiable textIn,Unifiable filter,out Unifiable term, SubQuery subquery)
         {
+            if (Unifiable.IsNullOrEmpty(textIn))
+            {
+                term = null;
+                return false;
+            }
+            if (textIn.AsString().Contains("#$"))
+            {
+                term = textIn;
+                if (!Unifiable.IsNullOrEmpty(term))
+                {
+                    if (!IsaFilter(term, filter))
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
             lock (stringTOResult)
             {
                 string key = "" + textIn + "=" + filter;
