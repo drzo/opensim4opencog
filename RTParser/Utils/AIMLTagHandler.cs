@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -15,6 +16,7 @@ namespace RTParser.Utils
     /// </summary>
     abstract public class AIMLTagHandler : TextTransformer, IXmlLineInfo
     {
+        public static ICollection<string> ReservedAttributes = new HashSet<string> { };
 
         public override Unifiable ProcessAimlChange()
         {
@@ -25,7 +27,7 @@ namespace RTParser.Utils
             }
             finally
             {
-                OnExit();
+                if (OnExit != null) OnExit();
             }
         }
 
@@ -34,11 +36,11 @@ namespace RTParser.Utils
             ThreadStart OnExit = EnterTag();
             try
             {
-                return CompleteProcess();
+                return CheckValue(CompleteProcess());
             }
             finally
             {
-                OnExit();
+                if (OnExit != null) OnExit();
             }
         }
 
@@ -46,36 +48,102 @@ namespace RTParser.Utils
         public ThreadStart EnterTag()
         {
             bool needsUnwind = false;
-            if (templateNode.Attributes.Count > 0)
+            XmlAttributeCollection collection = templateNode.Attributes;
+            if (collection.Count > 0)
             {
                 // graphmaster
-                GraphMaster g = request.Graph;
-                string graphName = GetAttribValue("graph", null);
-                var oldGraph = g;
-                if (graphName != null)
-                {
-                    needsUnwind = true;
-                    g = Proc.GetGraph(graphName, oldGraph);
-                    request.Graph = g;
-                }
-
+                GraphMaster oldGraph = request.Graph;
                 // topic
-                string tempTopic = GetAttribValue("topic", null);
-                var oldTopic = request.Topic;
-                if (tempTopic != null)
+                Unifiable oldTopic = request.Topic;
+
+                Hashtable savedValues = null;
+
+                foreach (XmlAttribute node in collection)
                 {
-                    needsUnwind = true;
-                    request.Topic = tempTopic;
+                    switch (node.Name.ToLower())
+                    {
+                        case "graph":
+                            {
+                                string graphName = node.Value;
+                                if (graphName != null)
+                                {
+                                    needsUnwind = true;
+                                    GraphMaster g = Proc.GetGraph(graphName, oldGraph);
+                                    if (g != null) request.Graph = g;
+                                }
+
+
+                            }
+                            break;
+                        case "topic":
+                            {
+                                string tempTopic = node.Value;
+                                if (tempTopic != null)
+                                {
+                                    needsUnwind = true;
+                                    request.Topic = tempTopic;
+                                }
+
+                            }
+                            break;
+                        case "name":
+                            continue;
+                        case "index":
+                            continue;
+                        case "default":
+                            continue;
+                        case "value":
+                            continue;
+                            
+                        default:
+                            {
+                                string n = node.Name;
+                                if (ReservedAttributes.Contains(n))
+                                {
+                                    continue;
+                                }
+                                string v = node.Value;
+                                string oldValue = request.grabSetting(n);
+                                savedValues = savedValues ?? new Hashtable();
+                                writeToLog("RECURSIVE=");
+                                savedValues.Add(n, oldValue);
+                                request.addSetting(n, v);
+                                needsUnwind = true;
+                            }
+                            break;
+                    }
                 }
 
                 // unwind
                 if (needsUnwind)
                 {
                     return () =>
-                    {
-                        request.Graph = oldGraph;
-                        request.Topic = oldTopic;
-                    };
+                               {
+                                   if (savedValues != null)
+                                   {
+                                       foreach (DictionaryEntry kv in savedValues)
+                                       {
+                                           request.addSetting((string) kv.Key, (Unifiable) kv.Value);
+                                       }
+                                   }
+                                   if (oldGraph != null)
+                                   {
+                                       request.Graph = oldGraph;
+                                   }
+                                   else
+                                   {
+                                       needsUnwind = false;
+                                   }
+                                   if (oldTopic != null) request.Topic = oldTopic;
+                                   else
+                                   {
+                                       needsUnwind = false;
+                                   }
+                                   if (!needsUnwind)
+                                   {
+                                       writeToLog("ERROR Something went odd during unwind!");
+                                   }
+                               };
                 }
             }
             return () => { };           
@@ -234,11 +302,15 @@ namespace RTParser.Utils
                 string s2;
                 if (!Unifiable.IsNull(RecurseResult))
                 {
-                     return RecurseResult;
+                    return RecurseResult;    
                 }
                 else
                 {
-                    s2 = Recurse();                    
+                    s2 = Recurse();
+                    if (!Unifiable.IsNull(RecurseResult))
+                    {
+                        return RecurseResult;
+                    }
                 }
                 string s0 = templateNode.InnerXml.Trim();
                 string s1 = Unifiable.InnerXmlText(templateNode);
@@ -381,6 +453,12 @@ namespace RTParser.Utils
         protected Unifiable RecurseResult = Unifiable.NULL;
         protected Unifiable Recurse()
         {
+            if (!Unifiable.IsNullOrEmpty(RecurseResult))
+            {
+                writeToLog("USING CACHED RECURSE " + RecurseResult);
+                // use cached recurse value
+                return RecurseResult;
+            }
             //Unifiable templateNodeInnerText;//= this.templateNodeInnerText;
             Unifiable templateResult = Unifiable.CreateAppendable();
             if (this.templateNode.HasChildNodes)
@@ -438,6 +516,10 @@ namespace RTParser.Utils
                     writeToLog("ERROR ?!?! templateNodeInnerText = " + value);
                 }
                 string v = value.AsString();
+                if (v.Contains("<"))
+                {
+                    writeToLogWarn("!@ERROR BAD INPUT? " + value);
+                }
                 if (v.Contains("&"))
                 {
                     RTPBot.writeDebugLine("!@ERROR BAD INPUT? " + value);
@@ -677,11 +759,11 @@ namespace RTParser.Utils
             }
             else
             {
-                Unifiable resultNodeInnerXML = tagHandler.Transform();
-                XmlNode resultNode = getNode(String.Format("<node>{0}</node>", Unifiable.ToVMString(resultNodeInnerXML)), templateNode);
+                string resultNodeInnerXML = tagHandler.Transform();
+                XmlNode resultNode = AIMLTagHandler.getNode("<node>" + resultNodeInnerXML + "</node>", templateNode);
                 if (resultNode.HasChildNodes)
                 {
-                    Unifiable recursiveResult = Unifiable.CreateAppendable();
+                    var recursiveResult = Unifiable.CreateAppendable();
                     // recursively check
                     foreach (XmlNode childNode in resultNode.ChildNodes)
                     {
@@ -689,23 +771,21 @@ namespace RTParser.Utils
                     }
                     if (!recursiveResult.IsEmpty)
                     {
-                        recursiveResult = CheckValue(recursiveResult);
                         RecurseResult = recursiveResult;
                     }
-                    return recursiveResult;//.ToString();
+                    return recursiveResult;
                 }
                 else
                 {
-                    Unifiable before = Unifiable.InnerXmlText(resultNode);//.InnerXml;        
-                    return CheckValue(before);
+                    return resultNode.InnerXml;
                 }
             }
         }
 
         public void SaveResultOnChild(XmlNode node, string value)
         {
-            if (value == null) return;
-            if (value == "") return;
+            //if (value == null) return;
+            //if (value == "") return;
             RTPBot.writeDebugLine("-!SaveResultOnChild AIMLTRACE " + value + " -> " + node.OuterXml);
             node.InnerXml = CheckValue(value);
         }

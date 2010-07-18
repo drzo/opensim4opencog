@@ -1699,17 +1699,15 @@ namespace RTParser
         {
             bool isTraced = request.IsTraced || result.IsTraced || !isAcceptingUserInput;
             //XmlNode guardNode = AIMLTagHandler.getNode(s.Guard.InnerXml);
+            bool usedGuard = sGuard != null && sGuard.Output != null;
+            sOutput = sOutput ?? templateInfo.Output;
             string output = sOutput.OuterXml;
-            bool usedGuard = sGuard != null;
+            LineInfoElement templateNode = LineInfoElement.Cast(sOutput);
             if (usedGuard)
             {
-                output = output.Trim();
-                if (output.StartsWith("<template"))
-                {
-                    output = "<template" + sGuard.InnerXml + " GUARDBOM " + output.Substring(10);
-                }
+                string guardStr = "<when>" + sGuard.Output.OuterXml + " GUARDBOM " + sOutput.OuterXml + "</when>";
+                templateNode = AIMLTagHandler.getNode(guardStr, sOutput);
             }
-            LineInfoElement templateNode = AIMLTagHandler.getNode(output, sOutput);
 
             string outputSentence = this.processNode(templateNode, query, request, result, request.user, handler);
             templateSucceeded = !Unifiable.IsFalse(outputSentence);
@@ -2461,8 +2459,9 @@ The AIMLbot program.
            // writeLine = MainConsoleWriteLn;
 
             myBot.loadSettings();
-            string myName = "Test Suite";
-            // myName = "Kotoko Irata";
+            string myName = "BinaBot Daxeline";
+            //myName = "Test Suite";
+            myName = "Kotoko Irata";
             //myName = "Nephrael Rae";
             if (args != null && args.Length > 0)
             {
