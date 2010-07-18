@@ -125,18 +125,19 @@ namespace RTParser.Utils
 
         string ResolveToURI(string pathIn, LoaderOptions loadOpts, Request request)
         {
-            string baseFile = GetBaseFile(loadOpts);
-            IEnumerable<String> baseFiles = new string[] {"", ".", baseFile, "aiml"};
-            foreach (var s in baseFiles)
+            string baseFile = GetBaseDirectory(loadOpts);
+            pathIn = pathIn.Trim();
+            string[] combine = baseFile != null ? new[] {".", baseFile, "aiml"} : new[] {".", "aiml"};
+            foreach (var s in combine)
             {
-                string path = (s != null && s != "") ? Path.Combine(s, pathIn) : pathIn;
+                string path = Path.Combine(s, pathIn);
                 if (Directory.Exists(path))
                 {
-                    return path;
+                    return (new DirectoryInfo(path)).FullName;
                 }
                 if (File.Exists(path))
                 {
-                    return path;
+                    return (new FileInfo(path)).FullName;
                 }
                 if (Uri.IsWellFormedUriString(path, UriKind.RelativeOrAbsolute))
                 {
@@ -158,17 +159,18 @@ namespace RTParser.Utils
             return pathIn;
         }
 
-        private string GetBaseFile(LoaderOptions loadOpts)
+        static string GetBaseDirectory(LoaderOptions loadOpts)
         {
             string baseFile = loadOpts.Filename ?? loadOpts.PrevFilename;
             if (baseFile == null) return ".";
             if (Directory.Exists(baseFile))
             {
-                baseFile = (new DirectoryInfo(baseFile)).FullName;
+                return (new DirectoryInfo(baseFile)).FullName;
             }
             if (File.Exists(baseFile))
             {
-                baseFile = (new FileInfo(baseFile)).DirectoryName;
+                var fi = new FileInfo(baseFile);
+                return fi.DirectoryName ?? baseFile;
             }
             return baseFile;
         }
@@ -245,8 +247,8 @@ namespace RTParser.Utils
                 string s = new FileInfo(filename).FullName;
                 if (RProcessor.IsFileLoaded(filename))
                 {
-                    writeToLog("Already loaded! " + filename + " => " + s);
-                    return;
+                    writeToLog("Already loaded! (but loading again) " + filename + " => " + s);
+                    //return;
                 }
                 writeToLog("Processing AIML file: " + filename + " into " + request.Graph);
                 RProcessor.AddFileLoaded(filename);
@@ -1123,8 +1125,14 @@ namespace RTParser.Utils
         public override XmlElement CreateElement(string prefix, string localname, string nsURI)
         {
             LineInfoElement elem = new LineInfoElement(prefix, localname, nsURI, this);
-            if (LineInfoReader != null)
-                elem.SetPos(LineInfoReader.Position);
+            try
+            {
+                //if (LineInfoReader != null && LineInfoReader.Position != -1)
+                  //  elem.SetPos(LineInfoReader.Position);
+            }
+            catch (Exception)
+            {
+            }
             if (LineTracker != null)
             {
                 elem.SetLineInfo(LineTracker.LineNumber, LineTracker.LinePosition);
@@ -1232,6 +1240,13 @@ namespace RTParser.Utils
                 if (lParent == null) return base.ParentNode;
                 return lParent;
             }
+        }
+
+        public static LineInfoElement Cast(XmlNode output)
+        {
+            if (output is LineInfoElement) return (LineInfoElement) output;
+            if (output == null) return null;
+            return AIMLTagHandler.getNode(output.OuterXml, output);
         }
     } // End LineInfoElement class.
 }
