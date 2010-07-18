@@ -92,6 +92,8 @@ namespace RTParser.Utils
                             continue;
                         case "default":
                             continue;
+                        case "match":
+                            continue;
                         case "value":
                             continue;
                             
@@ -103,7 +105,11 @@ namespace RTParser.Utils
                                     continue;
                                 }
                                 string v = node.Value;
-                                string oldValue = request.grabSetting(n);
+                                Unifiable oldValue = request.grabSetting(n);
+                                if (oldValue.AsString()==v)
+                                {
+                                    continue;
+                                }
                                 savedValues = savedValues ?? new Hashtable();
                                 writeToLog("RECURSIVE=");
                                 savedValues.Add(n, oldValue);

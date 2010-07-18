@@ -515,39 +515,63 @@ namespace RTParser
             return false;
         }
 
-        public override bool ConsumePath(string[] strings, out string fw, out int rw, SubQuery query)
+        public override bool ConsumePath(Unifiable fullpath, string[] tokens, out string fw, out Unifiable after, SubQuery query)
         {
-            rw = strings.Length;
-            if (rw == 0)
+            int sl = tokens.Length;
+            if (sl == 0)
             {
+                bool WasEmpty = IsEmpty;
                 fw = "";
-                return IsEmpty;
+                after = Unifiable.Empty;
+                return WasEmpty;
             }
-            fw = strings[0];
-            rw = 1;
+            fw = tokens[0];
+            int used = 1;
             string fws = fw.ToUpper();
             string su = ToUpper();
             if (su == fws)
             {
+                after = string.Join(" ", tokens, used, sl - used);
                 return true;
             }
             int minLen = LengthMin;
-            if (minLen > strings.Length)
+            if (minLen > tokens.Length)
             {
+                after = null;
                 return false;
             }
-            if (fws == "NOTHING") return false;
+            if (fws == "NOTHING")
+            {
+                after = null;
+                return false;
+            }
             Unifiable ovs = fws;
-            if (ovs.IsFlag(UFlags.IS_TAG | UFlags.IS_EMPTY)) return false;
-            if (ovs.IsFlag(UFlags.BINDS_STARS)) return false;
+            if (ovs.IsFlag(UFlags.IS_TAG | UFlags.IS_EMPTY))
+            {
+                after = null;
+                return false;
+            }
+
+            if (ovs.IsFlag(UFlags.BINDS_STARS))
+            {
+                after = null;
+                return false;
+            }
             if (str.StartsWith("<"))
             {
-                return UnifyTagHandler(ovs, query);
+                if (UnifyTagHandler(ovs, query))
+                {
+                    after = string.Join(" ", tokens, used, sl - used);
+                    return true;
+                }
+                after = null;
+                return false;
             }
             if (minLen > 1)
             {
                 writeToLog("MinLen=" + minLen);
             }
+            after = null;
             return false;
         }
 
@@ -624,13 +648,21 @@ namespace RTParser
                     writeToLog("UnifyLazy: CACHED" + ov + " in " + query);
                     return true;
                 }
-                valueCache = ToValue(query);
-                if (ov == valueCache)
+                if (ReferenceEquals(ov, valueCache))
                 {
                     writeToLog("UnifyLazy: SUCCEED" + ov + " in " + query);
                     return true;
                 }
-
+                if (valueCache is String)
+                {
+                    String sv = (String)valueCache;
+                    if (IsStringMatch(sv, ov.ToValue(query)))
+                    {
+                        writeToLog("UnifyLazy: SUCCEED" + ov + " in " + query);
+                        return true;
+                    }
+                }
+                valueCache = ToValue(query);
                 var tagHandler = GetTagHandler(query);
                 if (tagHandler.CanUnify(ov) == UNIFY_TRUE)
                 {
@@ -700,7 +732,8 @@ namespace RTParser
 
         sealed public override string ToValue(SubQuery query)
         {
-            if (valueCache==null) valueCache = ToValue0(query);
+            if (valueCache is string) return (String)valueCache;
+            if (valueCache == null) valueCache = ToValue0(query);
             return "" + valueCache;
         }
        protected string ToValue0(SubQuery query)

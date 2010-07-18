@@ -2461,7 +2461,7 @@ The AIMLbot program.
             myBot.loadSettings();
             string myName = "BinaBot Daxeline";
             //myName = "Test Suite";
-            myName = "Kotoko Irata";
+            //myName = "Kotoko Irata";
             //myName = "Nephrael Rae";
             if (args != null && args.Length > 0)
             {
