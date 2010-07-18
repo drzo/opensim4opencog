@@ -1705,7 +1705,7 @@ namespace RTParser
             LineInfoElement templateNode = LineInfoElement.Cast(sOutput);
             if (usedGuard)
             {
-                string guardStr = "<when>" + sGuard.Output.OuterXml + " GUARDBOM " + sOutput.OuterXml + "</when>";
+                string guardStr = "<when>" + sGuard.Output.InnerXml + " GUARDBOM " + sOutput.OuterXml + "</when>";
                 templateNode = AIMLTagHandler.getNode(guardStr, sOutput);
             }
 
