@@ -5,6 +5,7 @@ using System.Net;
 using System.Xml;
 using System.IO;
 using System.Text;
+using RTParser.AIMLTagHandlers;
 using UPath = RTParser.Unifiable;
 
 namespace RTParser.Utils
@@ -58,8 +59,9 @@ namespace RTParser.Utils
         /// <param name="path"></param>
         public void loadAIML(string path, LoaderOptions options, Request request)
         {
+            request = EnsureRequest(request);
+            path = ResolveToURI(path, options, request);
             writeToLog("*** Begin loadAIML From Location: '{0}' ***", path);
-            path = path.Trim();
             RProcessor.ReloadHooks.Add(() => loadAIML(path, options, request));
             if (Directory.Exists(path))
             {
@@ -79,7 +81,9 @@ namespace RTParser.Utils
 
         private void loadAIMLDir(string path, LoaderOptions options, Request request)
         {
-            writeToLog("Starting to process AIML files found in the directory " + path);
+            request = EnsureRequest(request);
+            path = ResolveToURI(path, options, request);
+            writeToLog("Starting to process AIML files found in the directory " + path);           
 
             string[] fileEntries = Directory.GetFiles(path, "*.aiml");
             if (fileEntries.Length > 0)
@@ -119,8 +123,60 @@ namespace RTParser.Utils
 
         }
 
+        string ResolveToURI(string pathIn, LoaderOptions loadOpts, Request request)
+        {
+            string baseFile = GetBaseFile(loadOpts);
+            IEnumerable<String> baseFiles = new string[] {"", ".", baseFile, "aiml"};
+            foreach (var s in baseFiles)
+            {
+                string path = (s != null && s != "") ? Path.Combine(s, pathIn) : pathIn;
+                if (Directory.Exists(path))
+                {
+                    return path;
+                }
+                if (File.Exists(path))
+                {
+                    return path;
+                }
+                if (Uri.IsWellFormedUriString(path, UriKind.RelativeOrAbsolute))
+                {
+                    try
+                    {
+                        var uri = new Uri(path);
+                        if (uri.IsFile || uri.IsUnc)
+                        {
+                            return uri.AbsolutePath;
+                        }
+                    }
+                    catch (Exception exception)
+                    {
+
+                    }
+                }
+                
+            }
+            return pathIn;
+        }
+
+        private string GetBaseFile(LoaderOptions loadOpts)
+        {
+            string baseFile = loadOpts.Filename ?? loadOpts.PrevFilename;
+            if (baseFile == null) return ".";
+            if (Directory.Exists(baseFile))
+            {
+                baseFile = (new DirectoryInfo(baseFile)).FullName;
+            }
+            if (File.Exists(baseFile))
+            {
+                baseFile = (new FileInfo(baseFile)).DirectoryName;
+            }
+            return baseFile;
+        }
+
         private void loadAIMLURI(string path, LoaderOptions loadOpts, Request request)
         {
+            request = EnsureRequest(request);
+            path = ResolveToURI(path, loadOpts, request);
             try
             {
                 writeToLog("Processing AIML URI: " + path);
@@ -133,7 +189,7 @@ namespace RTParser.Utils
                     loadAIMLFile(path, loadOpts, request);
                 }
                 else if (Uri.IsWellFormedUriString(path, UriKind.RelativeOrAbsolute))
-                {
+                {                   
                     var uri = new Uri(path);
                     if (uri.IsFile)
                     {
@@ -143,17 +199,29 @@ namespace RTParser.Utils
                     WebRequest req = WebRequest.Create(uri);
                     WebResponse resp = req.GetResponse();
                     Stream stream = resp.GetResponseStream();
-                    loadAIMLStream(stream, LoaderOptions.FromFilename(path, request), request);
+                    string pfile = loadOpts.Filename;
+                    try
+                    {
+                        loadOpts.Filename = path;
+                        loadAIMLStream(stream, loadOpts, request);
+                    }
+                    finally
+                    {
+                        loadOpts.Filename = pfile; 
+                    }
+                }
+                else
+                {
+                    String nf = "ERROR: XmlTextReader of AIML files (" + path + ")";
+                    throw new FileNotFoundException(nf);
                 }
                 writeToLog("Completed AIML URI: " + path);
             }
             catch (Exception e)
             {
-                String s = "ERROR: XmlTextReader of AIML files (" + path + ")  threw " + e;
-                throw new FileNotFoundException(s);
+                RProcessor.writeToLog(e);
+                throw e;
             }
-            String nf = "ERROR: XmlTextReader of AIML files (" + path + ")";
-            throw new FileNotFoundException(nf);
         }
 
         /// <summary>
@@ -163,6 +231,8 @@ namespace RTParser.Utils
         /// <param name="filename">The name of the file to process</param>
         public void loadAIMLFile(string filename, LoaderOptions opt, Request request)
         {
+            request = EnsureRequest(request);
+            filename = ResolveToURI(filename, opt, request);
             if (Directory.Exists(filename))
             {
                 writeToLog("Processing directory: " + filename);
@@ -178,13 +248,21 @@ namespace RTParser.Utils
                     writeToLog("Already loaded! " + filename + " => " + s);
                     return;
                 }
-                writeToLog("Processing AIML file: " + filename);
+                writeToLog("Processing AIML file: " + filename + " into " + request.Graph);
                 RProcessor.AddFileLoaded(filename);
                 var tr = File.OpenRead(filename);
                 try
                 {
-                    opt.SetFilename(filename);
-                    this.loadAIMLStream(tr, opt, request);
+                    string pfile = opt.Filename;
+                    try
+                    {
+                        opt.Filename = filename;
+                        this.loadAIMLStream(tr, opt, request);
+                    }
+                    finally
+                    {
+                        opt.Filename = pfile;
+                    }
                 }
                 finally
                 {
@@ -197,7 +275,7 @@ namespace RTParser.Utils
                     }
                 }
 
-                writeToLog("Loaded AIMLFile: '{0}'", filename);
+                writeToLog("Loaded AIMLFile: '{0}'", filename + " into " + request.Graph);
                 return;
             }
             catch (Exception e)
@@ -214,7 +292,7 @@ namespace RTParser.Utils
         /// <param name="filename">Where the XML document originated</param>
         public void loadAIMLString(string input, LoaderOptions filename, Request request)
         {
-
+            request = EnsureRequest(request);
             try
             {
                 byte[] byteArray = Encoding.ASCII.GetBytes(input);
@@ -239,7 +317,7 @@ namespace RTParser.Utils
         /// <param name="filename">Where the XML document originated</param>
         public void loadAIMLStream(Stream input, LoaderOptions filename, Request request)
         {
-
+            request = EnsureRequest(request);
             var xtr = XmlDocumentLineInfo.CreateXmlTextReader(input);
             while (!xtr.EOF)
             {
@@ -273,6 +351,7 @@ namespace RTParser.Utils
 
         public void loadAIMLNode(XmlNode currentNode, LoaderOptions filename, Request request)
         {
+            request = EnsureRequest(request);
             var prev = RProcessor.Loader;
             try
             {
@@ -284,11 +363,11 @@ namespace RTParser.Utils
                 string currentNodeName = currentNode.Name.ToLower();
                 if (currentNodeName == "aiml")
                 {
-                    string botname = RTPBot.GetAttribValue(currentNode, "graph", null);
+                    string graphname = RTPBot.GetAttribValue(currentNode, "graph", null);
                     GraphMaster g = request.Graph;
-                    if (botname != null)
+                    if (graphname != null)
                     {
-                        GraphMaster g2 = RProcessor.GetGraph(botname, g);
+                        GraphMaster g2 = RProcessor.GetGraph(graphname, g);
                         request.Graph = g2;
                         filename.Graph = g2;
                     }
@@ -350,8 +429,19 @@ namespace RTParser.Utils
             }
         }
 
+        private Request EnsureRequest(Request request)
+        {
+            if (request == null)
+            {
+                writeToLog("ERROR! Ensuring Request=" + CurrentRequest);
+                request = CurrentRequest;
+            }
+            return request;
+        }
+
         private void EvalNode(XmlNode currentNode, Request request, LoaderOptions filename)
         {
+            request = EnsureRequest(request);
             try
             {
                 RProcessor.ImmediateAiml(currentNode, request, this, null);

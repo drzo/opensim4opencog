@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Xml;
 using RTParser.AIMLTagHandlers;
 
@@ -14,6 +15,72 @@ namespace RTParser.Utils
     /// </summary>
     abstract public class AIMLTagHandler : TextTransformer, IXmlLineInfo
     {
+
+        public override Unifiable ProcessAimlChange()
+        {
+            ThreadStart OnExit = EnterTag();
+            try
+            {
+                return ProcessChange();
+            }
+            finally
+            {
+                OnExit();
+            }
+        }
+
+        public Unifiable CompleteAimlProcess()
+        {
+            ThreadStart OnExit = EnterTag();
+            try
+            {
+                return CompleteProcess();
+            }
+            finally
+            {
+                OnExit();
+            }
+        }
+
+
+        public ThreadStart EnterTag()
+        {
+            bool needsUnwind = false;
+            if (templateNode.Attributes.Count > 0)
+            {
+                // graphmaster
+                GraphMaster g = request.Graph;
+                string graphName = GetAttribValue("graph", null);
+                var oldGraph = g;
+                if (graphName != null)
+                {
+                    needsUnwind = true;
+                    g = Proc.GetGraph(graphName, oldGraph);
+                    request.Graph = g;
+                }
+
+                // topic
+                string tempTopic = GetAttribValue("topic", null);
+                var oldTopic = request.Topic;
+                if (tempTopic != null)
+                {
+                    needsUnwind = true;
+                    request.Topic = tempTopic;
+                }
+
+                // unwind
+                if (needsUnwind)
+                {
+                    return () =>
+                    {
+                        request.Graph = oldGraph;
+                        request.Topic = oldTopic;
+                    };
+                }
+            }
+            return () => { };           
+        }
+
         protected void Succeed()
         {
             if (query != null && query.CurrentTemplate != null)
@@ -167,7 +234,7 @@ namespace RTParser.Utils
                 string s2;
                 if (!Unifiable.IsNull(RecurseResult))
                 {
-                    s2 = RecurseResult;
+                     return RecurseResult;
                 }
                 else
                 {
@@ -314,7 +381,7 @@ namespace RTParser.Utils
         protected Unifiable RecurseResult = Unifiable.NULL;
         protected Unifiable Recurse()
         {
-            Unifiable templateNodeInnerText;//= this.templateNodeInnerText;
+            //Unifiable templateNodeInnerText;//= this.templateNodeInnerText;
             Unifiable templateResult = Unifiable.CreateAppendable();
             if (this.templateNode.HasChildNodes)
             {
@@ -419,8 +486,14 @@ namespace RTParser.Utils
             var sr = new StringReader(outerXML);
             try
             {
+                string named = "From " + outerXML;
+                if (templateNode != null)
+                {
+                    named = "" + templateNode.OwnerDocument;
+                    if (string.IsNullOrEmpty(named)) named = "from: " + templateNode.OuterXml;
+                }
                 XmlDocumentLineInfo doc =
-                    new XmlDocumentLineInfo("From '" + templateNode.OwnerDocument ?? " NODOC " + "' " + templateNode.OuterXml);
+                    new XmlDocumentLineInfo(named);
                 doc.Load(sr);
                 if (doc.ChildNodes.Count == 0)
                 {
@@ -505,6 +578,22 @@ namespace RTParser.Utils
             return s + "-->";
         }
 
+        public string DocumentInfo()
+        {
+            string s = null;
+            if (templateNode is LineInfoElement)
+            {
+                LineInfoElement li = (LineInfoElement)templateNode;
+                    s = "" + li.OwnerDocument;
+                    if (!string.IsNullOrEmpty(s)) return s;
+                    if (Parent != null && Parent != this)
+                    {
+                        s = DocumentInfo();
+                        if (!string.IsNullOrEmpty(s)) return s;
+                    }
+            }
+            return s;
+        }
 
         /// <summary>
         /// Helper method that turns the passed Unifiable into an XML node
@@ -514,10 +603,10 @@ namespace RTParser.Utils
         public virtual float CanUnify(Unifiable with)
         {
             string w = with.ToValue(query);
-            Unifiable t1 = ProcessChange();
+            Unifiable t1 = ProcessAimlChange();
             float score1 = t1.Unify(with, query);
             if (score1 == 0) return score1;
-            Unifiable t2 = CompleteProcess();
+            Unifiable t2 = CompleteAimlProcess();
             float score2 = t2.Unify(with, query);
             if (score2 == 0) return score2;
             return (score1 < score2) ? score1 : score2;

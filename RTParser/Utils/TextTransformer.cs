@@ -93,12 +93,17 @@ namespace RTParser.Utils
         {
             if (!this.inputString.IsEmpty)
             {
-                return this.ProcessChange();
+                return this.ProcessAimlChange();
             }
             else
             {
                 return Unifiable.Empty;
             }
+        }
+
+        public virtual Unifiable ProcessAimlChange()
+        {
+            return ProcessChange();
         }
 
         /// <summary>

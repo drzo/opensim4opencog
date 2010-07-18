@@ -31,7 +31,7 @@ namespace RTParser.AIMLTagHandlers
         }
         public override Unifiable CompleteProcess()
         {
-            return ProcessChange();
+            return ProcessAimlChange();
         }
         protected override Unifiable ProcessChange()
         {
