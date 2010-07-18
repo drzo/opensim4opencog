@@ -246,8 +246,9 @@ namespace RTParser.Utils
                 node = parent1.RootNode;
                 writeToLog("Adding to Parent " + category);
             }
-            Node.addCategoryTag(node, generatedPath, patternInfo,
+            Node created = Node.addCategoryTag(node, generatedPath, patternInfo,
                                 category, outerNode, templateNode, guard, thatInfo, this);
+
             this.Size++;
             // keep count of the number of categories that have been processed
         }

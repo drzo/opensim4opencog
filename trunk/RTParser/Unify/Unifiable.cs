@@ -75,6 +75,10 @@ namespace RTParser
                 case XmlNodeType.None:
                     break;
                 case XmlNodeType.Element:
+                    if (templateNode.InnerText != templateNode.InnerXml)
+                    {
+                        return templateNode.InnerXml;
+                    }
                     return templateNode.InnerXml;
                     break;
                 case XmlNodeType.Attribute:
@@ -83,13 +87,14 @@ namespace RTParser
                     writeToLog("XML INNER TEXT " + templateNode.OuterXml);
                     if (templateNode.InnerXml.Length > 0)
                     {
-                        return templateNode.InnerXml;
+                        return templateNode.InnerText + templateNode.InnerXml;
                     }
                     if (templateNode.InnerText.Length > 0)
                     {
                         return templateNode.InnerText + templateNode.InnerXml;
                     }
                     return templateNode.InnerText;
+
                 case XmlNodeType.CDATA:
                     break;
                 case XmlNodeType.EntityReference:

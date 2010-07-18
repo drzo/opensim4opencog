@@ -637,7 +637,7 @@ namespace RTParser
                     writeToLog("UnifyLazy: SUCCEED" + ov + " in " + query);
                     return true;
                 }
-                Unifiable outputSentence = tagHandler.CompleteProcess();
+                Unifiable outputSentence = tagHandler.CompleteAimlProcess();
                 string value = outputSentence.AsString();
                 if (ov.ToUpper() == value.ToUpper())
                 {
@@ -656,11 +656,6 @@ namespace RTParser
         private bool IsCachedMatch(Unifiable unifiable, SubQuery query)
         {
             return false;
-        }
-
-        private void GetPos()
-        {
-            throw new NotImplementedException();
         }
 
         //private SubQuery savedSQ;
@@ -717,7 +712,7 @@ namespace RTParser
                 //todo 
                 if (query == null) return AsString();
                 AIMLTagHandler tagHandler = GetTagHandler(query);
-                Unifiable outputSentence = tagHandler.CompleteProcess();
+                Unifiable outputSentence = tagHandler.CompleteAimlProcess();
                 if (!outputSentence.IsEmpty) return outputSentence.AsString();
                 writeToLog("Failed Eval " + str);
                 ///bot.GetTagHandler(templateNode, subquery, request, result, request.user);

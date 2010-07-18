@@ -63,7 +63,7 @@ namespace RTParser.Utils
         /// <param name="path">the path for the category</param>
         /// <param name="template">the template to find at the end of the path</param>
         /// <param name="filename">the file that was the source of this category</param>
-        static public void addCategoryTag(Node start, Unifiable path, PatternInfo patternInfo, CategoryInfo category, XmlNode outerTemplate, XmlNode templateNode, GuardInfo guard, ThatInfo thatInfo, GraphMaster master)
+        static public Node addCategoryTag(Node start, Unifiable path, PatternInfo patternInfo, CategoryInfo category, XmlNode outerTemplate, XmlNode templateNode, GuardInfo guard, ThatInfo thatInfo, GraphMaster master)
         {
             if (templateNode == null)
             {
@@ -73,6 +73,7 @@ namespace RTParser.Utils
             //String ts = outTemplate.OuterXml;
             Node thiz = start.addPathNodeChilds(path);
             thiz.addTerminal(templateNode, category, guard, thatInfo, master, patternInfo);
+            return thiz;
         }
 
         private void addTerminal(XmlNode templateNode, CategoryInfo category, GuardInfo guard, ThatInfo thatInfo, GraphMaster master, PatternInfo patternInfo)

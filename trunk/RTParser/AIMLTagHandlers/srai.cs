@@ -55,6 +55,22 @@ namespace RTParser.AIMLTagHandlers
             }
         }
 
+        protected string  OriginalProcessChange()
+        {
+            if (this.templateNode.Name.ToLower() == "srai")
+            {
+                if (this.templateNode.InnerText.Length > 0)
+                {
+                    Request subRequest = new AIMLbot.Request(this.templateNode.InnerText, (AIMLbot.User)this.user, (AIMLbot.Bot)this.Proc);
+                    subRequest.StartedOn = this.request.StartedOn; // make sure we don't keep adding time to the request
+                    Result subQuery = this.Proc.Chat(subRequest);
+                    this.request.hasTimedOut = subRequest.hasTimedOut;
+                    return subQuery.Output;
+                }
+            }
+            return string.Empty;
+        }
+
         private static int depth = 0;
         protected override Unifiable ProcessChange()
         {
@@ -93,9 +109,14 @@ namespace RTParser.AIMLTagHandlers
                         AIMLbot.Request subRequest = request.CreateSubRequest(templateNodeInnerValue, this.user,
                                                                               this.Proc, (AIMLbot.Request) request);
 
+                        
                         subRequest.Graph = request.Graph.Srai;
+
                         var ti = query.CurrentTemplate;
                         if (ti!=null) subRequest.UsedTemplates.Add(ti);
+
+#if NOTUSINGAIML
+
                         if (gn != null)
                         {
                             subRequest.Graph = Proc.GetGraph(gn, request.Graph);
@@ -106,6 +127,7 @@ namespace RTParser.AIMLTagHandlers
                         subRequest.ParentRequest = this.request;
                         subRequest.StartedOn = this.request.StartedOn;
                         subRequest.TimesOutAt = this.request.TimesOutAt;
+#endif
                         // make sure we don't keep adding time to the request
                         bool showDebug = true;
                         string subRequestrawInput = subRequest.rawInput;

@@ -2,52 +2,41 @@ namespace RTParser.Utils
 {
     public class LoaderOptions
     {
+        public Request TheRequest;
+        private string _filename;
+        public bool DebugFiles;
         public bool recurse;
+        public string PrevFilename;
 
-        public GraphMaster Graph;
+        public GraphMaster Graph
+        {
+            get { return TheRequest.Graph; }
+            set { TheRequest.Graph = value; }
+        }
+
+        public string Filename
+        {
+            get { return _filename; }
+            set
+            {
+                PrevFilename = Filename;
+                _filename = value;
+            }
+        }
 
         public static LoaderOptions GetDefault(Request r)
         {
-            LoaderOptions ops = new LoaderOptions(r.Graph);
-            ops.request = r;
+            LoaderOptions ops = new LoaderOptions(r);
             return ops;
         }
-        //public static LoaderOptions GetDefault(GraphMaster g)
-        //{
-        //    return new LoaderOptions(g);
-        //}
-        //public static LoaderOptions GetDefault(RTPBot bot)
-        //{
-        //    return GetDefault(bot.GraphMaster);
-        //}
-
-        public Request request;
-        public string Filename;
-        public int LineOffset = 0;
-        public bool DebugFiles;
-
-        public LoaderOptions(GraphMaster g)
+        private LoaderOptions(Request request)
         {
-            Graph = g;
-
+            TheRequest = request;
         }
 
         public override string ToString()
         {
-            return Filename ?? "LoaderOptions - no filename";
-        }
-
-        public static LoaderOptions FromFilename(string filename, Request request)
-        {
-            LoaderOptions lo = LoaderOptions.GetDefault(request);
-            lo.Filename = filename;
-            return lo;
-        }
-
-        public void SetFilename(string filename)
-        {
-            Filename = filename;
-            LineOffset = 0;
+            return _filename ?? "LoaderOptions - no filename";
         }
     }
 }

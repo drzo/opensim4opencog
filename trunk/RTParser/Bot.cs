@@ -495,10 +495,11 @@ namespace RTParser
         public void loadAIMLFromURI(string path, LoaderOptions options, Request request)
         {
             var prev = isAcceptingUserInput;
+            var rb = options.TheRequest;
             try
             {
                 isAcceptingUserInput = false;
-                options.request = request;
+                options.TheRequest = request;
                 AIMLLoader loader = Loader;
                 if (!StaticLoader || loader == null)
                 {
@@ -512,6 +513,7 @@ namespace RTParser
             }
             finally
             {
+                options.TheRequest = rb;
                 isAcceptingUserInput = prev;
             }
         }
@@ -1852,7 +1854,7 @@ namespace RTParser
                 return s;
             }
             tagHandler.SetParent(parent);
-            var cp = tagHandler.CompleteProcess();
+            var cp = tagHandler.CompleteAimlProcess();
             return cp;
         }
 
@@ -2459,7 +2461,7 @@ The AIMLbot program.
            // writeLine = MainConsoleWriteLn;
 
             myBot.loadSettings();
-            string myName = "BinaBot Daxeline";
+            string myName = "Test Suite";
             // myName = "Kotoko Irata";
             //myName = "Nephrael Rae";
             if (args != null && args.Length > 0)
@@ -2474,6 +2476,8 @@ The AIMLbot program.
                 if (argsLeft > 0)
                     myName = String.Join(" ", args, si, argsLeft);
             }
+            writeLine(Environment.NewLine);
+            writeLine("Botname: " + myName);
             writeLine(Environment.NewLine);
             User myUser = myBot.FindOrCreateUser(null); // UNKNOWN_PARTNER
             myBot.isAcceptingUserInput = false;

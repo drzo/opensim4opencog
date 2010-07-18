@@ -36,16 +36,16 @@ namespace RTParser.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "learn")
             {
-                LoaderOptions opts = new LoaderOptions(request.Graph);
+                LoaderOptions opts = LoaderOptions.GetDefault(request);
 
-                opts.recurse = Unifiable.IsLogicTF(GetAttribValue("recurse", Unifiable.Empty), query);
+                opts.recurse = Unifiable.IsLogicTF(GetAttribValue("recurse", opts.recurse ? "True" : "False"), query);
                 //recurse here?
                 GraphMaster g = request.Graph;
                 var g0 = g;
-                String gn = GetAttribValue("graph", null);
-                if (gn != null)
+                String graphName = GetAttribValue("graph", null);
+                if (graphName != null)
                 {
-                    g = Proc.GetGraph(gn, request.Graph);
+                    g = Proc.GetGraph(graphName, g0);
                 }
                 request.Graph = g;
                 try
@@ -56,7 +56,7 @@ namespace RTParser.AIMLTagHandlers
                         Unifiable path = templateNodeInnerText;
                         try
                         {
-                            opts.Filename = path;
+                            opts.Filename = DocumentInfo();
                             Proc.loadAIMLFromURI(path, opts, request);
                         }
                         catch (Exception e2)
