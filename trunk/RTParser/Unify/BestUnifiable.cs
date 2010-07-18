@@ -177,26 +177,27 @@ namespace RTParser
             return false;
         }
 
-        public override bool ConsumePath(string[] fullpath, out string left, out int right, SubQuery query)
+        public override bool ConsumePath(Unifiable path, string[] fullpath, out string left, out Unifiable after, SubQuery query)
         {
 
-            left = null;
-            right = 0;
             if (best != null)
             {
-                bool res = best.ConsumePath(fullpath, out left, out right, query);
+                bool res = best.ConsumePath(path, fullpath, out left, out after, query);
                 if (res) return true;
             }
             foreach (var u in List)
             {
                 if (object.ReferenceEquals(best, u)) continue;
-                bool res = u.ConsumePath(fullpath, out left, out right, query);
+                bool res = u.ConsumePath(path, fullpath, out left, out after, query);
                 if (res)
                 {
                     best = u;
                     return true;
                 }
             }
+
+            left = null;
+            after = null;
             return false;
         }
 

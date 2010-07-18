@@ -370,8 +370,12 @@ namespace RTParser.Utils
                     if (graphname != null)
                     {
                         GraphMaster g2 = RProcessor.GetGraph(graphname, g);
-                        request.Graph = g2;
-                        filename.Graph = g2;
+                        if (g2 != null)
+                        {
+                            request.Graph = g2;
+                            filename.Graph = g2;
+                        }
+                        if (g2 != g) writeToLog("AIMLGRAPH: " + g2);
                     }
                     try
                     {
@@ -387,6 +391,7 @@ namespace RTParser.Utils
                         request.Graph = g;
                         filename.Graph = g;
                     }
+                    return;
                 }
                 if (currentNodeName == "root")
                 {

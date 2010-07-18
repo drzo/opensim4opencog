@@ -395,7 +395,7 @@ namespace RTParser
         }
 
         public abstract bool ConsumeFirst(Unifiable fullpath, out Unifiable left, out Unifiable right, SubQuery query);
-        public abstract bool ConsumePath(string[] strings, out string fw, out int rw, SubQuery query);
+        public abstract bool ConsumePath(Unifiable fullpath, string[] tokens, out string fw, out Unifiable right, SubQuery query);
 
         public bool WillUnify(Unifiable other, SubQuery query)
         {

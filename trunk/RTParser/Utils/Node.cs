@@ -407,7 +407,7 @@ namespace RTParser.Utils
             {
                 string fw;
                 string np;
-                Node childNode = LitteralChild(splitPath, out fw, out np, query);
+                Node childNode = LitteralChild(path , splitPath, out fw, out np, query);
                 if (childNode==null) break;
                 firstWord = fw;
                 newPath = np;
@@ -520,15 +520,16 @@ namespace RTParser.Utils
             return null;/// string.Empty;
         }
 
-        private Node LitteralChild(string[] splitPath, out string firstWord, out string newPath, SubQuery query)
+        private Node LitteralChild(Unifiable path, string[] splitPath, out string firstWord, out string newPath, SubQuery query)
         {
-            IList<Node> childrenS = new List<Node>();
+            //IList<Node> childrenS = new List<Node>();
             Node childNode;
             firstWord = splitPath[0];
             int rw = 1;
-            newPath = string.Join(" ", splitPath, rw, splitPath.Length - rw);
+            
             if (children.TryGetValue(firstWord, out childNode))
             {
+                newPath = string.Join(" ", splitPath, rw, splitPath.Length - rw);
                 if (childNode.word == firstWord)
                 {
                     return childNode;
@@ -543,15 +544,17 @@ namespace RTParser.Utils
                // if (childNodeWord.IsWildCard()) continue;
 
                 childNode = childNodeKV.Value;
-                childrenS.Add(childNode);
+                //childrenS.Add(childNode);
                 string fw;
-                if (!childNode.word.ConsumePath(splitPath, out firstWord, out rw, query))
+                Unifiable newPath0;
+                if (!childNode.word.ConsumePath(path, splitPath, out firstWord, out newPath0, query))
                 {
                     continue;
                 }
-                newPath = string.Join(" ", splitPath, rw, splitPath.Length - rw);
+                newPath = newPath0;
                 return childNode;
             }
+            newPath = null;
             return null;
         }
 
