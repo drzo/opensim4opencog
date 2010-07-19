@@ -66,7 +66,7 @@ namespace RTParser.AIMLTagHandlers
                                 {
                                     int result = Convert.ToInt32(dimensions[0].Trim());
                                     int sentence = Convert.ToInt32(dimensions[1].Trim());
-                                    if ((result > 0) & (sentence > 0))
+                                    if ((result >= 0) & (sentence > 0))
                                     {
                                         return this.user.getInputSentence(result - 1, sentence - 1);
                                     }

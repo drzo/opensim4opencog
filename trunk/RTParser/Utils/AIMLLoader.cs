@@ -81,6 +81,7 @@ namespace RTParser.Utils
 
         private void loadAIMLDir(string path, LoaderOptions options, Request request)
         {
+            RProcessor.ReloadHooks.Add(() => loadAIMLDir(path, options, request));
             request = EnsureRequest(request);
             path = ResolveToURI(path, options, request);
             writeToLog("Starting to process AIML files found in the directory " + path);           
@@ -102,7 +103,7 @@ namespace RTParser.Utils
                     catch (Exception ee)
                     {
                         RProcessor.RemoveFileLoaded(filename);
-                        RTPBot.writeDebugLine("" + ee);
+                        RProcessor.writeToLog(ee);
                         RProcessor.writeToLog("Error in loadAIMLFile " + ee);
                     }
                 }
@@ -215,13 +216,17 @@ namespace RTParser.Utils
                 else
                 {
                     String nf = "ERROR: XmlTextReader of AIML files (" + path + ")";
-                    throw new FileNotFoundException(nf);
+                    var nfe = new FileNotFoundException(nf);
+                    RProcessor.writeToLog(nfe);
+                    writeToLog(nf);
+                    throw nfe;
                 }
                 writeToLog("Completed AIML URI: " + path);
             }
             catch (Exception e)
             {
                 RProcessor.writeToLog(e);
+                writeToLog("ERROR! " + e);
                 throw e;
             }
         }
@@ -231,14 +236,14 @@ namespace RTParser.Utils
         /// graphmaster
         /// </summary>
         /// <param name="filename">The name of the file to process</param>
-        public void loadAIMLFile(string filename, LoaderOptions opt, Request request)
+        public void loadAIMLFile(string filename, LoaderOptions options, Request request)
         {
             request = EnsureRequest(request);
-            filename = ResolveToURI(filename, opt, request);
+            filename = ResolveToURI(filename, options, request);
             if (Directory.Exists(filename))
             {
                 writeToLog("Processing directory: " + filename);
-                if (opt.recurse) loadAIMLDir(filename, opt, request);
+                if (options.recurse) loadAIMLDir(filename, options, request);
                 return;
             }
             try
@@ -250,20 +255,20 @@ namespace RTParser.Utils
                     writeToLog("Already loaded! (but loading again) " + filename + " => " + s);
                     //return;
                 }
-                writeToLog("Processing AIML file: " + filename + " into " + request.Graph);
+                writeToLog("Processing AIML file: " + filename + " from " + request.Graph);
                 RProcessor.AddFileLoaded(filename);
                 var tr = File.OpenRead(filename);
                 try
                 {
-                    string pfile = opt.Filename;
+                    string pfile = options.Filename;
                     try
                     {
-                        opt.Filename = filename;
-                        this.loadAIMLStream(tr, opt, request);
+                        options.Filename = filename;
+                        this.loadAIMLStream(tr, options, request);
                     }
                     finally
                     {
-                        opt.Filename = pfile;
+                        options.Filename = pfile;
                     }
                 }
                 finally
@@ -277,7 +282,7 @@ namespace RTParser.Utils
                     }
                 }
 
-                writeToLog("Loaded AIMLFile: '{0}'", filename + " into " + request.Graph);
+                writeToLog("Loaded AIMLFile: '{0}'", filename + " from " + request.Graph);
                 return;
             }
             catch (Exception e)
@@ -291,19 +296,19 @@ namespace RTParser.Utils
         /// Given an XML document containing valid AIML, attempts to load it into the graphmaster
         /// </summary>
         /// <param name="doc">The XML document containing the AIML</param>
-        /// <param name="filename">Where the XML document originated</param>
-        public void loadAIMLString(string input, LoaderOptions filename, Request request)
+        /// <param name="options">Where the XML document originated</param>
+        public void loadAIMLString(string docString, LoaderOptions options, Request request)
         {
             request = EnsureRequest(request);
             try
             {
-                byte[] byteArray = Encoding.ASCII.GetBytes(input);
+                byte[] byteArray = Encoding.ASCII.GetBytes(docString);
                 MemoryStream stream = new MemoryStream(byteArray);
-                loadAIMLStream(stream, filename, request);
+                loadAIMLStream(stream, options, request);
             }
             catch (Exception e2)
             {
-                String s = "which causes loadAIMLString '" + input + "' " + filename;
+                String s = "which causes loadAIMLString '" + docString + "' " + options;
                 s = s + "\n" + e2.Message + "\n" + e2.StackTrace + "\n" + s;
                 writeToLog(s);
                 throw e2;
@@ -367,15 +372,16 @@ namespace RTParser.Utils
                 {
                     string graphname = RTPBot.GetAttribValue(currentNode, "graph", null);
                     GraphMaster g = request.Graph;
+                    GraphMaster g2 = g;
                     if (graphname != null)
                     {
-                        GraphMaster g2 = RProcessor.GetGraph(graphname, g);
+                        g2 = RProcessor.GetGraph(graphname, g);
                         if (g2 != null)
                         {
                             request.Graph = g2;
                             filename.Graph = g2;
                         }
-                        if (g2 != g) writeToLog("AIMLGRAPH: " + g2);
+                        if (g2 != g) writeToLog("ENTERING: " + graphname + " as " + g2 + " from " + g);
                     }
                     try
                     {
@@ -388,6 +394,7 @@ namespace RTParser.Utils
                     }
                     finally
                     {
+                        if (g2 != g) writeToLog("LEAVING: " + graphname + " as " + g2 + " back to " + g);
                         request.Graph = g;
                         filename.Graph = g;
                     }

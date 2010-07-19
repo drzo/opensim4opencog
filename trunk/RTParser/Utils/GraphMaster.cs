@@ -345,7 +345,7 @@ namespace RTParser.Utils
             int resin = toplevel.TemplateCount;
             int patternCountChanged = 0;
             int tried = 0;
-            bool doIt = !request.IsComplete(request.result);
+            bool doIt = !request.IsComplete(request.CurrentResult);
             if (!doIt)
             {
                 writeToLog("AIMLTRACE DOIT: " + tried + " pc=" + patternCountChanged + ": " + false + "  " + request);
@@ -359,7 +359,7 @@ namespace RTParser.Utils
             {
                 int patternCount = toplevel.PatternCount;
                 toplevelBubble = null;
-                SubQuery query = new SubQuery(upath, request.result, request);
+                SubQuery query = new SubQuery(upath, request.CurrentResult, request);
                 query.TopLevel = toplevel;
                 var pattern = RootNode.evaluate00(upath.ToString(), query, request, matchstate, wildcard);
                 if (pattern != null)
