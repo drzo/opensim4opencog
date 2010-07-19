@@ -38,16 +38,30 @@ namespace RTParser.Prolog
         }
 
         // true = warn ... false = error
-        public static bool WarnOrError(string msg, params Object[] o)
+        public static bool WarnOrError(string msg, params object[] o)
         {
             Console.SetOut(Globals.StdOut);
-            string s;
+            string s = SafeFormat(msg, o);
             if (Globals.LineNo != -1)
-                s = (String.Format("\n*** error in line {0} at position {1}: {2}",
-                                                    Globals.LineNo, Globals.ColNo, String.Format(msg, o)));
-            else s = ("\n*** error: " + String.Format(msg, o));
+                s = SafeFormat("\n*** error in line {0} at position {1}: {2}",
+                                   Globals.LineNo, Globals.ColNo, s);
+            else s = ("\n*** error: " + s);
             Message(s);
             return true;
+        }
+
+        private static string SafeFormat(string msg, params object[] objects)
+        {
+            if (objects == null || objects.Length == 0) return msg;
+            try
+            {
+                return string.Format(msg, objects);
+            }
+            catch (Exception e)
+            {
+                RTPBot.writeDebugLine("ERROR " + e);
+            }
+            return msg;
         }
 
 
