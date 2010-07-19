@@ -56,7 +56,7 @@ namespace RTParser.Utils
                 // topic
                 Unifiable oldTopic = request.Topic;
 
-                Hashtable savedValues = null;
+                UndoStack savedValues = null;
 
                 foreach (XmlAttribute node in collection)
                 {
@@ -96,24 +96,18 @@ namespace RTParser.Utils
                             continue;
                         case "value":
                             continue;
-                            
+
                         default:
                             {
+
                                 string n = node.Name;
                                 if (ReservedAttributes.Contains(n))
                                 {
                                     continue;
                                 }
-                                string v = node.Value;
-                                Unifiable oldValue = request.grabSetting(n);
-                                if (oldValue.AsString()==v)
-                                {
-                                    continue;
-                                }
-                                savedValues = savedValues ?? new Hashtable();
-                                writeToLog("RECURSIVE=");
-                                savedValues.Add(n, oldValue);
-                                request.addSetting(n, v);
+                                string v = ReduceStar(node.Value, query);
+                                savedValues = savedValues ?? query.GetFreshUndoStack();
+                                savedValues.pushValues(query, n, v);
                                 needsUnwind = true;
                             }
                             break;
@@ -127,10 +121,7 @@ namespace RTParser.Utils
                                {
                                    if (savedValues != null)
                                    {
-                                       foreach (DictionaryEntry kv in savedValues)
-                                       {
-                                           request.addSetting((string) kv.Key, (Unifiable) kv.Value);
-                                       }
+                                       savedValues.UndoAll();
                                    }
                                    if (oldGraph != null)
                                    {
@@ -152,7 +143,7 @@ namespace RTParser.Utils
                                };
                 }
             }
-            return () => { };           
+            return () => { };
         }
 
         protected void Succeed()
@@ -161,7 +152,7 @@ namespace RTParser.Utils
             {
                 string type = GetType().Name;
                 double defualtReward = query.GetSucceedReward(type);
-                double score = GetAttribValue(templateNode, "score", defualtReward , query);
+                double score = GetAttribValue(templateNode, "score", defualtReward, query);
                 writeToLog("TSCORE {3} {0}*{1}->{2} ",
                            score, query.CurrentTemplate.Rating,
                            query.CurrentTemplate.Rating *= score, score);
@@ -308,7 +299,7 @@ namespace RTParser.Utils
                 string s2;
                 if (!Unifiable.IsNull(RecurseResult))
                 {
-                    return RecurseResult;    
+                    return RecurseResult;
                 }
                 else
                 {
@@ -394,9 +385,9 @@ namespace RTParser.Utils
         {
             get
             {
-                if (query!=null)
+                if (query != null)
                 {
-                    if (_request==query.Request)
+                    if (_request == query.Request)
                     {
                         return _request;
                     }
@@ -406,7 +397,7 @@ namespace RTParser.Utils
             }
             set
             {
-                _request = value; 
+                _request = value;
             }
         }
 
@@ -423,7 +414,8 @@ namespace RTParser.Utils
                     if (_result0 == query.Result)
                     {
                         return _result0;
-                    } else
+                    }
+                    else
                     {
                         return _result0;
                     }
@@ -672,13 +664,13 @@ namespace RTParser.Utils
             if (templateNode is LineInfoElement)
             {
                 LineInfoElement li = (LineInfoElement)templateNode;
-                    s = "" + li.OwnerDocument;
+                s = "" + li.OwnerDocument;
+                if (!string.IsNullOrEmpty(s)) return s;
+                if (Parent != null && Parent != this)
+                {
+                    s = DocumentInfo();
                     if (!string.IsNullOrEmpty(s)) return s;
-                    if (Parent != null && Parent != this)
-                    {
-                        s = DocumentInfo();
-                        if (!string.IsNullOrEmpty(s)) return s;
-                    }
+                }
             }
             return s;
         }
@@ -732,7 +724,7 @@ namespace RTParser.Utils
                     catch (Exception exception)
                     {
 
-                         RTPBot.writeDebugLine("AIMLTRACE: DECIMAL " + reduceStar + " " + exception);
+                        RTPBot.writeDebugLine("AIMLTRACE: DECIMAL " + reduceStar + " " + exception);
                     }
                 }
             }
@@ -792,7 +784,7 @@ namespace RTParser.Utils
         {
             //if (value == null) return;
             //if (value == "") return;
-            RTPBot.writeDebugLine("-!SaveResultOnChild AIMLTRACE " + value + " -> " + node.OuterXml);
+            writeToLog("-!SaveResultOnChild AIMLTRACE " + value + " -> " + node.OuterXml);
             node.InnerXml = CheckValue(value);
         }
 
@@ -865,6 +857,6 @@ namespace RTParser.Utils
             if (this.templateNode.Name.ToLower() == name) return true;
             writeToLog("CheckNode change " + name + " -> " + templateNode.Name);
             return true;
-        }    
+        }
     }
 }

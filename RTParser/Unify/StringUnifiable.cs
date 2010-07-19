@@ -421,7 +421,11 @@ namespace RTParser
 
         public override bool IsLongWildCard()
         {
-            return str == "*";
+            if (str == null) return false;
+            if (str.Length == 0) return false;
+            if (char.IsLetterOrDigit(str[0])) return false;
+            if (str == "*") return true;
+            if (str.StartsWith("<regex")) return false;
             return IsFlag(UFlags.LONG_WILDCARD);
             if (str == ("*")) return true;
             if (str == ("^")) return true;

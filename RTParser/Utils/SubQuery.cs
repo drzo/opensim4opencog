@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using AIMLbot;
 using UPath = RTParser.Unifiable;
 using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
@@ -235,13 +236,35 @@ namespace RTParser.Utils
                 {
                     result = subquery.Result;
                     request = subquery.Request ?? result.request;
-                    result = result ?? request.result;
+                    result = result ?? request.CurrentResult;
                     user = result.user;
                     bot = request.Proccessor;
                 }
                 handler = bot.GetTagHandler(user, subquery, request, result, node, null);
                 TagHandlers[str] = handler;
                 return handler;
+            }
+        }
+
+        public void UndoAll()
+        {
+             UndoStack.FindUndoAll(this);
+        }
+
+        public void AddUndo(ThreadStart undo)
+        {
+            lock (this)
+            {
+                UndoStack.GetStackFor(this).AddUndo(undo);
+            }
+        }
+
+        public UndoStack GetFreshUndoStack()
+        {
+            lock (this)
+            {
+                UndoStack.FindUndoAll(this);
+                return UndoStack.GetStackFor(this);
             }
         }
     }

@@ -64,7 +64,7 @@ namespace RTParser.Prolog
                 Console.WriteLine("| under the GNU General Public License, and you are welcome to redistribute it");
                 Console.WriteLine("| under certain conditions. Enter 'license.' at the command prompt for details.");
 
-                Console.WriteLine("?-[load],sentence(E,[what,rivers,are,there,?],[],[],[]).");
+                Console.WriteLine("?-[swiForCSharp],[load],sentence(E,[what,rivers,are,there,?],[],[],[]).");
 
                 while (!e.Halted)
                     try

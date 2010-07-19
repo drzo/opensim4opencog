@@ -42,7 +42,7 @@ namespace RTParser
         /// </summary>
         public bool StaticLoader = true;
 
-        public static string AIMLDEBUGSETTINGS = "clear -spam +error +aimltrace +cyc -dictlog -tscore";
+        public static string AIMLDEBUGSETTINGS = "clear -spam +error +aimltrace +cyc -dictlog -tscore +loaded";
         readonly public static TextFilter LoggedWords = new TextFilter() { "*", "-dictlog" }; //maybe should be ERROR", "STARTUP
         public User LastUser;
         readonly public User BotAsUser;
@@ -645,7 +645,15 @@ namespace RTParser
             ReloadHooks.Clear();
             foreach (var list in todo)
             {
-                list();
+                try
+                {
+                    list();
+                }
+                catch (Exception e)
+                {
+                    writeToLog(e);
+                    writeToLog("ReloadAll: " + e);
+                }
             }
         }
 
@@ -1015,13 +1023,14 @@ namespace RTParser
                 request.Graph = graph;
                 LoaderOptions loader = LoaderOptions.GetDefault(request);
                 loader.Graph = graph;
-                Loader.loadAIMLString("<aiml graph=\"" + graph.ScriptingName + "\">" + aimlText + "</aiml>", loader,
-                                      request);
+                string s = string.Format("<aiml graph=\"{0}\">{1}</aiml>", graph.ScriptingName, aimlText);
+                Loader.loadAIMLString(s, loader, request);
             }
             catch (Exception e)
             {
                 writeDebugLine("" + e);
                 writeChatTrace("" + e);
+                writeToLog(e);
                 throw e;
             }
             finally
@@ -1082,6 +1091,8 @@ namespace RTParser
                     {
                         sentence = sentence.Substring(0, sentence.Length - 1).Trim();
                     }
+                    if (sentence.Length==0) continue;
+                    writeToLog("skipping input sentence " + sentence0);
                     int topicNum = 0;
                     if (true)
                     {
@@ -1349,26 +1360,35 @@ namespace RTParser
         {
             bool isTraced = request.IsTraced || G == null;
             User user = request.user ?? LastUser;
+            UndoStack undoStack = UndoStack.GetStackFor(request);
+            AIMLbot.Result res;
+            undoStack.pushValues(user.Predicates, "rawinput", request.rawInput);
+            undoStack.pushValues(user.Predicates, "input", request.rawInput);
             lock (user.QueryLock)
             {
-                return Chat0(request, user, G);
+                res = Chat0000(request, user, G);
             }
+            undoStack.UndoAll();
+            return res;
+
         }
 
-        public AIMLbot.Result Chat0(Request request, User user, GraphMaster G)
+        private AIMLbot.Result Chat0000(Request request, User user, GraphMaster G)
         {
             LastUser = user;
+            AIMLbot.Result result;
+
             bool isTraced = request.IsTraced || G == null;
             //chatTrace = null;
 
             streamDepth++;
 
-            AIMLbot.Result result = request.CreateResult(request);
-            if (chatTrace) result.IsTraced = isTraced;
-
             string rawInputString = request.rawInput.AsString();
+
             if (rawInputString.StartsWith("@"))
             {
+                result = request.CreateResult(request);
+                if (chatTrace) result.IsTraced = isTraced;
                 bool myBotBotDirective = BotDirective(request.user, rawInputString, result.WriteLine);
                 if (myBotBotDirective)
                 {
@@ -1403,6 +1423,8 @@ namespace RTParser
                 Loader = loader;
                 //RTParser.Normalize.SplitIntoSentences splitter = new RTParser.Normalize.SplitIntoSentences(this);
                 Unifiable[] rawSentences = new Unifiable[] { request.rawInput };//splitter.Transform(request.rawInput);
+                result = request.CreateResult(request);
+                if (chatTrace) result.IsTraced = isTraced;
                 LoadInputPaths(request, loader, rawSentences, result);
                 int NormalizedPathsCount = result.NormalizedPaths.Count;
 
@@ -1490,17 +1512,20 @@ namespace RTParser
                 string nai = NotAcceptingUserInputMessage;
                 if (isTraced)
                     writeToLog("ERROR {0} getting back {1}", request, nai);
+                result = request.CreateResult(request);
                 result.AddOutputSentences(null, nai);
+                return result;
             }
 
             // populate the Result object
             result.Duration = DateTime.Now - request.StartedOn;
-            if (RTPBot.SaveProofs || true)
+            User popu = request.user ?? result.user;
+            if (result.ParentResult == null)
             {
-                User popu = request.user ?? result.user;
+                // toplevel result
                 popu.addResult(result);
-                popu.addResultTemplates(request);
             }
+            popu.addResultTemplates(request);
             streamDepth--;
             return result;
         }
@@ -1654,7 +1679,7 @@ namespace RTParser
 
             AIMLbot.Result result = request.CreateResult(request);
             request.CurrentResult = result;
-            if (request.result != result)
+            if (request.CurrentResult != result)
             {
                 writeToLog("ERROR did not set the result!");
             }
@@ -1670,13 +1695,16 @@ namespace RTParser
             bool templateSucceeded;
             bool createdOutput;
             SubQuery query = request.CurrentQuery;
+            bool doUndos = false;
             if (query == null)
             {
                 query = new SubQuery(requestName, result, request);
                 request.IsTraced = true;
+                doUndos = true;
             }
             proccessResponse(query, request, result, templateNode, sGuard, out createdOutput, out templateSucceeded,
                              handler, templateInfo);
+            if (doUndos) query.UndoAll();
             return result;
         }
 
@@ -1684,6 +1712,7 @@ namespace RTParser
         {
             request.CurrentResult = result;
             query = query ?? request.CurrentQuery;
+            UndoStack undoStack = UndoStack.GetStackFor(query);
             templateInfo = templateInfo ?? query.CurrentTemplate;
             //request.CurrentQuery = query;
             if (!request.CanUseTemplate(templateInfo, result))
@@ -1694,6 +1723,9 @@ namespace RTParser
             }
             proccessResponse0(query, request, result, templateNode, sGuard, out createdOutput, out templateSucceeded,
                              handler, templateInfo);
+
+            undoStack.UndoAll();
+
         }
         public void proccessResponse0(SubQuery query, Request request, Result result, XmlNode sOutput, GuardInfo sGuard, out bool createdOutput, out bool templateSucceeded, AIMLTagHandler handler, TemplateInfo templateInfo)
         {
@@ -2305,7 +2337,7 @@ The AIMLbot program.
             message = message.Replace("*RAWINPUT*", request.rawInput);
             message = message.Replace("*USER*", request.user.UserID);
             Unifiable paths = Unifiable.CreateAppendable();
-            foreach (Unifiable path in request.result.NormalizedPaths)
+            foreach (Unifiable path in request.CurrentResult.NormalizedPaths)
             {
                 paths.Append(path.LegacyPath + Environment.NewLine);
             }
@@ -2460,7 +2492,7 @@ The AIMLbot program.
 
             myBot.loadSettings();
             string myName = "BinaBot Daxeline";
-            //myName = "Test Suite";
+            myName = "Test Suite";
             //myName = "Kotoko Irata";
             //myName = "Nephrael Rae";
             if (args != null && args.Length > 0)
@@ -2511,9 +2543,13 @@ The AIMLbot program.
                     Environment.Exit(0);
                 }
                 input = input.Trim();
-                if (input == "quit")
+                if (input.ToLower() == "@quit")
                 {
-                    Environment.Exit(0);
+                    return;
+                }
+                if (input.ToLower() == "@exit")
+                {
+                    Environment.Exit(Environment.ExitCode);
                 }
                 writeLine("-----------------------------------------------------------------");
                 if (String.IsNullOrEmpty(input))
@@ -2598,9 +2634,16 @@ The AIMLbot program.
                 showHelp = true;
                 console("Commands are prefixed with @cmd");
                 console("@help shows help -- command help comming soon!");
+                console("@quit -- exits the aiml subsystem");
             }
 
-            if (showHelp) console("@rename <olduser> <newname>");
+            if (showHelp)
+                console("@rmuser <userid> -- removes a users from the user dictionary\n (best if used after a rename)");
+            if (cmd == "rmuser")
+            {
+                
+            }
+            if (showHelp) console("@rename <userid> <newname>");
             if (cmd == "rename")
             {
                 int lastIndex = args.IndexOf("-");
@@ -2836,6 +2879,7 @@ The AIMLbot program.
         }
         public bool LoadPersonalDirectory(string myName)
         {
+            ReloadHooks.Add(() => LoadPersonalDirectory(myName));
             bool loaded = false;
             string file = Path.Combine("config", myName);
             if (Directory.Exists(file))

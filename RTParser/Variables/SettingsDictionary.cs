@@ -606,11 +606,11 @@ namespace RTParser.Utils
 
         public static Unifiable grabSettingDefualt(ISettingsDictionary dictionary, string name, out string realName)
         {
-            string[] chops = new string[] {"favorite.", "favorite", "fav"};
             realName = name;
             var un = dictionary.grabSetting(name);
             if (Unifiable.IsNull(un))
             {
+                string[] chops = new string[] { "favorite.", "favorite", "fav" };
                 foreach (var chop in chops)
                 {
                     if (name.StartsWith(chop))
@@ -632,7 +632,10 @@ namespace RTParser.Utils
                     {
                         un = dictionary.grabSetting(realName);                        
                     }
-                    if (!Unifiable.IsNull(un)) return un;
+                    if (!Unifiable.IsNull(un))
+                    {
+                        return un;
+                    }
                 }
             }
             return un;

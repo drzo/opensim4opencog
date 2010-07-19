@@ -19,7 +19,7 @@ namespace RTParser
         bool IsTraced { get; set; }
         User user { get; set; }
         IEnumerable<Unifiable> BotOutputs { get; }
-        Result CurrentResult { set; }
+        Result CurrentResult { get;  set; }
         Unifiable Flags { get; }
         IList<Unifiable> Topics { get; }
         SettingsDictionary Predicates { get; }
@@ -34,7 +34,6 @@ namespace RTParser
         SubQuery CurrentQuery { get; }
         bool hasTimedOut { get; set; }
         RTPBot Proccessor { get; set; }
-        Result result { get; }
         Unifiable rawInput { get; set; }
         IList<Result> UsedResults { get; set; }
         IList<TemplateInfo> UsedTemplates { get; }
@@ -90,14 +89,13 @@ namespace RTParser
         /// <summary>
         /// The final result produced by this request
         /// </summary>
-        public Result result
+        public Result CurrentResult
         {
-            get
-            {
-                return CurrentResult;
-            }
+            get { return _result; }
+            set { _result = value; }
         }
-        public Result CurrentResult { private get; set; }
+
+        private Result _result;
 
 
         /// <summary>
@@ -143,7 +141,11 @@ namespace RTParser
                 Proof = new Proof();
             }
             this.rawInput = rawInput;
-            this.user = user;
+            if (user != null)
+            {
+                this.user = user;
+                if (user.CurrentRequest == null) user.CurrentRequest = this;
+            }
             this.Proccessor = bot;
             this.StartedOn = DateTime.Now;
             this.TimesOutAt = StartedOn.AddMilliseconds(Proccessor.TimeOut);
@@ -236,7 +238,7 @@ namespace RTParser
 
         public SettingsDictionary Predicates
         {
-            get { return result.Predicates; }
+            get { return CurrentResult.Predicates; }
         }
 
         public int GetCurrentDepth()
@@ -257,16 +259,16 @@ namespace RTParser
 
         public IList<TemplateInfo> UsedTemplates
         {
-            get { return result.UsedTemplates; }
+            get { return CurrentResult.UsedTemplates; }
         }
 
         public DateTime TimesOutAt { get; set;}
 
         public void WriteLine(string s, object[] args)
         {
-            if (result != null)
+            if (CurrentResult != null)
             {
-                result.WriteLine(s, args);
+                CurrentResult.WriteLine(s, args);
             }
             else
             {
@@ -304,10 +306,10 @@ namespace RTParser
 
         public AIMLbot.Result CreateResult(Request parentReq)
         {
-            var r = new AIMLbot.Result(user, Proccessor, parentReq, parentReq.result);
+            var r = new AIMLbot.Result(user, Proccessor, parentReq, parentReq.CurrentResult);
             CurrentResult = r;
             r.request = this;
-            return (AIMLbot.Result) result;
+            return (AIMLbot.Result)CurrentResult;
         }
 
         public AIMLbot.Request CreateSubRequest(Unifiable templateNodeInnerValue, User user, RTPBot rTPBot, AIMLbot.Request request)
@@ -347,8 +349,8 @@ namespace RTParser
         {
             get
             {
-                Result r = result;
-                if (result != null)
+                Result r = CurrentResult;
+                if (r != null)
                 {
                     SubQuery sq = r.CurrentQuery;
                     if (sq != null) return sq;

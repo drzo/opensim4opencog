@@ -25,7 +25,7 @@ namespace RTParser
         public bool RespondToChat = true;
         public int MaxRespondToChatPerMinute = 10;
 
-        public static int DefaultMaxResultsSaved = 10;
+        public static int DefaultMaxResultsSaved = 3;
         public int MaxResultsSaved = DefaultMaxResultsSaved;
 
         /// <summary>
@@ -533,7 +533,7 @@ namespace RTParser
 
         public Result GetResult(int i, bool mustBeSalient)
         {
-            if (i == -1) return null;
+            if (i == -1) return CurrentRequest.CurrentResult;
             lock (Results)
             {
                 if (i >= Results.Count) return null;
@@ -552,6 +552,8 @@ namespace RTParser
                 return Results[i];
             }
         }
+
+        public Request CurrentRequest;
 
         public Result GetResult(int i)
         {

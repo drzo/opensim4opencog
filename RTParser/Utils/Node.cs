@@ -540,7 +540,7 @@ namespace RTParser.Utils
             {                                
                 Unifiable childNodeWord = childNodeKV.Key;
                 if (childNodeWord.IsAnyWord()) continue;
-                if (childNodeWord.IsLongWildCard()) continue;
+               // if (childNodeWord.IsLongWildCard()) continue;
                // if (childNodeWord.IsWildCard()) continue;
 
                 childNode = childNodeKV.Value;
