@@ -252,57 +252,5 @@ namespace DotLisp
 
 
         }
-
-        private bool Coerce(object[] argarray, Type[] argtypes, ParameterInfo[] paramInfos, out object[] parameters)
-        {
-            int paramInfosLength = paramInfos.Length;
-            int argarrayLength = argarray.Length;
-            if (paramInfosLength == argarrayLength)
-            {
-                parameters = argarray;
-                return true;
-            }
-            if (paramInfosLength > argarrayLength)
-            {
-                parameters = null;
-                return false;
-            }
-            parameters = new object[paramInfosLength];
-            int currentParam = 0;
-            for (int i = 0; i < paramInfosLength; i++)
-            {
-                ParameterInfo p = paramInfos[i];
-                if (currentParam > argarrayLength)
-                {
-                    parameters[i] = p.DefaultValue;
-                }
-                else if (p.ParameterType.IsArray)
-                {
-                    if (!argtypes[currentParam].IsArray)
-                    {
-                        // the last arg is an array fill it with the rest and return
-                        if (i + 1 == paramInfosLength)
-                        {
-                            object[] pas = new object[argarrayLength - currentParam];
-                            parameters[i] = pas;
-                            i = 0;
-                            while (currentParam < argarrayLength)
-                            {
-                                pas[i++] = argarray[currentParam++];
-                            }
-                            return true;
-                        }                        
-                    }
-                   
-                }
-                else
-                {
-                    parameters[i] = argarray[currentParam];
-                }
-                currentParam++;
-            }
-            return true;
-        }
-
     }
 }
