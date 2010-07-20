@@ -49,10 +49,22 @@ namespace RTParser
         {
             lock (SaveLock)
             {
-                if (!needsSave) return;
+                if (!needsSave)
+                {
+                    WriteLine("Skipping save");
+                    return;
+                }
                 needsSave = false;
             }
-            SaveDirectory(_LoadedDirectory);
+            WriteLine("Doing save");
+            try
+            {
+                SaveDirectory(_LoadedDirectory);
+            }
+            catch (Exception exception)
+            {
+                WriteLine("ERROR saving " + exception);
+            }
             lock (SaveLock)
             {
                 needsSave = true;
@@ -246,7 +258,8 @@ namespace RTParser
                 this.Predicates.InsertFallback(() => bot.HeardPredicates);
                 Predicates.addSetting("id", UserID);
                 //this.Predicates.addSetting("topic", "NOTOPIC");
-                SaveTimer = new Timer(SaveOften, this, new TimeSpan(0, 5, 0), new TimeSpan(0, 5, 0));            
+                SaveTimer = new Timer(SaveOften, this, new TimeSpan(0, 5, 0), new TimeSpan(0, 5, 0));      
+                
             }
             else
             {
@@ -265,6 +278,17 @@ namespace RTParser
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
+            if (SaveTimer != null)
+            {
+                try
+                {
+                    SaveTimer.Dispose();
+                }
+                catch (Exception)
+                {
+
+                }
+            }
             SaveOften(this);
         }
 
@@ -534,7 +558,7 @@ namespace RTParser
         {
             try
             {
-                bot.writeToLog("USERTRACE: " + string.Format(s, objects));
+                bot.writeToLog("USERTRACE: {0} {1}", UserName ?? UserID, string.Format(s, objects));
             }
             catch(Exception exception)
             {
@@ -629,7 +653,11 @@ namespace RTParser
 
         public void SaveDirectory(string userdir)
         {
-            HostSystem.CreateDirectory(userdir);
+            if (!HostSystem.CreateDirectory(userdir))
+            {
+                WriteLine("Cannot SaveDirectory {0}", userdir);
+            }
+            WriteLine("Saveing User Directory {0}", userdir);
             Predicates.SaveTo(userdir, "user.predicates", "UserPredicates.xml");
             GraphMaster gm = bot.GetGraph(UserID, ListeningGraph);
             gm.WriteToFile(UserID, Path.Combine(userdir, UserID) + ".saved");
@@ -643,6 +671,7 @@ namespace RTParser
                 _LoadedDirectory = userdir;
                 LoadUserSettings(userdir);
                 LoadUserAiml(userdir);
+                WriteLine("Loaded " + _LoadedDirectory);
             }
         }
 
