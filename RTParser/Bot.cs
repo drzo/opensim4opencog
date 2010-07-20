@@ -2604,6 +2604,7 @@ The AIMLbot program.
                     usedHttpd = true;
                 }
             }
+
             string[] oArgs;
             if (usedHttpd)
             {
@@ -2617,23 +2618,37 @@ The AIMLbot program.
             myBot.outputDelegate = null;/// ?? Console.Out.WriteLine;
 
            // writeLine = MainConsoleWriteLn;
-
+            bool gettingUsername = false;
             myBot.loadSettings();
             string myName = "BinaBot Daxeline";
             //myName = "Test Suite";
             //myName = "Kotoko Irata";
             //myName = "Nephrael Rae";
-            if (args != null && args.Length > 0)
+            if (args != null)
             {
-                int si = 0;
-                int argsLeft = args.Length - si;
-                while (argsLeft > 0 && args[si].StartsWith("--"))
+                string newName = "";
+                foreach (var s in args)
                 {
-                    si++;
-                    argsLeft--;
+                    if (s == "--aiml" || s == "--botname")
+                    {
+                        gettingUsername = true;
+                        continue;
+                    }
+                    if (s.StartsWith("-"))
+                    {
+                        gettingUsername = false;
+                        continue;
+                    }
+                    if (gettingUsername)
+                    {
+                        newName += " " + s;
+                    }
                 }
-                if (argsLeft > 0)
-                    myName = String.Join(" ", args, si, argsLeft);
+                newName = newName.Trim();
+                if (newName.Length > 1)
+                {
+                    myName = newName;
+                }
             }
             writeLine(Environment.NewLine);
             writeLine("Botname: " + myName);
