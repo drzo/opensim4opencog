@@ -16,6 +16,7 @@ using RTParser.AIMLTagHandlers;
 using RTParser.Database;
 using RTParser.Normalize;
 using RTParser.Utils;
+using RTParser.Web;
 using UPath = RTParser.Unifiable;
 using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
 
@@ -29,7 +30,7 @@ namespace RTParser
     /// </summary>
     public class RTPBot : QuerySettings
     {
-        private bool ListeningToSelf = false;
+        public bool ListeningToSelf = false;
         public override string ToString()
         {
             string s = GetType().Name;
@@ -158,10 +159,9 @@ namespace RTParser
         {
             get
             {
-                return 600000;
-                if (!this.GlobalSettings.containsSettingCalled("timeout"))
+                if (this.GlobalSettings == null || !this.GlobalSettings.containsSettingCalled("timeout"))
                 {
-                    return 60000;
+                    return 20000;
                 }
                 String s = this.GlobalSettings.grabSettingNoDebug("timeout").ToValue(null);
                 return Convert.ToDouble(s);
@@ -2596,6 +2596,20 @@ The AIMLbot program.
         {
             RTPBot myBot = new Bot();
             OutputDelegate writeLine = MainConsoleWriteLn;
+            bool usedHttpd = false;
+            foreach (var s in args)
+            {
+                if (s == "--httpd")
+                {
+                    usedHttpd = true;
+                }
+            }
+            string[] oArgs;
+            if (usedHttpd)
+            {
+                ScriptExecutorGetter geter = new WebScriptExecutor(myBot);
+                new ClientManagerHttpServer(geter, 5580);
+            }
             Main(args, myBot, writeLine);
         }
         public static void Main(string[] args, RTPBot myBot, OutputDelegate writeLine)
@@ -2606,7 +2620,7 @@ The AIMLbot program.
 
             myBot.loadSettings();
             string myName = "BinaBot Daxeline";
-            myName = "Test Suite";
+            //myName = "Test Suite";
             //myName = "Kotoko Irata";
             //myName = "Nephrael Rae";
             if (args != null && args.Length > 0)
@@ -2995,6 +3009,8 @@ The AIMLbot program.
         {
             ReloadHooks.Add(() => LoadPersonalDirectory(myName));
             bool loaded = false;
+
+            // this is the personal "config file" only.. aiml stored elsewhere
             string file = Path.Combine("config", myName);
             if (Directory.Exists(file))
             {
@@ -3002,13 +3018,15 @@ The AIMLbot program.
                 loaded = true;
                 loadSettings(Path.Combine(file, "Settings.xml"));
             }
+
             file = Path.Combine("aiml", myName);
             if (Directory.Exists(file))
             {
-                GetLoaded(file); ;
+                UsePersonalDir(file); ;
                 loaded = true;
             }
 
+            // this is the personal "config file" only.. aiml stored elsewhere
             file = Path.Combine(myName, "config");
             if (Directory.Exists(file))
             {
@@ -3020,14 +3038,20 @@ The AIMLbot program.
             file = Path.Combine(myName, "aiml");
             if (Directory.Exists(file))
             {
-                GetLoaded(file); ;
+                UsePersonalDir(file); ;
                 loaded = true;
             }
             return loaded;
         }
 
-        private void GetLoaded(string file)
+        public void UsePersonalDir(string file)
         {
+            if (!HostSystem.DirExists(file))
+            {
+                writeToLog("ERROR - cannot use non existent personal dir = " + file);
+                return;
+            }
+            _PathToBotPersonalFiles = file;
             string s = string.Format("-LoadPersonalDirectories: '{0}'-", file);
             writeToLog(s);
             bool prev = isAcceptingUserInput;

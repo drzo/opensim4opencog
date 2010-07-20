@@ -17,7 +17,7 @@ using Radegast;
 using System.Windows.Forms;
 using RTParser;
 using SbsSW.SwiPlCs;
-using User=RTParser.User;
+using User = RTParser.User;
 
 namespace ABuildStartup
 {
@@ -42,7 +42,7 @@ namespace ABuildStartup
                 NativeMethods.AllocConsole();
             }
 
-            if (use.Length>0)
+            if (use.Length > 0)
             {
                 string arg0 = use[0].ToLower();
                 if (arg0.EndsWith(".vshost.exe"))
@@ -108,7 +108,7 @@ namespace ABuildStartup
             }
         }
 
-        private static TextFilter filter = new TextFilter() {"+*"};
+        private static TextFilter filter = new TextFilter() { "+*" };
         static public void FilteredWriteLine(string str, params object[] args)
         {
 
@@ -137,7 +137,7 @@ namespace ABuildStartup
             Application.ThreadExit += HandleThreadExit;
             AppDomain.CurrentDomain.UnhandledException += HandleUnhandledException;
             AppDomain.CurrentDomain.ProcessExit += HandleProcessExit;
-            
+
             if (ClientManager.MainThread == null)
             {
                 ClientManager.MainThread = Thread.CurrentThread;
@@ -147,7 +147,7 @@ namespace ABuildStartup
             if (arguments.GetAfter("--aiml", out oArgs))
             {
                 string[] newArgs = oArgs;
-                DoAndExit(() => RTPBotMain(oArgs));
+                DoAndExit(() => RTParser.RTPBot.Main(args));
             }
             if (arguments.GetAfter("--swipl", out oArgs))
             {
@@ -198,27 +198,12 @@ namespace ABuildStartup
                                   instance = null;
 
                               }
-                          })
-                ;
-        }
+                          });
 
-        private static void RTPBotMain(string[] args)
-        {
-            OutputDelegate writeLine = Console.WriteLine;
-            string[] oArgs;
-            bool usedHttpd = true ;//|| (args.GetAfter("http", out oArgs));
-            RTPBot myBot = new Bot();
-
-            if (usedHttpd)
-            {
-                ScriptExecutorGetter geter = new ScriptExecutorGetterImpl(myBot);
-                new ClientManagerHttpServer(geter, 5580);
-            }
-            Bot.Main(args, myBot, writeLine);
         }
 
         private static void HandleProcessExit(object sender, EventArgs e)
-        {            
+        {
             DebugWrite("HandleProcessExit");
             var v = ClientManager.SingleInstance;
             if (v != null)
@@ -254,7 +239,7 @@ namespace ABuildStartup
             if (v != null)
             {
                 v.Quit();
-            } 
+            }
             Environment.Exit(0);
         }
 
@@ -306,72 +291,5 @@ namespace ABuildStartup
             _appException = (Exception)e.ExceptionObject;
             FilteredWriteLine("!!HandleUnhandledException!! " + e.ExceptionObject);
         }
-    }
-
-    internal class ScriptExecutorGetterImpl : ScriptExecutorGetter, ScriptExecutor
-    {
-        #region Implementation of ScriptExecutorGetter
-
-        private RTPBot TheBot;
-        private User myUser;
-
-        public ScriptExecutorGetterImpl(RTPBot bot)
-        {
-            TheBot = bot;
-        }
-        public ScriptExecutor GetScriptExecuter(object o)
-        {
-            return this;
-        }
-
-        public void WriteLine(string s, params object[] args)
-        {
-            //TheBot.writeChatTrace(s, args);
-            Console.WriteLine(s,args);
-        }
-
-        #endregion
-
-        #region Implementation of ScriptExecutor
-
-        public CmdResult ExecuteCommand(string s, OutputDelegate outputDelegate)
-        {
-            StringWriter sw = new StringWriter();
-            if (s.StartsWith("aiml"))
-            {
-                s = s.Substring(4).Trim();
-                if (s.StartsWith("@ "))
-                    s = "@withuser" + s.Substring(1);
-            }
-            if (s.StartsWith("say")) s = "@" + s;
-            sw.WriteLine("AIMLTRACE " + s);
-            myUser = TheBot.LastUser;
-            bool r = TheBot.BotDirective(myUser, s, sw.WriteLine);
-            s = sw.ToString();
-            WriteLine(s);
-            return new CmdResult(s, r);
-        }
-
-        public CmdResult ExecuteXmlCommand(string s, OutputDelegate outputDelegate)
-        {
-            return ExecuteCommand(s, outputDelegate);
-        }
-
-        public string GetName()
-        {
-            return TheBot.GlobalSettings.grabSettingNoDebug("NAME");
-        }
-
-        public object getPosterBoard(object slot)
-        {
-            string sslot = "" + slot;
-            sslot = sslot.ToLower();
-            var u = TheBot.GlobalSettings.grabSetting(sslot);
-            if (Unifiable.IsNull(u)) return null;
-            if (u.IsEmpty) return "";
-            return u.ToValue(null);
-        }
-
-        #endregion
     }
 }
