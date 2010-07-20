@@ -544,11 +544,13 @@ namespace RTParser.Utils
                 {
                     if (this.settingsHash.ContainsKey(normalizedName))
                     {
-                        if(!this.orderedKeys.Contains(name))
+                        if (!this.orderedKeys.Contains(name))
                         {
-                            
+                            writeToLog("Missing odered key " + name);
                         }
+                        return true;
                     }
+                    return false;
                 }
                 else
                 {
