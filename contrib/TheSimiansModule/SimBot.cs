@@ -1,6 +1,7 @@
 ﻿using cogbot;
 using cogbot.Actions;
 using cogbot.TheOpenSims;
+using MushDLR223.ScriptEngines;
 using OpenMetaverse;
 
 namespace TheSimiansModule

@@ -279,7 +279,42 @@
         </Files>
       </Project>
       -->
+    <Project name="MushDLR223" path="lib/MushDLR223" type="Library" frameworkVersion="v3_5">
+      <Configuration name="Debug">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
 
+      <ReferencePath>../../bin/</ReferencePath>
+      <Reference name="System" localCopy="false"/>
+      <Reference name="System.Core" localCopy="false" />
+      <Reference name="System.Data" localCopy="false"/>
+      <Reference name="System.Xml" localCopy="false"/>
+      <Reference name="System.Web" localCopy="false"/>
+      <Reference name="System.Drawing" localCopy="false"/>
+      <Reference name="System.Windows.Forms" localCopy="false"/>
+      <Reference name="System.Data" localCopy="false"/>
+      <Reference name="ABCL.Net.dll" localCopy="false"/>
+      <Reference name="log4net.dll" localCopy="false"/>
+      <Reference name="HttpServer.dll" localCopy="false"/>
+      <Reference name="SwiPlCS.dll" localCopy="false"/>
+      <Reference name="System" localCopy="false"/>
+      <Reference name="DotLisp" localCopy="false"/>
+      <Reference name="OpenCyc.dll" localCopy="false"/>
+      <Reference name="IKVM.Runtime.dll" localCopy="false"/>
+      <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
+      <Files>
+        <Match pattern="*.cs" recurse="true"/>
+      </Files>
+    </Project>
+    
+    
     <Project name="DotLisp" path="dotlisp" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
@@ -319,10 +354,12 @@
       <Reference name="System.Data" localCopy="false"/>
       <Reference name="System.Xml" localCopy="false"/>
       <Reference name="System.Web" localCopy="false"/>
-      <Reference name="System.Core"/>
+     <Reference name="System.Core" localCopy="false" />
       <Reference name="OpenCyc.dll" localCopy="false"/>
       <Reference name="IKVM.Runtime.dll" localCopy="false"/>
       <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
+      <Reference name="MushDLR223"  localCopy="false"/>
+
       <Files>
           <Match path="." pattern="*.cs" recurse="true" subType="Code"><Exclude name="AssemblyInfo.cs"/><Exclude name="Program.cs"/></Match>
       </Files>
@@ -486,6 +523,7 @@
        <Reference name="IKVM.Runtime.dll" localCopy="false"/>
        <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
        <Reference name="Radegast.exe" localCopy="false"/>
+       <Reference name="MushDLR223"  localCopy="false"/>
          <!--   
        <Reference name=" Khendys.Controls.ExRichTextBox.dll" localCopy="false"/>
        <Reference name=" Interop.IWshRuntimeLibrary.dll" localCopy="false"/>
@@ -527,6 +565,7 @@
 
       <ReferencePath>../../bin/</ReferencePath>
       <Reference name="Cogbot.exe" localCopy="false"/>
+      <Reference name="MushDLR223"  localCopy="false"/>
       <Reference name="PathSystem3D" localCopy="false"/>
       <Reference name="OpenMetaverse" localCopy="false"/>
       <Reference name="OpenMetaverseTypes" localCopy="false"/>      
@@ -659,6 +698,7 @@
      <Reference name="System.Xml" localCopy="false"/>
      <Reference name="System.Xml.Linq" localCopy="false"/>
       <Reference name="Cogbot.exe" localCopy="false"/>
+      <Reference name="MushDLR223"  localCopy="false"/>
       <Reference name="PathSystem3D" localCopy="false"/>
       <Reference name="OpenMetaverse" localCopy="false"/>
       <Reference name="OpenMetaverseTypes" localCopy="false"/>      
@@ -735,6 +775,7 @@
 
      <ReferencePath>../../bin/</ReferencePath>
      <Reference name="Cogbot.exe" localCopy="false"/>
+     <Reference name="MushDLR223"  localCopy="false"/>
      <Reference name="System.Drawing" localCopy="false"/>
      <Reference name="System.Windows.Forms" localCopy="false"/>
      <Reference name="PathSystem3D" localCopy="false"/>
@@ -782,6 +823,7 @@
      <Reference name="System" localCopy="false"/>
      <Reference name="Radegast.exe" localCopy="false"/>
      <Reference name="DotLisp" localCopy="false"/>
+     <Reference name="MushDLR223"  localCopy="false"/>
      <Reference name="OpenCyc.dll" localCopy="false"/>
       <Reference name="IKVM.Runtime.dll" localCopy="false"/>
      <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
@@ -800,7 +842,41 @@
      </Configuration>
      <Configuration name="Release">
        <Options>
-           
+
+           <OutputPath>../../bin/</OutputPath>
+       </Options>
+     </Configuration>
+
+     <ReferencePath>../../bin/</ReferencePath>
+     <Reference name="Cogbot.exe" localCopy="false"/>
+     <Reference name="MushDLR223"  localCopy="false"/>
+     <Reference name="PathSystem3D" localCopy="false"/>
+     <Reference name="System.Drawing" localCopy="false"/>
+     <Reference name="System.Windows.Forms" localCopy="false"/>
+     <Reference name="System.Data" localCopy="false"/>
+     <Reference name="OpenMetaverse" localCopy="false"/>
+     <Reference name="OpenMetaverseTypes" localCopy="false"/>     
+     <Reference name="System" localCopy="false"/>
+     <Reference name="DotLisp" localCopy="false"/>
+     <Reference name="OpenCyc.dll" localCopy="false"/>
+      <Reference name="IKVM.Runtime.dll" localCopy="false"/>
+     <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
+     <Files>
+         <Match path="." pattern="*.cs"  recurse="true"  subType="Form"/>
+         <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
+     </Files>
+</Project>
+
+    <!---
+  <Project name="PDDLAuthoring" path="contrib/PDDLAuthoring" type="Library" frameworkVersion="v3_5">
+     <Configuration name="Debug">
+       <Options>
+           <OutputPath>../../bin/</OutputPath>
+       </Options>
+     </Configuration>
+     <Configuration name="Release">
+       <Options>
+
            <OutputPath>../../bin/</OutputPath>
        </Options>
      </Configuration>
@@ -824,6 +900,8 @@
      </Files>
 </Project>
 
+-->
+
     <Project name="IrcRegionModule" path="contrib/IrcRegionModule" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
@@ -839,6 +917,7 @@
 
       <ReferencePath>../../bin/</ReferencePath>
       <Reference name="Cogbot.exe" localCopy="false"/>
+      <Reference name="MushDLR223"  localCopy="false"/>
       <Reference name="System.Data" localCopy="false"/>
       <Reference name="OpenMetaverse" localCopy="false"/>
       <Reference name="OpenMetaverseTypes" localCopy="false"/>
@@ -867,6 +946,7 @@
      <ReferencePath>../../bin/</ReferencePath>
      <Reference name="Cogbot.exe" localCopy="false"/>
      <Reference name="PathSystem3D" localCopy="false"/>
+     <Reference name="MushDLR223"  localCopy="false"/>
      <Reference name="System.Drawing" localCopy="false"/>
      <Reference name="System.Core" localCopy="false"/>
      <Reference name="System.Windows.Forms" localCopy="false"/>
@@ -1541,6 +1621,7 @@ app -->
       <Reference name="AIMLbot" />
       <Reference name="AIMLBotModule" />
       <Reference name="Cogbot" />
+      <Reference name="MushDLR223"  localCopy="false"/>
       <Reference name="CogbotRadegastPluginModule" />
       <Reference name="CycWorldModule" />
       <Reference name="DotLisp" />

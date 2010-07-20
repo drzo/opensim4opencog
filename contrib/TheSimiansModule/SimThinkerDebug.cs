@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using cogbot;
+using MushDLR223.ScriptEngines;
 using Exception=System.Exception;
 using String=System.String;
 

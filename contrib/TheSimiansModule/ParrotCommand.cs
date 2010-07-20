@@ -6,6 +6,8 @@ using cogbot;
 using cogbot.Actions;
 using cogbot.TheOpenSims;
 using cogbot.Utilities;
+using MushDLR223.ScriptEngines;
+using MushDLR223.Utilities;
 using PathSystem3D.Navigation;
 using Exception=System.Exception;
 using String=System.String;
