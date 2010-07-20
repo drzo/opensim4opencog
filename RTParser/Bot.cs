@@ -10,6 +10,8 @@ using System.Xml;
 using System.Reflection;
 using System.Net.Mail;
 using AIMLbot;
+using MushDLR223.ScriptEngines;
+using MushDLR223.Utilities;
 using RTParser.AIMLTagHandlers;
 using RTParser.Database;
 using RTParser.Normalize;
@@ -818,8 +820,6 @@ namespace RTParser
         public string LastLogMessage = String.Empty;
 
         public OutputDelegate outputDelegate;
-
-        public delegate void OutputDelegate(string s, params object[] args);
 
         public void writeToLog(Exception e)
         {

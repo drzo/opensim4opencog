@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using com.hp.hpl.jena.graph;
+using MushDLR223.ScriptEngines;
 using RTParser;
 using RTParser.Utils;
 
@@ -502,7 +503,7 @@ namespace RTParser
             return sentence;
         }
 
-        public bool DoUserCommand(string input, RTPBot.OutputDelegate console)
+        public bool DoUserCommand(string input, OutputDelegate console)
         {
             if (input == null) return false;
             input = input.Trim();

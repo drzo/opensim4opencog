@@ -1,4 +1,5 @@
 using cogbot;
+using MushDLR223.ScriptEngines;
 using Radegast;
 
 namespace CogbotRadegastPluginModule
@@ -41,7 +42,7 @@ namespace CogbotRadegastPluginModule
                 cmdline = cmdline.Substring(1);
             }
             OutputDelegate newOutputDelegate = new OutputDelegate(WriteLine);
-            cogbot.Actions.CmdResult result;
+            CmdResult result;
             if (botClient == null)
             {
                 result = clientManager.ExecuteCommand(cmdline,newOutputDelegate);

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using cogbot;
 using cogbot.Actions;
 using cogbot.TheOpenSims;
+using MushDLR223.ScriptEngines;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 
