@@ -24,7 +24,7 @@ using System.Collections.Generic;
 namespace RTParser.Prolog
 {
     // Order of FType is important for term comparison. See CompareTo below
-    public enum FType { var, number, atom, text, datetime, timespan, boolean, comp, dcg, opr }   // functor types
+    public enum FType { var, number, atom, text, datetime, timespan, boolean, comp, dcg, opr, vmobj, }   // functor types
 
     /*
       ----
@@ -50,7 +50,7 @@ namespace RTParser.Prolog
         protected bool isUnified = false; // if true: term is unified with some other term (connected via ULink chain)
         protected bool isPacked = false; // for tree construction, set if tree is in parentheses (=> prec = 0)
         protected Term[] args;
-        protected object _functor; // not to be accessed directly
+        public object _functor; // not to be accessed directly
         protected string functor
         {
             get
@@ -62,11 +62,40 @@ namespace RTParser.Prolog
                     case FType.number: return _functor.ToString().Replace(',', '.');
                     case FType.datetime: return "'" + ((DateTime)_functor).ToString(DefaultDateFormat) + "'";
                     case FType.timespan: return "'" + ((TimeSpan)_functor).ToString() + "'";
+                    case FType.vmobj: return "'" + ((object)_functor).ToString() + "'";
                     default: return _functor.ToString();
                 }
             }
             set { _functor = value; }
         }
+        public string FunctorU
+        {
+            get
+            {
+                Term t = this;
+                while (t.isUnified) t = t.ULink;
+                var ff = t._functor;
+                if (ff == null)
+                {
+                    return null;
+                }
+                switch (fType)
+                {                                           
+                    case Prolog.FType.atom:
+                    case Prolog.FType.comp:
+                        string typeName = "" + ff;
+                        if (typeName[0] == '\'')
+                        {
+                            typeName = typeName.Substring(1, typeName.Length - 2);
+                        }
+                        return typeName;
+                        break;
+                    case FType.number: return ff.ToString().Replace(',', '.');
+                    default: return ff.ToString();
+                }
+            }
+        }
+
         public Term LinkEnd { get { Term t = this; while (t.isUnified) t = t.ULink; return t; } }
         public bool IsPacked { set { isPacked = value; } get { return isPacked; } }
         public bool IsUnified { get { return isUnified; } }
@@ -88,6 +117,10 @@ namespace RTParser.Prolog
         private const string ROOT = "true";
         public static Term EOF = new Term(Parser.EOF);
         public static Term FAIL = new Term("fail");
+
+        public static Term TRUE = new Term(Utils.MakeAtom("@true"), Prolog.FType.boolean);
+        public static Term FALSE = new Term(Utils.MakeAtom("@false"), Prolog.FType.boolean);
+ 
         private static Random rnd = new Random();
         public static bool trace = false;
         private static Dictionary<Term, Term> varDict = new Dictionary<Term, Term>();
@@ -122,6 +155,22 @@ namespace RTParser.Prolog
         public bool IsTimeSpan
         { get { return (FType == FType.timespan); } }
 
+        public bool IsObjectRef
+        { get { return (FType == FType.vmobj); } }
+
+        public bool IsObject
+        {
+            get
+            {
+                if (IsObjectRef || IsString || IsNumber || IsDateTime || IsTimeSpan) return true;
+                if (arity == 0 && !(_functor is string))
+                {
+                    return true;
+                }
+                return false;
+            }
+        }
+
         public bool IsCompound
         { get { return (FType == FType.comp); } }
 
@@ -130,6 +179,9 @@ namespace RTParser.Prolog
 
         public bool IsString
         { get { return (FType == FType.text); } }
+
+        public bool IsBool
+        { get { return (FType == FType.boolean); } }
 
         public bool IsCut
         { get { return (this is Cut); } }
@@ -246,6 +298,11 @@ namespace RTParser.Prolog
             fType = FType.timespan;
         }
 
+        public Term(Object obj,Type type)
+        {
+            _functor = obj;
+            fType = FType.vmobj;
+        }
 
         public Term(string s, Term[] a)
         {
@@ -1877,6 +1934,8 @@ namespace RTParser.Prolog
             { get { PrologIO.Error(intro + "a timespan", value.ToString()); return TimeSpan.MinValue; } }
             public virtual bool AsBool
             { get { PrologIO.Error(intro + "a bool", value.ToString()); return false; } }
+            public virtual object AsObject
+            { get { return value; } }
 
             public abstract int CompareTo(object o);
         }
@@ -1944,6 +2003,31 @@ namespace RTParser.Prolog
             }
         }
 
+
+        public class ObjectValue : OperandValue
+        {
+            public override DateTime AsDateTime { get { return (DateTime)value; } }
+            public override TimeSpan AsTimeSpan { get { return (TimeSpan)value; } }
+            public override Decimal AsNumber { get { return (decimal)value; } }
+            public override Int32 AsInteger { get { return (int)value; } }
+            public override object AsObject { get { return value; } }
+            public override bool AsBool { get { return (bool)value; } }
+            public ObjectValue(Object d)
+            {
+                value = d;
+                fType = FType.vmobj;
+            }
+
+            public override int CompareTo(object o)
+            {
+                int v = value.GetType().Name.CompareTo(o.GetType().Name);
+                if (v == 0)
+                {
+                    return value.GetHashCode().CompareTo(o.GetHashCode());
+                }
+                return v;
+            }
+        }
 
         public class DateTimeValue : OperandValue
         {
@@ -2027,6 +2111,8 @@ namespace RTParser.Prolog
                     return t0.ExprValue.AsDateTime.CompareTo(t1.ExprValue.AsDateTime);
                 case FType.timespan:
                     return t0.ExprValue.AsTimeSpan.CompareTo(t1.ExprValue.AsDateTime);
+                case FType.vmobj:
+                    return t0.ExprValue.CompareTo(t1.ExprValue.AsObject);
                 case FType.comp:
                 case FType.dcg:
                     result = t0.functor.CompareTo(t1.functor); // compare functor names
@@ -2076,6 +2162,10 @@ namespace RTParser.Prolog
                     return new StringValue((string)_functor);
                 else if (FType == FType.datetime)
                     return new DateTimeValue((DateTime)_functor);
+                else if (FType == FType.vmobj)
+                    return new ObjectValue((Object)_functor);
+                else if (FType == FType.boolean)
+                    return new BoolValue((bool)_functor);
                 else if (Arity == 0)
                     switch (functor)
                     {

@@ -19,6 +19,8 @@ using System.Text;
 using System.Collections;
 using System.Collections.Specialized;
 using System.Data;
+using IO = RTParser.Prolog.PrologIO;
+
 
 namespace RTParser.Prolog
 {
