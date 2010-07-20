@@ -137,8 +137,6 @@ namespace ABuildStartup
             Application.ThreadExit += HandleThreadExit;
             AppDomain.CurrentDomain.UnhandledException += HandleUnhandledException;
             AppDomain.CurrentDomain.ProcessExit += HandleProcessExit;
-
-            DoAndExit(() => RTPBotMain(new string[] { "Test Suite" }));
             
             if (ClientManager.MainThread == null)
             {
