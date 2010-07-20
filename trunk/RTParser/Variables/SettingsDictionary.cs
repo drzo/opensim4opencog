@@ -84,6 +84,7 @@ namespace RTParser.Utils
 
         private string theNameSpace;
         public bool TrimKeys = true;
+        private string fromFile;
 
         /// <summary>
         /// The number of items in the dictionary
@@ -96,20 +97,20 @@ namespace RTParser.Utils
             }
         }
 
-       public string NameSpace
-       {
-           get { return theNameSpace; }
-           set { theNameSpace = value; }
-       }
+        public string NameSpace
+        {
+            get { return theNameSpace; }
+            set { theNameSpace = value; }
+        }
 
-       public override string ToString()
-       {
-           return theNameSpace + "(" + Count + ") " ;
-       }
-       public string ToDebugString()
-       {
-           return theNameSpace + "(" + Count + ") " + DictionaryAsXML.DocumentElement.InnerXml.Replace("<item name=", "\n<item name =");
-       }
+        public override string ToString()
+        {
+            return theNameSpace + "(" + Count + ") ";
+        }
+        public string ToDebugString()
+        {
+            return theNameSpace + "(" + Count + ") " + DictionaryAsXML.DocumentElement.InnerXml.Replace("<item name=", "\n<item name =");
+        }
 
         /// <summary>
         /// An XML representation of the contents of this dictionary
@@ -123,18 +124,45 @@ namespace RTParser.Utils
                 result.AppendChild(dec);
                 XmlNode root = result.CreateNode(XmlNodeType.Element, "root", "");
                 XmlAttribute newAttr = result.CreateAttribute("name");
-                newAttr.Value = NameSpace;
-                result.AppendChild(root);
-                foreach (string key in this.orderedKeys)
+                lock (orderedKeys)
                 {
-                    XmlNode item = result.CreateNode(XmlNodeType.Element, "item", "");
-                    XmlAttribute name = result.CreateAttribute("name");
-                    name.Value = key;
-                    XmlAttribute value = result.CreateAttribute("value");
-                    value.Value = (Unifiable)this.settingsHash[key];
-                    item.Attributes.Append(name);
-                    item.Attributes.Append(value);
-                    root.AppendChild(item);
+
+                    newAttr.Value = NameSpace;
+                    if (fromFile != null)
+                    {
+                        newAttr = result.CreateAttribute("fromfile");
+                        newAttr.Value = fromFile;
+                    }
+                    result.AppendChild(root);
+
+                    foreach (var normalizedName in this._overides)
+                    {
+                        XmlNode item = result.CreateNode(XmlNodeType.Element, "override", "");
+                        XmlAttribute name = result.CreateAttribute("name");
+                        name.Value = normalizedName().NameSpace;
+                        item.Attributes.Append(name);
+                        root.AppendChild(item);
+                    }
+                    foreach (var normalizedName in this._parent)
+                    {
+                        XmlNode item = result.CreateNode(XmlNodeType.Element, "parent", "");
+                        XmlAttribute name = result.CreateAttribute("name");
+                        name.Value = normalizedName().NameSpace;
+                        item.Attributes.Append(name);
+                        root.AppendChild(item);
+                    }
+                    foreach (string n in this.orderedKeys)
+                    {
+                        XmlNode item = result.CreateNode(XmlNodeType.Element, "item", "");
+                        XmlAttribute name = result.CreateAttribute("name");
+                        name.Value = n;
+                        XmlAttribute value = result.CreateAttribute("value");
+                        value.Value = this.settingsHash[TransformKey(n)];
+                        item.Attributes.Append(name);
+                        item.Attributes.Append(value);
+                        root.AppendChild(item);
+                    }
+
                 }
                 return result;
             }
@@ -192,6 +220,7 @@ namespace RTParser.Utils
                         writeToLog("No settings found in: " + pathToSettings);
                     }
                     writeToLog("Loaded Settings found in: " + pathToSettings);
+                    if (fromFile == null) fromFile = pathToSettings;
                 }
                 else
                 {
@@ -239,17 +268,40 @@ namespace RTParser.Utils
             if ((myNode.Name == "item"))
             {
                 string name = RTPBot.GetAttribValue(myNode, "name", "");
-                if (name=="")
+                if (name == "")
                 {
                     return;
                 }
                 string value = RTPBot.GetAttribValue(myNode, "value", null);
-                if (value==null)
+                if (value == null)
                 {
                     value = myNode.InnerXml.Trim();
                 }
                 this.addSetting(name, new StringUnifiable(value));
             }
+        }
+
+        public void SaveTo(string dir, string rootname, string filename)
+        {
+            HostSystem.CreateDirectory(dir);
+            string tofile = Path.Combine(dir, filename);
+            if (fromFile == null) fromFile = tofile;
+            HostSystem.BackupFile(tofile);
+            XmlDocument xmldoc;
+            lock (orderedKeys)
+            {
+                var restore = NameSpace;
+                try
+                {
+                    NameSpace = rootname;
+                    xmldoc = DictionaryAsXML;
+                }
+                finally
+                {
+                    NameSpace = restore;
+                }
+            }
+            xmldoc.Save(tofile);
         }
 
         /// <summary>
@@ -262,14 +314,14 @@ namespace RTParser.Utils
         {
             lock (orderedKeys)
             {
-                string key = TransformKey(name);
+                string normalizedName = TransformKey(name);
                 value = TransformValue(value);
                 SettingsLog("ADD Setting Local '" + name + "'=" + str(value) + " ");
-                if (key.Length > 0)
+                if (normalizedName.Length > 0)
                 {
-                    this.removeSetting(key);
-                    this.orderedKeys.Add(key);
-                    this.settingsHash.Add(TransformKey(key), value);
+                    this.removeSetting(normalizedName);
+                    this.orderedKeys.Add(name);
+                    this.settingsHash.Add(normalizedName, value);
                 }
             }
             return true;
@@ -279,8 +331,9 @@ namespace RTParser.Utils
         {
             if (value == null)
             {
-               writeToLog("ERROR " + value + " NULL");
-               
+                writeToLog("ERROR " + value + " NULL");
+                return " NULL ";
+
             }
             string v = value.AsString();
             if (v.Contains("<") || v.Contains("&"))
@@ -294,12 +347,12 @@ namespace RTParser.Utils
         {
             lock (orderedKeys)
             {
-                string key = TransformKey(name);
-                if (key.Length > 0)
+                string normalizedName = TransformKey(name);
+                if (normalizedName.Length > 0)
                 {
-                    this.removeSetting(key);
-                    this.orderedKeys.Add(key);
-                    this.settingsHash.Add(TransformKey(key), value);
+                    this.removeSetting(name);
+                    this.orderedKeys.Add(name);
+                    this.settingsHash.Add(normalizedName, value);
                 }
             }
             return true;
@@ -314,7 +367,8 @@ namespace RTParser.Utils
             lock (orderedKeys)
             {
                 string normalizedName = TransformKey(name);
-                bool ret = orderedKeys.Contains(normalizedName);
+                bool ret = orderedKeys.Contains(name);
+                this.orderedKeys.Remove(name);
                 this.orderedKeys.Remove(normalizedName);
                 this.removeFromHash(normalizedName);
                 return ret;
@@ -330,7 +384,7 @@ namespace RTParser.Utils
         /// <summary>
         /// Removes a named setting from the Dictionary<,>
         /// </summary>
-        /// <param name="name">the key for the Dictionary<,></param>
+        /// <param name="name">the normalizedName for the Dictionary<,></param>
         private void removeFromHash(string name)
         {
             lock (orderedKeys)
@@ -364,13 +418,13 @@ namespace RTParser.Utils
             }
             lock (orderedKeys)
             {
-                string key = TransformKey(name);
-                if (this.orderedKeys.Contains(key))
+                string normalizedName = TransformKey(name);
+                if (this.orderedKeys.Contains(name))
                 {
-                    var old = this.settingsHash[key];
-                    this.removeFromHash(key);
+                    var old = this.settingsHash[normalizedName];
+                    this.removeFromHash(name);
                     SettingsLog("UPDATE Setting Local '" + name + "'=" + str(value));
-                    this.settingsHash.Add(TransformKey(key), value);
+                    this.settingsHash.Add(normalizedName, value);
                     return true;
                 }
             }
@@ -409,6 +463,20 @@ namespace RTParser.Utils
         /// <returns>the value of the setting</returns>
         public Unifiable grabSetting(string name)
         {
+#if debug
+            var v = grabSetting0(name);
+            if (Unifiable.IsNullOrEmpty(v))
+            {
+                RTPBot.writeDebugLine("DICT '{0}'=null", null);
+            }
+            return v;
+#else
+            return grabSetting0(name);
+#endif
+        }
+
+        public Unifiable grabSetting0(string name)
+        {
             foreach (ParentProvider overide in _overides)
             {
                 ISettingsDictionary dict = overide();
@@ -422,7 +490,7 @@ namespace RTParser.Utils
             lock (orderedKeys)
             {
                 string normalizedName = TransformKey(name);
-                if (this.containsLocalCalled(normalizedName))
+                if (this.containsLocalCalled(name))
                 {
                     Unifiable v = this.settingsHash[normalizedName];
                     SettingsLog("Returning LocalSetting '" + name + "'=" + str(v));
@@ -469,13 +537,18 @@ namespace RTParser.Utils
         /// <returns>Existential truth value</returns>
         public bool containsLocalCalled(string name)
         {
-            name = name.Trim();
             lock (orderedKeys)
             {
                 string normalizedName = TransformKey(name);
                 if (normalizedName.Length > 0)
                 {
-                    return this.orderedKeys.Contains(normalizedName);
+                    if (this.settingsHash.ContainsKey(normalizedName))
+                    {
+                        if(!this.orderedKeys.Contains(name))
+                        {
+                            
+                        }
+                    }
                 }
                 else
                 {
@@ -513,10 +586,10 @@ namespace RTParser.Utils
             {
                 var ps = new List<ISettingsDictionary>();
                 lock (_parent) foreach (var hash in _parent)
-                {
-                    ps.Add(hash());
+                    {
+                        ps.Add(hash());
 
-                }
+                    }
                 return ps;
             }
         }
@@ -529,9 +602,9 @@ namespace RTParser.Utils
         {
             lock (orderedKeys)
             {
-                foreach (string key in this.orderedKeys)
+                foreach (string name in this.orderedKeys)
                 {
-                    target.addSetting(key, this.grabSetting(key));
+                    target.addSetting(name, this.grabSetting(name));
                 }
             }
         }
@@ -600,7 +673,7 @@ namespace RTParser.Utils
             }
             finally
             {
-                NoDebug = false;                
+                NoDebug = false;
             }
         }
 
@@ -625,12 +698,12 @@ namespace RTParser.Utils
                     realName = chop + name;
                     if (dictionary is SettingsDictionary)
                     {
-                        SettingsDictionary sd = (SettingsDictionary) dictionary;
+                        SettingsDictionary sd = (SettingsDictionary)dictionary;
                         un = sd.grabSettingNoDebug(realName);
                     }
                     else
                     {
-                        un = dictionary.grabSetting(realName);                        
+                        un = dictionary.grabSetting(realName);
                     }
                     if (!Unifiable.IsNull(un))
                     {
