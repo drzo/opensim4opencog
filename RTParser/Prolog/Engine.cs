@@ -164,6 +164,7 @@ using System.Collections;
 using System.Threading;
 using System.Diagnostics;
 using System.Collections.Generic;
+using IO = RTParser.Prolog.PrologIO;
 #if mswindows
 using System.Security.Principal;
 using System.Collections.Generic; // available under Mono as well?
@@ -293,7 +294,7 @@ namespace RTParser.Prolog
         //private int           CallNo; // debugger: for uniquely identifying spy-ports
         //private static int    uCount; // Unify-calls count
         private const int INF = Int32.MaxValue;
-        private VarStack varStack = new VarStack(); // stack of variable bindings and choice points
+        public VarStack varStack = new VarStack(); // stack of variable bindings and choice points
         private PredicateStorage ps = new PredicateStorage();
         private TermNode goalNode;
         private bool trace = false;
@@ -479,6 +480,7 @@ namespace RTParser.Prolog
         {
             parser = new Parser(ps);
             ReadBuiltinPredicates();
+            theExt = new Ext(this);
         }
 
 
@@ -1257,7 +1259,7 @@ PrologIO.Verbose)
             Globals.TryCloseCurrentOutput();
         }
 
-
+        private Ext theExt;
         private bool DoBuiltin(BI biId, out bool findFirstClause)
         {
             findFirstClause = false;
@@ -2593,6 +2595,13 @@ PrologIO.Verbose)
                 //          PredicateDescr p = ps [Term.Key ("value", 2)];
                 //          p.DumpClauseList ();
                 //          break;
+
+                case BI.jcall0: // jcall0(+ObjOfClass,+MemberName,+ArgsList,?Result)
+                    if (!Ext.JCALL0(term, this)) return false;
+                    break;
+                case BI.jpred0: // jcall0(+ObjOfClass,+MemberName,+ArgsList,?Result)
+                    if (!theExt.JPRED0(term, this)) return false;
+                    break;
 
                 default:
                     return PrologIO.Error("Undefined built-in: {0}", term);

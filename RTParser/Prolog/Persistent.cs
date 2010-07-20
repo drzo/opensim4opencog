@@ -13,6 +13,10 @@
 
 -------------------------------------------------------------------------------------------*/
 #if USE_FirebirdSql
+using FirebirdSql.Data.FirebirdClient;
+
+//#define USE_FirebirdSql
+#if persistent
 using System;
 using System.Text;
 using System.Data;
@@ -21,7 +25,6 @@ using System.Collections.Specialized;
 using System.Xml;
 using System.Data.SqlClient;
 //using FirebirdSql.Data.Firebird;
-using FirebirdSql.Data.FirebirdClient;
 using IO = RTParser.Prolog.PrologIO;
 
 namespace RTParser.Prolog
@@ -436,4 +439,5 @@ namespace RTParser.Prolog
     }
 
 }
+#endif
 #endif

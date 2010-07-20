@@ -31,7 +31,7 @@ namespace RTParser.Prolog
         setof_add, setof_exit, setof_init, shell, silent, sort, spy, spypoints, statistics,
         string_, tab, tell, today, told, trace, undef_pred_action, undefineds, unifiable,
         univ, username, userroles, validdate, validtime, var, verbose, version, weekno,
-        whereXY, write, writef, writef0, writeln, writeq, xml_term, xmltrace
+        whereXY, write, writef, writef0, writeln, writeq, xml_term, xmltrace, jcall0, jpred0,
     }
 
     public class Builtins
@@ -65,6 +65,16 @@ namespace RTParser.Prolog
        call( X)                   :== call.
        '$metacall'( X)            :== call.
        fail                       :== fail.
+
+
+       jcall0(ObjOrClz,MemberName,ArgsList,Result)         :== jcall0.
+       jcall0(ObjOrClz,MemberName_ArgsList,Result)         :== jcall0.       
+       jset0(ObjOrClz,MemberName,ArgsList,InValue)         :== jcall0.
+       jget0(ObjOrClz,MemberName,ArgsList,OutValue)         :== jcall0.
+       jpred(ObjOrClz,MemberName,ArgsList,Value)         :== jpred0.
+
+       jcall_ext(MemberName,ArgsList,Result) :- jcall0(static('RTParser.Prolog.Ext'),MemberName,ArgsList,Result).
+       jnew(ClassName,ArgsList,Result) :- jcall_ext('jnew',[ClassName,ArgsList],Result).
 
        X = X.
        true.
@@ -486,6 +496,12 @@ namespace RTParser.Prolog
        conc([X|L1], L2, [X|L3]) :- conc(L1, L2, L3).
 
        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% END of TEMP (testing)
+
+
+reverse([], []):-!.
+reverse([Head|Tail], Result):- reverse(Tail, Reduced),append(Reduced, [Head], Result),!.
+
+
        ";
     }
 }
