@@ -10,6 +10,8 @@ using cogbot;
 using cogbot.Actions;
 using cogbot.Utilities;
 using CommandLine.Utility;
+using MushDLR223.ScriptEngines;
+using MushDLR223.Utilities;
 using OpenMetaverse;
 using Radegast;
 using System.Windows.Forms;
@@ -110,7 +112,7 @@ namespace ABuildStartup
         static public void FilteredWriteLine(string str, params object[] args)
         {
 
-            RTPBot.OutputDelegate del = new RTPBot.OutputDelegate(ClientManager.Real ?? Console.WriteLine);
+            OutputDelegate del = new OutputDelegate(ClientManager.Real ?? Console.WriteLine);
             if (ClientManager.Filter == null)
             {
                 ClientManager.Filter = new OutputDelegate(del);
@@ -135,7 +137,10 @@ namespace ABuildStartup
             Application.ThreadExit += HandleThreadExit;
             AppDomain.CurrentDomain.UnhandledException += HandleUnhandledException;
             AppDomain.CurrentDomain.ProcessExit += HandleProcessExit;
-            if (ClientManager.MainThread==null)
+
+            DoAndExit(() => RTPBotMain(new string[] { "Test Suite" }));
+            
+            if (ClientManager.MainThread == null)
             {
                 ClientManager.MainThread = Thread.CurrentThread;
             }
@@ -201,7 +206,7 @@ namespace ABuildStartup
 
         private static void RTPBotMain(string[] args)
         {
-            RTPBot.OutputDelegate writeLine = Console.WriteLine;
+            OutputDelegate writeLine = Console.WriteLine;
             string[] oArgs;
             bool usedHttpd = true ;//|| (args.GetAfter("http", out oArgs));
             RTPBot myBot = new Bot();

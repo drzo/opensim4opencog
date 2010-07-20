@@ -44,8 +44,15 @@ SET IKVMOPTIONS=-sharedclassloader -time -debug -compressresources -version:%IKV
 del Opencyc.dll /s
 
 
-bin\ikvmc.exe %IKVMOPTIONS% -target:library OpenCyc.jar
+bin\ikvmc.exe %IKVMOPTIONS% -target:library bin\OpenCyc.jar
 move OpenCyc.* bin\
+
+bin\ikvmc.exe %IKVMOPTIONS% -target:library bin\jnaerator-0.9.3.jar
+move jnaerator-0.9.3.* bin\
+
+bin\ikvmc.exe %IKVMOPTIONS% -target:library bin\bsh-2.0b4.jar
+move bsh-2.0b4.* bin\
+
 
 @REM copy C:\development\opensim4opencog\lib\jpl\src\java\jpl.jar %SWI_PROLOG_HOME%\lib\
 
