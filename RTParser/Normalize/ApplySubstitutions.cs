@@ -57,16 +57,21 @@ namespace RTParser.Normalize
             {
                 var vvalue = dictionary.grabSetting(pattern);
                 var value = vvalue.AsString();
+                string replacement;
                 if (value.Trim().Length == 0)
                 {
-                    Console.WriteLine("   VV: '{0}'", vvalue);
+                    value = " ";
+                    replacement = " ";
                 }
-
+                else
+                {
+                    value = value.Trim();
+                    replacement = marker + value.Replace(" ", markerSP) + marker;
+                }
                 string p2 = ApplySubstitutions.makeRegexSafe(pattern);
                 //Unifiable match = "\\b"+@p2.Trim().Replace(" ","\\s*")+"\\b";
                 string match = "\\b" + p2.TrimEnd().TrimStart() + "\\b";
-                string replacement = marker + value.Replace(" ", markerSP) + marker;
-                if (Regex.IsMatch(result, match, RegexOptions.IgnoreCase))
+                if (false && Regex.IsMatch(result, match, RegexOptions.IgnoreCase))
                 {
                     string testResult = Regex.Replace(result, match, replacement, RegexOptions.IgnoreCase);
                     Console.WriteLine("\n  SUBST :");
