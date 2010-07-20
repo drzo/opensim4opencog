@@ -62,6 +62,7 @@ namespace RTParser.Utils
         private GraphMaster _parent = null;
         private int parent0 = 0;
         private bool UnTraced = false;
+        private readonly IList<GraphMaster> FallBacksGraphs = new List<GraphMaster>();
 
         public GraphMaster Parent
         {
@@ -281,7 +282,7 @@ namespace RTParser.Utils
             }
             lock (request.user.AllQueries)
             {
-                request.user.AllQueries.Add(ql);
+                if (!request.user.AllQueries.Contains(ql)) request.user.AllQueries.Add(ql);
             }
             return ql;
         }
@@ -301,15 +302,14 @@ namespace RTParser.Utils
                     break;
                 }
             }
-            if (ql.TemplateCount == 0)
+            if (!ql.IsMaxedOut)
             {
-                if (trace) writeToLog("no templates for " + this);
                 var fallbacks = FallBacks(request.user);
                 if (fallbacks == null) return;
                 foreach (GraphMaster graphMaster in fallbacks)
                 {
                     graphMaster.evaluateQL(unifiable, request, matchState, ql);
-                    if (ql.TemplateCount > 0)
+                    if (ql.IsMaxedOut)
                     {
                         if (trace)
                             writeToLog("using parent templates from " + ql);
@@ -364,7 +364,7 @@ namespace RTParser.Utils
                 var pattern = RootNode.evaluate00(upath.ToString(), query, request, matchstate, wildcard);
                 if (pattern != null)
                 {
-                    var tmplateInfos = pattern.TemplateInfos;
+                    var tmplateInfos = pattern.TemplateInfoCopy;
                     if (toplevel.ContainsPattern(pattern))
                     {
                         toplevelBubble = pattern;
@@ -374,10 +374,10 @@ namespace RTParser.Utils
                     else if (!pattern.disabled)
                     {
                         toplevelBubble = pattern;
-                        toplevel.AddPattern(pattern);
                         pattern.disabled = true;
                         if (tmplateInfos != null && tmplateInfos.Count != 0)
                         {
+                            toplevel.AddPattern(pattern);
                             query.Pattern = pattern;
                             toplevel.AddBindingSet(query);
                             foreach (TemplateInfo sol in tmplateInfos)
@@ -394,6 +394,7 @@ namespace RTParser.Utils
                         pattern.disabled = true;
                     }
                 }
+                
                 if (toplevelBubble != null)
                 {
                     toplevelBubble.disabled = true;
@@ -440,9 +441,18 @@ namespace RTParser.Utils
             RTPBot.writeDebugLine("GRAPH: " + message + " in " + ToString(), args);
         }
 
+        internal void AddGenlMT(GraphMaster fallback)
+        {
+            lock (FallBacksGraphs)
+            {
+                if (!FallBacksGraphs.Contains(fallback))
+                    FallBacksGraphs.Add(fallback);
+            }
+        }
+
         private IEnumerable<GraphMaster> FallBacks(User user)
         {
-            return null;
+            return FallBacksGraphs;
         }
 
         private List<Result> DoParentEval(List<GraphMaster> totry, Request request, Unifiable unifiable)
@@ -516,10 +526,66 @@ namespace RTParser.Utils
         /// </summary>
         public override GraphMaster Graph
         {
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
+            get { return Srai; }
+            set
+            {
+                writeToLog("WARNING SETTING SRAI on " + this + " to " + value);
+                Srai = value;
+            }
         }
 
         #endregion
+
+        public void WriteToFile(string name, string filename)
+        {
+            var fi = new FileInfo(filename);
+            var di = fi.DirectoryName;
+            HostSystem.CreateDirectory(di);
+            HostSystem.BackupFile(filename);
+            var fs = new StreamWriter(filename, false);
+            fs.WriteLine("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>");
+            fs.WriteLine("<aiml graph=\"{0}\">", name);
+            foreach (var list in FallBacksGraphs)
+            {
+                fs.WriteLine(" <genlMt graph=\"{0}\"/>", list.ScriptingName);
+            }
+            foreach (var list in Parents)
+            {
+                fs.WriteLine(" <!-- parent graph=\"{0}\" -->", list.ScriptingName);
+            }
+            var srai = Srai;
+            if (srai != null)
+                fs.WriteLine(" <!-- vocabulary graph=\"{0}\" -->", Srai.ScriptingName);
+            try
+            {
+                string hide = "";
+                foreach (var ci in CategoryInfos)
+                {
+                    string c = ci.ToFileString();
+                    string ss = "" + AIMLLoader.CleanWhitepaces(c) + "\n";
+                    if (hide.Contains(ss))
+                    {
+                        continue;
+                    }
+                    hide += ss;
+                    fs.Write(ss + "<!-- " + ci.SourceInfo() + " -->\n");
+                }
+            }
+            finally
+            {
+                fs.WriteLine("</aiml>", name);
+                fs.Flush();
+                fs.Close();
+            }
+        }
+
+        public void AddRedundantTemplate(TemplateInfo redundant, TemplateInfo info)
+        {
+            lock (Templates)
+            {
+                Templates.Remove(redundant);
+                Templates.Add(info);
+            }
+        }
     }
 }

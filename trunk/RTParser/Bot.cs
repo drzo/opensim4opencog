@@ -52,8 +52,8 @@ namespace RTParser
             var r = new AIMLbot.Request(s, BotAsUser, this, null);
             r.IsTraced = true;
             r.StartedOn = DateTime.Now;
-            // times out in 5 minutes
-            r.TimesOutAt = DateTime.Now + new TimeSpan(0, 5, 0);
+            // times out in 15 minutes
+            r.TimesOutAt = DateTime.Now + new TimeSpan(0, 15, 0);
             return r;
         }
         public AIMLLoader Loader;
@@ -306,6 +306,45 @@ namespace RTParser
             }
         }
 
+        private string _PathToUserFiles = null;
+        public string PathToUserDir
+        {
+            get
+            {
+                if (_PathToUserFiles != null) return _PathToUserFiles;
+                if (this.GlobalSettings.containsSettingCalled("userdirectory"))
+                {
+                    var dir = this.GlobalSettings.grabSettingNoDebug("userdirectory");
+                    HostSystem.CreateDirectory(dir);
+                    _PathToUserFiles = dir;
+                    return HostSystem.ToRelativePath(dir);
+                }
+                foreach (var s in new[] { PersonalAiml, PathToAIML, PathToConfigFiles, RuntimeDirectory })
+                {
+                    if (s==null) continue;
+                    string exists = Path.Combine(s, "users");
+                    if (Directory.Exists(exists))
+                    {
+                        exists = HostSystem.ToRelativePath(exists);
+                        _PathToUserFiles = exists;
+                        return exists;
+                    }
+                }
+                string tryplace = Path.Combine(PathToAIML, "users");
+                HostSystem.CreateDirectory(tryplace);
+                _PathToUserFiles = tryplace;
+                return tryplace;
+
+            }
+        }
+
+        private string _PathToBotPersonalFiles = null;
+        protected string PersonalAiml
+        {
+            get { return _PathToBotPersonalFiles;  }
+            set { _PathToUserFiles = value; }
+        }
+
         /// <summary>
         /// The directory to look in for the AIML files
         /// </summary>
@@ -313,8 +352,13 @@ namespace RTParser
         {
             get
             {
-                return Path.Combine(Environment.CurrentDirectory, this.GlobalSettings.grabSetting("aimldirectory"));
+                return Path.Combine(RuntimeDirectory, this.GlobalSettings.grabSetting("aimldirectory"));
             }
+        }
+
+        protected string RuntimeDirectory
+        {
+            get { return Environment.CurrentDirectory; }
         }
 
         /// <summary>
@@ -324,7 +368,7 @@ namespace RTParser
         {
             get
             {
-                return Path.Combine(Environment.CurrentDirectory, this.GlobalSettings.grabSetting("configdirectory"));
+                return Path.Combine(RuntimeDirectory, this.GlobalSettings.grabSetting("configdirectory"));
             }
         }
 
@@ -335,7 +379,7 @@ namespace RTParser
         {
             get
             {
-                return Path.Combine(Environment.CurrentDirectory, this.GlobalSettings.grabSetting("logdirectory"));
+                return Path.Combine(RuntimeDirectory, this.GlobalSettings.grabSetting("logdirectory"));
             }
         }
 
@@ -634,7 +678,7 @@ namespace RTParser
         public void loadSettings()
         {
             // try a safe default setting for the settings xml file
-            string path = Path.Combine(Environment.CurrentDirectory, Path.Combine("config", "Settings.xml"));
+            string path = Path.Combine(RuntimeDirectory, Path.Combine("config", "Settings.xml"));
             this.loadSettings(path);
         }
 
@@ -920,75 +964,116 @@ namespace RTParser
             }
         }
 
-        public User FindOrCreateUser(string fromname, out bool newlyCreated)
+        public User FindOrCreateUser(string fullname, out bool newlyCreated)
         {
             newlyCreated = false;
             lock (BotUsers)
             {
-                fromname = CleanupFromname(fromname);
-                User myUser = FindUser(fromname);
+                string key = KeyFromUsername(fullname);
+                User myUser = FindUser(fullname);
                 if (myUser != null) return myUser;
                 newlyCreated = true;
-                string key = fromname.ToLower().Trim();
-                myUser = new AIMLbot.User(fromname, this);
-                writeDebugLine("USERTRACE: New User " + fromname);
-                BotUsers[key] = myUser;
-                if (!UnknowableName(fromname))
-                {
-                    myUser.Predicates.addSetting("name", fromname);
-                }
-                myUser.Predicates.addSetting("name", fromname);
+                myUser = CreateNewUser(fullname, key);
                 return myUser;
             }
         }
 
-        public void RenameUser(string old, string user)
+        private User CreateNewUser(string fullname, string key)
         {
             lock (BotUsers)
             {
-
-                old = CleanupFromname(old);
-                user = CleanupFromname(user);
-
-                writeDebugLine("USERTRACE: Rename User " + old + " -> " + user);
-
-                User f = FindUser(old);
-                if (f == null)
+                User myUser = new AIMLbot.User(key, this);
+                myUser.UserName = fullname;
+                writeDebugLine("USERTRACE: New User " + fullname);
+                BotUsers[key] = myUser;
+                if (!UnknowableName(fullname))
                 {
-                    User u = FindOrCreateUser(user);
+                    myUser.Predicates.addSetting("name", fullname);
                 }
-                else
+                myUser.Predicates.addSetting("name", fullname);
+                string userdir = GetUserDir(key);
+                myUser.SyncDirectory(userdir);
+                return myUser;
+            }
+        }
+
+        private string GetUserDir(string key)
+        {
+            string userDir =  Path.Combine(this.PathToUserDir, key);
+            HostSystem.CreateDirectory(userDir);
+            return HostSystem.ToRelativePath(userDir);
+        }
+
+        public void RenameUser(string oldname, string newname)
+        {
+            lock (BotUsers)
+            {
+                oldname = CleanupFromname(oldname);
+                string oldkey = KeyFromUsername(oldname);
+                newname = CleanupFromname(newname);
+                string newkey = KeyFromUsername(newname);
+
+                writeDebugLine("USERTRACE: Rename User " + oldname + " -> " + newname);
+
+                User newuser = FindUser(newname);
+                User olduser = FindUser(oldname);
+                if (olduser == null)
                 {
-                    BotUsers[user] = f;
-                    f.Predicates.addSetting("name", user);
+                    if (newuser == null)
+                    {
+                        newuser = FindOrCreateUser(newname);
+                    }
+                    return;
                 }
+
+                // old user existed
+                if (newuser != null)
+                {
+                    // copy settings
+                    newuser.LoadDirectory(olduser.UserDirectory);
+                }
+
+                if (UnknowableName(oldname))
+                {
+                    User nextuser = CreateNewUser(oldname, oldkey);
+                    BotUsers[oldkey] = nextuser;
+                }
+
+                BotUsers[newkey] = olduser;
+                olduser.Predicates.addSetting("name", newname);
             }
         }
 
         public static bool UnknowableName(string user)
         {
             if (String.IsNullOrEmpty(user)) return true;
-            return user.ToUpper().Contains("UNKNOWN");
+            string s = " " + user.ToUpper() + " ";
+            return s.Contains("UNKNOWN") || s.Contains("UNREC") || s.Contains("UNSEEN") || s.Contains("DEFAULT") ||
+                   s.Contains(" SOME") || s.Contains("*") || s.Contains(" _ ");
         }
 
-        public bool IsExistingUsername(string fromname)
+        public bool IsExistingUsername(string fullname)
         {
             lock (BotUsers)
             {
-                if (null == fromname)
+                if (null == fullname)
                 {
                     return false;
                 }
-                else
-                {
-                    fromname = fromname.Trim();
-                }
+                String fromname = CleanupFromname(fullname);
                 if (string.IsNullOrEmpty(fromname))
                 {
                     return false;
                 }
-                fromname = fromname.ToLower();
-                return BotUsers.ContainsKey(fromname);
+                String key = KeyFromUsername(fullname);
+                User user;
+                if (BotUsers.TryGetValue(key, out user))
+                {
+                    if (user.UserID == key || user.UserID == fromname) return true;
+                    writeToLog("USERTRACE WARNING! {0} => {1} <= {2}", fromname, key, user.UserID);
+                    return true;
+                }
+                return false;
             }
         }
 
@@ -1007,7 +1092,24 @@ namespace RTParser
             {
                 fromname = UNKNOWN_PARTNER;
             }
-            return fromname;
+            return fromname.Trim().Replace("_", " ");
+        }
+
+        public static string KeyFromUsername(string fromname)
+        {
+            if (null == fromname)
+            {
+                fromname = UNKNOWN_PARTNER;
+            }
+            else
+            {
+                fromname = fromname.Trim();
+            }
+            if (string.IsNullOrEmpty(fromname))
+            {
+                fromname = UNKNOWN_PARTNER;
+            }
+            return fromname.ToLower().Trim().Replace(" ", "_");
         }
 
         public void AddAiml(string aimlText)
@@ -1299,7 +1401,6 @@ namespace RTParser
             temp = ApplySubstitutions.Substitute(this, this.Person2Substitutions, temp);
             return temp;
         }
-
 
         public Unifiable CleanupCyc(string text)
         {
@@ -2435,6 +2536,19 @@ The AIMLbot program.
         public static string UNKNOWN_PARTNER = "UNKNOWN_PARTNER";
         public static bool SaveProofs;
 
+        public GraphMaster GetUserGraph(string graphPath, GraphMaster current)
+        {
+            GraphMaster g;
+            lock (GraphsByName)
+            {
+                if (!GraphsByName.TryGetValue(graphPath, out g))
+                {
+                    g = GraphsByName[graphPath] = new GraphMaster(graphPath, this);
+                    g.AddGenlMT(current);
+                }
+            }
+            return g;            
+        }
         public GraphMaster GetGraph(string graphPath, GraphMaster current)
         {
             if (graphPath == null)

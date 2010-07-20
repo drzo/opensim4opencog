@@ -36,7 +36,21 @@ namespace RTParser.Utils
         /// <summary>
         /// The template (if any) associated with this node
         /// </summary>
-        public UList TemplateInfos = null;//Unifiable.Empty;
+        private UList TemplateInfos = null;//Unifiable.Empty;
+        public UList TemplateInfoCopy
+        {
+            get
+            {
+                if (TemplateInfos == null) return null;
+                lock (TemplateInfos)
+                {
+                    if (TemplateInfos.Count == 0) return null;
+                    var copy = new UList();
+                    copy.AddRange(TemplateInfos);
+                    return copy;
+                }
+            }
+        }
 
 #if UNUSED
         /// <summary>
@@ -93,6 +107,8 @@ namespace RTParser.Utils
                     string newGuard = guard != null ? guard.OuterXml : null;
                     string newThat = thatInfo != null ? thatInfo.OuterXml : null;
                     List<TemplateInfo> dupes = null;
+
+                    int nodeNum = 0;
                     this.TemplateInfos.ForEach(delegate(TemplateInfo temp)
                                                    {
                                                        var categoryinfo1 = category;
@@ -103,13 +119,14 @@ namespace RTParser.Utils
                                                            if (AIMLLoader.AimlSame(newGuard, oldGuard))
                                                                if (AIMLLoader.AimlSame(newThat, oldThat))
                                                                {
-                                                                   if (true) return;
-                                                                   if (count==1)
+                                                                   if (nodeNum==0)
                                                                    {
-                                                                       // writeToLog("AIMLTRACE REDUNDANT " + TemplateInfos[0]);
+                                                                       TemplateInfo redundant = TemplateInfo.GetTemplateInfo(templateNode, guard, thatInfo, this, category);
+                                                                       master.AddRedundantTemplate(redundant, temp);                                                                       
                                                                        return;
                                                                    }
-                                                                   if (dupes == null) dupes = new List<TemplateInfo>();
+                                                                   nodeNum++;
+                                                                   dupes = dupes ?? new List<TemplateInfo>();
                                                                    dupes.Add(temp);
                                                                }
                                                    });
@@ -117,7 +134,7 @@ namespace RTParser.Utils
                     {
                         if (TemplateInfos.Count == 1)
                         {
-                            //writeToLog("AIMLTRACE REDUNDANT " + TemplateInfos[0]);
+                            writeToLog("ERROR!! AIMLLOADER ONE DUPE REDUNDANT " + TemplateInfos[0]);
                             if (true) return;
                             // no side effect!
                             TemplateInfo temp = dupes[0];
@@ -126,11 +143,13 @@ namespace RTParser.Utils
                         } else
                             dupes.ForEach(delegate(TemplateInfo temp)
                                           {
+                                              if (temp==TemplateInfos[0]) return;
                                               if (true)
                                               {
-                                                //  writeToLog("AIMLTRACE REDUNDANT " + temp);
+                                                  writeToLog("AIMLLOADER REDUNDANT \n" + temp + "\n from: " + category.Filename);
                                                   master.RemoveTemplate(temp);
                                                   this.TemplateInfos.Remove(temp);
+                                                  this.TemplateInfos.Insert(0, temp);
                                               }
                                           });
                         dupes.Clear();

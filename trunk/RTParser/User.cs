@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using com.hp.hpl.jena.graph;
 using RTParser;
 using RTParser.Utils;
@@ -11,7 +13,7 @@ namespace RTParser
     /// <summary>
     /// Encapsulates information and history of a user who has interacted with the bot
     /// </summary>
-    abstract public class User : QuerySettings, QuerySettingsReadOnly
+    abstract public class User : QuerySettings, QuerySettingsReadOnly,IDisposable
     {
         public readonly object QueryLock = new object();
 
@@ -38,6 +40,24 @@ namespace RTParser
         /// </summary>
         public RTParser.RTPBot bot;
 
+
+        public Timer SaveTimer;
+
+        readonly object SaveLock = new object();
+        private void SaveOften(object state)
+        {
+            lock (SaveLock)
+            {
+                if (!needsSave) return;
+                needsSave = false;
+            }
+            SaveDirectory(_LoadedDirectory);
+            lock (SaveLock)
+            {
+                needsSave = true;
+            }
+        }
+
         /// <summary>
         /// The grahmaster this user is using
         /// </summary>
@@ -49,7 +69,7 @@ namespace RTParser
                 {
                     GraphMaster _Graph = null;
                     var v = Predicates.grabSettingNoDebug("graphname");
-                    _Graph = bot.GetGraph(v, bot.GraphMaster) ?? _Graph;
+                    _Graph = bot.GetUserGraph(v, bot.GraphMaster);
                     if (_Graph != null)
                     {
                         return _Graph;
@@ -61,7 +81,9 @@ namespace RTParser
             }
             set
             {
-                Predicates.addSetting("graphname", value.ScriptingName);
+                if (!Predicates.containsLocalCalled("graphname"))
+                    Predicates.addSetting("graphname", value.ScriptingName);
+                else Predicates.updateSetting("graphname", value.ScriptingName);
                 GraphMaster lg = ListeningGraph;
                 if (lg != value)
                 {
@@ -82,6 +104,8 @@ namespace RTParser
         {
             get { return this.id; }
         }
+
+        public string UserName;
 
         /// <summary>
         /// A collection of all the result objects returned to the user in this session
@@ -215,23 +239,32 @@ namespace RTParser
                 // ApplySettings(bot.BotAsUser, this);
                 this.Predicates = new RTParser.Utils.SettingsDictionary(ShortName + ".predicates", this.bot, provider);
                 this.bot.DefaultPredicates.Clone(this.Predicates);
-                ListeningGraph = bot.GraphMaster;
                 //this.Predicates.AddGetSetProperty("topic", new CollectionProperty(_topics, () => bot.NOTOPIC));
                 this.Predicates.addSetting("topic", bot.NOTOPIC);
                 this.Predicates.InsertFallback(() => bot.DefaultPredicates);
                 this.Predicates.InsertFallback(() => bot.HeardPredicates);
                 Predicates.addSetting("id", UserID);
                 //this.Predicates.addSetting("topic", "NOTOPIC");
+                SaveTimer = new Timer(SaveOften, this, new TimeSpan(0, 5, 0), new TimeSpan(0, 5, 0));            
             }
             else
             {
                 throw new Exception("The UserID cannot be empty");
             }
         }
-
+       
         public override string ToString()
         {
             return UserID;
+        }
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        /// <filterpriority>2</filterpriority>
+        public void Dispose()
+        {
+            SaveOften(this);
         }
 
         /// <summary>
@@ -574,6 +607,84 @@ namespace RTParser
         public bool CanUseTemplate(TemplateInfo info, Result request)
         {
             return true;
+        }
+
+
+        public string UserDirectory
+        {
+            get { return _LoadedDirectory; }
+            set { LoadDirectory(value); }
+        }
+
+        private string _LoadedDirectory;
+        private bool needsSave;
+
+        public void SyncDirectory(string userdir)
+        {
+            LoadDirectory(userdir);
+            Predicates.addSetting("userdir", userdir);
+            SaveDirectory(userdir);
+        }
+
+        public void SaveDirectory(string userdir)
+        {
+            HostSystem.CreateDirectory(userdir);
+            Predicates.SaveTo(userdir, "user.predicates", "UserPredicates.xml");
+            GraphMaster gm = bot.GetGraph(UserID, ListeningGraph);
+            gm.WriteToFile(UserID, Path.Combine(userdir, UserID) + ".saved");
+
+        }
+
+        public void LoadDirectory(string userdir)
+        {
+            if (Directory.Exists(userdir))
+            {
+                _LoadedDirectory = userdir;
+                LoadUserSettings(userdir);
+                LoadUserAiml(userdir);
+            }
+        }
+
+        public void LoadUserSettings(string userdir)
+        {
+            if (Directory.Exists(userdir))
+            {
+                foreach (string s in Directory.GetFiles(userdir))
+                {
+                    LoadUserSettings(s);
+                }
+                return;
+            }
+            if (File.Exists(userdir))
+            {
+                if (!userdir.EndsWith(".xml"))
+                {
+                    return;
+                }
+                if (userdir.EndsWith("Predicates.xml"))
+                {
+                    Predicates.loadSettings(userdir);
+                }
+                return;
+            }
+        }
+
+        public void LoadUserAiml(string userdir)
+        {
+            if (Directory.Exists(userdir))
+            {
+                foreach (string s in Directory.GetFiles(userdir))
+                {
+                    LoadUserAiml(s);
+                }
+                return;
+            }
+            if (!File.Exists(userdir) || !userdir.EndsWith(".aiml")) return;
+            var request = new AIMLbot.Request("load user aiml ", this, bot, null);
+            request.TimesOutAt = DateTime.Now + new TimeSpan(0, 15, 0);
+            request.Graph = ListeningGraph;
+            var options = LoaderOptions.GetDefault(request);
+            bot.loadAIMLFromURI(userdir, options, request);
         }
     }
 }
