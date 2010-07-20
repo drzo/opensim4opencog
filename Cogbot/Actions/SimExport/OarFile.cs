@@ -6,6 +6,8 @@ using System.Text;
 using System.Xml;
 using OpenMetaverse;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.SimExport
 {
     public class Linkset

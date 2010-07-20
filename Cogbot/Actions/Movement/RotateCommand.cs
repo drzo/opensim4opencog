@@ -2,6 +2,8 @@ using System;
 using OpenMetaverse;
 using cogbot.Listeners;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Movement
 {
 

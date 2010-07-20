@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Threading;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Estate
 {
     public class UploadRawTerrainCommand : Command, RegionMasterCommand

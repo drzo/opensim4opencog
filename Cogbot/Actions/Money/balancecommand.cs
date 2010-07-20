@@ -4,6 +4,8 @@ using System.Threading;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Money
 {
     public class BalanceCommand : Command, BotPersonalCommand

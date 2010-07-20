@@ -5,6 +5,7 @@ using cogbot.Listeners;
 using System.Threading;
 using System.IO;
 using System.Collections;
+using MushDLR223.ScriptEngines;
 using OpenMetaverse;
 using System.Reflection;
 using cogbot.TheOpenSims;

@@ -4,6 +4,8 @@ using System.Threading;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.SimExport
 {
 

@@ -4,6 +4,8 @@ using System.Text;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Agent
 {
     public class WhoCommand: Command, RegionMasterCommand

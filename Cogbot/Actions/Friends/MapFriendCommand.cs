@@ -6,6 +6,8 @@ using OpenMetaverse;
 using OpenMetaverse.Packets;
 using System.Text;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Friends
 {
     public class MapFriendCommand : Command, BotPersonalCommand

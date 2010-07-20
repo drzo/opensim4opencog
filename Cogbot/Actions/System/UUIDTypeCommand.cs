@@ -5,6 +5,8 @@ using System.Text;
 using OpenMetaverse;
 using cogbot.Listeners;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Search
 {
     public class UUIDTypeCommand : Command, GridMasterCommand

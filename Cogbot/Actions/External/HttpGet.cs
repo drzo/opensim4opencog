@@ -4,6 +4,8 @@ using System.Text;
 using System.Net;
 //using OpenMetaverse; //using libsecondlife;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.WebUtil
 {
     public class HttpGet : Command, SystemApplicationCommand

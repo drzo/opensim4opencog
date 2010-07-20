@@ -6,6 +6,8 @@ using OpenMetaverse;
 using OpenMetaverse.Packets;
 using PathSystem3D.Navigation;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Movement
 {
     public class GotoCommand : Command, BotPersonalCommand

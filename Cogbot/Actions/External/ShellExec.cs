@@ -6,6 +6,8 @@ using System.Text;
 using System.Net;
 //using OpenMetaverse; //using libsecondlife;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.External
 {
     public class ShellExec : Command, SystemApplicationCommand

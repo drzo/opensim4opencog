@@ -2,6 +2,8 @@ using System.Windows.Forms;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Pathfinder
 {
     public class WalkToCommand : cogbot.Actions.Command, BotPersonalCommand

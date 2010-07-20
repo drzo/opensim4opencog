@@ -3,6 +3,8 @@ using cogbot.Listeners;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.SimExport
 {
     public class OrphanCommand : cogbot.Actions.Command, RegionMasterCommand

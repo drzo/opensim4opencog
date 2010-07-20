@@ -8,6 +8,8 @@ using OpenMetaverse;
 using OpenMetaverse.Http;
 using OpenMetaverse.Imaging;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.SimExport
 {
     public class UploadImageCommand : Command, BotPersonalCommand

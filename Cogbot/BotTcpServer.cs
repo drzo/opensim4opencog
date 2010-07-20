@@ -10,6 +10,7 @@ using System.Xml;
 using cogbot.Actions;
 using cogbot.ScriptEngines;
 using cogbot.TheOpenSims;
+using MushDLR223.ScriptEngines;
 using OpenMetaverse;
 using cogbot.Listeners;
 

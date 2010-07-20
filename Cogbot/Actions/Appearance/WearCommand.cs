@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using OpenMetaverse;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Appearance
 {
     public class WearCommand : Command, BotPersonalCommand

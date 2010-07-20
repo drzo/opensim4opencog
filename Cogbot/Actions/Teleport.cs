@@ -9,6 +9,8 @@ using PathSystem3D.Navigation; //using libsecondlife;
 //using TeleportFlags = OpenMetaverse.AgentManager.TeleportFlags;
 //using TeleportStatus = OpenMetaverse.AgentManager.TeleportStatus;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Agent
 {
 #pragma warning disable 0168

@@ -5,6 +5,8 @@ using OpenMetaverse;
 using OpenMetaverse.Packets;
 using PathSystem3D.Navigation;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Land
 {
     public class TreeCommand: Command, RegionMasterCommand

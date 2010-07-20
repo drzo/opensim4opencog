@@ -6,6 +6,7 @@ using System.Text;
 using System.Xml;
 using cogbot.Actions;
 using DotLisp;
+using MushDLR223.ScriptEngines;
 
 namespace cogbot.ScriptEngines
 {

@@ -5,6 +5,8 @@ using OpenMetaverse;
 using OpenMetaverse.Packets;
 using System.Text;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Groups
 {
     public class InviteGroupCommand : Command, BotPersonalCommand

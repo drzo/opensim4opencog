@@ -10,6 +10,8 @@ using OpenMetaverse;
 //using AgentFlags = OpenMetaverse.AgentManager.AgentFlags;
 //using AgentState = OpenMetaverse.AgentManager.AgentState;
 // taken initially from http://openmetaverse.org/svn/omf/libopenmetaverse/trunk/Programs/SimExport -r2392
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.SimExport
 {
 #if PORTIT

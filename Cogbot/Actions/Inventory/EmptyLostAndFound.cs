@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Inventory
 {
     public class EmptyLostAndCommand : Command, BotPersonalCommand

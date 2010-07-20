@@ -4,6 +4,8 @@ using System.IO;
 using System.Text;
 //using OpenMetaverse; //using libsecondlife;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Scripting
 {
     class EvalWith : Command, SystemApplicationCommand

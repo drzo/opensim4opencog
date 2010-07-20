@@ -7,6 +7,8 @@ using cogbot.Listeners;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Scripting
 {
     public class DownloadScriptCommand : Command, GridMasterCommand

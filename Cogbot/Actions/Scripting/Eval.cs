@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Text;
 //using OpenMetaverse; //using libsecondlife;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Scripting
 {
     class Eval : Command, BotSystemCommand

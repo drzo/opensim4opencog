@@ -1,6 +1,8 @@
 using System;
 using OpenMetaverse;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Search
 {
     public class FindTextureCommand : Command, RegionMasterCommand

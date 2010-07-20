@@ -5,6 +5,8 @@ using System.Text;
 using OpenMetaverse;
 using System.Diagnostics;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Scripting
 {
     public class CreateScriptCommand : Command, BotPersonalCommand

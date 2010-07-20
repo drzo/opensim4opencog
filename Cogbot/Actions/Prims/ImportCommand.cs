@@ -5,6 +5,8 @@ using System.IO;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Objects
 {
     public class ImportCommand : Command,RegionMasterCommand

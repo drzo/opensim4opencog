@@ -11,6 +11,8 @@ using cogbot.Actions.Scripting;
 using cogbot.Actions.System;
 using cogbot.Actions.WebUtil;
 using cogbot.Utilities;
+using MushDLR223.ScriptEngines;
+using MushDLR223.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using OpenMetaverse.Utilities;
@@ -1951,7 +1953,7 @@ namespace cogbot
 
         public CmdResult ExecuteTask(string scripttype, TextReader reader, OutputDelegate WriteLine)
         {
-            var si = ScriptEngines.ScriptManager.LoadScriptInterpreter(scripttype, this);
+            var si = ScriptManager.LoadScriptInterpreter(scripttype, this);
             object o = si.Read(scripttype, reader, WriteLine);
             if (o is CmdResult) return (CmdResult)o;
             if (o == null) return new CmdResult("void", true);

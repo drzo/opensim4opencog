@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.System
 {
     class Login : Command, BotSystemCommand

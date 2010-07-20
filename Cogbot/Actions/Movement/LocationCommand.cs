@@ -8,6 +8,8 @@ using PathSystem3D.Navigation;
 
 //using libsecondlife;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Movement
 {
     class LocationCommand : Command, BotSystemCommand

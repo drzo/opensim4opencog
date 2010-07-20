@@ -3,6 +3,8 @@ using cogbot.Listeners;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Money
 {
     public class SaleInfoCommand : cogbot.Actions.Command, RegionMasterCommand

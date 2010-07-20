@@ -4,6 +4,8 @@ using System.Text;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Land
 {
     public class GridMapCommand : Command, GridMasterCommand

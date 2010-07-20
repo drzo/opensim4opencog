@@ -6,6 +6,8 @@ using cogbot.TheOpenSims;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions
 {
     class Move : Command, BotPersonalCommand

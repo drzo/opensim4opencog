@@ -6,6 +6,8 @@ using OpenMetaverse;
 using OpenMetaverse.Packets;
 using cogbot.TheOpenSims;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.System
 {
     public class BotPermsCommand : Command, BotSystemCommand

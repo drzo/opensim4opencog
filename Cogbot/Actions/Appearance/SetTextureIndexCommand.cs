@@ -5,6 +5,8 @@ using cogbot.TheOpenSims;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Appearance
 {
     public class SetTextureIndexCommand : Command, BotPersonalCommand

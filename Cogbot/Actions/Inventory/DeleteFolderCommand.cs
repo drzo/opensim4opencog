@@ -7,6 +7,8 @@ using System.Xml;
 using System.Xml.Serialization;
 using OpenMetaverse;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Inventory.Shell
 {
     /// <summary>

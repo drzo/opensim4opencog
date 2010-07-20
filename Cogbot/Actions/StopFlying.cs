@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Movement
 {
     class StopFlying : Command, BotPersonalCommand

@@ -5,6 +5,8 @@ using cogbot.Listeners;
 using OpenMetaverse;
 using cogbot.TheOpenSims;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Appearance
 {
     public class AvatarInfoCommand : Command, RegionMasterCommand

@@ -4,6 +4,8 @@ using System.Text;
 using System.Threading;
 using OpenMetaverse; //using libsecondlife;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions
 {
     class Wear : Command, BotPersonalCommand

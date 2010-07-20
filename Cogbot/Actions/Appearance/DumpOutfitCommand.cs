@@ -7,6 +7,8 @@ using OpenMetaverse;
 using OpenMetaverse.Assets;
 using OpenMetaverse.Imaging;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Appearance
 {
     public class DumpOutfitCommand : Command, BotPersonalCommand

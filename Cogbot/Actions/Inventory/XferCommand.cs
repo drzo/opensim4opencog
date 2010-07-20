@@ -9,6 +9,8 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using PathSystem3D.Navigation;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.SimExport
 {
     public class XferCommand : Command, GridMasterCommand

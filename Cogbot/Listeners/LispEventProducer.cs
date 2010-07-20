@@ -6,6 +6,7 @@ using System.IO;
 using DotLisp;
 using System.Reflection;
 using System.Reflection.Emit;
+using MushDLR223.ScriptEngines;
 
 namespace cogbot.Listeners
 {

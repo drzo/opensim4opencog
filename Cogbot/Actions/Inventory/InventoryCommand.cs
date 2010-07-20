@@ -8,6 +8,8 @@ using System.Xml.Serialization;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Inventory.Shell
 {
     public class InventoryCommand : Command, BotPersonalCommand

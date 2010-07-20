@@ -5,6 +5,8 @@ using System.Threading;
 using OpenMetaverse;
 
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Search
 {
     public class FindObjectsCommand : Command, BotPersonalCommand

@@ -8,6 +8,8 @@ using System.Web;
 
 //using OpenMetaverse; //using libsecondlife;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.WebUtil
 {
     public class HttpPost : Command, SystemApplicationCommand

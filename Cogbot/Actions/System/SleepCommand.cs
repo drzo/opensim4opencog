@@ -3,6 +3,8 @@ using OpenMetaverse;
 using OpenMetaverse.Packets;
 using System.Threading;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.System
 {
     public class SleepCommand : Command, BotSystemCommand

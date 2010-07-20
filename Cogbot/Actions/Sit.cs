@@ -5,6 +5,8 @@ using System.Threading;
 using cogbot.TheOpenSims;
 using OpenMetaverse; //using libsecondlife;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Movement
 {
     class Sit : Command, BotPersonalCommand

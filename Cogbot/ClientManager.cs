@@ -8,6 +8,8 @@ using cogbot.Actions.Agent;
 using cogbot.ScriptEngines;
 using cogbot.Utilities;
 using CommandLine.Utility;
+using MushDLR223.ScriptEngines;
+using MushDLR223.Utilities;
 using OpenMetaverse;
 using cogbot.Actions;
 using Radegast;
@@ -19,7 +21,6 @@ namespace cogbot
 {
     public delegate void DescribeDelegate(bool detailed, OutputDelegate WriteLine);
     enum Modes { normal, tutorial };
-    public delegate void OutputDelegate(string str, params object[] args);
 
     public class ClientManager : IDisposable,ScriptExecutorGetter
     {
@@ -464,7 +465,7 @@ namespace cogbot
                     try
                     {
                         WriteLine("Start Loading Main TaskInterperter ... '" + taskInterperterType + "' \n");
-                        _lispTaskInterperter = ScriptEngines.ScriptManager.LoadScriptInterpreter(taskInterperterType, this);
+                        _lispTaskInterperter = ScriptManager.LoadScriptInterpreter(taskInterperterType, this);
                         _lispTaskInterperter.LoadFile("boot.lisp",WriteLine);
                         _lispTaskInterperter.LoadFile("extra.lisp",WriteLine);
                         _lispTaskInterperter.LoadFile("cogbot.lisp",WriteLine);

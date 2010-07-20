@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Threading;
 using OpenMetaverse;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Objects
 {
     public class ObjectGroupCommand : Command, RegionMasterCommand

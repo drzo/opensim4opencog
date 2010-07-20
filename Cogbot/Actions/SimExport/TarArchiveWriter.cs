@@ -30,6 +30,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.SimExport
 {
     /// <summary>
