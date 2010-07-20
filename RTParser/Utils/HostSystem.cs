@@ -31,12 +31,12 @@ namespace RTParser.Utils
             return str;
         }
 
-        private static bool FileOrDirExists(string str)
+        public static bool FileOrDirExists(string str)
         {
             return FileExists(str) || DirExists(str);
         }
 
-        private static bool DirExists(string prefix)
+        public static bool DirExists(string prefix)
         {
             return Directory.Exists(prefix);
         }
