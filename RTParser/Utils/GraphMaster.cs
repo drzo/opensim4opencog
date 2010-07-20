@@ -62,7 +62,7 @@ namespace RTParser.Utils
         private GraphMaster _parent = null;
         private int parent0 = 0;
         private bool UnTraced = false;
-        private readonly IList<GraphMaster> FallBacksGraphs = new List<GraphMaster>();
+        private readonly List<GraphMaster> FallBacksGraphs = new List<GraphMaster>();
 
         public GraphMaster Parent
         {
@@ -304,9 +304,8 @@ namespace RTParser.Utils
             }
             if (!ql.IsMaxedOut)
             {
-                var fallbacks = FallBacks(request.user);
-                if (fallbacks == null) return;
-                foreach (GraphMaster graphMaster in fallbacks)
+                if (FallBacksGraphs == null) return;
+                foreach (GraphMaster graphMaster in CopyOf(FallBacksGraphs))
                 {
                     graphMaster.evaluateQL(unifiable, request, matchState, ql);
                     if (ql.IsMaxedOut)
@@ -450,9 +449,21 @@ namespace RTParser.Utils
             }
         }
 
-        private IEnumerable<GraphMaster> FallBacks(User user)
+        static IEnumerable<T> CopyOf<T>(List<T> list)
         {
-            return FallBacksGraphs;
+            lock (list)
+            {
+                return list.ToArray();
+            }
+        }
+        static IEnumerable<T> CopyOf<T>(IEnumerable<T> list)
+        {
+            var copy = new List<T>();
+            lock (list)
+            {
+                copy.AddRange(list);
+            }
+            return copy;
         }
 
         private List<Result> DoParentEval(List<GraphMaster> totry, Request request, Unifiable unifiable)
@@ -461,7 +472,7 @@ namespace RTParser.Utils
             RTPBot proc = request.Proccessor;
             GraphMaster g = request.Graph;
             bool userTracing = request.IsTraced;
-            foreach (var p in totry)
+            foreach (var p in CopyOf(totry))
             {
                 if (p != null)
                 {
@@ -545,21 +556,21 @@ namespace RTParser.Utils
             var fs = new StreamWriter(filename, false);
             fs.WriteLine("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>");
             fs.WriteLine("<aiml graph=\"{0}\">", name);
-            foreach (var list in FallBacksGraphs)
+            foreach (var list in CopyOf(FallBacksGraphs))
             {
                 fs.WriteLine(" <genlMt graph=\"{0}\"/>", list.ScriptingName);
             }
-            foreach (var list in Parents)
+            foreach (var list in CopyOf(Parents))
             {
                 fs.WriteLine(" <!-- parent graph=\"{0}\" -->", list.ScriptingName);
             }
             var srai = Srai;
             if (srai != null)
-                fs.WriteLine(" <!-- vocabulary graph=\"{0}\" -->", Srai.ScriptingName);
+                fs.WriteLine(" <!-- vocabulary graph=\"{0}\" -->", srai.ScriptingName);
             try
             {
                 string hide = "";
-                foreach (var ci in CategoryInfos)
+                foreach (var ci in CopyOf(Templates))
                 {
                     string c = ci.ToFileString();
                     string ss = "" + AIMLLoader.CleanWhitepaces(c) + "\n";
@@ -568,12 +579,12 @@ namespace RTParser.Utils
                         continue;
                     }
                     hide += ss;
-                    fs.Write(ss + "<!-- " + ci.SourceInfo() + " -->\n");
+                    fs.Write(ss + "<!-- " + ci.CategoryInfo.SourceInfo() + " -->\n");
                 }
             }
             finally
             {
-                fs.WriteLine("</aiml>", name);
+                fs.WriteLine("</aiml>");
                 fs.Flush();
                 fs.Close();
             }
