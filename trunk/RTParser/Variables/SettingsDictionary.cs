@@ -319,7 +319,7 @@ namespace RTParser.Utils
                 SettingsLog("ADD Setting Local '" + name + "'=" + str(value) + " ");
                 if (normalizedName.Length > 0)
                 {
-                    this.removeSetting(normalizedName);
+                    this.removeSetting(name);
                     this.orderedKeys.Add(name);
                     this.settingsHash.Add(normalizedName, value);
                 }
@@ -369,8 +369,9 @@ namespace RTParser.Utils
                 string normalizedName = TransformKey(name);
                 bool ret = orderedKeys.Contains(name);
                 this.orderedKeys.Remove(name);
+                // shouldnt need this next one (but just in case)
                 this.orderedKeys.Remove(normalizedName);
-                this.removeFromHash(normalizedName);
+                this.removeFromHash(name);
                 return ret;
             }
         }
@@ -384,7 +385,7 @@ namespace RTParser.Utils
         /// <summary>
         /// Removes a named setting from the Dictionary<,>
         /// </summary>
-        /// <param name="name">the normalizedName for the Dictionary<,></param>
+        /// <param name="name">the key for the Dictionary<,></param>
         private void removeFromHash(string name)
         {
             lock (orderedKeys)
