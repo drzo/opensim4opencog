@@ -258,8 +258,8 @@ namespace RTParser
                 this.Predicates.InsertFallback(() => bot.HeardPredicates);
                 Predicates.addSetting("id", UserID);
                 //this.Predicates.addSetting("topic", "NOTOPIC");
-                SaveTimer = new Timer(SaveOften, this, new TimeSpan(0, 5, 0), new TimeSpan(0, 5, 0));      
-                
+                SaveTimer = new Timer(SaveOften, this, new TimeSpan(0, 5, 0), new TimeSpan(0, 5, 0));
+                needsSave = true;
             }
             else
             {
@@ -533,7 +533,17 @@ namespace RTParser
             input = input.Trim();
             if (input.StartsWith("@"))
             {
-                input = input.TrimStart(new[] { ' ', '@' });
+                input = input.TrimStart(new[] {' ', '@'});
+                switch (input)
+                {
+                    case "save":
+                        {
+                            SaveOften(this);
+                        }
+                        return true;
+                    default:
+                        break;
+                }
             }
             //if (input == "") return false;
             input = input + " ";
