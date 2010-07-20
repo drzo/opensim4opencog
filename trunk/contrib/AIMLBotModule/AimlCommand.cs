@@ -117,12 +117,18 @@ namespace AIMLBotModule
 
             double ratng;
             var MyBot = WorldSystemModule.MyBot;
-            String useOut = WorldSystemModule.AIMLInterpScored(joined, MyBot.FindOrCreateUser(lastKnownUser), out ratng);
-            double scored = ratng*14;
-            WorldSystemModule.MyBot.writeToLog("REALWORLD AIMLTRACE! '" + joined + "' " + scored + " '" + useOut + "'");
-            if (String.IsNullOrEmpty(useOut)) useOut = "Interesting.";
-            if (!useOut.Contains("mene value=")) useOut = useOut.Replace(" _", " ") + " mene value=" + (int) scored;
-            return Success(useOut);
+            var myUser = MyBot.FindOrCreateUser(lastKnownUser);
+            lock (myUser.QueryLock)
+            {
+                myUser.CurrentRequest = null;
+                String useOut = WorldSystemModule.AIMLInterpScored(joined, myUser, out ratng);
+                double scored = ratng*14;
+                WorldSystemModule.MyBot.writeToLog("REALWORLD AIMLTRACE! '" + joined + "' " + scored + " '" + useOut +
+                                                   "'");
+                if (String.IsNullOrEmpty(useOut)) useOut = "Interesting.";
+                if (!useOut.Contains("mene value=")) useOut = useOut.Replace(" _", " ") + " mene value=" + (int) scored;
+                return Success(useOut);
+            }
         }
 
         public void SetUser(string user)
