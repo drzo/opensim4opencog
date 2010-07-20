@@ -29,13 +29,13 @@ namespace RTParser.Utils
 
         public PatternInfo Pattern;
        // public GuardInfo Guard;
-        public LoaderOptions Filename;
+        public string Filename;
         public List<TemplateInfo> TemplateInfos = new List<TemplateInfo>();
-        public CategoryInfo(PatternInfo pattern, XmlNode cateNode, LoaderOptions filename)
+        public CategoryInfo(PatternInfo pattern, XmlNode cateNode, LoaderOptions options)
             : base(cateNode)
         {
             Pattern = pattern;
-            Filename = filename;
+            Filename = options.Filename;
         }
 
         public override string ToString()
@@ -69,6 +69,10 @@ namespace RTParser.Utils
             throw new NotImplementedException();
         }
 
+        public string SourceInfo()
+        {
+            return AIMLLoader.SourceInfo(Category);
+        }
         public string ToFileString()
         {
             string s = "";

@@ -126,6 +126,12 @@ namespace RTParser.Utils
 
         string ResolveToURI(string pathIn, LoaderOptions loadOpts, Request request)
         {
+            string path = ResolveToURI0(pathIn, loadOpts, request);
+            path = HostSystem.ToRelativePath(path);
+            return path;
+        }
+        string ResolveToURI0(string pathIn, LoaderOptions loadOpts, Request request)
+        {
             string baseFile = GetBaseDirectory(loadOpts);
             pathIn = pathIn.Trim();
             string[] combine = baseFile != null ? new[] {".", baseFile, "aiml"} : new[] {".", "aiml"};
@@ -182,17 +188,19 @@ namespace RTParser.Utils
             path = ResolveToURI(path, loadOpts, request);
             try
             {
-                writeToLog("Processing AIML URI: " + path);
                 if (Directory.Exists(path))
                 {
                     loadAIMLDir(path, loadOpts, request);
+                    return;
                 }
                 else if (File.Exists(path))
                 {
                     loadAIMLFile(path, loadOpts, request);
+                    return;
                 }
                 else if (Uri.IsWellFormedUriString(path, UriKind.RelativeOrAbsolute))
-                {                   
+                {
+                    writeToLog("Processing AIML URI: " + path);
                     var uri = new Uri(path);
                     if (uri.IsFile)
                     {
@@ -207,21 +215,14 @@ namespace RTParser.Utils
                     {
                         loadOpts.Filename = path;
                         loadAIMLStream(stream, loadOpts, request);
+                        writeToLog("Completed AIML URI: " + path);
+                        return;
                     }
                     finally
                     {
-                        loadOpts.Filename = pfile; 
+                        loadOpts.Filename = pfile;
                     }
                 }
-                else
-                {
-                    String nf = "ERROR: XmlTextReader of AIML files (" + path + ")";
-                    var nfe = new FileNotFoundException(nf);
-                    RProcessor.writeToLog(nfe);
-                    writeToLog(nf);
-                    throw nfe;
-                }
-                writeToLog("Completed AIML URI: " + path);
             }
             catch (Exception e)
             {
@@ -229,6 +230,11 @@ namespace RTParser.Utils
                 writeToLog("ERROR! " + e);
                 throw e;
             }
+            String nf = "ERROR: XmlTextReader of AIML files (" + path + ")";
+            var nfe = new FileNotFoundException(nf);
+            RProcessor.writeToLog(nfe);
+            writeToLog(nf);
+            throw nfe;
         }
 
         /// <summary>
@@ -949,8 +955,11 @@ namespace RTParser.Utils
 
         public static string LineNumberInfo(XmlNode templateNode)
         {
-
-            string s = "<!-- ";
+            return "<!-- " + SourceInfo(templateNode) + " -->";
+        }
+        public static string SourceInfo(XmlNode templateNode)
+        {
+            string s = "";
             if (templateNode is LineInfoElement)
             {
                 LineInfoElement li = (LineInfoElement)templateNode;
@@ -972,7 +981,7 @@ namespace RTParser.Utils
                     s = s + " (" + li.OwnerDocument.ToString() + ":line " + li.lineNumber + "," + li.linePosition + ") ";
                 }
             }
-            return s + " -->";
+            return s;
         }
 
         public static object LineTextInfo(XmlNode templateNode)
