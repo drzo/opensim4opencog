@@ -8,6 +8,8 @@ using cogbot.Actions;
 using cogbot.Listeners;
 using cogbot.ScriptEngines;
 using cogbot.TheOpenSims;
+using MushDLR223.ScriptEngines;
+using MushDLR223.Utilities;
 using OpenMetaverse;
 using RTParser;
 using cogbot;
@@ -1219,7 +1221,7 @@ namespace AIMLBotModule
             }
             string stringJoin = String.Join(" ", args, 0, args.Length);
             if (MyBotNullWarning()) return false;
-            return MyBot.BotDirective(MyUser, stringJoin, new RTPBot.OutputDelegate(writeLine));
+            return MyBot.BotDirective(MyUser, stringJoin, writeLine);
         }
 
         private bool MyBotNullWarning()

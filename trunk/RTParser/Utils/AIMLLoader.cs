@@ -5,6 +5,7 @@ using System.Net;
 using System.Xml;
 using System.IO;
 using System.Text;
+using MushDLR223.ScriptEngines;
 using RTParser.AIMLTagHandlers;
 using UPath = RTParser.Unifiable;
 
@@ -1010,7 +1011,7 @@ namespace RTParser.Utils
             return LineTextInfo(element.ParentNode ?? element) + " " + LineNumberInfo(element);
         }
 
-        public static void PrintResult(Result result, RTPBot.OutputDelegate console)
+        public static void PrintResult(Result result, OutputDelegate console)
         {
             console("-----------------------------------------------------------------");
             console("Result: " + result.Graph + " Request: " + result.request);
@@ -1045,7 +1046,7 @@ namespace RTParser.Utils
             return hide;
         }
 
-        public static void PrintTemplates(IList<TemplateInfo> templates, RTPBot.OutputDelegate console)
+        public static void PrintTemplates(IList<TemplateInfo> templates, OutputDelegate console)
         {                
             console(" " + GetTemplateSource(templates));
         }

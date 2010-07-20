@@ -6,6 +6,7 @@ using System.Text;
 using cogbot;
 using cogbot.Listeners;
 using cogbot.ScriptEngines;
+using MushDLR223.ScriptEngines;
 using RTParser.Utils;
 
 namespace PrologScriptEngine
