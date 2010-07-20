@@ -51,13 +51,13 @@ namespace RTParser.Normalize
         public static Unifiable Substitute(RTParser.RTPBot bot, RTParser.Utils.SettingsDictionary dictionary, Unifiable target)
         {
             string marker = ApplySubstitutions.getMarker(5);
-            string result = Unifiable.ToVMString(target);
+            string result = " " + Unifiable.ToVMString(target) + " ";
             foreach (string pattern in dictionary.SettingNames)
             {
                 string p2 = ApplySubstitutions.makeRegexSafe(pattern);
                 //Unifiable match = "\\b"+@p2.Trim().Replace(" ","\\s*")+"\\b";
                 Unifiable match = "\\b" + p2.TrimEnd().TrimStart() + "\\b";
-                Unifiable replacement = marker+dictionary.grabSetting(pattern).Trim()+marker;
+                Unifiable replacement = marker + dictionary.grabSetting(pattern).Trim() + marker;
                 result = Regex.Replace(result, match, replacement, RegexOptions.IgnoreCase);
             }
 
