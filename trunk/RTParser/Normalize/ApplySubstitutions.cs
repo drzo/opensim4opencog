@@ -48,7 +48,7 @@ namespace RTParser.Normalize
         /// <param name="dictionary">The dictionary containing the substitutions</param>
         /// <param name="target">the target Unifiable to which the substitutions are to be applied</param>
         /// <returns>The processed Unifiable</returns>
-        public static Unifiable Substitute(RTParser.RTPBot bot, RTParser.Utils.SettingsDictionary dictionary, Unifiable target)
+        public static Unifiable Substitute(RTParser.RTPBot bot, RTParser.Utils.SettingsDictionary dictionary, string target)
         {
             string marker = ApplySubstitutions.getMarker(5);
             string result = " " + Unifiable.ToVMString(target) + " ";
@@ -56,11 +56,11 @@ namespace RTParser.Normalize
             {
                 string p2 = ApplySubstitutions.makeRegexSafe(pattern);
                 //Unifiable match = "\\b"+@p2.Trim().Replace(" ","\\s*")+"\\b";
-                Unifiable match = "\\b" + p2.TrimEnd().TrimStart() + "\\b";
-                Unifiable replacement = marker + dictionary.grabSetting(pattern).Trim() + marker;
+                string match = "\\b" + p2.TrimEnd().TrimStart() + "\\b";
+                string replacement = marker + dictionary.grabSetting(pattern).AsString().Trim().Replace(" ", marker) +
+                                     marker;
                 result = Regex.Replace(result, match, replacement, RegexOptions.IgnoreCase);
             }
-
             return new StringUnifiable(result.Replace(marker, ""));
         }
 
