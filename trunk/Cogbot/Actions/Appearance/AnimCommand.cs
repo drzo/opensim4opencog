@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Threading;
 using cogbot.TheOpenSims;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Appearance
 {
     public class AnimCommand : Command, BotPersonalCommand

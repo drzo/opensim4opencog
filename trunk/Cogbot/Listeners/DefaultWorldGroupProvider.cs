@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using cogbot.ScriptEngines;
 using cogbot.TheOpenSims;
+using MushDLR223.ScriptEngines;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 

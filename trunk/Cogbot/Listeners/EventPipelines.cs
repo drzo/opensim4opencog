@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Text;
 using cogbot.TheOpenSims;
 using cogbot.Utilities;
+using MushDLR223.ScriptEngines;
+using MushDLR223.Utilities;
 using OpenMetaverse;
 using System.Threading;
 

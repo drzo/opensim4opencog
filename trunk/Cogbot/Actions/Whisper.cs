@@ -4,6 +4,8 @@ using System.Text;
 using OpenMetaverse;
 using cogbot.TheOpenSims; //using libsecondlife;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions
 {
     class Whisper : Command, BotPersonalCommand

@@ -2,6 +2,8 @@ using System;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Pathfinder
 {
     public enum MovementProceedure

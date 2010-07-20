@@ -4,6 +4,8 @@ using cogbot.TheOpenSims;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Movement
 {
     class FlyToCommand : Command, BotPersonalCommand

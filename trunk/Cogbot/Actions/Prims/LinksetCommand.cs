@@ -7,6 +7,8 @@ using OpenMetaverse;
 using PathSystem3D.Navigation;
 using Radegast;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Objects
 {
     public class LinksetCommand : cogbot.Actions.Command, RegionMasterCommand

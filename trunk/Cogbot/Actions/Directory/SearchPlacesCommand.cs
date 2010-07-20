@@ -7,6 +7,8 @@ using cogbot.Actions;
 using OpenMetaverse;
 
 // the Namespace used for all BotClient commands
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Search
 {
     class SearchPlacesCommand : Command, GridMasterCommand

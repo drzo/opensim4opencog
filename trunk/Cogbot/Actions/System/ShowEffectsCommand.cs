@@ -3,6 +3,8 @@ using cogbot;
 using cogbot.Actions;
 using OpenMetaverse;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.System
 {
     public class ShowEffectsCommand : Command, RegionMasterCommand

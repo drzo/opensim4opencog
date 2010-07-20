@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Inventory
 {
     public class TexturesCommand : Command, RegionMasterCommand

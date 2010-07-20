@@ -3,6 +3,8 @@ using System.Drawing;
 using System.Net;
 using OpenMetaverse;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Pathfinder
 {
     public class MapImagePaths : cogbot.Actions.Command, SystemApplicationCommand

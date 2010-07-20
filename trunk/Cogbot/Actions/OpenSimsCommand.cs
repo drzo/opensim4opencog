@@ -6,6 +6,8 @@ using cogbot.TheOpenSims;
 using System.Threading;
 using cogbot.Listeners; //using libsecondlife;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions
 {
 

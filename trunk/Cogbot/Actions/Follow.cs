@@ -7,6 +7,8 @@ using System.Windows.Forms;
 using cogbot.TheOpenSims;
 using PathSystem3D.Navigation;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Movement
 {
     class Follow : Command, BotPersonalCommand

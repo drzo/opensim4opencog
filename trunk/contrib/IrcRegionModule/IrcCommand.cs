@@ -4,6 +4,7 @@ using System.Threading;
 using cogbot;
 using cogbot.Actions;
 using Meebey.SmartIrc4net;
+using MushDLR223.ScriptEngines;
 using OpenMetaverse;
 
 namespace IrcRegionModule

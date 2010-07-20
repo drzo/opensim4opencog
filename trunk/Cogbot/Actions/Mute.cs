@@ -4,6 +4,8 @@ using System.Text;
 using cogbot.TheOpenSims;
 using OpenMetaverse; //using libsecondlife;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions
 {
     class Mute : Command, BotPersonalCommand

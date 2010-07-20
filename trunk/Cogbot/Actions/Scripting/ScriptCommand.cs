@@ -2,6 +2,8 @@ using System;
 using System.IO;
 using OpenMetaverse;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Scripting
 {
     public class ScriptCommand : Command, BotPersonalCommand

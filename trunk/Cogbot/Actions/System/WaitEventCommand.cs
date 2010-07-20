@@ -2,6 +2,8 @@
 using cogbot.TheOpenSims;
 using OpenMetaverse;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.System
 {
     public class WaitEventCommand : Command, BotPersonalCommand

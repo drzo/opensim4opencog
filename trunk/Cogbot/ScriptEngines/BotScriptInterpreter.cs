@@ -4,12 +4,14 @@ using System.IO;
 using System.Text;
 using cogbot.Actions;
 using DotLisp;
+using MushDLR223.ScriptEngines;
+using MushDLR223.Utilities;
 
 namespace cogbot.ScriptEngines
 {
     public class BotScriptInterpreter : CommonScriptInterpreter
     {
-        public BotClient BotClient;
+        public  BotClient BotClient;
 
         public override bool LoadsFileType(string filename)
         {

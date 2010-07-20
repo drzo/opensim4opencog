@@ -5,6 +5,8 @@ using System.Threading;
 using OpenMetaverse;
 
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Movement
 {
     class Jump : Command, BotPersonalCommand

@@ -2,6 +2,8 @@ using System;
 using System.Text.RegularExpressions;
 using OpenMetaverse;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Objects
 {
     public class PrimRegexCommand : Command, RegionMasterCommand

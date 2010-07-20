@@ -4,6 +4,8 @@ using System.Text;
 using OpenMetaverse;
 using cogbot.TheOpenSims; //using libsecondlife;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Land
 {
     class Describe : Command, BotPersonalCommand

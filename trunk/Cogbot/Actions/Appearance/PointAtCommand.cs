@@ -2,9 +2,12 @@ using System.Collections.Generic;
 using cogbot.Listeners;
 using cogbot.TheOpenSims;
 using cogbot.Utilities;
+using MushDLR223.Utilities;
 using OpenMetaverse;
 using Radegast;
 using PathSystem3D.Navigation;
+
+using MushDLR223.ScriptEngines;
 
 namespace cogbot.Actions.Agent
 {

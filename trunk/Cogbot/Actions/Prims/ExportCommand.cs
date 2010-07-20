@@ -6,6 +6,8 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenMetaverse.Assets;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.SimExport
 {
     public class ExportCommand : Command, RegionMasterCommand

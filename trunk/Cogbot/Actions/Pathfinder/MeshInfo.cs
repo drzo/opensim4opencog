@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Pathfinder
 {
     class meshinfo : cogbot.Actions.Command, SystemApplicationCommand

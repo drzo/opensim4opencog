@@ -8,6 +8,8 @@ using OpenMetaverse;
 using org.opencyc.xml;
 using Radegast;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.System
 {
     public class ShowRadCommand : Command, BotSystemCommand

@@ -8,6 +8,8 @@ using cogbot.Listeners;
 using cogbot.ScriptEngines;
 using cogbot.Utilities;
 using DotLisp;
+using MushDLR223.ScriptEngines;
+using MushDLR223.Utilities;
 using OpenMetaverse;
 
 namespace cogbot.TheOpenSims

@@ -2,6 +2,8 @@ using System;
 using System.Threading;
 using OpenMetaverse;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Appearance
 {
     /// <summary>

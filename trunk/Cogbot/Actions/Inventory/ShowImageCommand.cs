@@ -9,6 +9,8 @@ using OpenMetaverse;
 using OpenMetaverse.Assets;
 using Radegast;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.SimExport
 {
     public class ShowImageCommand : Command, GridMasterCommand

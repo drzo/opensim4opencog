@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using OpenMetaverse;
 using textsl.Utilities.XMLInterpreter;
-using OpenMetaverse; //using libsecondlife;
+
+//using libsecondlife;
 
 
 namespace cogbot.Tutorials

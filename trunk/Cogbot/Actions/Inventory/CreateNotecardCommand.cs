@@ -6,6 +6,8 @@ using System.Threading;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Inventory
 {
     public class CreateNotecardCommand : Command, BotPersonalCommand

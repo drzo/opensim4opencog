@@ -5,6 +5,8 @@ using cogbot.Listeners;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Communication
 {
     public class ImCommand : Command, BotPersonalCommand

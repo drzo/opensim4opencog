@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Pathfinder
 {
     public class RemeshPrim : cogbot.Actions.Command, SystemApplicationCommand

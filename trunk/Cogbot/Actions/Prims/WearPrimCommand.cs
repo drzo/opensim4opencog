@@ -6,6 +6,8 @@ using cogbot.TheOpenSims;
 using OpenMetaverse;
 using Radegast;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Objects
 {
     public class WearPrimCommand : cogbot.Actions.Command, RegionMasterCommand

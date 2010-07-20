@@ -4,6 +4,8 @@ using cogbot.TheOpenSims;
 using OpenMetaverse;
 using Radegast;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions
 {
     public class PrimWorkshopCommand : cogbot.Actions.Command, RegionMasterCommand

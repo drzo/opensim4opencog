@@ -5,6 +5,8 @@ using OpenMetaverse;
 //using AgentFlags = OpenMetaverse.AgentManager.AgentFlags;
 //using AgentState = OpenMetaverse.AgentManager.AgentState;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Movement
 {
     class RightCommand : Command, BotPersonalCommand

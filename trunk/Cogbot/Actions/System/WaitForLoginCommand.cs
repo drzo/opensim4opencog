@@ -4,6 +4,8 @@ using System.Text;
 using OpenMetaverse;
 using System.Threading;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.System
 {
     public class WaitForLoginCommand : Command, BotSystemCommand

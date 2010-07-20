@@ -4,6 +4,8 @@ using System.Text;
 using OpenMetaverse;
 using System.Threading; //using libsecondlife;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Movement
 {
     class Fly : Command, BotPersonalCommand

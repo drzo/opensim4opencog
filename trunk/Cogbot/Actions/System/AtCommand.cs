@@ -4,6 +4,8 @@ using System.Reflection;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.System
 {
     public class AtCommand : Command, BotSystemCommand

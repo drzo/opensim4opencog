@@ -5,6 +5,8 @@ using System.Threading;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions
 {
     public class ThreadCommand : Command, BotSystemCommand

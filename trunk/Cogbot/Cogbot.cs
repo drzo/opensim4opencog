@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
 using CommandLine.Utility;
+using MushDLR223.ScriptEngines;
 using OpenMetaverse;
 using System.IO;
 using OpenSim.Framework.Console;

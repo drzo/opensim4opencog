@@ -4,6 +4,8 @@ using OpenMetaverse;
 using PathSystem3D.Navigation;
 using PathSystem3D.Navigation.Debug;
 
+using MushDLR223.ScriptEngines;
+
 namespace cogbot.Actions.Pathfinder
 {
     public class pfdebug : cogbot.Actions.Command, SystemApplicationCommand
