@@ -99,8 +99,7 @@ namespace MushDLR223.Virtualization
             {
                 try
                 {
-                    Directory.CreateDirectory(filename);
-                    return true;
+                    return Directory.CreateDirectory(filename).Exists;
                 }
                 catch (Exception e)
                 {
@@ -108,7 +107,7 @@ namespace MushDLR223.Virtualization
                     return false;
                 }
             }
-            return false;
+            return true;
         }
 
         internal static void writeToLog(string message, params object[] args)
