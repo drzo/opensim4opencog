@@ -16,7 +16,7 @@ namespace RTParser.Utils
 
         public string Filename
         {
-            get { return _filename; }
+            get { return _filename ?? PrevFilename ?? "loadopts_no_file"; }
             set
             {
                 PrevFilename = Filename;
@@ -36,7 +36,7 @@ namespace RTParser.Utils
 
         public override string ToString()
         {
-            return _filename ?? "LoaderOptions - no filename";
+            return Filename + " " + Graph;
         }
     }
 }

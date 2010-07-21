@@ -731,8 +731,31 @@ namespace RTParser.Utils
             return defaultIfEmpty;
         }
 
+        /// <summary>
+        /// Do a transformation on the Unifiable found in the InputString attribute
+        /// </summary>
+        /// <returns>The resulting transformed Unifiable</returns>
+        public override Unifiable Transform()
+        {
+            if (!this.inputString.IsEmpty)
+            {
+                return this.ProcessAimlChange();
+            }
+            else
+            {
+                return Unifiable.Empty;
+            }
+        }
+
         public virtual Unifiable CompleteProcess()
         {
+//#if false
+            return RecurseProcess();
+        }
+
+        public virtual Unifiable RecurseProcess()
+        {
+//#endif
             if (!Unifiable.IsNull(RecurseResult))
             {
                 return RecurseResult;

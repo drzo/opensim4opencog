@@ -89,7 +89,7 @@ namespace RTParser.Utils
         /// Do a transformation on the Unifiable found in the InputString attribute
         /// </summary>
         /// <returns>The resulting transformed Unifiable</returns>
-        public Unifiable Transform()
+        public virtual Unifiable Transform()
         {
             if (!this.inputString.IsEmpty)
             {

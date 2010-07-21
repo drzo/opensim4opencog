@@ -16,7 +16,7 @@ namespace RTParser.AIMLTagHandlers
     /// 
     /// The bot element does not have any content. 
     /// </summary>
-    public class aiml : RTParser.Utils.AIMLTagHandler
+    public class aiml : RTParser.Utils.LoadingTagHandler
     {
         /// <summary>
         /// Ctor
@@ -38,30 +38,12 @@ namespace RTParser.AIMLTagHandlers
             isRecursive = false;
         }
 
-        protected override Unifiable ProcessChange()
+        protected override Unifiable ProcessLoad(LoaderOptions loaderOptions)
         {
             if (this.templateNode.Name.ToLower() == "aiml")
             {
-                GraphMaster g = request.Graph;
-                var g0 = g;
-                String gn = GetAttribValue("graph", null);
-                if (gn != null)
-                {
-                    g = Proc.GetGraph(gn, request.Graph);
-                }
-                request.Graph = g;
-                try
-                {
-                    // process each of these child "settings"? nodes
-                    foreach (XmlNode child in this.templateNode.ChildNodes)
-                    {
-                        Proc.Loader.loadAIMLNode(child, LoaderOptions.GetDefault(this.request), request);
-                    }
-                }
-                finally
-                {
-                    request.Graph = g0;   
-                }
+                // process each of these child "settings"? nodes
+                Proc.Loader.loadAIMLNode(templateNode, loaderOptions, request);
             }
             return Unifiable.Empty;
         }

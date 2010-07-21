@@ -29,6 +29,7 @@ namespace RTParser.AIMLTagHandlers
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
+            isRecursive = false;
         }
 
         public override float CanUnify(Unifiable with)
