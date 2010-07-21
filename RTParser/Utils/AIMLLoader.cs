@@ -8,6 +8,7 @@ using System.Text;
 using MushDLR223.ScriptEngines;
 using RTParser.AIMLTagHandlers;
 using UPath = RTParser.Unifiable;
+using MushDLR223.Virtualization;
 
 namespace RTParser.Utils
 {
@@ -64,12 +65,12 @@ namespace RTParser.Utils
             path = ResolveToURI(path, options, request);
             writeToLog("*** Begin loadAIML From Location: '{0}' ***", path);
             RProcessor.ReloadHooks.Add(() => loadAIML(path, options, request));
-            if (Directory.Exists(path))
+            if (HostSystem.DirExists(path))
             {
                 // process the AIML
                 loadAIMLDir(path, options, request);
             }
-            else if (File.Exists(path))
+            else if (HostSystem.FileExists(path))
             {
                 this.loadAIMLFile(path, options, request);
             }
@@ -87,7 +88,7 @@ namespace RTParser.Utils
             path = ResolveToURI(path, options, request);
             writeToLog("Starting to process AIML files found in the directory " + path);           
 
-            string[] fileEntries = Directory.GetFiles(path, "*.aiml");
+            string[] fileEntries = HostSystem.GetFiles(path, "*.aiml");
             if (fileEntries.Length > 0)
             {
                 foreach (string filename in fileEntries)
@@ -117,7 +118,7 @@ namespace RTParser.Utils
 
             if (options.recurse)
             {
-                foreach (string filename in Directory.GetDirectories(path))
+                foreach (string filename in HostSystem.GetDirectories(path))
                 {
                     loadAIMLDir(path + Path.DirectorySeparatorChar + filename, options, request);
                 }
@@ -125,62 +126,20 @@ namespace RTParser.Utils
 
         }
 
-        string ResolveToURI(string pathIn, LoaderOptions loadOpts, Request request)
-        {
-            string path = ResolveToURI0(pathIn, loadOpts, request);
-            path = HostSystem.ToRelativePath(path);
-            return path;
-        }
-        string ResolveToURI0(string pathIn, LoaderOptions loadOpts, Request request)
+        static string ResolveToURI(string pathIn, LoaderOptions loadOpts, Request request)
         {
             string baseFile = GetBaseDirectory(loadOpts);
-            pathIn = pathIn.Trim();
-            string[] combine = baseFile != null ? new[] {".", baseFile, "aiml"} : new[] {".", "aiml"};
-            foreach (var s in combine)
-            {
-                string path = Path.Combine(s, pathIn);
-                if (Directory.Exists(path))
-                {
-                    return (new DirectoryInfo(path)).FullName;
-                }
-                if (File.Exists(path))
-                {
-                    return (new FileInfo(path)).FullName;
-                }
-                if (Uri.IsWellFormedUriString(path, UriKind.RelativeOrAbsolute))
-                {
-                    try
-                    {
-                        var uri = new Uri(path);
-                        if (uri.IsFile || uri.IsUnc)
-                        {
-                            return uri.AbsolutePath;
-                        }
-                    }
-                    catch (Exception exception)
-                    {
-
-                    }
-                }
-                
-            }
-            return pathIn;
+            var combine = baseFile != null ? new[] {".", baseFile, "aiml"} : new[] {".", "aiml"};
+            string path = HostSystem.ResolveToURI(pathIn, combine);
+            path = HostSystem.ToRelativePath(path);
+            return path;
         }
 
         static string GetBaseDirectory(LoaderOptions loadOpts)
         {
             string baseFile = loadOpts.Filename ?? loadOpts.PrevFilename;
             if (baseFile == null) return ".";
-            if (Directory.Exists(baseFile))
-            {
-                return (new DirectoryInfo(baseFile)).FullName;
-            }
-            if (File.Exists(baseFile))
-            {
-                var fi = new FileInfo(baseFile);
-                return fi.DirectoryName ?? baseFile;
-            }
-            return baseFile;
+            return HostSystem.GetBaseDir(baseFile);
         }
 
         private void loadAIMLURI(string path, LoaderOptions loadOpts, Request request)
@@ -189,12 +148,12 @@ namespace RTParser.Utils
             path = ResolveToURI(path, loadOpts, request);
             try
             {
-                if (Directory.Exists(path))
+                if (HostSystem.DirExists(path))
                 {
                     loadAIMLDir(path, loadOpts, request);
                     return;
                 }
-                else if (File.Exists(path))
+                else if (HostSystem.FileExists(path))
                 {
                     loadAIMLFile(path, loadOpts, request);
                     return;
@@ -247,7 +206,7 @@ namespace RTParser.Utils
         {
             request = EnsureRequest(request);
             filename = ResolveToURI(filename, options, request);
-            if (Directory.Exists(filename))
+            if (HostSystem.DirExists(filename))
             {
                 writeToLog("Processing directory: " + filename);
                 if (options.recurse) loadAIMLDir(filename, options, request);
@@ -264,7 +223,7 @@ namespace RTParser.Utils
                 }
                 writeToLog("Processing AIML file: " + filename + " from " + request.Graph);
                 RProcessor.AddFileLoaded(filename);
-                var tr = File.OpenRead(filename);
+                var tr = HostSystem.OpenRead(filename);
                 try
                 {
                     string pfile = options.Filename;
@@ -333,17 +292,19 @@ namespace RTParser.Utils
         {
             request = EnsureRequest(request);
             var xtr = XmlDocumentLineInfo.CreateXmlTextReader(input);
+            string namefile = "" + filename;
             while (!xtr.EOF)
             {
                 try
                 {
-                    XmlDocumentLineInfo doc = new XmlDocumentLineInfo(input, "" + filename);
+                    XmlDocumentLineInfo doc = new XmlDocumentLineInfo(input, namefile);
                     doc.Load(xtr);
                     if (doc.DocumentElement == null)
                     {
-                        RProcessor.writeToLog("No Document at " + filename);
+                        RProcessor.writeToLog("ERROR: No Document at " + namefile);
                         continue;
                     }
+                    HostSystem.Close(input);
                     this.loadAIMLNode(doc.DocumentElement, filename, request);
                 }
                 catch (Exception e2)
@@ -377,49 +338,26 @@ namespace RTParser.Utils
                 string currentNodeName = currentNode.Name.ToLower();
                 if (currentNodeName == "aiml")
                 {
-                    string graphname = RTPBot.GetAttribValue(currentNode, "graph", null);
-                    GraphMaster g = request.Graph;
-                    GraphMaster g2 = g;
-                    if (graphname != null)
-                    {
-                        g2 = RProcessor.GetGraph(graphname, g);
-                        if (g2 != null)
-                        {
-                            request.Graph = g2;
-                            filename.Graph = g2;
-                        }
-                        if (g2 != g) writeToLog("ENTERING: " + graphname + " as " + g2 + " from " + g);
-                    }
-                    try
-                    {
-                        // process each of these child nodes
-                        foreach (XmlNode child in currentNode.ChildNodes)
-                        {
-                            loadAIMLNode(child, filename, request);
-                        }
-                        return;
-                    }
-                    finally
-                    {
-                        if (g2 != g) writeToLog("LEAVING: " + graphname + " as " + g2 + " back to " + g);
-                        request.Graph = g;
-                        filename.Graph = g;
-                    }
+                    IntoGraph(request, currentNode, filename);
                     return;
                 }
                 if (currentNodeName == "root")
                 {
+                    var prevDict = request.Settings;
+
                     // process each of these child "settings"? nodes
-                    foreach (XmlNode child in currentNode.ChildNodes)
+                    try
                     {
-                        loadAIMLNode(child, filename, request);
+                        IntoGraph(request, currentNode, filename);
                     }
-                    return;
+                    finally
+                    {
+                        request.Settings = prevDict;
+                    }
                 }
                 if (currentNodeName == "item")
                 {
-                    this.RProcessor.GlobalSettings.loadSettingNode(currentNode);
-                    return;
+                    SettingsDictionary.loadSettingNode(request.Settings, currentNode);
                 }
 
                 if (currentNodeName == "topic")
@@ -448,6 +386,49 @@ namespace RTParser.Utils
             {
                 RProcessor.Loader = prev;
             }
+        }
+
+        private void IntoGraph(Request request, XmlNode currentNode, LoaderOptions filename)
+        {
+            string graphname = RTPBot.GetAttribValue(currentNode, "graph", null);
+            GraphMaster outerGraph = request.Graph;
+            GraphMaster innerGraph = outerGraph;
+            try
+            {
+                if (graphname != null)
+                {
+                    innerGraph = RProcessor.GetGraph(graphname, outerGraph);
+                    if (innerGraph != null)
+                    {
+                        if (innerGraph != outerGraph)
+                        {
+                            request.Graph = innerGraph;
+                            filename.Graph = innerGraph;
+                            writeToLog("ENTERING: " + graphname + " as " + innerGraph + " from " + outerGraph);
+                        }
+                    }
+                    else
+                    {
+                        innerGraph = outerGraph;
+                    }
+                }
+                // process each of these child nodes
+                foreach (XmlNode child in currentNode.ChildNodes)
+                {
+                    loadAIMLNode(child, filename, request);
+                }
+                return;
+            }
+            finally
+            {
+                if (innerGraph != outerGraph)
+                {
+                    writeToLog("LEAVING: " + graphname + " as " + innerGraph + " back to " + outerGraph);
+                    request.Graph = outerGraph;
+                    filename.Graph = outerGraph;
+                }
+            }
+            return;
         }
 
         private Request EnsureRequest(Request request)

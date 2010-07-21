@@ -38,6 +38,7 @@ namespace RTParser
         IList<Result> UsedResults { get; set; }
         IList<TemplateInfo> UsedTemplates { get; }
         DateTime TimesOutAt { get; set; }
+        ISettingsDictionary Settings { get; set; }
         void WriteLine(string s, object[] args);
         bool IsComplete(Result o);
         bool addSetting(string name, Unifiable unifiable);
@@ -97,6 +98,7 @@ namespace RTParser
 
         private Result _result;
 
+        public ISettingsDictionary Settings { get; set; }
 
         /// <summary>
         /// Flag to show that the request has timed out
@@ -134,7 +136,6 @@ namespace RTParser
                 Proof = parent.Proof;
                 this.ParentRequest = parent;
                 Graph = parent.Graph;
-
             }
             else
             {
@@ -145,11 +146,16 @@ namespace RTParser
             {
                 this.user = user;
                 if (user.CurrentRequest == null) user.CurrentRequest = this;
+                Settings = user.Predicates;
             }
             this.Proccessor = bot;
             this.StartedOn = DateTime.Now;
             this.TimesOutAt = StartedOn.AddMilliseconds(Proccessor.TimeOut);
             this.framesAtStart = new StackTrace().FrameCount;
+            if (parent != null)
+            {
+                Settings = parent.Settings;
+            }
         }
 
         private GraphMaster ovGraph = null;
@@ -325,6 +331,7 @@ namespace RTParser
             subRequest.ParentRequest = request;
             subRequest.StartedOn = request.StartedOn;
             subRequest.TimesOutAt = request.TimesOutAt;
+            subRequest.Settings = request.Settings;
             return subRequest;
         }
 

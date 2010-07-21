@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Xml;
+using MushDLR223.Utilities;
+using MushDLR223.Virtualization;
 using org.opencyc.api;
 using org.opencyc.cycobject;
 using RTParser;
@@ -326,7 +328,7 @@ namespace RTParser.Database
             TheBot.AddExcuteHandler("subl", EvalSubLHandler);
 
             int id = 1;
-            FileStream f = File.Open("nodes.txt",FileMode.Create);
+            FileStream f = HostSystem.Open("nodes.txt",FileMode.Create);
             TextWriter tw = new StreamWriter(f);
             foreach (var item in cycAccess.converseList("(ask-template '?R '(#$and (#$genls ?R #$Communicating)(#$not (#$isa ?R #$NonVerbalCommunicating))) #$EverythingPSC)"))
             {

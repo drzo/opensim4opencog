@@ -9,6 +9,8 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics;
+using MushDLR223.Utilities;
+using MushDLR223.Virtualization;
 using RTParser;
 using RTParser.Utils;
 
@@ -48,7 +50,7 @@ namespace RTParser.AIMLTagHandlers
                 {
                     string file = Path.Combine("bgm", "corpus.txt");
                     //if (Directory.Exists(file))
-                    if (File.Exists(file))
+                    if (HostSystem.FileExists(file))
                     {
                         RTPBot.writeDebugLine("Load Corpus Bigrams: '{0}'", file);
                         StreamReader sr = new StreamReader(file);

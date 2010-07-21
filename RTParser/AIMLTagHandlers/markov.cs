@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 //using System.Linq;
 using System.Text.RegularExpressions;
+using MushDLR223.Virtualization;
 using RTParser;
 
 
@@ -43,23 +44,23 @@ namespace RTParser.AIMLTagHandlers
                     foreach (string name in nameset)
                     {
 
-                        string file = Path.Combine("trn", name);
+                        string file = HostSystem.Combine("trn", name);
                         //if (Directory.Exists(file))
-                        if (File.Exists(file))
+                        if (HostSystem.FileExists(file))
                         {
                             RTPBot.writeDebugLine("LoadMarkovSTM: '{0}'", file);
-                            StreamReader sr = new StreamReader(file);
+                            StreamReader sr = HostSystem.GetStreamReader(file);
                             this.user.bot.STM_Brain.WindowSize = 4;
                             this.user.bot.STM_Brain.Learn(sr);
                             sr.Close();
                         }
 
-                        file = Path.Combine("ngm", name);
+                        file = HostSystem.Combine("ngm", name);
                         //if (Directory.Exists(file))
-                        if (File.Exists(file))
+                        if (HostSystem.FileExists(file))
                         {
                             RTPBot.writeDebugLine("LoadMarkovSTM: '{0}'", file);
-                            StreamReader sr = new StreamReader(file);
+                            StreamReader sr = HostSystem.GetStreamReader(file);
                             this.user.bot.STM_Brain.WindowSize = 3;
                             this.user.bot.STM_Brain.LearnNgram(sr);
                             sr.Close();
@@ -75,23 +76,23 @@ namespace RTParser.AIMLTagHandlers
                     foreach (string name in wordset)
                     {
 
-                        string file = Path.Combine("trn", name);
+                        string file = HostSystem.Combine("trn", name);
                         //if (Directory.Exists(file))
-                        if (File.Exists(file))
+                        if (HostSystem.FileExists(file))
                         {
                             RTPBot.writeDebugLine("LoadMarkovSTM: '{0}'", file);
-                            StreamReader sr = new StreamReader(file);
+                            StreamReader sr = HostSystem.GetStreamReader(file);
                             this.user.bot.STM_Brain.WindowSize = 4;
                             this.user.bot.STM_Brain.Learn(sr);
                             sr.Close();
                         }
 
-                        file = Path.Combine("ngm", name);
+                        file = HostSystem.Combine("ngm", name);
                         //if (Directory.Exists(file))
-                        if (File.Exists(file))
+                        if (HostSystem.FileExists(file))
                         {
                             RTPBot.writeDebugLine("LoadMarkovSTM: '{0}'", file);
-                            StreamReader sr = new StreamReader(file);
+                            StreamReader sr = HostSystem.GetStreamReader(file);
                             this.user.bot.STM_Brain.WindowSize = 3;
                             this.user.bot.STM_Brain.LearnNgram(sr);
                             sr.Close();

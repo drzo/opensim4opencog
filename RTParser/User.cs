@@ -6,8 +6,10 @@ using System.Text;
 using System.Threading;
 using com.hp.hpl.jena.graph;
 using MushDLR223.ScriptEngines;
+using MushDLR223.Utilities;
 using RTParser;
 using RTParser.Utils;
+using MushDLR223.Virtualization;
 
 namespace RTParser
 {
@@ -56,10 +58,10 @@ namespace RTParser
                 }
                 needsSave = false;
             }
-            WriteLine("Doing save");
             try
             {
-                SaveDirectory(_LoadedDirectory);
+
+                SaveDirectory(_saveToDirectory);
             }
             catch (Exception exception)
             {
@@ -647,55 +649,107 @@ namespace RTParser
 
         public string UserDirectory
         {
-            get { return _LoadedDirectory; }
+            get { return _saveToDirectory; }
             set { LoadDirectory(value); }
         }
 
-        private string _LoadedDirectory;
+        private string _saveToDirectory;
         private bool needsSave;
+        private bool insideSave;
 
         public void SyncDirectory(string userdir)
         {
+            lock (SaveLock)
+            {
+                if (insideSave) return;
+            }
             LoadDirectory(userdir);
-            Predicates.addSetting("userdir", userdir);
+            if (userdir != null) Predicates.addSetting("userdir", userdir);
             SaveDirectory(userdir);
         }
 
         public void SaveDirectory(string userdir)
         {
+            _saveToDirectory = userdir;
+            needsSave = true;
+            lock (SaveLock)
+            {
+                if (insideSave) return;
+                insideSave = true;
+            }
+            try
+            {
+                SaveDirectory0(userdir);
+            }
+            finally
+            {
+                lock (SaveLock)
+                {
+                    insideSave = false;
+                }
+            }
+        }
+
+        private void SaveDirectory0(string userdir)
+        {
+            if (userdir==null && _saveToDirectory==null)
+            {
+                WriteLine("no saveto dir specified");
+                return;
+            }
             if (!HostSystem.CreateDirectory(userdir))
             {
                 WriteLine("Cannot SaveDirectory {0}", userdir);
+                return;
             }
             WriteLine("Saveing User Directory {0}", userdir);
             Predicates.SaveTo(userdir, "user.predicates", "UserPredicates.xml");
             GraphMaster gm = bot.GetGraph(UserID, ListeningGraph);
             gm.WriteToFile(UserID, Path.Combine(userdir, UserID) + ".saved");
-
         }
 
         public void LoadDirectory(string userdir)
         {
-            if (Directory.Exists(userdir))
+            lock (SaveLock)
             {
-                _LoadedDirectory = userdir;
+                if (insideSave) return;
+                insideSave = true;
+            }
+            try
+            {
+                LoadDirectory0(userdir);
+            }
+            finally
+            {
+                lock (SaveLock)
+                {
+                    insideSave = false;
+                }
+            }
+        }
+
+        private void LoadDirectory0(string userdir)
+        {
+            if (HostSystem.DirExists(userdir))
+            {
                 LoadUserSettings(userdir);
                 LoadUserAiml(userdir);
-                WriteLine("Loaded " + _LoadedDirectory);
+                WriteLine("Loaded " + _saveToDirectory);
+                _saveToDirectory = userdir;
             }
         }
 
         public void LoadUserSettings(string userdir)
         {
-            if (Directory.Exists(userdir))
+            if (HostSystem.DirExists(userdir))
             {
-                foreach (string s in Directory.GetFiles(userdir))
+                foreach (string s in HostSystem.GetFiles(userdir))
                 {
                     LoadUserSettings(s);
                 }
                 return;
             }
-            if (File.Exists(userdir))
+            if (HostSystem.FileExists(userdir))
             {
                 if (!userdir.EndsWith(".xml"))
                 {
@@ -711,15 +765,15 @@ namespace RTParser
 
         public void LoadUserAiml(string userdir)
         {
-            if (Directory.Exists(userdir))
+            if (HostSystem.DirExists(userdir))
             {
-                foreach (string s in Directory.GetFiles(userdir))
+                foreach (string s in HostSystem.GetFiles(userdir))
                 {
                     LoadUserAiml(s);
                 }
                 return;
             }
-            if (!File.Exists(userdir) || !userdir.EndsWith(".aiml")) return;
+            if (!HostSystem.FileExists(userdir) || !userdir.EndsWith(".aiml")) return;
             var request = new AIMLbot.Request("load user aiml ", this, bot, null);
             request.TimesOutAt = DateTime.Now + new TimeSpan(0, 15, 0);
             request.Graph = ListeningGraph;

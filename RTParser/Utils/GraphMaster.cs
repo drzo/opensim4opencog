@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
 using System.Xml;
+using MushDLR223.Utilities;
+using MushDLR223.Virtualization;
 using RTParser.AIMLTagHandlers;
 using RTParser.Utils;
 using Console=System.Console;
@@ -217,7 +219,7 @@ namespace RTParser.Utils
                 fi.Delete();
             }
 
-            FileStream saveFile = File.Create(path);
+            FileStream saveFile = HostSystem.Create(path);
             BinaryFormatter bf = new BinaryFormatter();
             bf.Serialize(saveFile, this.RootNode);
             saveFile.Close();
@@ -229,7 +231,7 @@ namespace RTParser.Utils
         /// <param name="path">the path to the dump file</param>
         public void loadFromBinaryFile(Unifiable path)
         {
-            FileStream loadFile = File.OpenRead(path);
+            Stream loadFile = HostSystem.OpenRead(path);
             BinaryFormatter bf = new BinaryFormatter();
             this.RootNode = (Node)bf.Deserialize(loadFile);
             loadFile.Close();
