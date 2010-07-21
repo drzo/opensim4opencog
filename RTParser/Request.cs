@@ -39,6 +39,7 @@ namespace RTParser
         IList<TemplateInfo> UsedTemplates { get; }
         DateTime TimesOutAt { get; set; }
         ISettingsDictionary Settings { get; set; }
+        int MaxInputs { get; set; }
         void WriteLine(string s, object[] args);
         bool IsComplete(Result o);
         bool addSetting(string name, Unifiable unifiable);
@@ -61,6 +62,9 @@ namespace RTParser
 
         public Proof Proof { get; set; }
 
+        // How many subqueries are going to be submitted with combos ot "that"/"topic" tags 
+        public int MaxInputs { get; set; }
+        
         public int depth { get; set; }
         /// <summary>
         /// The raw input from the user
@@ -127,7 +131,6 @@ namespace RTParser
         {
             UsedResults = new List<Result>();
             Flags = "Nothing";
-
             ApplySettings(user, this);
 
             if (parent != null)
@@ -136,9 +139,13 @@ namespace RTParser
                 Proof = parent.Proof;
                 this.ParentRequest = parent;
                 Graph = parent.Graph;
+                MaxInputs = 1;
             }
             else
             {
+                if (user != null)
+                    MaxInputs = user.MaxInputs;
+                else MaxInputs = 1;
                 Proof = new Proof();
             }
             this.rawInput = rawInput;
@@ -244,7 +251,11 @@ namespace RTParser
 
         public SettingsDictionary Predicates
         {
-            get { return CurrentResult.Predicates; }
+            get
+            {
+                if (Settings is SettingsDictionary) return (SettingsDictionary) Settings;
+                return  CurrentResult.Predicates;
+            }
         }
 
         public int GetCurrentDepth()

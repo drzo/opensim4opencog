@@ -958,7 +958,7 @@ namespace RTParser
         #endregion
 
         // Persistent user tracking
-        readonly Dictionary<string, User> BotUsers = new Dictionary<string, User>();
+        public readonly Dictionary<string, User> BotUsers = new Dictionary<string, User>();
 
         public void SetChatOnOff(string username, bool value)
         {
@@ -1074,6 +1074,52 @@ namespace RTParser
             }
         }
 
+        public string SetUser(string user, string lastKnownUser, OutputDelegate ConsoleWriteLine)
+        {
+            string setUser;
+            ConsoleWriteLine("<- SetUser=" + user + " lastKnownUser=" + lastKnownUser);
+            if (UnknowableName(user))
+            {
+                if (UnknowableName(lastKnownUser))
+                {
+                    ConsoleWriteLine("THEREFORE Same persom with still unknown name (make one up)");
+                    setUser = lastKnownUser = UNKNOWN_PARTNER;
+                }
+                else
+                {
+                    ConsoleWriteLine("THEREFORE New Person with unknown name");
+                    setUser = lastKnownUser = user;
+                }
+            }
+            else
+            {
+                if (UnknowableName(lastKnownUser))
+                {
+                    ConsoleWriteLine("THEREFORE Same Person now known name");
+                    RenameUser(lastKnownUser, user);
+                    setUser = lastKnownUser = user;
+                }
+                else
+                {
+                    if (SameUser(lastKnownUser, user))
+                    {
+                        ConsoleWriteLine("THEREFORE Different Person with known name");
+                        setUser = user;
+                        lastKnownUser = user;
+                    }
+                    else
+                    {
+                        ConsoleWriteLine("THEREFORE New Person with known name");
+                        setUser = user;
+                        lastKnownUser = user;
+                    }
+                }
+            }
+            user = setUser;
+            ConsoleWriteLine("-> SetUser=" + user + " lastKnownUser=" + lastKnownUser);
+            return user;
+        }
+
         public static bool UnknowableName(string user)
         {
             if (String.IsNullOrEmpty(user)) return true;
@@ -1125,24 +1171,16 @@ namespace RTParser
             {
                 fromname = UNKNOWN_PARTNER;
             }
-            return fromname.Trim().Replace("_", " ");
+            if (UnknowableName(fromname))
+            {
+                fromname = UNKNOWN_PARTNER;
+            }
+            return fromname.Trim().Replace(" ", "_").Replace(".", "_").Replace("-", "_").Replace("__", "_");
         }
 
         public static string KeyFromUsername(string fromname)
         {
-            if (null == fromname)
-            {
-                fromname = UNKNOWN_PARTNER;
-            }
-            else
-            {
-                fromname = fromname.Trim();
-            }
-            if (string.IsNullOrEmpty(fromname))
-            {
-                fromname = UNKNOWN_PARTNER;
-            }
-            return fromname.ToLower().Trim().Replace(" ", "_");
+            return CleanupFromname(fromname).ToLower();
         }
 
         public void AddAiml(string aimlText)
@@ -1213,8 +1251,11 @@ namespace RTParser
 
         private void LoadInputPaths(Request request, AIMLLoader loader, Unifiable[] rawSentences, AIMLbot.Result result)
         {
-            int maxInputs = 1;
+            int maxInputs = request.MaxInputs;
             int numInputs = 0;
+            int sentenceNum = 0;
+            int topicNum = 0;
+            int thatNum = 0;
             string lastInput = "";
             {
                 foreach (Unifiable sentence0 in rawSentences)
@@ -1226,15 +1267,20 @@ namespace RTParser
                     {
                         sentence = sentence.Substring(0, sentence.Length - 1).Trim();
                     }
-                    if (sentence.Length == 0) continue;
-                    writeToLog("skipping input sentence " + sentence0);
-                    int topicNum = 0;
-                    if (true)
+                    if (sentence.Length == 0)
                     {
-                        Unifiable path = loader.generatePath(sentence, //thatNum + " " +
-                                      request.user.getLastBotOutputForThat(), request.Flags,
-                            //topicNum + " " +
-                                     request.user.TopicSetting, true);
+                        writeToLog("skipping input sentence " + sentence0);
+                        continue;
+                    }
+                    sentenceNum++;
+                    topicNum = 0;
+                    if (maxInputs == 1)
+                    {
+                        Unifiable path = loader.generatePath(sentence,
+                                                             //thatNum + " " +
+                                                             request.user.getLastBotOutputForThat(), request.Flags,
+                                                             //topicNum + " " +
+                                                             request.user.TopicSetting, true);
                         numInputs++;
                         result.NormalizedPaths.Add(path);
                         if (numInputs >= maxInputs) return;
@@ -1248,7 +1294,7 @@ namespace RTParser
                         {
                             topic = NOTOPIC;
                         }
-                        int thatNum = 0;
+                        thatNum = 0;
                         foreach (Unifiable that in request.BotOutputs)
                         {
                             thatNum++;
@@ -2503,11 +2549,34 @@ The AIMLbot program.
 
         private object ClojExecHandler(string cmd, Request user)
         {
-            StringReader stringCodeReader = new StringReader(cmd);
-            object lispCode = clojureInterpreter.Read("ClojExecHandler", stringCodeReader, writeToLog);
-            if (clojureInterpreter.Eof(lispCode))
-                return "EOF on " + lispCode ?? "NULL";
-            return clojureInterpreter.Eval(lispCode);
+            var cloj = clojureInterpreter;
+            lock (cloj)
+            {
+                bool hasUser = cloj.IsSubscriberOf("MyUser");
+
+                if (hasUser)
+                {
+                    object o = cloj.GetSymbol("MyUser");
+                    object r = cloj.Eval(o);
+                    if (user.user != null && r != user.user)
+                    {
+                        cloj.Intern("MyUser", user.user);
+                    }
+                }
+                else
+                {
+                    if (user.user != null)
+                    {
+                        cloj.Intern("MyUser", user.user);
+                    }
+                }
+
+                StringReader stringCodeReader = new StringReader(cmd);
+                object lispCode = cloj.Read("ClojExecHandler", stringCodeReader, writeToLog);
+                if (cloj.Eof(lispCode))
+                    return "EOF on " + lispCode ?? "NULL";
+                return cloj.Eval(lispCode);
+            }
         }
 
         internal Unifiable SystemExecute(Unifiable cmd, Unifiable langu, Request user)
@@ -2829,23 +2898,6 @@ The AIMLbot program.
                 console("@quit -- exits the aiml subsystem");
             }
 
-            if (showHelp)
-                console("@rmuser <userid> -- removes a users from the user dictionary\n (best if used after a rename)");
-            if (cmd == "rmuser")
-            {
-
-            }
-            if (showHelp) console("@rename <userid> <newname>");
-            if (cmd == "rename")
-            {
-                int lastIndex = args.IndexOf("-");
-                string user = args.Substring(0, lastIndex).Trim();
-                string value = args.Substring(lastIndex + 1).Trim();
-                RenameUser(user, value);
-                console("Renamed: " + user + " is now known to be " + value);
-                return true;
-            }
-
             if (showHelp) console("@withuser <user> - <text>");
             if (cmd == "withuser" || cmd == "@")
             {
@@ -3003,37 +3055,24 @@ The AIMLbot program.
                 return myUser.DoUserCommand(args, console);
             }
 
-            if (showHelp) console("@setuser <full name>");
-            if (cmd == "setuser")
-            {
-                LastUser = FindOrCreateUser(args);
-                return true;
-            }
-            if (showHelp) console("@chuser <full name> [- <old user>]");
-            if (cmd == "chuser")
-            {
-                string oldUser = null;// myUser ?? LastUser.ShortName ?? "";
-                string newUser = args;
-                int lastIndex = args.IndexOf("-");
-                if (lastIndex > 0)
-                {
-                    oldUser = args.Substring(lastIndex + 1).Trim();
-                    newUser = args.Substring(0, lastIndex).Trim();
-                }
-                if (oldUser != null)
-                {
-                    RenameUser(oldUser, newUser);
-                }
-                LastUser = FindOrCreateUser(newUser);
-                return true;
-            }
-
             if (showHelp) console("@chgraph <graph> - changes the users graph");
             if (cmd == "graph" || cmd == "chgraph")
             {
                 if (args == "")
                 {
+                    console("-----------------------------------------------------------------");
+                    foreach (var ggg in GraphMaster.CopyOf(GraphsByName))
+                    {
+                        console("-----------------------------------------------------------------");
+                        string n = ggg.Key;
+                        GraphMaster gm = ggg.Value;
+                        console("" + gm + " key='" + n + "'");
+                        gm.WriteMetaHeaders(console);
+                        console("-----------------------------------------------------------------");
+                    }
+                    console("-----------------------------------------------------------------");
                     console("ListeningGraph=" + myUser.ListeningGraph);
+                    console("-----------------------------------------------------------------");
                     return true;
                 }
                 myUser.ListeningGraph = GetGraph(args, myUser.ListeningGraph);
@@ -3048,30 +3087,6 @@ The AIMLbot program.
             }
             if (cmd == "on" || cmd == "off")
             {
-                return true;
-            }
-            if (showHelp) console("@users  --- lists users");
-            if (cmd == "users")
-            {
-                console("-----------------------------------------------------------------");
-                console("------------BEGIN USERS----------------------------------");
-                foreach (var kv in BotUsers)
-                {
-                    console("-----------------------------------------------------------------");
-                    User user = kv.Value;
-                    if (user == null)
-                    {
-                        console("userid='" + kv.Key
-                                + "' NULL");
-                        continue;
-                    }
-                    console("userid='" + kv.Key
-                            + "' UserID='" + user.UserID
-                            + "' UserName='" + user.UserName + "'");
-                    console(user.Predicates.ToDebugString());
-                    console("-----------------------------------------------------------------");
-                }
-                console("------------ENDS USERS----------------------------------");
                 return true;
             }
 
@@ -3121,9 +3136,51 @@ The AIMLbot program.
                 return true;
             }
 
-            if (showHelp) return true;
+            bool uc = UserManager.BotDirective(this, myUser, input, console);
+            if (showHelp || uc) return true;
             console("unknown: @" + input);
             return false;
+        }
+
+        public void RemoveUser(string name)
+        {
+            string keyname = KeyFromUsername(name);
+            if (BotUsers.Remove(name))
+            {
+                writeToLog("USERTRACE: REMOVED " + name);
+            } else
+                if (BotUsers.Remove(keyname))
+                {
+                    writeToLog("USERTRACE: REMOVED " + keyname);
+                }
+        }
+
+        public static int DivideString(string args, string sep, out string left, out string right)
+        {
+            if (args == null)
+            {                
+                left = "";
+                right = null;
+                return 0;
+            }
+            args = args.Trim();
+            if (args.Length == 0)
+            {
+                left = args;
+                right = null;
+                return 1;
+            }
+            int lastIndex = args.IndexOf(sep);           
+            if (lastIndex==-1)
+            {
+                left = args;
+                right = null;
+                return 1;
+            } 
+            left = args.Substring(0, lastIndex).Trim();
+            right = args.Substring(lastIndex + 1).Trim();
+            if (right.Length == 0) return 1;
+            return 2;
         }
 
         public string GetUserMt(User user, SubQuery subquery)

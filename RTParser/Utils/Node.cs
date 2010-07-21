@@ -170,11 +170,11 @@ namespace RTParser.Utils
             }
             if (pat != null)
             {
-                if (thatInfo == null || thatInfo.FullPath.AsString() == "*")
+                if (thatInfo != null && thatInfo.FullPath.AsString() == "*")
                 {
                     if (patternInfo.LoopsFrom(newTemplateInfo))
                     {
-                        writeToLog("SKIPPING! " + pat + "==" + newTemplateInfo + "");
+                        writeToLog("ERROR because LoopsFrom so SKIPPING! " + pat + "==" + newTemplateInfo + "");
                         if (this.TemplateInfos.Count == 0)
                         {
                             this.TemplateInfos = null;
@@ -314,7 +314,8 @@ namespace RTParser.Utils
         private Node evaluate(string path, SubQuery query, Request request, MatchState matchstate, StringAppendableUnifiable wildcard)
         {
             var vv = evaluate00(path, query, request, matchstate, wildcard);
-            return (vv == null || vv.disabled || vv.TemplateInfos == null || vv.TemplateInfos.Count == 0) ? null : vv;
+            if (vv == null || vv.disabled || vv.TemplateInfos == null || vv.TemplateInfos.Count == 0) return null;
+            return vv;
         }
 
         public bool disabled = false;

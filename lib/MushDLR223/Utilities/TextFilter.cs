@@ -63,7 +63,7 @@ namespace MushDLR223.Utilities
 
         private void PrintMessage(OutputDelegate console, string message)
         {
-            bool doHeader = message.Contains("!");
+            bool doHeader = !message.Contains("<!--") && message.Contains("!");
 
             if (doHeader)
                 RealyPrintMessage(console, "---------------------------------------------------------------");

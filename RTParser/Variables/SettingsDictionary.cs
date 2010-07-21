@@ -568,7 +568,10 @@ namespace RTParser.Utils
                     {
                         if (!this.orderedKeys.Contains(name))
                         {
-                            writeToLog("Missing odered key " + name);
+                            if (!this.orderedKeys.Contains(name.ToUpper()))
+                            {
+                                writeToLog("Missing odered key " + name);
+                            }
                         }
                         return true;
                     }
