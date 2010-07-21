@@ -19,7 +19,7 @@ namespace MushDLR223.ScriptEngines
 
         public override object GetSymbol(string eventName)
         {
-            throw new NotImplementedException();
+            return base.ReadFromString(eventName);
         }
 
         public override bool IsSubscriberOf(string eventName)
@@ -41,9 +41,9 @@ namespace MushDLR223.ScriptEngines
         /// <returns></returns>
         public override bool LoadFile(string filename, OutputDelegate WriteLine)
         {
-            if (!filename.EndsWith(".lisp"))
+            if (!filename.EndsWith(".cloj"))
             {
-                filename = filename + ".lisp";
+                filename = filename + ".cloj";
             }
             System.IO.FileInfo fi = new System.IO.FileInfo(filename);
             if (fi.Exists)
@@ -92,6 +92,10 @@ namespace MushDLR223.ScriptEngines
         /// <param name="textForm"></param>
         public override void Intern(string varname, object value)
         {
+            if (value!=null)
+            {
+                InternType(value.GetType());
+            }
            dotLispInterpreter.Intern(varname, value);
         } // method: Intern
 

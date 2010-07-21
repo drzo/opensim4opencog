@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 namespace MushDLR223.ScriptEngines
@@ -41,5 +42,14 @@ namespace MushDLR223.ScriptEngines
         //public abstract ScriptInterpreter newInterpreter(object self);
 
 
+        public virtual object ReadFromString(string cmd)
+        {
+
+            StringReader stringCodeReader = new StringReader(cmd);
+            object lispCode = Read("ReadFromString" + GetType(), stringCodeReader, Console.WriteLine);
+            if (Eof(lispCode))
+                return lispCode;
+            return lispCode;
+        }
     }
 }

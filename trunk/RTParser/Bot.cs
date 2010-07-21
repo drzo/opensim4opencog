@@ -12,6 +12,7 @@ using System.Net.Mail;
 using AIMLbot;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
+using MushDLR223.Virtualization;
 using RTParser.AIMLTagHandlers;
 using RTParser.Database;
 using RTParser.Normalize;
@@ -118,7 +119,7 @@ namespace RTParser
         /// <summary>
         /// A buffer to hold log messages to be written out to the log file when a max size is reached
         /// </summary>
-        private List<Unifiable> LogBuffer = new List<Unifiable>();
+        private List<string> LogBuffer = new List<string>();
 
         /// <summary>
         /// A list of Topic states that are set currently (for use of guarding content)
@@ -325,7 +326,7 @@ namespace RTParser
                 {
                     if (s==null) continue;
                     string exists = Path.Combine(s, "users");
-                    if (Directory.Exists(exists))
+                    if (HostSystem.DirExists(exists))
                     {
                         exists = HostSystem.ToRelativePath(exists);
                         _PathToUserFiles = exists;
@@ -487,6 +488,12 @@ namespace RTParser
             AddExcuteHandler("bot", LightWeigthBotDirective);
             this.TheCyc = new CycDatabase(this);
             var v = TheCyc.GetCycAccess;
+            this.clojureInterpreter = new ClojureInterpreter(this);
+            clojureInterpreter.Init();
+            clojureInterpreter.Intern("MyBot", this);
+            clojureInterpreter.Intern("BotAsUser", BotAsUser);
+            clojureInterpreter.Intern("Users", BotUsers);
+            AddExcuteHandler("cloj", ClojExecHandler);            
         }
 
         #region Settings methods
@@ -554,8 +561,8 @@ namespace RTParser
                 Loader = loader;
                 loader.loadAIML(path, options, request);
                 // maybe loads settings files if they are there
-                string settings = Path.Combine(path, "Settings.xml");
-                if (File.Exists(settings)) loadSettings(settings);
+                string settings = HostSystem.Combine(path, "Settings.xml");
+                if (HostSystem.FileExists(settings)) loadSettings(settings);
             }
             finally
             {
@@ -614,8 +621,8 @@ namespace RTParser
                 this.CustomTags = new Dictionary<string, TagHandler>();
                 //this.GraphMaster = new GraphMaster();
                 //this.HeardSelfSayGraph = new GraphMaster();
-                if (File.Exists("AIMLbot.dll")) loadCustomTagHandlers("AIMLbot.dll");
-                if (File.Exists("AIMLbot.exe")) loadCustomTagHandlers("AIMLbot.exe");
+                if (HostSystem.FileExists("AIMLbot.dll")) loadCustomTagHandlers("AIMLbot.dll");
+                if (HostSystem.FileExists("AIMLbot.exe")) loadCustomTagHandlers("AIMLbot.exe");
 
                 string names_str = "markovx.trn 5ngram.ngm";
                 string[] nameset = names_str.Split(' ');
@@ -624,7 +631,7 @@ namespace RTParser
 
                     int loadcount = 0;
                     string file = Path.Combine("trn", name);
-                    if (File.Exists(file))
+                    if (HostSystem.FileExists(file))
                     {
                         StreamReader sr = new StreamReader(file);
                         writeToLog(" **** Markovian Brain LoadMarkovLTM: '{0}'****", file);
@@ -635,7 +642,7 @@ namespace RTParser
                     }
 
                     file = Path.Combine("ngm", name);
-                    if (File.Exists(file))
+                    if (HostSystem.FileExists(file))
                     {
                         StreamReader sr = new StreamReader(file);
                         writeToLog(" **** Markovian Brain LoadMarkovLTM: '{0}'**** ", file);
@@ -654,8 +661,8 @@ namespace RTParser
                 if (pHMM.hmmCorpusLoaded == 0)
                 {
                     string file = Path.Combine("bgm", "corpus.txt");
-                    //if (Directory.Exists(file))
-                    if (File.Exists(file))
+                    //if (HostSystem.DirExists(file))
+                    if (HostSystem.FileExists(file))
                     {
                         writeToLog("Load Corpus Bigrams: '{0}'", file);
                         StreamReader sr = new StreamReader(file);
@@ -775,11 +782,19 @@ namespace RTParser
         /// <param name="pathToSplitters">Path to the config file</param>
         private void loadSplitters(string pathToSplitters)
         {
-            FileInfo splittersFile = new FileInfo(pathToSplitters);
-            if (splittersFile.Exists)
+            if (HostSystem.FileExists(pathToSplitters))
             {
                 XmlDocument splittersXmlDoc = new XmlDocument();
-                splittersXmlDoc.Load(pathToSplitters);
+                Stream stream = HostSystem.OpenRead(pathToSplitters);
+                try
+                {
+                    splittersXmlDoc.Load(stream);
+                }
+                finally
+                {
+                    HostSystem.Close(stream);
+                }
+                 
                 // the XML should have an XML declaration like this:
                 // <?xml version="1.0" encoding="utf-8" ?> 
                 // followed by a <root> tag with children of the form:
@@ -893,11 +908,7 @@ namespace RTParser
                 if (this.LogBuffer.Count > this.MaxLogBufferSize - 1)
                 {
                     // Write out to log file
-                    DirectoryInfo logDirectory = new DirectoryInfo(this.PathToLogs);
-                    if (!logDirectory.Exists)
-                    {
-                        logDirectory.Create();
-                    }
+                    HostSystem.CreateDirectory(this.PathToLogs);
 
                     Unifiable logFileName = DateTime.Now.ToString("yyyyMMdd") + ".log";
                     FileInfo logFile = new FileInfo(Path.Combine(this.PathToLogs, logFileName));
@@ -999,7 +1010,7 @@ namespace RTParser
 
         private string GetUserDir(string key)
         {
-            string userDir =  Path.Combine(this.PathToUserDir, key);
+            string userDir =  HostSystem.Combine(this.PathToUserDir, key);
             HostSystem.CreateDirectory(userDir);
             return HostSystem.ToRelativePath(userDir);
         }
@@ -2470,11 +2481,24 @@ The AIMLbot program.
             return res;
         }
 
+
+        private object ClojExecHandler(string cmd, Request user)
+        {
+            StringReader stringCodeReader = new StringReader(cmd);
+            object lispCode = clojureInterpreter.Read("ClojExecHandler", stringCodeReader, writeToLog);
+            if (clojureInterpreter.Eof(lispCode))
+                return "EOF on " + lispCode??"NULL";
+            return clojureInterpreter.Eval(lispCode);
+        }
+
         internal Unifiable SystemExecute(Unifiable cmd, Unifiable langu, Request user)
         {
             if (Unifiable.IsNullOrEmpty(langu))
             {
                 langu = "bot";
+            } else
+            {
+                langu = langu.AsString().ToLower().Trim();
             }
             Unifiable s = "The system tag should be doing '" + cmd + "' lang=" + langu;
             writeToLog(s.AsString());
@@ -2501,6 +2525,7 @@ The AIMLbot program.
 
         public void AddExcuteHandler(string lang, SystemExecHandler handler)
         {
+            lang = lang.ToLower().Trim();
             ExecuteHandlers[lang] = handler;
         }
 
@@ -2709,7 +2734,8 @@ The AIMLbot program.
                     if (input.StartsWith("@"))
                     {
                         myBotBotDirective = myBot.BotDirective(myUser, input, writeLine);
-                        if (!myBotBotDirective) continue;
+                        //if (!myBotBotDirective) 
+                        continue;
                     }
                     if (!myBotBotDirective)
                     {
@@ -2884,7 +2910,7 @@ The AIMLbot program.
                     args = args.Substring(4).Trim();
                     string hide = AIMLLoader.GetTemplateSource(myUser.UsedTemplates);
                     console(hide);
-                    if (args.Length > 0) File.AppendAllText(args, hide + "\n");
+                    if (args.Length > 0) HostSystem.AppendAllText(args, hide + "\n");
                     return true;
                 }
                 if (int.TryParse(args, out i))
@@ -2967,25 +2993,29 @@ The AIMLbot program.
             if (cmd == "chuser")
             {
                 string oldUser = null;// myUser ?? LastUser.ShortName ?? "";
+                string newUser = args;
                 int lastIndex = args.IndexOf("-");
                 if (lastIndex > 0)
                 {
                     oldUser = args.Substring(lastIndex + 1).Trim();
-                    args = args.Substring(0, lastIndex - 1);
+                    newUser = args.Substring(0, lastIndex).Trim();
                 }
                 if (oldUser != null)
                 {
-                    RenameUser(oldUser, args);
+                    RenameUser(oldUser, newUser);
                 }
-                LastUser = FindOrCreateUser(args);
-
+                LastUser = FindOrCreateUser(newUser);
                 return true;
             }
 
-
-            if (showHelp) console("@graph <graph> - changes the users graph");
-            if (cmd == "graph")
+            if (showHelp) console("@chgraph <graph> - changes the users graph");
+            if (cmd == "graph" || cmd == "chgraph")
             {
+                if (args=="")
+                {
+                    console("ListeningGraph=" + myUser.ListeningGraph);
+                    return true;
+                }
                 myUser.ListeningGraph = GetGraph(args, myUser.ListeningGraph);
                 return true;
             }
@@ -3000,6 +3030,77 @@ The AIMLbot program.
             {
                 return true;
             }
+            if (showHelp) console("@users  --- lists users");
+            if (cmd == "users")
+            {
+                console("-----------------------------------------------------------------");
+                console("------------BEGIN USERS----------------------------------");
+                foreach (var kv in BotUsers)
+                {
+                    console("-----------------------------------------------------------------");
+                    User user = kv.Value;
+                    if (user == null)
+                    {
+                        console("userid='" + kv.Key
+                                + "' NULL");
+                        continue;
+                    }
+                    console("userid='" + kv.Key
+                            + "' UserID='" + user.UserID
+                            + "' UserName='" + user.UserName + "'");
+                    console(user.Predicates.ToDebugString());
+                    console("-----------------------------------------------------------------");   
+                }
+                console("------------ENDS USERS----------------------------------");
+                return true;
+            }
+
+            if (showHelp) console("@eval <source>  --- runs source based on users language setting interp='" + myUser.Predicates.grabSetting("interp") + "'");
+            if (cmd == "eval")
+            {
+                cmd = "call";
+                args = "@cloj " + args;
+            }
+            if (showHelp) console("@call <lang> <source>  --- runs script source");
+            if (cmd == "call")
+            {
+                string source;// myUser ?? LastUser.ShortName ?? "";
+                string slang;
+                if (args.StartsWith("@"))
+                {
+                    args = args.Substring(1);
+                    int lastIndex = args.IndexOf(" ");
+                    if (lastIndex > 0)
+                    {
+                        source = args.Substring(lastIndex + 1).Trim();
+                        slang = args.Substring(0, lastIndex);
+                    }
+                    else
+                    {
+                        source = args;
+                        slang = null;
+                    }
+                }
+                else
+                {
+                    source = args;
+                    slang = null;
+                }           
+                var ur = GetRequest(args, myUser.ShortName);
+                if (source != null)
+                {
+                    try
+                    {
+                        console(SystemExecute(source, slang, ur));
+                    }
+                    catch (Exception e)
+                    {
+                        console("SystemExecute " + source + " " +  slang + " caused " + e);
+                    }
+                }
+                return true;
+            }
+
             if (showHelp) return true;
             console("unknown: @" + input);
             return false;
@@ -3029,32 +3130,32 @@ The AIMLbot program.
             bool loaded = false;
 
             // this is the personal "config file" only.. aiml stored elsewhere
-            string file = Path.Combine("config", myName);
-            if (Directory.Exists(file))
+            string file = HostSystem.Combine("config", myName);
+            if (HostSystem.DirExists(file))
             {
                 writeToLog("LoadPersonalDirectories: '{0}'", file);
                 loaded = true;
                 loadSettings(Path.Combine(file, "Settings.xml"));
             }
 
-            file = Path.Combine("aiml", myName);
-            if (Directory.Exists(file))
+            file = HostSystem.Combine("aiml", myName);
+            if (HostSystem.DirExists(file))
             {
                 UsePersonalDir(file); ;
                 loaded = true;
             }
 
             // this is the personal "config file" only.. aiml stored elsewhere
-            file = Path.Combine(myName, "config");
-            if (Directory.Exists(file))
+            file = HostSystem.Combine(myName, "config");
+            if (HostSystem.DirExists(file))
             {
                 writeToLog("LoadPersonalDirectories: '{0}'", file);
                 loaded = true;
                 loadSettings(Path.Combine(file, "Settings.xml"));
             }
 
-            file = Path.Combine(myName, "aiml");
-            if (Directory.Exists(file))
+            file = HostSystem.Combine(myName, "aiml");
+            if (HostSystem.DirExists(file))
             {
                 UsePersonalDir(file); ;
                 loaded = true;
@@ -3115,6 +3216,7 @@ The AIMLbot program.
 
 
         private Dictionary<string, DateTime> LoadedFiles = new Dictionary<string, DateTime>();
+        private ClojureInterpreter clojureInterpreter;
 
         public bool AddFileLoaded(string filename)
         {

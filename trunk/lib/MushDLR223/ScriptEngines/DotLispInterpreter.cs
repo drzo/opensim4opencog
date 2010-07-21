@@ -43,9 +43,16 @@ namespace MushDLR223.ScriptEngines
         {
         }
 
+        public void WriteLine(string s, object[] args)
+        {
+            Console.WriteLine(s, args);
+        }
+
         sealed public override void Init()
         {
             dotLispInterpreter = new DotLisp.Interpreter();
+            dotLispInterpreter.LoadFile("boot.lisp");
+            dotLispInterpreter.LoadFile("extra.lisp");
         }
         /// <summary>
         /// 
@@ -135,7 +142,5 @@ namespace MushDLR223.ScriptEngines
             v.Intern("*SELF*", self);
             return v;
         } // method: newInterpreter
-
-
     }
 }

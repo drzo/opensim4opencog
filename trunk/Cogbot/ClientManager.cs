@@ -466,8 +466,6 @@ namespace cogbot
                     {
                         WriteLine("Start Loading Main TaskInterperter ... '" + taskInterperterType + "' \n");
                         _lispTaskInterperter = ScriptManager.LoadScriptInterpreter(taskInterperterType, this);
-                        _lispTaskInterperter.LoadFile("boot.lisp",WriteLine);
-                        _lispTaskInterperter.LoadFile("extra.lisp",WriteLine);
                         _lispTaskInterperter.LoadFile("cogbot.lisp",WriteLine);
                         _lispTaskInterperter.Intern("clientManager", this);
                         _scriptEventListener = new ScriptEventListener(_lispTaskInterperter, null);

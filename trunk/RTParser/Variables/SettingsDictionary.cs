@@ -7,6 +7,8 @@ using System.Threading;
 using System.Xml;
 using System.IO;
 using System.Xml.Serialization;
+using MushDLR223.Utilities;
+using MushDLR223.Virtualization;
 using RTParser;
 using RTParser.Normalize;
 using RTParser.Utils;
@@ -207,8 +209,11 @@ namespace RTParser.Utils
                         XmlDocument xmlDoc = new XmlDocument();
                         try
                         {
-                            xmlDoc.Load(pathToSettings);
+                            var stream = HostSystem.GetStream(pathToSettings);
+                            xmlDoc.Load(stream);
+                            HostSystem.Close(stream);
                             this.loadSettings(xmlDoc);
+                            
                         }
                         catch (Exception e)
                         {
@@ -264,6 +269,11 @@ namespace RTParser.Utils
 
         public void loadSettingNode(XmlNode myNode)
         {
+            loadSettingNode(this, myNode);   
+        }
+
+        static public void loadSettingNode(ISettingsDictionary dict, XmlNode myNode)
+        {
             if (myNode.NodeType == XmlNodeType.Comment) return;
             if ((myNode.Name == "item"))
             {
@@ -277,14 +287,25 @@ namespace RTParser.Utils
                 {
                     value = myNode.InnerXml.Trim();
                 }
-                this.addSetting(name, new StringUnifiable(value));
+
+                string updateOrAdd = RTPBot.GetAttribValue(myNode, "type", "add").ToLower().Trim();
+                if (updateOrAdd == "add")
+                {
+                    dict.addSetting(name, new StringUnifiable(value));
+                } else
+                {
+                    dict.updateSetting(name, new StringUnifiable(value));
+                }
+            } else
+            {
+                RTPBot.writeDebugLine("Unknown settings line {0} in {1}", AIMLLoader.LineTextInfo(myNode), dict);
             }
         }
 
         public void SaveTo(string dir, string rootname, string filename)
         {
             HostSystem.CreateDirectory(dir);
-            string tofile = Path.Combine(dir, filename);
+            string tofile = HostSystem.Combine(dir, filename);
             if (fromFile == null) fromFile = tofile;
             HostSystem.BackupFile(tofile);
             XmlDocument xmldoc;
