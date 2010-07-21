@@ -11,7 +11,7 @@ namespace RTParser.AIMLTagHandlers
     /// and to process its AIML object contents.
     /// supports network HTTP and web service based AIML learning (as well as local filesystem)
     /// </summary>
-    public class learn : RTParser.Utils.AIMLTagHandler
+    public class learn : RTParser.Utils.LoadingTagHandler
     {
         /// <summary>
         /// Ctor
@@ -32,11 +32,11 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        protected override Unifiable ProcessChange()
+        protected override Unifiable ProcessLoad(LoaderOptions loaderOptions)
         {
             if (this.templateNode.Name.ToLower() == "learn")
             {
-                LoaderOptions opts = LoaderOptions.GetDefault(request);
+                LoaderOptions opts = loaderOptions ?? LoaderOptions.GetDefault(request);
 
                 opts.recurse = Unifiable.IsLogicTF(GetAttribValue("recurse", opts.recurse ? "True" : "False"), query);
                 //recurse here?

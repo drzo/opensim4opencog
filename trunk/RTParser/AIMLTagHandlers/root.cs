@@ -16,7 +16,7 @@ namespace RTParser.AIMLTagHandlers
     /// 
     /// The bot element does not have any content. 
     /// </summary>
-    public class root : RTParser.Utils.AIMLTagHandler
+    public class root : RTParser.Utils.LoadingTagHandler
     {
         /// <summary>
         /// Ctor
@@ -37,15 +37,12 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        protected override Unifiable ProcessChange()
+        protected override Unifiable ProcessLoad(LoaderOptions loaderOptions)
         {
             if (this.templateNode.Name.ToLower() == "root")
             {
                 // process each of these child "settings"? nodes
-                foreach (XmlNode child in this.templateNode.ChildNodes)
-                {
-                    Proc.Loader.loadAIMLNode(child, LoaderOptions.GetDefault(this.request), request);
-                }
+                Proc.Loader.loadAIMLNode(templateNode, loaderOptions, request);
             }
             return Unifiable.Empty;
         }

@@ -292,7 +292,7 @@ namespace RTParser.Utils
         {
             request = EnsureRequest(request);
             var xtr = XmlDocumentLineInfo.CreateXmlTextReader(input);
-            string namefile = "" + filename;
+            string namefile = "" + filename.Filename;
             while (!xtr.EOF)
             {
                 try
