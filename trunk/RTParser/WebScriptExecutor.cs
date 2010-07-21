@@ -23,8 +23,7 @@ namespace RTParser.Web
 
         public void WriteLine(string s, params object[] args)
         {
-            //TheBot.writeChatTrace(s, args);
-            Console.WriteLine(s, args);
+            TheBot.writeToLog("HTTPD: " + s, args);
         }
 
         #endregion

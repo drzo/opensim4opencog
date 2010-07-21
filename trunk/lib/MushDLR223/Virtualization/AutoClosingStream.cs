@@ -285,7 +285,14 @@ namespace MushDLR223.Virtualization
         ///                 </exception><filterpriority>1</filterpriority>
         public override long Length
         {
-            get { return UnderlyingStream.Length; }
+            get
+            {
+                if (IsClosed)
+                {
+                    return 0;
+                }                
+                return UnderlyingStream.Length;
+            }
         }
 
         /// <summary>
@@ -300,7 +307,14 @@ namespace MushDLR223.Virtualization
         ///                 </exception><filterpriority>1</filterpriority>
         public override long Position
         {
-            get { return UnderlyingStream.Position; }
+            get
+            {
+                if (IsClosed)
+                {
+                    return Length;
+                }
+                return UnderlyingStream.Position;
+            }
             set { UnderlyingStream.Position = value; }
         }
 

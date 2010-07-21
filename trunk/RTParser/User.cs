@@ -112,6 +112,25 @@ namespace RTParser
             set { ListeningGraph = value; }
         }
 
+        public int MaxInputs
+        {
+            get
+            {
+                if (Predicates.containsSettingCalled("maxinputs"))
+                {
+                    var mi = Predicates.grabSetting("maxinputs");
+                    int miv;
+                    if (int.TryParse(mi.AsString(),out miv))
+                    {
+                        return miv;
+                    }
+                }
+                return 4;
+            }
+            set { Predicates.addSetting("maxinputs", "" + value); }
+        }
+
+
         /// <summary>
         /// The GUID that identifies this user to the bot
         /// </summary>
@@ -550,7 +569,7 @@ namespace RTParser
             //if (input == "") return false;
             input = input + " ";
             int firstWhite = input.IndexOf(' ');
-            string var = input.Substring(1, firstWhite);
+            string var = input.Substring(0, firstWhite).Trim();
             string value = input.Substring(firstWhite + 1).Trim();
             if (var == "")
             {
@@ -571,6 +590,7 @@ namespace RTParser
             try
             {
                 bot.writeToLog("USERTRACE: {0} {1}", UserName ?? UserID, string.Format(s, objects));
+                Console.WriteLine("USERTRACE: {0} {1}", UserName ?? UserID, string.Format(s, objects));
             }
             catch(Exception exception)
             {
@@ -643,6 +663,20 @@ namespace RTParser
 
         public bool CanUseTemplate(TemplateInfo info, Result request)
         {
+            lock (UsedTemplates)
+            {
+                if (UsedTemplates.Contains(info))
+                {
+                    if (info.CategoryInfo != null && info.CategoryInfo.Pattern != null && info.CategoryInfo.Pattern.FullPath != null)
+                    {
+                        if (info.CategoryInfo.Pattern.FullPath.AsString() == "*")
+                        {
+                            return true;
+                        }
+                    }
+                    // return false;
+                }
+            }
             return true;
         }
 

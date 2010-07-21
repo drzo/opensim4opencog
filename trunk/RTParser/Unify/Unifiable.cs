@@ -207,6 +207,15 @@ namespace RTParser
             return string.Join(sep, FromArrayOf(values), startIndex, count);
         }
 
+        public static Unifiable Join(string sep, string[] values, int startIndex, int count)
+        {
+            if (count == 1)
+            {
+                return values[startIndex];
+            }
+            return string.Join(sep, values, startIndex, count);
+        }
+
         public static Unifiable[] arrayOf(string[] strs)
         {
             Unifiable[] it = new Unifiable[strs.Length];
@@ -394,7 +403,6 @@ namespace RTParser
             }
         }
 
-        public abstract bool ConsumeFirst(Unifiable fullpath, out Unifiable left, out Unifiable right, SubQuery query);
         public abstract bool ConsumePath(Unifiable fullpath, string[] tokens, out string fw, out Unifiable right, SubQuery query);
 
         public bool WillUnify(Unifiable other, SubQuery query)

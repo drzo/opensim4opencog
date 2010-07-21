@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
 using System.Xml;
+using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
 using RTParser.AIMLTagHandlers;
@@ -24,7 +25,7 @@ namespace RTParser.Utils
         private String graphName;
         private RTPBot theBot;
         public GraphMaster Srai;
-        private bool NoIndexing = true;
+        static public bool NoIndexing = true;
         private bool FullDepth = true;
         readonly private List<GraphMaster> Parents = new List<GraphMaster>();
 
@@ -451,14 +452,14 @@ namespace RTParser.Utils
             }
         }
 
-        static IEnumerable<T> CopyOf<T>(List<T> list)
+        public static IEnumerable<T> CopyOf<T>(List<T> list)
         {
             lock (list)
             {
                 return list.ToArray();
             }
         }
-        static IEnumerable<T> CopyOf<T>(IEnumerable<T> list)
+        public static IEnumerable<T> CopyOf<T>(IEnumerable<T> list)
         {
             var copy = new List<T>();
             lock (list)
@@ -558,17 +559,7 @@ namespace RTParser.Utils
             var fs = new StreamWriter(filename, false);
             fs.WriteLine("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>");
             fs.WriteLine("<aiml graph=\"{0}\">", name);
-            foreach (var list in CopyOf(FallBacksGraphs))
-            {
-                fs.WriteLine(" <genlMt graph=\"{0}\"/>", list.ScriptingName);
-            }
-            foreach (var list in CopyOf(Parents))
-            {
-                fs.WriteLine(" <!-- parent graph=\"{0}\" -->", list.ScriptingName);
-            }
-            var srai = Srai;
-            if (srai != null)
-                fs.WriteLine(" <!-- vocabulary graph=\"{0}\" -->", srai.ScriptingName);
+            WriteMetaHeaders(fs.WriteLine);
             try
             {
                 string hide = "";
@@ -590,6 +581,30 @@ namespace RTParser.Utils
                 fs.Flush();
                 fs.Close();
             }
+        }
+
+        public void WriteMetaHeaders(OutputDelegate fs)
+        {
+            foreach (var list in CopyOf(FallBacksGraphs))
+            {
+                fs(" <genlMt graph=\"{0}\"/>", list.ScriptingName);
+            }
+            foreach (var list in CopyOf(Parents))
+            {
+                fs(" <!-- parent graph=\"{0}\" -->", list.ScriptingName);
+            }
+            var srai = Srai;
+            if (srai != null)
+                fs(" <!-- vocabulary graph=\"{0}\" -->", srai.ScriptingName);
+            fs(" <!-- templates={0} thats={1} patterns={2} topics={3}  -->",
+               CountOF(Templates), CountOF(Thats), CountOF(Patterns), CountOF(Topics));
+
+        }
+
+        static int CountOF(ICollection col)
+        {
+            if (col == null) return -1;
+            return col.Count;
         }
 
         public void AddRedundantTemplate(TemplateInfo redundant, TemplateInfo info)
