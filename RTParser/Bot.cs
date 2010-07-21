@@ -324,7 +324,7 @@ namespace RTParser
                 }
                 foreach (var s in new[] { PersonalAiml, PathToAIML, PathToConfigFiles, RuntimeDirectory })
                 {
-                    if (s==null) continue;
+                    if (s == null) continue;
                     string exists = Path.Combine(s, "users");
                     if (HostSystem.DirExists(exists))
                     {
@@ -344,7 +344,7 @@ namespace RTParser
         private string _PathToBotPersonalFiles = null;
         protected string PersonalAiml
         {
-            get { return _PathToBotPersonalFiles;  }
+            get { return _PathToBotPersonalFiles; }
             set { _PathToUserFiles = value; }
         }
 
@@ -493,8 +493,27 @@ namespace RTParser
             clojureInterpreter.Intern("MyBot", this);
             clojureInterpreter.Intern("BotAsUser", BotAsUser);
             clojureInterpreter.Intern("Users", BotUsers);
-            AddExcuteHandler("cloj", ClojExecHandler);            
+#if !(NOT_FAKE_LISTENERS)
+
+            if (!clojureInterpreter.IsSubscriberOf("thisClient"))
+            {
+                clojureInterpreter.Intern("thisClient", this);
+                clojureInterpreter.Intern("True", true);
+                clojureInterpreter.Intern("False", false);
+                listeners["AIMLBotModule"] = this;
+            }
+#endif
+            AddExcuteHandler("cloj", ClojExecHandler);
         }
+
+
+#if !(NOT_FAKE_LISTENERS)
+        public Dictionary<string, object> listeners = new Dictionary<string, object>();
+        public RTPBot MyBot
+        {
+            get { return this; }
+        }
+#endif
 
         #region Settings methods
 
@@ -794,7 +813,7 @@ namespace RTParser
                 {
                     HostSystem.Close(stream);
                 }
-                 
+
                 // the XML should have an XML declaration like this:
                 // <?xml version="1.0" encoding="utf-8" ?> 
                 // followed by a <root> tag with children of the form:
@@ -1010,7 +1029,7 @@ namespace RTParser
 
         private string GetUserDir(string key)
         {
-            string userDir =  HostSystem.Combine(this.PathToUserDir, key);
+            string userDir = HostSystem.Combine(this.PathToUserDir, key);
             HostSystem.CreateDirectory(userDir);
             return HostSystem.ToRelativePath(userDir);
         }
@@ -1059,7 +1078,7 @@ namespace RTParser
         {
             if (String.IsNullOrEmpty(user)) return true;
             string s = " " + user.ToUpper().Replace("-", " ").Replace("  ", " ").Replace(" ", "") + " ";
-            bool b = s.Contains("UNKNOWN") || s.Contains("UNREC") || s.Contains("UNNAME") 
+            bool b = s.Contains("UNKNOWN") || s.Contains("UNREC") || s.Contains("UNNAME")
                 || s.Contains("UNSEEN") || s.Contains("DEFAULT") ||
                    s.Contains(" SOME") || s.Contains("*") || s.Contains(" _ ");
             writeDebugLine("unknown " + user);
@@ -1207,7 +1226,7 @@ namespace RTParser
                     {
                         sentence = sentence.Substring(0, sentence.Length - 1).Trim();
                     }
-                    if (sentence.Length==0) continue;
+                    if (sentence.Length == 0) continue;
                     writeToLog("skipping input sentence " + sentence0);
                     int topicNum = 0;
                     if (true)
@@ -2487,7 +2506,7 @@ The AIMLbot program.
             StringReader stringCodeReader = new StringReader(cmd);
             object lispCode = clojureInterpreter.Read("ClojExecHandler", stringCodeReader, writeToLog);
             if (clojureInterpreter.Eof(lispCode))
-                return "EOF on " + lispCode??"NULL";
+                return "EOF on " + lispCode ?? "NULL";
             return clojureInterpreter.Eval(lispCode);
         }
 
@@ -2496,7 +2515,8 @@ The AIMLbot program.
             if (Unifiable.IsNullOrEmpty(langu))
             {
                 langu = "bot";
-            } else
+            }
+            else
             {
                 langu = langu.AsString().ToLower().Trim();
             }
@@ -2575,7 +2595,7 @@ The AIMLbot program.
                     g.AddGenlMT(current);
                 }
             }
-            return g;            
+            return g;
         }
         public GraphMaster GetGraph(string graphPath, GraphMaster current)
         {
@@ -2645,7 +2665,7 @@ The AIMLbot program.
         {
             myBot.outputDelegate = null;/// ?? Console.Out.WriteLine;
 
-           // writeLine = MainConsoleWriteLn;
+            // writeLine = MainConsoleWriteLn;
             bool gettingUsername = false;
             myBot.loadSettings();
             string myName = "BinaBot Daxeline";
@@ -2813,7 +2833,7 @@ The AIMLbot program.
                 console("@rmuser <userid> -- removes a users from the user dictionary\n (best if used after a rename)");
             if (cmd == "rmuser")
             {
-                
+
             }
             if (showHelp) console("@rename <userid> <newname>");
             if (cmd == "rename")
@@ -3011,7 +3031,7 @@ The AIMLbot program.
             if (showHelp) console("@chgraph <graph> - changes the users graph");
             if (cmd == "graph" || cmd == "chgraph")
             {
-                if (args=="")
+                if (args == "")
                 {
                     console("ListeningGraph=" + myUser.ListeningGraph);
                     return true;
@@ -3049,7 +3069,7 @@ The AIMLbot program.
                             + "' UserID='" + user.UserID
                             + "' UserName='" + user.UserName + "'");
                     console(user.Predicates.ToDebugString());
-                    console("-----------------------------------------------------------------");   
+                    console("-----------------------------------------------------------------");
                 }
                 console("------------ENDS USERS----------------------------------");
                 return true;
@@ -3085,7 +3105,7 @@ The AIMLbot program.
                 {
                     source = args;
                     slang = null;
-                }           
+                }
                 var ur = GetRequest(args, myUser.ShortName);
                 if (source != null)
                 {
@@ -3095,7 +3115,7 @@ The AIMLbot program.
                     }
                     catch (Exception e)
                     {
-                        console("SystemExecute " + source + " " +  slang + " caused " + e);
+                        console("SystemExecute " + source + " " + slang + " caused " + e);
                     }
                 }
                 return true;
