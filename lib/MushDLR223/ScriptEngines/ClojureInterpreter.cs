@@ -19,13 +19,16 @@ namespace MushDLR223.ScriptEngines
 
         public override object GetSymbol(string eventName)
         {
-            return base.ReadFromString(eventName);
+           // object r = Eval(base.ReadFromString(eventName));
+            //eventName = eventName.ToLower();
+            DotLisp.Symbol o = dotLispInterpreter.intern(eventName);//.Read("DefinedFunction", new System.IO.StringReader(eventName));           
+            return o;
         }
 
         public override bool IsSubscriberOf(string eventName)
         {
-            eventName = eventName.ToLower();
-            return false;
+            DotLisp.Symbol o = dotLispInterpreter.intern(eventName);//.Read("DefinedFunction", new System.IO.StringReader(eventName));           
+            return o.isDefined();
         }
 
         public ClojureInterpreter(object self)
