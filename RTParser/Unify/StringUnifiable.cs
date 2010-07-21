@@ -219,7 +219,10 @@ namespace RTParser
 
         public override object AsNodeXML()
         {
-            return str;
+            return str.Replace(" /", "/").Replace("/ ", "/").
+                Replace(" >", ">").Replace("> ", ">").
+                Replace(" <", "<").Replace("< ", "<").
+                ToLower();
         }
 
         public override string ToString()
@@ -468,57 +471,6 @@ namespace RTParser
             return str == "_";
         }
 
-        override public bool ConsumeFirst(Unifiable fullpath, out Unifiable left, out Unifiable right, SubQuery query)
-        {
-            left = Unifiable.Empty;
-            right = fullpath;
-            return false;
-            Unifiable[] array = fullpath.ToArray();
-            int len = array.Length;
-            if (len == 0) return false;
-            if (str == "_")
-            {
-                if (len > 1)
-                {
-
-                }
-                return false;
-            }
-            Unifiable[] myA = ToArray();
-            int upTo = myA.Length;
-            // if (upTo == 0) return false;
-            int min = 1;
-            Unifiable matchMe = this;
-            if (!IsLazy())
-            {
-                upTo = matchMe.ToUpper().Split(new char[] { ' ' }).Length;
-                min = upTo;
-            }
-            else
-            {
-                matchMe = ToValue(query);
-                upTo = matchMe.ToUpper().Split(new char[] { ' ' }).Length;
-                min = upTo;
-            }
-            if (upTo > len)
-            {
-                upTo = len;
-            }
-            //if (upTo > 1) writeToLog("ConsumeFirst Try: " + fullpath);
-
-            for (int j = min; j <= upTo; j++)
-            {
-                left = Join(" ", array, 0, j);
-                if (matchMe.WillUnify(left, query))
-                {
-                    if (j > 1) writeToLog("ConsumeFirst Success!: " + fullpath);
-                    rest = Join(" ", array, j, len - j);
-                    return true;
-                }
-            }
-            return false;
-        }
-
         public override bool ConsumePath(Unifiable fullpath, string[] tokens, out string fw, out Unifiable after, SubQuery query)
         {
             int sl = tokens.Length;
@@ -550,6 +502,62 @@ namespace RTParser
                 return false;
             }
             Unifiable ovs = fws;
+            if (IsFlag(UFlags.REG_CLASS))
+            {
+
+            }
+            else if (IsFlag(UFlags.IS_EXACT))
+            {
+                if (ovs.Flags == Flags)
+                {
+                    after = null;
+                    return false;
+                }
+            }
+            if (UniifyPath0(tokens, sl, ovs, used, minLen, query, out after))
+            {
+                return true;
+            }
+            if (MustBeFast) return false;
+
+            int len = tokens.Length;
+            Unifiable[] myA = ToArray();
+            int upTo = myA.Length;
+            // if (upTo == 0) return false;
+            int min = 1;
+            Unifiable matchMe = this;
+            if (!IsLazy())
+            {
+                upTo = matchMe.ToUpper().Split(new char[] { ' ' }).Length;
+                min = upTo;
+            }
+            else
+            {
+                matchMe = ToValue(query);
+                upTo = matchMe.ToUpper().Split(new char[] { ' ' }).Length;
+                min = upTo;
+            }
+            if (upTo > len)
+            {
+                upTo = len;
+            }
+            //if (upTo > 1) writeToLog("ConsumeFirst Try: " + fullpath);
+
+            for (int j = min; j <= upTo; j++)
+            {
+                fw = Join(" ", tokens, 0, j);
+                if (matchMe.WillUnify(fw, query))
+                {
+                    if (j > 1) writeToLog("ConsumeFirst Success!: " + fullpath);
+                    rest = Join(" ", tokens, j, len - j);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private bool UniifyPath0(string[] tokens, int sl, Unifiable ovs, int used, int minLen, SubQuery query, out Unifiable after)
+        {
             if (ovs.IsFlag(UFlags.IS_TAG | UFlags.IS_EMPTY))
             {
                 after = null;
@@ -578,6 +586,7 @@ namespace RTParser
             after = null;
             return false;
         }
+
 
         protected int LengthMin
         {

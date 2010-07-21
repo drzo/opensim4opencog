@@ -154,29 +154,6 @@ namespace RTParser
             //return bestf;
         }
 
-        public override bool ConsumeFirst(Unifiable fullpath, out Unifiable left, out Unifiable right, SubQuery query)
-        {
-
-            left = null;
-            right = null;
-            if (best != null)
-            {
-                bool res = best.ConsumeFirst(fullpath, out left, out right, query);
-                if (res) return true;
-            }
-            foreach (var u in List)
-            {
-                if (object.ReferenceEquals(best, u)) continue;
-                bool res = u.ConsumeFirst(fullpath, out left, out right, query);
-                if (res)
-                {
-                    best = u;
-                    return true;
-                }
-            }
-            return false;
-        }
-
         public override bool ConsumePath(Unifiable path, string[] fullpath, out string left, out Unifiable after, SubQuery query)
         {
 
