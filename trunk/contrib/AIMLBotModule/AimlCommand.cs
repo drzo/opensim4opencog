@@ -14,7 +14,7 @@ namespace AIMLBotModule
 {
     public class AimlCommand : cogbot.Actions.Command, BotPersonalCommand
     {
-        public static string UNKNOWN_PARTENER = "UNKNOWN_PARTNER";
+        public static string UNKNOWN_PARTENER = "null";
         private string lastKnownUser;
         public AimlCommand(BotClient testClient)
         {

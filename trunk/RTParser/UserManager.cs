@@ -157,7 +157,8 @@ namespace RTParser
             {
                 bool b;
                 User user = FindOrCreateUser(fromname, out b);
-                user.UserName = fromname;
+                if (!IsExistingUsername(fromname))
+                    user.UserName = fromname;
                 return user;
             }
         }
