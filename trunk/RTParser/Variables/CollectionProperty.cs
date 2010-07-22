@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using RTParser.Utils;
 
-namespace RTParser
+namespace RTParser.Variables
 {
     public class CollectionProperty
     {

@@ -10,13 +10,14 @@ using MushDLR223.Utilities;
 using RTParser;
 using RTParser.Utils;
 using MushDLR223.Virtualization;
+using RTParser.Variables;
 
 namespace RTParser
 {
     /// <summary>
     /// Encapsulates information and history of a user who has interacted with the bot
     /// </summary>
-    abstract public class User : QuerySettings, QuerySettingsReadOnly,IDisposable
+    abstract public class User : QuerySettings, IDisposable
     {
         public readonly object QueryLock = new object();
 
@@ -50,6 +51,7 @@ namespace RTParser
         readonly object SaveLock = new object();
         private void SaveOften(object state)
         {
+            if (IsRoleAcct) return;
             lock (SaveLock)
             {
                 if (!needsSave)
@@ -109,7 +111,7 @@ namespace RTParser
         }
         public override GraphMaster Graph
         {
-            get { return ListeningGraph;  }
+            get { return ListeningGraph; }
             set { ListeningGraph = value; }
         }
 
@@ -121,7 +123,7 @@ namespace RTParser
                 {
                     var mi = Predicates.grabSetting("maxinputs");
                     int miv;
-                    if (int.TryParse(mi.AsString(),out miv))
+                    if (int.TryParse(mi.AsString(), out miv))
                     {
                         return miv;
                     }
@@ -149,22 +151,31 @@ namespace RTParser
         {
             get
             {
-                if (this.Predicates != null && Predicates.containsSettingCalled("name"))
-                {
-                    return Predicates.grabSettingNoDebug("name");
-                }
-                return ShortName.Replace("_", " ");
+                return GetValueORElse(this.Predicates, "name", () => ShortName.Replace("_", " "));
             }
 
             set
             {
-                string saved = value.Replace("_", " ");
+                if (value == null) return;
+                if (bot.IsLastKnownUser(value)) return;
+                string saved = value.Replace("_", " ").Trim();
+                if (saved.Length == 0) return;
                 if (this.Predicates != null)
                 {
                     //Predicates.addSetting("id", bot.KeyFromUsername(value));
                     Predicates.addSetting("name", saved);
                 }
             }
+        }
+
+        private string GetValueORElse(ISettingsDictionary dictionary, string settingname, Func<String> func)
+        {
+            if (dictionary != null && dictionary.containsLocalCalled(settingname))
+            {
+                string value = dictionary.grabSetting(settingname);
+                if (!Unifiable.IsNullOrEmpty(value)) return value.Trim();
+            }
+            return func();
         }
 
         /// <summary>
@@ -216,7 +227,7 @@ namespace RTParser
         /// <summary>
         /// the predicates associated with this particular user
         /// </summary>
-        public RTParser.Utils.SettingsDictionary Predicates;
+        public  SettingsDictionary Predicates;
 
         /// <summary>
         /// The most recent result to be returned by the bot
@@ -300,7 +311,7 @@ namespace RTParser
                 this.bot = bot;
                 // we dont inherit the BotAsUser we inherit the bot's setings
                 // ApplySettings(bot.BotAsUser, this);
-                this.Predicates = new RTParser.Utils.SettingsDictionary(ShortName + ".predicates", this.bot, provider);
+                this.Predicates = new SettingsDictionary(ShortName + ".predicates", this.bot, provider);
                 this.bot.DefaultPredicates.Clone(this.Predicates);
                 //this.Predicates.AddGetSetProperty("topic", new CollectionProperty(_topics, () => bot.NOTOPIC));
                 this.Predicates.addSetting("topic", bot.NOTOPIC);
@@ -316,7 +327,7 @@ namespace RTParser
                 throw new Exception("The UserID cannot be empty");
             }
         }
-       
+
         public override string ToString()
         {
             return UserID;
@@ -525,7 +536,7 @@ namespace RTParser
                     if (!r.IsSailent) continue;
                     String sentence = r.RawOutput;
                     sentence = MainSentence(sentence);
-                    sentence = sentence.Trim(new char[] {'.', ' ', '!', '?'});
+                    sentence = sentence.Trim(new char[] { '.', ' ', '!', '?' });
                     if (sentence.Length == 0) continue;
                     String ssentence = bot.Loader.Normalize(sentence, true);
                     if (sentence.Length == 0) continue;
@@ -583,7 +594,7 @@ namespace RTParser
             input = input.Trim();
             if (input.StartsWith("@"))
             {
-                input = input.TrimStart(new[] {' ', '@'});
+                input = input.TrimStart(new[] { ' ', '@' });
                 switch (input)
                 {
                     case "save":
@@ -621,7 +632,7 @@ namespace RTParser
             {
                 bot.writeToLog("USERTRACE: {0} {1}", UserName ?? UserID, string.Format(s, objects));
             }
-            catch(Exception exception)
+            catch (Exception exception)
             {
                 bot.writeToLog(exception);
             }
@@ -713,7 +724,7 @@ namespace RTParser
         public string UserDirectory
         {
             get { return _saveToDirectory; }
-            set { LoadDirectory(value); }
+            set { _saveToDirectory = value; }
         }
 
         private string _saveToDirectory;
@@ -756,7 +767,7 @@ namespace RTParser
 
         private void SaveDirectory0(string userdir)
         {
-            if (userdir==null && _saveToDirectory==null)
+            if (userdir == null && _saveToDirectory == null)
             {
                 WriteLine("no saveto dir specified");
                 return;
@@ -798,8 +809,7 @@ namespace RTParser
             {
                 LoadUserSettings(userdir);
                 LoadUserAiml(userdir);
-                WriteLine("Loaded " + _saveToDirectory);
-                _saveToDirectory = userdir;
+                WriteLine("Loaded " + userdir);
             }
         }
 
@@ -821,7 +831,7 @@ namespace RTParser
                 }
                 if (userdir.EndsWith("Predicates.xml"))
                 {
-                    Predicates.loadSettings(userdir);
+                    SettingsDictionary.loadSettings(Predicates, userdir, true, true);
                 }
                 return;
             }

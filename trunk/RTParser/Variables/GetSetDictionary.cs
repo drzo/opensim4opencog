@@ -1,6 +1,7 @@
 using System;
+using RTParser.Variables;
 
-namespace RTParser.Utils
+namespace RTParser.Variables
 {
     internal class GetSetDictionary : ISettingsDictionary
     {

@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using System.Text.RegularExpressions;
+using RTParser.Variables;
 
 namespace RTParser.Normalize
 {
@@ -48,7 +49,7 @@ namespace RTParser.Normalize
         /// <param name="dictionary">The dictionary containing the substitutions</param>
         /// <param name="target">the target Unifiable to which the substitutions are to be applied</param>
         /// <returns>The processed Unifiable</returns>
-        public static string Substitute(RTParser.RTPBot bot, RTParser.Utils.SettingsDictionary dictionary, string target)
+        public static string Substitute(RTPBot bot, SettingsDictionary dictionary, string target)
         {
             string marker = ApplySubstitutions.getMarker(5);
             string markerSP = ApplySubstitutions.getMarker(3);
@@ -89,7 +90,7 @@ namespace RTParser.Normalize
             return result.Replace(marker, "").Replace(markerSP, " ");
         }
 
-        public static string SubstituteRecurse(RTParser.RTPBot bot, RTParser.Utils.SettingsDictionary dictionary, string target)
+        public static string SubstituteRecurse(RTParser.RTPBot bot, SettingsDictionary dictionary, string target)
         {
             string result = Unifiable.ToVMString(target);
             String prev = "";

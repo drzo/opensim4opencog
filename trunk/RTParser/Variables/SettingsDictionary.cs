@@ -13,7 +13,7 @@ using RTParser;
 using RTParser.Normalize;
 using RTParser.Utils;
 
-namespace RTParser.Utils
+namespace RTParser.Variables
 {
     public delegate ISettingsDictionary ParentProvider();
     public interface ISettingsDictionary
@@ -234,6 +234,50 @@ namespace RTParser.Utils
             }
         }
 
+        static public void loadSettings(SettingsDictionary dict, string pathToSettings, 
+            bool overwriteExisting, bool onlyIfUnknown)
+        {
+            lock (dict.orderedKeys)
+            {
+                if (pathToSettings.Length > 0)
+                {
+                    if (HostSystem.DirExists(pathToSettings))
+                    {
+                        foreach (string s in HostSystem.GetFiles(pathToSettings, "*.xml")) 
+                        {
+                            loadSettings(dict, s, overwriteExisting, onlyIfUnknown);
+                        }
+                        return;
+                    }
+                    if (!HostSystem.FileExists(pathToSettings))
+                    {
+                        dict.writeToLog("No settings found in: " + pathToSettings);
+                        throw new FileNotFoundException(pathToSettings);
+                        return;
+                    }
+
+                    try
+                    {
+                        XmlDocumentLineInfo xmlDoc = new XmlDocumentLineInfo(pathToSettings);
+                        var stream = HostSystem.GetStream(pathToSettings);
+                        xmlDoc.Load(stream);
+                        HostSystem.Close(stream);
+                        loadSettingNode(dict, xmlDoc, overwriteExisting, onlyIfUnknown);
+                        dict.writeToLog("Loaded Settings found in: " + pathToSettings);
+                        if (dict.fromFile == null) dict.fromFile = pathToSettings;
+                    }
+                    catch (Exception e)
+                    {
+                        dict.writeToLog("loadSettings: " + pathToSettings + "\n" + e);
+                    }
+                }
+                else
+                {
+                    throw new FileNotFoundException("settings for " + dict);
+                }
+            }
+        }
+
         private void writeToLog(string s)
         {
             if (bot != null) bot.writeToLog(s); else RTPBot.writeDebugLine(s);
@@ -255,26 +299,30 @@ namespace RTParser.Utils
         {
             lock (orderedKeys)
             {
-                // empty the hash
-                this.clearSettings();
-
+             
                 XmlNodeList rootChildren = settingsAsXML.DocumentElement.ChildNodes;
+
+                // empty the hash
+                //this.clearSettings();
 
                 foreach (XmlNode myNode in rootChildren)
                 {
-                    loadSettingNode(myNode);
+                    loadSettingNode(this, myNode, true, false);
                 }
             }
         }
 
-        public void loadSettingNode(XmlNode myNode)
-        {
-            loadSettingNode(this, myNode);   
-        }
-
-        static public void loadSettingNode(ISettingsDictionary dict, XmlNode myNode)
+        static public void loadSettingNode(ISettingsDictionary dict, XmlNode myNode, bool overwriteExisting, bool onlyIfUnknown)
         {
             if (myNode.NodeType == XmlNodeType.Comment) return;
+            if ((myNode.Name == "root"))
+            {
+                foreach (XmlNode n in myNode.ChildNodes)
+                {
+                    loadSettingNode(dict, n, overwriteExisting, onlyIfUnknown);
+                }
+                return;
+            }
             if ((myNode.Name == "item"))
             {
                 string name = RTPBot.GetAttribValue(myNode, "name", "");
@@ -289,11 +337,44 @@ namespace RTParser.Utils
                 }
 
                 string updateOrAdd = RTPBot.GetAttribValue(myNode, "type", "add").ToLower().Trim();
+                bool dictcontainsLocalCalled = dict.containsLocalCalled(name);
                 if (updateOrAdd == "add")
                 {
+                    if (!overwriteExisting)
+                    {
+                        if (dictcontainsLocalCalled)
+                        {
+                            return;
+                        }
+                    }
+                    if (onlyIfUnknown && dictcontainsLocalCalled)
+                    {
+                        var old = dict.grabSetting(name);
+                        if (!AIMLTagHandler.MeansUnknown(old))
+                        {
+                            return;
+                        }
+                    }
                     dict.addSetting(name, new StringUnifiable(value));
                 } else
                 {
+                    bool inherited = !dictcontainsLocalCalled && dict.containsSettingCalled(name);
+                    // update only
+                    var old = dict.grabSetting(name);
+                    if (inherited && onlyIfUnknown)
+                    {
+                        if (!AIMLTagHandler.MeansUnknown(old))
+                        {
+                            return;
+                        }
+                    }
+                    if (onlyIfUnknown && dictcontainsLocalCalled)
+                    {
+                        if (!AIMLTagHandler.MeansUnknown(old))
+                        {
+                            return;
+                        }
+                    }
                     dict.updateSetting(name, new StringUnifiable(value));
                 }
             } else
@@ -625,12 +706,28 @@ namespace RTParser.Utils
         /// Copies the values in the current object into the SettingsDictionary passed as the target
         /// </summary>
         /// <param name="target">The target to recieve the values from this SettingsDictionary</param>
-        public void Clone(SettingsDictionary target)
+        public void Clone(ISettingsDictionary target)
         {
             lock (orderedKeys)
             {
                 foreach (string name in this.orderedKeys)
                 {
+                    target.addSetting(name, this.grabSetting(name));
+                }
+            }
+        }
+        /// <summary>
+        /// Copies the values in the current object into the SettingsDictionary passed as the target
+        /// If the keys are missing
+        /// </summary>
+        /// <param name="target">The target to recieve the values from this SettingsDictionary</param>
+        public void AddMissingKeys(ISettingsDictionary target)
+        {
+            lock (orderedKeys)
+            {
+                foreach (string name in this.orderedKeys)
+                {
+                    if (target.containsLocalCalled(name)) continue;
                     target.addSetting(name, this.grabSetting(name));
                 }
             }

@@ -2,6 +2,7 @@ using System;
 using System.Xml;
 using System.Text;
 using RTParser.Utils;
+using RTParser.Variables;
 
 namespace RTParser.AIMLTagHandlers
 {

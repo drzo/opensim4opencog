@@ -157,7 +157,7 @@ namespace RTParser
             {
                 bool b;
                 User user = FindOrCreateUser(fromname, out b);
-                if (!IsExistingUsername(fromname))
+                if (!IsLastKnownUser(fromname))
                     user.UserName = fromname;
                 return user;
             }
@@ -197,6 +197,7 @@ namespace RTParser
         {
             lock (BotUsers)
             {
+                fullname = CleanupFromname(fullname);
                 User myUser = new AIMLbot.User(key, this);
                 myUser.UserName = fullname;
                 writeToLog("USERTRACE: New User " + fullname);
@@ -222,7 +223,6 @@ namespace RTParser
         private string GetUserDir(string key)
         {
             string userDir = HostSystem.Combine(PathToUserDir, key);
-            HostSystem.CreateDirectory(userDir);
             return HostSystem.ToRelativePath(userDir);
         }
 
@@ -301,6 +301,7 @@ namespace RTParser
                     {
                         writeToLog("USERTRACE: old acct is just some other user so just switching to: " + newname);
                         newuser = FindOrCreateUser(newname);
+// maybe                olduser.Predicates.AddMissingKeys(newuser.Predicates); 
                         LastUser = newuser;
                         return newuser;
                     }
@@ -341,90 +342,161 @@ namespace RTParser
         }
 
 
-        public void RenameUser(string oldname, string newname)
+        public User RenameUser(string oldname, string newname)
         {
             lock (BotUsers)
             {
+                oldname = oldname ?? LastUser.UserName;
                 oldname = CleanupFromname(oldname);
                 string oldkey = KeyFromUsername(oldname);
+
+                newname = newname ?? LastUser.UserName;
                 newname = CleanupFromname(newname);
                 string newkey = KeyFromUsername(newname);
 
-                writeToLog("USERTRACE: Rename User " + oldname + " -> " + newname);
 
-                User newuser = FindUser(newname);
+                User newuser = FindUser(newkey);
                 User olduser = FindUser(oldname);
+                if (olduser==null)
+                {
+                    writeToLog("USERTRACE: Neigther acct found so creating clean: " + newname);
+                    newuser = FindOrCreateUser(newname);
+                    newuser.LoadDirectory(GetUserDir(oldkey));
+                    return newuser;
+                }
+                
+                if (newuser == olduser)
+                {
+                    writeToLog("USERTRACE: Same accts found: " + newname);
+                    LastUser.UserName = newname;
+                    return newuser;
+                }
+
+                if (newuser != null)
+                {
+                    writeToLog("USERTRACE: both users exists: " + newname);
+                    // remove old acct from dict
+                    BotUsers.Remove(oldkey);
+                    // grab it into new user
+                    olduser.Predicates.AddMissingKeys(newuser.Predicates);
+                    newuser = olduser;
+                    BotUsers[newkey] = newuser;
+                    newuser.IsRoleAcct = false;
+                    newuser.ListeningGraph = GetUserGraph(newkey, GraphMaster);
+                    newuser.UserID = newkey;
+                    newuser.UserName = newname;
+                    newuser.SyncDirectory(GetUserDir(newkey));
+                    // rebuild an old one
+                    CreateNewUser(oldname, oldkey);
+                    newuser = FindOrCreateUser(newname);
+                    return newuser;
+                }
+
+                writeToLog("USERTRACE: Copying old user .. and making new: " + newuser);
+                // remove old acct from dict
+                BotUsers.Remove(oldkey);
+                // grab it into new user
+                newuser = olduser;
+                BotUsers[newkey] = newuser;
+                newuser.IsRoleAcct = false;
+                newuser.ListeningGraph = GetUserGraph(newkey, GraphMaster);
+                newuser.UserID = newkey;
+                newuser.UserName = newname;
+                newuser.SyncDirectory(GetUserDir(newkey));
+                // rebuild an old one
+                CreateNewUser(oldname, oldkey);
+                return newuser;
+
+
+
+                writeToLog("USERTRACE: ChangeUser " + oldname + " -> " + newname);
+
+                WriteUserInfo(writeToLog, " olduser='" + oldname + "' ", olduser);
+                WriteUserInfo(writeToLog, " newuser='" + newname + "' ", newuser);
+
                 if (olduser == null)
                 {
                     if (newuser == null)
                     {
+                        writeToLog("USERTRACE: Neigther acct found so creating clean: " + newname);
                         newuser = FindOrCreateUser(newname);
+                        return newuser;
                     }
-                    return;
+                    if (newuser.IsRoleAcct)
+                    {
+                        writeToLog("USERTRACE: User acct IsRole: " + newname);
+                        newuser.UserName = newname;
+                        return newuser;
+                    }
+                    writeToLog("USERTRACE: User acct found: " + newname);
+                    newuser = FindOrCreateUser(newname);
+                    return newuser;
+                }
+
+                if (newuser == olduser)
+                {
+                    writeToLog("USERTRACE: Same accts found: " + newname);
+                    LastUser.UserName = newname;
+                    return newuser;
                 }
 
                 // old user existed
                 if (newuser != null)
                 {
-                    // copy settings
-                    newuser.LoadDirectory(olduser.UserDirectory);
-                }
-
-                if (UnknowableName(oldname))
-                {
-                    User nextuser = CreateNewUser(oldname, oldkey);
-                    BotUsers[oldkey] = nextuser;
-                }
-
-                BotUsers[newkey] = olduser;
-                olduser.Predicates.addSetting("name", newname);
-            }
-        }
-
-        public string SetUser(string user, string lastKnownUser, OutputDelegate ConsoleWriteLine)
-        {
-            string setUser;
-            ConsoleWriteLine("<- SetUser=" + user + " lastKnownUser=" + lastKnownUser);
-            if (UnknowableName(user))
-            {
-                if (UnknowableName(lastKnownUser))
-                {
-                    ConsoleWriteLine("THEREFORE Same persom with still unknown name (make one up)");
-                    setUser = lastKnownUser = UNKNOWN_PARTNER;
-                }
-                else
-                {
-                    ConsoleWriteLine("THEREFORE New Person with unknown name");
-                    setUser = lastKnownUser = user;
-                }
-            }
-            else
-            {
-                if (UnknowableName(lastKnownUser))
-                {
-                    ConsoleWriteLine("THEREFORE Same Person now known name");
-                    RenameUser(lastKnownUser, user);
-                    setUser = lastKnownUser = user;
-                }
-                else
-                {
-                    if (SameUser(lastKnownUser, user))
+                    if (newuser.IsRoleAcct)
                     {
-                        ConsoleWriteLine("THEREFORE Different Person with known name");
-                        setUser = user;
-                        lastKnownUser = user;
+                        if (olduser.IsRoleAcct)
+                        {
+                            writeToLog(
+                                "USERTRACE: both acct are RoleAcct .. normaly shouldnt happen but just qa boring switchusers ");
+                            return newuser;
+                        }
+                        writeToLog("USERTRACE: New acct is RoleAcct .. so rebuilding: " + newkey);
+                        // remove old "new" acct from dict
+                        BotUsers.Remove(newkey);
+                        // kill its timer!
+                        newuser.Dispose();
+                        newuser = FindOrCreateUser(newname);
+                        return newuser;
                     }
                     else
                     {
-                        ConsoleWriteLine("THEREFORE New Person with known name");
-                        setUser = user;
-                        lastKnownUser = user;
+                        writeToLog("USERTRACE: old acct is just some other user so just switching to: " + newname);
+                        newuser = FindOrCreateUser(newname);
+                        return newuser;
                     }
                 }
+                else
+                {
+                    if (olduser.IsRoleAcct)
+                    {
+                        writeToLog("USERTRACE: Copying old RoleAcct .. and making new: " + newuser);
+                        // remove old acct from dict
+                        BotUsers.Remove(oldkey);
+                        // grab it into new user
+                        newuser = olduser;
+                        BotUsers[newkey] = newuser;
+                        newuser.IsRoleAcct = false;
+                        newuser.ListeningGraph = GetUserGraph(newkey, GraphMaster);
+                        newuser.UserID = newkey;
+                        newuser.UserName = newname;
+                        newuser.SyncDirectory(GetUserDir(newkey));
+                        // rebuild an old one
+                        CreateNewUser(oldname, oldkey);
+                        return newuser;
+                    }
+                    else
+                    {
+                        writeToLog("USERTRACE: old acct is just some other user so just creating: " + newname);
+                        newuser = FindOrCreateUser(newname);
+                        return newuser;
+                    }
+                }
+
+                writeToLog("USERTRACE: ERROR, Totally lost so using FindOrCreate and switching to: " + newname);
+                newuser = FindOrCreateUser(newname);
+                return newuser;
             }
-            user = setUser;
-            ConsoleWriteLine("-> SetUser=" + user + " lastKnownUser=" + lastKnownUser);
-            return user;
         }
 
         public static bool UnknowableName(string user)
@@ -441,6 +513,7 @@ namespace RTParser
         {
             lock (BotUsers)
             {
+                fullname = CleanupFromname(fullname);
                 if (null == fullname)
                 {
                     return false;
@@ -498,7 +571,7 @@ namespace RTParser
 
         public bool IsLastKnownUser(string fromname)
         {
-            //if (LastUser == null) return false;
+            //if (LastUser != null && LastUser.IsKnownAs(fromname)) return false;
             return (string.IsNullOrEmpty(fromname) || fromname.Trim() == "null");
         }
     }

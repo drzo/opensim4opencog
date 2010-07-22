@@ -1,6 +1,6 @@
 using System;
 
-namespace RTParser.Utils
+namespace RTParser.Variables
 {
     public delegate Unifiable GetUnifiable();
     //public delegate void SetUnifiable(Unifiable unifiable);

@@ -17,6 +17,7 @@ using RTParser.AIMLTagHandlers;
 using RTParser.Database;
 using RTParser.Normalize;
 using RTParser.Utils;
+using RTParser.Variables;
 using RTParser.Web;
 using UPath = RTParser.Unifiable;
 using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
@@ -636,7 +637,7 @@ namespace RTParser
                 this.PersonSubstitutions = new SettingsDictionary("bot.personsubstitutions", this, null);
                 this.Substitutions = new SettingsDictionary("bot.substitutions", this, null);
                 this.DefaultPredicates = new SettingsDictionary("bot.defaultpredicates", this, null);
-                this.HeardPredicates = new RTParser.Utils.SettingsDictionary("bot.heardpredicates", this, null);
+                this.HeardPredicates = new SettingsDictionary("bot.heardpredicates", this, null);
 
                 this.CustomTags = new Dictionary<string, TagHandler>();
                 //this.GraphMaster = new GraphMaster();

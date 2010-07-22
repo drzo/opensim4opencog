@@ -1,6 +1,7 @@
 using System.Reflection;
+using RTParser.Utils;
 
-namespace RTParser.Utils
+namespace RTParser.Variables
 {
     internal class ObjectPropertyDictionary : ISettingsDictionary
     {

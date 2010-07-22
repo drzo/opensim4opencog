@@ -15,6 +15,7 @@ using RTParser;
 using cogbot;
 using cogbot.Utilities;
 using RTParser.Utils;
+using RTParser.Variables;
 using Exception=System.Exception;
 using Math=System.Math;
 using String=System.String;
