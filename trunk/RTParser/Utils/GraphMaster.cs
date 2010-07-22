@@ -571,6 +571,7 @@ namespace RTParser.Utils
                     {
                         continue;
                     }
+                    if (hide.Length > 300000) hide = "";
                     hide += ss;
                     fs.Write(ss + "<!-- " + ci.CategoryInfo.SourceInfo() + " -->\n");
                 }

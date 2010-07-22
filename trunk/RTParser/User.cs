@@ -603,7 +603,7 @@ namespace RTParser
             if (var == "")
             {
                 console(Predicates.ToDebugString());
-                UserManager.WriteUserInfo(console, "", this);
+                RTPBot.WriteUserInfo(console, "", this);
                 return true;
             }
             if (value == "")

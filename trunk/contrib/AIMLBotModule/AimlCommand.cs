@@ -123,7 +123,7 @@ namespace AIMLBotModule
             {
                 myUser.CurrentRequest = null;
                 String useOut = WorldSystemModule.AIMLInterpScored(joined, myUser, out ratng);
-                double scored = ratng*14;
+                double scored = ratng;
                 WorldSystemModule.MyBot.writeToLog("REALWORLD AIMLTRACE! '" + joined + "' " + scored + " '" + useOut +
                                                    "'");
                 if (String.IsNullOrEmpty(useOut)) useOut = "Interesting.";
