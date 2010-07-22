@@ -52,7 +52,7 @@ namespace MushDLR223.Utilities
         HttpServer.HttpListener _listener;
         private int _port;
         private ScriptExecutorGetter clientManager;
-        private string defaultUser = "UNKNOWN_PARTNER";
+        private string defaultUser = "null";
 
         public ClientManagerHttpServer(ScriptExecutorGetter bc, int port)
         {
@@ -245,11 +245,11 @@ namespace MushDLR223.Utilities
                     if (String.IsNullOrEmpty(username))
                     {
                         //res = _botClient.ExecuteCommand(cmd + " " + text, wrresp.WriteLine);
-                        res = _botClient.ExecuteCommand("aiml @ " + defaultUser + " - " + text, wrresp.WriteLine);
+                        res = _botClient.ExecuteCommand("aiml @withuser " + defaultUser + " - " + text, wrresp.WriteLine);
                     }
                     else
                     {
-                        res = _botClient.ExecuteCommand("aiml @ " + username + " - " + text, wrresp.WriteLine);
+                        res = _botClient.ExecuteCommand("aiml @withuser " + username + " - " + text, wrresp.WriteLine);
                     }
                     AddToBody(response, "");
                     AddToBody(response, "\n<!-- End Response !-->");
