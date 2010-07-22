@@ -52,6 +52,7 @@ namespace RTParser.AIMLTagHandlers
                 // try to use a global blackboard predicate
                 bool newlyCreated;
                 RTParser.User gUser = this.user.bot.FindOrCreateUser("globalPreds", out newlyCreated);
+                if (newlyCreated) gUser.IsRoleAcct = true;
 
                 var thisRequestPredicates = this.request.Predicates;
                 if (GetAttribValue("type", null) == "bot") thisRequestPredicates = request.Proccessor.GlobalSettings;

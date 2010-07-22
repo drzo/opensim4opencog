@@ -159,8 +159,9 @@ namespace RTParser
             set
             {
                 string saved = value.Replace("_", " ");
-                if (this.Predicates != null && Predicates.containsSettingCalled("name"))
+                if (this.Predicates != null)
                 {
+                    //Predicates.addSetting("id", bot.KeyFromUsername(value));
                     Predicates.addSetting("name", saved);
                 }
             }
