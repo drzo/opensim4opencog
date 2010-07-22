@@ -8,6 +8,7 @@ using cogbot.Listeners;
 using cogbot.ScriptEngines;
 using MushDLR223.ScriptEngines;
 using RTParser.Utils;
+using RTParser.Variables;
 
 namespace PrologScriptEngine
 {

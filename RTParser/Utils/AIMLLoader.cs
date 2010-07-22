@@ -7,6 +7,7 @@ using System.IO;
 using System.Text;
 using MushDLR223.ScriptEngines;
 using RTParser.AIMLTagHandlers;
+using RTParser.Variables;
 using UPath = RTParser.Unifiable;
 using MushDLR223.Virtualization;
 
@@ -357,7 +358,7 @@ namespace RTParser.Utils
                 }
                 if (currentNodeName == "item")
                 {
-                    SettingsDictionary.loadSettingNode(request.Settings, currentNode);
+                    SettingsDictionary.loadSettingNode(request.Settings, currentNode, true, false);
                 }
 
                 if (currentNodeName == "topic")

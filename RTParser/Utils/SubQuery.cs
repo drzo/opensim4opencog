@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using AIMLbot;
+using RTParser.Variables;
 using UPath = RTParser.Unifiable;
 using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
 

@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Text;
 using RTParser;
 using RTParser.Utils;
+using RTParser.Variables;
 
 namespace RTParser
 {
@@ -40,6 +41,7 @@ namespace RTParser
         DateTime TimesOutAt { get; set; }
         ISettingsDictionary Settings { get; set; }
         int MaxInputs { get; set; }
+       // bool GraphsAcceptingUserInput { get; }
         void WriteLine(string s, object[] args);
         bool IsComplete(Result o);
         bool addSetting(string name, Unifiable unifiable);
