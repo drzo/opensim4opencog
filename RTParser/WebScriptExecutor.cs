@@ -10,7 +10,7 @@ namespace RTParser.Web
         #region Implementation of ScriptExecutorGetter
 
         private RTPBot TheBot;
-        private User myUser;
+        //private User myUser;
 
         public WebScriptExecutor(RTPBot bot)
         {
@@ -44,7 +44,7 @@ namespace RTParser.Web
             }
             if (!s.StartsWith("@")) s = "@" + s;
        //     sw.WriteLine("AIMLTRACE " + s);
-            myUser = TheBot.LastUser;
+            User myUser = TheBot.LastUser;
             //OutputDelegate del = outputDelegate ?? sw.WriteLine;
             bool r = TheBot.BotDirective(myUser, s, sw.WriteLine);
             sw.Flush();

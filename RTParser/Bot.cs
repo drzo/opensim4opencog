@@ -2698,11 +2698,23 @@ The AIMLbot program.
                 {
                     string user = args.Substring(0, lastIndex).Trim();
                     string value = args.Substring(lastIndex + 1).Trim();
-                    var r = GetRequest(value, args);
+                    var r = GetRequest(value, user);
                     r.IsTraced = true;
                     var res = Chat0(r, r.Graph);
                     double scored = res.Score;
-                    string useOut = MyBot.CleanupCyc(res.Output).AsString().Replace(" _", " ");
+                    Unifiable resOutput = res.Output;
+                    string useOut = "Interesting.";
+                    string oTest = resOutput.AsString();
+                    if (!string.IsNullOrEmpty(oTest))
+                    {
+                        useOut = MyBot.CleanupCyc(oTest).AsString();   
+                    }
+                    if (string.IsNullOrEmpty(useOut))
+                    {
+                        useOut = "Interesting.";
+                        scored = 0.5;
+                    }
+                    else useOut = useOut.Replace(" _", " ");
                     if (!useOut.Contains("mene value=")) useOut = useOut + " mene value=" + scored;
                     console(useOut);
                 }
