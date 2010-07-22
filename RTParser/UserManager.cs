@@ -32,7 +32,7 @@ namespace RTParser
                 console("@rmuser <userid> -- removes a users from the user dictionary\n (best if used after a rename)");
             if (cmd == "rmuser")
             {
-                string name = RTPBot.KeyFromUsername(args);
+                string name = myBot.KeyFromUsername(args);
                 if (args!=name)
                 {
                     console("use @rmuser " + name);
@@ -41,30 +41,13 @@ namespace RTParser
                 myBot.RemoveUser(name);
                 return true;
             }
-            if (showHelp) console("@rename <full name> [- <old user>]");
-            if (cmd == "rename")
-            {
-                string user, value;
-                int found = RTPBot.DivideString(args, "-", out user, out value);
-                if (found==1)
-                {
-                    value = myUser.UserID;
-                } else
-                {
-                    if (found == 0) console("@rename <full name> [- <old user>]");
-                }
-                myBot.RenameUser(value, user);
-                console("Renamed: " + user + " is now known to be " + value);
-                return true;
-            }
-
-            if (showHelp) console("@setuser <full name>");
+            if (showHelp) console("@setuser <full name> -- Finds or creates and acct and changes the LastUser (current user)");
             if (cmd == "setuser")
             {
                 myBot.LastUser = myBot.FindOrCreateUser(args);
                 return true;
             }
-            if (showHelp) console("@chuser <full name> [- <old user>]");
+            if (showHelp) console("@chuser <full name> [- <old user>] --  'old user' if not specified, uses LastUser. \n  Changes the LastUser (current user) and copies the user settings if the old acct was a 'role acct' and reloads the prevoius role settings.");
             if (cmd == "chuser")
             {
                 string oldUser = null;// myUser ?? LastUser.ShortName ?? "";
@@ -72,14 +55,27 @@ namespace RTParser
                 int lastIndex = args.IndexOf("-");
                 if (lastIndex > 0)
                 {
-                    oldUser = args.Substring(lastIndex + 1).Trim();
+                    oldUser = args.Substring(lastIndex).Trim();
                     newUser = args.Substring(0, lastIndex).Trim();
                 }
-                if (oldUser != null)
+                myBot.LastUser = myBot.ChangeUser(oldUser,newUser);
+                return true;
+            }
+            if (showHelp) console("@rename <full name> [- <old user>] -- if 'old user' if not specified, uses LastUser.\n  if the old user is a role acct, then is the same as @chuser (without resetting current user).  otherwise creates a dictionary alias ");
+            if (cmd == "rename")
+            {
+                string user, value;
+                int found = RTPBot.DivideString(args, "-", out user, out value);
+                if (found == 1)
                 {
-                    myBot.RenameUser(oldUser, newUser);
+                    value = myUser.UserID;
                 }
-                myBot.LastUser = myBot.FindOrCreateUser(newUser);
+                else
+                {
+                    if (found == 0) console("use: @rename <full name> [- <old user>]");
+                }
+                myBot.RenameUser(value, user);
+                console("Renamed: " + user + " is now known to be " + value);
                 return true;
             }
             if (showHelp) console("@users  --- lists users");
@@ -90,20 +86,15 @@ namespace RTParser
                 foreach (var kv in myBot.BotUsers)
                 {
                     console("-----------------------------------------------------------------");
-                    User user = kv.Value;
-                    if (user == null)
-                    {
-                        console("userid='" + kv.Key
-                                + "' NULL");
-                        continue;
-                    }
-                    console("userid='" + kv.Key
-                            + "' UserID='" + user.UserID
-                            + "' UserName='" + user.UserName + "'");
-                    console(user.Predicates.ToDebugString());
+                    WriteUserInfo(console, "key=" + kv.Key, kv.Value);
                     console("-----------------------------------------------------------------");
                 }
                 console("------------ENDS USERS----------------------------------");
+                console("-----------------------------------------------------------------");
+                WriteUserInfo(console, "LastUser: ", myBot.LastUser);
+                WriteUserInfo(console, "Command caller: ", myUser);
+                console("-----------------------------------------------------------------");
+                
                 return true;
             }
             if (cmd.StartsWith("jmx"))
@@ -112,6 +103,23 @@ namespace RTParser
                 return true;
             }
             return false;
+        }
+
+        public static void WriteUserInfo(OutputDelegate console, string name, User user)
+        {
+
+            if (user == null)
+            {
+                console(name + " NOUSER");
+                return;
+            }
+            console(name
+                    + " UserID='" + user.UserID
+                    + "' UserName='" + user.UserName
+                    + "' name='" + user.Predicates.grabSettingNoDebug("name")
+                    + "' roleacct='" + user.IsRoleAcct
+                    + "' ListeningGraph=" + user.ListeningGraph
+                    + "");
         }
     }
 }
