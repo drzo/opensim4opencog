@@ -47,11 +47,50 @@ namespace MushDLR223.Virtualization
         }
 
         static public readonly object ExistenceLock = new object();
+
+
         public static bool BackupFile(string filename)
+        {
+            return BackupFile(filename, true);
+        }
+        public static bool BackupFile(string filename, bool onlyOne)
         {
             lock (ExistenceLock)
             {
                 if (!FileExists(filename)) return true;
+                if (!onlyOne) return BackupFileMulti(filename);
+                string backname = filename + ".0" + BackupExt;
+                if (FileExists(backname))
+                {
+                    if (!DeleteFile(backname)) return false;
+                }
+                return FileMove(filename, backname);
+            }
+
+        }
+
+        public static bool DeleteFile(string filename)
+        {
+            if (!FileExists(filename)) return true;
+            try
+            {
+                File.Delete(filename);
+                return true;
+            }
+            catch (Exception exception)
+            {
+                writeToLog("DELETE FILE: '" + filename + "' " + exception);
+                return !FileExists(filename);
+            }
+        }
+
+        public static bool BackupFileMulti(string filename)
+        {
+            lock (ExistenceLock)
+            {                
+                if (!FileExists(filename)) return true;
+
+
                 string backname = filename + ".0" + BackupExt;
                 int i = 0;
                 while (FileExists(backname))
