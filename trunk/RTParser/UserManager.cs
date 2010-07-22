@@ -169,6 +169,11 @@ namespace RTParser
             lock (BotUsers)
             {
                 if (BotUsers.ContainsKey(key)) return BotUsers[key];
+                if (UnknowableName(fromname))
+                {
+                    var unk = UNKNOWN_PARTNER.ToLower();
+                    if (BotUsers.ContainsKey(unk)) return BotUsers[unk];                    
+                }
                 return null;
             }
         }
