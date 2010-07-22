@@ -979,8 +979,6 @@ namespace RTParser
         {
             lock (BotUsers)
             {
-
-                fromname = fromname ?? UNKNOWN_PARTNER;
                 bool b;
                 User user = FindOrCreateUser(fromname, out b);
                 user.UserName = fromname;
@@ -990,7 +988,7 @@ namespace RTParser
 
         public User FindUser(string fromname)
         {
-            if (String.IsNullOrEmpty(fromname)) return LastUser;
+            if (IsLastKnownUser(fromname)) return LastUser;
             string key = fromname.ToLower().Trim();
             lock (BotUsers)
             {
@@ -1076,7 +1074,12 @@ namespace RTParser
                         LastUser = newuser;
                         return newuser;
                     }
-
+                    if (newuser.IsRoleAcct)
+                    {
+                        writeDebugLine("USERTRACE: User acct IsRole: " + newname);
+                        newuser.UserName = newname;
+                        return newuser;                        
+                    }
                     writeDebugLine("USERTRACE: User acct found: " + newname);
                     newuser = FindOrCreateUser(newname);
                     LastUser = newuser;
@@ -1086,6 +1089,7 @@ namespace RTParser
                 if (newuser == olduser)
                 {
                     writeDebugLine("USERTRACE: Same accts found: " + newname);
+                    LastUser.UserName = newname;
                     LastUser = newuser;
                     return newuser;
                 }
@@ -1277,7 +1281,7 @@ namespace RTParser
             {
                 if (LastUser != null)
                 {
-                    fromname = LastUser.UserID;
+                    return LastUser.UserName;
                 }
                 else
                 {
@@ -1306,8 +1310,8 @@ namespace RTParser
 
         public bool IsLastKnownUser(string fromname)
         {
-            if (LastUser != null) return false;
-            return (string.IsNullOrEmpty(fromname) || fromname == "null");
+            //if (LastUser == null) return false;
+            return (string.IsNullOrEmpty(fromname) || fromname.Trim() == "null");
         }
 
         public void AddAiml(string aimlText)
@@ -1682,7 +1686,7 @@ namespace RTParser
 
         private AIMLbot.Result Chat0000(Request request, User user, GraphMaster G)
         {
-            LastUser = user;
+            //LastUser = user;
             AIMLbot.Result result;
 
             bool isTraced = request.IsTraced || G == null;
@@ -2897,7 +2901,6 @@ The AIMLbot program.
             writeLine(Environment.NewLine);
             writeLine("Botname: " + myName);
             writeLine(Environment.NewLine);
-            User myUser = myBot.FindOrCreateUser(null); // UNKNOWN_PARTNER
             myBot.isAcceptingUserInput = false;
             myBot.loadAIMLFromDefaults();
             writeLine("-----------------------------------------------------------------");
@@ -2911,6 +2914,7 @@ The AIMLbot program.
                                   "";
             //Added from AIML content now
             // myBot.AddAiml(evidenceCode);
+            User myUser = myBot.LastUser;
             myBot.BotDirective(myUser, "@log " + AIMLDEBUGSETTINGS, Console.Error.WriteLine);
             writeLine("-----------------------------------------------------------------");
             myBot.BotDirective(myUser, "@help", writeLine);
@@ -3029,9 +3033,12 @@ The AIMLbot program.
             if (cmd == "withuser" || cmd == "@")
             {
                 int lastIndex = args.IndexOf("-");
-                string user = args.Substring(0, lastIndex + 1).Trim();
-                string value = args.Substring(lastIndex + 1).Trim();
-                console(ChatString(value, user));
+                if (lastIndex > -1)
+                {
+                    string user = args.Substring(0, lastIndex - 1).Trim();
+                    string value = args.Substring(lastIndex + 1).Trim();
+                    console(ChatString(value, user));
+                }
                 return true;
             }
 
@@ -3176,7 +3183,7 @@ The AIMLbot program.
                 return true;
             }
 
-            if (showHelp) console("@user [var [value]]");
+            if (showHelp) console("@user [var [value]] -- lists or changes the current users get/set vars.");
             if (cmd == "user")
             {
                 return myUser.DoUserCommand(args, console);

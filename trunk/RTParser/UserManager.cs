@@ -17,7 +17,7 @@ namespace RTParser
             {
                 input = input.TrimStart(new[] { ' ', '@' });
             }
-            myUser = myUser ?? myBot.LastUser ?? myBot.FindOrCreateUser(null);
+           // myUser = myUser ?? myBot.LastUser ?? myBot.FindOrCreateUser(null);
             int firstWhite = input.IndexOf(' ');
             if (firstWhite == -1) firstWhite = input.Length - 1;
             string cmd = input.Substring(0, firstWhite + 1).Trim().ToLower();
@@ -97,7 +97,7 @@ namespace RTParser
                 
                 return true;
             }
-            if (cmd.StartsWith("jmx"))
+            if (cmd.Contains("jmx"))
             {
                 RTPBot.writeDebugLine("JMXTRACE: " + args);
                 return true;
