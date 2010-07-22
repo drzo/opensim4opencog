@@ -32,6 +32,7 @@ namespace RTParser
 
         public static int DefaultMaxResultsSaved = 3;
         public int MaxResultsSaved = DefaultMaxResultsSaved;
+        public bool IsRoleAcct = false;
 
         /// <summary>
         /// The local instance of the GUID that identifies this user to the bot
@@ -60,7 +61,7 @@ namespace RTParser
             }
             try
             {
-
+                if (IsRoleAcct) return;
                 SaveDirectory(_saveToDirectory);
             }
             catch (Exception exception)
@@ -137,9 +138,33 @@ namespace RTParser
         public Unifiable UserID
         {
             get { return this.id; }
+            set
+            {
+                this.id = value;
+                if (Predicates != null) Predicates.addSetting("id", value);
+            }
         }
 
-        public string UserName;
+        public string UserName
+        {
+            get
+            {
+                if (this.Predicates != null && Predicates.containsSettingCalled("name"))
+                {
+                    return Predicates.grabSettingNoDebug("name");
+                }
+                return ShortName.Replace("_", " ");
+            }
+
+            set
+            {
+                string saved = value.Replace("_", " ");
+                if (this.Predicates != null && Predicates.containsSettingCalled("name"))
+                {
+                    Predicates.addSetting("name", saved);
+                }
+            }
+        }
 
         /// <summary>
         /// A collection of all the result objects returned to the user in this session
@@ -234,7 +259,10 @@ namespace RTParser
         {
             get
             {
-                if (this.Predicates != null && Predicates.containsSettingCalled("name")) return Predicates.grabSettingNoDebug("name");
+                if (this.Predicates != null && Predicates.containsSettingCalled("name"))
+                {
+                    return Predicates.grabSettingNoDebug("name");
+                }
                 return UserID.AsString().ToLower().Replace(" ", "_");
             }
         }
@@ -574,6 +602,7 @@ namespace RTParser
             if (var == "")
             {
                 console(Predicates.ToDebugString());
+                UserManager.WriteUserInfo(console, "", this);
                 return true;
             }
             if (value == "")
@@ -590,7 +619,6 @@ namespace RTParser
             try
             {
                 bot.writeToLog("USERTRACE: {0} {1}", UserName ?? UserID, string.Format(s, objects));
-                Console.WriteLine("USERTRACE: {0} {1}", UserName ?? UserID, string.Format(s, objects));
             }
             catch(Exception exception)
             {
@@ -699,6 +727,7 @@ namespace RTParser
             }
             LoadDirectory(userdir);
             if (userdir != null) Predicates.addSetting("userdir", userdir);
+            if (IsRoleAcct) return;
             SaveDirectory(userdir);
         }
 

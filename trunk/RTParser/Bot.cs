@@ -46,7 +46,7 @@ namespace RTParser
         /// </summary>
         public bool StaticLoader = true;
 
-        public static string AIMLDEBUGSETTINGS = "clear -spam +error +aimltrace +cyc -dictlog -tscore +loaded";
+        public static string AIMLDEBUGSETTINGS = "clear -spam +user +error +aimltrace +cyc -dictlog -tscore +loaded";
         readonly public static TextFilter LoggedWords = new TextFilter() { "*", "-dictlog" }; //maybe should be ERROR", "STARTUP
         public User LastUser;
         readonly public User BotAsUser;
@@ -481,6 +481,7 @@ namespace RTParser
             TheNLKB = new NatLangDb(this);
             this.setup();
             BotAsUser = new AIMLbot.User("MySelf", this);
+            BotAsUser.IsRoleAcct = true;
             BotAsUser.ListeningGraph = HeardSelfSayGraph;
             BotAsUser.Predicates = GlobalSettings;
             //            BotAsRequestUsed = new AIMLbot.Request("-bank-input-", BotAsUser, this, null);
@@ -751,6 +752,8 @@ namespace RTParser
             Person2Substitutions.NoDebug = PersonSubstitutions.NoDebug = GenderSubstitutions.NoDebug = Substitutions.NoDebug = true;
             // Grab the splitters for this Proccessor
             this.loadSplitters(Path.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("splittersfile")));
+            LastUser = FindOrCreateUser(UNKNOWN_PARTNER);
+            LastUser.IsRoleAcct = true;
         }
 
         private void SetSaneGlobals(ISettingsDictionary settings)
@@ -768,7 +771,7 @@ namespace RTParser
             this.AdminEmail = SaneLocalSettings(settings, "adminemail", "");
             SaneLocalSettings(settings, "islogging", "False");
             SaneLocalSettings(settings, "willcallhome", "False");
-            SaneLocalSettings(settings, "timeout", "2000");
+            SaneLocalSettings(settings, "timeout", "5000");
             SaneLocalSettings(settings, "timeoutmessage", "ERROR: The request has timed out.");
             SaneLocalSettings(settings, "culture", "en-US");
             SaneLocalSettings(settings, "splittersfile", "Splitters.xml");
@@ -979,13 +982,15 @@ namespace RTParser
 
                 fromname = fromname ?? UNKNOWN_PARTNER;
                 bool b;
-                return FindOrCreateUser(fromname, out b);
+                User user = FindOrCreateUser(fromname, out b);
+                user.UserName = fromname;
+                return user;
             }
         }
 
         public User FindUser(string fromname)
         {
-            if (String.IsNullOrEmpty(fromname)) return null;
+            if (String.IsNullOrEmpty(fromname)) return LastUser;
             string key = fromname.ToLower().Trim();
             lock (BotUsers)
             {
@@ -1019,9 +1024,15 @@ namespace RTParser
                 if (!UnknowableName(fullname))
                 {
                     myUser.Predicates.addSetting("name", fullname);
+                    myUser.IsRoleAcct = false;
+                    myUser.ListeningGraph = GetUserGraph(key, GraphMaster);
+                } else
+                {
+                    myUser.IsRoleAcct = true;                    
+                    myUser.ListeningGraph = GetUserGraph(key, GraphMaster);
                 }
                 myUser.Predicates.addSetting("name", fullname);
-                string userdir = GetUserDir(key);
+                string userdir = GetUserDir(key);                
                 myUser.SyncDirectory(userdir);
                 return myUser;
             }
@@ -1032,6 +1043,110 @@ namespace RTParser
             string userDir = HostSystem.Combine(this.PathToUserDir, key);
             HostSystem.CreateDirectory(userDir);
             return HostSystem.ToRelativePath(userDir);
+        }
+
+
+        public User ChangeUser(string oldname, string newname)
+        {
+            lock (BotUsers)
+            {
+                oldname = oldname ?? LastUser.UserName;
+                oldname = CleanupFromname(oldname);
+                string oldkey = KeyFromUsername(oldname);
+
+                newname = newname ?? LastUser.UserName;
+                newname = CleanupFromname(newname);
+                string newkey = KeyFromUsername(newname);
+
+
+                User newuser = FindUser(newkey);
+                User olduser = FindUser(oldname);
+
+                writeDebugLine("USERTRACE: ChangeUser " + oldname + " -> " + newname);
+
+                UserManager.WriteUserInfo(writeDebugLine, " olduser='" + oldname + "' ", olduser);
+                UserManager.WriteUserInfo(writeDebugLine, " newuser='" + newname + "' ", newuser);
+
+                if (olduser == null)
+                {
+                    if (newuser == null)
+                    {
+                        writeDebugLine("USERTRACE: Neigther acct found so creating clean: " + newname);
+                        newuser = FindOrCreateUser(newname);
+                        LastUser = newuser;
+                        return newuser;
+                    }
+
+                    writeDebugLine("USERTRACE: User acct found: " + newname);
+                    newuser = FindOrCreateUser(newname);
+                    LastUser = newuser;
+                    return newuser;
+                }
+
+                if (newuser == olduser)
+                {
+                    writeDebugLine("USERTRACE: Same accts found: " + newname);
+                    LastUser = newuser;
+                    return newuser;
+                }
+
+                // old user existed
+                if (newuser != null)
+                {
+                    if (newuser.IsRoleAcct)
+                    {
+                        if (olduser.IsRoleAcct)
+                        {
+                            writeDebugLine("USERTRACE: both acct are RoleAcct .. normaly shouldnt happen but just qa boring switchusers ");
+                            LastUser = newuser;
+                            return newuser;
+                        }
+                        writeDebugLine("USERTRACE: New acct is RoleAcct .. so rebuilding: " + newkey);
+                        // remove old "new" acct from dict
+                        BotUsers.Remove(newkey);
+                        newuser = FindOrCreateUser(newname);
+                        LastUser = newuser;
+                        return newuser;
+                    } else
+                    {
+                        writeDebugLine("USERTRACE: old acct is just some other user so just switching to: " + newname);
+                        newuser = FindOrCreateUser(newname);
+                        LastUser = newuser;
+                        return newuser;
+                    }
+                } else
+                {
+                    if (olduser.IsRoleAcct)
+                    {
+                        writeDebugLine("USERTRACE: Copying old RoleAcct .. and making new: " + newuser);
+                        // remove old acct from dict
+                        BotUsers.Remove(oldkey);
+                        // grab it into new user
+                        LastUser = newuser = olduser;
+                        BotUsers[newkey] = newuser;
+                        newuser.IsRoleAcct = false;
+                        newuser.ListeningGraph = GetUserGraph(newkey, GraphMaster);
+                        newuser.UserID = newkey;
+                        newuser.UserName = newname;
+                        newuser.SyncDirectory(GetUserDir(newkey));
+                        // rebuild an old one
+                        CreateNewUser(oldname, oldkey);
+                        return newuser;
+                    }
+                    else
+                    {
+                        writeDebugLine("USERTRACE: old acct is just some other user so just creating: " + newname);
+                        newuser = FindOrCreateUser(newname);
+                        LastUser = newuser;
+                        return newuser;
+                    }
+                }  
+
+                writeDebugLine("USERTRACE: ERROR, Totally lost so using FindOrCreate and switching to: " + newname);
+                newuser = FindOrCreateUser(newname);
+                LastUser = newuser;
+                return newuser;
+            }
         }
 
         public void RenameUser(string oldname, string newname)
@@ -1127,7 +1242,6 @@ namespace RTParser
             bool b = s.Contains("UNKNOWN") || s.Contains("UNREC") || s.Contains("UNNAME")
                 || s.Contains("UNSEEN") || s.Contains("DEFAULT") ||
                    s.Contains(" SOME") || s.Contains("*") || s.Contains(" _ ");
-            writeDebugLine("unknown " + user);
             return b;
         }
 
@@ -1157,30 +1271,43 @@ namespace RTParser
         }
 
 
-        public static string CleanupFromname(string fromname)
+        public string CleanupFromname(string fromname)
         {
-            if (null == fromname)
+            if (IsLastKnownUser(fromname))
             {
-                fromname = UNKNOWN_PARTNER;
+                if (LastUser != null)
+                {
+                    fromname = LastUser.UserID;
+                }
+                else
+                {
+                    fromname = UNKNOWN_PARTNER;
+                }
             }
-            else
+            fromname = fromname.Trim();
+            return fromname.Trim().Replace(" ", "_").Replace(".", "_").Replace("-", "_").Replace("__", "_");
+        }
+
+        public string KeyFromUsername(string fromname)
+        {
+            if (IsLastKnownUser(fromname))
             {
-                fromname = fromname.Trim();
-            }
-            if (string.IsNullOrEmpty(fromname))
-            {
-                fromname = UNKNOWN_PARTNER;
+                if (LastUser != null)
+                {
+                    fromname = LastUser.UserID;
+                }
             }
             if (UnknowableName(fromname))
             {
                 fromname = UNKNOWN_PARTNER;
             }
-            return fromname.Trim().Replace(" ", "_").Replace(".", "_").Replace("-", "_").Replace("__", "_");
+            return CleanupFromname(fromname).ToLower();
         }
 
-        public static string KeyFromUsername(string fromname)
+        public bool IsLastKnownUser(string fromname)
         {
-            return CleanupFromname(fromname).ToLower();
+            if (LastUser != null) return false;
+            return (string.IsNullOrEmpty(fromname) || fromname == "null");
         }
 
         public void AddAiml(string aimlText)
@@ -2898,22 +3025,22 @@ The AIMLbot program.
                 console("@quit -- exits the aiml subsystem");
             }
 
-            if (showHelp) console("@withuser <user> - <text>");
+            if (showHelp) console("@withuser <user> - <text>  -- (aka. simply @)  runs text/command not intentionally setting LastUser");
             if (cmd == "withuser" || cmd == "@")
             {
                 int lastIndex = args.IndexOf("-");
-                string user = args.Substring(0, lastIndex).Trim();
+                string user = args.Substring(0, lastIndex + 1).Trim();
                 string value = args.Substring(lastIndex + 1).Trim();
                 console(ChatString(value, user));
                 return true;
             }
 
-            if (showHelp) console("@aimladd <aiml/>");
+            if (showHelp) console("@aimladd [graphname] <aiml/> -- inserts aiml content into graph (default LastUser.ListeningGraph )");
             if (cmd == "aimladd")
             {
-                int indexof = args.IndexOf(" ");
-                string gn = args.Substring(0, indexof);
-                args = args.Substring(indexof + 1).Trim();
+                int indexof = args.IndexOf("<");
+                string gn = args.Substring(0, indexof - 1);
+                args = args.Substring(indexof).Trim();
                 GraphMaster g = GetGraph(gn, myUser.ListeningGraph);
                 AddAiml(g, args);
                 console("Done with " + args);
@@ -2926,7 +3053,7 @@ The AIMLbot program.
                 Prolog.CSPrologMain.Main(new string[] { args });
             }
 
-            if (showHelp) console("@reload");
+            if (showHelp) console("@reload -- reloads any changed files ");
             if (cmd == "reload")
             {
                 ReloadAll();
@@ -2945,7 +3072,7 @@ The AIMLbot program.
                 console("Done with " + args);
                 return true;
             }
-            if (showHelp) console("@say <text> - fakes that the bot just said it");
+            if (showHelp) console("@say <text> -- fakes that the bot just said it");
             if (cmd == "say")
             {
                 HeardSelfSayNow(args);
@@ -2954,7 +3081,7 @@ The AIMLbot program.
                 return true;
             }
 
-            if (showHelp) console("@set [var [value]]");
+            if (showHelp) console("@set [type] [name [value]] -- emulates get/set tag in AIML.  'type' defaults to =\"user\" therefore same as @user");
             if (cmd == "set")
             {
                 console(DefaultPredicates.ToDebugString());
@@ -2962,7 +3089,7 @@ The AIMLbot program.
                 return true;
             }
 
-            if (showHelp) console("@bot [var [value]]");
+            if (showHelp) console("@bot [var [value]] -- lists or changes the bot GlobalPredicates.");
             if (cmd == "bot")
             {
                 console(HeardPredicates.ToDebugString());
@@ -3145,13 +3272,22 @@ The AIMLbot program.
         public void RemoveUser(string name)
         {
             string keyname = KeyFromUsername(name);
-            if (BotUsers.Remove(name))
+            User user;
+            if (BotUsers.TryGetValue(name, out user))
             {
+                user.Dispose();
+                BotUsers.Remove(name);
                 writeToLog("USERTRACE: REMOVED " + name);
             } else
-                if (BotUsers.Remove(keyname))
+                if (BotUsers.TryGetValue(keyname, out user))
                 {
+                    user.Dispose();
+                    BotUsers.Remove(keyname);
                     writeToLog("USERTRACE: REMOVED " + keyname);
+                }
+                else
+                {
+                    writeToLog("USERTRACE: rmuser, No user by the name ='" + name + "'");
                 }
         }
 
