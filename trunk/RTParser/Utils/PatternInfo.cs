@@ -32,10 +32,12 @@ namespace RTParser.Utils
             p = p.Replace("_", "*");
             p = AIMLLoader.CleanWhitepacesLower(p);
             p = "<srai>" + p + "</srai>";
+
             var t = newTemplateInfo.InnerXml.ToLower();
             t = AIMLLoader.CleanWhitepacesLower(t);
-            t = t.Replace("<star/>", "*");
+            t = t.Replace("<star index=\"1\"/>", "*");
             t = t.Replace("<sr/>", "<srai>*</srai>");
+
             if (t.Contains(p))
             {
                 return true;
@@ -44,6 +46,12 @@ namespace RTParser.Utils
         }
         internal bool DivergesFrom(TemplateInfo newTemplateInfo,out Unifiable from,out Unifiable to)
         {
+            if (true)
+            {
+                from = "";
+                to = "";
+                return false;
+            }
             var p = FullPath.AsString().ToLower();
             p = p.Replace("_", "*");
             p = AIMLLoader.CleanWhitepacesLower(p);

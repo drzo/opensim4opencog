@@ -4,7 +4,7 @@ using System.Xml;
 namespace RTParser.Utils
 {
     [Serializable]
-    public class TemplateInfo : OutputInfo
+    public class TemplateInfo : OutputInfo, IAIMLInfo
     {
         public GuardInfo Guard;
         public ThatInfo That;
@@ -84,10 +84,15 @@ namespace RTParser.Utils
             }
         }
 
-        public string ToFileString()
+         public string ToFileString()
         {
             if (CategoryInfo != null) return CategoryInfo.ToFileString();
             return ToString();
         }
+    }
+
+    public interface IAIMLInfo
+    {
+        string ToFileString();
     }
 }

@@ -25,14 +25,14 @@ namespace RTParser.Utils
         private String graphName;
         private RTPBot theBot;
         public GraphMaster Srai;
-        static public bool NoIndexing = true;
+        static public bool NoIndexing = false;
         private bool FullDepth = true;
         readonly private List<GraphMaster> Parents = new List<GraphMaster>();
 
         /// <summary>
         /// All the &lt;category&gt;s (if any) associated with this database
         /// </summary>
-        readonly private List<CategoryInfo> CategoryInfos = new List<CategoryInfo>();
+        private List<CategoryInfo> CategoryInfos = new List<CategoryInfo>();
 
         /// <summary>
         /// All the &lt;pattern&gt;s (if any) associated with this database
@@ -67,7 +67,7 @@ namespace RTParser.Utils
         private bool UnTraced = false;
         private readonly List<GraphMaster> FallBacksGraphs = new List<GraphMaster>();
         public bool IsBusy;
-        private List<TemplateInfo> UnusedTemplates = new  List<TemplateInfo>();
+        private List<TemplateInfo> UnusedTemplates = new List<TemplateInfo>();
 
         public GraphMaster Parent
         {
@@ -416,7 +416,7 @@ namespace RTParser.Utils
                         pattern.disabled = true;
                     }
                 }
-                
+
                 if (toplevelBubble != null)
                 {
                     toplevelBubble.disabled = true;
@@ -472,14 +472,14 @@ namespace RTParser.Utils
             }
         }
 
-        public static IEnumerable<T> CopyOf<T>(List<T> list)
+        public static IList<T> CopyOf<T>(List<T> list)
         {
             lock (list)
             {
                 return list.ToArray();
             }
         }
-        public static IEnumerable<T> CopyOf<T>(IEnumerable<T> list)
+        public static IList<T> CopyOf<T>(IEnumerable<T> list)
         {
             var copy = new List<T>();
             lock (list)
@@ -580,20 +580,25 @@ namespace RTParser.Utils
             fs.WriteLine("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>");
             fs.WriteLine("<aiml graph=\"{0}\">", name);
             WriteMetaHeaders(fs.WriteLine);
+
+            List<CategoryInfo> skipped = new List<CategoryInfo>(1000);
+            List<CategoryInfo> written = new List<CategoryInfo>(10000);
             try
             {
                 string hide = "";
-                foreach (var ci in CopyOf(Templates))
+                foreach (var ci in CopyOf(CategoryInfos))
                 {
                     string c = ci.ToFileString();
-                    string ss = "" + AIMLLoader.CleanWhitepaces(c) + "\n";
+                    string ss = AIMLLoader.CleanWhitepaces(c) + "\n";
                     if (hide.Contains(ss))
                     {
+                        skipped.Add(ci);
                         continue;
                     }
-                    if (hide.Length > 300000) hide = "";
+                    if (hide.Length > 30000) hide = "";
                     hide += ss;
-                    fs.Write(ss + "<!-- " + ci.CategoryInfo.SourceInfo() + " -->\n");
+                    written.Add(ci);
+                    fs.Write(ss + "<!-- " + ci.SourceInfo() + " -->\n");
                 }
             }
             finally
@@ -601,6 +606,9 @@ namespace RTParser.Utils
                 fs.WriteLine("</aiml>");
                 fs.Flush();
                 fs.Close();
+                writeToLog("COMPLETE WRITTING " + this + " to " + filename + " written=" + CountOF(written) + " skipped=" + CountOF(skipped) + " original=" + CountOF(CategoryInfos));
+                this.CategoryInfos = written;
+                Size = CategoryInfos.Count;
             }
         }
 
@@ -632,9 +640,32 @@ namespace RTParser.Utils
         {
             lock (Templates)
             {
-              //  Templates.Remove(redundant);
+                //  Templates.Remove(redundant);
                 UnusedTemplates.Add(info);
             }
+        }
+
+        internal void AddRedundantCate(CategoryInfo category, TemplateInfo temp)
+        {
+            //  throw new NotImplementedException();
+        }
+
+        public IList<CategoryInfo> GetCategoriesMatching(string match)
+        {
+
+            if (match == null || match == "*" || match == "" || match == ".*")
+            {
+                return CopyOf(CategoryInfos);
+            }
+            List<CategoryInfo> cats = new List<CategoryInfo>();
+            foreach (CategoryInfo ci in CopyOf(CategoryInfos))
+            {
+                if (ci.Matches(match))
+                {
+                    cats.Add(ci);
+                }
+            }
+            return cats;
         }
     }
 }

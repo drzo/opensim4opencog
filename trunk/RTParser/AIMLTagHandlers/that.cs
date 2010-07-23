@@ -53,7 +53,7 @@ namespace RTParser.AIMLTagHandlers
                 }
                 //else if (this.templateNode.Attributes.Count == 1)
                 {
-                    var at1 = GetAttribValue("index", null).AsString();
+                    var at1 = GetAttribValue("index", null);//.Trim();
                     if (at1 != null)
                     {
                         if (at1.Length > 0)

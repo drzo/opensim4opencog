@@ -105,7 +105,7 @@ namespace RTParser.Utils
                                 {
                                     continue;
                                 }
-                                string v = ReduceStar(node.Value, query);
+                                Unifiable v = (Unifiable)ReduceStar(node.Value, query);
                                 savedValues = savedValues ?? query.GetFreshUndoStack();
                                 savedValues.pushValues(query, n, v);
                                 needsUnwind = true;
@@ -236,7 +236,7 @@ namespace RTParser.Utils
             return name;
         }
 
-        private static string GetDictData(List<Unifiable> unifiables, int i)
+        private static Unifiable GetDictData(List<Unifiable> unifiables, int i)
         {
             int ii = i - 1;
             int uc = unifiables.Count;
@@ -265,31 +265,8 @@ namespace RTParser.Utils
             Regex matcher = new Regex(value.AsString().Replace(" ", "\\s").Replace("*", "[\\sA-Z0-9]+"),
                                       RegexOptions.IgnoreCase);
             if (matcher.IsMatch(actualValue)) return true;
-            if (MeansUnknown(value) && (MeansUnknown(actualValue))) return true;
+            if (Unifiable.IsUnknown(value) && (Unifiable.IsUnknown(actualValue))) return true;
             return false;
-        }
-
-        public static bool MeansUnknown(Unifiable unifiable)
-        {
-            if (Unifiable.IsNullOrEmpty(unifiable)) return true;
-            string s = unifiable.AsString().ToLower();
-            switch (s)
-            {
-                case "":
-                    return true;
-                case "unknown":
-                    return true;
-                case "nothing":
-                    return true;
-                case "*":
-                    return true;
-                case "_":
-                    return true;
-                case "undefined":
-                    return true;
-                default:
-                    return false;
-            }
         }
 
         protected Unifiable templateNodeInnerText
@@ -694,7 +671,7 @@ namespace RTParser.Utils
 
         #endregion
 
-        protected Unifiable GetAttribValue(string attribName, Unifiable defaultIfEmpty)
+        protected string GetAttribValue(string attribName, string defaultIfEmpty)
         {
             return GetAttribValue(templateNode, attribName, defaultIfEmpty, query);
         }
@@ -716,7 +693,7 @@ namespace RTParser.Utils
             {
                 if (attrib.Name.ToLower() == attribName)
                 {
-                    Unifiable reduceStar = ReduceStar(attrib.Value, sq);
+                    string reduceStar = "" + ReduceStar(attrib.Value, sq);
                     try
                     {
                         return double.Parse(reduceStar);
@@ -729,6 +706,17 @@ namespace RTParser.Utils
                 }
             }
             return defaultIfEmpty;
+        }
+
+        protected string GetAttribValue(IEnumerable<string> attribNames, Func<string> defaultIfEmpty)
+        {
+            string ifMissing = "MISSING";
+            foreach (var name in attribNames)
+            {
+                string vv = GetAttribValue(templateNode, name, ifMissing, query);
+                if (vv != ifMissing) return vv;
+            }
+            return defaultIfEmpty();
         }
 
         /// <summary>

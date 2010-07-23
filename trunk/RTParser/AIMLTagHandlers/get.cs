@@ -61,7 +61,7 @@ namespace RTParser.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "get")
             {
-                string name = GetAttribValue("name", templateNodeInnerText.Trim());
+                string name = GetAttribValue(new[] { "name", "var" }, () => templateNodeInnerText.Trim());
                 Unifiable defaultVal = GetAttribValue("default", Unifiable.Empty);
                 ISettingsDictionary dict = query;
                 if (GetAttribValue("type", "") == "bot") dict = request.Proccessor.GlobalSettings;
@@ -72,10 +72,10 @@ namespace RTParser.AIMLTagHandlers
                 
                 // try to use a global blackboard predicate
                 bool newlyCreated;
-                RTParser.User gUser = this.user.bot.FindOrCreateUser("UNKNOWN_PARTNER", out newlyCreated);
+                RTParser.User gUser = this.user.bot.FindOrCreateUser("globalPreds", out newlyCreated);
                 Unifiable gResult = SettingsDictionary.grabSettingDefualt(gUser.Predicates, name, out realName).Trim();
 
-                if ((MeansUnknown(resultGet)) && (!MeansUnknown(gResult)))
+                if ((Unifiable.IsUnknown(resultGet)) && (!Unifiable.IsUnknown(gResult)))
                 {
                     // result=nothing, gResult=something => return gResult
                     writeToLog("SETTINGS OVERRIDE " + gResult);

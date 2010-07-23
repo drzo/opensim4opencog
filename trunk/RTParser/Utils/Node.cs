@@ -119,10 +119,13 @@ namespace RTParser.Utils
                                                            if (AIMLLoader.AimlSame(newGuard, oldGuard))
                                                                if (AIMLLoader.AimlSame(newThat, oldThat))
                                                                {
-                                                                   if (nodeNum==0)
+                                                                   if (temp.CategoryInfo == category)
                                                                    {
-                                                                       TemplateInfo redundant = TemplateInfo.GetTemplateInfo(templateNode, guard, thatInfo, this, category);
-                                                                       master.AddRedundantTemplate(redundant, temp);                                                                       
+                                                                   }
+                                                                   if (nodeNum == 0)
+                                                                   {
+                                                                       //TemplateInfo redundant = TemplateInfo.GetTemplateInfo(templateNode, guard, thatInfo, this, category);
+                                                                       master.AddRedundantCate(category, temp);                                                                       
                                                                        return;
                                                                    }
                                                                    nodeNum++;
@@ -143,7 +146,10 @@ namespace RTParser.Utils
                         } else
                             dupes.ForEach(delegate(TemplateInfo temp)
                                           {
-                                              if (temp==TemplateInfos[0]) return;
+                                              if (temp == TemplateInfos[0])
+                                              {
+                                                  return;
+                                              }
                                               if (true)
                                               {
                                                   writeToLog("AIMLLOADER REDUNDANT \n" + temp + "\n from: " + category.Filename);
@@ -574,15 +580,14 @@ namespace RTParser.Utils
             Node childNode;
             firstWord = splitPath[0];
             int rw = 1;
-            
+
             if (children.TryGetValue(firstWord, out childNode))
             {
-                newPath = string.Join(" ", splitPath, rw, splitPath.Length - rw);
-                if (childNode.word == firstWord)
+                if (query.CanUseNode(childNode))
                 {
+                    newPath = string.Join(" ", splitPath, rw, splitPath.Length - rw);
                     return childNode;
                 }
-                 return childNode;
             }
             foreach (KeyValuePair<string, Node> childNodeKV in children)
             {                                
@@ -590,8 +595,11 @@ namespace RTParser.Utils
                 if (childNodeWord.IsAnyWord()) continue;
                // if (childNodeWord.IsLongWildCard()) continue;
                // if (childNodeWord.IsWildCard()) continue;
-
                 childNode = childNodeKV.Value;
+                if (!query.CanUseNode(childNode))
+                {
+                    continue;
+                }
                 //childrenS.Add(childNode);
                 string fw;
                 Unifiable newPath0;

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Xml;
+using RTParser.Database;
 using RTParser.Utils;
 using UPath = RTParser.Unifiable;
 
@@ -126,7 +127,7 @@ namespace RTParser
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-            string s = string.Format("Unsurported Node Type {0} in {1}", templateNode.NodeType, templateNode.OuterXml);
+            string s = String.Format("Unsurported Node Type {0} in {1}", templateNode.NodeType, templateNode.OuterXml);
             writeToLog(s);
             throw new ArgumentOutOfRangeException(s);
         }
@@ -134,7 +135,7 @@ namespace RTParser
                 
         public static implicit operator string(Unifiable value)
         {
-            if (Object.ReferenceEquals(value, null))
+            if (ReferenceEquals(value, null))
             {
                 return null;
             }
@@ -213,7 +214,7 @@ namespace RTParser
             {
                 return values[startIndex];
             }
-            return string.Join(sep, FromArrayOf(values), startIndex, count);
+            return String.Join(sep, FromArrayOf(values), startIndex, count);
         }
 
         public static Unifiable Join(string sep, string[] values, int startIndex, int count)
@@ -222,7 +223,7 @@ namespace RTParser
             {
                 return values[startIndex];
             }
-            return string.Join(sep, values, startIndex, count);
+            return String.Join(sep, values, startIndex, count);
         }
 
         public static Unifiable[] arrayOf(string[] strs)
@@ -285,8 +286,8 @@ namespace RTParser
 
         public static bool IsFalse(Unifiable tf)
         {
-            if (Object.ReferenceEquals(tf, null)) return true;
-            if (Object.ReferenceEquals(tf.Raw, null)) return true;
+            if (ReferenceEquals(tf, null)) return true;
+            if (ReferenceEquals(tf.Raw, null)) return true;
             return tf.IsFalse();
         }
 
@@ -301,7 +302,7 @@ namespace RTParser
         }
         public static bool IsNull(Object name)
         {
-            if (Object.ReferenceEquals(name, null)) return true;
+            if (ReferenceEquals(name, null)) return true;
             return (name is Unifiable && ((Unifiable)name).Raw == null);
         }
 
@@ -369,11 +370,11 @@ namespace RTParser
             get
             {
                 string s = AsString();
-                if (string.IsNullOrEmpty(s)) return true;
+                if (String.IsNullOrEmpty(s)) return true;
                 s = s.Trim();
                 if (s.Length != 0)
                 {
-                    Unifiable.writeToLog("was IsEmpty");
+                    writeToLog("was IsEmpty");
                     return false;
                 }
                 return true;
@@ -445,7 +446,7 @@ namespace RTParser
 
         static public bool IsMatch2(string st, string actualValue)
         {
-            if (Object.ReferenceEquals(st, actualValue)) return true;
+            if (ReferenceEquals(st, actualValue)) return true;
             string that = " " + actualValue + " ";
             string thiz = " " + st + " ";
             if (thiz == that)
@@ -475,7 +476,7 @@ namespace RTParser
             if (st.StartsWith("~"))
             {
                 string type = st.Substring(1);
-                var b = Database.NatLangDb.IsWordClass(actualValue, type);
+                var b = NatLangDb.IsWordClass(actualValue, type);
                 if (b)
                 {
                     return true;
@@ -489,7 +490,7 @@ namespace RTParser
         static bool TwoSemMatch(string that, string thiz)
         {
             return false;
-            if (Database.NatLangDb.IsWordClassCont(that, " determ") && Database.NatLangDb.IsWordClassCont(thiz, " determ"))
+            if (NatLangDb.IsWordClassCont(that, " determ") && NatLangDb.IsWordClassCont(thiz, " determ"))
             {
                 return true;
             }
@@ -549,7 +550,7 @@ namespace RTParser
 
         public abstract object AsNodeXML();
 
-        public static UPath MakePath(Unifiable unifiable)
+        public static Unifiable MakePath(Unifiable unifiable)
         {
             return unifiable;
         }
@@ -567,7 +568,7 @@ namespace RTParser
             {
                 return ((Unifiable) unifiable).AsString();
             }
-            if (Object.ReferenceEquals(null,unifiable))
+            if (ReferenceEquals(null,unifiable))
             {
                 return "-NULL-";
             }
@@ -577,6 +578,41 @@ namespace RTParser
         public abstract bool IsAnyWord();
 
         public abstract string ToUpper();
+
+        public static bool IsUnknown(object unifiable)
+        {
+            if (IsNullOrEmpty(unifiable)) return true;
+            string ss = AIMLLoader.CleanWhitepacesLower(unifiable.ToString());
+            string s = " " + ss.Replace("_", " ").Replace("-", " ") + " ";
+            bool b = s.Contains("unknown") || s.Contains("unrec") || s.Contains("unnam")
+                     || s.Contains("unseen") || s.Contains("default")
+                     || s.Contains(" some") || s.Contains("*") || s.Contains(" _ ")
+                     || s.Contains(" nothing ") || s.Contains("undefined");
+            if (b) return true;
+            if (unifiable is Unifiable)
+            {
+                if (!((Unifiable) unifiable).IsWildCard()) return false;
+                return true;
+            }
+            return false;
+            //switch (s)
+            //{
+            //    case "":
+            //        return true;
+            //    case "unknown":
+            //        return true;
+            //    case "nothing":
+            //        return true;
+            //    case "*":
+            //        return true;
+            //    case "_":
+            //        return true;
+            //    case "undefined":
+            //        return true;
+            //    default:
+            //        return false;
+            //}
+        }
     }
 }
 

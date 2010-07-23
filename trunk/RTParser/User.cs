@@ -128,7 +128,7 @@ namespace RTParser
                         return miv;
                     }
                 }
-                return 4;
+                return 1;
             }
             set { Predicates.addSetting("maxinputs", "" + value); }
         }
