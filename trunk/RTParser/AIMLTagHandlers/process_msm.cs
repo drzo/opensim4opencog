@@ -134,11 +134,11 @@ namespace RTParser.AIMLTagHandlers
             subRequest.ProcessMultipleTemplates = allowMultiplesTemplates;
 
             AIMLbot.Result subResult = null;
-            var prev = this.Proc.isAcceptingUserInput;
+            var prev = subRequest.GraphsAcceptingUserInput;
             var prevSO = user.SuspendAdd;
             try
             {
-                this.Proc.isAcceptingUserInput = true;
+                subRequest.GraphsAcceptingUserInput = true;
                 var newresult = request.CreateResult(subRequest);
                 subRequest.CurrentResult = newresult;
                 user.SuspendAdd = true;
@@ -148,7 +148,7 @@ namespace RTParser.AIMLTagHandlers
             finally
             {
                 user.SuspendAdd = prevSO;
-                this.Proc.isAcceptingUserInput = prev;
+                subRequest.GraphsAcceptingUserInput = prev;
             }
             //this.request.hasTimedOut = subRequest.hasTimedOut;
             //----------------------

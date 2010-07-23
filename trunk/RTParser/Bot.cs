@@ -524,11 +524,11 @@ namespace RTParser
         /// </summary>
         public void loadAIMLFromDefaults()
         {
-            var prev = isAcceptingUserInput;
+            Request getBotRequest = GetBotRequest("-loadAIMLFromDefaults-");
+            var prev = getBotRequest.GraphsAcceptingUserInput; 
             try
             {
-                Request getBotRequest = GetBotRequest("-loadAIMLFromDefaults-");
-                isAcceptingUserInput = false;
+                getBotRequest.GraphsAcceptingUserInput = false;
                 AIMLLoader loader = Loader;
                 if (!StaticLoader || loader == null)
                 {
@@ -540,7 +540,7 @@ namespace RTParser
             }
             finally
             {
-                isAcceptingUserInput = prev;
+                getBotRequest.GraphsAcceptingUserInput = prev;
             }
         }
 
@@ -550,15 +550,15 @@ namespace RTParser
         public void loadAIMLFromURI(string path, Request request)
         {
             request = request ?? GetBotRequest("-loadAIMLFromURI-" + path + "-");
-            var prev = isAcceptingUserInput;
+            var prev = request.GraphsAcceptingUserInput;
             try
             {
-                isAcceptingUserInput = false;
+                request.GraphsAcceptingUserInput = false;
                 loadAIMLFromURI(path, LoaderOptions.GetDefault(request), request);
             }
             finally
             {
-                isAcceptingUserInput = prev;
+                request.GraphsAcceptingUserInput = prev;
             }
         }
 
@@ -568,11 +568,11 @@ namespace RTParser
         /// </summary>
         public void loadAIMLFromURI(string path, LoaderOptions options, Request request)
         {
-            var prev = isAcceptingUserInput;
+            var prev = request.GraphsAcceptingUserInput;
             var rb = options.TheRequest;
             try
             {
-                isAcceptingUserInput = false;
+                request.GraphsAcceptingUserInput = false;
                 options.TheRequest = request;
                 AIMLLoader loader = Loader;
                 if (!StaticLoader || loader == null)
@@ -588,7 +588,7 @@ namespace RTParser
             finally
             {
                 options.TheRequest = rb;
-                isAcceptingUserInput = prev;
+                request.GraphsAcceptingUserInput = prev;
             }
         }
 
@@ -597,22 +597,22 @@ namespace RTParser
         /// </summary>
         /// <param name="newAIML">The XML document containing the AIML</param>
         /// <param name="filename">The originator of the XML document</param>
-        public void loadAIMLFromXML(XmlDocument newAIML, LoaderOptions filename, Request r)
+        public void loadAIMLFromXML(XmlDocument newAIML, LoaderOptions filename, Request request)
         {
-            var prev = isAcceptingUserInput;
+            var prev = request.GraphsAcceptingUserInput;
             try
             {
-                isAcceptingUserInput = false;
+                request.GraphsAcceptingUserInput = false;
                 AIMLLoader loader = Loader;
                 if (!StaticLoader || loader == null)
                 {
-                    loader = new AIMLLoader(this, r);
+                    loader = new AIMLLoader(this, request);
                 }
-                loader.loadAIMLNode(newAIML.DocumentElement, filename, r);
+                loader.loadAIMLNode(newAIML.DocumentElement, filename, request);
             }
             finally
             {
-                isAcceptingUserInput = prev;
+                request.GraphsAcceptingUserInput = prev;
             }
 
         }
@@ -622,9 +622,10 @@ namespace RTParser
         /// </summary>
         private void setup()
         {
+            Request request = GetBotRequest("-bot setup-");
             if (Loader == null)
             {
-                Loader = new AIMLLoader(this, GetBotRequest("-bot setup-"));
+                Loader = new AIMLLoader(this, request);
             }
             var prev = isAcceptingUserInput;
             try
@@ -807,7 +808,7 @@ namespace RTParser
         {
             if (HostSystem.FileExists(pathToSplitters))
             {
-                XmlDocument splittersXmlDoc = new XmlDocument();
+                XmlDocumentLineInfo splittersXmlDoc = new XmlDocumentLineInfo(pathToSplitters, true);
                 Stream stream = HostSystem.OpenRead(pathToSplitters);
                 try
                 {
@@ -1386,7 +1387,7 @@ namespace RTParser
                 }
             }
 
-            if (this.isAcceptingUserInput)
+            if (request.GraphsAcceptingUserInput)
             {
                 // Normalize the input
                 AIMLLoader loader = Loader;
@@ -1615,15 +1616,16 @@ namespace RTParser
 
         public AIMLbot.Result ImmediateAiml(XmlNode templateNode, Request request0, AIMLLoader loader, AIMLTagHandler handler)
         {
-            var prev = isAcceptingUserInput;
+
+            var prev = request0.GraphsAcceptingUserInput;
             try
             {
-                isAcceptingUserInput = true;
+                request0.GraphsAcceptingUserInput = true;
                 return ImmediateAIML0(request0, templateNode, handler);
             }
             finally
             {
-                isAcceptingUserInput = prev;
+                request0.GraphsAcceptingUserInput = prev;
             }
         }
 
@@ -1703,12 +1705,12 @@ namespace RTParser
         }
         public void proccessResponse0(SubQuery query, Request request, Result result, XmlNode sOutput, GuardInfo sGuard, out bool createdOutput, out bool templateSucceeded, AIMLTagHandler handler, TemplateInfo templateInfo)
         {
-            bool isTraced = request.IsTraced || result.IsTraced || !isAcceptingUserInput;
+            bool isTraced = request.IsTraced || result.IsTraced || !request.GraphsAcceptingUserInput;
             //XmlNode guardNode = AIMLTagHandler.getNode(s.Guard.InnerXml);
             bool usedGuard = sGuard != null && sGuard.Output != null;
             sOutput = sOutput ?? templateInfo.Output;
             string output = sOutput.OuterXml;
-            LineInfoElement templateNode = LineInfoElement.Cast(sOutput);
+            var templateNode = sOutput;
             if (usedGuard)
             {
                 string guardStr = "<when>" + sGuard.Output.InnerXml + " GUARDBOM " + sOutput.OuterXml + "</when>";
@@ -1725,7 +1727,7 @@ namespace RTParser
                 if (IsOutputSentence(o))
                 {
                     if (isTraced)
-                        writeToLog("AIMLTRACE '{0}' TEMPLATE={1}", o, AIMLLoader.CatTextInfo(templateNode));
+                        writeToLog("AIMLTRACE '{0}' IsOutputSentence={1}", o, AIMLLoader.ParentTextAndSourceInfo(templateNode));
                     createdOutput = true;
                     templateSucceeded = true;
                     result.AddOutputSentences(templateInfo, o);
@@ -1734,8 +1736,8 @@ namespace RTParser
                 {
                     createdOutput = false;
                 }
-                if (!createdOutput && isTraced && isAcceptingUserInput)
-                    writeToLog("UNUSED '{0}' TEMPLATE={1}", o, AIMLLoader.CatTextInfo(templateNode));
+                if (!createdOutput && isTraced && request.GraphsAcceptingUserInput)
+                    writeToLog("UNUSED '{0}' TEMPLATE={1}", o, AIMLLoader.ParentTextAndSourceInfo(templateNode));
                 return;
             }
 
@@ -1757,7 +1759,7 @@ namespace RTParser
                     {
                         if (isTraced)
                             writeToLog("GUARD FALSE '{0}' TEMPLATE={1}", request,
-                                       AIMLLoader.CatTextInfo(templateNode));
+                                       AIMLLoader.ParentTextAndSourceInfo(templateNode));
                         templateSucceeded = false;
                         createdOutput = false;
                         return;
@@ -1781,7 +1783,7 @@ namespace RTParser
                 if (IsOutputSentence(o))
                 {
                     if (isTraced)
-                        writeToLog(query.Graph + ": GUARD SUCCESS '{0}' TEMPLATE={1}", o, AIMLLoader.CatTextInfo(templateNode));
+                        writeToLog(query.Graph + ": GUARD SUCCESS '{0}' TEMPLATE={1}", o, AIMLLoader.ParentTextAndSourceInfo(templateNode));
                     templateSucceeded = true;
                     createdOutput = true;
                     result.AddOutputSentences(templateInfo, o);
@@ -1790,7 +1792,7 @@ namespace RTParser
                 else
                 {
                     writeToLog("GUARD SKIP '{0}' TEMPLATE={1}", outputSentence,
-                               AIMLLoader.CatTextInfo(templateNode));
+                               AIMLLoader.ParentTextAndSourceInfo(templateNode));
                 }
                 templateSucceeded = false;
                 createdOutput = false;
@@ -3050,16 +3052,17 @@ The AIMLbot program.
             }
             _PathToBotPersonalFiles = file;
             string s = string.Format("-LoadPersonalDirectories: '{0}'-", file);
+            Request request = GetBotRequest(s);
             writeToLog(s);
-            bool prev = isAcceptingUserInput;
+            bool prev = request.GraphsAcceptingUserInput;
             try
             {
-                isAcceptingUserInput = false;
-                loadAIMLFromURI(file, GetBotRequest(s));
+                request.GraphsAcceptingUserInput = false;
+                loadAIMLFromURI(file, request);
             }
             finally
             {
-                isAcceptingUserInput = prev;
+                request.GraphsAcceptingUserInput = prev;
             }
         }
 

@@ -14,34 +14,42 @@ namespace RTParser
 
         protected void SpoilCache()
         {
-            splitted = null;
+            splittedCache = null;
             valueCache = null;
-            rest = null;
-            upper = null;
+            restCache = null;
+            upperCache = null;
         }
 
-        public string str;
-        protected Unifiable[] splitted = null;
-        protected Unifiable rest = null;
-        public string upper;
+        protected string str;
+
+        protected Unifiable[] splittedCache = null;
+        protected Unifiable restCache = null;
+        protected string upperCache;
         private object valueCache;
 
-        protected string _str
+        private string _str
         {
             set
             {
+                if (value!=null)
+                {
+                    if (value.Contains("  "))
+                    {
+                        value = value.Replace("  ", " ");
+                    }
+                }
                 Flags = FlagsForString(value);
                 str = value;
             }
-            get { return str; }
+           // get { return str; }
         }
         public override string ToUpper()
         {
-            if (upper == null)
+            if (upperCache == null)
             {
-                upper = AsString().ToUpper().Trim().Replace("  ", " ");
+                upperCache = AsString().ToUpper().Trim();
             }
-            return upper;
+            return upperCache;
         }
 
         protected StringUnifiable()
@@ -275,6 +283,8 @@ namespace RTParser
             if (string.IsNullOrEmpty(str)) return false;
             char c = str[str.Length - 1];
             return c == '_' || c == '*';
+
+
             return false;
 
             if (str == "*" || str == "_")
@@ -292,12 +302,12 @@ namespace RTParser
 
         public override Unifiable[] ToArray()
         {
-            if (splitted != null)
+            if (splittedCache != null)
             {
-                return splitted;
+                return splittedCache;
             }
-            if (splitted == null) splitted = Splitter(str);
-            return splitted;
+            if (splittedCache == null) splittedCache = Splitter(str);
+            return splittedCache;
         }
 
         public static Unifiable[] Splitter(string str)
@@ -305,7 +315,8 @@ namespace RTParser
             string strTrim = str.Trim().Replace("  ", " ").Replace("  ", " ");
             if (!strTrim.Contains("<"))
                 return arrayOf(strTrim.Split(BRKCHARS, StringSplitOptions.RemoveEmptyEntries));
-            XmlDocument doc = new XmlDocument();
+
+            XmlDocumentLineInfo doc = new XmlDocumentLineInfo("split str: " + str, false);
             List<Unifiable> u = new List<Unifiable>();
 
             try
@@ -377,16 +388,16 @@ namespace RTParser
         public override Unifiable Rest()
         {
 
-            splitted = ToArray();
-            if (rest == null) 
-             return Join(" ", splitted, 1, splitted.Length - 1);
-            return rest;
+            splittedCache = ToArray();
+            if (restCache == null) 
+             return Join(" ", splittedCache, 1, splittedCache.Length - 1);
+            return restCache;
 
             if (String.IsNullOrEmpty(this.str)) return Unifiable.Empty;
             int i = str.IndexOfAny(BRKCHARS);
             if (i == -1) return Empty;
-            rest = str.Substring(i + 1);
-            return Create(rest.Trim());
+            restCache = str.Substring(i + 1);
+            return Create(restCache.Trim());
         }
 
         readonly static char[] BRKCHARS = " \r\n\t".ToCharArray();
@@ -549,7 +560,7 @@ namespace RTParser
                 if (matchMe.WillUnify(fw, query))
                 {
                     if (j > 1) writeToLog("ConsumeFirst Success!: " + fullpath);
-                    rest = Join(" ", tokens, j, len - j);
+                    restCache = Join(" ", tokens, j, len - j);
                     return true;
                 }
             }
@@ -752,7 +763,10 @@ namespace RTParser
        protected string ToValue0(SubQuery query)
         {
             if (IsLitteral()) return str;
-            if (str.Length < 2) return str;
+            if (str.Length < 2)
+            {
+                return str;
+            }
             if (IsLazy())
             {
                 //todo 
@@ -762,6 +776,10 @@ namespace RTParser
                 if (!outputSentence.IsEmpty) return outputSentence.AsString();
                 writeToLog("Failed Eval " + str);
                 ///bot.GetTagHandler(templateNode, subquery, request, result, request.user);
+            }
+            if (IsWildCard())
+            {
+                return str;
             }
             return AsString();
         }

@@ -40,7 +40,7 @@ namespace RTParser.Utils
         /// Do a transformation on the Unifiable found in the InputString attribute
         /// </summary>
         /// <returns>The resulting transformed Unifiable</returns>
-        sealed public override Unifiable Transform()
+        sealed public override string Transform()
         {
             return templateNodeInnerText;
             /*

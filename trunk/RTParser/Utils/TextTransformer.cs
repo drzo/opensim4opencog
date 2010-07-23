@@ -79,7 +79,7 @@ namespace RTParser.Utils
         /// </summary>
         /// <param name="input">The Unifiable to be transformed</param>
         /// <returns>The resulting output</returns>
-        public Unifiable Transform(string input)
+        public string Transform(string input)
         {
             this.inputString = new StringUnifiable(input);
             return this.Transform();
@@ -89,7 +89,7 @@ namespace RTParser.Utils
         /// Do a transformation on the Unifiable found in the InputString attribute
         /// </summary>
         /// <returns>The resulting transformed Unifiable</returns>
-        public virtual Unifiable Transform()
+        public virtual string Transform()
         {
             if (!this.inputString.IsEmpty)
             {

@@ -1059,11 +1059,11 @@ namespace AIMLBotModule
                 Console.WriteLine(GetModuleName() + ": not Bot is instenaced yet!!");
                 return "";
             }
-            if (!MyBot.isAcceptingUserInput)
+            Request r = new AIMLbot.Request(input, myUser, MyBot, null);
+            if (!r.GraphsAcceptingUserInput)
             {
                 return "";
             }
-            Request r = new AIMLbot.Request(input, myUser, MyBot, null);
             r.IsTraced = true;
             Result res = MyBot.Chat(r);
             scored = res.Score;

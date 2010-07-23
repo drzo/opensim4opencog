@@ -41,7 +41,7 @@ namespace RTParser
         DateTime TimesOutAt { get; set; }
         ISettingsDictionary Settings { get; set; }
         int MaxInputs { get; set; }
-       // bool GraphsAcceptingUserInput { get; }
+        bool GraphsAcceptingUserInput { get; set; }
         void WriteLine(string s, object[] args);
         bool IsComplete(Result o);
         bool addSetting(string name, Unifiable unifiable);
@@ -165,6 +165,12 @@ namespace RTParser
             {
                 Settings = parent.Settings;
             }
+        }
+
+        public bool GraphsAcceptingUserInput
+        {
+            get { return Graph.GraphsAcceptingUserInput; }
+            set { Graph.GraphsAcceptingUserInput = value; }
         }
 
         private GraphMaster ovGraph = null;

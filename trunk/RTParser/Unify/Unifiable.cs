@@ -150,14 +150,23 @@ namespace RTParser
         private static StringUnifiable MakeStringUnfiable(string value)
         {
             if (value == null) return null;
-            string key = value.Trim();//.ToLower();
+            Unifiable u;
+            if (true)
+                lock (internedUnifiables)
+                {
+                    if (internedUnifiables.TryGetValue(value, out u))
+                    {
+                        return (StringUnifiable)u;
+                    }
+                }
+
+            string key = AIMLLoader.CleanWhitepaces(value);
             if (value != key)
             {
              //   writeToLog("Triming? '" + value + "'");
-                value = value.Trim();
+                value = key;
                 //return new StringUnifiable(value);
             }
-            Unifiable u;
             if (true)
                 lock (internedUnifiables)
                 {
