@@ -48,7 +48,7 @@ namespace RTParser.Utils
         /// </summary>
         public void loadAIML(Request request)
         {
-            this.loadAIML(this.RProcessor.PathToAIML, LoaderOptions.GetDefault(request), request);
+            this.loadAIML(this.RProcessor.PathToAIML, request.loader , request);
         }
 
         public void loadAIML(string path)
@@ -82,8 +82,9 @@ namespace RTParser.Utils
             writeToLog("*** End loadAIML From Location: '{0}' ***", path);
         }
 
-        private void loadAIMLDir(string path, LoaderOptions options, Request request)
+        private void loadAIMLDir(string path, LoaderOptions options, Request request)        
         {
+            options.TheRequest = request;
             RProcessor.ReloadHooks.Add(() => loadAIMLDir(path, options, request));
             request = EnsureRequest(request);
             path = ResolveToURI(path, options, request);
@@ -96,7 +97,7 @@ namespace RTParser.Utils
                 {
                     try
                     {
-                        if (RProcessor.IsFileLoaded(filename))
+                        if (options.Graph.IsFileLoaded(filename))
                         {
                             //writeToLog("(skipping) " + filename);
                             continue;
@@ -105,7 +106,7 @@ namespace RTParser.Utils
                     }
                     catch (Exception ee)
                     {
-                        RProcessor.RemoveFileLoaded(filename);
+                        options.Graph.RemoveFileLoaded(filename);
                         RProcessor.writeToLog(ee);
                         RProcessor.writeToLog("Error in loadAIMLFile " + ee);
                     }
@@ -217,13 +218,13 @@ namespace RTParser.Utils
             {
                 // load the document
                 string s = new FileInfo(filename).FullName;
-                if (RProcessor.IsFileLoaded(filename))
+                if (options.Graph.IsFileLoaded(filename))
                 {
                     writeToLog("Already loaded! (but loading again) " + filename + " => " + s);
                     //return;
                 }
                 writeToLog("Processing AIML file: " + filename + " from " + request.Graph);
-                RProcessor.AddFileLoaded(filename);
+                options.Graph.AddFileLoaded(filename);
                 var tr = HostSystem.OpenRead(filename);
                 try
                 {
@@ -254,7 +255,7 @@ namespace RTParser.Utils
             }
             catch (Exception e)
             {
-                RProcessor.RemoveFileLoaded(filename);
+                options.Graph.RemoveFileLoaded(filename);
                 writeToLog("Error in AIML Stacktrace: " + filename + "\n  " + e.Message + "\n" + e.StackTrace);
                 writeToLog("Error in AIML file: " + filename + " Message " + e.Message);
             }

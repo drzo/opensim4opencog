@@ -42,6 +42,7 @@ namespace RTParser
         ISettingsDictionary Settings { get; set; }
         int MaxInputs { get; set; }
         bool GraphsAcceptingUserInput { get; set; }
+        LoaderOptions loader { get; }
         void WriteLine(string s, object[] args);
         bool IsComplete(Result o);
         bool addSetting(string name, Unifiable unifiable);
@@ -173,13 +174,22 @@ namespace RTParser
             set { Graph.GraphsAcceptingUserInput = value; }
         }
 
-        private GraphMaster ovGraph = null;
+        private LoaderOptions opts;
+        public LoaderOptions loader
+        {
+            get
+            {
+                return opts;
+            }
+        }
+
+        //private GraphMaster ovGraph = null;
         public override GraphMaster Graph
         {
             get
             {
-                if (ovGraph != null)
-                    return ovGraph;
+                if (opts.Graph != null)
+                    return opts.Graph;
                 if (ParentRequest != null)
                 {
                     var pg = ParentRequest.Graph;
@@ -187,7 +197,7 @@ namespace RTParser
                 }
                 return user.ListeningGraph;
             }
-            set { ovGraph = value; }
+            set { opts.Graph = value; }
         }
 
         private Unifiable _topic;

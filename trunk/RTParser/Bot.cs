@@ -571,7 +571,10 @@ namespace RTParser
             try
             {
                 request.GraphsAcceptingUserInput = false;
-                loadAIMLFromURI(path, LoaderOptions.GetDefault(request), request);
+                loadAIMLFromURI(path, 
+                    //LoaderOptions.GetDefault(request), 
+                    request.loader,
+                    request);
             }
             finally
             {
@@ -586,7 +589,7 @@ namespace RTParser
         public void loadAIMLFromURI(string path, LoaderOptions options, Request request)
         {
             var prev = request.GraphsAcceptingUserInput;
-            var rb = options.TheRequest;
+            var rb = options.TheRequest = request;
             try
             {
                 request.GraphsAcceptingUserInput = false;
@@ -771,6 +774,11 @@ namespace RTParser
             Person2Substitutions.NoDebug = PersonSubstitutions.NoDebug = GenderSubstitutions.NoDebug = Substitutions.NoDebug = true;
             // Grab the splitters for this Proccessor
             this.loadSplitters(Path.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("splittersfile")));
+            LastUser = FindOrCreateUser("globalPreds");
+            LastUser.IsRoleAcct = true;
+            LastUser.Predicates.removeSetting("name");
+            LastUser.Predicates.removeSetting("id");
+
             LastUser = FindOrCreateUser(UNKNOWN_PARTNER);
             LastUser.IsRoleAcct = true;
         }
@@ -1006,7 +1014,7 @@ namespace RTParser
             try
             {
                 request.Graph = graph;
-                LoaderOptions loader = LoaderOptions.GetDefault(request);
+                LoaderOptions loader = request.loader;// LoaderOptions.GetDefault(request);
                 loader.Graph = graph;
                 string s = string.Format("<aiml graph=\"{0}\">{1}</aiml>", graph.ScriptingName, aimlText);
                 Loader.loadAIMLString(s, loader, request);
@@ -3134,61 +3142,7 @@ The AIMLbot program.
             return FindUser(old) == FindUser(next);
         }
 
-
-
-        private Dictionary<string, DateTime> LoadedFiles = new Dictionary<string, DateTime>();
         private ClojureInterpreter clojureInterpreter;
-
-        public bool AddFileLoaded(string filename)
-        {
-            var fi = new FileInfo(filename);
-            string fullName = fi.FullName;
-            DateTime dt;
-            lock (LoadedFiles)
-            {
-                if (!LoadedFiles.TryGetValue(fullName, out dt))
-                {
-                    LoadedFiles[fullName] = fi.LastWriteTime;
-                    return true;
-                }
-                if (fi.LastWriteTime > dt)
-                {
-                    LoadedFiles[fi.FullName] = fi.LastWriteTime;
-                    return true;
-                }
-                return false;
-            }
-        }
-
-        public bool RemoveFileLoaded(string filename)
-        {
-            var fi = new FileInfo(filename);
-            string fullName = fi.FullName;
-            DateTime dt;
-            lock (LoadedFiles)
-            {
-                return LoadedFiles.Remove(fullName);
-            }
-        }
-
-        public bool IsFileLoaded(string filename)
-        {
-            var fi = new FileInfo(filename);
-            string fullName = fi.FullName;
-            DateTime dt;
-            lock (LoadedFiles)
-            {
-                if (!LoadedFiles.TryGetValue(fullName, out dt))
-                {
-                    return false;
-                }
-                if (fi.LastWriteTime > dt)
-                {
-                    return false;
-                }
-                return true;
-            }
-        }
 
         #region Overrides of QuerySettings
 

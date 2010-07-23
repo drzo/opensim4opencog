@@ -202,17 +202,9 @@ namespace RTParser
                 myUser.UserName = fullname;
                 writeToLog("USERTRACE: New User " + fullname);
                 BotUsers[key] = myUser;
-                if (!UnknowableName(fullname))
-                {
-                    myUser.Predicates.addSetting("name", fullname);
-                    myUser.IsRoleAcct = false;
-                    myUser.ListeningGraph = GetUserGraph(key, GraphMaster);
-                }
-                else
-                {
-                    myUser.IsRoleAcct = true;
-                    myUser.ListeningGraph = GetUserGraph(key, GraphMaster);
-                }
+                bool roleAcct = IsRoleAcctName(fullname);
+                myUser.IsRoleAcct = roleAcct;
+                myUser.ListeningGraph = GetUserGraph(key, GraphMaster);
                 myUser.Predicates.addSetting("name", fullname);
                 string userdir = GetUserDir(key);
                 myUser.SyncDirectory(userdir);
@@ -497,6 +489,14 @@ namespace RTParser
                 newuser = FindOrCreateUser(newname);
                 return newuser;
             }
+        }
+
+        public static bool IsRoleAcctName(string fullname)
+        {
+            if (UnknowableName(fullname)) return true;
+            if (fullname==null) return true;
+            fullname = fullname.ToLower();
+            return fullname.Contains("global") || fullname.Contains("heard");
         }
 
         public static bool UnknowableName(string user)

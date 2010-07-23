@@ -1,17 +1,24 @@
 namespace RTParser.Utils
 {
-    public class LoaderOptions
+    public struct LoaderOptions
     {
-        public Request TheRequest;
+        public Request TheRequest
+        {
+            set
+            {
+                Graph = value.Graph;
+            }
+        }
         private string _filename;
         public bool DebugFiles;
         public bool recurse;
         public string PrevFilename;
+        private GraphMaster TheRequestGraph;
 
         public GraphMaster Graph
         {
-            get { return TheRequest.Graph; }
-            set { TheRequest.Graph = value; }
+            get { return TheRequestGraph; }
+            set { TheRequestGraph = value; }
         }
 
         public string Filename
@@ -24,15 +31,16 @@ namespace RTParser.Utils
             }
         }
 
-        public static LoaderOptions GetDefault(Request r)
+        /*public static LoaderOptions GetDefault(Request r)
         {
-            LoaderOptions ops = new LoaderOptions(r);
+            LoaderOptions ops = new LoaderOptions();
+            ops.TheRequest = r;
             return ops;
-        }
-        private LoaderOptions(Request request)
-        {
-            TheRequest = request;
-        }
+        }*/
+        //private LoaderOptions(Request request)
+        //{
+          //  TheRequest = request;
+        //}
 
         public override string ToString()
         {
