@@ -56,7 +56,7 @@ namespace RTParser.Utils
             if (tryit!=null)
             {
                 return "" + AIMLLoader.CleanWhitepaces(tryit.OuterXml) +
-                       AIMLLoader.LineNumberInfo(tryit);                
+                       AIMLLoader.LocationEscapedInfo(tryit);                
             }
             string s = base.ToString();
             if (Guard!=null)

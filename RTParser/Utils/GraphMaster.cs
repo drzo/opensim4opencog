@@ -66,6 +66,8 @@ namespace RTParser.Utils
         private int parent0 = 0;
         private bool UnTraced = false;
         private readonly List<GraphMaster> FallBacksGraphs = new List<GraphMaster>();
+        public bool IsBusy;
+        private List<TemplateInfo> UnusedTemplates = new  List<TemplateInfo>();
 
         public GraphMaster Parent
         {
@@ -237,6 +239,24 @@ namespace RTParser.Utils
             this.RootNode = (Node)bf.Deserialize(loadFile);
             loadFile.Close();
 
+        }
+
+        public bool GraphsAcceptingUserInput
+        {
+            get
+            {
+                if (!theBot.isAcceptingUserInput) return false;
+                if (IsBusy) return false;
+                return true;
+            }
+            set
+            {
+                if (!theBot.isAcceptingUserInput)
+                {
+                    theBot.isAcceptingUserInput = true;
+                }
+                IsBusy = !value;
+            }
         }
 
         public void addCategoryTag(Unifiable generatedPath, PatternInfo patternInfo, CategoryInfo category, XmlNode outerNode, XmlNode templateNode, GuardInfo guard, ThatInfo thatInfo)
@@ -612,8 +632,8 @@ namespace RTParser.Utils
         {
             lock (Templates)
             {
-                Templates.Remove(redundant);
-                Templates.Add(info);
+              //  Templates.Remove(redundant);
+                UnusedTemplates.Add(info);
             }
         }
     }

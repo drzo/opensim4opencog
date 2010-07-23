@@ -536,7 +536,7 @@ namespace RTParser.Utils
             var sr = new StringReader(outerXML);
             try
             {
-                XmlDocumentLineInfo doc = new XmlDocumentLineInfo("From " + outerXML);
+                XmlDocumentLineInfo doc = new XmlDocumentLineInfo("From " + outerXML, false);
                 doc.Load(sr);
                 if (doc.ChildNodes.Count == 0)
                 {
@@ -573,7 +573,7 @@ namespace RTParser.Utils
                     if (string.IsNullOrEmpty(named)) named = "from: " + templateNode.OuterXml;
                 }
                 XmlDocumentLineInfo doc =
-                    new XmlDocumentLineInfo(named);
+                    new XmlDocumentLineInfo(named, true);
                 doc.Load(sr);
                 if (doc.ChildNodes.Count == 0)
                 {
@@ -595,7 +595,7 @@ namespace RTParser.Utils
             }
             catch (Exception exception)
             {
-                RTPBot.writeDebugLine("outerXML=" + outerXML);
+                RTPBot.writeDebugLine("ERROR outerXML='" + outerXML + "'\n" + exception + "\n" + AIMLLoader.LocationInfo(templateNode));
                 throw exception;
             }
         }
@@ -735,7 +735,7 @@ namespace RTParser.Utils
         /// Do a transformation on the Unifiable found in the InputString attribute
         /// </summary>
         /// <returns>The resulting transformed Unifiable</returns>
-        public override Unifiable Transform()
+        public override string Transform()
         {
             if (!this.inputString.IsEmpty)
             {

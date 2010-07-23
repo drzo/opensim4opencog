@@ -132,11 +132,11 @@ namespace RTParser.AIMLTagHandlers
                             return Unifiable.Empty;
                         }
                         AIMLbot.Result subResult;
-                        var prev = this.Proc.isAcceptingUserInput;
+                        var prev = subRequest.GraphsAcceptingUserInput;
                         var prevSO = user.SuspendAdd;
                         try
                         {
-                            this.Proc.isAcceptingUserInput = true;
+                            subRequest.GraphsAcceptingUserInput = true;
                             //var newresult = new AIMLbot.Result(request.user, Proc, request);
                             //subRequest.result = newresult;
                             user.SuspendAdd = true;
@@ -146,7 +146,7 @@ namespace RTParser.AIMLTagHandlers
                         finally
                         {
                             user.SuspendAdd = prevSO;
-                            this.Proc.isAcceptingUserInput = prev;
+                            subRequest.GraphsAcceptingUserInput = prev;
                         }
                         this.request.hasTimedOut = subRequest.hasTimedOut;
                         var subQueryRawOutput = subResult.RawOutput.Trim();

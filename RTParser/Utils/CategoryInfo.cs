@@ -40,7 +40,7 @@ namespace RTParser.Utils
 
         public override string ToString()
         {
-            return Category.OuterXml + " " + AIMLLoader.LineNumberInfo(Category);
+            return Category.OuterXml + " " + AIMLLoader.LocationEscapedInfo(Category);
         }
 
         public string XMLInfo()
@@ -71,7 +71,7 @@ namespace RTParser.Utils
 
         public string SourceInfo()
         {
-            return AIMLLoader.SourceInfo(Category);
+            return AIMLLoader.LocationInfo(Category);
         }
         public string ToFileString()
         {

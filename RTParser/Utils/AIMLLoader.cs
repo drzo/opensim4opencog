@@ -413,11 +413,14 @@ namespace RTParser.Utils
                         innerGraph = outerGraph;
                     }
                 }
+                bool prev = innerGraph.IsBusy;
+                innerGraph.IsBusy = true;
                 // process each of these child nodes
                 foreach (XmlNode child in currentNode.ChildNodes)
                 {
                     loadAIMLNode(child, filename, request);
                 }
+                innerGraph.IsBusy = prev;
                 return;
             }
             finally
@@ -454,7 +457,7 @@ namespace RTParser.Utils
                 RProcessor.writeToLog(e);
                 writeToLog("ImmediateAiml: ERROR: " + e);
                 XmlNode element = currentNode; 
-                string s = LineTextInfo(element) + " " + LineNumberInfo(element);
+                string s = TextAndSourceInfo(element) + " " + LocationEscapedInfo(element);
                 writeToLog("ERROR PARSING: " + s);
             }
         }
@@ -900,22 +903,87 @@ namespace RTParser.Utils
         {
             if (xml2 == null) return xml2;
             const long maxCleanSize = 2 << 16;
-            if (xml2.Length > maxCleanSize)
+            int inlen = xml2.Length;
+            if (inlen > maxCleanSize)
             {
                 return xml2;
             }
+          
             String s = "";
-            foreach (var c0 in xml2)
+
+            bool chgd = false;
+            bool xmlFound = false;
+            bool inwhite = true;
+            bool pendingWhitespace = false;
+            char lastChar = '\0';
+            foreach (char c0 in xml2)
             {
-                char c = c0;
-                if (c < 32) c = ' ';
-                s += c;
+                
+                if (c0 <= 32)
+                {
+                    if (inwhite)
+                    {
+                        chgd = true;
+                        continue;
+                    }
+                    inwhite = true;
+                    pendingWhitespace = true;
+                    continue;
+                }
+                switch (c0)
+                {
+                    case '/':
+                        if (lastChar=='r')
+                        {
+                            xmlFound = true;
+                        }
+                        inwhite = true;
+                        if (pendingWhitespace)
+                        {
+                            chgd = true;
+                            pendingWhitespace = false;
+                        }
+                        break;
+                    case '>':
+                    case '<':
+                    case '\\':
+                        inwhite = true;
+                        if (pendingWhitespace)
+                        {
+                            chgd = true;
+                            pendingWhitespace = false;
+                        }
+                        break;
+                    default:
+                        inwhite = false;
+                        break;
+                }
+                if (pendingWhitespace)
+                {
+                    s += ' ';
+                    pendingWhitespace = false;
+                }
+                s += c0;
+                lastChar = c0;
             }
-            s = s.Replace("\n", " ").Replace("\r", " ").
-                Replace(" <", "<").Replace("< ", "<").
-                Replace(" >", ">").Replace("> ", ">").
-                Replace("  ", " ").
-                Replace(" />", "/>").Replace("<star index=\"1\"", "<star").Replace(" index=\"1\"", "").Trim();            
+            if (pendingWhitespace) chgd = true;
+            int len = s.Length;
+            if (xmlFound)
+            {
+                s = s.Replace("<sr/>", "<srai><star index=\"1\"/></srai>");
+                s = s.Replace("<star/>", "<star index=\"1\"/>");
+                if (len != s.Length) chgd = true;
+            }
+            if (!chgd)
+            {
+                if (len!=inlen)
+                {
+                    return s;
+                }
+                return xml2;
+            }
+            //s = s.Replace("<star index=\"1\"", "<star");
+            
             return s;
         }
 
@@ -936,61 +1004,93 @@ namespace RTParser.Utils
             return false;
         }
 
-        public static string LineNumberInfo(XmlNode templateNode)
+        public static string NodeInfo(XmlNode templateNode, Func<string, XmlNode, string> funct)
         {
-            return "<!-- " + SourceInfo(templateNode) + " -->";
+            string s = null;
+            XmlNode nxt = templateNode;
+            s = funct("same",nxt);
+            if (s != null) return s;
+            nxt = templateNode.NextSibling;
+            s = funct("next",nxt);
+            if (s != null) return s;
+            nxt = templateNode.PreviousSibling;
+            s = funct("prev",nxt);
+            if (s != null) return s;
+            nxt = templateNode.ParentNode;
+            s = funct("prnt",nxt);
+            if (s != null) return s;
+            return s;
         }
-        public static string SourceInfo(XmlNode templateNode)
+
+        public static string LocationEscapedInfo(XmlNode templateNode)
         {
-            string s = "";
-            if (templateNode is LineInfoElement)
+            return "<!-- " + LocationInfo(templateNode) + " -->";
+        }
+
+        public static string LocationInfo(XmlNode templateNode)
+        {
+            string lines = NodeInfo(templateNode, LineNoInfo) ?? "(-1,-1)";
+            string doc = NodeInfo(templateNode,
+                                  (
+                                      (strng,node) =>
+                                          {
+                                              if (node == null) return null;
+                                              var od = node.OwnerDocument;
+                                              if (od == null) return null;
+                                              string st = od.ToString().Trim();
+                                              if (st.Length == 0) return null;
+                                              return st;
+                                          }));
+            if (doc == null)
             {
-                LineInfoElement li = (LineInfoElement)templateNode;
-                if (li.lineNumber == 0)
+                doc = "nodoc";
+            }
+            return doc + ":" + lines;
+        }
+
+        private static string LineNoInfo(string where, XmlNode templateNode)
+        {
+            string s = null;
+            LineInfoElement li = templateNode as LineInfoElement;
+            if (li != null)
+            {
+                if (li.LinePosition != 0 && li.LinePosition != 0)
                 {
-                    XmlNode Parent = templateNode.ParentNode;
-                    s = s + " " + li.OwnerDocument.ToString();
-                    if (Parent != null && Parent != templateNode)
-                    {
-                        s = s + " " + LineNumberInfo(Parent);
-                    }
-                    else
-                    {
-                        s = s + " (" + li.lineNumber + ":" + li.linePosition + ")";
-                    }
+                    return "(" + li.LinePosition + "," + li.LinePosition + ") ";
                 }
-                else
+                XmlNode Parent = li.ParentNode;
+                if (Parent != null && Parent != li)
                 {
-                    s = s + " (" + li.OwnerDocument.ToString() + ":line " + li.lineNumber + "," + li.linePosition + ") ";
+                    s = LineNoInfo(where + ".prnt", Parent);
                 }
             }
             return s;
         }
 
-        public static object LineTextInfo(XmlNode templateNode)
+        public static string TextAndSourceInfo(XmlNode templateNode)
+        {
+            return TextInfo(templateNode) + " " + LocationEscapedInfo(templateNode);
+        }
+
+        public static string TextInfo(XmlNode templateNode)
         {
             XmlNode textNode = templateNode;//.ParentNode ?? templateNode;
             string s = CleanWhitepaces(textNode.OuterXml);
             if (String.IsNullOrEmpty(s))
             {
-                XmlNode Parent = textNode.ParentNode;
-                LineInfoElement li = (LineInfoElement)templateNode;
-                s = s + " " + li.OwnerDocument.ToString();
+                var Parent = templateNode.ParentNode;
                 if (Parent != null && Parent != templateNode)
                 {
-                    s = s + " " + LineTextInfo(Parent);
+                    return TextInfo(Parent);
                 }
-                else
-                {
-                    return s;
-                }
+                return textNode.OuterXml;
             }
             return s;
         }
 
-        public static string CatTextInfo(LineInfoElement element)
+        public static string ParentTextAndSourceInfo(XmlNode element)
         {
-            return LineTextInfo(element.ParentNode ?? element) + " " + LineNumberInfo(element);
+            return TextAndSourceInfo(element.ParentNode ?? element) + " " + LocationEscapedInfo(element);
         }
 
         public static void PrintResult(Result result, OutputDelegate console)
@@ -1107,25 +1207,69 @@ namespace RTParser.Utils
         private Stream LineInfoReader;
         public IXmlLineInfo LineTracker;
         public string InfoString;
+        private bool PresrveWhitespace = false;
         public XmlDocumentLineInfo(Stream lineInfoReader, string toString)
         {
             InfoString = toString;
             LineInfoReader = lineInfoReader;
         }
-        public XmlDocumentLineInfo(string toString)
+        public XmlDocumentLineInfo(string toString, bool presrveWhite)
         {
+            PresrveWhitespace = true;
             InfoString = toString;
         }
+
         public XmlDocumentLineInfo(IXmlLineInfo lineInfoReader, string toString)
         {
             InfoString = toString;
             LineTracker = lineInfoReader;
         }
+
+        /// <summary>
+        /// Creates an <see cref="T:System.Xml.XmlNode"/> object based on the information in the <see cref="T:System.Xml.XmlReader"/>. The reader must be positioned on a node or attribute.
+        /// </summary>
+        /// <returns>
+        /// The new XmlNode or null if no more nodes exist.
+        /// </returns>
+        /// <param name="reader">The XML source 
+        ///                 </param><exception cref="T:System.NullReferenceException">The reader is positioned on a node type that does not translate to a valid DOM node (for example, EndElement or EndEntity). 
+        ///                 </exception>
+        public override XmlNode ReadNode(XmlReader reader)
+        {
+            if (reader is IXmlLineInfo)
+            {
+                LineTracker = (IXmlLineInfo)reader;
+            }
+            return base.ReadNode(reader);
+        }
+
         public override void LoadXml(string xml)
         {
             base.Load(new XmlTextReader(new StringReader(xml)));
         }
+        protected internal virtual void XmlText(string strData, System.Xml.XmlDocument doc)
+        {
+            
+        }
+        public override XmlText CreateTextNode(string text)
+        {
+            string clean = AIMLLoader.CleanWhitepaces(text);
+            if (clean != text)
+            {
+                if (PresrveWhitespace) return new XmlTextLineInfo(text, this);
+                return new XmlTextLineInfo(clean, this);
+            }
+            return new XmlTextLineInfo(text, this);
+        }
 
+        public override XmlAttribute CreateAttribute(string prefix, string localName, string namespaceURI)
+        {
+            return new XmlAttributeLineInfo(prefix, localName, namespaceURI, this);
+        }
+        public override XmlWhitespace CreateWhitespace(string text)
+        {
+            return base.CreateWhitespace(text);
+        }
         public override XmlElement CreateElement(string prefix, string localname, string nsURI)
         {
             LineInfoElement elem = new LineInfoElement(prefix, localname, nsURI, this);
@@ -1180,21 +1324,26 @@ namespace RTParser.Utils
 
     }
 
-    public class LineInfoElement : XmlElement, IXmlLineInfo
+    public class XmlAttributeLineInfo : XmlAttribute,IXmlLineInfo
     {
+        public XmlAttributeLineInfo(string prefix, string name, string uri, XmlDocumentLineInfo doc)
+            : base(prefix, name, uri, doc)
+        {
+
+        }
+
+        public override string ToString()
+        {
+            return AIMLLoader.TextAndSourceInfo(this);
+        }
         public int lineNumber = 0;
         public int linePosition = 0;
         public long charPos = 0;
         public LineInfoElement lParent;
-        internal LineInfoElement(string prefix, string localname, string nsURI, XmlDocument doc)
-            : base(prefix, localname.ToLower(), nsURI, doc)
-        {
-            //((XmlDocumentLineInfo)doc).IncrementElementCount();
-        }
         public void SetLineInfo(int linenum, int linepos)
         {
             lineNumber = linenum;
-            linePosition = linepos;            
+            linePosition = linepos;
         }
         public int LineNumber
         {
@@ -1220,21 +1369,26 @@ namespace RTParser.Utils
             charPos = position;
         }
 
+
         internal void SetParentFromNode(XmlNode xmlNode)
         {
-            if (!(xmlNode is LineInfoElement))
-            {
-                return;
-            }
-            LineInfoElement lie = (LineInfoElement) xmlNode;
+
             var pn = xmlNode.ParentNode;
             if (pn is LineInfoElement)
             {
-                lParent = (LineInfoElement) pn;
+                lParent = (LineInfoElement)pn;
             }
-            lineNumber = lie.LineNumber;
-            linePosition = lie.linePosition;
-            charPos = lie.charPos;
+            if (!(xmlNode is LineInfoElement))
+            {
+                xmlNode = lParent;
+            }
+            if (xmlNode is LineInfoElement)
+            {
+                LineInfoElement lie = (LineInfoElement)xmlNode;
+                lineNumber = lie.LineNumber;
+                linePosition = lie.linePosition;
+                charPos = lie.charPos;
+            }
         }
 
         public override XmlNode ParentNode
@@ -1245,12 +1399,157 @@ namespace RTParser.Utils
                 return lParent;
             }
         }
+    }
 
-        public static LineInfoElement Cast(XmlNode output)
+//#define HOLD_PARENT
+    public class XmlTextLineInfo : XmlText, IXmlLineInfo
+    {
+        public XmlTextLineInfo(string text, XmlDocumentLineInfo info)
+            : base(text, info)
         {
-            if (output is LineInfoElement) return (LineInfoElement) output;
-            if (output == null) return null;
-            return AIMLTagHandler.getNode(output.OuterXml, output);
+        }
+        public override string ToString()
+        {
+            return AIMLLoader.TextAndSourceInfo(this);
+        }
+        public int lineNumber = 0;
+        public int linePosition = 0;
+        public long charPos = 0;
+        public LineInfoElement lParent;
+        public void SetLineInfo(int linenum, int linepos)
+        {
+            lineNumber = linenum;
+            linePosition = linepos;
+        }
+        public int LineNumber
+        {
+            get
+            {
+                return lineNumber;
+            }
+        }
+        public int LinePosition
+        {
+            get
+            {
+                return linePosition;
+            }
+        }
+        public bool HasLineInfo()
+        {
+            return true;
+        }
+
+        public void SetPos(long position)
+        {
+            charPos = position;
+        }
+
+
+        internal void SetParentFromNode(XmlNode xmlNode)
+        {
+
+            var pn = xmlNode.ParentNode;
+            if (pn is LineInfoElement)
+            {
+                lParent = (LineInfoElement)pn;
+            }
+            if (!(xmlNode is LineInfoElement))
+            {
+                xmlNode = lParent;
+            }
+            if (xmlNode is LineInfoElement)
+            {
+                LineInfoElement lie = (LineInfoElement)xmlNode;
+                lineNumber = lie.LineNumber;
+                linePosition = lie.linePosition;
+                charPos = lie.charPos;
+            }
+        }
+
+        public override XmlNode ParentNode
+        {
+            get
+            {
+                if (lParent == null) return base.ParentNode;
+                return lParent;
+            }
+        }
+    }
+
+    public class LineInfoElement : XmlElement, IXmlLineInfo
+    {
+        internal LineInfoElement(string prefix, string localname, string nsURI, XmlDocument doc)
+            : base(prefix, localname.ToLower(), nsURI, doc)
+        {
+            //((XmlDocumentLineInfo)doc).IncrementElementCount();
+        }
+        public override string ToString()
+        {
+            return AIMLLoader.TextAndSourceInfo(this);
+        }
+        public int lineNumber = 0;
+        public int linePosition = 0;
+        public long charPos = 0;
+        public LineInfoElement lParent;
+        public void SetLineInfo(int linenum, int linepos)
+        {
+            lineNumber = linenum;
+            linePosition = linepos;
+        }
+        public int LineNumber
+        {
+            get
+            {
+                return lineNumber;
+            }
+        }
+        public int LinePosition
+        {
+            get
+            {
+                return linePosition;
+            }
+        }
+        public bool HasLineInfo()
+        {
+            return true;
+        }
+
+        public void SetPos(long position)
+        {
+            charPos = position;
+        }
+
+
+        internal void SetParentFromNode(XmlNode xmlNode)
+        {
+
+            var pn = xmlNode.ParentNode;
+            if (pn is LineInfoElement)
+            {
+                lParent = (LineInfoElement)pn;
+            }
+            if (!(xmlNode is LineInfoElement))
+            {
+                xmlNode = lParent;
+            }
+            if (xmlNode is LineInfoElement)
+            {
+                LineInfoElement lie = (LineInfoElement)xmlNode;
+                lineNumber = lie.LineNumber;
+                linePosition = lie.linePosition;
+                charPos = lie.charPos;
+            }
+        }
+
+        public override XmlNode ParentNode
+        {
+            get
+            {
+                if (lParent == null) return base.ParentNode;
+                return lParent;
+            }
         }
     } // End LineInfoElement class.
 }

@@ -206,7 +206,7 @@ namespace RTParser.Variables
                     FileInfo fi = new FileInfo(pathToSettings);
                     if (fi.Exists)
                     {
-                        XmlDocument xmlDoc = new XmlDocument();
+                        XmlDocumentLineInfo xmlDoc = new XmlDocumentLineInfo(pathToSettings, true);
                         try
                         {
                             var stream = HostSystem.GetStream(pathToSettings);
@@ -258,7 +258,7 @@ namespace RTParser.Variables
 
                     try
                     {
-                        XmlDocumentLineInfo xmlDoc = new XmlDocumentLineInfo(pathToSettings);
+                        XmlDocumentLineInfo xmlDoc = new XmlDocumentLineInfo(pathToSettings, true);
                         var stream = HostSystem.GetStream(pathToSettings);
                         xmlDoc.Load(stream);
                         HostSystem.Close(stream);
@@ -315,6 +315,26 @@ namespace RTParser.Variables
         static public void loadSettingNode(ISettingsDictionary dict, XmlNode myNode, bool overwriteExisting, bool onlyIfUnknown)
         {
             if (myNode.NodeType == XmlNodeType.Comment) return;
+            if (myNode.NodeType == XmlNodeType.XmlDeclaration)
+            {
+                if (myNode.HasChildNodes)
+                {
+                    foreach (XmlNode n in myNode.ChildNodes)
+                    {
+                        loadSettingNode(dict, n, overwriteExisting, onlyIfUnknown);
+                    }
+                    return;
+                }
+                return;
+            }
+            if (myNode.NodeType == XmlNodeType.Document || myNode.Name == "#document")
+            {
+                foreach (XmlNode n in myNode.ChildNodes)
+                {
+                    loadSettingNode(dict, n, overwriteExisting, onlyIfUnknown);
+                }
+                return;
+            }
             if ((myNode.Name == "root"))
             {
                 foreach (XmlNode n in myNode.ChildNodes)
@@ -322,6 +342,51 @@ namespace RTParser.Variables
                     loadSettingNode(dict, n, overwriteExisting, onlyIfUnknown);
                 }
                 return;
+            }
+            if ((myNode.Name == "include"))
+            {
+                string path = RTPBot.GetAttribValue(myNode, "path", myNode.InnerText);
+
+                overwriteExisting =
+                    Boolean.Parse(RTPBot.GetAttribValue(myNode, "overwriteExisting", "" + overwriteExisting));
+
+                onlyIfUnknown =
+                    Boolean.Parse(RTPBot.GetAttribValue(myNode, "overwriteExisting", "" + onlyIfUnknown));
+
+                loadSettings(ToSettingsDictionary(dict), path, overwriteExisting, onlyIfUnknown);
+                return;
+            }
+            if ((myNode.Name == "parent" || myNode.Name == "override" || myNode.Name == "fallback"))
+            {
+                string name = RTPBot.GetAttribValue(myNode, "name", null);
+                if (!string.IsNullOrEmpty(name))
+                {
+                    object rtpbotobj = MushDLR223.ScriptEngines.ScriptManager.ResolveToObject(dict, name);
+                    if (rtpbotobj == null)
+                    {
+                        RTPBot.writeDebugLine("-DICTRACE: Cannot ResolveToObject settings line {0} in {1}", AIMLLoader.TextAndSourceInfo(myNode), dict);
+                        return;
+                    }
+                    ParentProvider pp = ToParentProvider(rtpbotobj);
+                    SettingsDictionary settingsDict = ToSettingsDictionary(dict);
+                    if (settingsDict == null || pp == null)
+                    {
+                        ///warned already
+                        return;
+                    }
+                    switch (myNode.Name)
+                    {
+                        case "parent":
+                            settingsDict.InsertFallback(pp);
+                            return;
+                        case "fallback":
+                            settingsDict.InsertFallback(pp);
+                            return;
+                        case "override":
+                            settingsDict.InsertOverrides(pp);
+                            return;
+                    }
+                }
             }
             if ((myNode.Name == "item"))
             {
@@ -379,8 +444,42 @@ namespace RTParser.Variables
                 }
             } else
             {
-                RTPBot.writeDebugLine("Unknown settings line {0} in {1}", AIMLLoader.LineTextInfo(myNode), dict);
+                RTPBot.writeDebugLine("-DICTRACE: Warning settings line {0} in {1}", AIMLLoader.TextAndSourceInfo(myNode), dict);
             }
+        }
+
+        private static SettingsDictionary ToSettingsDictionary(ISettingsDictionary dictionary)
+        {
+            if (dictionary==null)
+            {
+                RTPBot.writeDebugLine("-DICTRACE: Warning ToSettingsDictionary got NULL");
+                return null;
+            }
+            SettingsDictionary sd = dictionary as SettingsDictionary;
+            if (sd != null) return sd;
+            RTPBot.writeDebugLine("-DICTRACE: Warning ToSettingsDictionary got type={0} '{1}'",
+                                  dictionary.GetType(),
+                                  dictionary);
+            return null;
+        }
+
+        private static ParentProvider ToParentProvider(object dictionary)
+        {
+            if (dictionary == null)
+            {
+                RTPBot.writeDebugLine("-DICTRACE: Warning ToParentProvider got NULL");
+                return null;
+            }
+            ParentProvider sd = dictionary as ParentProvider;
+            if (sd != null) return sd;
+            if (dictionary is ISettingsDictionary)
+            {
+                return (() => (ISettingsDictionary) dictionary);
+            }
+            RTPBot.writeDebugLine("-DICTRACE: Warning ToParentProvider got type={0} '{1}'",
+                                  dictionary.GetType(),
+                                  dictionary);
+            return null;
         }
 
         public void SaveTo(string dir, string rootname, string filename)

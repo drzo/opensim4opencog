@@ -55,7 +55,9 @@ namespace RTParser.AIMLTagHandlers
                     RTPBot.writeDebugLine("WARNING Depth pretty deep " + f + " returning empty");
                     return Unifiable.Empty;
                 }
-                XmlNode node = new XmlDocument().ReadNode(new XmlTextReader(new System.IO.StringReader(f.ToString())));
+                string s = f.ToString();
+                XmlNode node =
+                    new XmlDocumentLineInfo(s, false).ReadNode(new XmlTextReader(new System.IO.StringReader(s)));
                 bool templateSucceeded;
                 bool createdOutput;
                 templateInfo = GetTemplateInfo();

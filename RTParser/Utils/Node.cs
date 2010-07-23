@@ -31,7 +31,7 @@ namespace RTParser.Utils
         /// <summary>
         /// Contains the child nodes of this node
         /// </summary>
-        private Dictionary<Unifiable, Node> children = new Dictionary<Unifiable, Node>();
+        private Dictionary<string, Node> children = new Dictionary<string, Node>();
 
         /// <summary>
         /// The template (if any) associated with this node
@@ -215,64 +215,92 @@ namespace RTParser.Utils
         /// <param name="filename">the file that was the source of this category</param>
         private Node addPathNodeChilds(Unifiable path)
         {
+            return addPathNodeChilds(0 ,path.ToArray());
+        }
+
+        private Node addPathNodeChilds(int from, Unifiable[] path)
+        {
             Node initial = null;
+
             // check we're not at the leaf node
+            if (from >= path.Length)
+            {
+                return this;
+            } // was the nex block comment
+
+            /*
             if (!path.IsWildCard() && path.AsString().Trim().Length == 0)
             {
                 //this.GuardText = guard;
                 //this.filename = filename;
                 return this;
             }
-
+            */
             // otherwise, this sentence requires further child nodemappers in order to
             // be fully mapped within the GraphMaster structure.
 
             // split the input into its component words
             //Unifiable[] words0 = path./*Trim().*/Split();//" ".ToCharArray());
 
-            Unifiable firstRaw = path.First(); // words0[0];
-            string w = firstRaw.AsString();
+            //Unifiable firstRaw = path[from];//.First(); // words0[0];
+            //string w = firstRaw.AsString();
 
             // get the first word (to form the key for the child nodemapper)
             //Unifiable firstWord = Normalize.MakeCaseInsensitive.TransformInput(firstRaw);
-            Unifiable firstWord = firstRaw;
+            Unifiable firstWord = path[from];
 
             // concatenate the rest of the sentence into a suffix (to act as the
             // path argument in the child nodemapper)
-            Unifiable newPath = path.Rest(); // Unifiable.Join(" ", words0, 1, words0.Length - 1);
+            //Unifiable newPath = path.Rest(); // Unifiable.Join(" ", words0, 1, words0.Length - 1);
             // path.Rest();// Substring(firstWord.Length, path.Length - firstWord.Length).Trim();
 
             // o.k. check we don't already have a child with the key from this sentence
             // if we do then pass the handling of this sentence down the branch to the 
             // child nodemapper otherwise the child nodemapper doesn't yet exist, so create a new one  \
             bool found = false;
+            string fs = firstWord.ToUpper();
+            Node childNode;
             lock (children)
-            foreach (var c in this.children)
             {
-                string ks = c.Key.AsString();
-                string fs = firstWord.AsString();
-                if (ks == fs)
+                if (this.children.TryGetValue(fs, out childNode))
                 {
-                    Node childNode = c.Value;
-                    initial = childNode.addPathNodeChilds(newPath);
+                    initial = childNode.addPathNodeChilds(from + 1, path);
                     found = true;
-                    break;
                 }
-                if (ks.ToLower().Trim() == fs.ToLower().Trim())
-                {
-                    Node childNode = c.Value;
-                    initial = childNode.addPathNodeChilds(newPath);
-                    found = true;
-                    break;
-                }
-            }
-            if (!found)
-            {
-                Node childNode = new Node(this);
-                childNode.word = firstWord;
-                initial = childNode.addPathNodeChilds(newPath);
-                lock (children) this.children.Add(childNode.word, childNode);
 
+
+                if (false) // see if we need ot check new indexing system!
+                    if (!found) foreach (var c in this.children)
+                        {
+                            string ks = c.Key.ToUpper();
+                            if (ks == fs)
+                            {
+                                childNode = c.Value;
+                                initial = childNode.addPathNodeChilds(from + 1, path);
+                                found = true;
+                                break;
+                            }
+                            else
+                            {
+                                string kks = c.Value.word.ToUpper();
+                                if (kks == fs || ks != kks)
+                                {
+                                    childNode = c.Value;
+                                    initial = childNode.addPathNodeChilds(from + 1, path);
+                                    found = true;
+                                    break;
+                                }
+                            }
+                        }
+
+
+                if (!found)
+                {
+                    childNode = new Node(this);
+                    childNode.word = firstWord;
+                    initial = childNode.addPathNodeChilds(from + 1, path);
+                    this.children.Add(childNode.word.ToUpper(), childNode);
+                }
             }
             if (initial == null) throw new NullReferenceException("no child node: " + this);
             return initial;
@@ -289,7 +317,7 @@ namespace RTParser.Utils
         {
             if (Parent == null) return null;
             bool useNext = false;
-            lock (children) foreach (KeyValuePair<Unifiable, Node> v in Parent.children)
+            lock (children) foreach (KeyValuePair<string, Node> v in Parent.children)
             {
                 if (useNext) return v.Value;
                 if (v.Value == this)
@@ -381,12 +409,11 @@ namespace RTParser.Utils
 
             // first option is to see if this node has a child denoted by the "_" 
             // wildcard. "_" comes first in precedence in the AIML alphabet
-            lock (children) foreach (KeyValuePair<Unifiable, Node> childNodeKV in this.children)
+            lock (children) foreach (KeyValuePair<string, Node> childNodeKV in this.children)
             {
-                Unifiable childNodeWord = childNodeKV.Key;
-                if (!childNodeWord.IsAnyWord()) continue;
-
                 Node childNode = childNodeKV.Value;
+                Unifiable childNodeWord = childNode.word;
+                if (!childNodeWord.IsAnyWord()) continue;
 
                 // add the next word to the wildcard match 
                 StringAppendableUnifiable newWildcard = Unifiable.CreateAppendable();
@@ -484,13 +511,14 @@ namespace RTParser.Utils
             // third option - the input part of the path might have been matched so far but hasn't
             // returned a match, so check to see it contains the "*" wildcard. "*" comes last in
             // precedence in the AIML alphabet.
-            lock (children) foreach (KeyValuePair<Unifiable, Node> childNodeKV in this.children)
+            lock (children) foreach (KeyValuePair<string, Node> childNodeKV in this.children)
             {
-                Unifiable childNodeWord = childNodeKV.Key;
+                Node childNode = childNodeKV.Value;
+                Unifiable childNodeWord = childNode.word;//.Key;
                 if (!childNodeWord.IsLongWildCard()) continue;
             
                 // o.k. look for the path in the child node denoted by "*"
-                Node childNode = childNodeKV.Value;
+                //Node childNode = childNodeKV.Value;
 
                 // add the next word to the wildcard match 
                 var newWildcard = Unifiable.CreateAppendable();
@@ -556,9 +584,9 @@ namespace RTParser.Utils
                 }
                  return childNode;
             }
-            foreach (KeyValuePair<Unifiable, Node> childNodeKV in children)
+            foreach (KeyValuePair<string, Node> childNodeKV in children)
             {                                
-                Unifiable childNodeWord = childNodeKV.Key;
+                Unifiable childNodeWord = childNodeKV.Value.word;
                 if (childNodeWord.IsAnyWord()) continue;
                // if (childNodeWord.IsLongWildCard()) continue;
                // if (childNodeWord.IsWildCard()) continue;

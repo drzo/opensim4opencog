@@ -9,7 +9,10 @@ namespace RTParser
     {
         public override Unifiable Frozen(SubQuery subquery)
         {
-            return "" + ToValue(subquery);
+            string str0 = ToValue(subquery);
+            var u = new StringAppendableUnifiable();
+            u.str = str0;           
+            return u;
         }
 
         public StringAppendableUnifiable()
@@ -19,7 +22,7 @@ namespace RTParser
 
         public override void Clear()
         {
-            _str = "";
+            str = "";
             base.SpoilCache();
         }
 
@@ -47,7 +50,7 @@ namespace RTParser
                 p = str + p;
             }
             p = p.Replace("  ", " ").Trim();
-            _str = p;
+            str = p;
         }
 
         public override void Append(Unifiable p)
