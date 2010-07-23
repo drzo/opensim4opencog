@@ -501,12 +501,8 @@ namespace RTParser
 
         public static bool UnknowableName(string user)
         {
-            if (String.IsNullOrEmpty(user)) return true;
-            string s = " " + user.ToUpper().Replace("-", " ").Replace("  ", " ").Replace(" ", "") + " ";
-            bool b = s.Contains("UNKNOWN") || s.Contains("UNREC") || s.Contains("UNNAME")
-                || s.Contains("UNSEEN") || s.Contains("DEFAULT") ||
-                   s.Contains(" SOME") || s.Contains("*") || s.Contains(" _ ");
-            return b;
+            if (Unifiable.IsNullOrEmpty(user)) return true;
+            return Unifiable.IsUnknown(user);
         }
 
         public bool IsExistingUsername(string fullname)

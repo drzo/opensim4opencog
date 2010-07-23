@@ -834,12 +834,19 @@ namespace RTParser.Utils
         /// flags that we need to normalize out * and _ chars</param>
         /// <returns>The normalized Unifiable</returns>
         public Unifiable Normalize(string input, bool isUserInput)
-        {
-
+        {            
+            string input0 = input;
+            if (Unifiable.IsNullOrEmpty(input)) return Unifiable.Empty;
             input = CleanWhitepaces(input);
+            if (Unifiable.IsNullOrEmpty(input)) return Unifiable.Empty;
             while (input.EndsWith("?") || input.EndsWith(".") || input.EndsWith("!"))
             {
                 input = input.Substring(0, input.Length - 1).Trim();
+            }
+            if (Unifiable.IsNullOrEmpty(input))
+            {
+                //return input0;
+                return Unifiable.Empty;
             }
             if (isUserInput && false)
             {
@@ -1114,13 +1121,15 @@ namespace RTParser.Utils
             console("-----------------------------------------------------------------");
         }
 
-        public static string GetTemplateSource(IEnumerable<TemplateInfo> CI)
+        public static string GetTemplateSource(IEnumerable CI)
         {
             if (CI == null) return "";
             string hide = "";
             foreach (var ci in CI)
             {
-                string c = ci.ToFileString();
+                string c;
+                if (ci is IAIMLInfo) c = ((IAIMLInfo)ci).ToFileString();
+                else c = "" + ci;
                 string ss = "" + CleanWhitepaces(c) + "\n";
                 if (hide.Contains(ss)) continue;
                 hide += ss;
@@ -1128,9 +1137,22 @@ namespace RTParser.Utils
             return hide;
         }
 
-        public static void PrintTemplates(IList<TemplateInfo> templates, OutputDelegate console)
-        {                
-            console(" " + GetTemplateSource(templates));
+        public static void PrintTemplates(IEnumerable CI, OutputDelegate console)
+        {
+            if (CI == null) return;
+            string hide = "";
+            foreach (var ci in CI)
+            {
+                string c;
+                if (ci is IAIMLInfo) c = ((IAIMLInfo)ci).ToFileString();
+                else c = "" + ci;
+                string ss = "" + CleanWhitepaces(c) + "\n";
+                if (hide.Contains(ss)) continue;
+                if (hide.Length > 30000) hide = "";
+                hide += ss;
+                console(" {0}", c);
+            }
+            return;
         }
 
         public static string CleanWhitepaces(object info)

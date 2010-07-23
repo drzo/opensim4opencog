@@ -32,7 +32,24 @@ namespace RTParser
     /// </summary>
     public partial class RTPBot : QuerySettings
     {
-        public bool ListeningToSelf = false;
+        public bool ListeningToSelf
+        {
+
+            get
+            {
+                if (GlobalSettings != null)
+                {
+                    var lts = GlobalSettings.grabSettingNoDebug("ListeningToSelf");
+                    if (Unifiable.IsUnknown(lts)) return true;
+                    if (Unifiable.IsFalse(lts)) return false;
+                    if (Unifiable.IsTrue(lts)) return true;
+                    return true;
+                }
+
+                return false;
+            }
+        
+        }
         public override string ToString()
         {
             string s = GetType().Name;
@@ -481,7 +498,7 @@ namespace RTParser
             GraphsByName.Add("heardselfsay", _h);
             TheNLKB = new NatLangDb(this);
             this.setup();
-            BotAsUser = new AIMLbot.User("MySelf", this);
+            BotAsUser = new AIMLbot.User("HeardSelfSay", this);
             BotAsUser.IsRoleAcct = true;
             BotAsUser.ListeningGraph = HeardSelfSayGraph;
             BotAsUser.Predicates = GlobalSettings;
@@ -1198,7 +1215,7 @@ namespace RTParser
             if (message.Contains("<"))
             {
                 var v = AIMLTagHandler.getNode("<pre>" + message + "</pre>");
-                writeDebugLine("AIMLTRACE: " + message + " -> " + v.InnerText);
+                writeDebugLine("heardSelfSay - wrapping AIML: " + message + " -> " + v.InnerText);
                 message = v.InnerText;
             }
             //message = swapPerson(message);
@@ -1216,7 +1233,8 @@ namespace RTParser
             writeDebugLine("-----------------------------------------------------------------");
             AddHeardPreds(message, HeardPredicates);
             writeDebugLine("-----------------------------------------------------------------");
-            if (!ListeningToSelf)
+            bool lts = ListeningToSelf;
+            if (!lts)
             {
                 writeDebugLine("SELF: " + message);
                 writeDebugLine("-----------------------------------------------------------------");
@@ -2869,6 +2887,28 @@ The AIMLbot program.
             if (cmd == "user")
             {
                 return myUser.DoUserCommand(args, console);
+            }
+
+            if (showHelp) console("@ls <graph> - * --  lists all graph elements matching some elements");
+
+            if (cmd == "ls")
+            {
+                int lastIndex = args.IndexOf("-");
+                string graphname = args;
+                string match = ".*";
+                if (lastIndex > -1)
+                {
+                    graphname = args.Substring(0, lastIndex).Trim();
+                    match = args.Substring(lastIndex + 1).Trim();
+                }
+                GraphMaster G = GetGraph(graphname, myUser.ListeningGraph);
+                IList<CategoryInfo> Cats =  G.GetCategoriesMatching(match);
+                console("-----------------------------------------------------------------");
+                AIMLLoader.PrintTemplates(Cats, console);
+                console("-----------------------------------------------------------------");
+                console("Shown " + Cats.Count + " from " + G);
+                return true;
+
             }
 
             if (showHelp) console("@chgraph <graph> - changes the users graph");

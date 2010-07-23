@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using System.Xml;
 
 namespace RTParser.Utils
 {
     [Serializable]
-    public class CategoryInfo : GraphLinkInfo
+    public class CategoryInfo : GraphLinkInfo, IAIMLInfo
     {
         public XmlNode Category
         {
@@ -76,17 +77,26 @@ namespace RTParser.Utils
         public string ToFileString()
         {
             string s = "";
-            bool hasTopic = Topic != null;
+            var topic1 = this.Topic;
+            bool hasTopic = topic1 != null;
             if (hasTopic)
             {
                 s += "<topic name=\"";
-                var n = AIMLTagHandler.GetAttribValue(Topic, "name", null, null);
+                var n = AIMLTagHandler.GetAttribValue(topic1, "name", (string)null , null);
                 s += n;
                 s += "\">";
             }
             s += srcNode.OuterXml;
             if (hasTopic) s += "</topic>";
             return s;
+        }
+
+        public bool Matches(string pattern)
+        {
+            if (pattern == null || pattern == "*" || pattern == "") return true;
+            string s = ToFileString();
+            if (s.Contains(s)) return true;
+            return Regex.Matches(s, pattern).Count > 0;
         }
     }
 }

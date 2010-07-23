@@ -415,7 +415,7 @@ namespace RTParser.Variables
                     if (onlyIfUnknown && dictcontainsLocalCalled)
                     {
                         var old = dict.grabSetting(name);
-                        if (!AIMLTagHandler.MeansUnknown(old))
+                        if (!Unifiable.IsUnknown(old))
                         {
                             return;
                         }
@@ -428,14 +428,14 @@ namespace RTParser.Variables
                     var old = dict.grabSetting(name);
                     if (inherited && onlyIfUnknown)
                     {
-                        if (!AIMLTagHandler.MeansUnknown(old))
+                        if (!Unifiable.IsUnknown(old))
                         {
                             return;
                         }
                     }
                     if (onlyIfUnknown && dictcontainsLocalCalled)
                     {
-                        if (!AIMLTagHandler.MeansUnknown(old))
+                        if (!Unifiable.IsUnknown(old))
                         {
                             return;
                         }

@@ -162,5 +162,10 @@ namespace RTParser.Utils
         {
             return PatternsUsed != null && ContainsPattern(pair.Value);
         }
+
+        public bool CanUseNode(Node node)
+        {
+            return true;
+        }
     }
 }

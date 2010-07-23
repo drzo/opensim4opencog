@@ -268,6 +268,11 @@ namespace RTParser.Utils
                 return UndoStack.GetStackFor(this);
             }
         }
+
+        public bool CanUseNode(Node node)
+        {
+            return TopLevel.CanUseNode(node);
+        }
     }
 #if _FALSE_
     public class UList : IEnumerable<TemplateInfo>
