@@ -679,6 +679,11 @@ namespace MushDLR223.ScriptEngines
                 Console.WriteLine("WriteLine: {0} {1}", e, msg);
             }
         }
+
+        public static object ResolveToObject(object dictionary, string membername)
+        {
+            return null;
+        }
     }
 
     internal class VerifyEx : Exception
