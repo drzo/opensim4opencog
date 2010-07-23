@@ -851,7 +851,7 @@ namespace RTParser
             var request = new AIMLbot.Request("load user aiml ", this, bot, null);
             request.TimesOutAt = DateTime.Now + new TimeSpan(0, 15, 0);
             request.Graph = ListeningGraph;
-            var options = LoaderOptions.GetDefault(request);
+            var options = request.loader; //LoaderOptions.GetDefault(request);
             bot.loadAIMLFromURI(userdir, options, request);
         }
     }

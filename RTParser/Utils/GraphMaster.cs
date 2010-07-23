@@ -667,5 +667,58 @@ namespace RTParser.Utils
             }
             return cats;
         }
+        
+        private Dictionary<string, DateTime> LoadedFiles = new Dictionary<string, DateTime>();
+        
+        public bool AddFileLoaded(string filename)
+        {
+            var fi = new FileInfo(filename);
+            string fullName = fi.FullName;
+            DateTime dt;
+            lock (LoadedFiles)
+            {
+                if (!LoadedFiles.TryGetValue(fullName, out dt))
+                {
+                    LoadedFiles[fullName] = fi.LastWriteTime;
+                    return true;
+                }
+                if (fi.LastWriteTime > dt)
+                {
+                    LoadedFiles[fi.FullName] = fi.LastWriteTime;
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        public bool RemoveFileLoaded(string filename)
+        {
+            var fi = new FileInfo(filename);
+            string fullName = fi.FullName;
+            DateTime dt;
+            lock (LoadedFiles)
+            {
+                return LoadedFiles.Remove(fullName);
+            }
+        }
+
+        public bool IsFileLoaded(string filename)
+        {
+            var fi = new FileInfo(filename);
+            string fullName = fi.FullName;
+            DateTime dt;
+            lock (LoadedFiles)
+            {
+                if (!LoadedFiles.TryGetValue(fullName, out dt))
+                {
+                    return false;
+                }
+                if (fi.LastWriteTime > dt)
+                {
+                    return false;
+                }
+                return true;
+            }
+        }
     }
 }
