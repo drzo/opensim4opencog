@@ -17,7 +17,7 @@ namespace RTParser
     /// <summary>
     /// Encapsulates information and history of a user who has interacted with the bot
     /// </summary>
-    abstract public class User : QuerySettings, IDisposable
+    abstract public class User : QuerySettings, IDisposable, ISettingsDictionary
     {
         public readonly object QueryLock = new object();
 
@@ -227,7 +227,7 @@ namespace RTParser
         /// <summary>
         /// the predicates associated with this particular user
         /// </summary>
-        public  SettingsDictionary Predicates;
+        public SettingsDictionary Predicates;
 
         /// <summary>
         /// The most recent result to be returned by the bot
@@ -851,8 +851,76 @@ namespace RTParser
             var request = new AIMLbot.Request("load user aiml ", this, bot, null);
             request.TimesOutAt = DateTime.Now + new TimeSpan(0, 15, 0);
             request.Graph = ListeningGraph;
-            var options = request.loader; //LoaderOptions.GetDefault(request);
-            bot.loadAIMLFromURI(userdir, options, request);
+            var options = request.LoadOptions; //LoaderOptions.GetDefault(request);
+            request.Loader.loadAIMLURI(userdir, options.Value);
         }
+
+        #region Implementation of ISettingsDictionary
+
+        /// <summary>
+        /// Adds a bespoke setting to the Settings class (accessed via the grabSettings(string name)
+        /// method.
+        /// </summary>
+        /// <param name="name">The name of the new setting</param>
+        /// <param name="value">The value associated with this setting</param>
+        public bool addSetting(string name, Unifiable value)
+        {
+            return Predicates.addSetting(name, value);
+        }
+
+        /// <summary>
+        /// Removes the named setting from this class
+        /// </summary>
+        /// <param name="name">The name of the setting to remove</param>
+        public bool removeSetting(string name)
+        {
+            return Predicates.removeSetting(name);
+        }
+
+        /// <summary>
+        /// Updates the named setting with a new value whilst retaining the position in the
+        /// dictionary
+        /// </summary>
+        /// <param name="name">the name of the setting</param>
+        /// <param name="value">the new value</param>
+        public bool updateSetting(string name, Unifiable value)
+        {
+            return Predicates.updateSetting(name, value);
+        }
+
+        /// <summary>
+        /// Returns the value of a setting given the name of the setting
+        /// </summary>
+        /// <param name="name">the name of the setting whose value we're interested in</param>
+        /// <returns>the value of the setting</returns>
+        public Unifiable grabSetting(string name)
+        {
+            return Predicates.grabSetting(name);
+        }
+
+        /// <summary>
+        /// Checks to see if a setting of a particular name exists
+        /// </summary>
+        /// <param name="name">The setting name to check</param>
+        /// <returns>Existential truth value</returns>
+        public bool containsLocalCalled(string name)
+        {
+            return Predicates.containsLocalCalled(name);
+        }
+
+        public bool containsSettingCalled(string name)
+        {
+            return Predicates.containsSettingCalled(name);
+        }
+
+        public string NameSpace
+        {
+            get
+            {
+                return UserID;
+            }
+        }
+
+        #endregion
     }
 }

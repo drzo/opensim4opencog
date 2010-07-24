@@ -61,16 +61,16 @@ namespace RTParser.Utils
         {
             var res = base.CompleteProcess();
 
-            LoaderOptions loaderOptions = request.loader;// LoaderOptions.GetDefault(request);
-            string filename = loaderOptions.Filename;
+            var saveOpts = request.LoadOptions;
+            var loaderOptions = saveOpts;
             try
             {
-                string o2 = loaderOptions.Filename = DocumentInfo();
+                request.LoadingFrom = loaderOptions.LoadingFrom0 = DocumentInfo();
                 ProcessLoad(loaderOptions);
             }
             finally
             {
-                loaderOptions.Filename = filename;
+                request.LoadOptions = saveOpts;
             }
 
             return res;

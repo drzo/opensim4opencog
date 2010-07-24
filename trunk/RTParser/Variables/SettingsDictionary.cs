@@ -203,8 +203,7 @@ namespace RTParser.Variables
             {
                 if (pathToSettings.Length > 0)
                 {
-                    FileInfo fi = new FileInfo(pathToSettings);
-                    if (fi.Exists)
+                    if (HostSystem.FileExists(pathToSettings))
                     {
                         XmlDocumentLineInfo xmlDoc = new XmlDocumentLineInfo(pathToSettings, true);
                         try
@@ -251,8 +250,8 @@ namespace RTParser.Variables
                     }
                     if (!HostSystem.FileExists(pathToSettings))
                     {
-                        dict.writeToLog("No settings found in: " + pathToSettings);
-                        throw new FileNotFoundException(pathToSettings);
+                        dict.writeToLog("ERROR No settings found in: " + pathToSettings);
+                        //throw new FileNotFoundException(pathToSettings);
                         return;
                     }
 

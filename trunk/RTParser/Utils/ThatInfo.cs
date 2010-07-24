@@ -23,7 +23,7 @@ namespace RTParser.Utils
 
         public static ThatInfo GetPattern(LoaderOptions loaderOptions,Unifiable unifiable)
         {
-            return loaderOptions.Graph.FindThat(unifiable);
+            return loaderOptions.CtxGraph.FindThat(unifiable);
         }
     }
 }
