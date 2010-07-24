@@ -17,6 +17,8 @@ namespace RTParser.Utils
     [Serializable]
     public class SubQuery : ISettingsDictionary
     {
+        public bool IsTraced { get; set; }
+
         #region Attributes
 
         #region Overrides of QuerySettings

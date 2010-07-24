@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -10,6 +11,43 @@ namespace MushDLR223.Virtualization
     public static class HostSystem
     {
         public static string BackupExt = ".bak";
+        static public readonly object ExistenceLock = new object();
+        private static readonly List<Func<string, string[]>> _pathResolvers = new List<Func<string, string[]>>();
+        public static readonly string[] NO_EXPANSIONS = new string[0];
+
+        static HostSystem()
+        {
+            _pathResolvers.Add(ExpandEnvVars);
+        }
+
+        private static string[] ExpandEnvVars(string arg)
+        {
+            if (arg.StartsWith("%") && arg.EndsWith("%"))
+            {
+                string s = Environment.GetEnvironmentVariable(arg.Substring(1, arg.Length - 2));
+                if (!IsNullOrEmpty(s)) return new[] { s };
+            }
+            return NO_EXPANSIONS;
+        }
+
+
+        public static IEnumerable<Func<string, string[]>> PathResolvers
+        {
+            get { lock (_pathResolvers) return _pathResolvers.ToArray(); }
+        }
+
+        public static void InsertPathResolver(Func<string, string[]> funct)
+        {
+            lock (_pathResolvers) _pathResolvers.Insert(0, funct);
+        }
+
+        public static void RemovePathResolver(Func<string, string[]> funct)
+        {
+            lock (_pathResolvers)
+            {
+                while (_pathResolvers.Remove(funct)) ;
+            }
+        }
 
         public static string ToRelativePath(string str)
         {
@@ -40,105 +78,119 @@ namespace MushDLR223.Virtualization
             return FileExists(str) || DirExists(str);
         }
 
-        public static bool DirExists(string prefix)
+        public static bool DirExists(string pathname)
         {
-            if (IsNullOrEmpty(prefix)) return false;
-            return Directory.Exists(prefix);
+            string toexitingpath = ResolveToExistingPath(pathname);
+            if (!IsNullOrEmpty(toexitingpath)) pathname = toexitingpath;
+            if (IsNullOrEmpty(pathname)) return false;
+            return Directory.Exists(pathname);
         }
 
-        static public readonly object ExistenceLock = new object();
-
-
-        public static bool BackupFile(string filename)
+        public static bool BackupFile(string pathname)
         {
-            return BackupFile(filename, true);
+            string toexitingpath = ResolveToExistingPath(pathname);
+            if (!IsNullOrEmpty(toexitingpath)) pathname = toexitingpath;
+            return BackupFile(pathname, true);
         }
-        public static bool BackupFile(string filename, bool onlyOne)
+        public static bool BackupFile(string pathname, bool onlyOne)
         {
+            string toexitingpath = ResolveToExistingPath(pathname);
+            if (!IsNullOrEmpty(toexitingpath)) pathname = toexitingpath;
+
             lock (ExistenceLock)
             {
-                if (!FileExists(filename)) return true;
-                if (!onlyOne) return BackupFileMulti(filename);
-                string backname = filename + ".0" + BackupExt;
+                if (!FileExists(pathname)) return true;
+                if (!onlyOne) return BackupFileMulti(pathname);
+                string backname = pathname + ".0" + BackupExt;
                 if (FileExists(backname))
                 {
                     if (!DeleteFile(backname)) return false;
                 }
-                return FileMove(filename, backname);
+                return FileMove(pathname, backname);
             }
 
         }
 
-        public static bool DeleteFile(string filename)
+        public static bool DeleteFile(string pathname)
         {
-            if (!FileExists(filename)) return true;
+            string toexitingpath = ResolveToExistingPath(pathname);
+            if (!IsNullOrEmpty(toexitingpath)) pathname = toexitingpath;
+
+            if (!FileExists(pathname)) return true;
             try
             {
-                File.Delete(filename);
+                File.Delete(pathname);
                 return true;
             }
             catch (Exception exception)
             {
-                writeToLog("DELETE FILE: '" + filename + "' " + exception);
-                return !FileExists(filename);
+                writeToLog("DELETE FILE: '" + pathname + "' " + exception);
+                return !FileExists(pathname);
             }
         }
 
-        public static bool BackupFileMulti(string filename)
+        public static bool BackupFileMulti(string pathname)
         {
+            string toexitingpath = ResolveToExistingPath(pathname);
+            if (!IsNullOrEmpty(toexitingpath)) pathname = toexitingpath;
+
             lock (ExistenceLock)
             {                
-                if (!FileExists(filename)) return true;
+                if (!FileExists(pathname)) return true;
 
 
-                string backname = filename + ".0" + BackupExt;
+                string backname = pathname + ".0" + BackupExt;
                 int i = 0;
                 while (FileExists(backname))
                 {
                     i++;
-                    backname = filename + "." + i + BackupExt;
+                    backname = pathname + "." + i + BackupExt;
                 }
-                return FileMove(filename, backname);
+                return FileMove(pathname, backname);
             }
         }
 
-        public static bool FileMove(string filename, string backname)
+        public static bool FileMove(string pathname, string backname)
         {
             lock (ExistenceLock)
             {
-                if (IsNullOrEmpty(filename)) return false;
+                if (IsNullOrEmpty(pathname)) return false;
                 try
                 {
-                    File.Move(filename, backname);
+                    File.Move(pathname, backname);
                     return true;
                 }
                 catch (Exception e)
                 {
-                    writeToLog("Moving " + filename + " -> " + backname + " caused " + e);
+                    writeToLog("Moving " + pathname + " -> " + backname + " caused " + e);
                     return false;
                 }
             }
         }
 
-        public static bool FileExists(string filename)
+        public static bool FileExists(string pathname)
         {
-            if (IsNullOrEmpty(filename)) return false;
-            lock (ExistenceLock) return File.Exists(filename);
+            if (IsNullOrEmpty(pathname)) return false;
+            string toexitingpath = ResolveToExistingPath(pathname);
+            if (toexitingpath == null) return false;
+            lock (ExistenceLock) return File.Exists(toexitingpath);
         }
 
-        private static bool IsNullOrEmpty(string filename)
+        private static bool IsNullOrEmpty(string pathname)
         {
-            return filename == null || filename.Trim().Length == 0;
+            return pathname == null || pathname.Trim().Length == 0;
         }
 
-        public static bool CreateDirectory(string filename)
+        public static bool CreateDirectory(string pathname)
         {
-            if (IsNullOrEmpty(filename)) return false;
-            if (!Directory.Exists(filename))
+            if (IsNullOrEmpty(pathname)) return false;
+            string toexitingpath = ResolveToExistingPath(pathname);
+            if (!IsNullOrEmpty(toexitingpath)) pathname = toexitingpath;
+            if (!DirExists(pathname))
             {
                 try
                 {
-                    return Directory.CreateDirectory(filename).Exists;
+                    return Directory.CreateDirectory(pathname).Exists;
                 }
                 catch (Exception e)
                 {
@@ -169,15 +221,19 @@ namespace MushDLR223.Virtualization
             }
         }
 
-        public static String[] GetFiles(string userdir)
+        public static String[] GetFiles(string pathname)
         {
-            if (DirExists(userdir)) return Directory.GetFiles(userdir);
+            string exists = ResolveToExistingPath(pathname);
+            if (exists != null) pathname = exists;
+            if (DirExists(pathname)) return Directory.GetFiles(pathname);
             return new string[0];
         }
 
-        public static string[] GetFiles(string path, string ext)
+        public static string[] GetFiles(string pathname, string ext)
         {
-            if (DirExists(path)) return Directory.GetFiles(path, ext);
+            string exists = ResolveToExistingPath(pathname);
+            if (exists != null) pathname = exists;
+            if (Directory.Exists(pathname)) return Directory.GetFiles(pathname, ext);
             return new string[0];
         }
 
@@ -202,9 +258,11 @@ namespace MushDLR223.Virtualization
             if (before == null) return null;
             return ToAutoCloseStream(before, path);
         }
+        
         public static Stream GetStream0(string path)
         {
-            if (File.Exists(path)) return File.OpenRead(path);
+            string toexitingpath = ResolveToExistingPath(path);
+            if (File.Exists(toexitingpath)) return File.OpenRead(toexitingpath);
             if (Uri.IsWellFormedUriString(path, UriKind.RelativeOrAbsolute))
             {
                 try
@@ -223,6 +281,69 @@ namespace MushDLR223.Virtualization
                 WebResponse resp = req.GetResponse();
                 Stream stream = resp.GetResponseStream();
                 return stream;
+            }
+            return null;
+        }
+
+        public static string ResolveToExistingPath(string path)
+        {
+            string physicalPath = ToPhysicalPath(path, true);
+            if (!IsNullOrEmpty(physicalPath)) return physicalPath;
+           // string betterish = null;
+            foreach (var func in PathResolvers)
+            {
+                string[] existings = func(path);
+                if (existings==null) continue;
+                foreach (var existing in existings)
+                {
+                    if (!IsNullOrEmpty(existing))
+                    {
+                        ///    betterish = existing;
+                        string better = ToPhysicalPath(existing, true);
+                        if (!String.IsNullOrEmpty(better)) return better;
+                        return existing;
+                    }                                   
+                }
+            }
+            return null;
+        }
+
+        private static string ToPhysicalPath(string path, bool mustExist)
+        {
+            if (path == null) return null;
+            if (File.Exists(path)) return path;
+            if (Directory.Exists(path)) return path;
+            if (Uri.IsWellFormedUriString(path, UriKind.Absolute))
+            {
+                try
+                {
+                    var uri = new Uri(path);
+                    if (uri.IsFile)
+                    {
+                        return ToPhysicalPath(uri.AbsolutePath, mustExist);
+                    }
+                }
+                catch (Exception)
+                {
+                }
+            }
+            if (Uri.IsWellFormedUriString(path, UriKind.Relative))
+            {
+                try
+                {
+                    var uri = new Uri(path);
+                    if (uri.IsFile)
+                    {
+                        return ToPhysicalPath(uri.AbsolutePath, mustExist);
+                    }
+                }
+                catch (Exception)
+                {
+                }
+            }
+            if (!mustExist)
+            {
+                return Path.GetFullPath(path);
             }
             return null;
         }
@@ -320,38 +441,47 @@ namespace MushDLR223.Virtualization
             return pathIn;
         }
 
-        public static string GetBaseDir(string baseFile)
+        public static string GetBaseDir(string pathname)
         {
-            if (HostSystem.DirExists(baseFile))
+            string exists = ResolveToExistingPath(pathname);
+            if (exists != null) pathname = exists;
+
+            FileSystemInfo info = new DirectoryInfo(pathname);            
+            if (info.Exists)
             {
-                return (new DirectoryInfo(baseFile)).FullName;
+                string maybe = info.FullName;
+                if (string.IsNullOrEmpty(maybe)) return maybe;
             }
-            if (HostSystem.FileExists(baseFile))
+            if (File.Exists(exists))
             {
-                var fi = new FileInfo(baseFile);
-                return fi.DirectoryName ?? baseFile;
+                var fi = new FileInfo(pathname);
+                string maybe = fi.DirectoryName;
+                if (string.IsNullOrEmpty(maybe)) return maybe;
             }
-            return baseFile;
+            return Path.GetDirectoryName(pathname);
         }
 
-        public static string GetAbsolutePath(string baseFile)
+        public static string GetAbsolutePath(string pathname)
         {
-            if (HostSystem.DirExists(baseFile))
+            string exists = ResolveToExistingPath(pathname);
+            if (exists == null) exists = pathname;
+            if (Directory.Exists(exists))
             {
-                return (new DirectoryInfo(baseFile)).FullName;
+                return (new DirectoryInfo(exists)).FullName;
             }
-            if (HostSystem.FileExists(baseFile))
+            if (File.Exists(exists))
             {
-                var fi = new FileInfo(baseFile);
-                return fi.FullName;
+                var fi = new FileInfo(exists);
+                return fi.FullName ?? pathname;
             }
-            string s = Path.GetFullPath(baseFile);
-            if (s != baseFile)
+
+            string s = Path.GetFullPath(pathname);
+            if (s != pathname)
             {
-                writeToLog("Absolute path does not exist " + s + " from " + baseFile);
+                writeToLog("Absolute path does not exist " + s + " from " + pathname);
 
             }
-            return baseFile;
+            return pathname;
         }
 
         public static void Close(Stream stream)

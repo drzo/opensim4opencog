@@ -44,7 +44,7 @@ namespace RTParser.Utils
             catch
             {
             }
-            if (Rating!=1.0)
+            if (Rating != 1.0)
             {
                 RTPBot.writeDebugLine("!! SCORE =" + Rating + " for " + OuterXml + " in " + categoryInfo);
             }
@@ -53,19 +53,19 @@ namespace RTParser.Utils
         public override string ToString()
         {
             XmlNode tryit = base.Output.ParentNode;
-            if (tryit!=null)
+            if (tryit != null)
             {
                 return "" + AIMLLoader.CleanWhitepaces(tryit.OuterXml) +
-                       AIMLLoader.LocationEscapedInfo(tryit);                
+                       AIMLLoader.LocationEscapedInfo(tryit);
             }
             string s = base.ToString();
-            if (Guard!=null)
+            if (Guard != null)
             {
                 s = s + Guard.ToString();
             }
             if (That != null)
             {
-                s = s +  That.OuterXml;
+                s = s + That.OuterXml;
             }
             return s;
         }
@@ -78,21 +78,27 @@ namespace RTParser.Utils
                 NoInfo = false;
                 return new TemplateInfo(template, guard, thatInfo, node, category);
             }
-            finally 
+            finally
             {
-                NoInfo = prev;               
+                NoInfo = prev;
             }
         }
 
-         public string ToFileString()
+        public string ToFileString()
         {
             if (CategoryInfo != null) return CategoryInfo.ToFileString();
             return ToString();
+        }
+
+        public string SourceInfo()
+        {
+            return AIMLLoader.LocationInfo(srcNode);
         }
     }
 
     public interface IAIMLInfo
     {
         string ToFileString();
+        string SourceInfo();
     }
 }

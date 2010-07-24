@@ -903,8 +903,7 @@ namespace RTParser.Utils
 
         public static string MatchKeyClean(string s)
         {
-            s = CleanWhitepaces(s).Trim();
-            s = s.Replace("  ", " ");
+            s = CleanWhitepaces(s);
             if (s == "")
             {
                 return "*";
@@ -1148,9 +1147,9 @@ namespace RTParser.Utils
             LineInfoElement li = templateNode as LineInfoElement;
             if (li != null)
             {
-                if (li.LinePosition != 0 && li.LinePosition != 0)
+                if (li.LineNumber != 0 && li.LinePosition != 0)
                 {
-                    return "(" + li.LinePosition + "," + li.LinePosition + ") ";
+                    return "(" + li.LineNumber + "," + li.LinePosition + ") ";
                 }
                 XmlNode Parent = li.ParentNode;
                 if (Parent != null && Parent != li)
@@ -1195,7 +1194,7 @@ namespace RTParser.Utils
             {
                 console("input: \"" + s + "\"");
             }
-            PrintTemplates(result.UsedTemplates, console);
+            PrintTemplates(result.UsedTemplates, console, true);
             foreach (var s in result.SubQueries)
             {
                 console("\n" + s);
@@ -1224,20 +1223,30 @@ namespace RTParser.Utils
             return hide;
         }
 
-        public static void PrintTemplates(IEnumerable CI, OutputDelegate console)
+        public static void PrintTemplates(IEnumerable CI, OutputDelegate console, bool fileinfo)
         {
             if (CI == null) return;
             string hide = "";
             foreach (var ci in CI)
             {
                 string c;
-                if (ci is IAIMLInfo) c = ((IAIMLInfo)ci).ToFileString();
+                var cate = ci as IAIMLInfo;
+                if (cate != null) c = cate.ToFileString();
                 else c = "" + ci;
-                string ss = "" + CleanWhitepaces(c) + "\n";
+                string ss = CleanWhitepaces(c);
                 if (hide.Contains(ss)) continue;
                 if (hide.Length > 30000) hide = "";
                 hide += ss;
-                console(" {0}", c);
+                if (cate != null)
+                {
+                    c = cate.SourceInfo();
+                    if (!c.Contains("(0,0)"))
+                    {
+                        if (ss.Length > 50) ss = ss + "\n";
+                        ss = ss + "   <!--   " + c + "  -->";
+                    }
+                }
+                console(" {0}", ss);
             }
             return;
         }

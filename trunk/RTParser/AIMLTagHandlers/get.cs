@@ -73,7 +73,7 @@ namespace RTParser.AIMLTagHandlers
                 // try to use a global blackboard predicate
                 bool newlyCreated;
                 RTParser.User gUser = this.user.bot.FindOrCreateUser("globalPreds", out newlyCreated);
-                Unifiable gResult = SettingsDictionary.grabSettingDefualt(gUser.Predicates, name, out realName).Trim();
+                Unifiable gResult = SettingsDictionary.grabSettingDefualt(gUser.Predicates, name, out realName);
 
                 if ((Unifiable.IsUnknown(resultGet)) && (!Unifiable.IsUnknown(gResult)))
                 {

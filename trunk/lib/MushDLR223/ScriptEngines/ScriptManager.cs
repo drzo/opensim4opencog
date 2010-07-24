@@ -605,11 +605,23 @@ namespace MushDLR223.ScriptEngines
             return changed;
         }
 
-        private static IEnumerable<Type> CopyOf(HashSet<Type> types) 
+        private static IEnumerable<T> CopyOf<T>(ICollection<T> types)
         {
-            List<Type> copy = new List<Type>(types.Count);
-            copy.AddRange(types);
-            return copy;
+            if (types == null) return null;
+            lock (types)
+            {
+                List<T> copy = new List<T>(types.Count);
+                copy.AddRange(types);
+                return copy;                
+            }
+        }
+        private static IEnumerable<T> CopyOf<T>(List<T> types)
+        {
+            if (types == null) return null;
+            lock (types)
+            {
+                return types.ToArray();
+            }
         }
 
 
@@ -680,9 +692,21 @@ namespace MushDLR223.ScriptEngines
             }
         }
 
-        public static object ResolveToObject(object dictionary, string membername)
+        public static List<object> ResolveToObject(object any, string membername)
         {
-            return null;
+            List<object> objs = null;           
+            if (any == null)
+            {
+                foreach (var s in CopyOf(Interpreters))
+                {
+                    if (s.IsSubscriberOf(membername))
+                    {
+                        objs = objs ?? new List<object>();
+                        objs.Add(s.GetSymbol(membername));
+                    }                    
+                }
+            }
+            return objs;
         }
     }
 

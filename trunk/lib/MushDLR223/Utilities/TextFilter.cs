@@ -173,10 +173,12 @@ namespace MushDLR223.Utilities
                 if (addMode)
                 {
                     AnyOf.Add(w);
+                    ExceptFor.Remove(w);
                 }
                 if (remMode)
                 {
                     ExceptFor.Add(w);
+                    AnyOf.Remove(w);
                 }
                 sa = sa.Substring(f);
             }

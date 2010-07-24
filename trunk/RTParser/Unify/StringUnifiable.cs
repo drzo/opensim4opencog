@@ -192,7 +192,12 @@ namespace RTParser
 
         public override Unifiable Trim()
         {
-            string str2 = str.Trim().Replace("  ", " ").Replace("  ", " ");
+            if (str==null)
+            {
+                writeToLog("ERROR NULL.Tirm()!!");
+                return NULL;
+            }
+            string str2 = AIMLLoader.CleanWhitepaces(str);
             if (str2 == str) return this;
             return str.Trim();
         }

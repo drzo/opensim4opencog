@@ -119,10 +119,12 @@ namespace RTParser
                 console(name + " NOUSER");
                 return;
             }
+            string uname = user.Predicates.grabSettingNoDebug("name");
+
             console(name
                     + " UserID='" + user.UserID
                     + "' UserName='" + user.UserName
-                    + "' name='" + user.Predicates.grabSettingNoDebug("name")
+                    + "' name='" + uname
                     + "' roleacct='" + user.IsRoleAcct
                     + "' ListeningGraph=" + user.ListeningGraph
                     + "");
@@ -206,6 +208,7 @@ namespace RTParser
                 myUser.IsRoleAcct = roleAcct;
                 myUser.ListeningGraph = GetUserGraph(key, GraphMaster);
                 myUser.Predicates.addSetting("name", fullname);
+                myUser.Predicates.InsertFallback(() => AllUserPreds);
                 string userdir = GetUserDir(key);
                 myUser.SyncDirectory(userdir);
                 return myUser;

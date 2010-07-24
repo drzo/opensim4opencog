@@ -64,10 +64,12 @@ namespace RTParser
         /// </summary>
         public bool StaticLoader = true;
 
-        public static string AIMLDEBUGSETTINGS = "clear -spam +user +error +aimltrace +cyc -dictlog -tscore +loaded";
-        readonly public static TextFilter LoggedWords = new TextFilter() { "*", "-dictlog" }; //maybe should be ERROR", "STARTUP
+        public static string AIMLDEBUGSETTINGS =
+            "clear +*";
+            //"clear -spam +user +error +aimltrace +cyc -dictlog -tscore +loaded";
+        public static readonly TextFilter LoggedWords = new TextFilter() {"+*"};//, "-dictlog" }; //maybe should be ERROR", "STARTUP
         public User LastUser;
-        readonly public User BotAsUser;
+        public User BotAsUser;
         //public Request BotAsRequestUsed = null;
         public Request GetBotRequest(string s)
         {
@@ -145,6 +147,12 @@ namespace RTParser
         public List<Unifiable> CurrentStates = new List<Unifiable>();
 
         /// <summary>
+        /// A dictionary of first / third person substitutions
+        /// </summary>
+        public SettingsDictionary AllUserPreds;
+
+
+        /// <summary>
         /// How big to let the log buffer get before writing to disk
         /// </summary>
         private int MaxLogBufferSize
@@ -167,7 +175,7 @@ namespace RTParser
         {
             get
             {
-                return this.GlobalSettings.grabSetting("notacceptinguserinputmessage");
+                return this.GlobalSettings.grabSettingNoDebug("notacceptinguserinputmessage");
             }
         }
 
@@ -497,21 +505,20 @@ namespace RTParser
             GraphsByName.Add("default", _g);
             GraphsByName.Add("heardselfsay", _h);
             TheNLKB = new NatLangDb(this);
-            this.setup();
-            BotAsUser = new AIMLbot.User("HeardSelfSay", this);
-            BotAsUser.IsRoleAcct = true;
-            BotAsUser.ListeningGraph = HeardSelfSayGraph;
-            BotAsUser.Predicates = GlobalSettings;
             //            BotAsRequestUsed = new AIMLbot.Request("-bank-input-", BotAsUser, this, null);
             AddExcuteHandler("aiml", EvalAIMLHandler);
             AddExcuteHandler("bot", LightWeigthBotDirective);
+
             this.TheCyc = new CycDatabase(this);
             var v = TheCyc.GetCycAccess;
+
+
             this.clojureInterpreter = new ClojureInterpreter(this);
             clojureInterpreter.Init();
             clojureInterpreter.Intern("MyBot", this);
-            clojureInterpreter.Intern("BotAsUser", BotAsUser);
             clojureInterpreter.Intern("Users", BotUsers);
+            AddExcuteHandler("cloj", ClojExecHandler);
+
 #if !(NOT_FAKE_LISTENERS)
 
             if (!clojureInterpreter.IsSubscriberOf("thisClient"))
@@ -522,7 +529,7 @@ namespace RTParser
                 listeners["AIMLBotModule"] = this;
             }
 #endif
-            AddExcuteHandler("cloj", ClojExecHandler);
+            this.setup();
         }
 
 
@@ -618,24 +625,31 @@ namespace RTParser
         /// </summary>
         private void setup()
         {
-            Request request = GetBotRequest("-bot setup-");
-            if (Loader == null)
-            {
-                Loader = new AIMLLoader(this, request);
-            }
             var prev = isAcceptingUserInput;
             try
             {
                 isAcceptingUserInput = false;
                 this.GlobalSettings = new SettingsDictionary("bot.globalsettings", this, null);
-                ParentProvider provider = new ParentProvider(() => GlobalSettings);
+                //ParentProvider provider = new ParentProvider(() => GlobalSettings);
                 this.GenderSubstitutions = new SettingsDictionary("bot.gendersubstitutions", this, null);
                 this.Person2Substitutions = new SettingsDictionary("bot.person2substitutions", this, null);
                 this.PersonSubstitutions = new SettingsDictionary("bot.personsubstitutions", this, null);
                 this.Substitutions = new SettingsDictionary("bot.substitutions", this, null);
                 this.DefaultPredicates = new SettingsDictionary("bot.defaultpredicates", this, null);
                 this.HeardPredicates = new SettingsDictionary("bot.heardpredicates", this, null);
+                this.AllUserPreds = new SettingsDictionary("bot.alluserpred", this, null);
 
+                BotAsUser = new AIMLbot.User("HeardSelfSay", this);
+                BotAsUser.IsRoleAcct = true;
+                BotAsUser.ListeningGraph = HeardSelfSayGraph;
+                BotAsUser.Predicates = GlobalSettings;
+
+                Request request = GetBotRequest("-bot setup-");
+                if (Loader == null)
+                {
+                    Loader = new AIMLLoader(this, request);
+                }
+                clojureInterpreter.Intern("BotAsUser", BotAsUser);
                 this.CustomTags = new Dictionary<string, TagHandler>();
                 //this.GraphMaster = new GraphMaster();
                 //this.HeardSelfSayGraph = new GraphMaster();
@@ -747,19 +761,22 @@ namespace RTParser
             this.GenderSubstitutions.loadSettings(HostSystem.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("gendersubstitutionsfile")));
             this.DefaultPredicates.loadSettings(HostSystem.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("defaultpredicates")));
             this.Substitutions.loadSettings(HostSystem.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("substitutionsfile")));
-            Person2Substitutions.NoDebug = PersonSubstitutions.NoDebug = GenderSubstitutions.NoDebug = Substitutions.NoDebug = true;
+            Person2Substitutions.IsTraced = PersonSubstitutions.IsTraced = GenderSubstitutions.IsTraced = Substitutions.IsTraced = false;
             // Grab the splitters for this Proccessor
             this.loadSplitters(HostSystem.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("splittersfile")));
 
             User guser = FindOrCreateUser("globalPreds");
             guser.IsRoleAcct = true;
-            guser.Predicates.removeSetting("name");
-            guser.Predicates.removeSetting("id");
             guser.Predicates.clearSettings();
+            guser.Predicates.clearHierarchy();
+            guser.Predicates.InsertFallback(() => HeardPredicates);
             SettingsDictionary.loadSettings(
                 guser.Predicates,
                 HostSystem.Combine(PathToConfigFiles, "globalpreds.xml"),
                 true, false);
+            guser.Predicates.maskSetting("name");
+            guser.Predicates.maskSetting("id");
+
 
             LastUser = FindOrCreateUser(UNKNOWN_PARTNER);
             LastUser.IsRoleAcct = true;
@@ -2601,7 +2618,7 @@ The AIMLbot program.
             {
                 myUser = myBot.LastUser;
                 writeLine("-----------------------------------------------------------------");
-                string input = TextFilter.ReadLineFromInput(Console.Write, myUser.ShortName + "> ");
+                string input = TextFilter.ReadLineFromInput(Console.Write, myUser.UserName + "> ");
                 if (input == null)
                 {
                     Environment.Exit(0);
@@ -2656,7 +2673,7 @@ The AIMLbot program.
                         }
                     }
                     writeLine("-----------------------------------------------------------------");
-                    writeLine("{0}: {1}", myUser.ShortName, userJustSaid);
+                    writeLine("{0}: {1}", myUser.UserName, userJustSaid);
                     writeLine("---------------------");
                     writeLine("{0}: {1}   mene value={2}", myName, botJustSaid, meneValue);
                     writeLine("-----------------------------------------------------------------");
@@ -2737,10 +2754,16 @@ The AIMLbot program.
             if (cmd == "aimladd")
             {
                 int indexof = args.IndexOf("<");
-                string gn = args.Substring(0, indexof - 1);
-                args = args.Substring(indexof).Trim();
-                GraphMaster g = GetGraph(gn, myUser.ListeningGraph);
-                AddAiml(g, args);
+                if (indexof < 0)
+                {
+                    console(
+                        "@aimladd [graphname] <aiml/> -- inserts aiml content into graph (default LastUser.ListeningGraph )");
+                    return true;
+                }
+                string gn = args.Substring(0, indexof);
+                GraphMaster g =  GetGraph(gn, myUser.ListeningGraph);
+                String aiml = args.Substring(indexof).Trim();
+                AddAiml(g, aiml);
                 console("Done with " + args);
                 return true;
             }
@@ -2800,7 +2823,7 @@ The AIMLbot program.
             if (cmd == "proof")
             {
                 console("-----------------------------------------------------------------");
-                var ur = GetRequest(args, myUser.ShortName);
+                var ur = GetRequest(args, myUser.UserID);
                 int i;
                 Result r = myUser.LastResult;
                 if (args.StartsWith("save"))
@@ -2822,7 +2845,7 @@ The AIMLbot program.
                 {
                     List<TemplateInfo> CI = myUser.UsedTemplates;
                     console("-----------------------------------------------------------------");
-                    AIMLLoader.PrintTemplates(CI, console);
+                    AIMLLoader.PrintTemplates(CI, console, true);
                     if (args == "clear") CI.Clear();
                     console("-----------------------------------------------------------------");
                 }
@@ -2852,7 +2875,7 @@ The AIMLbot program.
                     return true;
                 }
 
-                var ur = GetRequest(args, myUser.ShortName);
+                var ur = GetRequest(args, myUser.UserID);
                 // Adds findall to request
                 if (true)
                 {
@@ -2896,7 +2919,7 @@ The AIMLbot program.
                 GraphMaster G = GetGraph(graphname, myUser.ListeningGraph);
                 IList<CategoryInfo> Cats =  G.GetCategoriesMatching(match);
                 console("-----------------------------------------------------------------");
-                AIMLLoader.PrintTemplates(Cats, console);
+                AIMLLoader.PrintTemplates(Cats, console, true);
                 console("-----------------------------------------------------------------");
                 console("Shown " + Cats.Count + " from " + G);
                 return true;
@@ -2969,7 +2992,7 @@ The AIMLbot program.
                     source = args;
                     slang = null;
                 }
-                var ur = GetRequest(args, myUser.ShortName);
+                var ur = GetRequest(args, myUser.UserID);
                 if (source != null)
                 {
                     try
@@ -3144,10 +3167,10 @@ The AIMLbot program.
         {
             get
             {
-                ISettingsDictionary dict = (ISettingsDictionary)BotAsUser ?? GlobalSettings;
+                SettingsDictionary dict = GlobalSettings;
                 if (dict != null)
                 {
-                    var botid = dict.grabSetting("id");
+                    var botid = dict.grabSettingNoDebug("id");
                 }
                 return "-BOT-ID-NULL-";
             }
