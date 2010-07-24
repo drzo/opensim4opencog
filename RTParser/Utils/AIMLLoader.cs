@@ -23,8 +23,15 @@ namespace RTParser.Utils
         /// <summary>
         /// The RProcessor whose brain is being processed
         /// </summary>
-        private RTParser.RTPBot RProcessor;
+        private RTParser.RTPBot RProcessorOld
+        {
+            get
+            {
+                return LoaderRequest00.Proccessor;
+            }
+        }
 
+        public Request LoaderRequest00;
         /// <summary>
         /// Allow all chars in RawUserInput
         /// </summary>
@@ -37,8 +44,7 @@ namespace RTParser.Utils
         /// <param name="bot">The bot whose brain is being processed</param>
         public AIMLLoader(RTParser.RTPBot bot, Request request)
         {
-            this.RProcessor = bot;
-            this.CurrentRequest = request;
+            this.LoaderRequest00 = request;
         }
 
         #region Methods
@@ -46,92 +52,81 @@ namespace RTParser.Utils
         /// <summary>
         /// Loads the AIML from files found in the RProcessor's AIMLpath into the RProcessor's brain
         /// </summary>
-        public void loadAIML(Request request)
-        {
-            this.loadAIML(this.RProcessor.PathToAIML, request.loader , request);
-        }
-
-        public void loadAIML(string path)
-        {
-            this.RProcessor.loadAIMLFromURI(path, null);
-        }
+        //public void loadAIML(string path)
+        //{
+        //    LoaderOptions loadOpts = request.loader;
+        //    request.Loader.loadAIMLFromURI(path, loadOpts);
+        //}
 
         /// <summary>
         /// Loads the AIML from files found in the path
         /// </summary>
         /// <param name="path"></param>
-        public void loadAIML(string path, LoaderOptions options, Request request)
+        public void loadAIMLDir0(string path, LoaderOptions loadOpts)
         {
-            request = EnsureRequest(request);
-            path = ResolveToURI(path, options, request);
-            writeToLog("*** Begin loadAIML From Location: '{0}' ***", path);
-            RProcessor.ReloadHooks.Add(() => loadAIML(path, options, request));
-            if (HostSystem.DirExists(path))
-            {
-                // process the AIML
-                loadAIMLDir(path, options, request);
-            }
-            else if (HostSystem.FileExists(path))
-            {
-                this.loadAIMLFile(path, options, request);
-            }
-            else
-            {
-                this.loadAIMLURI(path, options, request);
-            }
-            writeToLog("*** End loadAIML From Location: '{0}' ***", path);
-        }
+            RTPBot RProcessor = loadOpts.RProcessor;
+            path = ResolveToURI(path, loadOpts);
+            RProcessor.ReloadHooks.Add(() => loadAIMLDir0(path, loadOpts));
 
-        private void loadAIMLDir(string path, LoaderOptions options, Request request)        
-        {
-            options.TheRequest = request;
-            RProcessor.ReloadHooks.Add(() => loadAIMLDir(path, options, request));
-            request = EnsureRequest(request);
-            path = ResolveToURI(path, options, request);
-            writeToLog("Starting to process AIML files found in the directory " + path);           
+            Request request = loadOpts.TheRequest;
+            loadOpts = EnsureOptions(loadOpts, request, path);
+
+            writeToLog("Starting to process AIML files found in the directory " + path);
 
             string[] fileEntries = HostSystem.GetFiles(path, "*.aiml");
             if (fileEntries.Length > 0)
             {
-                foreach (string filename in fileEntries)
+                foreach (string f in fileEntries)
                 {
                     try
                     {
-                        if (options.Graph.IsFileLoaded(filename))
+                        if (loadOpts.CtxGraph.IsFileLoaded(f))
                         {
-                            //writeToLog("(skipping) " + filename);
+                            //writeToLog("(skipping) " + path);
                             continue;
                         }
-                        this.loadAIMLFile(filename, options, request);
+
+                        var savedOpt = request.LoadOptions;
+                        try
+                        {
+                            request.LoadOptions = loadOpts;
+                            request.Filename = f;
+                            loadOpts = request.LoadOptions;
+                            loadAIMLFile0(f, loadOpts, false);
+                        }
+                        finally
+                        {
+                            request.LoadOptions = savedOpt;
+                        }
                     }
                     catch (Exception ee)
                     {
-                        options.Graph.RemoveFileLoaded(filename);
-                        RProcessor.writeToLog(ee);
-                        RProcessor.writeToLog("Error in loadAIMLFile " + ee);
+                        loadOpts.CtxGraph.RemoveFileLoaded(path);
+                        writeToLog("Error in loadAIMLFile " + ee);
                     }
                 }
-                writeToLog("Finished processing the AIML files. " + Convert.ToString(request.Graph.Size) + " categories processed.");
+                writeToLog("Finished processing the AIML files. " + Convert.ToString(loadOpts.CtxGraph.Size) +
+                           " categories processed.");
             }
             else
             {
-                writeToLog("Could not find any .aiml files in the specified directory (" + path + "). Please make sure that your aiml file end in a lowercase aiml extension, for example - myFile.aiml is valid but myFile.AIML is not.");
+                writeToLog("Could not find any .aiml files in the specified directory (" + path +
+                           "). Please make sure that your aiml file end in a lowercase aiml extension, for example - myFile.aiml is valid but myFile.AIML is not.");
             }
 
-            if (options.recurse)
+            if (loadOpts.recurse)
             {
-                foreach (string filename in HostSystem.GetDirectories(path))
+                foreach (string f in HostSystem.GetDirectories(path))
                 {
-                    loadAIMLDir(path + Path.DirectorySeparatorChar + filename, options, request);
+                    loadAIMLDir0(path + Path.DirectorySeparatorChar + f, loadOpts);
                 }
             }
-
         }
 
-        static string ResolveToURI(string pathIn, LoaderOptions loadOpts, Request request)
+        static string ResolveToURI(string pathIn, LoaderOptions loadOpts)
         {
             string baseFile = GetBaseDirectory(loadOpts);
-            var combine = baseFile != null ? new[] {".", baseFile, "aiml"} : new[] {".", "aiml"};
+            var combine = baseFile != null ? new[] { ".", baseFile, "aiml" } : new[] { ".", "aiml" };
             string path = HostSystem.ResolveToURI(pathIn, combine);
             path = HostSystem.ToRelativePath(path);
             return path;
@@ -139,25 +134,51 @@ namespace RTParser.Utils
 
         static string GetBaseDirectory(LoaderOptions loadOpts)
         {
-            string baseFile = loadOpts.Filename ?? loadOpts.PrevFilename;
+            string baseFile = loadOpts.CurrentFilename ?? loadOpts.CurrentlyLoadingFrom ?? LoaderOptions.MISSING_FILE;
             if (baseFile == null) return ".";
             return HostSystem.GetBaseDir(baseFile);
         }
 
-        private void loadAIMLURI(string path, LoaderOptions loadOpts, Request request)
+        public void loadAIMLURI(string path, LoaderOptions loadOpts)
         {
-            request = EnsureRequest(request);
-            path = ResolveToURI(path, loadOpts, request);
+
+            RTPBot RProcessor = loadOpts.RProcessor;
+            RProcessor.ReloadHooks.Add(() => loadAIMLURI(path, loadOpts));
+            path = ResolveToURI(path, loadOpts);
+
+
             try
             {
                 if (HostSystem.DirExists(path))
                 {
-                    loadAIMLDir(path, loadOpts, request);
+                    Request request = loadOpts.TheRequest;
+                    var savedOpt = request.LoadOptions;
+                    try
+                    {
+                        request.LoadOptions = loadOpts;
+                        request.Filename = path;
+                        loadOpts = request.LoadOptions;
+                        loadAIMLDir0(path, loadOpts);
+                    }
+                    finally
+                    {
+                        request.LoadOptions = savedOpt;
+                    }
                     return;
                 }
                 else if (HostSystem.FileExists(path))
                 {
-                    loadAIMLFile(path, loadOpts, request);
+                    Request request = loadOpts.TheRequest;
+                    var savedOpt = request.LoadOptions;
+                    try
+                    {
+                        request.LoadOptions = loadOpts;
+                        loadAIMLFile0(path, loadOpts, true);
+                    }
+                    finally
+                    {
+                        request.LoadOptions = savedOpt;
+                    }
                     return;
                 }
                 else if (Uri.IsWellFormedUriString(path, UriKind.RelativeOrAbsolute))
@@ -166,23 +187,24 @@ namespace RTParser.Utils
                     var uri = new Uri(path);
                     if (uri.IsFile)
                     {
-                        loadAIMLURI(uri.AbsolutePath, loadOpts, request);
+                        loadAIMLURI(uri.AbsolutePath, loadOpts);
                         return;
                     }
                     WebRequest req = WebRequest.Create(uri);
                     WebResponse resp = req.GetResponse();
                     Stream stream = resp.GetResponseStream();
-                    string pfile = loadOpts.Filename;
+                    Request request = loadOpts.TheRequest;
+                    var savedOpt = request.LoadOptions;
                     try
                     {
-                        loadOpts.Filename = path;
-                        loadAIMLStream(stream, loadOpts, request);
+                        loadOpts.Loading0 = uri.ToString();
+                        loadAIMLStream(stream, loadOpts);
                         writeToLog("Completed AIML URI: " + path);
                         return;
                     }
                     finally
                     {
-                        loadOpts.Filename = pfile;
+                        request.LoadOptions = savedOpt;
                     }
                 }
             }
@@ -203,40 +225,47 @@ namespace RTParser.Utils
         /// Given the name of a file in the AIML path directory, attempts to load it into the 
         /// graphmaster
         /// </summary>
-        /// <param name="filename">The name of the file to process</param>
-        public void loadAIMLFile(string filename, LoaderOptions options, Request request)
+        /// <param name="path">The name of the file to process</param>
+        public void loadAIMLFile0(string path, LoaderOptions loadOpts, bool forceReload)
         {
-            request = EnsureRequest(request);
-            filename = ResolveToURI(filename, options, request);
-            if (HostSystem.DirExists(filename))
+            path = ResolveToURI(path, loadOpts);
+            RTPBot RProcessor = loadOpts.RProcessor;
+            //RProcessor.ReloadHooks.Add(() => loadAIMLFile0(path, loadOpts, forceReload));
+            Request request = loadOpts.TheRequest;
+            loadOpts = EnsureOptions(loadOpts, request, path);
+
+
+            if (!HostSystem.FileExists(path))
             {
-                writeToLog("Processing directory: " + filename);
-                if (options.recurse) loadAIMLDir(filename, options, request);
+                writeToLog("Processing url: " + path);
+                if (loadOpts.recurse) loadAIMLURI(path, loadOpts);
                 return;
             }
             try
             {
                 // load the document
-                string s = new FileInfo(filename).FullName;
-                if (options.Graph.IsFileLoaded(filename))
+                if (loadOpts.CtxGraph.IsFileLoaded(path))
                 {
-                    writeToLog("Already loaded! (but loading again) " + filename + " => " + s);
+                    if (!forceReload) return;
+                    writeToLog("Already loaded! (but loading again) " + path + " from " + loadOpts.CtxGraph);
                     //return;
                 }
-                writeToLog("Processing AIML file: " + filename + " from " + request.Graph);
-                options.Graph.AddFileLoaded(filename);
-                var tr = HostSystem.OpenRead(filename);
+                else
+                    writeToLog("Processing AIML file: " + path + " from " + loadOpts.CtxGraph);
+                loadOpts.CtxGraph.AddFileLoaded(path);
+                var tr = HostSystem.OpenRead(path);
                 try
                 {
-                    string pfile = options.Filename;
+                    string pfile = request.Filename;
                     try
                     {
-                        options.Filename = filename;
-                        this.loadAIMLStream(tr, options, request);
+                        request.Filename = path;
+                        loadOpts.Loading0 = path;
+                        this.loadAIMLStream(tr, loadOpts);
                     }
                     finally
                     {
-                        options.Filename = pfile;
+                        request.Filename = pfile;
                     }
                 }
                 finally
@@ -250,33 +279,40 @@ namespace RTParser.Utils
                     }
                 }
 
-                writeToLog("Loaded AIMLFile: '{0}'", filename + " from " + request.Graph);
+                writeToLog("Loaded AIMLFile: '{0}'", path + " from " + loadOpts.CtxGraph);
                 return;
             }
             catch (Exception e)
             {
-                options.Graph.RemoveFileLoaded(filename);
-                writeToLog("Error in AIML Stacktrace: " + filename + "\n  " + e.Message + "\n" + e.StackTrace);
-                writeToLog("Error in AIML file: " + filename + " Message " + e.Message);
+                loadOpts.CtxGraph.RemoveFileLoaded(path);
+                writeToLog("Error in AIML Stacktrace: " + path + "\n  " + e.Message + "\n" + e.StackTrace);
+                writeToLog("Error in AIML file: " + path + " Message " + e.Message);
             }
         }
         /// <summary>
         /// Given an XML document containing valid AIML, attempts to load it into the graphmaster
         /// </summary>
         /// <param name="doc">The XML document containing the AIML</param>
-        /// <param name="options">Where the XML document originated</param>
-        public void loadAIMLString(string docString, LoaderOptions options, Request request)
+        /// <param name="loadOpts">Where the XML document originated</param>
+        public void loadAIMLString(string docString, LoaderOptions loadOpts)
         {
-            request = EnsureRequest(request);
+            RTPBot RProcessor = loadOpts.RProcessor;
+            Request request = loadOpts.TheRequest;
+            //            RProcessor0.ReloadHooks.Add(() => loadAIMLFile0(path, loadOpts));
+            string path = request.Filename;
+            loadOpts = EnsureOptions(loadOpts, request, path);
+            path = ResolveToURI(path, loadOpts);
+
+
             try
             {
                 byte[] byteArray = Encoding.ASCII.GetBytes(docString);
                 MemoryStream stream = new MemoryStream(byteArray);
-                loadAIMLStream(stream, options, request);
+                loadAIMLStream(stream, loadOpts);
             }
             catch (Exception e2)
             {
-                String s = "which causes loadAIMLString '" + docString + "' " + options;
+                String s = "which causes loadAIMLString '" + docString + "' " + loadOpts;
                 s = s + "\n" + e2.Message + "\n" + e2.StackTrace + "\n" + s;
                 writeToLog(s);
                 throw e2;
@@ -289,12 +325,18 @@ namespace RTParser.Utils
         /// Given an XML document containing valid AIML, attempts to load it into the graphmaster
         /// </summary>
         /// <param name="doc">The XML document containing the AIML</param>
-        /// <param name="filename">Where the XML document originated</param>
-        public void loadAIMLStream(Stream input, LoaderOptions filename, Request request)
+        /// <param name="loadOpts">Where the XML document originated</param>
+        public void loadAIMLStream(Stream input, LoaderOptions loadOpts)
         {
-            request = EnsureRequest(request);
+            RTPBot RProcessor = loadOpts.RProcessor;
+            Request request = loadOpts.TheRequest;
+            string path = request.Filename;
+            loadOpts = EnsureOptions(loadOpts, request, path);
+            path = ResolveToURI(path, loadOpts);
+
+
             var xtr = XmlDocumentLineInfo.CreateXmlTextReader(input);
-            string namefile = "" + filename.Filename;
+            string namefile = "" + path;
             while (!xtr.EOF)
             {
                 try
@@ -307,11 +349,11 @@ namespace RTParser.Utils
                         continue;
                     }
                     HostSystem.Close(input);
-                    this.loadAIMLNode(doc.DocumentElement, filename, request);
+                    this.loadAIMLNode(doc.DocumentElement, loadOpts);
                 }
                 catch (Exception e2)
                 {
-                    String s = "which causes loadAIMLStream '" + input + "' " + filename + " charpos=" + input.Position;
+                    String s = "which causes loadAIMLStream '" + input + "' " + loadOpts + " charpos=" + input.Position;
                     s = s + "\n" + e2.Message + "\n" + e2.StackTrace + "\n" + s;
                     writeToLog(s);
                     //System.Console.Flush();
@@ -326,10 +368,40 @@ namespace RTParser.Utils
             return;
         }
 
-        public void loadAIMLNode(XmlNode currentNode, LoaderOptions filename, Request request)
+        private LoaderOptions EnsureOptions(LoaderOptions loadOpts, Request request1, string path)
         {
-            request = EnsureRequest(request);
+            Request request = LoaderRequest00;
+            if (request1 == null)
+            {
+                writeToLog("ERROR! Ensuring Request=" + request1);
+                request1 = request;
+            }
+            string fn = loadOpts.CurrentFilename;
+            if (fn == LoaderOptions.MISSING_FILE || Unifiable.IsNullOrEmpty(fn))
+            {
+                writeToLog("ERROR! Ensuring loadOpts.Filename='{0}' but path='{1}'", fn, path);
+            }
+            if (!fn.Contains(path) && !path.Contains(fn))
+            {
+                writeToLog("WARNING! Ensuring loadOpts.Filename='{0}' but path='{1}'", fn, path);
+            }
+            if (!request1.LoadOptions.Equals(loadOpts))
+            {
+               /// writeToLog("ERROR! Ensuring loadOpts.Filename='{0}' but path='{1}'", fn, path);
+            }
+            return loadOpts;
+        }
+
+        public void loadAIMLNode(XmlNode currentNode, LoaderOptions loadOpts)
+        {
+            RTPBot RProcessor = loadOpts.RProcessor;
+            Request request = loadOpts.TheRequest;
+            string path = request.Filename;
+            loadOpts = EnsureOptions(loadOpts, request, path);
+            path = ResolveToURI(path, loadOpts);
+
             var prev = RProcessor.Loader;
+
             try
             {
                 RProcessor.Loader = this;
@@ -340,7 +412,7 @@ namespace RTParser.Utils
                 string currentNodeName = currentNode.Name.ToLower();
                 if (currentNodeName == "aiml")
                 {
-                    IntoGraph(request, currentNode, filename);
+                    IntoGraph(request, currentNode, loadOpts);
                     return;
                 }
                 if (currentNodeName == "root")
@@ -350,7 +422,7 @@ namespace RTParser.Utils
                     // process each of these child "settings"? nodes
                     try
                     {
-                        IntoGraph(request, currentNode, filename);
+                        IntoGraph(request, currentNode, loadOpts);
                     }
                     finally
                     {
@@ -364,11 +436,11 @@ namespace RTParser.Utils
 
                 if (currentNodeName == "topic")
                 {
-                    this.processTopic(currentNode, currentNode.ParentNode, filename);
+                    this.processTopic(currentNode, currentNode.ParentNode, loadOpts);
                 }
                 else if (currentNodeName == "category")
                 {
-                    this.processCategory(currentNode, currentNode.ParentNode, filename);
+                    this.processCategory(currentNode, currentNode.ParentNode, loadOpts);
                 }
                 else if (currentNodeName == "meta")
                 {
@@ -376,12 +448,12 @@ namespace RTParser.Utils
                 }
                 else if (currentNodeName == "srai")
                 {
-                    EvalNode(currentNode, request, filename);
+                    EvalNode(currentNode, request, loadOpts);
                 }
                 else
                 {
                     writeToLog("ImmediateAiml:: " + currentNode.OuterXml);
-                    EvalNode(currentNode, request, filename);
+                    EvalNode(currentNode, request, loadOpts);
                 }
             }
             finally
@@ -390,8 +462,15 @@ namespace RTParser.Utils
             }
         }
 
-        private void IntoGraph(Request request, XmlNode currentNode, LoaderOptions filename)
+        private void IntoGraph(Request request, XmlNode currentNode, LoaderOptions loadOpts)
         {
+
+            RTPBot RProcessor = loadOpts.RProcessor;
+            string path = request.Filename;
+            loadOpts = EnsureOptions(loadOpts, request, path);
+            path = ResolveToURI(path, loadOpts);
+
+
             string graphname = RTPBot.GetAttribValue(currentNode, "graph", null);
             GraphMaster outerGraph = request.Graph;
             GraphMaster innerGraph = outerGraph;
@@ -405,7 +484,7 @@ namespace RTParser.Utils
                         if (innerGraph != outerGraph)
                         {
                             request.Graph = innerGraph;
-                            filename.Graph = innerGraph;
+                            loadOpts.CtxGraph = innerGraph;
                             writeToLog("ENTERING: " + graphname + " as " + innerGraph + " from " + outerGraph);
                         }
                     }
@@ -419,7 +498,7 @@ namespace RTParser.Utils
                 // process each of these child nodes
                 foreach (XmlNode child in currentNode.ChildNodes)
                 {
-                    loadAIMLNode(child, filename, request);
+                    loadAIMLNode(child, loadOpts);
                 }
                 innerGraph.IsBusy = prev;
                 return;
@@ -430,25 +509,18 @@ namespace RTParser.Utils
                 {
                     writeToLog("LEAVING: " + graphname + " as " + innerGraph + " back to " + outerGraph);
                     request.Graph = outerGraph;
-                    filename.Graph = outerGraph;
+                    loadOpts.CtxGraph = outerGraph;
                 }
             }
             return;
         }
 
-        private Request EnsureRequest(Request request)
+        private void EvalNode(XmlNode currentNode, Request request, LoaderOptions loadOpts)
         {
-            if (request == null)
-            {
-                writeToLog("ERROR! Ensuring Request=" + CurrentRequest);
-                request = CurrentRequest;
-            }
-            return request;
-        }
-
-        private void EvalNode(XmlNode currentNode, Request request, LoaderOptions filename)
-        {
-            request = EnsureRequest(request);
+            RTPBot RProcessor = loadOpts.RProcessor;
+            string path = request.Filename;
+            loadOpts = EnsureOptions(loadOpts, request, path);
+            path = ResolveToURI(path, loadOpts);
             try
             {
                 RProcessor.ImmediateAiml(currentNode, request, this, null);
@@ -457,7 +529,7 @@ namespace RTParser.Utils
             {
                 RProcessor.writeToLog(e);
                 writeToLog("ImmediateAiml: ERROR: " + e);
-                XmlNode element = currentNode; 
+                XmlNode element = currentNode;
                 string s = TextAndSourceInfo(element) + " " + LocationEscapedInfo(element);
                 writeToLog("ERROR PARSING: " + s);
             }
@@ -468,8 +540,8 @@ namespace RTParser.Utils
         /// graphmaster "brain"
         /// </summary>
         /// <param name="topicNode">the "topic" node</param>
-        /// <param name="filename">the file from which this topicNode is taken</param>
-        public void processTopic(XmlNode topicNode, XmlNode outerNode, LoaderOptions filename)
+        /// <param name="path">the file from which this topicNode is taken</param>
+        public void processTopic(XmlNode topicNode, XmlNode outerNode, LoaderOptions path)
         {
             // find the name of the topic or set to default "*"
             Unifiable topicName = RTPBot.GetAttribValue(topicNode, "name", Unifiable.STAR);
@@ -478,7 +550,7 @@ namespace RTParser.Utils
             {
                 if (cateNode.Name == "category")
                 {
-                    processCategoryWithTopic(cateNode, topicName, topicNode, filename);
+                    processCategoryWithTopic(cateNode, topicName, topicNode, path);
                 }
             }
         }
@@ -487,10 +559,10 @@ namespace RTParser.Utils
         /// Adds a category to the graphmaster structure using the default topic ("*")
         /// </summary>
         /// <param name="cateNode">the XML node containing the category</param>
-        /// <param name="filename">the file from which this category was taken</param>
-        public void processCategory(XmlNode cateNode, XmlNode outerNode, LoaderOptions filename)
+        /// <param name="path">the file from which this category was taken</param>
+        public void processCategory(XmlNode cateNode, XmlNode outerNode, LoaderOptions path)
         {
-            this.processCategoryWithTopic(cateNode, Unifiable.STAR, outerNode, filename);
+            this.processCategoryWithTopic(cateNode, Unifiable.STAR, outerNode, path);
         }
 
         /// <summary>
@@ -498,8 +570,8 @@ namespace RTParser.Utils
         /// </summary>
         /// <param name="cateNode">the XML node containing the category</param>
         /// <param name="topicName">the topic to be used</param>
-        /// <param name="filename">the file from which this category was taken</param>
-        private void processCategoryWithTopic(XmlNode cateNode, Unifiable topicName, XmlNode outerNode, LoaderOptions filename)
+        /// <param name="path">the file from which this category was taken</param>
+        private void processCategoryWithTopic(XmlNode cateNode, Unifiable topicName, XmlNode outerNode, LoaderOptions path)
         {
             // reference and check the required nodes
             List<XmlNode> patterns = FindNodes("pattern", cateNode);
@@ -510,18 +582,18 @@ namespace RTParser.Utils
                 {
                     if (Equals(null, pattern))
                     {
-                        throw new XmlException("Missing pattern tag in a cateNode found in " + filename);
+                        throw new XmlException("Missing pattern tag in a cateNode found in " + path);
                     }
                     if (Equals(null, template))
                     {
-                        throw new XmlException("Missing template tag in the cateNode with pattern: " + pattern.InnerText + " found in " + filename);
+                        throw new XmlException("Missing template tag in the cateNode with pattern: " + pattern.InnerText + " found in " + path);
                     }
-                    addCatNode(cateNode, pattern, filename, template, topicName, outerNode);
+                    addCatNode(cateNode, pattern, path, template, topicName, outerNode);
                 }
             }
         }
 
-        private void addCatNode(XmlNode cateNode, XmlNode patternNode, LoaderOptions filename, XmlNode templateNode,
+        private void addCatNode(XmlNode cateNode, XmlNode patternNode, LoaderOptions path, XmlNode templateNode,
             Unifiable topicName, XmlNode outerNode)
         {
             XmlNode guardnode = FindNode("guard", cateNode, FindNode("guard", outerNode, null));
@@ -536,7 +608,7 @@ namespace RTParser.Utils
             patternNode = newPattern;
             XmlNode topicTagText = extractThat(patternNode, "topic", cateNode, out patternText, out newPattern);
             patternNode = newPattern;
-            if (filename.DebugFiles && !ContansNoInfo(topicTagText.InnerXml))
+            if (path.DebugFiles && !ContansNoInfo(topicTagText.InnerXml))
             {
                 var s = RTPBot.GetAttribValue(topicTagText, "name", Unifiable.STAR);
                 if (topicName != s)
@@ -545,40 +617,52 @@ namespace RTParser.Utils
                 }
             }
             Unifiable categoryPath = generateCPath(patternText, that, cond, topicName, false);
-            PatternInfo patternInfo = PatternInfo.GetPattern(filename, patternNode, categoryPath);
-            TopicInfo topicInfo = TopicInfo.FindTopic(filename, topicName);
-            ThatInfo thatInfo = ThatInfo.GetPattern(filename, that);
+            PatternInfo patternInfo = PatternInfo.GetPattern(path, patternNode, categoryPath);
+            TopicInfo topicInfo = TopicInfo.FindTopic(path, topicName);
+            ThatInfo thatInfo = ThatInfo.GetPattern(path, that);
 
             // o.k., add the processed AIML to the GraphMaster structure
             if (!categoryPath.IsEmpty)
             {
                 try
                 {
-                    CategoryInfo categoryInfo = CategoryInfo.GetCategoryInfo(patternInfo, cateNode, filename);
-                    filename.Graph.addCategoryTag(categoryPath, patternInfo, categoryInfo, 
+                    CategoryInfo categoryInfo = CategoryInfo.GetCategoryInfo(patternInfo, cateNode, path);
+                    path.CtxGraph.addCategoryTag(categoryPath, patternInfo, categoryInfo,
                                                   outerNode, templateNode, guard, thatInfo);
                 }
                 catch (Exception e)
                 {
                     string s = "ERROR! Failed to load a new category into the graphmaster where the path = " +
                                categoryPath + " and templateNode = " + templateNode.OuterXml +
-                               " produced by a category in the file: " + filename + "\n";
+                               " produced by a category in the file: " + path + "\n";
                     writeToLog(s + e + "\n" + s);
                 }
             }
             else
             {
-                writeToLog("WARNING! Attempted to load a new category with an empty patternNode where the path = " + categoryPath + " and templateNode = " + templateNode.OuterXml + " produced by a category in the file: " + filename);
+                writeToLog("WARNING! Attempted to load a new category with an empty patternNode where the path = " + categoryPath + " and templateNode = " + templateNode.OuterXml + " produced by a category in the file: " + path);
             }
+        }
+
+        public override string ToString()
+        {
+            return "[AIMLLoader req='" + LoaderRequest00 + "' bot='" + LoaderRequest00.Proccessor.BotID + "']";
+            return base.ToString();
         }
 
         public void writeToLog(string message, params object[] args)
         {
-            this.RProcessor.writeToLog("LOADERTRACE: "+message, args);
+            string prefix = ToString();
+            LoaderRequest00.Proccessor.writeToLog("LOADERTRACE: " + message + " while " + prefix, args);
             try
             {
+                message = message.ToUpper();
                 Console.Out.Flush();
-                Console.Error.Flush();
+                if (message.Contains("ERROR") || message.Contains("WARN"))
+                {
+                    Console.Error.Flush();
+
+                }
             }
             catch { }
         }
@@ -643,7 +727,6 @@ namespace RTParser.Utils
 
         protected static XmlNode PatternStar = AIMLTagHandler.getNode("<pattern name=\"*\">*</pattern>");
         public bool ThatWideStar = false;
-        private Request CurrentRequest;
 
         /// <summary>
         /// Given a name will try to find a node named "name" in the childnodes or return null
@@ -722,6 +805,8 @@ namespace RTParser.Utils
         /// <returns>The appropriately processed path</returns>
         public Unifiable generateCPath(Unifiable pattern, Unifiable that, Unifiable flag, Unifiable topicName, bool isUserInput)
         {
+            var RProcessor = LoaderRequest00.Proccessor;
+
             // to hold the normalized path to be entered into the graphmaster
             Unifiable normalizedPath = Unifiable.CreateAppendable();
             string normalizedPattern;// = Unifiable.Empty;
@@ -737,7 +822,7 @@ namespace RTParser.Utils
             {
                 UseRawUserInput = true;
             }
-            if ((this.RProcessor.TrustAIML) & (!isUserInput || UseRawUserInput))
+            if ((RProcessor.TrustAIML) & (!isUserInput || UseRawUserInput))
             {
 
                 normalizedPattern = pattern.Trim();
@@ -835,7 +920,8 @@ namespace RTParser.Utils
         /// flags that we need to normalize out * and _ chars</param>
         /// <returns>The normalized Unifiable</returns>
         public Unifiable Normalize(string input, bool isUserInput)
-        {            
+        {
+            RTPBot RProcessor = LoaderRequest00.Proccessor;
             string input0 = input;
             if (Unifiable.IsNullOrEmpty(input)) return Unifiable.Empty;
             input = CleanWhitepaces(input);
@@ -857,8 +943,8 @@ namespace RTParser.Utils
             Unifiable result = Unifiable.CreateAppendable();
 
             // objects for normalization of the input
-            Normalize.ApplySubstitutions substitutor = new RTParser.Normalize.ApplySubstitutions(this.RProcessor);
-            Normalize.StripIllegalCharacters stripper = new RTParser.Normalize.StripIllegalCharacters(this.RProcessor);
+            Normalize.ApplySubstitutions substitutor = new RTParser.Normalize.ApplySubstitutions(RProcessor);
+            Normalize.StripIllegalCharacters stripper = new RTParser.Normalize.StripIllegalCharacters(RProcessor);
 
             Unifiable substitutedInput = substitutor.Transform(" " + input + " ").Trim();
             // split the pattern into it's component words
@@ -886,7 +972,7 @@ namespace RTParser.Utils
                 result.Append(normalizedWord);
             }
 
-            return  Unifiable.ToVMString(result).Replace("  ", " "); // make sure the whitespace is neat
+            return Unifiable.ToVMString(result).Replace("  ", " "); // make sure the whitespace is neat
         }
         #endregion
 
@@ -916,7 +1002,7 @@ namespace RTParser.Utils
             {
                 return xml2;
             }
-          
+
             String s = "";
 
             bool chgd = false;
@@ -926,7 +1012,7 @@ namespace RTParser.Utils
             char lastChar = '\0';
             foreach (char c0 in xml2)
             {
-                
+
                 if (c0 <= 32)
                 {
                     if (inwhite)
@@ -941,7 +1027,7 @@ namespace RTParser.Utils
                 switch (c0)
                 {
                     case '/':
-                        if (lastChar=='r')
+                        if (lastChar == 'r')
                         {
                             xmlFound = true;
                         }
@@ -984,14 +1070,14 @@ namespace RTParser.Utils
             }
             if (!chgd)
             {
-                if (len!=inlen)
+                if (len != inlen)
                 {
                     return s;
                 }
                 return xml2;
             }
             //s = s.Replace("<star index=\"1\"", "<star");
-            
+
             return s;
         }
 
@@ -1016,16 +1102,16 @@ namespace RTParser.Utils
         {
             string s = null;
             XmlNode nxt = templateNode;
-            s = funct("same",nxt);
+            s = funct("same", nxt);
             if (s != null) return s;
             nxt = templateNode.NextSibling;
-            s = funct("next",nxt);
+            s = funct("next", nxt);
             if (s != null) return s;
             nxt = templateNode.PreviousSibling;
-            s = funct("prev",nxt);
+            s = funct("prev", nxt);
             if (s != null) return s;
             nxt = templateNode.ParentNode;
-            s = funct("prnt",nxt);
+            s = funct("prnt", nxt);
             if (s != null) return s;
             return s;
         }
@@ -1040,15 +1126,15 @@ namespace RTParser.Utils
             string lines = NodeInfo(templateNode, LineNoInfo) ?? "(-1,-1)";
             string doc = NodeInfo(templateNode,
                                   (
-                                      (strng,node) =>
-                                          {
-                                              if (node == null) return null;
-                                              var od = node.OwnerDocument;
-                                              if (od == null) return null;
-                                              string st = od.ToString().Trim();
-                                              if (st.Length == 0) return null;
-                                              return st;
-                                          }));
+                                      (strng, node) =>
+                                      {
+                                          if (node == null) return null;
+                                          var od = node.OwnerDocument;
+                                          if (od == null) return null;
+                                          string st = od.ToString().Trim();
+                                          if (st.Length == 0) return null;
+                                          return st;
+                                      }));
             if (doc == null)
             {
                 doc = "nodoc";
@@ -1160,7 +1246,7 @@ namespace RTParser.Utils
         {
             if (info is XmlNode)
             {
-                XmlNode n = (XmlNode) info;
+                XmlNode n = (XmlNode)info;
                 if (n.Name == "template") info = n.ParentNode;
             }
             if (info is TemplateInfo)
@@ -1189,7 +1275,7 @@ namespace RTParser.Utils
                 {
                     if (!IsSilentTag(xmlNode)) return false;
                 }
-                if (node.ChildNodes.Count!=1)
+                if (node.ChildNodes.Count != 1)
                 {
                     return true;
                 }
@@ -1272,7 +1358,7 @@ namespace RTParser.Utils
         }
         protected internal virtual void XmlText(string strData, System.Xml.XmlDocument doc)
         {
-            
+
         }
         public override XmlText CreateTextNode(string text)
         {
@@ -1299,7 +1385,7 @@ namespace RTParser.Utils
             try
             {
                 //if (LineInfoReader != null && LineInfoReader.Position != -1)
-                  //  elem.SetPos(LineInfoReader.Position);
+                //  elem.SetPos(LineInfoReader.Position);
             }
             catch (Exception)
             {
@@ -1347,7 +1433,7 @@ namespace RTParser.Utils
 
     }
 
-    public class XmlAttributeLineInfo : XmlAttribute,IXmlLineInfo
+    public class XmlAttributeLineInfo : XmlAttribute, IXmlLineInfo
     {
         public XmlAttributeLineInfo(string prefix, string name, string uri, XmlDocumentLineInfo doc)
             : base(prefix, name, uri, doc)
@@ -1424,7 +1510,7 @@ namespace RTParser.Utils
         }
     }
 
-//#define HOLD_PARENT
+    //#define HOLD_PARENT
     public class XmlTextLineInfo : XmlText, IXmlLineInfo
     {
         public XmlTextLineInfo(string text, XmlDocumentLineInfo info)

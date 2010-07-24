@@ -43,7 +43,7 @@ namespace RTParser.AIMLTagHandlers
             if (this.templateNode.Name.ToLower() == "aiml")
             {
                 // process each of these child "settings"? nodes
-                Proc.Loader.loadAIMLNode(templateNode, loaderOptions, request);
+                request.Loader.loadAIMLNode(templateNode, loaderOptions);
             }
             return Unifiable.Empty;
         }

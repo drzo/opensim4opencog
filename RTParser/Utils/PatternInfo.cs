@@ -23,7 +23,7 @@ namespace RTParser.Utils
         public static PatternInfo GetPattern(LoaderOptions loaderOptions, XmlNode pattern, Unifiable unifiable)
         {
             if (NoInfo) return null;
-            return loaderOptions.Graph.FindPattern(pattern, unifiable);
+            return loaderOptions.CtxGraph.FindPattern(pattern, unifiable);
         }
 
         internal bool LoopsFrom(TemplateInfo newTemplateInfo)

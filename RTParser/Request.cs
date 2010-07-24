@@ -41,8 +41,14 @@ namespace RTParser
         DateTime TimesOutAt { get; set; }
         ISettingsDictionary Settings { get; set; }
         int MaxInputs { get; set; }
+
+
         bool GraphsAcceptingUserInput { get; set; }
-        LoaderOptions loader { get; }
+        LoaderOptions LoadOptions { get; set; }
+        AIMLLoader Loader { get; }
+        string Filename { get; set; }
+        string LoadingFrom { get; set; }
+
         void WriteLine(string s, object[] args);
         bool IsComplete(Result o);
         bool addSetting(string name, Unifiable unifiable);
@@ -119,7 +125,10 @@ namespace RTParser
 
         public override string ToString()
         {
-            string s = user.UserID;
+
+            string s;
+            if (user == null) s = "NULL";
+            else s = user.UserID;
             return s + ": " + Unifiable.ToVMString(rawInput);
         }
 
@@ -174,22 +183,71 @@ namespace RTParser
             set { Graph.GraphsAcceptingUserInput = value; }
         }
 
-        private LoaderOptions opts;
-        public LoaderOptions loader
+        public LoaderOptions LoadOptions
         {
             get
             {
-                return opts;
+                return new LoaderOptions(this, Graph);
+            }
+            set
+            {
+                Graph = value.CtxGraph;
+                Filename = value.CurrentFilename;
+                LoadingFrom = value.CurrentlyLoadingFrom;
             }
         }
 
-        //private GraphMaster ovGraph = null;
+
+        private AIMLLoader _aimlloader = null;
+        public AIMLLoader Loader
+        {
+            get
+            {
+                if (_aimlloader == null) _aimlloader = new AIMLLoader(Proccessor, this);
+                return _aimlloader;
+            }
+        }
+
+        public string Filename
+        {
+            get { return _filename; }
+            set
+            {
+                //if (_loadingfrom == null)
+                //{
+                //    _loadingfrom = _filename;
+                //}
+               if (_loadingfrom == null)
+               {
+                   _loadingfrom = null;
+                    //_loadingfrom = value;
+               }
+                _filename = value;
+            }
+        }
+        public string LoadingFrom
+        {
+            get { return _loadingfrom; }
+            set
+            {
+                if (_filename == null)
+                {
+                    _filename = value;
+                }
+                _loadingfrom = value;
+            }
+        }
+
+        private string _filename;
+        private string _loadingfrom;
+
+        private GraphMaster ovGraph = null;
         public override GraphMaster Graph
         {
             get
             {
-                if (opts.Graph != null)
-                    return opts.Graph;
+                if (ovGraph != null)
+                    return ovGraph;
                 if (ParentRequest != null)
                 {
                     var pg = ParentRequest.Graph;
@@ -197,7 +255,7 @@ namespace RTParser
                 }
                 return user.ListeningGraph;
             }
-            set { opts.Graph = value; }
+            set { ovGraph = value; }
         }
 
         private Unifiable _topic;

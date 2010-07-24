@@ -343,7 +343,7 @@ namespace RTParser
                 foreach (var s in new[] { PersonalAiml, PathToAIML, PathToConfigFiles, RuntimeDirectory })
                 {
                     if (s == null) continue;
-                    string exists = Path.Combine(s, "users");
+                    string exists = HostSystem.Combine(s, "users");
                     if (HostSystem.DirExists(exists))
                     {
                         exists = HostSystem.ToRelativePath(exists);
@@ -351,7 +351,7 @@ namespace RTParser
                         return exists;
                     }
                 }
-                string tryplace = Path.Combine(PathToAIML, "users");
+                string tryplace = HostSystem.Combine(PathToAIML, "users");
                 HostSystem.CreateDirectory(tryplace);
                 _PathToUserFiles = tryplace;
                 return tryplace;
@@ -373,7 +373,7 @@ namespace RTParser
         {
             get
             {
-                return Path.Combine(RuntimeDirectory, this.GlobalSettings.grabSetting("aimldirectory"));
+                return HostSystem.Combine(RuntimeDirectory, this.GlobalSettings.grabSetting("aimldirectory"));
             }
         }
 
@@ -389,7 +389,7 @@ namespace RTParser
         {
             get
             {
-                return Path.Combine(RuntimeDirectory, this.GlobalSettings.grabSetting("configdirectory"));
+                return HostSystem.Combine(RuntimeDirectory, this.GlobalSettings.grabSetting("configdirectory"));
             }
         }
 
@@ -400,7 +400,7 @@ namespace RTParser
         {
             get
             {
-                return Path.Combine(RuntimeDirectory, this.GlobalSettings.grabSetting("logdirectory"));
+                return HostSystem.Combine(RuntimeDirectory, this.GlobalSettings.grabSetting("logdirectory"));
             }
         }
 
@@ -541,24 +541,7 @@ namespace RTParser
         /// </summary>
         public void loadAIMLFromDefaults()
         {
-            Request getBotRequest = GetBotRequest("-loadAIMLFromDefaults-");
-            var prev = getBotRequest.GraphsAcceptingUserInput; 
-            try
-            {
-                getBotRequest.GraphsAcceptingUserInput = false;
-                AIMLLoader loader = Loader;
-                if (!StaticLoader || loader == null)
-                {
-                    loader = new AIMLLoader(this, getBotRequest);
-                }
-                Loader = loader;
-                loader.loadAIML(getBotRequest);
-
-            }
-            finally
-            {
-                getBotRequest.GraphsAcceptingUserInput = prev;
-            }
+            loadAIMLAndSettings(PathToAIML);
         }
 
         /// <summary>
@@ -566,19 +549,19 @@ namespace RTParser
         /// </summary>
         public void loadAIMLFromURI(string path, Request request)
         {
-            request = request ?? GetBotRequest("-loadAIMLFromURI-" + path + "-");
             var prev = request.GraphsAcceptingUserInput;
+            LoaderOptions savedOptions = request.LoadOptions;
             try
             {
                 request.GraphsAcceptingUserInput = false;
-                loadAIMLFromURI(path, 
-                    //LoaderOptions.GetDefault(request), 
-                    request.loader,
-                    request);
+                request.Filename = path;
+                LoaderOptions options = request.LoadOptions;
+                request.Loader.loadAIMLURI(path, options);
             }
             finally
             {
                 request.GraphsAcceptingUserInput = prev;
+                request.LoadOptions = savedOptions;
             }
         }
 
@@ -586,28 +569,21 @@ namespace RTParser
         /// <summary>
         /// Loads AIML from .aiml files into the graphmaster "brain" of the Proccessor
         /// </summary>
-        public void loadAIMLFromURI(string path, LoaderOptions options, Request request)
+        public void loadAIMLAndSettings(string path)
         {
-            var prev = request.GraphsAcceptingUserInput;
-            var rb = options.TheRequest = request;
+            Request request = GetBotRequest("-loadAIMLAndSettings-" + path + "-");
+            request.LoadingFrom = path;
+            var prev = request.GraphsAcceptingUserInput;     
             try
             {
                 request.GraphsAcceptingUserInput = false;
-                options.TheRequest = request;
-                AIMLLoader loader = Loader;
-                if (!StaticLoader || loader == null)
-                {
-                    loader = new AIMLLoader(this, request);
-                }
-                Loader = loader;
-                loader.loadAIML(path, options, request);
+                loadAIMLFromURI(path, request);
                 // maybe loads settings files if they are there
                 string settings = HostSystem.Combine(path, "Settings.xml");
                 if (HostSystem.FileExists(settings)) loadSettings(settings);
             }
             finally
             {
-                options.TheRequest = rb;
                 request.GraphsAcceptingUserInput = prev;
             }
         }
@@ -628,7 +604,7 @@ namespace RTParser
                 {
                     loader = new AIMLLoader(this, request);
                 }
-                loader.loadAIMLNode(newAIML.DocumentElement, filename, request);
+                request.Loader.loadAIMLNode(newAIML.DocumentElement, filename);
             }
             finally
             {
@@ -672,7 +648,7 @@ namespace RTParser
                 {
 
                     int loadcount = 0;
-                    string file = Path.Combine("trn", name);
+                    string file = HostSystem.Combine("trn", name);
                     if (HostSystem.FileExists(file))
                     {
                         StreamReader sr = new StreamReader(file);
@@ -683,7 +659,7 @@ namespace RTParser
                         loadcount++;
                     }
 
-                    file = Path.Combine("ngm", name);
+                    file = HostSystem.Combine("ngm", name);
                     if (HostSystem.FileExists(file))
                     {
                         StreamReader sr = new StreamReader(file);
@@ -702,7 +678,7 @@ namespace RTParser
 
                 if (pHMM.hmmCorpusLoaded == 0)
                 {
-                    string file = Path.Combine("bgm", "corpus.txt");
+                    string file = HostSystem.Combine("bgm", "corpus.txt");
                     //if (HostSystem.DirExists(file))
                     if (HostSystem.FileExists(file))
                     {
@@ -729,7 +705,7 @@ namespace RTParser
         public void loadSettings()
         {
             // try a safe default setting for the settings xml file
-            string path = Path.Combine(RuntimeDirectory, Path.Combine("config", "Settings.xml"));
+            string path = HostSystem.Combine(RuntimeDirectory, HostSystem.Combine("config", "Settings.xml"));
             this.loadSettings(path);
         }
 
@@ -766,18 +742,24 @@ namespace RTParser
             SetSaneGlobals(this.GlobalSettings);
 
             // Load the dictionaries for this RTPBot from the various configuration files
-            this.Person2Substitutions.loadSettings(Path.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("person2substitutionsfile")));
-            this.PersonSubstitutions.loadSettings(Path.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("personsubstitutionsfile")));
-            this.GenderSubstitutions.loadSettings(Path.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("gendersubstitutionsfile")));
-            this.DefaultPredicates.loadSettings(Path.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("defaultpredicates")));
-            this.Substitutions.loadSettings(Path.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("substitutionsfile")));
+            this.Person2Substitutions.loadSettings(HostSystem.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("person2substitutionsfile")));
+            this.PersonSubstitutions.loadSettings(HostSystem.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("personsubstitutionsfile")));
+            this.GenderSubstitutions.loadSettings(HostSystem.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("gendersubstitutionsfile")));
+            this.DefaultPredicates.loadSettings(HostSystem.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("defaultpredicates")));
+            this.Substitutions.loadSettings(HostSystem.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("substitutionsfile")));
             Person2Substitutions.NoDebug = PersonSubstitutions.NoDebug = GenderSubstitutions.NoDebug = Substitutions.NoDebug = true;
             // Grab the splitters for this Proccessor
-            this.loadSplitters(Path.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("splittersfile")));
-            LastUser = FindOrCreateUser("globalPreds");
-            LastUser.IsRoleAcct = true;
-            LastUser.Predicates.removeSetting("name");
-            LastUser.Predicates.removeSetting("id");
+            this.loadSplitters(HostSystem.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("splittersfile")));
+
+            User guser = FindOrCreateUser("globalPreds");
+            guser.IsRoleAcct = true;
+            guser.Predicates.removeSetting("name");
+            guser.Predicates.removeSetting("id");
+            guser.Predicates.clearSettings();
+            SettingsDictionary.loadSettings(
+                guser.Predicates,
+                HostSystem.Combine(PathToConfigFiles, "globalpreds.xml"),
+                true, false);
 
             LastUser = FindOrCreateUser(UNKNOWN_PARTNER);
             LastUser.IsRoleAcct = true;
@@ -960,7 +942,7 @@ namespace RTParser
                     HostSystem.CreateDirectory(this.PathToLogs);
 
                     Unifiable logFileName = DateTime.Now.ToString("yyyyMMdd") + ".log";
-                    FileInfo logFile = new FileInfo(Path.Combine(this.PathToLogs, logFileName));
+                    FileInfo logFile = new FileInfo(HostSystem.Combine(this.PathToLogs, logFileName));
                     StreamWriter writer;
                     if (!logFile.Exists)
                     {
@@ -1009,15 +991,16 @@ namespace RTParser
         }
         public void AddAiml(GraphMaster graph, string aimlText)
         {
-            Request request = GetBotRequest("Add aiml '" + aimlText + "' to " + graph);
+            Request request = GetBotRequest("AddAiml into '" + graph + "' '" + aimlText + "'");
             var prev = request.Graph;
             try
             {
                 request.Graph = graph;
-                LoaderOptions loader = request.loader;// LoaderOptions.GetDefault(request);
-                loader.Graph = graph;
+                LoaderOptions loader = request.LoadOptions.Value; // LoaderOptions.GetDefault(request);
+                loader.CtxGraph = graph;
+                loader.Loading0 = "from_text";
                 string s = string.Format("<aiml graph=\"{0}\">{1}</aiml>", graph.ScriptingName, aimlText);
-                Loader.loadAIMLString(s, loader, request);
+                request.Loader.loadAIMLString(s, loader);
             }
             catch (Exception e)
             {
@@ -2779,11 +2762,12 @@ The AIMLbot program.
             if (showHelp) console("@load <uri>");
             if (cmd == "load")
             {
+                Request req = GetBotRequest(cmd + " " + args);
                 if (Loader == null)
                 {
-                    Loader = new AIMLLoader(this, GetBotRequest(cmd + " " + args));
+                    Loader = new AIMLLoader(this, req);
                 }
-                Loader.loadAIML(args);
+                Loader.loadAIMLURI(args, req.LoadOptions.Value);
                 console("Done with " + args);
                 return true;
             }
@@ -3063,7 +3047,7 @@ The AIMLbot program.
             {
                 writeToLog("LoadPersonalDirectories: '{0}'", file);
                 loaded = true;
-                loadSettings(Path.Combine(file, "Settings.xml"));
+                loadSettings(HostSystem.Combine(file, "Settings.xml"));
             }
 
             file = HostSystem.Combine("aiml", myName);
@@ -3079,7 +3063,7 @@ The AIMLbot program.
             {
                 writeToLog("LoadPersonalDirectories: '{0}'", file);
                 loaded = true;
-                loadSettings(Path.Combine(file, "Settings.xml"));
+                loadSettings(HostSystem.Combine(file, "Settings.xml"));
             }
 
             file = HostSystem.Combine(myName, "aiml");
@@ -3101,6 +3085,7 @@ The AIMLbot program.
             _PathToBotPersonalFiles = file;
             string s = string.Format("-LoadPersonalDirectories: '{0}'-", file);
             Request request = GetBotRequest(s);
+            request.LoadingFrom = file;
             writeToLog(s);
             bool prev = request.GraphsAcceptingUserInput;
             try
@@ -3152,6 +3137,20 @@ The AIMLbot program.
         public override GraphMaster Graph
         {
             get { return GraphMaster; }
+            set { throw new NotImplementedException(); }
+        }
+
+        public string BotID
+        {
+            get
+            {
+                ISettingsDictionary dict = (ISettingsDictionary)BotAsUser ?? GlobalSettings;
+                if (dict != null)
+                {
+                    var botid = dict.grabSetting("id");
+                }
+                return "-BOT-ID-NULL-";
+            }
             set { throw new NotImplementedException(); }
         }
 

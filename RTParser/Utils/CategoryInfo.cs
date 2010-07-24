@@ -36,7 +36,7 @@ namespace RTParser.Utils
             : base(cateNode)
         {
             Pattern = pattern;
-            Filename = options.Filename;
+            Filename = options.CurrentFilename;
         }
 
         public override string ToString()
@@ -56,7 +56,7 @@ namespace RTParser.Utils
 
         public static CategoryInfo GetCategoryInfo(PatternInfo info, XmlNode node, LoaderOptions filename)
         {
-            return filename.Graph.FindCategoryInfo(info, node, filename);
+            return filename.CtxGraph.FindCategoryInfo(info, node, filename);
         }
 
         public static CategoryInfo MakeCategoryInfo(PatternInfo info, XmlNode node, LoaderOptions filename)
