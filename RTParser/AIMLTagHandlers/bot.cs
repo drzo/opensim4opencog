@@ -48,6 +48,7 @@ namespace RTParser.AIMLTagHandlers
                 if (RecurseResult != null) return RecurseResult;
                 string name = GetAttribValue(new[] { "name", "var" }, () => templateNodeInnerText.Trim());
                 Unifiable defaultVal = GetAttribValue("default", Unifiable.Empty);
+                if (name == "name") return "Bina";
                 string realName;
                 Unifiable value = SettingsDictionary.grabSettingDefualt(Proc.GlobalSettings, name ,out realName);
                 

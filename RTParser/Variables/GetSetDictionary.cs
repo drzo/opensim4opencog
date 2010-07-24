@@ -5,6 +5,8 @@ namespace RTParser.Variables
 {
     internal class GetSetDictionary : ISettingsDictionary
     {
+        public bool IsTraced { get; set; }
+
         public string NameSpace
         {
             // TODO: need a prepend?

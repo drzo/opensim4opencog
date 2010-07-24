@@ -23,7 +23,7 @@ namespace RTParser
         Result CurrentResult { get;  set; }
         Unifiable Flags { get; }
         IList<Unifiable> Topics { get; }
-        SettingsDictionary Predicates { get; }
+        ISettingsDictionary Predicates { get; }
         Proof Proof { get; set; }
 
         int MaxTemplates { get; set; }
@@ -325,12 +325,12 @@ namespace RTParser
             get { return user.BotOutputs; }
         }
 
-        public SettingsDictionary Predicates
+        public ISettingsDictionary Predicates
         {
             get
             {
                 if (Settings is SettingsDictionary) return (SettingsDictionary) Settings;
-                return  CurrentResult.Predicates;
+                return CurrentResult.Predicates;
             }
         }
 

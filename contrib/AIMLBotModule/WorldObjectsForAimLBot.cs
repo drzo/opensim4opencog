@@ -27,6 +27,7 @@ namespace AIMLBotModule
 {
     public class WorldObjectsForAimLBot : WorldObjectsModule, ICollectionProvider, ISettingsDictionary
     {
+        public bool IsTraced { get; set; }
         private static int _DefaultMaxRespondToChatPerMinute = 20;
         public static int DefaultMaxRespondToChatPerMinute
         {

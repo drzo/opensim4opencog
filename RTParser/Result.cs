@@ -74,7 +74,10 @@ namespace RTParser
             Started = true;
         }
 
-        public bool IsTraced = false;
+        /// <summary>
+        /// If the query is being traced
+        /// </summary>
+        public virtual bool IsTraced { get; set; }
 
         private string AlreadyUsed = "xtxtxtxtxtxtxtxtxxt";
         public int LinesToUse = 1;
@@ -277,7 +280,7 @@ namespace RTParser
             get { lock (OutputSentences) return OutputSentences.Count; }
         }
 
-        public SettingsDictionary Predicates
+        public ISettingsDictionary Predicates
         {
             get { return user.Predicates; }
         }

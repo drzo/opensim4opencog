@@ -151,7 +151,7 @@ namespace RTParser
         {
             get
             {
-                return GetValueORElse(this.Predicates, "name", () => ShortName.Replace("_", " "));
+                return GetValueORElse(this.Predicates, "name", () => UserID.AsString().Replace("_", " "));
             }
 
             set
@@ -228,6 +228,7 @@ namespace RTParser
         /// the predicates associated with this particular user
         /// </summary>
         public SettingsDictionary Predicates;
+        //public SettingsDictionary Predicates0;
 
         /// <summary>
         /// The most recent result to be returned by the bot
@@ -267,17 +268,6 @@ namespace RTParser
             }
         }
 
-        public string ShortName
-        {
-            get
-            {
-                if (this.Predicates != null && Predicates.containsSettingCalled("name"))
-                {
-                    return Predicates.grabSettingNoDebug("name");
-                }
-                return UserID.AsString().ToLower().Replace(" ", "_");
-            }
-        }
 
         #endregion
 
@@ -292,32 +282,32 @@ namespace RTParser
         /// </summary>
         /// <param name="UserID">The GUID of the user</param>
         /// <param name="bot">the bot the user is connected to</param>
-        public User(string UserID, RTParser.RTPBot bot)
-            : this(UserID, bot, new ParentProvider(() => bot.GlobalSettings))
+        internal User(string userID, RTParser.RTPBot bot)
+            : this(userID, bot, null)
         {
         }
 
         /// <summary>
         /// Ctor
         /// </summary>
-        /// <param name="UserID">The GUID of the user</param>
+        /// <param name="userID">The GUID of the user</param>
         /// <param name="bot">the bot the user is connected to</param>
-        public User(string UserID, RTParser.RTPBot bot, ParentProvider provider)
+        protected User(string userID, RTParser.RTPBot bot, ParentProvider provider)
             : base(bot)
         {
-            if (UserID.Length > 0)
+            if (userID.Length > 0)
             {
-                this.id = UserID;
+                this.id = userID;
                 this.bot = bot;
                 // we dont inherit the BotAsUser we inherit the bot's setings
                 // ApplySettings(bot.BotAsUser, this);
-                this.Predicates = new SettingsDictionary(ShortName + ".predicates", this.bot, provider);
+                this.Predicates = new SettingsDictionary(userID + ".predicates", this.bot, provider);
                 this.bot.DefaultPredicates.Clone(this.Predicates);
                 //this.Predicates.AddGetSetProperty("topic", new CollectionProperty(_topics, () => bot.NOTOPIC));
                 this.Predicates.addSetting("topic", bot.NOTOPIC);
-                this.Predicates.InsertFallback(() => bot.DefaultPredicates);
-                this.Predicates.InsertFallback(() => bot.HeardPredicates);
-                Predicates.addSetting("id", UserID);
+                //this.Predicates.InsertFallback(() => bot.DefaultPredicates);
+                Predicates.addSetting("id", userID);
+                Predicates.addSetting("name", userID);
                 //this.Predicates.addSetting("topic", "NOTOPIC");
                 SaveTimer = new Timer(SaveOften, this, new TimeSpan(0, 5, 0), new TimeSpan(0, 5, 0));
                 needsSave = true;

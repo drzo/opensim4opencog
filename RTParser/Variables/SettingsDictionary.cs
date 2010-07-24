@@ -52,6 +52,7 @@ namespace RTParser.Variables
         bool containsSettingCalled(string name);
 
         string NameSpace { get; }
+        bool IsTraced { get; set; }
     }
 
     /// <summary>
@@ -61,8 +62,6 @@ namespace RTParser.Variables
     public class SettingsDictionary : ISettingsDictionary
     {
         #region Attributes
-
-        public bool NoDebug = false;
 
         /// <summary>
         /// Holds a dictionary of settings
@@ -78,7 +77,10 @@ namespace RTParser.Variables
         // prechecks and uses if settings exist
         private List<ParentProvider> _overides = new List<ParentProvider>();
         // fallbacks (therefore inherits)
-        private List<ParentProvider> _parent = new List<ParentProvider>();
+        private List<ParentProvider> _fallbacks = new List<ParentProvider>();
+        // fallbacks (therefore inherits)
+        private List<ParentProvider> _listeners = new List<ParentProvider>();
+
         /// <summary>
         /// The bot this dictionary is associated with (only for writting log)
         /// </summary>
@@ -104,6 +106,8 @@ namespace RTParser.Variables
             get { return theNameSpace; }
             set { theNameSpace = value; }
         }
+
+        public bool IsTraced { get; set; }
 
         public override string ToString()
         {
@@ -145,11 +149,27 @@ namespace RTParser.Variables
                         item.Attributes.Append(name);
                         root.AppendChild(item);
                     }
-                    foreach (var normalizedName in this._parent)
+                    foreach (var normalizedName in this._fallbacks)
                     {
-                        XmlNode item = result.CreateNode(XmlNodeType.Element, "parent", "");
+                        XmlNode item = result.CreateNode(XmlNodeType.Element, "fallback", "");
                         XmlAttribute name = result.CreateAttribute("name");
                         name.Value = normalizedName().NameSpace;
+                        item.Attributes.Append(name);
+                        root.AppendChild(item);
+                    }
+                    foreach (var normalizedName in this._listeners)
+                    {
+                        XmlNode item = result.CreateNode(XmlNodeType.Element, "synchon", "");
+                        XmlAttribute name = result.CreateAttribute("name");
+                        name.Value = normalizedName().NameSpace;
+                        item.Attributes.Append(name);
+                        root.AppendChild(item);
+                    }
+                    foreach (var normalizedName in this.makedvars)
+                    {
+                        XmlNode item = result.CreateNode(XmlNodeType.Element, "maskedvar", "");
+                        XmlAttribute name = result.CreateAttribute("name");
+                        name.Value = normalizedName;
                         item.Attributes.Append(name);
                         root.AppendChild(item);
                     }
@@ -181,7 +201,8 @@ namespace RTParser.Variables
             theNameSpace = name;
             TrimKeys = !name.Contains("subst");
             this.bot = bot;
-            if (parent != null) _parent.Add(parent);
+            IsTraced = true;
+            if (parent != null) _fallbacks.Add(parent);
         }
 
         #region Methods
@@ -355,18 +376,20 @@ namespace RTParser.Variables
                 loadSettings(ToSettingsDictionary(dict), path, overwriteExisting, onlyIfUnknown);
                 return;
             }
-            if ((myNode.Name == "parent" || myNode.Name == "override" || myNode.Name == "fallback"))
+            if ((myNode.Name == "parent" || myNode.Name == "override" || myNode.Name == "fallback" || myNode.Name == "listener" || myNode.Name == "provider"))
             {
                 string name = RTPBot.GetAttribValue(myNode, "name", null);
                 if (!string.IsNullOrEmpty(name))
                 {
-                    object rtpbotobj = MushDLR223.ScriptEngines.ScriptManager.ResolveToObject(dict, name);
-                    if (rtpbotobj == null)
+                    var rtpbotobjCol = MushDLR223.ScriptEngines.ScriptManager.ResolveToObject(dict, name);
+                    if (rtpbotobjCol == null || rtpbotobjCol.Count == 0)
                     {
-                        RTPBot.writeDebugLine("-DICTRACE: Cannot ResolveToObject settings line {0} in {1}", AIMLLoader.TextAndSourceInfo(myNode), dict);
+                        RTPBot.writeDebugLine("-DICTRACE: Cannot ResolveToObject settings line {0} in {1}",
+                                              AIMLLoader.TextAndSourceInfo(myNode), dict);
                         return;
                     }
-                    ParentProvider pp = ToParentProvider(rtpbotobj);
+                    //if (tr)
+                    ParentProvider pp = ToParentProvider(rtpbotobjCol);
                     SettingsDictionary settingsDict = ToSettingsDictionary(dict);
                     if (settingsDict == null || pp == null)
                     {
@@ -375,8 +398,14 @@ namespace RTParser.Variables
                     }
                     switch (myNode.Name)
                     {
+                        case "provider":
+                            settingsDict.InsertProvider(pp);
+                            return;
                         case "parent":
                             settingsDict.InsertFallback(pp);
+                            return;
+                        case "listener":
+                            settingsDict.InsertListener(pp);
                             return;
                         case "fallback":
                             settingsDict.InsertFallback(pp);
@@ -386,6 +415,21 @@ namespace RTParser.Variables
                             return;
                     }
                 }
+            }
+            if ((myNode.Name == "maskedvar"))
+            {
+                string name = RTPBot.GetAttribValue(myNode, "name", "");
+                if (name == "")
+                {                    
+                }
+                SettingsDictionary settingsDict = ToSettingsDictionary(dict);
+                if (settingsDict == null)
+                {
+                    ///warned already
+                    return;
+                }
+                settingsDict.maskSetting(name);
+
             }
             if ((myNode.Name == "item"))
             {
@@ -475,6 +519,14 @@ namespace RTParser.Variables
             {
                 return (() => (ISettingsDictionary) dictionary);
             }
+            if (dictionary is IEnumerable)
+            {
+                foreach (var VARIABLE in dictionary as IEnumerable)
+                {
+                    ParentProvider e = ToParentProvider(VARIABLE);
+                    if (e != null) return e;
+                }
+            }
             RTPBot.writeDebugLine("-DICTRACE: Warning ToParentProvider got type={0} '{1}'",
                                   dictionary.GetType(),
                                   dictionary);
@@ -512,19 +564,45 @@ namespace RTParser.Variables
         /// <param name="value">The value associated with this setting</param>
         public bool addSetting(string name, Unifiable value)
         {
+            bool found = true;
             lock (orderedKeys)
             {
                 string normalizedName = TransformKey(name);
+                if (normalizedName == "NAME" && value.AsString().ToUpper().Contains("UNKN"))
+                {
+                    found = true;
+                }
+                if (makedvars.Contains(normalizedName))
+                {
+                    SettingsLog("ERROR MASKED ADD SETTING '" + name + "'=" + str(value) + " ");
+                    return false;
+                }
                 value = TransformValue(value);
-                SettingsLog("ADD Setting Local '" + name + "'=" + str(value) + " ");
                 if (normalizedName.Length > 0)
                 {
-                    this.removeSetting(name);
+                    SettingsLog("ADD LOCAL '" + name + "'=" + str(value) + " ");
+                    found = this.removeSetting(name);
+                    updateListeners(name, value, true, !found);
                     this.orderedKeys.Add(name);
                     this.settingsHash.Add(normalizedName, value);
                 }
+                else
+                {
+                    SettingsLog("ERROR ADD Setting Local '" + name + "'=" + str(value) + " ");
+                }
             }
-            return true;
+            return !found;
+        }
+
+        private void updateListeners(string name, Unifiable value, bool locally, bool addedNew)
+        {
+            foreach (var list in _listeners)
+            {
+                var l = list();
+                if (addedNew) l.addSetting(name, value);
+                else
+                    l.updateSetting(name, value);
+            }
         }
 
         private Unifiable TransformValue(Unifiable value)
@@ -572,6 +650,10 @@ namespace RTParser.Variables
                 // shouldnt need this next one (but just in case)
                 this.orderedKeys.Remove(normalizedName);
                 this.removeFromHash(name);
+                if (ret)
+                {
+                    //maskedettings.Remove(normalizedName);
+                }
                 return ret;
             }
         }
@@ -579,7 +661,18 @@ namespace RTParser.Variables
         public string TransformKey(string name)
         {
             if (TrimKeys) name = name.Trim();
-            return MakeCaseInsensitive.TransformInput(name);
+            
+            name = name.ToUpper();
+            if (false)foreach (var k in new string[] { "FAVORITE", "FAV" })
+            {
+
+                if (name.StartsWith(k))
+                {
+                    if (name.Length > k.Length) name = name.Substring(k.Length);
+                }                                
+            }
+            return name;
+            //return MakeCaseInsensitive.TransformInput(name);
         }
 
         /// <summary>
@@ -620,16 +713,30 @@ namespace RTParser.Variables
             lock (orderedKeys)
             {
                 string normalizedName = TransformKey(name);
-                if (this.orderedKeys.Contains(name))
+                if (this.settingsHash.ContainsKey(normalizedName))
                 {
                     var old = this.settingsHash[normalizedName];
+
+                    if (makedvars.Contains(normalizedName))
+                    {
+                        SettingsLog("MASKED Not Update Local '" + name + "'=" + str(value) + " keeped " + str(old));
+                        return false;
+                    }
+                    updateListeners(name, value, true, false);
                     this.removeFromHash(name);
                     SettingsLog("UPDATE Setting Local '" + name + "'=" + str(value));
                     this.settingsHash.Add(normalizedName, value);
                     return true;
                 }
+
+                // before fallbacks
+                if (makedvars.Contains(normalizedName))
+                {
+                    SettingsLog("MASKED NOT UPDATE FALLBACKS '" + name + "'=" + str(value));
+                    return false;
+                }
             }
-            foreach (var parent in Parents)
+            foreach (var parent in Fallbacks)
             {
                 if (parent.updateSetting(name, value))
                 {
@@ -656,6 +763,27 @@ namespace RTParser.Variables
                 this.settingsHash.Clear();
             }
         }
+        public void clearHierarchy()
+        {
+            lock (orderedKeys)
+            {
+                _overides.Clear();
+                _fallbacks.Clear();
+                makedvars.Clear();                
+            }
+        }
+
+        public void clearSyncs()
+        {
+            _listeners.Clear();
+        }
+
+        private HashSet<string> makedvars = new HashSet<string>();
+        public void maskSetting(string name)
+        {
+            name = TransformKey(name);
+            lock (orderedKeys) makedvars.Add(name);
+        }
 
         /// <summary>
         /// Returns the value of a setting given the name of the setting
@@ -672,7 +800,16 @@ namespace RTParser.Variables
             }
             return v;
 #else
-            return grabSetting0(name);
+            try
+            {
+                return grabSetting0(name);
+            }
+            catch (Exception e)
+            {
+                writeToLog("ERROR " + e);
+
+                return null;
+            }
 #endif
         }
 
@@ -684,49 +821,62 @@ namespace RTParser.Variables
                 if (dict.containsSettingCalled(name))
                 {
                     Unifiable v = dict.grabSetting(name);
-                    SettingsLog("Returning Override '" + name + "'=" + str(v));
+                    SettingsLog("OVERRIDE '" + name + "'=" + str(v));
                     return v;
                 }
             }
             lock (orderedKeys)
             {
                 string normalizedName = TransformKey(name);
-                if (this.containsLocalCalled(name))
+
+                if (this.settingsHash.ContainsKey(normalizedName))
                 {
                     Unifiable v = this.settingsHash[normalizedName];
-                    SettingsLog("Returning LocalSetting '" + name + "'=" + str(v));
+                    if (makedvars.Contains(normalizedName))
+                    {
+                        SettingsLog("MASKED RETURNLOCAL '" + name + "=NULL instead of" + str(v));
+                        return null;
+                    }
+                    SettingsLog("LOCALRETURN '" + name + "'=" + str(v));
                     return v;
                 }
-                else if (Parents.Count > 0)
+                else if (Fallbacks.Count > 0)
                 {
-                    foreach (var list in Parents)
+                    foreach (var list in Fallbacks)
                     {
+                        list.IsTraced = false;
                         if (list.containsSettingCalled(name))
                         {
                             Unifiable v = list.grabSetting(name);
-                            SettingsLog("Returning Parent '" + name + "'=" + str(v));
+                            if (makedvars.Contains(normalizedName))
+                            {
+                                SettingsLog("MASKED PARENT '" + name + "=NULL instead of" + str(v));
+                                return null;
+                            }
+                            SettingsLog("RETURN FALLBACK '" + name + "'=" + str(v));
                             if (v != null && !Unifiable.IsFalse(v)) return v;
                         }
                     }
-                    var v0 = Parents[0].grabSetting(name);
-                    SettingsLog("Returning False '" + name + "'=" + v0);
+                    var v0 = Fallbacks[0].grabSetting(name);
+                    SettingsLog("RETURN FALLBACK0 '" + name + "'=" + str(v0));
                     return v0;
                 }
-                SettingsLog("Returning Empty " + name);
-                return Unifiable.Empty;
+                SettingsLog("MISSING '" + name + "'");
+                return Unifiable.NULL;
 
             }
         }
 
         private void SettingsLog(string unifiable)
         {
-            if (NoDebug) return;
+            if (unifiable.Contains("ERROR")) IsTraced = true;
+            if (!IsTraced) return;
             var fc = new StackTrace().FrameCount;
             RTPBot.writeDebugLine("DICTLOG: " + NameSpace + " (" + fc + ")   " + unifiable);
             if (fc > 200)
             {
                 //throw new 
-                RTPBot.writeDebugLine("DICTLOG OVERFLOWING: " + NameSpace + " (" + fc + ")   " + unifiable);
+                RTPBot.writeDebugLine("ERROR DICTLOG OVERFLOWING: " + NameSpace + " (" + fc + ")   " + unifiable);
                 //Console.ReadLine();
             }
         }
@@ -741,9 +891,14 @@ namespace RTParser.Variables
             lock (orderedKeys)
             {
                 string normalizedName = TransformKey(name);
+                
+                if (makedvars.Contains(normalizedName)) return true;
+
                 if (normalizedName.Length > 0)
                 {
-                    if (this.settingsHash.ContainsKey(normalizedName))
+                    return settingsHash.ContainsKey(normalizedName);
+
+                    if (!this.settingsHash.ContainsKey(normalizedName))
                     {
                         if (!this.orderedKeys.Contains(name))
                         {
@@ -786,12 +941,12 @@ namespace RTParser.Variables
             }
         }
 
-        public List<ISettingsDictionary> Parents
+        public List<ISettingsDictionary> Fallbacks
         {
             get
             {
                 var ps = new List<ISettingsDictionary>();
-                lock (_parent) foreach (var hash in _parent)
+                lock (_fallbacks) foreach (var hash in _fallbacks)
                     {
                         ps.Add(hash());
 
@@ -859,7 +1014,12 @@ namespace RTParser.Variables
 
         public void InsertFallback(ParentProvider provider)
         {
-            _parent.Insert(0, provider);
+            _fallbacks.Insert(0, provider);
+        }
+
+        public void InsertListener(ParentProvider provider)
+        {
+            _listeners.Insert(0, provider);
         }
 
         public void InsertOverrides(ParentProvider provider)
@@ -869,7 +1029,8 @@ namespace RTParser.Variables
 
         public void InsertProvider(ParentProvider provider)
         {
-            _parent.Insert(0, provider);
+            _listeners.Insert(0, provider);
+            _fallbacks.Insert(0, provider);
         }
 
         public void AddGetSetProperty(string topic, GetUnifiable getter, Action<Unifiable> setter)
@@ -886,16 +1047,19 @@ namespace RTParser.Variables
 
         public Unifiable grabSettingNoDebug(string name)
         {
-            if (NoDebug) return grabSetting(name);
-            NoDebug = true;
-            try
+            lock (orderedKeys)
             {
-                var v = grabSetting(name);
-                return v;
-            }
-            finally
-            {
-                NoDebug = false;
+                if (!IsTraced) return grabSetting(name);
+                IsTraced = true;
+                try
+                {
+                    var v = grabSetting(name);
+                    return v;
+                }
+                finally
+                {
+                    IsTraced = false;
+                }
             }
         }
 

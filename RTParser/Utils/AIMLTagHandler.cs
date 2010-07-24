@@ -259,13 +259,14 @@ namespace RTParser.Utils
 
         public static bool IsPredMatch(Unifiable value, Unifiable actualValue, SubQuery subquery)
         {
+            if (Unifiable.IsNull(actualValue)) return Unifiable.IsNullOrEmpty(value);
             value = value.Trim();
             actualValue = actualValue.Trim();
             if (actualValue.WillUnify(value, subquery)) return true;
             Regex matcher = new Regex(value.AsString().Replace(" ", "\\s").Replace("*", "[\\sA-Z0-9]+"),
                                       RegexOptions.IgnoreCase);
             if (matcher.IsMatch(actualValue)) return true;
-            if (Unifiable.IsUnknown(value) && (Unifiable.IsUnknown(actualValue))) return true;
+            if (value.ToUpper() == "UNKNOWN" && (Unifiable.IsUnknown(actualValue))) return true;
             return false;
         }
 
