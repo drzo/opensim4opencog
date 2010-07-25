@@ -1236,10 +1236,10 @@
   <random>
    <li> Tell me more about your family.</li>
    <li> Who else in your family <person>
-     <star index="3"/>
+     <star index="2"/>
    </person>?</li>
-   <li> Your <person><star index="2"/></person> ?</li>
-   <li> What else comes to mind when you think of your <person><star index="2"/></person> ?</li>
+   <li> Your <person><star index="1"/></person> ?</li>
+   <li> What else comes to mind when you think of your <person><star index="1"/></person> ?</li>
   </random>
  </template>
 </category>
