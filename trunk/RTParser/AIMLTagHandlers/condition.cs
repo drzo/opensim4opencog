@@ -2,6 +2,7 @@ using System;
 using System.Xml;
 using System.Text;
 using System.Text.RegularExpressions;
+using RTParser.Variables;
 
 namespace RTParser.AIMLTagHandlers
 {
@@ -118,8 +119,8 @@ namespace RTParser.AIMLTagHandlers
             if (this.templateNode.Name.ToLower() == "condition")
             {
                 // heuristically work out the type of condition being processed
-
-                if (this.templateNode.Attributes.Count == 2) // block
+                int tncount = AttributesCount(templateNode, "name,value");
+                if (tncount == 2) // block
                 {
                     Unifiable name = GetAttribValue("name", null);
                     Unifiable value = GetAttribValue("value", null);
@@ -135,7 +136,7 @@ namespace RTParser.AIMLTagHandlers
                     }
                     UnknownCondition();
                 }
-                else if (this.templateNode.Attributes.Count == 1) // single predicate
+                else if (tncount == 1) // single predicate
                 {
                     if (this.templateNode.Attributes[0].Name == "name")
                     {
@@ -143,14 +144,18 @@ namespace RTParser.AIMLTagHandlers
 
                         foreach (XmlNode childLINode in this.templateNode.ChildNodes)
                         {
+                            int cac = AttributesCount(childLINode, "name,value");
                             if (childLINode.Name.ToLower() == "li")
                             {
-                                if (childLINode.Attributes.Count == 1)
+                                if (cac == 1)
                                 {
                                     if (childLINode.Attributes[0].Name.ToLower() == "value")
                                     {
-                                        Unifiable actualValue = this.query.grabSetting(name);
-                                        Unifiable value = GetAttribValue(childLINode, "value", Unifiable.Empty, query);
+                                        ISettingsDictionary dict = query;
+                                        if (GetAttribValue("type", "") == "bot") dict = request.Proccessor.GlobalSettings;
+                                        string realName;
+                                        Unifiable actualValue = SettingsDictionary.grabSettingDefualt(dict, name, out realName);
+                                        Unifiable value = GetAttribValue(childLINode, "value", EmptyFunct, query);
                                         if (IsPredMatch(value, actualValue, query))
                                         {
                                             Succeed();
@@ -158,7 +163,7 @@ namespace RTParser.AIMLTagHandlers
                                         }
                                     }
                                 }
-                                else if (childLINode.Attributes.Count == 0)
+                                else if (cac == 0)
                                 {
                                     Succeed();
                                     return Unifiable.InnerXmlText(childLINode);
@@ -167,19 +172,25 @@ namespace RTParser.AIMLTagHandlers
                         }
                     }
                 }
-                else if (this.templateNode.Attributes.Count == 0) // multi-predicate
+                else if (tncount == 0) // multi-predicate
                 {
                     foreach (XmlNode childLINode in this.templateNode.ChildNodes)
                     {
                         if (childLINode.Name.ToLower() == "li")
                         {
-                            if (childLINode.Attributes.Count == 2)
+                            int cac = AttributesCount(childLINode, "name,value");
+
+                            if (cac == 2)
                             {
-                                string name = GetAttribValue(childLINode, "name", string.Empty, query);
-                                Unifiable value = GetAttribValue(childLINode, "value", string.Empty, query);
+                                string name = GetAttribValue(childLINode, "name", EmptyFunct, query);
+                                Unifiable value = GetAttribValue(childLINode, "value", EmptyFunct, query);
                                 if ((name.Length > 0) & (!value.IsEmpty))
                                 {
-                                    Unifiable actualValue = this.query.grabSetting(name);
+                                    ISettingsDictionary dict = query;
+                                    if (GetAttribValue("type", "") == "bot") dict = request.Proccessor.GlobalSettings;
+                                    string realName;
+                                    Unifiable actualValue = SettingsDictionary.grabSettingDefualt(dict, name,
+                                                                                                  out realName);
                                     if (IsPredMatch(value, actualValue, query))
                                     {
                                         Succeed();
@@ -187,16 +198,16 @@ namespace RTParser.AIMLTagHandlers
                                     }
                                 }
                             }
-                            if (childLINode.Attributes.Count == 1)
+                            if (cac == 1)
                             {
-                                string name = GetAttribValue(childLINode, "name", string.Empty, query);
+                                string name = GetAttribValue(childLINode, "name", EmptyFunct, query);
                                 if ((name.Length > 0) && this.query.containsSettingCalled(name))
                                 {
                                     Succeed();
                                     return Unifiable.InnerXmlText(childLINode);
                                 }
                             }
-                            else if (childLINode.Attributes.Count == 0)
+                            else if (cac == 0)
                             {
                                 Succeed();
                                 return Unifiable.InnerXmlText(childLINode);
