@@ -61,7 +61,7 @@ namespace RTParser.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "get")
             {
-                string name = GetAttribValue(new[] { "name", "var" }, () => templateNodeInnerText.Trim());
+                string name = GetAttribValue(templateNode, "name,var", () => templateNodeInnerText, query);
                 Unifiable defaultVal = GetAttribValue("default", Unifiable.Empty);
                 ISettingsDictionary dict = query;
                 if (GetAttribValue("type", "") == "bot") dict = request.Proccessor.GlobalSettings;
@@ -81,7 +81,7 @@ namespace RTParser.AIMLTagHandlers
                     writeToLog("SETTINGS OVERRIDE " + gResult);
                     return gResult;
                 }
-                string sresultGet = resultGet.ToValue(query).Trim();
+                string sresultGet = resultGet.ToValue(query);
                 if (sresultGet.ToUpper() == "UNKNOWN")
                 {
                     return sresultGet + " " + name;

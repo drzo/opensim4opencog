@@ -61,7 +61,12 @@ namespace RTParser.AIMLTagHandlers
                     return ("unknown " + name);
                 }
                 if (name != "name") Succeed();
-                if (Unifiable.IsNullOrEmpty(value))
+                var v2 = value.ToValue(query);
+                if (!Unifiable.IsNullOrEmpty(v2))
+                {
+                    value = v2;
+                }
+                if (!Unifiable.IsNullOrEmpty(value))
                 {
                     RecurseResult = value;
                 }

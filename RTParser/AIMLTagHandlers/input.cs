@@ -47,7 +47,7 @@ namespace RTParser.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "input")
             {
-                if (this.templateNode.Attributes.Count == 0)
+                if (AttributesCount(templateNode, "index") == 0)
                 {
                     return this.user.getInputSentence();
                 }
