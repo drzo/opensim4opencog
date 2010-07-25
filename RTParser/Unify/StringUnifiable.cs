@@ -61,6 +61,122 @@ namespace RTParser
         {
             _str = value;
         }
+        public StringUnifiable(string v, bool tf)
+        {
+            str = v;
+            if (tf)
+            {
+                int vLength = v.Length;
+                if (vLength==0)
+                {
+                    Flags = UFlags.IS_EMPTY | UFlags.IS_EXACT;
+                    valueCache = "";
+                    upperCache = "";
+                    return;
+                    
+                }
+                int vLengthM1 = vLength - 1;
+                switch (v[vLengthM1])
+                {
+                    case '*':
+                        {
+                            Flags |= UFlags.LONG_WILDCARD;
+                            vLength = vLengthM1;
+                            v = v.Substring(0, vLengthM1);
+                        }
+                        break;
+                    case '_':
+                        {
+                            Flags |= UFlags.SHORT_WILDCARD;
+                            vLength = vLengthM1;
+                            v = v.Substring(0, vLengthM1);
+                        }
+                        break;
+                    case '>':
+                        {
+                            Flags |= UFlags.LAZY_XML;
+                            int find = v.IndexOf("h=\"");
+                            if (find==4)
+                            {
+                                switch(v[find])
+                                {
+                                    case '*':
+                                        {
+                                            Flags |= UFlags.LONG_WILDCARD;
+                                        }
+                                        break;
+                                    case '_':
+                                        {
+                                            Flags |= UFlags.SHORT_WILDCARD;
+                                        }
+                                        break;
+                                    case '.':
+                                        {
+                                            Flags |= UFlags.ZERO_OR_MORE;
+                                        }
+                                        break;
+                                }
+                            }
+                            //vLength = vLengthM1;
+                            return;
+                        }
+                        break;
+                    default:
+                        Flags |= UFlags.IS_EXACT;
+                        break;
+                }
+                while (vLength > 0)
+                {
+                    if (v.StartsWith("()"))
+                    {
+                        Flags |= UFlags.IS_FALSE;
+                        v = v.Substring(2);
+                        vLength -= 2;
+                        continue;
+                    }
+                    if (v.StartsWith("~"))
+                    {
+                        Flags |= UFlags.NO_BINDS_STARS;
+                        v = v.Substring(1);
+                        vLength -= 1;
+                        continue;
+                    }
+                    if (v == "T")
+                    {
+                        Flags |= UFlags.IS_TRUE;
+                        v = v.Substring(1);
+                        vLength -= 1;
+                        continue;
+                    }
+                    if (v == "NIL")
+                    {
+                        Flags |= UFlags.IS_FALSE;
+                        v = v.Substring(3);
+                        vLength -= 3;
+                        continue;
+                    }
+                    if (v.StartsWith("TAG-"))
+                    {
+                        Flags |= UFlags.IS_TAG;
+                        v = v.Substring(4);
+                        vLength -= 4;
+                        continue;
+                    }
+                    else
+                    {
+                        break;
+                    }
+
+                }
+                UFlags Flags0 = FlagsForString(str);
+                Flags = Flags | Flags0;
+
+            }
+            else
+            {
+                Flags = FlagsForString(str);
+            }
+        }
 
         static UFlags FlagsForString(string str)
         {
@@ -69,32 +185,70 @@ namespace RTParser
             {
                 int len = str.Length;
                 if (len == 0)
-                    return UFlags.IS_EMPTY | UFlags.IS_EXACT | UFlags.IS_FALSE;
+                    return UFlags.IS_EMPTY | UFlags.IS_EXACT;
                 else
                 {
                     UFlags Flags = UFlags.NO_FLAGS;
                     char c;
                     str = str.Trim();
-                    if (str == "") return UFlags.IS_EMPTY | UFlags.IS_FALSE;
+                    if (str == "") return UFlags.IS_EMPTY;
                     c = str[0];
-
+                    if (len == 1)
+                    {
+                        switch (c)
+                        {
+                            case '*':
+                                return UFlags.LONG_WILDCARD | UFlags.BINDS_STARS;
+                            case '_':
+                                return UFlags.SHORT_WILDCARD | UFlags.BINDS_STARS;
+                            case 'T':
+                                return UFlags.IS_TRUE | UFlags.SHORT_WILDCARD;
+                            default:
+                                if (char.IsLetter(c))
+                                {
+                                    return UFlags.IS_EXACT;
+                                }
+                                else if (char.IsNumber(c) || c == '%')
+                                {
+                                    return UFlags.IS_EXACT;
+                                }
+                                else if (char.IsPunctuation(c) || c == '%')
+                                {
+                                    return UFlags.IS_PUNCT;
+                                }
+                                return UFlags.IS_EXACT;
+                        }
+                    }
+                    string found = str.ToUpper();
+                    int c1 = str[str.Length - 1];
                     switch (c)
                     {
-                        case '_':
-                            Flags |= UFlags.SHORT_WILDCARD;
+
+                        case '(':
+                            if (c1 == ')' && len == 2)
+                                return UFlags.IS_FALSE;
+                            break;                        
+                        case 'O':
+                            if (c1 == 'N')
+                                return UFlags.IS_TRUE;
+                            else if (c1 == 'F')
+                                return UFlags.IS_TRUE;
                             break;
                         case 'N':
-                            Flags |= UFlags.IS_FALSE | UFlags.IS_EXACT;
+                            if (c1 == 'O' && len == 2)
+                                return UFlags.IS_FALSE;
+                            if (c1 == 'L' && len == 3)
+                                return UFlags.IS_FALSE;
                             break;
                         case 'F':
-                            Flags |= UFlags.IS_FALSE | UFlags.IS_EXACT;
+                            if (c1 == 'E' && len == 5)
+                                return UFlags.IS_FALSE;
                             break;
                         case 'T':
-                            if (len > 3)
+                            if (len > 4)
                             {
                                 if (str.StartsWith("TAG-")) Flags |= UFlags.IS_TAG;
                             }
-                            Flags |= UFlags.IS_TRUE | UFlags.IS_EXACT;
                             break;
                         case '*':
                             Flags |= UFlags.LONG_WILDCARD;
@@ -138,11 +292,10 @@ namespace RTParser
                     }
 
 
-                    c = str[str.Length - 1];
                     if (c == '_')
-                        Flags |= UFlags.SHORT_WILDCARD | UFlags.BINDS_STARS;
+                        Flags |= UFlags.SHORT_WILDCARD;
                     else if (c == '*')
-                        Flags |= UFlags.LONG_WILDCARD | UFlags.BINDS_STARS;
+                        Flags |= UFlags.LONG_WILDCARD;
                     else if (Flags == UFlags.NO_FLAGS)
                     {
                         if (char.IsLetter(c))
@@ -268,18 +421,6 @@ namespace RTParser
         {
             if (IsFlag(UFlags.IS_FALSE)) return true;
             if (IsFlag(UFlags.IS_TRUE)) return false;
-            if (String.IsNullOrEmpty(str))
-            {
-                Flags |= UFlags.IS_FALSE;
-                return true;
-            }
-
-            string found = str.Trim().ToUpper();
-            if (found == "" || found == "NIL" || found == "()" || found == "FALSE" || found == "NO" || found == "OFF")
-            {
-                Flags |= UFlags.IS_FALSE;
-                return true;
-            }
             return false;
         }
 
@@ -423,6 +564,7 @@ namespace RTParser
         public override bool IsShort()
         {
             if (str == "_") return true;
+            if (str.EndsWith("_")) return true;
             // if (this.IsMarkerTag()) return false; // tested by the next line
             if (IsLazyStar()) return false;
             if (IsLazy()) return true;
@@ -442,8 +584,8 @@ namespace RTParser
         {
             if (str == null) return false;
             if (str.Length == 0) return false;
+            if (str.EndsWith("*")) return true;
             if (char.IsLetterOrDigit(str[0])) return false;
-            if (str == "*") return true;
             if (str.StartsWith("<regex")) return false;
             return IsFlag(UFlags.LONG_WILDCARD);
             if (str == ("*")) return true;
@@ -456,6 +598,7 @@ namespace RTParser
         public override bool IsLazy()
         {
             if (this.IsMarkerTag()) return false;
+            if (str == null) return false;
             if (str == "") return false;
             if (str[0] == '~')
             {
@@ -479,7 +622,7 @@ namespace RTParser
 
         override public bool StoreWildCard()
         {
-            return !str.StartsWith("~");
+            return !str.StartsWith("~");// && !str.StartsWith("TAG-");           
         }
 
         public override bool IsAnySingleUnit()

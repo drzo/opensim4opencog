@@ -1453,7 +1453,9 @@ namespace RTParser
 
 
 
+                int sqc = result.SubQueries.Count;
 
+                bool printedSQs = false;
                 //todo pick and chose the queries
                 // if (result.SubQueries.Count != 1)
                 {
@@ -1465,6 +1467,7 @@ namespace RTParser
                             s += Environment.NewLine;
                             s += "  " + Unifiable.ToVMString(path.FullPath);
                         }
+                        printedSQs = true;
                         writeToLog(s);
                         Console.Out.Flush();
                     }
@@ -1475,6 +1478,26 @@ namespace RTParser
                 bool hasMoreSolutions;
                 ProccessTemplates(request, result, out solutions, out hasMoreSolutions);
 
+                if (result.OutputSentenceCount == 0 && sqc > 0)
+                {
+                    isTraced = true;
+                    //todo pick and chose the queries
+                    // if (result.SubQueries.Count != 1)
+                    {
+                        if (!printedSQs)
+                        {
+                            string s = "AIMLTRACE! : OutputSenteceCount == 0 while sqc=" + result.SubQueries.Count;
+                            foreach (var path in result.SubQueries)
+                            {
+                                s += Environment.NewLine;
+                                s += "  " + Unifiable.ToVMString(path.FullPath);
+                            }
+                            writeToLog(s);
+                            Console.Out.Flush();
+                        }
+                    }
+                    ProccessTemplates(request, result, out solutions, out hasMoreSolutions);
+                }
 
                 if (isTraced || result.OutputSentenceCount != 1)
                 {

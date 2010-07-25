@@ -19,7 +19,7 @@ namespace RTParser
         }
 
         [Flags]
-        public enum UFlags : uint
+        public enum UFlags : uint 
         {
             NO_FLAGS = 0,
             IS_TRUE = 1,
@@ -39,6 +39,7 @@ namespace RTParser
             IS_PUNCT = 16384,
             APPENDABLE = 32768,
             NO_BINDS_STARS = 65536,
+            ZERO_OR_MORE = 131072,
         }
 
         public const float UNIFY_TRUE = 0;
@@ -173,7 +174,7 @@ namespace RTParser
                 {
                     if (!internedUnifiables.TryGetValue(key, out u))
                     {
-                        u = internedUnifiables[key] = new StringUnifiable(value);
+                        u = internedUnifiables[key] = new StringUnifiable(value, true);
                     }
                     return (StringUnifiable)u;
                 }
@@ -384,6 +385,8 @@ namespace RTParser
         public static Unifiable TopicTag = Create("TAG-TOPIC");
         public static Unifiable FlagTag = Create("TAG-FLAG");
         public static Unifiable InputTag = Create("TAG-INPUT");
+        public static Unifiable TagStartText = Create("TAG-START");
+        public static Unifiable TagEndText = Create("TAG-END");
 
         public abstract object Raw { get; }
         public virtual bool IsEmpty

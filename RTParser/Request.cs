@@ -386,7 +386,8 @@ namespace RTParser
 
             if (result1.SubQueries.Count >= qs.MaxPatterns)
             {
-                return true;
+                if (result1.OutputSentenceCount>0) return true;
+                //return true;
             }
             if (result1.UsedTemplates.Count >= qs.MaxTemplates)
             {
