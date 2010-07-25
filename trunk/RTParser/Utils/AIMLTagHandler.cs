@@ -259,9 +259,16 @@ namespace RTParser.Utils
 
         public static bool IsPredMatch(Unifiable required, Unifiable actualValue, SubQuery subquery)
         {
-            if (Unifiable.IsNull(required)) return Unifiable.IsNullOrEmpty(actualValue);
+            if (Unifiable.IsNull(required))
+            {
+                return Unifiable.IsNullOrEmpty(actualValue);
+            }
+            if (Unifiable.IsNull(actualValue))
+            {
+                return Unifiable.IsNullOrEmpty(required);
+            }
             required = required.Trim();
-            if (required.IsAnyWord())
+            if (required.IsAnySingleUnit())
             {
                 return !Unifiable.IsNullOrEmpty(actualValue);
             }
@@ -432,6 +439,8 @@ namespace RTParser.Utils
         }
 
         protected Unifiable RecurseResult = Unifiable.NULL;
+        protected static Func<string> EmptyFunct = (() => String.Empty);
+
         protected Unifiable Recurse()
         {
             if (!Unifiable.IsNullOrEmpty(RecurseResult))
@@ -677,19 +686,48 @@ namespace RTParser.Utils
 
         #endregion
 
-        protected string GetAttribValue(string attribName, string defaultIfEmpty)
+
+
+        public static int AttributesCount(XmlNode node, string s)
         {
-            return GetAttribValue(templateNode, attribName, defaultIfEmpty, query);
+            int i = 0;
+            string ss = "," + s + ",";
+            foreach (XmlAttribute cn in node.Attributes)
+            {
+                if (ss.Contains("," + cn.Name + ","))
+                {
+                    i++;
+                }
+            }
+            return i;
         }
 
-        static public Unifiable GetAttribValue(XmlNode node, string attribName, Unifiable defaultIfEmpty, SubQuery sq)
+        protected string GetAttribValue(string attribName,string defaultIfEmpty)
         {
-            attribName = attribName.ToLower();
-            foreach (XmlAttribute attrib in node.Attributes)
+            return GetAttribValue(templateNode, attribName, () => defaultIfEmpty, query);
+        }
+
+        static public Unifiable GetAttribValue(XmlNode node, string attribName, Func<string> defaultIfEmpty, SubQuery sq)
+        {
+            bool found = false;
+            Unifiable u = Unifiable.NULL;
+            foreach (var nameS in attribName.Split(new[] { ',' }))
             {
-                if (attrib.Name.ToLower() == attribName) return ReduceStar(attrib.Value, sq);
+                String attribnym = nameS.ToLower();
+                foreach (XmlAttribute attrib in node.Attributes)
+                {
+                    if (attrib.Name.ToLower() == attribnym)
+                    {
+                        found = true;
+                        var r = ReduceStar(attrib.Value, sq);
+                        if (!Unifiable.IsNullOrEmpty(r)) return r;
+                        if (Unifiable.IsNull(r)) continue;
+                        u = r;
+                    }
+                }
             }
-            return defaultIfEmpty;
+            if (found) return u;
+            return defaultIfEmpty();
         }
 
         static public double GetAttribValue(XmlNode node, string attribName, double defaultIfEmpty, SubQuery sq)
@@ -719,7 +757,7 @@ namespace RTParser.Utils
             string ifMissing = "MISSING";
             foreach (var name in attribNames)
             {
-                string vv = GetAttribValue(templateNode, name, ifMissing, query);
+                string vv = GetAttribValue(templateNode, name, () => ifMissing, query);
                 if (vv != ifMissing) return vv;
             }
             return defaultIfEmpty();

@@ -25,13 +25,14 @@ namespace RTParser.Utils
         public Node(Node P)
         {
             Parent = P;
+            SyncObject = this;
         }
         #region Attributes
 
         /// <summary>
         /// Contains the child nodes of this node
         /// </summary>
-        private Dictionary<string, Node> children = new Dictionary<string, Node>();
+        private Dictionary<string, Node> children;
 
         /// <summary>
         /// The template (if any) associated with this node
@@ -167,7 +168,7 @@ namespace RTParser.Utils
             // last in first out addition
             TemplateInfo newTemplateInfo = TemplateInfo.GetTemplateInfo(templateNode, guard, thatInfo, this, category);
             newTemplateInfo.That = thatInfo;
-            this.That = thatInfo;
+            // this.That = thatInfo;
             PatternInfo pat = patternInfo;
             if (category != null)
             {
@@ -266,9 +267,9 @@ namespace RTParser.Utils
             bool found = false;
             string fs = firstWord.ToUpper();
             Node childNode;
-            lock (children)
+            lock (SyncObject)
             {
-                if (this.children.TryGetValue(fs, out childNode))
+                if (this.children!=null && this.children.TryGetValue(fs, out childNode))
                 {
                     initial = childNode.addPathNodeChilds(from + 1, path);
                     found = true;
@@ -305,6 +306,7 @@ namespace RTParser.Utils
                     childNode = new Node(this);
                     childNode.word = firstWord;
                     initial = childNode.addPathNodeChilds(from + 1, path);
+                    children = children ?? new Dictionary<string, Node>();
                     this.children.Add(childNode.word.ToUpper(), childNode);
                 }
             }
@@ -314,7 +316,7 @@ namespace RTParser.Utils
 
         #endregion
 
-        private ThatInfo That;
+        //private ThatInfo That;
 
         #region Evaluate Node
 
@@ -323,7 +325,7 @@ namespace RTParser.Utils
         {
             if (Parent == null) return null;
             bool useNext = false;
-            lock (children) foreach (KeyValuePair<string, Node> v in Parent.children)
+            lock (SyncObject) foreach (KeyValuePair<string, Node> v in Parent.children)
             {
                 if (useNext) return v.Value;
                 if (v.Value == this)
@@ -345,12 +347,7 @@ namespace RTParser.Utils
             return word;
         }
 
-        private Node evaluate(string path, SubQuery query, Request request, MatchState matchstate, StringAppendableUnifiable wildcard)
-        {
-            var vv = evaluate00(path, query, request, matchstate, wildcard);
-            if (vv == null || vv.disabled || vv.TemplateInfos == null || vv.TemplateInfos.Count == 0) return null;
-            return vv;
-        }
+        readonly private object SyncObject;
 
         public bool disabled = false;
 
@@ -364,7 +361,33 @@ namespace RTParser.Utils
         /// <param name="matchstate">The part of the input path the node represents</param>
         /// <param name="wildcard">The contents of the user input absorbed by the AIML wildcards "_" and "*"</param>
         /// <returns>The template to process to generate the output</returns>
-        public Node evaluate00(string path, SubQuery query, Request request, MatchState matchstate, StringAppendableUnifiable wildcard)
+        public Node evaluate(string path, SubQuery query, Request request, MatchState matchstate, StringAppendableUnifiable wildcard)
+        {
+
+            // if we've matched all the words in the input sentence and this is the end
+            // of the line then return the cCategory for this node
+            if (path.Length == 0)
+            {
+                if (TemplateInfos == null || TemplateInfos.Count == 0)
+                {
+                }
+                return this;
+            }
+
+            // otherwise split the input into it's component words
+            string[] splitPath = path.ToUpper().Split(" \r\n\t".ToCharArray());
+            return evaluateFirst(0, splitPath, query, request, matchstate, wildcard);
+            
+        }
+
+        private Node evaluateNext(int at, string[] splitPath, SubQuery query, Request request, MatchState matchstate, StringAppendableUnifiable wildcard)
+        {
+            var vv = evaluateFirst(at, splitPath, query, request, matchstate, wildcard);
+            if (vv == null || vv.disabled || vv.TemplateInfos == null || vv.TemplateInfos.Count == 0) return null;
+            return vv;
+        }
+
+        public Node evaluateFirst(int at, string[] splitPath,  SubQuery query, Request request, MatchState matchstate, StringAppendableUnifiable wildcard)
         {
             // check for timeout
             // check for timeout
@@ -378,25 +401,27 @@ namespace RTParser.Utils
                 return null; // Unifiable.Empty;
             }
 
+            int pathLength = splitPath.Length - at;
+
             // so we still have time!
-            path = path.Trim();
+            //path = path.Trim();
 
             // check if this is the end of a branch in the GraphMaster 
             // return the cCategory for this node
-            if (this.children.Count == 0)
+            if (this.children == null || this.children.Count == 0)
             {
-                if (path.Length > 0)
+                if (pathLength > 0)
                 {
                     // if we get here it means that there is a wildcard in the user input part of the
                     // path.
-                    this.storeWildCard(path, wildcard);
+                    this.storeWildCard(string.Join(" ", splitPath, at, pathLength), wildcard);
                 }
                 return this;
             }
 
             // if we've matched all the words in the input sentence and this is the end
             // of the line then return the cCategory for this node
-            if (path.Length == 0)
+            if (pathLength <= 0)
             {
                 if (TemplateInfos == null || TemplateInfos.Count == 0)
                 {
@@ -405,28 +430,28 @@ namespace RTParser.Utils
             }
 
             // otherwise split the input into it's component words
-            string[] splitPath = path.Split(" \r\n\t".ToCharArray());
+            //string[] splitPath = path.Split(" \r\n\t".ToCharArray());
 
             // get the first word of the sentence
-            string firstWord = Normalize.MakeCaseInsensitive.TransformInput(splitPath[0]);
+            //string firstWord = splitPath[at];
 
             // and concatenate the rest of the input into a new path for child nodes
-            string newPath = path.Substring(firstWord.Length, path.Length - firstWord.Length);
+            //string newPath = path.Substring(firstWord.Length, path.Length - firstWord.Length);
 
             // first option is to see if this node has a child denoted by the "_" 
             // wildcard. "_" comes first in precedence in the AIML alphabet
-            lock (children) foreach (KeyValuePair<string, Node> childNodeKV in this.children)
+            lock (SyncObject) foreach (KeyValuePair<string, Node> childNodeKV in this.children)
             {
                 Node childNode = childNodeKV.Value;
                 Unifiable childNodeWord = childNode.word;
-                if (!childNodeWord.IsAnyWord()) continue;
+                if (!childNodeWord.IsAnySingleUnit()) continue;
 
                 // add the next word to the wildcard match 
                 StringAppendableUnifiable newWildcard = Unifiable.CreateAppendable();
-                this.storeWildCard(splitPath[0], newWildcard);
+                this.storeWildCard(splitPath[at], newWildcard);
 
                 // move down into the identified branch of the GraphMaster structure
-                var result = childNode.evaluate(newPath, query, request, matchstate, newWildcard);
+                var result = childNode.evaluateNext(at + 1, splitPath, query, request, matchstate, newWildcard);
 
                 // and if we get a result from the branch process the wildcard matches and return 
                 // the result
@@ -452,18 +477,19 @@ namespace RTParser.Utils
                 }
             }
 
-            bool isTag = firstWord.StartsWith("TAG-");
+            bool isTag = splitPath[at].StartsWith("TAG-");
             // second option - the nodemapper may have contained a "_" child, but led to no match
             // or it didn't contain a "_" child at all. So get the child nodemapper from this 
             // nodemapper that matches the first word of the input sentence.
             while (true) 
             {
-                string fw;
-                string np;
-                Node childNode = LitteralChild(path , splitPath, out fw, out np, query);
+                string firstWord;
+                //string np;
+                int newAt;
+                Node childNode = LitteralChild(at, splitPath, out firstWord, out newAt, query);
                 if (childNode==null) break;
-                firstWord = fw;
-                newPath = np;
+                //firstWord = fw0;
+                //at = newAt;
                 // process the matchstate - this might not make sense but the matchstate is working
                 // with a "backwards" path: "topic <topic> that <that> user input"
                 // the "classic" path looks like this: "user input <that> that <topic> topic"
@@ -492,7 +518,7 @@ namespace RTParser.Utils
                 // move down into the identified branch of the GraphMaster structure using the new
                 // matchstate
                 var newWildcard = Unifiable.CreateAppendable();
-                var result = childNode.evaluate(newPath, query, request, newMatchstate, newWildcard);
+                var result = childNode.evaluateNext(newAt, splitPath, query, request, newMatchstate, newWildcard);
                 // and if we get a result from the child return it
                 if (result != null)
                 {
@@ -517,7 +543,7 @@ namespace RTParser.Utils
             // third option - the input part of the path might have been matched so far but hasn't
             // returned a match, so check to see it contains the "*" wildcard. "*" comes last in
             // precedence in the AIML alphabet.
-            lock (children) foreach (KeyValuePair<string, Node> childNodeKV in this.children)
+            lock (SyncObject) foreach (KeyValuePair<string, Node> childNodeKV in this.children)
             {
                 Node childNode = childNodeKV.Value;
                 Unifiable childNodeWord = childNode.word;//.Key;
@@ -528,9 +554,9 @@ namespace RTParser.Utils
 
                 // add the next word to the wildcard match 
                 var newWildcard = Unifiable.CreateAppendable();
-                this.storeWildCard(splitPath[0], newWildcard);
+                this.storeWildCard(splitPath[at], newWildcard);
 
-                var result = childNode.evaluate(newPath, query, request, matchstate, newWildcard);
+                var result = childNode.evaluateNext(at + 1, splitPath, query, request, matchstate, newWildcard);
                 // and if we get a result from the branch process and return it
                 if (result!=null)
                 {
@@ -559,10 +585,10 @@ namespace RTParser.Utils
             // if this node is itself representing a wildcard then the search continues to be
             // valid if we proceed with the tail.
             //if ((this.word == "_") || (this.word == "*"))
-            if (word.IsAnyWord() || word.IsLongWildCard())
+            if (word.IsAnySingleUnit() || word.IsLongWildCard())
             {
-                this.storeWildCard(splitPath[0], wildcard);
-                var result = this.evaluate(newPath, query, request, matchstate, wildcard);
+                this.storeWildCard(splitPath[at], wildcard);
+                var result = this.evaluateNext(at + 1, splitPath, query, request, matchstate, wildcard);
                 return result;
             }
 
@@ -574,27 +600,27 @@ namespace RTParser.Utils
             return null;/// string.Empty;
         }
 
-        private Node LitteralChild(Unifiable path, string[] splitPath, out string firstWord, out string newPath, SubQuery query)
+
+        private Node LitteralChild(int at, string[] splitPath, out string firstWord, out int newAt, SubQuery query)
         {
             //IList<Node> childrenS = new List<Node>();
             Node childNode;
-            firstWord = splitPath[0];
-            int rw = 1;
-
+            firstWord = splitPath[at];
             if (children.TryGetValue(firstWord, out childNode))
             {
                 if (query.CanUseNode(childNode))
                 {
-                    newPath = string.Join(" ", splitPath, rw, splitPath.Length - rw);
+                    //newPath = string.Join(" ", splitPath, rw, splitPath.Length - rw);
+                    newAt = at + 1;
                     return childNode;
                 }
             }
             foreach (KeyValuePair<string, Node> childNodeKV in children)
-            {                                
+            {
                 Unifiable childNodeWord = childNodeKV.Value.word;
-                if (childNodeWord.IsAnyWord()) continue;
-               // if (childNodeWord.IsLongWildCard()) continue;
-               // if (childNodeWord.IsWildCard()) continue;
+                if (childNodeWord.IsAnySingleUnit()) continue;
+                // if (childNodeWord.IsLongWildCard()) continue;
+                // if (childNodeWord.IsWildCard()) continue;
                 childNode = childNodeKV.Value;
                 if (!query.CanUseNode(childNode))
                 {
@@ -603,14 +629,15 @@ namespace RTParser.Utils
                 //childrenS.Add(childNode);
                 string fw;
                 Unifiable newPath0;
-                if (!childNode.word.ConsumePath(path, splitPath, out firstWord, out newPath0, query))
+                if (!childNode.word.ConsumePath(at, splitPath, out firstWord, out newPath0, out newAt, query))
                 {
                     continue;
                 }
-                newPath = newPath0;
+                //newPath = newPath0;
                 return childNode;
             }
-            newPath = null;
+
+            newAt = at;
             return null;
         }
 

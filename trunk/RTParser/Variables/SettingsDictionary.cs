@@ -1069,7 +1069,17 @@ namespace RTParser.Variables
             var un = dictionary.grabSetting(name);
             if (Unifiable.IsNull(un))
             {
-                string[] chops = new string[] { "favorite.", "favorite", "fav" };
+                if (name.Contains(","))
+                    foreach (string name0 in name.Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        un = grabSettingDefualt(dictionary, name0, out realName);
+                        if (!Unifiable.IsNull(un))
+                        {
+                            return un;
+                        }
+                    }
+
+                string[] chops = new string[] {"favorite.", "favorite", "fav"};
                 foreach (var chop in chops)
                 {
                     if (name.StartsWith(chop))
@@ -1084,7 +1094,7 @@ namespace RTParser.Variables
                     realName = chop + name;
                     if (dictionary is SettingsDictionary)
                     {
-                        SettingsDictionary sd = (SettingsDictionary)dictionary;
+                        SettingsDictionary sd = (SettingsDictionary) dictionary;
                         un = sd.grabSettingNoDebug(realName);
                     }
                     else

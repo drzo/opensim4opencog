@@ -482,28 +482,30 @@ namespace RTParser
             return !str.StartsWith("~");
         }
 
-        public override bool IsAnyWord()
+        public override bool IsAnySingleUnit()
         {
             return str == "_";
         }
 
-        public override bool ConsumePath(Unifiable fullpath, string[] tokens, out string fw, out Unifiable after, SubQuery query)
+        public override bool ConsumePath(int at, string[] tokens, out string fw, out Unifiable after, out int newAt, SubQuery query)
         {
-            int sl = tokens.Length;
-            if (sl == 0)
+            int tokenLen = tokens.Length;
+            if (tokenLen == 0)
             {
                 bool WasEmpty = IsEmpty;
                 fw = "";
                 after = Unifiable.Empty;
+                newAt = at;
                 return WasEmpty;
             }
-            fw = tokens[0];
-            int used = 1;
+            fw = tokens[at];
+            newAt = at + 1;
             string fws = fw.ToUpper();
             string su = ToUpper();
             if (su == fws)
             {
-                after = string.Join(" ", tokens, used, sl - used);
+                int atPlusOne = at + 1;
+                after = string.Join(" ", tokens, atPlusOne, tokenLen - atPlusOne);
                 return true;
             }
             int minLen = LengthMin;
@@ -530,7 +532,7 @@ namespace RTParser
                     return false;
                 }
             }
-            if (UniifyPath0(tokens, sl, ovs, used, minLen, query, out after))
+            if (UniifyPath0(at, tokens, tokenLen, ovs, newAt, minLen, query, out after))
             {
                 return true;
             }
@@ -544,13 +546,13 @@ namespace RTParser
             Unifiable matchMe = this;
             if (!IsLazy())
             {
-                upTo = matchMe.ToUpper().Split(new char[] { ' ' }).Length;
+                upTo = matchMe.ToUpper().Split(new char[] {' '}).Length;
                 min = upTo;
             }
             else
             {
                 matchMe = ToValue(query);
-                upTo = matchMe.ToUpper().Split(new char[] { ' ' }).Length;
+                upTo = matchMe.ToUpper().Split(new char[] {' '}).Length;
                 min = upTo;
             }
             if (upTo > len)
@@ -564,7 +566,7 @@ namespace RTParser
                 fw = Join(" ", tokens, 0, j);
                 if (matchMe.WillUnify(fw, query))
                 {
-                    if (j > 1) writeToLog("ConsumeFirst Success!: " + fullpath);
+                    if (j > 1) writeToLog("ConsumeFirst Success!: " + at);
                     restCache = Join(" ", tokens, j, len - j);
                     return true;
                 }
@@ -572,7 +574,7 @@ namespace RTParser
             return false;
         }
 
-        private bool UniifyPath0(string[] tokens, int sl, Unifiable ovs, int used, int minLen, SubQuery query, out Unifiable after)
+        private bool UniifyPath0(int at, string[] tokens, int tokenLen, Unifiable ovs, int usedAt, int minLen, SubQuery query, out Unifiable after)
         {
             if (ovs.IsFlag(UFlags.IS_TAG | UFlags.IS_EMPTY))
             {
@@ -587,9 +589,10 @@ namespace RTParser
             }
             if (str.StartsWith("<"))
             {
+                int usedReally = usedAt - at;
                 if (UnifyTagHandler(ovs, query))
                 {
-                    after = string.Join(" ", tokens, used, sl - used);
+                    after = string.Join(" ", tokens, usedReally, tokenLen - usedReally);
                     return true;
                 }
                 after = null;
@@ -737,19 +740,6 @@ namespace RTParser
             catch (Exception e)
             {
                 return AIMLTagHandler.getNode("<template>" + str + "</template>");
-            }
-        }
-
-        public override bool IsEmpty
-        {
-            get
-            {
-                string s = str;
-                if (string.IsNullOrEmpty(s)) return true;
-                s = s.Trim();
-                if (s.Length != 0) return false;
-                writeToLog("IsEmpty: " + str);
-                return true;
             }
         }
 

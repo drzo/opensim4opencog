@@ -160,12 +160,8 @@ namespace RTParser.Utils
 
         public Unifiable grabSetting(string name)
         {
-            var v = Request.grabSetting(name);
-            name = name.ToLower();
-            if (name.Equals("dog") || name.Equals("father"))
-            {
-                RTPBot.writeDebugLine("dog=" + v);
-            }
+            string realName;
+            var v = SettingsDictionary.grabSettingDefualt(Request.Settings, name, out realName); 
             return v;
         }
 
