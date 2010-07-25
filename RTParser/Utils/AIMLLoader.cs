@@ -66,7 +66,6 @@ namespace RTParser.Utils
         {
             RTPBot RProcessor = loadOpts.RProcessor;
             path = ResolveToURI(path, loadOpts);
-            RProcessor.ReloadHooks.Add(() => loadAIMLDir0(path, loadOpts));
 
             Request request = loadOpts.TheRequest;
             loadOpts = EnsureOptions(loadOpts, request, path);
@@ -129,12 +128,16 @@ namespace RTParser.Utils
             var combine = baseFile != null ? new[] { ".", baseFile, "aiml" } : new[] { ".", "aiml" };
             string path = HostSystem.ResolveToURI(pathIn, combine);
             path = HostSystem.ToRelativePath(path);
+            if (!HostSystem.FileOrDirExists(path))
+            {
+                RTPBot.writeDebugLine("WARNING PATH NOT EXIST ERROR: " + path);
+            }
             return path;
         }
 
         static string GetBaseDirectory(LoaderOptions loadOpts)
         {
-            string baseFile = loadOpts.CurrentFilename ?? loadOpts.CurrentlyLoadingFrom ?? LoaderOptions.MISSING_FILE;
+            string baseFile = loadOpts.CurrentlyLoadingFrom ?? loadOpts.CurrentFilename ?? LoaderOptions.MISSING_FILE;
             if (baseFile == null) return ".";
             return HostSystem.GetBaseDir(baseFile);
         }
@@ -143,10 +146,9 @@ namespace RTParser.Utils
         {
 
             RTPBot RProcessor = loadOpts.RProcessor;
+            loadOpts.Loading0 = path;
             RProcessor.ReloadHooks.Add(() => loadAIMLURI(path, loadOpts));
             path = ResolveToURI(path, loadOpts);
-
-
             try
             {
                 if (HostSystem.DirExists(path))
@@ -237,7 +239,7 @@ namespace RTParser.Utils
 
             if (!HostSystem.FileExists(path))
             {
-                writeToLog("Processing url: " + path);
+                writeToLog("WARNING (Re)writing url: " + path);
                 if (loadOpts.recurse) loadAIMLURI(path, loadOpts);
                 return;
             }
@@ -260,7 +262,7 @@ namespace RTParser.Utils
                     try
                     {
                         request.Filename = path;
-                        loadOpts.Loading0 = path;
+                        loadOpts = request.LoadOptions;
                         this.loadAIMLStream(tr, loadOpts);
                     }
                     finally
@@ -270,13 +272,7 @@ namespace RTParser.Utils
                 }
                 finally
                 {
-                    try
-                    {
-                        tr.Close();
-                    }
-                    catch (Exception)
-                    {
-                    }
+                    HostSystem.Close(tr);
                 }
 
                 writeToLog("Loaded AIMLFile: '{0}'", path + " from " + loadOpts.CtxGraph);
@@ -495,12 +491,20 @@ namespace RTParser.Utils
                 }
                 bool prev = innerGraph.IsBusy;
                 innerGraph.IsBusy = true;
-                // process each of these child nodes
-                foreach (XmlNode child in currentNode.ChildNodes)
+                try
                 {
-                    loadAIMLNode(child, loadOpts);
+                    // process each of these child nodes
+                    foreach (XmlNode child in currentNode.ChildNodes)
+                    {
+                        loadAIMLNode(child, loadOpts);
+
+                    }
                 }
-                innerGraph.IsBusy = prev;
+                finally
+                {
+
+                    innerGraph.IsBusy = prev;
+                }
                 return;
             }
             finally

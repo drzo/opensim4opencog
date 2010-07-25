@@ -56,7 +56,7 @@ namespace RTParser.AIMLTagHandlers
                         Unifiable path = templateNodeInnerText;
                         try
                         {
-                            request.Filename = DocumentInfo();
+                            request.LoadingFrom = DocumentInfo();
                             request.Loader.loadAIMLURI(path, loaderOptions);
                         }
                         catch (Exception e2)

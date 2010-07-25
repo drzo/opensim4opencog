@@ -83,9 +83,9 @@ namespace MushDLR223.Utilities
                 if (lastOutput == message) return;
             }
             if (lastOutput == message) return;
-            if (lastOutput.Contains(message)) return;
+            if (message.Length > 10 && lastOutput.Contains(message)) return;
             if (lastOutput.Length > 10 && message.Contains(lastOutput)) return;
-            console(message);
+            console("{0}", message);
             lastOutput = message;
         }
 

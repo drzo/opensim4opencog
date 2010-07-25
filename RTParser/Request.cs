@@ -232,7 +232,10 @@ namespace RTParser
             {
                 if (_filename == null)
                 {
-                    _filename = value;
+                  //   _filename = value;
+                } else
+                {
+                 //   Filename = null;
                 }
                 _loadingfrom = value;
             }
