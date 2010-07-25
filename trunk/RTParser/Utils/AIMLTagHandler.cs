@@ -307,14 +307,15 @@ namespace RTParser.Utils
 
             set
             {
-                if (AIMLLoader.ContainsAiml(value))
-                {
-                    writeToLogWarn("ContainsAiml = " + value);
-                }
                 if (Unifiable.IsNullOrEmpty(value))
                 {
                     writeToLog("ERROR ?!?! templateNodeInnerText = " + value);
                 }
+                else if (!value.AsString().Contains("<a href"))
+                    if (AIMLLoader.ContainsAiml(value))
+                    {
+                        writeToLogWarn("ContainsAiml = " + value);
+                    }
                 templateNode.InnerText = CheckValue(value);
             }
         }
@@ -506,13 +507,16 @@ namespace RTParser.Utils
                     writeToLog("ERROR ?!?! templateNodeInnerText = " + value);
                 }
                 string v = value.AsString();
-                if (v.Contains("<"))
+                if (!value.AsString().Contains("<a href"))
                 {
-                    writeToLogWarn("!@ERROR BAD INPUT? " + value);
-                }
-                if (v.Contains("&"))
-                {
-                    RTPBot.writeDebugLine("!@ERROR BAD INPUT? " + value);
+                    if (v.Contains("<"))
+                    {
+                        writeToLogWarn("!@ERROR BAD INPUT? " + value);
+                    }
+                    else if (v.Contains("&"))
+                    {
+                        RTPBot.writeDebugLine("!@ERROR BAD INPUT? " + value);
+                    }
                 }
                 return value;
             }

@@ -383,7 +383,7 @@ namespace RTParser.Utils
             }
             if (!request1.LoadOptions.Equals(loadOpts))
             {
-               /// writeToLog("ERROR! Ensuring loadOpts.Filename='{0}' but path='{1}'", fn, path);
+                /// writeToLog("ERROR! Ensuring loadOpts.Filename='{0}' but path='{1}'", fn, path);
             }
             return loadOpts;
         }
@@ -429,7 +429,6 @@ namespace RTParser.Utils
                 {
                     SettingsDictionary.loadSettingNode(request.Settings, currentNode, true, false);
                 }
-
                 if (currentNodeName == "topic")
                 {
                     this.processTopic(currentNode, currentNode.ParentNode, loadOpts);
@@ -445,6 +444,17 @@ namespace RTParser.Utils
                 else if (currentNodeName == "srai")
                 {
                     EvalNode(currentNode, request, loadOpts);
+                }
+                else if (currentNodeName == "genlmt")
+                {
+                    string name = RTPBot.GetAttribValue(currentNode, "graph,name,mt", "");
+                    GraphMaster G = null;
+                    if (name != "")
+                    {
+                        G = request.Proccessor.GetUserGraph(name, loadOpts.CtxGraph);
+                        loadOpts.CtxGraph.AddGenlMT(G);
+                    }
+                    writeToLog("GENLMT: " + loadOpts.CtxGraph + " => " + name + " => " + G);
                 }
                 else
                 {
@@ -644,7 +654,7 @@ namespace RTParser.Utils
             }
             else
             {
-                writeToLog("WARNING! Attempted to load a new category with an empty patternNode where the path = " + categoryPath + " and templateNode = " + templateNode.OuterXml + " produced by a category in the file: " + path);
+                writeToLog("ERROR WARNING! Attempted to load a new category with an empty patternNode where the path = " + categoryPath + " and templateNode = " + templateNode.OuterXml + " produced by a category in the file: " + path);
             }
         }
 
@@ -731,6 +741,7 @@ namespace RTParser.Utils
 
         protected static XmlNode PatternStar = AIMLTagHandler.getNode("<pattern name=\"*\">*</pattern>");
         public bool ThatWideStar = false;
+        public static bool useInexactMatching = false;
 
         /// <summary>
         /// Given a name will try to find a node named "name" in the childnodes or return null
@@ -873,36 +884,87 @@ namespace RTParser.Utils
                         normalizedThat = "* " + normalizedThat;
                     //normalizedThat = "<br/> " + normalizedThat;
                 }
-
                 // This check is in place to avoid huge "that" elements having to be processed by the 
                 // graphmaster. 
                 //if (normalizedThat.Length > this.RProcessor.MaxThatSize)
                 //{
                 //    normalizedThat = Unifiable.STAR;
                 //}
-                var TagEndText = Unifiable.Create("TAG-END");
+                Unifiable addTagEnd = isUserInput ? Unifiable.TagEndText : null;
+                Unifiable addTagStart = isUserInput ? Unifiable.TagStartText : null;
+
+                //useInexactMatching = true;
+                if (useInexactMatching)
+                {
+                    if (!isUserInput)
+                    {
+                        normalizedPattern = PadStars(normalizedPattern);
+                        normalizedThat = PadStars(normalizedThat);
+                        normalizedTopic = PadStars(normalizedTopic);
+                    }
+                    else
+                    {
+                        normalizedPattern = NoWilds(normalizedPattern);
+                        normalizedThat = NoWilds(normalizedThat);
+                        normalizedTopic = NoWilds(normalizedTopic);
+                    }
+                }
+                else
+                {
+                    addTagEnd = addTagStart = null;
+                }
 
                 // o.k. build the path
                 normalizedPath.Append(Unifiable.InputTag);
+                if (addTagStart != null) normalizedPath.Append(addTagStart);
                 normalizedPath.Append(Unifiable.Create(normalizedPattern));
+                if (addTagEnd != null) normalizedPath.Append(addTagEnd);
                 if (RProcessor.UseInlineThat)
                 {
                     normalizedPath.Append(Unifiable.ThatTag);
+                    if (addTagStart != null) normalizedPath.Append(addTagStart);
                     normalizedPath.Append(normalizedThat);
+                    if (addTagEnd != null) normalizedPath.Append(addTagEnd);
                 }
                 normalizedPath.Append(Unifiable.FlagTag);
                 normalizedPath.Append(flag);
                 normalizedPath.Append(Unifiable.TopicTag);
+                if (addTagStart != null) normalizedPath.Append(addTagStart);
                 normalizedPath.Append(normalizedTopic);
-                normalizedPath.Append(TagEndText);
+                if (addTagEnd != null) normalizedPath.Append(addTagEnd);
 
-                return normalizedPath;//.Frozen();
+                return normalizedPath; //.Frozen();
             }
             else
             {
                 return Unifiable.Empty;
             }
         }
+
+        private string NoWilds(string pattern)
+        {
+            pattern = pattern.Trim();
+            int pl = pattern.Length;
+            if (pl < 4) return pattern;
+            while (pattern.Contains("*"))
+            {
+                pattern = pattern.Replace("*", " ").Trim();
+            }
+            return pattern;
+        }
+
+        private string PadStars(string pattern)
+        {
+            pattern = pattern.Trim();
+            int pl = pattern.Length;
+            if (pl == 0) return "~*";
+            if (pl == 1) return pattern;
+            if (pl == 2) return pattern;
+            if (char.IsLetterOrDigit(pattern[pl - 1])) pattern = pattern + " ~*";
+            if (char.IsLetterOrDigit(pattern[0])) pattern = "~* " + pattern;
+            return pattern;
+        }
+
         public static string MatchKeyClean(Unifiable unifiable)
         {
             return MatchKeyClean(unifiable.AsString());
@@ -998,8 +1060,45 @@ namespace RTParser.Utils
             return false;
         }
 
-
         public static string CleanWhitepaces(string xml2)
+        {
+            return CleanWhitepaces(xml2, null, Unused, Unused);
+        }
+
+        private static bool Unused(char arg1, char arg2)
+        {
+            throw new NotImplementedException();
+            return false;
+        }
+
+
+        public static string CleanWildcards(string text)
+        {
+            if (text == null) return text;
+            if (text.Contains("\""))
+            {
+                return CleanWhitepaces(text);
+            }
+            string clean = text;
+            clean = AIMLLoader.CleanWhitepaces(
+                text, "*_",
+                new Func<char, char, bool>((c0, c1) =>
+                                               {
+                                                   if (char.IsLetterOrDigit(c1) || char.IsControl(c1)) return true;
+                                                   if ("\"'".Contains("" + c1)) return false;
+                                                   return false;
+                                               }),
+                new Func<char, char, bool>((c0, c1) =>
+                                               {
+                                                   if (char.IsLetterOrDigit(c0) || char.IsControl(c0)) return true;
+                                                   if ("\"'".Contains("" + c0)) return false;
+                                                   return false;
+                                               }));
+            return clean;
+        }
+
+        public static string CleanWhitepaces(string xml2, string padchars,
+            Func<char, char, bool> ifBefore, Func<char, char, bool> ifAfter)
         {
             if (xml2 == null) return xml2;
             const long maxCleanSize = 2 << 16;
@@ -1055,6 +1154,22 @@ namespace RTParser.Utils
                         }
                         break;
                     default:
+                        if (padchars != null)
+                        {
+
+                            bool before = padchars.Contains("" + lastChar);
+                            if (before && ifBefore(lastChar, c0))
+                            {
+                                if (!inwhite) pendingWhitespace = true;
+                            }
+
+                            bool after = padchars.Contains("" + c0);
+                            if (after && ifAfter(lastChar, c0))
+                            {
+                                if (!inwhite) pendingWhitespace = true;
+                            }
+
+                        }
                         inwhite = false;
                         break;
                 }
@@ -1333,6 +1448,12 @@ namespace RTParser.Utils
         public IXmlLineInfo LineTracker;
         public string InfoString;
         private bool PresrveWhitespace = false;
+        public bool MustSpaceWildcards = false;
+        public bool MustSpaceAttributeValues = false;
+        private string currentNodeType;
+        private string prevNodeType;
+        private string currentAttributeName;
+
         public XmlDocumentLineInfo(Stream lineInfoReader, string toString)
         {
             InfoString = toString;
@@ -1372,44 +1493,86 @@ namespace RTParser.Utils
         {
             base.Load(new XmlTextReader(new StringReader(xml)));
         }
-        protected internal virtual void XmlText(string strData, System.Xml.XmlDocument doc)
-        {
 
-        }
         public override XmlText CreateTextNode(string text)
         {
-            string clean = AIMLLoader.CleanWhitepaces(text);
+            XmlTextLineInfo node;
+            string clean = text;
+            if (MustSpaceWildcards)
+            {
+                clean = AIMLLoader.CleanWildcards(text);
+            } else
+            {
+                clean = AIMLLoader.CleanWhitepaces(text);
+            }
             if (clean != text)
             {
-                if (PresrveWhitespace) return new XmlTextLineInfo(text, this);
-                return new XmlTextLineInfo(clean, this);
+                node = new XmlTextLineInfo(clean, this);
+            } else
+            {
+                node = new XmlTextLineInfo(text, this);
             }
-            return new XmlTextLineInfo(text, this);
+            setLineInfo(node);
+            return node;
+        }
+
+        public void setLineInfo(AIMLLineInfo node)
+        {
+            if (LineTracker != null)
+            {
+                node.SetLineInfo(LineTracker.LineNumber, LineTracker.LinePosition);
+            }
         }
 
         public override XmlAttribute CreateAttribute(string prefix, string localName, string namespaceURI)
         {
-            return new XmlAttributeLineInfo(prefix, localName, namespaceURI, this);
+            XmlAttributeLineInfo elem;
+            var prev = currentAttributeName;
+            try
+            {
+                currentAttributeName = localName;
+                elem = new XmlAttributeLineInfo(prefix, localName, namespaceURI, this);
+            }
+            finally
+            {
+               // currentAttributeName = prev;
+            }
+            setLineInfo(elem);
+            return elem;
         }
         public override XmlWhitespace CreateWhitespace(string text)
         {
             return base.CreateWhitespace(text);
         }
-        public override XmlElement CreateElement(string prefix, string localname, string nsURI)
+        public override XmlElement CreateElement(string prefix, string localName, string namespaceURI)
         {
-            LineInfoElement elem = new LineInfoElement(prefix, localname, nsURI, this);
+            LineInfoElement elem;
             try
             {
-                //if (LineInfoReader != null && LineInfoReader.Position != -1)
-                //  elem.SetPos(LineInfoReader.Position);
+
+                switch (localName)
+                {
+                    case "pattern":
+                    case "that":
+                        MustSpaceWildcards = true;
+                        break;
+                    case "category":
+                    case "template":
+                        MustSpaceWildcards = false;
+                        break;
+                    default:
+                        break;
+                }
+
+                prevNodeType = currentNodeType;
+                currentNodeType = localName;
+                elem = new LineInfoElement(prefix, localName, namespaceURI, this);
             }
-            catch (Exception)
+            finally
             {
+                // currentNodeType = prev;
             }
-            if (LineTracker != null)
-            {
-                elem.SetLineInfo(LineTracker.LineNumber, LineTracker.LinePosition);
-            }
+            setLineInfo(elem);
             return elem;
         }
 
@@ -1443,14 +1606,27 @@ namespace RTParser.Utils
                 settings.ConformanceLevel = ConformanceLevel.Fragment;
                 settings.IgnoreWhitespace = true;
                 settings.IgnoreComments = true;
+                settings.ValidationType = ValidationType.None;
                 return settings;
             }
         }
 
     }
 
-    public class XmlAttributeLineInfo : XmlAttribute, IXmlLineInfo
+    public class XmlAttributeLineInfo : XmlAttribute, AIMLLineInfo
     {
+        public override string Value
+        {
+            get
+            {
+                return base.Value;
+            }
+            set
+            {
+                value = AIMLLoader.CleanWildcards(value);
+                base.Value = value;
+            }
+        }
         public XmlAttributeLineInfo(string prefix, string name, string uri, XmlDocumentLineInfo doc)
             : base(prefix, name, uri, doc)
         {
@@ -1526,8 +1702,13 @@ namespace RTParser.Utils
         }
     }
 
+    public interface AIMLLineInfo : IXmlLineInfo
+    {
+        void SetLineInfo(int number, int position);
+    }
+
     //#define HOLD_PARENT
-    public class XmlTextLineInfo : XmlText, IXmlLineInfo
+    public class XmlTextLineInfo : XmlText, AIMLLineInfo
     {
         public XmlTextLineInfo(string text, XmlDocumentLineInfo info)
             : base(text, info)
@@ -1602,7 +1783,7 @@ namespace RTParser.Utils
         }
     }
 
-    public class LineInfoElement : XmlElement, IXmlLineInfo
+    public class LineInfoElement : XmlElement, AIMLLineInfo
     {
         internal LineInfoElement(string prefix, string localname, string nsURI, XmlDocument doc)
             : base(prefix, localname.ToLower(), nsURI, doc)
