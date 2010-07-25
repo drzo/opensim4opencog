@@ -257,16 +257,21 @@ namespace RTParser.Utils
         }
 
 
-        public static bool IsPredMatch(Unifiable value, Unifiable actualValue, SubQuery subquery)
+        public static bool IsPredMatch(Unifiable required, Unifiable actualValue, SubQuery subquery)
         {
-            if (Unifiable.IsNull(actualValue)) return Unifiable.IsNullOrEmpty(value);
-            value = value.Trim();
+            if (Unifiable.IsNull(required)) return Unifiable.IsNullOrEmpty(actualValue);
+            required = required.Trim();
+            if (required.IsAnyWord())
+            {
+                return !Unifiable.IsNullOrEmpty(actualValue);
+            }
+
             actualValue = actualValue.Trim();
-            if (actualValue.WillUnify(value, subquery)) return true;
-            Regex matcher = new Regex(value.AsString().Replace(" ", "\\s").Replace("*", "[\\sA-Z0-9]+"),
+            if (actualValue.WillUnify(required, subquery)) return true;
+            Regex matcher = new Regex(required.AsString().Replace(" ", "\\s").Replace("*", "[\\sA-Z0-9]+"),
                                       RegexOptions.IgnoreCase);
             if (matcher.IsMatch(actualValue)) return true;
-            if (value.ToUpper() == "UNKNOWN" && (Unifiable.IsUnknown(actualValue))) return true;
+            if (required.ToUpper() == "UNKNOWN" && (Unifiable.IsUnknown(actualValue))) return true;
             return false;
         }
 

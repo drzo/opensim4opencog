@@ -579,7 +579,7 @@ namespace RTParser
         public void loadAIMLAndSettings(string path)
         {
             Request request = GetBotRequest("-loadAIMLAndSettings-" + path + "-");
-            request.LoadingFrom = path;
+            request.LoadingFrom = null; 
             var prev = request.GraphsAcceptingUserInput;     
             try
             {
