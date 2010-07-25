@@ -192,9 +192,20 @@ namespace RTParser
             }
         }
 
+
+        public string ToMatchPattern()
+        {
+            return ToUpper();
+        }
+
         static public bool IsTrue(Unifiable v)
         {
-            return !IsFalse(v);
+            if (!IsFalse(v))
+            {
+                if (!IsNullOrEmpty(v)) return true;
+                return false;
+            }
+            return true;
         }
 
         static public bool IsLogicTF(Unifiable v, SubQuery subquery)
@@ -306,6 +317,15 @@ namespace RTParser
             return (name is Unifiable && ((Unifiable)name).Raw == null);
         }
 
+        public static bool IsEMPTY(Object name)
+        {
+            if (name is String)
+            {
+                return ((String)name).Trim().Length == 0;
+            }
+            return (name is Unifiable && ((Unifiable)name).Raw == null);
+        }
+
         public static Unifiable operator +(string u, Unifiable more)
         {
             if (u.Length == 0) return more;
@@ -363,6 +383,7 @@ namespace RTParser
         public static Unifiable ThatTag = Create("TAG-THAT");
         public static Unifiable TopicTag = Create("TAG-TOPIC");
         public static Unifiable FlagTag = Create("TAG-FLAG");
+        public static Unifiable InputTag = Create("TAG-INPUT");
 
         public abstract object Raw { get; }
         public virtual bool IsEmpty
@@ -374,7 +395,7 @@ namespace RTParser
                 s = s.Trim();
                 if (s.Length != 0)
                 {
-                    writeToLog("was IsEmpty");
+                   // writeToLog("was IsEmpty");
                     return false;
                 }
                 return true;
@@ -384,6 +405,21 @@ namespace RTParser
         public Unifiable LegacyPath
         {
             get { return this; }
+        }
+
+        public virtual bool IsUnitMatcher
+        {
+            get { return IsShort(); }
+        }
+
+        public virtual bool IsStarMatcher
+        {
+            get { return !IsUnitMatcher && IsWildCard(); }
+        }
+
+        public bool CanMatchZero
+        {
+            get { return ToUpper().Length == 0; }
         }
 
         protected virtual bool IsFalse()
@@ -413,7 +449,9 @@ namespace RTParser
             }
         }
 
-        public abstract bool ConsumePath(Unifiable fullpath, string[] tokens, out string fw, out Unifiable right, SubQuery query);
+        public abstract bool ConsumePath(int at, string[] tokens,
+                                         out string fw, out Unifiable right,
+                                         out int newAt, SubQuery query);
 
         public bool WillUnify(Unifiable other, SubQuery query)
         {
@@ -575,7 +613,7 @@ namespace RTParser
             return "" + unifiable;
         }
 
-        public abstract bool IsAnyWord();
+        public abstract bool IsAnySingleUnit();
 
         public abstract string ToUpper();
 
@@ -612,6 +650,11 @@ namespace RTParser
             //    default:
             //        return false;
             //}
+        }
+
+        public bool IsAnyWord()
+        {
+            return IsUnitMatcher;
         }
     }
 }

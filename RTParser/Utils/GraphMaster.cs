@@ -383,7 +383,7 @@ namespace RTParser.Utils
                 toplevelBubble = null;
                 SubQuery query = new SubQuery(upath, request.CurrentResult, request);
                 query.TopLevel = toplevel;
-                var pattern = RootNode.evaluate00(upath.ToString(), query, request, matchstate, wildcard);
+                var pattern = RootNode.evaluate(upath.ToString(), query, request, matchstate, wildcard);
                 if (pattern != null)
                 {
                     var tmplateInfos = pattern.TemplateInfoCopy;

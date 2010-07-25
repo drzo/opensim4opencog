@@ -82,7 +82,7 @@ namespace RTParser.Utils
             if (hasTopic)
             {
                 s += "<topic name=\"";
-                var n = AIMLTagHandler.GetAttribValue(topic1, "name", (string)null , null);
+                var n = AIMLTagHandler.GetAttribValue(topic1, "name", ()=>(string)null , null);
                 s += n;
                 s += "\">";
             }

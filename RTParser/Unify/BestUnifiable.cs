@@ -96,11 +96,11 @@ namespace RTParser
             return true;
         }
 
-        public override bool IsAnyWord()
+        public override bool IsAnySingleUnit()
         {
             foreach (var u in List)
             {
-                if (u.IsAnyWord())
+                if (u.IsAnySingleUnit())
                 {
                     best = u;
                     return true;
@@ -154,18 +154,18 @@ namespace RTParser
             //return bestf;
         }
 
-        public override bool ConsumePath(Unifiable path, string[] fullpath, out string left, out Unifiable after, SubQuery query)
+        public override bool ConsumePath(int at, string[] fullpath, out string left, out Unifiable after, out int newAt, SubQuery query)
         {
 
             if (best != null)
             {
-                bool res = best.ConsumePath(path, fullpath, out left, out after, query);
+                bool res = best.ConsumePath(at, fullpath, out left, out after, out newAt, query);
                 if (res) return true;
             }
             foreach (var u in List)
             {
                 if (object.ReferenceEquals(best, u)) continue;
-                bool res = u.ConsumePath(path, fullpath, out left, out after, query);
+                bool res = u.ConsumePath(at, fullpath, out left, out after, out newAt, query);
                 if (res)
                 {
                     best = u;
@@ -175,6 +175,7 @@ namespace RTParser
 
             left = null;
             after = null;
+            newAt = at;
             return false;
         }
 

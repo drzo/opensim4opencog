@@ -880,8 +880,10 @@ namespace RTParser.Utils
                 //{
                 //    normalizedThat = Unifiable.STAR;
                 //}
+                var TagEndText = Unifiable.Create("TAG-END");
 
                 // o.k. build the path
+                normalizedPath.Append(Unifiable.InputTag);
                 normalizedPath.Append(Unifiable.Create(normalizedPattern));
                 if (RProcessor.UseInlineThat)
                 {
@@ -892,6 +894,7 @@ namespace RTParser.Utils
                 normalizedPath.Append(flag);
                 normalizedPath.Append(Unifiable.TopicTag);
                 normalizedPath.Append(normalizedTopic);
+                normalizedPath.Append(TagEndText);
 
                 return normalizedPath;//.Frozen();
             }
