@@ -46,8 +46,9 @@ namespace RTParser.AIMLTagHandlers
                 if (graphName != null)
                 {
                     g = Proc.GetGraph(graphName, g0);
+                    if (g != null) request.Graph = g;
                 }
-                request.Graph = g;
+
                 try
                 {
                     Unifiable templateNodeInnerText = Recurse();
@@ -57,7 +58,16 @@ namespace RTParser.AIMLTagHandlers
                         try
                         {
                             request.LoadingFrom = DocumentInfo();
-                            request.Loader.loadAIMLURI(path, loaderOptions);
+                            loaderOptions = request.LoadOptions;
+                            string s = templateNode.InnerXml;
+                            if (s.Contains("<"))
+                            {
+                                request.Loader.loadAIMLNode(templateNode, loaderOptions);
+                            }
+                            else
+                            {
+                                request.Loader.loadAIMLURI(path, loaderOptions);
+                            }
                         }
                         catch (Exception e2)
                         {

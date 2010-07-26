@@ -571,10 +571,11 @@ namespace RTParser.Utils
                 XmlDocumentLineInfo doc =
                     new XmlDocumentLineInfo(named, true);
                 doc.Load(sr);
+                var de = doc.DocumentElement;
                 if (doc.ChildNodes.Count == 0)
                 {
                     RTPBot.writeDebugLine("NULL outerXML=" + outerXML);
-                    return null;
+                  //  return null;
                 }
                 if (doc.ChildNodes.Count != 1)
                 {

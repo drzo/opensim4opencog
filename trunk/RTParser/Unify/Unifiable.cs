@@ -27,6 +27,7 @@ namespace RTParser
             IS_NULL = 4,
             IS_EMPTY = 8,
             IS_EXACT = 16,
+
             BINDS_STARS = 32,
             LONG_WILDCARD = 64,
             SHORT_WILDCARD = 128,

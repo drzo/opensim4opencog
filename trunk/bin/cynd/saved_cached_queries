@@ -1,0 +1,3 @@
+:- dynamic cached_query/2.
+
+

@@ -1950,6 +1950,7 @@ namespace RTParser
                         tagHandler = new AIMLTagHandlers.aiml(this, user, query, request, result, node);
                         break;
                     case "aimlexec":
+                    case "eval":
                         tagHandler = new AIMLTagHandlers.aimlexec(this, user, query, request, result, node);
                         break;
                     case "root":
@@ -2663,6 +2664,12 @@ The AIMLbot program.
                 }
                 try
                 {
+                    var cmdprefix = myBot.GlobalSettings.grabSettingNoDebug("cmdprefix");
+                    if (!input.Contains("@") && !Unifiable.IsNullOrEmpty(cmdprefix))
+                    {
+                        input = cmdprefix.AsString() + " " + input;
+                    }
+
                     bool myBotBotDirective = false;
                     if (input.StartsWith("@"))
                     {
@@ -2794,7 +2801,17 @@ The AIMLbot program.
             if (showHelp) console("@prolog <load.pl>");
             if (cmd == "prolog")
             {
-                Prolog.CSPrologMain.Main(new string[] { args });
+                Prolog.CSPrologMain.Main(args.Split(" \r\n\t".ToCharArray(),StringSplitOptions.RemoveEmptyEntries));
+                return true;
+            }
+
+            if (showHelp) console("@pl text to say");
+            if (cmd == "pl")
+            {
+                string callme = "alicebot2(['"+string.Join("','",args.ToUpper()
+                    .Split(" \r\n\t".ToCharArray(),StringSplitOptions.RemoveEmptyEntries))+"'],Out),writeq('----------------------------------------------'),writeq(Out),nl,halt.";
+                Prolog.CSPrologMain.Main(new string[] { callme });
+                return true;
             }
 
             if (showHelp) console("@reload -- reloads any changed files ");

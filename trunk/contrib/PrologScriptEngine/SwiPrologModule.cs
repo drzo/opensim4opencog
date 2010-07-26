@@ -17,7 +17,7 @@ namespace PrologScriptEngine
     public class SwiPrologModule : WorldObjectsModule, ICollectionProvider, ISettingsDictionary
     {
         #region ISettingsDictionary Members
-
+        public bool IsTraced { get; set; }
         public PrologScriptInterpreter PLScriptInterpreter;
         ///<summary>
         ///</summary>

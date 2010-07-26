@@ -64,7 +64,23 @@ namespace RTParser.Prolog
                 Console.WriteLine("| under the GNU General Public License, and you are welcome to redistribute it");
                 Console.WriteLine("| under certain conditions. Enter 'license.' at the command prompt for details.");
 
-                Console.WriteLine("?-[swiForCSharp],[load],sentence(E,[what,rivers,are,there,?],[],[],[]).");
+                Console.WriteLine("?-[aimlbotFromCS],[load],sentence(E,[what,rivers,are,there,?],[],[],[]).");
+
+
+                string sr = "[aimlbotFromCS].";
+                e.ExecuteQuery(ref sr);
+
+                if (args == null || args.Length == 0)
+                {
+                    sr = "alicebot2(['HI'],X).";
+                    e.ExecuteQuery(ref sr);
+                }
+
+                foreach (var call in args)
+                {
+                    string str = call;
+                    e.ExecuteQuery(ref str);
+                }
 
                 while (!e.Halted)
                     try
