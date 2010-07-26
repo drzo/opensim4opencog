@@ -40,6 +40,8 @@ namespace RTParser.AIMLTagHandlers
         private static int depth = 0;
         public override Unifiable CompleteProcess()
         {
+            RecurseResult = null;
+            isRecursive = true;
             Unifiable f = Recurse();           
             try
             {
@@ -54,6 +56,11 @@ namespace RTParser.AIMLTagHandlers
                 {
                     RTPBot.writeDebugLine("WARNING Depth pretty deep " + f + " returning empty");
                     return Unifiable.Empty;
+                }
+                var tn = templateNode;
+                foreach(var cn in tn.ChildNodes)
+                {
+                    
                 }
                 string s = f.ToString();
                 XmlNode node =

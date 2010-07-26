@@ -447,7 +447,7 @@ namespace MushDLR223.Utilities
         {
             TextWriter w = (Console.Out ?? Console.Error) ?? new StringWriter();
             MethodInfo rm = null;
-            object ro = null;
+            object ro = null;       
             if (outputDelegate != null)
             {
                 var mi = outputDelegate.Method;

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text.RegularExpressions;
 using System.Xml;
 using RTParser.AIMLTagHandlers;
@@ -64,118 +65,129 @@ namespace RTParser
         public StringUnifiable(string v, bool tf)
         {
             str = v;
-            if (tf)
+            if (tf || true)
             {
                 int vLength = v.Length;
-                if (vLength==0)
-                {
-                    Flags = UFlags.IS_EMPTY | UFlags.IS_EXACT;
-                    valueCache = "";
-                    upperCache = "";
-                    return;
-                    
-                }
-                int vLengthM1 = vLength - 1;
-                switch (v[vLengthM1])
-                {
-                    case '*':
-                        {
-                            Flags |= UFlags.LONG_WILDCARD;
-                            vLength = vLengthM1;
-                            v = v.Substring(0, vLengthM1);
-                        }
-                        break;
-                    case '_':
-                        {
-                            Flags |= UFlags.SHORT_WILDCARD;
-                            vLength = vLengthM1;
-                            v = v.Substring(0, vLengthM1);
-                        }
-                        break;
-                    case '>':
-                        {
-                            Flags |= UFlags.LAZY_XML;
-                            int find = v.IndexOf("h=\"");
-                            if (find==4)
-                            {
-                                switch(v[find])
-                                {
-                                    case '*':
-                                        {
-                                            Flags |= UFlags.LONG_WILDCARD;
-                                        }
-                                        break;
-                                    case '_':
-                                        {
-                                            Flags |= UFlags.SHORT_WILDCARD;
-                                        }
-                                        break;
-                                    case '.':
-                                        {
-                                            Flags |= UFlags.ZERO_OR_MORE;
-                                        }
-                                        break;
-                                }
-                            }
-                            //vLength = vLengthM1;
-                            return;
-                        }
-                        break;
-                    default:
-                        Flags |= UFlags.IS_EXACT;
-                        break;
-                }
-                while (vLength > 0)
-                {
-                    if (v.StartsWith("()"))
-                    {
-                        Flags |= UFlags.IS_FALSE;
-                        v = v.Substring(2);
-                        vLength -= 2;
-                        continue;
-                    }
-                    if (v.StartsWith("~"))
-                    {
-                        Flags |= UFlags.NO_BINDS_STARS;
-                        v = v.Substring(1);
-                        vLength -= 1;
-                        continue;
-                    }
-                    if (v == "T")
-                    {
-                        Flags |= UFlags.IS_TRUE;
-                        v = v.Substring(1);
-                        vLength -= 1;
-                        continue;
-                    }
-                    if (v == "NIL")
-                    {
-                        Flags |= UFlags.IS_FALSE;
-                        v = v.Substring(3);
-                        vLength -= 3;
-                        continue;
-                    }
-                    if (v.StartsWith("TAG-"))
-                    {
-                        Flags |= UFlags.IS_TAG;
-                        v = v.Substring(4);
-                        vLength -= 4;
-                        continue;
-                    }
-                    else
-                    {
-                        break;
-                    }
-
-                }
-                UFlags Flags0 = FlagsForString(str);
-                Flags = Flags | Flags0;
-
+                ClassifyFlagTypes(v, vLength);
             }
             else
             {
                 Flags = FlagsForString(str);
             }
+        }
+
+        private UFlags ClassifyFlagTypes(string v, int vLength)
+        {
+
+            if (vLength == 0)
+            {
+                Flags = UFlags.IS_EMPTY | UFlags.IS_EXACT;
+                valueCache = "";
+                upperCache = "";
+                return Flags;
+            }
+
+            UFlags flag = GuessLastVType(vLength, v);
+
+            while (vLength > 0)
+            {
+                if (v.StartsWith("()"))
+                {
+                    Flags |= UFlags.IS_FALSE;
+                    v = v.Substring(2);
+                    vLength -= 2;
+                    continue;
+                }
+                if (v.StartsWith("~"))
+                {
+                    Flags |= UFlags.NO_BINDS_STARS;
+                    v = v.Substring(1);
+                    vLength -= 1;
+                    continue;
+                }
+                if (v == "T")
+                {
+                    Flags |= UFlags.IS_TRUE;
+                    v = v.Substring(1);
+                    vLength -= 1;
+                    continue;
+                }
+                if (v == "NIL")
+                {
+                    Flags |= UFlags.IS_FALSE;
+                    v = v.Substring(3);
+                    vLength -= 3;
+                    continue;
+                }
+                if (v.StartsWith("TAG-"))
+                {
+                    Flags |= UFlags.IS_TAG;
+                    v = v.Substring(4);
+                    vLength -= 4;
+                    continue;
+                }
+                else
+                {
+                    break;
+                }
+
+            }
+            UFlags Flags0 = FlagsForString(str);
+            return Flags | Flags0;
+        }
+
+        private UFlags GuessLastVType(int vLength, string v)
+        {
+            int vLengthM1 = vLength - 1;
+            switch (v[vLengthM1])
+            {
+                case '*':
+                    {
+                        Flags |= UFlags.LONG_WILDCARD;
+                        vLength = vLengthM1;
+                        v = v.Substring(0, vLengthM1);
+                    }
+                    break;
+                case '_':
+                    {
+                        Flags |= UFlags.SHORT_WILDCARD;
+                        vLength = vLengthM1;
+                        v = v.Substring(0, vLengthM1);
+                    }
+                    break;
+                case '>':
+                    {
+                        Flags |= UFlags.LAZY_XML;
+                        int find = v.IndexOf("h=\"");
+                        if (find == 4)
+                        {
+                            switch (v[find])
+                            {
+                                case '*':
+                                    {
+                                        Flags |= UFlags.LONG_WILDCARD;
+                                    }
+                                    break;
+                                case '_':
+                                    {
+                                        Flags |= UFlags.SHORT_WILDCARD;
+                                    }
+                                    break;
+                                case '.':
+                                    {
+                                        Flags |= UFlags.ZERO_OR_MORE;
+                                    }
+                                    break;
+                            }
+                        }
+                        //vLength = vLengthM1;
+                    }
+                    break;
+                default:
+                    Flags |= UFlags.IS_EXACT;
+                    break;
+            }
+            return Flags;
         }
 
         static UFlags FlagsForString(string str)
@@ -463,11 +475,17 @@ namespace RTParser
                 return arrayOf(strTrim.Split(BRKCHARS, StringSplitOptions.RemoveEmptyEntries));
 
             XmlDocumentLineInfo doc = new XmlDocumentLineInfo("split str: " + str, false);
+            StringReader sr = new StringReader("<node>" + strTrim + "</node>");
             List<Unifiable> u = new List<Unifiable>();
 
             try
             {
-                doc.LoadXml("<node>" + strTrim + "</node>");
+                doc.Load(sr);
+
+                if (!doc.HasChildNodes)
+                {
+                    writeToLog("ERROR No Children");
+                }
                 foreach (XmlNode node in doc.FirstChild.ChildNodes)
                 {
                     if (node.NodeType == XmlNodeType.Comment) continue;

@@ -378,7 +378,7 @@ namespace RTParser.Utils
         readonly private object SyncObject;
 
         public bool disabled = false;
-        public static bool UseZeroArgs = true;
+        public static bool UseZeroArgs = false;
         public static StringAppendableUnifiable EmptyStringAppendable = new StringAppendableUnifiable();
 
         /// <summary>
