@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Xml;
 using System.Text;
+using RTParser.Utils;
 
 namespace RTParser.AIMLTagHandlers
 {
@@ -36,16 +37,9 @@ namespace RTParser.AIMLTagHandlers
                 // recursively check
                 foreach (XmlNode childNode in templateNode.ChildNodes)
                 {
-                    try
-                    {
-                        Unifiable part = Proc.processNode(childNode, query, request, result, user, this);
+                    Unifiable part = ProcessChildNode(childNode, false, false);
                         templateResult.Append(part);
                     }
-                    catch (Exception e)
-                    {
-                        RTPBot.writeDebugLine("" + e);
-                    }
-                }
             }
             return templateResult;//.ToString();
         }
@@ -62,15 +56,8 @@ namespace RTParser.AIMLTagHandlers
                 // recursively check
                 foreach (XmlNode childNode in templateNode.ChildNodes)
                 {
-                    try
-                    {
-                        Unifiable part = Proc.processNode(childNode, query, request, result, user, this);
+                    Unifiable part = ProcessChildNode(childNode, true, false);
                         templateResult.Append(part);
-                    }
-                    catch (Exception e)
-                    {
-                        RTPBot.writeDebugLine("ERROR: " + e);
-                    }
                 }
             }
             return templateResult;//.ToString();

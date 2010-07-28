@@ -160,6 +160,7 @@ namespace RTParser.Utils
                         request.LoadOptions = loadOpts;
                         request.Filename = path;
                         loadOpts = request.LoadOptions;
+                        RProcessor.loadConfigs(path, request);
                         loadAIMLDir0(path, loadOpts);
                     }
                     finally
@@ -297,9 +298,6 @@ namespace RTParser.Utils
             //            RProcessor0.ReloadHooks.Add(() => loadAIMLFile0(path, loadOpts));
             string path = request.Filename;
             loadOpts = EnsureOptions(loadOpts, request, path);
-            path = ResolveToURI(path, loadOpts);
-
-
             try
             {
                 byte[] byteArray = Encoding.ASCII.GetBytes(docString);
@@ -323,6 +321,56 @@ namespace RTParser.Utils
         /// <param name="doc">The XML document containing the AIML</param>
         /// <param name="loadOpts">Where the XML document originated</param>
         public void loadAIMLStream(Stream input0, LoaderOptions loadOpts)
+        {
+
+            RTPBot RProcessor = loadOpts.RProcessor;
+            Request request = loadOpts.TheRequest;
+            string path = request.Filename;
+            loadOpts = EnsureOptions(loadOpts, request, path);
+            path = ResolveToURI(path, loadOpts);
+
+            var xtr = XmlDocumentLineInfo.CreateXmlTextReader(input0);
+            string namefile = "" + path;
+            while (!xtr.EOF)
+            {
+                //  IXmlLineInfo text = (IXmlLineInfo)xtr;
+                try
+                {
+                    XmlDocumentLineInfo doc = new XmlDocumentLineInfo("" + namefile, false);
+                    doc.Load(xtr);
+                    if (doc.DocumentElement == null)
+                    {
+                        RProcessor.writeToLog("ERROR: No Document at " + namefile);
+                        //        continue;
+                    }
+                    this.loadAIMLNode(doc.DocumentElement, loadOpts);
+                }
+                catch (Exception e2)
+                {
+                    String s = "which causes loadAIMLStream '" + e2 + "' " + loadOpts; //" charpos=" + xtr1.LineNumber;
+                    //s = s + "\n" + e2.Message + "\n" + e2.StackTrace + "\n"; //+ s;
+                    writeToLog(s);
+                    //System.Console.Flush();
+                    // if (!xtr.Read())
+                    {
+                        throw e2;
+                    }
+                    // 
+                }
+                finally
+                {
+                    //   xtr.Close();
+                }
+
+            }
+            return;
+        }
+        /// <summary>
+        /// Given an XML document containing valid AIML, attempts to load it into the graphmaster
+        /// </summary>
+        /// <param name="doc">The XML document containing the AIML</param>
+        /// <param name="loadOpts">Where the XML document originated</param>
+        public void loadAIMLStreamFallback(Stream input0, LoaderOptions loadOpts)
         {
 
             RTPBot RProcessor = loadOpts.RProcessor;
@@ -377,7 +425,8 @@ namespace RTParser.Utils
                         throw e2;
                     }
                     // 
-                } finally
+                }
+                finally
                 {
                  //   xtr.Close();
                 }
@@ -447,9 +496,26 @@ namespace RTParser.Utils
                         request.Settings = prevDict;
                     }
                 }
+                if (currentNodeName == "substitutions")
+                {
+                    var prevDict = request.Settings;
+
+                    // process each of these child "settings"? nodes
+                    try
+                    {
+
+                        request.Settings = request.Proccessor.InputSubstitutions;
+
+                        IntoGraph(request, currentNode, loadOpts);
+                    }
+                    finally
+                    {
+                        request.Settings = prevDict;
+                    }
+                }
                 if (currentNodeName == "item")
                 {
-                    SettingsDictionary.loadSettingNode(request.Settings, currentNode, true, false);
+                    SettingsDictionary.loadSettingNode(request.Settings, currentNode, true, false, request);
                 }
                 if (currentNodeName == "topic")
                 {
@@ -463,20 +529,26 @@ namespace RTParser.Utils
                 {
                     writeToLog("UNUSED: " + currentNode.OuterXml);
                 }
+                else if (currentNodeName == "#comment")
+                {
+                    writeToLog("UNUSED: " + currentNode.OuterXml);
+                }
                 else if (currentNodeName == "srai")
                 {
                     EvalNode(currentNode, request, loadOpts);
                 }
                 else if (currentNodeName == "genlmt")
                 {
-                    string name = RTPBot.GetAttribValue(currentNode, "graph,name,mt", "");
-                    GraphMaster G = null;
-                    if (name != "")
+                    string name = RTPBot.GetAttribValue(currentNode, "graph,name,mt,to", null);
+                    string from = RTPBot.GetAttribValue(currentNode, "from", null);
+                    if (name == null)
                     {
-                        G = request.Proccessor.GetUserGraph(name, loadOpts.CtxGraph);
-                        loadOpts.CtxGraph.AddGenlMT(G);
+                        name = currentNode.InnerText.Trim();
                     }
-                    writeToLog("GENLMT: " + loadOpts.CtxGraph + " => " + name + " => " + G);
+                    GraphMaster FROM = request.Proccessor.GetGraph(from, loadOpts.CtxGraph);
+                    GraphMaster TO = request.Proccessor.GetGraph(name, loadOpts.CtxGraph);
+                    FROM.AddGenlMT(TO);
+                    writeToLog("GENLMT: " + FROM + " => " + name + " => " + TO);
                 }
                 else
                 {
@@ -553,6 +625,8 @@ namespace RTParser.Utils
 
         private void EvalNode(XmlNode currentNode, Request request, LoaderOptions loadOpts)
         {
+            if (currentNode.NodeType == XmlNodeType.Comment) return;
+
             RTPBot RProcessor = loadOpts.RProcessor;
             string path = request.Filename;
             loadOpts = EnsureOptions(loadOpts, request, path);
@@ -632,7 +706,11 @@ namespace RTParser.Utils
         private void addCatNode(XmlNode cateNode, XmlNode patternNode, LoaderOptions path, XmlNode templateNode,
             Unifiable topicName, XmlNode outerNode)
         {
-            XmlNode guardnode = FindNode("guard", cateNode, FindNode("guard", outerNode, null));
+            XmlNode guardnode = FindNode("guard", cateNode, null);
+            if (guardnode==null && outerNode!=null && outerNode.Name!="aiml")
+            {
+                guardnode= FindNode("guard", outerNode, null);
+            }
             GuardInfo guard = guardnode == null ? null : GuardInfo.GetGuardInfo(guardnode);
 
 
@@ -748,6 +826,8 @@ namespace RTParser.Utils
                 }
                 patternString = MatchKeyClean(patternString.Replace(thatString, ""));
                 var newLineInfoPattern = AIMLTagHandler.getNode("<pattern>" + patternString + "</pattern>", patternNode);
+                //TODO BEFORE COMMIT DMILES
+				newLineInfoPattern.ReadOnly = true;
                 newLineInfoPattern.SetParentFromNode((LineInfoElement)patternNode);
                 patternNode = newLineInfoPattern;
                 patternText = Unifiable.Create(Unifiable.InnerXmlText(patternNode));
@@ -761,7 +841,15 @@ namespace RTParser.Utils
             return that ?? PatternStar;// hatText;//this.generatePath(patternText, thatText, topicName, isUserInput);
         }
 
-        protected static XmlNode PatternStar = AIMLTagHandler.getNode("<pattern name=\"*\">*</pattern>");
+        protected static XmlNode PatternStar
+        {
+            get
+            {
+                var ps = AIMLTagHandler.getNode("<pattern name=\"*\">*</pattern>");
+                ps.ReadOnly = true;
+                return ps;
+            }
+        } 
         public bool ThatWideStar = false;
         public static bool useInexactMatching = false;
 
@@ -773,33 +861,43 @@ namespace RTParser.Utils
         /// <returns>The node (or null)</returns>
         static public XmlNode FindNode(string name, XmlNode node, XmlNode ifMissing)
         {
+            name = name.ToLower();
+            foreach (var n in name.Split(",".ToCharArray(), StringSplitOptions.RemoveEmptyEntries))
+            {
             foreach (XmlNode child in node.ChildNodes)
             {
-                if (child.Name == name)
+                    if (child.Name.ToLower() == n)
                 {
                     return child;
                 }
+            }
             }
             return ifMissing;
         }
         static public XmlNode FindNodeOrHigher(string name, XmlNode node, XmlNode ifMissing)
         {
             if (node == null) return ifMissing;
+            foreach (var n in name.Split(",".ToCharArray(), StringSplitOptions.RemoveEmptyEntries))
+            {
             foreach (XmlNode child in node.ChildNodes)
             {
-                if (child.Name == name)
+                    if (child.Name.ToLower() == n)
                 {
                     return child;
                 }
+            }
             }
             return FindHigher(name, node.ParentNode, ifMissing);
         }
         static public XmlNode FindHigher(string name, XmlNode node, XmlNode ifMissing)
         {
             if (node == null) return ifMissing;
-            if (node.Name == name)
+            foreach (var n in name.Split(",".ToCharArray(), StringSplitOptions.RemoveEmptyEntries))
+            {
+                if (node.Name.ToLower() == n)
             {
                 return node;
+            }
             }
             return FindHigher(name, node.ParentNode, ifMissing);
         }
@@ -878,6 +976,7 @@ namespace RTParser.Utils
                 normalizedThat = this.Normalize(that, isUserInput).Trim();
                 normalizedTopic = this.Normalize(topicName, isUserInput).Trim();
             }
+
 
             // check sizes
             if (normalizedPattern.Length > 0)
@@ -1208,7 +1307,7 @@ namespace RTParser.Utils
             if (xmlFound)
             {
                 s = s.Replace("<sr/>", "<srai><star index=\"1\"/></srai>");
-                s = s.Replace("<star/>", "<star index=\"1\"/>");
+                s = s.Replace("star/>", "star index=\"1\"/>");
                 if (len != s.Length) chgd = true;
             }
             if (!chgd)
@@ -1435,6 +1534,72 @@ namespace RTParser.Utils
                 return true;
             }
             return false;
+        }
+
+        public static LineInfoElement CopyNode(XmlNode node, bool copyParent)
+        {
+            if (copyParent)
+            {
+                XmlNode parentNode = node.ParentNode;
+                if (parentNode != null)
+                {
+                    LineInfoElement xmlNode0 = node as LineInfoElement;
+                    int idx = xmlNode0.IndexInBaseParent;
+                    if (idx >= 0)
+                    {
+                        var parentCopy = (LineInfoElement)parentNode.CloneNode(true);
+                        parentCopy.ReadOnly = xmlNode0.ReadOnly;
+                        xmlNode0 = (LineInfoElement)parentCopy.ChildNodes[idx];
+                        xmlNode0.ReadOnly = !copyParent;
+                        return xmlNode0;
+                    }
+                }
+            }
+
+            XmlNode oc = node.CloneNode(true);
+
+            LineInfoElement xmlNode = oc as LineInfoElement;
+            if (xmlNode == null)
+            {
+                xmlNode = AIMLTagHandler.getNode(node.OuterXml, node);
+                xmlNode.ReadOnly = false;
+            }
+            else
+        {
+                xmlNode.ReadOnly = false;
+            }
+            xmlNode.ReadOnly = false;
+            return xmlNode;
+        }
+            
+        public static LineInfoElement CopyNode(string newName, XmlNode node, bool copyParent)
+        {
+            var od = node.OwnerDocument;
+            LineInfoElement newnode = (LineInfoElement) node.OwnerDocument.CreateNode(node.NodeType, newName, node.NamespaceURI);
+            newnode.SetParentFromNode(node);
+            newnode.lParent = ToLineInfoElement(node.ParentNode);
+            var ats = node.Attributes;
+            if (ats != null) foreach (XmlAttribute a in ats)
+            {
+                XmlAttribute na = od.CreateAttribute(a.Prefix, a.LocalName, a.NamespaceURI);
+                na.Value = a.Value;
+                newnode.Attributes.Append(na);
+            }
+            foreach (XmlNode a in node.ChildNodes)
+            {
+                newnode.AppendChild(a.CloneNode(true));
+            }
+            return (LineInfoElement) newnode;
+        }
+
+        public static LineInfoElement ToLineInfoElement(XmlNode pattern)
+        {
+            if (pattern == null) return null;
+            if (pattern is LineInfoElement)
+            {
+                return (LineInfoElement) pattern;
+            }
+            return CopyNode(pattern, true);
         }
     }
 }

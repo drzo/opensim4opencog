@@ -18,6 +18,11 @@ namespace RTParser.Utils
     public class SubQuery : ISettingsDictionary
     {
         public bool IsTraced { get; set; }
+        public IEnumerable<string> SettingNames(int depth)
+        {
+            //get 
+            { return Request.Settings.SettingNames(depth); }
+        }
 
         #region Attributes
 

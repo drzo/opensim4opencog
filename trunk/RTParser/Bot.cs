@@ -3,9 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.IO;
 using System.Threading;
+using System.Web;
 using System.Xml;
 using System.Reflection;
 using System.Net.Mail;
@@ -70,6 +72,7 @@ namespace RTParser
         public static readonly TextFilter LoggedWords = new TextFilter() {"+*"};//, "-dictlog" }; //maybe should be ERROR", "STARTUP
         public User LastUser;
         public User BotAsUser;
+        public User ExemplarUser;
         //public Request BotAsRequestUsed = null;
         public Request GetBotRequest(string s)
         {
@@ -106,7 +109,12 @@ namespace RTParser
         /// <summary>
         /// Generic substitutions that take place during the normalization process
         /// </summary>
-        public SettingsDictionary Substitutions;
+        public SettingsDictionary InputSubstitutions;
+
+        /// <summary>
+        /// Output substitutions that take place before the bot speaks
+        /// </summary>
+        public SettingsDictionary OutputSubstitutions;
 
         /// <summary>
         /// The default predicates to set up for a user
@@ -114,10 +122,24 @@ namespace RTParser
         public SettingsDictionary DefaultPredicates;
 
         /// <summary>
-        /// The default predicates to set up for a user
+        /// A weak name/value association list of what has happened in dialog  
         /// </summary>
         public SettingsDictionary HeardPredicates;
 
+        /// <summary>
+        /// A weak name/value association list of what has happened in dialog  
+        /// </summary>
+        public SettingsDictionary SetPredicateReturn;
+
+        /// <summary>
+        ///  Substitution blocks for graphmasters
+        /// </summary>
+        public Dictionary<string, ISettingsDictionary> AllDictionaries = new Dictionary<string, ISettingsDictionary>();
+
+        /// <summary>
+        /// When a tag has no name like <icecream/> it is transformed to <bot name="icecream"></bot>
+        /// </summary>
+        public static bool UnknownTagsAreBotVars = true;
         /// <summary>
         /// Holds information about the available custom tag handling classes (if loaded)
         /// Key = class name
@@ -548,6 +570,7 @@ namespace RTParser
         /// </summary>
         public void loadAIMLFromDefaults()
         {
+            loadConfigs(PathToConfigFiles, GetBotRequest("-loadAimlFromDefaults-"));
             loadAIMLAndSettings(PathToAIML);
         }
 
@@ -584,10 +607,11 @@ namespace RTParser
             try
             {
                 request.GraphsAcceptingUserInput = false;
-                loadAIMLFromURI(path, request);
                 // maybe loads settings files if they are there
                 string settings = HostSystem.Combine(path, "Settings.xml");
                 if (HostSystem.FileExists(settings)) loadSettings(settings);
+                //loading settings first
+                loadAIMLFromURI(path, request);
             }
             finally
             {
@@ -628,21 +652,43 @@ namespace RTParser
             var prev = isAcceptingUserInput;
             try
             {
+
                 isAcceptingUserInput = false;
                 this.GlobalSettings = new SettingsDictionary("bot.globalsettings", this, null);
-                //ParentProvider provider = new ParentProvider(() => GlobalSettings);
+                loadSettings();
+
+
                 this.GenderSubstitutions = new SettingsDictionary("bot.gendersubstitutions", this, null);
+                RegisterSubstitutions("gender", GenderSubstitutions);
                 this.Person2Substitutions = new SettingsDictionary("bot.person2substitutions", this, null);
+                RegisterSubstitutions("person2", Person2Substitutions);
                 this.PersonSubstitutions = new SettingsDictionary("bot.personsubstitutions", this, null);
-                this.Substitutions = new SettingsDictionary("bot.substitutions", this, null);
+                RegisterSubstitutions("person", PersonSubstitutions);
+                this.InputSubstitutions = new SettingsDictionary("bot.substitutions", this, null);
+                RegisterSubstitutions("input", InputSubstitutions);
+
+                //ParentProvider provider = new ParentProvider(() => GlobalSettings);
                 this.DefaultPredicates = new SettingsDictionary("bot.defaultpredicates", this, null);
                 this.HeardPredicates = new SettingsDictionary("bot.heardpredicates", this, null);
                 this.AllUserPreds = new SettingsDictionary("bot.alluserpred", this, null);
+                this.SetPredicateReturn = new SettingsDictionary("bot.setpredicatereturn", this, null);
 
                 BotAsUser = new AIMLbot.User("HeardSelfSay", this);
                 BotAsUser.IsRoleAcct = true;
                 BotAsUser.ListeningGraph = HeardSelfSayGraph;
                 BotAsUser.Predicates = GlobalSettings;
+
+                User guser = ExemplarUser = new AIMLbot.User("globalPreds", this);
+                BotUsers["globalpreds"] = guser;
+                guser.IsRoleAcct = true;
+                guser.Predicates.clearSettings();
+                guser.Predicates.clearHierarchy();
+                guser.Predicates.InsertFallback(() => HeardPredicates);
+                guser.Predicates.maskSetting("name");
+                guser.Predicates.maskSetting("id");
+
+                LastUser = FindOrCreateUser(UNKNOWN_PARTNER);
+                LastUser.IsRoleAcct = true;
 
                 Request request = GetBotRequest("-bot setup-");
                 if (Loader == null)
@@ -725,7 +771,8 @@ namespace RTParser
 
         public void ReloadAll()
         {
-            setup();
+            // Setup creates too many things from scratch andis uneeded for refreshing
+            //setup();
             List<CrossAppDomainDelegate> todo = new List<CrossAppDomainDelegate>(ReloadHooks);
             ReloadHooks.Clear();
             foreach (var list in todo)
@@ -739,6 +786,55 @@ namespace RTParser
                     writeToLog(e);
                     writeToLog("ReloadAll: " + e);
                 }
+            }
+        }
+
+        // Load the dictionaries for this RTPBot from the various configuration files
+        public void loadConfigs(string pathToSettings, Request request)
+        {
+            if (!HostSystem.DirExists(pathToSettings))
+            {
+                writeToLog("Not loading configs from non-existent dir: " + pathToSettings);
+                return;
+            }
+
+            var files = new List<string>(HostSystem.GetFiles(pathToSettings, "*.xml"));
+
+            var HostSystemCombine = new Func<string, string, string>((arg1, arg2) =>
+                                                                         {
+                                                                             string s = HostSystem.Combine(arg1, arg2);
+                                                                             int i = files.RemoveAll(obj => obj.Replace("\\", "/").EndsWith("/" + arg2));
+                                                                             if (i == 0)
+                                                                             {
+                                                                                 return null;
+                                                                             }
+                                                                             if (i == 1)
+                                                                             {
+                                                                                 //good
+                                                                                 return s;
+                                                                             }
+                                                                             //not so good
+                                                                             return s;
+                                                                         });
+
+            this.Person2Substitutions.loadSettings(HostSystemCombine(pathToSettings, this.GlobalSettings.grabSetting("person2substitutionsfile")));
+            this.PersonSubstitutions.loadSettings(HostSystemCombine(pathToSettings, this.GlobalSettings.grabSetting("personsubstitutionsfile")));
+            this.GenderSubstitutions.loadSettings(HostSystemCombine(pathToSettings, this.GlobalSettings.grabSetting("gendersubstitutionsfile")));
+            this.InputSubstitutions.loadSettings(HostSystemCombine(pathToSettings, this.GlobalSettings.grabSetting("substitutionsfile")));
+            Person2Substitutions.IsTraced = PersonSubstitutions.IsTraced = GenderSubstitutions.IsTraced = InputSubstitutions.IsTraced = false;
+
+            this.DefaultPredicates.loadSettings(HostSystemCombine(pathToSettings, this.GlobalSettings.grabSetting("defaultpredicates")));
+
+            // Grab the splitters for this Proccessor
+            this.loadSplitters(HostSystemCombine(pathToSettings, this.GlobalSettings.grabSetting("splittersfile")));
+            var guser = FindUser("globalPreds");
+            SettingsDictionary.loadSettings(guser.Predicates, HostSystemCombine(pathToSettings, "globalpreds.xml"),
+                true, false, request);
+            writeToLog("Files left to process = " + files.Count);
+            foreach (var list in files)
+            {
+                writeToLog("LoadAIMLURI = " + list);
+                loadSettings(list);
             }
         }
 
@@ -756,30 +852,8 @@ namespace RTParser
             SetSaneGlobals(this.GlobalSettings);
 
             // Load the dictionaries for this RTPBot from the various configuration files
-            this.Person2Substitutions.loadSettings(HostSystem.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("person2substitutionsfile")));
-            this.PersonSubstitutions.loadSettings(HostSystem.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("personsubstitutionsfile")));
-            this.GenderSubstitutions.loadSettings(HostSystem.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("gendersubstitutionsfile")));
-            this.DefaultPredicates.loadSettings(HostSystem.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("defaultpredicates")));
-            this.Substitutions.loadSettings(HostSystem.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("substitutionsfile")));
-            Person2Substitutions.IsTraced = PersonSubstitutions.IsTraced = GenderSubstitutions.IsTraced = Substitutions.IsTraced = false;
-            // Grab the splitters for this Proccessor
-            this.loadSplitters(HostSystem.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("splittersfile")));
+            if (HostSystem.DirExists(pathToSettings)) loadConfigs(pathToSettings, null);
 
-            User guser = FindOrCreateUser("globalPreds");
-            guser.IsRoleAcct = true;
-            guser.Predicates.clearSettings();
-            guser.Predicates.clearHierarchy();
-            guser.Predicates.InsertFallback(() => HeardPredicates);
-            SettingsDictionary.loadSettings(
-                guser.Predicates,
-                HostSystem.Combine(PathToConfigFiles, "globalpreds.xml"),
-                true, false);
-            guser.Predicates.maskSetting("name");
-            guser.Predicates.maskSetting("id");
-
-
-            LastUser = FindOrCreateUser(UNKNOWN_PARTNER);
-            LastUser.IsRoleAcct = true;
         }
 
         private void SetSaneGlobals(ISettingsDictionary settings)
@@ -819,7 +893,9 @@ namespace RTParser
             var res = settings.grabSetting(name);
             if (!settings.containsLocalCalled(name))
             {
-                settings.addSetting(name, Unifiable.Create(value));
+                Unifiable sane = Unifiable.Create(value);
+                settings.addSetting(name, sane);
+                return sane;
             }
             return res;
         }
@@ -942,11 +1018,6 @@ namespace RTParser
 
         public void writeToLog0(string message)
         {
-
-            if (message.Contains("rocreate by cloning, or software copy"))
-            {
-
-            }
             this.LastLogMessage = message;
             if (!this.IsLogging) return;
             lock (this.LoggingLock)
@@ -1101,6 +1172,15 @@ namespace RTParser
                                                              request.user.getLastBotOutputForThat(), request.Flags,
                                                              //topicNum + " " +
                                                              request.user.TopicSetting, true);
+                        if (path.IsEmpty)
+                        {
+                            path = loader.generatePath(sentence,
+                                //thatNum + " " +
+                                     request.user.getLastBotOutputForThat(), request.Flags,
+                                //topicNum + " " +
+                                     request.user.TopicSetting, false);
+                        }
+                        if (path.IsEmpty) continue;
                         numInputs++;
                         result.NormalizedPaths.Add(path);
                         if (numInputs >= maxInputs) return;
@@ -1136,6 +1216,7 @@ namespace RTParser
                             }
                             string thisInput = path.LegacyPath.AsString().Trim().ToUpper();
                             if (thisInput == lastInput) continue;
+
                             lastInput = thisInput;
                             numInputs++;
                             result.NormalizedPaths.Add(path);
@@ -1223,6 +1304,7 @@ namespace RTParser
             if (message.Contains("<"))
             {
                 var v = AIMLTagHandler.getNode("<pre>" + message + "</pre>");
+                v.ReadOnly = false;
                 writeDebugLine("heardSelfSay - wrapping AIML: " + message + " -> " + v.InnerText);
                 message = v.InnerText;
             }
@@ -1298,7 +1380,7 @@ namespace RTParser
         {
             string temp = Loader.Normalize(inputString, true);
             //temp = ApplySubstitutions.Substitute(this, this.PersonSubstitutions, temp);
-            temp = ApplySubstitutions.Substitute(this, this.Person2Substitutions, temp);
+            temp = ApplySubstitutions.Substitute(this.Person2Substitutions, temp);
             return temp;
         }
 
@@ -1576,7 +1658,7 @@ namespace RTParser
                             bool createdOutput;
                             bool templateSucceeded;
                             proccessResponse(query, request, result, s.Output, s.Guard, out createdOutput,
-                                             out templateSucceeded, null, s);
+                                             out templateSucceeded, null, s, true, true);
 
 
                             if (createdOutput)
@@ -1651,19 +1733,12 @@ namespace RTParser
 
         public static string GetAttribValue(XmlNode templateNode, string attribName, string defaultIfEmpty)
         {
-            attribName = attribName.ToLower();
-            foreach (XmlAttribute attrib in templateNode.Attributes)
-            {
-                if (attrib.Name.ToLower() == attribName)
-                {
-                    return attrib.Value;
-                }
-            }
-            return defaultIfEmpty;
+            return AIMLTagHandler.GetAttribValue(templateNode, attribName, () => defaultIfEmpty, null);
         }
 
 
-        public AIMLbot.Result ImmediateAiml(XmlNode templateNode, Request request0, AIMLLoader loader, AIMLTagHandler handler)
+        public AIMLbot.Result ImmediateAiml(XmlNode templateNode, Request request0,
+            AIMLLoader loader, AIMLTagHandler handler)
         {
 
             var prev = request0.GraphsAcceptingUserInput;
@@ -1680,7 +1755,7 @@ namespace RTParser
 
         private AIMLbot.Result ImmediateAIML0(Request parentRequest, XmlNode templateNode, AIMLTagHandler handler)
         {
-            string requestName = "<aiml>" + templateNode.OuterXml + "</aiml>";
+            string requestName = "<underline>" + templateNode.OuterXml + "</underline>";
             RTPBot request0Proccessor = this;
             GuardInfo sGuard = null;
             Request request = null;
@@ -1689,7 +1764,7 @@ namespace RTParser
             if (parentRequest != null)
             {
                 user = parentRequest.user;
-                requestName = parentRequest.rawInput;
+                requestName = parentRequest.rawInput + " " + requestName;
             }
 
             //  if (request == null)
@@ -1721,38 +1796,56 @@ namespace RTParser
             bool createdOutput;
             SubQuery query = request.CurrentQuery;
             bool doUndos = false;
+            bool copyChild = false;
             if (query == null)
             {
                 query = new SubQuery(requestName, result, request);
                 request.IsTraced = true;
                 doUndos = true;
+                copyChild = true;
             }
             proccessResponse(query, request, result, templateNode, sGuard, out createdOutput, out templateSucceeded,
-                             handler, templateInfo);
+                             handler, templateInfo, copyChild, false); //not sure if should copy parent
             if (doUndos) query.UndoAll();
             return result;
         }
 
-        public void proccessResponse(SubQuery query, Request request, Result result, XmlNode templateNode, GuardInfo sGuard, out bool createdOutput, out bool templateSucceeded, AIMLTagHandler handler, TemplateInfo templateInfo)
+        public AIMLTagHandler proccessResponse(SubQuery query,
+            Request request, Result result,
+            XmlNode templateNode, GuardInfo sGuard,
+            out bool createdOutput, out bool templateSucceeded,
+            AIMLTagHandler handler, TemplateInfo templateInfo,
+            bool copyChild, bool copyParent)
         {
             request.CurrentResult = result;
             query = query ?? request.CurrentQuery;
-            UndoStack undoStack = UndoStack.GetStackFor(query);
             templateInfo = templateInfo ?? query.CurrentTemplate;
             //request.CurrentQuery = query;
             if (!request.CanUseTemplate(templateInfo, result))
             {
                 templateSucceeded = false;
                 createdOutput = false;
-                return;
+                return null;
             }
-            proccessResponse0(query, request, result, templateNode, sGuard, out createdOutput, out templateSucceeded,
-                             handler, templateInfo);
+            UndoStack undoStack = UndoStack.GetStackFor(query);
+            try
+            {
+                return proccessResponse000(query, request, result, templateNode, sGuard,
+                                         out createdOutput, out templateSucceeded,
+                                         handler, templateInfo, copyChild, copyParent);
 
+            }
+            finally
+            {
             undoStack.UndoAll();
-
+            }
         }
-        public void proccessResponse0(SubQuery query, Request request, Result result, XmlNode sOutput, GuardInfo sGuard, out bool createdOutput, out bool templateSucceeded, AIMLTagHandler handler, TemplateInfo templateInfo)
+
+        public AIMLTagHandler proccessResponse000(SubQuery query, Request request, Result result,
+            XmlNode sOutput, GuardInfo sGuard,
+            out bool createdOutput, out bool templateSucceeded,
+            AIMLTagHandler handler, TemplateInfo templateInfo,
+            bool copyChild, bool copyParent)
         {
             bool isTraced = request.IsTraced || result.IsTraced || !request.GraphsAcceptingUserInput;
             //XmlNode guardNode = AIMLTagHandler.getNode(s.Guard.InnerXml);
@@ -1760,13 +1853,20 @@ namespace RTParser
             sOutput = sOutput ?? templateInfo.Output;
             string output = sOutput.OuterXml;
             var templateNode = sOutput;
+            bool childOriginal = true;
             if (usedGuard)
             {
-                string guardStr = "<when>" + sGuard.Output.InnerXml + " GUARDBOM " + sOutput.OuterXml + "</when>";
+                string guardStr = "<template>" + sGuard.Output.InnerXml + " GUARDBOM " + sOutput.OuterXml + "</template>"; 
                 templateNode = AIMLTagHandler.getNode(guardStr, sOutput);
+                childOriginal = false;
             }
 
-            string outputSentence = this.processNode(templateNode, query, request, result, request.user, handler);
+            bool protectChild = copyChild || childOriginal;
+            AIMLTagHandler tagHandler;
+            string outputSentence = this.processNode(templateNode, query,
+                request, result, request.user, handler,
+                protectChild, copyParent, out tagHandler);
+
             templateSucceeded = !Unifiable.IsFalse(outputSentence);
 
             int f = outputSentence.IndexOf("GUARDBOM");
@@ -1787,7 +1887,7 @@ namespace RTParser
                 }
                 if (!createdOutput && isTraced && request.GraphsAcceptingUserInput)
                     writeToLog("UNUSED '{0}' TEMPLATE={1}", o, AIMLLoader.ParentTextAndSourceInfo(templateNode));
-                return;
+                return tagHandler;
             }
 
             try
@@ -1797,7 +1897,7 @@ namespace RTParser
                 if (!templateSucceeded)
                 {
                     createdOutput = false;
-                    return;
+                    return tagHandler;
                 }
                 string lang = GetAttribValue(sGuard.Output, "lang", "cycl").ToLower();
 
@@ -1811,7 +1911,7 @@ namespace RTParser
                                        AIMLLoader.ParentTextAndSourceInfo(templateNode));
                         templateSucceeded = false;
                         createdOutput = false;
-                        return;
+                        return tagHandler;
                     }
                     else
                     {
@@ -1823,7 +1923,7 @@ namespace RTParser
                     writeToLog(e);
                     templateSucceeded = false;
                     createdOutput = false;
-                    return;
+                    return tagHandler;
                 }
 
                 //part the BOM
@@ -1836,7 +1936,7 @@ namespace RTParser
                     templateSucceeded = true;
                     createdOutput = true;
                     result.AddOutputSentences(templateInfo, o);
-                    return;
+                    return tagHandler;
                 }
                 else
                 {
@@ -1845,14 +1945,14 @@ namespace RTParser
                 }
                 templateSucceeded = false;
                 createdOutput = false;
-                return;
+                return tagHandler;
             }
             catch (System.Exception ex)
             {
                 writeToLog(ex);
                 templateSucceeded = false;
                 createdOutput = false;
-                return;
+                return tagHandler;
             }
         }
 
@@ -1879,7 +1979,9 @@ namespace RTParser
         /// <param name="result">the result to be sent to the user</param>
         /// <param name="user">the user who originated the request</param>
         /// <returns>the output Unifiable</returns>
-        public string processNode(XmlNode node, SubQuery query, Request request, Result result, User user, AIMLTagHandler parent)
+        public string processNode(XmlNode node, SubQuery query,
+            Request request, Result result, User user,
+            AIMLTagHandler parent, bool protectChild, bool copyParent, out AIMLTagHandler tagHandler)
         {
             // check for timeout (to avoid infinite loops)
             if (request != null && DateTime.Now > request.TimesOutAt)
@@ -1889,17 +1991,25 @@ namespace RTParser
                     request.user.UserID, request.rawInput,
                     (query == null ? "-NOQUERY-" : query.Templates.Count.ToString()));
                 request.hasTimedOut = true;
+                tagHandler = null;
                 return Unifiable.Empty;
             }
 
+
+            var oldNode = node;
+            // copy the node!?!
+            if (protectChild)
+                node = AIMLLoader.CopyNode(node, copyParent);
+
             // process the node
-            AIMLTagHandler tagHandler = GetTagHandler(user, query, request, result, node, parent);
+            tagHandler = GetTagHandler(user, query, request, result, node, parent);
             if (ReferenceEquals(null, tagHandler))
             {
                 if (node.NodeType == XmlNodeType.Comment) return Unifiable.Empty;
                 if (node.NodeType != XmlNodeType.Text)
                 {
                     writeToLog("XML ?? " + node.NodeType + "  " + node.OuterXml);
+                    return node.InnerXml;
                 }
                 string s = node.InnerText.Trim();
                 if (String.IsNullOrEmpty(s))
@@ -1908,6 +2018,7 @@ namespace RTParser
                 }
                 return s;
             }
+
             tagHandler.SetParent(parent);
             var cp = tagHandler.CompleteAimlProcess();
             return cp;
@@ -1939,9 +2050,10 @@ namespace RTParser
         internal AIMLTagHandler GetTagHandler00(User user, SubQuery query, Request request, Result result, XmlNode node)
         {
             AIMLTagHandler tagHandler = this.getBespokeTags(user, query, request, result, node);
+            string nodeNameLower = node.Name.ToLower();
             if (Equals(null, tagHandler))
             {
-                switch (node.Name.ToLower())
+                switch (nodeNameLower)
                 {
                     case "template":
                         tagHandler = new AIMLTagHandlers.template(this, user, query, request, result, node);
@@ -1980,6 +2092,15 @@ namespace RTParser
                     case "condition":
                         tagHandler = new AIMLTagHandlers.condition(this, user, query, request, result, node);
                         break;
+                    case "if":
+                    case "li":
+                        tagHandler = new AIMLTagHandlers.liif(this, user, query, request, result, node);
+                        break;
+                    case "personf":
+                        tagHandler = new AIMLTagHandlers.format(this, user, query, request, result, node,
+                                                                new Func<string, string>((s) => HttpUtility.UrlEncode(s)),
+                                                                null);
+                        break;
                     case "date":
                         tagHandler = new AIMLTagHandlers.date(this, user, query, request, result, node);
                         break;
@@ -1995,16 +2116,24 @@ namespace RTParser
                     case "gossip":
                         tagHandler = new AIMLTagHandlers.gossip(this, user, query, request, result, node);
                         break;
+                    case "get_ip":
                     case "id":
                         tagHandler = new AIMLTagHandlers.id(this, user, query, request, result, node);
                         break;
                     case "input":
-                        tagHandler = new AIMLTagHandlers.input(this, user, query, request, result, node);
+                        tagHandler = new AIMLTagHandlers.input(this, user, query, request, result, node, 1);
+                        break;
+                    case "justthat": // <input index="2"/> 
+                        tagHandler = new AIMLTagHandlers.input(this, user, query, request, result, node, 2);
+                        break;
+                    case "beforethat": // <input index="3"/> 
+                        tagHandler = new AIMLTagHandlers.input(this, user, query, request, result, node, 3);
                         break;
                     case "javascript":
                         tagHandler = new AIMLTagHandlers.javascript(this, user, query, request, result, node);
                         break;
                     case "learn":
+                    case "load":
                         tagHandler = new AIMLTagHandlers.learn(this, user, query, request, result, node);
                         break;
                     case "lowercase":
@@ -2026,6 +2155,7 @@ namespace RTParser
                         tagHandler = new AIMLTagHandlers.set(this, user, query, request, result, node);
                         break;
                     case "size":
+                    case "getsize":
                         tagHandler = new AIMLTagHandlers.size(this, user, query, request, result, node);
                         break;
                     case "sr":
@@ -2040,8 +2170,11 @@ namespace RTParser
                     case "system":
                         tagHandler = new AIMLTagHandlers.system(this, user, query, request, result, node);
                         break;
-                    case "that":
-                        tagHandler = new AIMLTagHandlers.that(this, user, query, request, result, node);
+                    case "that": //default <that index="1,1"/>
+                        tagHandler = new AIMLTagHandlers.that(this, user, query, request, result, node, 1);
+                        break;
+                    case "justbeforethat": //treated as <that index="2,1"/>
+                        tagHandler = new AIMLTagHandlers.that(this, user, query, request, result, node, 2);
                         break;
                     case "thatstar":
                         tagHandler = new AIMLTagHandlers.thatstar(this, user, query, request, result, node);
@@ -2056,6 +2189,7 @@ namespace RTParser
                         tagHandler = new AIMLTagHandlers.uppercase(this, user, query, request, result, node);
                         break;
                     case "version":
+                    case "getversion":
                         tagHandler = new AIMLTagHandlers.version(this, user, query, request, result, node);
                         break;
                     case "cycsystem":
@@ -2153,7 +2287,7 @@ namespace RTParser
 
 
                     case "#text":
-                        return null;
+                        return new AIMLTagHandlers.verbatum(node.InnerText, this, user, query, request, result, node);
                     case "#comment":
                         return new AIMLTagHandlers.verbatum(node.OuterXml, this, user, query, request, result, node);
                     case "br":
@@ -2169,8 +2303,8 @@ namespace RTParser
                 // "bot", "favorite", "fav" 
                 foreach (KeyValuePair<string, string> prefix in new[]
                                                                     {
-                                                                        new KeyValuePair<string, string>("get", "get"),
                                                                         new KeyValuePair<string, string>("get_", "get"),
+                                                                        new KeyValuePair<string, string>("get", "get"),
                                                                         new KeyValuePair<string, string>("set_", "set"),
                                                                         new KeyValuePair<string, string>("set", "set"),
                                                                         new KeyValuePair<string, string>("bot_", "bot"),
@@ -2181,14 +2315,29 @@ namespace RTParser
                                                                         new KeyValuePair<string, string>("fav", "bot"),
                                                                     })
                 {
-                    if (node.Name.StartsWith(prefix.Key) && node.Name.Length > prefix.Key.Length)
+                    if (nodeNameLower.StartsWith(prefix.Key) && node.Name.Length > prefix.Key.Length)
                     {
                         string name = node.Name.Substring(prefix.Key.Length);
                         var pn = node.ParentNode;
-                        string outside = node.OuterXml.Replace("<" + prefix.Key + name, "<" + prefix.Value + " name=\"" + name + "\"");
-                        writeToLog("AIMLLOADER: ! convert " + node.OuterXml + " -> " + outside);
+                        var newnode = AIMLLoader.CopyNode(prefix.Value, node, false);
+                        XmlAttribute atr = newnode.OwnerDocument.CreateAttribute("name");
+                        atr.Value = name;
+                        newnode.Attributes.Append(atr);
+                        if (node.Name.ToLower() != newnode.Name.ToLower())
+                        {
+                            writeToLog("AIMLLOADER: converted " + node.OuterXml + " -> " + newnode.OuterXml);
+                            return GetTagHandler00(user, query, request, result, newnode);
                     }
+                        writeToLog("AIMLLOADER: ! convert " + node.OuterXml + " -> " + newnode.OuterXml);
                 }
+                }
+            }
+            if ((UnknownTagsAreBotVars && tagHandler == null) || nodeNameLower == "name")
+            {
+                tagHandler = new AIMLTagHandlers.bot(this, user, query, request, result, node);
+            }
+            if (tagHandler == null)
+            {
                 tagHandler = new AIMLTagHandlers.verbatum(node.OuterXml, this, user, query, request, result, node);
                 writeToLog("AIMLLOADER:  Verbatum: " + node.OuterXml);
             }
@@ -2207,7 +2356,7 @@ namespace RTParser
         public AIMLTagHandler getBespokeTags(User user, SubQuery query, Request request, Result result, XmlNode node)
         {
             string nodename = node.Name.ToLower();
-            if (this.CustomTags.ContainsKey(nodename))
+            if (CustomTags != null && this.CustomTags.ContainsKey(nodename))
             {
                 TagHandler customTagHandler = (TagHandler)this.CustomTags[node.Name.ToLower()];
 
@@ -2387,7 +2536,8 @@ The AIMLbot program.
         private object EvalAIMLHandler(string cmd, Request user)
         {
             string evalTemplate = "<template>" + cmd + "</template>";
-            XmlNode node = AIMLTagHandler.getNode(evalTemplate);
+            var node = AIMLTagHandler.getNode(evalTemplate);
+            node.ReadOnly = false;
             var res = ImmediateAiml(node, user, Loader, null);
             return res;
         }
@@ -2498,7 +2648,7 @@ The AIMLbot program.
 
         public static bool SaveProofs;
 
-        public GraphMaster GetUserGraph(string graphPath, GraphMaster current)
+        public GraphMaster GetUserGraph(string graphPath)
         {
             GraphMaster g;
             lock (GraphsByName)
@@ -2506,12 +2656,30 @@ The AIMLbot program.
                 if (!GraphsByName.TryGetValue(graphPath, out g))
                 {
                     g = GraphsByName[graphPath] = new GraphMaster(graphPath, this);
-                    g.AddGenlMT(current);
                 }
             }
             return g;
         }
         public GraphMaster GetGraph(string graphPath, GraphMaster current)
+        {
+            GraphMaster g = FindGraph(graphPath, current);
+            if (g != null) return g;
+            if (graphPath == null)
+            {
+                return current;
+            }
+            graphPath = graphPath.ToLower().Trim();
+            lock (GraphsByName)
+            {
+                if (!GraphsByName.TryGetValue(graphPath, out g))
+                {
+                    g = GraphsByName[graphPath] = new GraphMaster(graphPath, this);
+                }
+            }
+            return g;
+        }
+
+        public GraphMaster FindGraph(string graphPath, GraphMaster current)
         {
             if (graphPath == null)
             {
@@ -2536,6 +2704,7 @@ The AIMLbot program.
 
             if (graphPath == "parent")
             {
+                if (current == null) return null;
                 return current.Parent;
             }
 
@@ -2544,7 +2713,7 @@ The AIMLbot program.
             {
                 if (!GraphsByName.TryGetValue(graphPath, out g))
                 {
-                    g = GraphsByName[graphPath] = new GraphMaster(graphPath, this);
+                    return null;
                 }
             }
             return g;
@@ -2720,10 +2889,16 @@ The AIMLbot program.
         public object LightWeigthBotDirective(string input, Request request)
         {
             var sw = new StringWriter();
-            bool b = BotDirective(request.user, input, request.WriteLine);
+            var all = new OutputDelegate((s, args) =>
+                                                         {
+                                                             request.WriteLine(s, args);
+                                                             sw.WriteLine(s, args);
+                                                             writeDebugLine(s, args);
+                                                         });
+            bool b = BotDirective(request.user, input, all);
             var sws = sw.ToString();
-            writeDebugLine(sws);
-            return Unifiable.Empty;
+            if (!b) return Unifiable.FAIL_NIL;
+            return sws;
         }
 
         public bool BotDirective(User myUser, string input, OutputDelegate console)
@@ -2822,6 +2997,11 @@ The AIMLbot program.
                 //                return;//Success("WorldSystemModule.MyBot.ReloadAll();");
             }
 
+            if (cmd == "echo")
+            {
+                console(args);
+                return true;
+            }
             if (showHelp) console("@load <uri>");
             if (cmd == "load")
             {
@@ -2949,7 +3129,7 @@ The AIMLbot program.
             if (cmd == "ls")
             {
                 int lastIndex = args.IndexOf("-");
-                string graphname = args;
+                string graphname = "current";
                 string match = ".*";
                 if (lastIndex > -1)
                 {
@@ -2957,18 +3137,23 @@ The AIMLbot program.
                     match = args.Substring(lastIndex + 1).Trim();
                 }
                 GraphMaster G = GetGraph(graphname, myUser.ListeningGraph);
-                IList<CategoryInfo> Cats =  G.GetCategoriesMatching(match);
-                console("-----------------------------------------------------------------");
-                AIMLLoader.PrintTemplates(Cats, console, true);
-                console("-----------------------------------------------------------------");
-                console("Shown " + Cats.Count + " from " + G);
+                G.Listing(console, args, false);
                 return true;
 
             }
 
             if (showHelp) console("@chgraph <graph> - changes the users graph");
-            if (cmd == "graph" || cmd == "chgraph")
+            if (cmd == "graph" || cmd == "chgraph" || cmd == "cd")
             {
+                GraphMaster current = myUser.ListeningGraph;
+                GraphMaster graph = FindGraph(args, current);
+                if (graph != null && graph != current)
+            {
+                    console("Changing to graph " + graph);
+                    myUser.ListeningGraph = graph;
+                    console("-----------------------------------------------------------------");
+                    return true;
+                }
                 if (args == "")
                 {
                     console("-----------------------------------------------------------------");
@@ -2981,14 +3166,12 @@ The AIMLbot program.
                         gm.WriteMetaHeaders(console);
                         console("-----------------------------------------------------------------");
                     }
+                }
                     console("-----------------------------------------------------------------");
-                    console("ListeningGraph=" + myUser.ListeningGraph);
+                console("ListeningGraph=" + current);
                     console("-----------------------------------------------------------------");
                     return true;
                 }
-                myUser.ListeningGraph = GetGraph(args, myUser.ListeningGraph);
-                return true;
-            }
 
             if (showHelp) console("@log " + AIMLDEBUGSETTINGS);
             if (cmd.StartsWith("log"))
@@ -3179,6 +3362,38 @@ The AIMLbot program.
         internal static void writeDebugLine(string message, params object[] args)
         {
             lock (LoggedWords) LoggedWords.writeDebugLine(Console.WriteLine, message, args);
+            //if (args != null && args.Length >= 0)
+            {
+                try
+                {
+                    string real = string.Format(message, args);
+                    message = real.ToUpper();
+                    if (message.Contains("ERROR") && !message.Contains("TIMEOUTMESSAGE"))
+                        Breakpoint(real);
+                    else if (message.Contains("EXCEPTION")) Breakpoint(real);
+                }
+                catch (Exception)
+                {
+                }
+            }
+        }
+
+        private static int skipMany = 0;
+        public static void Breakpoint(string err)
+        {
+            if (skipMany > 0)
+            {
+                skipMany--;
+                return;
+            }
+            Console.WriteLine("" + err);
+            Console.WriteLine("press enter of enter a number to skip breakpoints");
+            string p = Console.ReadLine();
+            int skipNext;
+            if (int.TryParse(p, out skipNext))
+            {
+                skipMany = skipNext;
+            }
         }
 
         public bool SameUser(string old, string next)
@@ -3218,5 +3433,86 @@ The AIMLbot program.
         }
 
         #endregion
+
+        public SettingsDictionary GetDictionary(string named, string type, bool createIfMissing)
+        {
+            lock (AllDictionaries)
+            {
+                named = named.ToLower();
+                ISettingsDictionary dict;
+                if (!AllDictionaries.TryGetValue(type + "." + named, out dict))
+                {
+                    if (createIfMissing)
+                    {
+                        dict = new SettingsDictionary(named, this, null);
+                        loadDictionary(dict, named, type);
+                    }
+                }
+                return (SettingsDictionary) dict;
+            }
+        }
+
+        private void loadDictionary(ISettingsDictionary dictionary, string path, string type)
+        {
+            User user = LastUser ?? ExemplarUser ?? BotAsUser;
+            Request r = user.CurrentRequest ?? user.LastResult.request;
+            int loaded = 0;
+            foreach (string p in GetSearchRoots(r))
+            {
+                foreach (var s0 in new[] { "", type, type + "s", })
+                {
+                    foreach (var s1 in new[] {"", "." + type, ".xml", ".subst", ".properties",})
+                    {
+                        var named = HostSystem.Combine(p, path + s0 + s1);
+                        if (HostSystem.FileExists(named))
+                        {
+                            SettingsDictionary.loadSettings(dictionary, named, true, false, r);
+                            loaded++;
+                            break;
+                        }
+                    }
+                }
+                if (loaded > 0) return;
+            }
+            if (loaded == 0)
+            {
+                writeToLog("");
+            }
+        }
+
+
+        private void RegisterSubstitutions(string named, SettingsDictionary dict)
+        {
+            lock (AllDictionaries)
+            {
+                named = named.ToLower();
+                AllDictionaries["substitution." + named] = dict;
+            }
+        }
+
+        protected IEnumerable GetSearchRoots(Request request)
+        {
+            List<string> searchAt = new List<string>();
+            if (_PathToBotPersonalFiles != null)
+            {
+                searchAt.Add(_PathToBotPersonalFiles);
+            }
+            if (PathToConfigFiles != null)
+            {
+                searchAt.Add(PathToConfigFiles);
+            }
+            var PathToAIML = this.PathToAIML;
+            if (PathToAIML != null)
+            {
+                searchAt.Add(PathToAIML);
+            }
+            var PathToUsers = this.PathToUserDir;
+            if (request != null)
+            {
+                searchAt.Add(GetUserDir(request.user.UserID));
+            }
+            searchAt.Add(RuntimeDirectory);
+            return searchAt;
     }
+}
 }

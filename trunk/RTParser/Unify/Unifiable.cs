@@ -423,7 +423,7 @@ namespace RTParser
 
         public bool CanMatchZero
         {
-            get { return ToUpper().Length == 0; }
+            get { return Raw != null && ToUpper().Length == 0; }
         }
 
         protected virtual bool IsFalse()
@@ -441,6 +441,7 @@ namespace RTParser
 
         public abstract bool IsLazy();
         public abstract bool IsLitteral();
+        public abstract bool IsLitteralText();
 
         public static void writeToLog(string message, params object[] args)
         {
@@ -555,6 +556,8 @@ namespace RTParser
 
 
         public static Unifiable NULL = new StringUnifiable(null);
+
+        public static Unifiable FAIL_NIL = new StringUnifiable("NIL");
 
         public virtual Unifiable ToCaseInsenitive()
         {

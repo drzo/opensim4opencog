@@ -440,8 +440,11 @@ namespace RTParser
         {
             if (string.IsNullOrEmpty(str)) return false;
             char c = str[str.Length - 1];
-            return c == '_' || c == '*';
-
+            if (c == '_' || c == '*') return true;
+            if (c=='>')
+            {
+                return true;
+            }
 
             return false;
 
@@ -475,7 +478,7 @@ namespace RTParser
                 return arrayOf(strTrim.Split(BRKCHARS, StringSplitOptions.RemoveEmptyEntries));
 
             XmlDocumentLineInfo doc = new XmlDocumentLineInfo("split str: " + str, false);
-            StringReader sr = new StringReader("<node>" + strTrim + "</node>");
+            StringReader sr = new StringReader("<bold>" + strTrim + "</bold>");
             List<Unifiable> u = new List<Unifiable>();
 
             try
@@ -630,6 +633,15 @@ namespace RTParser
             if (this.IsLazy()) return false;
             if (this.IsMarkerTag()) return true;
             if (this.IsWildCard()) return false;
+            return true;
+        }
+
+        public override bool IsLitteralText()
+        {
+            if (this.IsLazy()) return false;
+            if (this.IsMarkerTag()) return false;
+            if (this.IsWildCard()) return false;
+            if (this.IsAnySingleUnit()) return false;
             return true;
         }
 

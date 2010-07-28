@@ -562,9 +562,30 @@ namespace RTParser.Utils
                 if (result != null)
                 {
                     var childNodeWord = childNode.word;
-                    if (!isTag && childNodeWord.IsWildCard() && childNodeWord.StoreWildCard())
+                    if (!isTag)
                     {
-                        writeToLog("should store WC for " + childNodeWord + " from " + firstWord);
+                        if (childNodeWord.IsLitteral())
+                        {
+
+                        }
+                        if (childNodeWord.IsWildCard())
+                        {
+                            if (childNodeWord.StoreWildCard())
+                            {
+                                writeToLog("should store WC for " + childNodeWord + " from " + firstWord);
+                                var stars = query.GetMatchList(matchstate);
+                                Insert(stars, firstWord);
+                            }
+                        }
+                        else if (childNodeWord.IsLazy())
+                        {
+                            if (childNodeWord.StoreWildCard())
+                            {
+                                writeToLog("should store WC for " + childNodeWord + " from " + firstWord);
+                                var stars = query.GetMatchList(matchstate);
+                                Insert(stars, firstWord);
+                            }
+                        }
                     }
                     if (UseWildcard(newWildcard))
                     {

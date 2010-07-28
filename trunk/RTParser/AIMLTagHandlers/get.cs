@@ -82,7 +82,7 @@ namespace RTParser.AIMLTagHandlers
                     return gResult;
                 }
                 string sresultGet = resultGet.ToValue(query);
-                if (sresultGet.ToUpper() == "UNKNOWN")
+                if (sresultGet != null && sresultGet.ToUpper() == "UNKNOWN")
                 {
                     return sresultGet + " " + name;
                 }

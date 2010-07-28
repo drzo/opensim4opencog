@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Reflection;
 using RTParser.Utils;
 
@@ -6,6 +8,11 @@ namespace RTParser.Variables
     internal class ObjectPropertyDictionary : ISettingsDictionary
     {
         public bool IsTraced { get; set; }
+        public IEnumerable<string> SettingNames(int depth)
+        {
+            //get
+            { return new[] { named }; }
+        }
 
         public string NameSpace
         {

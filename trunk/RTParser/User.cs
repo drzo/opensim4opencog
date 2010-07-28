@@ -87,7 +87,7 @@ namespace RTParser
                 {
                     GraphMaster _Graph = null;
                     var v = Predicates.grabSettingNoDebug("graphname");
-                    _Graph = bot.GetUserGraph(v, bot.GraphMaster);
+                    _Graph = bot.GetUserGraph(v);
                     if (_Graph != null)
                     {
                         return _Graph;
@@ -821,7 +821,7 @@ namespace RTParser
                 }
                 if (userdir.EndsWith("Predicates.xml"))
                 {
-                    SettingsDictionary.loadSettings(Predicates, userdir, true, true);
+                    SettingsDictionary.loadSettings(Predicates, userdir, true, true, null);
                 }
                 return;
             }
@@ -910,6 +910,12 @@ namespace RTParser
             {
                 return UserID;
             }
+        }
+
+        public IEnumerable<string> SettingNames(int depth)
+        {
+            //get 
+            { return Predicates.SettingNames(depth); }
         }
 
         #endregion

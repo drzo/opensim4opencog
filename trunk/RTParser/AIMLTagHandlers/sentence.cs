@@ -38,7 +38,7 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessChange()
         {
-            if(this.templateNode.Name.ToLower()=="sentence")
+            if (CheckNode("sentence"))
             {
                 if (!templateNodeInnerText.IsEmpty)
                 {

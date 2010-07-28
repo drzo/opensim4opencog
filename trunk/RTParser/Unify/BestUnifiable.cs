@@ -19,6 +19,13 @@ namespace RTParser
             return true;   
         }
 
+        public override bool IsLitteralText()
+        {
+            if (best==null) throw noBest();
+            return best.IsLitteralText();
+            
+        }
+
         private Unifiable best;
         public List<Unifiable> List = new List<Unifiable>();
 
