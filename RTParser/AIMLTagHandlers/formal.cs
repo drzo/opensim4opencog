@@ -13,7 +13,7 @@ namespace RTParser.AIMLTagHandlers
     /// If no character in this Unifiable has a different uppercase version, based on the Unicode 
     /// standard, then the original Unifiable is returned.
     /// </summary>
-    public class formal : RTParser.Utils.AIMLTagHandler
+    public class formal : RTParser.Utils.AIMLFormatingTagHandler
     {
         /// <summary>
         /// Ctor
@@ -34,9 +34,9 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        protected override Unifiable ProcessChange()
+        protected override Unifiable Format(Unifiable templateNodeInnerText)
         {
-            if (this.templateNode.Name.ToLower() == "formal")
+            if (CheckNode("formal"))
             {
                 Unifiable result = Unifiable.CreateAppendable();
                 Unifiable rest = templateNodeInnerText;

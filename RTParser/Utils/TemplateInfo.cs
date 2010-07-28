@@ -26,6 +26,15 @@ namespace RTParser.Utils
                 return false;
             }
         }
+
+        public XmlNode ClonedOutput
+        {
+            get
+            {
+                return AIMLLoader.CopyNode(Output, true);
+            }
+        }
+
         public TemplateInfo(XmlNode template, GuardInfo guard, ThatInfo that, Node patternNode, CategoryInfo categoryInfo)
             : base(template)
         {

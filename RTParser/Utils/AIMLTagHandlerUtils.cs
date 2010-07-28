@@ -122,7 +122,7 @@ namespace RTParser.Utils
             return i;
         }
 
-        protected string GetAttribValue(string attribName, string defaultIfEmpty)
+        public string GetAttribValue(string attribName, string defaultIfEmpty)
         {
             return GetAttribValue(templateNode, attribName, () => defaultIfEmpty, query);
         }

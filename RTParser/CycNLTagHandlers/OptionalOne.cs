@@ -48,7 +48,7 @@ namespace RTParser.CycNLTagHandlers
                             string srch = (" " + with.ToValue(query) + " ").ToUpper();
                             return ((" " + childNode.InnerText + " ").ToUpper().Contains(srch)) ? OR_TRUE : OR_FALSE;
                         }
-                        AIMLTagHandler part = Proc.GetTagHandler(user, query, request, result, childNode, this);
+                        AIMLTagHandler part = GetChildTagHandler(childNode);
                         float rate1 = part.CanUnify(with);
                         if (rate1 == 0) return rate1 + OR_TRUE;
                     }

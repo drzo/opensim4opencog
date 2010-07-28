@@ -1,6 +1,9 @@
 using System;
 using System.Xml;
 using System.Text;
+using RTParser.AIMLTagHandlers;
+using RTParser.Utils;
+using RTParser.Variables;
 
 namespace RTParser.AIMLTagHandlers
 {
@@ -25,7 +28,7 @@ namespace RTParser.AIMLTagHandlers
     /// most AIML has been written in English. However, the decision about whether to transform the 
     /// person aspect of other words is left up to the implementation.
     /// </summary>
-    public class person : RTParser.Utils.AIMLTagHandler
+    public class person : AIMLDictSubstFormatingTagHandler
     {
         /// <summary>
         /// Ctor
@@ -46,32 +49,14 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        protected override Unifiable ProcessChange()
+        protected override ISettingsDictionary GetDictionary()
         {
-            if (this.templateNode.Name.ToLower() == "person")
+            ISettingsDictionary dict = request.Graph.GetSubstitutions(templateNode.Name.ToLower(), false);
+            if (dict != null)
             {
-                if (!templateNodeInnerText.IsEmpty)
-                {
-                    // non atomic version of the node
-                    return RTParser.Normalize.ApplySubstitutions.Substitute( this.Proc.PersonSubstitutions, templateNodeInnerText);
-                }
-                else
-                {
-                    // atomic version of the node
-                    XmlNode starNode = Utils.AIMLTagHandler.getNode("<star/>", templateNode);
-                    star recursiveStar = new star(this.Proc, this.user, this.query, this.request, this.result, starNode);
-                    templateNodeInnerText = recursiveStar.Transform();
-                    if (!templateNodeInnerText.IsEmpty)
-                    {
-                        return this.ProcessChange();
-                    }
-                    else
-                    {
-                        return Unifiable.Empty;
-                    }
-                }
-            }
-            return Unifiable.Empty;
+                return dict;
         }
+            return Proc.PersonSubstitutions;
     }
+}
 }

@@ -6,6 +6,7 @@ using System.IO;
 using System.Xml;
 using System.Xml.Schema;
 using System.Text;
+using AIMLbot;
 using MushDLR223.ScriptEngines;
 using RTParser.Variables;
 using UPath = RTParser.Unifiable;
@@ -17,13 +18,13 @@ namespace RTParser.Utils
     /// A utility class for loading AIML files from disk into the graphmaster structure that 
     /// forms an AIML RProcessor's "brain"
     /// </summary>
-    public class AIMLLoader
+    public class AIMLLoader : XmlNodeEvaluator
     {
         #region Attributes
         /// <summary>
         /// The RProcessor whose brain is being processed
         /// </summary>
-        private RTParser.RTPBot RProcessorOld
+        public RTParser.RTPBot RProcessorOld
         {
             get
             {
@@ -31,6 +32,8 @@ namespace RTParser.Utils
             }
         }
 
+
+        private TestCaseRunner testCaseRunner;
         public Request LoaderRequest00;
         /// <summary>
         /// Allow all chars in RawUserInput
@@ -45,6 +48,9 @@ namespace RTParser.Utils
         public AIMLLoader(RTParser.RTPBot bot, Request request)
         {
             this.LoaderRequest00 = request;
+            testCaseRunner = new TestCaseRunner(this);
+            XmlNodeEvaluators.Add(testCaseRunner);
+            XmlNodeEvaluators.Add(this);
         }
 
         #region Methods
@@ -160,7 +166,7 @@ namespace RTParser.Utils
                         request.LoadOptions = loadOpts;
                         request.Filename = path;
                         loadOpts = request.LoadOptions;
-                        RProcessor.loadConfigs(path, request);
+                        RTPBot.loadConfigs(RProcessor, path, request);
                         loadAIMLDir0(path, loadOpts);
                     }
                     finally
@@ -402,7 +408,7 @@ namespace RTParser.Utils
             string namefile = "" + path;
             //while (!xtr.EOF)
             {
-              //  IXmlLineInfo text = (IXmlLineInfo)xtr;
+                //  IXmlLineInfo text = (IXmlLineInfo)xtr;
                 try
                 {
                     XmlDocumentLineInfo doc = new XmlDocumentLineInfo("" + namefile, false);
@@ -410,7 +416,7 @@ namespace RTParser.Utils
                     if (doc.DocumentElement == null)
                     {
                         RProcessor.writeToLog("ERROR: No Document at " + namefile);
-                //        continue;
+                        //        continue;
                     }
                     this.loadAIMLNode(doc.DocumentElement, loadOpts);
                 }
@@ -420,7 +426,7 @@ namespace RTParser.Utils
                     //s = s + "\n" + e2.Message + "\n" + e2.StackTrace + "\n"; //+ s;
                     writeToLog(s);
                     //System.Console.Flush();
-                   // if (!xtr.Read())
+                    // if (!xtr.Read())
                     {
                         throw e2;
                     }
@@ -428,7 +434,7 @@ namespace RTParser.Utils
                 }
                 finally
                 {
-                 //   xtr.Close();
+                    //   xtr.Close();
                 }
 
             }
@@ -625,15 +631,50 @@ namespace RTParser.Utils
 
         private void EvalNode(XmlNode currentNode, Request request, LoaderOptions loadOpts)
         {
+            /*
+               <TestCase name="connect">
+                    <Input>CONNECT</Input>
+                    <ExpectedAnswer>Connected to test case AIML set.</ExpectedAnswer>
+               </TestCase>
+            */
+
             if (currentNode.NodeType == XmlNodeType.Comment) return;
 
+            OutputDelegate del = Console.WriteLine;
+            HashSet<XmlNode> nodes = new HashSet<XmlNode>();
+            bool evaledNode = false;
+            foreach (XmlNodeEval funct in GetEvaluators(currentNode))
+            {
+                evaledNode = true;
+                var newNode = funct(currentNode, request, del);
+                if (newNode != null)
+                {
+                    evaledNode = true;
+                    foreach (var node in newNode)
+                    {
+                        nodes.Add(node);
+                    }
+                }
+            }
+            if (evaledNode)
+            {
+                del("evaledNode=" + evaledNode);
+                del("nodes.Count=" + nodes.Count);
+                int nc = 1;
+                foreach (XmlNode n in nodes)
+                {
+                    del("node {0}:{1}", nc, n);
+                    nc++;
+                }
+                return;
+            }
             RTPBot RProcessor = loadOpts.RProcessor;
             string path = request.Filename;
             loadOpts = EnsureOptions(loadOpts, request, path);
             path = ResolveToURI(path, loadOpts);
             try
             {
-                RProcessor.ImmediateAiml(currentNode, request, this, null);
+                ImmediateAiml(currentNode, request, this, null);
             }
             catch (Exception e)
             {
@@ -643,6 +684,35 @@ namespace RTParser.Utils
                 string s = TextAndSourceInfo(element) + " " + LocationEscapedInfo(element);
                 writeToLog("ERROR PARSING: " + s);
             }
+        }
+
+        private AIMLbot.Result ImmediateAiml(XmlNode node, Request request, AIMLLoader loader, object o)
+        {
+            RTPBot RProcessor = request.Proccessor;
+            return RProcessor.ImmediateAiml(node, request, this, null);
+        }
+
+        public virtual IEnumerable<XmlNode> Eval_Element_NodeType(XmlNode src, Request request, OutputDelegate outputdelegate)
+        {
+            outputdelegate("" + ImmediateAiml(src, request, this, null) + "");
+            return new XmlNode[] {src};
+        }
+
+        public override IEnumerable<XmlNodeEval> GetEvaluators(XmlNode node)
+        {
+
+            List<XmlNodeEval> nodes = new List<XmlNodeEval>();
+            foreach (XmlNodeEvaluator xmlNodeEvaluator in XmlNodeEvaluators)
+            {
+                if (xmlNodeEvaluator == this)
+                {
+                    nodes.AddRange(base.GetEvaluators(node));
+                    continue;
+                }
+                IEnumerable<XmlNodeEval> nodeE = xmlNodeEvaluator.GetEvaluators(node);
+                nodes.AddRange(nodeE);
+            }
+            return nodes;
         }
 
         /// <summary>
@@ -707,9 +777,9 @@ namespace RTParser.Utils
             Unifiable topicName, XmlNode outerNode)
         {
             XmlNode guardnode = FindNode("guard", cateNode, null);
-            if (guardnode==null && outerNode!=null && outerNode.Name!="aiml")
+            if (guardnode == null && outerNode != null && outerNode.Name != "aiml")
             {
-                guardnode= FindNode("guard", outerNode, null);
+                guardnode = FindNode("guard", outerNode, null);
             }
             GuardInfo guard = guardnode == null ? null : GuardInfo.GetGuardInfo(guardnode);
 
@@ -827,7 +897,7 @@ namespace RTParser.Utils
                 patternString = MatchKeyClean(patternString.Replace(thatString, ""));
                 var newLineInfoPattern = AIMLTagHandler.getNode("<pattern>" + patternString + "</pattern>", patternNode);
                 //TODO BEFORE COMMIT DMILES
-				newLineInfoPattern.ReadOnly = true;
+                newLineInfoPattern.ReadOnly = true;
                 newLineInfoPattern.SetParentFromNode((LineInfoElement)patternNode);
                 patternNode = newLineInfoPattern;
                 patternText = Unifiable.Create(Unifiable.InnerXmlText(patternNode));
@@ -849,9 +919,10 @@ namespace RTParser.Utils
                 ps.ReadOnly = true;
                 return ps;
             }
-        } 
+        }
         public bool ThatWideStar = false;
         public static bool useInexactMatching = false;
+        private List<XmlNodeEvaluator> XmlNodeEvaluators = new List<XmlNodeEvaluator>();
 
         /// <summary>
         /// Given a name will try to find a node named "name" in the childnodes or return null
@@ -864,13 +935,13 @@ namespace RTParser.Utils
             name = name.ToLower();
             foreach (var n in name.Split(",".ToCharArray(), StringSplitOptions.RemoveEmptyEntries))
             {
-            foreach (XmlNode child in node.ChildNodes)
-            {
-                    if (child.Name.ToLower() == n)
+                foreach (XmlNode child in node.ChildNodes)
                 {
-                    return child;
+                    if (child.Name.ToLower() == n)
+                    {
+                        return child;
+                    }
                 }
-            }
             }
             return ifMissing;
         }
@@ -879,13 +950,13 @@ namespace RTParser.Utils
             if (node == null) return ifMissing;
             foreach (var n in name.Split(",".ToCharArray(), StringSplitOptions.RemoveEmptyEntries))
             {
-            foreach (XmlNode child in node.ChildNodes)
-            {
-                    if (child.Name.ToLower() == n)
+                foreach (XmlNode child in node.ChildNodes)
                 {
-                    return child;
+                    if (child.Name.ToLower() == n)
+                    {
+                        return child;
+                    }
                 }
-            }
             }
             return FindHigher(name, node.ParentNode, ifMissing);
         }
@@ -895,9 +966,9 @@ namespace RTParser.Utils
             foreach (var n in name.Split(",".ToCharArray(), StringSplitOptions.RemoveEmptyEntries))
             {
                 if (node.Name.ToLower() == n)
-            {
-                return node;
-            }
+                {
+                    return node;
+                }
             }
             return FindHigher(name, node.ParentNode, ifMissing);
         }
@@ -1565,31 +1636,31 @@ namespace RTParser.Utils
                 xmlNode.ReadOnly = false;
             }
             else
-        {
+            {
                 xmlNode.ReadOnly = false;
             }
             xmlNode.ReadOnly = false;
             return xmlNode;
         }
-            
+
         public static LineInfoElement CopyNode(string newName, XmlNode node, bool copyParent)
         {
             var od = node.OwnerDocument;
-            LineInfoElement newnode = (LineInfoElement) node.OwnerDocument.CreateNode(node.NodeType, newName, node.NamespaceURI);
+            LineInfoElement newnode = (LineInfoElement)node.OwnerDocument.CreateNode(node.NodeType, newName, node.NamespaceURI);
             newnode.SetParentFromNode(node);
             newnode.lParent = ToLineInfoElement(node.ParentNode);
             var ats = node.Attributes;
             if (ats != null) foreach (XmlAttribute a in ats)
-            {
-                XmlAttribute na = od.CreateAttribute(a.Prefix, a.LocalName, a.NamespaceURI);
-                na.Value = a.Value;
-                newnode.Attributes.Append(na);
-            }
+                {
+                    XmlAttribute na = od.CreateAttribute(a.Prefix, a.LocalName, a.NamespaceURI);
+                    na.Value = a.Value;
+                    newnode.Attributes.Append(na);
+                }
             foreach (XmlNode a in node.ChildNodes)
             {
                 newnode.AppendChild(a.CloneNode(true));
             }
-            return (LineInfoElement) newnode;
+            return (LineInfoElement)newnode;
         }
 
         public static LineInfoElement ToLineInfoElement(XmlNode pattern)
@@ -1597,9 +1668,86 @@ namespace RTParser.Utils
             if (pattern == null) return null;
             if (pattern is LineInfoElement)
             {
-                return (LineInfoElement) pattern;
+                return (LineInfoElement)pattern;
             }
             return CopyNode(pattern, true);
+        }
+    }
+
+    internal class TestCaseRunner : XmlNodeEvaluator
+    {
+        private AIMLLoader Loader;
+
+        public TestCaseRunner(AIMLLoader loader)
+            : base("Eval", "_")
+        {
+            Loader = loader;
+        }
+
+        /// <summary>
+        ///     <TestCase name="connect">
+        //        <Input>CONNECT</Input>
+        ///       <ExpectedAnswer>Connected to test case AIML set.</ExpectedAnswer>
+        ///    </TestCase>
+        /// </summary>
+        /// <param name="src"></param>
+        /// <param name="request"></param>
+        /// <param name="outputdelegate"></param>
+        /// <returns></returns>
+        public IEnumerable<XmlNode> EvalTestCase(XmlNode src, Request request, OutputDelegate outputdelegate)
+        {
+            request = request ?? Loader.LoaderRequest00;
+            User user = request.user;
+            var robot = request.Proccessor ?? Loader.RProcessorOld;
+
+            string tcname =FindNodeOrAttrib(src, "name", null);
+            string tcdesc = FindNodeOrAttrib(src, "Description", null);
+            string input =  FindNodeOrAttrib(src, "Input", null);
+            if (input == null)
+            {
+                outputdelegate("ERROR cannot find 'Input' in '" + src.OuterXml + "'");
+            }
+            string userID = FindNodeOrAttrib(src, "UserId,UserName", user.UserID);
+
+            string expectedAnswer = FindNodeOrAttrib(src, "ExpectedAnswer", null);
+            if (expectedAnswer == null)
+            {
+                outputdelegate("ERROR cannot find 'ExpectedAnswer' in '" + src.OuterXml + "'");
+            }
+            outputdelegate("{0}: {1} ", tcname, tcdesc);
+            outputdelegate("{0}: {1} ", userID, input);
+            string resp = robot.ChatString(input, userID);
+            outputdelegate("{0}: {1} ", robot, resp);
+            bool m = Matches(resp, expectedAnswer, FindNodeOrAttrib(src, "MatchType,Match", null));
+            outputdelegate("PASSED={0}", m);
+            return new[] {src};
+        }
+
+        static bool Matches(string resp, string answer, string s)
+        {
+            return resp == answer;
+        }
+
+
+        static string FindNodeOrAttrib(XmlNode myNode, string names, string defaultNotFound)
+        {
+            string value = RTPBot.GetAttribValue(myNode, names, defaultNotFound);
+            if (value == defaultNotFound)
+            {
+                XmlNode holder = AIMLLoader.FindNode(names, myNode, null);
+                if (holder != null)
+                {
+                    value = holder.InnerText;
+                    return value;
+                }
+            }
+            return defaultNotFound;
+        }
+
+
+        public override string ToString()
+        {
+            return GetType().Name;
         }
     }
 }

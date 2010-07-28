@@ -12,7 +12,7 @@ namespace RTParser.AIMLTagHandlers
     /// 
     /// The gossip element does not have any attributes. It may contain any AIML template elements.
     /// </summary>
-    public class gossip : RTParser.Utils.AIMLTagHandler
+    public class gossip : RTParser.Utils.AIMLFormatingTagHandler
     {
         /// <summary>
         /// Ctor
@@ -33,9 +33,15 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        protected override Unifiable ProcessChange()
+        /// <summary>
+        /// The method that does the actual processing of the text.
+        /// 
+        /// This like the think tag retunns nothihng.. but logs it to the console
+        /// </summary>
+        /// <returns>The resulting processed text</returns>
+        protected override Unifiable Format(Unifiable templateNodeInnerText)
         {
-            if (this.templateNode.Name.ToLower() == "gossip")
+            if (CheckNode("gossip"))
             {
                 // gossip is merely logged by the Proc and written to log files
                 if (!templateNodeInnerText.IsEmpty)
