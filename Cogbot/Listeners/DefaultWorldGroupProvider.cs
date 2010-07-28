@@ -87,6 +87,11 @@ namespace cogbot.Listeners
         }
 
         readonly Dictionary<string, Func<IList>> ObjectGroups = new Dictionary<string, Func<IList>>();
+        public IEnumerable<string> GroupNames
+        {
+            get { lock (ObjectGroups) return new List<string>(ObjectGroups.Keys); }
+        }
+
         public void AddObjectGroup(string selecteditems, Func<IList> func)
         {
             lock (ObjectGroups)

@@ -90,6 +90,11 @@ namespace cogbot.Listeners
             get { return GridMaster == this; }
         }
 
+        public IEnumerable<string> GroupNames
+        {
+            get { return _defaultProvider.GroupNames; }
+        } 
+
         public override void Parcels_OnSimParcelsDownloaded(object sender,
                                                             SimParcelsDownloadedEventArgs e)
         {

@@ -28,6 +28,12 @@ namespace AIMLBotModule
     public class WorldObjectsForAimLBot : WorldObjectsModule, ICollectionProvider, ISettingsDictionary
     {
         public bool IsTraced { get; set; }
+        public IEnumerable<string> SettingNames(int depth)
+        {
+            //get
+            { return WorldSystem.GroupNames; }
+        }
+
         private static int _DefaultMaxRespondToChatPerMinute = 20;
         public static int DefaultMaxRespondToChatPerMinute
         {

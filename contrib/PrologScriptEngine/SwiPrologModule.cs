@@ -18,6 +18,12 @@ namespace PrologScriptEngine
     {
         #region ISettingsDictionary Members
         public bool IsTraced { get; set; }
+        public IEnumerable<string> SettingNames(int depth)
+        {
+            //get 
+            { throw new NotImplementedException(); }
+        }
+
         public PrologScriptInterpreter PLScriptInterpreter;
         ///<summary>
         ///</summary>
