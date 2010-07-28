@@ -53,6 +53,8 @@ namespace RTParser.Variables
 
         string NameSpace { get; }
         bool IsTraced { get; set; }
+
+        IEnumerable<string> SettingNames(int depth);
     }
 
     /// <summary>
@@ -80,6 +82,8 @@ namespace RTParser.Variables
         private List<ParentProvider> _fallbacks = new List<ParentProvider>();
         // fallbacks (therefore inherits)
         private List<ParentProvider> _listeners = new List<ParentProvider>();
+        // fallbacks (therefore inherits)
+        private PrefixProvider prefixProvideer;
 
         /// <summary>
         /// The bot this dictionary is associated with (only for writting log)
@@ -165,6 +169,16 @@ namespace RTParser.Variables
                         item.Attributes.Append(name);
                         root.AppendChild(item);
                     }
+                    foreach (var normalizedName in this.prefixProvideer._prefixes)
+                    {
+                        XmlNode item = result.CreateNode(XmlNodeType.Element, "prefixes", "");
+                        XmlAttribute name = result.CreateAttribute("name");
+                        name.Value = normalizedName.Key;
+                        XmlAttribute value = result.CreateAttribute("value");
+                        value.Value = normalizedName.Value().NameSpace;
+                        item.Attributes.Append(name);
+                        root.AppendChild(item);
+                    }
                     foreach (var normalizedName in this.makedvars)
                     {
                         XmlNode item = result.CreateNode(XmlNodeType.Element, "maskedvar", "");
@@ -203,6 +217,11 @@ namespace RTParser.Variables
             this.bot = bot;
             IsTraced = true;
             if (parent != null) _fallbacks.Add(parent);
+            prefixProvideer = new PrefixProvider();
+            prefixProvideer.NameSpace = name + ".evalprefix";
+            ParentProvider pp = () => prefixProvideer;
+            _fallbacks.Add(pp);
+            _listeners.Add(pp);
         }
 
         #region Methods
@@ -220,6 +239,7 @@ namespace RTParser.Variables
         /// <param name="pathToSettings">The file containing the settings</param>
         public void loadSettings(string pathToSettings)
         {
+            if (pathToSettings == null) return;
             lock (orderedKeys)
             {
                 if (pathToSettings.Length > 0)
@@ -243,20 +263,23 @@ namespace RTParser.Variables
                     else
                     {
                         writeToLog("No settings found in: " + pathToSettings);
+                        return;
                     }
                     writeToLog("Loaded Settings found in: " + pathToSettings);
                     if (fromFile == null) fromFile = pathToSettings;
                 }
                 else
                 {
-                    throw new FileNotFoundException();
+                    throw new FileNotFoundException(pathToSettings);
                 }
             }
         }
 
-        static public void loadSettings(SettingsDictionary dict, string pathToSettings, 
-            bool overwriteExisting, bool onlyIfUnknown)
+        static public void loadSettings(ISettingsDictionary dict0, string pathToSettings,
+            bool overwriteExisting, bool onlyIfUnknown, Request request)
         {
+            SettingsDictionary dict = ToSettingsDictionary(dict0);
+            if (pathToSettings == null) return;
             lock (dict.orderedKeys)
             {
                 if (pathToSettings.Length > 0)
@@ -265,7 +288,7 @@ namespace RTParser.Variables
                     {
                         foreach (string s in HostSystem.GetFiles(pathToSettings, "*.xml")) 
                         {
-                            loadSettings(dict, s, overwriteExisting, onlyIfUnknown);
+                            loadSettings(dict, s, overwriteExisting, onlyIfUnknown, request);
                         }
                         return;
                     }
@@ -282,7 +305,7 @@ namespace RTParser.Variables
                         var stream = HostSystem.GetStream(pathToSettings);
                         xmlDoc.Load(stream);
                         HostSystem.Close(stream);
-                        loadSettingNode(dict, xmlDoc, overwriteExisting, onlyIfUnknown);
+                        loadSettingNode(dict, xmlDoc, overwriteExisting, onlyIfUnknown, request);
                         dict.writeToLog("Loaded Settings found in: " + pathToSettings);
                         if (dict.fromFile == null) dict.fromFile = pathToSettings;
                     }
@@ -327,12 +350,12 @@ namespace RTParser.Variables
 
                 foreach (XmlNode myNode in rootChildren)
                 {
-                    loadSettingNode(this, myNode, true, false);
+                    loadSettingNode(this, myNode, true, false, null);
                 }
             }
         }
 
-        static public void loadSettingNode(ISettingsDictionary dict, XmlNode myNode, bool overwriteExisting, bool onlyIfUnknown)
+        static public void loadSettingNode(ISettingsDictionary dict, XmlNode myNode, bool overwriteExisting, bool onlyIfUnknown, Request request)
         {
             if (myNode.NodeType == XmlNodeType.Comment) return;
             if (myNode.NodeType == XmlNodeType.XmlDeclaration)
@@ -341,29 +364,31 @@ namespace RTParser.Variables
                 {
                     foreach (XmlNode n in myNode.ChildNodes)
                     {
-                        loadSettingNode(dict, n, overwriteExisting, onlyIfUnknown);
+                        loadSettingNode(dict, n, overwriteExisting, onlyIfUnknown, request);
                     }
                     return;
                 }
                 return;
             }
-            if (myNode.NodeType == XmlNodeType.Document || myNode.Name == "#document")
+            string lower = myNode.Name.ToLower();
+
+            if (myNode.NodeType == XmlNodeType.Document || lower == "#document")
             {
                 foreach (XmlNode n in myNode.ChildNodes)
                 {
-                    loadSettingNode(dict, n, overwriteExisting, onlyIfUnknown);
+                    loadSettingNode(dict, n, overwriteExisting, onlyIfUnknown, request);
                 }
                 return;
             }
-            if ((myNode.Name == "root"))
+            if (lower == "root" || lower == "vars" || lower == "items")
             {
                 foreach (XmlNode n in myNode.ChildNodes)
                 {
-                    loadSettingNode(dict, n, overwriteExisting, onlyIfUnknown);
+                    loadSettingNode(dict, n, overwriteExisting, onlyIfUnknown, request);
                 }
                 return;
             }
-            if ((myNode.Name == "include"))
+            if ((lower == "include"))
             {
                 string path = RTPBot.GetAttribValue(myNode, "path", myNode.InnerText);
 
@@ -373,10 +398,10 @@ namespace RTParser.Variables
                 onlyIfUnknown =
                     Boolean.Parse(RTPBot.GetAttribValue(myNode, "overwriteExisting", "" + onlyIfUnknown));
 
-                loadSettings(ToSettingsDictionary(dict), path, overwriteExisting, onlyIfUnknown);
+                loadSettings(ToSettingsDictionary(dict), path, overwriteExisting, onlyIfUnknown, request);
                 return;
             }
-            if ((myNode.Name == "parent" || myNode.Name == "override" || myNode.Name == "fallback" || myNode.Name == "listener" || myNode.Name == "provider"))
+            if ((lower == "parent" || lower == "override" || lower == "fallback" || lower == "listener" || lower == "provider"))
             {
                 string name = RTPBot.GetAttribValue(myNode, "name", null);
                 if (!string.IsNullOrEmpty(name))
@@ -396,7 +421,7 @@ namespace RTParser.Variables
                         ///warned already
                         return;
                     }
-                    switch (myNode.Name)
+                    switch (lower)
                     {
                         case "provider":
                             settingsDict.InsertProvider(pp);
@@ -416,7 +441,7 @@ namespace RTParser.Variables
                     }
                 }
             }
-            if ((myNode.Name == "maskedvar"))
+            if ((lower == "maskedvar"))
             {
                 string name = RTPBot.GetAttribValue(myNode, "name", "");
                 if (name == "")
@@ -431,19 +456,41 @@ namespace RTParser.Variables
                 settingsDict.maskSetting(name);
 
             }
-            if ((myNode.Name == "item"))
+            //<predicates><predicate name="failed" default="" set-return="value"/>
+            //<properties><property name="name" value="YourBot"/>
+            //<vars><set name="accountability" >gnucash</set>
+            //<properties><entry key="programd.aiml-schema.namespace-uri">http://alicebot.org/2001/AIML-1.0.1</entry>
+            //<param name="PrintStackTraces" value="false"/>
+            //<parameter name="channel" value="#some-channel"/>
+            //<input><substitute find="=reply" replace=""/>
+            //<substitution><old>:\)</old><new> smile </new></substitution>
+            if (lower == "item" || lower == "set" || lower == "entry" || lower == "predicate" ||
+                lower == "substitution" || lower == "param" || lower == "parameter" || lower == "substitute")
             {
-                string name = RTPBot.GetAttribValue(myNode, "name", "");
+                string name = RTPBot.GetAttribValue(myNode, "name,var,old,key,find,param", "");
                 if (name == "")
                 {
+                    XmlNode holder = AIMLLoader.FindNode("name,var,old,key,find", myNode, null);
+                    if (holder == null)
+                    {
                     return;
                 }
-                string value = RTPBot.GetAttribValue(myNode, "value", null);
+                    name = holder.InnerText;
+                }
+                string value = RTPBot.GetAttribValue(myNode, "value,default,replace,new", null);
                 if (value == null)
                 {
-                    value = myNode.InnerXml.Trim();
+                    XmlNode holder = AIMLLoader.FindNode("value,default,replace,new", myNode, null);
+                    if (holder != null)
+                    {
+                        value = holder.InnerXml;
+                    }
                 }
-
+                if (value == null)
+                {
+                    string maybe = myNode.InnerXml.Trim();
+                    if (maybe != null) value = maybe;
+                }
                 string updateOrAdd = RTPBot.GetAttribValue(myNode, "type", "add").ToLower().Trim();
                 bool dictcontainsLocalCalled = dict.containsLocalCalled(name);
                 if (updateOrAdd == "add")
@@ -464,7 +511,8 @@ namespace RTParser.Variables
                         }
                     }
                     dict.addSetting(name, new StringUnifiable(value));
-                } else
+                }
+                else
                 {
                     bool inherited = !dictcontainsLocalCalled && dict.containsSettingCalled(name);
                     // update only
@@ -485,7 +533,8 @@ namespace RTParser.Variables
                     }
                     dict.updateSetting(name, new StringUnifiable(value));
                 }
-            } else
+            }
+            else
             {
                 RTPBot.writeDebugLine("-DICTRACE: Warning settings line {0} in {1}", AIMLLoader.TextAndSourceInfo(myNode), dict);
             }
@@ -769,6 +818,7 @@ namespace RTParser.Variables
             {
                 _overides.Clear();
                 _fallbacks.Clear();
+                _fallbacks.Add(() => prefixProvideer);
                 makedvars.Clear();                
             }
         }
@@ -776,12 +826,14 @@ namespace RTParser.Variables
         public void clearSyncs()
         {
             _listeners.Clear();
+            _listeners.Add(() => prefixProvideer);
         }
 
         private HashSet<string> makedvars = new HashSet<string>();
         public void maskSetting(string name)
         {
             name = TransformKey(name);
+            writeToLog("MASKING: " + name);
             lock (orderedKeys) makedvars.Add(name);
         }
 
@@ -928,12 +980,18 @@ namespace RTParser.Variables
         /// Returns a collection of the names of all the settings defined in the dictionary
         /// </summary>
         /// <returns>A collection of the names of all the settings defined in the dictionary</returns>
-        public string[] SettingNames
+        public IEnumerable<string> SettingNames(int depth)
         {
-            get
+            //       get
             {
                 lock (orderedKeys)
                 {
+                    var list = prefixProvideer.SettingNames(depth) as List<String>;
+                    if (list != null && list.Count > 0)
+                    {
+                        list.AddRange(orderedKeys);
+                        return list.ToArray();
+                    }
                     string[] result = new string[this.orderedKeys.Count];
                     this.orderedKeys.CopyTo(result, 0);
                     return result;
@@ -954,6 +1012,27 @@ namespace RTParser.Variables
                 return ps;
             }
         }
+
+
+        
+        public Unifiable this[string name]
+        {
+            get { return SettingsDictionary.IndexGet(this,name); }
+            set { SettingsDictionary.IndexSet(this, name, value); }
+        }
+
+        public static void IndexSet(ISettingsDictionary dictionary, string name, Unifiable value)
+        {
+            dictionary.addSetting(name, value);
+        }
+
+        public static Unifiable IndexGet(ISettingsDictionary dictionary, string name)
+        {
+            return dictionary.grabSetting(name);
+        }
+
+        public static IEnumerable<string> NO_SETTINGS = new string[0];
+        public static IEnumerable<string> TOO_DEEP = new string[0];
 
         /// <summary>
         /// Copies the values in the current object into the SettingsDictionary passed as the target
@@ -1033,6 +1112,12 @@ namespace RTParser.Variables
             _fallbacks.Insert(0, provider);
         }
 
+        public void AddChild(string prefix, ParentProvider dict)
+        {
+            ISettingsDictionary sdict = dict();
+            prefixProvideer.AddChild(prefix, dict);
+        }
+
         public void AddGetSetProperty(string topic, GetUnifiable getter, Action<Unifiable> setter)
         {
             var prov = new GetSetDictionary(topic, new GetSetProperty(getter, setter));
@@ -1109,5 +1194,190 @@ namespace RTParser.Variables
             }
             return un;
         }
+    }
+
+    internal class PrefixProvider : ISettingsDictionary
+    {
+        static IEnumerable<ISettingsDictionary> NONE = new ISettingsDictionary[0];
+        public Dictionary<string, ParentProvider> _prefixes = new Dictionary<string, ParentProvider>();
+        private string theNameSpace;
+
+        public Unifiable this[string name]
+        {
+            get { return SettingsDictionary.IndexGet(this, name); }
+            set { SettingsDictionary.IndexSet(this, name, value); }
+        }
+
+        public ISettingsDictionary GetChild(string fullname, out string childsSettingName)
+        {
+            foreach (var prefix in _prefixes)
+            {
+                if (fullname.StartsWith(prefix.Key))
+                {
+                    childsSettingName = fullname.Substring(prefix.Key.Length);
+                    return prefix.Value();
+                }
+            }
+            childsSettingName = fullname;
+            return null;
+        }
+
+        public IEnumerable<ISettingsDictionary> GetChildren(string fullname)
+        {
+            List<ISettingsDictionary> dicts = null;
+            foreach (var prefix in _prefixes)
+            {
+                if (fullname.StartsWith(prefix.Key))
+                {
+                    dicts = dicts ?? new List<ISettingsDictionary>();
+                    dicts.Add(prefix.Value());
+                }
+            }
+            return (IEnumerable<ISettingsDictionary>)(dicts ?? NONE);
+        }
+
+
+        public ParentProvider AddChild(string prefix, ISettingsDictionary dict)
+        {
+            ParentProvider pp = () => dict;
+            _prefixes.Add(prefix, pp);
+            return pp;
+        }
+
+        public void AddChild(string prefix, ParentProvider pp)
+        {
+            _prefixes[prefix] = pp;
+        }
+
+        #region Implementation of ISettingsDictionary
+
+        /// <summary>
+        /// Adds a bespoke setting to the Settings class (accessed via the grabSettings(string name)
+        /// method.
+        /// </summary>
+        /// <param name="name">The name of the new setting</param>
+        /// <param name="value">The value associated with this setting</param>
+        public bool addSetting(string name, Unifiable value)
+        {
+            string nextName;
+            ISettingsDictionary dict = GetChild(name, out nextName);
+            if (dict == null) return false;
+            return dict.addSetting(nextName, value);
+        }
+
+        /// <summary>
+        /// Removes the named setting from this class
+        /// </summary>
+        /// <param name="name">The name of the setting to remove</param>
+        public bool removeSetting(string name)
+        {
+            string nextName;
+            ISettingsDictionary dict = GetChild(name, out nextName);
+            if (dict == null) return false;
+            return dict.removeSetting(nextName);
+        }
+
+        /// <summary>
+        /// Updates the named setting with a new value whilst retaining the position in the
+        /// dictionary
+        /// </summary>
+        /// <param name="name">the name of the setting</param>
+        /// <param name="value">the new value</param>
+        public bool updateSetting(string name, Unifiable value)
+        {
+            string nextName;
+            ISettingsDictionary dict = GetChild(name, out nextName);
+            if (dict == null) return false;
+            return dict.updateSetting(nextName, value);
+        }
+
+        /// <summary>
+        /// Returns the value of a setting given the name of the setting
+        /// </summary>
+        /// <param name="name">the name of the setting whose value we're interested in</param>
+        /// <returns>the value of the setting</returns>
+        public Unifiable grabSetting(string name)
+        {
+            string nextName;
+            ISettingsDictionary dict = GetChild(name, out nextName);
+            if (dict == null) return null;
+            return dict.grabSetting(nextName);
+        }
+
+        /// <summary>
+        /// Checks to see if a setting of a particular name exists
+        /// </summary>
+        /// <param name="name">The setting name to check</param>
+        /// <returns>Existential truth value</returns>
+        public bool containsLocalCalled(string name)
+        {
+            string nextName;
+            ISettingsDictionary dict = GetChild(name, out nextName);
+            if (dict == null) return false;
+            return dict.containsLocalCalled(nextName);
+        }
+
+        public bool containsSettingCalled(string name)
+        {
+            string nextName;
+            ISettingsDictionary dict = GetChild(name, out nextName);
+            if (dict == null) return false;
+            return dict.containsSettingCalled(nextName);
+        }
+
+
+        public string NameSpace
+        {
+            get { return theNameSpace; }
+            set { theNameSpace = value; }
+        }
+
+        public bool IsTraced
+        {
+            get
+            {
+                foreach (var prefix in _prefixes.Values)
+                {
+                    if (prefix().IsTraced) return true;
+                }
+                return false;
+            }
+            set
+            {
+                foreach (var prefix in _prefixes.Values)
+                {
+                    prefix().IsTraced = value;
+                }
+            }
+        }
+
+        public ParentProvider GetProvider(ISettingsDictionary dict)
+        {
+            foreach (var prefix in _prefixes.Values)
+            {
+                if (prefix() == dict) return prefix;
+            }
+            return null;
+        }
+
+        public IEnumerable<string> SettingNames(int depth)
+        {
+            //get
+            {
+                if (depth < 1) return SettingsDictionary.TOO_DEEP;
+                List<String> list = new List<string>();
+                foreach (var prefix in _prefixes.Values)
+                {
+                    ISettingsDictionary child = prefix();
+                    foreach (var cn in child.SettingNames(depth - 1))
+                    {
+                        list.Add(prefix + cn);
+                    }
+                }
+                return list;
+            }
+        }
+
+        #endregion
     }
 }

@@ -16,6 +16,39 @@ namespace RTParser.Utils
 
     public class XmlDocumentLineInfo : XmlDocument
     {
+        public override bool IsReadOnly
+        {
+            get
+            {
+                bool was = base.IsReadOnly;
+                if (DocumentInNormalize) return false;
+                return DocumentHasNormalized || was;
+            }
+        }
+
+        public override void Normalize()
+        {
+            if (DocumentHasNormalized || DocumentInNormalize) 
+            {
+               // writeToLog("In normalization already");
+                return;
+            }
+
+            SuspendLineInfo = true;
+            DocumentInNormalize = true;
+            try
+            {
+                base.Normalize();
+                DocumentHasNormalized = true;
+            }
+            finally
+            {
+                DocumentInNormalize = false;
+            }
+        }
+
+        public bool DocumentHasNormalized = false;
+        public bool DocumentInNormalize = false;
         public override void Load(Stream reader)
         {
             try
@@ -30,6 +63,7 @@ namespace RTParser.Utils
                     return;
                 }
                 base.Load(reader);
+                Normalize();
             }
             catch (Exception e)
             {
@@ -37,15 +71,45 @@ namespace RTParser.Utils
             }
         }
 
+// ReSharper disable RedundantOverridenMember
+        public override XmlNode CreateNode(XmlNodeType type, string prefix, string name, string namespaceURI)
+        {
+            var v = base.CreateNode(type, prefix, name, namespaceURI);
+            return v;
+        }
+        public override XmlCDataSection CreateCDataSection(string data)
+        {
+            var v = base.CreateCDataSection(data);
+            return v;
+        }
+        public override XmlNode CreateNode(string nodeTypeString, string name, string namespaceURI)
+        {
+            var v = base.CreateNode(nodeTypeString, name, namespaceURI);
+            return v;
+        }
+        public override XmlNode CreateNode(XmlNodeType type, string name, string namespaceURI)
+        {
+            var v = base.CreateNode(type, name, namespaceURI);
+            return v;
+        }
+        protected override XmlAttribute CreateDefaultAttribute(string prefix, string localName, string namespaceURI)
+        {
+            var v = base.CreateDefaultAttribute(prefix, localName, namespaceURI);
+            return v;
+        }
+
         public override XmlDocumentFragment CreateDocumentFragment()
         {
-            return base.CreateDocumentFragment();
+            var v = base.CreateDocumentFragment();
+            return v;
         }
 
         public override XmlDocumentType CreateDocumentType(string name, string publicId, string systemId, string internalSubset)
         {
-            return base.CreateDocumentType(name, publicId, systemId, internalSubset);
+            var v = base.CreateDocumentType(name, publicId, systemId, internalSubset);
+            return v;
         }
+        // ReSharper restore RedundantOverridenMember
 
         string version, encoding, standalone;
         public override XmlDeclaration CreateXmlDeclaration(string version, string encoding, string standalone)
@@ -71,6 +135,7 @@ namespace RTParser.Utils
                 try
                 {
                     base.Load(reader);
+                    Normalize();
                 }
                 catch (Exception e)
                 {
@@ -103,6 +168,7 @@ namespace RTParser.Utils
                 LineTracker = (IXmlLineInfo)reader;
             }
             base.Load(reader);
+            Normalize();
         }
 
         public override string ToString()
@@ -167,6 +233,7 @@ namespace RTParser.Utils
         public override void LoadXml(string xml)
         {
             base.Load(new XmlTextReader(new StringReader(xml)));
+            Normalize();
         }
 
         public override XmlText CreateTextNode(string text)
@@ -193,11 +260,24 @@ namespace RTParser.Utils
             return node;
         }
 
-        public void setLineInfo(AIMLLineInfo node)
+        public void setLineInfo(XmlNode node)
         {
             if (LineTracker != null)
             {
-                node.SetLineInfo(LineTracker.LineNumber, LineTracker.LinePosition);
+                AIMLLineInfo nodeL = node as AIMLLineInfo;
+                if (!SuspendLineInfo && nodeL != null)
+                    nodeL.SetLineInfo(LineTracker.LineNumber, LineTracker.LinePosition);
+            }
+            if (node is AIMLXmlInfo) (node as AIMLXmlInfo).ReadOnly = true;
+        }
+
+
+        static public void SuggestLineNo(IXmlLineInfo lie, AIMLLineInfo target)
+        {
+            int atline = lie.LineNumber;
+            if (atline > target.LineNumber)
+            {
+                target.SetLineInfo(lie.LineNumber, lie.LinePosition);
             }
         }
 
@@ -290,10 +370,35 @@ namespace RTParser.Utils
             }
         }
 
+        public bool SuspendLineInfo;
     }
 
     public class XmlAttributeLineInfo : XmlAttribute, AIMLLineInfo
     {
+        public override XmlNode CloneNode(bool deep)
+        {
+            var v = new XmlAttributeLineInfo(base.Prefix, base.LocalName, base.NamespaceURI,
+                                             (XmlDocumentLineInfo) OwnerDocument);
+            v.CloneOf = CloneOf ?? this;
+            v.SetLineInfo(LineNumber, LinePosition);
+            v.Value = Value;
+            v.ReadOnly = ReadOnly;
+            return v;
+        }
+        public override bool IsReadOnly
+        {
+            get
+            {
+                if (!OwnerDocument.IsReadOnly) return false;
+                if (!base.IsReadOnly)
+                {
+                    if (CloneOf == null) return true;
+                    return false;
+                }
+                return true;
+            }
+        }
+        public bool ReadOnly { get; set; }
         public override string Value
         {
             get
@@ -320,6 +425,8 @@ namespace RTParser.Utils
         public int linePosition = 0;
         public long charPos = 0;
         public LineInfoElement lParent;
+        public XmlNode CloneOf { get; set; }
+
         public void SetLineInfo(int linenum, int linepos)
         {
             lineNumber = linenum;
@@ -381,14 +488,48 @@ namespace RTParser.Utils
         }
     }
 
-    public interface AIMLLineInfo : IXmlLineInfo
+    public interface AIMLLineInfo : IXmlLineInfo, AIMLXmlInfo
     {
         void SetLineInfo(int number, int position);
+        void SetPos(long pos);
+    }
+
+    public interface AIMLXmlInfo
+    {
+        bool ReadOnly { get; set; }
     }
 
     //#define HOLD_PARENT
     public class XmlTextLineInfo : XmlText, AIMLLineInfo
     {
+        public bool ReadOnly { get; set; }
+        public override bool IsReadOnly
+        {
+            get
+            {
+                if (!OwnerDocument.IsReadOnly) return false;
+                if (!base.IsReadOnly)
+                {
+                    if (base.ParentNode==null) return false;
+                    if (CloneOf == null)
+                    {
+                        return true;
+                    }
+                    return false;
+                }
+                return true;
+            }
+        }
+        public XmlNode CloneOf { get; set; }
+        public override XmlNode CloneNode(bool deep)
+        {
+            var v = new XmlTextLineInfo(base.Data, (XmlDocumentLineInfo)OwnerDocument);
+            v.SetLineInfo(LineNumber, LinePosition);
+            v.ReadOnly = ReadOnly;
+            v.CloneOf = CloneOf ?? this;
+            return v;
+        }
+
         public XmlTextLineInfo(string text, XmlDocumentLineInfo info)
             : base(text, info)
         {
@@ -470,6 +611,16 @@ namespace RTParser.Utils
         {
             //((XmlDocumentLineInfo)doc).IncrementElementCount();
         }
+
+        public override void Normalize()
+        {
+            if (OwnerDocument.IsReadOnly) OwnerDocument.Normalize();
+            else
+            {
+                base.Normalize();
+            }
+        }
+
         public override string ToString()
         {
             return AIMLLoader.TextAndSourceInfo(this);
@@ -480,6 +631,12 @@ namespace RTParser.Utils
         public LineInfoElement lParent;
         public void SetLineInfo(int linenum, int linepos)
         {
+            if (linenum < lineNumber)
+            {
+                writeToLog("too small");
+                return;
+            } 
+
             lineNumber = linenum;
             linePosition = linepos;
         }
@@ -515,6 +672,7 @@ namespace RTParser.Utils
             if (pn is LineInfoElement)
             {
                 lParent = (LineInfoElement)pn;
+                XmlDocumentLineInfo.SuggestLineNo(lParent,this);
             }
             if (!(xmlNode is LineInfoElement))
             {
@@ -523,10 +681,155 @@ namespace RTParser.Utils
             if (xmlNode is LineInfoElement)
             {
                 LineInfoElement lie = (LineInfoElement)xmlNode;
-                lineNumber = lie.LineNumber;
-                linePosition = lie.linePosition;
-                charPos = lie.charPos;
+                XmlDocumentLineInfo.SuggestLineNo(lie, this);
             }
+        }
+        
+        internal void SetParent(LineInfoElement pn)
+        {
+            lParent = (LineInfoElement) pn;
+        }
+
+
+        public int IndexInParent
+        {
+            get
+            {
+                XmlNode sib = lParent;
+                if (sib == null)
+                {
+                    return IndexInBaseParent;
+                }
+                int idx = 0;
+                sib = sib.FirstChild;
+                while (sib != null)
+                {
+                    if (ReferenceEquals(sib, this)) return idx;
+                    sib = sib.NextSibling;
+                    idx++;
+                }
+                return IndexInBaseParent;
+            }
+        }
+
+
+        public int IndexInBaseParent
+        {
+            get
+            {
+                return IndexIn(base.ParentNode);
+            }
+        }
+
+        public int IndexIn(XmlNode parent)
+        {
+            if (parent == null) return -2;
+            int idx = 0;
+            XmlNode sib = parent.FirstChild;
+            while (sib != null)
+            {
+                if (ReferenceEquals(sib, this)) return idx;
+                sib = sib.NextSibling;
+                idx++;
+            }
+            return -1;
+        }
+
+        public override XmlNode CloneNode(bool deep)
+        {
+            XmlDocumentLineInfo od = (XmlDocumentLineInfo) OwnerDocument;
+            //od.Normalize();
+            var newnode = new LineInfoElement(Prefix, LocalName, NamespaceURI, od);
+            newnode.CloneOf = CloneOf ?? this;
+            newnode.SetLineInfo(LineNumber, LinePosition);
+            if (deep)
+            {
+                bool newnodeWas = newnode.protect;
+                newnode.protect = false;
+                if (HasChildNodes)
+                    foreach (XmlNode a in ChildNodes)
+                    {
+                        try
+                        {
+                            var a2 = a.CloneNode(deep);
+                            bool a2ro = a2.IsReadOnly;
+                            var a22 = a2 as AIMLXmlInfo;
+                            if (a22 != null) a22.ReadOnly = false;
+                            newnode.AppendChild(a2);
+                            if (a22 != null) a22.ReadOnly = a2ro;
+                        }
+                        catch (Exception e)
+                        {
+                            writeToLog("newnode.AppendChild " + e);
+                        }
+                    }
+                var ats = Attributes;
+                if (ats != null)
+                    foreach (XmlAttribute a in ats)
+                    {
+                        try
+                        {
+                            var a2 = (XmlAttribute)a.CloneNode(deep);
+                            bool a2ro = a2.IsReadOnly;
+                            var a22 = a2 as AIMLXmlInfo;
+                            if (a22 != null) a22.ReadOnly = false;
+                            newnode.Attributes.Append(a2);
+                            if (a22 != null) a22.ReadOnly = a2ro;
+                        }
+                        catch (Exception e)
+                        {
+                            newnode.writeToLog("newnode.AppendChild " + e);
+                        }
+                    }
+                newnode.protect = newnodeWas;
+            }
+            else
+            {
+                newnode.protect = false;
+            }
+            return newnode;
+        }
+
+        public XmlNode CloneOf
+        {
+            get;
+            set;
+        }
+
+        public override XmlNode RemoveChild(XmlNode newChild)
+        {
+            try
+            {
+                return base.RemoveChild(newChild);
+            }
+            catch (Exception e)
+            {
+                writeToLog("newnode.AppendChild " + e);
+                return null;
+            }
+        }
+
+        public override XmlNode AppendChild(XmlNode newChild)
+        {
+            try
+            {            
+                return base.AppendChild(newChild);
+            }
+            catch (Exception e)
+            {
+                writeToLog("newnode.AppendChild " + e);
+                return null;
+            }
+        }
+
+        public static IXmlLineInfo ToLineInfoElement(XmlNode pattern)
+        {
+            if (pattern == null) return null;
+            if (pattern is IXmlLineInfo)
+            {
+                return (IXmlLineInfo)pattern;
+            }
+            return null;// CopyNode(pattern, true);
         }
 
         public override XmlNode ParentNode
@@ -536,6 +839,113 @@ namespace RTParser.Utils
                 if (lParent == null) return base.ParentNode;
                 return lParent;
             }
+        }
+
+        public virtual XmlNode ParentNodeBase
+        {
+            get
+            {
+                return base.ParentNode;
+            }
+        }
+
+        public bool protect = true;
+
+
+        public override string InnerXml
+        {
+            get
+            {
+                return base.InnerXml;
+            }
+            set
+            {
+                if (InnerXml == value) return;
+                if (protect)
+                {
+                    writeToLog("InnerXml Should not be changed to " + value);
+                }
+                base.InnerXml = value;
+            }
+        }
+
+        public override string InnerText
+        {
+            get
+            {
+                return base.InnerText;
+            }
+            set
+            {
+                if (protect)
+                {
+                    writeToLog("InnerText Should not be changed to " + value);
+                }
+                base.InnerText = value;
+            }
+        }
+
+        private void writeToLog(string s)
+        {
+            RTPBot.writeDebugLine("ERROR " + s + " in " + this);
+        }
+
+        public override bool IsReadOnly
+        {
+            get
+            {
+                if (!OwnerDocument.IsReadOnly) return false;
+                if (!base.IsReadOnly)
+                {
+                    if (!protect) return false;
+
+                    if (CloneOf == null) return true;
+                    return false;
+                }
+                return true;
+            }
+        }
+        public bool ReadOnly
+        {
+            get
+            {
+                if (base.IsReadOnly)
+                {
+                    if (!protect)
+                    {
+                        protect = IsReadOnly;
+                    }
+                }
+                return protect;
+            }
+            set
+            {
+                protect = value;
+
+                foreach (object node in ChildNodes)
+                {
+                    if (node is AIMLXmlInfo)
+                    {
+                        ((AIMLXmlInfo)node).ReadOnly = value;
+                    }
+                    else
+                    {
+                        writeToLog("Child is not a AIMLXmlInfo: " + node);
+                    }
+                }
+                foreach (object node in Attributes)
+                {
+                    if (node is AIMLXmlInfo)
+                    {
+                        ((AIMLXmlInfo)node).ReadOnly = value;
+                    }
+                    else
+                    {
+                        writeToLog("Attribute is not a AIMLXmlInfo: " + node);
+                    }
+                }
+            }
+
         }
     } // End LineInfoElement class.
 

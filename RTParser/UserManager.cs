@@ -206,9 +206,15 @@ namespace RTParser
                 BotUsers[key] = myUser;
                 bool roleAcct = IsRoleAcctName(fullname);
                 myUser.IsRoleAcct = roleAcct;
-                myUser.ListeningGraph = GetUserGraph(key, GraphMaster);
+                GraphMaster g = GetUserGraph(key);
+                g.AddGenlMT(GraphMaster);
+                myUser.ListeningGraph = g;
                 myUser.Predicates.addSetting("name", fullname);
                 myUser.Predicates.InsertFallback(() => AllUserPreds);
+                this.GlobalSettings.AddChild("user." + key + ".", ()=>  myUser.Predicates);
+
+                myUser.Predicates.AddChild("bot.", () => BotAsUser.Predicates);
+
                 string userdir = GetUserDir(key);
                 myUser.SyncDirectory(userdir);
                 return myUser;
@@ -312,7 +318,9 @@ namespace RTParser
                         LastUser = newuser = olduser;
                         BotUsers[newkey] = newuser;
                         newuser.IsRoleAcct = false;
-                        newuser.ListeningGraph = GetUserGraph(newkey, GraphMaster);
+                        GraphMaster g = GetUserGraph(newkey);
+                        g.AddGenlMT(GraphMaster);
+                        newuser.ListeningGraph = g;
                         newuser.UserID = newkey;
                         newuser.UserName = newname;
                         newuser.SyncDirectory(GetUserDir(newkey));
@@ -377,7 +385,7 @@ namespace RTParser
                     newuser = olduser;
                     BotUsers[newkey] = newuser;
                     newuser.IsRoleAcct = false;
-                    newuser.ListeningGraph = GetUserGraph(newkey, GraphMaster);
+                    newuser.ListeningGraph = GetUserGraph(newkey);
                     newuser.UserID = newkey;
                     newuser.UserName = newname;
                     newuser.SyncDirectory(GetUserDir(newkey));
@@ -394,7 +402,8 @@ namespace RTParser
                 newuser = olduser;
                 BotUsers[newkey] = newuser;
                 newuser.IsRoleAcct = false;
-                newuser.ListeningGraph = GetUserGraph(newkey, GraphMaster);
+                GraphMaster graph = GetUserGraph(newkey);
+                newuser.ListeningGraph = graph;
                 newuser.UserID = newkey;
                 newuser.UserName = newname;
                 newuser.SyncDirectory(GetUserDir(newkey));
@@ -472,7 +481,8 @@ namespace RTParser
                         newuser = olduser;
                         BotUsers[newkey] = newuser;
                         newuser.IsRoleAcct = false;
-                        newuser.ListeningGraph = GetUserGraph(newkey, GraphMaster);
+                        graph = GetUserGraph(newkey);
+                        newuser.ListeningGraph = graph; 
                         newuser.UserID = newkey;
                         newuser.UserName = newname;
                         newuser.SyncDirectory(GetUserDir(newkey));

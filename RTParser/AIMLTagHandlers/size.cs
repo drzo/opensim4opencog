@@ -33,7 +33,7 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "size")
+            if (CheckNode("size,getsize"))
             {
                 return Convert.ToString(request.Graph.Size);
             }

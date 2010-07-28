@@ -14,10 +14,19 @@ namespace RTParser.Utils
     /// The template for all classes that handle the AIML tags found within template nodes of a
     /// category.
     /// </summary>
-    abstract public class AIMLTagHandler : TextTransformer, IXmlLineInfo
+    abstract public partial class AIMLTagHandler : TextTransformer, IXmlLineInfo
     {
+        /// <summary>
+        /// Attributes that we use from AIML not intended to be stacked nto user dictionary
+        /// </summary>
         public static ICollection<string> ReservedAttributes = new HashSet<string> { };
 
+
+        /// <summary>
+        /// By calling this and not just ProcessChange() 
+        /// You've ensure we have a proper calling context
+        /// </summary>
+        /// <returns></returns>
         public override Unifiable ProcessAimlChange()
         {
             ThreadStart OnExit = EnterTag();
@@ -31,6 +40,10 @@ namespace RTParser.Utils
             }
         }
 
+        /// <summary>
+        /// By calling this and not just CompleteProcess() 
+        /// You've ensure we have a proper calling context
+        /// </summary>
         public Unifiable CompleteAimlProcess()
         {
             ThreadStart OnExit = EnterTag();
@@ -49,7 +62,7 @@ namespace RTParser.Utils
         {
             bool needsUnwind = false;
             XmlAttributeCollection collection = templateNode.Attributes;
-            if (collection.Count > 0)
+            if (collection!=null && collection.Count > 0)
             {
                 // graphmaster
                 GraphMaster oldGraph = request.Graph;
@@ -146,7 +159,24 @@ namespace RTParser.Utils
             return () => { };
         }
 
-        protected void Succeed()
+        /// <summary>
+        /// Helper method that turns the passed Unifiable into an XML node
+        /// </summary>
+        /// <param name="outerXML">the Unifiable to XMLize</param>
+        /// <returns>The XML node</returns>
+        public virtual float CanUnify(Unifiable with)
+        {
+            string w = with.ToValue(query);
+            Unifiable t1 = ProcessAimlChange();
+            float score1 = t1.Unify(with, query);
+            if (score1 == 0) return score1;
+            Unifiable t2 = CompleteAimlProcess();
+            float score2 = t2.Unify(with, query);
+            if (score2 == 0) return score2;
+            return (score1 < score2) ? score1 : score2;
+        }
+
+        protected Unifiable Succeed()
         {
             if (query != null && query.CurrentTemplate != null)
             {
@@ -157,6 +187,7 @@ namespace RTParser.Utils
                            score, query.CurrentTemplate.Rating,
                            query.CurrentTemplate.Rating *= score, score);
             }
+            return Unifiable.InnerXmlText(templateNode);
         }
 
         public bool WhenTrue(Unifiable unifiable)
@@ -171,114 +202,6 @@ namespace RTParser.Utils
                 templateNodeInnerText = unifiable;
                 return true;
             }
-            return false;
-        }
-
-
-        internal TemplateInfo templateInfo;
-        public TemplateInfo GetTemplateInfo()
-        {
-            if (templateInfo == null)
-            {
-                if (query != null)
-                {
-                    templateInfo = query.CurrentTemplate;
-                }
-                if (templateInfo != null) return templateInfo;
-                if (Parent != null)
-                {
-                    templateInfo = Parent.GetTemplateInfo();
-                    if (templateInfo != null) return templateInfo;
-                }
-            }
-            return templateInfo;
-        }
-
-        static public Unifiable ReduceStar(string name, SubQuery query)
-        {
-            try
-            {
-                if (name.StartsWith("star_"))
-                {
-                    int i = Int32.Parse(name.Substring(5));
-                    name = GetDictData(query.InputStar, i);
-                }
-                if (name.StartsWith("that_"))
-                {
-                    int i = Int32.Parse(name.Substring(5)) + 1;
-                    name = GetDictData(query.ThatStar, i);
-                }
-                if (name.StartsWith("thatstar_"))
-                {
-                    int i = Int32.Parse(name.Substring(9)) + 1;
-                    name = GetDictData(query.ThatStar, i);
-                }
-                if (name.StartsWith("topicstar_"))
-                {
-                    int i = Int32.Parse(name.Substring(10));
-                    name = GetDictData(query.TopicStar, i);
-                }
-                if (name.StartsWith("topic_"))
-                {
-                    int i = Int32.Parse(name.Substring(6));
-                    name = GetDictData(query.TopicStar, i);
-                }
-                if (name.StartsWith("guard_"))
-                {
-                    int i = Int32.Parse(name.Substring(6));
-                    name = GetDictData(query.GuardStar, i);
-                }
-            }
-            catch (Exception e)
-            {
-                RTPBot.writeDebugLine("" + e);
-            }
-            return name;
-        }
-
-        private static Unifiable GetDictData(List<Unifiable> unifiables, int i)
-        {
-            int ii = i - 1;
-            int uc = unifiables.Count;
-            if (uc == 0)
-            {
-                RTPBot.writeDebugLine(" !ERROR -star underflow! " + i + "- ");
-                return String.Empty;
-            }
-            if (ii > uc)
-            {
-                return unifiables[ii];
-            }
-            if (ii < 0)
-            {
-                ii = 0;
-            }
-            return unifiables[ii];
-        }
-
-
-        public static bool IsPredMatch(Unifiable required, Unifiable actualValue, SubQuery subquery)
-        {
-            if (Unifiable.IsNull(required))
-            {
-                return Unifiable.IsNullOrEmpty(actualValue);
-            }
-            if (Unifiable.IsNull(actualValue))
-            {
-                return Unifiable.IsNullOrEmpty(required);
-            }
-            required = required.Trim();
-            if (required.IsAnySingleUnit())
-            {
-                return !Unifiable.IsNullOrEmpty(actualValue);
-            }
-
-            actualValue = actualValue.Trim();
-            if (actualValue.WillUnify(required, subquery)) return true;
-            Regex matcher = new Regex(required.AsString().Replace(" ", "\\s").Replace("*", "[\\sA-Z0-9]+"),
-                                      RegexOptions.IgnoreCase);
-            if (matcher.IsMatch(actualValue)) return true;
-            if (required.ToUpper() == "UNKNOWN" && (Unifiable.IsUnknown(actualValue))) return true;
             return false;
         }
 
@@ -425,22 +348,16 @@ namespace RTParser.Utils
         /// </summary>
         public XmlNode templateNode;
 
-        public AIMLTagHandler Parent;
-        public void SetParent(AIMLTagHandler handler)
+        protected bool ReadOnly
         {
-            if (handler == this)
-            {
-                throw new InvalidOperationException("same");
-            }
-            else if (handler == null)
-            {
-                //throw new InvalidOperationException("no parent handler");                
-            }
-            Parent = handler;
+            get { return false; }
+            set { throw new NotImplementedException(); }
         }
 
         protected Unifiable RecurseResult = Unifiable.NULL;
         protected static Func<string> EmptyFunct = (() => String.Empty);
+        protected static Func<string> NullStringFunct = (() => null);
+
 
         protected Unifiable Recurse()
         {
@@ -457,19 +374,12 @@ namespace RTParser.Utils
                 // recursively check
                 foreach (XmlNode childNode in this.templateNode.ChildNodes)
                 {
-                    if (childNode.NodeType == XmlNodeType.Text)
+                    Unifiable found = ProcessChildNode(childNode, ReadOnly, false);
+                    if (Unifiable.IsFalse(found))
                     {
-                        templateResult.Append(childNode.InnerText.Trim());
+                        // until it beomes true once ?   return Unifiable.Empty;
                     }
-                    else
-                    {
-                        Unifiable found = Proc.processNode(childNode, query, request, result, user, this);
-                        if (Unifiable.IsFalse(found))
-                        {
-                            // until it beomes true once ?   return Unifiable.Empty;
-                        }
-                        templateResult.Append(found);
-                    }
+                    templateResult.Append(found);
                 }
                 //templateNodeInnerText = templateResult;//.ToString();
                 if (!templateResult.IsEmpty)
@@ -481,46 +391,12 @@ namespace RTParser.Utils
             }
             else
             {
-                Unifiable before = Unifiable.InnerXmlText(this.templateNode);//.InnerXml;        
+                Unifiable before = Unifiable.InnerXmlText(this.templateNode); //.InnerXml;        
                 return CheckValue(before);
             }
 
         }
 
-
-        #region Helper methods
-
-
-        public Unifiable CheckValue(Unifiable value)
-        {
-            if (Object.ReferenceEquals(value, Unifiable.Empty)) return value;
-            if (value == null)
-            {
-                RTPBot.writeDebugLine("ERROR " + value + " NULL");
-                return null;
-            }
-            else
-            {
-                if (Unifiable.IsNullOrEmpty(value))
-                {
-                    return Unifiable.Empty;
-                    writeToLog("ERROR ?!?! templateNodeInnerText = " + value);
-                }
-                string v = value.AsString();
-                if (!value.AsString().Contains("<a href"))
-                {
-                    if (v.Contains("<"))
-                    {
-                        writeToLogWarn("!@ERROR BAD INPUT? " + value);
-                    }
-                    else if (v.Contains("&"))
-                    {
-                        RTPBot.writeDebugLine("!@ERROR BAD INPUT? " + value);
-                    }
-                }
-                return value;
-            }
-        }
 
         /// <summary>
         /// Helper method that turns the passed Unifiable into an XML node
@@ -549,7 +425,8 @@ namespace RTParser.Utils
                     LineInfoElement li = (LineInfoElement)temp;
                     return (LineInfoElement)temp; //.FirstChild;}
                 }
-                return (LineInfoElement)temp; //.FirstChild;}
+                return getNode("<node>" + outerXML + "</node>");
+                //return (LineInfoElement)temp; //.FirstChild;}
             }
             catch (Exception exception)
             {
@@ -596,177 +473,8 @@ namespace RTParser.Utils
                 throw exception;
             }
         }
-        public override string ToString()
-        {
-            return LineNumberTextInfo();
-        }
-        public string LineNumberTextInfo()
-        {
-            string s = LineTextInfo() + " " + LineNumberInfo();
-            if (!s.Contains(initialString))
-            {
-                return "-WAS- '" + inputString + "' => " + s;
-            }
-            return s;
-        }
-        public string LineTextInfo()
-        {
-            string s = templateNode.OuterXml.Trim();
-            if (String.IsNullOrEmpty(s))
-            {
-                LineInfoElement li = (LineInfoElement)templateNode;
-                s = s + " " + li.OwnerDocument.ToString();
-                if (Parent != null && Parent != this)
-                {
-                    s = s + " " + Parent.LineTextInfo();
-                }
-                else
-                {
-                    return s;
-                }
-
-            }
-            return s;
-        }
-
-        public string LineNumberInfo()
-        {
-            string s = "<!--";
-            if (templateNode is LineInfoElement)
-            {
-                LineInfoElement li = (LineInfoElement)templateNode;
-                if (li.lineNumber == 0)
-                {
-                    s = s + " " + li.OwnerDocument.ToString();
-                    if (Parent != null && Parent != this)
-                    {
-                        s = s + " " + Parent.LineNumberInfo();
-                    }
-                    else
-                    {
-                        s = s + " (" + li.lineNumber + ":" + li.linePosition + ")";
-                    }
-                }
-                else
-                {
-                    s = s + " (" + li.OwnerDocument.ToString() + ":line " + li.lineNumber + "," + li.linePosition + ") ";
-                }
-            }
-            return s + "-->";
-        }
-
-        public string DocumentInfo()
-        {
-            string s = null;
-            if (templateNode is LineInfoElement)
-            {
-                LineInfoElement li = (LineInfoElement)templateNode;
-                s = "" + li.OwnerDocument;
-                if (!string.IsNullOrEmpty(s)) return s;
-                if (Parent != null && Parent != this)
-                {
-                    s = DocumentInfo();
-                    if (!string.IsNullOrEmpty(s)) return s;
-                }
-            }
-            return s;
-        }
-
-        /// <summary>
-        /// Helper method that turns the passed Unifiable into an XML node
-        /// </summary>
-        /// <param name="outerXML">the Unifiable to XMLize</param>
-        /// <returns>The XML node</returns>
-        public virtual float CanUnify(Unifiable with)
-        {
-            string w = with.ToValue(query);
-            Unifiable t1 = ProcessAimlChange();
-            float score1 = t1.Unify(with, query);
-            if (score1 == 0) return score1;
-            Unifiable t2 = CompleteAimlProcess();
-            float score2 = t2.Unify(with, query);
-            if (score2 == 0) return score2;
-            return (score1 < score2) ? score1 : score2;
-        }
-
-        #endregion
 
 
-
-        public static int AttributesCount(XmlNode node, string s)
-        {
-            int i = 0;
-            string ss = "," + s + ",";
-            foreach (XmlAttribute cn in node.Attributes)
-            {
-                if (ss.Contains("," + cn.Name + ","))
-                {
-                    i++;
-                }
-            }
-            return i;
-        }
-
-        protected string GetAttribValue(string attribName,string defaultIfEmpty)
-        {
-            return GetAttribValue(templateNode, attribName, () => defaultIfEmpty, query);
-        }
-
-        static public Unifiable GetAttribValue(XmlNode node, string attribName, Func<string> defaultIfEmpty, SubQuery sq)
-        {
-            bool found = false;
-            Unifiable u = Unifiable.NULL;
-            foreach (var nameS in attribName.Split(new[] { ',' }))
-            {
-                String attribnym = nameS.ToLower();
-                foreach (XmlAttribute attrib in node.Attributes)
-                {
-                    if (attrib.Name.ToLower() == attribnym)
-                    {
-                        found = true;
-                        var r = ReduceStar(attrib.Value, sq);
-                        if (!Unifiable.IsNullOrEmpty(r)) return r;
-                        if (Unifiable.IsNull(r)) continue;
-                        u = r;
-                    }
-                }
-            }
-            if (found) return u;
-            return defaultIfEmpty();
-        }
-
-        static public double GetAttribValue(XmlNode node, string attribName, double defaultIfEmpty, SubQuery sq)
-        {
-            attribName = attribName.ToLower();
-            foreach (XmlAttribute attrib in node.Attributes)
-            {
-                if (attrib.Name.ToLower() == attribName)
-                {
-                    string reduceStar = "" + ReduceStar(attrib.Value, sq);
-                    try
-                    {
-                        return double.Parse(reduceStar);
-                    }
-                    catch (Exception exception)
-                    {
-
-                        RTPBot.writeDebugLine("AIMLTRACE: DECIMAL " + reduceStar + " " + exception);
-                    }
-                }
-            }
-            return defaultIfEmpty;
-        }
-
-        protected string GetAttribValue(IEnumerable<string> attribNames, Func<string> defaultIfEmpty)
-        {
-            string ifMissing = "MISSING";
-            foreach (var name in attribNames)
-            {
-                string vv = GetAttribValue(templateNode, name, () => ifMissing, query);
-                if (vv != ifMissing) return vv;
-            }
-            return defaultIfEmpty();
-        }
 
         /// <summary>
         /// Do a transformation on the Unifiable found in the InputString attribute
@@ -806,9 +514,9 @@ namespace RTParser.Utils
                     // recursively check
                     foreach (XmlNode childNode in node.ChildNodes)
                     {
-                        if (childNode.NodeType != XmlNodeType.Text)
+                        if (childNode.NodeType == XmlNodeType.Element)
                         {
-                            SaveResultOnChild(childNode, Proc.processNode(childNode, query, request, result, user, this));
+                            SaveResultOnChild(childNode, ProcessChildNode(childNode, ReadOnly, false));
                         }
                     }
                 }
@@ -825,7 +533,7 @@ namespace RTParser.Utils
                     // recursively check
                     foreach (XmlNode childNode in resultNode.ChildNodes)
                     {
-                        recursiveResult.Append(Proc.processNode(childNode, query, request, result, user, this));
+                        recursiveResult.Append(ProcessChildNode(childNode, ReadOnly, false));
                     }
                     if (!recursiveResult.IsEmpty)
                     {
@@ -844,77 +552,21 @@ namespace RTParser.Utils
         {
             //if (value == null) return;
             //if (value == "") return;
+            if (node.NodeType==XmlNodeType.Comment) return;
             writeToLog("-!SaveResultOnChild AIMLTRACE " + value + " -> " + node.OuterXml);
             node.InnerXml = CheckValue(value);
         }
 
-        protected void writeToLogWarn(string unifiable, params object[] objs)
-        {
-            writeToLog("WARNING: " + unifiable, objs);
-        }
-
-        public virtual void writeToLog(string unifiable, params object[] objs)
-        {
-            if (unifiable.ToUpper().StartsWith("ERROR"))
-            {
-                writeToLogWarn("BAD " + unifiable, objs);
-                return;
-            }
-            this.Proc.writeToLog("AIMLTRACE: " + unifiable + " in " + GetType().Name + "  " + LineNumberTextInfo(), objs);
-        }
-
-        #region Implementation of IXmlLineInfo
-
-        /// <summary>
-        /// Gets a value indicating whether the class can return line information.
-        /// </summary>
-        /// <returns>
-        /// true if <see cref="P:System.Xml.IXmlLineInfo.LineNumber"/> and <see cref="P:System.Xml.IXmlLineInfo.LinePosition"/> can be provided; otherwise, false.
-        /// </returns>
-        public bool HasLineInfo()
-        {
-            if (templateNode is IXmlLineInfo) return true;
-            if (Parent != null && Parent != this) return Parent.HasLineInfo();
-            return false;
-        }
-
-        /// <summary>
-        /// Gets the current line number.
-        /// </summary>
-        /// <returns>
-        /// The current line number or 0 if no line information is available (for example, <see cref="M:System.Xml.IXmlLineInfo.HasLineInfo"/> returns false).
-        /// </returns>
-        public int LineNumber
-        {
-            get
-            {
-                IXmlLineInfo ix = (templateNode as IXmlLineInfo) ?? Parent ?? this;
-                if (ix != this) return ix.LineNumber;
-                //throw new NotImplementedException();
-                return 0;
-            }
-        }
-
-        /// <summary>
-        /// Gets the current line position.
-        /// </summary>
-        /// <returns>
-        /// The current line position or 0 if no line information is available (for example, <see cref="M:System.Xml.IXmlLineInfo.HasLineInfo"/> returns false).
-        /// </returns>
-        public int LinePosition
-        {
-            get
-            {
-                IXmlLineInfo ix = (templateNode as IXmlLineInfo) ?? Parent ?? this;
-                if (ix != this) return ix.LinePosition;
-                return 0;
-            }
-        }
-        #endregion
-
         protected bool CheckNode(string name)
         {
             if (this.templateNode.Name.ToLower() == name) return true;
+            if (name.Contains(","))
+            {
+                foreach (var s in name.Split(",".ToCharArray(), StringSplitOptions.RemoveEmptyEntries))
+                {
+                    if (CheckNode(s)) return true;
+                }
+            }
             writeToLog("CheckNode change " + name + " -> " + templateNode.Name);
             return true;
         }

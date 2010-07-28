@@ -24,6 +24,7 @@ namespace RTParser.AIMLTagHandlers
     /// </summary>
     public class that : RTParser.Utils.AIMLTagHandler
     {
+        readonly int offetFrom = 0;
         /// <summary>
         /// Ctor
         /// </summary>
@@ -39,17 +40,27 @@ namespace RTParser.AIMLTagHandlers
                         RTParser.Request request,
                         RTParser.Result result,
                         XmlNode templateNode)
+            : this(bot, user, query, request, result, templateNode, 1)
+        {
+        }
+        public that(RTParser.RTPBot bot,
+                RTParser.User user,
+                RTParser.Utils.SubQuery query,
+                RTParser.Request request,
+                RTParser.Result result,
+                XmlNode templateNode, int offset)
             : base(bot, user, query, request, result, templateNode)
         {
+            offetFrom = offset;
         }
 
         protected override Unifiable ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "that")
+            if (CheckNode("that,justbeforethat"))
             {
-                if (this.templateNode.Attributes.Count == 0)
+                if (AttributesCount(templateNode, "index") == 0)
                 {
-                    return this.user.getThat();
+                    return this.user.getThat(offetFrom - 1, 0);
                 }
                 //else if (this.templateNode.Attributes.Count == 1)
                 {

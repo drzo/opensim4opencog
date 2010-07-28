@@ -32,34 +32,17 @@ namespace RTParser.Utils
         /// The method that does the actual processing of the text.
         /// </summary>
         /// <returns>The resulting processed text</returns>
-        sealed protected override Unifiable ProcessChange()
+        protected override Unifiable ProcessChange()
         {
-            return base.RecurseProcess();
-        }
-        /// <summary>
-        /// Do a transformation on the Unifiable found in the InputString attribute
-        /// </summary>
-        /// <returns>The resulting transformed Unifiable</returns>
-        sealed public override string Transform()
-        {
-            return templateNodeInnerText;
-            /*
-
-            if (!this.inputString.IsEmpty)
-            {
-                return this.RecurseProcess();
-            }
-            else
-            {
-                return Unifiable.Empty;
-            }*/
+            RecurseResult = base.RecurseProcess();
+            return RecurseResult;
         }
 
         #endregion
 
-        sealed public override Unifiable CompleteProcess()
+        public override Unifiable CompleteProcess()
         {
-            var res = base.CompleteProcess();
+           // var res = base.CompleteProcess();
 
             var saveOpts = request.LoadOptions;
             var loaderOptions = saveOpts;
@@ -73,9 +56,42 @@ namespace RTParser.Utils
                 request.LoadOptions = saveOpts;
             }
 
-            return res;
+            if (RecurseResult == (string)null) return Unifiable.Empty;
+            return RecurseResult;
         }
 
         protected abstract Unifiable ProcessLoad(LoaderOptions loaderOptions);
+
+        public override Unifiable CheckValue(Unifiable value)
+        {
+            if (Object.ReferenceEquals(value, Unifiable.Empty)) return value;
+            if (value == null)
+            {
+                writeToLogWarn("ChackValue NULL");
+                return Unifiable.Empty;
+            }
+            else
+            {
+                if (Unifiable.IsNullOrEmpty(value))
+                {
+                    writeToLogWarn("CheckValue EMPTY = '" + value + "'");
+                    return Unifiable.Empty;
+                }
+                string v = value.AsString();
+                if (!value.AsString().Contains("<a href"))
+                {
+                    if (v.Contains("<"))
+                    {
+                        writeToLogWarn("CheckValue XML = '" + value + "'");
+                    }
+                    else if (v.Contains("&"))
+                    {
+                        writeToLogWarn("CheckValue HTML = '" + value + "'");
+                    }
+                }
+                return value;
+            }
+        }
+
     }
 }

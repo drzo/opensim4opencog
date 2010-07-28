@@ -40,11 +40,11 @@ namespace RTParser.AIMLTagHandlers
         private static int depth = 0;
         public override Unifiable CompleteProcess()
         {
+            try
+            {
             RecurseResult = null;
             isRecursive = true;
             Unifiable f = Recurse();           
-            try
-            {
                 depth++;
                 int d = request.GetCurrentDepth();
                 if (d > 30)
@@ -69,7 +69,7 @@ namespace RTParser.AIMLTagHandlers
                 bool createdOutput;
                 templateInfo = GetTemplateInfo();
                 Proc.proccessResponse(query, request, result, (XmlNode) node, templateInfo.Guard, out createdOutput,
-                                      out templateSucceeded, this, templateInfo);
+                                      out templateSucceeded, this, templateInfo, ReadOnly, true);
                 return Unifiable.Empty;
             }
             finally

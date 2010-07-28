@@ -16,8 +16,7 @@ namespace RTParser.Utils
             bool containsAtAll = settings.containsSettingCalled(n);
 
             var oldValue = settings.grabSetting(n);
-
-            if (oldValue.AsString() == v)
+            if (oldValue == v)
             {
                 return false;
             }

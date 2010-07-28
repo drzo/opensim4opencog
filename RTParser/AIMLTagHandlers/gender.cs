@@ -53,7 +53,7 @@ namespace RTParser.AIMLTagHandlers
                 if (!templateNodeInnerText.IsEmpty)
                 {
                     // non atomic version of the node
-                    return RTParser.Normalize.ApplySubstitutions.Substitute(this.Proc, this.Proc.GenderSubstitutions, templateNodeInnerText);
+                    return RTParser.Normalize.ApplySubstitutions.Substitute(this.Proc.GenderSubstitutions, templateNodeInnerText);
                 }
                 else
                 {

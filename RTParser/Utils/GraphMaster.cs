@@ -3,12 +3,14 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Xml;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
 using RTParser.AIMLTagHandlers;
 using RTParser.Utils;
+using RTParser.Variables;
 using Console=System.Console;
 using File=System.IO.File;
 using UPath = RTParser.Unifiable;
@@ -121,7 +123,7 @@ namespace RTParser.Utils
             {
                 if (!Patterns.TryGetValue(pats, out pi))
                 {
-                    Patterns[pats] = pi = new PatternInfo(pattern, pats);
+                    Patterns[pats] = pi = new PatternInfo(AIMLLoader.ToLineInfoElement(pattern), pats);
                 }
                 else
                 {
@@ -245,8 +247,15 @@ namespace RTParser.Utils
         {
             get
             {
-                if (!theBot.isAcceptingUserInput) return false;
-                if (IsBusy) return false;
+                return true;
+                if (!theBot.isAcceptingUserInput)
+                {
+                    return false;
+                }
+                if (IsBusy)
+                {
+                    return false;
+                }
                 return true;
             }
             set
@@ -465,6 +474,11 @@ namespace RTParser.Utils
 
         internal void AddGenlMT(GraphMaster fallback)
         {
+            if (fallback==this)
+            {
+                writeToLog("Trying to genlMt reversed to " + this);
+                return;
+            }
             lock (FallBacksGraphs)
             {
                 if (!FallBacksGraphs.Contains(fallback))
@@ -719,6 +733,39 @@ namespace RTParser.Utils
                 }
                 return true;
             }
+        }
+
+        public void Listing(OutputDelegate console, string match, bool parents)
+        {
+            GraphMaster G = this;
+            IList<CategoryInfo> Cats = G.GetCategoriesMatching(match);
+            console("-----------------------------------------------------------------");
+            AIMLLoader.PrintTemplates(Cats, console, true);
+            console("-----------------------------------------------------------------");
+            console("Shown " + Cats.Count + " from " + G);
+            OutputDelegate When = new OutputDelegate((s,a)=>
+                                      {
+                                          console(s, a);   
+                                      });
+            G.WriteMetaHeaders(When);
+        }
+
+
+        static public bool Matches(string pattern, string target)
+        {
+            if (pattern == null || pattern == "*" || pattern == "") return true;;
+            if (target.Contains(pattern)) return true;
+            return Regex.Matches(target, pattern).Count > 0;
+        }
+
+        public ISettingsDictionary GetSubstitutions(string named, bool createIfMissing)
+        {
+            return theBot.GetDictionary(named, "substitutions", createIfMissing);
+        }
+
+        public ISettingsDictionary GetDictionary(string named, string type, bool createIfMissing)
+        {
+            return theBot.GetDictionary(named, type, createIfMissing);
         }
     }
 }

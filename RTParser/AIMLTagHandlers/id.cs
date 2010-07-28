@@ -34,7 +34,7 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "id")
+            if (CheckNode("id,get_ip"))
             {
                 return this.user.UserID;
             }

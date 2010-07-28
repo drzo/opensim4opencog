@@ -34,7 +34,7 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessLoad(LoaderOptions loaderOptions)
         {
-            if (this.templateNode.Name.ToLower() == "learn")
+            if (CheckNode("learn,load"))
             {
                // LoaderOptions loaderOptions = loaderOptions0;// ?? LoaderOptions.GetDefault(request);
 
@@ -52,9 +52,9 @@ namespace RTParser.AIMLTagHandlers
                 try
                 {
                     Unifiable templateNodeInnerText = Recurse();
-                    if (!templateNodeInnerText.IsEmpty)
+                    //if (!templateNodeInnerText.IsEmpty)
                     {
-                        Unifiable path = templateNodeInnerText;
+                        Unifiable path = GetAttribValue("filename,uri,file,url,dir,directory",templateNodeInnerText);
                         try
                         {
                             request.LoadingFrom = DocumentInfo();
@@ -63,10 +63,16 @@ namespace RTParser.AIMLTagHandlers
                             if (s.Contains("<"))
                             {
                                 request.Loader.loadAIMLNode(templateNode, loaderOptions);
+                                return s;
+                            }
+                            else if (path == "")
+                            {
+                                writeToLogWarn("ERROR! Attempted (but failed) to <learn> some new AIML from the following URI: '{0}' - '{1}'", path, s);
                             }
                             else
                             {
                                 request.Loader.loadAIMLURI(path, loaderOptions);
+                                return path; // Succeed();
                             }
                         }
                         catch (Exception e2)

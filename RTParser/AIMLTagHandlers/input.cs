@@ -33,23 +33,35 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public input(RTParser.RTPBot bot,
+        private input(RTParser.RTPBot bot,
                         RTParser.User user,
                         RTParser.Utils.SubQuery query,
                         RTParser.Request request,
                         RTParser.Result result,
                         XmlNode templateNode)
+            : this(bot, user, query, request, result, templateNode, 1)
+        {
+        }
+
+        readonly int offetFrom = 0;
+        public input(RTParser.RTPBot bot,
+                        RTParser.User user,
+                        RTParser.Utils.SubQuery query,
+                        RTParser.Request request,
+                        RTParser.Result result,
+                XmlNode templateNode, int offset)
             : base(bot, user, query, request, result, templateNode)
         {
+            offetFrom = offset;
         }
 
         protected override Unifiable ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "input")
+            if (CheckNode("index,justthat,beforethat"))
             {
                 if (AttributesCount(templateNode, "index") == 0)
                 {
-                    return this.user.getInputSentence();
+                    return this.user.getInputSentence(offetFrom - 1);
                 }
                 string at = GetAttribValue("index", null);
                 if (at != null)

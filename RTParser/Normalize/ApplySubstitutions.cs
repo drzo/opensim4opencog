@@ -38,7 +38,7 @@ namespace RTParser.Normalize
 
         protected override Unifiable ProcessChange()
         {
-            return ApplySubstitutions.Substitute(this.Proc, this.Proc.Substitutions, this.inputString);
+            return ApplySubstitutions.Substitute(this.Proc.InputSubstitutions, this.inputString);
         }
 
         /// <summary>
@@ -49,12 +49,12 @@ namespace RTParser.Normalize
         /// <param name="dictionary">The dictionary containing the substitutions</param>
         /// <param name="target">the target Unifiable to which the substitutions are to be applied</param>
         /// <returns>The processed Unifiable</returns>
-        public static string Substitute(RTPBot bot, SettingsDictionary dictionary, string target)
+        public static string Substitute(ISettingsDictionary dictionary, string target)
         {
             string marker = ApplySubstitutions.getMarker(5);
             string markerSP = ApplySubstitutions.getMarker(3);
             string result = " " + Unifiable.ToVMString(target) + " ";
-            foreach (string pattern in dictionary.SettingNames)
+            foreach (string pattern in dictionary.SettingNames(1))
             {
                 var vvalue = dictionary.grabSetting(pattern);
                 var value = vvalue.AsString();
@@ -97,7 +97,7 @@ namespace RTParser.Normalize
             while (prev != result)
             {
                 prev = result;
-                result = Substitute(bot, dictionary, target);
+                result = Substitute(dictionary, target);
             }
             return  new StringUnifiable(result);
         }
