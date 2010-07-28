@@ -15,7 +15,7 @@ namespace RTParser.AIMLTagHandlers
     /// If no character in this Unifiable has a different uppercase version, based on the Unicode 
     /// standard, then the original Unifiable is returned. 
     /// </summary>
-    public class sentence : RTParser.Utils.AIMLTagHandler
+    public class sentence : RTParser.Utils.AIMLFormatingTagHandler
     {
         /// <summary>
         /// Ctor
@@ -36,7 +36,11 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        protected override Unifiable ProcessChange()
+        /// <summary>
+        /// The method that does the actual processing of the text.
+        /// </summary>
+        /// <returns>The resulting processed text</returns>
+        protected override Unifiable Format(Unifiable templateNodeInnerText)
         {
             if (CheckNode("sentence"))
             {

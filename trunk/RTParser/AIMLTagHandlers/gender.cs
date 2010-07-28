@@ -25,7 +25,7 @@ namespace RTParser.AIMLTagHandlers
     /// fact that most AIML has been written in English. However, the decision about whether to 
     /// transform gender of other words is left up to the implementation.
     /// </summary>
-    public class gender : RTParser.Utils.AIMLTagHandler
+    public class gender : RTParser.Utils.AIMLDictSubstFormatingTagHandler
     {
         /// <summary>
         /// Ctor
@@ -45,33 +45,5 @@ namespace RTParser.AIMLTagHandlers
             : base(bot, user, query, request, result, templateNode)
         {
         }
-
-        protected override Unifiable ProcessChange()
-        {
-            if (this.templateNode.Name.ToLower() == "gender")
-            {
-                if (!templateNodeInnerText.IsEmpty)
-                {
-                    // non atomic version of the node
-                    return RTParser.Normalize.ApplySubstitutions.Substitute(this.Proc.GenderSubstitutions, templateNodeInnerText);
-                }
-                else
-                {
-                    // atomic version of the node
-                    XmlNode starNode = Utils.AIMLTagHandler.getNode("<star/>", templateNode);
-                    star recursiveStar = new star(this.Proc, this.user, this.query, this.request, this.result, starNode);
-                    templateNodeInnerText = recursiveStar.Transform();
-                    if (!templateNodeInnerText.IsEmpty)
-                    {
-                        return this.ProcessChange();
-                    }
-                    else
-                    {
-                        return Unifiable.Empty;
-                    }
-                }
-            }
-            return Unifiable.Empty;
-        }
-    }
+}
 }

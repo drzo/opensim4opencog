@@ -25,7 +25,7 @@ namespace RTParser.AIMLTagHandlers
     /// that most AIML has been written in English. However, the decision about whether to transform 
     /// the person aspect of other words is left up to the implementation.
     /// </summary>
-    public class person2 : RTParser.Utils.AIMLTagHandler
+    public class person2 : RTParser.Utils.AIMLFormatingTagHandler
     {
         /// <summary>
         /// Ctor
@@ -46,9 +46,14 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        protected override Unifiable ProcessChange()
+
+        /// <summary>
+        /// The method that does the actual processing of the text.
+        /// </summary>
+        /// <returns>The resulting processed text</returns>
+        protected override Unifiable Format(Unifiable templateNodeInnerText)
         {
-            if (this.templateNode.Name.ToLower() == "person2")
+            if (CheckNode("person2"))
             {
                 if (!templateNodeInnerText.IsEmpty)
                 {

@@ -177,6 +177,7 @@ namespace RTParser.Variables
                         XmlAttribute value = result.CreateAttribute("value");
                         value.Value = normalizedName.Value().NameSpace;
                         item.Attributes.Append(name);
+                        item.Attributes.Append(value);
                         root.AppendChild(item);
                     }
                     foreach (var normalizedName in this.makedvars)
@@ -237,7 +238,7 @@ namespace RTParser.Variables
         /// <item name="name" value="value"/>
         /// </summary>
         /// <param name="pathToSettings">The file containing the settings</param>
-        public void loadSettings(string pathToSettings)
+        public void loadSettings(string pathToSettings, Request request)
         {
             if (pathToSettings == null) return;
             lock (orderedKeys)
@@ -252,8 +253,7 @@ namespace RTParser.Variables
                             var stream = HostSystem.GetStream(pathToSettings);
                             xmlDoc.Load(stream);
                             HostSystem.Close(stream);
-                            this.loadSettings(xmlDoc);
-                            
+                            this.loadSettings(xmlDoc, request);                            
                         }
                         catch (Exception e)
                         {
@@ -311,7 +311,7 @@ namespace RTParser.Variables
                     }
                     catch (Exception e)
                     {
-                        dict.writeToLog("loadSettings: " + pathToSettings + "\n" + e);
+                        dict.writeToLog("ERROR loadSettings: " + pathToSettings + "\n" + e);
                     }
                 }
                 else
@@ -321,9 +321,10 @@ namespace RTParser.Variables
             }
         }
 
-        private void writeToLog(string s)
+        private void writeToLog(string message, params object[] args)
         {
-            if (bot != null) bot.writeToLog(s); else RTPBot.writeDebugLine(s);
+            if (message.Trim().ToLower().StartsWith("error")) message = "-DICTRACE: " + message;
+            if (bot != null) bot.writeToLog(message, args); else RTPBot.writeDebugLine(message, args);
         }
 
         /// <summary>
@@ -338,54 +339,172 @@ namespace RTParser.Variables
         /// <item name="name" value="value"/>
         /// </summary>
         /// <param name="settingsAsXML">The settings as an XML document</param>
-        public void loadSettings(XmlDocument settingsAsXML)
+        public void loadSettings(XmlDocument settingsAsXML, Request request)
         {
             lock (orderedKeys)
             {
-             
-                XmlNodeList rootChildren = settingsAsXML.DocumentElement.ChildNodes;
-
-                // empty the hash
-                //this.clearSettings();
-
-                foreach (XmlNode myNode in rootChildren)
+                if (settingsAsXML.DocumentElement == null)
                 {
-                    loadSettingNode(this, myNode, true, false, null);
+                    writeToLog("ERROR no doc element in " + settingsAsXML);
                 }
+                loadSettingNode(this, settingsAsXML.Attributes, true, false, request);
+                loadSettingNode(this, settingsAsXML.DocumentElement, true, false, request);
+            }
+        }
+
+        static public void loadSettingNode(ISettingsDictionary dict, IEnumerable Attributes, bool overwriteExisting, bool onlyIfUnknown, Request request)
+        {
+            if (Attributes==null) return;
+            foreach (object o in Attributes)
+            {
+                if (o is XmlNode)
+                {
+                    XmlNode n = (XmlNode) o;
+                    loadSettingNode(dict, n, overwriteExisting, onlyIfUnknown, request);
+                }
+            }
+        }
+
+        private static void loadSetting(ISettingsDictionary dict, string name, string value, string updateOrAddOrDefualt, XmlNode myNode, bool overwriteExisting, bool onlyIfUnknown, Request request)
+        {
+            updateOrAddOrDefualt = updateOrAddOrDefualt.ToLower().Trim();
+
+            overwriteExisting =
+                Boolean.Parse(RTPBot.GetAttribValue(myNode, "overwriteExisting", "" + overwriteExisting));
+
+            onlyIfUnknown =
+                Boolean.Parse(RTPBot.GetAttribValue(myNode, "onlyIfKnown", "" + onlyIfUnknown));
+
+            bool dictcontainsLocalCalled = dict.containsLocalCalled(name);
+
+            if (updateOrAddOrDefualt == "add")
+            {
+                if (!overwriteExisting)
+                {
+                    if (dictcontainsLocalCalled)
+                    {
+                        return;
+                    }
+                }
+                if (onlyIfUnknown && dictcontainsLocalCalled)
+                {
+                    var old = dict.grabSetting(name);
+                    if (!Unifiable.IsUnknown(old))
+                    {
+                        return;
+                    }
+                }
+                dict.addSetting(name, new StringUnifiable(value));
+            }
+            else
+            {
+                bool inherited = !dictcontainsLocalCalled && dict.containsSettingCalled(name);
+                // update only
+                var old = dict.grabSetting(name);
+                if (inherited && onlyIfUnknown)
+                {
+                    if (!Unifiable.IsUnknown(old))
+                    {
+                        return;
+                    }
+                }
+                if (onlyIfUnknown && dictcontainsLocalCalled)
+                {
+                    if (!Unifiable.IsUnknown(old))
+                    {
+                        return;
+                    }
+                }
+                dict.updateSetting(name, new StringUnifiable(value));
             }
         }
 
         static public void loadSettingNode(ISettingsDictionary dict, XmlNode myNode, bool overwriteExisting, bool onlyIfUnknown, Request request)
         {
+
+            SettingsDictionary settingsDict = ToSettingsDictionary(dict);
+
+            if (myNode==null) return;
             if (myNode.NodeType == XmlNodeType.Comment) return;
+            if (myNode.NodeType == XmlNodeType.Attribute)
+            {
+                // attribues should not overwrite existing? 
+                loadSetting(dict, myNode.Name, myNode.Value, "add", myNode, overwriteExisting, onlyIfUnknown, request);
+                return;
+            }
+            int atcount = 0;
+            if (myNode.Attributes != null)
+            {
+                atcount = myNode.Attributes.Count;
+                if (myNode.Attributes["xmlns"] != null) atcount = atcount - 1;
+            }
             if (myNode.NodeType == XmlNodeType.XmlDeclaration)
             {
-                if (myNode.HasChildNodes)
-                {
-                    foreach (XmlNode n in myNode.ChildNodes)
-                    {
-                        loadSettingNode(dict, n, overwriteExisting, onlyIfUnknown, request);
-                    }
-                    return;
-                }
+                loadSettingNode(dict, myNode.Attributes, false, onlyIfUnknown, request);
+                loadSettingNode(dict, myNode.ChildNodes, overwriteExisting, onlyIfUnknown, request);
                 return;
             }
             string lower = myNode.Name.ToLower();
 
             if (myNode.NodeType == XmlNodeType.Document || lower == "#document")
             {
+                loadSettingNode(dict, myNode.Attributes, false, onlyIfUnknown, request);
+                loadSettingNode(dict, myNode.ChildNodes, overwriteExisting, onlyIfUnknown, request);
+                return;
+            }
+            if (lower == "substitutions")
+            {
+                //loadSettingNode(dict, myNode.Attributes, false, true, request);
+
+                dict = request.Graph.GetSubstitutions("input", true);
                 foreach (XmlNode n in myNode.ChildNodes)
                 {
-                    loadSettingNode(dict, n, overwriteExisting, onlyIfUnknown, request);
+                    string nn = n.Name.ToLower();
+                    /// ProgramQ            ProgramD
+                    if (nn != "substitution" && nn != "substitute")
+                    {
+                        var chgdict = request.Graph.GetSubstitutions(nn, false);
+                        if (chgdict != null)
+                        {
+                            settingsDict.writeToLog("switching to substitutions: " + dict);
+                            loadSettingNode(chgdict, n, overwriteExisting, onlyIfUnknown, request);
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        /// ProgramD shoukd nbot actually be here
+                        loadSettingNode(dict, n, overwriteExisting, onlyIfUnknown, request);
+                    }
                 }
                 return;
             }
-            if (lower == "root" || lower == "vars" || lower == "items")
+            if (myNode.NodeType==XmlNodeType.Element)
             {
-                foreach (XmlNode n in myNode.ChildNodes)
+                string href = RTPBot.GetAttribValue(myNode, "href", null);
+                if (href!=null&& href.Length>0)
                 {
-                    loadSettingNode(dict, n, overwriteExisting, onlyIfUnknown, request);
+                    string name = RTPBot.GetAttribValue(myNode, "id", myNode.Name);
+                    loadSetting(dict, name, href, "add", myNode, false, true, request);
+                    return;
                 }
+            }
+
+            if (lower == "bot")
+            {
+                var p = myNode.ParentNode;
+                if (p!=null && p.Name.ToLower()=="bots")
+                {
+                    loadSettingNode(dict, myNode.ChildNodes, overwriteExisting, onlyIfUnknown, request);
+                    loadSettingNode(dict, myNode.Attributes, false, false, request);
+                    return;                    
+                } 
+            }
+
+            if (lower == "root" || lower == "vars" || lower == "items" || lower == "properties" || lower == "bots" || lower == "testing")
+            {
+                loadSettingNode(dict, myNode.ChildNodes, overwriteExisting, onlyIfUnknown, request);
+                loadSettingNode(dict, myNode.Attributes, false, false, request);
                 return;
             }
             if ((lower == "include"))
@@ -396,29 +515,21 @@ namespace RTParser.Variables
                     Boolean.Parse(RTPBot.GetAttribValue(myNode, "overwriteExisting", "" + overwriteExisting));
 
                 onlyIfUnknown =
-                    Boolean.Parse(RTPBot.GetAttribValue(myNode, "overwriteExisting", "" + onlyIfUnknown));
+                    Boolean.Parse(RTPBot.GetAttribValue(myNode, "onlyIfKnown", "" + onlyIfUnknown));
 
                 loadSettings(ToSettingsDictionary(dict), path, overwriteExisting, onlyIfUnknown, request);
                 return;
             }
-            if ((lower == "parent" || lower == "override" || lower == "fallback" || lower == "listener" || lower == "provider"))
+            if ((lower == "parent" || lower == "override" || lower == "fallback" || lower == "listener"
+                || lower == "provider" || lower == "syncon" || lower == "synchon" || lower == "prefixes"))
             {
-                string name = RTPBot.GetAttribValue(myNode, "name", null);
+                string name = RTPBot.GetAttribValue(myNode, "value,dict,name", null);
                 if (!string.IsNullOrEmpty(name))
                 {
-                    var rtpbotobjCol = MushDLR223.ScriptEngines.ScriptManager.ResolveToObject(dict, name);
-                    if (rtpbotobjCol == null || rtpbotobjCol.Count == 0)
+                    ParentProvider pp = settingsDict.FindDictionary(name, null);
+                    if (pp==null|| pp()==null)
                     {
-                        RTPBot.writeDebugLine("-DICTRACE: Cannot ResolveToObject settings line {0} in {1}",
-                                              AIMLLoader.TextAndSourceInfo(myNode), dict);
-                        return;
-                    }
-                    //if (tr)
-                    ParentProvider pp = ToParentProvider(rtpbotobjCol);
-                    SettingsDictionary settingsDict = ToSettingsDictionary(dict);
-                    if (settingsDict == null || pp == null)
-                    {
-                        ///warned already
+                        settingsDict.writeToLog("Cannot ResolveToObject settings line {0} in {1}", name, settingsDict);
                         return;
                     }
                     switch (lower)
@@ -429,6 +540,7 @@ namespace RTParser.Variables
                         case "parent":
                             settingsDict.InsertFallback(pp);
                             return;
+                        case "syncon":
                         case "listener":
                             settingsDict.InsertListener(pp);
                             return;
@@ -438,7 +550,14 @@ namespace RTParser.Variables
                         case "override":
                             settingsDict.InsertOverrides(pp);
                             return;
+                        case "prefixes":
+                            settingsDict.AddChild(RTPBot.GetAttribValue(myNode, "prefix,name,dict,value", name), pp);
+                            return;
+                        default:
+                            settingsDict.writeToLog("ERROR cannot make a name/v from " + AIMLLoader.TextAndSourceInfo(myNode));
+                            return;
                     }
+                    return;
                 }
             }
             if ((lower == "maskedvar"))
@@ -447,13 +566,13 @@ namespace RTParser.Variables
                 if (name == "")
                 {                    
                 }
-                SettingsDictionary settingsDict = ToSettingsDictionary(dict);
                 if (settingsDict == null)
                 {
                     ///warned already
                     return;
                 }
                 settingsDict.maskSetting(name);
+                return;
 
             }
             //<predicates><predicate name="failed" default="" set-return="value"/>
@@ -464,20 +583,22 @@ namespace RTParser.Variables
             //<parameter name="channel" value="#some-channel"/>
             //<input><substitute find="=reply" replace=""/>
             //<substitution><old>:\)</old><new> smile </new></substitution>
-            if (lower == "item" || lower == "set" || lower == "entry" || lower == "predicate" ||
+            if (lower == "item" || lower == "set" || lower == "entry" || lower == "predicate" || lower == "property" ||
                 lower == "substitution" || lower == "param" || lower == "parameter" || lower == "substitute")
             {
+
                 string name = RTPBot.GetAttribValue(myNode, "name,var,old,key,find,param", "");
                 if (name == "")
                 {
                     XmlNode holder = AIMLLoader.FindNode("name,var,old,key,find", myNode, null);
                     if (holder == null)
                     {
-                    return;
-                }
+                        settingsDict.SettingsLog("ERROR cannot make a name/v from " + AIMLLoader.TextAndSourceInfo(myNode));
+                        return;
+                    }
                     name = holder.InnerText;
                 }
-                string value = RTPBot.GetAttribValue(myNode, "value,default,replace,new", null);
+                string value = RTPBot.GetAttribValue(myNode, "value,href,default,replace,new,enabled", null);
                 if (value == null)
                 {
                     XmlNode holder = AIMLLoader.FindNode("value,default,replace,new", myNode, null);
@@ -491,53 +612,52 @@ namespace RTParser.Variables
                     string maybe = myNode.InnerXml.Trim();
                     if (maybe != null) value = maybe;
                 }
-                string updateOrAdd = RTPBot.GetAttribValue(myNode, "type", "add").ToLower().Trim();
-                bool dictcontainsLocalCalled = dict.containsLocalCalled(name);
-                if (updateOrAdd == "add")
-                {
-                    if (!overwriteExisting)
-                    {
-                        if (dictcontainsLocalCalled)
-                        {
-                            return;
-                        }
-                    }
-                    if (onlyIfUnknown && dictcontainsLocalCalled)
-                    {
-                        var old = dict.grabSetting(name);
-                        if (!Unifiable.IsUnknown(old))
-                        {
-                            return;
-                        }
-                    }
-                    dict.addSetting(name, new StringUnifiable(value));
-                }
-                else
-                {
-                    bool inherited = !dictcontainsLocalCalled && dict.containsSettingCalled(name);
-                    // update only
-                    var old = dict.grabSetting(name);
-                    if (inherited && onlyIfUnknown)
-                    {
-                        if (!Unifiable.IsUnknown(old))
-                        {
-                            return;
-                        }
-                    }
-                    if (onlyIfUnknown && dictcontainsLocalCalled)
-                    {
-                        if (!Unifiable.IsUnknown(old))
-                        {
-                            return;
-                        }
-                    }
-                    dict.updateSetting(name, new StringUnifiable(value));
-                }
+                if (value == null)
+                    settingsDict.writeToLog("ERROR cannot make a n/value from " + AIMLLoader.TextAndSourceInfo(myNode));
+
+                loadSetting(dict, name, value, RTPBot.GetAttribValue(myNode, "type", "add"), myNode,
+                            overwriteExisting, onlyIfUnknown, request);
+                return;
             }
-            else
+            if (lower == "learn" || lower == "srai")
             {
-                RTPBot.writeDebugLine("-DICTRACE: Warning settings line {0} in {1}", AIMLLoader.TextAndSourceInfo(myNode), dict);
+                request.Loader.loadAIMLNode(myNode, request.LoadOptions);
+                return;
             }
+            if (myNode.NodeType == XmlNodeType.Element && atcount == 0)
+            {
+                int cs = myNode.ChildNodes.Count;
+                string value = myNode.InnerXml.Trim();
+                string itext = myNode.InnerText.Trim();
+                if (itext == value)
+                {
+                    string name = myNode.Name;
+                    loadSetting(dict, name, value, "add", myNode, false, true, request);
+                    return;
+                }
+                
+            }
+            {
+                settingsDict.writeToLog("-DICTRACE: ERROR unknow settings line {0} in {1}", AIMLLoader.TextAndSourceInfo(myNode), dict);
+            }
+        }
+
+        public ParentProvider FindDictionary(string name , ParentProvider fallback )
+        {            
+            var rtpbotobjCol = MushDLR223.ScriptEngines.ScriptManager.ResolveToObject(this, name);
+            if (rtpbotobjCol == null || rtpbotobjCol.Count == 0)
+            {
+                writeToLog("Cannot ResolveToObject settings line {0} in {1}", name, this);
+                return fallback;
+            }
+            //if (tr)
+            ParentProvider pp = ToParentProvider(rtpbotobjCol);
+            if (pp == null)
+            {
+                ///warned already
+                return fallback;
+            }
+            return pp;
         }
 
         private static SettingsDictionary ToSettingsDictionary(ISettingsDictionary dictionary)
@@ -665,7 +785,7 @@ namespace RTParser.Variables
             string v = value.AsString();
             if (v.Contains("<") || v.Contains("&"))
             {
-                RTPBot.writeDebugLine("!@ERROR BAD INPUT? " + value);
+                writeToLog("!@ERROR BAD INPUT? " + value);
             }
             return value;
         }
@@ -848,7 +968,7 @@ namespace RTParser.Variables
             var v = grabSetting0(name);
             if (Unifiable.IsNullOrEmpty(v))
             {
-                RTPBot.writeDebugLine("DICT '{0}'=null", null);
+                writeToLog("DICT '{0}'=null", null);
             }
             return v;
 #else
@@ -919,16 +1039,16 @@ namespace RTParser.Variables
             }
         }
 
-        private void SettingsLog(string unifiable)
+        public void SettingsLog(string message, params object[] args)
         {
-            if (unifiable.Contains("ERROR")) IsTraced = true;
+            if (message.Contains("ERROR")) IsTraced = true;
             if (!IsTraced) return;
             var fc = new StackTrace().FrameCount;
-            RTPBot.writeDebugLine("DICTLOG: " + NameSpace + " (" + fc + ")   " + unifiable);
+            writeToLog("DICTLOG: " + NameSpace + " (" + fc + ")   " + message, args);
             if (fc > 200)
             {
                 //throw new 
-                RTPBot.writeDebugLine("ERROR DICTLOG OVERFLOWING: " + NameSpace + " (" + fc + ")   " + unifiable);
+                writeToLog("ERROR DICTLOG OVERFLOWING: " + NameSpace + " (" + fc + ")   " + message, args);
                 //Console.ReadLine();
             }
         }

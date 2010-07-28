@@ -30,14 +30,15 @@ namespace RTParser.AIMLTagHandlers
         }
 
 
+        /// <summary>
+        /// The method that does the actual processing of the text.
+        /// </summary>
+        /// <returns>The resulting processed text</returns>
         protected override Unifiable ProcessChange()
         {
-           // if (this.templateNode.Name.ToLower() == "cycphrase")
+            if (CheckNode("cycphrase"))
             {
-                if (!templateNodeInnerText.IsEmpty)
-                {
-                    return this.TheCyc.Paraphrase(Recurse());
-                }
+                return TheCyc.Paraphrase(TransformAtomically(null, false));
             }
             return Unifiable.Empty;
         }

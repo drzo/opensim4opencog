@@ -43,10 +43,12 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "bot")
+            if (RecurseResult != null) return RecurseResult;
+            string name = this.templateNode.Name.ToLower();
+            if (name == "bot")
             {
-                if (RecurseResult != null) return RecurseResult;
-                string name = GetAttribValue(new[] { "name", "var" }, () => templateNodeInnerText.Trim());
+                name = GetAttribValue(new[] { "name", "var" }, () => templateNodeInnerText.Trim());          
+            }
                 Unifiable defaultVal = GetAttribValue("default", Unifiable.Empty);
                 if (name == "name") return "Bina";
                 string realName;
@@ -71,8 +73,6 @@ namespace RTParser.AIMLTagHandlers
                     RecurseResult = value;
                 }
                 return value;
-            }
-            return Unifiable.Empty;
         }
     }
 }

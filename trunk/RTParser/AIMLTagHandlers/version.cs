@@ -33,7 +33,7 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "version")
+            if (CheckNode("version,getversion"))
             {
                 return this.Proc.GlobalSettings.grabSetting("version");
             }

@@ -10,7 +10,7 @@ namespace RTParser.AIMLTagHandlers
     /// 
     /// The think element has no attributes. It may contain any AIML template elements.
     /// </summary>
-    public class think : RTParser.Utils.AIMLTagHandler
+    public class think : RTParser.Utils.AIMLFormatingTagHandler
     {
         /// <summary>
         /// Ctor
@@ -31,8 +31,13 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        protected override Unifiable ProcessChange()
+        /// <summary>
+        /// The method that does the actual processing of the text.
+        /// </summary>
+        /// <returns>The resulting processed text</returns>
+        protected override Unifiable Format(Unifiable templateNodeInnerText)
         {
+            CheckNode("think");
             return Unifiable.Empty;
         }
     }

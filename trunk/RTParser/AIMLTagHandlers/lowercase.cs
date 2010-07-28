@@ -12,7 +12,7 @@ namespace RTParser.AIMLTagHandlers
     /// If no character in this Unifiable has a different lowercase version, based on the Unicode 
     /// standard, then the original Unifiable is returned. 
     /// </summary>
-    public class lowercase : RTParser.Utils.AIMLTagHandler
+    public class lowercase : RTParser.Utils.AIMLFormatingTagHandler
     {
         /// <summary>
         /// Ctor
@@ -33,9 +33,9 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        protected override Unifiable ProcessChange()
+        protected override Unifiable Format(Unifiable templateNodeInnerText)
         {
-            if (this.templateNode.Name.ToLower() == "lowercase")
+            if (CheckNode("lowercase"))
             {
                 return templateNodeInnerText.ToValue(query).ToLower(this.Proc.Locale);
             }
