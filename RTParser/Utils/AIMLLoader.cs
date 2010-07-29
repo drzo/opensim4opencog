@@ -1060,14 +1060,19 @@ namespace RTParser.Utils
             {
 
                 normalizedPattern = pattern.Trim();
-                while (normalizedPattern.EndsWith("?") || normalizedPattern.EndsWith("."))
+                // clip only one off
+                if (isUserInput) if (normalizedPattern.EndsWith("?") || normalizedPattern.EndsWith(".") || normalizedPattern.EndsWith("!"))
                 {
                     normalizedPattern = normalizedPattern.Substring(0, normalizedPattern.Length - 1).Trim();
                 }
-
-                normalizedPattern = MatchKeyClean(normalizedPattern);
-                normalizedThat = MatchKeyClean(that);
-                normalizedTopic = MatchKeyClean(topicName);
+                if (false)
+                {
+                    normalizedPattern = MatchKeyClean(normalizedPattern);
+                    normalizedThat = MatchKeyClean(that);
+                    normalizedTopic = MatchKeyClean(topicName);
+                }
+                normalizedThat = that.Trim();
+                normalizedTopic = topicName.Trim();
             }
             else
             {
@@ -1230,6 +1235,7 @@ namespace RTParser.Utils
             Unifiable result = Unifiable.CreateAppendable();
 
             // objects for normalization of the input
+            var RProcessor = LoaderRequest00.TargetBot;
             Normalize.ApplySubstitutions substitutor = new RTParser.Normalize.ApplySubstitutions(RProcessor);
             Normalize.StripIllegalCharacters stripper = new RTParser.Normalize.StripIllegalCharacters(RProcessor);
 
