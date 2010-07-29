@@ -79,8 +79,10 @@ namespace RTParser
         public User ExemplarUser;
         //public Request BotAsRequestUsed = null;
         public Request GetBotRequest(string s)
-        {
+        {           
             var r = new AIMLbot.Request(s, BotAsUser, this, null);
+            Result res = new AIMLbot.Result(BotAsUser, this, r, null);
+            res._CurrentQuery = new SubQuery(s, res, r);
             r.IsTraced = true;
             r.StartedOn = DateTime.Now;
             // times out in 15 minutes
@@ -642,7 +644,7 @@ namespace RTParser
                 {
                     loader = new AIMLLoader(this, request);
                 }
-                request.Loader.loadAIMLNode(newAIML.DocumentElement, filename);
+                request.Loader.loadAIMLNode(newAIML.DocumentElement, filename, request);
             }
             finally
             {
@@ -1677,7 +1679,7 @@ namespace RTParser
             solutions = 0;
             foreach (SubQuery query in result.SubQueries)
             {
-                result.CurrentQuery = query;
+                result._CurrentQuery = query;
                 UList queryTemplates = query.Templates;
                 if (queryTemplates != null && queryTemplates.Count > 0)
                 {
@@ -2027,7 +2029,7 @@ namespace RTParser
             // check for timeout (to avoid infinite loops)
             if (request != null && DateTime.Now > request.TimesOutAt)
             {
-                request.Proccessor.writeToLog(
+                request.writeToLog(
                     "WARNING! Request timeout. User: {0} raw input: \"{1}\" processing template: \"{2}\"",
                     request.user.UserID, request.rawInput,
                     (query == null ? "-NOQUERY-" : query.Templates.Count.ToString()));

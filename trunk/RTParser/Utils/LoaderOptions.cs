@@ -1,8 +1,9 @@
 using System;
+using System.Collections.Generic;
 
 namespace RTParser.Utils
 {
-    public struct LoaderOptions
+    public class LoaderOptions
     {
         //public LoaderOptions prevoious;
         public readonly Request TheRequest;
@@ -17,7 +18,7 @@ namespace RTParser.Utils
             {
                 if (_specified_Graph != null) return _specified_Graph;
                 return TheRequest.Graph;
-            } 
+            }
             set
             {
                 TheRequest.Graph = value;
@@ -57,13 +58,14 @@ namespace RTParser.Utils
         {
             get
             {
-                return _currently_loadingfrom??TheRequest.LoadingFrom;
+                return _currently_loadingfrom ?? TheRequest.LoadingFrom;
             }
         }
 
 
         public static readonly string MISSING_FILE = "loadopts_MISSING_FILE";
         public RTPBot RProcessor;
+        public List<CategoryInfo> CategoryInfos = new List<CategoryInfo>();
 
         public LoaderOptions Value
         {
@@ -82,7 +84,7 @@ namespace RTParser.Utils
             recurse = false;
             _currently_loadingfrom = impl.LoadingFrom;
             _specified_Graph = master;
-            RProcessor = impl.Proccessor;
+            RProcessor = impl.TargetBot;           
         }
 
         /*public static LoaderOptions GetDefault(Request r)
@@ -93,7 +95,7 @@ namespace RTParser.Utils
         }*/
         //private LoaderOptions(Request request)
         //{
-          //  TheRequest = request;
+        //  TheRequest = request;
         //}
 
         public override string ToString()
@@ -134,8 +136,8 @@ namespace RTParser.Utils
             unchecked
             {
                 int result = (_curently_loading != null ? _curently_loading.GetHashCode() : 0);
-                result = (result*397) ^ recurse.GetHashCode();
-                result = (result*397) ^ (_specified_Graph != null ? _specified_Graph.GetHashCode() : 0);
+                result = (result * 397) ^ recurse.GetHashCode();
+                result = (result * 397) ^ (_specified_Graph != null ? _specified_Graph.GetHashCode() : 0);
                 return result;
             }
         }

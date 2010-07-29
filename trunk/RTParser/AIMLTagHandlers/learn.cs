@@ -62,7 +62,7 @@ namespace RTParser.AIMLTagHandlers
                             string s = templateNode.InnerXml;
                             if (s.Contains("<"))
                             {
-                                request.Loader.loadAIMLNode(templateNode, loaderOptions);
+                                request.Loader.loadAIMLNode(templateNode, loaderOptions, request);
                                 return s;
                             }
                             else if (path == "")

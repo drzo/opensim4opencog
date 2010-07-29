@@ -428,7 +428,7 @@ namespace RTParser.Utils
             // check for timeout
             if (DateTime.Now > request.TimesOutAt)
             {
-                request.Proccessor.writeToLog("TIMEOUT! User: " +
+                request.writeToLog("TIMEOUT! User: " +
                                               request.user.UserID + " raw input: \"" +
                                               request.rawInput + "\" in " + this);
                 request.IsTraced = true;

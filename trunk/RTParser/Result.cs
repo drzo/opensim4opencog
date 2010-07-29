@@ -295,7 +295,22 @@ namespace RTParser
         /// </summary>
         public List<Unifiable> InputSentences = new List<Unifiable>();
 
-        public SubQuery CurrentQuery;
+        public SubQuery _CurrentQuery;
+        public SubQuery CurrentQuery
+        {
+            get
+            {
+                if (_CurrentQuery != null) return _CurrentQuery;
+                Result r = ParentResult;
+                while (r != null)
+                {
+                    SubQuery r_CurrentQuery = r._CurrentQuery;
+                    if (r_CurrentQuery != null) return r_CurrentQuery;
+                    r = r.ParentResult;
+                }
+                return null;
+            }
+        }
         public Result ParentResult;
         public bool IsSailent
         {

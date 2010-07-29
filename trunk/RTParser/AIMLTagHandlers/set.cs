@@ -55,7 +55,7 @@ namespace RTParser.AIMLTagHandlers
                 if (newlyCreated) gUser.IsRoleAcct = true;
 
                 var thisRequestPredicates = this.request.Predicates;
-                if (GetAttribValue("type", null) == "bot") thisRequestPredicates = request.Proccessor.GlobalSettings;
+                if (GetAttribValue("type", null) == "bot") thisRequestPredicates = request.TargetBot.GlobalSettings;
                 if (!Unifiable.IsNull(name))
                 {
                     if (!templateNodeInnerText.IsEmpty)
