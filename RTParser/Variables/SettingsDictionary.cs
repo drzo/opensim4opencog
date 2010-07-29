@@ -619,9 +619,9 @@ namespace RTParser.Variables
                             overwriteExisting, onlyIfUnknown, request);
                 return;
             }
-            if (lower == "learn" || lower == "srai")
+            if (lower == "learn" || lower == "srai" || lower == "aiml" || lower == "that" || lower == "category" || lower == "topic")
             {
-                request.Loader.loadAIMLNode(myNode, request.LoadOptions);
+                request.Loader.loadAIMLNode(myNode, request.LoadOptions, request);
                 return;
             }
             if (myNode.NodeType == XmlNodeType.Element && atcount == 0)

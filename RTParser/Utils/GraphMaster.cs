@@ -286,7 +286,6 @@ namespace RTParser.Utils
             // keep count of the number of categories that have been processed
         }
 
-
         public override string ToString()
         {
             return "[Graph: " + graphName + ":" + Size + "]";
@@ -506,7 +505,7 @@ namespace RTParser.Utils
         private List<Result> DoParentEval(List<GraphMaster> totry, Request request, Unifiable unifiable)
         {
             List<Result> pl = new List<Result>();
-            RTPBot proc = request.Proccessor;
+            RTPBot proc = request.TargetBot;
             GraphMaster g = request.Graph;
             bool userTracing = request.IsTraced;
             foreach (var p in CopyOf(totry))

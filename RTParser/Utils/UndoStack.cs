@@ -123,7 +123,7 @@ namespace RTParser.Utils
             }
         }
 
-        public static void FindUndoAll(SubQuery query)
+        public static void FindUndoAll(object query)
         {
             var u = FindStackFor(query);
             if (u != null) u.UndoAll();

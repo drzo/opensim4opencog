@@ -4,6 +4,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Xml;
 using RTParser.AIMLTagHandlers;
+using RTParser.Variables;
 
 namespace RTParser.Utils
 {
@@ -140,7 +141,7 @@ namespace RTParser.Utils
                     if (attrib.Name.ToLower() == attribnym)
                     {
                         found = true;
-                        var r = ReduceStar(attrib.Value, sq);
+                        var r = ReduceStar(attrib.Value, sq, sq);
                         if (!Unifiable.IsNullOrEmpty(r)) return r;
                         if (Unifiable.IsNull(r)) continue;
                         u = r;
@@ -158,7 +159,7 @@ namespace RTParser.Utils
             {
                 if (attrib.Name.ToLower() == attribName)
                 {
-                    string reduceStar = "" + ReduceStar(attrib.Value, sq);
+                    string reduceStar = "" + ReduceStar(attrib.Value, sq, sq);
                     try
                     {
                         return double.Parse(reduceStar);
@@ -184,7 +185,7 @@ namespace RTParser.Utils
             return defaultIfEmpty();
         }
 
-        static public Unifiable ReduceStar(string name, SubQuery query)
+        static public Unifiable ReduceStar(string name, SubQuery query, ISettingsDictionary dict)
         {
             try
             {
@@ -193,30 +194,40 @@ namespace RTParser.Utils
                     int i = Int32.Parse(name.Substring(5));
                     name = GetDictData(query.InputStar, i);
                 }
-                if (name.StartsWith("that_"))
+                else if (name.StartsWith("that_"))
                 {
                     int i = Int32.Parse(name.Substring(5)) + 1;
                     name = GetDictData(query.ThatStar, i);
                 }
-                if (name.StartsWith("thatstar_"))
+                else if (name.StartsWith("thatstar_"))
                 {
                     int i = Int32.Parse(name.Substring(9)) + 1;
                     name = GetDictData(query.ThatStar, i);
                 }
-                if (name.StartsWith("topicstar_"))
+                else if (name.StartsWith("topicstar_"))
                 {
                     int i = Int32.Parse(name.Substring(10));
                     name = GetDictData(query.TopicStar, i);
                 }
-                if (name.StartsWith("topic_"))
+                else if (name.StartsWith("topic_"))
                 {
                     int i = Int32.Parse(name.Substring(6));
                     name = GetDictData(query.TopicStar, i);
                 }
-                if (name.StartsWith("guard_"))
+                else if (name.StartsWith("guard_"))
                 {
                     int i = Int32.Parse(name.Substring(6));
                     name = GetDictData(query.GuardStar, i);
+                }
+                else if (name.StartsWith("@"))
+                {
+                    Unifiable value = query.Request.TargetBot.SystemExecute(name, null, query.Request);
+                    if (!Unifiable.IsNullOrEmpty(value)) return value;
+                }
+                else if (name.StartsWith("%dictvar_"))
+                {
+                    Unifiable value = dict.grabSetting(name.Substring(8));
+                    if (!Unifiable.IsNullOrEmpty(value)) return value;
                 }
             }
             catch (Exception e)

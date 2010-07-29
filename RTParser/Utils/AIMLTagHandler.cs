@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Xml;
 using RTParser.AIMLTagHandlers;
+using RTParser.Variables;
 
 namespace RTParser.Utils
 {
@@ -29,7 +30,7 @@ namespace RTParser.Utils
         /// <returns></returns>
         public override Unifiable ProcessAimlChange()
         {
-            ThreadStart OnExit = EnterTag();
+            ThreadStart OnExit = EnterTag(request,templateNode,query);
             try
             {
                 return ProcessChange();
@@ -46,7 +47,7 @@ namespace RTParser.Utils
         /// </summary>
         public Unifiable CompleteAimlProcess()
         {
-            ThreadStart OnExit = EnterTag();
+            ThreadStart OnExit = EnterTag(request, templateNode, query);
             try
             {
                 return CheckValue(CompleteProcess());
@@ -58,9 +59,11 @@ namespace RTParser.Utils
         }
 
 
-        public ThreadStart EnterTag()
+        static public ThreadStart EnterTag(Request request, XmlNode templateNode, SubQuery query)
         {
             bool needsUnwind = false;
+            object thiz = (object)query ?? request;
+            ISettingsDictionary dict = query ?? request.TargetSettings;
             XmlAttributeCollection collection = templateNode.Attributes;
             if (collection!=null && collection.Count > 0)
             {
@@ -80,12 +83,19 @@ namespace RTParser.Utils
                                 string graphName = node.Value;
                                 if (graphName != null)
                                 {
+                                    GraphMaster innerGraph = request.TargetBot.GetGraph(graphName, oldGraph);
                                     needsUnwind = true;
-                                    GraphMaster g = Proc.GetGraph(graphName, oldGraph);
-                                    if (g != null) request.Graph = g;
+                                    if (innerGraph != null && innerGraph != oldGraph)
+                                    {
+                                        request.Graph = innerGraph;
+                                        request.writeToLog("ENTERING: " + graphName + " as " + innerGraph + " from " +
+                                                           oldGraph);
+                                    }
+                                    else
+                                    {
+                                        oldGraph = null; //?
+                                    }
                                 }
-
-
                             }
                             break;
                         case "topic":
@@ -118,9 +128,11 @@ namespace RTParser.Utils
                                 {
                                     continue;
                                 }
-                                Unifiable v = (Unifiable)ReduceStar(node.Value, query);
-                                savedValues = savedValues ?? query.GetFreshUndoStack();
-                                savedValues.pushValues(query, n, v);
+                                Unifiable v = (Unifiable)ReduceStar(node.Value, query, dict);
+                                UndoStack.FindUndoAll(thiz);
+                                savedValues = savedValues ?? UndoStack.GetStackFor(thiz);
+                                //savedValues = savedValues ?? query.GetFreshUndoStack();
+                                savedValues.pushValues(dict, n, v);
                                 needsUnwind = true;
                             }
                             break;
@@ -138,6 +150,7 @@ namespace RTParser.Utils
                                    }
                                    if (oldGraph != null)
                                    {
+                                       request.writeToLog("LEAVING: " + request.Graph + "  back to " + oldGraph);
                                        request.Graph = oldGraph;
                                    }
                                    else
@@ -151,7 +164,7 @@ namespace RTParser.Utils
                                    }
                                    if (!needsUnwind)
                                    {
-                                       writeToLog("ERROR Something went odd during unwind!");
+                                       request.writeToLog("ERROR Something went odd during unwind!");
                                    }
                                };
                 }

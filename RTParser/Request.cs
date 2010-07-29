@@ -34,12 +34,12 @@ namespace RTParser
         QueryList TopLevel { get; set; }
         SubQuery CurrentQuery { get; }
         bool hasTimedOut { get; set; }
-        RTPBot Proccessor { get; set; }
+        RTPBot TargetBot { get; set; }
         Unifiable rawInput { get; set; }
         IList<Result> UsedResults { get; set; }
         IList<TemplateInfo> UsedTemplates { get; }
         DateTime TimesOutAt { get; set; }
-        ISettingsDictionary Settings { get; set; }
+        ISettingsDictionary TargetSettings { get; set; }
         int MaxInputs { get; set; }
 
 
@@ -60,6 +60,7 @@ namespace RTParser
 
         AIMLbot.Request CreateSubRequest(Unifiable templateNodeInnerValue, User user, RTPBot rTPBot, AIMLbot.Request request);
         bool CanUseTemplate(TemplateInfo info, Result request);
+        void writeToLog(string message, params object[] args);
     }
 
     /// <summary>
@@ -98,7 +99,7 @@ namespace RTParser
         /// <summary>
         /// The Proccessor to which the request is being made
         /// </summary>
-        public RTPBot Proccessor { get; set; }
+        public RTPBot TargetBot { get; set; }
 
         /// <summary>
         /// The final result produced by this request
@@ -111,7 +112,7 @@ namespace RTParser
 
         private Result _result;
 
-        public ISettingsDictionary Settings { get; set; }
+        public ISettingsDictionary TargetSettings { get; set; }
 
         /// <summary>
         /// Flag to show that the request has timed out
@@ -165,15 +166,15 @@ namespace RTParser
             {
                 this.user = user;
                 if (user.CurrentRequest == null) user.CurrentRequest = this;
-                Settings = user.Predicates;
+                TargetSettings = user.Predicates;
             }
-            this.Proccessor = bot;
+            this.TargetBot = bot;
             this.StartedOn = DateTime.Now;
-            this.TimesOutAt = StartedOn.AddMilliseconds(Proccessor.TimeOut);
+            this.TimesOutAt = StartedOn.AddMilliseconds(TargetBot.TimeOut);
             this.framesAtStart = new StackTrace().FrameCount;
             if (parent != null)
             {
-                Settings = parent.Settings;
+                TargetSettings = parent.TargetSettings;
             }
         }
 
@@ -203,7 +204,7 @@ namespace RTParser
         {
             get
             {
-                if (_aimlloader == null) _aimlloader = new AIMLLoader(Proccessor, this);
+                if (_aimlloader == null) _aimlloader = new AIMLLoader(TargetBot, this);
                 return _aimlloader;
             }
         }
@@ -283,7 +284,7 @@ namespace RTParser
                 }
                 Unifiable prev = Topic;
                 user.TopicSetting = value;
-                if (value == Proccessor.NOTOPIC)
+                if (value == TargetBot.NOTOPIC)
                 {
                     if (_topic != null)
                     {
@@ -318,7 +319,7 @@ namespace RTParser
                 {
                     if (!tops.Contains(_topic)) tops.Insert(0, _topic);
                 }
-                if (tops.Count == 0) return new List<Unifiable>() { Proccessor.NOTOPIC };
+                if (tops.Count == 0) return new List<Unifiable>() { TargetBot.NOTOPIC };
                 return tops;
             }
         }
@@ -332,7 +333,7 @@ namespace RTParser
         {
             get
             {
-                if (Settings is SettingsDictionary) return (SettingsDictionary) Settings;
+                if (TargetSettings is SettingsDictionary) return (SettingsDictionary) TargetSettings;
                 return CurrentResult.Predicates;
             }
         }
@@ -368,7 +369,7 @@ namespace RTParser
             }
             else
             {
-                Proccessor.writeToLog(s, args);
+                TargetBot.writeToLog(s, args);
             }
         }
 
@@ -403,7 +404,7 @@ namespace RTParser
 
         public AIMLbot.Result CreateResult(Request parentReq)
         {
-            var r = new AIMLbot.Result(user, Proccessor, parentReq, parentReq.CurrentResult);
+            var r = new AIMLbot.Result(user, TargetBot, parentReq, parentReq.CurrentResult);
             CurrentResult = r;
             r.request = this;
             return (AIMLbot.Result)CurrentResult;
@@ -413,7 +414,7 @@ namespace RTParser
         {
             request = (AIMLbot.Request) (request ?? this);
             user = user ?? this.user;
-            rTPBot = rTPBot ?? this.Proccessor;
+            rTPBot = rTPBot ?? this.TargetBot;
             var subRequest = new AIMLbot.Request(templateNodeInnerValue, user, rTPBot, request);
             Result res = request.CurrentResult;
             subRequest.CurrentResult = res;
@@ -422,7 +423,7 @@ namespace RTParser
             subRequest.ParentRequest = request;
             subRequest.StartedOn = request.StartedOn;
             subRequest.TimesOutAt = request.TimesOutAt;
-            subRequest.Settings = request.Settings;
+            subRequest.TargetSettings = request.TargetSettings;
             return subRequest;
         }
 
@@ -439,6 +440,11 @@ namespace RTParser
                 result = result.ParentResult;
             }
             return true;
+        }
+
+        public void writeToLog(string message, params object[] args)
+        {
+            TargetBot.writeToLog(message, args);
         }
 
         public IList<Result> UsedResults { get; set; }

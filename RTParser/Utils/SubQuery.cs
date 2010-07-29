@@ -21,7 +21,7 @@ namespace RTParser.Utils
         public IEnumerable<string> SettingNames(int depth)
         {
             //get 
-            { return Request.Settings.SettingNames(depth); }
+            { return Request.TargetSettings.SettingNames(depth); }
         }
 
         #region Attributes
@@ -163,10 +163,12 @@ namespace RTParser.Utils
             get { return Request.Predicates.NameSpace; }
         }
 
+        public RTPBot RProcessor;
+
         public Unifiable grabSetting(string name)
         {
             string realName;
-            var v = SettingsDictionary.grabSettingDefualt(Request.Settings, name, out realName); 
+            var v = SettingsDictionary.grabSettingDefualt(Request.TargetSettings, name, out realName); 
             return v;
         }
 
@@ -242,7 +244,7 @@ namespace RTParser.Utils
                     request = subquery.Request ?? result.request;
                     result = result ?? request.CurrentResult;
                     user = result.user;
-                    bot = request.Proccessor;
+                    bot = request.TargetBot;
                 }
                 handler = bot.GetTagHandler(user, subquery, request, result, node, null);
                 TagHandlers[str] = handler;

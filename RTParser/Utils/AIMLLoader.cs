@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Net;
 using System.IO;
+using System.Threading;
 using System.Xml;
 using System.Xml.Schema;
 using System.Text;
@@ -28,7 +29,7 @@ namespace RTParser.Utils
         {
             get
             {
-                return LoaderRequest00.Proccessor;
+                return LoaderRequest00.TargetBot;
             }
         }
 
@@ -50,7 +51,7 @@ namespace RTParser.Utils
             this.LoaderRequest00 = request;
             testCaseRunner = new TestCaseRunner(this);
             XmlNodeEvaluators.Add(testCaseRunner);
-            XmlNodeEvaluators.Add(this);
+            //XmlNodeEvaluators.Add(this);
         }
 
         #region Methods
@@ -349,7 +350,7 @@ namespace RTParser.Utils
                         RProcessor.writeToLog("ERROR: No Document at " + namefile);
                         //        continue;
                     }
-                    this.loadAIMLNode(doc.DocumentElement, loadOpts);
+                    this.loadAIMLNode(doc.DocumentElement, loadOpts, request);
                 }
                 catch (Exception e2)
                 {
@@ -418,7 +419,7 @@ namespace RTParser.Utils
                         RProcessor.writeToLog("ERROR: No Document at " + namefile);
                         //        continue;
                     }
-                    this.loadAIMLNode(doc.DocumentElement, loadOpts);
+                    this.loadAIMLNode(doc.DocumentElement, loadOpts, request);
                 }
                 catch (Exception e2)
                 {
@@ -465,83 +466,85 @@ namespace RTParser.Utils
             return loadOpts;
         }
 
-        public void loadAIMLNode(XmlNode currentNode, LoaderOptions loadOpts)
+        public void InsideLoaderContext(XmlNode currentNode, Request request, SubQuery query, ThreadStart doit)
         {
-            RTPBot RProcessor = loadOpts.RProcessor;
-            Request request = loadOpts.TheRequest;
-            string path = request.Filename;
-            loadOpts = EnsureOptions(loadOpts, request, path);
-            path = ResolveToURI(path, loadOpts);
-
+            query = query ?? request.CurrentQuery;
+            //Result result = query.Result;
+            RTPBot RProcessor = request.TargetBot;
             var prev = RProcessor.Loader;
-
             try
             {
                 RProcessor.Loader = this;
-                if (currentNode.NodeType == XmlNodeType.Comment) return;
+                // Get a list of the nodes that are children of the <aiml> tag
+                // these nodes should only be either <topic> or <category>
+                // the <topic> nodes will contain more <category> nodes
+                string currentNodeName = currentNode.Name.ToLower();
+
+                ThreadStart ts = AIMLTagHandler.EnterTag(request, currentNode, query);
+                try
+                {
+                    doit();
+                }
+                finally
+                {
+                    ts();
+                }
+            }
+            finally
+            {
+                RProcessor.Loader = prev;
+            }
+        }
+
+
+        public List<CategoryInfo> loadAIMLNodes(IEnumerable nodes, LoaderOptions loadOpts, Request request)
+        {
+            if (nodes!=null)
+            {
+                foreach (var node in nodes)
+                {
+                    loadAIMLNode((XmlNode) node, loadOpts, request);
+                }
+            }
+            return loadOpts.CategoryInfos;
+        }
+
+        public List<CategoryInfo> loadAIMLNode(XmlNode currentNode, LoaderOptions loadOpts, Request request)
+        {
+            List<CategoryInfo> CIs = loadOpts.CategoryInfos;
+            RTPBot RProcessor = loadOpts.RProcessor;
+            var prev = RProcessor.Loader;
+            try
+            {
+                RProcessor.Loader = this;
                 // Get a list of the nodes that are children of the <aiml> tag
                 // these nodes should only be either <topic> or <category>
                 // the <topic> nodes will contain more <category> nodes
                 string currentNodeName = currentNode.Name.ToLower();
                 if (currentNodeName == "aiml")
                 {
-                    IntoGraph(request, currentNode, loadOpts);
-                    return;
-                }
-                if (currentNodeName == "root")
-                {
-                    var prevDict = request.Settings;
-
-                    // process each of these child "settings"? nodes
-                    try
-                    {
-                        IntoGraph(request, currentNode, loadOpts);
-                    }
-                    finally
-                    {
-                        request.Settings = prevDict;
-                    }
-                }
-                if (currentNodeName == "substitutions")
-                {
-                    var prevDict = request.Settings;
-
-                    // process each of these child "settings"? nodes
-                    try
-                    {
-
-                        request.Settings = request.Proccessor.InputSubstitutions;
-
-                        IntoGraph(request, currentNode, loadOpts);
-                    }
-                    finally
-                    {
-                        request.Settings = prevDict;
-                    }
-                }
-                if (currentNodeName == "item")
-                {
-                    SettingsDictionary.loadSettingNode(request.Settings, currentNode, true, false, request);
+                    InsideLoaderContext(currentNode, request, request.CurrentQuery,
+                                        () =>
+                                        CIs.AddRange(loadAIMLNodes(currentNode.ChildNodes, loadOpts, request)));
+                    return CIs;
                 }
                 if (currentNodeName == "topic")
                 {
                     this.processTopic(currentNode, currentNode.ParentNode, loadOpts);
+                    return CIs;
                 }
                 else if (currentNodeName == "category")
                 {
                     this.processCategory(currentNode, currentNode.ParentNode, loadOpts);
+                    return CIs;
                 }
-                else if (currentNodeName == "meta")
+                else if (currentNodeName == "that")
                 {
-                    writeToLog("UNUSED: " + currentNode.OuterXml);
-                }
-                else if (currentNodeName == "#comment")
-                {
-                    writeToLog("UNUSED: " + currentNode.OuterXml);
-                }
-                else if (currentNodeName == "srai")
-                {
-                    EvalNode(currentNode, request, loadOpts);
+                    InsideLoaderContext(currentNode, request, request.CurrentQuery,
+                                        () =>
+                                        loadAIMLNodes(currentNode.ChildNodes, loadOpts, request));
+                    return CIs;
+                    return CIs;
                 }
                 else if (currentNodeName == "genlmt")
                 {
@@ -551,86 +554,75 @@ namespace RTParser.Utils
                     {
                         name = currentNode.InnerText.Trim();
                     }
-                    GraphMaster FROM = request.Proccessor.GetGraph(from, loadOpts.CtxGraph);
-                    GraphMaster TO = request.Proccessor.GetGraph(name, loadOpts.CtxGraph);
+                    GraphMaster FROM = request.TargetBot.GetGraph(from, loadOpts.CtxGraph);
+                    GraphMaster TO = request.TargetBot.GetGraph(name, loadOpts.CtxGraph);
                     FROM.AddGenlMT(TO);
                     writeToLog("GENLMT: " + FROM + " => " + name + " => " + TO);
+                    return CIs;
                 }
-                else
+                else if (currentNodeName == "meta")
                 {
-                    writeToLog("ImmediateAiml:: " + currentNode.OuterXml);
-                    EvalNode(currentNode, request, loadOpts);
+                    writeToLog("UNUSED: " + currentNode.OuterXml);
+                }
+                else if (currentNodeName == "#comment")
+                {
+                    writeToLog("UNUSED: " + currentNode.OuterXml);
+                }
+                else 
+                {
+                    EvalNode(currentNode, request, loadOpts);                   
                 }
             }
             finally
             {
                 RProcessor.Loader = prev;
             }
-        }
-
-        private void IntoGraph(Request request, XmlNode currentNode, LoaderOptions loadOpts)
-        {
-
-            RTPBot RProcessor = loadOpts.RProcessor;
-            string path = request.Filename;
-            loadOpts = EnsureOptions(loadOpts, request, path);
-            path = ResolveToURI(path, loadOpts);
-
-
-            string graphname = RTPBot.GetAttribValue(currentNode, "graph", null);
-            GraphMaster outerGraph = request.Graph;
-            GraphMaster innerGraph = outerGraph;
-            try
-            {
-                if (graphname != null)
-                {
-                    innerGraph = RProcessor.GetGraph(graphname, outerGraph);
-                    if (innerGraph != null)
-                    {
-                        if (innerGraph != outerGraph)
-                        {
-                            request.Graph = innerGraph;
-                            loadOpts.CtxGraph = innerGraph;
-                            writeToLog("ENTERING: " + graphname + " as " + innerGraph + " from " + outerGraph);
-                        }
-                    }
-                    else
-                    {
-                        innerGraph = outerGraph;
-                    }
-                }
-                bool prev = innerGraph.IsBusy;
-                innerGraph.IsBusy = true;
-                try
-                {
-                    // process each of these child nodes
-                    foreach (XmlNode child in currentNode.ChildNodes)
-                    {
-                        loadAIMLNode(child, loadOpts);
-
-                    }
-                }
-                finally
-                {
-
-                    innerGraph.IsBusy = prev;
-                }
-                return;
-            }
-            finally
-            {
-                if (innerGraph != outerGraph)
-                {
-                    writeToLog("LEAVING: " + graphname + " as " + innerGraph + " back to " + outerGraph);
-                    request.Graph = outerGraph;
-                    loadOpts.CtxGraph = outerGraph;
-                }
-            }
-            return;
+            return CIs;
         }
 
         private void EvalNode(XmlNode currentNode, Request request, LoaderOptions loadOpts)
         {
+            string currentNodeName = currentNode.Name.ToLower();
+            if (currentNodeName == "root")
+            {
+                // process each of these child "settings"? nodes
+                var prevDict = request.TargetSettings;
+                try
+                {
+                    SettingsDictionary.loadSettingNode(request.TargetSettings, currentNode, true, false, request);
+                }
+                finally
+                {
+                    request.TargetSettings = prevDict;
+                }
+                return;
+            }
+            if (currentNodeName == "substitutions")
+            {
+                var prevDict = request.TargetSettings;
+                // process each of these child "settings"? nodes
+                try
+                {
+                    request.TargetSettings = request.TargetBot.InputSubstitutions;
+                    SettingsDictionary.loadSettingNode(request.TargetSettings, currentNode, true, false, request);
+                }
+                finally
+                {
+                    request.TargetSettings = prevDict;
+                }
+                return;
+            }
+            if (currentNodeName == "item")
+            {
+                SettingsDictionary.loadSettingNode(request.TargetSettings, currentNode, true, false, request);
+                return;
+            }
+            if (currentNodeName == "bot")
+            {
+                SettingsDictionary.loadSettingNode(request.TargetBot.Settings, currentNode, true, false, request);
+                return;
+            }
+            writeToLog("ImmediateAiml:: " + currentNode.OuterXml);
             /*
                <TestCase name="connect">
                     <Input>CONNECT</Input>
@@ -688,7 +680,7 @@ namespace RTParser.Utils
 
         private AIMLbot.Result ImmediateAiml(XmlNode node, Request request, AIMLLoader loader, object o)
         {
-            RTPBot RProcessor = request.Proccessor;
+            RTPBot RProcessor = request.TargetBot;
             return RProcessor.ImmediateAiml(node, request, this, null);
         }
 
@@ -721,7 +713,7 @@ namespace RTParser.Utils
         /// </summary>
         /// <param name="topicNode">the "topic" node</param>
         /// <param name="path">the file from which this topicNode is taken</param>
-        public void processTopic(XmlNode topicNode, XmlNode outerNode, LoaderOptions path)
+        public List<CategoryInfo> processTopic(XmlNode topicNode, XmlNode outerNode, LoaderOptions path)
         {
             // find the name of the topic or set to default "*"
             Unifiable topicName = RTPBot.GetAttribValue(topicNode, "name", Unifiable.STAR);
@@ -733,16 +725,44 @@ namespace RTParser.Utils
                     processCategoryWithTopic(cateNode, topicName, topicNode, path);
                 }
             }
+            return path.CategoryInfos;
         }
 
+        /// <summary>
+        /// Given a "topic" topicNode, processes all the categories for the topic and adds them to the 
+        /// graphmaster "brain"
+        /// </summary>
+        /// <param name="topicNode">the "topic" node</param>
+        /// <param name="path">the file from which this topicNode is taken</param>
+        public List<CategoryInfo> processOuterThat(XmlNode thatNode, XmlNode outerNode, LoaderOptions path)
+        {
+            List<CategoryInfo> CIS = path.CategoryInfos;
+            List<CategoryInfo> newCats = path.CategoryInfos = new List<CategoryInfo>();
+            // find the name of the topic or set to default "*"
+            Unifiable thatPattten = RTPBot.GetAttribValue(thatNode, "pattern,value,name", Unifiable.STAR);
+            // process all the category nodes
+            ThatInfo newThatInfo = new ThatInfo(thatNode, thatPattten);
+            foreach (XmlNode cateNode in thatNode.ChildNodes)
+            {
+                // getting stacked up inside
+                loadAIMLNode(cateNode, path, path.TheRequest);
+            }
+            foreach (var ci0 in newCats)
+            {
+                ci0.AddPrecondition(newThatInfo);
+            }
+
+            CIS.AddRange(newCats);
+            return path.CategoryInfos = CIS;
+        }
         /// <summary>
         /// Adds a category to the graphmaster structure using the default topic ("*")
         /// </summary>
         /// <param name="cateNode">the XML node containing the category</param>
         /// <param name="path">the file from which this category was taken</param>
-        public void processCategory(XmlNode cateNode, XmlNode outerNode, LoaderOptions path)
+        public List<CategoryInfo> processCategory(XmlNode cateNode, XmlNode outerNode, LoaderOptions path)
         {
-            this.processCategoryWithTopic(cateNode, Unifiable.STAR, outerNode, path);
+            return processCategoryWithTopic(cateNode, Unifiable.STAR, outerNode, path);
         }
 
         /// <summary>
@@ -751,8 +771,9 @@ namespace RTParser.Utils
         /// <param name="cateNode">the XML node containing the category</param>
         /// <param name="topicName">the topic to be used</param>
         /// <param name="path">the file from which this category was taken</param>
-        private void processCategoryWithTopic(XmlNode cateNode, Unifiable topicName, XmlNode outerNode, LoaderOptions path)
+        private List<CategoryInfo> processCategoryWithTopic(XmlNode cateNode, Unifiable topicName, XmlNode outerNode, LoaderOptions path)
         {
+            List<CategoryInfo> CIs = path.CategoryInfos;
             // reference and check the required nodes
             List<XmlNode> patterns = FindNodes("pattern", cateNode);
             List<XmlNode> templates = FindNodes("template", cateNode);
@@ -768,12 +789,13 @@ namespace RTParser.Utils
                     {
                         throw new XmlException("Missing template tag in the cateNode with pattern: " + pattern.InnerText + " found in " + path);
                     }
-                    addCatNode(cateNode, pattern, path, template, topicName, outerNode);
+                    CIs.Add(addCatNode(cateNode, pattern, path, template, topicName, outerNode));                   
                 }
             }
+            return CIs;
         }
 
-        private void addCatNode(XmlNode cateNode, XmlNode patternNode, LoaderOptions path, XmlNode templateNode,
+        private CategoryInfo addCatNode(XmlNode cateNode, XmlNode patternNode, LoaderOptions path, XmlNode templateNode,
             Unifiable topicName, XmlNode outerNode)
         {
             XmlNode guardnode = FindNode("guard", cateNode, null);
@@ -811,8 +833,12 @@ namespace RTParser.Utils
                 try
                 {
                     CategoryInfo categoryInfo = CategoryInfo.GetCategoryInfo(patternInfo, cateNode, path);
-                    path.CtxGraph.addCategoryTag(categoryPath, patternInfo, categoryInfo,
+                    categoryInfo.SetCategoryTag(categoryPath, patternInfo, categoryInfo,
                                                   outerNode, templateNode, guard, thatInfo);
+                    GraphMaster pathCtxGraph = path.CtxGraph;
+                    pathCtxGraph.addCategoryTag(categoryPath, patternInfo, categoryInfo,
+                                                outerNode, templateNode, guard, thatInfo);
+                    return categoryInfo;
                 }
                 catch (Exception e)
                 {
@@ -820,24 +846,26 @@ namespace RTParser.Utils
                                categoryPath + " and templateNode = " + templateNode.OuterXml +
                                " produced by a category in the file: " + path + "\n";
                     writeToLog(s + e + "\n" + s);
+                    return null;
                 }
             }
             else
             {
                 writeToLog("ERROR WARNING! Attempted to load a new category with an empty patternNode where the path = " + categoryPath + " and templateNode = " + templateNode.OuterXml + " produced by a category in the file: " + path);
+                return null;
             }
         }
 
         public override string ToString()
         {
-            return "[AIMLLoader req='" + LoaderRequest00 + "' bot='" + LoaderRequest00.Proccessor.BotID + "']";
+            return "[AIMLLoader req='" + LoaderRequest00 + "' bot='" + LoaderRequest00.TargetBot.BotID + "']";
             return base.ToString();
         }
 
         public void writeToLog(string message, params object[] args)
         {
             string prefix = ToString();
-            LoaderRequest00.Proccessor.writeToLog("LOADERTRACE: " + message + " while " + prefix, args);
+            LoaderRequest00.writeToLog("LOADERTRACE: " + message + " while " + prefix, args);
             try
             {
                 message = message.ToUpper();
@@ -1011,7 +1039,7 @@ namespace RTParser.Utils
         /// <returns>The appropriately processed path</returns>
         public Unifiable generateCPath(Unifiable pattern, Unifiable that, Unifiable flag, Unifiable topicName, bool isUserInput)
         {
-            var RProcessor = LoaderRequest00.Proccessor;
+            var RProcessor = LoaderRequest00.TargetBot;
 
             // to hold the normalized path to be entered into the graphmaster
             Unifiable normalizedPath = Unifiable.CreateAppendable();
@@ -1181,7 +1209,6 @@ namespace RTParser.Utils
         /// <returns>The normalized Unifiable</returns>
         public Unifiable Normalize(string input, bool isUserInput)
         {
-            RTPBot RProcessor = LoaderRequest00.Proccessor;
             string input0 = input;
             if (Unifiable.IsNullOrEmpty(input)) return Unifiable.Empty;
             input = CleanWhitepaces(input);
@@ -1698,7 +1725,7 @@ namespace RTParser.Utils
         {
             request = request ?? Loader.LoaderRequest00;
             User user = request.user;
-            var robot = request.Proccessor ?? Loader.RProcessorOld;
+            var robot = request.TargetBot ?? Loader.RProcessorOld;
 
             string tcname =FindNodeOrAttrib(src, "name", null);
             string tcdesc = FindNodeOrAttrib(src, "Description", null);

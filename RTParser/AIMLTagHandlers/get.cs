@@ -64,7 +64,7 @@ namespace RTParser.AIMLTagHandlers
                 string name = GetAttribValue(templateNode, "name,var", () => templateNodeInnerText, query);
                 Unifiable defaultVal = GetAttribValue("default", Unifiable.Empty);
                 ISettingsDictionary dict = query;
-                if (GetAttribValue("type", "") == "bot") dict = request.Proccessor.GlobalSettings;
+                if (GetAttribValue("type", "") == "bot") dict = request.TargetBot.GlobalSettings;
                 string realName;
                 Unifiable resultGet = SettingsDictionary.grabSettingDefualt(dict, name, out realName);
  

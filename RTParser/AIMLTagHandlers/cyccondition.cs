@@ -152,7 +152,7 @@ namespace RTParser.AIMLTagHandlers
                                     if (childLINode.Attributes[0].Name.ToLower() == "value")
                                     {
                                         ISettingsDictionary dict = query;
-                                        if (GetAttribValue("type", "") == "bot") dict = request.Proccessor.GlobalSettings;
+                                        if (GetAttribValue("type", "") == "bot") dict = request.TargetBot.GlobalSettings;
                                         string realName;
                                         Unifiable actualValue = SettingsDictionary.grabSettingDefualt(dict, name, out realName);
                                         Unifiable value = GetAttribValue(childLINode, "value", EmptyFunct, query);
@@ -187,7 +187,7 @@ namespace RTParser.AIMLTagHandlers
                                 if ((name.Length > 0) & (!value.IsEmpty))
                                 {
                                     ISettingsDictionary dict = query;
-                                    if (GetAttribValue("type", "") == "bot") dict = request.Proccessor.GlobalSettings;
+                                    if (GetAttribValue("type", "") == "bot") dict = request.TargetBot.GlobalSettings;
                                     string realName;
                                     Unifiable actualValue = SettingsDictionary.grabSettingDefualt(dict, name,
                                                                                                   out realName);

@@ -5,12 +5,19 @@ using System.Text;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Virtualization;
 using RTParser.Utils;
+using RTParser.Variables;
 
 namespace RTParser
 {
     public partial class RTPBot
     {
         public static string UNKNOWN_PARTNER = "UNKNOWN_PARTNER";
+
+        public SettingsDictionary Settings
+        {
+            get { return BotAsUser.Predicates; }
+            set { BotAsUser.Predicates = value; }
+        }
 
         public bool BotUserDirective(User myUser, string input, OutputDelegate console)
         {

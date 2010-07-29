@@ -122,7 +122,7 @@ namespace RTParser.AIMLTagHandlers
 
                 ISettingsDictionary dict = query;
                 if (GetAttribValue("type", "") == "bot" || GetAttribValue("bot", "").ToLower() == "true")
-                    dict = request.Proccessor.GlobalSettings;
+                    dict = request.TargetBot.GlobalSettings;
 
                 bool yesInherit = true;
                 bool noLocal = false;
