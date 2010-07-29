@@ -496,6 +496,7 @@ namespace RTParser
         //public string lastDefState;
 
         public Stack<string> conversationStack = new Stack<string>();
+        public Hashtable wordAttributeHash = new Hashtable();
 
         /// <summary>
         /// If set to false the input from AIML files will undergo the same normalization process that
@@ -2321,6 +2322,16 @@ namespace RTParser
                         break;
                     case "peekstack":
                         tagHandler = new AIMLTagHandlers.peekstack(this, user, query, request, result, node);
+                        break;
+
+                    case "lex":
+                        tagHandler = new AIMLTagHandlers.lex(this, user, query, request, result, node);
+                        break;
+                    case "lexset":
+                        tagHandler = new AIMLTagHandlers.lexset(this, user, query, request, result, node);
+                        break;
+                    case "lexis":
+                        tagHandler = new AIMLTagHandlers.lexis(this, user, query, request, result, node);
                         break;
 
 
