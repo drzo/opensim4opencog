@@ -1326,13 +1326,19 @@ namespace RTParser.Utils
             Func<char, char, bool> ifBefore, Func<char, char, bool> ifAfter)
         {
             if (xml2 == null) return xml2;
-            const long maxCleanSize = 2 << 16;
+            const long maxCleanSize = 2 << 14;
             int inlen = xml2.Length;
             if (inlen > maxCleanSize)
             {
                 return xml2;
             }
 
+            bool padWildCards = true;
+
+            padWildCards = xml2.IndexOfAny("\\:/".ToCharArray(), 0) == -1;
+
+            if (!padWildCards) padchars = null;
+            
             String s = "";
 
             bool chgd = false;
