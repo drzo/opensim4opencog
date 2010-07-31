@@ -12,6 +12,8 @@ namespace RTParser.Utils
         {
             srcNode = template;
 
+            if (XmlDocumentLineInfo.SkipXmlns && this.srcNode.Attributes != null) this.srcNode.Attributes.RemoveNamedItem("xmlns");
+
             if (NoInfo)
             {
                 throw new InvalidOperationException("now Inof");
@@ -20,12 +22,14 @@ namespace RTParser.Utils
         }
         public override string ToString()
         {
+            if (XmlDocumentLineInfo.SkipXmlns && this.srcNode.Attributes != null) this.srcNode.Attributes.RemoveNamedItem("xmlns");
             return srcNode.OuterXml + " " + AIMLLoader.LocationEscapedInfo(srcNode);
         }
         public string InnerXml
         {
             get
             {
+                if (XmlDocumentLineInfo.SkipXmlns && this.srcNode.Attributes != null) this.srcNode.Attributes.RemoveNamedItem("xmlns"); 
                 return srcNode.InnerXml;
             }
         }
@@ -34,6 +38,7 @@ namespace RTParser.Utils
         {
             get
             {
+                if (XmlDocumentLineInfo.SkipXmlns && this.srcNode.Attributes != null) this.srcNode.Attributes.RemoveNamedItem("xmlns");
                 return srcNode.OuterXml;
             }
         }

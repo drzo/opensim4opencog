@@ -69,8 +69,10 @@ namespace RTParser.Utils
             {
                 // graphmaster
                 GraphMaster oldGraph = request.Graph;
+                GraphMaster newGraph = null;
                 // topic
                 Unifiable oldTopic = request.Topic;
+                Unifiable newTopic = null;
 
                 UndoStack savedValues = null;
 
@@ -88,6 +90,7 @@ namespace RTParser.Utils
                                     if (innerGraph != null && innerGraph != oldGraph)
                                     {
                                         request.Graph = innerGraph;
+                                        newGraph = innerGraph;
                                         request.writeToLog("ENTERING: " + graphName + " as " + innerGraph + " from " +
                                                            oldGraph);
                                     }
@@ -100,11 +103,11 @@ namespace RTParser.Utils
                             break;
                         case "topic":
                             {
-                                string tempTopic = node.Value;
-                                if (tempTopic != null)
+                                newTopic = node.Value;
+                                if (newTopic != null)
                                 {
                                     needsUnwind = true;
-                                    request.Topic = tempTopic;
+                                    request.Topic = newTopic;
                                 }
 
                             }
@@ -144,27 +147,45 @@ namespace RTParser.Utils
                 {
                     return () =>
                                {
-                                   if (savedValues != null)
+                                   try
                                    {
-                                       savedValues.UndoAll();
+
+                                       if (savedValues != null)
+                                       {
+                                           savedValues.UndoAll();
+                                       }
+                                       if (newGraph != null)
+                                       {
+                                           var cg = request.Graph;
+                                           if (cg==newGraph)
+                                           {
+                                               request.writeToLog("LEAVING: " + request.Graph + "  back to " + oldGraph);
+                                               request.Graph = oldGraph;                                               
+                                           } else
+                                           {
+                                               request.writeToLog("WARNING: UNWIND GRAPH UNEXPECTED " + cg +
+                                                                  " EXPECTED TO CHAGNE "
+                                                                  + newGraph + " to " + oldGraph);
+                                           }
+                                       }
+                                       if (newTopic != null)
+                                       {
+                                           var ct = request.Topic;
+                                           if (newTopic == ct)
+                                           {
+                                               request.Topic = oldTopic;
+                                           }
+                                           else
+                                           {
+                                               request.writeToLog("WARNING: UNWIND TOPIC UNEXPECTED " + ct +
+                                                                  " EXPECTED TO CHAGNE "
+                                                                  + newTopic + " to " + oldTopic);                                             
+                                           }
+                                       }
                                    }
-                                   if (oldGraph != null)
+                                   catch (Exception ex)
                                    {
-                                       request.writeToLog("LEAVING: " + request.Graph + "  back to " + oldGraph);
-                                       request.Graph = oldGraph;
-                                   }
-                                   else
-                                   {
-                                       needsUnwind = false;
-                                   }
-                                   if (oldTopic != null) request.Topic = oldTopic;
-                                   else
-                                   {
-                                       needsUnwind = false;
-                                   }
-                                   if (!needsUnwind)
-                                   {
-                                       request.writeToLog("ERROR Something went odd during unwind!");
+                                       request.writeToLog("ERROR " + ex);
                                    }
                                };
                 }
@@ -462,6 +483,7 @@ namespace RTParser.Utils
                     new XmlDocumentLineInfo(named, true);
                 doc.Load(sr);
                 var de = doc.DocumentElement;
+                //doc.IsReadOnly = false;
                 if (doc.ChildNodes.Count == 0)
                 {
                     RTPBot.writeDebugLine("NULL outerXML=" + outerXML);
@@ -539,7 +561,8 @@ namespace RTParser.Utils
             else
             {
                 string resultNodeInnerXML = tagHandler.Transform();
-                XmlNode resultNode = AIMLTagHandler.getNode("<node>" + resultNodeInnerXML + "</node>", templateNode);
+                LineInfoElement resultNode = AIMLTagHandler.getNode("<node>" + resultNodeInnerXML + "</node>", templateNode);
+                resultNode.ReadOnly = false;
                 if (resultNode.HasChildNodes)
                 {
                     var recursiveResult = Unifiable.CreateAppendable();

@@ -73,26 +73,27 @@ namespace RTParser
 
         static string InnerXmlText0(XmlNode templateNode)
         {
+            if (templateNode == null) return "-NULLXML-";
             switch (templateNode.NodeType)
             {
                 case XmlNodeType.None:
                     break;
                 case XmlNodeType.Element:
-                    if (templateNode.InnerText != templateNode.InnerXml)
+                    if (false && templateNode.InnerText != templateNode.InnerXml)
                     {
-                        return templateNode.InnerXml;
+                        string ss = "";
+                        foreach (XmlNode childNode in templateNode.ChildNodes)
+                        {
+                            ss = ss + " " + Unifiable.InnerXmlText(childNode);
+                        }
+                      //  return ss;
                     }
                     return templateNode.InnerXml;
                     break;
                 case XmlNodeType.Attribute:
                     break;
                 case XmlNodeType.Text:
-                    writeToLog("XML INNER TEXT " + templateNode.OuterXml);
                     if (templateNode.InnerXml.Length > 0)
-                    {
-                        return templateNode.InnerText + templateNode.InnerXml;
-                    }
-                    if (templateNode.InnerText.Length > 0)
                     {
                         return templateNode.InnerText + templateNode.InnerXml;
                     }
@@ -103,6 +104,14 @@ namespace RTParser
                 case XmlNodeType.EntityReference:
                     break;
                 case XmlNodeType.Entity:
+                    {
+                        string ss = "";
+                        foreach (XmlNode childNode in templateNode.ChildNodes)
+                        {
+                            ss = ss + " " + Unifiable.InnerXmlText(childNode);
+                        }
+                        return ss;
+                    }
                     break;
                 case XmlNodeType.ProcessingInstruction:
                     break;

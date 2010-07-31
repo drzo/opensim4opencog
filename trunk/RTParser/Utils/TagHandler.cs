@@ -44,6 +44,7 @@ namespace RTParser.Utils
         /// <returns>The instantiated class</returns>
         public AIMLTagHandler Instantiate(Dictionary<string, Assembly> Assemblies, User user, SubQuery query, Request request, Result result, XmlNode node, RTPBot bot)
         {
+            lock (Assemblies)
             if (Assemblies.ContainsKey(this.AssemblyName))
             {
                 if (type!=null)

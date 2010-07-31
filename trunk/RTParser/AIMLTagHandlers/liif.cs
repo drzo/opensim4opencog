@@ -216,7 +216,7 @@ namespace RTParser.AIMLTagHandlers
                 }
 
             }
-            return Unifiable.Empty;
+            return Succeed();
         }
 
         public void UnknownCondition()

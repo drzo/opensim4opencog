@@ -116,7 +116,7 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "condition")
+            if (CheckNode("condition"))
             {
                 // heuristically work out the type of condition being processed
                 int tncount = AttributesCount(templateNode, "name,value");
@@ -138,29 +138,33 @@ namespace RTParser.AIMLTagHandlers
                 }
                 else if (tncount == 1) // single predicate
                 {
-                    if (this.templateNode.Attributes[0].Name == "name")
+                    if (AttributesCount(templateNode, "name") == 1)
                     {
                         string name = GetAttribValue("name", String.Empty);
 
                         foreach (XmlNode childLINode in this.templateNode.ChildNodes)
                         {
+                            base.DebugCheck(5);
                             int cac = AttributesCount(childLINode, "name,value");
                             if (childLINode.Name.ToLower() == "li")
                             {
                                 if (cac == 1)
                                 {
-                                    if (childLINode.Attributes[0].Name.ToLower() == "value")
+                                    if (AttributesCount(childLINode, "value") == 1)
                                     {
                                         ISettingsDictionary dict = query;
-                                        if (GetAttribValue("type", "") == "bot") dict = request.TargetBot.GlobalSettings;
+                                        if (GetAttribValue("type", "") == "bot")
+                                            dict = request.TargetBot.GlobalSettings;
                                         string realName;
-                                        Unifiable actualValue = SettingsDictionary.grabSettingDefualt(dict, name, out realName);
+                                        Unifiable actualValue = SettingsDictionary.grabSettingDefualt(dict, name,
+                                                                                                      out realName);
                                         Unifiable value = GetAttribValue(childLINode, "value", EmptyFunct, query);
                                         if (IsPredMatch(value, actualValue, query))
                                         {
                                             Succeed();
                                             return Unifiable.InnerXmlText(childLINode);
                                         }
+                                        continue;
                                     }
                                 }
                                 else if (cac == 0)
@@ -168,6 +172,7 @@ namespace RTParser.AIMLTagHandlers
                                     Succeed();
                                     return Unifiable.InnerXmlText(childLINode);
                                 }
+                                UnknownCondition();
                             }
                         }
                     }
@@ -221,7 +226,7 @@ namespace RTParser.AIMLTagHandlers
 
         public void UnknownCondition()
         {
-            writeToLog("Unknown conditions " + LineNumberTextInfo());
+            writeToLogWarn("ERROR Unknown conditions " + LineNumberTextInfo());
         }
     }
 }

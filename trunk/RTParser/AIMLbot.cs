@@ -30,7 +30,7 @@ namespace AIMLbot
             : this(rawInput, user, bot, null)
         {
         }
-        public Request(String rawInput, RTParser.User user, RTPBot bot, Request r)
+        public Request(String rawInput, RTParser.User user, RTPBot bot, RTParser.Request r)
             : base(rawInput, user, bot, r)
         {
         }

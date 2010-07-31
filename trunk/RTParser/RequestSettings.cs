@@ -43,10 +43,10 @@ namespace RTParser
 
         #endregion
     }
-    
+
     abstract public class QuerySettings : QuerySettingsSettable
     {
-        
+
         public static int UNLIMITED = 999;
         public static QuerySettings AIMLDefaults = new QuerySettingsImpl(null)
         {
@@ -74,7 +74,7 @@ namespace RTParser
             ProcessMultiplePatterns = true, // needed to find verbal outputs
             MaxTemplates = UNLIMITED,
             SraiDepth = new SettingMinMaxCurrent<int>()
-                            {                               
+                            {
                                 Current = 0,
                                 Min = 0,
                                 Max = UNLIMITED,
@@ -109,13 +109,13 @@ namespace RTParser
             w.MaxOutputs = r.MaxOutputs;
             w.MinTemplates = r.MinTemplates;
             w.MinPatterns = r.MinPatterns;
-            w.MinOutputs = r.MinOutputs;            
+            w.MinOutputs = r.MinOutputs;
             w.ProcessMultipleTemplates = r.ProcessMultipleTemplates;
             w.ProcessMultiplePatterns = r.ProcessMultiplePatterns;
             w.SraiDepth = r.SraiDepth;
 
-          //  GraphMaster gm = r.Graph;
-          //  if (gm != null) w.Graph = gm;
+            //  GraphMaster gm = r.Graph;
+            //  if (gm != null) w.Graph = gm;
 
         }
 
@@ -133,7 +133,7 @@ namespace RTParser
         /// If the query is being traced
         /// </summary>
         public virtual bool IsTraced { get; set; }
-     
+
         /// <summary>
         /// Some patterns implies multiple templates
         /// </summary>
@@ -173,6 +173,8 @@ namespace RTParser
 
         public virtual SettingMinMaxCurrent<TimeSpan> Time { get; set; }
 
+
+        public virtual int DebugLevel { get; set; }
     }
 
     public interface QuerySettingsReadOnly
@@ -215,6 +217,8 @@ namespace RTParser
         int MaxPatterns { get; }
 
         SettingMinMaxCurrent<int> SraiDepth { get; set; }
+
+        int DebugLevel { get; }
     }
 
     public interface QuerySettingsSettable : QuerySettingsReadOnly
@@ -255,5 +259,7 @@ namespace RTParser
         /// If the query is being traced
         /// </summary>
         bool IsTraced { set; }
+
+        int DebugLevel { set; }
     }
 }

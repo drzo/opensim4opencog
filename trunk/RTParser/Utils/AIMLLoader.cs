@@ -622,7 +622,9 @@ namespace RTParser.Utils
                 SettingsDictionary.loadSettingNode(request.TargetBot.Settings, currentNode, true, false, request);
                 return;
             }
-            writeToLog("ImmediateAiml:: " + currentNode.OuterXml);
+            string currentNodeOuterXml = currentNode.OuterXml;
+            if (currentNodeOuterXml.Length > 80) currentNodeOuterXml = currentNodeOuterXml.Substring(0, 60) + "...";
+            writeToLog("ImmediateAiml: " + currentNodeOuterXml);
             /*
                <TestCase name="connect">
                     <Input>CONNECT</Input>
@@ -635,7 +637,8 @@ namespace RTParser.Utils
             OutputDelegate del = Console.WriteLine;
             HashSet<XmlNode> nodes = new HashSet<XmlNode>();
             bool evaledNode = false;
-            foreach (XmlNodeEval funct in GetEvaluators(currentNode))
+            IEnumerable<XmlNodeEval> getEvaluators = GetEvaluators(currentNode);
+            foreach (XmlNodeEval funct in getEvaluators)
             {
                 evaledNode = true;
                 var newNode = funct(currentNode, request, del);
@@ -1061,17 +1064,14 @@ namespace RTParser.Utils
 
                 normalizedPattern = pattern.Trim();
                 // clip only one off
-                if (isUserInput) if (normalizedPattern.EndsWith("?") || normalizedPattern.EndsWith(".") || normalizedPattern.EndsWith("!"))
-                {
-                    normalizedPattern = normalizedPattern.Substring(0, normalizedPattern.Length - 1).Trim();
-                }
+                if (isUserInput) normalizedPattern = CleanPunct(normalizedPattern);
                 if (false)
                 {
                     normalizedPattern = MatchKeyClean(normalizedPattern);
                     normalizedThat = MatchKeyClean(that);
                     normalizedTopic = MatchKeyClean(topicName);
                 }
-                normalizedThat = that.Trim();
+                normalizedThat = CleanPunct(that.Trim());
                 normalizedTopic = topicName.Trim();
             }
             else
@@ -1164,6 +1164,15 @@ namespace RTParser.Utils
             {
                 return Unifiable.Empty;
             }
+        }
+
+        public static string CleanPunct(string normalizedPattern)
+        {
+            if (normalizedPattern.EndsWith("?") || normalizedPattern.EndsWith(".") || normalizedPattern.EndsWith("!"))
+            {
+                normalizedPattern = normalizedPattern.Substring(0, normalizedPattern.Length - 1).Trim();
+            }
+            return normalizedPattern;
         }
 
         private string NoWilds(string pattern)
@@ -1710,83 +1719,6 @@ namespace RTParser.Utils
                 return (LineInfoElement)pattern;
             }
             return CopyNode(pattern, true);
-        }
-    }
-
-    internal class TestCaseRunner : XmlNodeEvaluator
-    {
-        private AIMLLoader Loader;
-
-        public TestCaseRunner(AIMLLoader loader)
-            : base("Eval", "_")
-        {
-            Loader = loader;
-        }
-
-        /// <summary>
-        ///     <TestCase name="connect">
-        //        <Input>CONNECT</Input>
-        ///       <ExpectedAnswer>Connected to test case AIML set.</ExpectedAnswer>
-        ///    </TestCase>
-        /// </summary>
-        /// <param name="src"></param>
-        /// <param name="request"></param>
-        /// <param name="outputdelegate"></param>
-        /// <returns></returns>
-        public IEnumerable<XmlNode> EvalTestCase(XmlNode src, Request request, OutputDelegate outputdelegate)
-        {
-            request = request ?? Loader.LoaderRequest00;
-            User user = request.user;
-            var robot = request.TargetBot ?? Loader.RProcessorOld;
-
-            string tcname =FindNodeOrAttrib(src, "name", null);
-            string tcdesc = FindNodeOrAttrib(src, "Description", null);
-            string input =  FindNodeOrAttrib(src, "Input", null);
-            if (input == null)
-            {
-                outputdelegate("ERROR cannot find 'Input' in '" + src.OuterXml + "'");
-            }
-            string userID = FindNodeOrAttrib(src, "UserId,UserName", user.UserID);
-
-            string expectedAnswer = FindNodeOrAttrib(src, "ExpectedAnswer", null);
-            if (expectedAnswer == null)
-            {
-                outputdelegate("ERROR cannot find 'ExpectedAnswer' in '" + src.OuterXml + "'");
-            }
-            outputdelegate("{0}: {1} ", tcname, tcdesc);
-            outputdelegate("{0}: {1} ", userID, input);
-            string resp = robot.ChatString(input, userID);
-            outputdelegate("{0}: {1} ", robot, resp);
-            bool m = Matches(resp, expectedAnswer, FindNodeOrAttrib(src, "MatchType,Match", null));
-            outputdelegate("PASSED={0}", m);
-            return new[] {src};
-        }
-
-        static bool Matches(string resp, string answer, string s)
-        {
-            return resp == answer;
-        }
-
-
-        static string FindNodeOrAttrib(XmlNode myNode, string names, string defaultNotFound)
-        {
-            string value = RTPBot.GetAttribValue(myNode, names, defaultNotFound);
-            if (value == defaultNotFound)
-            {
-                XmlNode holder = AIMLLoader.FindNode(names, myNode, null);
-                if (holder != null)
-                {
-                    value = holder.InnerText;
-                    return value;
-                }
-            }
-            return defaultNotFound;
-        }
-
-
-        public override string ToString()
-        {
-            return GetType().Name;
         }
     }
 }
