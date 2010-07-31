@@ -214,6 +214,7 @@ namespace RTParser.Variables
         public SettingsDictionary(String name, RTParser.RTPBot bot, ParentProvider parent)
         {
             theNameSpace = name;
+            Subst = name.Contains("subst");
             TrimKeys = !name.Contains("subst");
             this.bot = bot;
             IsTraced = true;
@@ -394,7 +395,9 @@ namespace RTParser.Variables
                         return;
                     }
                 }
+                bool wasTracing = dict.IsTraced;
                 dict.addSetting(name, new StringUnifiable(value));
+                dict.IsTraced = wasTracing;
             }
             else
             {
@@ -415,7 +418,9 @@ namespace RTParser.Variables
                         return;
                     }
                 }
+                bool wasTracing = dict.IsTraced;
                 dict.updateSetting(name, new StringUnifiable(value));
+                dict.IsTraced = wasTracing;
             }
         }
 
@@ -466,8 +471,8 @@ namespace RTParser.Variables
                         var chgdict = request.Graph.GetSubstitutions(nn, false);
                         if (chgdict != null)
                         {
-                            settingsDict.writeToLog("switching to substitutions: " + dict);
-                            loadSettingNode(chgdict, n, overwriteExisting, onlyIfUnknown, request);
+                            settingsDict.writeToLog("switching to substitutions: " + chgdict);
+                            loadSettingNode(chgdict, n.ChildNodes, overwriteExisting, onlyIfUnknown, request);
                             continue;
                         }
                     }
@@ -587,8 +592,8 @@ namespace RTParser.Variables
                 lower == "substitution" || lower == "param" || lower == "parameter" || lower == "substitute")
             {
 
-                string name = RTPBot.GetAttribValue(myNode, "name,var,old,key,find,param", "");
-                if (name == "")
+                string name = RTPBot.GetAttribValue(myNode, "name,var,old,key,find,param", null);
+                if (name == null)
                 {
                     XmlNode holder = AIMLLoader.FindNode("name,var,old,key,find", myNode, null);
                     if (holder == null)
@@ -736,6 +741,7 @@ namespace RTParser.Variables
             bool found = true;
             lock (orderedKeys)
             {
+                name = TransformName(name);
                 string normalizedName = TransformKey(name);
                 if (normalizedName == "NAME" && value.AsString().ToUpper().Contains("UNKN"))
                 {
@@ -794,6 +800,7 @@ namespace RTParser.Variables
         {
             lock (orderedKeys)
             {
+                name = TransformName(name);
                 string normalizedName = TransformKey(name);
                 if (normalizedName.Length > 0)
                 {
@@ -805,6 +812,20 @@ namespace RTParser.Variables
             return true;
         }
 
+        private string TransformName(string name)
+        {
+            if (Subst)
+            {
+                string nn = name;
+                int len = name.Length;
+                if (name.EndsWith("\\s")) name = name.Substring(0, len - 1);
+                if (name.StartsWith("\\s")) name = name.Substring(1);
+                name = name.ToUpper();
+                if (name == nn) return nn;
+            }
+            return name;
+        }
+
         /// <summary>
         /// Removes the named setting from this class
         /// </summary>
@@ -813,6 +834,7 @@ namespace RTParser.Variables
         {
             lock (orderedKeys)
             {
+                name = TransformName(name);
                 string normalizedName = TransformKey(name);
                 bool ret = orderedKeys.Contains(name);
                 this.orderedKeys.Remove(name);
@@ -852,6 +874,7 @@ namespace RTParser.Variables
         {
             lock (orderedKeys)
             {
+                name = TransformName(name);
                 string normalizedName = TransformKey(name);
                 this.settingsHash.Remove(normalizedName);
             }
@@ -881,6 +904,7 @@ namespace RTParser.Variables
             }
             lock (orderedKeys)
             {
+                name = TransformName(name);
                 string normalizedName = TransformKey(name);
                 if (this.settingsHash.ContainsKey(normalizedName))
                 {
@@ -952,6 +976,7 @@ namespace RTParser.Variables
         private HashSet<string> makedvars = new HashSet<string>();
         public void maskSetting(string name)
         {
+            name = TransformName(name);
             name = TransformKey(name);
             writeToLog("MASKING: " + name);
             lock (orderedKeys) makedvars.Add(name);
@@ -974,6 +999,7 @@ namespace RTParser.Variables
 #else
             try
             {
+                name = TransformName(name);
                 return grabSetting0(name);
             }
             catch (Exception e)
@@ -1041,7 +1067,10 @@ namespace RTParser.Variables
 
         public void SettingsLog(string message, params object[] args)
         {
-            if (message.Contains("ERROR")) IsTraced = true;
+            if (message.Contains("ERROR") && !message.Contains("ERROR: The requ"))
+            {
+                IsTraced = true;
+            }
             if (!IsTraced) return;
             var fc = new StackTrace().FrameCount;
             writeToLog("DICTLOG: " + NameSpace + " (" + fc + ")   " + message, args);
@@ -1062,8 +1091,9 @@ namespace RTParser.Variables
         {
             lock (orderedKeys)
             {
+                name = TransformName(name);
                 string normalizedName = TransformKey(name);
-                
+
                 if (makedvars.Contains(normalizedName)) return true;
 
                 if (normalizedName.Length > 0)
@@ -1153,6 +1183,7 @@ namespace RTParser.Variables
 
         public static IEnumerable<string> NO_SETTINGS = new string[0];
         public static IEnumerable<string> TOO_DEEP = new string[0];
+        public bool Subst;
 
         /// <summary>
         /// Copies the values in the current object into the SettingsDictionary passed as the target

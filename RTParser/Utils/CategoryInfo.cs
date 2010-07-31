@@ -78,6 +78,7 @@ namespace RTParser.Utils
         }
         public string ToFileString()
         {
+            if (XmlDocumentLineInfo.SkipXmlns && this.srcNode.Attributes != null) this.srcNode.Attributes.RemoveNamedItem("xmlns");
             string s = "";
             var topic1 = this.Topic;
             bool hasTopic = topic1 != null;

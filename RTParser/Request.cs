@@ -61,6 +61,7 @@ namespace RTParser
         AIMLbot.Request CreateSubRequest(Unifiable templateNodeInnerValue, User user, RTPBot rTPBot, AIMLbot.Request request);
         bool CanUseTemplate(TemplateInfo info, Result request);
         void writeToLog(string message, params object[] args);
+        int DebugLevel { get; set; }
     }
 
     /// <summary>
@@ -142,6 +143,7 @@ namespace RTParser
         public RequestImpl(Unifiable rawInput, User user, RTPBot bot, Request parent)
             : base(user) // Get query settings intially from user
         {
+            DebugLevel = -1;
             UsedResults = new List<Result>();
             Flags = "Nothing";
             ApplySettings(user, this);
@@ -445,6 +447,23 @@ namespace RTParser
         public void writeToLog(string message, params object[] args)
         {
             TargetBot.writeToLog(message, args);
+        }
+
+        public override int DebugLevel
+        {
+            get
+            {
+        
+                int baseDebugLevel = base.DebugLevel;
+                if (baseDebugLevel > 0) return baseDebugLevel;
+                if (ParentRequest == null)
+                {
+                    if (user == null) return baseDebugLevel;
+                    return user.DebugLevel;
+                }
+                return ParentRequest.DebugLevel;
+            }
+            set { base.DebugLevel = value; }
         }
 
         public IList<Result> UsedResults { get; set; }

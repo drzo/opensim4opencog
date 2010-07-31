@@ -16,6 +16,9 @@ namespace RTParser.Utils
 
     public class XmlDocumentLineInfo : XmlDocument
     {
+
+        public static bool SkipXmlns = true;
+
         public override bool IsReadOnly
         {
             get
@@ -71,42 +74,58 @@ namespace RTParser.Utils
             }
         }
 
+        public static void CheckNode(XmlNode node)
+        {
+            return;
+            if (node.OuterXml.Contains("l:") || node.OuterXml.Contains("nls"))
+            {
+                return;
+            }
+        }
+
 // ReSharper disable RedundantOverridenMember
         public override XmlNode CreateNode(XmlNodeType type, string prefix, string name, string namespaceURI)
         {
             var v = base.CreateNode(type, prefix, name, namespaceURI);
+            CheckNode(v);
             return v;
         }
         public override XmlCDataSection CreateCDataSection(string data)
         {
             var v = base.CreateCDataSection(data);
+            CheckNode(v);
             return v;
         }
         public override XmlNode CreateNode(string nodeTypeString, string name, string namespaceURI)
         {
             var v = base.CreateNode(nodeTypeString, name, namespaceURI);
+            CheckNode(v);
             return v;
         }
         public override XmlNode CreateNode(XmlNodeType type, string name, string namespaceURI)
         {
             var v = base.CreateNode(type, name, namespaceURI);
+            CheckNode(v);
             return v;
         }
         protected override XmlAttribute CreateDefaultAttribute(string prefix, string localName, string namespaceURI)
-        {
+        {            
             var v = base.CreateDefaultAttribute(prefix, localName, namespaceURI);
+            CheckNode(v);
             return v;
         }
 
         public override XmlDocumentFragment CreateDocumentFragment()
         {
             var v = base.CreateDocumentFragment();
+            CheckNode(v);
             return v;
         }
 
         public override XmlDocumentType CreateDocumentType(string name, string publicId, string systemId, string internalSubset)
         {
             var v = base.CreateDocumentType(name, publicId, systemId, internalSubset);
+            CheckNode(v);
             return v;
         }
         // ReSharper restore RedundantOverridenMember
@@ -121,7 +140,9 @@ namespace RTParser.Utils
             }
             this.encoding = encoding;
             this.standalone = standalone;
-            return base.CreateXmlDeclaration(version, encoding, standalone);
+            var v = base.CreateXmlDeclaration(version, encoding, standalone);
+            CheckNode(v);
+            return v;
         }
         public override void Load(XmlReader reader)
         {
@@ -262,6 +283,7 @@ namespace RTParser.Utils
 
         public void setLineInfo(XmlNode node)
         {
+            CheckNode(node);
             if (LineTracker != null)
             {
                 AIMLLineInfo nodeL = node as AIMLLineInfo;
@@ -288,6 +310,15 @@ namespace RTParser.Utils
             try
             {
                 currentAttributeName = localName;
+                if (false)
+                {
+                    if (localName == "xmlns")
+                    {
+                        localName = "xxxxx";
+                    }
+                    prefix = "";
+                    namespaceURI = "";
+                }
                 elem = new XmlAttributeLineInfo(prefix, localName, namespaceURI, this);
             }
             finally
@@ -364,6 +395,7 @@ namespace RTParser.Utils
                 settings.ValidationType = ValidationType.None;
                 settings.IgnoreWhitespace = true;
                 settings.IgnoreComments = true;
+                settings.ProhibitDtd = true;
                 settings.CheckCharacters = false;
                 settings.ValidationFlags = XmlSchemaValidationFlags.AllowXmlAttributes | XmlSchemaValidationFlags.ReportValidationWarnings | XmlSchemaValidationFlags.ProcessIdentityConstraints;
                 return settings;
@@ -530,6 +562,17 @@ namespace RTParser.Utils
             return v;
         }
 
+        public override string InnerXml
+        {
+            get
+            {
+                return base.InnerXml;
+            }
+            set
+            {
+                base.InnerText = value;
+            }
+        }
         public XmlTextLineInfo(string text, XmlDocumentLineInfo info)
             : base(text, info)
         {
@@ -607,8 +650,9 @@ namespace RTParser.Utils
     public class LineInfoElement : XmlElement, AIMLLineInfo
     {
         internal LineInfoElement(string prefix, string localname, string nsURI, XmlDocument doc)
-            : base(prefix, localname.ToLower(), nsURI, doc)
+            : base(prefix, localname, nsURI, doc)
         {
+            XmlDocumentLineInfo.CheckNode(this);
             //((XmlDocumentLineInfo)doc).IncrementElementCount();
         }
 
@@ -769,6 +813,7 @@ namespace RTParser.Utils
                     {
                         try
                         {
+                            if (XmlDocumentLineInfo.SkipXmlns && a.Name == "xmlns") continue;
                             var a2 = (XmlAttribute)a.CloneNode(deep);
                             bool a2ro = a2.IsReadOnly;
                             var a22 = a2 as AIMLXmlInfo;

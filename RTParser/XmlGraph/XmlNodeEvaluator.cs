@@ -8,6 +8,9 @@ namespace RTParser.Utils
 {
     abstract public class XmlNodeEvaluator
     {
+        public readonly static IEnumerable<XmlNodeEval> NO_XmlNodeEval = new XmlNodeEval[0];
+        public readonly static IEnumerable<XmlNode> NO_XmlNode = new XmlNode[0];
+
         protected Type ReflectionType;
         protected string prefix = "Eval_";
         protected string typesufix = "_NodeType";
@@ -37,8 +40,16 @@ namespace RTParser.Utils
             List<XmlNodeEval> list = new List<XmlNodeEval>();
             foreach (XmlNode xmlNode in node)
             {
-                list.AddRange(GetEvaluators(xmlNode));
+                var vs = GetEvaluators(xmlNode);
+                if (vs != NO_XmlNodeEval)
+                {
+                    foreach (var eval in vs)
+                    {
+                        list.Add(eval);
+                    }
+                }
             }
+            if (list.Count == 0) return NO_XmlNodeEval;
             return list;
         }
 
@@ -77,7 +88,7 @@ namespace RTParser.Utils
 
         public virtual IEnumerable<XmlNode> DoNothing(XmlNode src, Request request, OutputDelegate outputdelegate)
         {
-            throw new NotImplementedException();
+            return NO_XmlNode;
         }
     }
 }

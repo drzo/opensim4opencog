@@ -67,7 +67,11 @@ namespace RTParser.AIMLTagHandlers
                 if (GetAttribValue("type", "") == "bot") dict = request.TargetBot.GlobalSettings;
                 string realName;
                 Unifiable resultGet = SettingsDictionary.grabSettingDefualt(dict, name, out realName);
- 
+
+                if (ReferenceEquals(resultGet, null))
+                {
+                    resultGet = Unifiable.NULL;
+                }
                 // if ((!String.IsNullOrEmpty(result)) && (!result.IsWildCard())) return result; // we have a local one
                 
                 // try to use a global blackboard predicate

@@ -133,7 +133,7 @@ namespace RTParser.Utils
             bool found = false;
             Unifiable u = Unifiable.NULL;
             if (node.Attributes == null) return defaultIfEmpty();
-            foreach (var nameS in attribName.Split(new[] { ',' }))
+            foreach (var nameS in attribName.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
             {
                 String attribnym = nameS.ToLower();
                 foreach (XmlAttribute attrib in node.Attributes)
@@ -275,10 +275,17 @@ namespace RTParser.Utils
             }
 
             actualValue = actualValue.Trim();
-            if (actualValue.WillUnify(required, subquery)) return true;
-            Regex matcher = new Regex(required.AsString().Replace(" ", "\\s").Replace("*", "[\\sA-Z0-9]+"),
+            if (actualValue.WillUnify(required, subquery))
+            {
+                return true;
+            }
+            string requiredAsStringReplaceReplace = required.AsString().Replace(" ", "\\s").Replace("*", "[\\sA-Z0-9]+");
+            Regex matcher = new Regex("^"+requiredAsStringReplaceReplace+"$",
                                       RegexOptions.IgnoreCase);
-            if (matcher.IsMatch(actualValue)) return true;
+            if (matcher.IsMatch(actualValue))
+            {
+                return true;
+            }
             if (required.ToUpper() == "UNKNOWN" && (Unifiable.IsUnknown(actualValue))) return true;
             return false;
         }
@@ -596,6 +603,15 @@ namespace RTParser.Utils
                 return true;
             }
             return false;
+        }
+
+        protected void DebugCheck(int i)
+        {
+            if (!request.IsTraced) return;
+            if (request.DebugLevel < i)
+            {
+                RTPBot.Breakpoint("Level " + request.DebugLevel + "<" + i);
+            }
         }
     }
 }

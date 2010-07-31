@@ -919,5 +919,10 @@ namespace RTParser
         }
 
         #endregion
+
+        public Request CreateRequest(string s)
+        {
+            return new AIMLbot.Request(s, this, bot, CurrentRequest);
+        }
     }
 }

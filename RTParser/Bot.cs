@@ -56,6 +56,24 @@ namespace RTParser
             }
 
         }
+        public bool ProcessHeardPreds
+        {
+
+            get
+            {
+                if (GlobalSettings != null)
+                {
+                    var lts = GlobalSettings.grabSettingNoDebug("ProcessHeardPreds");
+                    if (Unifiable.IsUnknown(lts)) return false;
+                    if (Unifiable.IsFalse(lts)) return false;
+                    if (Unifiable.IsTrue(lts)) return true;
+                    return true;
+                }
+
+                return false;
+            }
+
+        }
         public override string ToString()
         {
             string s = GetType().Name;
@@ -666,14 +684,16 @@ namespace RTParser
                 isAcceptingUserInput = false;
                 this.GlobalSettings = new SettingsDictionary("bot.globalsettings", this, null);
 
-                this.GenderSubstitutions = new SettingsDictionary("nl.gendersubstitutions", this, null);
+                this.GenderSubstitutions = new SettingsDictionary("nl.substitutions.gender", this, null);
                 RegisterSubstitutions("gender", GenderSubstitutions);
-                this.Person2Substitutions = new SettingsDictionary("nl.person2substitutions", this, null);
+                this.Person2Substitutions = new SettingsDictionary("nl.substitutions.person2", this, null);
                 RegisterSubstitutions("person2", Person2Substitutions);
-                this.PersonSubstitutions = new SettingsDictionary("nl.personsubstitutions", this, null);
+                this.PersonSubstitutions = new SettingsDictionary("nl.substitutions.person", this, null);
                 RegisterSubstitutions("person", PersonSubstitutions);
-                this.InputSubstitutions = new SettingsDictionary("nl.inputsubstitutions", this, null);
+                this.InputSubstitutions = new SettingsDictionary("nl.substitutions.input", this, null);
                 RegisterSubstitutions("input", InputSubstitutions);
+                this.OutputSubstitutions = new SettingsDictionary("nl.substitutions.output", this, null);
+                RegisterSubstitutions("output", OutputSubstitutions);
 
 
                 //ParentProvider provider = new ParentProvider(() => GlobalSettings);
@@ -1333,34 +1353,66 @@ namespace RTParser
             return null;
         }
 
-        public AIMLbot.Result HeardSelfSayNow(string message)
+        private string GetMessageWithoutXML(string message)
         {
-            if (message == null) return null;
-            message = message.Trim();
-            if (message == "") return null;
             if (message.Contains("<"))
             {
-                var v = AIMLTagHandler.getNode("<pre>" + message + "</pre>");
-                v.ReadOnly = false;
-                writeDebugLine("heardSelfSay - wrapping AIML: " + message + " -> " + v.InnerText);
-                message = v.InnerText;
+                try
+                {
+                    string s = "";
+                    var v = AIMLTagHandler.getNode("<pre>" + message + "</pre>");
+                    v.ReadOnly = false;
+                    foreach (XmlNode childNode in v.ChildNodes)
+                    {
+                        s = s + " " + Unifiable.InnerXmlText(childNode);
+                    }
+                    message = s;
+                }
+                catch (Exception)
+                {
+                    
+                    throw;
+                }
+            }
+            return message;
+        }
+
+        public Result HeardSelfSayNow(string message)
+        {
+            Result LR = null;
+            if (message == null) return LR;
+            bool lts = ListeningToSelf;
+            bool prochp = ProcessHeardPreds;
+            if (!lts && !prochp) return LR;
+            message = message.Trim();
+            if (message == "") return LR;
+            if (message.Contains("<"))
+            {
+                string messageIn = message;
+                message = GetMessageWithoutXML(message);
+                writeDebugLine("heardSelfSay - undressing XML AIML: " + messageIn + " -> " + message);
             }
             //message = swapPerson(message);
             //writeDebugLine("HEARDSELF SWAP: " + message);
-            if (LastUser != null)
-            {
-                lock (LastUser.QueryLock)
-                {
-                    var LR = LastUser.LastResult;
-                    if (LR != null)
-                        LR.AddOutputSentences(null, message);
-                }
-            }
 
-            writeDebugLine("-----------------------------------------------------------------");
-            AddHeardPreds(message, HeardPredicates);
-            writeDebugLine("-----------------------------------------------------------------");
-            bool lts = ListeningToSelf;
+            if (prochp)
+            {
+                if (LastUser != null)
+                {
+                    lock (LastUser.QueryLock)
+                    {
+                        LR = LastUser.LastResult;
+                        if (LR != null)
+                        {
+                            LR.AddOutputSentences(null, message);
+                            
+                        }
+                    }
+                }
+                writeDebugLine("-----------------------------------------------------------------");
+                AddHeardPreds(message, HeardPredicates);
+                writeDebugLine("-----------------------------------------------------------------");
+            }
             if (!lts)
             {
                 writeDebugLine("SELF: " + message);
@@ -1509,7 +1561,7 @@ namespace RTParser
             {
                 result = request.CreateResult(request);
                 if (chatTrace) result.IsTraced = isTraced;
-                bool myBotBotDirective = BotDirective(request.user, rawInputString, result.WriteLine);
+                bool myBotBotDirective = BotDirective(request, rawInputString, result.WriteLine);
                 if (myBotBotDirective)
                 {
                     return result;
@@ -2095,6 +2147,7 @@ namespace RTParser
         {
             AIMLTagHandler tagHandler = this.getBespokeTags(user, query, request, result, node);
             string nodeNameLower = node.Name.ToLower();
+            bool liText = false;
             if (Equals(null, tagHandler))
             {
                 switch (nodeNameLower)
@@ -2136,8 +2189,11 @@ namespace RTParser
                     case "condition":
                         tagHandler = new AIMLTagHandlers.condition(this, user, query, request, result, node);
                         break;
-                    case "if":
                     case "li":
+                        if (liText)
+                        tagHandler = new AIMLTagHandlers.liif(this, user, query, request, result, node);
+                        break;
+                    case "if":
                         tagHandler = new AIMLTagHandlers.liif(this, user, query, request, result, node);
                         break;
                     case "personf":
@@ -2341,6 +2397,7 @@ namespace RTParser
 
 
                     case "#text":
+                        if (!liText) return null;
                         return new AIMLTagHandlers.verbatum(node.InnerText, this, user, query, request, result, node);
                     case "#comment":
                         return new AIMLTagHandlers.verbatum(node.OuterXml, this, user, query, request, result, node);
@@ -2410,21 +2467,36 @@ namespace RTParser
         public AIMLTagHandler getBespokeTags(User user, SubQuery query, Request request, Result result, XmlNode node)
         {
             string nodename = node.Name.ToLower();
-            if (CustomTags != null && this.CustomTags.ContainsKey(nodename))
+            if (CustomTags != null)
             {
-                TagHandler customTagHandler = (TagHandler)this.CustomTags[node.Name.ToLower()];
+                return null;
+                try
+                {
+                    lock (CustomTags)
 
-                AIMLTagHandler newCustomTag = customTagHandler.Instantiate(this.LateBindingAssemblies, user, query, request, result, node, this);
-                if (Equals(null, newCustomTag))
-                {
-                    return null;
+
+                        if (this.CustomTags.ContainsKey(nodename))
+                        {
+                            TagHandler customTagHandler = (TagHandler) this.CustomTags[node.Name.ToLower()];
+
+                            AIMLTagHandler newCustomTag = customTagHandler.Instantiate(this.LateBindingAssemblies, user,
+                                                                                       query,
+                                                                                       request, result, node, this);
+                            if (Equals(null, newCustomTag))
+                            {
+                                return null;
+                            }
+                            else
+                            {
+                                return newCustomTag;
+                            }
+                        }
                 }
-                else
+                catch (Exception e)
                 {
-                    return newCustomTag;
+                    writeToLog("WARNING IN GET BESPOKE TAGS: " + e);
                 }
             }
-            else
             {
                 try
                 {
@@ -2433,7 +2505,7 @@ namespace RTParser
                     Type t = Type.GetType(typeName);
                     if (t == null) return null;
                     var c = t.GetConstructor(TagHandler.CONSTRUCTOR_TYPES);
-                    return (AIMLTagHandler)c.Invoke(new object[] { user, query, request, result, node, this });
+                    return (AIMLTagHandler) c.Invoke(new object[] {user, query, request, result, node, this});
                 }
                 catch (Exception e)
                 {
@@ -2786,6 +2858,7 @@ The AIMLbot program.
             {
                 if (s == "--httpd")
                 {
+                    UseBreakpointOnError = false;
                     usedHttpd = true;
                 }
             }
@@ -2814,6 +2887,14 @@ The AIMLbot program.
                 string newName = "";
                 foreach (var s in args)
                 {
+                    if (s == "--breakpoints")
+                    {
+                        //UseBreakpointOnError = true;
+                    }
+                    if (s == "--nobreakpoints")
+                    {
+                        UseBreakpointOnError = false;
+                    }
                     if (s == "--aiml" || s == "--botname")
                     {
                         gettingUsername = true;
@@ -2852,9 +2933,10 @@ The AIMLbot program.
             //Added from AIML content now
             // myBot.AddAiml(evidenceCode);
             User myUser = myBot.LastUser;
-            myBot.BotDirective(myUser, "@log " + AIMLDEBUGSETTINGS, Console.Error.WriteLine);
+            Request request = myUser.CreateRequest("current user toplevel");
+            myBot.BotDirective(request, "@log " + AIMLDEBUGSETTINGS, Console.Error.WriteLine);
             writeLine("-----------------------------------------------------------------");
-            myBot.BotDirective(myUser, "@help", writeLine);
+            myBot.BotDirective(request, "@help", Console.Error.WriteLine);
             writeLine("-----------------------------------------------------------------");
 
             String botJustSaid = null;
@@ -2896,7 +2978,7 @@ The AIMLbot program.
                     bool myBotBotDirective = false;
                     if (input.StartsWith("@"))
                     {
-                        myBotBotDirective = myBot.BotDirective(myUser, input, writeLine);
+                        myBotBotDirective = myBot.BotDirective(request, input, writeLine);
                         //if (!myBotBotDirective) 
                         continue;
                     }
@@ -2915,9 +2997,12 @@ The AIMLbot program.
                         {
                             botJustSaid = res.Output;
                             meneValue = "" + res.Score;
-                            writeLine("-----------------------------------------------------------------");
-                            myBot.HeardSelfSayNow(botJustSaid);
-                            writeLine("-----------------------------------------------------------------");
+                            if (myBot.ProcessHeardPreds)
+                            {
+                                writeLine("-----------------------------------------------------------------");
+                                myBot.HeardSelfSayNow(botJustSaid);
+                                writeLine("-----------------------------------------------------------------");
+                            }
 
                         }
                         else
@@ -2949,13 +3034,20 @@ The AIMLbot program.
                                                              sw.WriteLine(s, args);
                                                              writeDebugLine(s, args);
                                                          });
-            bool b = BotDirective(request.user, input, all);
+            bool b = BotDirective(request, input, all);
             var sws = sw.ToString();
             if (!b) return Unifiable.FAIL_NIL;
             return sws;
         }
 
-        public bool BotDirective(User myUser, string input, OutputDelegate console)
+        public bool BotDirective(User user, string input, OutputDelegate console)
+        {
+            Request request = user.CreateRequest(input);
+            return BotDirective(request, input, console);
+            
+        }
+
+        public bool BotDirective(Request request, string input, OutputDelegate console)
         {
             if (input == null) return false;
             input = input.Trim();
@@ -2964,7 +3056,7 @@ The AIMLbot program.
             {
                 input = input.TrimStart(new[] { ' ', '@' });
             }
-            myUser = myUser ?? LastUser ?? FindOrCreateUser(null);
+            User myUser = request.user ?? LastUser ?? FindOrCreateUser(UNKNOWN_PARTNER);
             int firstWhite = input.IndexOf(' ');
             if (firstWhite == -1) firstWhite = input.Length - 1;
             string cmd = input.Substring(0, firstWhite + 1).Trim().ToLower();
@@ -3059,12 +3151,12 @@ The AIMLbot program.
             if (showHelp) console("@load <uri>");
             if (cmd == "load")
             {
-                Request req = GetBotRequest(cmd + " " + args);
                 if (Loader == null)
                 {
-                    Loader = new AIMLLoader(this, req);
+                    Loader = new AIMLLoader(this, request);
                 }
-                Loader.loadAIMLURI(args, req.LoadOptions.Value);
+                LoaderOptions reqLoadOptionsValue = request.LoadOptions.Value;
+                Loader.loadAIMLURI(args, reqLoadOptionsValue);
                 console("Done with " + args);
                 return true;
             }
@@ -3435,13 +3527,16 @@ The AIMLbot program.
 
         public static void Breakpoint(string err)
         {
-            if (!UseBreakpointOnError) return;
             if (skipMany > 0)
             {
                 skipMany--;
                 return;
             }
             Console.WriteLine("" + err);
+            if (!UseBreakpointOnError)
+            {
+                return;
+            }
             Console.WriteLine("press enter of enter a number to skip breakpoints");
             string p = Console.ReadLine();
             int skipNext;
@@ -3493,13 +3588,18 @@ The AIMLbot program.
         {
             lock (AllDictionaries)
             {
+                string key = type + "." + named;
                 named = named.ToLower();
                 ISettingsDictionary dict;
-                if (!AllDictionaries.TryGetValue(type + "." + named, out dict))
+                if (!AllDictionaries.TryGetValue(key, out dict))
                 {
                     if (createIfMissing)
                     {
-                        dict = new SettingsDictionary(named, this, null);
+                        if (type.Contains("subst"))
+                        {
+                            writeToLog("ERROR CREATING " + key);
+                        }
+                        dict = AllDictionaries[key] = new SettingsDictionary(named, this, null);
                         loadDictionary(dict, named, type);
                     }
                 }
@@ -3541,7 +3641,9 @@ The AIMLbot program.
             lock (AllDictionaries)
             {
                 named = named.ToLower();
-                AllDictionaries["substitution." + named] = dict;
+                dict.IsTraced = false;
+                string key = "substitutions" + "." + named;
+                AllDictionaries[key] = dict;
             }
         }
 
