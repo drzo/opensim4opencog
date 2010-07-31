@@ -31,7 +31,7 @@ namespace RTParser
         public bool RespondToChat = true;
         public int MaxRespondToChatPerMinute = 10;
 
-        public static int DefaultMaxResultsSaved = 3;
+        public static int DefaultMaxResultsSaved = 5;
         public int MaxResultsSaved = DefaultMaxResultsSaved;
         public bool IsRoleAcct = false;
 

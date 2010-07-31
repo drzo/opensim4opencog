@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using System.Xml;
 using MushDLR223.ScriptEngines;
 
@@ -37,7 +38,7 @@ namespace RTParser.Utils
         }
         public IEnumerable<XmlNode> EvalTestSuite(XmlNode src, Request request, OutputDelegate outputdelegate)
         {
-
+            ResetTests();
             List<XmlNode> list = new List<XmlNode>();
             foreach (var node in src.ChildNodes)
             {
@@ -118,14 +119,33 @@ namespace RTParser.Utils
             }
             string userID = FindNodeOrAttrib(src, "UserId,UserName", () => user.UserID);
 
-            const string MISSING_EXPECTED_ANSWER = "MISSING EXPECTED ANSWER";
-            string expectedAnswer = FindNodeOrAttrib(src, "ExpectedAnswer,ExpectedKeywords", () => MISSING_EXPECTED_ANSWER);
+            const string MISSING_EXPECTED_ANSWER = "ExpectedKeywords";
+            List<string> matchTheseToPass = new List<string>();
+            string expectedAnswer = FindNodeOrAttrib(src, "ExpectedAnswer", () => MISSING_EXPECTED_ANSWER);
+            expectedAnswer = Fudge(expectedAnswer);
             if (expectedAnswer == MISSING_EXPECTED_ANSWER)
             {
-                outputdelegate("ERROR cannot find 'ExpectedAnswer' in '" + src.OuterXml + "'");
-                expectedAnswer = "CANT FIND";
+                List<XmlNode> nodes = AIMLLoader.FindNodes("ExpectedKeywords", src);
+                if (nodes == null || nodes.Count == 0)
+                {
+                    outputdelegate("ERROR cannot find 'ExpectedAnswer' in '" + src.OuterXml + "'");
+                }
+                else
+                {
+                    foreach (var list in nodes)
+                    {
+
+                        string v = Unifiable.InnerXmlText(list);
+
+                        matchTheseToPass.Add(".*" + Fudge(v) + ".*");
+                    }
+                }
+
+            } else
+            {
+                matchTheseToPass.Add("^" + Fudge(expectedAnswer) + "$");
             }
-            expectedAnswer = expectedAnswer.Replace("<html:br xmlns:html=\"http://www.w3.org/1999/xhtml\" />", " ");
+
             outputdelegate("{0}: {1} ", tcname, tcdesc);
             outputdelegate("{0}: {1} ", userID, input);
             string resp = "ERROR";
@@ -138,17 +158,30 @@ namespace RTParser.Utils
                     RTPBot.Breakpoint("testing...");
                     r.DebugLevel = 9;
                 }
-                resp = robot.Chat(r).Output;
-                outputdelegate("{0}: {1} ", robot, resp);                
-                m = Matches(resp, expectedAnswer, FindNodeOrAttrib(src, "MatchType,Match", null));
+                resp = Fudge(robot.Chat(r).Output);
+                outputdelegate("{0}: {1} ", robot, resp);
+                m = true;
+                int good = 0;
+                foreach (var s in matchTheseToPass)
+                {
+                    if (!Matches(resp, s, FindNodeOrAttrib(src, "MatchType,Match", null)))
+                    {
+                        m = false;
+                    } else
+                    {
+                        good++;
+                    }
+                }
                 outputdelegate("PASSED={0}", m);
                 if (traceIt)
                 {
                     RTPBot.Breakpoint("tested...");
                 }
                 return AIMLTagHandler.getNode(
-                    "<template>TESTCASE " + tcname + " PASSED=" + m + " expectedAnswer='" + expectedAnswer + "' resp=" + resp +
-                    "' desc" + tcdesc + "'</template>", src);
+                    "<template>TESTCASE='" + tcname + "' PASSED=" + m +
+                    " GOOD=" + good + " RESP='" + resp +
+                    "' EXPECT='" + expectedAnswer +
+                    "' DESC='" + tcdesc + "'</template>", src);
 
             }
             catch (Exception err)
@@ -156,21 +189,41 @@ namespace RTParser.Utils
                 m = false;
                 errorCount++;
                 return AIMLTagHandler.getNode(
-                    "<template type=\"error\">TESTCASE " + tcname + " PASSED=" + m + " expectedAnswer='" + expectedAnswer +
-                    "' resp=" + resp +
-                    "' desc" + tcdesc + "' ERRMSG='" + err + "'</template>", src);
+                    "<template type=\"error\">TESTCASE=' " + tcname + "' PASSED=" + m + " RESP='" + resp +
+                    "' EXPECT='" + resp +
+                    "' DESC='" + tcdesc + "' ERRMSG='" + err + "'</template>", src);
             }
         }
 
         bool Matches(string resp, string answer, string s)
         {
             if (resp == answer) return true;
-            if (AIMLLoader.CleanPunct(AIMLLoader.CleanWhitepaces(resp)) == AIMLLoader.CleanPunct(AIMLLoader.CleanWhitepaces(answer)))
+            if ((new Regex(answer)).IsMatch(resp))
+            {
+                return true;
+            }
+            if (Fudge(resp) == Fudge(answer))
             {
                 if (!traceIt) fudgeCount++;
                 return true;
-            }           
+            }
             return false;
+        }
+
+        private static string Fudge(string expectedAnswer)
+        {
+            expectedAnswer = AIMLLoader.CleanPunct(AIMLLoader.CleanWhitepaces(expectedAnswer));
+            expectedAnswer = expectedAnswer.Replace("<html:", "<");
+            string was = expectedAnswer;
+            expectedAnswer = expectedAnswer.Replace("<br xmlns:html=\"http://www.w3.org/1999/xhtml\"/>", " ");
+            expectedAnswer = expectedAnswer.Replace("<br/>", " ");
+            if (was != expectedAnswer)
+            {
+                expectedAnswer = expectedAnswer.Replace(".", " ");
+                return AIMLLoader.CleanWhitepaces(expectedAnswer);                
+            }
+            expectedAnswer = expectedAnswer.Replace(".", " ");
+            return AIMLLoader.CleanWhitepaces(expectedAnswer);
         }
 
 
