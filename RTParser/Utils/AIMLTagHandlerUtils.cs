@@ -92,7 +92,7 @@ namespace RTParser.Utils
                             part = afterEachOrNull(part);
                             if (saveResultsOnChildren)
                             {
-                                childNode.InnerXml = part;
+                                SaveResultOnChild(childNode, part);
                             }
                             templateResult.Append(part);
                         }
@@ -252,6 +252,15 @@ namespace RTParser.Utils
             }
             if (ii < 0)
             {
+                if (false)
+                {
+                    var sa = Unifiable.CreateAppendable();
+                    foreach (var u in unifiables)
+                    {
+                        sa.Append(u);
+                    }
+                    return sa;
+                }
                 ii = 0;
             }
             return unifiables[ii];
