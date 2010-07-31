@@ -2146,7 +2146,7 @@ namespace RTParser
         internal AIMLTagHandler GetTagHandler00(User user, SubQuery query, Request request, Result result, XmlNode node)
         {
             AIMLTagHandler tagHandler = this.getBespokeTags(user, query, request, result, node);
-            string nodeNameLower = node.Name.ToLower();
+            string nodeNameLower = node.LocalName.ToLower();
             bool liText = false;
             if (Equals(null, tagHandler))
             {

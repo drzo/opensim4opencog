@@ -964,11 +964,11 @@ namespace RTParser.Utils
         static public XmlNode FindNode(string name, XmlNode node, XmlNode ifMissing)
         {
             name = name.ToLower();
-            foreach (var n in name.Split(",".ToCharArray(), StringSplitOptions.RemoveEmptyEntries))
+            foreach (var n in NamesStrings(name))
             {
                 foreach (XmlNode child in node.ChildNodes)
                 {
-                    if (child.Name.ToLower() == n)
+                    if (AIMLLoader.NameMatches(child, n))
                     {
                         return child;
                     }
@@ -979,11 +979,11 @@ namespace RTParser.Utils
         static public XmlNode FindNodeOrHigher(string name, XmlNode node, XmlNode ifMissing)
         {
             if (node == null) return ifMissing;
-            foreach (var n in name.Split(",".ToCharArray(), StringSplitOptions.RemoveEmptyEntries))
+            foreach (var n in NamesStrings(name))
             {
                 foreach (XmlNode child in node.ChildNodes)
                 {
-                    if (child.Name.ToLower() == n)
+                    if (AIMLLoader.NameMatches(child, n))
                     {
                         return child;
                     }
@@ -994,22 +994,35 @@ namespace RTParser.Utils
         static public XmlNode FindHigher(string name, XmlNode node, XmlNode ifMissing)
         {
             if (node == null) return ifMissing;
-            foreach (var n in name.Split(",".ToCharArray(), StringSplitOptions.RemoveEmptyEntries))
+            foreach (var n in NamesStrings(name))
             {
-                if (node.Name.ToLower() == n)
+                if (AIMLLoader.NameMatches(node, n))
                 {
                     return node;
                 }
             }
             return FindHigher(name, node.ParentNode, ifMissing);
         }
+
+        private static string[] NamesStrings(string name)
+        {
+            return name.Split(",".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+        }
+
+        private static bool NameMatches(XmlNode node, string s)
+        {
+            return node.Name.ToLower() == s || node.LocalName.ToLower() == s;
+        }
+
         static public List<XmlNode> FindNodes(string name, XmlNode node)
         {
             name = name.ToLower();
+            if (name.Contains(","))
+                throw new NotImplementedException("Commans in FindNodes " + name + " in " + node.OuterXml);
             List<XmlNode> nodes = new List<XmlNode>();
             foreach (XmlNode child in node.ChildNodes)
             {
-                if (child.Name.ToLower() == name)
+                if (AIMLLoader.NameMatches(child, name))
                 {
                     nodes.Add(child);
                 }
@@ -1059,6 +1072,8 @@ namespace RTParser.Utils
             {
                 UseRawUserInput = true;
             }
+
+            bool thatContainedAnd = that.ToUpper().Contains(" AND ");
             if ((RProcessor.TrustAIML) & (!isUserInput || UseRawUserInput))
             {
 
@@ -1139,6 +1154,14 @@ namespace RTParser.Utils
                     addTagEnd = addTagStart = null;
                 }
 
+                if (thatContainedAnd)
+                {
+                    if (!normalizedThat.ToUpper().Contains(" AND "))
+                    {
+                        writeToLog("ERROR in that: " + that + " -> " + normalizedThat);
+                    }
+                }
+
                 // o.k. build the path
                 normalizedPath.Append(Unifiable.InputTag);
                 if (addTagStart != null) normalizedPath.Append(addTagStart);
@@ -1151,12 +1174,13 @@ namespace RTParser.Utils
                     normalizedPath.Append(normalizedThat);
                     if (addTagEnd != null) normalizedPath.Append(addTagEnd);
                 }
-                normalizedPath.Append(Unifiable.FlagTag);
-                normalizedPath.Append(flag);
                 normalizedPath.Append(Unifiable.TopicTag);
                 if (addTagStart != null) normalizedPath.Append(addTagStart);
                 normalizedPath.Append(normalizedTopic);
                 if (addTagEnd != null) normalizedPath.Append(addTagEnd);
+
+                normalizedPath.Append(Unifiable.FlagTag);
+                normalizedPath.Append(flag);
 
                 return normalizedPath; //.Frozen();
             }

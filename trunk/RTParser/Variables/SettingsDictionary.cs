@@ -818,8 +818,7 @@ namespace RTParser.Variables
             {
                 string nn = name;
                 int len = name.Length;
-                if (name.EndsWith("\\s")) name = name.Substring(0, len - 1);
-                if (name.StartsWith("\\s")) name = name.Substring(1);
+                name = name.Replace("\\b", " ");
                 name = name.ToUpper();
                 if (name == nn) return nn;
             }
