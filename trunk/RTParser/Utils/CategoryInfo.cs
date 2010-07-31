@@ -20,12 +20,12 @@ namespace RTParser.Utils
 
         public XmlNode Topic
         {
-            get { return AIMLLoader.FindNode("topic", Category, null); }
+            get { return AIMLLoader.FindNodeOrHigher("topic", Category, null); }
         }
 
         public XmlNode That
         {
-            get { return AIMLLoader.FindNode("that", Category, null); }
+            get { return AIMLLoader.FindNodeOrHigher("that", Category, null); }
         }
 
         public PatternInfo Pattern;

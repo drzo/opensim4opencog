@@ -37,6 +37,27 @@ namespace RTParser.Utils
                 return;
             }
 
+            if (DocumentElement != null)
+            {
+                var attrs = DocumentElement.Attributes;
+                if (attrs != null)
+                {
+                    var list = new List<XmlAttribute>();
+                    foreach (XmlAttribute s in attrs)
+                    {
+                        if (s.LocalName == "xmlns")
+                        {
+                            list.Add(s);
+                        }
+                    }
+                    foreach (XmlAttribute s in list)
+                    {
+
+                        DocumentElement.RemoveAttributeNode(s.LocalName, s.NamespaceURI);
+                    }
+                }
+            }
+
             SuspendLineInfo = true;
             DocumentInNormalize = true;
             try
@@ -146,7 +167,7 @@ namespace RTParser.Utils
         }
         public override void Load(XmlReader reader)
         {
-            SetupReader(reader.Settings);
+            CheckReader(reader.Settings);
             if (reader is IXmlLineInfo)
             {
                 LineTracker = (IXmlLineInfo)reader;
@@ -166,14 +187,15 @@ namespace RTParser.Utils
             }
         }
 
-        static void SetupReader(XmlReaderSettings settings)
+        static void CheckReader(XmlReaderSettings settings)
         {
             if (settings == null) return;
-            if (settings.ConformanceLevel != DefaultSettings.ConformanceLevel) writeToLog("ConformanceLevel settings odd");
-            if (settings.ValidationType != DefaultSettings.ValidationType) writeToLog("ValidationType settings odd");
-            if (settings.IgnoreWhitespace != DefaultSettings.IgnoreWhitespace) writeToLog("whitespace settings odd");
-            if (settings.IgnoreComments != DefaultSettings.IgnoreComments) writeToLog("IgnoreComments settings odd");
-            if (settings.CheckCharacters != DefaultSettings.CheckCharacters) writeToLog("CheckCharacters settings odd");
+            var xmlReaderSettings = DefaultSettings;
+            if (settings.ConformanceLevel != xmlReaderSettings.ConformanceLevel) writeToLog("ConformanceLevel settings odd");
+            if (settings.ValidationType != xmlReaderSettings.ValidationType) writeToLog("ValidationType settings odd");
+            if (settings.IgnoreWhitespace != xmlReaderSettings.IgnoreWhitespace) writeToLog("whitespace settings odd");
+            if (settings.IgnoreComments != xmlReaderSettings.IgnoreComments) writeToLog("IgnoreComments settings odd");
+            if (settings.CheckCharacters != xmlReaderSettings.CheckCharacters) writeToLog("CheckCharacters settings odd");
             //  if (settings.ValidationFlags != DefaultSettings.ValidationFlags) writeToLog("ValidationFlags settings odd");
         }
 
@@ -234,7 +256,7 @@ namespace RTParser.Utils
         ///                 </exception>
         public override XmlNode ReadNode(XmlReader reader)
         {
-            SetupReader(reader.Settings);
+            CheckReader(reader.Settings);
             if (reader is IXmlLineInfo)
             {
                 LineTracker = (IXmlLineInfo)reader;

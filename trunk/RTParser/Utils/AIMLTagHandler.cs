@@ -588,9 +588,12 @@ namespace RTParser.Utils
         {
             //if (value == null) return;
             //if (value == "") return;
-            if (node.NodeType==XmlNodeType.Comment) return;
+            if (node.NodeType == XmlNodeType.Comment) return;
             writeToLog("-!SaveResultOnChild AIMLTRACE " + value + " -> " + node.OuterXml);
-            node.InnerXml = CheckValue(value);
+
+            if (node is XmlText) node.InnerText = CheckValue(value);
+            else
+                node.InnerXml = CheckValue(value);
         }
 
         protected bool CheckNode(string name)
