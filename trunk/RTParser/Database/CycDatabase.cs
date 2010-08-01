@@ -458,6 +458,7 @@ namespace RTParser.Database
             int l_1 = text.Length - 1;
             if (l_1 < 2) return text;
             char c = text[l_1];
+            if (!text.Contains("#$")) return text;
             if (char.IsPunctuation(c))
             {
                 return CleanupCyc0(text.Substring(0, l_1)) + c;

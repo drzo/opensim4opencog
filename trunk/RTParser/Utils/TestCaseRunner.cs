@@ -6,9 +6,9 @@ using MushDLR223.ScriptEngines;
 
 namespace RTParser.Utils
 {
-    internal class TestCaseRunner : XmlNodeEvaluator
+    internal class TestCaseRunner : XmlNodeEvaluatorImpl
     {
-        private AIMLLoader Loader;
+        private Request Loader;
         int passCount;
         int testCount;
         int errorCount;
@@ -25,7 +25,7 @@ namespace RTParser.Utils
             fudgeCount = 0;
         }
 
-        public TestCaseRunner(AIMLLoader loader)
+        public TestCaseRunner(Request loader)
             : base("Eval", "_")
         {
             ResetTests();
@@ -34,7 +34,7 @@ namespace RTParser.Utils
 
         public override IEnumerable<XmlNodeEval> GetEvaluators(XmlNode node)
         {
-            return base.GetEvaluators(node);
+            return base.GetEvaluatorsFromReflection(node);
         }
         public IEnumerable<XmlNode> EvalTestSuite(XmlNode src, Request request, OutputDelegate outputdelegate)
         {
@@ -104,9 +104,9 @@ namespace RTParser.Utils
 
         private XmlNode RunTest(Request request, XmlNode src, OutputDelegate outputdelegate, out bool m)
         {
-            request = request ?? Loader.LoaderRequest00;
+           // request = request ?? Loader.LoaderRequest00;
             User user = request.user;
-            var robot = request.TargetBot ?? Loader.RProcessorOld;
+            var robot = request.TargetBot ?? Loader.TargetBot;
 
             string tcname = FindNodeOrAttrib(src, "name", null);
             string tcdesc = FindNodeOrAttrib(src, "Description", null);

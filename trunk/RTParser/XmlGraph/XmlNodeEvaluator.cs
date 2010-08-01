@@ -6,7 +6,12 @@ using MushDLR223.ScriptEngines;
 
 namespace RTParser.Utils
 {
-    abstract public class XmlNodeEvaluator
+
+    public interface XmlNodeEvaluator
+    {
+           IEnumerable<XmlNodeEval> GetEvaluators(XmlNode node);        
+    }
+    abstract public class XmlNodeEvaluatorImpl : XmlNodeEvaluator
     {
         public readonly static IEnumerable<XmlNodeEval> NO_XmlNodeEval = new XmlNodeEval[0];
         public readonly static IEnumerable<XmlNode> NO_XmlNode = new XmlNode[0];
@@ -15,19 +20,19 @@ namespace RTParser.Utils
         protected string prefix = "Eval_";
         protected string typesufix = "_NodeType";
 
-        protected XmlNodeEvaluator()
+        protected XmlNodeEvaluatorImpl()
         {
             ReflectionType = GetType(); 
         }
 
-        protected XmlNodeEvaluator(string prefix, string suffix)
+        protected XmlNodeEvaluatorImpl(string prefix, string suffix)
             : this()
         {
             this.prefix = prefix;
             this.typesufix = suffix;
         }
 
-        public virtual IEnumerable<XmlNodeEval> GetEvaluators(XmlNode node)
+        public virtual IEnumerable<XmlNodeEval> GetEvaluatorsFromReflection(XmlNode node)
         {
             MethodInfo example = typeof (XmlNodeEval).GetMethod("Invoke");
             Type type = GetType();
@@ -90,5 +95,11 @@ namespace RTParser.Utils
         {
             return NO_XmlNode;
         }
+
+        #region Implementation of XmlNodeEvaluator
+
+        public abstract IEnumerable<XmlNodeEval> GetEvaluators(XmlNode node);
+
+        #endregion
     }
 }
