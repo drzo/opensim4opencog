@@ -593,7 +593,7 @@ atomSplit2([W|S],[W|Words]):-atomSplit2(S,Words).
 
 
 
-:-['aimlbotFromBoth.pl'].
+:-['cynd/bootstrap.aiml.pl'].
 
 
 %:-load_aiml_files.

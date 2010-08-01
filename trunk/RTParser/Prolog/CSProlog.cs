@@ -67,7 +67,7 @@ namespace RTParser.Prolog
                 Console.WriteLine("?-[aimlbotFromCS],[load],sentence(E,[what,rivers,are,there,?],[],[],[]).");
 
 
-                string sr = "[aimlbotFromCS].";
+                string sr = "['cynd/logicmoo_module_aiml.pro'].";
                 e.ExecuteQuery(ref sr);
 
                 if (args == null || args.Length == 0)
