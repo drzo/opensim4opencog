@@ -19,7 +19,7 @@ namespace RTParser.Utils
     /// A utility class for loading AIML files from disk into the graphmaster structure that 
     /// forms an AIML RProcessor's "brain"
     /// </summary>
-    public class AIMLLoader : XmlNodeEvaluator
+    public class AIMLLoader : XmlNodeEvaluatorImpl
     {
         #region Attributes
         /// <summary>
@@ -34,7 +34,6 @@ namespace RTParser.Utils
         }
 
 
-        private TestCaseRunner testCaseRunner;
         public Request LoaderRequest00;
         /// <summary>
         /// Allow all chars in RawUserInput
@@ -49,8 +48,6 @@ namespace RTParser.Utils
         public AIMLLoader(RTParser.RTPBot bot, Request request)
         {
             this.LoaderRequest00 = request;
-            testCaseRunner = new TestCaseRunner(this);
-            XmlNodeEvaluators.Add(testCaseRunner);
             //XmlNodeEvaluators.Add(this);
         }
 
@@ -370,7 +367,6 @@ namespace RTParser.Utils
                 }
 
             }
-            return;
         }
         /// <summary>
         /// Given an XML document containing valid AIML, attempts to load it into the graphmaster
@@ -497,7 +493,7 @@ namespace RTParser.Utils
         }
 
 
-        public List<CategoryInfo> loadAIMLNodes(IEnumerable nodes, LoaderOptions loadOpts, Request request)
+        public void loadAIMLNodes(IEnumerable nodes, LoaderOptions loadOpts, Request request)
         {
             if (nodes!=null)
             {
@@ -506,12 +502,10 @@ namespace RTParser.Utils
                     loadAIMLNode((XmlNode) node, loadOpts, request);
                 }
             }
-            return loadOpts.CategoryInfos;
         }
 
-        public List<CategoryInfo> loadAIMLNode(XmlNode currentNode, LoaderOptions loadOpts, Request request)
+        public void loadAIMLNode(XmlNode currentNode, LoaderOptions loadOpts, Request request)
         {
-            List<CategoryInfo> CIs = loadOpts.CategoryInfos;
             RTPBot RProcessor = loadOpts.RProcessor;
             var prev = RProcessor.Loader;
             try
@@ -525,190 +519,46 @@ namespace RTParser.Utils
                 {
                     InsideLoaderContext(currentNode, request, request.CurrentQuery,
                                         () =>
-                                        CIs.AddRange(loadAIMLNodes(currentNode.ChildNodes, loadOpts, request)));
-                    return CIs;
+                                        loadAIMLNodes(currentNode.ChildNodes, loadOpts, request));
                 }
-                if (currentNodeName == "topic")
+                else if (currentNodeName == "topic")
                 {
                     this.processTopic(currentNode, currentNode.ParentNode, loadOpts);
-                    return CIs;
                 }
                 else if (currentNodeName == "category")
                 {
                     this.processCategory(currentNode, currentNode.ParentNode, loadOpts);
-                    return CIs;
                 }
                 else if (currentNodeName == "that")
                 {
                     InsideLoaderContext(currentNode, request, request.CurrentQuery,
                                         () =>
                                         loadAIMLNodes(currentNode.ChildNodes, loadOpts, request));
-                    return CIs;
-                    return CIs;
                 }
-                else if (currentNodeName == "genlmt")
+                else
                 {
-                    string name = RTPBot.GetAttribValue(currentNode, "graph,name,mt,to", null);
-                    string from = RTPBot.GetAttribValue(currentNode, "from", null);
-                    if (name == null)
-                    {
-                        name = currentNode.InnerText.Trim();
-                    }
-                    GraphMaster FROM = request.TargetBot.GetGraph(from, loadOpts.CtxGraph);
-                    GraphMaster TO = request.TargetBot.GetGraph(name, loadOpts.CtxGraph);
-                    FROM.AddGenlMT(TO);
-                    writeToLog("GENLMT: " + FROM + " => " + name + " => " + TO);
-                    return CIs;
-                }
-                else if (currentNodeName == "meta")
-                {
-                    writeToLog("UNUSED: " + currentNode.OuterXml);
-                }
-                else if (currentNodeName == "#comment")
-                {
-                    writeToLog("UNUSED: " + currentNode.OuterXml);
-                }
-                else 
-                {
-                    EvalNode(currentNode, request, loadOpts);                   
+                    loadOpts.RProcessor.ImmediateAiml(currentNode, request, this, null);
                 }
             }
             finally
             {
                 RProcessor.Loader = prev;
             }
-            return CIs;
-        }
-
-        private void EvalNode(XmlNode currentNode, Request request, LoaderOptions loadOpts)
-        {
-            string currentNodeName = currentNode.Name.ToLower();
-            if (currentNodeName == "root")
-            {
-                // process each of these child "settings"? nodes
-                var prevDict = request.TargetSettings;
-                try
-                {
-                    SettingsDictionary.loadSettingNode(request.TargetSettings, currentNode, true, false, request);
-                }
-                finally
-                {
-                    request.TargetSettings = prevDict;
-                }
-                return;
-            }
-            if (currentNodeName == "substitutions")
-            {
-                var prevDict = request.TargetSettings;
-                // process each of these child "settings"? nodes
-                try
-                {
-                    request.TargetSettings = request.TargetBot.InputSubstitutions;
-                    SettingsDictionary.loadSettingNode(request.TargetSettings, currentNode, true, false, request);
-                }
-                finally
-                {
-                    request.TargetSettings = prevDict;
-                }
-                return;
-            }
-            if (currentNodeName == "item")
-            {
-                SettingsDictionary.loadSettingNode(request.TargetSettings, currentNode, true, false, request);
-                return;
-            }
-            if (currentNodeName == "bot")
-            {
-                SettingsDictionary.loadSettingNode(request.TargetBot.Settings, currentNode, true, false, request);
-                return;
-            }
-            string currentNodeOuterXml = currentNode.OuterXml;
-            if (currentNodeOuterXml.Length > 80) currentNodeOuterXml = currentNodeOuterXml.Substring(0, 60) + "...";
-            writeToLog("ImmediateAiml: " + currentNodeOuterXml);
-            /*
-               <TestCase name="connect">
-                    <Input>CONNECT</Input>
-                    <ExpectedAnswer>Connected to test case AIML set.</ExpectedAnswer>
-               </TestCase>
-            */
-
-            if (currentNode.NodeType == XmlNodeType.Comment) return;
-
-            OutputDelegate del = Console.WriteLine;
-            HashSet<XmlNode> nodes = new HashSet<XmlNode>();
-            bool evaledNode = false;
-            IEnumerable<XmlNodeEval> getEvaluators = GetEvaluators(currentNode);
-            foreach (XmlNodeEval funct in getEvaluators)
-            {
-                evaledNode = true;
-                var newNode = funct(currentNode, request, del);
-                if (newNode != null)
-                {
-                    evaledNode = true;
-                    foreach (var node in newNode)
-                    {
-                        nodes.Add(node);
-                    }
-                }
-            }
-            if (evaledNode)
-            {
-                del("evaledNode=" + evaledNode);
-                del("nodes.Count=" + nodes.Count);
-                int nc = 1;
-                foreach (XmlNode n in nodes)
-                {
-                    del("node {0}:{1}", nc, n);
-                    nc++;
-                }
-                return;
-            }
-            RTPBot RProcessor = loadOpts.RProcessor;
-            string path = request.Filename;
-            loadOpts = EnsureOptions(loadOpts, request, path);
-            path = ResolveToURI(path, loadOpts);
-            try
-            {
-                ImmediateAiml(currentNode, request, this, null);
-            }
-            catch (Exception e)
-            {
-                RProcessor.writeToLog(e);
-                writeToLog("ImmediateAiml: ERROR: " + e);
-                XmlNode element = currentNode;
-                string s = TextAndSourceInfo(element) + " " + LocationEscapedInfo(element);
-                writeToLog("ERROR PARSING: " + s);
-            }
-        }
-
-        private AIMLbot.Result ImmediateAiml(XmlNode node, Request request, AIMLLoader loader, object o)
-        {
-            RTPBot RProcessor = request.TargetBot;
-            return RProcessor.ImmediateAiml(node, request, this, null);
-        }
-
-        public virtual IEnumerable<XmlNode> Eval_Element_NodeType(XmlNode src, Request request, OutputDelegate outputdelegate)
-        {
-            outputdelegate("" + ImmediateAiml(src, request, this, null) + "");
-            return new XmlNode[] {src};
         }
 
         public override IEnumerable<XmlNodeEval> GetEvaluators(XmlNode node)
         {
-
-            List<XmlNodeEval> nodes = new List<XmlNodeEval>();
-            foreach (XmlNodeEvaluator xmlNodeEvaluator in XmlNodeEvaluators)
-            {
-                if (xmlNodeEvaluator == this)
-                {
-                    nodes.AddRange(base.GetEvaluators(node));
-                    continue;
-                }
-                IEnumerable<XmlNodeEval> nodeE = xmlNodeEvaluator.GetEvaluators(node);
-                nodes.AddRange(nodeE);
-            }
-            return nodes;
+            return base.GetEvaluatorsFromReflection(node);
         }
+
+        public virtual IEnumerable<XmlNode> Eval_Element_NodeType(XmlNode src, Request request, OutputDelegate outputdelegate)
+        {
+            //XmlNode node = 
+            loadAIMLNode(src, request.LoadOptions, request);
+            //if (node == null) return NO_XmlNode;
+            return new XmlNode[] {src};
+        }
+
 
         /// <summary>
         /// Given a "topic" topicNode, processes all the categories for the topic and adds them to the 
@@ -953,7 +803,6 @@ namespace RTParser.Utils
         }
         public bool ThatWideStar = false;
         public static bool useInexactMatching = false;
-        private List<XmlNodeEvaluator> XmlNodeEvaluators = new List<XmlNodeEvaluator>();
 
         /// <summary>
         /// Given a name will try to find a node named "name" in the childnodes or return null
@@ -1719,6 +1568,7 @@ namespace RTParser.Utils
         {
             var od = node.OwnerDocument;
             LineInfoElement newnode = (LineInfoElement)node.OwnerDocument.CreateNode(node.NodeType, newName, node.NamespaceURI);
+            newnode.ReadOnly = false;
             newnode.SetParentFromNode(node);
             newnode.lParent = ToLineInfoElement(node.ParentNode);
             var ats = node.Attributes;
@@ -1732,6 +1582,7 @@ namespace RTParser.Utils
             {
                 newnode.AppendChild(a.CloneNode(true));
             }
+            newnode.ReadOnly = node.IsReadOnly;
             return (LineInfoElement)newnode;
         }
 

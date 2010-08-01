@@ -34,6 +34,8 @@ namespace RTParser
     /// </summary>
     public partial class RTPBot : QuerySettings
     {
+        private List<XmlNodeEvaluator> XmlNodeEvaluators = new List<XmlNodeEvaluator>();
+        private TestCaseRunner testCaseRunner;
 
         private static int skipMany = 0;
         public static bool UseBreakpointOnError = false;
@@ -558,6 +560,9 @@ namespace RTParser
             //            BotAsRequestUsed = new AIMLbot.Request("-bank-input-", BotAsUser, this, null);
             AddExcuteHandler("aiml", EvalAIMLHandler);
             AddExcuteHandler("bot", LightWeigthBotDirective);
+
+            testCaseRunner = new TestCaseRunner(null);
+            XmlNodeEvaluators.Add(testCaseRunner);
 
             this.TheCyc = new CycDatabase(this);
             var v = TheCyc.GetCycAccess;
@@ -1478,7 +1483,7 @@ namespace RTParser
             if (text == null) return null;
             if (text == "")
             {
-                return null;
+                return "";
             }
             text = text.Trim();
             if (text == "")
@@ -1826,7 +1831,6 @@ namespace RTParser
             return AIMLTagHandler.GetAttribValue(templateNode, attribName, () => defaultIfEmpty, null);
         }
 
-
         public AIMLbot.Result ImmediateAiml(XmlNode templateNode, Request request0,
             AIMLLoader loader, AIMLTagHandler handler)
         {
@@ -1972,7 +1976,14 @@ namespace RTParser
                 if (IsOutputSentence(o))
                 {
                     if (isTraced)
-                        writeToLog("AIMLTRACE '{0}' IsOutputSentence={1}", o, AIMLLoader.ParentTextAndSourceInfo(templateNode));
+                    {
+                        string aIMLLoaderParentTextAndSourceInfo = AIMLLoader.ParentTextAndSourceInfo(templateNode);
+                        if (aIMLLoaderParentTextAndSourceInfo.Length>80)
+                        {
+                            aIMLLoaderParentTextAndSourceInfo = aIMLLoaderParentTextAndSourceInfo.Substring(0, 70) + "...";
+                        }
+                        writeToLog("AIMLTRACE '{0}' IsOutputSentence={1}", o, aIMLLoaderParentTextAndSourceInfo);
+                    }
                     createdOutput = true;
                     templateSucceeded = true;
                     result.AddOutputSentences(templateInfo, o);
@@ -2062,8 +2073,14 @@ namespace RTParser
 
         public string AsOutputSentence(string sentence)
         {
-            if (sentence == null) return null;
-            return CleanupCyc(sentence);
+            if (sentence == null)
+            {
+                return null;
+            }
+            sentence = ApplySubstitutions.Substitute(OutputSubstitutions, sentence);
+            sentence = CleanupCyc(sentence);
+            sentence = ApplySubstitutions.Substitute(OutputSubstitutions, sentence);
+            return sentence;
         }
 
         /// <summary>
@@ -2102,17 +2119,17 @@ namespace RTParser
             if (ReferenceEquals(null, tagHandler))
             {
                 if (node.NodeType == XmlNodeType.Comment) return Unifiable.Empty;
-                if (node.NodeType != XmlNodeType.Text)
+                if (node.NodeType == XmlNodeType.Text)
                 {
-                    writeToLog("XML ?? " + node.NodeType + "  " + node.OuterXml);
-                    return node.InnerXml;
+                    string s = node.InnerText.Trim();
+                    if (String.IsNullOrEmpty(s))
+                    {
+                        return Unifiable.Empty;
+                    }
+                    return s;
                 }
-                string s = node.InnerText.Trim();
-                if (String.IsNullOrEmpty(s))
-                {
-                    return Unifiable.Empty;
-                }
-                return s;
+                EvalAiml(node, request, request.WriteLine);
+                return node.InnerXml;
             }
 
             tagHandler.SetParent(parent);
@@ -2120,6 +2137,40 @@ namespace RTParser
             return cp;
         }
 
+
+        public IEnumerable<XmlNode> EvalAiml(XmlNode currentNode, Request request, OutputDelegate del)
+        {
+            HashSet<XmlNode> nodes = new HashSet<XmlNode>();
+            bool evaledNode = false;
+            del = del ?? request.WriteLine;
+            IEnumerable<XmlNodeEval> getEvaluators = GetEvaluators(currentNode);
+            foreach (XmlNodeEval funct in getEvaluators)
+            {
+                evaledNode = true;
+                var newNode = funct(currentNode, request, del);
+                if (newNode != null)
+                {
+                    evaledNode = true;
+                    foreach (var node in newNode)
+                    {
+                        nodes.Add(node);
+                    }
+                }
+            }
+            if (evaledNode)
+            {
+                del("evaledNode=" + evaledNode);
+                del("nodes.Count=" + nodes.Count);
+                int nc = 1;
+                foreach (XmlNode n in nodes)
+                {
+                    del("node {0}:{1}", nc, n);
+                    nc++;
+                }
+                return nodes;
+            }
+            return XmlNodeEvaluatorImpl.NO_XmlNode;
+        }
 
         internal AIMLTagHandler GetTagHandler(User user, SubQuery query, Request request, Result result, XmlNode node, AIMLTagHandler handler)
         {
@@ -2162,8 +2213,12 @@ namespace RTParser
                     case "eval":
                         tagHandler = new AIMLTagHandlers.aimlexec(this, user, query, request, result, node);
                         break;
+                    case "vars":
                     case "root":
-                        tagHandler = new AIMLTagHandlers.root(this, user, query, request, result, node);
+                        tagHandler = new AIMLTagHandlers.root(this, user, query, request, result, node, (() => request.TargetSettings));
+                        break;
+                    case "substitutions":
+                        tagHandler = new AIMLTagHandlers.root(this, user, query, request, result, node, (() => request.TargetBot.InputSubstitutions));
                         break;
                     case "topic":
                         tagHandler = new AIMLTagHandlers.topic(this, user, query, request, result, node);
@@ -2191,7 +2246,7 @@ namespace RTParser
                         break;
                     case "li":
                         if (liText)
-                        tagHandler = new AIMLTagHandlers.liif(this, user, query, request, result, node);
+                            tagHandler = new AIMLTagHandlers.liif(this, user, query, request, result, node);
                         break;
                     case "if":
                         tagHandler = new AIMLTagHandlers.liif(this, user, query, request, result, node);
@@ -2443,15 +2498,13 @@ namespace RTParser
                     }
                 }
             }
-            if ((UnknownTagsAreBotVars && tagHandler == null) || nodeNameLower == "name")
+            if (tagHandler != null) return tagHandler;
+            if (nodeNameLower == "name")
             {
-                tagHandler = new AIMLTagHandlers.bot(this, user, query, request, result, node);
+                return new AIMLTagHandlers.bot(this, user, query, request, result, node);
             }
-            if (tagHandler == null)
-            {
-                tagHandler = new AIMLTagHandlers.verbatum(node.OuterXml, this, user, query, request, result, node);
-                writeToLog("AIMLLOADER:  Verbatum: " + node.OuterXml);
-            }
+            tagHandler = new AIMLTagHandlers.lazyClosure(this, user, query, request, result, node);
+            writeToLog("AIMLLOADER:  Verbatum: " + node.OuterXml);
             return tagHandler;
         }
 
@@ -2978,6 +3031,7 @@ The AIMLbot program.
                     bool myBotBotDirective = false;
                     if (input.StartsWith("@"))
                     {
+                        request.TimesOutAt = DateTime.Now + new TimeSpan(0, 5, 0);
                         myBotBotDirective = myBot.BotDirective(request, input, writeLine);
                         //if (!myBotBotDirective) 
                         continue;
@@ -3102,7 +3156,7 @@ The AIMLbot program.
             }
 
             if (showHelp) console("@aimladd [graphname] <aiml/> -- inserts aiml content into graph (default LastUser.ListeningGraph )");
-            if (cmd == "aimladd")
+            if (cmd == "aimladd" || cmd == "+")
             {
                 int indexof = args.IndexOf("<");
                 if (indexof < 0)
@@ -3671,5 +3725,140 @@ The AIMLbot program.
             searchAt.Add(RuntimeDirectory);
             return searchAt;
         }
+
+
+        public IEnumerable<XmlNodeEval> GetEvaluators(XmlNode node)
+        {
+
+            List<XmlNodeEval> nodes = new List<XmlNodeEval>();
+            foreach (XmlNodeEvaluator xmlNodeEvaluator in XmlNodeEvaluators)
+            {
+                IEnumerable<XmlNodeEval> nodeE = xmlNodeEvaluator.GetEvaluators(node);
+                nodes.AddRange(nodeE);
+            }
+            return nodes;
+        }
+    }
+}
+
+namespace RTParser.AIMLTagHandlers
+{
+    internal class lazyClosure : AIMLTagHandler
+    {
+        /// <summary>
+        /// Ctor
+        /// </summary>
+        /// <param name="bot">The bot involved in this request</param>
+        /// <param name="user">The user making the request</param>
+        /// <param name="query">The query that originated this node</param>
+        /// <param name="request">The request inputted into the system</param>
+        /// <param name="result">The result to be passed to the user</param>
+        /// <param name="templateNode">The node to be processed</param>
+        public lazyClosure(RTParser.RTPBot bot,
+                        RTParser.User user,
+                        RTParser.Utils.SubQuery query,
+                        RTParser.Request request,
+                        RTParser.Result result,
+                        XmlNode templateNode)
+            : base(bot, user, query, request, result, templateNode)
+        {
+            isRecursive = false;
+        }
+
+        #region Overrides of TextTransformer
+
+        /// <summary>
+        /// The method that does the actual processing of the text.
+        /// </summary>
+        /// <returns>The resulting processed text</returns>
+        public override Unifiable RecurseProcess()
+        {
+            string currentNodeName = templateNode.Name.ToLower();
+            if (currentNodeName == "substitutions")
+            {
+                var prevDict = request.TargetSettings;
+                // process each of these child "settings"? nodes
+                try
+                {
+                    request.TargetSettings = request.TargetBot.InputSubstitutions;
+                    SettingsDictionary.loadSettingNode(request.TargetSettings, templateNode, true, false, request);
+                }
+                finally
+                {
+                    request.TargetSettings = prevDict;
+                }
+                return Succeed();
+            }
+            if (currentNodeName == "genlmt")
+            {
+                string name = RTPBot.GetAttribValue(templateNode, "graph,name,mt,to", null);
+                string from = RTPBot.GetAttribValue(templateNode, "from", null);
+                if (name == null)
+                {
+                    name = templateNode.InnerText.Trim();
+                }
+                GraphMaster FROM = request.TargetBot.GetGraph(from, request.Graph);
+                GraphMaster TO = request.TargetBot.GetGraph(name, request.Graph);
+                FROM.AddGenlMT(TO);
+                writeToLog("GENLMT: " + FROM + " => " + name + " => " + TO);
+                return Succeed();
+            }
+            if (currentNodeName == "meta")
+            {
+                writeToLog("UNUSED: " + templateNode.OuterXml);
+                return Succeed();
+
+            }
+            if (currentNodeName == "#comment")
+            {
+                writeToLog("UNUSED: " + templateNode.OuterXml);
+                return Succeed();
+
+            }
+            if (currentNodeName == "item")
+            {
+                SettingsDictionary.loadSettingNode(request.TargetSettings, templateNode, true, false, request);
+                return Succeed();
+
+            }
+            if (currentNodeName == "bot")
+            {
+                SettingsDictionary.loadSettingNode(request.TargetBot.Settings, templateNode, true, false, request);
+                return Succeed();
+            }
+            string currentNodeOuterXml = templateNode.OuterXml;
+            if (currentNodeOuterXml.Length > 80) currentNodeOuterXml = currentNodeOuterXml.Substring(0, 60) + "...";
+            writeToLog("ImmediateAiml: " + currentNodeOuterXml);
+            /*
+               <TestCase name="connect">
+                    <Input>CONNECT</Input>
+                    <ExpectedAnswer>Connected to test case AIML set.</ExpectedAnswer>
+               </TestCase>
+            */
+
+            if (templateNode.NodeType == XmlNodeType.Comment) return Succeed();
+
+            if (RTPBot.UnknownTagsAreBotVars)
+            {
+                var v = Proc.GlobalSettings.grabSetting(currentNodeName);
+                if (!Unifiable.IsNull(v)) return v;
+            }
+            var vs = Proc.EvalAiml(templateNode, request, request.WriteLine);
+            return Succeed();
+        }
+        #endregion
+
+        #region Overrides of TextTransformer
+
+        /// <summary>
+        /// The method that does the actual processing of the text.
+        /// </summary>
+        /// <returns>The resulting processed text</returns>
+        protected override Unifiable ProcessChange()
+        {
+            return Unifiable.STAR;
+        }
+
+        #endregion
     }
 }

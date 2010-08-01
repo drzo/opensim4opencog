@@ -2,6 +2,7 @@ using System;
 using System.Xml;
 using System.Text;
 using RTParser.Utils;
+using RTParser.Variables;
 
 namespace RTParser.AIMLTagHandlers
 {
@@ -32,19 +33,33 @@ namespace RTParser.AIMLTagHandlers
                         RTParser.Utils.SubQuery query,
                         RTParser.Request request,
                         RTParser.Result result,
-                        XmlNode templateNode)
+                        XmlNode templateNode, ParentProvider pp)
             : base(bot, user, query, request, result, templateNode)
         {
+
+            GetTargetSettings = pp ?? (() => this.request.TargetSettings);
         }
 
         protected override Unifiable ProcessLoad(LoaderOptions loaderOptions)
         {
-            if (this.templateNode.Name.ToLower() == "root")
+            if (CheckNode("root,vars,substitutions,substitutions"))
             {
                 // process each of these child "settings"? nodes
-                request.Loader.loadAIMLNode(templateNode, loaderOptions, request);
+                var prevDict = request.TargetSettings;
+                try
+                {
+                    SettingsDictionary.loadSettingNode(GetTargetSettings(), templateNode, true, false, request);
+                }
+                finally
+                {
+                    request.TargetSettings = prevDict;
+                }
+                return Unifiable.Empty;
+                return Succeed();
             }
             return Unifiable.Empty;
         }
+
+        public ParentProvider GetTargetSettings;
     }
 }

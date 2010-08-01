@@ -16,7 +16,7 @@ namespace RTParser.Utils
         {
             get
             {
-                if (_specified_Graph != null) return _specified_Graph;
+               // if (_specified_Graph != null) return _specified_Graph;
                 return TheRequest.Graph;
             }
             set
@@ -65,7 +65,7 @@ namespace RTParser.Utils
 
         public static readonly string MISSING_FILE = "loadopts_MISSING_FILE";
         public RTPBot RProcessor;
-        public List<CategoryInfo> CategoryInfos = new List<CategoryInfo>();
+        public List<CategoryInfo> CategoryInfos;
 
         public LoaderOptions Value
         {
@@ -84,7 +84,8 @@ namespace RTParser.Utils
             recurse = false;
             _currently_loadingfrom = impl.LoadingFrom;
             _specified_Graph = master;
-            RProcessor = impl.TargetBot;           
+            RProcessor = impl.TargetBot; 
+            CategoryInfos = new List<CategoryInfo>();
         }
 
         /*public static LoaderOptions GetDefault(Request r)

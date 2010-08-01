@@ -606,7 +606,7 @@ namespace RTParser.Utils
                     if (CheckNode(s)) return true;
                 }
             }
-            writeToLog("CheckNode change " + name + " -> " + templateNode.Name);
+            //writeToLog("CheckNode change " + name + " -> " + templateNode.Name);
             return true;
         }
     }
