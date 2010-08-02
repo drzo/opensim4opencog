@@ -914,7 +914,7 @@ namespace RTParser.Utils
             string patString = " " + pattern.AsString() + " ";
             if (patString.Contains(" exec ") || patString.Contains(" aiml ")
                 || patString.Contains(" lisp ") || patString.Contains(" tag ")
-                || patString.Contains("<") || patString.Contains(">")
+                || patString.Contains("<") || patString.Contains(">") || patString.Contains("\\") || patString.Contains("/")
                 || patString.Contains("\"") || patString.Contains("=") || patString.Contains("#$")
                 || patString.Contains("~") || patString.Contains("*"))
             {
@@ -1007,7 +1007,7 @@ namespace RTParser.Utils
                     if (!normalizedThat.ToUpper().Contains(" AND "))
                     {
                         writeToLog("ERROR in that: " + that + " -> " + normalizedThat);
-                        normalizedThat = that.ToUpper();
+                        normalizedThat = CleanPunct(that);
                     }
                 }
 
@@ -1122,6 +1122,19 @@ namespace RTParser.Utils
             Normalize.StripIllegalCharacters stripper = new RTParser.Normalize.StripIllegalCharacters(RProcessor);
 
             Unifiable substitutedInput = substitutor.Transform(" " + input + " ").Trim();
+            bool cand = input.ToUpper().Contains(" AND ");
+            bool cand2 = substitutedInput.ToUpper().Contains(" AND ");
+            int nonAlpha = NonAlphaCount(input);
+            int nonAlpha2 = NonAlphaCount(substitutedInput);
+            if (cand != cand2 || nonAlpha != nonAlpha2)
+            {
+                substitutedInput = input;
+            }
+            else
+            {
+                substitutedInput = input;
+            }
+
             // split the pattern into it's component words
             string[] substitutedWords = substitutedInput.AsString().Split(' ');
 
@@ -1132,6 +1145,10 @@ namespace RTParser.Utils
                 if (isUserInput)
                 {
                     normalizedWord = stripper.Transform(word);
+                    if (normalizedWord != word)
+                    {
+                        writeToLog("Normalize stripper " + word + "->" + normalizedWord);
+                    }
                 }
                 else
                 {
@@ -1149,6 +1166,19 @@ namespace RTParser.Utils
 
             return Unifiable.ToVMString(result).Replace("  ", " "); // make sure the whitespace is neat
         }
+
+        private int NonAlphaCount(string input)
+        {
+            input = CleanWhitepaces(input);
+            int na = 0;
+            foreach (var s in input)
+            {
+                if (char.IsLetterOrDigit(s)) continue;
+                na++;
+            }
+            return na;
+        }
+
         #endregion
 
         public static bool AimlSame(string xml1, string xml2)

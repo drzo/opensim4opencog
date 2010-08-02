@@ -143,6 +143,7 @@ namespace RTParser
         public RequestImpl(Unifiable rawInput, User user, RTPBot bot, Request parent)
             : base(user) // Get query settings intially from user
         {
+            Request pmaybe = null;
             DebugLevel = -1;
             UsedResults = new List<Result>();
             Flags = "Nothing";
@@ -166,9 +167,18 @@ namespace RTParser
             this.rawInput = rawInput;
             if (user != null)
             {
+                pmaybe = user.CurrentRequest;
                 this.user = user;
                 if (user.CurrentRequest == null) user.CurrentRequest = this;
                 TargetSettings = user.Predicates;
+                if (parent == null)
+                {
+                    if (pmaybe != null)
+                    {
+                       // ParentRequest = pmaybe;
+                    }
+                    user.CurrentRequest = this;
+                }
             }
             this.TargetBot = bot;
             this.StartedOn = DateTime.Now;

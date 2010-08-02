@@ -317,7 +317,7 @@ namespace RTParser
         {
             if (name is String)
             {
-                return ((String) name).Trim().Length == 0;
+                return ((String) name).Length == 0;
             }
             if (IsNull(name)) return true;
             return (name is Unifiable && ((Unifiable)name).IsEmpty);

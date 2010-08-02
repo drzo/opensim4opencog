@@ -72,20 +72,24 @@ namespace RTParser.Normalize
                 string p2 = ApplySubstitutions.makeRegexSafe(pattern);
                 //Unifiable match = "\\b"+@p2.Trim().Replace(" ","\\s*")+"\\b";
                 string match = "\\b" + p2.TrimEnd().TrimStart() + "\\b";
-                if (false && Regex.IsMatch(result, match, RegexOptions.IgnoreCase))
+                if (Regex.IsMatch(result, match, RegexOptions.IgnoreCase))
                 {
                     string testResult = Regex.Replace(result, match, replacement, RegexOptions.IgnoreCase);
-                    Console.WriteLine("\n  SUBST :");
-                    Console.WriteLine("   R: '{0}'", result);
-                    Console.WriteLine("  PT: '{0}'", pattern);
-                    Console.WriteLine("   V: '{0}'", value);
-                    Console.WriteLine("  P2: '{0}'", p2);
-                    Console.WriteLine("   M: '{0}'", match);
-                    Console.WriteLine("  PR: '{0}'", replacement);
-                    Console.WriteLine("  RS: '{0}'", testResult);
-                    Console.WriteLine("  TS: '{0}'", testResult.Replace(marker, "").Replace(markerSP, " "));
+                    if (false)
+                    {
+                        Console.WriteLine("\n  SUBST :");
+                        Console.WriteLine("   R: '{0}'", result);
+                        Console.WriteLine("  PT: '{0}'", pattern);
+                        Console.WriteLine("   V: '{0}'", value);
+                        Console.WriteLine("  P2: '{0}'", p2);
+                        Console.WriteLine("   M: '{0}'", match);
+                        Console.WriteLine("  PR: '{0}'", replacement);
+                        Console.WriteLine("  RS: '{0}'", testResult);
+                        Console.WriteLine("  TS: '{0}'", testResult.Replace(marker, "").Replace(markerSP, " "));
+                    }
+                    result = testResult;
                 }
-                result = Regex.Replace(result, match, replacement, RegexOptions.IgnoreCase);
+                
             }
             return result.Replace(marker, "").Replace(markerSP, " ");
         }

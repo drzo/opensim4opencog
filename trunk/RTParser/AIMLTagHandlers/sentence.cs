@@ -44,27 +44,12 @@ namespace RTParser.AIMLTagHandlers
         {
             if (CheckNode("sentence"))
             {
+                string s = templateNodeInnerText;
                 if (!templateNodeInnerText.IsEmpty)
                 {
-                    var result = new StringBuilder();
-                    Unifiable[] words = templateNodeInnerText.ToArray();
-                    bool doChange = true;
-                    foreach (var word in words)
-                    {
-                        if (doChange)
-                        {
-                            doChange = false;
-                            result.Append(word.ToPropper());
-                            continue;
-                        }
-                        string wordToValue = word.ToValue(query);
-                        if (wordToValue.Length > 1 && wordToValue.ToUpper() == wordToValue)
-                        {
-                            wordToValue = wordToValue.ToLower();
-                        }
-                        result.Append(" " + wordToValue);
-                    }
-                    return result.ToString();
+                    s = s.Substring(0, 1).ToUpper() + s.Substring(1);
+                    s = s.Replace(" ,", ",");
+                    return s;
                 }
             }
             return Unifiable.Empty;

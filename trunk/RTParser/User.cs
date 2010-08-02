@@ -425,6 +425,11 @@ namespace RTParser
         /// <returns>the identified sentence number from the input from the bot "n" steps ago</returns>
         public Unifiable getInputSentence(int n, int sentence)
         {
+            if (n == 0)
+            {
+                return CurrentRequest.rawInput;
+            }
+            n = n - 1;
             if ((n >= 0) & (n < this.SailentResultCount))
             {
                 Result historicInput = GetResult(n);

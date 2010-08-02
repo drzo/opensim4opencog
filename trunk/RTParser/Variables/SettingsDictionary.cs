@@ -837,9 +837,10 @@ namespace RTParser.Variables
             {
                 string nn = name;
                 int len = name.Length;
-                name = name.Replace("\\b", " ");
+                name = name.Replace("\\b", " ").Trim();
                 name = name.ToUpper();
                 if (name == nn) return nn;
+                return name;
             }
             return name;
         }

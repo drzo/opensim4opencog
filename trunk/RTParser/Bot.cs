@@ -1186,7 +1186,9 @@ namespace RTParser
 
         public RequestImpl GetRequest(string rawInput, string username)
         {
-            var r = new AIMLbot.Request(rawInput, FindOrCreateUser(username), this, null);
+            User findOrCreateUser = FindOrCreateUser(username);
+            var r = new AIMLbot.Request(rawInput, findOrCreateUser, this, null);
+            findOrCreateUser.CurrentRequest = r;
             r.IsTraced = true;
             return r;
         }
@@ -3873,7 +3875,7 @@ namespace RTParser.AIMLTagHandlers
                 if (p=="False")
                 {
                     writeThrus++;
-                    sb.Append("\n" + nodeOuterXml + "\n");
+                    sb.Append("\n" + nodeOuterXml.Replace("\" ","\"\n ") + "\n");
                 }
                 Console.WriteLine();
             }

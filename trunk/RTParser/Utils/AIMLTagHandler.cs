@@ -418,7 +418,7 @@ namespace RTParser.Utils
 
         protected Unifiable Recurse()
         {
-            if (!Unifiable.IsNullOrEmpty(RecurseResult))
+            if (!Unifiable.IsNull(RecurseResult))
             {
                 writeToLog("USING CACHED RECURSE " + RecurseResult);
                 // use cached recurse value
