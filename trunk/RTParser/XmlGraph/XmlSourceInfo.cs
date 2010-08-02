@@ -1033,6 +1033,32 @@ namespace RTParser.Utils
             }
 
         }
+
+        public static void unsetReadonly(LineInfoElement node)
+        {
+            if (node.ReadOnly)
+            {
+                node.ReadOnly = false;
+            }
+        }
+
+        public static void unsetReadonly(XmlNode node)
+        {
+            LineInfoElement lie = node as LineInfoElement;
+            if (node.IsReadOnly)
+            {
+                unsetReadonly(lie);
+            }
+        }
+
+        public static void notReadonly(XmlNode node)
+        {
+            LineInfoElement lie = node as LineInfoElement;
+            if (node.IsReadOnly)
+            {
+                unsetReadonly(lie);
+            }
+        }
     } // End LineInfoElement class.
 
 }

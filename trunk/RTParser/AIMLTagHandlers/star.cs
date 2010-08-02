@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Xml;
 using RTParser.Utils;
@@ -20,7 +21,7 @@ namespace RTParser.AIMLTagHandlers
     /// 
     /// The star element does not have any content. 
     /// </summary>
-    public class star : UnifibleTagHandler
+    public class star : StarTagHandler
     {
         /// <summary>
         /// Ctor
@@ -37,8 +38,43 @@ namespace RTParser.AIMLTagHandlers
                         RTParser.Request request,
                         RTParser.Result result,
                         XmlNode templateNode)
+            : base(bot, user, query, request, result, templateNode, 1)
+        {
+            StarDict = () => TheQuery.InputStar;
+        }
+    }
+
+    public class StarTagHandler : RTParser.Utils.UnifibleTagHandler
+    {
+        protected virtual IList<Unifiable> GetStarDict()
+        {
+            return StarDict();
+        }
+
+        protected int DefaultIndex { get; set; }
+
+        protected Func<IList<Unifiable>> StarDict;
+        internal const float STAR_TRUE = 0;
+        internal const float STAR_FALSE = 1;
+
+        /// <summary>
+        /// Ctor
+        /// </summary>
+        /// <param name="bot">The bot involved in this request</param>
+        /// <param name="user">The user making the request</param>
+        /// <param name="query">The query that originated this node</param>
+        /// <param name="request">The request inputted into the system</param>
+        /// <param name="result">The result to be passed to the user</param>
+        /// <param name="templateNode">The node to be processed</param>
+        public StarTagHandler(RTParser.RTPBot bot,
+                                      RTParser.User user,
+                                      RTParser.Utils.SubQuery query,
+                                      RTParser.Request request,
+                                      RTParser.Result result,
+                                      XmlNode templateNode, int idx)
             : base(bot, user, query, request, result, templateNode)
         {
+            DefaultIndex = idx;
         }
 
         public override float CanUnify(Unifiable with)
@@ -63,10 +99,12 @@ namespace RTParser.AIMLTagHandlers
                             if (childNode.NodeType == XmlNodeType.Text)
                             {
                                 string srch = (" " + with.ToValue(query) + " ").ToUpper();
-                                return ((" " + childNode.InnerText + " ").ToUpper().Equals(srch)) ? STAR_TRUE : STAR_FALSE;
+                                return ((" " + childNode.InnerText + " ").ToUpper().Equals(srch))
+                                           ? STAR_TRUE
+                                           : STAR_FALSE;
                             }
                             AIMLTagHandler part = GetChildTagHandler(childNode);
-                            if (part.CanUnify(with)>0) return STAR_FALSE;
+                            if (part.CanUnify(with) > 0) return STAR_FALSE;
                         }
                         catch (Exception e)
                         {
@@ -81,37 +119,46 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "star")
+            IList<Unifiable> stars = GetStarDict();
+            
+            int starsCount = stars.Count;
+            string value = GetAttribValue("index", "" + DefaultIndex);
+
+            string starName = this.templateNode.Name.ToLower();
+            if (CheckNode("star,thatstar,inputstar,topicstar"))
             {
-                if (this.query.InputStar.Count > 0)
+                if (starsCount > 0)
                 {
-                    int index = Convert.ToInt32(GetAttribValue("index", "1"));
+                    int index = Convert.ToInt32(value);
                     try
                     {
-                        if (index <= query.InputStar.Count)
+                        if (index <= starsCount)
                         {
                             if (index > 0)
                             {
-                                return (Unifiable)this.query.InputStar[index - 1];
+                                return stars[index - 1];
                             }
                         }
                         else
                         {
-                            writeToLogWarn("InputStar out of bounds reference caused by input: " + this.request.rawInput);
+                            writeToLogWarn(String.Format("{0} out of bounds 0<{1}<{2} reference caused by input: '{3}'",
+                                                         starName, index, starsCount, this.request.rawInput));
                         }
                     }
                     catch
                     {
-                        writeToLogWarn("Index set to non-integer value whilst processing star tag in response to the input: " + this.request.rawInput);
+                        writeToLogWarn(String.Format("{0} non-integer '{1}' of {2} reference caused by input: '{3}'",
+                             starName, value, starsCount, this.request.rawInput));
                     }
                 }
                 else
                 {
-                    writeToLogWarn("A star tag tried to reference an empty InputStar collection when processing the input: " + this.request.rawInput);
-                    return templateNodeInnerText;
+                    writeToLogWarn(String.Format("A star tag tried to reference an empty '{0}' collection '{1}' of {2} reference caused by input: '{3}'",
+                         starName, value, starsCount, this.request.rawInput)); 
                 }
             }
-            return Unifiable.Empty;
+            Unifiable ret = GetAttribValue("default", templateNodeInnerText);
+            return ret;
         }
 
     }

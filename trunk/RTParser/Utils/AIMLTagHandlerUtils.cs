@@ -10,6 +10,25 @@ namespace RTParser.Utils
 {
     abstract public partial class AIMLTagHandler
     {
+        public RTParser.Utils.SubQuery TheQuery
+        {
+            get
+            {
+                SubQuery ret = this.query 
+                    //?? request.CurrentQuery ?? this.query ?? result.CurrentQuery
+                    ;
+                return ret;
+            }
+        }
+
+        public Unifiable GetStarContent()
+        {
+            XmlNode starNode = Utils.AIMLTagHandler.getNode("<star/>", templateNode);
+            LineInfoElement.unsetReadonly(starNode);
+            star recursiveStar = new star(this.Proc, this.user, this.query, this.request, this.result, starNode);
+            return recursiveStar.Transform();
+        }
+
         public AIMLTagHandler Parent;
         public void SetParent(AIMLTagHandler handler)
         {
@@ -65,9 +84,8 @@ namespace RTParser.Utils
                 if (!templateNode.HasChildNodes)
                 {
                     // atomic version of the node
-                    XmlNode starNode = Utils.AIMLTagHandler.getNode("<star/>", templateNode);
-                    star recursiveStar = new star(this.Proc, this.user, this.query, this.request, this.result, starNode);
-                    Unifiable templateResult = recursiveStar.Transform();
+                    Unifiable templateResult = GetStarContent();
+
                     var a = afterEachOrNull(templateResult);
                     if (saveResultsOnChildren)
                     {
@@ -82,7 +100,6 @@ namespace RTParser.Utils
                     StringAppendableUnifiable templateResult = Unifiable.CreateAppendable();
                     foreach (XmlNode childNode in templateNode.ChildNodes)
                     {
-                        AIMLTagHandler tagHandlerChild;
                         try
                         {
                             bool protectChildren = ReadOnly;
@@ -301,7 +318,6 @@ namespace RTParser.Utils
 
         public virtual Unifiable CheckValue(Unifiable value)
         {
-            return value;
             if (Object.ReferenceEquals(value, Unifiable.Empty)) return value;
             if (value == null)
             {
@@ -310,6 +326,7 @@ namespace RTParser.Utils
             }
             else
             {
+                return value;
                 if (Unifiable.IsNullOrEmpty(value))
                 {
                     writeToLogWarn("CheckValue EMPTY = '" + value + "'");
@@ -577,7 +594,12 @@ namespace RTParser.Utils
                 }
                 else
                 {
-
+                    if (childNode.InnerXml.StartsWith("+"))
+                    {
+                        string s = childNode.InnerXml.Substring(1);
+                        while (s.StartsWith("+")) s = s.Substring(1);
+                        return s;
+                    }
                     bool copyParent, copyChild;
                     copyParent = copyChild = protectChildren;
 
@@ -592,7 +614,7 @@ namespace RTParser.Utils
                     } 
                     if (saveOnInnerXML)
                     {
-                        childNode.InnerXml = CheckValue(value);
+                        SaveResultOnChild(childNode, value);
                     }
                     return value;
                 }

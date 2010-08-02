@@ -1,6 +1,7 @@
 using System;
 using System.Xml;
 using System.Text;
+using RTParser.Utils;
 
 namespace RTParser.AIMLTagHandlers
 {
@@ -36,11 +37,10 @@ namespace RTParser.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "sr")
             {
-                XmlNode starNode = Utils.AIMLTagHandler.getNode("<star/>", templateNode);
-                star recursiveStar = new star(this.Proc, this.user, this.query, this.request, this.result, starNode);
-                Unifiable starContent = recursiveStar.Transform();
+                Unifiable starContent = GetStarContent();
 
                 XmlNode sraiNode = RTParser.Utils.AIMLTagHandler.getNode(String.Format("<srai>{0}</srai>", starContent), templateNode);
+                LineInfoElement.unsetReadonly(sraiNode);
                 srai sraiHandler = new srai(this.Proc, this.user, this.query, this.request, this.result, sraiNode);
                 return sraiHandler.Transform();
             }

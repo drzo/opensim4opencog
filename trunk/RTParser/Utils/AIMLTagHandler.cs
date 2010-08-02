@@ -21,7 +21,7 @@ namespace RTParser.Utils
         /// Attributes that we use from AIML not intended to be stacked nto user dictionary
         /// </summary>
         public static ICollection<string> ReservedAttributes = new HashSet<string> { };
-
+        public bool IsStarted = false;
 
         /// <summary>
         /// By calling this and not just ProcessChange() 
@@ -33,6 +33,10 @@ namespace RTParser.Utils
             ThreadStart OnExit = EnterTag(request,templateNode,query);
             try
             {
+                if (!Unifiable.IsNull(RecurseResult))
+                {
+                    return RecurseResult;
+                }
                 RecurseResult = ProcessChange();
                 return RecurseResult;
             }
@@ -428,10 +432,6 @@ namespace RTParser.Utils
                 foreach (XmlNode childNode in this.templateNode.ChildNodes)
                 {
                     Unifiable found = ProcessChildNode(childNode, ReadOnly, false);
-                    if (Unifiable.IsFalse(found))
-                    {
-                        // until it beomes true once ?   return Unifiable.Empty;
-                    }
                     templateResult.Append(found);
                 }
                 //templateNodeInnerText = templateResult;//.ToString();
@@ -542,7 +542,8 @@ namespace RTParser.Utils
                 {
                     return RecurseResult;
                 }
-                return RecurseResult = this.ProcessAimlChange();
+                RecurseResult = this.ProcessAimlChange();
+                return RecurseResult;
             }
             else
             {
@@ -559,7 +560,7 @@ namespace RTParser.Utils
         public virtual Unifiable RecurseProcess()
         {
 //#endif
-            if (!Unifiable.IsNull(RecurseResult))
+            if (!Unifiable.IsNullOrEmpty(RecurseResult))
             {
                 return RecurseResult;
             }
@@ -567,18 +568,28 @@ namespace RTParser.Utils
             XmlNode node = templateNode;
             if (tagHandler.isRecursive)
             {
+                var recursiveResult = Unifiable.CreateAppendable();
                 if (node.HasChildNodes)
                 {
                     // recursively check
                     foreach (XmlNode childNode in node.ChildNodes)
                     {
-                        if (childNode.NodeType == XmlNodeType.Element)
-                        {
-                            SaveResultOnChild(childNode, ProcessChildNode(childNode, ReadOnly, false));
-                        }
+                        
+                        Unifiable processChildNode = ProcessChildNode(childNode, ReadOnly, false);
+                        SaveResultOnChild(childNode, processChildNode);
+                        recursiveResult.Append(processChildNode);
                     }
                 }
                 var v = tagHandler.Transform();
+                if (v == recursiveResult)
+                {
+                    return v;
+                }
+                if (Unifiable.IsNullOrEmpty(v))
+                {
+                    if (!Unifiable.IsNullOrEmpty(recursiveResult))
+                        ;// v = recursiveResult;
+                }
                 return CheckValue(v);
             }
             else
@@ -611,12 +622,16 @@ namespace RTParser.Utils
         {
             //if (value == null) return;
             //if (value == "") return;
+            value = CheckValue(value);
+            if (value==null || value.Trim()=="")
+            {
+                writeToLog("-!SaveResultOnChild AIMLTRACE " + value + " -> " + node.OuterXml);                
+            }
             if (node.NodeType == XmlNodeType.Comment) return;
-            writeToLog("-!SaveResultOnChild AIMLTRACE " + value + " -> " + node.OuterXml);
 
-            if (node is XmlText) node.InnerText = CheckValue(value);
+            if (node is XmlText) node.InnerText = value;
             else
-                node.InnerXml = CheckValue(value);
+                node.InnerXml = "+" + value;
         }
 
         protected bool CheckNode(string name)
