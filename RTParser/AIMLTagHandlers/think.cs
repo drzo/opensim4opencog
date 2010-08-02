@@ -40,5 +40,10 @@ namespace RTParser.AIMLTagHandlers
             CheckNode("think");
             return Unifiable.Empty;
         }
+        protected override Unifiable ProcessChange()
+        {
+            base.ProcessChange();
+            return Unifiable.Empty;
+        }
     }
 }

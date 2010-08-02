@@ -96,12 +96,40 @@ namespace RTParser
         }
         public void AddOutputSentences(TemplateInfo ti, string unifiable)
         {
-            if (Unifiable.IsNullOrEmpty(unifiable))
+            
+            if (null == unifiable)
             {
                 bot.writeToLog("ERROR assing null output " + ti);
                 if (ti == null) return;
+                return;
+            }
+            unifiable = unifiable.Trim();
+            if (unifiable=="")
+            {
+                bot.writeToLog("ERROR assing '' output " + ti);
+                return;
+            }
+            unifiable = unifiable + " ";
+            if (false && unifiable.Length > 2 && (unifiable.Contains("<br/>") || unifiable.Contains("&p;")))
+            {
+                string[] sents = unifiable.Split(new string[] { "<br/>", "&p;" }, StringSplitOptions.RemoveEmptyEntries);
+                foreach (var s in sents)
+                {
+                    AddOutputSentences(ti, s);
+                }
+                return;
+            }
+            if (false && unifiable.Length > 2 && (unifiable.Contains(". ") || unifiable.Contains("? ")))
+            {
+                string[] sents = unifiable.Split(new string[] { ". ", "? " }, StringSplitOptions.RemoveEmptyEntries);
+                foreach (var s in sents)
+                {
+                    AddOutputSentences(ti, s);
+                }
+                return;
             }
             if (AlreadyUsed.Contains(unifiable)) return;
+
             if (ti != null)
             {
                 lock (UsedTemplates1)
