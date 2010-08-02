@@ -1141,7 +1141,10 @@ namespace RTParser
         }
         public void AddAiml(GraphMaster graph, string aimlText)
         {
-            Request request = GetBotRequest("AddAiml into '" + graph + "' '" + aimlText + "'");
+            AddAiml(graph, aimlText, GetBotRequest("AddAiml into '" + graph + "' '" + aimlText + "'"));
+        }
+        public void AddAiml(GraphMaster graph, string aimlText, Request request)
+        {
             var prev = request.Graph;
             try
             {
@@ -1489,7 +1492,7 @@ namespace RTParser
             if (text == "")
             {
                 writeToLog(" had white string ");
-                return null;
+                return "";
             }
             if (TheCyc != null)
             {
@@ -2080,7 +2083,7 @@ namespace RTParser
             sentence = ApplySubstitutions.Substitute(OutputSubstitutions, sentence);
             sentence = CleanupCyc(sentence);
             sentence = ApplySubstitutions.Substitute(OutputSubstitutions, sentence);
-            return sentence;
+            return sentence.Trim();
         }
 
         /// <summary>
@@ -2458,6 +2461,8 @@ namespace RTParser
                         return new AIMLTagHandlers.verbatum(node.OuterXml, this, user, query, request, result, node);
                     case "br":
                         return new AIMLTagHandlers.verbatum("\n", this, user, query, request, result, node);
+                    case "pre":
+                        return new AIMLTagHandlers.verbatum(node.InnerXml, this, user, query, request, result, node);
                     case "p":
                         return new AIMLTagHandlers.verbatum("\n\n", this, user, query, request, result, node);
                     default:
@@ -2486,7 +2491,8 @@ namespace RTParser
                         string name = node.Name.Substring(prefix.Key.Length);
                         var pn = node.ParentNode;
                         var newnode = AIMLLoader.CopyNode(prefix.Value, node, false);
-                        XmlAttribute atr = newnode.OwnerDocument.CreateAttribute("name");
+                        XmlAttributeLineInfo atr = (XmlAttributeLineInfo)newnode.OwnerDocument.CreateAttribute("name");
+                        atr.ReadOnly = false;
                         atr.Value = name;
                         newnode.Attributes.Append(atr);
                         if (node.Name.ToLower() != newnode.Name.ToLower())
@@ -3168,7 +3174,7 @@ The AIMLbot program.
                 string gn = args.Substring(0, indexof);
                 GraphMaster g = GetGraph(gn, myUser.ListeningGraph);
                 String aiml = args.Substring(indexof).Trim();
-                AddAiml(g, aiml);
+                AddAiml(g, aiml, request);
                 console("Done with " + args);
                 return true;
             }
@@ -3773,6 +3779,16 @@ namespace RTParser.AIMLTagHandlers
         /// <returns>The resulting processed text</returns>
         public override Unifiable RecurseProcess()
         {
+            if (templateNode.NodeType == XmlNodeType.Comment) return Unifiable.Empty;
+            if (templateNode.NodeType == XmlNodeType.Text)
+            {
+                string s = templateNode.InnerText.Trim();
+                if (String.IsNullOrEmpty(s))
+                {
+                    return Unifiable.Empty;
+                }
+                return s;
+            }
             string currentNodeName = templateNode.Name.ToLower();
             if (currentNodeName == "substitutions")
             {
@@ -3791,8 +3807,8 @@ namespace RTParser.AIMLTagHandlers
             }
             if (currentNodeName == "genlmt")
             {
-                string name = RTPBot.GetAttribValue(templateNode, "graph,name,mt,to", null);
-                string from = RTPBot.GetAttribValue(templateNode, "from", null);
+                string name = RTPBot.GetAttribValue(templateNode, "name,mt,to,super,into", null);
+                string from = RTPBot.GetAttribValue(templateNode, "graph,from", null);
                 if (name == null)
                 {
                     name = templateNode.InnerText.Trim();
@@ -3800,19 +3816,15 @@ namespace RTParser.AIMLTagHandlers
                 GraphMaster FROM = request.TargetBot.GetGraph(from, request.Graph);
                 GraphMaster TO = request.TargetBot.GetGraph(name, request.Graph);
                 FROM.AddGenlMT(TO);
-                writeToLog("GENLMT: " + FROM + " => " + name + " => " + TO);
-                return Succeed();
+                return Succeed("GENLMT: " + FROM + " => " + name + " => " + TO);
             }
             if (currentNodeName == "meta")
             {
-                writeToLog("UNUSED: " + templateNode.OuterXml);
-                return Succeed();
-
+                return Succeed("UNUSED: " + templateNode.OuterXml);
             }
             if (currentNodeName == "#comment")
             {
-                writeToLog("UNUSED: " + templateNode.OuterXml);
-                return Succeed();
+                return Succeed("UNUSED: " + templateNode.OuterXml);
 
             }
             if (currentNodeName == "item")
@@ -3844,7 +3856,38 @@ namespace RTParser.AIMLTagHandlers
                 if (!Unifiable.IsNull(v)) return v;
             }
             var vs = Proc.EvalAiml(templateNode, request, request.WriteLine);
-            return Succeed();
+            StringBuilder sb = new StringBuilder();
+            int writeThrus = 0;
+            int total = 0;
+            foreach (var node in vs)
+            {
+                total++;
+                string nodeOuterXml = node.InnerXml;
+                Console.WriteLine(nodeOuterXml);
+                string p = RTPBot.GetAttribValue(node,"PASSED","FALSE");
+                if (p=="False")
+                {
+                    writeThrus++;
+                    sb.Append("\n" + nodeOuterXml + "\n");
+                }
+                Console.WriteLine();
+            }
+            
+            Console.WriteLine();
+            Console.WriteLine();
+            Console.WriteLine(writeThrus);
+            Console.WriteLine();
+            string ss = sb.ToString();
+            Console.WriteLine(sb);
+            Console.WriteLine();
+            Console.WriteLine();
+            Console.WriteLine();
+            return Succeed("total is " + total);
+        }
+
+        private Unifiable Succeed(string p)
+        {
+            return "<!-- " + p.Replace("<!--", "<#-").Replace("-->", "-#>") + "-->";
         }
         #endregion
 

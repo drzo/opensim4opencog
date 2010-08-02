@@ -36,11 +36,18 @@ namespace RTParser.AIMLTagHandlers
         readonly Unifiable data;
         protected override Unifiable ProcessChange()
         {
+            return  RecurseResult = data;
+        }
+
+        public override Unifiable CompleteProcess()
+        {
+            //#if false
             return data;
         }
 
         public override float CanUnify(Unifiable with)
         {
+            writeToLogWarn("CANUNIFY: " + with);
             return base.CanUnify(with);
         }
     }

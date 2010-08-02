@@ -33,7 +33,8 @@ namespace RTParser.Utils
             ThreadStart OnExit = EnterTag(request,templateNode,query);
             try
             {
-                return ProcessChange();
+                RecurseResult = ProcessChange();
+                return RecurseResult;
             }
             finally
             {
@@ -50,7 +51,17 @@ namespace RTParser.Utils
             ThreadStart OnExit = EnterTag(request, templateNode, query);
             try
             {
-                return CheckValue(CompleteProcess());
+                var test = CompleteProcess();
+                if (Unifiable.IsNull(test))
+                {
+                    writeToLogWarn("NULL " + test);
+                }
+                if (Unifiable.IsNull(RecurseResult))
+                {
+                    //writeToLog("NULL RecurseResult");
+                }
+                if (test == RecurseResult) return test;
+                return test;
             }
             finally
             {
@@ -220,8 +231,15 @@ namespace RTParser.Utils
                 writeToLog("TSCORE {3} {0}*{1}->{2} ",
                            score, query.CurrentTemplate.Rating,
                            query.CurrentTemplate.Rating *= score, score);
+            }            
+            string s = Unifiable.InnerXmlText(templateNode);
+            if (string.IsNullOrEmpty(s))
+            {
+                if (!Unifiable.IsNullOrEmpty(RecurseResult))
+                    return RecurseResult;
+                return "<!-- " + templateNode.OuterXml + " -->";
             }
-            return Unifiable.InnerXmlText(templateNode);
+            return s;
         }
 
         public bool WhenTrue(Unifiable unifiable)
@@ -300,6 +318,7 @@ namespace RTParser.Utils
             this.result = result;
             this.templateNode = templateNode;
             inputString = templateNode.OuterXml;
+            initialString = inputString;
             if (this.templateNode.Attributes != null) this.templateNode.Attributes.RemoveNamedItem("xmlns");
         }
 
@@ -519,7 +538,11 @@ namespace RTParser.Utils
         {
             if (!this.inputString.IsEmpty)
             {
-                return this.ProcessAimlChange();
+                if (!Unifiable.IsNull(RecurseResult))
+                {
+                    return RecurseResult;
+                }
+                return RecurseResult = this.ProcessAimlChange();
             }
             else
             {
@@ -527,7 +550,7 @@ namespace RTParser.Utils
             }
         }
 
-        public virtual Unifiable CompleteProcess()
+        public override Unifiable CompleteProcess()
         {
 //#if false
             return RecurseProcess();

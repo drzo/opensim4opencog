@@ -34,13 +34,26 @@ namespace RTParser.Utils
         /// <returns>The resulting processed text</returns>
         protected override Unifiable ProcessChange()
         {
+            if (!Unifiable.IsNull(RecurseResult))
+            {
+                return RecurseResult;
+            }
             if (isRecursive && !ReadOnly)
             {
-                return Format(TransformAtomically(null, true));
+                return RecurseResult =  Format(TransformAtomically(FormatEach, true));
             }
-            return TransformAtomically(Format, false);
+            return RecurseResult = TransformAtomically(Format, false);
         }
 
+        protected virtual Unifiable FormatEach(Unifiable text)
+        {
+            return text;
+        }
+
+        public override Unifiable CompleteProcess()
+        {
+            return RecurseResult = ProcessChange();
+        }
         #endregion
         
 

@@ -420,7 +420,7 @@ namespace RTParser.Utils
             string s = LineTextInfo() + " " + LineNumberInfo();
             if (!s.Contains(initialString))
             {
-                return "-WAS- '" + inputString + "' => " + s;
+                return "-WAS- '" + initialString + "' -NOW- " + s;
             }
             return s;
         }
@@ -586,9 +586,12 @@ namespace RTParser.Utils
                                                  request, result, user,
                                                  this, copyChild, copyParent,
                                                  out tagHandlerChild);
+                    if (Unifiable.IsNull(value))
+                    {
+                        writeToLogWarn("ERROR NULL AIMLTRACE " + value + " -> " + childNode.OuterXml + "!");                        
+                    } 
                     if (saveOnInnerXML)
                     {
-                        writeToLog("-SaveResultOnChild AIMLTRACE " + value + " -> " + childNode.OuterXml + "!");
                         childNode.InnerXml = CheckValue(value);
                     }
                     return value;

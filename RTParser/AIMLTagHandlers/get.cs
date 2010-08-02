@@ -90,7 +90,7 @@ namespace RTParser.AIMLTagHandlers
                 {
                     return sresultGet + " " + name;
                 }
-                if (!String.IsNullOrEmpty(resultGet))
+                if (!String.IsNullOrEmpty(sresultGet))
                 {
                     if (!String.IsNullOrEmpty(gResult))
                     {

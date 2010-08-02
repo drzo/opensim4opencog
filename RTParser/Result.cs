@@ -99,6 +99,7 @@ namespace RTParser
             if (Unifiable.IsNullOrEmpty(unifiable))
             {
                 bot.writeToLog("ERROR assing null output " + ti);
+                if (ti == null) return;
             }
             if (AlreadyUsed.Contains(unifiable)) return;
             if (ti != null)

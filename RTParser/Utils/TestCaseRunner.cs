@@ -53,8 +53,11 @@ namespace RTParser.Utils
                     else
                     {
                         failCount++;
-                        traceIt = true;
-                        result = RunTest(request, (XmlNode) node, outputdelegate, out b);
+                        if (false)
+                        {
+                            traceIt = true;
+                            result = RunTest(request, (XmlNode) node, outputdelegate, out b);
+                        }
                     }
                     if (result != null)
                     {
@@ -177,22 +180,30 @@ namespace RTParser.Utils
                 {
                     RTPBot.Breakpoint("tested...");
                 }
-                return AIMLTagHandler.getNode(
-                    "<template>TESTCASE='" + tcname + "' PASSED=" + m +
-                    " GOOD=" + good + " RESP='" + resp +
-                    "' EXPECT='" + expectedAnswer +
-                    "' DESC='" + tcdesc + "'</template>", src);
-
+                return GetMessage(src, "PASSED='" + m +
+                                       "'", "TESTCASE='" + tcname + "' GOOD='" + good + "' RESP='" + resp +
+                                            "' EXPECT='" + expectedAnswer +
+                                            "' INPUT='" + input +
+                                            "' DESC='" + tcdesc + "'");
             }
             catch (Exception err)
             {
+                string ERRMSG = "" + err;
                 m = false;
                 errorCount++;
-                return AIMLTagHandler.getNode(
-                    "<template type=\"error\">TESTCASE=' " + tcname + "' PASSED=" + m + " RESP='" + resp +
-                    "' EXPECT='" + resp +
-                    "' DESC='" + tcdesc + "' ERRMSG='" + err + "'</template>", src);
+                return GetMessage(src, "PASSED='" + m +
+                                       "'", "TESTCASE='" + tcname + "' ERRMSG='" + ERRMSG + "' RESP='" + resp +
+                                            "' EXPECT='" + expectedAnswer +
+                                            "' INPUT='" + input +
+                                            "' DESC='" + tcdesc + "'");
             }
+        }
+
+        private XmlNode GetMessage(XmlNode src, string attrs, string msg)
+        {
+            attrs = attrs.Replace("\"", "#").Replace("'", "\"");
+            msg = msg.Replace("\"", "#").Replace("'", "\"");
+            return AIMLTagHandler.getNode("<template " + attrs + " >" + attrs + " " + msg + "</template>", src);
         }
 
         bool Matches(string resp, string answer, string s)
