@@ -14,7 +14,7 @@ namespace RTParser.AIMLTagHandlers
     /// 
     /// The topicstar element does not have any content. 
     /// </summary>
-    public class topicstar : RTParser.Utils.AIMLTagHandler
+    public class topicstar : StarTagHandler
     {
         /// <summary>
         /// Ctor
@@ -31,38 +31,9 @@ namespace RTParser.AIMLTagHandlers
                         RTParser.Request request,
                         RTParser.Result result,
                         XmlNode templateNode)
-            : base(bot, user, query, request, result, templateNode)
+            : base(bot, user, query, request, result, templateNode, 1)
         {
-        }
-
-        protected override Unifiable ProcessChange()
-        {
-            if (this.templateNode.Name.ToLower() == "topicstar")
-            {
-                try
-                {
-                    int result = Convert.ToInt32(GetAttribValue("index", "1"));
-                    if (result <= query.TopicStar.Count)
-                    {
-                        if (result >= 0)
-                        {
-                            return (Unifiable)this.query.TopicStar[result - 1];
-                        }
-                    }
-                    else
-                    {
-                        writeToLog("ERROR! An out of bounds index " + result + " to TopicStar was encountered when processing the input: " + this.request.rawInput);
-                    }
-                    return GetAttribValue("default", Unifiable.Empty);
-                }
-                catch (Exception e)
-                {
-                    writeToLog("ERROR! A TopicStar tag with a bady formed index (" +
-                                         this.LineNumberTextInfo() + ") was encountered processing the input: " +
-                                         this.request.rawInput + " " + e);
-                }
-            }
-            return Unifiable.Empty;
+            StarDict = () => TheQuery.TopicStar;
         }
     }
 }

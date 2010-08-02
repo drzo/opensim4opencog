@@ -76,8 +76,41 @@ namespace RTParser.AIMLTagHandlers
         static int depth = 0;
         protected override Unifiable ProcessChange()
         {
+            if (IsStarted)
+            {
+                return RecurseResult;
+            }
+            IsStarted = true;
+            if (Unifiable.IsNullOrEmpty(RecurseResult))
+            {
+                RecurseResult = ProcessChange0();
+                templateNode.InnerXml = "+" + RecurseResult;
+            }
+            return RecurseResult;
+        }
+        public override Unifiable CompleteProcess()
+        {
+            return ProcessChange();
+            return base.CompleteProcess();
+        }
+        public override string Transform()
+        {
+            return base.Transform();
+        }
+        public override Unifiable RecurseProcess()
+        {
+            return ProcessChange();
+        }
+        protected Unifiable ProcessChange0()
+        {
             try
             {
+                if (templateNode.InnerXml.StartsWith("+"))
+                {
+                    string s = templateNode.InnerXml.Substring(1);
+                    while (s.StartsWith("+")) s = s.Substring(1);
+                    return s;
+                }
                 int d = request.GetCurrentDepth();
                 object prefix = string.Format("{0}: SRAI({1}/{2})", request.Graph, depth, d);
                 if (d > request.SraiDepth.Max)

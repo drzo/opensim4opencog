@@ -17,7 +17,7 @@ namespace RTParser.AIMLTagHandlers
     /// 
     /// The thatstar element does not have any content. 
     /// </summary>
-    public class thatstar : RTParser.Utils.AIMLTagHandler
+    public class thatstar : StarTagHandler
     {
         /// <summary>
         /// Ctor
@@ -34,37 +34,9 @@ namespace RTParser.AIMLTagHandlers
                         RTParser.Request request,
                         RTParser.Result result,
                         XmlNode templateNode)
-            : base(bot, user, query, request, result, templateNode)
+            : base(bot, user, query, request, result, templateNode, 1)
         {
-        }
-
-        protected override Unifiable ProcessChange()
-        {
-            if (this.templateNode.Name.ToLower() == "thatstar")
-            {
-                try
-                {
-                    int result = Convert.ToInt32(GetAttribValue("index", "1")) - 1;
-                    if (result <= query.ThatStar.Count)
-                    {
-                        if (result >= 0)
-                        {
-                            return (Unifiable) this.query.ThatStar[result];
-                        }
-                    }
-                    else
-                    {
-                        writeToLog("ERROR! An out of bounds index " + result + " to thatstar was encountered when processing the input: " + this.request.rawInput);
-                    }
-                    return GetAttribValue("default", Unifiable.Empty);
-                }
-                catch (Exception exception)
-                {
-                    writeToLog("ERROR! A thatstar tag with a bady formed index (" + this.templateNode.OuterXml +
-                               ") was encountered processing the input: " + this.request.rawInput + " " + exception);
-                }
-            }
-            return Unifiable.Empty;
+            StarDict = () => TheQuery.ThatStar;
         }
     }
 }
