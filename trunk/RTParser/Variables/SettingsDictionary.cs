@@ -376,6 +376,24 @@ namespace RTParser.Variables
             onlyIfUnknown =
                 Boolean.Parse(RTPBot.GetAttribValue(myNode, "onlyIfKnown", "" + onlyIfUnknown));
 
+            string returnNameWhenSet =
+                RTPBot.GetAttribValue(myNode, "return-name-when-set", null);
+            if (returnNameWhenSet!=null)
+            {
+                returnNameWhenSet = returnNameWhenSet.Trim();
+                if (returnNameWhenSet.Length == 0) returnNameWhenSet = "FALSE";
+                string tst = returnNameWhenSet.ToUpper();
+                char c = tst[0];
+                if (tst == "NO" || c == 'F') returnNameWhenSet = "value";
+                else if (c == 'T' || tst == "NAME") returnNameWhenSet = "name";
+            }
+            returnNameWhenSet =
+                RTPBot.GetAttribValue(myNode, "set-return", returnNameWhenSet);
+            if (returnNameWhenSet!=null)
+            {
+                request.TargetBot.SetPredicateReturn.addSetting(name, returnNameWhenSet.ToLower());
+            }
+
             bool dictcontainsLocalCalled = dict.containsLocalCalled(name);
 
             if (updateOrAddOrDefualt == "add")
@@ -506,7 +524,8 @@ namespace RTParser.Variables
                 } 
             }
 
-            if (lower == "root" || lower == "vars" || lower == "items" || lower == "properties" || lower == "bots" || lower == "testing")
+            if (lower == "root" || lower == "vars" || lower == "items" || lower == "properties" 
+                || lower == "bots" || lower == "testing" || lower == "predicates")
             {
                 loadSettingNode(dict, myNode.ChildNodes, overwriteExisting, onlyIfUnknown, request);
                 loadSettingNode(dict, myNode.Attributes, false, false, request);

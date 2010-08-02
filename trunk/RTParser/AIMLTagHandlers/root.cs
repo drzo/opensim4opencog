@@ -42,7 +42,7 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessLoad(LoaderOptions loaderOptions)
         {
-            if (CheckNode("root,vars,substitutions,substitutions"))
+            if (CheckNode("root,vars,substitutions,substitutions,bots,properties,predicates"))
             {
                 // process each of these child "settings"? nodes
                 var prevDict = request.TargetSettings;

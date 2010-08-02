@@ -1,6 +1,7 @@
 using System;
 using System.Xml;
 using System.Text;
+using RTParser.Variables;
 
 namespace RTParser.AIMLTagHandlers
 {
@@ -61,15 +62,15 @@ namespace RTParser.AIMLTagHandlers
                     if (!templateNodeInnerText.IsEmpty)
                     {
                         if (!Unifiable.IsNull(gName)) gUser.Predicates.addSetting(gName, templateNodeInnerText);
-                        thisRequestPredicates.addSetting(name, templateNodeInnerText);
-                        return thisRequestPredicates.grabSetting(name);
+                        return SetAndReturn(name, thisRequestPredicates, templateNodeInnerText);
                     }
                     else
                     {
                         // remove the predicate
                         if (!Unifiable.IsNull(gName)) gUser.Predicates.removeSetting(gName);
                         thisRequestPredicates.removeSetting(name);
-                        return Unifiable.Empty;
+                        return SetAndReturn(name, thisRequestPredicates, templateNodeInnerText);
+                        //return Unifiable.Empty;
                     }
                 }
                 else  //recursive form like <set>name value Unifiable</set>
@@ -85,11 +86,20 @@ namespace RTParser.AIMLTagHandlers
                         return Unifiable.Empty;
                     }
                     if (!Unifiable.IsNull(gName)) gUser.Predicates.addSetting(gName, templateNodeInnerText);
-                    thisRequestPredicates.addSetting(name, joined);
-                    return thisRequestPredicates.grabSetting(name);
+                    return SetAndReturn(name, thisRequestPredicates, joined);
                 }
             }
             return Unifiable.Empty;
+        }
+
+        private Unifiable SetAndReturn(Unifiable name, ISettingsDictionary thisRequestPredicates, Unifiable value)
+        {
+            thisRequestPredicates.addSetting(name, value);
+            string ret = Proc.SetPredicateReturn.grabSetting(name);
+            if (ret == null) ret = "value";
+            else ret = ret.ToLower();
+            if (ret == "name") return name;
+            return thisRequestPredicates.grabSetting(name);
         }
     }
 }
