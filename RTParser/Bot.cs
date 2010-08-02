@@ -2218,7 +2218,12 @@ namespace RTParser
                         break;
                     case "vars":
                     case "root":
+                    case "predicates":
                         tagHandler = new AIMLTagHandlers.root(this, user, query, request, result, node, (() => request.TargetSettings));
+                        break;
+                    case "properties":
+                    case "bots":
+                        tagHandler = new AIMLTagHandlers.root(this, user, query, request, result, node, (() => request.TargetBot.GlobalSettings));
                         break;
                     case "substitutions":
                         tagHandler = new AIMLTagHandlers.root(this, user, query, request, result, node, (() => request.TargetBot.InputSubstitutions));
