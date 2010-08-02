@@ -68,7 +68,12 @@ namespace RTParser
 
         public static string InnerXmlText(XmlNode templateNode)
         {
-            return InnerXmlText0(templateNode).Trim();
+            string s = InnerXmlText0(templateNode).Trim();
+            while (s.StartsWith("+"))
+            {
+                s = s.Substring(1);
+            }
+            return s;
         }
 
         static string InnerXmlText0(XmlNode templateNode)

@@ -17,6 +17,21 @@ namespace RTParser.Utils
     /// </summary>
     abstract public partial class AIMLTagHandler : TextTransformer, IXmlLineInfo
     {
+
+        protected bool ResultReady(out string result0)
+        {
+            result0 = RecurseResult;
+            if (templateNode.InnerXml.StartsWith("+"))
+            {
+                string s = templateNode.InnerXml.Substring(1);
+                s = s.TrimStart("+ ".ToCharArray());
+                result0 = s;
+                return true;
+            }
+           // if (!Unifiable.IsNullOrEmpty(result0)) return true;
+            return false;
+        }
+
         /// <summary>
         /// Attributes that we use from AIML not intended to be stacked nto user dictionary
         /// </summary>
@@ -37,6 +52,7 @@ namespace RTParser.Utils
                 {
                     return RecurseResult;
                 }
+                IsStarted = true;
                 RecurseResult = ProcessChange();
                 return RecurseResult;
             }
@@ -278,9 +294,7 @@ namespace RTParser.Utils
                         return RecurseResult;
                     }
                 }
-                string s0 = templateNode.InnerXml.Trim();
-                string s1 = Unifiable.InnerXmlText(templateNode);
-                string sr = s1;
+                string sr = Unifiable.InnerXmlText(templateNode);
                 return CheckValue(sr);
             }
 
@@ -498,8 +512,11 @@ namespace RTParser.Utils
                     named = "" + templateNode.OwnerDocument;
                     if (string.IsNullOrEmpty(named)) named = "from: " + templateNode.OuterXml;
                 }
-                XmlDocumentLineInfo doc =
-                    new XmlDocumentLineInfo(named, true);
+                XmlDocumentLineInfo doc = null;// templateNode.OwnerDocument as XmlDocumentLineInfo;
+                if (doc == null)
+                {
+                    doc = new XmlDocumentLineInfo(named, true);
+                }
                 doc.Load(sr);
                 var de = doc.DocumentElement;
                 //doc.IsReadOnly = false;
@@ -613,12 +630,12 @@ namespace RTParser.Utils
                 }
                 else
                 {
-                    return resultNode.InnerXml;
+                    return Unifiable.InnerXmlText(resultNode);
                 }
             }
         }
 
-        public void SaveResultOnChild(XmlNode node, string value)
+        public virtual void SaveResultOnChild(XmlNode node, string value)
         {
             //if (value == null) return;
             //if (value == "") return;

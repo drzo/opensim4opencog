@@ -25,25 +25,47 @@ namespace RTParser.Utils
             isRecursive = false;
         }
 
-
-        #region Overrides of TextTransformer
-
-        /// <summary>
-        /// The method that does the actual processing of the text.
-        /// </summary>
-        /// <returns>The resulting processed text</returns>
         protected override Unifiable ProcessChange()
         {
-            RecurseResult = base.RecurseProcess();
-            return RecurseResult;
+            IsStarted = true;
+            isRecursive = true;
+            var recursiveResult = Unifiable.CreateAppendable();
+            if (templateNode.HasChildNodes)
+            {
+                // recursively check
+                foreach (XmlNode childNode in templateNode.ChildNodes)
+                {
+
+                    Unifiable processChildNode = ProcessChildNode(childNode, ReadOnly, false);
+                    SaveResultOnChild(childNode, processChildNode);
+                    recursiveResult.Append(processChildNode);
+                }
+            }
+            return recursiveResult;
         }
 
-        #endregion
+        public override void SaveResultOnChild(XmlNode node, string value)
+        {
+            //if (value == null) return;
+            //if (value == "") return;
+            value = CheckValue(value);
+            if (value == null || value.Trim() == "")
+            {
+                writeToLog("-!SaveResultOnChild AIMLTRACE " + value + " -> " + node.OuterXml);
+            }
+            if (node.NodeType == XmlNodeType.Comment) return;
+
+            if (node is XmlText) node.InnerText = value;
+            else
+                node.InnerXml = "+" + value;
+        }
 
         public override Unifiable CompleteProcess()
         {
-           // var res = base.CompleteProcess();
-
+            if (!IsStarted)
+            {
+                ProcessChange();
+            }
             var saveOpts = request.LoadOptions;
             var loaderOptions = saveOpts;
             Unifiable vv = null;
