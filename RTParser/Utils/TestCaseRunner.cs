@@ -181,7 +181,8 @@ namespace RTParser.Utils
                     RTPBot.Breakpoint("tested...");
                 }
                 return GetMessage(src, "PASSED='" + m +
-                                       "'", "TESTCASE='" + tcname + "' GOOD='" + good + "' RESP='" + resp +
+                                       "'", "TESTCASE='" + tcname + "' GOOD='" + good +
+                                            "' RESPNS='" + resp +
                                             "' EXPECT='" + expectedAnswer +
                                             "' INPUT='" + input +
                                             "' DESC='" + tcdesc + "'");
@@ -212,6 +213,10 @@ namespace RTParser.Utils
             if ((new Regex(answer)).IsMatch(resp))
             {
                 return true;
+            }
+            if (answer.StartsWith("^") && answer.EndsWith("$"))
+            {
+                answer = answer.Substring(1, answer.Length - 2);
             }
             if (Fudge(resp) == Fudge(answer))
             {

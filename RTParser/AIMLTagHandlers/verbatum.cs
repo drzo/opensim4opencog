@@ -30,21 +30,28 @@ namespace RTParser.AIMLTagHandlers
             : base(bot, user, query, request, result, templateNode)
         {
             data = show;
+            RecurseResult = data;
             isRecursive = false;
         }
 
         readonly Unifiable data;
         protected override Unifiable ProcessChange()
-        {
-            return  RecurseResult = data;
+        {              
+            RecurseResult = data;
+            return data;
         }
 
         public override Unifiable CompleteProcess()
         {
             //#if false
+            RecurseResult = data;
             return data;
         }
-
+        public override string Transform()
+        {
+            RecurseResult = data;
+            return data;
+        }
         public override float CanUnify(Unifiable with)
         {
             writeToLogWarn("CANUNIFY: " + with);
