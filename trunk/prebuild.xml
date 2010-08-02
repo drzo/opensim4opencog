@@ -360,6 +360,7 @@
       <Reference name="IKVM.Runtime.dll" localCopy="false"/>
       <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
       <Reference name="MushDLR223"  localCopy="false"/>
+      <Reference name="Microsoft.JScript"  localCopy="false"/>
 
       <Files>
           <Match path="." pattern="*.cs" recurse="true" subType="Code"><Exclude name="AssemblyInfo.cs"/><Exclude name="Program.cs"/></Match>
