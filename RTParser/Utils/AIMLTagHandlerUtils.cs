@@ -597,7 +597,7 @@ namespace RTParser.Utils
                     if (childNode.InnerXml.StartsWith("+"))
                     {
                         string s = childNode.InnerXml.Substring(1);
-                        while (s.StartsWith("+")) s = s.Substring(1);
+                        s = s.TrimStart("+ ".ToCharArray());
                         return s;
                     }
                     bool copyParent, copyChild;

@@ -912,7 +912,10 @@ namespace RTParser
             if (valueCache is XmlNode) return (XmlNode)valueCache;
             try
             {
-                return AIMLTagHandler.getNode(str);
+                var node = AIMLTagHandler.getNode(str);
+                node.ReadOnly = false;               
+                return node;
+
             }
             catch (Exception e)
             {

@@ -30,6 +30,65 @@ namespace RTParser.AIMLTagHandlers
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
+            
+        }
+
+        protected override Unifiable ProcessChange()
+        {         
+            IsStarted = true;
+            isRecursive = true;
+            var recursiveResult = Unifiable.CreateAppendable();
+
+            if (templateNode.HasChildNodes)
+            {
+
+                XmlNode attach = AIMLLoader.CopyNode("aiml", templateNode, false);
+                attach.RemoveAll();
+                // recursively check
+                foreach (XmlNode childNode in templateNode.ChildNodes)
+                {
+                    attach.AppendChild(EvalChild(childNode));
+                }
+                templateNode = attach;
+            }
+            return recursiveResult;
+        }
+
+        private XmlNode EvalChild(XmlNode templateNode)
+        {
+            XmlNode attach = templateNode.CloneNode(false);// //AIMLLoader.CopyNode(templateNode, false);
+            LineInfoElement.unsetReadonly(attach);
+            if (templateNode.HasChildNodes)
+            {
+                // recursively check
+                foreach (XmlNode childNode in templateNode.ChildNodes)
+                {
+                    if (childNode.LocalName=="eval")
+                    {
+                        LineInfoElement tchiuld = getNode("<template>" + childNode.InnerXml + "</template>", childNode);
+                        LineInfoElement.unsetReadonly(tchiuld);
+                        Unifiable processChildNode = ProcessChildNode(tchiuld, ReadOnly, false);
+                        SaveResultOnChild(childNode, processChildNode);
+                        LineInfoElement readNode = getNode("<node>" + Unifiable.InnerXmlText(childNode) + "</node>", childNode);
+                        LineInfoElement.unsetReadonly(readNode);
+                        if (readNode.ChildNodes.Count == 1)
+                        {
+                            XmlNode chilz = readNode.ChildNodes[0];
+                            LineInfoElement.chopParent(chilz);
+                            attach.AppendChild(chilz);
+                            continue;
+                        }
+                        foreach (XmlNode child in readNode.ChildNodes)
+                        {
+                            LineInfoElement.unsetReadonly(child);
+                            attach.AppendChild(child.CloneNode(true));
+                        }
+                        continue;
+                    }
+                    attach.AppendChild(EvalChild(childNode));
+                }
+            }
+            return attach;
         }
 
         protected override Unifiable ProcessLoad(LoaderOptions loaderOptions)
@@ -51,14 +110,14 @@ namespace RTParser.AIMLTagHandlers
 
                 try
                 {
-                    string s = templateNode.InnerXml;
-                    Unifiable templateNodeInnerText;
+                    string s = templateNode.InnerXml.TrimStart("+ ".ToCharArray());
+                    Unifiable templateNodeInnerText = s;
                     if (s.Length > 0)
                     {
-                        templateNodeInnerText = Recurse();
+                      //  templateNodeInnerText = Recurse();
                     } else
                     {
-                        templateNodeInnerText = s;
+                       // templateNodeInnerText = s;
                     }
                     //if (!templateNodeInnerText.IsEmpty)
                     {

@@ -871,6 +871,25 @@ namespace RTParser.Utils
             }
             else
             {
+                var ats = Attributes;
+                if (ats != null)
+                    foreach (XmlAttribute a in ats)
+                    {
+                        try
+                        {
+                            if (XmlDocumentLineInfo.SkipXmlns && a.Name == "xmlns") continue;
+                            var a2 = (XmlAttribute)a.CloneNode(deep);
+                            bool a2ro = a2.IsReadOnly && false;
+                            var a22 = a2 as AIMLXmlInfo;
+                            if (a22 != null) a22.ReadOnly = false;
+                            newnode.Attributes.Append(a2);
+                            if (a22 != null) a22.ReadOnly = a2ro;
+                        }
+                        catch (Exception e)
+                        {
+                            newnode.writeToLog("newnode.AppendChild " + e);
+                        }
+                    }
                 newnode.protect = false;
             }
             return newnode;
@@ -898,7 +917,14 @@ namespace RTParser.Utils
         public override XmlNode AppendChild(XmlNode newChild)
         {
             try
-            {            
+            {
+                if (newChild.OwnerDocument != OwnerDocument)
+                {
+                    if (newChild.NodeType == XmlNodeType.Text)
+                    {
+                        newChild = OwnerDocument.CreateTextNode(newChild.InnerText);
+                    }
+                }
                 return base.AppendChild(newChild);
             }
             catch (Exception e)
@@ -1034,6 +1060,13 @@ namespace RTParser.Utils
 
         }
 
+        public static void unsetReadonly(AIMLLineInfo node)
+        {
+            if (node.ReadOnly)
+            {
+                node.ReadOnly = false;
+            }
+        }
         public static void unsetReadonly(LineInfoElement node)
         {
             if (node.ReadOnly)
@@ -1044,7 +1077,7 @@ namespace RTParser.Utils
 
         public static void unsetReadonly(XmlNode node)
         {
-            LineInfoElement lie = node as LineInfoElement;
+            AIMLLineInfo lie = node as AIMLLineInfo;
             if (node.IsReadOnly)
             {
                 unsetReadonly(lie);
@@ -1053,11 +1086,17 @@ namespace RTParser.Utils
 
         public static void notReadonly(XmlNode node)
         {
-            LineInfoElement lie = node as LineInfoElement;
+            AIMLLineInfo lie = node as AIMLLineInfo;
             if (node.IsReadOnly)
             {
                 unsetReadonly(lie);
             }
+        }
+
+        public static void chopParent(XmlNode chilz)
+        {
+            XmlNode p = chilz.ParentNode;
+            p.RemoveChild(chilz);
         }
     } // End LineInfoElement class.
 
