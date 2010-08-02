@@ -629,15 +629,15 @@ namespace RTParser.Utils
         {
             foreach (var list in CopyOf(FallBacksGraphs))
             {
-                fs(" <genlMt graph=\"{0}\"/>", list.ScriptingName);
+                fs(" <genlMt name=\"{0}\"/>", list.ScriptingName);
             }
             foreach (var list in CopyOf(Parents))
             {
-                fs(" <!-- parent graph=\"{0}\" -->", list.ScriptingName);
+                fs(" <!-- parent name=\"{0}\" -->", list.ScriptingName);
             }
             var srai = Srai;
             if (srai != null)
-                fs(" <!-- vocabulary graph=\"{0}\" -->", srai.ScriptingName);
+                fs(" <!-- vocabulary name=\"{0}\" -->", srai.ScriptingName);
             fs(" <!-- templates={0} thats={1} patterns={2} topics={3}  -->",
                CountOF(Templates), CountOF(Thats), CountOF(Patterns), CountOF(Topics));
 

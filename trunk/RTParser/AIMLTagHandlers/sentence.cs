@@ -46,55 +46,27 @@ namespace RTParser.AIMLTagHandlers
             {
                 if (!templateNodeInnerText.IsEmpty)
                 {
-                    var result =  new StringBuilder();
-                    char[] letters = templateNodeInnerText.ToValue(query).Trim().ToCharArray();
+                    var result = new StringBuilder();
+                    Unifiable[] words = templateNodeInnerText.ToArray();
                     bool doChange = true;
-                    for (int i = 0; i < letters.Length; i++)
+                    foreach (var word in words)
                     {
-                        string letterAsString = Convert.ToString(letters[i]);
-                        if (this.Proc.Splitters.Contains(letterAsString))
+                        if (doChange)
                         {
-                            doChange = true;
+                            doChange = false;
+                            result.Append(word.ToPropper());
+                            continue;
                         }
-
-                        Regex lowercaseLetter = new Regex("[a-zA-Z]");
-
-                        if (lowercaseLetter.IsMatch(letterAsString))
+                        string wordToValue = word.ToValue(query);
+                        if (wordToValue.Length > 1 && wordToValue.ToUpper() == wordToValue)
                         {
-                            if (doChange)
-                            {
-                                result.Append(letterAsString.ToUpper(this.Proc.Locale));
-                                doChange = false;
-                            }
-                            else
-                            {
-                                result.Append(letterAsString.ToLower(this.Proc.Locale));
-                            }
+                            wordToValue = wordToValue.ToLower();
                         }
-                        else
-                        {
-                            result.Append(letterAsString);
-                        }
+                        result.Append(" " + wordToValue);
                     }
                     return result.ToString();
                 }
-                else
-                {
-                    // atomic version of the node
-                    XmlNode starNode = Utils.AIMLTagHandler.getNode("<star/>", templateNode);
-                    star recursiveStar = new star(this.Proc, this.user, this.query, this.request, this.result, starNode);
-                    templateNodeInnerText = recursiveStar.Transform();
-                    if (!templateNodeInnerText.IsEmpty)
-                    {
-                        return this.ProcessChange();
-                    }
-                    else
-                    {
-                        return Unifiable.Empty;
-                    }
-                }
             }
-
             return Unifiable.Empty;
         }
     }

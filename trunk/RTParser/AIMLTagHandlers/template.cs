@@ -41,11 +41,15 @@ namespace RTParser.AIMLTagHandlers
                         templateResult.Append(part);
                     }
             }
-            return templateResult;//.ToString();
+            return RecurseResult = templateResult;//.ToString();
         }
 
         public override Unifiable CompleteProcess()
         {
+            if (!Unifiable.IsNull(RecurseResult))
+            {
+                return RecurseResult;
+            }
             Unifiable templateResult = Unifiable.CreateAppendable();
             if (query.CurrentTemplate != null)
             {

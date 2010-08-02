@@ -446,10 +446,14 @@ namespace RTParser.Utils
                 if (!OwnerDocument.IsReadOnly) return false;
                 if (!base.IsReadOnly)
                 {
+                    if (!ReadOnly)
+                    {
+                        return false;
+                    }
                     if (CloneOf == null) return true;
                     return false;
                 }
-                return true;
+                return ReadOnly;
             }
         }
         public bool ReadOnly { get; set; }
@@ -462,7 +466,22 @@ namespace RTParser.Utils
             set
             {
                 value = AIMLLoader.CleanWildcards(value);
-                base.Value = value;
+                var wasReadOnly = ReadOnly;
+                try
+                {
+                    if (IsReadOnly)
+                    {
+                        if (ReadOnly)
+                        {
+                            ReadOnly = false;
+                        }
+                    }
+                    base.Value = value;
+                }
+                finally
+                {
+                    ReadOnly = wasReadOnly;
+                }
             }
         }
         public XmlAttributeLineInfo(string prefix, string name, string uri, XmlDocumentLineInfo doc)

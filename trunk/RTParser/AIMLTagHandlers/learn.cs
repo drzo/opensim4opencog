@@ -51,7 +51,15 @@ namespace RTParser.AIMLTagHandlers
 
                 try
                 {
-                    Unifiable templateNodeInnerText = Recurse();
+                    string s = templateNode.InnerXml;
+                    Unifiable templateNodeInnerText;
+                    if (s.Length > 0)
+                    {
+                        templateNodeInnerText = Recurse();
+                    } else
+                    {
+                        templateNodeInnerText = s;
+                    }
                     //if (!templateNodeInnerText.IsEmpty)
                     {
                         Unifiable path = GetAttribValue("filename,uri,file,url,dir,directory",templateNodeInnerText);
@@ -59,7 +67,6 @@ namespace RTParser.AIMLTagHandlers
                         {
                             request.LoadingFrom = DocumentInfo();
                             loaderOptions = request.LoadOptions;
-                            string s = templateNode.InnerXml;
                             if (s.Contains("<"))
                             {
                                 request.Loader.loadAIMLNode(templateNode, loaderOptions, request);
@@ -70,7 +77,7 @@ namespace RTParser.AIMLTagHandlers
                                 writeToLogWarn("ERROR! Attempted (but failed) to <learn> some new AIML from the following URI: '{0}' - '{1}'", path, s);
                             }
                             else
-                            {
+                            {                                
                                 request.Loader.loadAIMLURI(path, loaderOptions);
                                 return path; // Succeed();
                             }

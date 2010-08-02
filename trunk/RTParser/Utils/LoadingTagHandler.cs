@@ -46,18 +46,30 @@ namespace RTParser.Utils
 
             var saveOpts = request.LoadOptions;
             var loaderOptions = saveOpts;
+            Unifiable vv = null;
+            GraphMaster GM = loaderOptions.CtxGraph;
+            int size = GM.Size;
             try
             {
                 request.LoadingFrom = loaderOptions.LoadingFrom0 = DocumentInfo();
-                ProcessLoad(loaderOptions);
+                vv = ProcessLoad(loaderOptions);
+                if (!Unifiable.IsNullOrEmpty(vv))
+                {
+                    RecurseResult = vv;
+                }
             }
             finally
             {
                 request.LoadOptions = saveOpts;
             }
-
-            if (RecurseResult == (string)null) return Unifiable.Empty;
-            return RecurseResult;
+            int newSize = GM.Size;
+            int change = newSize - size;
+            string ch = "Loaded " + GM + " was " + size;
+            if (RecurseResult == (string)null)
+            {
+                return ch;
+            }
+            return ch + " " + RecurseResult;
         }
 
         protected abstract Unifiable ProcessLoad(LoaderOptions loaderOptions);

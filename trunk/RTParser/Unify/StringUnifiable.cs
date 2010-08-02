@@ -369,6 +369,10 @@ namespace RTParser
 
         public override string AsString()
         {
+            if (str==null)
+            {
+                return " -U-NULL- ";
+            }
             return str;
         }
 

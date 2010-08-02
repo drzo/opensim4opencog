@@ -111,5 +111,10 @@ namespace RTParser.Utils
         /// </summary>
         /// <returns>The resulting processed text</returns>
         protected abstract Unifiable ProcessChange();
+
+        public virtual Unifiable CompleteProcess()
+        {
+            return inputString;
+        }
     }
 }

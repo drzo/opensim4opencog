@@ -331,7 +331,6 @@ namespace RTParser.Utils
             Request request = loadOpts.TheRequest;
             string path = request.Filename;
             loadOpts = EnsureOptions(loadOpts, request, path);
-            path = ResolveToURI(path, loadOpts);
 
             var xtr = XmlDocumentLineInfo.CreateXmlTextReader(input0);
             string namefile = "" + path;
@@ -1008,6 +1007,7 @@ namespace RTParser.Utils
                     if (!normalizedThat.ToUpper().Contains(" AND "))
                     {
                         writeToLog("ERROR in that: " + that + " -> " + normalizedThat);
+                        normalizedThat = that.ToUpper();
                     }
                 }
 
