@@ -126,6 +126,7 @@
         </Files>
       </Project>
 
+      <!--
       <Project name="OpenMetaverse.Http" path="lib/OpenMetaverse.Http" type="Library" rootNamespace="OpenMetaverse.Http" frameworkVersion="v3_5">
         <Configuration name="Debug">
           <Options>
@@ -151,7 +152,7 @@
           <Match pattern="*.cs" recurse="true"/>
         </Files>
       </Project>
-
+-->
       <Project name="OpenMetaverse" path="lib/OpenMetaverse" type="Library" rootNamespace="OpenMetaverse" frameworkVersion="v3_5">
         <Configuration name="Debug">
           <Options>
@@ -175,9 +176,9 @@
         <Reference name="log4net"/>
         <Reference name="OpenMetaverseTypes"/>
         <Reference name="OpenMetaverse.StructuredData"/>
-        <Reference name="OpenMetaverse.Http"/>
+        <!-- <Reference name="OpenMetaverse.Http"/> -->
         <Reference name="PrimMesher.dll" localCopy="false"/>
-        <Reference name="XMLRPC"/>
+        <Reference name="XMLRPC" localCopy="false"/>
         <Files>
           <Match pattern="*.cs" recurse="true"/>
         </Files>
@@ -204,7 +205,7 @@
         <Reference name="OpenMetaverse"/>
         <Reference name="OpenMetaverseTypes"/>        
         <Reference name="OpenMetaverse.StructuredData"/>
-        <Reference name="OpenMetaverse.Http"/>
+        <!-- <Reference name="OpenMetaverse.Http"/> -->
         <Files>
           <Match pattern="*.cs" recurse="true"/>
         </Files>
@@ -424,7 +425,7 @@
       <Reference name="OpenMetaverse"/>
       <Reference name="OpenMetaverseTypes"/>
       <Reference name="OpenMetaverse.StructuredData"/>
-      <Reference name="OpenMetaverse.Http"/>
+     <Reference name="OpenMetaverse.Http"/> 
       <Reference name="Tools"/>
       <Reference name="XMLRPC"/>
 
@@ -460,15 +461,17 @@
         <Reference name="OpenMetaverseTypes" localCopy="false"/>
         <Reference name="OpenMetaverse.StructuredData" localCopy="false"/>
         <Reference name="OpenMetaverse.Rendering.Meshmerizer" localCopy="false"/>
-        <Reference name="OpenMetaverse.Http"/>
+        <!-- <Reference name="OpenMetaverse.Http"/> -->
 
-        <Reference name="assemblies/fmodex-dotnet.dll" localCopy="true"/>
-        <Reference name="assemblies/Tao.OpenGl.dll" localCopy="true"/>
-        <Reference name="assemblies/Tao.Platform.Windows.dll" localCopy="true" />
-        <Reference name="assemblies/Tools.dll" localCopy="true" />
-        <Reference name="assemblies/log4net.dll" localCopy="true" />
+        <!-- found in assemblies// -->
+        <Reference name="fmodex-dotnet.dll" localCopy="false"/>
+        <Reference name="Tao.OpenGl.dll" localCopy="false"/>
+        <Reference name="Tao.Platform.Windows.dll" localCopy="false" />
+        <Reference name="Tools.dll" localCopy="false" />
+        <Reference name="log4net.dll" localCopy="false" />
+        <Reference name="CommandLine.dll"  localCopy="false" />
 
-        <Reference name="XMLRPC" localCopy="true" />
+        <Reference name="XMLRPC.dll" localCopy="false" />
 
         <Files>
             <Match path="." pattern="*.cs" recurse="true" subType="Code">
@@ -1239,7 +1242,7 @@ app -->
       <Reference name="System.Xml"/>
       <Reference name="LookingGlass.Framework"/>
       <Reference name="OpenMetaverse"/>
-      <Reference name="OpenMetaverse.Http"/>
+      <!-- <Reference name="OpenMetaverse.Http"/> -->
       <Reference name="OpenMetaverse.StructuredData"/>
       <Reference name="OpenMetaverseTypes"/>
       <Files>
