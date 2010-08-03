@@ -77,8 +77,16 @@ namespace CogbotRadegastPluginModule
         public void FakeEvent(Object target, String infoName, params object[] parameters)
         {
             Type type = target.GetType();
-            EventInfo eventInfo = type.GetEvent(infoName);
-            MethodInfo m = eventInfo.GetRaiseMethod();
+            BindingFlags flags = BindingFlags.Static;
+            const BindingFlags AnyPublic = BindingFlags.NonPublic | BindingFlags.Public;
+            EventInfo eventInfo = type.GetEvent(infoName, AnyPublic | BindingFlags.Static);
+            if (eventInfo == null)
+            {
+                eventInfo = type.GetEvent(infoName, AnyPublic | BindingFlags.Instance);
+                flags = BindingFlags.Instance;
+
+            }
+            MethodInfo m = eventInfo.GetRaiseMethod(true);
 
             Exception lastException = null;
             if (m != null)
@@ -87,7 +95,7 @@ namespace CogbotRadegastPluginModule
                 {
 
 
-                    m.Invoke(target, parameters);
+                    m.Invoke(m.IsStatic ? null : target, parameters);
                     return;
                 }
                 catch (Exception e)
@@ -95,24 +103,36 @@ namespace CogbotRadegastPluginModule
                     lastException = e;
                 }
             }
+
+            FieldInfo fieldInfo = type.GetField(eventInfo.Name, BindingFlags.NonPublic | BindingFlags.Instance);
+            if (fieldInfo == null)
+            {
+                fieldInfo = type.GetField(eventInfo.Name, BindingFlags.NonPublic | BindingFlags.Static);
+            }
+            Delegate handlerDelegate = null;
+            if (fieldInfo != null)
+            {
+                var o = fieldInfo.GetValue(fieldInfo.IsStatic ? null : target);
+                handlerDelegate = o as Delegate;
+            }
             else
             {
+                Type tHandler = eventInfo.EventHandlerType;
+                try
                 {
-                    FieldInfo fieldInfo = type.GetField(eventInfo.Name,
-                                                        BindingFlags.Instance | BindingFlags.NonPublic |
-                                                        BindingFlags.Public);
-                    if (fieldInfo != null)
-                    {
-                        Delegate del = fieldInfo.GetValue(target) as Delegate;
-
-                        if (del != null)
-                        {
-                            del.DynamicInvoke(parameters);
-                            return;
-                        }
-                    }
+                    handlerDelegate = Delegate.CreateDelegate(tHandler, type, infoName);
+                }
+                catch (Exception exception)
+                {
+                    Console.WriteLine("" + exception);
                 }
             }
+            if (handlerDelegate != null)
+            {
+                handlerDelegate.DynamicInvoke(parameters);
+                return;
+            }
+
             if (lastException != null) throw lastException;
             throw new NotSupportedException();
         }

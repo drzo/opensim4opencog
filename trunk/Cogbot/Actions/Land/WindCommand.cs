@@ -30,11 +30,11 @@ namespace cogbot.Actions.Land
             Simulator sim = SimRegion.GetRegion(aPos.GlobalPosition).TheSimulator;
             if (sim == null) return Failure("Unknown simulator for " + aPos);
             ulong handle = sim.Handle;
-            if (!Client.Terrain.WindSpeeds.ContainsKey(handle))
+            if (sim.WindSpeeds == null)
             {
                 return Failure("Unknown wind speed at sim: " + sim);
             }
-            Vector2[] windSpeeds = Client.Terrain.WindSpeeds[handle];
+            Vector2[] windSpeeds = sim.WindSpeeds;
             Vector2 windSpeed = windSpeeds[yPos * 16 + xPos];
             return Success("Wind speed at " + aPos + " is " + windSpeed);
         }

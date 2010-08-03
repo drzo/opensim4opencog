@@ -9,6 +9,7 @@ using AIMLbot;
 using cogbot;
 using cogbot.Actions;
 using cogbot.Utilities;
+using CommandLine;
 using CommandLine.Utility;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
@@ -191,15 +192,63 @@ namespace ABuildStartup
                               }
                               else
                               {
-                                  RadegastInstance instance = RadegastInstance.GlobalInstance;
-                                  var mf = instance.MainForm;
-                                  if (false) cogbot.ClientManager.SingleInstance.ProcessCommandArgs();
-                                  Application.Run(mf);
-                                  instance = null;
-
+                                  RadegastMain(args);
                               }
                           });
 
+        }
+
+        /// <summary>
+        /// Parsed command line options
+        /// </summary>
+        //public static CommandLine CommandLine;
+
+        /// <summary>
+        /// The main entry point for the application.
+        /// </summary>
+        [STAThread]
+
+        public static void RadegastMain(string[] args)
+        {
+            // Read command line options
+            Radegast.CommandLine CommandLine = MainProgram.CommandLine = new Radegast.CommandLine();
+            CommandLineParser parser = new CommandLineParser(new CommandLineParserSettings(Console.Error));
+            if (!parser.ParseArguments(args, MainProgram.CommandLine))
+            {
+                Environment.Exit(1);
+            }
+
+            // Change current working directory to Radegast install dir
+            Directory.SetCurrentDirectory(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
+
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+
+            // Create main Radegast instance
+
+            RadegastInstance instance = RadegastInstance.GlobalInstance;
+            // See if we only wanted to display list of grids
+            if (CommandLine.ListGrids)
+            {
+                Console.WriteLine(CommandLine.GetHeader());
+                Console.WriteLine();
+                Radegast.GridManager grids = instance.GridManger;
+                Console.WriteLine("Use Grid ID as the parameter for --grid");
+                Console.WriteLine("{0,-25} - {1}", "Grid ID", "Grid Name");
+                Console.WriteLine("========================================================");
+
+                for (int i = 0; i < grids.Count; i++)
+                {
+                    Console.WriteLine("{0,-25} - {1}", grids[i].ID, grids[i].Name);
+                }
+
+                Environment.Exit(0);
+            }
+
+            var mf = instance.MainForm;
+            if (false) cogbot.ClientManager.SingleInstance.ProcessCommandArgs();
+            Application.Run(mf);
+            instance = null;
         }
 
         private static void HandleProcessExit(object sender, EventArgs e)

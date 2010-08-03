@@ -13,7 +13,7 @@ namespace cogbot.Listeners
             if (!IsMaster(simulator)) return;
             AttachedSoundPacket sound = (AttachedSoundPacket)packet;
             Sound_OnAttachSound(this,
-                                new AttachedSoundEventArgs(sound.DataBlock.SoundID, sound.DataBlock.OwnerID,
+                                new AttachedSoundEventArgs(simulator, sound.DataBlock.SoundID, sound.DataBlock.OwnerID,
                                                            sound.DataBlock.ObjectID, sound.DataBlock.Gain,
                                                            (SoundFlags) sound.DataBlock.Flags));
         }
@@ -28,7 +28,7 @@ namespace cogbot.Listeners
 
             AttachedSoundGainChangePacket change = (AttachedSoundGainChangePacket)packet;
 
-            Sound_OnAttachSoundGainChange(this,new AttachedSoundGainChangeEventArgs(change.DataBlock.ObjectID, change.DataBlock.Gain));
+            Sound_OnAttachSoundGainChange(this,new AttachedSoundGainChangeEventArgs(simulator,change.DataBlock.ObjectID, change.DataBlock.Gain));
         }
 
         protected void PreloadSoundHandler(object sender, PacketReceivedEventArgs e)
@@ -43,7 +43,7 @@ namespace cogbot.Listeners
             foreach (PreloadSoundPacket.DataBlockBlock data in preload.DataBlock)
             {
 
-                Sound_OnPreloadSound(this, new PreloadSoundEventArgs(data.SoundID, data.OwnerID, data.ObjectID));
+                Sound_OnPreloadSound(this, new PreloadSoundEventArgs(simulator, data.SoundID, data.OwnerID, data.ObjectID));
             }
         }
 
@@ -57,7 +57,7 @@ namespace cogbot.Listeners
 
             SoundTriggerPacket trigger = (SoundTriggerPacket)packet;
 
-            Sound_OnSoundTrigger(this, new SoundTriggerEventArgs(
+            Sound_OnSoundTrigger(this, new SoundTriggerEventArgs(simulator,
                                            trigger.SoundData.SoundID,
                                            trigger.SoundData.OwnerID,
                                            trigger.SoundData.ObjectID,

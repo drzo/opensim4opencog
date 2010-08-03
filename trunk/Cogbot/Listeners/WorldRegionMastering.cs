@@ -677,9 +677,10 @@ namespace cogbot.Listeners
         }
 
 
-        public override void Terrain_OnLandPatch(Simulator simulator, int x, int y, int width, float[] data)
+        public override void Terrain_OnLandPatch(object sender, LandPatchReceivedEventArgs e) 
         {
             //client.Terrain.LandPatchReceived -= Terrain_OnLandPatch;
+            //Simulator simulator, int x, int y, int width, float[] data
             //Console.Write(",");
             //SimRegion R = SimRegion.GetRegion(simulator);
             //base.Terrain_OnLandPatch(simulator, x, y, width, null);

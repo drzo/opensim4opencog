@@ -71,7 +71,7 @@ namespace cogbot.Actions.Objects
                 try { xml = File.ReadAllText(filename); }
                 catch (Exception e) { return Failure(e.Message); }
 
-                try { prims = ClientHelpers.OSDToPrimList(OSDParser.DeserializeLLSDXml(xml)); }
+                try { prims = Helpers.OSDToPrimList(OSDParser.DeserializeLLSDXml(xml)); }
                 catch (Exception e) { return Failure("failed to deserialize " + filename + ": " + e.Message); }
 
                 // Build an organized structure from the imported prims
