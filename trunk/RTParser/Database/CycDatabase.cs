@@ -189,7 +189,13 @@ namespace RTParser.Database
         
         static private Dictionary<string, Unifiable> stringTOResult = new Dictionary<string, Unifiable>();
         static private Unifiable NILTerm = "NIL";
-        public bool Lookup(Unifiable textIn,Unifiable filter,out Unifiable term, SubQuery subquery)
+
+        public bool Lookup(Unifiable textIn, Unifiable filter, out Unifiable term, SubQuery subquery)
+        {
+            return Lookup1(textIn, filter, out term, subquery);
+        }
+
+        public bool Lookup1(Unifiable textIn,Unifiable filter,out Unifiable term, SubQuery subquery)
         {
             if (Unifiable.IsNullOrEmpty(textIn))
             {
@@ -231,7 +237,7 @@ namespace RTParser.Database
                         writeToLog("true={0} term={1} textIn{2}  paraPhrase={3}", t, term, textIn, paraphrase);
                     }
                 }
-                stringTOResult.Add(key, term);
+                stringTOResult[key] = term;
                 return t;                
             }
         }
@@ -244,14 +250,26 @@ namespace RTParser.Database
                 term = text;
                 return false;
             }
+            string textStr = text.StartsWith("\"") ? text : String.Format("\"{0}\"", text);
             if (!CycEnabled)
             {
-                term = String.Format("\"{0}\"", text);
+                term = textStr;
                 return true;
             }
             filter = Cyclify(filter);
             bool nospaces = !text.Contains(" ");
-            Unifiable ptext = textIn.ToPropper();
+
+            string nqtext = textStr.Trim("\"".ToCharArray());
+            string ptext = nqtext.Substring(0, 1).ToUpper() + nqtext.Substring(2);
+
+            if (nospaces)
+            {
+                if (Unifiable.IsFalse(EvalSubL(String.Format("(car (fi-complete \"{0}-TheWord\"))", ptext), null)))
+                {
+                    //no word used
+                    nospaces = false;
+                }
+            }
             if(false
             || lookupCycTerm("(#$nameString ?CYCOBJECT \"%s\")", text, filter, out term)
             || (nospaces && (lookupCycTerm("(#$denotation #$%s-TheWord ?TEXT ?TYPE ?CYCOBJECT)", ptext, filter, out term)
@@ -263,17 +281,18 @@ namespace RTParser.Database
             || lookupCycTerm("(#$countryName-ShortForm ?CYCOBJECT \"%s\")", text, filter,out term)
             || lookupCycTerm("(#$acronymString ?CYCOBJECT \"%s\")", text, filter,out term)
             || lookupCycTerm("(#$scientificName ?CYCOBJECT \"%s\")", text, filter,out term)
-            || lookupCycTerm("(#$termStrings ?CYCOBJECT \"%s\")", text, filter,out term)
-            || lookupCycTerm("(#$termStrings-GuessedFromName ?CYCOBJECT \"%s\")", text, filter,out term)
+            || lookupCycTerm("(#$termStrings-GuessedFromName ?CYCOBJECT \"%s\")", text, filter, out term)
             || lookupCycTerm("(#$prettyString ?CYCOBJECT \"%s\")", text, filter,out term)
-            || lookupCycTerm("(#$nicknames ?CYCOBJECT \"%s\")", text, filter,out term)
             || lookupCycTerm("(#$preferredTermStrings ?CYCOBJECT \"%s\")", text, filter, out term)
             || lookupCycTerm("(#$and (#$isa ?P #$ProperNamePredicate-Strict)(?P ?CYCOBJECT \"%s\"))", text, filter, out term)
             || lookupCycTerm("(#$and (#$isa ?P #$ProperNamePredicate-General)(?P ?CYCOBJECT \"%s\"))", text, filter, out term)
-            || (nospaces && lookupCycTerm("(#$preferredGenUnit ?CYCOBJECT ?POS #$%s-TheWord )", ptext, filter, out term))
+            || (nospaces && lookupCycTerm("(#$preferredGenUnit ?CYCOBJECT ?POS #$%s-TheWord )", ptext, filter, out term))                        
+            || lookupCycTerm("(#$termStrings ?CYCOBJECT \"%s\")", text, filter, out term)
+            || lookupCycTerm("(#$nicknames ?CYCOBJECT \"%s\")", text, filter, out term)
             || lookupCycTerm("(#$and (#$wordStrings ?WORD \"%s\") (#$or (#$denotation ?WORD ?TEXT ?TYPE ?CYCOBJECT) (#$denotationRelatedTo ?WORD ?TEXT ?TYPE ?CYCOBJECT) ))", text, filter,out term))            
                 return true;
-            term = EvalSubL(String.Format("(car (fi-complete \"{0}\"))", text),null);
+
+            term = EvalSubL(String.Format("(car (fi-complete \"{0}\"))", nqtext), null);
             // Followed by asking Cyc to guess at the word using (fi-complete \”%s\”)
             if (Unifiable.IsTrue(term))
             {
@@ -282,7 +301,7 @@ namespace RTParser.Database
                     return true;
                 }
             }
-            term = EvalSubL(String.Format("(cdr (car (denotation-mapper \"{0}\")))", text), null);
+            term = EvalSubL(String.Format("(cdr (car (denotation-mapper \"{0}\")))", nqtext), null);
             if (Unifiable.IsTrue(term))
             {
                 if (IsaFilter(term, filter))
@@ -290,7 +309,7 @@ namespace RTParser.Database
                     return true;
                 }
             }
-            term = EvalSubL(String.Format("(car (denots-of-string \"{0}\"))", text), null);
+            term = EvalSubL(String.Format("(car (denots-of-string \"{0}\"))", nqtext), null);
             if (Unifiable.IsTrue(term))
             {
                 if (IsaFilter(term, filter))
@@ -305,9 +324,19 @@ namespace RTParser.Database
 
         //(mapcar #'(lambda (x) (pwhen (member col x) ))  (denotation-mapper "isa"))
 
-        private bool lookupCycTerm(string template, Unifiable text,Unifiable filter, out Unifiable term)
-        {
-            template = template.Replace("%s", text);            
+        private bool lookupCycTerm(string template, string text,Unifiable filter, out Unifiable term)
+        {            
+            string textStr = text.StartsWith("\"") ? text : ("\"" + text + "\"");
+            if (!char.IsLetter(text[0]))
+            {
+                
+            }
+            template = template.Replace("\"%s\"", textStr);
+            
+            //template = template.Replace("#$%s-TheWord", textWord);   
+            template = template.Replace("%s", text);
+            
+            
             try
             {
 	            term = EvalSubL(String.Format("(first (ask-template '?CYCOBJECT '(#$and {0} (#$isa ?CYCOBJECT {1})) #$EverythingPSC))", template,filter), null);
@@ -356,6 +385,7 @@ namespace RTParser.Database
         {
             try
             {
+                if (String.IsNullOrEmpty(cmd)) return "NIL";
                 Unifiable ss = EvalSubL("(cyc-query '" + cmd + " #$EverythingPSC)", null);
                 if (Unifiable.IsFalse(ss))
                 {
@@ -431,7 +461,7 @@ namespace RTParser.Database
 
         internal bool IsaFilter(Unifiable term, Unifiable filter)
         {
-            if (term.IsEmpty) return false;
+            if (term==null || term.IsEmpty) return false;
             if (term == "NIL") return false;
             if (!filter.IsEmpty)
             {
@@ -494,18 +524,19 @@ namespace RTParser.Database
             if (text.StartsWith("("))
             {   //todo is a list then?
                 text = String.Format("'{0}", text);
+            } else if (text.StartsWith("'#$"))
+            {
+                text = text.Substring(1);
             }
             //return text;
             try
             {
-                while (text.EndsWith("."))
-                {
-
-                }
+                text = text.TrimEnd(".".ToCharArray());
                 if (text.Trim().Length==0)
                 {
                     
                 }
+                if (text == "'()" || text == "NIL") return "";
                 string res = EvalSubL(String.Format("(generate-phrase {0})", text), null);
                 if (String.IsNullOrEmpty(res)) return text;
                 return res;
@@ -521,9 +552,9 @@ namespace RTParser.Database
             if (mt == "NIL") return "NIL";
             mt = mt.Trim();
             if (mt.Length < 3) return mt;
-            if (Char.IsLetter(mt.ToCharArray()[0])) return "#$" + mt;
+
+            if (mt.StartsWith("(") || mt.StartsWith("#$") || mt.StartsWith("\"")) return mt;
             if (Char.IsDigit(mt.ToCharArray()[0])) return mt;
-            if (mt.StartsWith("(") || mt.StartsWith("#$")) return mt;
             return "#$" + mt;
         }
 

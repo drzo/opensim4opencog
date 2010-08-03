@@ -2016,7 +2016,7 @@ namespace RTParser
                 try
                 {
                     Unifiable ss = SystemExecute(left, lang, request);
-                    if (Unifiable.IsFalse(ss))
+                    if (Unifiable.IsFalse(ss) || Unifiable.IsNullOrEmpty(ss))
                     {
                         if (isTraced)
                             writeToLog("GUARD FALSE '{0}' TEMPLATE={1}", request,
@@ -2571,7 +2571,7 @@ namespace RTParser
                     Type t = Type.GetType(typeName);
                     if (t == null) return null;
                     var c = t.GetConstructor(TagHandler.CONSTRUCTOR_TYPES);
-                    return (AIMLTagHandler) c.Invoke(new object[] {user, query, request, result, node, this});
+                    return (AIMLTagHandler)c.Invoke(new object[] { this, user, query, request, result, node });
                 }
                 catch (Exception e)
                 {
@@ -3445,6 +3445,13 @@ The AIMLbot program.
 
             bool uc = BotUserDirective(myUser, input, console);
             if (showHelp || uc) return true;
+            SystemExecHandler handler;
+            if (ExecuteHandlers.TryGetValue(cmd, out handler))
+            {
+                console("" + handler(args, request));
+                return true;
+            }
+
             console("unknown: @" + input);
             return false;
         }
