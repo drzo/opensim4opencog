@@ -488,9 +488,9 @@ namespace CogbotRadegastPluginModule
             if (av == null) return;
 
             if (instance.State.FollowName != av.Name)
-                instance.State.Follow(av.Name);
+                instance.State.Follow(av.Name, av.ID);
             else
-                instance.State.Follow(string.Empty);
+                instance.State.Follow(string.Empty, UUID.Zero);
         }
 
         private void ctxPoint_Click(object sender, EventArgs e)
