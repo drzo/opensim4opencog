@@ -213,7 +213,7 @@ namespace OpenMetaverse.Imaging
 
 				bitmap.UnlockBits(bd);
 			}
-            else
+			else
             {
                 throw new NotSupportedException("Unrecognized pixel format: " + bitmap.PixelFormat.ToString());
             }

@@ -32,21 +32,30 @@ namespace OpenMetaverse
 {
     public class TerrainManager
     {
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="simulator"></param>
-        /// <param name="x"></param>
-        /// <param name="y"></param>
-        /// <param name="width"></param>
-        /// <param name="data"></param>
-        public delegate void LandPatchCallback(Simulator simulator, int x, int y, int width, float[] data);
-        
-        /// <summary></summary>
-        public event LandPatchCallback OnLandPatch;
+        #region EventHandling
+        /// <summary>The event subscribers. null if no subcribers</summary>
+        private EventHandler<LandPatchReceivedEventArgs> m_LandPatchReceivedEvent;
 
-        public InternalDictionary<ulong, TerrainPatch[]> SimPatches = new InternalDictionary<ulong, TerrainPatch[]>();
-        public InternalDictionary<ulong,Vector2[]> WindSpeeds = new InternalDictionary<ulong,Vector2[]>();
+        /// <summary>Raises the LandPatchReceived event</summary>
+        /// <param name="e">A LandPatchReceivedEventArgs object containing the
+        /// data returned from the simulator</param>
+        protected virtual void OnLandPatchReceived(LandPatchReceivedEventArgs e)
+        {
+            EventHandler<LandPatchReceivedEventArgs> handler = m_LandPatchReceivedEvent;
+            if (handler != null)
+                handler(this, e);
+        }
+
+        /// <summary>Thread sync lock object</summary>
+        private readonly object m_LandPatchReceivedLock = new object();
+
+        /// <summary>Raised when the simulator responds sends </summary>
+        public event EventHandler<LandPatchReceivedEventArgs> LandPatchReceived
+        {
+            add { lock (m_LandPatchReceivedLock) { m_LandPatchReceivedEvent += value; } }
+            remove { lock (m_LandPatchReceivedLock) { m_LandPatchReceivedEvent -= value; } }
+        }
+        #endregion
 
         private GridClient Client;
 
@@ -58,44 +67,6 @@ namespace OpenMetaverse
         {
             Client = client;
             Client.Network.RegisterCallback(PacketType.LayerData, LayerDataHandler);
-        }
-
-        /// <summary>
-        /// Retrieve the terrain height at a given coordinate
-        /// </summary>
-        /// <param name="regionHandle">The region that the point of interest is in</param>
-        /// <param name="x">Sim X coordinate, valid range is from 0 to 255</param>
-        /// <param name="y">Sim Y coordinate, valid range is from 0 to 255</param>
-        /// <param name="height">The terrain height at the given point if the
-        /// lookup was successful, otherwise 0.0f</param>
-        /// <returns>True if the lookup was successful, otherwise false</returns>
-        public bool TerrainHeightAtPoint(ulong regionHandle, int x, int y, out float height)
-        {
-            if (x >= 0 && x < 256 && y >= 0 && y < 256)
-            {
-                TerrainPatch[] found;
-                lock (SimPatches.Dictionary)
-                {
-                    if (!SimPatches.TryGetValue(regionHandle, out found))
-                    {
-                        height = 0.0f;
-                        return false;
-                    }
-                }
-                int patchX = x / 16;
-                int patchY = y / 16;
-                x = x % 16;
-                y = y % 16;
-                TerrainPatch patch = found[patchY * 16 + patchX];
-                if (patch != null)
-                {
-                    height = patch.Data[y * 16 + x];
-                    return true;
-                }
-            }
-
-            height = 0.0f;
-            return false;
         }
 
         private void DecompressLand(Simulator simulator, BitPack bitpack, TerrainPatch.GroupHeader group)
@@ -132,27 +103,16 @@ namespace OpenMetaverse
 
                 count++;
 
-                if (OnLandPatch != null)
-                {
-                    try { OnLandPatch(simulator, x, y, group.PatchSize, heightmap); }
-                    catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
-                }
+                try { OnLandPatchReceived(new LandPatchReceivedEventArgs(simulator, x, y, group.PatchSize, heightmap)); }
+                catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
 
                 if (Client.Settings.STORE_LAND_PATCHES)
                 {
-                    TerrainPatch[] found;
-                    lock (SimPatches.Dictionary)
-                        if (!SimPatches.TryGetValue(simulator.Handle, out found))
-                        {
-                            found = new TerrainPatch[16 * 16];
-                            SimPatches.Add(simulator.Handle, found);
-                        }
                     TerrainPatch patch = new TerrainPatch();
                     patch.Data = heightmap;
                     patch.X = x;
                     patch.Y = y;
-                    found[y * 16 + x] = patch;
-
+                    simulator.Terrain[y * 16 + x] = patch;
                 }
             }
         }
@@ -179,17 +139,12 @@ namespace OpenMetaverse
             header = TerrainCompressor.DecodePatchHeader(bitpack);
             TerrainCompressor.DecodePatch(patches, bitpack, header, group.PatchSize);
             float[] yvalues = TerrainCompressor.DecompressPatch(patches, header, group);
-            ulong handle = simulator.Handle;
-            Vector2[] windSpeeds;
-            lock (WindSpeeds.Dictionary)
+
+            if (simulator.Client.Settings.STORE_LAND_PATCHES)
             {
-                if (!WindSpeeds.TryGetValue(handle,out windSpeeds))
-                {
-                    windSpeeds = WindSpeeds[handle] = new Vector2[256]; 
-                }
+                for (int i = 0; i < 256; i++)
+                    simulator.WindSpeeds[i] = new Vector2(xvalues[i], yvalues[i]);
             }
-            for (int i = 0; i < 256; i++)
-                windSpeeds[i] = new Vector2(xvalues[i], yvalues[i]);
         }
 
         private void DecompressCloud(Simulator simulator, BitPack bitpack, TerrainPatch.GroupHeader group)
@@ -214,7 +169,7 @@ namespace OpenMetaverse
             switch (type)
             {
                 case TerrainPatch.LayerType.Land:
-                    if (OnLandPatch != null || Client.Settings.STORE_LAND_PATCHES)
+                    if (m_LandPatchReceivedEvent != null || Client.Settings.STORE_LAND_PATCHES)
                         DecompressLand(e.Simulator, bitpack, header);
                     break;
                 case TerrainPatch.LayerType.Water:
@@ -232,4 +187,36 @@ namespace OpenMetaverse
             }
         }
     }
+
+    #region EventArgs classes
+    // <summary>Provides data for LandPatchReceived</summary>
+    public class LandPatchReceivedEventArgs : EventArgs
+    {
+        private readonly Simulator m_Simulator;
+        private readonly int m_X;
+        private readonly int m_Y;
+        private readonly int m_PatchSize;
+        private readonly float[] m_HeightMap;
+
+        /// <summary>Simulator from that sent tha data</summary>
+        public Simulator Simulator { get { return m_Simulator; } }
+        /// <summary>Sim coordinate of the patch</summary>
+        public int X { get { return m_X; } }
+        /// <summary>Sim coordinate of the patch</summary>
+        public int Y { get { return m_Y; } }
+        /// <summary>Size of tha patch</summary>
+        public int PatchSize { get { return m_PatchSize; } }
+        /// <summary>Heightmap for the patch</summary>
+        public float[] HeightMap { get { return m_HeightMap; } }
+
+        public LandPatchReceivedEventArgs(Simulator simulator, int x, int y, int patchSize, float[] heightMap)
+        {
+            this.m_Simulator = simulator;
+            this.m_X = x;
+            this.m_Y = y;
+            this.m_PatchSize = patchSize;
+            this.m_HeightMap = heightMap;
+        }
+    }
+    #endregion
 }

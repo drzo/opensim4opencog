@@ -469,8 +469,8 @@ namespace OpenMetaverse.Imaging
 						System.Drawing.Imaging.PixelFormat.Format32bppArgb);
 
 					bd = b.LockBits(new System.Drawing.Rectangle(0, 0, b.Width, b.Height),
-                    System.Drawing.Imaging.ImageLockMode.WriteOnly,
-                    System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
+						System.Drawing.Imaging.ImageLockMode.WriteOnly,
+						System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
 				}
 				else
 				{	// Image does not need an alpha layer, so do not include one.

@@ -43,7 +43,7 @@ namespace OpenMetaverse
         /// <summary>Internal dictionary that this class wraps around. Do not
         /// modify or enumerate the contents of this dictionary without locking
         /// on this member</summary>
-        public Dictionary<TKey, TValue> Dictionary;
+        internal Dictionary<TKey, TValue> Dictionary;
 
         /// <summary>
         /// Gets the number of Key/Value pairs contained in the <seealso cref="T:InternalDictionary"/>

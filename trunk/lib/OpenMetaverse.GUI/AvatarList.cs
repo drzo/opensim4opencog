@@ -295,35 +295,35 @@ namespace OpenMetaverse.GUI
                 TrackedAvatar trackedAvatar;
                 bool found;
 
-                    lock (_UntrackedAvatars)
+                lock (_UntrackedAvatars)
                     found = _UntrackedAvatars.TryGetValue(avatar.ID, out trackedAvatar);
 
                 if (found)
-                        {
-                            trackedAvatar.Name = avatar.Name;
-                            trackedAvatar.ListViewItem.Text = avatar.Name;
-                            trackedAvatar.ListViewItem.ForeColor = Color.FromKnownColor(KnownColor.ControlText);
+                {
+                    trackedAvatar.Name = avatar.Name;
+                    trackedAvatar.ListViewItem.Text = avatar.Name;
+                    trackedAvatar.ListViewItem.ForeColor = Color.FromKnownColor(KnownColor.ControlText);
 
                     lock (_TrackedAvatars) _TrackedAvatars.Add(avatar.LocalID, avatar.ID, trackedAvatar);
-                            _UntrackedAvatars.Remove(avatar.ID);
-                        }
-                    
+                    _UntrackedAvatars.Remove(avatar.ID);
+                }                
+
                 lock (_TrackedAvatars)
                     found = _TrackedAvatars.TryGetValue(avatar.ID, out trackedAvatar);
 
                 if (found)
-                    {
-                        trackedAvatar.Avatar = avatar;
-                        trackedAvatar.Name = avatar.Name;
-                        trackedAvatar.ID = avatar.ID;
+                {
+                    trackedAvatar.Avatar = avatar;
+                    trackedAvatar.Name = avatar.Name;
+                    trackedAvatar.ID = avatar.ID;
 
-                        string strDist = avatar.ID == _Client.Self.AgentID ? "--" : (int)Vector3.Distance(_Client.Self.SimPosition, avatar.Position) + "m";
-                        trackedAvatar.ListViewItem.SubItems[1].Text = strDist;
-                    }
-                    else
-                    {
-                        AddAvatar(avatar.ID, avatar, Vector3.Zero);
-                    }               
+                    string strDist = avatar.ID == _Client.Self.AgentID ? "--" : (int)Vector3.Distance(_Client.Self.SimPosition, avatar.Position) + "m";
+                    trackedAvatar.ListViewItem.SubItems[1].Text = strDist;
+                }
+                else
+                {
+                    AddAvatar(avatar.ID, avatar, Vector3.Zero);
+                }
 
                 this.Sort();
             }
@@ -427,18 +427,18 @@ namespace OpenMetaverse.GUI
                     foundAvatar = _TrackedAvatars.TryGetValue(e.AvatarID, out trackedAvatar);
 
                 if (foundAvatar)
-                    {                        
-                        this.BeginInvoke((MethodInvoker)delegate
-                        {
-                            byte param = e.VisualParams[31];
-                            if (param > 0)
-                                trackedAvatar.ListViewItem.ForeColor = Color.Blue;
-                            else
-                                trackedAvatar.ListViewItem.ForeColor = Color.Magenta;
-                        });                        
-                    }
+                {
+                    this.BeginInvoke((MethodInvoker)delegate
+                    {
+                        byte param = e.VisualParams[31];
+                        if (param > 0)
+                            trackedAvatar.ListViewItem.ForeColor = Color.Blue;
+                        else
+                            trackedAvatar.ListViewItem.ForeColor = Color.Magenta;
+                    });
                 }
             }
+        }
             
     
 
@@ -465,10 +465,10 @@ namespace OpenMetaverse.GUI
                 found = _TrackedAvatars.ContainsKey(e.Update.LocalID);
 
             if (found)
-                {
-                    Avatar av;
-                    if (e.Simulator.ObjectsAvatars.TryGetValue(e.Update.LocalID, out av))
-                        UpdateAvatar(av);
+            {
+                Avatar av;
+                if (e.Simulator.ObjectsAvatars.TryGetValue(e.Update.LocalID, out av))
+                    UpdateAvatar(av);
             }
         }
 

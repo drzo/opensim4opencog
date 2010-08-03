@@ -53,7 +53,6 @@ namespace OpenMetaverse.Messages
                 case "ParcelObjectOwnersReply": message = new ParcelObjectOwnersReplyMessage(); break;
                 case "TeleportFinish": message = new TeleportFinishMessage(); break;
                 case "EnableSimulator": message = new EnableSimulatorMessage(); break;
-                case "DisableSimulator": message = new DisableSimulatorMessage(); break;
                 case "ParcelPropertiesUpdate": message = new ParcelPropertiesUpdateMessage(); break;
                 case "EstablishAgentCommunication": message = new EstablishAgentCommunicationMessage(); break;
                 case "ChatterBoxInvitation": message = new ChatterBoxInvitationMessage(); break;
@@ -91,6 +90,8 @@ namespace OpenMetaverse.Messages
                 case "RegionInfo": message = new RegionInfoMessage(); break;
                 case "ObjectMediaNavigate": message = new ObjectMediaNavigateMessage(); break;
                 case "ObjectMedia": message = new ObjectMediaMessage(); break;
+                case "AttachmentResources": message = AttachmentResourcesMessage.GetMessageHandler(map); break;
+                case "LandResources": message = LandResourcesMessage.GetMessageHandler(map); break;
                 //case "ProductInfoRequest": message = new ProductInfoRequestMessage(); break;
 
                 // Capabilities TODO:
@@ -123,7 +124,7 @@ namespace OpenMetaverse.Messages
                 }
                 catch (Exception e)
                 {
-                    Logger.Log("Exception while tring to Deserialize " + eventName + ":" + e.Message + ": " + e.StackTrace, Helpers.LogLevel.Error);
+                    Logger.Log("Exception while tring to Deserialize " + eventName + ":" + e.Message + ": " + e.StackTrace, Helpers.LogLevel.Error);                    
                 }
 
                 return null;

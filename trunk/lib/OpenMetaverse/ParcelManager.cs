@@ -458,7 +458,7 @@ namespace OpenMetaverse
     /// <summary>
     /// Parcel of land, a portion of virtual real estate in a simulator
     /// </summary>
-    public struct Parcel
+    public class Parcel
     {
         /// <summary>The total number of contiguous 4x4 meter blocks your agent owns within this parcel</summary>        
         public int SelfCount;
@@ -590,52 +590,14 @@ namespace OpenMetaverse
         public Parcel(int localID)
         {
             LocalID = localID;
-            SelfCount = 0;
-            OtherCount = 0;
-            PublicCount = 0;
-            OwnerID = UUID.Zero;
-            IsGroupOwned = false;
-            AuctionID = 0;
             ClaimDate = Utils.Epoch;
-            ClaimPrice = 0;
-            RentPrice = 0;
-            AABBMin = Vector3.Zero;
-            AABBMax = Vector3.Zero;
             Bitmap = Utils.EmptyBytes;
-            Area = 0;
-            Status = ParcelStatus.None;
-            SimWideMaxPrims = 0;
-            SimWideTotalPrims = 0;
-            MaxPrims = 0;
-            TotalPrims = 0;
-            OwnerPrims = 0;
-            GroupPrims = 0;
-            OtherPrims = 0;
-            ParcelPrimBonus = 0;
-            OtherCleanTime = 0;
-            Flags = ParcelFlags.None;
-            SalePrice = 0;
             Name = String.Empty;
             Desc = String.Empty;
             MusicURL = String.Empty;
-            GroupID = UUID.Zero;
-            PassPrice = 0;
-            PassHours = 0;
-            Category = ParcelCategory.None;
-            AuthBuyerID = UUID.Zero;
-            SnapshotID = UUID.Zero;
-            UserLocation = Vector3.Zero;
-            UserLookAt = Vector3.Zero;
-            Landing = LandingType.None;
-            Dwell = 0;
-            RegionDenyAnonymous = false;
-            RegionPushOverride = false;
-            AccessWhiteList = new List<ParcelManager.ParcelAccessEntry>();
+            AccessWhiteList = new List<ParcelManager.ParcelAccessEntry>(0);
             AccessBlackList = new List<ParcelManager.ParcelAccessEntry>(0);
-            RegionDenyAgeUnverified = false;
             Media = new ParcelMedia();
-            ObscureMedia = false;
-            ObscureMusic = false;
         }
 
         /// <summary>
@@ -775,6 +737,12 @@ namespace OpenMetaverse
         #endregion Structs
 
         #region Delegates
+        /// <summary>
+        /// Called once parcel resource usage information has been collected
+        /// </summary>
+        /// <param name="success">Indicates if operation was successfull</param>
+        /// <param name="info">Parcel resource usage information</param>
+        public delegate void LandResourcesCallback(bool success, LandResourcesInfo info);
 
         /// <summary>The event subscribers. null if no subcribers</summary>
         private EventHandler<ParcelDwellReplyEventArgs> m_DwellReply;
@@ -984,10 +952,9 @@ namespace OpenMetaverse
         }
         #endregion Delegates
 
-
         private GridClient Client;
-
         private AutoResetEvent WaitForSimParcel;
+
         #region Public Methods
 
         /// <summary>
@@ -1131,16 +1098,15 @@ namespace OpenMetaverse
 
             if (refresh)
             {
-                int[,] parcelMap = simulator.ParcelMap;
                     for (int y = 0; y < 64; y++)
                         for (int x = 0; x < 64; x++)
-                            parcelMap[y, x] = 0;
+                            simulator.ParcelMap[y, x] = 0;
             }
 
             Thread th = new Thread(delegate()
             {
                 int count = 0, timeouts = 0, y, x;
-                int[,] parcelMap = simulator.ParcelMap;
+
                 for (y = 0; y < 64; y++)
                 {
                     for (x = 0; x < 64; x++)
@@ -1148,7 +1114,7 @@ namespace OpenMetaverse
                         if (!Client.Network.Connected)
                             return;
 
-                        if (parcelMap[y, x] == 0)
+                        if (simulator.ParcelMap[y, x] == 0)
                         {
                             Client.Parcels.RequestParcelProperties(simulator,
                                                              (y + 1) * 4.0f, (x + 1) * 4.0f,
@@ -1362,10 +1328,9 @@ namespace OpenMetaverse
         /// dictionary.</remarks>
         public int GetParcelLocalID(Simulator simulator, Vector3 position)
         {
-            int[,] parcelMap = simulator.ParcelMap;
-            if (parcelMap[(byte)position.Y / 4, (byte)position.X / 4] > 0)
+            if (simulator.ParcelMap[(byte)position.Y / 4, (byte)position.X / 4] > 0)
             {
-                return parcelMap[(byte)position.Y / 4, (byte)position.X / 4];
+                return simulator.ParcelMap[(byte)position.Y / 4, (byte)position.X / 4];
             }
             else
             {
@@ -1447,7 +1412,7 @@ namespace OpenMetaverse
                 y = (int)p.AABBMax.Y - (int)p.AABBMin.Y / 2;
             }
 
-            if (!Client.Terrain.TerrainHeightAtPoint(simulator.Handle, x, y, out height))
+            if (!simulator.TerrainHeightAtPoint(x, y, out height))
             {
                 Logger.Log("Land Patch not stored for location", Helpers.LogLevel.Warning, Client);
                 return false;
@@ -1489,6 +1454,10 @@ namespace OpenMetaverse
             land.ParcelData[0].South = south;
             land.ParcelData[0].East = east;
             land.ParcelData[0].North = north;
+
+            land.ModifyBlockExtended = new ModifyLandPacket.ModifyBlockExtendedBlock[1];
+            land.ModifyBlockExtended[0] = new ModifyLandPacket.ModifyBlockExtendedBlock();
+            land.ModifyBlockExtended[0].BrushSize = (float)brushSize;
 
             Client.Network.SendPacket(land, simulator);
         }
@@ -1601,6 +1570,64 @@ namespace OpenMetaverse
             return UUID.Zero;
 
         }
+
+        /// <summary>
+        /// Retrieves information on resources used by the parcel
+        /// </summary>
+        /// <param name="parcelID">UUID of the parcel</param>
+        /// <param name="getDetails">Should per object resource usage be requested</param>
+        /// <param name="callback">Callback invoked when the request is complete</param>
+        public void GetParcelResouces(UUID parcelID, bool getDetails, LandResourcesCallback callback)
+        {
+            try
+            {
+                Uri url = Client.Network.CurrentSim.Caps.CapabilityURI("LandResources");
+                CapsClient request = new CapsClient(url);
+
+                request.OnComplete += delegate(CapsClient client, OSD result, Exception error)
+                {
+                    try
+                    {
+                        if (result == null || error != null)
+                        {
+                            callback(false, null);
+                        }
+                        LandResourcesMessage response = new LandResourcesMessage();
+                        response.Deserialize((OSDMap)result);
+
+                        CapsClient summaryRequest = new CapsClient(response.ScriptResourceSummary);
+                        OSD summaryResponse = summaryRequest.GetResponse(Client.Settings.CAPS_TIMEOUT);
+
+                        LandResourcesInfo res = new LandResourcesInfo();
+                        res.Deserialize((OSDMap)summaryResponse);
+
+                        if (response.ScriptResourceDetails != null && getDetails)
+                        {
+                            CapsClient detailRequest = new CapsClient(response.ScriptResourceDetails);
+                            OSD detailResponse = detailRequest.GetResponse(Client.Settings.CAPS_TIMEOUT);
+                            res.Deserialize((OSDMap)detailResponse);
+                        }
+                        callback(true, res);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Log("Failed fetching land resources", Helpers.LogLevel.Error, Client, ex);
+                        callback(false, null);
+                    }
+                };
+
+                LandResourcesRequest param = new LandResourcesRequest();
+                param.ParcelID = parcelID;
+                request.BeginGetResponse(param.Serialize(), OSDFormat.Xml, Client.Settings.CAPS_TIMEOUT);
+
+            }
+            catch (Exception ex)
+            {
+                Logger.Log("Failed fetching land resources:", Helpers.LogLevel.Error, Client, ex);
+                callback(false, null);
+            }
+        }
+
         #endregion Public Methods
 
         #region Packet Handlers
@@ -1735,7 +1762,7 @@ namespace OpenMetaverse
                 {
                     lock (simulator.Parcels.Dictionary)
                         simulator.Parcels.Dictionary[parcel.LocalID] = parcel;
-                    int[,] parcelMap = simulator.ParcelMap;
+
                     bool set = false;
                     int y, x, index, bit;
                     for (y = 0; y < 64; y++)
@@ -1748,7 +1775,7 @@ namespace OpenMetaverse
 
                             if ((parcel.Bitmap[index] & (1 << bit)) != 0)
                             {
-                                parcelMap[y, x] = parcel.LocalID;
+                                simulator.ParcelMap[y, x] = parcel.LocalID;
                                 set = true;
                             }
                         }

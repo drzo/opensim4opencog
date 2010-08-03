@@ -285,7 +285,7 @@ namespace OpenMetaverse.Imaging
                 }
                 else
                 {
-                return new ManagedImage(bitmap);
+                    return new ManagedImage(bitmap);
                 }
             }
             catch (Exception e)

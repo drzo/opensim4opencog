@@ -1465,7 +1465,7 @@ namespace OpenMetaverse
         private bool CreateBakes()
         {
             bool success = true;
-            List<BakeType> pendingBakes = new List<BakeType>(0);
+            List<BakeType> pendingBakes = new List<BakeType>();
 
             // Check each bake layer in the Textures array for missing bakes
             for (int bakedIndex = 0; bakedIndex < BAKED_TEXTURE_COUNT; bakedIndex++)
@@ -1494,6 +1494,16 @@ namespace OpenMetaverse
                     }
                 );
             }
+
+            // Free up all the textures we're holding on to
+            for (int i = 0; i < Textures.Length; i++)
+            {
+                Textures[i].Texture = null;
+            }
+
+            // We just allocated and freed a ridiculous amount of memory while 
+            // baking. Signal to the GC to clean up
+            GC.Collect();
 
             return success;
         }
@@ -1612,14 +1622,6 @@ namespace OpenMetaverse
         /// Textures array and send it
         /// </summary>
         private void RequestAgentSetAppearance()
-        {
-            AgentSetAppearancePacket set = MakeAppearancePacket();
-
-            Client.Network.SendPacket(set);
-            Logger.DebugLog("Send AgentSetAppearance packet");
-        }
-
-        public AgentSetAppearancePacket MakeAppearancePacket()
         {
             AgentSetAppearancePacket set = new AgentSetAppearancePacket();
             set.AgentData.AgentID = Client.Self.AgentID;
@@ -1763,14 +1765,16 @@ namespace OpenMetaverse
 
                 // The calculation for the HeadSize scalar may be incorrect, but it seems to work
                 double agentHeight = agentSizeBase + (agentSizeVPLegLength * .1918) + (agentSizeVPHipLength * .0375) +
-                                     (agentSizeVPHeight * .12022) + (agentSizeVPHeadSize * .01117) + (agentSizeVPNeckLength * .038) +
-                                     (agentSizeVPHeelHeight * .08) + (agentSizeVPPlatformHeight * .07);
+                    (agentSizeVPHeight * .12022) + (agentSizeVPHeadSize * .01117) + (agentSizeVPNeckLength * .038) +
+                    (agentSizeVPHeelHeight * .08) + (agentSizeVPPlatformHeight * .07);
 
                 set.AgentData.Size = new Vector3(0.45f, 0.6f, (float)agentHeight);
 
                 #endregion Agent Size
             }
-            return set;
+
+            Client.Network.SendPacket(set);
+            Logger.DebugLog("Send AgentSetAppearance packet");
         }
 
         private void DelayedRequestSetAppearance()
