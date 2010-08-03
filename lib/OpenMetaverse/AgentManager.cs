@@ -991,6 +991,29 @@ namespace OpenMetaverse
         }
 
         /// <summary>The event subscribers. null if no subcribers</summary>
+        private EventHandler<GroupChatLeftEventArgs> m_GroupChatLeft;
+
+        /// <summary>Raises the GroupChatLeft event</summary>
+        /// <param name="e">A GroupChatLeftEventArgs object containing the
+        /// data returned from the data server</param>
+        protected virtual void OnGroupChatLeft(GroupChatLeftEventArgs e)
+        {
+            EventHandler<GroupChatLeftEventArgs> handler = m_GroupChatLeft;
+            if (handler != null)
+                handler(this, e);
+        }
+
+        /// <summary>Thread sync lock object</summary>
+        private readonly object m_GroupChatLeftLock = new object();
+
+        /// <summary>Raised when our agent exits a group chat session</summary>
+        public event EventHandler<GroupChatLeftEventArgs> GroupChatLeft
+        {
+            add { lock (m_GroupChatLeftLock) { m_GroupChatLeft += value; } }
+            remove { lock (m_GroupChatLeftLock) { m_GroupChatLeft -= value; } }
+        }        
+
+        /// <summary>The event subscribers. null if no subcribers</summary>
         private EventHandler<AlertMessageEventArgs> m_AlertMessage;
 
         /// <summary>Raises the AlertMessage event</summary>
@@ -3358,6 +3381,11 @@ namespace OpenMetaverse
             Movement.Camera.LookDirection(movement.Data.LookAt);
             simulator.Handle = movement.Data.RegionHandle;
             simulator.SimVersion = Utils.BytesToString(movement.SimData.ChannelVersion);
+            lock (Client.Network.Simulators) 
+                if (Client.Network.CurrentSim == null || Client.Network.CurrentSim.Handle != simulator.Handle)
+            {
+                if (simulator.Caps!=null) Client.Network.SetCurrentSim(simulator, simulator.Caps._SeedCapsURI);   
+            }
         }
 
         /// <summary>Process an incoming packet and raise the appropriate events</summary>
@@ -3867,6 +3895,11 @@ namespace OpenMetaverse
                         if (m_ChatSessionMemberLeft != null)
                         {
                             OnChatSessionMemberLeft(new ChatSessionMemberLeftEventArgs(msg.SessionID, msg.Updates[i].AgentID));
+                        }
+
+                        if (msg.Updates[i].AgentID == Client.Self.AgentID)
+                        {
+                            OnGroupChatLeft(new GroupChatLeftEventArgs(msg.SessionID));                            
                         }
                     }
                 }
@@ -4517,6 +4550,24 @@ namespace OpenMetaverse
             this.m_SessionName = sessionName;
             this.m_TmpSessionID = tmpSessionID;
             this.m_Success = success;
+        }
+    }
+    
+    /// <summary>The session information when your agent exits a group chat session</summary>
+    public class GroupChatLeftEventArgs : EventArgs
+    {
+        private readonly UUID m_SessionID;
+
+        /// <summary>Get the ID of the session your agent left</summary>
+        public UUID SessionID { get { return m_SessionID; } }
+
+        /// <summary>
+        /// Construct a new instance of the GroupChatLeftEventArgs class
+        /// </summary>
+        /// <param name="chatSessionID">The ID of the session your agent left</param>
+        public GroupChatLeftEventArgs(UUID chatSessionID)
+        {
+            this.m_SessionID = chatSessionID;
         }
     }
 
