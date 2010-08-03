@@ -581,6 +581,12 @@ namespace RTParser.Utils
         {
             try
             {
+                if (childNode.InnerXml.StartsWith("+"))
+                {
+                    string s = childNode.InnerXml.Substring(1);
+                    s = s.TrimStart("+ ".ToCharArray());
+                    return s;
+                }
                 if (childNode.NodeType == XmlNodeType.Text)
                 {
                     Unifiable value = childNode.InnerText.Trim();
@@ -590,16 +596,10 @@ namespace RTParser.Utils
                 else if (childNode.NodeType == XmlNodeType.Comment)
                 {
                     if (saveOnInnerXML) childNode.InnerXml = "";
-                    return childNode.OuterXml;
+                    return String.Empty;
                 }
                 else
                 {
-                    if (childNode.InnerXml.StartsWith("+"))
-                    {
-                        string s = childNode.InnerXml.Substring(1);
-                        s = s.TrimStart("+ ".ToCharArray());
-                        return s;
-                    }
                     bool copyParent, copyChild;
                     copyParent = copyChild = protectChildren;
 
