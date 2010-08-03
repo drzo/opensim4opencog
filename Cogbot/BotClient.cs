@@ -118,9 +118,10 @@ namespace cogbot
             //}
             try
             {
+                Settings.LOGIN_SERVER = BotLoginParams.URI;
                 //SetLoginOptionsFromRadegast();
                 Network.Login(BotLoginParams.FirstName, BotLoginParams.LastName,
-                              BotLoginParams.Password, "OnRez", BotLoginParams.Start, "UNR");
+                              BotLoginParams.Password, BotLoginParams.LoadFromConfig(), BotLoginParams.Start, "UNR");
             }
             catch (Exception ex)
             {

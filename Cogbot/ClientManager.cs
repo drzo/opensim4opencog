@@ -586,6 +586,8 @@ namespace cogbot
                     return;// bc;                    
                 }
                 LoginDetails BotLoginParams = GetBotLoginParams(first, last, passwd, simurl, location);
+                LastBotClient = BotClientForAcct(BotLoginParams);
+                EnsureRunning(BotLoginParams, LastBotClient);
             }
         }
 
@@ -606,7 +608,10 @@ namespace cogbot
                     {
                         _wasFirstGridClient = false;
                         if (ClientManager.UsingCogbotFromRadgast)
+                        {
+
                             inst = RadegastInstance.GlobalInstance;
+                        }
                         else
                         {
                             if (gridClient == null)
@@ -942,7 +947,7 @@ namespace cogbot
                 gc.Throttle.Cloud = 0;
                 gc.Throttle.Land = 1000000;
                 gc.Throttle.Task = 1000000;
-
+                gc.Settings.LOGIN_SERVER = account.URI;
                 LoginParams loginParams = gc.Network.DefaultLoginParams(account.FirstName, account.LastName,
                                                                         account.Password, "BotClient", version);
                 account.UseNetworkDefaults(loginParams);
@@ -1531,55 +1536,152 @@ namespace cogbot
             URI = defaults.URI;
         }
 
-        public override string ToString()
-        {
-            return BotLName;
-        }
 
-        LoginParams loginParams;
-        public string FirstName
-        {
-            get { return loginParams.FirstName; }
-            set { loginParams.FirstName = value; }
-        }
-        public string LastName
-        {
-            get { return loginParams.LastName; }
-            set { loginParams.LastName = value; }
-        }
-        public string Password
-        {
-            get { return loginParams.Password; }
-            set { loginParams.Password = value; }
-        }
-        public string URI
-        {
-            get { return loginParams.URI; }
-            set { loginParams.URI = value; }
-        }
-        public string StartLocation
-        {
-            get { return loginParams.Start; }
-            set { loginParams.Start = value; }
-        }
+        internal LoginParams loginParams;
 
         public string BotLName
         {
             get { return ClientManager.KeyFromName(FirstName, LastName); }
         }
 
+        /// <summary>A randomly generated ID to distinguish between login attempts. This value is only used
+        /// internally in the library and is never sent over the wire</summary>
+       /* public UUID LoginID
+        {
+            get { return loginParams.LoginID; }
+            set { loginParams.LoginID = value; }
+        }
+        */
+        public override string ToString()
+        {
+            return BotLName;
+        }
+
+        /// <summary>The number of milliseconds to wait before a login is considered
+        /// failed due to timeout</summary>
+        public int Timeout
+        {
+            get { return loginParams.Timeout; }
+            set { loginParams.Timeout = value; }
+        }
+        /// <summary>The request method</summary>
+        /// <remarks>login_to_simulator is currently the only supported method</remarks>
+        public string MethodName
+        {
+            get { return loginParams.MethodName; }
+            set { loginParams.MethodName = value; }
+        }
+        /// <summary>A string containing the platform information the agent is running on</summary>
+        public string Platform
+        {
+            get { return loginParams.Platform; }
+            set { loginParams.Platform = value; }
+        }
+        /// <summary>A string hash of the network cards Mac Address</summary>
+        public string MAC
+        {
+            get { return loginParams.MAC; }
+            set { loginParams.MAC = value; }
+        }
+        /// <summary>Unknown or deprecated</summary>
+        public string ViewerDigest
+        {
+            get { return loginParams.ViewerDigest; }
+            set { loginParams.ViewerDigest = value; }
+        }
+        /// <summary>A string hash of the first disk drives ID used to identify this clients uniqueness</summary>
+        public string ID0
+        {
+            get { return loginParams.ID0; }
+            set { loginParams.ID0 = value; }
+        }
+        /// <summary>A string containing the viewers Software, this is not directly sent to the login server but 
+        /// instead is used to generate the Version string</summary>
+        public string UserAgent
+        {
+            get { return loginParams.UserAgent; }
+            set { loginParams.UserAgent = value; }
+        }
+        /// <summary>A string representing the software creator. This is not directly sent to the login server but
+        /// is used by the library to generate the Version information</summary>
+        public string Author
+        {
+            get { return loginParams.Author; }
+            set { loginParams.Author = value; }
+        }
+        /// <summary>If true, this agent agrees to the Terms of Service of the grid its connecting to</summary>
+        public bool AgreeToTos
+        {
+            get { return loginParams.AgreeToTos; }
+            set { loginParams.AgreeToTos = value; }
+        }
+        /// <summary>Unknown</summary>
+        public bool ReadCritical
+        {
+            get { return loginParams.ReadCritical; }
+            set { loginParams.ReadCritical = value; }
+        }
+        /// <summary>An array of string sent to the login server to enable various options</summary>
+        public string[] Options
+        {
+            get { return loginParams.Options; }
+            set { loginParams.Options = value; }
+        }
+
+        /// <summary>The Agents First name</summary>
+        public string FirstName
+        {
+            get { return loginParams.FirstName; }
+            set { loginParams.FirstName = value; }
+        }
+        /// <summary>The Agents Last name</summary>
+        public string LastName
+        {
+            get { return loginParams.LastName; }
+            set { loginParams.LastName = value; }
+        }
+        /// <summary>A md5 hashed password</summary>
+        /// <remarks>plaintext password will be automatically hashed</remarks>
+        public string Password
+        {
+            get { return loginParams.Password; }
+            set { loginParams.Password = value; }
+        }
+        /// <summary>The URL of the Login Server</summary>
+        public string URI
+        {
+            get { return loginParams.URI; }
+            set { loginParams.URI = value; }
+        }
+        /// <summary>The agents starting location once logged in</summary>
+        /// <remarks>Either "last", "home", or a string encoded URI 
+        /// containing the simulator name and x/y/z coordinates e.g: uri:hooper&amp;128&amp;152&amp;17</remarks>
+        public string StartLocation
+        {
+            get { return loginParams.Start; }
+            set { loginParams.Start = value; }
+        }
+
+        /// <summary>The client software version information</summary>
+        /// <remarks>The official viewer uses: Second Life Release n.n.n.n 
+        /// where n is replaced with the current version of the viewer</remarks>
         public string Version
         {
             get { return loginParams.Version; }
             set { loginParams.Version = value; }
         }
 
+        /// <summary>The agents starting location once logged in</summary>
+        /// <remarks>Either "last", "home", or a string encoded URI 
+        /// containing the simulator name and x/y/z coordinates e.g: uri:hooper&amp;128&amp;152&amp;17</remarks>
         public string Start
         {
             get { return loginParams.Start; }
             set { loginParams.Start = value; }
         }
 
+        /// <summary>A string containing the client software channel information</summary>
+        /// <example>Second Life Release</example>
         public string Channel
         {
             get { return loginParams.Channel; }
@@ -1593,6 +1695,10 @@ namespace cogbot
 
         public void UseNetworkDefaults(LoginParams @params)
         {
+            if (string.IsNullOrEmpty(loginParams.URI))
+            {
+                @params.URI = loginParams.URI;
+            }
             loginParams = @params;
         }
 
