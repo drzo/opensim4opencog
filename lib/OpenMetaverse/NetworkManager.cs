@@ -883,7 +883,7 @@ namespace OpenMetaverse
             }
         }
 
-        private void SetCurrentSim(Simulator simulator, string seedcaps)
+        internal void SetCurrentSim(Simulator simulator, string seedcaps)
         {
             if (simulator != CurrentSim)
             {
