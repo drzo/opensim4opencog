@@ -702,7 +702,7 @@ namespace cogbot.Listeners
         static public readonly string[] paramNamesOnLandPatch = new string[] { "simulator", "x", "y", "width", "data" };
         static public readonly Type[] paramTypesOnLandPatch = new Type[] { typeof(Simulator), typeof(int), typeof(int), typeof(int), typeof(float[]) };
 
-        public virtual void Terrain_OnLandPatch(Simulator simulator, int x, int y, int width, float[] data) { OnEvent("On-Land-Patch", paramNamesOnLandPatch, paramTypesOnLandPatch, simulator, x, y, width, data); }
+        public virtual void Terrain_OnLandPatch(object sender, LandPatchReceivedEventArgs e) { OnEvent("On-Land-Patch", paramNamesOnLandPatch, paramTypesOnLandPatch, e.Simulator, e.X, e.Y, e.PatchSize, e.HeightMap); }
 
         static public readonly string[] paramNamesOnAttachSound = new string[] { "soundID", "ownerID", "objectID", "gain", "flags" };
         static public readonly Type[] paramTypesOnAttachSound = new Type[] { typeof(UUID), typeof(UUID), typeof(UUID), typeof(float), typeof(byte) };
@@ -833,7 +833,7 @@ namespace cogbot.Listeners
             client.Directory.DirPlacesReply += Directory_OnPlacesReply;
             client.Directory.DirEventsReply += Directory_OnEventsReply;
             client.Directory.EventInfoReply += Directory_OnEventInfo;
-            client.Terrain.OnLandPatch += Terrain_OnLandPatch;
+            client.Terrain.LandPatchReceived += Terrain_OnLandPatch;
             client.Sound.AttachedSound += Sound_OnAttachSound;
             client.Sound.AttachedSoundGainChange += Sound_OnAttachSoundGainChange;
             client.Sound.SoundTrigger += Sound_OnSoundTrigger;
@@ -961,7 +961,7 @@ namespace cogbot.Listeners
             client.Directory.DirPlacesReply -= Directory_OnPlacesReply;
             client.Directory.DirEventsReply -= Directory_OnEventsReply;
             client.Directory.EventInfoReply -= Directory_OnEventInfo;
-            client.Terrain.OnLandPatch -= Terrain_OnLandPatch;
+            client.Terrain.LandPatchReceived -= Terrain_OnLandPatch;
             client.Sound.AttachedSound -= Sound_OnAttachSound;
             client.Sound.AttachedSoundGainChange -= Sound_OnAttachSoundGainChange;
             client.Sound.SoundTrigger -= Sound_OnSoundTrigger;

@@ -406,7 +406,11 @@ namespace cogbot.Actions
         /// <returns>CmdResult Failure with a string containing the parameter usage instructions</returns>
         public virtual CmdResult ShowUsage()
         {
-            CmdResult res = Failure("Usage: //" + Usage);
+            return ShowUsage(Usage);
+        }
+        public virtual CmdResult ShowUsage(string usg)
+        {
+            CmdResult res = Failure("Usage: //" +usg);
             res.InvalidArgs = true;
             return res;
         }

@@ -1120,7 +1120,7 @@ namespace cogbot.TheOpenSims
             if (Client != null && x >= 0 && x < 256 && y >= 0 && y < 256)
             {
                 float height;
-                while (!Client.Terrain.TerrainHeightAtPoint(RegionHandle, (int) x, (int) y, out height))
+                while (!TheSimulator.TerrainHeightAtPoint((int) x, (int) y, out height))
                 {
                     if (GetGroundLevelTried > 20)
                     {

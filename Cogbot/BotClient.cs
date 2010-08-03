@@ -61,7 +61,7 @@ namespace cogbot
         /// <summary>Friends list subsystem</summary>
         public FriendsManager Friends { get { return gridClient.Friends; } }
         /// <summary>Grid (aka simulator group) subsystem</summary>
-        public GridManager Grid { get { return gridClient.Grid; } }
+        public OpenMetaverse.GridManager Grid { get { return gridClient.Grid; } }
         /// <summary>Object subsystem</summary>
         public ObjectManager Objects { get { return gridClient.Objects; } }
         /// <summary>Group subsystem</summary>
@@ -121,7 +121,8 @@ namespace cogbot
                 Settings.LOGIN_SERVER = BotLoginParams.URI;
                 //SetLoginOptionsFromRadegast();
                 Network.Login(BotLoginParams.FirstName, BotLoginParams.LastName,
-                              BotLoginParams.Password, BotLoginParams.LoadFromConfig(), BotLoginParams.Start, "UNR");
+                              BotLoginParams.Password, BotLoginParams.UserAgent, BotLoginParams.Start,
+                              BotLoginParams.Version);
             }
             catch (Exception ex)
             {
@@ -274,7 +275,7 @@ namespace cogbot
 
                 if (__TheRadegastInstance == null)
                 {
-                    Console.WriteLine("setting radgast null");
+                    Console.WriteLine("getting radegast null");
                 }
                 return __TheRadegastInstance;
             }
@@ -282,7 +283,7 @@ namespace cogbot
             {
                 if (value == null)
                 {
-                    Console.WriteLine("setting radgast null");
+                    Console.WriteLine("setting radegast null");
                 }
                 if (__TheRadegastInstance == value) return;
                 if (__TheRadegastInstance!=null)
@@ -1798,7 +1799,7 @@ namespace cogbot
             to.FirstName = BotLoginParams.FirstName;
             to.LastName = BotLoginParams.LastName;
             to.Password = BotLoginParams.Password;
-            to.Grid = LoginGrid.Custom;
+            to.Grid = new Grid(BotLoginParams.URI, BotLoginParams.URI, BotLoginParams.URI);
             to.GridCustomLoginUri = BotLoginParams.URI;
             to.StartLocation = StartLocationType.Custom;
             to.StartLocationCustom = BotLoginParams.Start;
@@ -1832,17 +1833,11 @@ namespace cogbot
             BotLoginParams.FirstName = from.FirstName;
             BotLoginParams.LastName = from.LastName;
             BotLoginParams.Password = from.Password;
-            switch (from.Grid)
+            BotLoginParams.URI = from.GridCustomLoginUri;
+            Grid g = from.Grid;
+            if (g != null)
             {
-                case LoginGrid.BetaGrid:
-                    BotLoginParams.URI = OpenMetaverse.Settings.ADITI_LOGIN_SERVER;
-                    break;
-                case LoginGrid.MainGrid:
-                    BotLoginParams.URI = OpenMetaverse.Settings.AGNI_LOGIN_SERVER;
-                    break;
-                default:
-                    BotLoginParams.URI = from.GridCustomLoginUri;
-                    break;
+                BotLoginParams.URI = g.LoginURI;
             }
             switch (from.StartLocation)
             {

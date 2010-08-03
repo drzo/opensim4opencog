@@ -586,7 +586,6 @@ namespace cogbot
                     return;// bc;                    
                 }
                 LoginDetails BotLoginParams = GetBotLoginParams(first, last, passwd, simurl, location);
-                LastBotClient = BotClientForAcct(BotLoginParams);
                 EnsureRunning(BotLoginParams, LastBotClient);
             }
         }
@@ -609,29 +608,37 @@ namespace cogbot
                         _wasFirstGridClient = false;
                         if (ClientManager.UsingCogbotFromRadgast)
                         {
-
                             inst = RadegastInstance.GlobalInstance;
                         }
-                        else
+
+                        if (inst != null)
                         {
-                            if (gridClient == null)
+                            gridClient = inst.Client;
+                        }
+                        if (bc == null)
+                        {
+                            bc = BotClientForAcct(details);
+                            if (gridClient == bc.gridClient)
                             {
-                                if (bc != null)
+                                if (inst != null)
                                 {
-                                    gridClient = bc.gridClient;
-                                    if (gridClient == null) gridClient = new GridClient();
+                                    bc.TheRadegastInstance = inst;
                                 }
-                                else
-                                {
-                                    gridClient = new GridClient();
-                                }
-                            }
-                            if (inst == null)
+                            } else
                             {
-                                inst = new RadegastInstance(gridClient);
+                                if (inst != null)
+                                {
+                                    bc.TheRadegastInstance = inst;
+                                  //  bc.gridClient = inst.Client;
+                                }
                             }
                         }
-                        gridClient = inst.Client;
+
+                        inst = bc.TheRadegastInstance;
+                        if (inst == null)
+                        {
+                            inst = new RadegastInstance(gridClient);
+                        }
                         bc.TheRadegastInstance = inst;
                     }
                     else
@@ -639,12 +646,17 @@ namespace cogbot
                         if (bc != null)
                         {
                             gridClient = bc;
+                            inst = bc.TheRadegastInstance;
                         }
                         else
                         {
+                            if (inst == null)
+                            {
+                                inst = RadegastInstance.GlobalInstance;
+                            }
                             gridClient = new GridClient();
+                            inst = new RadegastInstance(gridClient);
                         }
-                        inst = new RadegastInstance(gridClient);
                     }
                     if (bc == null)
                     {
@@ -1537,7 +1549,7 @@ namespace cogbot
         }
 
 
-        internal LoginParams loginParams;
+        internal LoginParams loginParams = new LoginParams();
 
         public string BotLName
         {
