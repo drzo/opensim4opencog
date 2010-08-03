@@ -242,13 +242,14 @@ namespace METAbolt
 
             //netcom.Teleport(iDets[0],
             //client.Self.Teleport(   
-
+#if false
             var frmTeleport = new frmTeleport(instance);
             frmTeleport.txtRegion.Text = iDets[0].ToString();
             frmTeleport.nudX.Value = (int)fX;
             frmTeleport.nudY.Value = (int)fY;
             frmTeleport.nudZ.Value = (int)fZ;
             frmTeleport.ShowDialog();
+#endif
         }
 
         private void lvwFindEvents_ColumnClick(object sender, ColumnClickEventArgs e)
