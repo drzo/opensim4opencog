@@ -2155,7 +2155,8 @@ namespace cogbot
                 this.Self.InstantMessage(target, text, session);
                 return;
             }
-            TheRadegastInstance.Netcom.SendInstantMessage(text, target, session);
+            InvokeGUI(() =>
+                      TheRadegastInstance.Netcom.SendInstantMessage(text, target, session));
         }
 
         public string NameKey()
