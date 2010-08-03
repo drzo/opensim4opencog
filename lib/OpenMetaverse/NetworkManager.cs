@@ -38,27 +38,7 @@ using OpenMetaverse.Interfaces;
 using OpenMetaverse.Messages.Linden;
 
 namespace OpenMetaverse
-{
-    /// <summary>
-    /// This exception is thrown whenever an attempt to send a packet to a simulator where the 
-    /// simulator packet processing is not yet enabled occurs
-    /// </summary>
-    public class NotConnectedException : ApplicationException
-    {
-        private String m_Message;
-        public override string Message
-        {
-            get
-            {
-                return base.Message + " " + m_Message;
-            }
-        }
-        public NotConnectedException(String message)
-        {
-            m_Message = message;
-        }
-    }
-    
+{        
     /// <summary>
     /// NetworkManager is responsible for managing the network layer of 
     /// OpenMetaverse. It tracks all the server connections, serializes 
@@ -284,7 +264,7 @@ namespace OpenMetaverse
         ///<summary>Raises the SimChanged Event</summary>
         /// <param name="e">A SimChangedEventArgs object containing
         /// the data sent from the simulator</param>
-        public virtual void OnSimChanged(SimChangedEventArgs e)
+        protected virtual void OnSimChanged(SimChangedEventArgs e)
         {
             EventHandler<SimChangedEventArgs> handler = m_SimChanged;
             if (handler != null)
@@ -385,7 +365,6 @@ namespace OpenMetaverse
 
             // Register internal CAPS callbacks
             RegisterEventCallback("EnableSimulator", new Caps.EventQueueCallback(EnableSimulatorHandler));
-            RegisterEventCallback("DisableSimulator", new Caps.EventQueueCallback(DisableSimulatorHandler));
 
             // Register the internal callbacks
             RegisterCallback(PacketType.RegionHandshake, RegionHandshakeHandler);
@@ -492,8 +471,6 @@ namespace OpenMetaverse
             else
             {
                 Logger.Log("Packet received before simulator packet processing threads running, make certain you are completely logged in", Helpers.LogLevel.Error);
-                SendPacket(packet);
-                //throw new NotConnectedException("Packet received before simulator packet processing threads running, make certain you are completely logged in");
             }
         }
 
@@ -623,11 +600,13 @@ namespace OpenMetaverse
             }
             else if (setDefault)
             {
+                // Move in to this simulator
+                simulator.handshakeComplete = false;
+                simulator.UseCircuitCode();
+                Client.Self.CompleteAgentMovement(simulator);
+
                 // We're already connected to this server, but need to set it to the default
                 SetCurrentSim(simulator, seedcaps);
-
-                // Move in to this simulator
-                Client.Self.CompleteAgentMovement(simulator);
 
                 // Send an initial AgentUpdate to complete our movement in to the sim
                 if (Client.Settings.SEND_AGENT_UPDATES)
@@ -904,7 +883,7 @@ namespace OpenMetaverse
             }
         }
 
-        internal void SetCurrentSim(Simulator simulator, string seedcaps)
+        private void SetCurrentSim(Simulator simulator, string seedcaps)
         {
             if (simulator != CurrentSim)
             {
@@ -1128,10 +1107,10 @@ namespace OpenMetaverse
         protected void RegionHandshakeHandler(object sender, PacketReceivedEventArgs e)
         {
             RegionHandshakePacket handshake = (RegionHandshakePacket)e.Packet;
-            Simulator simulator0 = e.Simulator;
+            Simulator simulator = e.Simulator;
             e.Simulator.ID = handshake.RegionInfo.CacheID;
-            SimulatorData simulator = simulator0.SimData;
-            simulator0.IsEstateManager = handshake.RegionInfo.IsEstateManager;
+
+            simulator.IsEstateManager = handshake.RegionInfo.IsEstateManager;
             simulator.Name = Utils.BytesToString(handshake.RegionInfo.SimName);
             simulator.SimOwner = handshake.RegionInfo.SimOwner;
             simulator.TerrainBase0 = handshake.RegionInfo.TerrainBase0;
@@ -1167,11 +1146,12 @@ namespace OpenMetaverse
             reply.AgentData.AgentID = Client.Self.AgentID;
             reply.AgentData.SessionID = Client.Self.SessionID;
             reply.RegionInfo.Flags = 0;
-            SendPacket(reply, simulator0);
+            SendPacket(reply, simulator);
 
             // We're officially connected to this sim
-            simulator0.connected = true;
-            simulator0.ConnectedEvent.Set();
+            simulator.connected = true;
+            simulator.handshakeComplete = true;
+            simulator.ConnectedEvent.Set();
         }
 
         protected void EnableSimulatorHandler(string capsKey, IMessage message, Simulator simulator)
@@ -1195,28 +1175,6 @@ namespace OpenMetaverse
                     Logger.Log("Unabled to connect to new sim " + ip + ":" + port,
                         Helpers.LogLevel.Error, Client);
                 }
-            }
-        }
-
-        protected void DisableSimulatorHandler(string capsKey, IMessage message, Simulator simulator)
-        {
-            if (!Client.Settings.MULTIPLE_SIMS) return;
-
-            DisableSimulatorMessage msg = (DisableSimulatorMessage)message;
-
-            for (int i = 0; i < msg.Simulators.Length; i++)
-            {
-                IPAddress ip = msg.Simulators[i].IP;
-                ushort port = (ushort)msg.Simulators[i].Port;
-                ulong handle = msg.Simulators[i].RegionHandle;
-
-                IPEndPoint endPoint = new IPEndPoint(ip, port);
-
-                if (FindSimulator(endPoint) != null) return;
-                string mess = "DisableSimulatorHandler Caps";
-
-                // Shutdown the network layer
-                Shutdown(DisconnectType.ServerInitiated, mess);
             }
         }
 

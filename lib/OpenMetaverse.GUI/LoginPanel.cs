@@ -249,7 +249,7 @@ namespace OpenMetaverse.GUI
                 }
 
                 if (_Client != null)
-                        _Client.Network.Logout();
+                    _Client.Network.Logout();
 
                 btnLogin.Text = "Login";
             }
@@ -272,13 +272,13 @@ namespace OpenMetaverse.GUI
         private void Network_OnDisconnected(object sender, DisconnectedEventArgs e)
         {
             if (!this.IsHandleCreated) return;
-
+                
             SetText(btnLogin, "Login");
         }
 
         private void Network_OnLogin(object sender, LoginProgressEventArgs e)
         {
-            if (!this.IsHandleCreated) return;
+            if (!this.IsHandleCreated) return; 
 
             SetText(btnLogin, "Logout");
 

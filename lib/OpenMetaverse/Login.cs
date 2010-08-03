@@ -69,7 +69,7 @@ namespace OpenMetaverse
     /// <summary>
     /// Login Request Parameters
     /// </summary>
-    public struct LoginParams
+    public class LoginParams
     {
         /// <summary>The URL of the Login Server</summary>
         public string URI;
@@ -121,6 +121,77 @@ namespace OpenMetaverse
         /// <summary>A randomly generated ID to distinguish between login attempts. This value is only used
         /// internally in the library and is never sent over the wire</summary>
         internal UUID LoginID;
+
+        /// <summary>
+        /// Default constuctor, initializes sane default values
+        /// </summary>
+        public LoginParams()
+        {
+            List<string> options = new List<string>(16);
+            options.Add("inventory-root");
+            options.Add("inventory-skeleton");
+            options.Add("inventory-lib-root");
+            options.Add("inventory-lib-owner");
+            options.Add("inventory-skel-lib");
+            options.Add("initial-outfit");
+            options.Add("gestures");
+            options.Add("event_categories");
+            options.Add("event_notifications");
+            options.Add("classified_categories");
+            options.Add("buddy-list");
+            options.Add("ui-config");
+            options.Add("tutorial_settings");
+            options.Add("login-flags");
+            options.Add("global-textures");
+            options.Add("adult_compliant");
+
+            this.Options = options.ToArray();
+            this.MethodName = "login_to_simulator";
+            this.Start = "last";
+            this.Platform = NetworkManager.GetPlatform();
+            this.MAC = NetworkManager.GetMAC();
+            this.ViewerDigest = String.Empty;
+            this.ID0 = NetworkManager.GetMAC();
+            this.AgreeToTos = true;
+            this.ReadCritical = true;
+        }
+
+        /// <summary>
+        /// Instantiates new LoginParams object and fills in the values
+        /// </summary>
+        /// <param name="client">Instance of GridClient to read settings from</param>
+        /// <param name="firstName">Login first name</param>
+        /// <param name="lastName">Login last name</param>
+        /// <param name="password">Password</param>
+        /// <param name="channel">Login channnel (application name)</param>
+        /// <param name="version">Client version, should be application name + version number</param>
+        public LoginParams(GridClient client, string firstName, string lastName, string password, string channel, string version)
+            : this()
+        {
+            this.URI = client.Settings.LOGIN_SERVER;
+            this.Timeout = client.Settings.LOGIN_TIMEOUT;
+            this.FirstName = firstName;
+            this.LastName = lastName;
+            this.Password = password;
+            this.Channel = channel;
+            this.Version = version;
+        }
+
+        /// <summary>
+        /// Instantiates new LoginParams object and fills in the values
+        /// </summary>
+        /// <param name="client">Instance of GridClient to read settings from</param>
+        /// <param name="firstName">Login first name</param>
+        /// <param name="lastName">Login last name</param>
+        /// <param name="password">Password</param>
+        /// <param name="channel">Login channnel (application name)</param>
+        /// <param name="version">Client version, should be application name + version number</param>
+        /// <param name="loginURI">URI of the login server</param>
+        public LoginParams(GridClient client, string firstName, string lastName, string password, string channel, string version, string loginURI)
+            : this(client, firstName, lastName, password, channel, version)
+        {
+            this.URI = loginURI;
+        }
     }
 
     public struct BuddyListEntry
@@ -165,7 +236,7 @@ namespace OpenMetaverse
         public string UDPBlacklist;
 
         #region Inventory
-        
+
         public UUID InventoryRoot;
         public UUID LibraryRoot;
         public InventoryFolder[] InventorySkeleton;
@@ -279,10 +350,10 @@ namespace OpenMetaverse
             }
 
             SecondsSinceEpoch = (int)ParseUInt("seconds_since_epoch", reply);
-            
+
             InventoryRoot = ParseMappedUUID("inventory-root", "folder_id", reply);
             InventorySkeleton = ParseInventorySkeleton("inventory-skeleton", reply);
-            
+
             LibraryOwner = ParseMappedUUID("inventory-lib-owner", "agent_id", reply);
             LibraryRoot = ParseMappedUUID("inventory-lib-root", "folder_id", reply);
             LibrarySkeleton = ParseInventorySkeleton("inventory-skel-lib", reply);
@@ -334,15 +405,15 @@ namespace OpenMetaverse
 
                 if (osdHome.Type == OSDType.Map)
                 {
-                    home = (OSDMap) osdHome;
+                    home = (OSDMap)osdHome;
 
                     OSD homeRegion;
                     if (home.TryGetValue("region_handle", out homeRegion) && homeRegion.Type == OSDType.Array)
                     {
-                        OSDArray homeArray = (OSDArray) homeRegion;
+                        OSDArray homeArray = (OSDArray)homeRegion;
                         if (homeArray.Count == 2)
-                            HomeRegion = Utils.UIntsToLong((uint) homeArray[0].AsInteger(),
-                                                           (uint) homeArray[1].AsInteger());
+                            HomeRegion = Utils.UIntsToLong((uint)homeArray[0].AsInteger(),
+                                                           (uint)homeArray[1].AsInteger());
                         else
                             HomeRegion = 0;
                     }
@@ -462,7 +533,7 @@ namespace OpenMetaverse
         public static string ParseString(string key, Hashtable reply)
         {
             if (reply.ContainsKey(key))
-                    return String.Format("{0}", reply[key]);
+                return String.Format("{0}", reply[key]);
 
             return String.Empty;
         }
@@ -605,7 +676,7 @@ namespace OpenMetaverse
         public InventoryFolder[] ParseInventorySkeleton(string key, Hashtable reply)
         {
             UUID ownerID;
-            if(key.Equals("inventory-skel-lib"))
+            if (key.Equals("inventory-skel-lib"))
                 ownerID = LibraryOwner;
             else
                 ownerID = AgentID;
@@ -646,7 +717,7 @@ namespace OpenMetaverse
     public partial class NetworkManager
     {
         #region Delegates
-        
+
 
         //////LoginProgress
         //// LoginProgress
@@ -711,7 +782,7 @@ namespace OpenMetaverse
         #endregion Delegates
 
         #region Events
-        
+
         /// <summary>Called when a reply is received from the login server, the
         /// login sequence will block until this event returns</summary>
         private event LoginResponseCallback OnLoginResponse;
@@ -738,7 +809,7 @@ namespace OpenMetaverse
         #endregion
 
         #region Private Members
-        private LoginParams? CurrentContext = null;
+        private LoginParams CurrentContext = null;
         private AutoResetEvent LoginEvent = new AutoResetEvent(false);
         private LoginStatus InternalStatusCode = LoginStatus.None;
         private string InternalErrorKey = String.Empty;
@@ -766,45 +837,7 @@ namespace OpenMetaverse
         public LoginParams DefaultLoginParams(string firstName, string lastName, string password,
             string userAgent, string userVersion)
         {
-            List<string> options = new List<string>(16);
-            options.Add("inventory-root");
-            options.Add("inventory-skeleton");
-            options.Add("inventory-lib-root");
-            options.Add("inventory-lib-owner");
-            options.Add("inventory-skel-lib");
-            options.Add("initial-outfit");
-            options.Add("gestures");
-            options.Add("event_categories");
-            options.Add("event_notifications");
-            options.Add("classified_categories");
-            options.Add("buddy-list");
-            options.Add("ui-config");
-            options.Add("tutorial_settings");
-            options.Add("login-flags");
-            options.Add("global-textures");
-            options.Add("adult_compliant");
-
-            LoginParams loginParams = new LoginParams();
-            if (Client == null)
-                throw new NullReferenceException("GridClient must be instantiated before calling DefaultLoginParams()");
-
-            loginParams.URI = Client.Settings.LOGIN_SERVER;
-            loginParams.Timeout = Client.Settings.LOGIN_TIMEOUT;
-            loginParams.MethodName = "login_to_simulator";
-            loginParams.FirstName = firstName;
-            loginParams.LastName = lastName;
-            loginParams.Password = password;
-            loginParams.Start = "last";
-            loginParams.Channel = userAgent;
-            loginParams.Version = userVersion;
-            loginParams.Platform = GetPlatform();
-            loginParams.MAC = GetMAC();
-            loginParams.ViewerDigest = String.Empty;
-            loginParams.Options = options.ToArray();
-            loginParams.ID0 = GetMAC();
-            loginParams.AgreeToTos = true;
-            loginParams.ReadCritical = true;
-            return loginParams;
+            return new LoginParams(Client, firstName, lastName, password, userAgent, userVersion);
         }
 
         /// <summary>
@@ -878,10 +911,7 @@ namespace OpenMetaverse
         {
             // FIXME: Now that we're using CAPS we could cancel the current login and start a new one
             if (CurrentContext != null)
-            {
-                return;
                 throw new Exception("Login already in progress");
-            }            
 
             LoginEvent.Reset();
             CurrentContext = loginParams;
@@ -927,7 +957,7 @@ namespace OpenMetaverse
 
         private void BeginLogin()
         {
-            LoginParams loginParams = CurrentContext.Value;
+            LoginParams loginParams = CurrentContext;
             // Generate a random ID to identify this login attempt
             loginParams.LoginID = UUID.Random();
             CurrentContext = loginParams;
@@ -941,7 +971,7 @@ namespace OpenMetaverse
             if (loginParams.Password.Length != 35 && !loginParams.Password.StartsWith("$1$"))
                 loginParams.Password = Utils.MD5(loginParams.Password);
 
-            if (loginParams.ViewerDigest== null)
+            if (loginParams.ViewerDigest == null)
                 loginParams.ViewerDigest = String.Empty;
 
             if (loginParams.Version == null)
@@ -972,7 +1002,7 @@ namespace OpenMetaverse
             if (Client.Settings.USE_LLSD_LOGIN)
             {
                 #region LLSD Based Login
-                
+
                 // Create the CAPS login structure
                 OSDMap loginLLSD = new OSDMap();
                 loginLLSD["first"] = OSD.FromString(loginParams.FirstName);
@@ -987,7 +1017,7 @@ namespace OpenMetaverse
                 loginLLSD["read_critical"] = OSD.FromBoolean(loginParams.ReadCritical);
                 loginLLSD["viewer_digest"] = OSD.FromString(loginParams.ViewerDigest);
                 loginLLSD["id0"] = OSD.FromString(loginParams.ID0);
-                
+
                 // Create the options LLSD array
                 OSDArray optionsOSD = new OSDArray();
                 for (int i = 0; i < loginParams.Options.Length; i++)
@@ -1030,7 +1060,7 @@ namespace OpenMetaverse
             else
             {
                 #region XML-RPC Based Login Code
-                
+
                 // Create the Hashtable for XmlRpcCs
                 Hashtable loginXmlRpc = new Hashtable();
                 loginXmlRpc["first"] = loginParams.FirstName;
@@ -1070,7 +1100,7 @@ namespace OpenMetaverse
                 {
                     ArrayList loginArray = new ArrayList(1);
                     loginArray.Add(loginXmlRpc);
-                    XmlRpcRequest request = new XmlRpcRequest(CurrentContext.Value.MethodName, loginArray);
+                    XmlRpcRequest request = new XmlRpcRequest(CurrentContext.MethodName, loginArray);
 
                     // Start the request
                     Thread requestThread = new Thread(
@@ -1079,7 +1109,7 @@ namespace OpenMetaverse
                             try
                             {
                                 LoginReplyXmlRpcHandler(
-                                    request.Send(CurrentContext.Value.URI, CurrentContext.Value.Timeout),
+                                    request.Send(CurrentContext.URI, CurrentContext.Timeout),
                                     loginParams);
                             }
                             catch (WebException e)
@@ -1141,7 +1171,7 @@ namespace OpenMetaverse
             try
             {
                 reply.Parse((Hashtable)response.Value);
-                if (context.LoginID != CurrentContext.Value.LoginID)
+                if (context.LoginID != CurrentContext.LoginID)
                 {
                     Logger.Log("Login response does not match login request. Only one login can be attempted at a time",
                         Helpers.LogLevel.Error);
@@ -1157,7 +1187,7 @@ namespace OpenMetaverse
 
             string reason = reply.Reason;
             string message = reply.Message;
-            
+
             if (reply.Login == "true")
             {
                 // Remove the quotes around our first name.
@@ -1184,12 +1214,12 @@ namespace OpenMetaverse
                 }
 
                 #endregion Critical Information
-                
+
                 /* Add any blacklisted UDP packets to the blacklist
                  * for exclusion from packet processing */
-                if(reply.UDPBlacklist != null)
+                if (reply.UDPBlacklist != null)
                     UDPBlacklist.AddRange(reply.UDPBlacklist.Split(','));
-                
+
                 // Misc:
                 //uint timestamp = (uint)reply.seconds_since_epoch;
                 //DateTime time = Helpers.UnixTimeToDateTime(timestamp); // TODO: Do something with this?
@@ -1208,9 +1238,9 @@ namespace OpenMetaverse
                 // reply.inventory_skel_lib
                 // reply.initial_outfit
             }
-            
+
             bool redirect = (reply.Login == "indeterminate");
-            
+
             try
             {
                 if (OnLoginResponse != null)
@@ -1225,7 +1255,7 @@ namespace OpenMetaverse
             if (redirect)
             {
                 UpdateLoginStatus(LoginStatus.Redirecting, "Redirecting login...");
-                LoginParams loginParams = CurrentContext.Value;
+                LoginParams loginParams = CurrentContext;
                 loginParams.URI = reply.NextUrl;
                 loginParams.MethodName = reply.NextMethod;
                 loginParams.Options = reply.NextOptions;
@@ -1302,7 +1332,7 @@ namespace OpenMetaverse
                             // Make the next login URL jump
                             UpdateLoginStatus(LoginStatus.Redirecting, data.Message);
 
-                            LoginParams loginParams = CurrentContext.Value;
+                            LoginParams loginParams = CurrentContext;
                             loginParams.URI = LoginResponseData.ParseString("next_url", map);
                             //CurrentContext.Params.MethodName = LoginResponseData.ParseString("next_method", map);
 
@@ -1346,7 +1376,7 @@ namespace OpenMetaverse
                                     SendPacket(new EconomyDataRequestPacket());
 
                                     // Update the login message with the MOTD returned from the server
-                                    UpdateLoginStatus(LoginStatus.Success, data.Message);                                    
+                                    UpdateLoginStatus(LoginStatus.Success, data.Message);
                                 }
                                 else
                                 {
@@ -1393,12 +1423,12 @@ namespace OpenMetaverse
                 UpdateLoginStatus(LoginStatus.Failed, error.Message);
             }
         }
-        
+
         /// <summary>
         /// Get current OS
         /// </summary>
         /// <returns>Either "Win" or "Linux"</returns>
-        private static string GetPlatform()
+        public static string GetPlatform()
         {
             switch (Environment.OSVersion.Platform)
             {
@@ -1413,16 +1443,27 @@ namespace OpenMetaverse
         /// Get clients default Mac Address
         /// </summary>
         /// <returns>A string containing the first found Mac Address</returns>
-        private static string GetMAC()
+        public static string GetMAC()
         {
             string mac = String.Empty;
+
             System.Net.NetworkInformation.NetworkInterface[] nics = System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces();
 
-            if (nics.Length > 0)
-                mac = nics[0].GetPhysicalAddress().ToString().ToUpper();
+            if (nics != null && nics.Length > 0)
+            {
+                for (int i = 0; i < nics.Length; i++)
+                {
+                    string adapterMac = nics[i].GetPhysicalAddress().ToString().ToUpper();
+                    if (adapterMac.Length == 12 && adapterMac != "000000000000")
+                    {
+                        mac = adapterMac;
+                        continue;
+                    }
+                }
+            }
 
             if (mac.Length < 12)
-                mac = "000000000000";
+                mac = UUID.Random().ToString().Substring(24, 12);
 
             return String.Format("{0}:{1}:{2}:{3}:{4}:{5}",
                 mac.Substring(0, 2),
@@ -1436,15 +1477,15 @@ namespace OpenMetaverse
         #endregion
     }
     #region EventArgs
-    
+
     public class LoginProgressEventArgs : EventArgs
     {
         private readonly LoginStatus m_Status;
         private readonly String m_Message;
         private readonly String m_FailReason;
 
-        public LoginStatus Status { get { return m_Status; } }        
-        public String Message { get { return m_Message; } } 
+        public LoginStatus Status { get { return m_Status; } }
+        public String Message { get { return m_Message; } }
         public string FailReason { get { return m_FailReason; } }
 
         public LoginProgressEventArgs(LoginStatus login, String message, String failReason)
@@ -1453,13 +1494,7 @@ namespace OpenMetaverse
             this.m_Message = message;
             this.m_FailReason = failReason;
         }
-        public LoginProgressEventArgs(LoginStatus login, String message)
-        {
-            this.m_Status = login;
-            this.m_Message = message;
-            this.m_FailReason = "login failed";
-        }
     }
-    
+
     #endregion EventArgs
 }

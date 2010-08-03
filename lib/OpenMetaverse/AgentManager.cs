@@ -682,6 +682,15 @@ namespace OpenMetaverse
     /// </summary>
     public partial class AgentManager
     {
+        #region Delegates
+        /// <summary>
+        /// Called once attachment resource usage information has been collected
+        /// </summary>
+        /// <param name="success">Indicates if operation was successfull</param>
+        /// <param name="info">Attachment resource usage information</param>
+        public delegate void AttachmentResourcesCallback(bool success, AttachmentResourcesMessage info);
+        #endregion Delegates
+
         #region Event Delegates
 
         /// <summary>The event subscribers. null if no subcribers</summary>
@@ -706,7 +715,7 @@ namespace OpenMetaverse
             add { lock (m_ChatLock) { m_Chat += value; } }
             remove { lock (m_ChatLock) { m_Chat -= value; } }
         }
-        
+
         /// <summary>The event subscribers. null if no subcribers</summary>
         private EventHandler<ScriptDialogEventArgs> m_ScriptDialog;
 
@@ -729,7 +738,7 @@ namespace OpenMetaverse
             add { lock (m_ScriptDialogLock) { m_ScriptDialog += value; } }
             remove { lock (m_ScriptDialogLock) { m_ScriptDialog -= value; } }
         }
-        
+
         /// <summary>The event subscribers. null if no subcribers</summary>
         private EventHandler<ScriptQuestionEventArgs> m_ScriptQuestion;
 
@@ -750,7 +759,7 @@ namespace OpenMetaverse
         {
             add { lock (m_ScriptQuestionLock) { m_ScriptQuestion += value; } }
             remove { lock (m_ScriptQuestionLock) { m_ScriptQuestion -= value; } }
-        }        
+        }
 
         /// <summary>The event subscribers. null if no subcribers</summary>
         private EventHandler<LoadUrlEventArgs> m_LoadURL;
@@ -773,7 +782,7 @@ namespace OpenMetaverse
             add { lock (m_LoadUrlLock) { m_LoadURL += value; } }
             remove { lock (m_LoadUrlLock) { m_LoadURL -= value; } }
         }
-        
+
         /// <summary>The event subscribers. null if no subcribers</summary>
         private EventHandler<BalanceEventArgs> m_Balance;
 
@@ -796,7 +805,7 @@ namespace OpenMetaverse
             add { lock (m_BalanceLock) { m_Balance += value; } }
             remove { lock (m_BalanceLock) { m_Balance -= value; } }
         }
-        
+
         /// <summary>The event subscribers. null if no subcribers</summary>
         private EventHandler<MoneyBalanceReplyEventArgs> m_MoneyBalance;
 
@@ -819,7 +828,7 @@ namespace OpenMetaverse
             add { lock (m_MoneyBalanceReplyLock) { m_MoneyBalance += value; } }
             remove { lock (m_MoneyBalanceReplyLock) { m_MoneyBalance -= value; } }
         }
-        
+
         /// <summary>The event subscribers. null if no subcribers</summary>
         private EventHandler<InstantMessageEventArgs> m_InstantMessage;
 
@@ -842,7 +851,7 @@ namespace OpenMetaverse
             add { lock (m_InstantMessageLock) { m_InstantMessage += value; } }
             remove { lock (m_InstantMessageLock) { m_InstantMessage -= value; } }
         }
-    
+
         /// <summary>The event subscribers. null if no subcribers</summary>
         private EventHandler<TeleportEventArgs> m_Teleport;
 
@@ -865,7 +874,7 @@ namespace OpenMetaverse
             add { lock (m_TeleportLock) { m_Teleport += value; } }
             remove { lock (m_TeleportLock) { m_Teleport += value; } }
         }
-    
+
         /// <summary>The event subscribers. null if no subcribers</summary>
         private EventHandler<AgentDataReplyEventArgs> m_AgentData;
 
@@ -910,7 +919,7 @@ namespace OpenMetaverse
         {
             add { lock (m_AnimationsChangedLock) { m_AnimationsChanged += value; } }
             remove { lock (m_AnimationsChangedLock) { m_AnimationsChanged -= value; } }
-        }        
+        }
 
         /// <summary>The event subscribers. null if no subcribers</summary>
         private EventHandler<MeanCollisionEventArgs> m_MeanCollision;
@@ -933,7 +942,7 @@ namespace OpenMetaverse
         {
             add { lock (m_MeanCollisionLock) { m_MeanCollision += value; } }
             remove { lock (m_MeanCollisionLock) { m_MeanCollision -= value; } }
-        }        
+        }
 
         /// <summary>The event subscribers. null if no subcribers</summary>
         private EventHandler<RegionCrossedEventArgs> m_RegionCrossed;
@@ -957,7 +966,7 @@ namespace OpenMetaverse
             add { lock (m_RegionCrossedLock) { m_RegionCrossed += value; } }
             remove { lock (m_RegionCrossedLock) { m_RegionCrossed -= value; } }
         }
-        
+
         /// <summary>The event subscribers. null if no subcribers</summary>
         private EventHandler<GroupChatJoinedEventArgs> m_GroupChatJoined;
 
@@ -979,30 +988,7 @@ namespace OpenMetaverse
         {
             add { lock (m_GroupChatJoinedLock) { m_GroupChatJoined += value; } }
             remove { lock (m_GroupChatJoinedLock) { m_GroupChatJoined -= value; } }
-        }        
-
-        /// <summary>The event subscribers. null if no subcribers</summary>
-        private EventHandler<GroupChatLeftEventArgs> m_GroupChatLeft;
-
-        /// <summary>Raises the GroupChatLeft event</summary>
-        /// <param name="e">A GroupChatLeftEventArgs object containing the
-        /// data returned from the data server</param>
-        protected virtual void OnGroupChatLeft(GroupChatLeftEventArgs e)
-        {
-            EventHandler<GroupChatLeftEventArgs> handler = m_GroupChatLeft;
-            if (handler != null)
-                handler(this, e);
         }
-
-        /// <summary>Thread sync lock object</summary>
-        private readonly object m_GroupChatLeftLock = new object();
-
-        /// <summary>Raised when our agent exits a group chat session</summary>
-        public event EventHandler<GroupChatLeftEventArgs> GroupChatLeft
-        {
-            add { lock (m_GroupChatLeftLock) { m_GroupChatLeft += value; } }
-            remove { lock (m_GroupChatLeftLock) { m_GroupChatLeft -= value; } }
-        }        
 
         /// <summary>The event subscribers. null if no subcribers</summary>
         private EventHandler<AlertMessageEventArgs> m_AlertMessage;
@@ -1026,7 +1012,7 @@ namespace OpenMetaverse
         {
             add { lock (m_AlertMessageLock) { m_AlertMessage += value; } }
             remove { lock (m_AlertMessageLock) { m_AlertMessage -= value; } }
-        }        
+        }
 
         /// <summary>The event subscribers. null if no subcribers</summary>
         private EventHandler<ScriptControlEventArgs> m_ScriptControl;
@@ -1050,7 +1036,7 @@ namespace OpenMetaverse
             add { lock (m_ScriptControlLock) { m_ScriptControl += value; } }
             remove { lock (m_ScriptControlLock) { m_ScriptControl -= value; } }
         }
-       
+
         /// <summary>The event subscribers. null if no subcribers</summary>
         private EventHandler<CameraConstraintEventArgs> m_CameraConstraint;
 
@@ -1074,7 +1060,7 @@ namespace OpenMetaverse
             add { lock (m_CameraConstraintLock) { m_CameraConstraint += value; } }
             remove { lock (m_CameraConstraintLock) { m_CameraConstraint -= value; } }
         }
-        
+
         /// <summary>The event subscribers. null if no subcribers</summary>
         private EventHandler<ScriptSensorReplyEventArgs> m_ScriptSensorReply;
 
@@ -1096,7 +1082,7 @@ namespace OpenMetaverse
         {
             add { lock (m_ScriptSensorReplyLock) { m_ScriptSensorReply += value; } }
             remove { lock (m_ScriptSensorReplyLock) { m_ScriptSensorReply -= value; } }
-        }        
+        }
 
         /// <summary>The event subscribers. null if no subcribers</summary>
         private EventHandler<AvatarSitResponseEventArgs> m_AvatarSitResponse;
@@ -1119,7 +1105,7 @@ namespace OpenMetaverse
         {
             add { lock (m_AvatarSitResponseLock) { m_AvatarSitResponse += value; } }
             remove { lock (m_AvatarSitResponseLock) { m_AvatarSitResponse -= value; } }
-        }       
+        }
 
         /// <summary>The event subscribers. null if no subcribers</summary>
         private EventHandler<ChatSessionMemberAddedEventArgs> m_ChatSessionMemberAdded;
@@ -1142,7 +1128,7 @@ namespace OpenMetaverse
         {
             add { lock (m_ChatSessionMemberAddedLock) { m_ChatSessionMemberAdded += value; } }
             remove { lock (m_ChatSessionMemberAddedLock) { m_ChatSessionMemberAdded -= value; } }
-        }       
+        }
 
         /// <summary>The event subscribers. null if no subcribers</summary>
         private EventHandler<ChatSessionMemberLeftEventArgs> m_ChatSessionMemberLeft;
@@ -1253,24 +1239,52 @@ namespace OpenMetaverse
         {
             get
             {
-                if (sittingOn != 0)
-                {
-                    Primitive parent;
-                    if (Client.Network.CurrentSim != null && Client.Network.CurrentSim.ObjectsPrimitives.TryGetValue(sittingOn, out parent))
-                    {
-                        return parent.Position + Vector3.Transform(relativePosition, Matrix4.CreateFromQuaternion(parent.Rotation));
-                    }
-                    else
-                    {
-                        Logger.Log("Currently sitting on object " + sittingOn + " which is not tracked, SimPosition will be inaccurate",
-                            Helpers.LogLevel.Warning, Client);
-                        return relativePosition;
-                    }
-                }
-                else
+                // simple case, agent not seated
+                if (sittingOn == 0)
                 {
                     return relativePosition;
                 }
+
+                // a bit more complicatated, agent sitting on a prim
+                Primitive p = null;
+                Vector3 fullPosition = relativePosition;
+
+                if (Client.Network.CurrentSim.ObjectsPrimitives.TryGetValue(sittingOn, out p))
+                {
+                    fullPosition += p.Position;
+                }
+
+                // go up the hiearchy trying to find the root prim
+                while (p != null && p.ParentID != 0)
+                {
+                    Avatar av;
+                    if (Client.Network.CurrentSim.ObjectsAvatars.TryGetValue(p.ParentID, out av))
+                    {
+                        p = av;
+                        fullPosition += p.Position;
+                    }
+                    else
+                    {
+                        if (Client.Network.CurrentSim.ObjectsPrimitives.TryGetValue(p.ParentID, out p))
+                        {
+                            fullPosition += p.Position;
+                        }
+                    }
+                }
+
+                if (p != null) // we found the root prim
+                {
+                    return fullPosition;
+                }
+
+                // Didn't find the seat's root prim, try returning coarse loaction
+                if (Client.Network.CurrentSim.avatarPositions.TryGetValue(AgentID, out fullPosition))
+                {
+                    return fullPosition;
+                }
+
+                Logger.Log("Failed to determine agents sim position", Helpers.LogLevel.Warning, Client);
+                return relativePosition;
             }
         }
         /// <summary>
@@ -1365,7 +1379,7 @@ namespace OpenMetaverse
             Client = client;
 
             Movement = new AgentMovement(Client);
-            
+
             Client.Network.Disconnected += Network_OnDisconnected;
 
             // Teleport callbacks            
@@ -1656,6 +1670,10 @@ namespace OpenMetaverse
             im.MessageBlock.RegionID = UUID.Zero;
 
             Client.Network.SendPacket(im);
+
+            lock (GroupChatSessions.Dictionary)
+                if (GroupChatSessions.ContainsKey(groupID))
+                    GroupChatSessions.Remove(groupID);
         }
 
         /// <summary>
@@ -1699,6 +1717,10 @@ namespace OpenMetaverse
 
                 CapsClient request = new CapsClient(url);
                 request.BeginGetResponse(acceptInvite.Serialize(), OSDFormat.Xml, Client.Settings.CAPS_TIMEOUT);
+
+                lock (GroupChatSessions.Dictionary)
+                    if (!GroupChatSessions.ContainsKey(session_id))
+                        GroupChatSessions.Add(session_id, new List<ChatSessionMember>());
             }
             else
             {
@@ -1835,10 +1857,8 @@ namespace OpenMetaverse
             effect.Effect[0].Type = (byte)EffectType.LookAt;
 
             byte[] typeData = new byte[57];
-            if (sourceAvatar != UUID.Zero)
-                Buffer.BlockCopy(sourceAvatar.GetBytes(), 0, typeData, 0, 16);
-            if (targetObject != UUID.Zero)
-                Buffer.BlockCopy(targetObject.GetBytes(), 0, typeData, 16, 16);
+            Buffer.BlockCopy(sourceAvatar.GetBytes(), 0, typeData, 0, 16);
+            Buffer.BlockCopy(targetObject.GetBytes(), 0, typeData, 16, 16);
             Buffer.BlockCopy(globalOffset.GetBytes(), 0, typeData, 32, 24);
             typeData[56] = (byte)type;
 
@@ -2707,7 +2727,7 @@ namespace OpenMetaverse
                         if (e.Simulator == Client.Network.CurrentSim)
                             queueEvent.Set();
                     };
-                
+
                 Client.Network.EventQueueRunning += queueCallback;
                 queueEvent.WaitOne(10 * 1000, false);
                 Client.Network.EventQueueRunning -= queueCallback;
@@ -3116,6 +3136,46 @@ namespace OpenMetaverse
             classified.Data.ClassifiedID = classifiedID;
             Client.Network.SendPacket(classified);
         }
+
+        /// <summary>
+        /// Fetches resource usage by agents attachmetns
+        /// </summary>
+        /// <param name="callback">Called when the requested information is collected</param>
+        public void GetAttachmentResources(AttachmentResourcesCallback callback)
+        {
+            try
+            {
+                Uri url = Client.Network.CurrentSim.Caps.CapabilityURI("AttachmentResources");
+                CapsClient request = new CapsClient(url);
+
+                request.OnComplete += delegate(CapsClient client, OSD result, Exception error)
+                {
+                    try
+                    {
+                        if (result == null || error != null)
+                        {
+                            callback(false, null);
+                        }
+                        AttachmentResourcesMessage info = AttachmentResourcesMessage.FromOSD(result);
+                        callback(true, info);
+
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Log("Failed fetching AttachmentResources", Helpers.LogLevel.Error, Client, ex);
+                        callback(false, null);
+                    }
+                };
+
+                request.BeginGetResponse(Client.Settings.CAPS_TIMEOUT);
+            }
+            catch (Exception ex)
+            {
+                Logger.Log("Failed fetching AttachmentResources", Helpers.LogLevel.Error, Client, ex);
+                callback(false, null);
+            }
+        }
+
         #endregion Misc
 
         #region Packet Handlers
@@ -3168,7 +3228,7 @@ namespace OpenMetaverse
             if (m_Chat != null)
             {
                 Packet packet = e.Packet;
-                
+
                 ChatFromSimulatorPacket chat = (ChatFromSimulatorPacket)packet;
 
                 OnChat(new ChatEventArgs(e.Simulator, Utils.BytesToString(chat.ChatData.Message),
@@ -3192,7 +3252,7 @@ namespace OpenMetaverse
             if (m_ScriptDialog != null)
             {
                 Packet packet = e.Packet;
-                
+
                 ScriptDialogPacket dialog = (ScriptDialogPacket)packet;
                 List<string> buttons = new List<string>();
 
@@ -3245,13 +3305,13 @@ namespace OpenMetaverse
             if (m_ScriptControl != null)
             {
                 Packet packet = e.Packet;
-                
+
                 ScriptControlChangePacket change = (ScriptControlChangePacket)packet;
                 for (int i = 0; i < change.Data.Length; i++)
                 {
                     OnScriptControlChange(new ScriptControlEventArgs((ScriptControlChange)change.Data[i].Controls,
                             change.Data[i].PassToAgent,
-                            change.Data[i].TakeControls));                    
+                            change.Data[i].TakeControls));
                 }
             }
         }
@@ -3263,13 +3323,13 @@ namespace OpenMetaverse
         /// <param name="e">The EventArgs object containing the packet data</param>
         protected void LoadURLHandler(object sender, PacketReceivedEventArgs e)
         {
-            
+
             if (m_LoadURL != null)
             {
                 Packet packet = e.Packet;
 
                 LoadURLPacket loadURL = (LoadURLPacket)packet;
-    
+
                 OnLoadURL(new LoadUrlEventArgs(
                     Utils.BytesToString(loadURL.Data.ObjectName),
                     loadURL.Data.ObjectID,
@@ -3296,13 +3356,8 @@ namespace OpenMetaverse
 
             relativePosition = movement.Data.Position;
             Movement.Camera.LookDirection(movement.Data.LookAt);
-            //simulator.Handle = movement.Data.RegionHandle;
-            simulator.SimData.SimVersion = Utils.BytesToString(movement.SimData.ChannelVersion);
-            lock (Client.Network.Simulators) 
-                if (Client.Network.CurrentSim == null || Client.Network.CurrentSim.Handle != simulator.Handle)
-            {
-                if (simulator.Caps!=null) Client.Network.SetCurrentSim(simulator, simulator.Caps._SeedCapsURI);   
-            }
+            simulator.Handle = movement.Data.RegionHandle;
+            simulator.SimVersion = Utils.BytesToString(movement.SimData.ChannelVersion);
         }
 
         /// <summary>Process an incoming packet and raise the appropriate events</summary>
@@ -3310,7 +3365,7 @@ namespace OpenMetaverse
         /// <param name="e">The EventArgs object containing the packet data</param>
         protected void HealthHandler(object sender, PacketReceivedEventArgs e)
         {
-            Packet packet = e.Packet;            
+            Packet packet = e.Packet;
             health = ((HealthMessagePacket)packet).HealthData.Health;
         }
 
@@ -3352,7 +3407,7 @@ namespace OpenMetaverse
         protected void MoneyBalanceReplyHandler(object sender, PacketReceivedEventArgs e)
         {
             Packet packet = e.Packet;
-            
+
             if (packet.Type == PacketType.MoneyBalanceReply)
             {
                 MoneyBalanceReplyPacket reply = (MoneyBalanceReplyPacket)packet;
@@ -3450,7 +3505,7 @@ namespace OpenMetaverse
         {
             Packet packet = e.Packet;
             Simulator simulator = e.Simulator;
-            
+
             bool finished = false;
             TeleportFlags flags = TeleportFlags.Default;
 
@@ -3677,7 +3732,7 @@ namespace OpenMetaverse
 
                 if (m_RegionCrossed != null)
                 {
-                    OnRegionCrossed(new RegionCrossedEventArgs(oldSim, newSim));                     
+                    OnRegionCrossed(new RegionCrossedEventArgs(oldSim, newSim));
                 }
             }
             else
@@ -3748,12 +3803,16 @@ namespace OpenMetaverse
         /// <param name="simulator"></param>
         protected void ChatterBoxSessionStartReplyEventHandler(string capsKey, IMessage message, Simulator simulator)
         {
-            if (m_GroupChatJoined != null)
-            {
-                ChatterBoxSessionStartReplyMessage msg = (ChatterBoxSessionStartReplyMessage)message;
+            ChatterBoxSessionStartReplyMessage msg = (ChatterBoxSessionStartReplyMessage)message;
 
-                OnGroupChatJoined(new GroupChatJoinedEventArgs(msg.SessionID, msg.SessionName, msg.TempSessionID, msg.Success));                
+            if (msg.Success)
+            {
+                lock (GroupChatSessions.Dictionary)
+                    if (!GroupChatSessions.ContainsKey(msg.SessionID))
+                        GroupChatSessions.Add(msg.SessionID, new List<ChatSessionMember>());
             }
+
+            OnGroupChatJoined(new GroupChatJoinedEventArgs(msg.SessionID, msg.SessionName, msg.TempSessionID, msg.Success));
         }
 
         /// <summary>
@@ -3808,11 +3867,6 @@ namespace OpenMetaverse
                         if (m_ChatSessionMemberLeft != null)
                         {
                             OnChatSessionMemberLeft(new ChatSessionMemberLeftEventArgs(msg.SessionID, msg.Updates[i].AgentID));
-                        }
-
-                        if (msg.Updates[i].AgentID == Client.Self.AgentID)
-                        {
-                            OnGroupChatLeft(new GroupChatLeftEventArgs(msg.SessionID));                            
                         }
                     }
                 }
@@ -3875,7 +3929,14 @@ namespace OpenMetaverse
                 im.Message = msg.Message;
                 im.Offline = msg.Offline;
                 im.BinaryBucket = msg.BinaryBucket;
-
+                try
+                {
+                    ChatterBoxAcceptInvite(msg.IMSessionID);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log("Failed joining IM:", Helpers.LogLevel.Warning, Client, ex);
+                }
                 OnInstantMessage(new InstantMessageEventArgs(im, simulator));
             }
         }
@@ -3921,10 +3982,10 @@ namespace OpenMetaverse
             if (m_AlertMessage != null)
             {
                 Packet packet = e.Packet;
-                
+
                 AlertMessagePacket alert = (AlertMessagePacket)packet;
 
-                OnAlertMessage(new AlertMessageEventArgs(Utils.BytesToString(alert.AlertData.Message)));            
+                OnAlertMessage(new AlertMessageEventArgs(Utils.BytesToString(alert.AlertData.Message)));
             }
         }
 
@@ -3936,7 +3997,7 @@ namespace OpenMetaverse
             if (m_CameraConstraint != null)
             {
                 Packet packet = e.Packet;
-                
+
                 CameraConstraintPacket camera = (CameraConstraintPacket)packet;
                 OnCameraConstraint(new CameraConstraintEventArgs(camera.CameraCollidePlane.Plane));
             }
@@ -3950,7 +4011,7 @@ namespace OpenMetaverse
             if (m_ScriptSensorReply != null)
             {
                 Packet packet = e.Packet;
-                
+
                 ScriptSensorReplyPacket reply = (ScriptSensorReplyPacket)packet;
 
                 for (int i = 0; i < reply.SensedData.Length; i++)
@@ -3959,7 +4020,7 @@ namespace OpenMetaverse
                     ScriptSensorReplyPacket.RequesterBlock requestor = reply.Requester;
 
                     OnScriptSensorReply(new ScriptSensorReplyEventArgs(requestor.SourceID, block.GroupID, Utils.BytesToString(block.Name),
-                      block.ObjectID, block.OwnerID, block.Position, block.Range, block.Rotation, (ScriptSensorTypeFlags)block.Type, block.Velocity));                    
+                      block.ObjectID, block.OwnerID, block.Position, block.Range, block.Rotation, (ScriptSensorTypeFlags)block.Type, block.Velocity));
                 }
             }
 
@@ -3973,12 +4034,12 @@ namespace OpenMetaverse
             if (m_AvatarSitResponse != null)
             {
                 Packet packet = e.Packet;
-                
+
                 AvatarSitResponsePacket sit = (AvatarSitResponsePacket)packet;
 
                 OnAvatarSitResponse(new AvatarSitResponseEventArgs(sit.SitObject.ID, sit.SitTransform.AutoPilot, sit.SitTransform.CameraAtOffset,
                   sit.SitTransform.CameraEyeOffset, sit.SitTransform.ForceMouselook, sit.SitTransform.SitPosition,
-                  sit.SitTransform.SitRotation));                
+                  sit.SitTransform.SitRotation));
             }
         }
 
@@ -3986,7 +4047,7 @@ namespace OpenMetaverse
     }
 
     #region Event Argument Classes
-    
+
     /// <summary>
     /// 
     /// </summary>
@@ -4341,7 +4402,7 @@ namespace OpenMetaverse
             this.m_GroupName = groupName;
         }
     }
-    
+
     /// <summary>Data sent by the simulator to indicate the active/changed animations
     /// applied to your agent</summary>
     public class AnimationsChangedEventArgs : EventArgs
@@ -4422,7 +4483,7 @@ namespace OpenMetaverse
         public RegionCrossedEventArgs(Simulator oldSim, Simulator newSim)
         {
             this.m_OldSimulator = oldSim;
-            this.m_NewSimulator = newSim;            
+            this.m_NewSimulator = newSim;
         }
     }
 
@@ -4456,24 +4517,6 @@ namespace OpenMetaverse
             this.m_SessionName = sessionName;
             this.m_TmpSessionID = tmpSessionID;
             this.m_Success = success;
-        }
-    }
-    
-    /// <summary>The session information when your agent exits a group chat session</summary>
-    public class GroupChatLeftEventArgs : EventArgs
-    {
-        private readonly UUID m_SessionID;
-
-        /// <summary>Get the ID of the session your agent left</summary>
-        public UUID SessionID { get { return m_SessionID; } }
-
-        /// <summary>
-        /// Construct a new instance of the GroupChatLeftEventArgs class
-        /// </summary>
-        /// <param name="chatSessionID">The ID of the session your agent left</param>
-        public GroupChatLeftEventArgs(UUID chatSessionID)
-        {
-            this.m_SessionID = chatSessionID;
         }
     }
 
@@ -4542,7 +4585,7 @@ namespace OpenMetaverse
             m_CollidePlane = collidePlane;
         }
     }
-    
+
     /// <summary>
     /// Data containing script sensor requests which allow an agent to know the specific details
     /// of a primitive sending script sensor requests
@@ -4610,10 +4653,10 @@ namespace OpenMetaverse
             this.m_Velocity = velocity;
         }
     }
-    
+
     /// <summary>Contains the response data returned from the simulator in response to a <see cref="RequestSit"/></summary>
     public class AvatarSitResponseEventArgs : EventArgs
-    {        
+    {
         private readonly UUID m_ObjectID;
         private readonly bool m_Autopilot;
         private readonly Vector3 m_CameraAtOffset;

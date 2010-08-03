@@ -2532,7 +2532,7 @@ namespace OpenMetaverse
         /// <param name="groupOwner">UUID of group to own the object</param>        
         /// <param name="queryID">User defined queryID to correlate replies</param>
         /// <param name="rezSelected">If set to true, the CreateSelected flag
-        /// will be set on the rezzed object</param>
+        /// will be set on the rezzed object</param>        
         public UUID RequestRezFromInventory(Simulator simulator, Quaternion rotation, Vector3 position,
             InventoryItem item, UUID groupOwner, UUID queryID, bool rezSelected)
         {
@@ -3603,7 +3603,7 @@ namespace OpenMetaverse
                                 break;
                             case InstantMessageDialog.GroupNotice:
                                 imp.MessageBlock.Dialog = (byte)InstantMessageDialog.GroupNoticeInventoryAccepted;
-                                break;
+                                break;                         
                         }
                         imp.MessageBlock.BinaryBucket = args.FolderID.GetBytes();                        
                     }
@@ -3820,7 +3820,7 @@ namespace OpenMetaverse
                 {
                     // Request full item update so we keep store in sync
                     RequestFetchInventory((UUID)(((object[])client.UserData)[1]), contents["new_asset"].AsUUID());
-
+                    
 
                     try
                     {
@@ -4350,7 +4350,7 @@ namespace OpenMetaverse
         public AssetType AssetType { get { return m_AssetType; } }
         public UUID ObjectID { get { return m_ObjectID; } }
         public bool FromTask { get { return m_FromTask; } }
-
+        
         public InventoryObjectOfferedEventArgs(InstantMessage offerDetails, AssetType type, UUID objectID, bool fromTask, UUID folderID)
         {
             this.Accept = false;

@@ -867,7 +867,7 @@ namespace OpenMetaverse
             Client.Network.RegisterCallback(PacketType.LeaveGroupReply, LeaveGroupReplyHandler);
             Client.Network.RegisterCallback(PacketType.UUIDGroupNameReply, UUIDGroupNameReplyHandler);
             Client.Network.RegisterCallback(PacketType.EjectGroupMemberReply, EjectGroupMemberReplyHandler);
-            Client.Network.RegisterCallback(PacketType.GroupNoticesListReply, GroupNoticesListReplyHandler);
+            Client.Network.RegisterCallback(PacketType.GroupNoticesListReply, GroupNoticesListReplyHandler);            
 
             Client.Network.RegisterEventCallback("AgentDropGroup", new Caps.EventQueueCallback(AgentDropGroupMessageHandler));
         }
@@ -1852,7 +1852,7 @@ namespace OpenMetaverse
             {
                 OnGroupMemberEjected(new GroupOperationEventArgs(reply.GroupData.GroupID, reply.EjectData.Success));
             }
-        }
+        }        
 
         #endregion Packet Handlers
     }
