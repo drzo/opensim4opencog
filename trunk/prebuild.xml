@@ -1659,6 +1659,7 @@ app -->
       <Reference name="RadegastSpeech" />
       <Reference name="RadSpeechLin" />
       <Reference name="RadSpeechWin" />
+      <Reference name="CommandLine.dll"  localCopy="false" />
       <Reference name="SwiPlCs" localCopy="false"/>
       <Reference name="System" localCopy="false"/>
       <Reference name="System.Data" />
