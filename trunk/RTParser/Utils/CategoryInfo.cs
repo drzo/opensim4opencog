@@ -223,15 +223,21 @@ namespace RTParser.Utils
         {
             lock (sw)
             {
-                sw.Remove(0, sw.Length);
+                sw.Length = 0;
+                sw.Capacity = 100000;
                 //var tw = new StringWriter(sw);
                 XMLWriterSettings.Encoding = Encoding.ASCII;
                 XMLWriterSettings.CloseOutput = false;
                 XMLWriterSettings.OmitXmlDeclaration = true;
-                XMLWriterSettings.IndentChars = " ";// = true;
-                XMLWriterSettings.Indent = true;
 
+                XMLWriterSettings.IndentChars = " ";// = true;
+                XMLWriterSettings.Indent = false;
                 var v = XmlWriter.Create(sw, XMLWriterSettings);
+                //v.Formatting = Formatting.Indented;
+                //v.Namespaces = false;
+               
+
+                
                 try
                 {
                     srcNode.WriteTo(v);

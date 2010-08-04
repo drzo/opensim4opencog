@@ -675,7 +675,7 @@ PrologIO.Verbose)
                 }
                 else
                 {
-                    PrologIO.Warning("call(" + currClause + ",from,{0})", lastCurrClause);
+                    //PrologIO.Warning("call(" + currClause + ",from,{0})", lastCurrClause);
                     lastCurrClause = currClause;
                 }
                 if (currClause.NextClause != null) // currClause.NextClause will be tried upon backtracking
