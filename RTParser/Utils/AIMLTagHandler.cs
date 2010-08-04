@@ -309,7 +309,7 @@ namespace RTParser.Utils
             {
                 if (!Unifiable.IsNullOrEmpty(RecurseResult))
                     return RecurseResult;
-                return Succeed(templateNode.OuterXml);
+                return Succeed(ToVisiable(templateNode));
             }
             return s;
         }

@@ -920,6 +920,7 @@ namespace RTParser.Utils
                 || patString.Contains("~") || patString.Contains("*"))
             {
                 UseRawUserInput = true;
+                isUserInput = false;
             }
 
             bool thatContainedAnd = that.ToUpper().Contains(" AND ");

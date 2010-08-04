@@ -679,5 +679,22 @@ namespace RTParser.Utils
                 RTPBot.Breakpoint("Level " + request.DebugLevel + "<" + i);
             }
         }
+
+        protected string ToVisiable(XmlNode node)
+        {
+            string oxml = node.OuterXml;
+            if (node.NodeType == XmlNodeType.Attribute)
+            {
+                return node.Name + "=\"" + node.Value + "\"";
+            }
+            if (oxml.Trim().Length > 0) return oxml;
+            oxml = node.InnerText;
+            if (oxml.Trim().Length > 0) return oxml;
+            if (node.NodeType == XmlNodeType.Element)
+            {
+                return node.OuterXml;
+            }
+            return node.OuterXml;
+        }
     }
 }

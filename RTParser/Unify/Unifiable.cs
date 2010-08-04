@@ -93,6 +93,15 @@ namespace RTParser
                         }
                       //  return ss;
                     }
+                    string innerText = templateNode.InnerText.Trim();
+                    if (templateNode.InnerXml.Length >= templateNode.InnerText.Length)
+                    {
+                        if (innerText.Length == 0)
+                        {
+                            //writeToLog("return empty?");
+                        }
+                        return templateNode.InnerXml;
+                    }
                     return templateNode.InnerXml;
                     break;
                 case XmlNodeType.Attribute:
