@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Xml;
 
 namespace RTParser.Utils
@@ -13,6 +14,39 @@ namespace RTParser.Utils
         public double Rating = 1.0;
         public SubQuery Query;
         public Unifiable TextSaved;
+
+        public GraphMaster Graph
+        {
+            get
+            {
+                return GraphmasterNode.Graph;
+            }
+        }
+
+        public bool IsDisabled
+        {
+            get { return CategoryInfo.IsDisabled; }
+            set {
+                if (value != CategoryInfo.IsDisabled)
+                {
+                    CategoryInfo.IsDisabled = value;
+                    Node node = GraphmasterNode;
+                    if (value)
+                    {
+                        node.TemplateInfos.Remove(this);
+                        node.TemplateInfosDisabled = node.TemplateInfosDisabled ?? new List<TemplateInfo>();
+                        node.TemplateInfosDisabled.Add(this);
+                    } else
+                    {                                                
+                        //node.TemplateInfosDisabled = node.TemplateInfosDisabled ?? new List<TemplateInfo>();                        
+                        node.TemplateInfosDisabled.Remove(this);
+
+                        node.TemplateInfos = node.TemplateInfos ?? new List<TemplateInfo>();
+                        node.TemplateInfos.Add(this);
+                    }
+                }
+            }
+        }
 
         public bool IsSilent
         {
@@ -93,9 +127,9 @@ namespace RTParser.Utils
             }
         }
 
-        public string ToFileString()
+        public string ToFileString(PrintOptions printOptions)
         {
-            if (CategoryInfo != null) return CategoryInfo.ToFileString();
+            if (CategoryInfo != null) return CategoryInfo.ToFileString(printOptions);
             return ToString();
         }
 
@@ -107,7 +141,8 @@ namespace RTParser.Utils
 
     public interface IAIMLInfo
     {
-        string ToFileString();
+        string ToFileString(PrintOptions printOptions);
         string SourceInfo();
+        GraphMaster Graph { get; }
     }
 }

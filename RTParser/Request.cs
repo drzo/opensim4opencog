@@ -4,13 +4,14 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using RTParser;
+using RTParser.AIMLTagHandlers;
 using RTParser.Utils;
 using RTParser.Variables;
 
 namespace RTParser
 {
 
-    public interface Request : QuerySettingsReadOnly
+    public interface Request : QuerySettingsReadOnly,QuerySettingsSettable
     {
         int depth { get; set; }
         Unifiable Topic { get; set; }
@@ -62,6 +63,9 @@ namespace RTParser
         bool CanUseTemplate(TemplateInfo info, Result request);
         void writeToLog(string message, params object[] args);
         int DebugLevel { get; set; }
+        Unifiable That { get; set; }
+        PrintOptions WriterOptions { get; }
+        string GraphName { get; set; }
     }
 
     /// <summary>
@@ -257,8 +261,29 @@ namespace RTParser
         private string _filename;
         private string _loadingfrom;
 
-        private GraphMaster ovGraph = null;
-        public override GraphMaster Graph
+        private GraphMaster sGraph = null;
+        public GraphMaster Graph
+        {
+            get
+            {
+                if (sGraph != null)
+                    return sGraph;
+                if (ParentRequest != null)
+                {
+                    var pg = ParentRequest.Graph;
+                    if (pg != null) return pg;
+                }
+                return user.ListeningGraph;
+            }
+            set { sGraph = value; }
+        }
+
+        private string ovGraph = null;
+
+        /// <summary>
+        /// The Graph to start the query on
+        /// </summary>
+        public override string GraphName
         {
             get
             {
@@ -266,10 +291,10 @@ namespace RTParser
                     return ovGraph;
                 if (ParentRequest != null)
                 {
-                    var pg = ParentRequest.Graph;
+                    var pg = ParentRequest.GraphName;
                     if (pg != null) return pg;
                 }
-                return user.ListeningGraph;
+                return user.GraphName;
             }
             set { ovGraph = value; }
         }
@@ -441,6 +466,8 @@ namespace RTParser
 
         public bool CanUseTemplate(TemplateInfo info, Result result)
         {
+            if (info == null) return true;
+            if (info.IsDisabled) return false;
             if (!user.CanUseTemplate(info, result)) return false;
             while (result != null)
             {
@@ -474,6 +501,36 @@ namespace RTParser
                 return ParentRequest.DebugLevel;
             }
             set { base.DebugLevel = value; }
+        }
+
+        internal Unifiable ithat = null;
+        public Unifiable That
+        {
+            get
+            {
+                if (ithat != null) return ithat;
+                if (ParentRequest != null)
+                {
+                    return ParentRequest.That;
+                }
+                return user.That;
+            }
+            set { ithat = value; }
+        }
+
+        internal PrintOptions iopts;
+        public PrintOptions WriterOptions
+        {
+            get
+            {
+                if (iopts != null) return iopts;
+                if (ParentRequest != null)
+                {
+                    return ParentRequest.WriterOptions;
+                }
+                return user.WriterOptions;
+            }
+            set { iopts = value; }
         }
 
         public IList<Result> UsedResults { get; set; }

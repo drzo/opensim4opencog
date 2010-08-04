@@ -9,6 +9,7 @@ using System.Xml.Schema;
 using System.Text;
 using AIMLbot;
 using MushDLR223.ScriptEngines;
+using MushDLR223.Utilities;
 using RTParser.Variables;
 using UPath = RTParser.Unifiable;
 using MushDLR223.Virtualization;
@@ -901,7 +902,7 @@ namespace RTParser.Utils
         /// <param name="isUserInput">marks the path to be created as originating from user input - so
         /// normalize out the * and _ wildcards used by AIML</param>
         /// <returns>The appropriately processed path</returns>
-        public Unifiable generateCPath(Unifiable pattern, Unifiable that, Unifiable flag, Unifiable topicName, bool isUserInput)
+        private Unifiable generateCPath(Unifiable pattern, Unifiable that, Unifiable flag, Unifiable topicName, bool isUserInput)
         {
             var RProcessor = LoaderRequest00.TargetBot;
 
@@ -1098,22 +1099,14 @@ namespace RTParser.Utils
         {
             string input0 = input;
             if (Unifiable.IsNullOrEmpty(input)) return Unifiable.Empty;
-            input = CleanWhitepaces(input);
+            if (isUserInput) input = CleanWhitepaces(input);
             if (Unifiable.IsNullOrEmpty(input)) return Unifiable.Empty;
-            while (input.EndsWith("?") || input.EndsWith(".") || input.EndsWith("!"))
-            {
-                input = input.Substring(0, input.Length - 1).Trim();
-            }
+            input = input.TrimEnd("?!. \n\r\t".ToCharArray());
             if (Unifiable.IsNullOrEmpty(input))
             {
                 //return input0;
                 return Unifiable.Empty;
             }
-            if (isUserInput && false)
-            {
-                return input;
-            }
-
             Unifiable result = Unifiable.CreateAppendable();
 
             // objects for normalization of the input
@@ -1144,8 +1137,10 @@ namespace RTParser.Utils
                 Unifiable normalizedWord;
                 if (isUserInput)
                 {
+                    string wwword = word.AsString().Trim(",. \"?".ToCharArray());
+                    if (wwword.Length==0) continue;
                     normalizedWord = stripper.Transform(word);
-                    if (normalizedWord != word)
+                    if (normalizedWord != wwword)
                     {
                         writeToLog("Normalize stripper " + word + "->" + normalizedWord);
                     }
@@ -1218,7 +1213,7 @@ namespace RTParser.Utils
             }
             string clean = text;
             clean = AIMLLoader.CleanWhitepaces(
-                text, "*_",
+                text, "*",
                 new Func<char, char, bool>((c0, c1) =>
                                                {
                                                    if (char.IsLetterOrDigit(c1) || char.IsControl(c1)) return true;
@@ -1451,7 +1446,7 @@ namespace RTParser.Utils
             return TextAndSourceInfo(element.ParentNode ?? element) + " " + LocationEscapedInfo(element);
         }
 
-        public static void PrintResult(Result result, OutputDelegate console)
+        public static void PrintResult(Result result, OutputDelegate console, PrintOptions printOptions)
         {
             console("-----------------------------------------------------------------");
             console("Result: " + result.Graph + " Request: " + result.request);
@@ -1459,7 +1454,7 @@ namespace RTParser.Utils
             {
                 console("input: \"" + s + "\"");
             }
-            PrintTemplates(result.UsedTemplates, console, true);
+            PrintTemplates(result.UsedTemplates, console, printOptions);
             foreach (var s in result.SubQueries)
             {
                 console("\n" + s);
@@ -1472,48 +1467,17 @@ namespace RTParser.Utils
             console("-----------------------------------------------------------------");
         }
 
-        public static string GetTemplateSource(IEnumerable CI)
+        public static string GetTemplateSource(IEnumerable CI, PrintOptions printOptions)
         {
             if (CI == null) return "";
-            string hide = "";
-            foreach (var ci in CI)
-            {
-                string c;
-                if (ci is IAIMLInfo) c = ((IAIMLInfo)ci).ToFileString();
-                else c = "" + ci;
-                string ss = "" + CleanWhitepaces(c) + "\n";
-                if (hide.Contains(ss)) continue;
-                hide += ss;
-            }
-            return hide;
+            var fs = new StringWriter();
+            GraphMaster.PrintToWriter(CI, printOptions, fs, null);
+            return fs.ToString();
         }
 
-        public static void PrintTemplates(IEnumerable CI, OutputDelegate console, bool fileinfo)
+        public static void PrintTemplates(IEnumerable CI, OutputDelegate console, PrintOptions printOptions)
         {
-            if (CI == null) return;
-            string hide = "";
-            foreach (var ci in CI)
-            {
-                string c;
-                var cate = ci as IAIMLInfo;
-                if (cate != null) c = cate.ToFileString();
-                else c = "" + ci;
-                string ss = CleanWhitepaces(c);
-                if (hide.Contains(ss)) continue;
-                if (hide.Length > 30000) hide = "";
-                hide += ss;
-                if (cate != null)
-                {
-                    c = cate.SourceInfo();
-                    if (!c.Contains("(0,0)"))
-                    {
-                        if (ss.Length > 50) ss = ss + "\n";
-                        ss = ss + "   <!--   " + c + "  -->";
-                    }
-                }
-                console(" {0}", ss);
-            }
-            return;
+            GraphMaster.PrintToWriter(CI, printOptions, new OutputDelegateWriter(console), null);
         }
 
         public static string CleanWhitepaces(object info)

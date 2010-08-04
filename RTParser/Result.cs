@@ -139,7 +139,7 @@ namespace RTParser
                     {
                         TemplateOfRating = ti;
                         TemplateRating = ThisRating;
-                        bot.writeChatTrace("AIMLTRACE RATING=" + ThisRating + " TI: " + ti + "---- U: " + unifiable);
+                        bot.writeChatTrace("AIMLTRACE OUTPUT RATING={0} TI: {1} U: {2}", ThisRating, ti, unifiable);
 
                     }
                     if (!Unifiable.IsNullOrEmpty(unifiable))

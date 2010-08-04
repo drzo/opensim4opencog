@@ -1075,8 +1075,11 @@ namespace RTParser.Variables
                         }
                     }
                     var v0 = Fallbacks[0].grabSetting(name);
-                    SettingsLog("RETURN FALLBACK0 '" + name + "'=" + str(v0));
-                    return v0;
+                    if (!Unifiable.IsNull(v0))
+                    {
+                        SettingsLog("RETURN FALLBACK0 '" + name + "'=" + str(v0));
+                        return v0;
+                    }
                 }
                 SettingsLog("MISSING '" + name + "'");
                 return Unifiable.NULL;

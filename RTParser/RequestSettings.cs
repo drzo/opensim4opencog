@@ -35,11 +35,7 @@ namespace RTParser
         /// <summary>
         /// The Graph to start the query on
         /// </summary>
-        public override GraphMaster Graph
-        {
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
-        }
+        sealed public override string GraphName { get; set; }
 
         #endregion
     }
@@ -58,7 +54,7 @@ namespace RTParser
             MaxPatterns = 1,
             MinTemplates = 1,
             MaxTemplates = 1,
-            GraphName = "defualt",
+            GraphName = "default",
             IsTraced = false,
             SraiDepth = new SettingMinMaxCurrent<int>()
             {
@@ -122,12 +118,12 @@ namespace RTParser
         /// <summary>
         /// The Graph to start the query on
         /// </summary>
-        public virtual string GraphName { get; set; }
+        public abstract string GraphName { get; set; }
 
         /// <summary>
         /// The Graph to start the query on
         /// </summary>
-        public abstract GraphMaster Graph { get; set; }
+      //  public abstract GraphMaster Graph { get; set; }
 
         /// <summary>
         /// If the query is being traced
@@ -182,7 +178,7 @@ namespace RTParser
         /// <summary>
         /// The Graph to start the query on
         /// </summary>
-        GraphMaster Graph { get; }
+        string GraphName { get; }
 
         /// <summary>
         /// If the query is being traced
@@ -253,7 +249,7 @@ namespace RTParser
         /// <summary>
         /// The Graph to start the query on
         /// </summary>
-        GraphMaster Graph { set; }
+        string GraphName { set; }
 
         /// <summary>
         /// If the query is being traced

@@ -112,15 +112,15 @@ namespace RTParser.Utils
                     return Unifiable.Empty;
                 }
                 string v = value.AsString();
-                if (!value.AsString().Contains("<a href"))
+                if (!value.AsString().Contains("a href"))
                 {
                     if (v.Contains("<"))
                     {
-                        writeToLogWarn("CheckValue XML = '" + value + "'");
+                        writeToLog("CheckValue XML = '" + value + "'");
                     }
                     else if (v.Contains("&"))
                     {
-                        writeToLogWarn("CheckValue HTML = '" + value + "'");
+                        writeToLog("CheckValue HTML = '" + value + "'");
                     }
                 }
                 return value;
