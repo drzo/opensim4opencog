@@ -99,12 +99,12 @@ namespace RTParser.Prolog
                         while (true)
                         {
                             query += Console.ReadLine();
-                            if (query.Trim().EndsWith("/")) break; // TEMP
+                            if (query.Trim().EndsWith("/")) break; // TEMP - TODO - TO TAKE OUT?
                             if (query.Trim().StartsWith("!")) break;
                             if (query.Trim().EndsWith(".")) break;
                             Console.Write("|  ");
                         }
-                        //            if (query.Trim ().EndsWith ("/")) break; // TEMP
+                        //            if (query.Trim ().EndsWith ("/")) break; // TEMP - TODO - TO TAKE OUT?
 
                         bool result = e.ExecuteQuery(ref query);
 
