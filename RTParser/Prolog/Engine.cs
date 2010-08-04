@@ -3,6 +3,7 @@
 #define arg1index
 #define mswindows
 #define newor
+#define partialengine
 #endif
 
 /*-----------------------------------------------------------------------------------------
@@ -285,12 +286,13 @@ namespace RTParser.Prolog
     }
 
 
-    public class PrologEngine
+    public partial class PrologEngine
     {
         #region private members
 
         private bool halted = false;
-        private class AbortQueryException : ApplicationException { }
+        public class CSPrologException : ApplicationException { }
+        private class AbortQueryException : CSPrologException { }
         //private static Parser seeParser = Globals.CurrentParser = new Parser (ps);   /////////////// is dit wel nodig? !!!!!!!!!!!!!!!!!!!!!!!!!!
         private string currentInputName;
         //private ThreadStart   seeParserRun;
@@ -486,7 +488,11 @@ namespace RTParser.Prolog
         {
             parser = new Parser(ps);
             ReadBuiltinPredicates();
+#if partialengine
+            theExt = this;
+#else
             theExt = new Ext(this);
+#endif
         }
 
 
@@ -518,7 +524,7 @@ namespace RTParser.Prolog
 
             if (!cmdBuf.PreprocessQuery(ref query)) return true;
 
-            if (query == "/") { halted = true; return true; } // TEMP
+            if (query == "/") { halted = true; return true; } // TEMP - TODO - TO TAKE OUT?
 
             ElapsedTime();
             ProcessorTime();
@@ -544,6 +550,14 @@ namespace RTParser.Prolog
                 result = queryTimeout == 0 ? ExecuteGoalList() : StartExecuteGoalListThread();
             }
             catch (AbortQueryException)
+            {
+                result = false;
+            }
+            catch (CSPrologException)
+            {
+                result = false;
+            }
+            catch (Exception)
             {
                 result = false;
             }
@@ -706,6 +720,19 @@ PrologIO.Verbose)
                     else if ((builtinId = currClause.BuiltinId) != BI.none)
                     {
                         if (builtinId == BI.call)
+                        {
+                            t = goalNode.Term.Arg(0);
+
+                            if (t.IsVar) return PrologIO.Error("Unbound variable '{0}' in goal list", t.VarName());
+
+                            tn0 = t.ToGoalList(stackTop, goalNode.Level + 1);
+
+                            if (reporting) tn0.Append(new SpyPoint(SpyPort.exit, spyGoal));
+
+                            goalNode = (goalNode == null) ? tn0 : tn0.Append(goalNode.NextNode);
+                            findFirstClause = true;
+                        }
+                        else if (builtinId == BI.catch3)
                         {
                             t = goalNode.Term.Arg(0);
 
@@ -1266,7 +1293,11 @@ PrologIO.Verbose)
             Globals.TryCloseCurrentOutput();
         }
 
+#if partialengine
+        public PrologEngine theExt;
+#else
         private Ext theExt;
+#endif
         private TermNode lastCurrClause;
 
         private bool DoBuiltin(BI biId, out bool findFirstClause)
@@ -2606,7 +2637,7 @@ PrologIO.Verbose)
                 //          break;
 
                 case BI.jcall0: // jcall0(+ObjOfClass,+MemberName,+ArgsList,?Result)
-                    if (!Ext.JCALL0(term, this)) return false;
+                    if (!theExt.JCALL0(term, this)) return false;
                     break;
                 case BI.jpred0: // jcall0(+ObjOfClass,+MemberName,+ArgsList,?Result)
                     if (!theExt.JPRED0(term, this)) return false;

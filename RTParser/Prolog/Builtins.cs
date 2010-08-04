@@ -37,7 +37,7 @@ namespace RTParser.Prolog
         setof_add, setof_exit, setof_init, shell, silent, sort, spy, spypoints, statistics,
         string_, tab, tell, today, told, trace, undef_pred_action, undefineds, unifiable,
         univ, username, userroles, validdate, validtime, var, verbose, version, weekno,
-        whereXY, write, writef, writef0, writeln, writeq, xml_term, xmltrace, jcall0, jpred0,
+        whereXY, write, writef, writef0, writeln, writeq, xml_term, xmltrace, jcall0, jpred0, catch3,
     }
 
     public class Builtins
@@ -81,6 +81,8 @@ namespace RTParser.Prolog
 
        jcall_ext(MemberName,ArgsList,Result) :- jcall0(static('RTParser.Prolog.Ext'),MemberName,ArgsList,Result).
        jnew(ClassName,ArgsList,Result) :- jcall_ext('jnew',[ClassName,ArgsList],Result).
+
+        catch(Call,Exception,Handler) :== catch3.
 
        X = X.
        true.

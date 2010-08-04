@@ -3,6 +3,7 @@
 #define arg1index
 #define mswindows
 #define newor
+#define partialengine
 #endif
 
 #define debugging
@@ -49,7 +50,11 @@ namespace RTParser.Prolog
       ----------------
     */
 
+#if partialengine
+    public partial class PrologEngine
+#else        
     public class Ext
+#endif
     {
         private static readonly Dictionary<Type, Func<Term, /*CONTEXT,*/ Object>> TermTypeConvertor =
             new Dictionary<Type, Func<Term,  /*CONTEXT,*/ object>>();
@@ -58,13 +63,19 @@ namespace RTParser.Prolog
         static PrologBinder prologBinder = new PrologBinder();
 
         private static PrologEngine engine;
-        public static Object[] EMPTY_VECTOR = new Object[0];
+        public Object[] EMPTY_VECTOR = new Object[0];
+#if !(partialengine)
         private static VarStack varStack
         {
             get { return engine.varStack; }
         }
+#endif
 
-        public Ext(PrologEngine e)
+#if partialengine
+        public void InitEngine(PrologEngine e)
+#else        
+   public Ext(PrologEngine e)
+#endif
         {
             engine = e;
 
@@ -189,11 +200,11 @@ namespace RTParser.Prolog
                                                                      "java.util",
                                                                  };
 
-        static public bool JCALL0(Term term, CONTEXT engine)
+        public bool JCALL0(Term term, CONTEXT engine)
         {
             return JCALL0(term.FunctorU, term.Args/*ctx*/);
         }
-        static public bool JCALL0(String functor, Term[] args/*CONTEXT*/)
+        public bool JCALL0(String functor, Term[] args/*CONTEXT*/)
         {
             Term t0, t1;
             Object o = null;
@@ -253,7 +264,7 @@ namespace RTParser.Prolog
 
 
         [TermConversion]
-        static public ICollection CollectionFromTerm(Term term/*CONTEXT*/)
+        public ICollection CollectionFromTerm(Term term/*CONTEXT*/)
         {
             if (term.IsObjectRef)
             {
@@ -301,7 +312,7 @@ namespace RTParser.Prolog
             return (ICollection)ObjectFromTerm(term/*ctx*/);
         }
 
-        private static object CompoundToObject(String value, Term[] args/*CONTEXT*/)
+        private object CompoundToObject(String value, Term[] args/*CONTEXT*/)
         {
             int arity = args.Length;
             if (arity == 1)
@@ -478,7 +489,7 @@ namespace RTParser.Prolog
             return n;
         }
 
-        static public bool ObjectUnify(object r, Term t2/*CONTEXT*/)
+        public bool ObjectUnify(object r, Term t2/*CONTEXT*/)
         {
             if (t2.IsVar)
             {
@@ -513,7 +524,7 @@ namespace RTParser.Prolog
                                                      target, args);
         }
 
-        static public Object SetDefaultIndexedProperty(Object target, Object[] args)
+        public Object SetDefaultIndexedProperty(Object target, Object[] args)
         {
             Type targetType = target.GetType();
             return targetType.InvokeMember("", BindingFlags.Default | BindingFlags.SetProperty, null,
@@ -525,7 +536,7 @@ namespace RTParser.Prolog
             return true;
         }
 
-        static public object JNEW(Type clz, Term[] termArray/*CONTEXT*/)
+        public object JNEW(Type clz, Term[] termArray/*CONTEXT*/)
         {
             Type type = clz;
             //object[] termArray = toTermList(lis);
@@ -564,7 +575,7 @@ namespace RTParser.Prolog
         }
 
 
-        static public object JCALL0(Type type, object objectOrNull, string name, Term[] typeHints, Term[] termArray/*CONTEXT*/)
+        public object JCALL0(Type type, object objectOrNull, string name, Term[] typeHints, Term[] termArray/*CONTEXT*/)
         {
             //
             // Summary:
@@ -662,7 +673,7 @@ namespace RTParser.Prolog
             if (objectOrNull == null) flags |= BindingFlags.Static;
             flags |= BindingFlags.Instance;
             object[] argarray = terms_to_objects(termArray/*ctx*/);
-            if (argarray == null) argarray = Ext.EMPTY_VECTOR;
+            if (argarray == null) argarray = this.EMPTY_VECTOR;
             Type[] argtypes = Type.GetTypeArray(argarray);
 
             Exception lastException = null;
@@ -800,7 +811,7 @@ namespace RTParser.Prolog
 
         }
 
-        static bool TryInvokeWithBinder(Type type, string name, Binder methodBinder0, object[] argarray, object target, bool isStatic, ref Exception lastException, ref object result)
+        bool TryInvokeWithBinder(Type type, string name, Binder methodBinder0, object[] argarray, object target, bool isStatic, ref Exception lastException, ref object result)
         {
             try
             {
