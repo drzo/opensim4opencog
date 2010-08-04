@@ -21,11 +21,24 @@ namespace RTParser.Utils
             RTPBot.writeDebugLine("!NODE: " +  message + " in " +ToString(), args);
         }
 
+        GraphMaster _graph;
+        public GraphMaster Graph
+        {
+            get
+            {                
+                if (_graph != null) return _graph;
+                return SyncObject.Graph;
+            }
+            set
+            {
+                _graph = value;
+            }
+        }
         private Node Parent;
         public Node(Node P)
         {
             Parent = P;
-            SyncObject = this;
+            SyncObject = P ?? this;
         }
         #region Attributes
 
@@ -37,7 +50,12 @@ namespace RTParser.Utils
         /// <summary>
         /// The template (if any) associated with this node
         /// </summary>
-        private UList TemplateInfos = null;//Unifiable.Empty;
+        internal UList TemplateInfos = null;//Unifiable.Empty;
+        /// <summary>
+        /// The template (if any) associated with this node
+        /// </summary>
+        internal UList TemplateInfosDisabled = null;//Unifiable.Empty;
+
         public UList TemplateInfoCopy
         {
             get
@@ -50,6 +68,27 @@ namespace RTParser.Utils
                     copy.AddRange(TemplateInfos);
                     return copy;
                 }
+            }
+        }
+        public int TemplateInfoCount
+        {
+            get
+            {
+                if (TemplateInfos == null) return 0;
+                lock (TemplateInfos)
+                {
+                    if (TemplateInfos.Count == 0) return 0;
+                    return TemplateInfos.Count;
+                }
+            }
+        }
+
+        public object ChildCount
+        {
+            get
+            {
+                if (children == null) return -1;
+                return children.Count;
             }
         }
 
@@ -78,7 +117,7 @@ namespace RTParser.Utils
         /// <param name="path">the path for the category</param>
         /// <param name="template">the template to find at the end of the path</param>
         /// <param name="filename">the file that was the source of this category</param>
-        static public Node addCategoryTag(Node start, Unifiable path, PatternInfo patternInfo, CategoryInfo category, XmlNode outerTemplate, XmlNode templateNode, GuardInfo guard, ThatInfo thatInfo, GraphMaster master)
+        static public Node addCategoryTagUnused(Node start, Unifiable path, PatternInfo patternInfo, CategoryInfo category, XmlNode outerTemplate, XmlNode templateNode, GuardInfo guard, ThatInfo thatInfo, GraphMaster master)
         {
             if (templateNode == null)
             {
@@ -91,7 +130,7 @@ namespace RTParser.Utils
             return thiz;
         }
 
-        private void addTerminal(XmlNode templateNode, CategoryInfo category, GuardInfo guard, ThatInfo thatInfo, GraphMaster master, PatternInfo patternInfo)
+        public TemplateInfo addTerminal(XmlNode templateNode, CategoryInfo category, GuardInfo guard, ThatInfo thatInfo, GraphMaster master, PatternInfo patternInfo)
         {
             const bool RemoveDupes = true; //slows it down but maybe important to do
             if (this.TemplateInfos == null)
@@ -100,6 +139,8 @@ namespace RTParser.Utils
             }
             else if (RemoveDupes)
             {
+                TemplateInfo returnIt = null;
+                bool returnTemp = false;
                 lock (this.TemplateInfos)
                 {
                     // search for old
@@ -126,7 +167,9 @@ namespace RTParser.Utils
                                                                    if (nodeNum == 0)
                                                                    {
                                                                        //TemplateInfo redundant = TemplateInfo.GetTemplateInfo(templateNode, guard, thatInfo, this, category);
-                                                                       master.AddRedundantCate(category, temp);                                                                       
+                                                                       master.AddRedundantCate(category, temp);
+                                                                       returnTemp = true;
+                                                                       returnIt = temp;
                                                                        return;
                                                                    }
                                                                    nodeNum++;
@@ -139,30 +182,45 @@ namespace RTParser.Utils
                         if (TemplateInfos.Count == 1)
                         {
                             writeToLog("ERROR!! AIMLLOADER ONE DUPE REDUNDANT " + TemplateInfos[0]);
-                            if (true) return;
-                            // no side effect!
                             TemplateInfo temp = dupes[0];
+                            if (true)
+                            {
+                                returnTemp = true;
+                                returnIt = temp;
+                                return temp;
+                            }
+                            // no side effect!
                             master.RemoveTemplate(temp);
                             TemplateInfos = null;
-                        } else
+                        }
+                        else
+                        {
                             dupes.ForEach(delegate(TemplateInfo temp)
-                                          {
-                                              if (temp == TemplateInfos[0])
                                               {
-                                                  return;
-                                              }
-                                              if (true)
-                                              {
-                                                  writeToLog("AIMLLOADER REDUNDANT \n" + temp + "\n from: " + category.Filename);
-                                                  master.RemoveTemplate(temp);
-                                                  this.TemplateInfos.Remove(temp);
-                                                  this.TemplateInfos.Insert(0, temp);
-                                              }
-                                          });
+                                                  if (temp == TemplateInfos[0])
+                                                  {
+                                                      returnTemp = true;
+                                                      returnIt = temp;
+                                                      return;
+                                                  }
+                                                  if (true)
+                                                  {
+                                                      writeToLog("AIMLLOADER REDUNDANT \n" + temp + "\n from: " +
+                                                                 category.Filename);
+                                                      master.RemoveTemplate(temp);
+                                                      this.TemplateInfos.Remove(temp);
+                                                      this.TemplateInfos.Insert(0, temp);
+                                                      returnTemp = true;
+                                                      returnIt = temp;
+                                                      return;
+                                                  }
+                                              });
+                        }
                         dupes.Clear();
                         dupes = null;
                     }
                 }
+                if (returnTemp) return returnIt;
             }
 
             // last in first out addition
@@ -190,7 +248,7 @@ namespace RTParser.Utils
                         {
                             this.TemplateInfos = null;
                         }
-                        return;
+                        return null;
                     }
                     Unifiable from;
                     Unifiable to;
@@ -201,7 +259,7 @@ namespace RTParser.Utils
                         {
                             this.TemplateInfos = null;
                         }
-                        return;
+                        return null;
                     }
                 }
                 pat.GraphmasterNode = this;
@@ -216,6 +274,7 @@ namespace RTParser.Utils
                 throw new InvalidCastException("weird");
             }
             this.TemplateInfos.Insert(0, newTemplateInfo);
+            return newTemplateInfo;
         }
 
         /// <summary>
@@ -224,7 +283,7 @@ namespace RTParser.Utils
         /// <param name="path">the path for the category</param>
         /// <param name="outTemplate">the outTemplate to find at the end of the path</param>
         /// <param name="filename">the file that was the source of this category</param>
-        private Node addPathNodeChilds(Unifiable path)
+        public Node addPathNodeChilds(Unifiable path)
         {
             return addPathNodeChilds(0 ,path.ToArray());
         }
@@ -375,7 +434,7 @@ namespace RTParser.Utils
             return word;
         }
 
-        readonly private object SyncObject;
+        readonly private Node SyncObject;
 
         public bool disabled = false;
         public static bool UseZeroArgs = false;
@@ -416,9 +475,9 @@ namespace RTParser.Utils
             var vv = evaluateFirst(at, splitPath, query, request, matchstate, wildcard);
             if (wildcard.AsString().Trim().Length>0 )
             {
-                if (vv == null || vv.disabled || vv.TemplateInfos == null || vv.TemplateInfos.Count == 0) return null;                
+                if (vv == null || vv.disabled || vv.NoEnabledTemplates) return null;                
             }
-            if (vv == null || vv.disabled || vv.TemplateInfos == null || vv.TemplateInfos.Count == 0) return null;
+            if (vv == null || vv.disabled || vv.NoEnabledTemplates) return null;
             return vv;
         }
 
@@ -458,7 +517,7 @@ namespace RTParser.Utils
             // of the line then return the cCategory for this node
             if (pathLength <= 0)
             {
-                if (TemplateInfos == null || TemplateInfos.Count == 0)
+                if (NoEnabledTemplates)
                 {
                 }
                 return this;
@@ -512,7 +571,7 @@ namespace RTParser.Utils
                 }
             }
 
-            bool isTag = firstWord.StartsWith("TAG-");
+            
             // second option - the nodemapper may have contained a "_" child, but led to no match
             // or it didn't contain a "_" child at all. So get the child nodemapper from this 
             // nodemapper that matches the first word of the input sentence.
@@ -534,6 +593,7 @@ namespace RTParser.Utils
                 // the "classic" path looks like this: "user input <that> that <topic> topic"
                 // but having it backwards is more efficient for searching purposes
                 MatchState newMatchstate = matchstate;
+                bool isTag = firstWord.StartsWith("TAG-");
                 if (isTag)
                 {
                     if (firstWord == "TAG-THAT")
@@ -603,7 +663,8 @@ namespace RTParser.Utils
             // third option - the input part of the path might have been matched so far but hasn't
             // returned a match, so check to see it contains the "*" wildcard. "*" comes last in
             // precedence in the AIML alphabet.
-            lock (SyncObject) foreach (KeyValuePair<string, Node> childNodeKV in this.children)
+            bool wisTag = firstWord.StartsWith("TAG-");
+            if (!wisTag) lock (SyncObject) foreach (KeyValuePair<string, Node> childNodeKV in this.children)
             {
                 Node childNode = childNodeKV.Value;
                 Unifiable childNodeWord = childNode.word;//.Key;
@@ -645,7 +706,7 @@ namespace RTParser.Utils
             // if this node is itself representing a wildcard then the search continues to be
             // valid if we proceed with the tail.
             //if ((this.word == "_") || (this.word == "*"))
-            if (word.IsAnySingleUnit() || word.IsLongWildCard())
+            if (!wisTag) if (word.IsAnySingleUnit() || word.IsLongWildCard())
             {
                 storeWildCard(firstWord, wildcard);
                 var result = this.evaluateNext(at + 1, splitPath, query, request, matchstate, wildcard);
@@ -658,6 +719,18 @@ namespace RTParser.Utils
             //wildcard = new StringBuilder();
             wildcard.Clear();
             return null;/// string.Empty;
+        }
+
+        protected bool NoEnabledTemplates
+        {
+            get
+            {
+                if (TemplateInfos==null) return true;
+                int tc = TemplateInfos.Count;
+                if (tc==0) return true;
+                if (tc==1) return TemplateInfos[0].IsDisabled;
+                return false;               
+            }
         }
 
         static void Insert(List<Unifiable> unifiables, string s)
@@ -725,7 +798,7 @@ namespace RTParser.Utils
         {
             if (word.AsString().StartsWith("TAG-"))
             {
-                //return;
+                return;
             }
 
             if (!wildcard.IsEmpty)

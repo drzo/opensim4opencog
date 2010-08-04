@@ -208,33 +208,39 @@ namespace RTParser.Utils
             {
                 if (name.StartsWith("star_"))
                 {
-                    int i = Int32.Parse(name.Substring(5));
-                    name = GetDictData(query.InputStar, i);
+                    name = GetDictData(query.InputStar, name, 5);
                 }
-                else if (name.StartsWith("that_"))
+                else if (name.StartsWith("inputstar_"))
                 {
-                    int i = Int32.Parse(name.Substring(5)) + 1;
-                    name = GetDictData(query.ThatStar, i);
+                    name = GetDictData(query.InputStar, name, 10);
+                }
+                else if (name.StartsWith("input_"))
+                {
+                    name = GetDictData(query.InputStar, name, 6);
                 }
                 else if (name.StartsWith("thatstar_"))
                 {
-                    int i = Int32.Parse(name.Substring(9)) + 1;
-                    name = GetDictData(query.ThatStar, i);
+                    name = GetDictData(query.ThatStar, name, 9);
+                }
+                else if (name.StartsWith("that_"))
+                {
+                    name = GetDictData(query.ThatStar, name, 5);
                 }
                 else if (name.StartsWith("topicstar_"))
                 {
-                    int i = Int32.Parse(name.Substring(10));
-                    name = GetDictData(query.TopicStar, i);
+                    name = GetDictData(query.TopicStar, name, 10);
                 }
                 else if (name.StartsWith("topic_"))
                 {
-                    int i = Int32.Parse(name.Substring(6));
-                    name = GetDictData(query.TopicStar, i);
+                    name = GetDictData(query.TopicStar, name, 6);
+                }
+                else if (name.StartsWith("guardstar_"))
+                {
+                    name = GetDictData(query.GuardStar, name, 10);
                 }
                 else if (name.StartsWith("guard_"))
                 {
-                    int i = Int32.Parse(name.Substring(6));
-                    name = GetDictData(query.GuardStar, i);
+                    name = GetDictData(query.GuardStar, name, 6);
                 }
                 else if (name.StartsWith("@"))
                 {
@@ -254,31 +260,47 @@ namespace RTParser.Utils
             return name;
         }
 
-        private static Unifiable GetDictData(List<Unifiable> unifiables, int i)
+        private static Unifiable GetDictData(List<Unifiable> unifiables, string name, int startChars)
         {
-            int ii = i - 1;
+            string s = name.Substring(startChars);
+
+            if (s == "*" || s == "ALL" || s == "0")
+            {
+                var result = Unifiable.CreateAppendable();
+                foreach (Unifiable u in unifiables)
+                {
+                    result.Append(u);
+                }
+                return result;
+            }
+
             int uc = unifiables.Count;
+
+            bool fromend = false;
+            if (s.StartsWith("-"))
+            {
+                fromend = true;
+                s = s.Substring(1);
+            }
+
+            int i = Int32.Parse(s);
+
+            if (i==0)
+            {
+                if (uc == 0) return "";
+            }
+            int ii = i - 1;
+            if (fromend) ii = uc - i;
             if (uc == 0)
             {
-                RTPBot.writeDebugLine(" !ERROR -star underflow! " + i + "- ");
+                RTPBot.writeDebugLine(" !ERROR -star underflow! " + i + " in " + name);
                 return String.Empty;
             }
-            if (ii > uc)
+            if (ii >= uc || ii < 0)
             {
+
+                RTPBot.writeDebugLine(" !ERROR -star badindexed 0 < " + i + " < " + uc + " in " + name);
                 return unifiables[ii];
-            }
-            if (ii < 0)
-            {
-                if (false)
-                {
-                    var sa = Unifiable.CreateAppendable();
-                    foreach (var u in unifiables)
-                    {
-                        sa.Append(u);
-                    }
-                    return sa;
-                }
-                ii = 0;
             }
             return unifiables[ii];
         }
@@ -312,7 +334,10 @@ namespace RTParser.Utils
             {
                 return true;
             }
-            if (required.ToUpper() == "UNKNOWN" && (Unifiable.IsUnknown(actualValue))) return true;
+            if (required.ToUpper() == "UNKNOWN" && (Unifiable.IsUnknown(actualValue)))
+            {
+                return true;
+            }
             return false;
         }
 
@@ -589,8 +614,15 @@ namespace RTParser.Utils
                 }
                 if (childNode.NodeType == XmlNodeType.Text)
                 {
-                    Unifiable value = childNode.InnerText.Trim();
-                    if (saveOnInnerXML) childNode.InnerXml = value;
+                    string value = childNode.InnerText.Trim();
+                    if (value.StartsWith("+"))
+                    {
+                        return value.Substring(1);
+                    }
+                    if (saveOnInnerXML)
+                    {
+                        childNode.InnerText = "+" + value;
+                    }
                     return value;
                 }
                 else if (childNode.NodeType == XmlNodeType.Comment)

@@ -29,10 +29,10 @@ namespace RTParser.Utils
 
         #region Overrides of RequestSettingsImpl
 
-        public override GraphMaster Graph
+        public override string GraphName
         {
-            get { return TheRequest.Graph; }
-            set { TheRequest.Graph = value; }
+            get { return TheRequest.GraphName; }
+            set { TheRequest.GraphName = value; }
         }
 
         #endregion

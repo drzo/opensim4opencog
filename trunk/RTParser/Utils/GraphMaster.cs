@@ -62,7 +62,13 @@ namespace RTParser.Utils
         /// </summary>
         readonly private List<GuardInfo> Guards = new List<GuardInfo>();
 
+
+        public GraphMaster GetGraph(string value)
+        {
+            return theBot.GetGraph(value, this);
+        }
         private Node RootNode = new RTParser.Utils.Node(null);
+        private Node PostParentRootNode = new RTParser.Utils.Node(null);
         public int Size = 0;
         private GraphMaster _parent = null;
         private int parent0 = 0;
@@ -105,6 +111,8 @@ namespace RTParser.Utils
             graphName = gn;
             theBot = bot;
             Srai = this;
+            RootNode.Graph = this;
+            PostParentRootNode.Graph = this;
         }
 
         public PatternInfo FindPattern(XmlNode pattern, Unifiable unifiable)
@@ -227,6 +235,7 @@ namespace RTParser.Utils
             FileStream saveFile = HostSystem.Create(path);
             BinaryFormatter bf = new BinaryFormatter();
             bf.Serialize(saveFile, this.RootNode);
+            bf.Serialize(saveFile, this.PostParentRootNode);
             saveFile.Close();
         }
 
@@ -239,6 +248,7 @@ namespace RTParser.Utils
             Stream loadFile = HostSystem.OpenRead(path);
             BinaryFormatter bf = new BinaryFormatter();
             this.RootNode = (Node)bf.Deserialize(loadFile);
+            this.PostParentRootNode = (Node)bf.Deserialize(loadFile);
             loadFile.Close();
 
         }
@@ -270,19 +280,38 @@ namespace RTParser.Utils
 
         public void addCategoryTag(Unifiable generatedPath, PatternInfo patternInfo, CategoryInfo category, XmlNode outerNode, XmlNode templateNode, GuardInfo guard, ThatInfo thatInfo)
         {
-            var node = this.RootNode;
             if (SilentTagsInPutParent && AIMLLoader.IsSilentTag(templateNode))
             {
                 GraphMaster parent1 = makeParent();
                 this.Parents.Add(parent1);
-                parent1.Size++;
-                node = parent1.RootNode;
+                parent1.SilentTagsInPutParent = false;
                 writeToLog("Adding to Parent " + category);
+                parent1.addCategoryTag(generatedPath,patternInfo,category,outerNode,templateNode,guard,thatInfo);
+                return;
             }
-            Node created = Node.addCategoryTag(node, generatedPath, patternInfo,
-                                category, outerNode, templateNode, guard, thatInfo, this);
 
-            this.Size++;
+            Node rootNode = this.RootNode;
+            if (IsStartStarStar(generatedPath))
+            {
+                rootNode = this.PostParentRootNode;
+            }
+            Node thiz = rootNode.addPathNodeChilds(generatedPath);
+            int countBefore = thiz.TemplateInfoCount;
+            TemplateInfo info = thiz.addTerminal(templateNode, category, guard, thatInfo, this, patternInfo);
+            int countAfter = thiz.TemplateInfoCount;
+            /*
+             * Node created = Node.addCategoryTag(node, generatedPath, patternInfo,
+                                category, outerNode, templateNode, guard, thatInfo, this);*/
+            int changed = countAfter - countBefore;
+            if (changed == 0)
+            {
+                return;
+            }
+            if (changed < 0 || info==null)
+            {
+                return;
+            }
+            this.Size += changed;
             // keep count of the number of categories that have been processed
         }
 
@@ -322,7 +351,7 @@ namespace RTParser.Utils
         {
             if (DoParents) DoParentEval(Parents, request, unifiable);
             bool trace = request.IsTraced && !UnTraced;
-            while (getQueries(unifiable, request, matchState, 0, Unifiable.CreateAppendable(), ql))
+            while (getQueries(RootNode, unifiable, request, matchState, 0, Unifiable.CreateAppendable(), ql))
             {
                 if (ql.IsMaxedOut)
                 {
@@ -347,15 +376,30 @@ namespace RTParser.Utils
                     }
                 }
             }
+            if (!ql.IsMaxedOut)
+            {
+                while (getQueries(PostParentRootNode, unifiable, request, matchState, 0, Unifiable.CreateAppendable(), ql))
+                {
+                    if (ql.IsMaxedOut)
+                    {
+                        break;
+                    }
+                    if (!request.ProcessMultiplePatterns)
+                    {
+                        break;
+                    }
+                }
+            }
             return;
         }
 
 
-        static bool IsStartStarStar(Node bubble)
+        public bool IsStartStarStar(String bubble)
         {
             if (bubble == null) return false;
             string s = bubble.ToString();
-            bool b = s.Trim().StartsWith("* TAG-THAT * TAG-FLAG * TAG-TOPIC *");
+            
+            bool b = s.Trim().StartsWith(STAR_PATH);
             if (!b) return false;
             return b;
         }
@@ -369,8 +413,7 @@ namespace RTParser.Utils
         /// <param name="mtchList"></param>
         /// <param name="query"></param>
         /// <returns></returns>
-
-        private bool getQueries(UPath upath, Request request, MatchState matchstate, int index, StringAppendableUnifiable wildcard, QueryList toplevel)
+        private bool getQueries(Node rootNode, UPath upath, Request request, MatchState matchstate, int index, StringAppendableUnifiable wildcard, QueryList toplevel)
         {
             int resin = toplevel.TemplateCount;
             int patternCountChanged = 0;
@@ -391,7 +434,7 @@ namespace RTParser.Utils
                 toplevelBubble = null;
                 SubQuery query = new SubQuery(upath, request.CurrentResult, request);
                 query.TopLevel = toplevel;
-                var pattern = RootNode.evaluate(upath.ToString(), query, request, matchstate, wildcard);
+                var pattern = rootNode.evaluate(upath.ToString(), query, request, matchstate, wildcard);
                 if (pattern != null)
                 {
                     var tmplateInfos = pattern.TemplateInfoCopy;
@@ -443,7 +486,7 @@ namespace RTParser.Utils
                 {
                     break;
                 }
-                if (IsStartStarStar(toplevelBubble))
+                if (toplevelBubble != null && IsStartStarStar(toplevelBubble.ToString()))
                 {
                     toplevel.NoMoreResults = true;
                     break;
@@ -471,6 +514,25 @@ namespace RTParser.Utils
             RTPBot.writeDebugLine("GRAPH: " + message + " in " + ToString(), args);
         }
 
+
+        public void RemoveGenlMT(GraphMaster fallback)
+        {
+            if (fallback == this)
+            {
+                writeToLog("Trying to genlMt reversed to " + this);
+                FallBacksGraphs.Remove(fallback);
+                return;
+            }
+            lock (FallBacksGraphs)
+            {
+                if (FallBacksGraphs.Contains(fallback))
+                {
+                    FallBacksGraphs.Remove(fallback);
+                    writeToLog("GENLMT REMOVING " + fallback + " FROM " + this);
+                }
+            }
+        }
+
         internal void AddGenlMT(GraphMaster fallback)
         {
             if (fallback==this)
@@ -481,7 +543,11 @@ namespace RTParser.Utils
             lock (FallBacksGraphs)
             {
                 if (!FallBacksGraphs.Contains(fallback))
+                {
                     FallBacksGraphs.Add(fallback);
+                    writeToLog("GENLMT ADDING " + fallback + " TO " + this);
+                }
+                fallback.RemoveGenlMT(this);
             }
         }
 
@@ -571,62 +637,98 @@ namespace RTParser.Utils
         /// <summary>
         /// The Graph to start the query on
         /// </summary>
-        public override GraphMaster Graph
+        public override string GraphName
         {
-            get { return Srai; }
+            get { return Srai.GraphName; }
             set
             {
                 writeToLog("WARNING SETTING SRAI on " + this + " to " + value);
-                Srai = value;
+                Srai = GetGraph(value);
             }
         }
 
         #endregion
 
-        public void WriteToFile(string name, string filename)
+        public void WriteToFile(string name, string filename, PrintOptions printOptions)
         {
             var fi = new FileInfo(filename);
             var di = fi.DirectoryName;
             HostSystem.CreateDirectory(di);
             HostSystem.BackupFile(filename);
             var fs = new StreamWriter(filename, false);
-            fs.WriteLine("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>");
-            fs.WriteLine("<aiml graph=\"{0}\">", name);
-            WriteMetaHeaders(fs.WriteLine);
+            if (!printOptions.XMLWriterSettings.OmitXmlDeclaration)
+            {
+                fs.WriteLine("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>");
+            }
 
+            fs.WriteLine("<aiml graph=\"{0}\">", name);
+            printOptions.CurrentGraphName = name;
             List<CategoryInfo> skipped = new List<CategoryInfo>(1000);
             List<CategoryInfo> written = new List<CategoryInfo>(10000);
             try
             {
-                string hide = "";
-                foreach (var ci in CopyOf(CategoryInfos))
-                {
-                    string c = ci.ToFileString();
-                    string ss = AIMLLoader.CleanWhitepaces(c) + "\n";
-                    if (hide.Contains(ss))
-                    {
-                        skipped.Add(ci);
-                        continue;
-                    }
-                    if (hide.Length > 30000) hide = "";
-                    hide += ss;
-                    written.Add(ci);
-                    fs.Write(ss + "<!-- " + ci.SourceInfo() + " -->\n");
-                }
+                PrintToWriter(CopyOf(CategoryInfos), printOptions, fs, written);
             }
             finally
             {
                 fs.WriteLine("</aiml>");
                 fs.Flush();
                 fs.Close();
-                writeToLog("COMPLETE WRITTING " + this + " to " + filename + " written=" + CountOF(written) + " skipped=" + CountOF(skipped) + " original=" + CountOF(CategoryInfos));
+                writeToLog("COMPLETE WRITTING " + this + " to " + filename + " written=" + CountOF(written) +
+                           " skipped=" + CountOF(skipped) + " original=" + CountOF(CategoryInfos));
                 this.CategoryInfos = written;
                 Size = CategoryInfos.Count;
             }
         }
 
-        public void WriteMetaHeaders(OutputDelegate fs)
+        public static void PrintToWriter(IEnumerable items, PrintOptions printOptions, TextWriter fs, IList written)
         {
+            //string hide = "";
+            if (items == null) return;
+            foreach (IAIMLInfo ci in items)
+            {
+                string graphName = ci.Graph.graphName;
+                if (printOptions.DontPrint(ci)) continue;
+                string c = ci.ToFileString(printOptions);                
+                string cws = AIMLLoader.CleanWhitepaces(c);                
+                if (printOptions.DontPrint(cws)) continue;
+
+                if (printOptions.RemoveDuplicates)
+                {
+                    printOptions.Writting(ci);
+                    printOptions.Writting(cws);
+                }
+                if (written != null) written.Add(ci);
+                string ss = c.TrimEnd();
+                if (printOptions.CleanWhitepaces)
+                {
+                   // ss = cws;
+                }
+                fs.Write(ss);
+                if (printOptions.IncludeLineno || printOptions.IncludeGraphName)
+                {
+                    if (!printOptions.CategoryPerLine) if (ss.Length > 50) fs.WriteLine();
+                    fs.Write("   <!-- ");
+                    if (printOptions.IncludeGraphName)
+                    {
+                        fs.Write(graphName);
+                    }
+                    if (printOptions.IncludeLineno)
+                    {
+                        c = ci.SourceInfo();
+                        if (!c.Contains("(0,0)"))
+                        {
+                            fs.Write(" " + c);
+                        }
+                    }
+                    fs.WriteLine("-->");
+                }
+            }
+        }
+
+        public void WriteMetaHeaders(OutputDelegate fs, PrintOptions printOptions)
+        {
+            
             foreach (var list in CopyOf(FallBacksGraphs))
             {
                 fs(" <genlMt name=\"{0}\"/>", list.ScriptingName);
@@ -637,9 +739,13 @@ namespace RTParser.Utils
             }
             var srai = Srai;
             if (srai != null)
-                fs(" <!-- vocabulary name=\"{0}\" -->", srai.ScriptingName);
-            fs(" <!-- templates={0} thats={1} patterns={2} topics={3}  -->",
-               CountOF(Templates), CountOF(Thats), CountOF(Patterns), CountOF(Topics));
+                fs(" <sraiGraph name=\"{0}\" />", srai.ScriptingName);
+            if (printOptions.WriteStatistics)
+            {
+                fs(" <!-- templates={0} thats={1} patterns={2} topics={3} nodes1={4} nodes2={5}  -->",
+                   CountOF(Templates), CountOF(Thats), CountOF(Patterns), CountOF(Topics), RootNode.ChildCount,
+                   PostParentRootNode.ChildCount);
+            }
 
         }
 
@@ -682,7 +788,20 @@ namespace RTParser.Utils
         }
         
         private Dictionary<string, DateTime> LoadedFiles = new Dictionary<string, DateTime>();
-        
+        string _STAR_PATH;
+        public string STAR_PATH
+        {
+            get
+            {
+                
+                if (_STAR_PATH==null)
+                {
+                    _STAR_PATH = theBot.Loader.generatePath("*", "*", "*", "*", false);
+                }
+                return _STAR_PATH;
+            }
+        }
+
         public bool AddFileLoaded(string filename)
         {
             var fi = new FileInfo(filename);
@@ -734,19 +853,19 @@ namespace RTParser.Utils
             }
         }
 
-        public void Listing(OutputDelegate console, string match, bool parents)
+        public void Listing(OutputDelegate console, string match, PrintOptions printOptions)
         {
             GraphMaster G = this;
-            IList<CategoryInfo> Cats = G.GetCategoriesMatching(match);
+            var Cats = G.GetCategoriesMatching(match);
             console("-----------------------------------------------------------------");
-            AIMLLoader.PrintTemplates(Cats, console, true);
+            PrintToWriter(Cats, printOptions, new OutputDelegateWriter(console), null);
             console("-----------------------------------------------------------------");
             console("Shown " + Cats.Count + " from " + G);
-            OutputDelegate When = new OutputDelegate((s,a)=>
-                                      {
-                                          console(s, a);   
-                                      });
-            G.WriteMetaHeaders(When);
+            OutputDelegate When = new OutputDelegate((s, a) =>
+                                                         {
+                                                             console(s, a);
+                                                         });
+            G.WriteMetaHeaders(When, printOptions);
         }
 
 

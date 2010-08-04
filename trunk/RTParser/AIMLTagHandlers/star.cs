@@ -132,12 +132,9 @@ namespace RTParser.AIMLTagHandlers
                     int index = Convert.ToInt32(value);
                     try
                     {
-                        if (index <= starsCount)
+                        if (index <= starsCount && index > 0)
                         {
-                            if (index > 0)
-                            {
-                                return stars[index - 1];
-                            }
+                            return stars[index - 1];
                         }
                         else
                         {

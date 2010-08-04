@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
 
@@ -8,6 +10,9 @@ namespace RTParser.Utils
     [Serializable]
     public class CategoryInfo : GraphLinkInfo, IAIMLInfo
     {
+
+        public bool IsDisabled { get; set; }
+
         public XmlNode Category
         {
             get { return srcNode; }
@@ -72,33 +77,70 @@ namespace RTParser.Utils
             throw new NotImplementedException();
         }
 
-        public string SourceInfo()
+        #region IAIMLInfo Members
+
+        string IAIMLInfo.SourceInfo()
         {
             return AIMLLoader.LocationInfo(Category);
         }
-        public string ToFileString()
+
+        public GraphMaster Graph
         {
-            if (XmlDocumentLineInfo.SkipXmlns && this.srcNode.Attributes != null) this.srcNode.Attributes.RemoveNamedItem("xmlns");
+            get { return Pattern.GraphmasterNode.Graph; }
+        }
+
+        public string ToFileString(PrintOptions printOptions)
+        {
+            //if (XmlDocumentLineInfo.SkipXmlns && this.srcNode.Attributes != null) this.srcNode.Attributes.RemoveNamedItem("xmlns");
             string s = "";
+            if (IsDisabled)
+            {
+                if (!printOptions.WriteDisabledItems) return s;
+            }
+            string graphName = ((IAIMLInfo) this).Graph.ScriptingName;
+            if (printOptions.IncludeGraphName)
+            {
+                if (graphName!=printOptions.CurrentGraphName)
+                {
+                    if (printOptions.InsideAiml)
+                    {
+                        s += "\n</aiml>\n";
+                        s += string.Format("\n<aiml graph=\"{0}\">\n", graphName);
+                        printOptions.CurrentGraphName = graphName;
+                    }
+                    else
+                    {
+                        printOptions.InsideAiml = true;
+                        s += string.Format("\n<aiml graph=\"{0}\">\n", graphName);
+                        printOptions.CurrentGraphName = graphName;                        
+                    }
+                }
+            }
             var topic1 = this.Topic;
             bool hasTopic = topic1 != null;
             if (hasTopic)
             {
                 s += "<topic name=\"";
-                var n = AIMLTagHandler.GetAttribValue(topic1, "name", () => (string)null, null);
+                var n = AIMLTagHandler.GetAttribValue(topic1, "name", () => (string) null, null);
                 s += n;
                 s += "\">";
             }
-            s += srcNode.OuterXml;
+            XmlWriterSettings settings = printOptions.XMLWriterSettings;
+            s += printOptions.FormatXML(srcNode);
+
             if (hasTopic) s += "</topic>";
+            if (IsDisabled)
+            {
+                s += "<!-- IsDisabled  " + s.Replace("<!--", "<#--").Replace("-->", "--#>") + " -->";
+            }
             return s;
         }
-
+        #endregion
         public bool Matches(string pattern)
         {
             if (pattern == null || pattern == "*" || pattern == "") return true;
-            string s = ToFileString();
-            if (s.Contains(s)) return true;
+            string s = ToFileString(PrintOptions.VERBOSE_FOR_MATCHING);
+            if (pattern.Contains(s)) return true;
             return Regex.Matches(s, pattern).Count > 0;
         }
 
@@ -124,6 +166,110 @@ namespace RTParser.Utils
             this.Size++;
 #endif
             // keep count of the number of categories that have been processed
+        }
+    }
+
+    public class PrintOptions
+    {
+        public PrintOptions()
+        {
+            //tw = new StringWriter(sw);
+        }   
+        public XmlWriterSettings XMLWriterSettings = new XmlWriterSettings();
+
+        public string CurrentGraphName;
+
+        public bool InsideAiml = false;
+
+        public XmlWriter GetXMLTextWriter(TextWriter w)
+        {
+            lock (this)
+            {
+                if (w != lastW)
+                {
+                    lastW = w;
+                    currentWriter = XmlWriter.Create(w, XMLWriterSettings);
+                }
+            }
+            return currentWriter;
+        }
+
+        public bool RemoveDuplicates = true;       
+        public bool CleanWhitepaces = true;
+        public bool IncludeLineno = true;
+        public bool CategoryPerLine = false;
+        public bool IncludeGraphName = true;
+        public List<object> dontPrint = new List<object>(); 
+        public string InsideThat = null;
+        public string InsideTopic = null;
+        public Request RequestImplicits;
+        readonly public StringBuilder sw = new StringBuilder();
+        //readonly public StringWriter tw;
+
+        public static PrintOptions CONSOLE_LISTING = new PrintOptions();
+        public static PrintOptions VERBOSE_FOR_MATCHING = new PrintOptions();
+
+        public static PrintOptions SAVE_TO_FILE = new PrintOptions()
+                                                      {
+                                                          CategoryPerLine = false,
+                                                      };
+
+        private XmlWriter currentWriter;
+        private TextWriter lastW;
+        public bool WriteDisabledItems = true;
+        public bool WriteStatistics = true;
+
+        internal string FormatXML(XmlNode srcNode)
+        {
+            lock (sw)
+            {
+                sw.Remove(0, sw.Length);
+                //var tw = new StringWriter(sw);
+                XMLWriterSettings.Encoding = Encoding.ASCII;
+                XMLWriterSettings.CloseOutput = false;
+                XMLWriterSettings.OmitXmlDeclaration = true;
+                XMLWriterSettings.IndentChars = " ";// = true;
+                XMLWriterSettings.Indent = true;
+
+                var v = XmlWriter.Create(sw, XMLWriterSettings);
+                try
+                {
+                    srcNode.WriteTo(v);
+                    v.Flush();
+                    var s = sw.ToString();
+                    return s;
+                }
+                catch (Exception exception)
+                {                    
+                    throw exception;
+                }
+            }
+        }
+
+        private string hide = "";
+        public bool DontPrint(object cws)
+        {
+            if (hide.Contains("" + cws)) return true;
+            return false;
+        }
+
+        public void Writting(object cws)
+        {
+            if (hide.Length > 30000)
+                hide = "" + cws;
+            else
+                hide += "" + cws;
+        }
+
+        public void ClearHistory()
+        {
+            InsideAiml = false;
+            InsideTopic = null;
+            InsideThat = null;
+            dontPrint.Clear();
+            sw.Length = 0;
+            sw.Capacity = 100000;
+            hide = "";
         }
     }
 }

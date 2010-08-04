@@ -95,7 +95,7 @@ namespace RTParser.AIMLTagHandlers
         {
             return base.Transform();
         }
-        public override Unifiable RecurseProcess()
+        public override Unifiable RecurseProcess(object Failure)
         {
             return ProcessChange();
         }

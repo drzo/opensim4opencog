@@ -1234,16 +1234,18 @@ namespace RTParser
                     topicNum = 0;
                     if (maxInputs == 1)
                     {
+                        Unifiable requestThat = request.That;
+                        requestThat.AsString().ToString();
                         Unifiable path = loader.generatePath(sentence,
                             //thatNum + " " +
-                                                             request.user.getLastBotOutputForThat(), request.Flags,
+                                                             requestThat, request.Flags,
                             //topicNum + " " +
                                                              request.user.TopicSetting, true);
                         if (path.IsEmpty)
                         {
                             path = loader.generatePath(sentence,
                                 //thatNum + " " +
-                                     request.user.getLastBotOutputForThat(), request.Flags,
+                                     requestThat, request.Flags,
                                 //topicNum + " " +
                                      request.user.TopicSetting, false);
                         }
@@ -3251,6 +3253,8 @@ The AIMLbot program.
                 return BotAsUser.DoUserCommand(args, console);
             }
 
+            PrintOptions printOptions = request.WriterOptions??PrintOptions.CONSOLE_LISTING;
+            printOptions.ClearHistory();
 
             if (showHelp) console("@proof [[clear]|[save [filename.aiml]]] - clears or prints a content buffer being used");
             if (cmd == "proof")
@@ -3262,7 +3266,7 @@ The AIMLbot program.
                 if (args.StartsWith("save"))
                 {
                     args = args.Substring(4).Trim();
-                    string hide = AIMLLoader.GetTemplateSource(myUser.UsedTemplates);
+                    string hide = AIMLLoader.GetTemplateSource(myUser.UsedTemplates,printOptions);
                     console(hide);
                     if (args.Length > 0) HostSystem.AppendAllText(args, hide + "\n");
                     return true;
@@ -3272,15 +3276,38 @@ The AIMLbot program.
                     r = myUser.GetResult(i);
                     console("-----------------------------------------------------------------");
                     if (r != null)
-                        AIMLLoader.PrintResult(r, console);
+                        AIMLLoader.PrintResult(r, console, printOptions);
                 }
                 else
                 {
+                    ListAsSet<TemplateInfo> CId = myUser.DisabledTemplates;
                     List<TemplateInfo> CI = myUser.UsedTemplates;
+                    if (args == "disable")
+                    {
+                        foreach (var C in CI)
+                        {
+                            C.IsDisabled = true;
+                            myUser.DisabledTemplates.Add(C);
+                        }
+                        CI.Clear();
+                    }
+                    if (args == "enable" || args=="reset")
+                    {
+                        foreach (var C in CId)
+                        {
+                            C.IsDisabled = false;
+                            myUser.UsedTemplates.Add(C);
+                        }
+                        CId.Clear();
+                    }
                     console("-----------------------------------------------------------------");
-                    AIMLLoader.PrintTemplates(CI, console, true);
-                    if (args == "clear") CI.Clear();
+                    console("-------DISABLED--------------------------------------");
+                    AIMLLoader.PrintTemplates(CId, console, printOptions);
                     console("-----------------------------------------------------------------");
+                    console("-------ENABLED--------------------------------------");
+                    AIMLLoader.PrintTemplates(CI, console, printOptions);
+                    console("-----------------------------------------------------------------");
+                    if (args == "clear" || args == "reset") CI.Clear();
                 }
 
                 return true;
@@ -3326,7 +3353,7 @@ The AIMLbot program.
                 console("-----------------------------------------------------------------");
                 var result = Chat0(ur, myUser.ListeningGraph);
                 console("-----------------------------------------------------------------");
-                AIMLLoader.PrintResult(result, console);
+                AIMLLoader.PrintResult(result, console, printOptions);
                 console("-----------------------------------------------------------------");
                 return true;
             }
@@ -3350,7 +3377,7 @@ The AIMLbot program.
                     match = args.Substring(lastIndex + 1).Trim();
                 }
                 GraphMaster G = GetGraph(graphname, myUser.ListeningGraph);
-                G.Listing(console, args, false);
+                G.Listing(console, args, printOptions);
                 return true;
 
             }
@@ -3376,7 +3403,7 @@ The AIMLbot program.
                         string n = ggg.Key;
                         GraphMaster gm = ggg.Value;
                         console("" + gm + " key='" + n + "'");
-                        gm.WriteMetaHeaders(console);
+                        gm.WriteMetaHeaders(console, printOptions);
                         console("-----------------------------------------------------------------");
                     }
                 }
@@ -3636,9 +3663,9 @@ The AIMLbot program.
         /// <summary>
         /// The Graph to start the query on
         /// </summary>
-        public override GraphMaster Graph
+        public override string GraphName
         {
-            get { return GraphMaster; }
+            get { return GraphMaster.ScriptingName; }
             set { throw new NotImplementedException(); }
         }
 
@@ -3822,6 +3849,36 @@ namespace RTParser.AIMLTagHandlers
             if (currentNodeName == "genlmt")
             {
                 string name = RTPBot.GetAttribValue(templateNode, "name,mt,to,super,into", null);
+                string removeTo = RTPBot.GetAttribValue(templateNode, "remove", null);
+                string from = RTPBot.GetAttribValue(templateNode, "graph,from", null);
+                bool deleteLink = false;
+                if (name == null)
+                {
+                    name = templateNode.InnerText.Trim();
+                }
+                if (removeTo != null)
+                {
+                    deleteLink = true;
+                    name = removeTo;
+                }
+                GraphMaster FROM = request.TargetBot.GetGraph(from, request.Graph);
+                GraphMaster TO = request.TargetBot.GetGraph(name, request.Graph);
+                if (FROM != null && TO != null)
+                {
+                    if (deleteLink)
+                    {
+                        FROM.RemoveGenlMT(TO);
+                    }
+                    else
+                    {
+                        FROM.AddGenlMT(TO);
+                    }
+                    return Succeed("GENLMT: " + FROM + " => " + name + " => " + TO);
+                }
+            }
+            if (currentNodeName == "sraigraph")
+            {
+                string name = RTPBot.GetAttribValue(templateNode, "name,mt,to,super,into", null);
                 string from = RTPBot.GetAttribValue(templateNode, "graph,from", null);
                 if (name == null)
                 {
@@ -3829,8 +3886,12 @@ namespace RTParser.AIMLTagHandlers
                 }
                 GraphMaster FROM = request.TargetBot.GetGraph(from, request.Graph);
                 GraphMaster TO = request.TargetBot.GetGraph(name, request.Graph);
-                FROM.AddGenlMT(TO);
-                return Succeed("GENLMT: " + FROM + " => " + name + " => " + TO);
+                if (FROM != null && TO != null)
+                {
+                    FROM.Srai = TO;
+                    return Succeed("SRAI: " + FROM + " => " + name + " => " + TO);
+                }
+                return Failure("FROM '" + from + "'='" + FROM + "'" + " TO '" + name + "'='" + TO + "'");
             }
             if (currentNodeName == "meta")
             {
@@ -3899,10 +3960,6 @@ namespace RTParser.AIMLTagHandlers
             return Succeed("total is " + total);
         }
 
-        private Unifiable Succeed(string p)
-        {
-            return "<!-- " + p.Replace("<!--", "<#-").Replace("-->", "-#>") + "-->";
-        }
         #endregion
 
         #region Overrides of TextTransformer

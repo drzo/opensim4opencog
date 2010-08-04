@@ -23,9 +23,9 @@ namespace RTParser
 
         #region Attributes
 
-        public List<TemplateInfo> UsedTemplates = new List<TemplateInfo>();
-
-        public List<QueryList> AllQueries = new List<QueryList>();
+        public ListAsSet<TemplateInfo> UsedTemplates = new ListAsSet<TemplateInfo>();
+        public ListAsSet<TemplateInfo> DisabledTemplates = new ListAsSet<TemplateInfo>();
+        public ListAsSet<QueryList> AllQueries = new ListAsSet<QueryList>();
 
         public int LastResponseGivenTime = 0;
         public bool RespondToChat = true;
@@ -109,10 +109,10 @@ namespace RTParser
                 }
             }
         }
-        public override GraphMaster Graph
+        public override string GraphName
         {
-            get { return ListeningGraph; }
-            set { ListeningGraph = value; }
+            get { return ListeningGraph.ScriptingName; }
+            set { ListeningGraph = bot.GetGraph(value, ListeningGraph); }
         }
 
         public int MaxInputs
@@ -297,6 +297,7 @@ namespace RTParser
         {
             if (userID.Length > 0)
             {
+                WriterOptions = new PrintOptions();
                 this.id = userID;
                 this.bot = bot;
                 // we dont inherit the BotAsUser we inherit the bot's setings
@@ -520,7 +521,34 @@ namespace RTParser
         }
         #endregion
 
-        public string getLastBotOutputForThat()
+        public Unifiable That
+        {
+            get
+            {
+                if (CurrentRequest != null)
+                {
+                    if (CurrentRequest.ithat != null)
+                    {
+                        return CurrentRequest.ithat;
+                    }
+                }
+                return getLastBotOutputForThat();
+            }
+            set
+            {
+                if (CurrentRequest != null)
+                {
+                    if (CurrentRequest.ithat == null)
+                    {
+                        CurrentRequest.ithat = value;
+                        return;
+                    }
+                }
+                CurrentRequest.ithat = value;
+            }
+
+        }
+        private string getLastBotOutputForThat()
         {
             lock (Results)
             {
@@ -678,7 +706,7 @@ namespace RTParser
             }
         }
 
-        public Request CurrentRequest;
+        public RequestImpl CurrentRequest;
 
         public Result GetResult(int i)
         {
@@ -775,7 +803,7 @@ namespace RTParser
             WriteLine("Saveing User Directory {0}", userdir);
             Predicates.SaveTo(userdir, "user.predicates", "UserPredicates.xml");
             GraphMaster gm = bot.GetGraph(UserID, ListeningGraph);
-            gm.WriteToFile(UserID, Path.Combine(userdir, UserID) + ".saved");
+            gm.WriteToFile(UserID, HostSystem.Combine(userdir, UserID) + ".saved", PrintOptions.SAVE_TO_FILE);
         }
 
         public void LoadDirectory(string userdir)
@@ -916,6 +944,8 @@ namespace RTParser
                 return UserID;
             }
         }
+
+        public PrintOptions WriterOptions { get; set; }
 
         public IEnumerable<string> SettingNames(int depth)
         {

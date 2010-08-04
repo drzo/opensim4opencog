@@ -104,6 +104,10 @@ namespace RTParser.Utils
                 // topic
                 Unifiable oldTopic = request.Topic;
                 Unifiable newTopic = null;
+                
+                // that
+                Unifiable oldThat = request.That;
+                Unifiable newThat = null;
 
                 UndoStack savedValues = null;
 
@@ -113,17 +117,24 @@ namespace RTParser.Utils
                     {
                         case "graph":
                             {
-                                string graphName = node.Value;
+                                string graphName = ReduceStar(node.Value, query, dict);
                                 if (graphName != null)
                                 {
                                     GraphMaster innerGraph = request.TargetBot.GetGraph(graphName, oldGraph);
                                     needsUnwind = true;
-                                    if (innerGraph != null && innerGraph != oldGraph)
+                                    if (innerGraph != null)
                                     {
-                                        request.Graph = innerGraph;
-                                        newGraph = innerGraph;
-                                        request.writeToLog("ENTERING: " + graphName + " as " + innerGraph + " from " +
-                                                           oldGraph);
+                                        if (innerGraph != oldGraph)
+                                        {
+                                            request.Graph = innerGraph;
+                                            newGraph = innerGraph;
+                                            request.writeToLog("ENTERING: {0} as {1} from {2}",
+                                                               graphName, innerGraph, oldGraph);
+                                        }
+                                        else
+                                        {
+                                            newGraph = innerGraph;
+                                        }
                                     }
                                     else
                                     {
@@ -134,11 +145,24 @@ namespace RTParser.Utils
                             break;
                         case "topic":
                             {
-                                newTopic = node.Value;
+                                newTopic = ReduceStar(node.Value, query, dict);
                                 if (newTopic != null)
                                 {
+                                    if (newTopic.IsEmpty) newTopic = "Nothing";
                                     needsUnwind = true;
                                     request.Topic = newTopic;
+                                }
+
+                            }
+                            break;
+                        case "that":
+                            {
+                                newThat = ReduceStar(node.Value, query, dict);
+                                if (newThat != null)
+                                {
+                                    if (newThat.IsEmpty) newThat = "Nothing";
+                                    needsUnwind = true;
+                                    request.That = newThat;
                                 }
 
                             }
@@ -190,13 +214,14 @@ namespace RTParser.Utils
                                            var cg = request.Graph;
                                            if (cg==newGraph)
                                            {
-                                               request.writeToLog("LEAVING: " + request.Graph + "  back to " + oldGraph);
+                                               request.writeToLog("LEAVING: {0}  back to {1}", request.Graph, oldGraph);
                                                request.Graph = oldGraph;                                               
                                            } else
                                            {
-                                               request.writeToLog("WARNING: UNWIND GRAPH UNEXPECTED " + cg +
-                                                                  " EXPECTED TO CHAGNE "
-                                                                  + newGraph + " to " + oldGraph);
+                                               request.writeToLog(
+                                                   "WARNING: UNWIND GRAPH UNEXPECTED CHANGE {0} FROM {1} SETTING TO {2}",
+                                                   cg, newGraph, oldGraph);
+                                               request.Graph = oldGraph;
                                            }
                                        }
                                        if (newTopic != null)
@@ -208,9 +233,25 @@ namespace RTParser.Utils
                                            }
                                            else
                                            {
-                                               request.writeToLog("WARNING: UNWIND TOPIC UNEXPECTED " + ct +
-                                                                  " EXPECTED TO CHAGNE "
-                                                                  + newTopic + " to " + oldTopic);                                             
+                                               request.writeToLog(
+                                                   "WARNING: UNWIND TOPIC UNEXPECTED CHANGE {0} FROM {1} SETTING TO {2}",
+                                                   ct, newTopic, oldTopic);
+                                               request.Topic = oldTopic;
+                                           }
+                                       }
+                                       if (newThat != null)
+                                       {
+                                           var ct = request.That;
+                                           if (newThat == ct)
+                                           {
+                                               request.That = oldThat;
+                                           }
+                                           else
+                                           {
+                                               request.writeToLog(
+                                                   "WARNING: UNWIND THAT UNEXPECTED CHANGE {0} FROM {1} SETTING TO {2}",
+                                                   ct, newThat, oldThat);
+                                               request.That = oldThat;
                                            }
                                        }
                                    }
@@ -241,6 +282,17 @@ namespace RTParser.Utils
             return (score1 < score2) ? score1 : score2;
         }
 
+        protected Unifiable Failure(string p)
+        {
+            writeToLog("<!-- FAILURE: " + p.Replace("<!--", "<#-").Replace("-->", "-#>") + "-->");
+            return Unifiable.Empty;
+        }
+
+        protected Unifiable Succeed(string p)
+        {
+            return "<!-- SUCCEED: " + p.Replace("<!--", "<#-").Replace("-->", "-#>") + "-->";
+        }
+
         protected Unifiable Succeed()
         {
             if (query != null && query.CurrentTemplate != null)
@@ -257,7 +309,7 @@ namespace RTParser.Utils
             {
                 if (!Unifiable.IsNullOrEmpty(RecurseResult))
                     return RecurseResult;
-                return "<!-- " + templateNode.OuterXml + " -->";
+                return Succeed(templateNode.OuterXml);
             }
             return s;
         }
