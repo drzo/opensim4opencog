@@ -2730,7 +2730,7 @@ namespace RTParser.Prolog
 
         public StringDictionary IdentifierSet(string source)
         {
-            string s;
+            string s = null;
             inStream = new StringReadBuffer(source);
             StringDictionary result = new StringDictionary();
             tokenize = true;
