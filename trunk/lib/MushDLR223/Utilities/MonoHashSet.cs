@@ -4,13 +4,13 @@ using System.Collections.Generic;
 
 namespace MushDLR223.Utilities
 {
-    public class ListAsSet<T> : List<T>
+    public class ListAsSet<T> : List<T>, IList<T>
     {
         public event Action<T> OnAdd;
         public event Action<T> OnRemove;
         public event Action OnModified;
 
-        public void Clear()
+        void ICollection<T>.Clear()
         {
             lock (this)
             {
@@ -24,7 +24,7 @@ namespace MushDLR223.Utilities
             if (OnModified != null) OnModified();
         }
 
-        public void RemoveAt(int index)
+        void IList<T>.RemoveAt(int index)
         {
             T t = this[index];
             if (OnRemove != null) OnRemove(t);
@@ -79,7 +79,7 @@ namespace MushDLR223.Utilities
         }
 
         // synchronization
-        public bool Remove(T item)
+        bool ICollection<T>.Remove(T item)
         {
             lock (this)
             {
@@ -206,7 +206,7 @@ namespace MushDLR223.Utilities
             return list;
         }
 
-        public new void Add(T item)
+        void ICollection<T>.Add(T item)
         {
             AddTo(item);
         }
@@ -228,5 +228,134 @@ namespace MushDLR223.Utilities
                     }
             }
         }
+
+        #region IList<T> Members
+
+        /// <summary>
+        /// Determines the index of a specific item in the <see cref="T:System.Collections.Generic.IList`1"/>.
+        /// </summary>
+        /// <returns>
+        /// The index of <paramref name="item"/> if found in the list; otherwise, -1.
+        /// </returns>
+        /// <param name="item">The object to locate in the <see cref="T:System.Collections.Generic.IList`1"/>.
+        ///                 </param>
+        int IList<T>.IndexOf(T item)
+        {
+            return base.IndexOf(item);
+        }
+
+        /// <summary>
+        /// Inserts an item to the <see cref="T:System.Collections.Generic.IList`1"/> at the specified index.
+        /// </summary>
+        /// <param name="index">The zero-based index at which <paramref name="item"/> should be inserted.
+        ///                 </param><param name="item">The object to insert into the <see cref="T:System.Collections.Generic.IList`1"/>.
+        ///                 </param><exception cref="T:System.ArgumentOutOfRangeException"><paramref name="index"/> is not a valid index in the <see cref="T:System.Collections.Generic.IList`1"/>.
+        ///                 </exception><exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.IList`1"/> is read-only.
+        ///                 </exception>
+        void IList<T>.Insert(int index, T item)
+        {
+            base.Insert(index, item);
+        }
+
+        /// <summary>
+        /// Gets or sets the element at the specified index.
+        /// </summary>
+        /// <returns>
+        /// The element at the specified index.
+        /// </returns>
+        /// <param name="index">The zero-based index of the element to get or set.
+        ///                 </param><exception cref="T:System.ArgumentOutOfRangeException"><paramref name="index"/> is not a valid index in the <see cref="T:System.Collections.Generic.IList`1"/>.
+        ///                 </exception><exception cref="T:System.NotSupportedException">The property is set and the <see cref="T:System.Collections.Generic.IList`1"/> is read-only.
+        ///                 </exception>
+        T IList<T>.this[int index]
+        {
+            get
+            {
+                return base[index];
+            }
+            set
+            {
+                base[index] = value;
+            }
+        }
+
+        #endregion
+
+        #region ICollection<T> Members
+
+        /// <summary>
+        /// Determines whether the <see cref="T:System.Collections.Generic.ICollection`1"/> contains a specific value.
+        /// </summary>
+        /// <returns>
+        /// true if <paramref name="item"/> is found in the <see cref="T:System.Collections.Generic.ICollection`1"/>; otherwise, false.
+        /// </returns>
+        /// <param name="item">The object to locate in the <see cref="T:System.Collections.Generic.ICollection`1"/>.
+        ///                 </param>
+        bool ICollection<T>.Contains(T item)
+        {
+            return base.Contains(item);
+        }
+
+        /// <summary>
+        /// Copies the elements of the <see cref="T:System.Collections.Generic.ICollection`1"/> to an <see cref="T:System.Array"/>, starting at a particular <see cref="T:System.Array"/> index.
+        /// </summary>
+        /// <param name="array">The one-dimensional <see cref="T:System.Array"/> that is the destination of the elements copied from <see cref="T:System.Collections.Generic.ICollection`1"/>. The <see cref="T:System.Array"/> must have zero-based indexing.
+        ///                 </param><param name="arrayIndex">The zero-based index in <paramref name="array"/> at which copying begins.
+        ///                 </param><exception cref="T:System.ArgumentNullException"><paramref name="array"/> is null.
+        ///                 </exception><exception cref="T:System.ArgumentOutOfRangeException"><paramref name="arrayIndex"/> is less than 0.
+        ///                 </exception><exception cref="T:System.ArgumentException"><paramref name="array"/> is multidimensional.
+        ///                     -or-
+        ///                 <paramref name="arrayIndex"/> is equal to or greater than the length of <paramref name="array"/>.
+        ///                     -or-
+        ///                     The number of elements in the source <see cref="T:System.Collections.Generic.ICollection`1"/> is greater than the available space from <paramref name="arrayIndex"/> to the end of the destination <paramref name="array"/>.
+        ///                     -or-
+        ///                     Type <paramref name="T"/> cannot be cast automatically to the type of the destination <paramref name="array"/>.
+        ///                 </exception>
+        void ICollection<T>.CopyTo(T[] array, int arrayIndex)
+        {
+            base.CopyTo(array, arrayIndex);
+        }
+
+        /// <summary>
+        /// Gets the number of elements contained in the <see cref="T:System.Collections.Generic.ICollection`1"/>.
+        /// </summary>
+        /// <returns>
+        /// The number of elements contained in the <see cref="T:System.Collections.Generic.ICollection`1"/>.
+        /// </returns>
+        int ICollection<T>.Count
+        {
+            get { return base.Count;  }
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether the <see cref="T:System.Collections.Generic.ICollection`1"/> is read-only.
+        /// </summary>
+        /// <returns>
+        /// true if the <see cref="T:System.Collections.Generic.ICollection`1"/> is read-only; otherwise, false.
+        /// </returns>
+        bool ICollection<T>.IsReadOnly
+        {
+            get { return false; }
+        }
+
+        #endregion
+
+        #region IEnumerable<T> Members
+
+        IEnumerator<T> IEnumerable<T>.GetEnumerator()
+        {
+            return base.GetEnumerator();
+        }
+
+        #endregion
+
+        #region IEnumerable Members
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return base.GetEnumerator();
+        }
+
+        #endregion
     }
 }
