@@ -1,3 +1,10 @@
+#if VISUAL_STUDIO
+#define debugging
+#define arg1index
+#define mswindows
+#define newor
+#endif
+
 #define debugging
 /*-----------------------------------------------------------------------------------------
 
@@ -557,7 +564,7 @@ namespace RTParser.Prolog
               IO.Error ("No predicate definitions allowed for persistent predicate '{0}'", index);
             else
 #endif
-                        PrologIO.Error("Predicate '{0}' is already defined in {1}", index, pd.DefiningFile);
+                        PrologIO.WarnOrError("Predicate '{0}' is already defined in {1}", index, pd.DefiningFile);
                     }
                     definedInCurrFile[key] = true;
                     pd = SetClauseList(PredEnum.session, Term.Functor, Term.Arity, clause); // implicitly erases all previous definitions
@@ -851,7 +858,7 @@ namespace RTParser.Prolog
                 // prefix a clause that is pointed to by first-argument indexing with '.'
                 Console.Write(" {0}{1}", (pd.IsFirstArgMarked(clause)) ? "." : " ", clause.Term);
 #else
-        Console.Write("  {0}", clause.Term);
+                Console.Write("  {0}", clause.Term);
 #endif
 
                 if ((next = clause.NextNode) != null)
