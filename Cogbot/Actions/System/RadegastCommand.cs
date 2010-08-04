@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using cogbot;
 using cogbot.Actions;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using org.opencyc.xml;
 using Radegast;
 
@@ -82,9 +83,20 @@ namespace cogbot.Actions.System
                         }));
                         return Success("radegast " + arg0);
                     }
+                case "tray":
+                    {                        
+                        if (!PanelGUI.IsHandleCreated) return Success("No handle to " + arg0);
+                        TheBotClient.TheRadegastInstance.GlobalSettings["minimize_to_tray"] = new OSDBoolean(true);
+                        BeginInvoke(new MethodInvoker(() =>
+                        {
+                            PanelGUI.WindowState = FormWindowState.Minimized;
+                        }));
+                        return Success("radegast " + arg0);
+                    }
                 case "minimize":
                     {
                         if (!PanelGUI.IsHandleCreated) return Success("No handle to " + arg0);
+                        TheBotClient.TheRadegastInstance.GlobalSettings["minimize_to_tray"] = new OSDBoolean(false);
                         BeginInvoke(new MethodInvoker(() =>
                         {
                             PanelGUI.WindowState = FormWindowState.Minimized;
