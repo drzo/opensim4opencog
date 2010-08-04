@@ -1,3 +1,9 @@
+#if VISUAL_STUDIO
+#define debugging
+#define arg1index
+#define mswindows
+#define newor
+#endif
 
 /*-----------------------------------------------------------------------------------------
 
@@ -663,21 +669,12 @@ PrologIO.Verbose)
                     if (!(redo = CanBacktrack(true))) return false;  // redo is set if a choice point was found
                 }
 
-                findFirstClause = false; // i.e. advance to the next clause upon backtracking                
+                findFirstClause = false; // i.e. advance to the next clause upon backtracking
                 currClause = goalNode.NextClause; // definition in program
 
                 if (reporting) varStack.Push(new SpyPoint(SpyPort.call, goalNode)); // to be able to retry goal etc.
                 //dmiles
-                if (currClause == null)
-                {
-                    PrologIO.Warning("missingAndNow(" + lastCurrClause + ")");
-                    currClause = lastCurrClause;
-                }
-                else
-                {
-                    //PrologIO.Warning("call(" + currClause + ",from,{0})", lastCurrClause);
-                    lastCurrClause = currClause;
-                }
+
                 if (currClause.NextClause != null) // currClause.NextClause will be tried upon backtracking
                     varStack.Push(currentCp = new ChoicePoint(goalNode, currClause.NextClause));
                 else if (reporting)

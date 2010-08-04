@@ -1,3 +1,9 @@
+#if VISUAL_STUDIO
+#define debugging
+#define arg1index
+#define mswindows
+#define newor
+#endif
 
 /*-----------------------------------------------------------------------------------------
 
