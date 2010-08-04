@@ -78,6 +78,44 @@
       </Project>
       -->
 
+
+    <Project name="SwiPlCs" path="contrib/SwiPlCs" type="Library" frameworkVersion="v3_5">
+      <Configuration name="Debug">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+
+      <ReferencePath>../../bin/</ReferencePath>
+      <Reference name="SWIJPL.dll" localCopy="false"/>
+      <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
+      <Reference name="IKVM.Runtime.dll" localCopy="false"/>
+      <Reference name="IKVM.Runtime.JNI.dll" localCopy="false"/>
+      <Reference name="System" localCopy="false"/>
+      <Reference name="System.Core" localCopy="false"/>
+      <Reference name="System.Data" localCopy="false"/>
+      <Reference name="System.Data.DataSetExtensions" localCopy="false"/>
+      <Reference name="System.Deployment" localCopy="false"/>
+      <Reference name="System.Drawing" localCopy="false"/>
+      <Reference name="System.Windows.Forms" localCopy="false"/>
+      <Reference name="System.Xml" localCopy="false"/>
+      <Reference name="System.Xml.Linq" localCopy="false"/>
+      <Files>
+        <Match path="." pattern="*.cs"  recurse="true"  subType="Form">
+          <Exclude name="Plugins/"/>
+        </Match>
+        <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource">
+          <Exclude name="Plugins/"/>
+        </Match>
+        <Match path="." pattern="AssemblyInfo.cs"/>
+      </Files>
+    </Project>
+
       <Project name="OpenMetaverseTypes" path="lib/OpenMetaverseTypes" type="Library" rootNamespace="OpenMetaverse" frameworkVersion="v3_5">
         <Configuration name="Debug">
           <Options>
@@ -280,6 +318,28 @@
         </Files>
       </Project>
       -->
+    
+    <Project name="DotLisp" path="dotlisp" type="Library" frameworkVersion="v3_5">
+      <Configuration name="Debug">
+        <Options>
+          <OutputPath>../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release">
+        <Options>
+          <OutputPath>../bin/</OutputPath>
+        </Options>
+      </Configuration>
+
+      <ReferencePath>../bin/</ReferencePath>
+      <Reference name="System" localCopy="false"/>
+      <Reference name="System.Data" localCopy="false"/>
+      <Reference name="System.Xml" localCopy="false"/>
+      <Files>
+        <Match pattern="*.cs" recurse="false"/>
+      </Files>
+    </Project>
+
     <Project name="MushDLR223" path="lib/MushDLR223" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
@@ -304,36 +364,14 @@
       <Reference name="ABCL.Net.dll" localCopy="false"/>
       <Reference name="log4net.dll" localCopy="false"/>
       <Reference name="HttpServer.dll" localCopy="false"/>
-      <Reference name="SwiPlCS.dll" localCopy="false"/>
+      <Reference name="SwiPlCs" localCopy="false"/>
       <Reference name="System" localCopy="false"/>
-      <Reference name="DotLisp" localCopy="false"/>
+      <Reference name="DotLisp.dll" localCopy="false"/>
       <Reference name="OpenCyc.dll" localCopy="false"/>
       <Reference name="IKVM.Runtime.dll" localCopy="false"/>
       <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
       <Files>
         <Match pattern="*.cs" recurse="true"/>
-      </Files>
-    </Project>
-    
-    
-    <Project name="DotLisp" path="dotlisp" type="Library" frameworkVersion="v3_5">
-      <Configuration name="Debug">
-        <Options>
-          <OutputPath>../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release">
-        <Options>
-          <OutputPath>../bin/</OutputPath>
-        </Options>
-      </Configuration>
-
-      <ReferencePath>../bin/</ReferencePath>
-      <Reference name="System" localCopy="false"/>
-      <Reference name="System.Data" localCopy="false"/>
-      <Reference name="System.Xml" localCopy="false"/>
-      <Files>
-        <Match pattern="*.cs" recurse="false"/>
       </Files>
     </Project>
 
@@ -646,41 +684,8 @@
      </Files>
 </Project>
 
- <Project name="SWIPlCs" path="contrib/SWIPlCs" type="Library" frameworkVersion="v3_5">
-     <Configuration name="Debug">
-       <Options>
-           <OutputPath>../../bin/</OutputPath>
-       </Options>
-     </Configuration>
-     <Configuration name="Release">
-       <Options>
-           <OutputPath>../../bin/</OutputPath>
-       </Options>
-     </Configuration>
 
-     <ReferencePath>../../bin/</ReferencePath>
-     <Reference name="SWIJPL.dll" localCopy="false"/>
-     <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
-     <Reference name="IKVM.Runtime.dll" localCopy="false"/>
-     <Reference name="IKVM.Runtime.JNI.dll" localCopy="false"/>
-     <Reference name="System" localCopy="false"/>
-     <Reference name="System.Core" localCopy="false"/>
-     <Reference name="System.Data" localCopy="false"/>
-     <Reference name="System.Data.DataSetExtensions" localCopy="false"/>
-     <Reference name="System.Deployment" localCopy="false"/>
-     <Reference name="System.Drawing" localCopy="false"/>
-     <Reference name="System.Windows.Forms" localCopy="false"/>
-     <Reference name="System.Xml" localCopy="false"/>
-     <Reference name="System.Xml.Linq" localCopy="false"/>
-     <Reference name="SwiPlCs" localCopy="false"/>
-     <Files>
-         <Match path="." pattern="*.cs"  recurse="true"  subType="Form">  <Exclude name="AssemblyInfo.cs"/><Exclude name="Plugins/"/></Match>
-         <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource">  <Exclude name="AssemblyInfo.cs"/><Exclude name="Plugins/"/></Match>
-         <Match path="." pattern="AssemblyInfo.cs"/>
-     </Files>
-</Project>
-
-  <Project name="PrologScriptEngine" path="contrib/PrologScriptEngine" type="Library" frameworkVersion="v3_5">
+    <Project name="PrologScriptEngine" path="contrib/PrologScriptEngine" type="Library" frameworkVersion="v3_5">
      <Configuration name="Debug">
        <Options>
            <OutputPath>../../bin/</OutputPath>
@@ -1625,11 +1630,11 @@ app -->
       <!--<Reference name="Mono.Addins.dll" localCopy="false"/>-->
       <Reference name="AIMLbot" />
       <Reference name="AIMLBotModule" />
-      <Reference name="Cogbot" />
+      <Reference name="Cogbot.exe" />
       <Reference name="MushDLR223"  localCopy="false"/>
       <Reference name="CogbotRadegastPluginModule" />
       <Reference name="CycWorldModule" />
-      <Reference name="DotLisp" />
+      <Reference name="DotLisp.dll" />
       <Reference name="FashionBotModule" />
       <Reference name="fmodex-dotnet.dll" localCopy="false"/>
       <Reference name="HttpServer" />
@@ -1666,7 +1671,6 @@ app -->
       <Reference name="System.Drawing" localCopy="false"/>
       <Reference name="System.Windows.Forms" />
       <Reference name="System.Xml"/>
-      <Reference name="SWIPLCs" />
       <Reference name="SWIJPL.dll" localCopy="false"/>
       <Reference name="TheSimiansModule" />
       <Reference name="XMLRPC.dll" localCopy="false"/>
