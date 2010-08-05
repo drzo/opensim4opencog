@@ -1802,7 +1802,7 @@ namespace cogbot
             to.Grid = new Grid(BotLoginParams.URI, BotLoginParams.URI, BotLoginParams.URI);
             to.GridCustomLoginUri = BotLoginParams.URI;
             to.StartLocation = StartLocationType.Custom;
-            to.StartLocationCustom = BotLoginParams.Start;
+            to.StartLocationCustom = BotLoginParams.Start;            
             to.Version = BotLoginParams.Version;
             to.Channel = BotLoginParams.Channel;
             RadegastTab tab;

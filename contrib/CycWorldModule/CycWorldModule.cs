@@ -8,7 +8,12 @@ namespace CycWorldModule
 {
     public class CycWorldModule : WorldObjectsModule
     {
-        readonly internal SimCyclifier cyclifier;
+        private void InvokeGUI(Action action)
+        {
+            client.InvokeGUI(() => { lock (oneInstanceLock) action(); });
+        }
+
+        internal SimCyclifier cyclifier;
         public static CycWorldModule CycModule;
         private CycConnectionForm cycConnectionForm;
         readonly static object oneInstanceLock = new object();
@@ -25,32 +30,40 @@ namespace CycWorldModule
         public CycWorldModule(BotClient _parent)
             : base(_parent)
         {
+            client = _parent;
             lock (oneInstanceLock)
                 if (CycModule == null)
                 {
-                    CycModule = this;
-                    _parent.ClientManager.AddTool("CycWorldModule","CycWorldModule", ShowCycForm);
-                    cyclifier = new SimCyclifier(this);
-                    client.WorldSystem.OnAddSimObject += cyclifier.World_OnSimObject;
-                    client.AddBotMessageSubscriber(cyclifier.eventFilter);
-                    Console.WriteLine("CycWorldModule Loaded");
-
+                    InvokeGUI(InitInstance);
                 }
+        }
+
+        private void InitInstance()
+        {
+            CycModule = this;
+            client.ClientManager.AddTool(client, "CycWorldModule", "CycWorldModule", ShowCycForm);
+            cyclifier = new SimCyclifier(this);
+            client.WorldSystem.OnAddSimObject += cyclifier.World_OnSimObject;
+            client.AddBotMessageSubscriber(cyclifier.eventFilter);
+            Console.WriteLine("CycWorldModule Loaded");
         }
 
         public CycConnectionForm CycConnectionForm
         {
             get
             {
-                if (cycConnectionForm == null || cycConnectionForm.IsDisposed) 
-                    cycConnectionForm = new CycConnectionForm();
-                return cycConnectionForm;
+                lock (oneInstanceLock)
+                {
+                    if (cycConnectionForm == null || cycConnectionForm.IsDisposed)
+                        cycConnectionForm = new CycConnectionForm();
+                    return cycConnectionForm;
+                }
             }
         }
 
         private void ShowCycForm(object sender, EventArgs e)
         {
-            CycConnectionForm.Reactivate();
+            InvokeGUI(CycConnectionForm.Reactivate);
         }
 
 
@@ -60,6 +73,10 @@ namespace CycWorldModule
         }
 
         public override void StartupListener()
+        {
+            InvokeGUI(StartupListener0);           
+        }
+        private void StartupListener0()
         {
             cycBrowser = new CycBrowser(RadegastInstance);
             cycTab = client.TheRadegastInstance.TabConsole.AddTab("cyc", "CYC", cycBrowser);
@@ -71,6 +88,10 @@ namespace CycWorldModule
         }
 
         public void Show(Object position)
+        {
+            InvokeGUI(() => Show0(position));
+        }
+        public void Show0(Object position)
         {
             object fort = cyclifier.ToFort(position);
             var noQ = SimCyclifier.cycInfoMapSaver.NoQueue;
