@@ -4,6 +4,7 @@
 #endif
 using System;
 using System.Windows.Forms;
+using cogbot;
 
 namespace CycWorldModule.DotCYC
 {
@@ -89,6 +90,8 @@ namespace CycWorldModule.DotCYC
                 SimCyclifier.Trace();
                 txtCycOutput.Text = ee.ToString();
             }
+            ClientManager.addSetting("cycHostName", m_cycAccess.getHostName());
+            ClientManager.addSetting("cycBasePort", "" + m_cycAccess.getBasePort());
             wasConnected = IsConnected();
         }
         private void disconnect()

@@ -44,6 +44,28 @@ namespace cogbot
             });
         }
 
+
+        public static readonly Dictionary<string, string> DefaultSettings = new Dictionary<string, string>();
+
+        public static void addSetting(string name, string value)
+        {
+            name = name.ToLower().Replace(" ", "_");
+            DefaultSettings[name] = value;
+        }
+
+
+        public static string grabSetting(string name)
+        {
+            name = name.ToLower().Replace(" ", "_");
+            string value = null;
+            if (DefaultSettings.TryGetValue(name, out value))
+            {
+                return value;
+            }
+            return value;
+        }
+
+
         static private ClientManagerHttpServer clientManagerHttpServer;
         public void AddTool(BotClient client, string name, string text, EventHandler threadStart)
         {
@@ -583,13 +605,16 @@ namespace cogbot
                     WriteLine(";; Reusing {0}", fullName);
                     AddTypesToBotClient(bc);
                     BotByName[bc.NameKey()] = bc;
-                    bc.BotLoginParams.Password = passwd;
-                    bc.BotLoginParams.URI = simurl;
-                    bc.BotLoginParams.Start = location;
+                    if (!string.IsNullOrEmpty(passwd))
+                        bc.BotLoginParams.Password = passwd;
+                    if (!string.IsNullOrEmpty(simurl))
+                        bc.BotLoginParams.URI = simurl;
+                    if (!string.IsNullOrEmpty(location))
+                        bc.BotLoginParams.Start = location;
                     return;// bc;                    
                 }
                 LoginDetails BotLoginParams = GetBotLoginParams(first, last, passwd, simurl, location);
-                EnsureRunning(BotLoginParams, LastBotClient);
+                EnsureRunning(BotLoginParams, null);
             }
         }
 
@@ -627,12 +652,13 @@ namespace cogbot
                                 {
                                     bc.TheRadegastInstance = inst;
                                 }
-                            } else
+                            }
+                            else
                             {
                                 if (inst != null)
                                 {
                                     bc.TheRadegastInstance = inst;
-                                  //  bc.gridClient = inst.Client;
+                                    //  bc.gridClient = inst.Client;
                                 }
                             }
                         }
@@ -667,18 +693,21 @@ namespace cogbot
                         bc.TheRadegastInstance = inst;
                     }
 
+                    if (bc.IsEnsuredRunning) return;
+                    bc.IsEnsuredRunning = true;
+
                     string fullName = details.BotLName;
                     bc.SetRadegastLoginOptions();
                     AddTypesToBotClient(bc);
                     InSTAThread(new ThreadStart(() =>
-                    {
-                        EnsureMainForm(inst);
-                    }), fullName);
+                                                    {
+                                                        EnsureMainForm(inst);
+                                                    }), fullName);
                     InSTAThread(new ThreadStart(() =>
                                                     {
                                                         EnsureStarting(bc);
                                                     }), "worker " + fullName);
-                    
+
 
                     // return bc;
                 }
@@ -745,11 +774,10 @@ namespace cogbot
                 {
                     BotLoginParams.URI = simurl;
                 }
-                if (string.IsNullOrEmpty(location))
+                if (!string.IsNullOrEmpty(location))
                 {
-                    location = "last";
+                    BotLoginParams.Start = location;
                 }
-                BotLoginParams.Start = location;
                 return BotLoginParams;
             }
         }
@@ -970,8 +998,8 @@ namespace cogbot
                                                                         account.Password, "BotClient", version);
                 account.UseNetworkDefaults(loginParams);
 
-                if (!string.IsNullOrEmpty(account.StartLocation))
-                    loginParams.Start = account.StartLocation;
+                if (!string.IsNullOrEmpty(account.Start))
+                    loginParams.Start = account.Start;
 
                 if (!string.IsNullOrEmpty(account.URI))
                     loginParams.URI = account.URI;
@@ -1069,7 +1097,7 @@ namespace cogbot
             account.Password = args[2];
 
             if (args.Length > 3)
-                account.StartLocation = NetworkManager.StartLocation(args[3], 128, 128, 40);
+                account.Start = NetworkManager.StartLocation(args[3], 128, 128, 40);
 
             if (args.Length > 4)
                 if (args[4].StartsWith("http://"))
@@ -1427,7 +1455,7 @@ namespace cogbot
             {
                 char sep = '/';
                 string[] startbits = arguments["startpos"].Split(sep);
-                DefaultAccount.StartLocation = NetworkManager.StartLocation(startbits[0], Int32.Parse(startbits[1]),
+                DefaultAccount.Start = NetworkManager.StartLocation(startbits[0], Int32.Parse(startbits[1]),
                         Int32.Parse(startbits[2]), Int32.Parse(startbits[3]));
             }
 
@@ -1498,7 +1526,7 @@ namespace cogbot
                             {
                                 char sep = '/';
                                 string[] startbits = tokens[3].Split(sep);
-                                account.StartLocation = NetworkManager.StartLocation(startbits[0], Int32.Parse(startbits[1]),
+                                account.Start = NetworkManager.StartLocation(startbits[0], Int32.Parse(startbits[1]),
                                     Int32.Parse(startbits[2]), Int32.Parse(startbits[3]));
                             }
 
@@ -1542,24 +1570,36 @@ namespace cogbot
         public LoginDetails(LoginDetails defaults)
         {
             if (defaults == null) return;
-            loginParams = defaults.loginParams;
             FirstName = defaults.FirstName;
             LastName = defaults.LastName;
             Password = defaults.Password;
-            StartLocation = defaults.StartLocation;
+            loginParams.Start = defaults.Start;
             GroupCommands = defaults.GroupCommands;
             MasterName = defaults.MasterName;
             MasterKey = defaults.MasterKey;
             URI = defaults.URI;
-
             MAC = defaults.MAC;
             AgreeToTos = defaults.AgreeToTos;
-            Start = defaults.Start;
+            ViewerDigest = defaults.ViewerDigest;
+            Channel = defaults.Channel;
+            Timeout = defaults.Timeout;
+        }
 
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != typeof (LoginDetails)) return false;
+            return Equals((LoginDetails) obj);
         }
 
 
-        internal LoginParams loginParams = new LoginParams();
+        readonly internal LoginParams loginParams = new LoginParams();
+        public bool GroupCommands;
+        public string MasterName;
+        public UUID MasterKey;
+        public BotClient Client;
+
 
         public string BotLName
         {
@@ -1675,14 +1715,6 @@ namespace cogbot
             get { return loginParams.URI; }
             set { loginParams.URI = value; }
         }
-        /// <summary>The agents starting location once logged in</summary>
-        /// <remarks>Either "last", "home", or a string encoded URI 
-        /// containing the simulator name and x/y/z coordinates e.g: uri:hooper&amp;128&amp;152&amp;17</remarks>
-        public string StartLocation
-        {
-            get { return loginParams.Start; }
-            set { loginParams.Start = value; }
-        }
 
         /// <summary>The client software version information</summary>
         /// <remarks>The official viewer uses: Second Life Release n.n.n.n 
@@ -1710,18 +1742,32 @@ namespace cogbot
             set { loginParams.Channel = value; }
         }
 
-        public bool GroupCommands;
-        public string MasterName;
-        public UUID MasterKey;
-        public BotClient Client;
-
-        public void UseNetworkDefaults(LoginParams @params)
+        public void UseNetworkDefaults(LoginParams defaults)
         {
-            if (string.IsNullOrEmpty(loginParams.URI))
-            {
-                @params.URI = loginParams.URI;
-            }
-            loginParams = @params;
+            if (!string.IsNullOrEmpty(loginParams.URI))
+                defaults.URI = loginParams.URI;
+            else
+                loginParams.URI = defaults.URI;
+
+            if (string.IsNullOrEmpty(FirstName))
+                FirstName = defaults.FirstName;
+            if (string.IsNullOrEmpty(LastName))
+                LastName = defaults.LastName;
+            if (string.IsNullOrEmpty(loginParams.Start))
+                loginParams.Start = defaults.Start;
+            if (string.IsNullOrEmpty(loginParams.Password))
+                loginParams.Password = defaults.Password;
+            if (string.IsNullOrEmpty(loginParams.Version))
+                loginParams.Version = defaults.Version;
+            if (string.IsNullOrEmpty(loginParams.ViewerDigest))
+                loginParams.ViewerDigest = defaults.ViewerDigest;
+            if (string.IsNullOrEmpty(loginParams.MAC))
+                loginParams.MAC = defaults.MAC;
+            if (string.IsNullOrEmpty(loginParams.Channel))
+                loginParams.Channel = defaults.Channel;
+
+            AgreeToTos = defaults.AgreeToTos;
+            Timeout = defaults.Timeout;
         }
 
         public void LoadFromConfig(Configuration config)
@@ -1730,6 +1776,59 @@ namespace cogbot
             LastName = config.lastName;
             Password = config.password;
             URI = config.simURL;
+        }
+
+        public bool Equals(LoginDetails other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Equals(other.URI, URI) && other.Timeout == Timeout && Equals(other.MethodName, MethodName) 
+                && Equals(other.FirstName, FirstName) && Equals(other.LastName, LastName) && Equals(other.Password, Password) 
+                && Equals(other.Start, Start) && Equals(other.Channel, Channel) && Equals(other.Version, Version) 
+                && Equals(other.Platform, Platform) && Equals(other.MAC, MAC) && Equals(other.ViewerDigest, ViewerDigest) 
+                && Equals(other.ID0, ID0) && Equals(other.UserAgent, UserAgent) && Equals(other.Author, Author) 
+                && other.AgreeToTos.Equals(AgreeToTos) && other.ReadCritical.Equals(ReadCritical) 
+                && Equals(other.Options, Options) && 
+                Equals(other.loginParams, loginParams) && other.GroupCommands.Equals(GroupCommands)
+                   && Equals(other.MasterName, MasterName) && other.MasterKey.Equals(MasterKey)
+                   && Equals(other.Client, Client);
+        }
+
+        /// <summary>
+        /// Serves as a hash function for a particular type. 
+        /// </summary>
+        /// <returns>
+        /// A hash code for the current <see cref="T:System.Object"/>.
+        /// </returns>
+        /// <filterpriority>2</filterpriority>
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int result = (URI != null ? URI.GetHashCode() : 0);
+                result = (result * 397) ^ Timeout;
+                result = (result * 397) ^ (MethodName != null ? MethodName.GetHashCode() : 0);
+                result = (result * 397) ^ (FirstName != null ? FirstName.GetHashCode() : 0);
+                result = (result * 397) ^ (LastName != null ? LastName.GetHashCode() : 0);
+                result = (result * 397) ^ (Password != null ? Password.GetHashCode() : 0);
+                result = (result * 397) ^ (Start != null ? Start.GetHashCode() : 0);
+                result = (result * 397) ^ (Channel != null ? Channel.GetHashCode() : 0);
+                result = (result * 397) ^ (Version != null ? Version.GetHashCode() : 0);
+                result = (result * 397) ^ (Platform != null ? Platform.GetHashCode() : 0);
+                result = (result * 397) ^ (MAC != null ? MAC.GetHashCode() : 0);
+                result = (result * 397) ^ (ViewerDigest != null ? ViewerDigest.GetHashCode() : 0);
+                result = (result * 397) ^ (ID0 != null ? ID0.GetHashCode() : 0);
+                result = (result * 397) ^ (UserAgent != null ? UserAgent.GetHashCode() : 0);
+                result = (result * 397) ^ (Author != null ? Author.GetHashCode() : 0);
+                result = (result * 397) ^ AgreeToTos.GetHashCode();
+                result = (result * 397) ^ ReadCritical.GetHashCode();
+                result = (result * 397) ^ (Options != null ? Options.GetHashCode() : 0);
+                result = (result * 397) ^ GroupCommands.GetHashCode();
+                result = (result * 397) ^ (MasterName != null ? MasterName.GetHashCode() : 0);
+                result = (result * 397) ^ MasterKey.GetHashCode();
+                result = (result * 397) ^ (Client != null ? Client.GetHashCode() : 0);
+                return result;
+            }
         }
     }
 

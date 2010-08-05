@@ -1322,15 +1322,20 @@ namespace cogbot
             if (login == LoginStatus.Failed)
             {
                 WriteLine("Not able to login");
+                ExpectConnected = false;
                 // SendNewEvent("on-login-fail",login,message);
                 SendNetworkEvent("On-Login-Fail", login, message);
                 if (LoginRetries-- >= 0) Login();
             }
             else if (login == LoginStatus.Success)
             {
-                SetLoginOptionsFromRadegast();
+                if (!ClientManager.StarupLispCreatedBotClients)
+                {
+                    GetLoginOptionsFromRadegast();
+                }
                 LoginRetries = 0;
                 WriteLine("Logged in successfully");
+                ExpectConnected = true;
                 SendNetworkEvent("On-Login-Success", login, message);
                 //                SendNewEvent("on-login-success",login,message);
             }
@@ -1824,10 +1829,14 @@ namespace cogbot
         {
             console.txtFirstName.Text = options.FirstName;
             console.txtLastName.Text = options.LastName;
-            //console.cbxLocation.Text = options.StartLocationCustom;
+            console.cbxLocation.Text = options.StartLocationCustom;
+            console.cbTOS.Checked = true;
+            console.txtCustomLoginUri.Text = options.StartLocationCustom;
+            console.cbxLocation.Text = "Custom";
+            console.cbxGrid.Text = "Custom";
         }
 
-        public void SetLoginOptionsFromRadegast()
+        public void GetLoginOptionsFromRadegast()
         {
             var from = TheRadegastInstance.Netcom.LoginOptions;
             BotLoginParams.FirstName = from.FirstName;
@@ -2092,6 +2101,8 @@ namespace cogbot
         }
 
         bool TalkingAllowed = true;
+        public bool IsEnsuredRunning;
+
         public void Talk(string text)
         {
             Talk(text, 0, ChatType.Normal);

@@ -38,6 +38,7 @@ using System.Windows.Forms;
 ﻿using cogbot.TheOpenSims;
 ﻿using CycWorldModule.DotCYC;
 ﻿using OpenMetaverse;
+﻿using org.opencyc.api;
 ﻿using org.opencyc.cycobject;
 ﻿using Radegast;
 
@@ -53,7 +54,31 @@ namespace CycWorldModule
         WebBrowser map;
     //    Regex slscheme = new Regex("^secondlife://(.+)/([0-9]+)/([0-9]+)");
         bool InTeleport = false;
-        private string cycURL = "http://cycserver:3602/cgi-bin/cyccgi/cg?cb-start";
+        public string cycURL
+        {
+            get
+            {
+                var v = SimCyclifier.cycAccess;
+                if (v==null)
+                {
+                    v = CycAccess.sharedCycAccessInstance;
+                }
+                if (v!=null)
+                {
+                    string s = v.getHostName();
+                    int bp = v.getBasePort();
+                    if (bp>0)
+                    {
+                        s += ":" + bp + 2;
+                    } else
+                    {
+                        s += ":3602";
+                    }
+                    return string.Format("http://{0}/cgi-bin/cyccgi/cg?cb-start", s);
+                }
+                return "http://cycserver:3602/cgi-bin/cyccgi/cg?cb-start";
+            }
+        }
 
         public CycBrowser(RadegastInstance i)
         {
