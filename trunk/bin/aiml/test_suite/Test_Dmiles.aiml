@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<aiml graph="default">
+
+  <!--
+  <category>
+    <pattern>*</pattern>
+    <template>
+      <srai>STDCATCHALL-NEXVER</srai>
+    </template>
+  </category>
+-->
+
+  <learn graph="eliza" filename="../jliza/" />
+  <category>
+    <pattern>TOELIZA *</pattern>
+    <template>
+      <sr graph="eliza" />
+    </template>
+  </category>
+
+  <category>
+    <pattern>QT</pattern>
+    <template>
+      <learn graph="ProgramD" filename="aiml\test_suite\ProgramD\AIML.aiml" />
+      <learn graph="ProgramD" filename="aiml\test_suite\ProgramD\predicates.xml" />
+      <learn graph="ProgramD" filename="aiml\test_suite\ProgramD\properties.xml" />
+      <learn graph="ProgramD" filename="aiml\test_suite\ProgramD\substitutions.xml" />
+      <system>@chgraph programd</system>
+      <pre>now @load aiml\test_suite\ProgramD\AIML.xml</pre>
+    </template>
+  </category>
+  <aiml graph="ProgramD">
+    <category>
+      <pattern>QT1</pattern>
+      <template graph="ProgramD">
+        <system>@load aiml\test_suite\ProgramD\AIML.xml</system>
+      </template>
+    </category>
+  </aiml>
+
+
+  <category>
+    <pattern>QT2</pattern>
+    <template>
+      <learn graph="ProgramQ" filename="aiml\test_suite\ProgramQ\TestSuite.aiml" />
+      <learn graph="ProgramQ" filename="aiml\test_suite\ProgramQ\bot.xml" />
+      <learn graph="ProgramQ" filename="aiml\test_suite\ProgramQ\vars.xml" />
+      <learn graph="ProgramQ" filename="aiml\test_suite\ProgramQ\substitutions.xml" />
+      <system>@chgraph programq</system>
+    </template>
+  </category>
+  <aiml graph="ProgramQ">
+    <category>
+      <pattern>QT3</pattern>
+      <template graph="ProgramQ">
+        <system>@load aiml\test_suite\ProgramQ\TestSuite.xml</system>
+      </template>
+    </category>
+  </aiml>
+
+  <category>
+    <pattern>PROGRAMQ</pattern>
+    <template>
+      <learn dir="ProgramQ/"/>
+    </template>
+  </category>
+
+  <category>
+    <pattern>PROGRAMD</pattern>
+    <template>
+      <learn graph="ProgramD" dir="ProgramD/"/>
+      <srai>@chgraph programd</srai>
+      <srai>@load aiml\test_suite\ProgramD\AIML.xml</srai>
+    </template>
+  </category>
+
+  <category>
+    <pattern>YES</pattern>
+    <that>CAN YOU BE *</that>
+    <template>
+      Then please do be <set name="will">
+        <thatstar/>
+      </set>
+    </template>
+  </category>
+
+  <category>
+    <pattern>NO</pattern>
+    <that>CAN YOU BE *</that>
+    <template>
+      Then please try to be <set name="will">
+        <thatstar/>
+      </set>
+    </template>
+  </category>
+
+  <category>
+    <pattern>_</pattern>
+    <pattern>*</pattern>
+    <that>CAN YOU BE *</that>
+    <template>
+      So that means yes that you'll be <set name="will">
+        <thatstar/>
+      </set>
+    </template>
+  </category>
+
+  <category>
+    <pattern>YES</pattern>
+    <that>SO THAT MEANS *</that>
+    <template>
+      Then <get name="will"/>
+    </template>
+  </category>
+
+  <category>
+    <pattern>NO</pattern>
+    <that>SO THAT MEANS *</that>
+    <template>
+      why not <get name="will"/>?
+    </template>
+  </category>
+
+
+  <category>
+    <pattern>TEST REGEX1  *</pattern>
+    <template>hit test regex star</template>
+  </category>
+  <category>
+    <pattern>
+      TEST REGEX1 <regex match="*">.*(THING|ONE).*</regex>
+    </pattern>
+    <template>hit test regex  star thing star </template>
+  </category>
+  <category>
+    <pattern>
+      TEST REGEX1 <regex match="*">.*(THING|ONE)</regex>
+    </pattern>
+    <template>hit test regex  star thing </template>
+  </category>
+  <category>
+    <pattern>
+      TEST REGEX1 <regex match="*">(THING|ONE)</regex>
+    </pattern>
+    <template>hit test regex  thing </template>
+  </category>
+
+  <category>
+    <pattern>
+      TEST REGEX2 BUGGER <regex match="*">.*</regex>
+    </pattern>
+    <template>hit regex bugger1 </template>
+  </category>
+  <category>
+    <pattern>
+      TEST REGEX2 BUGGER <regex match="_">.*</regex>
+    </pattern>
+    <template>hit regex bugger2 </template>
+  </category>
+
+
+  <!--
+  <category>
+    <pattern>*</pattern>
+    <template>
+      <srai>STDCATCHALL-NEXVER</srai>
+    </template>
+  </category>
+
+
+  <learn> aiml/nephrael_rae/ </learn>
+  <learn>aiml\bina_v1\ZZ_Stu.aiml</learn>
+-->
+
+  <category>
+    <pattern>I LIKE *</pattern>
+    <template>
+      <learn>
+        <category>
+          <pattern><eval>I HAVE <star index="1"/></eval></pattern>
+          <template>THAT IS BECASUE YOU LIKE <eval> <star index="1"/></eval>s</template>
+        </category>
+      </learn>
+    </template>
+  </category>
+
+</aiml>
+
