@@ -45,13 +45,13 @@ namespace cogbot
         }
 
         static private ClientManagerHttpServer clientManagerHttpServer;
-        public void AddTool(string name, string text, EventHandler threadStart)
+        public void AddTool(BotClient client, string name, string text, EventHandler threadStart)
         {
-            //      base.Invoke(new AddToolDelegate(AddTool0), new object[] {name, text, threadStart});
+            client.InvokeGUI(() => AddTool0(client, name, text, threadStart));
         }
 
         public delegate void AddToolDelegate(string name, string text, EventHandler threadStart);
-        public void AddTool0(string name, string text, EventHandler threadStart)
+        private void AddTool0(BotClient client, string name, string text, EventHandler threadStart)
         {
             // SuspendLayout();
             ToolStripMenuItem stripMenuItem =
@@ -583,6 +583,9 @@ namespace cogbot
                     WriteLine(";; Reusing {0}", fullName);
                     AddTypesToBotClient(bc);
                     BotByName[bc.NameKey()] = bc;
+                    bc.BotLoginParams.Password = passwd;
+                    bc.BotLoginParams.URI = simurl;
+                    bc.BotLoginParams.Start = location;
                     return;// bc;                    
                 }
                 LoginDetails BotLoginParams = GetBotLoginParams(first, last, passwd, simurl, location);
@@ -717,12 +720,15 @@ namespace cogbot
             {
                 String fullName = KeyFromName(first, last);
                 BotClient bc = GetBotByName(fullName);
+                LoginDetails BotLoginParams = null;
                 if (bc != null)
                 {
-                    return bc.BotLoginParams;
+                    BotLoginParams = bc.BotLoginParams;
                 }
-
-                LoginDetails BotLoginParams = FindOrCreateAccount(first, last);
+                else
+                {
+                    BotLoginParams = FindOrCreateAccount(first, last);
+                }
                 if (!string.IsNullOrEmpty(first))
                 {
                     BotLoginParams.FirstName = first;
@@ -1541,11 +1547,15 @@ namespace cogbot
             LastName = defaults.LastName;
             Password = defaults.Password;
             StartLocation = defaults.StartLocation;
-
             GroupCommands = defaults.GroupCommands;
             MasterName = defaults.MasterName;
             MasterKey = defaults.MasterKey;
             URI = defaults.URI;
+
+            MAC = defaults.MAC;
+            AgreeToTos = defaults.AgreeToTos;
+            Start = defaults.Start;
+
         }
 
 
