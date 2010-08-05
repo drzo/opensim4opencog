@@ -1,13 +1,48 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<aiml graph="default">
+<aiml>
 
- <learn>aiml/example_bot/</learn>
+  <learn uri="aiml/example_bot/" />
+  <genlMt name="chomskyAIML"/>
+  <learn graph="chomskyAIML" uri="aiml/chomskyAIML/" />
+
+  <!--
+  
+  <learn graph="example_bot" uri="aiml/example_bot/" />
+  it used to be this client had not implmented baked appearances yet.. so it would send the last appearch it got from a peerto the server 
+  <learn>aiml/test_suite/</learn>
+  <learn>aiml/example_bot/</learn>
+  
+  <aiml graph="chomskyAIML">
+    <genlMt graph="UniversalVocab"/>
+    <learn> aiml/chomskyAIML/ </learn>
+  </aiml>
+
+
+
+  <aiml graph="chomskyAIML2">
+    <genlMt graph="UniversalVocab"/>
+    <learn> aiml/chomskyAIML2/ </learn>
+  </aiml>
+
+    <genlMt graph="default" name="chomskyAIML"/>
+-->
+
+
+  <!--
+  <learn>aiml/chomskyAIML2/</learn>
+    <category>
+    <pattern>DO YOU DO IT</pattern>
+    <template>
+      You mean, do I do <get name="it"/>?
+    </template>
+  </category>
+  -->
+
+
 
   <category>
-  <pattern>DO YOU DO IT</pattern>
-  <template>
-    You mean, do I do <get name="it"/>?
-  </template>
+    <pattern>*</pattern>
+    <template>VERY LAST DEFALT</template>
   </category>
 
 </aiml>
