@@ -36,6 +36,8 @@ to_upper(Any,Any):-!.
 
 ignore(C) :- C ; true.
 
+format(A,B,C):-writeq(format(A,B,C)).
+flush_output(A):-nl.
 
 call_with_depth_limit(C,D,M):-C.
 
@@ -85,6 +87,27 @@ callInteractive0(Term,Var):-atom(Term),!,catch(((Term,writeln(called(Term)))),_,
 callInteractive0(Term,_):-catch((call(Term),writeq(Term),nl,fail),_,fail).
 callInteractive0(Term,_):-!.
 
+
+% ===============================================================================================
+% Save Possible Responses (Degrade them as well)
+% ===============================================================================================
+
+dyn_retractall(X):- numbervars(X,0,E),call(X),retract(X),fail.
+dyn_retractall(_).
+
+possibleResponse( 0.1, [very,bad]).
+
+:-dynamic(possibleResponse/2).
+
+savePosibleResponse(N,O):- call( possibleResponse(_,O) ),!.
+savePosibleResponse(N,O):-
+    findall(1, degraded(O), L),!,
+   length(L,K),
+   SN is N - (K * 0.6)  , !,
+   asserta(possibleResponse(SN,O)).
+
+
+   
 % ===============================================================================================
 % ALICE IN PROLOG
 % ===============================================================================================
@@ -131,8 +154,8 @@ all_upper_atom(X):-toUppercase(X,N),N=X.
 :-dynamic(default_channel/1).
 :-dynamic(default_user/1).
 
-%default_channel( "#logicmoo").
-%default_user(    "default_user").         
+default_channel( "#logicmoo").
+default_user(    "unknown_partner").         
 
 % say(Say):-writeq(Say),nl.
 toCodes(B,A):-cyc:stringToCodelist(B,AO),(is_list(A) -> A=AO ; string_to_list(AO,A)),!.
@@ -153,18 +176,18 @@ alicebot2(Atoms,[O-N]):-
    computeAnswer(1,srai(Atoms),O,N),!.
 
 alicebot2(Atoms,Resp):-	
-   retractall(possibleResponse(_,_)),
+   dyn_retractall(possibleResponse(_,_)),
    swi_flag(a_answers,_,0),!,
    ignore((
    call_with_depth_limit(computeAnswer(1,srai(Atoms),O,N),8000,DL),
 	 ignore((nonvar(N),nonvar(O),savePosibleResponse(N,O))),swi_flag(a_answers,X,X+1),X>3)),!,
    findall(NR-OR, call(possibleResponse(NR,OR)) ,L),!,
    %format('~n-> ~w~n',[L]),
-   keysort(L,S),
-   dumpList(S),
-   reverse(S,[Resp|RR]),
-   degrade(Resp),
-   rememberSaidIt(Resp).
+   keysort(L,S),!,
+   dumpList(S),!,
+   reverse(S,[Resp|RR]),!,
+   degrade(Resp),!,
+   rememberSaidIt(Resp),!.
 
 % ===============================================================================================
 % Degrade Response
@@ -175,22 +198,6 @@ degraded([]).
 
 degrade(_-OR):- degraded(OR),!.
 degrade(OR):- asserta(degraded(OR)).
-
-
-% ===============================================================================================
-% Save Possible Responses (Degrade them as well)
-% ===============================================================================================
-
-:-dynamic(possibleResponse/2).
-possibleResponse(0.1,[very,bad]).
-
-savePosibleResponse(N,O):-possibleResponse(_,O),!.
-savePosibleResponse(N,O):-
-    findall(1, degraded(O), L),!,
-   length(L,K),
-   SN is N - (K * 0.6)  , !,
-   asserta(possibleResponse(SN,O)).
-
 
 
 % ===============================================================================================
@@ -319,7 +326,7 @@ getAliceMem(X,E):-isAliceMem(X,E),!.
  
 setAliceMem(X,[E]):-!,setAliceMem(X,E),!.
 setAliceMem(X,'nick').
-setAliceMem(X,E):-retractall(isAliceMem(X,_)),asserta(isAliceMem(X,E)),writeln(debug(isAliceMem(X,E))),!.
+setAliceMem(X,E):-dyn_retractall(isAliceMem(X,_)),asserta(isAliceMem(X,E)),writeln(debug(isAliceMem(X,E))),!.
 :-dynamic(isAliceMem/2).
 
 % ===============================================================================================
@@ -331,7 +338,7 @@ getLastSaid([*]).
 
 rememberSaidIt([]):-!.
 rememberSaidIt(_-R1):-!,rememberSaidIt(R1).
-rememberSaidIt(R1):-append(New,'.',R1),!,rememberSaidIt(New).
+rememberSaidIt(R1):-append(New,['.'],R1),!,rememberSaidIt(New).
 rememberSaidIt(R1):-ignore(retract(getLastSaid(_))),toUppercase(R1,SR1),!,asserta(getLastSaid(SR1)).
 
 

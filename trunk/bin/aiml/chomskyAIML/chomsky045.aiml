@@ -1,17 +1,10 @@
-<?xml version="1.0" encoding="ISO-8859-1" ?> 
-
- <aiml>
-
- <!--   The ALICE program is open source code released under  --> 
-
- <!--   the terms of the GNU General Public License    --> 
-
- <!--   as published by the Free Software Foundation.  --> 
-
- <!--   Complies with AIML 1.0 Tag Set Specification   --> 
-
+﻿<?xml version="1.0" encoding="ISO-8859-1" ?> 
+<aiml>
+<!--   The ALICE program is open source code released under  -->
+<!--   the terms of the GNU General Public License    -->
+<!--   as published by the Free Software Foundation.  -->
+<!--   Complies with AIML 1.0 Tag Set Specification   -->
 <!-- This BIOGRAPHY3 file created by Peter Lafferty 6 February 2005, (c) Peter Lafferty  -->
-
 
 
   <category>
@@ -489,7 +482,7 @@
   <think><set name="topic">biography</set></think>
   </template> 
   </category>
-n
+
   <category>
   <pattern>THE BEST HUMAN</pattern> 
   <template>

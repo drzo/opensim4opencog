@@ -138,15 +138,16 @@
 <template><think><set name="favorite"><star index="1"/></set> = <set name="star_1"><star index="2"/></set></think></template>
 </category>
 
+
 <category>
 <pattern>*</pattern>
 <that>* _ ABOUT *</that>
 <template>
-<think><set name="thatstar_3"><star/></set><set name="what"><thatstar index="3"/></set></think>
-<srai><topicstar index="3"/> IS <star/></srai>
+ <think><set name="thatstar_3"><star/></set><set name="what"><thatstar index="3"/></set></think>
+ <srai that="thatstar_3"><thatstar index="3"/> IS <star/></srai>
 </template>
 </category>
-
+  
 </aiml>
 
 <aiml graph="parent">
