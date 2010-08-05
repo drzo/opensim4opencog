@@ -1140,9 +1140,16 @@ namespace OpenMetaverse
                 // The first packet reserves the first four bytes of the data for the
                 // total length of the asset and appends 1000 bytes of data after that
                 send.DataPacket.Data = new byte[1004];
-                Buffer.BlockCopy(Utils.IntToBytes(upload.Size), 0, send.DataPacket.Data, 0, 4);
-                Buffer.BlockCopy(upload.AssetData, 0, send.DataPacket.Data, 4, 1000);
-                upload.Transferred += 1000;
+                int uploadSize = upload.Size;
+                Buffer.BlockCopy(Utils.IntToBytes(uploadSize), 0, send.DataPacket.Data, 0, 4);
+                int transferSize = Math.Min(1000, uploadSize);
+                Buffer.BlockCopy(upload.AssetData, 0, send.DataPacket.Data, 4, transferSize);
+                if (transferSize<1000)
+                {
+                    // last packet - small transfer
+                    send.XferID.Packet |= (uint)0x80000000; // This signals the final packet
+                }
+                upload.Transferred += transferSize;
 
                 lock (Transfers)
                 {
@@ -1150,8 +1157,9 @@ namespace OpenMetaverse
                     Transfers[upload.ID] = upload;
                 }
             }
-            else if ((send.XferID.Packet + 1) * 1000 < upload.Size)
+            else if ((upload.Transferred + 1000) < upload.Size)
             {
+                // this uses at least 1000 in length
                 // This packet is somewhere in the middle of the transfer, or a perfectly
                 // aligned packet at the end of the transfer
                 send.DataPacket.Data = new byte[1000];
@@ -1161,9 +1169,10 @@ namespace OpenMetaverse
             else
             {
                 // Special handler for the last packet which will be less than 1000 bytes
-                int lastlen = upload.Size - ((int)send.XferID.Packet * 1000);
+                //was int lastlen = upload.Size - ((int)send.XferID.Packet * 1000);
+                int lastlen = upload.Size - upload.Transferred;
                 send.DataPacket.Data = new byte[lastlen];
-                Buffer.BlockCopy(upload.AssetData, (int)send.XferID.Packet * 1000, send.DataPacket.Data, 0, lastlen);
+                Buffer.BlockCopy(upload.AssetData, upload.Transferred, send.DataPacket.Data, 0, lastlen);
                 send.XferID.Packet |= (uint)0x80000000; // This signals the final packet
                 upload.Transferred += lastlen;
             }
