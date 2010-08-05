@@ -114,7 +114,7 @@ namespace CogbotRadegastPluginModule
             rchatConsole.btnSay.Enabled = true;
             //  rchatConsole.btnShout.Enabled = true;
             RadegastTab tab2 = RadegastInstance.TabConsole.GetTab("login");
-            tab2.AllowDetach = true;
+            if (tab2 != null) tab2.AllowDetach = true;
             //RadegastTab tab3 = RadegastInstance.TabConsole.GetTab("search");
             //tab3.Control = new METAbolt.SearchConsole(inst);
             var sc = new METAbolt.SearchConsole(inst)
@@ -123,6 +123,9 @@ namespace CogbotRadegastPluginModule
                 // Visible = false
             };
             tab = inst.TabConsole.AddTab("cogbotsearch", "CogbotSearch", sc);
+            tab.AllowClose = false;
+            tab.AllowDetach = true;
+
             clientManager.ProcessCommandArgs();
             new Thread(() =>
                            {

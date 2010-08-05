@@ -1271,10 +1271,20 @@ namespace OpenMetaverse
             }
         }
 
+
+        private readonly object TransferPacketHandlerLock = new object();
+        protected void TransferPacketHandler(object sender, PacketReceivedEventArgs e)
+        {
+            lock (TransferPacketHandlerLock)
+            {
+                TransferPacketHandler0(sender, e); 
+            } 
+        }
+
         /// <summary>Process an incoming packet and raise the appropriate events</summary>
         /// <param name="sender">The sender</param>
         /// <param name="e">The EventArgs object containing the packet data</param>
-        protected void TransferPacketHandler(object sender, PacketReceivedEventArgs e)
+        protected void TransferPacketHandler0(object sender, PacketReceivedEventArgs e)
         {
             TransferPacketPacket asset = (TransferPacketPacket)e.Packet;
             Transfer transfer;
@@ -1316,18 +1326,32 @@ namespace OpenMetaverse
                     }
                 }
 
+                int packetDataLen = asset.TransferData.Data.Length;
                 // This assumes that every transfer packet except the last one is exactly 1000 bytes,
-                // hopefully that is a safe assumption to make
+                int startPos = 1000 * asset.TransferData.Packet;
+                int bufferLen = download.AssetData.Length;
+                if ((startPos + packetDataLen) > bufferLen)
+                {
+                    int nextPacketDataLen = bufferLen - startPos;
+                    string stringFormat =
+                        String.Format(
+                            "nextPacketDataLen={0} TransferData.Data.Length={1}, startPos ={2} AssetData.Length={3}, TransferData.Packet={4}",
+                            nextPacketDataLen, packetDataLen, startPos, bufferLen, asset.TransferData.Packet);
+                    Logger.Log(stringFormat, Helpers.LogLevel.Error);
+                    if (nextPacketDataLen < 0) nextPacketDataLen = 0;
+                    packetDataLen = nextPacketDataLen;
+
+                }
+                // hopefully that is a safe assumption to make                
                 try
                 {
-                    Buffer.BlockCopy(asset.TransferData.Data, 0, download.AssetData, 1000 * asset.TransferData.Packet,
-                        asset.TransferData.Data.Length);
-                    download.Transferred += asset.TransferData.Data.Length;
+                    Buffer.BlockCopy(asset.TransferData.Data, 0, download.AssetData, startPos, packetDataLen);
+                    download.Transferred += packetDataLen;
                 }
                 catch (ArgumentException)
                 {
-                    Logger.Log(String.Format("TransferPacket handling failed. TransferData.Data.Length={0}, AssetData.Length={1}, TransferData.Packet={2}",
-                        asset.TransferData.Data.Length, download.AssetData.Length, asset.TransferData.Packet), Helpers.LogLevel.Error);
+                    Logger.Log(String.Format("TransferPacket handling failed. TransferData.Data.Length={0}, startPos ={1} AssetData.Length={2}, TransferData.Packet={3}",
+                        packetDataLen, startPos, bufferLen, asset.TransferData.Packet), Helpers.LogLevel.Error);
                     return;
                 }
 

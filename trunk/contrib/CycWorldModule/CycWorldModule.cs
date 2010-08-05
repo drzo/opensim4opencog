@@ -10,7 +10,7 @@ namespace CycWorldModule
     {
         private void InvokeGUI(Action action)
         {
-            client.InvokeGUI(() => { lock (oneInstanceLock) action(); });
+            client.InvokeGUI(() => { action(); });
         }
 
         internal SimCyclifier cyclifier;
@@ -31,16 +31,21 @@ namespace CycWorldModule
             : base(_parent)
         {
             client = _parent;
+            bool startIt = false;
             lock (oneInstanceLock)
                 if (CycModule == null)
                 {
-                    InvokeGUI(InitInstance);
+                    CycModule = this;
+                    startIt = true;
+                } else
+                {
+                    Console.WriteLine("\n\n\nStaring more than one CycModule?!");
                 }
+            if (startIt) InvokeGUI(InitInstance);
         }
 
         private void InitInstance()
         {
-            CycModule = this;
             client.ClientManager.AddTool(client, "CycWorldModule", "CycWorldModule", ShowCycForm);
             cyclifier = new SimCyclifier(this);
             client.WorldSystem.OnAddSimObject += cyclifier.World_OnSimObject;
@@ -52,6 +57,7 @@ namespace CycWorldModule
         {
             get
             {
+                if (cycConnectionForm != null && !cycConnectionForm.IsDisposed) return cycConnectionForm;
                 lock (oneInstanceLock)
                 {
                     if (cycConnectionForm == null || cycConnectionForm.IsDisposed)
