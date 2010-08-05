@@ -1550,6 +1550,7 @@ app -->
       <Reference name="LookingGlass.Comm"/>
       <Reference name="LookingGlass.Framework"/>
       <Reference name="LookingGlass.World"/>
+      <Reference name="LookingGlass.World.LL"/>
       <Reference name="LookingGlass.Rest"/>
       <Reference name="HttpServer.dll" localCopy="false"/>
       <Reference name="OpenMetaverse"/>
