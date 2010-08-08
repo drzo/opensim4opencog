@@ -23,6 +23,8 @@ using RTParser.Variables;
 using RTParser.Web;
 using UPath = RTParser.Unifiable;
 using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
+using LAIR.ResourceAPIs.WordNet;
+using LAIR.Collections.Generic;
 
 namespace RTParser
 {
@@ -91,8 +93,8 @@ namespace RTParser
         public bool StaticLoader = true;
 
         public static string AIMLDEBUGSETTINGS =
-            "clear +*";
-        //"clear -spam +user +error +aimltrace +cyc -dictlog -tscore +loaded";
+        //    "clear +*";
+        "clear -spam +user +error +aimltrace +cyc -dictlog -tscore +loaded";
         public static readonly TextFilter LoggedWords = new TextFilter() { "+*" };//, "-dictlog" }; //maybe should be ERROR", "STARTUP
         public User LastUser;
         public User BotAsUser;
@@ -462,6 +464,16 @@ namespace RTParser
                 return HostSystem.Combine(RuntimeDirectory, this.GlobalSettings.grabSetting("logdirectory"));
             }
         }
+        /// <summary>
+        /// The directory to look in for the WordNet3 files
+        /// </summary>
+        public string PathToWordNet
+        {
+            get
+            {
+                return HostSystem.Combine(RuntimeDirectory, this.GlobalSettings.grabSetting("wordnetdirectory"));
+            }
+        }
 
         /// <summary>
         /// The number of categories this Proccessor has in its graphmaster "brain"
@@ -517,6 +529,8 @@ namespace RTParser
 
         public Stack<string> conversationStack = new Stack<string>();
         public Hashtable wordAttributeHash = new Hashtable();
+        public WordNetEngine wordNetEngine; // = new WordNetEngine(HostSystem.Combine(Environment.CurrentDirectory, this.GlobalSettings.grabSetting("wordnetdirectory")), true);
+       
 
         /// <summary>
         /// If set to false the input from AIML files will undergo the same normalization process that
@@ -786,6 +800,10 @@ namespace RTParser
                         writeToLog("Loaded Corpus Bigrams: '{0}'", file);
                     }
                 }
+                Console.WriteLine("*** Start WN-Load ***");
+                wordNetEngine = new WordNetEngine(PathToWordNet, true);
+                Console.WriteLine("*** DONE WN-Load ***");
+
             }
             finally
             {
