@@ -5,6 +5,7 @@
 using System;
 using System.Windows.Forms;
 using cogbot;
+using MushDLR223.Utilities;
 
 namespace CycWorldModule.DotCYC
 {
@@ -86,7 +87,7 @@ namespace CycWorldModule.DotCYC
             }
             catch (Exception ee)
             {
-                Console.WriteLine(""+ee);
+                DLRConsole.DebugWriteLine("" + ee);
                 SimCyclifier.Trace();
                 txtCycOutput.Text = ee.ToString();
             }

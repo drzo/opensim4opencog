@@ -732,7 +732,7 @@ namespace CogbotRadegastPluginModule
             try
             {
                 if (str == null) return;
-                if (args != null && args.Length > 0) str = String.Format(str, args);
+                str = String.Format(str, args);
                 str = str.Trim();
                 if (str == "") return;
 
@@ -784,7 +784,7 @@ namespace CogbotRadegastPluginModule
                                                                              }
                                                                              catch (Exception e)
                                                                              {
-                                                                                 Console.WriteLine("" + e);
+                                                                                 DLRConsole.DebugWriteLine("" + e);
                                                                                  // probably dead anyway ...
                                                                              }
                                                                          })));

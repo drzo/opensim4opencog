@@ -571,7 +571,7 @@ namespace TheSimiansModule
                                                         }
                                                         catch (Exception e)
                                                         {
-                                                            Console.WriteLine("" + e);
+                                                            DLRConsole.DebugWriteLine("" + e);
                                                         }
                                                     }
                                          ));

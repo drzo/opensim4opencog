@@ -2,6 +2,7 @@
 using cogbot;
 using cogbot.Listeners;
 using CycWorldModule.DotCYC;
+using MushDLR223.Utilities;
 using Radegast;
 
 namespace CycWorldModule
@@ -39,7 +40,7 @@ namespace CycWorldModule
                     startIt = true;
                 } else
                 {
-                    Console.WriteLine("\n\n\nStaring more than one CycModule?!");
+                    DLRConsole.DebugWriteLine("\n\n\nStaring more than one CycModule?!");
                 }
             if (startIt) InvokeGUI(InitInstance);
         }
@@ -50,7 +51,7 @@ namespace CycWorldModule
             cyclifier = new SimCyclifier(this);
             client.WorldSystem.OnAddSimObject += cyclifier.World_OnSimObject;
             client.AddBotMessageSubscriber(cyclifier.eventFilter);
-            Console.WriteLine("CycWorldModule Loaded");
+            DLRConsole.DebugWriteLine("CycWorldModule Loaded");
         }
 
         public CycConnectionForm CycConnectionForm

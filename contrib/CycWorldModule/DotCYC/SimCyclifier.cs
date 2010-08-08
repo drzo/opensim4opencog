@@ -194,7 +194,7 @@ namespace CycWorldModule.DotCYC
             cycAccess = cycConnection.getCycAccess();
             if (cycAccess == null)
             {
-                Console.WriteLine("No Cyc connection");
+                DLRConsole.DebugWriteLine("No Cyc connection");
                 return;
             }
             genlPreds = C("genlPreds");
@@ -2432,7 +2432,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
                 args = new object[] { s };
                 s = "{0}";
             }
-            Console.WriteLine(string.Format("[SimCyclifier] {0}", s), args);
+            DLRConsole.DebugWriteLine(string.Format("[SimCyclifier] {0}", s), args);
         }
 
         static internal void Exception(Exception e)

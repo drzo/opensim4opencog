@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Windows.Forms;
+using MushDLR223.Utilities;
 using OpenMetaverse;
 using Radegast;
 
@@ -124,7 +125,7 @@ namespace CogbotRadegastPluginModule
                 }
                 catch (Exception exception)
                 {
-                    Console.WriteLine("" + exception);
+                    DLRConsole.SystemWriteLine(exception);
                 }
             }
             if (handlerDelegate != null)

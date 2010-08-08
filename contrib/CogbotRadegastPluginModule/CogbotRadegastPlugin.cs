@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using cogbot;
 using cogbot.Listeners;
 using cogbot.TheOpenSims;
+using MushDLR223.Utilities;
 using OpenMetaverse;
 using Radegast;
 //using RadegastTab = Radegast.SleekTab;
@@ -147,7 +148,7 @@ namespace CogbotRadegastPluginModule
             }
             if (chatConsole == null)
             {
-                Console.WriteLine(str,args);
+                DLRConsole.SystemWriteLine(str, args);
             }
             else
             {
