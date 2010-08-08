@@ -1,0 +1,17 @@
+C:\dev\WordNet.net\WordNet\obj\Debug\ResolveAssemblyReference.cache
+C:\dev\Cogbot2010-07-20\lib\WordNet.net\WordNet\obj\Debug\ResolveAssemblyReference.cache
+C:\dev\Cogbot2010-07-20\lib\WordNet.net\WordNet\bin\Debug\LAIR.ResourceAPIs.WordNet.XML
+C:\dev\Cogbot2010-07-20\lib\WordNet.net\WordNet\bin\Debug\LAIR.ResourceAPIs.WordNet.dll
+C:\dev\Cogbot2010-07-20\lib\WordNet.net\WordNet\bin\Debug\LAIR.ResourceAPIs.WordNet.pdb
+C:\dev\Cogbot2010-07-20\lib\WordNet.net\WordNet\bin\Debug\LAIR.GraphViz.dll
+C:\dev\Cogbot2010-07-20\lib\WordNet.net\WordNet\bin\Debug\LAIR.MachineLearning.dll
+C:\dev\Cogbot2010-07-20\lib\WordNet.net\WordNet\bin\Debug\LAIR.XML.dll
+C:\dev\Cogbot2010-07-20\lib\WordNet.net\WordNet\bin\Debug\MySql.Data.dll
+C:\dev\Cogbot2010-07-20\lib\WordNet.net\WordNet\bin\Debug\LAIR.GraphViz.xml
+C:\dev\Cogbot2010-07-20\lib\WordNet.net\WordNet\bin\Debug\LAIR.Collections.xml
+C:\dev\Cogbot2010-07-20\lib\WordNet.net\WordNet\bin\Debug\LAIR.Extensions.xml
+C:\dev\Cogbot2010-07-20\lib\WordNet.net\WordNet\bin\Debug\LAIR.XML.xml
+C:\dev\Cogbot2010-07-20\lib\WordNet.net\WordNet\bin\Debug\LAIR.MachineLearning.xml
+C:\dev\Cogbot2010-07-20\lib\WordNet.net\WordNet\bin\Debug\LAIR.IO.xml
+C:\dev\Cogbot2010-07-20\lib\WordNet.net\WordNet\obj\Debug\LAIR.ResourceAPIs.WordNet.dll
+C:\dev\Cogbot2010-07-20\lib\WordNet.net\WordNet\obj\Debug\LAIR.ResourceAPIs.WordNet.pdb
