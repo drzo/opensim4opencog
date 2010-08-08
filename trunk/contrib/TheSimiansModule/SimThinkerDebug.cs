@@ -7,6 +7,7 @@ using System.Threading;
 using System.Windows.Forms;
 using cogbot;
 using MushDLR223.ScriptEngines;
+using MushDLR223.Utilities;
 using Exception=System.Exception;
 using String=System.String;
 
@@ -51,7 +52,7 @@ namespace TheSimiansModule
             }
             catch (Exception e)
             {
-                Console.WriteLine("" + e);
+                DLRConsole.DebugWriteLine("" + e);
             }
         }
 
@@ -68,7 +69,7 @@ namespace TheSimiansModule
             }
             catch (Exception e)
             {
-                Console.WriteLine("" + e);
+                DLRConsole.DebugWriteLine("" + e);
             }
         }
 
@@ -164,7 +165,7 @@ namespace TheSimiansModule
             }
             catch (Exception e)
             {
-                Console.WriteLine("" + e);
+                DLRConsole.DebugWriteLine("" + e);
             }
         }
 
@@ -184,7 +185,7 @@ namespace TheSimiansModule
             }
             catch (Exception e)
             {
-                Console.WriteLine("" + e);
+                DLRConsole.DebugWriteLine("" + e);
                 // probably dead anyway ...
             }
             return;

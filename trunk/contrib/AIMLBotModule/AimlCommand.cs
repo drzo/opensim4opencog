@@ -6,6 +6,7 @@ using cogbot;
 using cogbot.Actions;
 using cogbot.Listeners;
 using MushDLR223.ScriptEngines;
+using MushDLR223.Utilities;
 using RTParser;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
@@ -39,7 +40,7 @@ namespace AIMLBotModule
                             if (v.MyBot != null) return v;
                         }
                     Thread.Sleep(3000);
-                    Console.WriteLine("waiting on " + mn);
+                    DLRConsole.DebugWriteLine("waiting on " + mn);
                 }
             }
         }
@@ -135,17 +136,17 @@ namespace AIMLBotModule
         public void SetUser(string user)
         {
             string setUser;
-            Console.WriteLine("<- SetUser=" + user + " lastKnownUser=" + lastKnownUser);
+            DLRConsole.DebugWriteLine("<- SetUser=" + user + " lastKnownUser=" + lastKnownUser);
             if (RTPBot.UnknowableName(user))
             {
                 if (RTPBot.UnknowableName(lastKnownUser))
                 {
-                    Console.WriteLine("THEREFORE Same persom with still unknown name (make one up)");
+                    DLRConsole.DebugWriteLine("THEREFORE Same persom with still unknown name (make one up)");
                     setUser = lastKnownUser = UNKNOWN_PARTENER;
                 }
                 else
                 {
-                    Console.WriteLine("THEREFORE New Person with unknown name");
+                    DLRConsole.DebugWriteLine("THEREFORE New Person with unknown name");
                     setUser = lastKnownUser = user;
                 }
             }
@@ -153,7 +154,7 @@ namespace AIMLBotModule
             {
                 if (RTPBot.UnknowableName(lastKnownUser))
                 {
-                    Console.WriteLine("THEREFORE Same Person now known name");
+                    DLRConsole.DebugWriteLine("THEREFORE Same Person now known name");
                     WorldSystemModule.RenameUser(lastKnownUser, user);
                     setUser = lastKnownUser = user;
                 }
@@ -161,20 +162,20 @@ namespace AIMLBotModule
                 {
                     if (WorldSystemModule.SameUser(lastKnownUser, user))
                     {
-                        Console.WriteLine("THEREFORE Different Person with known name");
+                        DLRConsole.DebugWriteLine("THEREFORE Different Person with known name");
                         setUser = user;
                         lastKnownUser = user;
                     }
                     else
                     {
-                        Console.WriteLine("THEREFORE New Person with known name");
+                        DLRConsole.DebugWriteLine("THEREFORE New Person with known name");
                         setUser = user;
                         lastKnownUser = user;
                     }
                 }
             }
             user = setUser;
-            Console.WriteLine("-> SetUser=" + user + " lastKnownUser=" + lastKnownUser);
+            DLRConsole.DebugWriteLine("-> SetUser=" + user + " lastKnownUser=" + lastKnownUser);
             WorldSystemModule.SetDefaultUser(user);
         }
     }
@@ -199,7 +200,7 @@ namespace AIMLBotModule
                 return;
             }
             string aimlCall = string.Format("SimEvent {0} {1}", evt.GetVerb(), argsListString(evt.GetArgs()));
-            //Console.WriteLine(aimlCall);
+            //DLRConsole.DebugWriteLine(aimlCall);
             //Result r = AimlBot.Chat(aimlCall,"EventSystem");
         }
 

@@ -265,12 +265,6 @@ namespace AIMLBotModule
                     SimEventSubscriber evtSub = new AIMLEventSubscriber(MyBot, this);
                     client.AddBotMessageSubscriber(evtSub);
                 }
-                while (false)
-                {
-                    Console.Write("You: ");
-                    string input = Console.ReadLine();
-                    WriteLine("RTPBot: " + AIMLInterp(input, MyUser));
-                }
             }
             catch (Exception e)
             {
@@ -420,12 +414,12 @@ namespace AIMLBotModule
         public void AIML_OnInstantMessage(object sender, InstantMessageEventArgs e)
         {
             var im = e.IM;
-            Console.WriteLine("InstantMessage=" + im.Dialog);
-            //Console.WriteLine("FromAgentID=" + WorldSystem.GetObject(im.FromAgentID));
+            DLRConsole.DebugWriteLine("InstantMessage=" + im.Dialog);
+            //DLRConsole.DebugWriteLine("FromAgentID=" + WorldSystem.GetObject(im.FromAgentID));
             object toObject = WorldSystem.GetObject(im.ToAgentID);
-            //if (toObject!=null) Console.WriteLine("ToAgentID=" + toObject.GetType());
+            //if (toObject!=null) DLRConsole.DebugWriteLine("ToAgentID=" + toObject.GetType());
             object sessionObject = WorldSystem.GetObject(im.IMSessionID);
-            //if (sessionObject != null) Console.WriteLine("SessionID=" + sessionObject.GetType());            
+            //if (sessionObject != null) DLRConsole.DebugWriteLine("SessionID=" + sessionObject.GetType());            
 
 
             if (im.Dialog == InstantMessageDialog.StartTyping || im.Dialog == InstantMessageDialog.StopTyping)
@@ -836,7 +830,7 @@ namespace AIMLBotModule
             }
             else
             {
-                Console.WriteLine("cant even get a Enqueue! " + MethodInfo.GetCurrentMethod());
+                DLRConsole.DebugWriteLine("cant even get a Enqueue! " + MethodInfo.GetCurrentMethod());
             }
         }
 
@@ -1019,7 +1013,7 @@ namespace AIMLBotModule
             }
             if (MyBot == null)
             {
-                Console.WriteLine(GetModuleName() + ": not Bot is instenaced yet!!");
+                DLRConsole.DebugWriteLine(GetModuleName() + ": not Bot is instenaced yet!!");
                 return "";
             }
             Request r = new AIMLbot.Request(input, myUser, MyBot, null);
@@ -1063,7 +1057,7 @@ namespace AIMLBotModule
             }
             if (MyBot == null)
             {
-                Console.WriteLine(GetModuleName() + ": not Bot is instenaced yet!!");
+                DLRConsole.DebugWriteLine(GetModuleName() + ": not Bot is instenaced yet!!");
                 return "";
             }
             Request r = new AIMLbot.Request(input, myUser, MyBot, null);
@@ -1235,7 +1229,7 @@ namespace AIMLBotModule
         private bool MyBotNullWarning()
         {
             if (MyBot != null) return false;
-            Console.WriteLine("WARNING! MyBOt NULL");
+            DLRConsole.DebugWriteLine("WARNING! MyBOt NULL");
             client.WriteLine("WARNING! MyBOt NULL");
             return true;
         }

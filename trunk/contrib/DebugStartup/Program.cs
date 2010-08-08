@@ -1,24 +1,16 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
-using AIMLbot;
+using System.Windows.Forms;
 using cogbot;
-using cogbot.Actions;
-using cogbot.Utilities;
 using CommandLine;
-using CommandLine.Utility;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
-using OpenMetaverse;
 using Radegast;
-using System.Windows.Forms;
-using RTParser;
 using SbsSW.SwiPlCs;
-using User = RTParser.User;
 
 namespace ABuildStartup
 {
@@ -36,12 +28,6 @@ namespace ABuildStartup
         public static void Main()
         {
             string[] use = Environment.GetCommandLineArgs() ?? new string[0];
-
-            if (ClientManager.MainThread == null)
-            {
-                ClientManager.MainThread = Thread.CurrentThread;
-                NativeMethods.AllocConsole();
-            }
 
             if (use.Length > 0)
             {
@@ -113,7 +99,7 @@ namespace ABuildStartup
         static public void FilteredWriteLine(string str, params object[] args)
         {
 
-            OutputDelegate del = new OutputDelegate(ClientManager.Real ?? Console.WriteLine);
+            OutputDelegate del = new OutputDelegate(ClientManager.Real ?? DLRConsole.DebugWriteLine);
             if (ClientManager.Filter == null)
             {
                 ClientManager.Filter = new OutputDelegate(del);
@@ -143,22 +129,25 @@ namespace ABuildStartup
             {
                 ClientManager.MainThread = Thread.CurrentThread;
             }
-            Arguments arguments = new Arguments(args);
+            ClientManager.arguments = new Parser(args);
             string[] oArgs;
-            if (arguments.GetAfter("--aiml", out oArgs))
+            if (ClientManager.arguments.GetAfter("--aiml", out oArgs))
             {
                 string[] newArgs = oArgs;
+                AllocConsole();
                 DoAndExit(() => RTParser.RTPBot.Main(args));
             }
-            if (arguments.GetAfter("--swipl", out oArgs))
+            if (ClientManager.arguments.GetAfter("--swipl", out oArgs))
             {
                 string[] newArgs = oArgs;
+                AllocConsole();
                 DoAndExit(() => PrologClient.Main(newArgs));
             }
-            if (arguments.GetAfter("--main", out oArgs))
+            if (ClientManager.arguments.GetAfter("--main", out oArgs))
             {
                 string[] newArgs = oArgs;
-                string c = arguments["--main"];
+                AllocConsole();
+                string c = ClientManager.arguments["--main"];
                 DoAndExit(() =>
                               {
                                   Type t = Type.GetType(c, false, false);
@@ -174,28 +163,49 @@ namespace ABuildStartup
                                   }
                               });
             }
-            if (arguments.GetWithout("--noconfig", out oArgs))
+            if (ClientManager.arguments.GetWithout("--noconfig", out oArgs))
             {
-                arguments = new Arguments(oArgs);
-                cogbot.ClientManager.NoLoadConfig = true;
-                //cogbot.ClientManager.consoleDelegate = FilteredWriteLine;
+                ClientManager.arguments = new Parser(oArgs);
+                ClientManager.NoLoadConfig = true;
+            }
+            if (ClientManager.arguments.GetWithout("--console", out oArgs))
+            {
+                ClientManager.dosBox = true;
+                ClientManager.arguments = new Parser(oArgs);
+            }
+            if (ClientManager.arguments.GetWithout("--nogui", out oArgs))
+            {
+                ClientManager.noGUI = true;
             }
 
-            bool noRadgast = arguments.GetWithout("--nogui", out oArgs);
+            MainProgram.CommandLine = new Radegast.CommandLine();
+            ClientManager.arguments = new Parser(oArgs);
+
+            if (ClientManager.dosBox) AllocConsole();
+
             DoAndExit(() =>
                           {
-                              string[] newArgs = oArgs;
-                              cogbot.ClientManager.arguments = new Arguments(newArgs);
-                              if (noRadgast)
+                              if (ClientManager.noGUI)
                               {
-                                  cogbot.Program.Main(newArgs);
+                                  ClientManager.UsingRadgastFromCogbot = true;
+                                  cogbot.Program.Main(oArgs);
                               }
                               else
                               {
-                                  RadegastMain(args);
+                                  ClientManager.UsingCogbotFromRadgast = true;
+                                  RadegastMain(oArgs);
                               }
                           });
 
+        }
+
+        public static void AllocConsole()
+        {
+            if (!ClientManager.AllocedConsole)
+            {
+                ClientManager.AllocedConsole = true;
+                NativeMethods.AllocConsole();
+            }
         }
 
         /// <summary>
@@ -212,10 +222,10 @@ namespace ABuildStartup
         {
             // Read command line options
             Radegast.CommandLine CommandLine = MainProgram.CommandLine = new Radegast.CommandLine();
-            CommandLineParser parser = new CommandLineParser(new CommandLineParserSettings(Console.Error));
+            CommandLineParser parser = new CommandLineParser(new CommandLineParserSettings(DLRConsole.Out));
             if (!parser.ParseArguments(args, MainProgram.CommandLine))
             {
-                Environment.Exit(1);
+              //  Environment.Exit(1);
             }
 
             // Change current working directory to Radegast install dir
@@ -230,16 +240,16 @@ namespace ABuildStartup
             // See if we only wanted to display list of grids
             if (CommandLine.ListGrids)
             {
-                Console.WriteLine(CommandLine.GetHeader());
-                Console.WriteLine();
+                DLRConsole.SystemWriteLine(CommandLine.GetHeader());
+                DLRConsole.SystemWriteLine();
                 Radegast.GridManager grids = instance.GridManger;
-                Console.WriteLine("Use Grid ID as the parameter for --grid");
-                Console.WriteLine("{0,-25} - {1}", "Grid ID", "Grid Name");
-                Console.WriteLine("========================================================");
+                DLRConsole.SystemWriteLine("Use Grid ID as the parameter for --grid");
+                DLRConsole.SystemWriteLine("{0,-25} - {1}", "Grid ID", "Grid Name");
+                DLRConsole.SystemWriteLine("========================================================");
 
                 for (int i = 0; i < grids.Count; i++)
                 {
-                    Console.WriteLine("{0,-25} - {1}", grids[i].ID, grids[i].Name);
+                    DLRConsole.SystemWriteLine("{0,-25} - {1}", grids[i].ID, grids[i].Name);
                 }
 
                 Environment.Exit(0);
