@@ -203,7 +203,7 @@ namespace MushDLR223.Virtualization
 
         internal static void writeToLog(string message, params object[] args)
         {
-            Console.WriteLine("HostSystem: " + message, args);
+            DLRConsole.DebugWriteLine("HostSystem: " + message, args);
         }
 
         internal static void writeToLog(Exception exception)

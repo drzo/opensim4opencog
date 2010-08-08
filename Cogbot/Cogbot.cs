@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
-using CommandLine.Utility;
 using MushDLR223.ScriptEngines;
+using MushDLR223.Utilities;
 using OpenMetaverse;
 using System.IO;
-using OpenSim.Framework.Console;
 using Radegast;
 using Settings=OpenMetaverse.Settings;
+using Console = MushDLR223.Utilities.DLRConsole;
 
 
 namespace cogbot
@@ -18,7 +18,7 @@ namespace cogbot
     {
         private static void Usage()
         {
-            Console.WriteLine("Usage: " + Environment.NewLine +
+            DLRConsole.SystemWriteLine("Usage: " + Environment.NewLine +
                     "cogbot.exe --first firstname --last lastname --pass password [--loginuri=\"uri\"] [--startpos \"sim/x/y/z\"] [--master \"master name\"] [--masterkey \"master uuid\"] [--gettextures] [--scriptfile \"filename\"]");
         }
 
@@ -28,13 +28,21 @@ namespace cogbot
             internal static extern Boolean AllocConsole();
         }
 
-        public static ConsoleBase consoleBase;
+        public static DLRConsole consoleBase;
 
 
         [STAThread]
         public static void Main(string[] args)
         {
-            NativeMethods.AllocConsole();
+            ClientManager.UsingCogbotFromRadgast = false;
+            ClientManager.UsingRadgastFromCogbot = true;
+
+            if (!ClientManager.AllocedConsole)
+            {
+                ClientManager.AllocedConsole = true;
+                NativeMethods.AllocConsole();
+            }
+
             if (ClientManager.MainThread == null)
             {
                 ClientManager.MainThread = Thread.CurrentThread;
@@ -43,10 +51,8 @@ namespace cogbot
            // Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-            ClientManager.UsingCogbotFromRadgast = false;
-            ClientManager.UsingRadgastFromCogbot = true;
-            ClientManager.arguments = new Arguments(args);
-            consoleBase = new ConsoleBase("textform");
+            ClientManager.arguments = new Parser(args);
+            consoleBase = new DLRConsole("textform");
             ClientManager manager = new ClientManager();
             manager.outputDelegate = new OutputDelegate(WriteLine);
             if (!manager.ProcessCommandArgs())
@@ -63,8 +69,8 @@ namespace cogbot
             try
             {
                 if (color != ConsoleColor.White)
-                    System.Console.ForegroundColor = color;
-                Console.WriteLine(format, args);
+                    DLRConsole.SystemForegroundColor = color;
+                DLRConsole.SystemWriteLine(format, args);
             }
             finally
             {
@@ -73,8 +79,8 @@ namespace cogbot
         }
         public string CmdPrompt(string p)
         {
-            Console.Write(p);
-            Console.Out.Flush();
+            Console.SystemWrite(p);
+            Console.SystemFlush();
             return Console.ReadLine();
         }
 
@@ -88,13 +94,13 @@ namespace cogbot
                     {
                         args = new object[] { str };
                         str = "{0}";
-                    } 
-                    Console.WriteLine(str, args);
+                    }
+                    DLRConsole.SystemWriteLine(str, args);
                 }
                 catch (FormatException)
                 {
 
-                    Console.WriteLine(str);
+                    DLRConsole.SystemWriteLine(str);
                 }      
                 return;
             }
@@ -118,12 +124,12 @@ namespace cogbot
             {
                 try
                 {
-                    Console.WriteLine("[" + sender + "] " + str, args);
+                    DLRConsole.SystemWriteLine("[" + sender + "] " + str, args);
                 }
                 catch (FormatException)
                 {
 
-                    Console.WriteLine("[" + sender + "] " + str);
+                    DLRConsole.SystemWriteLine("[" + sender + "] " + str);
                 }
                 return;
             }

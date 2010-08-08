@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using cogbot.Listeners;
 using cogbot.ScriptEngines;
+using MushDLR223.Utilities;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 
@@ -368,7 +369,7 @@ namespace cogbot.TheOpenSims
                 var o = Parameters[i];
                 if (o.Value is Vector3)
                 {
-                    //Console.WriteLine("Got v3 in {0}", this);
+                    //DLRConsole.WriteLine("Got v3 in {0}", this);
                 }
                 object key = o;
 
@@ -380,7 +381,7 @@ namespace cogbot.TheOpenSims
 
                 if (v == null)
                 {
-                    Console.WriteLine("Got null in {0}", this);
+                    DLRConsole.DebugWriteLine("Got null in {0}", this);
                 }
 
                 // we already nave a good name

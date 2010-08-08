@@ -96,7 +96,7 @@ namespace cogbot.Listeners
 
         public void Inventory_OnScriptRunning(object sender, ScriptRunningReplyEventArgs e)
         {
-            Console.WriteLine("On-Script-Running ObjectID: {0} ItemID: {1} IsMono: {2} IsRunning: {3}", e.ObjectID, e.ScriptID, e.IsMono, e.IsRunning);
+            WriteLine("On-Script-Running ObjectID: {0} ItemID: {1} IsMono: {2} IsRunning: {3}", e.ObjectID, e.ScriptID, e.IsMono, e.IsRunning);
         }
 
         /// <summary>
@@ -138,7 +138,7 @@ namespace cogbot.Listeners
                                               if (GetScriptRunning(ScriptHolder.ID, ib.UUID))
                                               {
                                                   SetScriptRunning(ScriptHolder.ID, ib.UUID, false);
-                                                  Console.WriteLine(String.Format("{0}", GetScriptRunning(ScriptHolder.ID, ib.UUID)));
+                                                  WriteLine(String.Format("{0}", GetScriptRunning(ScriptHolder.ID, ib.UUID)));
                                               }
                                               break;
                                           }

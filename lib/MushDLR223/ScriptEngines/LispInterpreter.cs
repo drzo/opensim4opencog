@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using MushDLR223.Utilities;
 
 namespace MushDLR223.ScriptEngines
 {
@@ -46,7 +47,7 @@ namespace MushDLR223.ScriptEngines
         {
 
             StringReader stringCodeReader = new StringReader(cmd);
-            object lispCode = Read("ReadFromString" + GetType(), stringCodeReader, Console.WriteLine);
+            object lispCode = Read("ReadFromString" + GetType(), stringCodeReader, DLRConsole.DebugWriteLine);
             if (Eof(lispCode))
                 return lispCode;
             return lispCode;

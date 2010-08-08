@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using MushDLR223.Utilities;
 using OpenMetaverse;
 using System.Reflection;
 using OpenMetaverse.Assets;
@@ -45,7 +46,7 @@ namespace cogbot.Listeners
                 {
                     if (o==null)
                     {
-                        Console.WriteLine("bd args in " + eventName);
+                        DLRConsole.SystemWriteLine("bd args in " + eventName);
                     }
                 }
 

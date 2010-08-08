@@ -11,6 +11,7 @@ using cogbot.Actions;
 using cogbot.ScriptEngines;
 using cogbot.TheOpenSims;
 using MushDLR223.ScriptEngines;
+using MushDLR223.Utilities;
 using OpenMetaverse;
 using cogbot.Listeners;
 
@@ -143,7 +144,7 @@ namespace cogbot.Utilities
             }
             catch (Exception e)
             {
-                Console.WriteLine("" + e);
+                DLRConsole.SystemWriteLine("" + e);
             }
 
         }

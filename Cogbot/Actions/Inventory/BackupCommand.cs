@@ -163,7 +163,7 @@ namespace cogbot.Actions.SimExport
         void bwQueueRunner_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             QueueWorker = null;
-            Console.WriteLine(BackgroundBackupStatus);
+            WriteLine(BackgroundBackupStatus);
         }
 
         void bwQueueRunner_DoWork(object sender, DoWorkEventArgs e)
@@ -217,7 +217,7 @@ namespace cogbot.Actions.SimExport
 
         void bwBackup_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            Console.WriteLine(Name + ": Inventory walking thread done.");
+            WriteLine(Name + ": Inventory walking thread done.");
             BackupWorker = null;
         }
 
@@ -332,7 +332,7 @@ namespace cogbot.Actions.SimExport
                     else
                     {
                         TextItemErrors++;
-                        Console.WriteLine("{0}: Download of asset {1} ({2}) failed with status {3}", Name, r.FileName,
+                        WriteLine("{0}: Download of asset {1} ({2}) failed with status {3}", Name, r.FileName,
                             r.AssetID.ToString(), asset.Status.ToString());
                     }
 

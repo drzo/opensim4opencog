@@ -500,10 +500,10 @@ namespace cogbot.TheOpenSims
                     {
                         if (prim.ID != ID)
                         {
-                            Console.WriteLine("\n Different UUID! {0}", prim);
+                            DLRConsole.SystemWriteLine("\n Different UUID! {0}", prim);
                         }
                         _primRefs.Add(prim);
-                        //Console.WriteLine("\n Different prims {0}", prim);
+                        //DLRConsole.WriteLine("\n Different prims {0}", prim);
                     }
                 }
                 lock (HasPrimLock) _Prim0 = prim;
@@ -1320,7 +1320,7 @@ namespace cogbot.TheOpenSims
                 {
                     needUpdate = true;
                     if (RegionHandle == 0) RegionHandle = Prim.RegionHandle;
-                    // Console.WriteLine("Reselecting prim " + Prim);
+                    // DLRConsole.WriteLine("Reselecting prim " + Prim);
                     Simulator sim = GetSimulator();
                     if (sim != null)
                         WorldObjects.EnsureSelected(Prim.LocalID, sim);

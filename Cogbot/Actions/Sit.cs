@@ -69,7 +69,7 @@ namespace cogbot.Actions.Movement
             //if (Client.Self.SittingOn != 0 || sittingOnGround)
             // return ("$bot is already sitting.");
 
-            string on = args.prepPhrases["on"];
+            string on = args["on"];
             if (on.Length == 0)
             {
                 on = String.Join(" ", args.tokens);

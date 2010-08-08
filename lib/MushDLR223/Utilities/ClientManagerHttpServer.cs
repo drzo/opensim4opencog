@@ -40,7 +40,7 @@ namespace MushDLR223.Utilities
                 }
             } catch(Exception e)
             {
-                Console.WriteLine("" + e);
+                DLRConsole.DebugWriteLine("" + e);
                 Server.LogInfo("WriteLine exception" + e);
             }
         }

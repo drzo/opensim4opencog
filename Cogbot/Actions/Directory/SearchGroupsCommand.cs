@@ -63,12 +63,12 @@ namespace cogbot.Actions.Search
             {
                 foreach (DirectoryManager.GroupSearchData group in e.MatchedGroups)
                 {
-                    Console.WriteLine("Group {1} ({0}) has {2} members", group.GroupID, group.GroupName, group.Members);
+                    WriteLine("Group {1} ({0}) has {2} members", group.GroupID, group.GroupName, group.Members);
                 }
             }
             else
             {
-                Console.WriteLine("Didn't find any groups that matched your query :(");
+                WriteLine("Didn't find any groups that matched your query :(");
             }
             waitQuery.Set();
         }        

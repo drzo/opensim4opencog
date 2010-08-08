@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
@@ -7,7 +8,7 @@ using System.Threading;
 using cogbot.Actions.Agent;
 using cogbot.ScriptEngines;
 using cogbot.Utilities;
-using CommandLine.Utility;
+using log4net.Core;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using OpenMetaverse;
@@ -45,12 +46,10 @@ namespace cogbot
         }
 
 
-        public static readonly Dictionary<string, string> DefaultSettings = new Dictionary<string, string>();
-
         public static void addSetting(string name, string value)
         {
             name = name.ToLower().Replace(" ", "_");
-            DefaultSettings[name] = value;
+            arguments[name] = value;
         }
 
 
@@ -58,7 +57,7 @@ namespace cogbot
         {
             name = name.ToLower().Replace(" ", "_");
             string value = null;
-            if (DefaultSettings.TryGetValue(name, out value))
+            if (arguments.TryGetValue(name, out value))
             {
                 return value;
             }
@@ -155,6 +154,7 @@ namespace cogbot
                 }
                 SingleInstance = this;                
             }
+            DLRConsole.AddOutput(new OutputDelegateWriter(VeryRealWriteLine));
             config = new Configuration();
             config.loadConfig();
             DefaultAccount.LoadFromConfig(config);
@@ -784,6 +784,7 @@ namespace cogbot
 
         public static string KeyFromName(string first, string last)
         {
+            if (first == null && last == null) return "no-user";
             string bn = string.Format("{0} {1}", first.ToLower(), last.ToLower());
             return bn;
         }
@@ -846,7 +847,7 @@ namespace cogbot
         public static bool UsingRadgastFromCogbot = false;
         public bool StarupLispCreatedBotClients;
         public static bool IsVisualStudio;
-        public static Arguments arguments;
+        public static Parser arguments;
         public static bool DoNotCreateBotClientsFromLispScript = false;
 
         /// <summary>
@@ -980,6 +981,7 @@ namespace cogbot
                         if (inst == null) inst = Radegast.RadegastInstance.GlobalInstance;
                         gc = inst.Client;
                     }
+                    SetDebugConsole(inst);
                 }
                 
                 
@@ -1060,8 +1062,39 @@ namespace cogbot
             }
         }
 
+        public void SetDebugConsole(RadegastInstance inst)
+        {
+            if (inst==null) return;
+            if (TheDebugConsoleRTB == null)
+            {
+                SetDebugConsole(inst.TabConsole.GetTab("debug"));
+                if (TheDebugConsoleRTB == null)
+                {
+                    SetDebugConsole(inst.TabConsole.GetTab("cogbot"));
+                    if (TheDebugConsoleRTB == null) SetDebugConsole(inst.TabConsole.GetTab("chat"));
+                }
+            }
+        }
+        public void SetDebugConsole(RadegastTab tab)
+        {
+            if (tab == null) return;
+            var dc = tab.Control as DebugConsole;
+            if (dc != null)
+            {
+                TheDebugConsoleRTB = dc.rtbLog;
+                return;
+            }
+            var dc2 = tab.Control as ChatConsole;
+            if (dc2 != null)
+            {
+                TheDebugConsoleRTB = dc2.rtbChat;
+                return;
+            }
+        }
+
         private void EnsureMainForm(RadegastInstance instance)
         {
+            SetDebugConsole(instance);            
             var mf = instance.MainForm;
             if (!mf.IsHandleCreated)
             {
@@ -1140,7 +1173,51 @@ namespace cogbot
         public static Thread MainThread;
 
         public static OutputDelegate Filter = null;
-        public static OutputDelegate Real = Console.WriteLine;
+        public static OutputDelegate Real = DLRConsole.SystemWriteLine;
+
+        public static RichTextBox TheDebugConsoleRTB = null;
+        public static bool AllocedConsole;
+        public static bool dosBox;
+        public static bool noGUI;
+
+        private static void VeryRealWriteLine(string s, object[] args)
+        {
+            string str = string.Format(s, args);
+            VeryRealWriteLine_Log(Color.Green, "", "", str);
+        }
+
+        public static void VeryRealWriteLine_Log(Color color, string timeStamp, string named, string mesg)
+        {
+            RichTextBox rtbLog = TheDebugConsoleRTB;
+            if (rtbLog==null)
+            {
+                var O = Console.Out;
+                if (O==null) return;
+                O.WriteLine(mesg);
+                return;
+            }
+            if (rtbLog.InvokeRequired)
+            {
+                if (rtbLog.IsHandleCreated)
+                    rtbLog.BeginInvoke(new MethodInvoker(() => VeryRealWriteLine_Log(color, timeStamp, named, mesg)));
+                return;
+            }
+            rtbLog.SelectionColor = Color.FromKnownColor(KnownColor.WindowText);
+            if (!String.IsNullOrEmpty(timeStamp))
+            {
+                rtbLog.AppendText(string.Format("{0} ", timeStamp));
+            }
+            if (!String.IsNullOrEmpty(named))
+            {
+                rtbLog.AppendText("[");
+                rtbLog.SelectionColor = color;
+                rtbLog.AppendText(named);
+                rtbLog.SelectionColor = Color.FromKnownColor(KnownColor.WindowText);
+                rtbLog.AppendText("]: - ");
+            }
+            rtbLog.AppendText(string.Format("{0}{1}", mesg, Environment.NewLine));
+        }
+
         public OutputDelegate outputDelegate
         {
             get

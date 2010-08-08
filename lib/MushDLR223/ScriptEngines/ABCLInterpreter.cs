@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading;
 using System.IO;
 using System.Reflection;
+using MushDLR223.Utilities;
 using org.armedbear.lisp;
 
 namespace MushDLR223.ScriptEngines
@@ -27,7 +28,7 @@ namespace MushDLR223.ScriptEngines
             {
                 Condition cond = (Condition)args[0];
                 String s = "DESC:\r\n" + cond.getDescription().writeToString() + "\r\nMESG:\r\n" + cond.getMessage() + "\r\nRPRT:\r\n" + cond.getConditionReport() + "\r\n";
-                System.Console.WriteLine(s);
+                DLRConsole.DebugWriteLine(s);
                // if (true) return previous.execute(args);
                 if (args[0] is UndefinedFunction)
                 {
@@ -211,19 +212,6 @@ namespace MushDLR223.ScriptEngines
             Lisp.eval(new Cons(Symbol.LOAD, new Cons(new SimpleString(p), Lisp.NIL)));
         }
 
-        internal void WriteText(string p)
-        {
-            Console.Write(p);
-     //       for (int i = 0; i < chars.Length; i++)
-       //     {
-         //       WriteLine.WriteByte((byte)chars[i]);
-           // }
-           // if (ironTextBoxControl != null)
-           // {
-             //   ironTextBoxControl.WriteText(p);
-           // }
-        }
-
         internal void ExecuteToConsole(string command)
         {
             getInterpreter();
@@ -288,7 +276,7 @@ namespace MushDLR223.ScriptEngines
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.ToString());
+                WriteLine(e.ToString());
                 return Lisp.EOF;
             }
         }
@@ -389,7 +377,7 @@ namespace MushDLR223.ScriptEngines
             Package pkg = CurrentPackage();
             String ns = ci.getName();
             if (!useClassname(ns)) return;
-            Console.WriteLine("; importing " + p + " as " + ns );
+            WriteLine("; importing " + p + " as " + ns );
             java.lang.reflect.Field[] fi = ci.getFields();
             for (int i = 0; i < fi.Length; i++)
             {
@@ -407,10 +395,10 @@ namespace MushDLR223.ScriptEngines
                 {
                     old = pkg.intern(new SimpleString(fname));
                     needsClear = true;
-                   // Console.WriteLine(";;; skip field " + fname + " for " + f);
+                   // WriteLine(";;; skip field " + fname + " for " + f);
                   //  continue;
                 }
-                Console.WriteLine(";;; field " + fname + " for " + f);
+                WriteLine(";;; field " + fname + " for " + f);
                 Symbol sfm = Intern(fname, null, exceptFor, f.getType(), maxDepth-1);// IkvmSite.fieldToInstanceSymbol(fname, pkg, s, f);
                 if (needsClear) sfm.setSymbolValue(null);
 
@@ -445,10 +433,10 @@ namespace MushDLR223.ScriptEngines
                 }
                 if (old != null)
                 {
-                    Console.WriteLine(";;; skip method " + fname + " for " + m);
+                    WriteLine(";;; skip method " + fname + " for " + m);
                     continue;
                 }
-                Console.WriteLine(";;; method " + p + " as " + fname + " to " + m);
+                WriteLine(";;; method " + p + " as " + fname + " to " + m);
                 //LispObject sfm = IkvmSite.methodToInstanceSymbol(fname, pkg, s, m);
             }
         }
@@ -464,7 +452,7 @@ namespace MushDLR223.ScriptEngines
         {
             //ClientManager.debugLevel = 2;
             getInterpreter();
-            Console.WriteLine("ABCL EVAL: " + ToStr(p));
+            WriteLine("ABCL EVAL: " + ToStr(p));
             try
             {
                 if (p is LispObject) return Lisp.eval((LispObject)p);
@@ -472,7 +460,7 @@ namespace MushDLR223.ScriptEngines
 
             catch (Exception e)
             {
-                Console.WriteLine(e.ToString());
+                WriteLine(e.ToString());
             }
             return p;
         }
@@ -586,7 +574,7 @@ namespace MushDLR223.ScriptEngines
 
         internal LispObject makeVariable(LispObject lispObject)
         {
-            Console.WriteLine("faking " + lispObject);
+            WriteLine("faking " + lispObject);
             return lispObject;
             //throw new Exception("The method or operation is not implemented.");
         }

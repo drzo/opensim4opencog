@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using DotLisp;
+using MushDLR223.Utilities;
 using OpenMetaverse.StructuredData;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
@@ -88,7 +89,7 @@ namespace cogbot.Listeners
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine("" + e);
+                        DLRConsole.DebugWriteLine("" + e);
                     }
                 }
             }
@@ -109,7 +110,7 @@ namespace cogbot.Listeners
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("" + e);
+                    DLRConsole.DebugWriteLine("" + e);
                 }
             }
             return dict;

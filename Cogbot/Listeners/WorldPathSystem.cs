@@ -86,8 +86,8 @@ namespace cogbot.Listeners
                     occUpdate++;
                     if (occUpdate % 100 == 0)
                     {
-                        Console.Write("." + occUpdate);
-                        Console.Out.Flush();
+                        DLRConsole.SystemWrite("." + occUpdate);
+                        DLRConsole.SystemFlush();
                     }
                     if (RealMeshes >= MaxMeshes || !WorldObjects.MaintainCollisions) break;
                 }
@@ -101,12 +101,12 @@ namespace cogbot.Listeners
 
         private static void Debug(string p)
         {
-            Console.WriteLine(p);
+            DLRConsole.SystemWriteLine(p);
         }
 
         private void Error(string p)
         {
-            Console.WriteLine(p);
+            DLRConsole.SystemWriteLine(p);
             throw new NotImplementedException();
         }
 

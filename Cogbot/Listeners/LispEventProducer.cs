@@ -7,6 +7,7 @@ using DotLisp;
 using System.Reflection;
 using System.Reflection.Emit;
 using MushDLR223.ScriptEngines;
+using MushDLR223.Utilities;
 
 namespace cogbot.Listeners
 {
@@ -125,7 +126,7 @@ namespace cogbot.Listeners
                 //t.InvokeMember("Interval", BindingFlags.SetProperty, null, timer, new Object[] { 1000 });
                 //t.InvokeMember("Enabled", BindingFlags.SetProperty, null, timer, new Object[] { true });
 
-               // Console.WriteLine("Press the Enter key to end the program.");
+               // DLRConsole.WriteLine("Press the Enter key to end the program.");
                 //Console.ReadLine();
 
 
@@ -199,7 +200,7 @@ namespace cogbot.Listeners
             string prefix = "client." +t.Name.Replace("Manager", "");
             foreach (var eventInfo in t.GetEvents())
             {
-                Console.WriteLine(prefix + "." + eventInfo.Name + "+=Invoke;");
+                DLRConsole.SystemWriteLine(prefix + "." + eventInfo.Name + "+=Invoke;");
                 //LispDelegate newLispDelegate = new LispDelegate(this, manager, eventInfo);
                 //eventInfo.AddEventHandler(manager, newLispDelegate.GetDelegate()); //psuedocode
             }
@@ -272,8 +273,8 @@ namespace cogbot.Listeners
             }
             catch (Exception e)
             {
-                Console.WriteLine(eval);
-                Console.WriteLine("Caused: " + e);
+                DLRConsole.SystemWriteLine(eval);
+                DLRConsole.SystemWriteLine("Caused: " + e);
             }
             return true;
         }

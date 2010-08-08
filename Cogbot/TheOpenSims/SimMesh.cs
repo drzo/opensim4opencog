@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using cogbot.Listeners;
+using MushDLR223.Utilities;
 using OpenMetaverse;
 using PathSystem3D.Mesher;
 using PathSystem3D.Navigation;
@@ -187,7 +188,7 @@ namespace cogbot.TheOpenSims
                     int b = InnerBoxes.Count;
                     InnerBoxes = Box3Fill.Simplify((List<Box3Fill>)InnerBoxes);
                     if (b>3000)
-                     Console.Write("Simplfy mesh {0} -> {1} ", b, InnerBoxes.Count + " " + OuterBox.Mass + " " + this.GetObjectName());
+                        DLRConsole.SystemWrite("Simplfy mesh {0} -> {1} ", b, InnerBoxes.Count + " " + OuterBox.Mass + " " + this.GetObjectName());
                 }
                 AddPos(Position);
             }
@@ -458,7 +459,7 @@ namespace cogbot.TheOpenSims
 
         private static void Error(string s, string sculptDataString)
         {
-            Console.WriteLine(s + " " + sculptDataString);
+            DLRConsole.SystemWriteLine(s + " " + sculptDataString);
         }
 
 

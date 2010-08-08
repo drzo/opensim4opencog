@@ -20,7 +20,7 @@ namespace MushDLR223.Utilities
         private string lastOutput = "xoxoxoxoxoxoxoxoxoxoxoxoxdo";
         public void writeDebugLine(OutputDelegate console, string message, params object[] args)
         {
-            console = console ?? Console.WriteLine;
+            console = console ?? DLRConsole.SystemWriteLine;
             try
             {
                 bool printIt;
@@ -56,7 +56,7 @@ namespace MushDLR223.Utilities
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                DLRConsole.DebugWriteLine("" + e);
                 console(message + " --> " + e);
             }
         }
@@ -202,12 +202,12 @@ namespace MushDLR223.Utilities
         public static OutputDelegate CheckOutput(OutputDelegate od)
         {
             if (od != null) return od;
-            TextWriter tw = Console.Out ?? Console.Error;
+            TextWriter tw = DLRConsole.Out ?? Console.Out ?? Console.Error;
             if (tw != null)
             {
                 return tw.WriteLine;
             }
-            return Console.WriteLine;
+            return DLRConsole.SystemWriteLine;
             od = (new StringWriter()).WriteLine;
             return od;
         }
@@ -270,7 +270,7 @@ namespace MushDLR223.Utilities
                 }
                 if (ss == "list" || ss == "")
                 {
-                    Console.WriteLine("{0} Count={1}", collection, collection.Count);
+                    DLRConsole.SystemWriteLine("{0} Count={1}", collection, collection.Count);
                     foreach (var s in collection)
                     {
                         console(String.Format(" {0}", s));
@@ -445,7 +445,7 @@ namespace MushDLR223.Utilities
 
         public static string ReadLineFromInput(OutputDelegate outputDelegate, string prompt)
         {
-            TextWriter w = (Console.Out ?? Console.Error) ?? new StringWriter();
+            TextWriter w = (DLRConsole.Out ?? (Console.Out ?? Console.Error) ?? new StringWriter());
             MethodInfo rm = null;
             object ro = null;       
             if (outputDelegate != null)
@@ -469,7 +469,7 @@ namespace MushDLR223.Utilities
 
             if (rm == null)
             {
-                TextReader r = Console.In;
+                TextReader r = DLRConsole.In;
                 if (r == null)
                 {
                     outputDelegate("SYSTEM: No Input");

@@ -46,7 +46,7 @@ namespace cogbot.Actions.Search
             //sb.AppendFormat("   Location: {0}/{1}/{2}" + System.Environment.NewLine, e.MatchedEvent.SimName, x, y);
             //sb.AppendFormat("       Date: {0}" + System.Environment.NewLine, e.MatchedEvent.Date);
             //sb.AppendFormat("Description: {0}" + System.Environment.NewLine, e.MatchedEvent.Desc);
-            Console.WriteLine(sb.ToString());
+            WriteLine(sb.ToString());
             Client.Directory.EventInfoReply -= Directory_EventDetails;
         }
     }

@@ -1,16 +1,11 @@
-    using System;
-    using System.Collections;
-    using System.Collections.Generic;
-    using System.Configuration;
-    using System.Threading;
-using cogbot.Actions;
+using System;
+using System.Collections;
+using System.Collections.Generic;
 using cogbot.TheOpenSims;
-    using MushDLR223.Utilities;
-    using OpenMetaverse;
-using cogbot.Utilities;
-    using PathSystem3D.Navigation;
-using cogbot.ScriptEngines;
 using MushDLR223.ScriptEngines;
+using MushDLR223.Utilities;
+using OpenMetaverse;
+using PathSystem3D.Navigation;
 
 namespace cogbot.Listeners
 {

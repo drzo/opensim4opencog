@@ -2,6 +2,7 @@
 using System.IO;
 using System.Collections.Generic;
 using System.Threading;
+using MushDLR223.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using MushDLR223.ScriptEngines;
@@ -71,8 +72,8 @@ namespace cogbot.Actions.Estate
             }
             else
             {
-                //Console.WriteLine("Progress: {0}/{1} {2}/{3} {4}", upload.XferID, upload.ID, upload.Transferred, upload.Size, upload.Success);
-                Console.Write(".");
+                //DLRConsole.WriteLine("Progress: {0}/{1} {2}/{3} {4}", upload.XferID, upload.ID, upload.Transferred, upload.Size, upload.Success);
+                DLRConsole.SystemWrite(".");
             }
         }
 

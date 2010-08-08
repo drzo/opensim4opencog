@@ -89,12 +89,12 @@ namespace cogbot.Actions.Agent
 
         void Groups_OnGroupJoined(object sender, GroupOperationEventArgs e)
         {
-            Console.WriteLine(Client.ToString() + (e.Success ? " joined " : " failed to join ") +
+            WriteLine(Client.ToString() + (e.Success ? " joined " : " failed to join ") +
                 e.GroupID.ToString());
 
             if (e.Success)
             {
-                Console.WriteLine(Client.ToString() + " setting " + e.GroupID.ToString() +
+                WriteLine(Client.ToString() + " setting " + e.GroupID.ToString() +
                     " as the active group");
                 Client.Groups.ActivateGroup(e.GroupID);
             }

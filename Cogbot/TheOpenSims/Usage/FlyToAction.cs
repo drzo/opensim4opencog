@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using MushDLR223.Utilities;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 
@@ -116,7 +117,7 @@ namespace cogbot.TheOpenSims
                     if (!Target.IsRegionAttached)
                     {
                         EndFlyto();
-                        Console.WriteLine("" + this + " Not regions attached " + Target);
+                        DLRConsole.SystemWriteLine("" + this + " Not regions attached " + Target);
                         Thread.Sleep(2000);
                         return;
                     }

@@ -6,6 +6,7 @@ using System.Threading;
 using System.IO;
 using System.Collections;
 using MushDLR223.ScriptEngines;
+using MushDLR223.Utilities;
 using OpenMetaverse;
 using System.Reflection;
 using cogbot.TheOpenSims;
@@ -44,9 +45,9 @@ namespace cogbot.ScriptEngines
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine("!Exception: " + e.GetBaseException().Message);
-                        Console.WriteLine("error occured: " + e.Message);
-                        Console.WriteLine("        Stack: " + e.StackTrace.ToString());
+                        DLRConsole.SystemWriteLine("!Exception: " + e.GetBaseException().Message);
+                        DLRConsole.SystemWriteLine("error occured: " + e.Message);
+                        DLRConsole.SystemWriteLine("        Stack: " + e.StackTrace.ToString());
                     }
                     Thread.Sleep(5);
                 }
@@ -61,13 +62,13 @@ namespace cogbot.ScriptEngines
             try
             {
                 StringReader stringCodeReader = new System.IO.StringReader(lispCode);
-                codeTree = taskInterperter.Read("enqueueLispEvent", stringCodeReader, Console.WriteLine);
+                codeTree = taskInterperter.Read("enqueueLispEvent", stringCodeReader, DLRConsole.SystemWriteLine);
                 if (taskInterperter.Eof(codeTree))
                     return null;
             }
             catch (Exception e)
             {
-                Console.WriteLine(lispCode + " -> " + e);
+                DLRConsole.SystemWriteLine(lispCode + " -> " + e);
                 return null;
             }
             return codeTree;
@@ -83,17 +84,17 @@ namespace cogbot.ScriptEngines
 
         public void enqueueLispEvent(string lispCode)
         {
-            Console.WriteLine(":: " + lispCode);
+            DLRConsole.SystemWriteLine(":: " + lispCode);
             try
             {
-                enqueueLispTask(taskInterperter.Read("enqueueLispEvent", new StringReader(lispCode), Console.WriteLine));
+                enqueueLispTask(taskInterperter.Read("enqueueLispEvent", new StringReader(lispCode), DLRConsole.DebugWriteLine));
             }
             catch (Exception e)
             {
-                Console.WriteLine("!Exception: " + e.GetBaseException().Message);
-                Console.WriteLine("error occured: " + e.Message);
-                Console.WriteLine("        Stack: " + e.StackTrace.ToString());
-                Console.WriteLine("     LispCode: " + lispCode);
+                DLRConsole.DebugWriteLine("!Exception: " + e.GetBaseException().Message);
+                DLRConsole.DebugWriteLine("error occured: " + e.Message);
+                DLRConsole.DebugWriteLine("        Stack: " + e.StackTrace.ToString());
+                DLRConsole.DebugWriteLine("     LispCode: " + lispCode);
             }
         }
 
@@ -414,10 +415,10 @@ namespace cogbot.ScriptEngines
             }
             catch (Exception e)
             {
-                Console.WriteLine("!Exception: " + e.GetBaseException().Message);
-                Console.WriteLine("error occured: " + e.Message);
-                Console.WriteLine("        Stack: " + e.StackTrace.ToString());
-                Console.WriteLine("     LispCode: " + codeString);
+                DLRConsole.SystemWriteLine("!Exception: " + e.GetBaseException().Message);
+                DLRConsole.SystemWriteLine("error occured: " + e.Message);
+                DLRConsole.SystemWriteLine("        Stack: " + e.StackTrace.ToString());
+                DLRConsole.SystemWriteLine("     LispCode: " + codeString);
             }
         }
 

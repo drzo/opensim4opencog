@@ -30,9 +30,9 @@ namespace cogbot.Actions.Movement
             SimPosition position;
             int argUsed;
 
-            if (args.prepPhrases["is"].Length != 0)
+            if (args["is"].Length != 0)
             {
-                position = WorldSystem.GetVector(Parser.ParseArguments(args.prepPhrases["is"]), out argUsed);
+                position = WorldSystem.GetVector(Parser.ParseArguments(args["is"]), out argUsed);
             }
             else
             {

@@ -88,15 +88,15 @@ namespace cogbot.Actions
 
 
 
-                if (args.prepPhrases["to"].Length > 0)
+                if (args["to"].Length > 0)
                 {
-                    if ((WorldSystem).tryGetAvatar(args.prepPhrases["to"], out avatar))
+                    if ((WorldSystem).tryGetAvatar(args["to"], out avatar))
                     {
                         WriteLine("Moving to person " + avatar.GetName() + ".");
                         AutoPilot(avatar.SimPosition, WriteLine);
                         return;
                     }
-                    else if ((WorldSystem).tryGetPrim(args.prepPhrases["to"], out prim))
+                    else if ((WorldSystem).tryGetPrim(args["to"], out prim))
                     {
                         WriteLine("Moving to object " + prim.Properties.Name + ".");
                         AutoPilot(prim.SimPosition, WriteLine);
@@ -104,7 +104,7 @@ namespace cogbot.Actions
                     }
                     else
                     {
-                        WriteLine("I don't know how to move to " + args.prepPhrases["to"] + ".");
+                        WriteLine("I don't know how to move to " + args["to"] + ".");
                         return;
                     }
                 }

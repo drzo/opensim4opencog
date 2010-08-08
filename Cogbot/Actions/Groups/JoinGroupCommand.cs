@@ -95,7 +95,7 @@ namespace cogbot.Actions.Groups
                 queryID = UUID.Zero;
                 if (e.MatchedGroups.Count < 1)
                 {
-                    Console.WriteLine("ERROR: Got an empty reply");
+                    WriteLine("ERROR: Got an empty reply");
                 }
                 else
                 {
@@ -108,10 +108,10 @@ namespace cogbot.Actions.Groups
                          * names present on the server, so we need to check each result.
                          * UUIDs of the matching groups are written on the console.
                          */
-                        Console.WriteLine("Matching groups are:\n");
+                        WriteLine("Matching groups are:\n");
                         foreach (DirectoryManager.GroupSearchData groupRetrieved in e.MatchedGroups)
                         {
-                            Console.WriteLine(groupRetrieved.GroupName + "\t\t\t(" +
+                            WriteLine(groupRetrieved.GroupName + "\t\t\t(" +
                                 Name + " UUID " + groupRetrieved.GroupID.ToString() + ")");
 
                             if (groupRetrieved.GroupName.ToLower() == groupName.ToLower())
@@ -132,7 +132,7 @@ namespace cogbot.Actions.Groups
 
         void Groups_OnGroupJoined(object sender, GroupOperationEventArgs e)
         {
-            Console.WriteLine(Client.ToString() + (e.Success ? " joined " : " failed to join ") + e.GroupID.ToString());
+            WriteLine(Client.ToString() + (e.Success ? " joined " : " failed to join ") + e.GroupID.ToString());
 
             /* A.Biondi 
              * This code is not necessary because it is yet present in the 
@@ -142,7 +142,7 @@ namespace cogbot.Actions.Groups
                 
             if (success)
             {
-                Console.WriteLine(Client.ToString() + " setting " + groupID.ToString() + " as the active group");
+                DLRConsole.WriteLine(Client.ToString() + " setting " + groupID.ToString() + " as the active group");
                 Client.Groups.ActivateGroup(groupID);
             }
                 

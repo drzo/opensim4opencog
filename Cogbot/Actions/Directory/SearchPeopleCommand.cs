@@ -64,12 +64,12 @@ namespace cogbot.Actions.Search
             {
                 foreach (DirectoryManager.AgentSearchData agent in e.MatchedPeople)
                 {
-                    Console.WriteLine("{0} {1} ({2})", agent.FirstName, agent.LastName, agent.AgentID);                   
+                    WriteLine("{0} {1} ({2})", agent.FirstName, agent.LastName, agent.AgentID);                   
                 }
             }
             else
             {
-                Console.WriteLine("Didn't find any people that matched your query :(");
+                WriteLine("Didn't find any people that matched your query :(");
             }
             waitQuery.Set();
         }

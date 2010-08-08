@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using MushDLR223.Utilities;
 using OpenMetaverse; //using libsecondlife;
 
 using MushDLR223.ScriptEngines;
@@ -29,12 +30,12 @@ namespace cogbot.Actions
                 if (args.Length == 0) return ShowUsage();
                 bool bake = true;
                 string wear = args.str.Trim();
-                if (args[0] == "nobake")
+                if (args.IsTrue("nobake"))
                 {
                     bake = false;
                     wear = wear.Substring(6).Trim();
                 }
-                if (args[0] == "test")
+                if (args.IsTrue("test"))
                 {
                     bake = true;
                     wear = wear.Substring(4).Trim();

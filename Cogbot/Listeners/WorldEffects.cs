@@ -172,7 +172,7 @@ namespace cogbot.Listeners
                 user.Parent = null;
                 user.LogEvent(SendPipelineEvent(new SimObjectEvent(updown, p, SimEventType.SIT, SimEventClass.REGIONAL, args)));
             }
-            //Console.WriteLine(user + " " + p + " " + ScriptEngines.ScriptEventListener.argsListString(args));
+            //DLRConsole.WriteLine(user + " " + p + " " + ScriptEngines.ScriptEventListener.argsListString(args));
         }
 
 

@@ -51,7 +51,7 @@ namespace cogbot.Actions.Groups
 
         void Groups_OnGroupLeft(object sender, GroupOperationEventArgs e)
         {
-            Console.WriteLine(Client.ToString() + (e.Success ? " has left group " : " failed to left group ") + e.GroupID.ToString());
+            WriteLine(Client.ToString() + (e.Success ? " has left group " : " failed to left group ") + e.GroupID.ToString());
 
             leftGroup = e.Success;
             GroupsEvent.Set();

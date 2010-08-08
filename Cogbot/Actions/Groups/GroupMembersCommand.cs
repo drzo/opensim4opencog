@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using MushDLR223.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using System.Text;
@@ -61,7 +62,7 @@ namespace cogbot.Actions.Groups
                     foreach (KeyValuePair<UUID, GroupMember> member in e.Members)
                         sb.AppendFormat("GroupMembers: MemberUUID {0}", member.Key.ToString()).AppendLine();
                 sb.AppendFormat("GroupMembers: MemberCount {0}", e.Members.Count).AppendLine();
-                Console.WriteLine(sb.ToString());
+                WriteLine(sb.ToString());
                 GroupsEvent.Set();
             } 
         }

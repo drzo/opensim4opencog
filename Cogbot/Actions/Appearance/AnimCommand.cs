@@ -141,7 +141,7 @@ namespace cogbot.Actions.Appearance
             if (NOSEARCH_ANIM)
             {
                 String str = string.Join(" ", args);
-                Console.WriteLine("ANIM ECHO " + str);
+                WriteLine("ANIM ECHO " + str);
                 Success("\nStart anim " + str + "\n");
             }
             return Success("Ran " + amins.Count + " amins");
