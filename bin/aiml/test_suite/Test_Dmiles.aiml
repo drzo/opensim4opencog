@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <aiml graph="default">
 
+
+  <learn uri="aiml/example_bot/" />
+  <genlMt name="chomskyAIML"/>
+  <learn graph="chomskyAIML" uri="aiml/chomskyAIML/" />
+
   <!--
   <category>
     <pattern>*</pattern>
@@ -185,4 +190,5 @@
   </category>
 
 </aiml>
+
 
