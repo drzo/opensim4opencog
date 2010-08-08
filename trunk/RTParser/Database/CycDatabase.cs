@@ -422,17 +422,18 @@ namespace RTParser.Database
         {
             Unifiable result = "(EVAL-SUBL " + cmd + ")";
             CycAccess access = GetCycAccess;
-            Console.Write(result);
-            Console.Out.Flush();
+            DLRConsole.SystemWrite(result);
+            DLRConsole.SystemFlush();
             if (!UseCyc)
             {
+                DLRConsole.SystemWriteLine("NOT USE CYC");
                 return null;// "NIL";
             }
             try
             {
                 string str = "(list " + cmd + ")";
                 Object oresult = access.converseList(str).first();
-                writeToLog(str + " => " + oresult);
+                DLRConsole.SystemWriteLine(str + " => " + oresult);
                 result = "" + oresult;
                 if (oresult is CycObject)
                 {
@@ -446,8 +447,8 @@ namespace RTParser.Database
             catch (Exception e)
             {
                 TheBot.writeToLog(e);
-                Console.WriteLine("\n" + e);
-                Console.Out.Flush();
+                DLRConsole.DebugWriteLine("\n" + e);
+                DLRConsole.SystemFlush();
                 return null;
             }
             return result;

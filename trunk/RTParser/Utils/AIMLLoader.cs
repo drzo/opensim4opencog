@@ -722,10 +722,10 @@ namespace RTParser.Utils
             try
             {
                 message = message.ToUpper();
-                Console.Out.Flush();
+                DLRConsole.SystemFlush();
                 if (message.Contains("ERROR") || message.Contains("WARN"))
                 {
-                    Console.Error.Flush();
+                    DLRConsole.SystemFlush();
 
                 }
             }

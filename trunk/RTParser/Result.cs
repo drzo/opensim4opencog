@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using MushDLR223.Utilities;
 using RTParser;
 using RTParser.Utils;
 using RTParser.Variables;
@@ -60,17 +61,16 @@ namespace RTParser
             {
                 return;
             }
-            var o = Console.Out;
             var queriesGetBindings = queries.GetBindings();
             foreach (SubQuery query in queriesGetBindings)
             {
                 if (IsTraced)
                 {
                     bot.writeChatTrace("AIMLTRACE SQ: " + query);
-                    o.Flush();
                 }
                 SubQueries.Add(query);
             }
+            DLRConsole.SystemFlush();
             Started = true;
         }
 

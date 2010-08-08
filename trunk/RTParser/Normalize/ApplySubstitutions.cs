@@ -1,6 +1,8 @@
 using System;
 using System.Text;
 using System.Text.RegularExpressions;
+using MushDLR223.ScriptEngines;
+using MushDLR223.Utilities;
 using RTParser.Variables;
 
 namespace RTParser.Normalize
@@ -77,15 +79,16 @@ namespace RTParser.Normalize
                     string testResult = Regex.Replace(result, match, replacement, RegexOptions.IgnoreCase);
                     if (false)
                     {
-                        Console.WriteLine("\n  SUBST :");
-                        Console.WriteLine("   R: '{0}'", result);
-                        Console.WriteLine("  PT: '{0}'", pattern);
-                        Console.WriteLine("   V: '{0}'", value);
-                        Console.WriteLine("  P2: '{0}'", p2);
-                        Console.WriteLine("   M: '{0}'", match);
-                        Console.WriteLine("  PR: '{0}'", replacement);
-                        Console.WriteLine("  RS: '{0}'", testResult);
-                        Console.WriteLine("  TS: '{0}'", testResult.Replace(marker, "").Replace(markerSP, " "));
+                        OutputDelegate to = DLRConsole.DebugWriteLine;
+                        to("\n  SUBST :");
+                        to("   R: '{0}'", result);
+                        to("  PT: '{0}'", pattern);
+                        to("   V: '{0}'", value);
+                        to("  P2: '{0}'", p2);
+                        to("   M: '{0}'", match);
+                        to("  PR: '{0}'", replacement);
+                        to("  RS: '{0}'", testResult);
+                        to("  TS: '{0}'", testResult.Replace(marker, "").Replace(markerSP, " "));
                     }
                     result = testResult;
                 }
