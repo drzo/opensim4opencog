@@ -39,8 +39,8 @@ main_loop:-repeat,main_loop1(Atom),catch(atom_to_term(Atom,Term,Vars),_,fail),
 % callInteractive(Term,V):-
 callInteractive(Term,Var):-callInteractive0(Term,Var).
 
-callInteractive0(Term,Var):-atom(Term),!,catch(((Term,writeln(called(Term)))),_,fail),!.
-callInteractive0(Term,_):-catch((call(Term),writeq(Term),nl,fail),_,fail).
+callInteractive0(Term,Var):-atom(Term),!,catch(((Term,writeln(called(Term)))),E,aiml_error(E)),!.
+callInteractive0(Term,_):-catch((call(Term),writeq(Term),nl,fail),E,aiml_error(E)).
 callInteractive0(Term,_):-!.
 
 % ===============================================================================================
@@ -68,12 +68,20 @@ list_replace(List,_Char,_Replace,List):-!.
 term_to_string(I,IS):- catch(string_to_atom(IS,I),_,(term_to_atom(I,A),string_to_atom(IS,A))),!.
 %well i played with a couple few differnt environment impls.. they have their pros cons.. one impl.. that was unique is that an array of "binding pairs" live in an arraylist.. to be "in" an environment it meant that you held an "index" into the arry list that as you went backwards you'd find your bindings.. each symbol had a java int field "lastBindingIndex" .. that was a "hint" to where you could fastforward the backwards search .. end named binding context also had a "index" to when you leave a named block.. you could quickly reset the top of an index.
 
-say(X):-format(user_output,'~q~n',X),flush_output(user_output).
+alicebot:-repeat,
+	read_line_with_nl(user,Codes,[]),
+	once((atom_codes(Atom,Codes),alicebot(Atom))),fail.
 
+say(X):-format(user_output,'~q~n',X),flush_output(user_output),fail.
+say(X):-aiml_eval(X,Calls),callEachList(Calls).
 
+callEachList(Calls):-member(C,Calls),callInteractive(once(call(C)),C),fail.
+callEachList(_Calls).
+
+alicebot(Input):- atom(Input),atom_concat('call ',Rest,Input),catch((atom_to_term(Rest,Term,Vars),ignore(callInteractive(Term,Vars))),_,true),!.
 alicebot(Input):-
    alicebot(Input,Resp),
-   say(Resp).
+   say(Resp),!.
 alicebot(Input):-say('-no response-').
 
 
@@ -278,6 +286,7 @@ degrade(OR):-asserta(degraded(OR)).
    
 
 :-['logicmoo_module_aiml_loader.pl'].
+:-['logicmoo_module_aiml_eval.pl'].
 
 %:-['bootstrap.aiml.pl'].
 

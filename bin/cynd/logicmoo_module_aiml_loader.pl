@@ -50,7 +50,9 @@ aiml_files(F,Files):-atom_concat(F,'/',WithSlashes),absolute_file_name(WithSlash
                     atom_concat(WithOneSlash,'/*.aiml',Mask),expand_file_name(Mask,Files).
 
 load_aiml_file(F):- exists_directory(F), aiml_files(F,Files),!,load_aiml_files(Files).
-load_aiml_file(F):- file_name_extension(F,'aiml',Aiml),create_aiml_file(Aiml).
+load_aiml_file(F):- exists_file(F), create_aiml_file(F).
+load_aiml_file(F):- file_name_extension(F,'aiml',Aiml), exists_file(Aiml),create_aiml_file(Aiml).
+load_aiml_file(F):- atom_concat('../',F,Again),load_aiml_file(Again).
 
 
 aimlOption(rebuild_Aiml_Files,true).
@@ -88,6 +90,10 @@ withAttributes(filelevel,ATTRIBS,Call):-
     debugOnFailureAiml(Call),
     debugOnFailureAiml(popAttributes(filelevel,ATTRIBS)),!.
 
+% ============================================
+% Loading content
+% ============================================
+
 load_aiml_structure(O):-atomic(O),!,writeq(load_aiml_structure(O)),nl.
 
 load_aiml_structure(element(aiml,ALIST,LIST)):-
@@ -97,31 +103,19 @@ load_aiml_structure(element(aiml,ALIST,LIST)):-
    debugOnFailureAiml(load_aiml_structure_list(LIST)),
    debugOnFailureAiml(popAttributes(filelevel,ATTRIBS)),!.
 
-load_aiml_structure(element(substitute,[name=Catalog, find=Find, replace=Replace],[])):-!,
-	 debugOnFailureAiml(load_aiml_structure(substitute(Catalog,Find,Replace))).
-load_aiml_structure(element(substitute,[name=Catalog, find=Find, replace=Replace],Stuff)):-!,
-	 debugOnFailureAiml(load_aiml_structure(substitute(Catalog,Find,Replace,Stuff))).
-
-load_aiml_structure(element(Tag,ALIST,INNER_XML)):- member(Tag,[topic]),
+load_aiml_structure(element(Tag,ALIST,INNER_XML)):- member(Tag,[topic,flags]),
    debugOnFailureAiml(replaceAttribute(name,Tag,ALIST,ATTRIBS)),
    debugOnFailureAiml(withAttributes(filelevel,ATTRIBS,load_aiml_structure_list(INNER_XML))).
 
-load_aiml_structure(element(Tag,ALIST,INNER_XML)):- member(Tag,[guard]),
+load_aiml_structure(element(Tag,ALIST,INNER_XML)):- cateMember(Tag),
    debugOnFailureAiml(replaceAttribute(name,Tag,ALIST,ATTRIBS)),
    debugOnFailureAiml(pushAttributes(filelevel,ATTRIBS)),
-   debugOnFailureAiml(pushAttributes(category,[guard=INNER_XML|ATTRIBS])).
+   debugOnFailureAiml(pushAttributes(category,[Tag=INNER_XML|ATTRIBS])).
 
 load_aiml_structure(element(Tag,ALIST,INNER_XML)):- member(Tag,[category]),
       debugOnFailureAiml(pushAttributes(filelevel,ALIST)),
       debugOnFailureAiml(load_category(element(Tag,ALIST,INNER_XML))),
       debugOnFailureAiml(popAttributes(filelevel,ALIST)),!.
-
-
-load_aiml_structure(substitute(Dict,Find,Replace)):-
-  debugOnFailureAiml((
-      convert_text(Find,F),convert_text(Replace,Resp),!,
-      load_aiml_structure(dict(Dict,F,Resp)))).
-
 
 load_aiml_structure(element(Tag,ALIST,LIST)):- tagType(Tag,immediate),!,
    debugOnFailureAiml(replaceAttribute(name,Tag,ALIST,ATTRIBS)),!,
@@ -136,6 +130,45 @@ load_aiml_structure(element(Tag,ALIST,PATTERN)):- once(convert_ele(element(Tag,A
   (ground(NEW);once(convert_ele(element(Tag,ALIST,PATTERN),_NEXT))), 
   debugOnFailureAiml(load_aiml_structure(NEW)),!.
 
+% ============================================
+% special dictionaries
+% ============================================
+
+% user/bot dictionaries
+load_aiml_structure(element(Tag,ALIST,LIST)):-member(Tag,[predicates,vars]),
+   debugOnFailureAiml(replaceAttribute(name,dictionary,ALIST,ATTRIBS)),!,
+   debugOnFailureAiml(pushAttributes(filelevel,ATTRIBS)),
+   debugOnFailureAiml(load_aiml_structure_list(LIST)),
+   debugOnFailureAiml(popAttributes(filelevel,ATTRIBS)),!.
+
+% user/bot dictionaries n/vs
+load_aiml_structure(element(Tag,ALIST,LIST)):-member(Tag,[predicate,var]),
+   debugOnFailureAiml(attributeValue(ALIST,[name,var],Name,error)),!,
+   debugOnFailureAiml(attributeValue(ALIST,[default,value],Value,LIST)),!,
+   debugOnFailureAiml(attributeValue(ALIST,['set-return'],SetReturn,value)),!,
+   peekNameValue(filelevel,dictionary,Dict),
+   load_aiml_structure(dict(Dict,Name,Value)),
+   load_aiml_structure(dict(setReturn(Dict),Name,Value)).
+
+
+% substitutions
+load_aiml_structure(element(substitute,[name=Catalog, find=Find, replace=Replace],[])):-!,
+	 debugOnFailureAiml(load_aiml_structure(substitute(Catalog,Find,Replace))).
+load_aiml_structure(element(substitute,[name=Catalog, find=Find, replace=Replace],Stuff)):-!,
+	 debugOnFailureAiml(load_aiml_structure(substitute(Catalog,Find,Replace,Stuff))).
+
+load_aiml_structure(substitute(Dict,Find,Replace)):-
+  debugOnFailureAiml((
+      convert_text(Find,F),convert_text(Replace,Resp),!,
+      load_aiml_structure(dict(Dict,F,Resp)))).
+
+% actual assertions
+load_aiml_structure(dict(Dict,Name,Value)):-
+      assertz(dict(Dict,Name,Value)),!.
+
+% ============================================
+% ERROR loading
+% ============================================
 load_aiml_structure(X):-aiml_error(load_aiml_structure(X)).
 %      saveFAttribute(F,A),
      % 
@@ -309,11 +342,12 @@ pushCateStack([]).
 %pushCateElement([]):-!.
 %pushCateElement(E):-ignore_aiml(E),!.
 
-pushCateElement(element(Tag,[],PATTERN)):-member(Tag,[topic,that,guard,pattern,template]),!,
+pushCateElement(element(Tag,[],PATTERN)):- cateMember(Tag),!,
   convert_template(PATTERN,DCG),
   pushAttributes(category,[Tag=DCG]),!.
 
-pushCateElement(element(Tag,ALIST,PATTERN)):-member(Tag,[pattern,template,that,guard]),
+
+pushCateElement(element(Tag,ALIST,PATTERN)):- cateMember(Tag),
       replaceAttribute(name,Tag,ALIST,ATTRIBS),!,
       convert_template(PATTERN,DCG),
       pushAttributes(category,ATTRIBS),
@@ -330,7 +364,7 @@ load_aiml_structure(element(Tag,ALIST,INNER_XML)):- member(Tag,[topic]),
 
 
 
-pushCateElement(element(Tag,ALIST,INNER_XML)):-member(Tag,[topic,that,guard]),
+pushCateElement(element(Tag,ALIST,INNER_XML)):- cateMember(Tag),
    replaceAttribute(name,Tag,ALIST,ATTRIBS),
    convert_attributes(ATTRIBS,CONV),
    pushAttributes(category,CONV),
@@ -346,7 +380,7 @@ pushCateElement(E):-aiml_error(pushCateElement(E)).
 
 clearCateStack:-dyn_retractall(attribDatabase(category,_,_)).
 
-popCateElements(CateO):- debugOnFailureAiml((grabAttributes([pattern,template,that,guard,topic],category,Cate),!,CateO=Cate)).
+popCateElements(CateO):- cateMemberTags(CATETAGS), debugOnFailureAiml((grabAttributes(CATETAGS,category,Cate),!,CateO=Cate)).
 
 popCateElements(CateO):-fail,
     popCateElements1(Cate1),popCateElements2(Cate2),append(Cate1,Cate2,Cate),!,CateO=Cate.
@@ -455,7 +489,7 @@ convert_ele(element(A, B, C),INNER_XML):-tagType(A, immediate),!,
       convert_name(A,AA),
       convert_attributes(B,BB),
       convert_template(C,CC),!,
-   (element(A, B, C) == element(AA, BB, CC) ->  INNER_XML=..[immediate,AA,BB,CC] ; convert_element(element(AA, BB, CC),INNER_XML)),!.
+   (element(A, B, C) == element(AA, BB, CC) ->  INNER_XML=..[element,AA,BB,CC] ; convert_element(element(AA, BB, CC),INNER_XML)),!.
 
 convert_ele(element(A, B, C),INNER_XML):-
       convert_name(A,AA),
@@ -485,12 +519,16 @@ defaultPredicates(N,V):-member(N,[username,botname]),V='*'.
 
 
 tagType(Tag,pushable):-cateFallback(LIST),member([Tag=_],LIST).
-tagType(Tag,insideCate):-tagType(Tag,requiredCate);tagType(Tag,optionalCate).
+tagType(Tag,insideCate):-cateMember(Tag).
 
 tagType(Tag,requiredCate):-member(Tag,[pattern,template]).
-tagType(Tag,optionalCate):-member(Tag,[topic,that,graph,guard,userdict]).
+tagType(Tag,optionalCate):-cateMember(Tag),not(tagType(Tag,requiredCate)).
 
-cateFallback([topic='*',that='*',graph='default',pattern='ERROR PATTERN',guard='*',template='ERROR TEMPLATE'|MORE]):-findall(N=V,defaultPredicates(N,V),MORE).
+
+cateMember(Tag):-cateMemberTags(List),member(Tag,List).
+cateMemberTags([graph,topic,that,pattern,flags,call,guard,template,userdict]).
+
+cateFallback([topic='*',call='true',flags='*',that='*',userdict='user',graph='default',pattern='ERROR PATTERN',guard='*',template='ERROR TEMPLATE'|MORE]):-findall(N=V,defaultPredicates(N,V),MORE).
 
 
 transform_aiml_structure(catagory,category,OldProps,OldProps,NEWPATTERN,NEWPATTERN).
@@ -527,7 +565,7 @@ substitutionDicts(gender).
 substitutionDicts(person).
 substitutionDicts(person2).
 substitutionDicts(person3).
-substitutionDicts(Dict):-evaluatorsDicts(Dict).
+%substitutionDicts(Dict):-evaluatorsDicts(Dict).
 
 %%:-abolish(attribDatabase/3).
 :-dyn_retractall(attribDatabase(_,_,_)).
@@ -541,7 +579,7 @@ substitutionDicts(Dict):-evaluatorsDicts(Dict).
 
 saveaimlCate:-tell(aimlCate),listing(aimlCate),told.
 
-do:-load_aiml_files,saveaimlCate.
+do:-load_aiml_files,saveaimlCate,alicebot.
 
 
 
