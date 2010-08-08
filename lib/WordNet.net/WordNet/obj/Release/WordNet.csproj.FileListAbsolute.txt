@@ -1,0 +1,11 @@
+C:\dev\NLPLibs.net\LAIR.ResourceAPIs.WordNet.dll
+C:\dev\NLPLibs.net\LAIR.ResourceAPIs.WordNet.pdb
+C:\dev\WordNet.net\WordNet\obj\Release\ResolveAssemblyReference.cache
+C:\dev\WordNet.net\WordNet\obj\Release\LAIR.ResourceAPIs.WordNet.dll
+C:\dev\WordNet.net\WordNet\obj\Release\LAIR.ResourceAPIs.WordNet.pdb
+C:\dev\NLPLibs.net\LAIR.ResourceAPIs.WordNet.XML
+C:\dev\Cogbot2010-07-20\lib\NLPLibs.net\LAIR.ResourceAPIs.WordNet.dll
+C:\dev\Cogbot2010-07-20\lib\NLPLibs.net\LAIR.ResourceAPIs.WordNet.pdb
+C:\dev\Cogbot2010-07-20\lib\WordNet.net\WordNet\obj\Release\ResolveAssemblyReference.cache
+C:\dev\Cogbot2010-07-20\lib\WordNet.net\WordNet\obj\Release\LAIR.ResourceAPIs.WordNet.dll
+C:\dev\Cogbot2010-07-20\lib\WordNet.net\WordNet\obj\Release\LAIR.ResourceAPIs.WordNet.pdb
