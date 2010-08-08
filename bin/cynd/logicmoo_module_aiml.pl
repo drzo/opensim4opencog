@@ -73,15 +73,14 @@ alicebot:-repeat,
 	once((atom_codes(Atom,Codes),alicebot(Atom))),fail.
 
 say(X):-format(user_output,'~q~n',X),flush_output(user_output),fail.
-say(X):-aiml_eval(X,Calls),callEachList(Calls).
+say(X):-eval_template(X).
 
-callEachList(Calls):-member(C,Calls),callInteractive(once(call(C)),C),fail.
+callEachList(Calls):-is_list(Calls),member(Cs,Calls),callEachList(Cs),fail.
+callEachList(C):-not(is_list(C)),callInteractive(once(call(C)),C),fail.
 callEachList(_Calls).
 
 alicebot(Input):- atom(Input),atom_concat('call ',Rest,Input),catch((atom_to_term(Rest,Term,Vars),ignore(callInteractive(Term,Vars))),_,true),!.
-alicebot(Input):-
-   alicebot(Input,Resp),
-   say(Resp),!.
+alicebot(Input):- alicebot(Input,Resp), say(Resp),!.
 alicebot(Input):-say('-no response-').
 
 
@@ -296,4 +295,4 @@ degrade(OR):-asserta(degraded(OR)).
 
 %:-main_loop.
 
-
+% :- tell(listing1),listing,told.

@@ -26,7 +26,7 @@ pp_listing(Pred):-functor(Pred,F,A),functor(FA,F,A),listing(F),nl,findall(NV,pre
 
 
 debugOnFailureAiml((A,B)):- !,debugOnFailureAiml(A),!,debugOnFailureAiml(B),!.
-debugOnFailureAiml(Call):- Ran=_, ignore( (catch(Call,E,(aiml_error(E))),Ran=yes) ; aiml_error(debugOnFailureAiml(Call)) ),!.
+debugOnFailureAiml(Call):- once( catch(Call,E,aiml_error(Call:E)) ; (trace,writeq(fail(Call))) ).
 
 % =================================================================================
 % AIML Loading
@@ -47,12 +47,12 @@ load_aiml_files(F):-atom(F),
 load_aiml_files(F):-atom(F),expand_file_name(F,FILES),!,load_aiml_files(FILES),!.
 
 aiml_files(F,Files):-atom_concat(F,'/',WithSlashes),absolute_file_name(WithSlashes,[relative_to('./')],WithOneSlash),
-                    atom_concat(WithOneSlash,'/*.aiml',Mask),expand_file_name(Mask,Files).
+                    atom_concat(WithOneSlash,'/*.aiml',Mask),expand_file_name(Mask,Files),!.
 
-load_aiml_file(F):- exists_directory(F), aiml_files(F,Files),!,load_aiml_files(Files).
-load_aiml_file(F):- exists_file(F), create_aiml_file(F).
-load_aiml_file(F):- file_name_extension(F,'aiml',Aiml), exists_file(Aiml),create_aiml_file(Aiml).
-load_aiml_file(F):- atom_concat('../',F,Again),load_aiml_file(Again).
+load_aiml_file(F):- exists_directory(F), aiml_files(F,Files),load_aiml_files(Files),!.
+load_aiml_file(F):- exists_file(F), create_aiml_file(F),!.
+load_aiml_file(F):- file_name_extension(F,'aiml',Aiml), exists_file(Aiml),create_aiml_file(Aiml),!.
+load_aiml_file(F):- atom_concat('../',F,Again),load_aiml_file(Again),!.
 
 
 aimlOption(rebuild_Aiml_Files,true).
@@ -70,25 +70,32 @@ create_aiml_file(F):-
 ifThen(When,Do):-When->Do;true.
 
 create_aiml_file(F):-
+  debugOnFailureAiml((
      Dofile = fail,
    atom_concat(F,'.pl',PLNAME),
    ifThen(Dofile,tell(PLNAME)),
    (format(user_error,'%~w~n',[F])),
-   load_structure(F,X,[dialect(xml),space(remove)]),!,
+   load_structure(F,X,[dialect(xml),space(remove)]),
    ATTRIBS = [filename=F],
-   pushAttributes(filelevel,ATTRIBS),!,
-   load_aiml_structure_list(X),!,
-   popAttributes(filelevel,ATTRIBS),!,
-   ifThen(Dofile,(told,[PLNAME])),!.
+   pushAttributes(filelevel,ATTRIBS),
+   load_aiml_structure_list(X),
+   popAttributes(filelevel,ATTRIBS),
+   ifThen(Dofile,(told,[PLNAME])))),!.
 
 
-load_aiml_structure_list([X|L]):-debugOnFailureAiml(load_aiml_structure(X)),!,debugOnFailureAiml(load_aiml_structure_list(L)),!.
-load_aiml_structure_list([]):-!.
+load_aiml_structure_list(L):-load_mapcar(load_aiml_structure,L).
+
+
+load_mapcar(Pred,[X|L]):-debugOnFailureAiml(call(Pred,X)),!,debugOnFailureAiml(load_mapcar(Pred,L)),!.
+load_mapcar(_Pred,[]):-!.
+
+
 
 withAttributes(filelevel,ATTRIBS,Call):-
-    debugOnFailureAiml(pushAttributes(filelevel,ATTRIBS)),
-    debugOnFailureAiml(Call),
-    debugOnFailureAiml(popAttributes(filelevel,ATTRIBS)),!.
+    debugOnFailureAiml((
+     pushAttributes(filelevel,ATTRIBS),
+     Call,
+     popAttributes(filelevel,ATTRIBS))),!.
 
 % ============================================
 % Loading content
@@ -97,78 +104,117 @@ withAttributes(filelevel,ATTRIBS,Call):-
 load_aiml_structure(O):-atomic(O),!,writeq(load_aiml_structure(O)),nl.
 
 load_aiml_structure(element(aiml,ALIST,LIST)):-
-   debugOnFailureAiml(ground(ALIST)),
-   debugOnFailureAiml(replaceAttribute(name,graph,ALIST,ATTRIBS)),!,
-   debugOnFailureAiml(pushAttributes(filelevel,ATTRIBS)),
-   debugOnFailureAiml(load_aiml_structure_list(LIST)),
-   debugOnFailureAiml(popAttributes(filelevel,ATTRIBS)),!.
+   debugOnFailureAiml((
+     ground(ALIST),
+     replaceAttribute(name,graph,ALIST,ATTRIBS),
+     pushAttributes(filelevel,ATTRIBS),
+     load_aiml_structure_list(LIST),
+     popAttributes(filelevel,ATTRIBS))),!.
 
 load_aiml_structure(element(Tag,ALIST,INNER_XML)):- member(Tag,[topic,flags]),
-   debugOnFailureAiml(replaceAttribute(name,Tag,ALIST,ATTRIBS)),
-   debugOnFailureAiml(withAttributes(filelevel,ATTRIBS,load_aiml_structure_list(INNER_XML))).
+   debugOnFailureAiml((
+     replaceAttribute(name,Tag,ALIST,ATTRIBS),
+     withAttributes(filelevel,ATTRIBS,load_aiml_structure_list(INNER_XML)))),!.
 
 load_aiml_structure(element(Tag,ALIST,INNER_XML)):- cateMember(Tag),
-   debugOnFailureAiml(replaceAttribute(name,Tag,ALIST,ATTRIBS)),
-   debugOnFailureAiml(pushAttributes(filelevel,ATTRIBS)),
-   debugOnFailureAiml(pushAttributes(category,[Tag=INNER_XML|ATTRIBS])).
+   debugOnFailureAiml((
+     replaceAttribute(name,Tag,ALIST,ATTRIBS),
+     pushAttributes(filelevel,ATTRIBS),
+     pushAttributes(category,[Tag=INNER_XML|ATTRIBS]))),!.
 
 load_aiml_structure(element(Tag,ALIST,INNER_XML)):- member(Tag,[category]),
-      debugOnFailureAiml(pushAttributes(filelevel,ALIST)),
-      debugOnFailureAiml(load_category(element(Tag,ALIST,INNER_XML))),
-      debugOnFailureAiml(popAttributes(filelevel,ALIST)),!.
+   debugOnFailureAiml((
+     pushAttributes(filelevel,ALIST),
+     load_category(element(Tag,ALIST,INNER_XML)),
+     popAttributes(filelevel,ALIST))),!.
 
 load_aiml_structure(element(Tag,ALIST,LIST)):- tagType(Tag,immediate),!,
-   debugOnFailureAiml(replaceAttribute(name,Tag,ALIST,ATTRIBS)),!,
-   debugOnFailureAiml(pushAttributes(filelevel,ATTRIBS)),      
        debugOnFailureAiml((
-      debugFmt(call_immediate(Tag,ALIST,LIST)))).
+     replaceAttribute(name,Tag,ALIST,ATTRIBS),
+     pushAttributes(filelevel,ATTRIBS),      
+     debugFmt(call_immediate(Tag,ALIST,LIST)))),!.
 
-%load_aiml_structure(O):- convert_ele(O,OO),O \== OO,!,load_aiml_structure(OO),!.
-
-load_aiml_structure(element(Tag,ALIST,PATTERN)):- once(convert_ele(element(Tag,ALIST,PATTERN),NEW)),
-  NEW \== element(Tag,ALIST,PATTERN),
-  (ground(NEW);once(convert_ele(element(Tag,ALIST,PATTERN),_NEXT))), 
-  debugOnFailureAiml(load_aiml_structure(NEW)),!.
 
 % ============================================
 % special dictionaries
 % ============================================
 
 % user/bot dictionaries
-load_aiml_structure(element(Tag,ALIST,LIST)):-member(Tag,[predicates,vars]),
-   debugOnFailureAiml(replaceAttribute(name,dictionary,ALIST,ATTRIBS)),!,
+load_aiml_structure(element(Tag,ALIST,LIST)):- member(Tag,[predicates,vars,properties]),
+   debugOnFailureAiml((
+     debugOnFailureAiml(replaceAttribute(name,dictionary,ALIST,ATTRIBS)),
    debugOnFailureAiml(pushAttributes(filelevel,ATTRIBS)),
    debugOnFailureAiml(load_aiml_structure_list(LIST)),
-   debugOnFailureAiml(popAttributes(filelevel,ATTRIBS)),!.
+     debugOnFailureAiml(popAttributes(filelevel,ATTRIBS)))),!.
 
-% user/bot dictionaries n/vs
-load_aiml_structure(element(Tag,ALIST,LIST)):-member(Tag,[predicate,var]),
-   debugOnFailureAiml(attributeValue(ALIST,[name,var],Name,error)),!,
-   debugOnFailureAiml(attributeValue(ALIST,[default,value],Value,LIST)),!,
-   debugOnFailureAiml(attributeValue(ALIST,['set-return'],SetReturn,value)),!,
+
+% user/bot predicatates
+load_aiml_structure(element(Tag,ALIST,LIST)):-member(Tag,[predicate]),
+   debugOnFailureAiml((
+     attributeValue(ALIST,[name,var],Name,error),
+     attributeValue(ALIST,[default],Default,''),
+     attributeValue(ALIST,[value,default],Value,LIST),
+     attributeValue(ALIST,['set-return'],SetReturn,value),
    peekNameValue(filelevel,dictionary,Dict),
    load_aiml_structure(dict(Dict,Name,Value)),
-   load_aiml_structure(dict(setReturn(Dict),Name,Value)).
+     load_aiml_structure(dict(defaultValue(Dict),Name,Default)),
+     load_aiml_structure(dict(setReturn(Dict),Name,SetReturn)))),!.
+
+% user/bot dictionaries name/values
+load_aiml_structure(element(Tag,ALIST,LIST)):-member(Tag,[property,var,item]),
+   debugOnFailureAiml((
+     attributeValue(ALIST,[name,var],Name,error),
+     attributeValue(ALIST,[value,default],Value,LIST),
+     peekNameValue(filelevel,dictionary,Dict),
+     load_aiml_structure(dict(Dict,Name,Value)))),!.
 
 
 % substitutions
-load_aiml_structure(element(substitute,[name=Catalog, find=Find, replace=Replace],[])):-!,
-	 debugOnFailureAiml(load_aiml_structure(substitute(Catalog,Find,Replace))).
-load_aiml_structure(element(substitute,[name=Catalog, find=Find, replace=Replace],Stuff)):-!,
-	 debugOnFailureAiml(load_aiml_structure(substitute(Catalog,Find,Replace,Stuff))).
+load_aiml_structure(element(substitutions,ALIST,LIST)):-
+   debugOnFailureAiml((
+      replaceAttribute(name,graph,[dictionary=substitutions(input)|ALIST],ATTRIBS),
+     pushAttributes(filelevel,ATTRIBS),
+     load_mapcar(load_substs,LIST),
+     popAttributes(filelevel,ATTRIBS))),!.
+
+load_substs(element(Tag,ALIST,LIST)):- substitutionDictsName(Tag,Dict),
+   debugOnFailureAiml((
+      replaceAttribute(name,graph,[dictionary=substitutions(Dict)|ALIST],ATTRIBS),
+     pushAttributes(filelevel,ATTRIBS),
+     load_mapcar(load_substs,LIST),
+     popAttributes(filelevel,ATTRIBS))),!.
+
+load_substs(element(substitute,ATTRIBS,LIST)):-
+   debugOnFailureAiml((
+      peekNameValue(filelevel,dictionary,substitutions(Catalog)),
+      attributeOrTagValue(ATTRIBS,[find,name,before],Find,error,LIST),
+      attributeOrTagValue(ATTRIBS,[replace,value,after],Replace,error,LIST),
+      debugOnFailureAiml(load_aiml_structure(dict(substitutions(Catalog),Find,Replace))))),!.
+
+% substitutions
+load_aiml_structure(element(substitute,ATTRIBS,LIST)):- load_substs(element(substitute,ATTRIBS,LIST)),!.
+load_aiml_structure(element(substitution,ATTRIBS,LIST)):- load_substs(element(substitute,ATTRIBS,LIST)),!.
+
 
 load_aiml_structure(substitute(Dict,Find,Replace)):-
   debugOnFailureAiml((
-      convert_text(Find,F),convert_text(Replace,Resp),!,
-      load_aiml_structure(dict(Dict,F,Resp)))).
+      convert_text(Find,F),!,convert_text(Replace,Resp),!,
+      load_aiml_structure(dict(substitutions(Dict),F,Resp)))),!.
 
 % actual assertions
 load_aiml_structure(dict(Dict,Name,Value)):-
       assertz(dict(Dict,Name,Value)),!.
 
+
 % ============================================
-% ERROR loading
+% Rewrite or Error loading
 % ============================================
+
+load_aiml_structure(element(Tag,ALIST,PATTERN)):- once(convert_ele(element(Tag,ALIST,PATTERN),NEW)),
+  NEW \== element(Tag,ALIST,PATTERN), once((ground(NEW);convert_ele(element(Tag,ALIST,PATTERN),_NEXT))),!,
+  debugOnFailureAiml(load_aiml_structure(NEW)),!.
+
+
 load_aiml_structure(X):-aiml_error(load_aiml_structure(X)).
 %      saveFAttribute(F,A),
      % 
@@ -528,7 +574,9 @@ tagType(Tag,optionalCate):-cateMember(Tag),not(tagType(Tag,requiredCate)).
 cateMember(Tag):-cateMemberTags(List),member(Tag,List).
 cateMemberTags([graph,topic,that,pattern,flags,call,guard,template,userdict]).
 
-cateFallback([topic='*',call='true',flags='*',that='*',userdict='user',graph='default',pattern='ERROR PATTERN',guard='*',template='ERROR TEMPLATE'|MORE]):-findall(N=V,defaultPredicates(N,V),MORE).
+cateFallback([topic='*',call='true',flags='*',that='*',
+       dictionary='userdict',
+       userdict='user',graph='default',pattern='ERROR PATTERN',guard='*',template='ERROR TEMPLATE'|MORE]):-findall(N=V,defaultPredicates(N,V),MORE).
 
 
 transform_aiml_structure(catagory,category,OldProps,OldProps,NEWPATTERN,NEWPATTERN).
@@ -558,6 +606,10 @@ formatterMethod(NamedMethod,NamedMethod):-substitutionDicts(NamedMethod).
 evaluatorsDicts(Dict):-member(Dict,[system,javascript,eval,cycquery,cycsystem,cycassert]).
 
 substitutionDicts(Dict):-member(Dict,[formal,uppercase,lowercase,sentence,gossip,think,(format)]).
+
+
+%substitutionDictsName(input,pattern).
+substitutionDictsName(N,N):-substitutionDicts(N).
 
 substitutionDicts(input).
 substitutionDicts(output).
