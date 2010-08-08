@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using MushDLR223.Utilities;
 using RTParser;
 
 namespace RTParser.Database
@@ -75,7 +76,7 @@ namespace RTParser.Database
                 if (!StringCachePOSWORD.TryGetValue(s, out dict))
                 {
                     dict = StringCachePOSWORD[s] = " " + GetWordInfo(s) + " ";
-                    Console.WriteLine("" + s + " => " + dict);
+                    DLRConsole.DebugWriteLine("" + s + " => " + dict);
                 }
             }
             var b = dict.Contains(wclass);

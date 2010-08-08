@@ -7,6 +7,7 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Text;
 using MushDLR223.ScriptEngines;
+using MushDLR223.Utilities;
 using RTParser.Variables;
 using UPath = RTParser.Unifiable;
 using MushDLR223.Virtualization;
@@ -201,7 +202,7 @@ namespace RTParser.Utils
 
         private static void writeToLog(string s)
         {
-            Console.WriteLine("{0}", s);
+            DLRConsole.DebugWriteLine("{0}", s);
         }
 
         public override void Load(TextReader reader)

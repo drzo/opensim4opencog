@@ -1670,7 +1670,7 @@ namespace RTParser
                         }
                         printedSQs = true;
                         writeToLog(s);
-                        Console.Out.Flush();
+                        DLRConsole.SystemFlush();
                     }
                 }
 
@@ -1694,7 +1694,7 @@ namespace RTParser
                                 s += "  " + Unifiable.ToVMString(path.FullPath);
                             }
                             writeToLog(s);
-                            Console.Out.Flush();
+                            DLRConsole.SystemFlush();
                         }
                     }
                     ProccessTemplates(request, result, out solutions, out hasMoreSolutions);
@@ -1704,7 +1704,7 @@ namespace RTParser
                 {
                     if (isTraced)
                     {
-                        Console.Out.Flush();
+                        DLRConsole.SystemFlush();
                         string s = "AIMLTRACE: result.OutputSentenceCount = " + result.OutputSentenceCount;
                         foreach (var path in result.OutputSentences)
                         {
@@ -1713,7 +1713,7 @@ namespace RTParser
                         }
                         s += Environment.NewLine;
                         writeToLog(s);
-                        Console.Out.Flush();
+                        DLRConsole.SystemFlush();
                     }
 
                     foreach (SubQuery path in result.SubQueries)
@@ -3020,10 +3020,11 @@ The AIMLbot program.
             // myBot.AddAiml(evidenceCode);
             User myUser = myBot.LastUser;
             Request request = myUser.CreateRequest("current user toplevel");
-            myBot.BotDirective(request, "@log " + AIMLDEBUGSETTINGS, Console.Error.WriteLine);
+            myBot.BotDirective(request, "@log " + AIMLDEBUGSETTINGS, writeLine);
             writeLine("-----------------------------------------------------------------");
-            myBot.BotDirective(request, "@help", Console.Error.WriteLine);
+            myBot.BotDirective(request, "@help", writeLine);
             writeLine("-----------------------------------------------------------------");
+            DLRConsole.SystemFlush();
 
             String botJustSaid = null;
             string meneValue = null;
@@ -3033,7 +3034,7 @@ The AIMLbot program.
             {
                 myUser = myBot.LastUser;
                 writeLine("-----------------------------------------------------------------");
-                string input = TextFilter.ReadLineFromInput(Console.Write, myUser.UserName + "> ");
+                string input = TextFilter.ReadLineFromInput(DLRConsole.SystemWrite, myUser.UserName + "> ");                
                 if (input == null)
                 {
                     Environment.Exit(0);
@@ -3627,7 +3628,7 @@ The AIMLbot program.
 
         internal static void writeDebugLine(string message, params object[] args)
         {
-            lock (LoggedWords) LoggedWords.writeDebugLine(Console.WriteLine, message, args);
+            lock (LoggedWords) LoggedWords.writeDebugLine(DLRConsole.SystemWriteLine, message, args);
             //if (args != null && args.Length >= 0)
             {
                 try
@@ -3651,13 +3652,13 @@ The AIMLbot program.
                 skipMany--;
                 return;
             }
-            Console.WriteLine("" + err);
+            DLRConsole.SystemWriteLine("" + err);
             if (!UseBreakpointOnError)
             {
                 return;
             }
-            Console.WriteLine("press enter of enter a number to skip breakpoints");
-            string p = Console.ReadLine();
+            DLRConsole.SystemWriteLine("press enter of enter a number to skip breakpoints");
+            string p = DLRConsole.ReadLine();
             int skipNext;
             if (int.TryParse(p, out skipNext))
             {
@@ -3952,29 +3953,30 @@ namespace RTParser.AIMLTagHandlers
             StringBuilder sb = new StringBuilder();
             int writeThrus = 0;
             int total = 0;
+            OutputDelegate WriteLine = DLRConsole.SystemWriteLine;
             foreach (var node in vs)
             {
                 total++;
                 string nodeOuterXml = node.InnerXml;
-                Console.WriteLine(nodeOuterXml);
+                WriteLine(nodeOuterXml);
                 string p = RTPBot.GetAttribValue(node,"PASSED","FALSE");
                 if (p=="False")
                 {
                     writeThrus++;
                     sb.Append("\n" + nodeOuterXml.Replace("\" ","\"\n ") + "\n");
                 }
-                Console.WriteLine();
+                WriteLine("");
             }
-            
-            Console.WriteLine();
-            Console.WriteLine();
-            Console.WriteLine(writeThrus);
-            Console.WriteLine();
+
+            WriteLine("");
+            WriteLine("");
+            WriteLine("" + writeThrus);
+            WriteLine("");
             string ss = sb.ToString();
-            Console.WriteLine(sb);
-            Console.WriteLine();
-            Console.WriteLine();
-            Console.WriteLine();
+            WriteLine(ss);
+            WriteLine("");
+            WriteLine("");
+            WriteLine("");
             return Succeed("total is " + total);
         }
 
