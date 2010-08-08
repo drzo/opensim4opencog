@@ -2,7 +2,11 @@
 using System.Text.RegularExpressions;
 using System.Xml;
 using System.Text;
+using System.Collections.Generic;
 using RTParser.Utils;
+// For Wordnet access
+using LAIR.ResourceAPIs.WordNet;
+using LAIR.Collections.Generic;
 
 namespace RTParser.AIMLTagHandlers
 {
@@ -50,7 +54,10 @@ namespace RTParser.AIMLTagHandlers
             {
                 templateNodeInnerText = Recurse();
             }
-            
+
+            string wnPos = GetAttribValue("wnpos", "").ToLower();
+            string wnRelation = GetAttribValue("wnrel", "").ToLower();
+
             //Lookup definition for current word we could unify with
             string wordAttributes = "";
             string key = (string)with.ToValue(query).Trim();
@@ -69,6 +76,86 @@ namespace RTParser.AIMLTagHandlers
             // Can you find a match inside ?
             var matcher = new Regex(re);
             if (matcher.IsMatch(wordAttributes)) return AND_TRUE;
+
+
+            // Ok, lets try WordNet
+            WordNetEngine ourWordNetEngine = this.user.bot.wordNetEngine;
+            Set < SynSet > synPatternSet = null;
+
+            // find our POS domain if possible
+            WordNetEngine.POS ourPOS = WordNetEngine.POS.Noun;
+            if (wnPos.Length > 0)
+            {
+                // populate POS list
+                foreach (WordNetEngine.POS p in Enum.GetValues(typeof(WordNetEngine.POS)))
+                    if (p != WordNetEngine.POS.None)
+                    {
+                        if (p.ToString().ToLower().Contains(wnPos))
+                        {
+                            ourPOS = p;
+                        }
+                    }
+            }
+
+            try { synPatternSet = ourWordNetEngine.GetSynSets(re, ourPOS); }
+            catch (Exception)
+            {
+                //MessageBox.Show("Invalid Start SynSet ID");
+                return AND_FALSE;
+            }
+
+            Set<SynSet> synInputSet = null;
+            try { synInputSet = ourWordNetEngine.GetSynSets(key.ToLower(), ourPOS); }
+            catch (Exception)
+            {
+                //MessageBox.Show("Invalid Dest SynSet ID");
+                return AND_FALSE;
+            }
+
+                List<WordNetEngine.SynSetRelation> vlist = new List<WordNetEngine.SynSetRelation>(); //[2];
+                //vlist[0] = WordNetEngine.SynSetRelation.Hyponym;
+                //vlist[1] = WordNetEngine.SynSetRelation.InstanceHyponym;
+                //vlist[0] = WordNetEngine.SynSetRelation.Hypernym ;
+                //vlist[1] = WordNetEngine.SynSetRelation.InstanceHypernym;
+                if (wnRelation.Length == 0)
+                {
+                    vlist.Add(WordNetEngine.SynSetRelation.Hypernym);
+                    vlist.Add(WordNetEngine.SynSetRelation.InstanceHypernym);
+                }
+                else
+                {
+                    // populate Relation list
+                    foreach (WordNetEngine.SynSetRelation r in Enum.GetValues(typeof(WordNetEngine.SynSetRelation)))
+                        if (r != WordNetEngine.SynSetRelation.None)
+                        {
+                            if (r.ToString().ToLower().Contains(wnRelation))
+                            {
+                                vlist.Add(r);
+                            }
+                        }
+
+                }
+
+            if ((synInputSet.Count > 0) && (synPatternSet.Count > 0))
+            {
+               foreach (SynSet synDstSet in synInputSet)
+                {
+                foreach (SynSet synSrcSet in synPatternSet)
+                    {
+                        //synSets.Items.Add(synSet);
+                        List<SynSet> linkageList = null;
+
+                        linkageList = synDstSet.GetShortestPathTo(synSrcSet, vlist);
+                        if ((linkageList != null) && (linkageList.Count > 0))
+                        {
+
+                            return AND_TRUE;
+                        }
+                    }
+                }
+                return AND_FALSE;
+            }
+
             return AND_FALSE;
         }
 
