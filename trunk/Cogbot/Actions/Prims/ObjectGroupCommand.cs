@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using MushDLR223.Utilities;
 using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
@@ -292,7 +293,7 @@ namespace cogbot.Actions.Objects
             }
             catch (Exception e)
             {
-                Console.WriteLine("" + e);
+                DLRConsole.SystemWriteLine("" + e);
             }
         }
 

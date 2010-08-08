@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading;
 using System.Collections.Generic;
 using cogbot.TheOpenSims;
+using MushDLR223.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
 using Object=System.Object;
@@ -206,7 +207,7 @@ namespace cogbot.Listeners
                 ImageDownload image = RegionMasterTexturePipeline.Cache.GetCachedImage(id);
                 if (image == null)
                 {
-                    Console.WriteLine("AssetTexture is null?! " + id);
+                    DLRConsole.DebugWriteLine("AssetTexture is null?! " + id);
                 }
                 else
                 {

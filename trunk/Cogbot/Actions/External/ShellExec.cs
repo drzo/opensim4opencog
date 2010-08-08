@@ -32,7 +32,7 @@ namespace cogbot.Actions.External
         }
         public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
-            return Success(DoShellExec(args[0],Parser.Rejoin(args.tokens,1)));
+            return Success(DoShellExec(args[0], Parser.Rejoin(args.tokens, 1)));
         }
     }
 }

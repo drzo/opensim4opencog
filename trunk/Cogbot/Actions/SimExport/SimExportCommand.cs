@@ -521,9 +521,9 @@ namespace cogbot.Actions.SimExport
             }
             else
             {
-                Console.WriteLine("Usage: SimExport.exe [OPTION]...");
-                Console.WriteLine("An interactive CurrentClient for exporting assets");
-                Console.WriteLine("Options:");
+                DLRConsole.WriteLine("Usage: SimExport.exe [OPTION]...");
+                DLRConsole.WriteLine("An interactive CurrentClient for exporting assets");
+                DLRConsole.WriteLine("Options:");
                 argParser.WriteOptionDescriptions(Console.Out);
             }
         }

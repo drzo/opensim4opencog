@@ -53,7 +53,7 @@ namespace cogbot.Actions.Agent
         void acceptInput0(string verb, Parser parser)
         {
             String[] args = parser.tokens;
-            string ToS = parser.prepPhrases["to"];
+            string ToS = parser["to"];
             if (String.IsNullOrEmpty(ToS))
             {
                 ToS = parser.str;

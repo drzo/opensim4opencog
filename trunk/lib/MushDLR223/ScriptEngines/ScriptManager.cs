@@ -5,6 +5,7 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using java.lang;
+using MushDLR223.Utilities;
 using Exception=System.Exception;
 
 namespace MushDLR223.ScriptEngines
@@ -684,11 +685,11 @@ namespace MushDLR223.ScriptEngines
             try
             {
                 string f = string.Format(msg, args);
-                Console.WriteLine("{0}", f);
+                DLRConsole.SystemWriteLine("{0}", f);
             }
             catch (Exception e)
             {
-                Console.WriteLine("WriteLine: {0} {1}", e, msg);
+                DLRConsole.DebugWriteLine("WriteLine: {0} {1}", e, msg);
             }
         }
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using MushDLR223.Utilities;
 using Drawing2D = System.Drawing.Drawing2D;
 using System.IO;
 using System.Threading;
@@ -40,11 +41,11 @@ namespace cogbot.Actions.SimExport
             if (!UInt32.TryParse(args[1], out timeout))
                 return ShowUsage();// " uploadimage [inventoryname] [timeout] [filename]";
 
-            Console.WriteLine("Loading image " + fileName);
+            WriteLine("Loading image " + fileName);
             byte[] jpeg2k = LoadImage(fileName);
             if (jpeg2k == null)
                 return Failure("failed to compress image to JPEG2000");
-            Console.WriteLine("Finished compressing image to JPEG2000, uploading...");
+            WriteLine("Finished compressing image to JPEG2000, uploading...");
             start = DateTime.Now;
             DoUpload(jpeg2k, inventoryName);
 
@@ -70,12 +71,12 @@ namespace cogbot.Actions.SimExport
                     AssetType.Texture, InventoryType.Texture, Client.Inventory.FindFolderForType(AssetType.Texture),
                     delegate(bool success, string status, UUID itemID, UUID assetID)
                     {
-                        Console.WriteLine(String.Format(
+                        WriteLine(String.Format(
                             "RequestCreateItemFromAsset() returned: Success={0}, Status={1}, ItemID={2}, AssetID={3}",
                             success, status, itemID, assetID));
 
                         TextureID = assetID;
-                        Console.WriteLine(String.Format("Upload took {0}", DateTime.Now.Subtract(start)));
+                        WriteLine(String.Format("Upload took {0}", DateTime.Now.Subtract(start)));
                         UploadCompleteEvent.Set();
                     }
                 );
@@ -151,7 +152,7 @@ namespace cogbot.Actions.SimExport
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString() + " SL Image Upload ");
+                WriteLine(ex.ToString() + " SL Image Upload ");
                 return null;
             }
             return UploadData;

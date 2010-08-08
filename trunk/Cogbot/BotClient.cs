@@ -275,7 +275,7 @@ namespace cogbot
 
                 if (__TheRadegastInstance == null)
                 {
-                    Console.WriteLine("getting radegast null");
+                    WriteLine("getting radegast null");
                 }
                 return __TheRadegastInstance;
             }
@@ -283,16 +283,18 @@ namespace cogbot
             {
                 if (value == null)
                 {
-                    Console.WriteLine("setting radegast null");
+                    WriteLine("setting radegast null");
                 }
                 if (__TheRadegastInstance == value) return;
-                if (__TheRadegastInstance!=null)
+                if (__TheRadegastInstance != null)
                 {
                     var nc = __TheRadegastInstance.Netcom;
                     if (nc != null) nc.InstantMessageSent -= IMSent;
                 }
                 __TheRadegastInstance = value;
+                if (value==null) return;
                 value.Netcom.InstantMessageSent += IMSent;
+                ClientManager.SetDebugConsole(value);
             }
         }
 
@@ -1101,6 +1103,7 @@ namespace cogbot
                 string SelfName = String.Format("{0}", GetName());
                 str = str.Replace("$bot", SelfName);
                 if (str.StartsWith(SelfName)) str = str.Substring(SelfName.Length).Trim();
+                ClientManager.SetDebugConsole(__TheRadegastInstance);
                 ClientManager.WriteLine(str);
             }
             catch (Exception ex)
@@ -1572,7 +1575,7 @@ namespace cogbot
                 }
                 //            Settings.LOG_LEVEL = Helpers.LogLevel.Debug;
                 //text = text.Replace("\"", "");
-                string verb = cogbot.Actions.Parser.ParseArgs(text)[0];
+                string verb = Parser.ParseArgs(text)[0];
                 verb = verb.ToLower();
                 if (Commands != null && Commands.ContainsKey(verb))
                 {
@@ -1657,7 +1660,7 @@ namespace cogbot
         {
             if(!TalkingAllowed)
             {
-                Console.WriteLine("!!NOTE!! skipping saying " + str);
+                WriteLine("!!NOTE!! skipping saying " + str);
                 return;
             }
             if (!Network.Connected)

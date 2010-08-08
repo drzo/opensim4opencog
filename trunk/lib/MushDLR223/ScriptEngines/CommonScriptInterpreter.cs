@@ -3,11 +3,39 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using MushDLR223.Utilities;
 
 namespace MushDLR223.ScriptEngines
 {
     abstract public class CommonScriptInterpreter : ScriptInterpreter
     {
+
+        public void WriteText(string format, params object[] args)
+        {
+            DLRConsole.SystemWrite(format, args);
+            //       for (int i = 0; i < chars.Length; i++)
+            //     {
+            //       WriteLine.WriteByte((byte)chars[i]);
+            // }
+            // if (ironTextBoxControl != null)
+            // {
+            //   ironTextBoxControl.WriteText(p);
+            // }
+        }
+        public void WriteLine(string format, params object[] args)
+        {
+            WriteText(format, args);
+            WriteText(Environment.NewLine);
+            //       for (int i = 0; i < chars.Length; i++)
+            //     {
+            //       WriteLine.WriteByte((byte)chars[i]);
+            // }
+            // if (ironTextBoxControl != null)
+            // {
+            //   ironTextBoxControl.WriteText(p);
+            // }
+        }
+
         public virtual object Self
         {
             get { return GetSymbol("this"); }

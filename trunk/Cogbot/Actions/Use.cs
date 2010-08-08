@@ -25,9 +25,9 @@ namespace cogbot.Actions.Agent
         //   base.acceptInput(verb, args);
            string to_op = "";
            string objname = "";
-           if (args.prepPhrases["to"].Length > 0)
+           if (args["to"].Length > 0)
            {
-               to_op = args.prepPhrases["to"];
+               to_op = args["to"];
            }
            objname = args.objectPhrase;
            if (objname == "") {

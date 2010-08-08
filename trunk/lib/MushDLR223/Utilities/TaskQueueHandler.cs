@@ -35,7 +35,7 @@ namespace MushDLR223.Utilities
         readonly object EventQueueLock = new object();
         AutoResetEvent WaitingOn = new AutoResetEvent(false);
         readonly LinkedList<ThreadStart> EventQueue = new LinkedList<ThreadStart>();
-        public static bool DebugQueue = true;
+        public static bool DebugQueue = false;
         public TaskQueueHandler(string str, int msWaitBetween) : this(str,msWaitBetween,true)
         {
 
@@ -269,10 +269,10 @@ namespace MushDLR223.Utilities
 
         public void WriteLine(string s, params object[] parms)
         {
-            s = "\n[TASK " + Name + "] " + s;
-            if (debugOutput != Console.WriteLine)
+            s = "\n[TASK " + Name + "] " + s;            
+            if (debugOutput != DLRConsole.DebugWriteLine)
             {
-                Console.WriteLine(s, parms);
+                DLRConsole.DebugWriteLine(s, parms);
             }
             if (debugOutput != null) debugOutput(s, parms);
         }

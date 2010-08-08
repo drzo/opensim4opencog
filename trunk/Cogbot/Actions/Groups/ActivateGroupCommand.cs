@@ -41,7 +41,7 @@ namespace cogbot.Actions.Groups
                 EventHandler<PacketReceivedEventArgs> pcallback = AgentDataUpdateHandler;
                 Client.Network.RegisterCallback(PacketType.AgentDataUpdate, pcallback);
 
-                Console.WriteLine("setting " + groupName + " as active group");
+                WriteLine("setting " + groupName + " as active group");
                 Client.Groups.ActivateGroup(groupUUID);
                 GroupsEvent.WaitOne(30000, false);
 

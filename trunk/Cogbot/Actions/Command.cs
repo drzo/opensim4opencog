@@ -1,17 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Text;
-using System.Threading;
 using cogbot.TheOpenSims;
 using MushDLR223.ScriptEngines;
+using MushDLR223.Utilities;
 using OpenMetaverse;
-using OpenMetaverse.Packets;
-using Radegast;
 using System.Reflection;
-using  Simulator = OpenMetaverse.Simulator;
-
-using MushDLR223.ScriptEngines;
+using Simulator = OpenMetaverse.Simulator;
 
 namespace cogbot.Actions
 {
@@ -80,7 +75,21 @@ namespace cogbot.Actions
 
     public abstract class Command : IComparable
     {
-        protected OutputDelegate WriteLine;
+        private OutputDelegate _writeLine;
+        protected OutputDelegate WriteLine
+        {
+            get { return _writeLine; }
+            set
+            {
+                if (value == null)
+                {
+                    _writeLine = StaticWriteLine;
+                    return;
+                }
+                _writeLine = value;
+            }
+        }
+
         private int success = 0, failure = 0;
 
         public Command()
@@ -89,13 +98,19 @@ namespace cogbot.Actions
             
         } // constructor
 
+        private void StaticWriteLine(string s, object[] args)
+        {
+            if (_mClient != null) _mClient.WriteLine(Name + ": " + s, args);
+        }
+
         public Command(BotClient bc)
         {
+            WriteLine = StaticWriteLine;
             Name = GetType().Name.Replace("Command", "");
             _mClient = bc;
             if (!(this is BotCommand))
             {
-                Console.WriteLine("" + this + " is not a BotCommand?!");
+                DLRConsole.DebugWriteLine("" + this + " is not a BotCommand?!");
             }
             if (this is BotPersonalCommand)
             {
@@ -263,7 +278,14 @@ namespace cogbot.Actions
             this.WriteLine = WriteLine;
             Parser p = Parser.ParseArgs(String.Join(" ", args));
             p.tokens = args;
-            return acceptInput(Name, p, WriteLine);
+            try
+            {
+                return acceptInput(Name, p, WriteLine);
+            }
+            finally
+            {
+                //??  WriteLine = StaticWriteLine;
+            }
         }
 
         public virtual CmdResult ExecuteCmd(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
@@ -272,7 +294,14 @@ namespace cogbot.Actions
             this.WriteLine = WriteLine;
             Parser p = Parser.ParseArgs(String.Join(" ", args));
             p.tokens = args;
-            return acceptInput(Name, p, WriteLine);
+            try
+            {
+                return acceptInput(Name, p, WriteLine);
+            }
+            finally
+            {
+              //??  WriteLine = StaticWriteLine;
+            }
         }
 
 
@@ -355,7 +384,7 @@ namespace cogbot.Actions
         {
             failure++;
             WriteLine(usage);
-            Console.WriteLine(usage);
+            DLRConsole.SystemWriteLine(usage);
             return Result(usage, false);
         }
 
@@ -373,11 +402,11 @@ namespace cogbot.Actions
             }
             try
             {
-                Console.WriteLine(usage);
+                DLRConsole.SystemWriteLine(usage);
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                DLRConsole.SystemWriteLine(e);
             }
             return Result("Success " + Name, true);
         }

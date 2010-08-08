@@ -60,13 +60,13 @@ namespace cogbot.Actions.Search
         {
             if (e.MatchedEvents[0].ID == 0 && e.MatchedEvents.Count == 1)
             {
-                Console.WriteLine("No Results matched your search string");
+                WriteLine("No Results matched your search string");
             }
             else
             {
                 foreach (DirectoryManager.EventsSearchData ev in e.MatchedEvents)
                 {
-                    Console.WriteLine("Event ID: {0} Event Name: {1} Event Date: {2}", ev.ID, ev.Name, ev.Date);
+                    WriteLine("Event ID: {0} Event Name: {1} Event Date: {2}", ev.ID, ev.Name, ev.Date);
                 }
             }
             resultCount = e.MatchedEvents.Count;

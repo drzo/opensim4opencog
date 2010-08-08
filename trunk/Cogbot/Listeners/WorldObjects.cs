@@ -307,7 +307,7 @@ namespace cogbot.Listeners
         private static void Debug(string p)
         {
             if (Settings.LOG_LEVEL != Helpers.LogLevel.None)
-                ;// Console.WriteLine(p);
+                ;// DLRConsole.WriteLine(p);
         }
 
         // these will be shared between Clients and regions
@@ -474,10 +474,10 @@ namespace cogbot.Listeners
             Debug(String.Format(p, args));
         }
 
-        public void WriteLine(string p)
+        public void WriteLine(string p, params object[] args)
         {
-            Debug(p);
-            client.WriteLine(p);
+            Debug(p, args);
+            client.WriteLine(p, args);
         }
 
 
@@ -1370,7 +1370,7 @@ namespace cogbot.Listeners
         {
             if (P == null)
             {
-                Console.WriteLine("NULL RESELECTOBJECT");
+                DLRConsole.DebugWriteLine("NULL RESELECTOBJECT");
                 return;
             }
             Simulator sim = GetSimulator(P);

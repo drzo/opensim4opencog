@@ -25,7 +25,7 @@ namespace cogbot.Actions.System
         void Avatars_ViewerEffectLookAt(object sender, ViewerEffectLookAtEventArgs e)
         {
             if (ShowEffects)
-                Console.WriteLine(
+                WriteLine(
                 "ViewerEffect [LookAt]: SourceID: {0} TargetID: {1} TargetPos: {2} Type: {3} Duration: {4} ID: {5}",
                 e.SourceID.ToString(), e.TargetID.ToString(), e.TargetPosition, e.LookType, e.Duration,
                 e.EffectID.ToString());
@@ -34,7 +34,7 @@ namespace cogbot.Actions.System
         void Avatars_ViewerEffectPointAt(object sender, ViewerEffectPointAtEventArgs e)
         {
             if (ShowEffects)
-                Console.WriteLine(
+                WriteLine(
                 "ViewerEffect [PointAt]: SourceID: {0} TargetID: {1} TargetPos: {2} Type: {3} Duration: {4} ID: {5}",
                 e.SourceID.ToString(), e.TargetID.ToString(), e.TargetPosition, e.PointType, e.Duration,
                 e.EffectID.ToString());
@@ -43,7 +43,7 @@ namespace cogbot.Actions.System
         void Avatars_ViewerEffect(object sender, ViewerEffectEventArgs e)
         {
             if (ShowEffects)
-                Console.WriteLine(
+                WriteLine(
                 "ViewerEffect [{0}]: SourceID: {1} TargetID: {2} TargetPos: {3} Duration: {4} ID: {5}",
                 e.Type, e.SourceID.ToString(), e.TargetID.ToString(), e.TargetPosition, e.Duration,
                 e.EffectID.ToString());

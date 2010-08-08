@@ -29,18 +29,17 @@ using System;
 using System.Text.RegularExpressions;
 using log4net.Appender;
 using log4net.Core;
-using cogbot;
 
-namespace OpenSim.Framework.Console
+namespace MushDLR223.Utilities
 {
     /// <summary>
     /// Writes log information out onto the console
     /// </summary>
     public class OpenSimAppender : AnsiColorTerminalAppender
     {
-        private ConsoleBase m_console = null;
+        private DLRConsole m_console = null;
 
-        public ConsoleBase Console
+        public DLRConsole Console
         {
             get { return m_console; }
             set { m_console = value; }
@@ -79,11 +78,11 @@ namespace OpenSim.Framework.Console
                 // Get some direct matches $1 $4 is a
                 if (matches.Count == 1)
                 {
-                    System.Console.Write(matches[0].Groups["Front"].Value);
-                    System.Console.Write("[");
+                    DLRConsole.SystemWrite(matches[0].Groups["Front"].Value);
+                    DLRConsole.SystemWrite("[");
 
                     WriteColorText(DeriveColor(matches[0].Groups["Category"].Value), matches[0].Groups["Category"].Value);
-                    System.Console.Write("]:");
+                    DLRConsole.SystemWrite("]:");
 
                     if (le.Level == Level.Error)
                     {
@@ -95,18 +94,18 @@ namespace OpenSim.Framework.Console
                     }
                     else
                     {
-                        System.Console.Write(matches[0].Groups["End"].Value);
+                        DLRConsole.SystemWrite(matches[0].Groups["End"].Value);
                     }
-                    System.Console.WriteLine();
+                    DLRConsole.SystemWriteLine();
                 }
                 else
                 {
-                    System.Console.Write(loggingMessage);
+                    DLRConsole.SystemWrite(loggingMessage);
                 }
             }
             catch (Exception e)
             {
-                System.Console.WriteLine("Couldn't write out log message: {0}", e.ToString());
+                DLRConsole.SystemWriteLine("Couldn't write out log message: {0}", e.ToString());
             }
             finally
             {
@@ -123,14 +122,14 @@ namespace OpenSim.Framework.Console
                 {
                     try
                     {
-                        System.Console.ForegroundColor = color;
-                        System.Console.Write(sender);
-                        System.Console.ResetColor();
+                        DLRConsole.SystemForegroundColor = color;
+                        DLRConsole.SystemWrite(sender);
+                        DLRConsole.SystemResetColor();
                     }
                     catch (ArgumentNullException)
                     {
                         // Some older systems dont support coloured text.
-                        System.Console.WriteLine(sender);
+                        DLRConsole.SystemWriteLine(sender);
                     }
                 }
             }

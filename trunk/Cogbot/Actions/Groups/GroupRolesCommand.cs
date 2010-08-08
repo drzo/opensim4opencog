@@ -62,7 +62,7 @@ namespace cogbot.Actions.Groups
                     foreach (KeyValuePair<UUID, GroupRole> role in e.Roles)
                         sb.AppendFormat("GroupRole: Role {0} {1}|{2}", role.Value.ID, role.Value.Name, role.Value.Title).AppendLine();
                 sb.AppendFormat("GroupRole: RoleCount {0}", e.Roles.Count).AppendLine();
-                Console.WriteLine(sb.ToString());
+                WriteLine(sb.ToString());
                 GroupsEvent.Set();
             } 
         }

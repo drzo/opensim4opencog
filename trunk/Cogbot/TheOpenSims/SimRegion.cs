@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading;
 using cogbot.Listeners;
 using cogbot.ScriptEngines;
+using MushDLR223.Utilities;
 using OpenMetaverse;
 using PathSystem3D.Mesher;
 using PathSystem3D.Navigation;
@@ -241,7 +242,7 @@ namespace cogbot.TheOpenSims
                 if (value.WaterHeight != 0)
                 {
                     PathStore.WaterHeight = value.WaterHeight;
-                    Console.WriteLine("{0} WaterHeight = {1}", value.Name, PathStore.WaterHeight);
+                    DLRConsole.DebugWriteLine("{0} WaterHeight = {1}", value.Name, PathStore.WaterHeight);
                 }
                 //PathStore.RegionName = _GridInfo.Name;
                 regionEvent.Set();
@@ -304,7 +305,7 @@ namespace cogbot.TheOpenSims
                         _GridInfo.WaterHeight = (byte) value.WaterHeight;
                         if (value.RegionID != UUID.Zero) this._RegionID = value.RegionID;
                         if (!string.IsNullOrEmpty(value.Name)) this.RegionName = value.Name;
-                        Console.WriteLine("{0} SimWaterHeight = {1}", value.Name, PathStore.WaterHeight);
+                        DLRConsole.DebugWriteLine("{0} SimWaterHeight = {1}", value.Name, PathStore.WaterHeight);
                     }
                 }
                 bestSimulator = TheSimulator;
@@ -1144,7 +1145,7 @@ namespace cogbot.TheOpenSims
                     if (GetGroundLevelTried > 10)
                     {
                         if (Settings.LOG_LEVEL != Helpers.LogLevel.None)
-                            Console.WriteLine("BADDDDD Height " + x + " " + y + " waiting " + AverageHieght + " sim " +
+                            DLRConsole.DebugWriteLine("BADDDDD Height " + x + " " + y + " waiting " + AverageHieght + " sim " +
                                               RegionName);
                         return AverageHieght;
                     }
@@ -1209,7 +1210,7 @@ namespace cogbot.TheOpenSims
                 str = "{0}";
             }
             if (Settings.LOG_LEVEL != Helpers.LogLevel.None)
-                Console.WriteLine(str, args);
+                DLRConsole.SystemWriteLine(str, args);
         }
 
         public static bool IsMaster(Simulator simulator, GridClient client)

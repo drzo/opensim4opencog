@@ -27,7 +27,7 @@ namespace cogbot.Actions
         {
             //base.acceptInput(verb, args);
 
-            string to = args.prepPhrases["to"];
+            string to = args["to"];
 
             if (to.Length > 0) {
                 SimAvatar avatar;

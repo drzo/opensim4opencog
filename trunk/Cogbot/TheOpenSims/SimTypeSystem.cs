@@ -309,7 +309,7 @@ namespace cogbot.TheOpenSims
                     fi.SetValue(usage.ChangeActual, ff);
                     continue;
                 }
-                System.Console.WriteLine("ERROR: SimBots.ini-like dirrective unknown: '" + s + "'");
+                DLRConsole.SystemWriteLine("ERROR: SimBots.ini-like dirrective unknown: '" + s + "'");
             }
         }
 
@@ -553,7 +553,7 @@ namespace cogbot.TheOpenSims
                     props.SitName = otype.GetSitName();
                     if (!String.IsNullOrEmpty(props.SitName))
                     {
-                        // Console.WriteLine("[TODO] SetSitName(" + prim + "," + otype.GetSitName());
+                        // DLRConsole.WriteLine("[TODO] SetSitName(" + prim + "," + otype.GetSitName());
                     }
                 }
                 if (String.IsNullOrEmpty(props.TouchName))
@@ -561,7 +561,7 @@ namespace cogbot.TheOpenSims
                     props.TouchName = otype.GetTouchName();
                     if (!String.IsNullOrEmpty(props.TouchName))
                     {
-                        //  Console.WriteLine("[TODO] SetTextName(" + prim + "," + otype.GetTouchName());
+                        //  DLRConsole.WriteLine("[TODO] SetTextName(" + prim + "," + otype.GetTouchName());
                     }
                 }
             }

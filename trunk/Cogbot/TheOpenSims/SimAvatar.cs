@@ -293,7 +293,7 @@ namespace cogbot.TheOpenSims
             if (noteable)
             //if (theAvatar.Name.Contains("rael"))
             {
-                Console.WriteLine(SE);
+                DLRConsole.SystemWriteLine(SE);
             }
             return noteable;
         }
@@ -594,14 +594,14 @@ namespace cogbot.TheOpenSims
 
             //if (Prim.RegionHandle == 0)
             //{
-            //    Console.WriteLine("Don't know the region for " + this);
+            //    DLRConsole.WriteLine("Don't know the region for " + this);
             //}
 
             //if (_CurrentRegion == null)
             //{
             //    if (Prim.RegionHandle==0)
             //    {
-            //        Console.WriteLine("Dont know the region for " + this);
+            //        DLRConsole.WriteLine("Dont know the region for " + this);
             //    }
             //    _CurrentRegion = SimRegion.GetRegion(Prim.RegionHandle);
             //    Debug("out of date _CurrentRegion ");
@@ -1556,7 +1556,7 @@ namespace cogbot.TheOpenSims
                     if (currentDist < maxDistance) return true;
                     if (Prim.Velocity == Vector3.Zero)
                     {
-                        Console.Write("!");
+                        Write("!");
                         if (IsBlocked)
                         {
                             blockCount++;
@@ -1576,7 +1576,7 @@ namespace cogbot.TheOpenSims
                     StopMoving();
                     if (IsBlocked)
                     {
-                        Console.Write("=");
+                        Write("=");
                         return false;
                     }
                     return true;
@@ -1590,14 +1590,19 @@ namespace cogbot.TheOpenSims
                 }
                 else
                 {
-                    Console.Write("+");
+                    Write("+");
                     ///  StopMoving();
                     return true;
                 }
             }
             StopMoving();
-            Console.Write("-");
+            Write("-");
             return false;
+        }
+
+        private void Write(string s)
+        {
+            DLRConsole.SystemWrite(s);
         }
 
         public override bool GotoTarget(SimPosition pos)

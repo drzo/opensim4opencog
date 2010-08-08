@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using MushDLR223.Utilities;
 using OpenMetaverse;
 
 namespace cogbot.Listeners
@@ -40,10 +41,10 @@ namespace cogbot.Listeners
 
             if (eventName.EndsWith("On-Image-Receive-Progress")) return true;
             if (eventName.EndsWith("Look-At")) return true;
-            Console.WriteLine("\n"+eventName);
+            DLRConsole.SystemWriteLine("\n" + eventName);
             for (int i = 0; i < paramNames.Length;i++ )
             {
-                Console.WriteLine(" " + paramNames[i] + ": " + client.argString( parameters[i]));
+                DLRConsole.SystemWriteLine(" " + paramNames[i] + ": " + client.argString(parameters[i]));
             }
             return true;
         }

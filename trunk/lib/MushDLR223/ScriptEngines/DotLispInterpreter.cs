@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using MushDLR223.Utilities;
 
 namespace MushDLR223.ScriptEngines
 {
@@ -45,7 +46,7 @@ namespace MushDLR223.ScriptEngines
 
         public void WriteLine(string s, object[] args)
         {
-            Console.WriteLine(s, args);
+            DLRConsole.DebugWriteLine(s, args);
         }
 
         sealed public override void Init()
