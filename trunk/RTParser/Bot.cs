@@ -471,7 +471,10 @@ namespace RTParser
         {
             get
             {
-                return HostSystem.Combine(RuntimeDirectory, this.GlobalSettings.grabSetting("wordnetdirectory"));
+
+                var wnd = this.GlobalSettings.grabSetting("wordnetdirectory");
+                if (wnd == null) return "wordnet30";
+                return HostSystem.Combine(RuntimeDirectory, wnd);
             }
         }
 
