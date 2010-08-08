@@ -833,11 +833,12 @@ destringify(B,B):-!.
 
 %stringToList(X,Y):-writeq(string_to_list(X,Y)),nl,fail.
 stringToList(X,Y):-var(X),!,string_to_list(X,Y).
+stringToList([],[]).
+stringToList("",[]).
 stringToList(X,Y):-atom(X),atom_codes(X,Codes),!,stringToList(Codes,Y),!.
 stringToList(X,Y):-string(X),string_to_atom(X,M),!,stringToList(M,Y).
 stringToList(X,Y):-string(X),!,string_to_list(X,Y).
 stringToList(X,Y):-is_string(X),!,string_to_list(X,Y).
-stringToList([],[]).
 stringToList([X|XX],Y):-concat_atom([X|XX],' ',XXX),!,string_to_list(XXX,Y).
 %prologPredToCyc(Predicate):-arity(PredicateHead)
 

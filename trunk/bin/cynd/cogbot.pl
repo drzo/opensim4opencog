@@ -18,7 +18,7 @@ expand_aliases(X,Z):-file_search_path(X,Y),expand_file_name_each(Y,Z).
 
 
 expand_aliases_locally(X,Z):-nonvar(X),expand_file_name_each(X,Z).
-expand_aliases_locally(X,Z):-file_search_path(X,Y),expand_file_name_each(Y,Z)
+expand_aliases_locally(X,Z):-file_search_path(X,Y),expand_file_name_each(Y,Z).
 
 
 expand_to_absolutes(A,AAA):-expand_aliases(A,AA),absolute_file_name(AA,AAA).
@@ -67,7 +67,8 @@ directory_of_file(File,Start,Hints,Dir):- member(Dir,Hints),join_pathnames(Dir,F
 
 %:-file_exists('cogbot.pl'),asserta(cogbot_pl_dir('./').
 :-['cyc'].
-%:-['bootstrap.aiml.pl'].
+:-['logicmoo_module_aiml.pl'].
 %%:-assertz(librar
 %file_search_path(X,Y).
+
 
