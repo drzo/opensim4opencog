@@ -1,3 +1,12 @@
+% ===================================================================
+% File 'cogbot.pl'
+% Purpose: Toplevle loader file for proog support
+% Maintainer: Douglas Miles
+% Contact: $Author: dmiles $@users.sourceforge.net ;
+% Version: 'cogbot.pl' 1.0.0
+% Revision:  $Revision: 1.7 $
+% Revised At:   $Date: 2002/07/11 21:57:28 $
+% ===================================================================
 
 
 :-dynamic(cogbot_pl_dir/1).
@@ -23,7 +32,7 @@ expand_aliases_locally(X,Z):-file_search_path(X,Y),expand_file_name_each(Y,Z).
 
 expand_to_absolutes(A,AAA):-expand_aliases(A,AA),absolute_file_name(AA,AAA).
 
-same_paths(A,B):-expand_to_absolutes(A,BB),
+same_paths(A,B):-expand_to_absolutes(A,AA),
                  expand_to_absolutes(B,BB),
                  same_refs(AA,BB),!.
 
@@ -36,22 +45,21 @@ join_pathnames(First,Second,All):-var(First),nonvar(Second),nonvar(All),!,
    expand_to_absolutes(All,Joined),atomic(Joined),trace,   
    concat_atom(List,'/',Joined),
    expand_aliases_locally(Second,BE),
-   append(AE0,BE0,List),concat_atom(BE0,'/',BE),   
+   append(AE,BE0,List),concat_atom(BE0,'/',BE),   
    expand_aliases(First,AE),!.
    
 join_pathnames(First,Second,All):-nonvar(First),nonvar(Second),var(All),!,
    cb_file_search_path(First,A),expand_to_absolutes(A,AE),
-   cb_file_search_path(Second,B),concat_atom([AE,B],'/',Joined),expand_to_absolutes(Joind,Place),!,same_refs(Place,All),!.
+   cb_file_search_path(Second,B),concat_atom([AE,B],'/',Joined),expand_to_absolutes(Joined,Place),!,same_refs(Place,All),!.
 
 
 join_pathnames(First,Second,All):-nonvar(First),var(Second),nonvar(All),!,
    cb_file_search_path(First,A),expand_to_absolutes(A,AE),
-   cb_file_search_path(Second,B),concat_atom([AE,B],'/',Joined),expand_to_absolutes(Joind,Place),!,same_refs(Place,All),!.
+   cb_file_search_path(Second,B),concat_atom([AE,B],'/',Joined),expand_to_absolutes(Joined,Place),!,same_refs(Place,All),!.
 
-join_pathnames(First,Second,All):-var(First),nonvar(Full),
-   
+join_pathnames(First,Second,Full):-var(First),nonvar(Full),   
    cb_file_search_path(First,A),expand_to_absolutes(A,AE),
-   cb_file_search_path(Second,B),concat_atom([AE,B],'/',Joined),expand_to_absolutes(Joind,Place),is_absolute_file_name(Place),!.
+   cb_file_search_path(Second,B),concat_atom([AE,B],'/',Joined),expand_to_absolutes(Joined,Place),is_absolute_file_name(Place),!.
 
 /*
 :- extern_pathname(FullPath,'cogbot.pl'),file_directory_name(FullPath),asserta(cogbot_pl_dir(FullPath)).
@@ -66,8 +74,12 @@ directory_of_file(File,Start,Hints,Dir):- member(Dir,Hints),join_pathnames(Dir,F
 */
 
 %:-file_exists('cogbot.pl'),asserta(cogbot_pl_dir('./').
-:-['cyc'].
-:-['logicmoo_module_aiml.pl'].
+
+:- exists_file('cogbot.pl') -> cd('..') ; true.
+
+
+:-['cynd/cyc'].
+:-['cynd/logicmoo_module_aiml.pl'].
 %%:-assertz(librar
 %file_search_path(X,Y).
 

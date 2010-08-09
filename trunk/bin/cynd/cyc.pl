@@ -2134,10 +2134,10 @@ sterm_to_pterm_list(VAR,[VAR]).
 
 
 atomSplit(Atom,Words):-var(Atom),!,
-   concat_atom(Words,' ',Atom).
-atomSplit(Atom,Words):-
-   concat_atom(Words1,' ',Atom),
-   atomSplit2(Words1,Words),!.
+   concat_atom(Words,' ',Atom),!.
+atomSplit(Atom,WordsO):-atom(Atom),
+   concat_atom(Words1,' ',Atom),!,
+   atomSplit2(Words1,Words),!,Words=WordsO.
 
 atomSplit2([],[]).
 atomSplit2([W|S],[A,Mark|Words]):- member(Mark,['.',',','?']),atom_concat(A,Mark,W),not(A=''),!,atomSplit2(S,Words).

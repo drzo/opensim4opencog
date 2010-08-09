@@ -78,12 +78,12 @@ main_loop1(Atom):- current_input(In),!,
             alicebot(Atom),!.
 
 main_loop:-repeat,main_loop1(Atom),catch(atom_to_term(Atom,Term,Vars),_,fail),
-      once(callInteractive(Term,Vars)),fail.
+      once(callInteractive0(Term,Vars)),fail.
 
 % callInteractive(Term,V):-
 callInteractive(Term,Var):-callInteractive0(Term,Var).
 
-callInteractive0(Term,Var):-atom(Term),!,catch(((Term,writeln(called(Term)))),_,fail),!.
+callInteractive0(Term,Var):-atom(Term),!,Term,writeln(called(Term)),!.
 callInteractive0(Term,_):-catch((call(Term),writeq(Term),nl,fail),_,fail).
 callInteractive0(Term,_):-!.
 
