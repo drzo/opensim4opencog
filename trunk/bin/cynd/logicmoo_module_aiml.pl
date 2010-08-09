@@ -31,7 +31,7 @@ test_call(G):-writeln(G),ignore(once(catch(G,E,writeln(E)))).
 main_loop1(Atom):- current_input(In),!,
             read_line_to_codes(In,Codes),!,
             atom_codes(Atom,Codes),!,
-            alicebot(Atom),!.
+            alicebotCTX(Ctx,Atom),!.
 
 main_loop:-repeat,main_loop1(Atom),fail.
 
@@ -41,6 +41,13 @@ callInteractive(Term,Var):-catch(callInteractive0(Term,Var),E,aiml_error(E)),!.
 %callInteractive0(Term,_):-atom(Term),!,Term,!,writeln(called(Term)),!.
 callInteractive0(Term,Var):- call(Term),writeq(Term:Var),nl,fail.
 callInteractive0(Term,_):-!.
+
+currentContext(X):-makeAimlContext(X),!.
+
+makeAimlContext(
+   aimlcontext(
+      stars([_pattern|_],[_topic|_],[_that|_],[_|_guard]),
+      settings([_|_graph],[_|_topic2],[_username|_],[_input|_]))).
 
 % ===============================================================================================
 % ALICE IN PROLOG
@@ -82,42 +89,48 @@ all_upper_atom(X):-toUppercase(X,N),N=X.
 %default_channel( "#logicmoo").
 %default_user(    "default_user").         
 
-% say(Say):-writeq(Say),nl.
+% say(Ctx,Say):-writeq(Say),nl.
 toCodes(B,A):-cyc:stringToCodelist(B,AO),(is_list(A) -> A=AO ; string_to_list(AO,A)),!.
 
 
 dumpList([]):-!.
-dumpList([A|B]):-say(A),dumpList(B),!.
+dumpList([A|B]):-say(Ctx,A),dumpList(B),!.
 
-dumpList(B):-say(  dumpList(B)).
+dumpList(B):-say(Ctx,  dumpList(B)).
 
 
-say(X):- aiml_eval(X,Y),!,debugFmt(Y),!.
+say(Ctx,X):- aiml_eval(Ctx,X,Y),!,debugFmt(Y),!.
 
 alicebot:-repeat,
 	read_line_with_nl(user,Codes,[]),
-        once((atom_codes(Atom,Codes),alicebot(Atom))),fail.
+        makeAimlContext(Ctx),
+        once((atom_codes(Atom,Codes),alicebotCTX(Ctx,Atom))),fail.
 
-alicebot(Input):- atom(Input),catch(((atom_to_term(Input,Term,Vars),callInteractive0(Term,Vars))),_,fail),!.
-alicebot(Input):- once((alicebot(Input,Resp),say(Resp))),!.
-alicebot(_):- say('-no response-').
+alicebot(Input):- currentContext(Ctx),!,alicebotCTX(Ctx,Input).
 
-alicebot(Input,Resp):- atom(Input),!,
+alicebotCTX(Ctx,Input):- atom(Input),catch(((atom_to_term(Input,Term,Vars),callInteractive0(Term,Vars))),_,fail),!.
+alicebotCTX(Ctx,Input):- once((alicebotCTX(Ctx,Input,Resp),say(Ctx,Resp))),!.
+alicebotCTX(Ctx,_):- say(Ctx,'-no response-').
+
+alicebotCTX(Ctx,Input,Resp):- atom(Input),!,
       getWordTokens(Input,TokensO),!,Tokens=TokensO,
-      alicebot(Tokens,Resp),!.
+      alicebotCTX(Ctx,Tokens,Resp),!.
 
-alicebot([TOK|Tokens],Resp):- atom(TOK),atom_concat('@',_,TOK),!,systemCall('bot',[TOK|Tokens],Output),debugFmt(Output).
+alicebotCTX(Ctx,[TOK|Tokens],Resp):- atom(TOK),atom_concat('@',_,TOK),!,systemCall(Ctx,'bot',[TOK|Tokens],Output),debugFmt(Output).
 
-alicebot(Tokens,Resp):-
+alicebotCTX(Ctx,Tokens,Resp):-
    toUppercase(Tokens,UCase),!,
    removePMark(UCase,Atoms),!,
-   alicebot2(Atoms,Resp),!.
+   alicebot2(Ctx,Atoms,Resp),!.
 
-alicebot2(Atoms,Resp):-	
+alicebot2(Atoms,Resp):- currentContext(Ctx),!,alicebot2(Ctx,Atoms,Resp).
+
+alicebot2(Ctx,Atoms,Resp):-	
    retractall(posibleResponse(_,_)),
    flag(a_answers,_,0),!,
    ignore((
-   call_with_depth_limit(computeAnswer(1,srai(Atoms),O,N),8000,DL),
+
+   call_with_depth_limit(computeAnswer(Ctx,1,srai(Atoms),O,N),8000,DL),
 	 ignore((nonvar(N),nonvar(O),savePosibleResponse(N,O))),flag(a_answers,X,X+1),X>3)),!,
    findall(NR-OR,posibleResponse(NR,OR),L),!,
    %format('~n-> ~w~n',[L]),
@@ -147,38 +160,38 @@ from_atom_codes(Atom,Atom):-atom(Atom),!.
 from_atom_codes(Atom,Codes):-convert_to_string(Codes,Atom),!.
 from_atom_codes(Atom,Codes):-atom_codes(Atom,Codes).
 
-computeAnswer(Votes,[],[],Votes):-!.
-computeAnswer(Votes,['.'],[],Votes):-!.
-computeAnswer(Votes,I,_,_):-(Votes>20;Votes<0.3),!,fail.
-computeAnswer(Votes,nick,A,Votes):-!,default_user(B),!,from_atom_codes(A,B),!.
-computeAnswer(Votes,person,A,Votes):-!,default_user(B),!,from_atom_codes(A,B),!.
-computeAnswer(Votes,botnick,'jllykifsh',Votes):-!.
-computeAnswer(Votes,mynick,'jllykifsh',Votes):-!.
-computeAnswer(Votes,name=name,'jllykifsh',Votes):-!.
-computeAnswer(Votes,mychan,A,Votes):-!,default_channel(B),!,from_atom_codes(A,B),!.
-computeAnswer(Votes,randomsentence,O,VotesO):-!, choose_randomsentence(X),!,computeAnswer(Votes,X,O,VotesO).
-computeAnswer(Votes,Resp,Resp,Votes):-atomic(Resp),!.
-computeAnswer(Votes,srai(Input),O,VotesO):- !,flatten([Input],Flat),computeSRAI(Votes,Flat,Mid,VotesM),computeAnswer(VotesM,Mid,O,VotesO).
-computeAnswer(Votes,li(List),AA,VotesO):-!,computeAnswer(Votes,List,AA,VotesO).
-computeAnswer(Votes,random(List),AA,VotesO):-!,randomPick(List,Pick),computeAnswer(Votes,Pick,AA,VotesO).
-computeAnswer(Votes,condition(List),AA,VotesO):-!,member(Pick,List),computeAnswer(Votes,Pick,AA,VotesO).
-computeAnswer(Votes,String,Atom,Votes):-string(String),!,string_to_atom(String,Atom).
-computeAnswer(Votes,String,Atom,Votes):-is_string(String),toCodes(String,Codes),!,from_atom_codes(Atom,Codes).
-computeAnswer(Votes,'$stringCodes'(List),AA,Votes):-!,from_atom_codes(AA,List).
-computeAnswer(Votes,gossip(Thought),O,VotesO):-!,computeAnswer(Votes,Thought,O,VotesO).
-computeAnswer(Votes,think(Thought),[],VotesO):-!,computeAnswer(Votes,Thought,O,VotesO).
-computeAnswer(Votes,get([X]),Resp,VotesO):-getAliceMem(X,E),!,computeAnswer(Votes,E,Resp,VotesM),VotesO is VotesM * 1.1.
-computeAnswer(Votes,get(X),Resp,VotesO):-getAliceMem(X,E),!,computeAnswer(Votes,E,Resp,VotesM),VotesO is VotesM * 1.1.
-computeAnswer(Votes,get(_),_,_):-!,fail.
-computeAnswer(Votes,_-A,A,Votes):-!.
-computeAnswer(Votes,set(X,E),Resp,VotesO):-!,computeAnswer(Votes,E,Resp,VotesM),setAliceMem(X,Resp),!,VotesO is VotesM * 1.1.
-%computeAnswer(Votes,B,Out,VotesO):-append(BB,['.','.'|BBB],B),append(BB,['.'|BBB],RB),!,computeAnswer(Votes,RB,Out,VotesO).
-computeAnswer(Votes,B,Out,VotesO):-append(BB,['.'|BBB],B),append(BB,BBB,RB),!,computeAnswer(Votes,RB,Out,VotesO).
-computeAnswer(Votes,[A|L],OO,VotesO):-!,
-	 computeAnswer(Votes,A,AA,VotesM),
-	 computeAnswer(VotesM,L,LL,VotesO),
+computeAnswer(Ctx,Votes,[],[],Votes):-!.
+computeAnswer(Ctx,Votes,['.'],[],Votes):-!.
+computeAnswer(Ctx,Votes,I,_,_):-(Votes>20;Votes<0.3),!,fail.
+computeAnswer(Ctx,Votes,nick,A,Votes):-!,default_user(B),!,from_atom_codes(A,B),!.
+computeAnswer(Ctx,Votes,person,A,Votes):-!,default_user(B),!,from_atom_codes(A,B),!.
+computeAnswer(Ctx,Votes,botnick,'jllykifsh',Votes):-!.
+computeAnswer(Ctx,Votes,mynick,'jllykifsh',Votes):-!.
+computeAnswer(Ctx,Votes,name=name,'jllykifsh',Votes):-!.
+computeAnswer(Ctx,Votes,mychan,A,Votes):-!,default_channel(B),!,from_atom_codes(A,B),!.
+computeAnswer(Ctx,Votes,randomsentence,O,VotesO):-!, choose_randomsentence(X),!,computeAnswer(Ctx,Votes,X,O,VotesO).
+computeAnswer(Ctx,Votes,Resp,Resp,Votes):-atomic(Resp),!.
+computeAnswer(Ctx,Votes,srai(Input),O,VotesO):- !,flatten([Input],Flat),computeSRAI(Ctx,Votes,Flat,Mid,VotesM),computeAnswer(Ctx,VotesM,Mid,O,VotesO).
+computeAnswer(Ctx,Votes,li(List),AA,VotesO):-!,computeAnswer(Ctx,Votes,List,AA,VotesO).
+computeAnswer(Ctx,Votes,random(List),AA,VotesO):-!,randomPick(List,Pick),computeAnswer(Ctx,Votes,Pick,AA,VotesO).
+computeAnswer(Ctx,Votes,condition(List),AA,VotesO):-!,member(Pick,List),computeAnswer(Ctx,Votes,Pick,AA,VotesO).
+computeAnswer(Ctx,Votes,String,Atom,Votes):-string(String),!,string_to_atom(String,Atom).
+computeAnswer(Ctx,Votes,String,Atom,Votes):-is_string(String),toCodes(String,Codes),!,from_atom_codes(Atom,Codes).
+computeAnswer(Ctx,Votes,'$stringCodes'(List),AA,Votes):-!,from_atom_codes(AA,List).
+computeAnswer(Ctx,Votes,gossip(Thought),O,VotesO):-!,computeAnswer(Ctx,Votes,Thought,O,VotesO).
+computeAnswer(Ctx,Votes,think(Thought),[],VotesO):-!,computeAnswer(Ctx,Votes,Thought,O,VotesO).
+computeAnswer(Ctx,Votes,get([X]),Resp,VotesO):-getAliceMem(X,E),!,computeAnswer(Ctx,Votes,E,Resp,VotesM),VotesO is VotesM * 1.1.
+computeAnswer(Ctx,Votes,get(X),Resp,VotesO):-getAliceMem(X,E),!,computeAnswer(Ctx,Votes,E,Resp,VotesM),VotesO is VotesM * 1.1.
+computeAnswer(Ctx,Votes,get(_),_,_):-!,fail.
+computeAnswer(Ctx,Votes,_-A,A,Votes):-!.
+computeAnswer(Ctx,Votes,set(X,E),Resp,VotesO):-!,computeAnswer(Ctx,Votes,E,Resp,VotesM),setAliceMem(X,Resp),!,VotesO is VotesM * 1.1.
+%computeAnswer(Ctx,Votes,B,Out,VotesO):-append(BB,['.','.'|BBB],B),append(BB,['.'|BBB],RB),!,computeAnswer(Ctx,Votes,RB,Out,VotesO).
+computeAnswer(Ctx,Votes,B,Out,VotesO):-append(BB,['.'|BBB],B),append(BB,BBB,RB),!,computeAnswer(Ctx,Votes,RB,Out,VotesO).
+computeAnswer(Ctx,Votes,[A|L],OO,VotesO):-!,
+	 computeAnswer(Ctx,Votes,A,AA,VotesM),
+	 computeAnswer(Ctx,VotesM,L,LL,VotesO),
 	 once(flatten([AA,LL],OO)).
-computeAnswer(Votes,Resp,Resp,Votes).
+computeAnswer(Ctx,Votes,Resp,Resp,Votes).
 
 
 
@@ -188,10 +201,10 @@ computeAnswer(Votes,Resp,Resp,Votes).
 % Apply Input Match
 % ===============================================================================================
 
-computeSRAI(Votes,[],_,_):-!,fail.
-computeSRAI(Votes,Input,TopicStarO,VotesO):-
+computeSRAI(Ctx,Votes,[],_,_):-!,fail.
+computeSRAI(Ctx,Votes,Input,TopicStarO,VotesO):-
 	 getLastSaid(WhatSaid),
-	 set_matchit(Input,MatchIt),get_aiml_what(What,MatchIt,Out),
+	 set_matchit(Input,MatchIt),get_aiml_what(Ctx,What,MatchIt,Out),
 	 rateMatch(What,WhatSaid,What,NewTopic,TopicVote,TopicStar), 
 	 rateMatch(MatchIt,Input,Out,Next,Voted,_), 
 	 flatten([Next],NextO),
@@ -199,17 +212,17 @@ computeSRAI(Votes,Input,TopicStarO,VotesO):-
 	 VotesO is Votes * (Voted + TopicVote).
 
 % this next line is what it does on fallback
-%computeSRAI(Votes,[B|Flat],[B|TopicStarO],VotesO):-computeSRAI(Votes,Flat,TopicStarO,VotesO).
+%computeSRAI(Ctx,Votes,[B|Flat],[B|TopicStarO],VotesO):-computeSRAI(Ctx,Votes,Flat,TopicStarO,VotesO).
 
 set_matchit([Input|_],[Input|_]).
 set_matchit([Input|_],[_,Input|_]).
 set_matchit([_,Input|_],[_,Input|_]).
 
-%get_aiml_what(What,Match,OOut):-get_aiml_cyc(What,Match,Out),(([srai(Out)] = OOut);OOut=Out).
-get_aiml_what(What,Match,Out):-what(What, Match,Out).
-get_aiml_what([*],Match,Out):-response(Match,Out).
-get_aiml_what([A|L],Match,Out):-aimlCate(AIML),member(that=[A|L],AIML),member(pattern=Match,AIML),member(template=Out,AIML).
-get_aiml_what([*],Match,Out):-aimlCate(AIML),member(that=(*),AIML),member(pattern=Match,AIML),member(template=Out,AIML).
+%get_aiml_what(Ctx,What,Match,OOut):-get_aiml_cyc(What,Match,Out),(([srai(Out)] = OOut);OOut=Out).
+get_aiml_what(Ctx,What,Match,Out):-what(What, Match,Out).
+get_aiml_what(Ctx,[*],Match,Out):-response(Match,Out).
+get_aiml_what(Ctx,[A|L],Match,Out):-aimlCate(Ctx,AIML),member(that=[A|L],AIML),member(pattern=Match,AIML),member(template=Out,AIML).
+get_aiml_what(Ctx,[*],Match,Out):-aimlCate(Ctx,AIML),member(that=(*),AIML),member(pattern=Match,AIML),member(template=Out,AIML).
 
 %get_aiml_cyc([*],[String|ListO],[Obj,*]):-poStr(Obj,[String|List]),append(List,[*],ListO).
 %get_aiml_cyc([*],[String,*],[Obj,*]):-poStr(Obj,String).
@@ -298,4 +311,5 @@ degrade(OR):-asserta(degraded(OR)).
 
 % :- tell(listing1),listing,told.
 
-:-guitracer,do.
+:- guitracer,do.
+
