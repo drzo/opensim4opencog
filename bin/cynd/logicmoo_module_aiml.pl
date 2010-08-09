@@ -92,7 +92,7 @@ dumpList([A|B]):-say(A),dumpList(B),!.
 dumpList(B):-say(  dumpList(B)).
 
 
-say(X):-eval_template(X),!.
+say(X):- aiml_eval(X,Y),!,debugFmt(Y),!.
 
 alicebot:-repeat,
 	read_line_with_nl(user,Codes,[]),
@@ -106,7 +106,8 @@ alicebot(Input,Resp):- atom(Input),!,
       getWordTokens(Input,TokensO),!,Tokens=TokensO,
       alicebot(Tokens,Resp),!.
 
-alicebot(Tokens,Resp):-systemCall('bot',Tokens,Output),debugFmt(Output),fail.
+alicebot([TOK|Tokens],Resp):- atom(TOK),atom_concat('@',_,TOK),!,systemCall('bot',[TOK|Tokens],Output),debugFmt(Output).
+
 alicebot(Tokens,Resp):-
    toUppercase(Tokens,UCase),!,
    removePMark(UCase,Atoms),!,
@@ -297,4 +298,4 @@ degrade(OR):-asserta(degraded(OR)).
 
 % :- tell(listing1),listing,told.
 
-:-do.
+:-guitracer,do.

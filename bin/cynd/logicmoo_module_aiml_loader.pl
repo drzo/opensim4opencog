@@ -20,11 +20,11 @@
 
 dyn_retractall(E):- retractall(E),functor(E,F,A),dynamic(F/A),!.
 
-pp_listing(Pred):-!. %%functor(Pred,F,A),functor(FA,F,A),listing(F),nl,findall(NV,predicate_property(FA,NV),LIST),writeq(LIST),nl,!.
+pp_listing(_Pred):-!. %%functor(Pred,F,A),functor(FA,F,A),listing(F),nl,findall(NV,predicate_property(FA,NV),LIST),writeq(LIST),nl,!.
 
 %:-dyn_retractall(aimlCate(_)).
 
-aimlDebugFmt(X):-!. %%debugFmt(X),!.
+aimlDebugFmt(_X):-!. %%debugFmt(X),!.
 
 debugOnFailureAiml((A,B)):- !,debugOnFailureAiml(A),!,debugOnFailureAiml(B),!.
 debugOnFailureAiml(Call):- once( catch(Call,E,aiml_error(Call:E)) ; (trace,writeq(fail(Call))) ).
@@ -102,11 +102,11 @@ withAttributes(filelevel,ATTRIBS,Call):-
 % Loading content
 % ============================================
 
-load_aiml_structure(O):-atomic(O),!,writeq(load_aiml_structure(O)),nl.
+load_aiml_structure(O):-atomic(O),!,aimlDebugFmt(load_aiml_structure(O)),!.
 
 load_aiml_structure(element(aiml,ALIST,LIST)):-
    debugOnFailureAiml((
-     ground(ALIST),
+     prolog_must(ground(ALIST)),
      replaceAttribute(name,graph,ALIST,ATTRIBS),
      pushAttributes(filelevel,ATTRIBS),
      load_aiml_structure_list(LIST),
@@ -135,6 +135,27 @@ load_aiml_structure(element(Tag,ALIST,LIST)):- tagType(Tag,immediate),!,
      pushAttributes(filelevel,ATTRIBS),      
      debugFmt(call_immediate(Tag,ALIST,LIST)))),!.
 
+
+
+% ============================================
+% Test Suite 
+% ============================================
+
+load_aiml_structure(element('TestSuite',ATTRIBS,LIST)):-
+   debugOnFailureAiml((
+     ground(ALIST),
+     replaceAttribute(name,graph,ALIST,ATTRIBS),
+     pushAttributes(filelevel,ATTRIBS),
+     load_aiml_structure_list(LIST),
+     popAttributes(filelevel,ATTRIBS))),!.
+
+load_aiml_structure(element('TestCase',ALIST,LIST)):-
+   debugOnFailureAiml((
+     replaceAttribute(name,graph,ALIST,ATTRIBS),
+     pushAttributes(filelevel,ATTRIBS),
+     getAttributeOrTags(['name'='SomeName','Description'='some descr','Input'='error','ExpectedAnswer'='SomeAnswwer'],ATTRIBS,LIST,NormalProps),
+     debugFmt(testIt(NormalProps)),
+     popAttributes(filelevel,ATTRIBS))),!.
 
 % ============================================
 % special dictionaries
@@ -170,6 +191,10 @@ load_aiml_structure(element(Tag,ALIST,LIST)):-member(Tag,[property,var,item]),
      load_aiml_structure(dict(Dict,Name,Value)))),!.
 
 
+
+% ============================================
+% special substitution dictionaries
+% ============================================
 % substitutions
 load_aiml_structure(element(substitutions,ALIST,LIST)):-
    debugOnFailureAiml((
@@ -211,12 +236,16 @@ load_aiml_structure(dict(Dict,Name,Value)):-
 % Rewrite or Error loading
 % ============================================
 
-load_aiml_structure(element(Tag,ALIST,PATTERN)):- once(convert_ele(element(Tag,ALIST,PATTERN),NEW)),
-  NEW \== element(Tag,ALIST,PATTERN), once((ground(NEW);convert_ele(element(Tag,ALIST,PATTERN),_NEXT))),!,
-  debugOnFailureAiml(load_aiml_structure(NEW)),!.
+load_aiml_structure(element(Tag,ALIST,PATTERN)):- 
+     once(convert_ele(element(Tag,ALIST,PATTERN),NEW)),
+     load_aiml_structure_diff(element(Tag,ALIST,PATTERN),NEW).
 
 
-load_aiml_structure(X):-aiml_error(load_aiml_structure(X)).
+load_aiml_structure_diff(BEFORE,AFTER):- BEFORE==AFTER,!,aiml_error(load_aiml_structure(BEFORE)),!.
+load_aiml_structure_diff(BEFORE,AFTER):- load_aiml_structure(AFTER).
+
+
+load_aiml_structure(X):- trace,aiml_error(load_aiml_structure(X)).
 %      saveFAttribute(F,A),
      % 
       %(catch(X,_,fail);asserta(X)),!.
@@ -361,7 +390,8 @@ aiml_error(E):-debugFmt('~q~n',[error(E)]),trace,!.
 assertCate(Cate):-
      convert_template(Cate,Assert),!,
       prolog_must(ground(Assert)),
-      assertz(aimlCate(Assert)).
+      retractall(aimlCate(Assert)),
+      asserta(aimlCate(Assert)).
 
 % ===============================================================================================
 %  Load Categories
@@ -451,15 +481,20 @@ cateNodes2a(Scope,Tag,DCGO):-aiml_error(peekNameValue(Scope,Tag,DCG)),!,DCG=DCGO
 % ===============================================================================================
 %  PATTERN/TEMPLATE normalization
 % ===============================================================================================
-convert_template(X,Y):-nonvar(Y),throw(nonvar(Y)).
-convert_template([],[])-!.
+convert_template(X,_Y):-var(X),throw(var(X)).
+convert_template(_X,Y):-nonvar(Y),throw(nonvar(Y)).
+convert_template([],[]):-!.
+convert_template([ATOM],O):-atom(ATOM),!,atomSplit(ATOM,LIST),!,O=LIST,!.
+convert_template([I|P],[I|L]):- atom(I),!,convert_element(P,L),!.
 convert_template([I|P],L):- ignore_aiml(I),!,convert_template(P,L),!.
 convert_template([I|P],[O|L]):- convert_element(I,O),!,convert_template(P,L),!.
 convert_template(P,PO):-convert_element(P,PO).
 
 
 convert_element(Input,Out):-atomic(Input),!,Out=Input.
-convert_element(Input,Out):-convert_ele(Input,M),!,convert_ele(M,OutO),!,OutO=Out.
+
+convert_element(Input,Out):-convert_ele(Input,M),!,M=Out,!.
+%%%,convert_ele(M,OutO),!,OutO=Out.
 
 
       
@@ -467,10 +502,15 @@ nameOrValue(ALIST, _VALUE, NORV, 0):-member(name=NORV,ALIST),!.
 nameOrValue(ALIST, _VALUE, NORV, 0):-member(var=NORV,ALIST),!.
 nameOrValue(_XATS, VALUE, NORV, 1):- NORV = VALUE.
 
-convert_ele(X,Y):-nonvar(Y),throw(nonvar(Y)).
+convert_ele(_X,Y):-nonvar(Y),throw(nonvar(Y)).
 convert_ele(In,_In):-not(ground(In)),aiml_error(not(ground(In))),!,fail.
 
 convert_ele(li(A),li(AA)):-convert_template(A,AA).
+convert_ele(element(html:TAG,A,B),Out):-!,convert_ele(element(TAG,A,B),Out),!.
+convert_ele(element(br,[],[]),'<br/>').
+convert_ele(element(p,[],[]),'<p/>').
+convert_ele(element(pre,[],B),B):-!,convert_template(B,BB).
+
 
 % bot/get/set
 convert_ele(element(bot, ALIST, VALUE),get(bot,NAME)):-nameOrValue(ALIST,VALUE,NORV,_),convert_template(NORV,NAME).
@@ -491,6 +531,7 @@ convert_ele(element(BOT_ATOM, ALIST, V),element(bot,[name=N|ALIST],VV)):-atom_co
 convert_ele(element(BOT_ATOM, ALIST, V),element(get,[name=N|ALIST],VV)):-atom_concat('get',N,BOT_ATOM),lengthAtLeast(N,2),convert_template(V,VV).
 
 lengthAtLeast(N,GE):-atom(N),atom_length(N,L),L>=GE.
+
 
 
 %DELAY convert_ele(element(srai, [], B),srai(BB)):-convert_template(B,BB).
@@ -565,9 +606,18 @@ tagType(Tag,optionalCate):-cateMember(Tag),not(tagType(Tag,requiredCate)).
 cateMember(Tag):-cateMemberTags(List),member(Tag,List).
 cateMemberTags([graph,topic,that,pattern,flags,call,guard,template,userdict]).
 
-cateFallback([topic='*',call='true',flags='*',that='*',
+cateFallback([
+       topic='*',
+       call='true',
+       flags='*',
+       that='*',
        dictionary='userdict',
-       userdict='user',graph='default',pattern='ERROR PATTERN',guard='*',template='ERROR TEMPLATE'|MORE]):-findall(N=V,defaultPredicates(N,V),MORE).
+       userdict='user',
+       substitutions='input',
+       graph='default',
+       pattern='ERROR PATTERN',
+       guard='*',
+       template='ERROR TEMPLATE'|MORE]):-findall(N=V,defaultPredicates(N,V),MORE).
 
 
 transform_aiml_structure(catagory,category,OldProps,OldProps,NEWPATTERN,NEWPATTERN).
@@ -590,13 +640,11 @@ specialIndex(personf,formatter,[type=url_encode]).
 specialIndex(Name,formatter,[type=Method]):-formatterMethod(Name,Method).
 
 
+formatterProc(Dict):-member(Dict,[formal,uppercase,lowercase,sentence,gossip,think,(format)]).
+formatterMethod(NamedMethod,NamedMethod):-formatterProc(NamedMethod).
 
-
-formatterMethod(NamedMethod,NamedMethod):-substitutionDicts(NamedMethod).
 
 evaluatorsDicts(Dict):-member(Dict,[system,javascript,eval,cycquery,cycsystem,cycassert]).
-
-substitutionDicts(Dict):-member(Dict,[formal,uppercase,lowercase,sentence,gossip,think,(format)]).
 
 
 %substitutionDictsName(input,pattern).
