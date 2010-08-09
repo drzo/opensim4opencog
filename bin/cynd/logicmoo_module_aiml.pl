@@ -33,14 +33,13 @@ main_loop1(Atom):- current_input(In),!,
             atom_codes(Atom,Codes),!,
             alicebot(Atom),!.
 
-main_loop:-repeat,main_loop1(Atom),catch(atom_to_term(Atom,Term,Vars),_,fail),
-      once(callInteractive(Term,Vars)),fail.
+main_loop:-repeat,main_loop1(Atom),fail.
 
-% callInteractive(Term,V):-
-callInteractive(Term,Var):-callInteractive0(Term,Var).
 
-callInteractive0(Term,Var):-atom(Term),!,catch(((Term,writeln(called(Term)))),E,aiml_error(E)),!.
-callInteractive0(Term,_):-catch((call(Term),writeq(Term),nl,fail),E,aiml_error(E)).
+callInteractive(Term,Var):-catch(callInteractive0(Term,Var),E,aiml_error(E)),!.
+
+%callInteractive0(Term,_):-atom(Term),!,Term,!,writeln(called(Term)),!.
+callInteractive0(Term,Var):- call(Term),writeq(Term:Var),nl,fail.
 callInteractive0(Term,_):-!.
 
 % ===============================================================================================
@@ -68,22 +67,6 @@ list_replace(List,_Char,_Replace,List):-!.
 term_to_string(I,IS):- catch(string_to_atom(IS,I),_,(term_to_atom(I,A),string_to_atom(IS,A))),!.
 %well i played with a couple few differnt environment impls.. they have their pros cons.. one impl.. that was unique is that an array of "binding pairs" live in an arraylist.. to be "in" an environment it meant that you held an "index" into the arry list that as you went backwards you'd find your bindings.. each symbol had a java int field "lastBindingIndex" .. that was a "hint" to where you could fastforward the backwards search .. end named binding context also had a "index" to when you leave a named block.. you could quickly reset the top of an index.
 
-alicebot:-repeat,
-	read_line_with_nl(user,Codes,[]),
-	once((atom_codes(Atom,Codes),alicebot(Atom))),fail.
-
-say(X):-format(user_output,'~q~n',X),flush_output(user_output),fail.
-say(X):-eval_template(X).
-
-callEachList(Calls):-is_list(Calls),member(Cs,Calls),callEachList(Cs),fail.
-callEachList(C):-not(is_list(C)),callInteractive(once(call(C)),C),fail.
-callEachList(_Calls).
-
-alicebot(Input):- atom(Input),atom_concat('call ',Rest,Input),catch((atom_to_term(Rest,Term,Vars),ignore(callInteractive(Term,Vars))),_,true),!.
-alicebot(Input):- alicebot(Input,Resp), say(Resp),!.
-alicebot(Input):-say('-no response-').
-
-
 atomSplit(A,B):-cyc:atomSplit(A,B).
 
 removePMark(UCase,Atoms):-append(AtomsPre,[Last],UCase),member(Last,[?,('.'),(',')]),!,removePMark(AtomsPre,Atoms).
@@ -108,11 +91,26 @@ dumpList([A|B]):-say(A),dumpList(B),!.
 
 dumpList(B):-say(  dumpList(B)).
 
-alicebot(Input,Resp):-
-   getWordTokens(Input,Tokens),
-   toUppercase(Tokens,UCase),
-   removePMark(UCase,Atoms),
-   alicebot2(Atoms,Resp).
+
+say(X):-eval_template(X),!.
+
+alicebot:-repeat,
+	read_line_with_nl(user,Codes,[]),
+        once((atom_codes(Atom,Codes),alicebot(Atom))),fail.
+
+alicebot(Input):- atom(Input),catch(((atom_to_term(Input,Term,Vars),callInteractive0(Term,Vars))),_,fail),!.
+alicebot(Input):- once((alicebot(Input,Resp),say(Resp))),!.
+alicebot(_):- say('-no response-').
+
+alicebot(Input,Resp):- atom(Input),!,
+      getWordTokens(Input,TokensO),!,Tokens=TokensO,
+      alicebot(Tokens,Resp),!.
+
+alicebot(Tokens,Resp):-systemCall('bot',Tokens,Output),debugFmt(Output),fail.
+alicebot(Tokens,Resp):-
+   toUppercase(Tokens,UCase),!,
+   removePMark(UCase,Atoms),!,
+   alicebot2(Atoms,Resp),!.
 
 alicebot2(Atoms,Resp):-	
    retractall(posibleResponse(_,_)),
@@ -125,8 +123,8 @@ alicebot2(Atoms,Resp):-
    keysort(L,S),
    dumpList(S),
    reverse(S,[Resp|RR]),
-   degrade(Resp),
-   rememberSaidIt(Resp).
+   degrade(Resp),!,
+   rememberSaidIt(Resp),!.
 
 
 % ===============================================================================================
@@ -283,9 +281,11 @@ rememberSaidIt(R1):-ignore(retract(getLastSaid(_))),toUppercase(R1,SR1),!,assert
 degrade(_-OR):-!,degrade(OR).
 degrade(OR):-asserta(degraded(OR)).
    
+:- exists_file('logicmoo_module_aiml_eval.pl')-> cd('..') ; true.
 
-:-['logicmoo_module_aiml_loader.pl'].
-:-['logicmoo_module_aiml_eval.pl'].
+:-['cynd/logicmoo_module_aiml_loader.pl'].
+:-['cynd/logicmoo_module_aiml_eval.pl'].
+
 
 %:-['bootstrap.aiml.pl'].
 
@@ -296,3 +296,5 @@ degrade(OR):-asserta(degraded(OR)).
 %:-main_loop.
 
 % :- tell(listing1),listing,told.
+
+:-do.

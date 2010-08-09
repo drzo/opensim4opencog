@@ -20,10 +20,11 @@
 
 dyn_retractall(E):- retractall(E),functor(E,F,A),dynamic(F/A),!.
 
-pp_listing(Pred):-functor(Pred,F,A),functor(FA,F,A),listing(F),nl,findall(NV,predicate_property(FA,NV),LIST),writeq(LIST),nl,!.
+pp_listing(Pred):-!. %%functor(Pred,F,A),functor(FA,F,A),listing(F),nl,findall(NV,predicate_property(FA,NV),LIST),writeq(LIST),nl,!.
 
 %:-dyn_retractall(aimlCate(_)).
 
+aimlDebugFmt(X):-!. %%debugFmt(X),!.
 
 debugOnFailureAiml((A,B)):- !,debugOnFailureAiml(A),!,debugOnFailureAiml(B),!.
 debugOnFailureAiml(Call):- once( catch(Call,E,aiml_error(Call:E)) ; (trace,writeq(fail(Call))) ).
@@ -32,7 +33,7 @@ debugOnFailureAiml(Call):- once( catch(Call,E,aiml_error(Call:E)) ; (trace,write
 % AIML Loading
 % =================================================================================
 load_aiml_files:-dyn_retractall(aimlCate(_)),fail.
-load_aiml_files:-load_aiml_files('../aiml/test_suite/*.aiml'),fail.
+load_aiml_files:-load_aiml_files('aiml/test_suite/*.aiml'),fail.
 load_aiml_files:-load_aiml_files('*.aiml'),fail.
 load_aiml_files:-pp_listing(aimlCate(_)).
 
@@ -276,19 +277,19 @@ grabNameValue(Scope,Name,Value):-attribDatabase(Scope2,Name,Value),Scope\=Scope2
 
 
 pushNameValue(Scope,N,V):-var(Scope),!,aiml_error((pushNameValue(Scope,N,V):-var(Scope))),!.
-pushNameValue(Scope,Name,V):-nonvar(Name),Name==name,debugFmt(nop(pushNameValue(Scope,name,V))),!.
+pushNameValue(Scope,Name,V):-nonvar(Name),Name==name,aimlDebugFmt(nop(pushNameValue(Scope,name,V))),!.
 pushNameValue(Scope,N,V):-prolog_must(ground(attribDatabase(Scope,N,V))),
-     debugFmt(pushNameValue(Scope,N,V)),
+     aimlDebugFmt(pushNameValue(Scope,N,V)),
      asserta(attribDatabase(Scope,N,V)),!.
 
 popNameValue(Scope,N,V):-var(Scope),!,aiml_error((popNameValue(Scope,N,V):-var(Scope))),!.
-popNameValue(Scope,Name,V):-nonvar(Name),Name==name,debugFmt(nop(popNameValue(Scope,name,V))),!.
+popNameValue(Scope,Name,V):-nonvar(Name),Name==name,aimlDebugFmt(nop(popNameValue(Scope,name,V))),!.
 popNameValue(Scope,N,V):-prolog_must(ground(v(Scope,N,V))),
    ignore(attribDatabase(Scope,N,V)),
    ignore(dyn_retract(attribDatabase(Scope,N,V))),!,
    prolog_must(ground(popNameValue1(Scope,N,V))),!.
 
-dyn_retract(attribDatabase(Scope,N,V)):-debugFmt(retract(attribDatabase(Scope,N,V))),!. %%,retract(attribDatabase(Scope,N,V)),trace.
+dyn_retract(attribDatabase(Scope,N,V)):-aimlDebugFmt(retract(attribDatabase(Scope,N,V))),!. %%,retract(attribDatabase(Scope,N,V)),trace.
 
 peekNameValue(Scope,N,V):-attribDatabase(Scope,N,V),!.
 
@@ -358,7 +359,7 @@ aiml_error(E):-debugFmt('~q~n',[error(E)]),trace,!.
 % ===============================================================================================
 
 assertCate(Cate):-
-     convert_templates(Cate,Assert),!,
+     convert_template(Cate,Assert),!,
       prolog_must(ground(Assert)),
       assertz(aimlCate(Assert)).
 
@@ -450,33 +451,23 @@ cateNodes2a(Scope,Tag,DCGO):-aiml_error(peekNameValue(Scope,Tag,DCG)),!,DCG=DCGO
 % ===============================================================================================
 %  PATTERN/TEMPLATE normalization
 % ===============================================================================================
-convert_template([],[]).
-convert_template([P],PO):-convert_template(P,PO),!.
-convert_template(InputI,OutO):-debugOnFailureAiml((convert_template0(InputI,OutOO),!,OutO=OutOO)).
-
-convert_template0(InputI,OutO):-
-   flatten([InputI],Input),!,
-   convert_templates(Input,M),!,
-   flatten([M],MM),!,
-   convert_templates(MM,O),!,
-   flatten([O],Out),!,
-   (Input == Out -> OutO = Out ; convert_template(Out,OutO)).
+convert_template(X,Y):-nonvar(Y),throw(nonvar(Y)).
+convert_template([],[])-!.
+convert_template([I|P],L):- ignore_aiml(I),!,convert_template(P,L),!.
+convert_template([I|P],[O|L]):- convert_element(I,O),!,convert_template(P,L),!.
+convert_template(P,PO):-convert_element(P,PO).
 
 
-
-convert_templates([],[])-!.
-convert_templates([I|P],L):- ignore_aiml(I),!,convert_templates(P,L),!.
-convert_templates([I|P],[O|L]):- convert_element(I,O),!,convert_templates(P,L),!.
-convert_templates(P,PO):-convert_element(P,PO).
-
-
+convert_element(Input,Out):-atomic(Input),!,Out=Input.
 convert_element(Input,Out):-convert_ele(Input,M),!,convert_ele(M,OutO),!,OutO=Out.
+
 
       
 nameOrValue(ALIST, _VALUE, NORV, 0):-member(name=NORV,ALIST),!.
 nameOrValue(ALIST, _VALUE, NORV, 0):-member(var=NORV,ALIST),!.
 nameOrValue(_XATS, VALUE, NORV, 1):- NORV = VALUE.
 
+convert_ele(X,Y):-nonvar(Y),throw(nonvar(Y)).
 convert_ele(In,_In):-not(ground(In)),aiml_error(not(ground(In))),!,fail.
 
 convert_ele(li(A),li(AA)):-convert_template(A,AA).
