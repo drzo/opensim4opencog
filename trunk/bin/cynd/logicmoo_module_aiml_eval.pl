@@ -15,18 +15,15 @@
 :- style_check(-atom).
 :- style_check(-string).
 
-eval_templateList([A|DOIT]):-eval_template(A),eval_templateList(DOIT),!.
-eval_templateList([]).
+% ===================================================================
+%  Prolog-like call
+% ===================================================================
 
+aiml_call([Atomic|Rest]):-atom(Atomic),!, aiml_eval([Atomic|Rest],Output),!,debugFmt(Output),!.
 
-eval_template(_ - Calls):- !,eval_template(Calls),!.
+aiml_call(_ - Calls):- !,aiml_call(Calls),!.
 
-eval_template(element(srai,ATTRIBS,DOIT)):-
-      pushAttributes(filelevel,ATTRIBS),
-      eval_templateList(DOIT),
-      popAttributes(filelevel,ATTRIBS),!.
-
-eval_template(element(Learn, ATTRIBS, Value)):- member(Learn,[load,learn]),!,
+aiml_call(element(Learn, ATTRIBS, Value)):- member(Learn,[load,learn]),!,
  debugOnFailureAiml((
      attributeValue(ATTRIBS,[graph],Graph,current_value),
      attributeValue(ATTRIBS,[filename,uri,path,dir,file],Filename,Value),
@@ -36,24 +33,25 @@ eval_template(element(Learn, ATTRIBS, Value)):- member(Learn,[load,learn]),!,
 
 
 
-eval_template(element(Learn, ATTRIBS, Value)):- aiml_error(eval_template(element(Learn, ATTRIBS, Value))),!.
+aiml_call(element(Learn, ATTRIBS, Value)):- aiml_error(aiml_call(element(Learn, ATTRIBS, Value))),!.
 
-eval_template(Call):- aiml_eval(Call,Calls),!,callEachList(Calls),!.
-eval_template(INNER_XML):-render_outvalue(INNER_XML,Rendered),!, debugFmt(Rendered),!.
+aiml_call(Call):- aiml_eval(Call,Calls),!,callEachElement(Calls),!.
+aiml_call(INNER_XML):-render_outvalue(INNER_XML,Rendered),!, debugFmt(Rendered),!.
+
+aiml_call(element(genlmt,TOFROM,_)):-
+ debugOnFailureAiml((
+      attributeValue(TOFROM,[to,name],TO,error),
+      attributeValue(TOFROM,[graph,from],FROM,current_value),
+      assertz(genlMtGraph(TO,FROM)))),!.
 
 
+% ===================================================================
+%  Prolog-like call
+% ===================================================================
 
-
-callEachList(C):-not(is_list(C)),!,callInteractive(C,_).
-callEachList(Calls):-is_list(Calls),member(Cs,Calls),callEachList(Cs),fail.
-
-aiml_eval(_ - Calls, Res):- !,aiml_eval(Calls, Res),!.
-aiml_eval([],[]):-!.
-aiml_eval([A|AA],[B|BB]):-aiml_eval(A,B),aiml_eval(AA,BB),!.
-
-aiml_eval(element(pre, _, ListIn), writeln(Render)):- 
-      convert_element(ListIn,ListOut),
-      render_value(template,ListOut,Render),!.
+callEachElement([C|Calls]):-!, callEachElement(C),callEachElement(Calls).
+callEachElement(element(A,B,C)):- convert_element(element(A,B,C),ELE),callEachElement(ELE),!.
+callEachElement(C):-callInteractive(C,_).
 
 % ===================================================================
 %  render templates
@@ -65,6 +63,20 @@ render_outvalue([ValueI],ValueO):-atom(ValueI),!,render_outvalue(ValueI,ValueO),
 render_outvalue([Value|I],ValueO):-atom(Value),concat_atom([Value|I],' ',ValueI),!,render_outvalue(ValueI,ValueO),!.
 render_outvalue(ValueI,ValueO):- !,ValueI=ValueO,!.
 
+render_outvalue([],[]):-!.
+
+aiml_eval(Num - Msg,Result):-!,aiml_eval(Msg,Result),!.
+
+aiml_eval(A,B):-atomic(A),!,B=A.
+
+aiml_eval(element(srai,ATTRIBS,DOIT),RETURN):-
+      pushAttributes(filelevel,ATTRIBS),
+      aiml_eval(DOIT,MID), computeAnswer(10,MID,RETURN,_Votes),
+      popAttributes(filelevel,ATTRIBS),!.
+
+
+aiml_eval([A|AA], [B|BB]):- aiml_eval(A,B),convert_template(AA,BB),!.
+aiml_eval([A|AA], [B|BB]):- convert_element(A,B),aiml_eval(AA,BB),!.
 
 % ===================================================================
 %  system tag impl
@@ -76,8 +88,9 @@ aiml_eval(element(system,ATTRIBS,INNER_XML),[systemCall(Value,Rendered,Output)])
 
 
 systemCall(Lang,Eval,Out):-atom(Eval),!,atomSplit(Eval,Atoms),!,systemCall(Lang,Atoms,Out).
-systemCall('bot',['@load',Filename],['@load',Filename]):- load_aiml_file_graph([],default,Filename),!.
-systemCall(Lang,Eval,writeq(evaled(Lang,Eval))):-!.
+systemCall('bot',['@load',Filename],['@load',Filename]):-  load_aiml_files(Filename),!. %%%  load_aiml_file_graph([],default,Filename),!.
+systemCall('bot',['@chgraph',Graph],['@chgraph',Graph]):-  set_current_value(graph,Graph),!.
+systemCall(Lang,Eval,writeq(evaled(Lang,Eval))):- trace,!.
 
 
 
@@ -86,10 +99,15 @@ systemCall(Lang,Eval,writeq(evaled(Lang,Eval))):-!.
 % ===================================================================
 
 % 0.9 version
-aiml_eval(element(Learn, XML, []),[load_aiml_file_graph(XML,Graph,Filename)]):- member(Learn,[load,learn]),
+aiml_eval(element(Learn, ATTRIB, EXTRA),NEW):- member(Learn,[load,learn]),
  debugOnFailureAiml((
-     attributeValue(XML,[graph],Graph,current_value),
-     attributeValue(XML,[filename,uri,path,dir,file],Filename,error))),!.
+     attributeValue(ATTRIB,[graph],Graph,current_value),
+     attributeValue(ATTRIB,[filename,uri,path,dir,file],Filename,'/dev/null'),
+     load_structure(Filename,MOREXML,[dialect(xml),space(remove)]))),!,
+     append(EXTRA,MOREXML,NEWXML),
+     NEW = element(aiml,ATTRIB,NEWXML),
+     !,load_aiml_structure(NEW),!.
+     
 
 
 
@@ -101,17 +119,11 @@ load_aiml_file_graph(XML,Graph,Filename):-
 
 
 
-aiml_eval(element(genlmt,TOFROM,_),[genlMtGraph(TO,FROM)]):-
- debugOnFailureAiml((
-      attributeValue(TOFROM,[to,name],TO,error),
-      attributeValue(TOFROM,[graph,from],FROM,current_value),
-      assertz(genlMtGraph(TO,FROM)))),!.
-
 % ===================================================================
 %  template tag impl
 % ===================================================================
 
-%aiml_eval(INNER_XML,[debugFmt(Rendered)]):-render_outvalue(INNER_XML,Rendered),!.
+aiml_eval(INNER_XML,[debugFmt(Rendered)]):-render_outvalue(INNER_XML,Rendered),!.
 
 
 % ===================================================================
@@ -142,3 +154,12 @@ findTagValue(XML,Name,ValueO,Else):-ValueI=Else,!,render_outvalue(ValueI,ValueO)
 
 
 current_value(Name,ValueI):-peekNameValue(_,Name,ValueI),!.
+
+
+%['name'='SomeName','Description'='some descr','Input'='error','ExpectedAnswer'='SomeAnswwer']
+getAttributeOrTags([],ATTRIBS,LIST,[]):-!.
+getAttributeOrTags([N=Default|More],ATTRIBS,LIST,[N=Found|NormalProps]):- 
+      attributeOrTagValue(ATTRIBS,[N],Found,Default,LIST),
+      getAttributeOrTags(More,ATTRIBS,LIST,NormalProps),!.
+
+set_current_value(N,V):-pushNameValue(user,N,V).
