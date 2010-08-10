@@ -90,7 +90,7 @@ namespace RTParser.AIMLTagHandlers
                 foreach (WordNetEngine.POS p in Enum.GetValues(typeof(WordNetEngine.POS)))
                     if (p != WordNetEngine.POS.None)
                     {
-                        if (p.ToString().ToLower().Contains(wnPos))
+                        if (p.ToString().ToLower().Equals(wnPos))
                         {
                             ourPOS = p;
                         }
@@ -100,16 +100,32 @@ namespace RTParser.AIMLTagHandlers
             try { synPatternSet = ourWordNetEngine.GetSynSets(re, ourPOS); }
             catch (Exception)
             {
-                //MessageBox.Show("Invalid Start SynSet ID");
                 return AND_FALSE;
+            }
+            if (synPatternSet.Count == 0)
+            {
+                try { synPatternSet = ourWordNetEngine.GetSynSets(re.ToLower(), ourPOS); }
+                catch (Exception)
+                {
+                    return AND_FALSE;
+                }
+
             }
 
             Set<SynSet> synInputSet = null;
-            try { synInputSet = ourWordNetEngine.GetSynSets(key.ToLower(), ourPOS); }
+            try { synInputSet = ourWordNetEngine.GetSynSets(key, ourPOS); }
             catch (Exception)
             {
-                //MessageBox.Show("Invalid Dest SynSet ID");
                 return AND_FALSE;
+            }
+            if (synInputSet.Count == 0)
+            {
+                try { synInputSet = ourWordNetEngine.GetSynSets(key.ToLower(), ourPOS); }
+                catch (Exception)
+                {
+                    return AND_FALSE;
+                }
+
             }
 
                 List<WordNetEngine.SynSetRelation> vlist = new List<WordNetEngine.SynSetRelation>(); //[2];
