@@ -167,7 +167,7 @@ namespace SbsSW.SwiPlCs
 
         private static void SetupProlog()
         {
-            CogbotHome = "c:\\development\\opensim4opencog\\bin";
+            CogbotHome = Environment.CurrentDirectory;
             SwiHomeDir = Environment.GetEnvironmentVariable("SWI_HOME_DIR");
             if (string.IsNullOrEmpty(SwiHomeDir))
             {
@@ -381,44 +381,46 @@ namespace SbsSW.SwiPlCs
         //[MTAThread]
         public static void Main(string[] args0)
         {
+            bool demo = false;
             SetupProlog();
-                
-            DoQuery("asserta(fff(1))");
-            DoQuery("asserta(fff(9))");
-            DoQuery("nl");
-            DoQuery("flush");
 
-            
-
-            PlAssert("father(martin, inka)");
-            if (!PlCsDisabled)
+            if (demo)
             {
-                PlQuery.PlCall("assert(father(uwe, gloria))");
-                PlQuery.PlCall("assert(father(uwe, melanie))");
-                PlQuery.PlCall("assert(father(uwe, ayala))");
-                using (PlQuery q = new PlQuery("father(P, C), atomic_list_concat([P,' is_father_of ',C], L)"))
+                DoQuery("asserta(fff(1))");
+                DoQuery("asserta(fff(9))");
+                DoQuery("nl");
+                DoQuery("flush");
+
+                PlAssert("father(martin, inka)");
+                if (!PlCsDisabled)
                 {
-                    foreach (PlTermV v in q.Solutions)
-                        Console.WriteLine(ToCSString(v));
+                    PlQuery.PlCall("assert(father(uwe, gloria))");
+                    PlQuery.PlCall("assert(father(uwe, melanie))");
+                    PlQuery.PlCall("assert(father(uwe, ayala))");
+                    using (PlQuery q = new PlQuery("father(P, C), atomic_list_concat([P,' is_father_of ',C], L)"))
+                    {
+                        foreach (PlTermV v in q.Solutions)
+                            Console.WriteLine(ToCSString(v));
 
-                    foreach (PlQueryVariables v in q.SolutionVariables)
-                        Console.WriteLine(v["L"].ToString());
+                        foreach (PlQueryVariables v in q.SolutionVariables)
+                            Console.WriteLine(v["L"].ToString());
 
 
-                    Console.WriteLine("all child's from uwe:");
-                    q.Variables["P"].Unify("uwe");
-                    foreach (PlQueryVariables v in q.SolutionVariables)
-                        Console.WriteLine(v["C"].ToString());
+                        Console.WriteLine("all child's from uwe:");
+                        q.Variables["P"].Unify("uwe");
+                        foreach (PlQueryVariables v in q.SolutionVariables)
+                            Console.WriteLine(v["C"].ToString());
+                    }
+                    //PlQuery.PlCall("ensure_loaded(library(thread_util))");
+                    //Warning: [Thread 2] Thread running "thread_run_interactor" died on exception: thread_util:attach_console/0: Undefined procedure: thread_util:win_open_console/5
+                    //PlQuery.PlCall("interactor");
+                    //Delegate Foo0 = foo0;
+                    RegisterPLCSForeigns();
                 }
-                //PlQuery.PlCall("ensure_loaded(library(thread_util))");
-                //Warning: [Thread 2] Thread running "thread_run_interactor" died on exception: thread_util:attach_console/0: Undefined procedure: thread_util:win_open_console/5
-                //PlQuery.PlCall("interactor");
-                //Delegate Foo0 = foo0;
-                RegisterPLCSForeigns();
-            }
 
-            PlAssert("tc2:-foo2(X,Y),writeq(f(X,Y)),nl,X=5");
-            PlAssert("tc3:-foo3(X,Y,Z),Z,writeln(f(X,Y,Z)),X=5");
+                PlAssert("tc2:-foo2(X,Y),writeq(f(X,Y)),nl,X=5");
+                PlAssert("tc3:-foo3(X,Y,Z),Z,writeln(f(X,Y,Z)),X=5");
+            }
 
             ClassFile.ThrowFormatErrors = false;
             libpl.NoToString = true;
@@ -426,7 +428,21 @@ namespace SbsSW.SwiPlCs
             //SafelyRun((() => DoQuery(new Query(new jpl.Atom("jpl0")))));
             libpl.NoToString = false;
             ClassFile.ThrowFormatErrors = true;
-
+            if (args0.Length > 0)
+            {
+                int i = 0;
+                foreach (var s in args0)
+                {
+                    if (s == "-f")
+                    {
+                        string s1 = args0[i + 1];
+                        args0[i + 1] = "['" + s1 + "']";
+                        continue;
+                    }
+                    PlCall(s);
+                    i++;
+                }
+            }
             if (!JplDisabled)
             {
                 var run = new jpl.Atom("prolog");
