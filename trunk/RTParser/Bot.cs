@@ -95,7 +95,7 @@ namespace RTParser
         public static string AIMLDEBUGSETTINGS =
         //    "clear +*";
         "clear -spam +user +error +aimltrace +cyc -dictlog -tscore +loaded";
-        public static readonly TextFilter LoggedWords = new TextFilter() { "+*" };//, "-dictlog" }; //maybe should be ERROR", "STARTUP
+        public static readonly TextFilter LoggedWords = new TextFilter() { "-dictlog +error" }; //maybe should be ERROR", "STARTUP
         public User LastUser;
         public User BotAsUser;
         public User ExemplarUser;
@@ -2140,7 +2140,12 @@ namespace RTParser
             var oldNode = node;
             // copy the node!?!
             if (protectChild)
-                node = AIMLLoader.CopyNode(node, copyParent);
+            {
+                copyParent = true;
+                var newnode = AIMLLoader.CopyNode(node, copyParent);
+                newnode.ReadOnly = false;
+                node = newnode;
+            }
 
             // process the node
             tagHandler = GetTagHandler(user, query, request, result, node, parent);
@@ -3910,8 +3915,8 @@ namespace RTParser.AIMLTagHandlers
                 GraphMaster TO = request.TargetBot.GetGraph(name, request.Graph);
                 if (FROM != null && TO != null)
                 {
-                    FROM.Srai = TO;
-                    return Succeed("SRAI: " + FROM + " => " + name + " => " + TO);
+                    FROM.Srai = name;
+                    return Succeed("SRAI: " + FROM + " => " + name + " => right now " + TO);
                 }
                 return Failure("FROM '" + from + "'='" + FROM + "'" + " TO '" + name + "'='" + TO + "'");
             }

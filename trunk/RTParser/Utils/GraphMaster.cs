@@ -26,7 +26,7 @@ namespace RTParser.Utils
 
         private String graphName;
         private RTPBot theBot;
-        public GraphMaster Srai;
+        public String Srai;
         static public bool NoIndexing = false;
         private bool FullDepth = true;
         readonly private List<GraphMaster> Parents = new List<GraphMaster>();
@@ -110,7 +110,7 @@ namespace RTParser.Utils
         {
             graphName = gn;
             theBot = bot;
-            Srai = this;
+            Srai = "current";
             RootNode.Graph = this;
             PostParentRootNode.Graph = this;
         }
@@ -211,7 +211,7 @@ namespace RTParser.Utils
         private GraphMaster makeParent()
         {
             var p = new GraphMaster("" + graphName + ".parent" + (parent0 == 0 ? "" : "" + parent0), theBot);
-            p.Srai = this;
+            p.Srai = graphName;
             parent0++;
             p.UnTraced = true;
             Parents.Add(p);
@@ -639,11 +639,11 @@ namespace RTParser.Utils
         /// </summary>
         public override string GraphName
         {
-            get { return Srai.GraphName; }
+            get { return Srai; }
             set
             {
                 writeToLog("WARNING SETTING SRAI on " + this + " to " + value);
-                Srai = GetGraph(value);
+                Srai = value;
             }
         }
 
@@ -739,7 +739,7 @@ namespace RTParser.Utils
             }
             var srai = Srai;
             if (srai != null)
-                fs(" <sraiGraph name=\"{0}\" />", srai.ScriptingName);
+                fs(" <sraiGraph name=\"{0}\" />", srai);
             if (printOptions.WriteStatistics)
             {
                 fs(" <!-- templates={0} thats={1} patterns={2} topics={3} nodes1={4} nodes2={5}  -->",
