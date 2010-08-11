@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<aiml graph="douglas_miles">
+  <genlMt name="default"/>
+  <genlMt name="chomskyAIML"/>
+  <learn graph="chomskyAIML" uri="aiml/chomskyAIML/"/>
+  <!--  <system>@cloj MyBot.GraphsByName.chomskyAIML.Srai </system> -->
+ <!-- vocabulary name="douglas_miles" -->
+ <!-- templates=0 thats=0 patterns=0 topics=0  -->
+</aiml>
