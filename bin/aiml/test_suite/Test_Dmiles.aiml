@@ -2,12 +2,13 @@
 <aiml graph="default">
 
 
+  <learn graph="chomskyAIML" uri="aiml/chomskyAIML/" />
+   
+  <!--
   <learn uri="aiml/example_bot/" />
   <genlMt name="chomskyAIML"/>
-  <learn graph="chomskyAIML" uri="aiml/chomskyAIML/" />
 
-  <!--
-  <category>
+ <category>
     <pattern>*</pattern>
     <template>
       <srai>STDCATCHALL-NEXVER</srai>
@@ -15,7 +16,7 @@
   </category>
 -->
 
-  <learn graph="eliza" filename="../jliza/" />
+  <learn graph="eliza" filename="aiml/jliza/" />
   <category>
     <pattern>TOELIZA *</pattern>
     <template>
@@ -172,10 +173,9 @@
     </template>
   </category>
 
-
   <learn> aiml/nephrael_rae/ </learn>
   <learn>aiml\bina_v1\ZZ_Stu.aiml</learn>
--->
+   -->
 
   <category>
     <pattern>I LIKE *</pattern>
