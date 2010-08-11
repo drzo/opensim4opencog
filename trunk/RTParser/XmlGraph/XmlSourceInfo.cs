@@ -903,15 +903,25 @@ namespace RTParser.Utils
         }
 
         public override XmlNode RemoveChild(XmlNode newChild)
-        {
+        {            
+            bool before = _whenReadOnly;
             try
             {
+                if (ReadOnly)
+                {
+                    writeToLog("ERROR RemoveChild on ReadOnly ");
+                }
+                ReadOnly = false;
+                _whenReadOnly = false;
                 return base.RemoveChild(newChild);
             }
             catch (Exception e)
             {
                 writeToLog("newnode.AppendChild " + e);
                 return null;
+            } finally
+            {
+                _whenReadOnly = before;
             }
         }
 
@@ -1000,8 +1010,10 @@ namespace RTParser.Utils
 
         private void writeToLog(string s)
         {
-            RTPBot.writeDebugLine("ERROR " + s + " in " + this);
+            RTPBot.writeDebugLine("ERROR  " + s + " on XML node: '" + this + "'");
         }
+        private bool _whenReadOnly = true;
+        
 
         public override bool IsReadOnly
         {
@@ -1012,10 +1024,14 @@ namespace RTParser.Utils
                 {
                     if (!protect) return false;
 
-                    if (CloneOf == null) return true;
+                    if (CloneOf == null)
+                    {
+                        
+                        return _whenReadOnly;
+                    }
                     return false;
                 }
-                return true;
+                return _whenReadOnly;
             }
         }
         public bool ReadOnly
