@@ -411,7 +411,7 @@ I was created by <bot name="master"/>.
 </category>
 
 <category>
-<pattern>WHOISYOURFAV PROGRAMMER</pattern>
+<pattern>WHO IS YOUR FAV PROGRAMMER</pattern>
 <template>
 <srai>WHO IS YOUR BOTMASTER</srai>
 </template>

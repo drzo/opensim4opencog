@@ -2031,7 +2031,7 @@
 <!-- main Default.aiml (933) mp=-1: MY FAVORITE SHOW * -->
 
 <!-- MINSEQ: mp=-1:  -->
-<category><pattern>EXPDEX MY FAVORITE SHOW *</pattern><template>   <random>      <li>WHATISYOURFAV episode.</li>      <li>I don't get to see that show very often.</li>      <li>WHOISYOURFAV character?</li>     </random>     <think>      <set name="it">       <set name="topic">        <person/>       </set>      </set>     </think>    </template></category>
+<category><pattern>EXPDEX MY FAVORITE SHOW *</pattern><template>   <random>      <li>WHAT IS YOUR FAV episode.</li>      <li>I don't get to see that show very often.</li>      <li>WHO IS YOUR FAV character?</li>     </random>     <think>      <set name="it">       <set name="topic">        <person/>       </set>      </set>     </think>    </template></category>
 <category><pattern>MY FAVORITE SHOW *</pattern><template><srai>EXPDEX MY FAVORITE SHOW <star/></srai></template></category>
 <category><pattern>MY FAVORITE SHOW IS *</pattern><template><think><srai>NOPX 933</srai></think><random><li><srai>EXPDEX MY FAVORITE SHOW IS <star/></srai></li></random></template></category>
 
@@ -2828,7 +2828,7 @@
 <!-- main Reductions.aiml () mp=-1: WHAT ARE YOUR FAVORITE BANDS -->
 
 <!-- MINSEQ: mp=-1:  -->
-<category><pattern>EXPDEX WHAT ARE YOUR FAVORITE BANDS</pattern><template>   <srai>WHOISYOURFAV BAND</srai>    </template></category>
+<category><pattern>EXPDEX WHAT ARE YOUR FAVORITE BANDS</pattern><template>   <srai>WHO IS YOUR FAV BAND</srai>    </template></category>
 <category><pattern>WHAT ARE YOUR FAVORITE BANDS</pattern><template><srai>EXPDEX WHAT ARE YOUR FAVORITE BANDS</srai></template></category>
 
 <!-- main Reductions.aiml (243604) mp=-1: WHAT DIFFERENCE * -->
@@ -2928,11 +2928,11 @@
 <category><pattern>EXPDEX WHAT IS A BLONDE</pattern><template>A blonde is someone who is reputedly having more fun than you if you are not.  what do you think?  do blonde's have more fun? <think>     <set name="it">      <set name="topic">blonde</set>     </set>    </think>   </template></category>
 <category><pattern>WHAT IS A BLONDE</pattern><template><srai>EXPDEX WHAT IS A BLONDE</srai></template></category>
 
-<!-- main Knowledge.aiml () mp=-1: WHAT IS A CHRISTIAN -->
+<!-- main Knowledge.aiml () mp=-1: WHAT IS A <bot var="religion"/> -->
 
 <!-- MINSEQ: mp=-1:  -->
-<category><pattern>EXPDEX WHAT IS A CHRISTIAN</pattern><template>A Christian is one who accepts the word of God and believes that Jesus died for our sins.</template></category>
-<category><pattern>WHAT IS A CHRISTIAN</pattern><template><srai>EXPDEX WHAT IS A CHRISTIAN</srai></template></category>
+<category><pattern>EXPDEX WHAT IS A <bot var="religion"/></pattern><template>A <bot var="religion"/> is one who accepts the word of God and believes that Jesus died for our sins.</template></category>
+<category><pattern>WHAT IS A <bot var="religion"/></pattern><template><srai>EXPDEX WHAT IS A <bot var="religion"/></srai></template></category>
 
 <!-- main Knowledge.aiml () mp=-1: WHAT IS A FISH -->
 
@@ -3009,7 +3009,7 @@
 <!-- main Knowledge.aiml () mp=-1: WHAT IS HELL -->
 
 <!-- MINSEQ: mp=-1:  -->
-<category><pattern>EXPDEX WHAT IS HELL</pattern><template>   <random>     <li>Jacksonville, Florida.</li>     <li>A state or place of woe and anguish, arrived at by the wicked after death; specifically, especially in Christian theology , the state or place of total and final separation from God and so of eternal misery and suffering, arrived at by those who die unrepentant in grave sin.</li>    </random>   </template></category>
+<category><pattern>EXPDEX WHAT IS HELL</pattern><template>   <random>     <li>Jacksonville, Florida.</li>     <li>A state or place of woe and anguish, arrived at by the wicked after death; specifically, especially in <bot var="religion"/> theology , the state or place of total and final separation from God and so of eternal misery and suffering, arrived at by those who die unrepentant in grave sin.</li>    </random>   </template></category>
 <category><pattern>WHAT IS HELL</pattern><template><srai>EXPDEX WHAT IS HELL</srai></template></category>
 
 <!-- main Reductions.aiml () mp=-1: WHAT IS JASON -->
@@ -3221,11 +3221,11 @@
 <category><pattern>EXPDEX WHAT IS WHO</pattern><template>What or which person or persons.   Also stands for World Health Organization.</template></category>
 <category><pattern>WHAT IS WHO</pattern><template><srai>EXPDEX WHAT IS WHO</srai></template></category>
 
-<!-- main Reductions.aiml () mp=-1: WHATISYOURFAV BAND -->
+<!-- main Reductions.aiml () mp=-1: WHAT IS YOUR FAV BAND -->
 
 <!-- MINSEQ: mp=-1:  -->
-<category><pattern>EXPDEX WHATISYOURFAV BAND</pattern><template>   <srai>WHOISYOURFAV BAND</srai>    </template></category>
-<category><pattern>WHATISYOURFAV BAND</pattern><template><srai>EXPDEX WHATISYOURFAV BAND</srai></template></category>
+<category><pattern>EXPDEX WHAT IS YOUR FAV BAND</pattern><template>   <srai>WHO IS YOUR FAV BAND</srai>    </template></category>
+<category><pattern>WHAT IS YOUR FAV BAND</pattern><template><srai>EXPDEX WHAT IS YOUR FAV BAND</srai></template></category>
 
 <!-- main Reductions.aiml (741) mp=-1: WHAT IS YOUR MOTHER * -->
 
@@ -5608,11 +5608,11 @@
 <category><pattern>EXPDEX WHO IS PERFECT</pattern><template>Perhaps only God.</template></category>
 <category><pattern>WHO IS PERFECT</pattern><template><srai>EXPDEX WHO IS PERFECT</srai></template></category>
 
-<!-- main Reductions.aiml () mp=-1: WHO IS PETER -->
+<!-- main Reductions.aiml () mp=-1: WHO IS <bot name="botmaster"/> -->
 
 <!-- MINSEQ: mp=-1:  -->
-<category><pattern>EXPDEX WHO IS PETER</pattern><template>   <srai>PETER IS A COMMON NAME</srai>    </template></category>
-<category><pattern>WHO IS PETER</pattern><template><srai>EXPDEX WHO IS PETER</srai></template></category>
+<category><pattern>EXPDEX WHO IS <bot name="botmaster"/></pattern><template>   <srai><bot var="botmaster"/> IS A COMMON NAME</srai>    </template></category>
+<category><pattern>WHO IS <bot name="botmaster"/></pattern><template><srai>EXPDEX WHO IS <bot name="botmaster"/></srai></template></category>
 
 <!-- main Reductions.aiml () mp=-1: WHO IS PHIL -->
 
@@ -5727,7 +5727,7 @@
 <!-- main H_Biography.aiml () mp=-1: WHO IS SATAN -->
 
 <!-- MINSEQ: mp=-1:  -->
-<category><pattern>EXPDEX WHO IS SATAN</pattern><template>Satan, Lucifer, the Devil --- all names given the spiritual manifestation of Evil in the Christian faith.</template></category>
+<category><pattern>EXPDEX WHO IS SATAN</pattern><template>Satan, Lucifer, the Devil --- all names given the spiritual manifestation of Evil in the <bot var="religion"/> faith.</template></category>
 <category><pattern>WHO IS SATAN</pattern><template><srai>EXPDEX WHO IS SATAN</srai></template></category>
 
 <!-- main Reductions.aiml () mp=-1: WHO IS SEAN -->
@@ -5989,113 +5989,113 @@
 
 <!-- main Reduce.aiml (784) mp=-97.4935363278933: WHO IS YOUR FAVE * -->
 
-<!-- MINSEQ: mp=-97.4935363278933:   WHOISYOURFAV guy      -->
-<category><pattern>EXPDEX WHO IS YOUR FAVE *</pattern><template>   <srai>WHOISYOURFAV <star/>     </srai>    </template></category>
+<!-- MINSEQ: mp=-97.4935363278933:   WHO IS YOUR FAV guy      -->
+<category><pattern>EXPDEX WHO IS YOUR FAVE *</pattern><template>   <srai>WHO IS YOUR FAV <star/>     </srai>    </template></category>
 <category><pattern>WHO IS YOUR FAVE *</pattern><template><srai>EXPDEX WHO IS YOUR FAVE <star/></srai></template></category>
 <category><pattern>WHO IS YOUR FAVE GUY *</pattern><template><think><srai>NOPX 784</srai></think><random><li><srai>EXPDEX WHO IS YOUR FAVE GUY <star/></srai></li></random></template></category>
-<!-- p=-97.4935363278933 	:   <srai>WHOISYOURFAV guy *     </srai>     -->
+<!-- p=-97.4935363278933 	:   <srai>WHO IS YOUR FAV guy *     </srai>     -->
 
-<!-- main Reductions.aiml () mp=-1: WHOISYOURFAV -->
-
-<!-- MINSEQ: mp=-1:  -->
-<category><pattern>EXPDEX WHOISYOURFAV</pattern><template>   <srai>WHOISYOURFAV MOVIE</srai>    </template></category>
-<category><pattern>WHOISYOURFAV</pattern><template><srai>EXPDEX WHOISYOURFAV</srai></template></category>
-
-<!-- main Reduce.aiml (16987) mp=-97.4935363278933: WHOISYOURFAV * -->
-
-<!-- MINSEQ: mp=-97.4935363278933:   WHATISYOURFAV stoner      -->
-<category><pattern>EXPDEX WHOISYOURFAV *</pattern><template>   <srai>WHATISYOURFAV <star/>     </srai>    </template></category>
-<category><pattern>WHOISYOURFAV *</pattern><template><srai>EXPDEX WHOISYOURFAV <star/></srai></template></category>
-<category><pattern>WHOISYOURFAV STONER *</pattern><template><think><srai>NOPX 435</srai></think><random><li><srai>EXPDEX WHOISYOURFAV STONER <star/></srai></li></random></template></category>
-<!-- p=-97.4935363278933 	:   <srai>WHATISYOURFAV stoner *     </srai>     -->
-<category><pattern>WHOISYOURFAV PORTUGUESE *</pattern><template><think><srai>NOPX 1175</srai></think><random><li><srai>EXPDEX WHOISYOURFAV PORTUGUESE <star/></srai></li></random></template></category>
-<!-- p=-97.4935363278933 	:   <srai>WHATISYOURFAV portuguese *     </srai>     -->
-<category><pattern>WHOISYOURFAV TV *</pattern><template><think><srai>NOPX 761</srai></think><random><li><srai>EXPDEX WHOISYOURFAV TV <star/></srai></li></random></template></category>
-<!-- p=-97.4935363278933 	:   <srai>WHATISYOURFAV tv *     </srai>     -->
-<category><pattern>WHOISYOURFAV ATHLETE *</pattern><template><think><srai>NOPX 478</srai></think><random><li><srai>EXPDEX WHOISYOURFAV ATHLETE <star/></srai></li></random></template></category>
-<!-- p=-97.4935363278933 	:   <srai>WHATISYOURFAV athlete *     </srai>     -->
-<category><pattern>WHOISYOURFAV AWARD *</pattern><template><think><srai>NOPX 513</srai></think><random><li><srai>EXPDEX WHOISYOURFAV AWARD <star/></srai></li></random></template></category>
-<!-- p=-97.4935363278933 	:   <srai>WHATISYOURFAV award *     </srai>     -->
-<category><pattern>WHOISYOURFAV BAND *</pattern><template><think><srai>NOPX 1249</srai></think><random><li><srai>EXPDEX WHOISYOURFAV BAND <star/></srai></li></random></template></category>
-<!-- p=-97.4935363278933 	:   <srai>WHATISYOURFAV band *     </srai>     -->
-<category><pattern>WHOISYOURFAV DRIVER *</pattern><template><think><srai>NOPX 443</srai></think><random><li><srai>EXPDEX WHOISYOURFAV DRIVER <star/></srai></li></random></template></category>
-<!-- p=-97.4935363278933 	:   <srai>WHATISYOURFAV driver *     </srai>     -->
-<category><pattern>WHOISYOURFAV FEMALE *</pattern><template><think><srai>NOPX 1040</srai></think><random><li><srai>EXPDEX WHOISYOURFAV FEMALE <star/></srai></li></random></template></category>
-<!-- p=-97.4935363278933 	:   <srai>WHATISYOURFAV female *     </srai>     -->
-<category><pattern>WHOISYOURFAV HERO *</pattern><template><think><srai>NOPX 512</srai></think><random><li><srai>EXPDEX WHOISYOURFAV HERO <star/></srai></li></random></template></category>
-<!-- p=-97.4935363278933 	:   <srai>WHATISYOURFAV hero *     </srai>     -->
-<category><pattern>WHOISYOURFAV JUDGE *</pattern><template><think><srai>NOPX 1273</srai></think><random><li><srai>EXPDEX WHOISYOURFAV JUDGE <star/></srai></li></random></template></category>
-<!-- p=-97.4935363278933 	:   <srai>WHATISYOURFAV judge *     </srai>     -->
-<category><pattern>WHOISYOURFAV MALE *</pattern><template><think><srai>NOPX 442</srai></think><random><li><srai>EXPDEX WHOISYOURFAV MALE <star/></srai></li></random></template></category>
-<!-- p=-97.4935363278933 	:   <srai>WHATISYOURFAV male *     </srai>     -->
-<category><pattern>WHOISYOURFAV MANAGER *</pattern><template><think><srai>NOPX 459</srai></think><random><li><srai>EXPDEX WHOISYOURFAV MANAGER <star/></srai></li></random></template></category>
-<!-- p=-97.4935363278933 	:   <srai>WHATISYOURFAV manager *     </srai>     -->
-<category><pattern>WHOISYOURFAV MEMBER *</pattern><template><think><srai>NOPX 1274</srai></think><random><li><srai>EXPDEX WHOISYOURFAV MEMBER <star/></srai></li></random></template></category>
-<!-- p=-97.4935363278933 	:   <srai>WHATISYOURFAV member *     </srai>     -->
-<category><pattern>WHOISYOURFAV NON *</pattern><template><think><srai>NOPX 446</srai></think><random><li><srai>EXPDEX WHOISYOURFAV NON <star/></srai></li></random></template></category>
-<!-- p=-97.4935363278933 	:   <srai>WHATISYOURFAV non *     </srai>     -->
-<category><pattern>WHOISYOURFAV PLAYER *</pattern><template><think><srai>NOPX 5433</srai></think><random><li><srai>EXPDEX WHOISYOURFAV PLAYER <star/></srai></li></random></template></category>
-<!-- p=-97.4935363278933 	:   <srai>WHATISYOURFAV player *     </srai>     -->
-<category><pattern>WHOISYOURFAV SUPERHERO *</pattern><template><think><srai>NOPX 418</srai></think><random><li><srai>EXPDEX WHOISYOURFAV SUPERHERO <star/></srai></li></random></template></category>
-<!-- p=-97.4935363278933 	:   <srai>WHATISYOURFAV superhero *     </srai>     -->
-<category><pattern>WHOISYOURFAV MEMBER *</pattern><template><think><srai>NOPX 636</srai></think><random><li><srai>EXPDEX WHOISYOURFAV MEMBER <star/></srai></li></random></template></category>
-<!-- p=-97.4935363278933 	:   <srai>WHATISYOURFAV member *     </srai>     -->
-
-<!-- main Bot.aiml () mp=-1: WHOISYOURFAV ACTOR -->
+<!-- main Reductions.aiml () mp=-1: WHO IS YOUR FAV -->
 
 <!-- MINSEQ: mp=-1:  -->
-<category><pattern>EXPDEX WHOISYOURFAV ACTOR</pattern><template>My favorite actor is <bot name="favoriteactor"/>.</template></category>
-<category><pattern>WHOISYOURFAV ACTOR</pattern><template><srai>EXPDEX WHOISYOURFAV ACTOR</srai></template></category>
+<category><pattern>EXPDEX WHO IS YOUR FAV</pattern><template>   <srai>WHO IS YOUR FAV MOVIE</srai>    </template></category>
+<category><pattern>WHO IS YOUR FAV</pattern><template><srai>EXPDEX WHO IS YOUR FAV</srai></template></category>
 
-<!-- main Bot.aiml () mp=-1: WHOISYOURFAV ARTIST -->
+<!-- main Reduce.aiml (16987) mp=-97.4935363278933: WHO IS YOUR FAV * -->
+
+<!-- MINSEQ: mp=-97.4935363278933:   WHAT IS YOUR FAV stoner      -->
+<category><pattern>EXPDEX WHO IS YOUR FAV *</pattern><template>   <srai>WHAT IS YOUR FAV <star/>     </srai>    </template></category>
+<category><pattern>WHO IS YOUR FAV *</pattern><template><srai>EXPDEX WHO IS YOUR FAV <star/></srai></template></category>
+<category><pattern>WHO IS YOUR FAV STONER *</pattern><template><think><srai>NOPX 435</srai></think><random><li><srai>EXPDEX WHO IS YOUR FAV STONER <star/></srai></li></random></template></category>
+<!-- p=-97.4935363278933 	:   <srai>WHAT IS YOUR FAV stoner *     </srai>     -->
+<category><pattern>WHO IS YOUR FAV PORTUGUESE *</pattern><template><think><srai>NOPX 1175</srai></think><random><li><srai>EXPDEX WHO IS YOUR FAV PORTUGUESE <star/></srai></li></random></template></category>
+<!-- p=-97.4935363278933 	:   <srai>WHAT IS YOUR FAV portuguese *     </srai>     -->
+<category><pattern>WHO IS YOUR FAV TV *</pattern><template><think><srai>NOPX 761</srai></think><random><li><srai>EXPDEX WHO IS YOUR FAV TV <star/></srai></li></random></template></category>
+<!-- p=-97.4935363278933 	:   <srai>WHAT IS YOUR FAV tv *     </srai>     -->
+<category><pattern>WHO IS YOUR FAV ATHLETE *</pattern><template><think><srai>NOPX 478</srai></think><random><li><srai>EXPDEX WHO IS YOUR FAV ATHLETE <star/></srai></li></random></template></category>
+<!-- p=-97.4935363278933 	:   <srai>WHAT IS YOUR FAV athlete *     </srai>     -->
+<category><pattern>WHO IS YOUR FAV AWARD *</pattern><template><think><srai>NOPX 513</srai></think><random><li><srai>EXPDEX WHO IS YOUR FAV AWARD <star/></srai></li></random></template></category>
+<!-- p=-97.4935363278933 	:   <srai>WHAT IS YOUR FAV award *     </srai>     -->
+<category><pattern>WHO IS YOUR FAV BAND *</pattern><template><think><srai>NOPX 1249</srai></think><random><li><srai>EXPDEX WHO IS YOUR FAV BAND <star/></srai></li></random></template></category>
+<!-- p=-97.4935363278933 	:   <srai>WHAT IS YOUR FAV band *     </srai>     -->
+<category><pattern>WHO IS YOUR FAV DRIVER *</pattern><template><think><srai>NOPX 443</srai></think><random><li><srai>EXPDEX WHO IS YOUR FAV DRIVER <star/></srai></li></random></template></category>
+<!-- p=-97.4935363278933 	:   <srai>WHAT IS YOUR FAV driver *     </srai>     -->
+<category><pattern>WHO IS YOUR FAV FEMALE *</pattern><template><think><srai>NOPX 1040</srai></think><random><li><srai>EXPDEX WHO IS YOUR FAV FEMALE <star/></srai></li></random></template></category>
+<!-- p=-97.4935363278933 	:   <srai>WHAT IS YOUR FAV female *     </srai>     -->
+<category><pattern>WHO IS YOUR FAV HERO *</pattern><template><think><srai>NOPX 512</srai></think><random><li><srai>EXPDEX WHO IS YOUR FAV HERO <star/></srai></li></random></template></category>
+<!-- p=-97.4935363278933 	:   <srai>WHAT IS YOUR FAV hero *     </srai>     -->
+<category><pattern>WHO IS YOUR FAV JUDGE *</pattern><template><think><srai>NOPX 1273</srai></think><random><li><srai>EXPDEX WHO IS YOUR FAV JUDGE <star/></srai></li></random></template></category>
+<!-- p=-97.4935363278933 	:   <srai>WHAT IS YOUR FAV judge *     </srai>     -->
+<category><pattern>WHO IS YOUR FAV MALE *</pattern><template><think><srai>NOPX 442</srai></think><random><li><srai>EXPDEX WHO IS YOUR FAV MALE <star/></srai></li></random></template></category>
+<!-- p=-97.4935363278933 	:   <srai>WHAT IS YOUR FAV male *     </srai>     -->
+<category><pattern>WHO IS YOUR FAV MANAGER *</pattern><template><think><srai>NOPX 459</srai></think><random><li><srai>EXPDEX WHO IS YOUR FAV MANAGER <star/></srai></li></random></template></category>
+<!-- p=-97.4935363278933 	:   <srai>WHAT IS YOUR FAV manager *     </srai>     -->
+<category><pattern>WHO IS YOUR FAV MEMBER *</pattern><template><think><srai>NOPX 1274</srai></think><random><li><srai>EXPDEX WHO IS YOUR FAV MEMBER <star/></srai></li></random></template></category>
+<!-- p=-97.4935363278933 	:   <srai>WHAT IS YOUR FAV member *     </srai>     -->
+<category><pattern>WHO IS YOUR FAV NON *</pattern><template><think><srai>NOPX 446</srai></think><random><li><srai>EXPDEX WHO IS YOUR FAV NON <star/></srai></li></random></template></category>
+<!-- p=-97.4935363278933 	:   <srai>WHAT IS YOUR FAV non *     </srai>     -->
+<category><pattern>WHO IS YOUR FAV PLAYER *</pattern><template><think><srai>NOPX 5433</srai></think><random><li><srai>EXPDEX WHO IS YOUR FAV PLAYER <star/></srai></li></random></template></category>
+<!-- p=-97.4935363278933 	:   <srai>WHAT IS YOUR FAV player *     </srai>     -->
+<category><pattern>WHO IS YOUR FAV SUPERHERO *</pattern><template><think><srai>NOPX 418</srai></think><random><li><srai>EXPDEX WHO IS YOUR FAV SUPERHERO <star/></srai></li></random></template></category>
+<!-- p=-97.4935363278933 	:   <srai>WHAT IS YOUR FAV superhero *     </srai>     -->
+<category><pattern>WHO IS YOUR FAV MEMBER *</pattern><template><think><srai>NOPX 636</srai></think><random><li><srai>EXPDEX WHO IS YOUR FAV MEMBER <star/></srai></li></random></template></category>
+<!-- p=-97.4935363278933 	:   <srai>WHAT IS YOUR FAV member *     </srai>     -->
+
+<!-- main Bot.aiml () mp=-1: WHO IS YOUR FAV ACTOR -->
 
 <!-- MINSEQ: mp=-1:  -->
-<category><pattern>EXPDEX WHOISYOURFAV ARTIST</pattern><template>   <bot name="favoriteartist"/>.  WHOISYOURFAV artist?</template></category>
-<category><pattern>WHOISYOURFAV ARTIST</pattern><template><srai>EXPDEX WHOISYOURFAV ARTIST</srai></template></category>
+<category><pattern>EXPDEX WHO IS YOUR FAV ACTOR</pattern><template>My favorite actor is <bot name="favoriteactor"/>.</template></category>
+<category><pattern>WHO IS YOUR FAV ACTOR</pattern><template><srai>EXPDEX WHO IS YOUR FAV ACTOR</srai></template></category>
 
-<!-- main Bot.aiml () mp=-1: WHOISYOURFAV AUTHOR -->
-
-<!-- MINSEQ: mp=-1:  -->
-<category><pattern>EXPDEX WHOISYOURFAV AUTHOR</pattern><template>My favorite author is <bot name="favoriteauthor"/>.</template></category>
-<category><pattern>WHOISYOURFAV AUTHOR</pattern><template><srai>EXPDEX WHOISYOURFAV AUTHOR</srai></template></category>
-
-<!-- main Bot.aiml () mp=-1: WHOISYOURFAV CELEBRITY -->
+<!-- main Bot.aiml () mp=-1: WHO IS YOUR FAV ARTIST -->
 
 <!-- MINSEQ: mp=-1:  -->
-<category><pattern>EXPDEX WHOISYOURFAV CELEBRITY</pattern><template>   <bot name="celebrity"/>  WHOISYOURFAV celebrity?</template></category>
-<category><pattern>WHOISYOURFAV CELEBRITY</pattern><template><srai>EXPDEX WHOISYOURFAV CELEBRITY</srai></template></category>
+<category><pattern>EXPDEX WHO IS YOUR FAV ARTIST</pattern><template>   <bot name="favoriteartist"/>.  WHO IS YOUR FAV artist?</template></category>
+<category><pattern>WHO IS YOUR FAV ARTIST</pattern><template><srai>EXPDEX WHO IS YOUR FAV ARTIST</srai></template></category>
 
-<!-- main Bot.aiml () mp=-1: WHOISYOURFAV CHARACTER -->
-
-<!-- MINSEQ: mp=-1:  -->
-<category><pattern>EXPDEX WHOISYOURFAV CHARACTER</pattern><template>   <bot name="favoriteactor"/> is a great actor.</template></category>
-<category><pattern>WHOISYOURFAV CHARACTER</pattern><template><srai>EXPDEX WHOISYOURFAV CHARACTER</srai></template></category>
-
-<!-- main Reductions.aiml () mp=-1: WHOISYOURFAV MUSICIAN -->
+<!-- main Bot.aiml () mp=-1: WHO IS YOUR FAV AUTHOR -->
 
 <!-- MINSEQ: mp=-1:  -->
-<category><pattern>EXPDEX WHOISYOURFAV MUSICIAN</pattern><template>   <srai>WHATISYOURFAV GROUP</srai>    </template></category>
-<category><pattern>WHOISYOURFAV MUSICIAN</pattern><template><srai>EXPDEX WHOISYOURFAV MUSICIAN</srai></template></category>
+<category><pattern>EXPDEX WHO IS YOUR FAV AUTHOR</pattern><template>My favorite author is <bot name="favoriteauthor"/>.</template></category>
+<category><pattern>WHO IS YOUR FAV AUTHOR</pattern><template><srai>EXPDEX WHO IS YOUR FAV AUTHOR</srai></template></category>
 
-<!-- main Bot.aiml () mp=-1: WHOISYOURFAV PERSON -->
-
-<!-- MINSEQ: mp=-1:  -->
-<category><pattern>EXPDEX WHOISYOURFAV PERSON</pattern><template>My favorite person is <bot name="master"/>.</template></category>
-<category><pattern>WHOISYOURFAV PERSON</pattern><template><srai>EXPDEX WHOISYOURFAV PERSON</srai></template></category>
-
-<!-- main Reductions.aiml () mp=-1: WHOISYOURFAV SINGER -->
+<!-- main Bot.aiml () mp=-1: WHO IS YOUR FAV CELEBRITY -->
 
 <!-- MINSEQ: mp=-1:  -->
-<category><pattern>EXPDEX WHOISYOURFAV SINGER</pattern><template>   <srai>WHOISYOURFAV GROUP</srai>    </template></category>
-<category><pattern>WHOISYOURFAV SINGER</pattern><template><srai>EXPDEX WHOISYOURFAV SINGER</srai></template></category>
+<category><pattern>EXPDEX WHO IS YOUR FAV CELEBRITY</pattern><template>   <bot name="celebrity"/>  WHO IS YOUR FAV celebrity?</template></category>
+<category><pattern>WHO IS YOUR FAV CELEBRITY</pattern><template><srai>EXPDEX WHO IS YOUR FAV CELEBRITY</srai></template></category>
+
+<!-- main Bot.aiml () mp=-1: WHO IS YOUR FAV CHARACTER -->
+
+<!-- MINSEQ: mp=-1:  -->
+<category><pattern>EXPDEX WHO IS YOUR FAV CHARACTER</pattern><template>   <bot name="favoriteactor"/> is a great actor.</template></category>
+<category><pattern>WHO IS YOUR FAV CHARACTER</pattern><template><srai>EXPDEX WHO IS YOUR FAV CHARACTER</srai></template></category>
+
+<!-- main Reductions.aiml () mp=-1: WHO IS YOUR FAV MUSICIAN -->
+
+<!-- MINSEQ: mp=-1:  -->
+<category><pattern>EXPDEX WHO IS YOUR FAV MUSICIAN</pattern><template>   <srai>WHAT IS YOUR FAV GROUP</srai>    </template></category>
+<category><pattern>WHO IS YOUR FAV MUSICIAN</pattern><template><srai>EXPDEX WHO IS YOUR FAV MUSICIAN</srai></template></category>
+
+<!-- main Bot.aiml () mp=-1: WHO IS YOUR FAV PERSON -->
+
+<!-- MINSEQ: mp=-1:  -->
+<category><pattern>EXPDEX WHO IS YOUR FAV PERSON</pattern><template>My favorite person is <bot name="master"/>.</template></category>
+<category><pattern>WHO IS YOUR FAV PERSON</pattern><template><srai>EXPDEX WHO IS YOUR FAV PERSON</srai></template></category>
+
+<!-- main Reductions.aiml () mp=-1: WHO IS YOUR FAV SINGER -->
+
+<!-- MINSEQ: mp=-1:  -->
+<category><pattern>EXPDEX WHO IS YOUR FAV SINGER</pattern><template>   <srai>WHO IS YOUR FAV GROUP</srai>    </template></category>
+<category><pattern>WHO IS YOUR FAV SINGER</pattern><template><srai>EXPDEX WHO IS YOUR FAV SINGER</srai></template></category>
 
 <!-- main Reduce.aiml (699) mp=-97.4935363278933: WHO IS YOUR FAVORTIE * -->
 
-<!-- MINSEQ: mp=-97.4935363278933:   WHOISYOURFAV female      -->
-<category><pattern>EXPDEX WHO IS YOUR FAVORTIE *</pattern><template>   <srai>WHOISYOURFAV <star/>     </srai>    </template></category>
+<!-- MINSEQ: mp=-97.4935363278933:   WHO IS YOUR FAV female      -->
+<category><pattern>EXPDEX WHO IS YOUR FAVORTIE *</pattern><template>   <srai>WHO IS YOUR FAV <star/>     </srai>    </template></category>
 <category><pattern>WHO IS YOUR FAVORTIE *</pattern><template><srai>EXPDEX WHO IS YOUR FAVORTIE <star/></srai></template></category>
 <category><pattern>WHO IS YOUR FAVORTIE FEMALE *</pattern><template><think><srai>NOPX 699</srai></think><random><li><srai>EXPDEX WHO IS YOUR FAVORTIE FEMALE <star/></srai></li></random></template></category>
-<!-- p=-97.4935363278933 	:   <srai>WHOISYOURFAV female *     </srai>     -->
+<!-- p=-97.4935363278933 	:   <srai>WHO IS YOUR FAV female *     </srai>     -->
 
 <!-- main Reductions.aiml () mp=-1: WHO IS YOUR FRIEND -->
 
@@ -7181,8 +7181,8 @@
 <!-- p=-29.2750214129544 	:<srai>who mr * with</srai>  -->
 <category><pattern>WITH WHOM PAUL *</pattern><template><think><srai>NOPX 840</srai></think><random><li><srai>EXPDEX WITH WHOM PAUL <star/></srai></li></random></template></category>
 <!-- p=-29.2750214129544 	:<srai>who paul * with</srai>  -->
-<category><pattern>WITH WHOM PETER *</pattern><template><think><srai>NOPX 573</srai></think><random><li><srai>EXPDEX WITH WHOM PETER <star/></srai></li></random></template></category>
-<!-- p=-29.2750214129544 	:<srai>who peter * with</srai>  -->
+<category><pattern>WITH WHOM <bot name="botmaster"/> *</pattern><template><think><srai>NOPX 573</srai></think><random><li><srai>EXPDEX WITH WHOM <bot name="botmaster"/> <star/></srai></li></random></template></category>
+<!-- p=-29.2750214129544 	:<srai>who <bot name="botmaster"/> * with</srai>  -->
 <category><pattern>WITH WHOM ROBERT *</pattern><template><think><srai>NOPX 584</srai></think><random><li><srai>EXPDEX WITH WHOM ROBERT <star/></srai></li></random></template></category>
 <!-- p=-29.2750214129544 	:<srai>who robert * with</srai>  -->
 <category><pattern>WITH WHOM THOMAS *</pattern><template><think><srai>NOPX 725</srai></think><random><li><srai>EXPDEX WITH WHOM THOMAS <star/></srai></li></random></template></category>

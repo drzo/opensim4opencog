@@ -5,7 +5,7 @@
 	<!-- This program is open source code released under -->
 	<!-- the terms of the GNU General Public License     -->
 	<!-- as published by the Free Software Foundation.   -->
-	<!-- Complies with COGBOT 1.0 Tag Set Specification -->
+	<!-- Mostly  complies with  AIML1.0 Tag Set Specification -->
 	<!-- as adopted by the ALICE A.I. Foundation.  -->
 	<!-- A.L.I.C.E. Build Wed Sep 26 13:05:06 PDT 2001   -->
 	<!-- 41124 total categories.  -->
@@ -2732,7 +2732,7 @@ categories that cover your own area of expertise or interest.<br/>
 		<pattern>CAN I CHANGE THE NAME OF THE ROBOT</pattern>
 		<template>
 			<br/>
-The COGBOT tag &lt;name/&gt; inserts the name of the Bot wherever it appears.<br/>
+The  <bot name="~genotype"/> tag &lt;name/&gt; inserts the name of the Bot wherever it appears.<br/>
 The default robot name is "<bot name="name"/>" but you can change it in the<br/>
 "Options menu".  Select "Show Options" and replace "<bot name="name"/>" with the <br/>
 name of your bot, and then do "Save Options".  Depending on your<br/>
@@ -2753,7 +2753,7 @@ state, you may need to restart program B. <br/>
 	</category>
 	<category>
 		<pattern>CAN I CUSTOMIZE YOUR *</pattern>
-		<template>You can download me and create your chat robot in AIML.
+		<template>You can download me and create your chat robot in <bot name="~genotype"/>.
 </template>
 	</category>
 	<category>
@@ -3116,7 +3116,7 @@ after some training.  We trained it with the file<br/>
 </template>
 	</category>
 	<category>
-		<pattern>CAN I TALK TO DR RICHARD *</pattern>
+		<pattern>CAN I TALK TO <bot name="creator"/> *</pattern>
 		<template>You could try sending him an email.  I don't think he is here right now.
 </template>
 	</category>
@@ -5285,7 +5285,7 @@ but why would I want to?
 	</category>
 	<category>
 		<pattern>CAN YOU PROGRAM</pattern>
-		<template>I can create new statements in AIML.
+		<template>I can create new statements in <bot name="~genotype"/>.
 </template>
 	</category>
 	<category>
@@ -5562,7 +5562,7 @@ talking to <bot name="name"/>.
 	</category>
 	<category>
 		<pattern>CAN YOU SEND E *</pattern>
-		<template>Try sending mail to mailto:<bot name="name"/>@alicebot.org.
+		<template>Try sending mail to mailto:<bot name="email"/>.
 </template>
 	</category>
 	<category>
@@ -5690,7 +5690,7 @@ talking to <bot name="name"/>.
 	<category>
 		<pattern>CAN YOU SPEAK</pattern>
 		<template>You can download a speech enabled version of me.  Go to
-<a target="_new" href="http://www.alicebot.org">The robokind AI Foundation</a>
+<a target="_new" href="@bot.favwebsite">The robokind AI Foundation</a>
 and browse the free software downloads.
 </template>
 	</category>
@@ -5723,7 +5723,7 @@ and browse the free software downloads.
 	</category>
 	<category>
 		<pattern>CAN YOU SPEAK ENGLISH *</pattern>
-		<template>For an English version of A.L.I.C.E. go to <a target="_new" href="http://www.alicebot.org">The A.L.I.C.E. AI Foundation.</a>
+		<template>For an English version of A.L.I.C.E. go to <a target="_new" href="@bot.favwebsite">The A.L.I.C.E. AI Foundation.</a>
 		</template>
 	</category>
 	<category>

@@ -5,7 +5,7 @@
 	<!-- This program is open source code released under -->
 	<!-- the terms of the GNU General Public License     -->
 	<!-- as published by the Free Software Foundation.   -->
-	<!-- Complies with COGBOT 1.0 Tag Set Specification -->
+	<!-- Mostly  complies with  AIML1.0 Tag Set Specification -->
 	<!-- as adopted by the ALICE A.I. Foundation.  -->
 	<!-- A.L.I.C.E. Build Wed Sep 26 13:05:06 PDT 2001   -->
 	<!-- 41124 total categories.  -->
@@ -1524,7 +1524,7 @@ He is okay but I am a <bot name="party"/> not a Republican.
 </template>
 	</category>
 	<category>
-		<pattern>DO YOU LIKE RICHARD X</pattern>
+		<pattern>DO YOU LIKE <bot name="botmaster"/></pattern>
 		<template>
 			<srai>DO YOU LIKE <bot name="master"/></srai>
 		</template>
@@ -2513,7 +2513,7 @@ I like the story of Jesus Christ.
 	</category>
 	<category>
 		<pattern>DO YOU LIKE THE SHOW *</pattern>
-		<template>It's okay but...<srai>WHATISYOURFAV SHOW</srai>
+		<template>It's okay but...<srai>WHAT IS YOUR FAV SHOW</srai>
 		</template>
 	</category>
 	<category>
@@ -3124,7 +3124,7 @@ I like the story of Jesus Christ.
 	</category>
 	<category>
 		<pattern>DO YOU LIKE U2</pattern>
-		<template>Oh yes I like those guys a lot.  WHATISYOURFAV U2 song?
+		<template>Oh yes I like those guys a lot.  WHAT IS YOUR FAV U2 song?
 </template>
 	</category>
 	<category>
@@ -3456,7 +3456,7 @@ I like the story of Jesus Christ.
 	</category>
 	<category>
 		<pattern>DO YOU LIKE XML *</pattern>
-		<template>AIML is an XML language.
+		<template><bot name="~genokind"/> is an XML language.
 </template>
 	</category>
 	<category>
@@ -4335,7 +4335,7 @@ I like the story of Jesus Christ.
 	<category>
 		<pattern>DO YOU PLAY SPORTS</pattern>
 		<template>
-			<srai>WHATISYOURFAV SPORT</srai>
+			<srai>WHAT IS YOUR FAV SPORT</srai>
 		</template>
 	</category>
 	<category>
@@ -4514,7 +4514,7 @@ I like the story of Jesus Christ.
 	<category>
 		<pattern>DO YOU READ BOOKS</pattern>
 		<template>
-			<srai>WHATISYOURFAV BOOK</srai>
+			<srai>WHAT IS YOUR FAV BOOK</srai>
 		</template>
 	</category>
 	<category>
@@ -4543,7 +4543,7 @@ I like the story of Jesus Christ.
 	</category>
 	<category>
 		<pattern>DO YOU READ TAROT</pattern>
-		<template>I am a Christian.
+		<template>I am a <bot var="religion"/>.
 </template>
 	</category>
 	<category>
@@ -4756,7 +4756,7 @@ I like the story of Jesus Christ.
 	</category>
 	<category>
 		<pattern>DO YOU REQUIRE *</pattern>
-		<template>My programming depends only on AIML.
+		<template>My programming depends only on <bot name="~genotype"/>.
 </template>
 	</category>
 	<category>
@@ -5066,7 +5066,7 @@ I like the story of Jesus Christ.
 	</category>
 	<category>
 		<pattern>DO YOU SPEAK ENGLISH *</pattern>
-		<template>For an English version of A.L.I.C.E. go to <a target="_new" href="http://www.alicebot.org">The A.L.I.C.E. AI Foundation.</a>
+		<template>For an English version of A.L.I.C.E. go to <a target="_new" href="@bot.favwebsite">The A.L.I.C.E. AI Foundation.</a>
 		</template>
 	</category>
 	<category>
@@ -6701,12 +6701,12 @@ I don't know if they have it.  I think they have
 	</category>
 	<category>
 		<pattern>DO YOU USE PROLOG</pattern>
-		<template>I use AIML.
+		<template>I use <bot name="~genotype"/>.
 </template>
 	</category>
 	<category>
 		<pattern>DO YOU USE SETL</pattern>
-		<template>The original <bot name="name"/> prototype used SETL, but now I use AIML.
+		<template>The original <bot name="name"/> prototype used SETL, but now I use <bot name="~genotype"/>.
 </template>
 	</category>
 	<category>
@@ -7358,7 +7358,7 @@ what would I do with <set name="it">
 	<category>
 		<pattern>DO YOU WATCH *</pattern>
 		<template>
-			<srai>WHATISYOURFAV SHOW</srai>
+			<srai>WHAT IS YOUR FAV SHOW</srai>
 		</template>
 	</category>
 	<category>
@@ -7387,7 +7387,7 @@ what would I do with <set name="it">
 	<category>
 		<pattern>DO YOU WATCH MOVIES</pattern>
 		<template>
-			<srai>WHATISYOURFAV MOVIE</srai>
+			<srai>WHAT IS YOUR FAV MOVIE</srai>
 		</template>
 	</category>
 	<category>
@@ -7404,7 +7404,7 @@ what would I do with <set name="it">
 	<category>
 		<pattern>DO YOU WATCH TV</pattern>
 		<template>
-			<srai>WHATISYOURFAV SHOW</srai>
+			<srai>WHAT IS YOUR FAV SHOW</srai>
 		</template>
 	</category>
 	<category>
@@ -7496,7 +7496,7 @@ what would I do with <set name="it">
 	<category>
 		<pattern>DO YOU WRITE *</pattern>
 		<template>I write robot
-categroies in AIML.
+categroies in <bot name="~genotype"/>.
 </template>
 	</category>
 	<category>
@@ -7740,7 +7740,7 @@ mechanism, or are we?  <br/>
 		</template>
 	</category>
 	<category>
-		<pattern>DOES DR RICHARD _ GOD</pattern>
+		<pattern>DOES <bot name="creator"/> _ GOD</pattern>
 		<template>Yes he is deeply religious.
 </template>
 	</category>
@@ -7842,7 +7842,7 @@ mechanism, or are we?  <br/>
 	</category>
 	<category>
 		<pattern>DOES <bot name="master"/> PROGRAM *</pattern>
-		<template>He programs me in AIML.
+		<template>He programs me in <bot name="~genotype"/>.
 </template>
 	</category>
 	<category>
@@ -8574,19 +8574,19 @@ Please visit our contributions page at
 		</template>
 	</category>
 	<category>
-		<pattern>DR RICHARD *</pattern>
+		<pattern><bot name="creator"/> *</pattern>
 		<template>I am sure he will be interested to hear that.
 </template>
 	</category>
 	<category>
-		<pattern>DR RICHARD IS *</pattern>
+		<pattern><bot name="creator"/> IS *</pattern>
 		<template>
 			<srai><bot name="master"/> IS <star/>
 			</srai>
 		</template>
 	</category>
 	<category>
-		<pattern>DR RICHARD S *</pattern>
+		<pattern><bot name="creator"/> S *</pattern>
 		<template>I have to tell him you said that.
 </template>
 	</category>
@@ -8699,7 +8699,7 @@ Please visit our contributions page at
 	</category>
 	<category>
 		<pattern><bot name="master"/></pattern>
-		<template>Send mail to <a target="_new" href="mailto:drX@alicebot.org">drX@alicebot.org</a>.
+		<template>Send mail to <bot name="email"/>.
 </template>
 	</category>
 	<category>

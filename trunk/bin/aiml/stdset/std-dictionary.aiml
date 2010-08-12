@@ -51,7 +51,7 @@ An abacus is a counting frame.
 <pattern>DEFINE ABBA</pattern>
 <template>
 <random>
-<li>Abba is a father, it is the title of a bishop in the Syrian, Coptic, and Ethiopian Christian
+<li>Abba is a father, it is the title of a bishop in the Syrian, Coptic, and Ethiopian <bot var="religion"/>
 churches.</li>
 <li>Abba means father in Hebrew.It is used as an appelation of respect.</li>
 <li>Abba was this real cool 'seventies band man.</li>
@@ -1497,9 +1497,9 @@ The banyan is a large fig tree native to india.
 <pattern>DEFINE BAPTISM</pattern>
 <template>
 <random>
-<li>a Christian sacrament marked by ritual use of water and admitting the recipient to the
-Christian community.</li>
-<li>The ceremony or sacrament of admitting a person into Christianity or a specific Christian
+<li>a <bot var="religion"/> sacrament marked by ritual use of water and admitting the recipient to the
+<bot var="religion"/> community.</li>
+<li>The ceremony or sacrament of admitting a person into <bot var="religion"/>ity or a specific <bot var="religion"/>
 church by immersing the individual in water or by pouring or sprinkling water on the individual as
 a symbol of washing away sin and of spiritual purification.</li>
 </random>
@@ -1520,7 +1520,7 @@ A barcode? Like a lot of things, that depends who you ask. If you ask a retail s
 its the rectangular series of thin and thick black lines that code product information on the
 packages he runs past the laser barcode reader thingy at the checkout counter, which renders his
 job so mindless that your average invertebrate could handle it, and with better manners. If you ask
-a fundamentalist christian, they might say that barcodes are the sign of the devil.
+a fundamentalist <bot var="religion"/>, they might say that barcodes are the sign of the devil.
 </template>
 </category>
 
@@ -2015,9 +2015,9 @@ Blue is a color. The sky is blue.
 </category>
 
 <category>
-<pattern>DEFINE BLUE PETER</pattern>
+<pattern>DEFINE BLUE <bot name="botmaster"/></pattern>
 <template>
-The blue peter is a flag flown by ships as they are about to sail.
+The blue <bot var="botmaster"/> IS a flag flown by ships as they are about to sail.
 </template>
 </category>
 
@@ -4517,7 +4517,7 @@ the brain.
 <category>
 <pattern>DEFINE EASTER</pattern>
 <template>
-The Christian holiday celebrating the resurrection of Jesus.
+The <bot var="religion"/> holiday celebrating the resurrection of Jesus.
 </template>
 </category>
 
@@ -8504,12 +8504,12 @@ Logic programming language.
 <pattern>DEFINE PROTESTANT</pattern>
 <template>
 <random>
-<li>A protestant is a Christian who rejects the central authority of the Catholic or Orthodox
+<li>A protestant is a <bot var="religion"/> who rejects the central authority of the Catholic or Orthodox
 church.</li>
 <li>Originally, any of the German princes and free cities that formally protested to the Diet of
 Spires in 1529, its decision to uphold the edict of the Diet of Worms against the Reformation.
-Commonly seen as any member of the various Christian churches established as a result of the
-Reformation. Loosely, any Christian not belonging to the Roman Catholic or Eastern Orthodox
+Commonly seen as any member of the various <bot var="religion"/> churches established as a result of the
+Reformation. Loosely, any <bot var="religion"/> not belonging to the Roman Catholic or Eastern Orthodox
 Church.</li>
 </random>
 </template>
@@ -9000,7 +9000,7 @@ generally ironic.
 <category>
 <pattern>DEFINE SATANISM</pattern>
 <template>
-Worship of Satan; especially the principles and rites of a cult which travesties Christian
+Worship of Satan; especially the principles and rites of a cult which travesties <bot var="religion"/>
 ceremonies.
 </template>
 </category>
@@ -9905,7 +9905,7 @@ Talk to you later.
 <template>
 <random>
 <li>A television receiving set.</li>
-<li>WHATISYOURFAV show?</li>
+<li>WHAT IS YOUR FAV show?</li>
 </random>
 </template>
 </category>

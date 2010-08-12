@@ -451,7 +451,7 @@
 <category><pattern>SPREAD OF BREAST *</pattern><template><think><srai>NOPX 823</srai></think><random><li><srai>EXPDEX SPREAD OF BREAST <star/></srai></li></random></template></category>
 <category><pattern>SPREAD OF BUDDHISM *</pattern><template><think><srai>NOPX 1197</srai></think><random><li><srai>EXPDEX SPREAD OF BUDDHISM <star/></srai></li></random></template></category>
 <category><pattern>SPREAD OF CANCER *</pattern><template><think><srai>NOPX 612</srai></think><random><li><srai>EXPDEX SPREAD OF CANCER <star/></srai></li></random></template></category>
-<category><pattern>SPREAD OF CHRISTIANITY *</pattern><template><think><srai>NOPX 1406</srai></think><random><li><srai>EXPDEX SPREAD OF CHRISTIANITY <star/></srai></li></random></template></category>
+<category><pattern>SPREAD OF <bot var="religion"/>ITY *</pattern><template><think><srai>NOPX 1406</srai></think><random><li><srai>EXPDEX SPREAD OF <bot var="religion"/>ITY <star/></srai></li></random></template></category>
 <category><pattern>SPREAD OF DEMOCRACY *</pattern><template><think><srai>NOPX 883</srai></think><random><li><srai>EXPDEX SPREAD OF DEMOCRACY <star/></srai></li></random></template></category>
 <category><pattern>SPREAD OF DISEASE *</pattern><template><think><srai>NOPX 1822</srai></think><random><li><srai>EXPDEX SPREAD OF DISEASE <star/></srai></li></random></template></category>
 <category><pattern>SPREAD OF EARLY *</pattern><template><think><srai>NOPX 515</srai></think><random><li><srai>EXPDEX SPREAD OF EARLY <star/></srai></li></random></template></category>
@@ -645,7 +645,7 @@
 <category><pattern>SPREAD UNK THE *</pattern><template><think><srai>NOPX 504</srai></think><random><li><srai>EXPDEX SPREAD UNK THE <star/></srai></li></random></template></category>
 <category><pattern>SPREAD UNK ZHALF *</pattern><template><think><srai>NOPX 1280</srai></think><random><li><srai>EXPDEX SPREAD UNK ZHALF <star/></srai></li></random></template></category>
 <category><pattern>SPREAD AIDS AWARENESS *</pattern><template><think><srai>NOPX 475</srai></think><random><li><srai>EXPDEX SPREAD AIDS AWARENESS <star/></srai></li></random></template></category>
-<category><pattern>SPREAD CHRISTIANITY TO *</pattern><template><think><srai>NOPX 478</srai></think><random><li><srai>EXPDEX SPREAD CHRISTIANITY TO <star/></srai></li></random></template></category>
+<category><pattern>SPREAD <bot var="religion"/>ITY TO *</pattern><template><think><srai>NOPX 478</srai></think><random><li><srai>EXPDEX SPREAD <bot var="religion"/>ITY TO <star/></srai></li></random></template></category>
 <category><pattern>SPREAD CHRISTMAS CHEER *</pattern><template><think><srai>NOPX 1876</srai></think><random><li><srai>EXPDEX SPREAD CHRISTMAS CHEER <star/></srai></li></random></template></category>
 <category><pattern>SPREAD DISASTERSEARCH *</pattern><template><think><srai>NOPX 1351</srai></think><random><li><srai>EXPDEX SPREAD DISASTERSEARCH <star/></srai></li></random></template></category>
 <category><pattern>SPREAD FOR A *</pattern><template><think><srai>NOPX 756</srai></think><random><li><srai>EXPDEX SPREAD FOR A <star/></srai></li></random></template></category>
@@ -1610,8 +1610,8 @@
 <category><pattern>SPREAD OF CATHOLICISM *</pattern><template><think><srai>NOPX 1479</srai></think><random><li><srai>EXPDEX SPREAD OF CATHOLICISM <star/></srai></li></random></template></category>
 <category><pattern>SPREAD OF CHINESE *</pattern><template><think><srai>NOPX 624</srai></think><random><li><srai>EXPDEX SPREAD OF CHINESE <star/></srai></li></random></template></category>
 <category><pattern>SPREAD OF CHRIST *</pattern><template><think><srai>NOPX 632</srai></think><random><li><srai>EXPDEX SPREAD OF CHRIST <star/></srai></li></random></template></category>
-<category><pattern>SPREAD OF CHRISTIAN *</pattern><template><think><srai>NOPX 907</srai></think><random><li><srai>EXPDEX SPREAD OF CHRISTIAN <star/></srai></li></random></template></category>
-<category><pattern>SPREAD OF CHRISTIANITY *</pattern><template><think><srai>NOPX 13657</srai></think><random><li><srai>EXPDEX SPREAD OF CHRISTIANITY <star/></srai></li></random></template></category>
+<category><pattern>SPREAD OF <bot var="religion"/> *</pattern><template><think><srai>NOPX 907</srai></think><random><li><srai>EXPDEX SPREAD OF <bot var="religion"/> <star/></srai></li></random></template></category>
+<category><pattern>SPREAD OF <bot var="religion"/>ITY *</pattern><template><think><srai>NOPX 13657</srai></think><random><li><srai>EXPDEX SPREAD OF <bot var="religion"/>ITY <star/></srai></li></random></template></category>
 <category><pattern>SPREAD OF COMMUNISM *</pattern><template><think><srai>NOPX 5165</srai></think><random><li><srai>EXPDEX SPREAD OF COMMUNISM <star/></srai></li></random></template></category>
 <category><pattern>SPREAD OF DEMOCRACY *</pattern><template><think><srai>NOPX 433</srai></think><random><li><srai>EXPDEX SPREAD OF DEMOCRACY <star/></srai></li></random></template></category>
 <category><pattern>SPREAD OF DUTCH *</pattern><template><think><srai>NOPX 485</srai></think><random><li><srai>EXPDEX SPREAD OF DUTCH <star/></srai></li></random></template></category>
@@ -2484,7 +2484,7 @@
 <category><pattern>SPREAD THE *</pattern><template><think><srai>NOPX 598</srai></think><random><li><srai>EXPDEX SPREAD THE <star/></srai></li></random></template></category>
 <category><pattern>SPREAD THE AIDS *</pattern><template><think><srai>NOPX 569</srai></think><random><li><srai>EXPDEX SPREAD THE AIDS <star/></srai></li></random></template></category>
 <category><pattern>SPREAD THE CATHOLIC *</pattern><template><think><srai>NOPX 570</srai></think><random><li><srai>EXPDEX SPREAD THE CATHOLIC <star/></srai></li></random></template></category>
-<category><pattern>SPREAD THE CHRISTIAN *</pattern><template><think><srai>NOPX 2303</srai></think><random><li><srai>EXPDEX SPREAD THE CHRISTIAN <star/></srai></li></random></template></category>
+<category><pattern>SPREAD THE <bot var="religion"/> *</pattern><template><think><srai>NOPX 2303</srai></think><random><li><srai>EXPDEX SPREAD THE <bot var="religion"/> <star/></srai></li></random></template></category>
 <category><pattern>SPREAD THE CHRISTMAS *</pattern><template><think><srai>NOPX 861</srai></think><random><li><srai>EXPDEX SPREAD THE CHRISTMAS <star/></srai></li></random></template></category>
 <category><pattern>SPREAD THE DA *</pattern><template><think><srai>NOPX 1578</srai></think><random><li><srai>EXPDEX SPREAD THE DA <star/></srai></li></random></template></category>
 <category><pattern>SPREAD THE DHARMA *</pattern><template><think><srai>NOPX 759</srai></think><random><li><srai>EXPDEX SPREAD THE DHARMA <star/></srai></li></random></template></category>
@@ -3775,7 +3775,7 @@
 <category><pattern>SPREAD OF AVIAN INFLUENZA *</pattern><template><think><srai>NOPX 437</srai></think><random><li><srai>EXPDEX SPREAD OF AVIAN INFLUENZA <star/></srai></li></random></template></category>
 <category><pattern>SPREAD OF BUDDHISM *</pattern><template><think><srai>NOPX 575</srai></think><random><li><srai>EXPDEX SPREAD OF BUDDHISM <star/></srai></li></random></template></category>
 <category><pattern>SPREAD OF CATHOLICISM *</pattern><template><think><srai>NOPX 1003</srai></think><random><li><srai>EXPDEX SPREAD OF CATHOLICISM <star/></srai></li></random></template></category>
-<category><pattern>SPREAD OF CHRISTIANITY *</pattern><template><think><srai>NOPX 529</srai></think><random><li><srai>EXPDEX SPREAD OF CHRISTIANITY <star/></srai></li></random></template></category>
+<category><pattern>SPREAD OF <bot var="religion"/>ITY *</pattern><template><think><srai>NOPX 529</srai></think><random><li><srai>EXPDEX SPREAD OF <bot var="religion"/>ITY <star/></srai></li></random></template></category>
 <category><pattern>SPREAD OF COMMUNISM IN *</pattern><template><think><srai>NOPX 1101</srai></think><random><li><srai>EXPDEX SPREAD OF COMMUNISM IN <star/></srai></li></random></template></category>
 <category><pattern>SPREAD OF H5N1 *</pattern><template><think><srai>NOPX 1077</srai></think><random><li><srai>EXPDEX SPREAD OF H5N1 <star/></srai></li></random></template></category>
 <category><pattern>SPREAD OF HIV *</pattern><template><think><srai>NOPX 4419</srai></think><random><li><srai>EXPDEX SPREAD OF HIV <star/></srai></li></random></template></category>
@@ -4155,8 +4155,8 @@
 <category><pattern>SPREAD SPORTS BETTING POSTING *</pattern><template><think><srai>NOPX 892</srai></think><random><li><srai>EXPDEX SPREAD SPORTS BETTING POSTING <star/></srai></li></random></template></category>
 <category><pattern>SPREAD SPREAD SPREAD SPREAD *</pattern><template><think><srai>NOPX 22095</srai></think><random><li><srai>EXPDEX SPREAD SPREAD SPREAD SPREAD <star/></srai></li></random></template></category>
 <category><pattern>SPREAD THE AIDS VIRUS *</pattern><template><think><srai>NOPX 416</srai></think><random><li><srai>EXPDEX SPREAD THE AIDS VIRUS <star/></srai></li></random></template></category>
-<category><pattern>SPREAD THE CHRISTIAN FAITH *</pattern><template><think><srai>NOPX 628</srai></think><random><li><srai>EXPDEX SPREAD THE CHRISTIAN FAITH <star/></srai></li></random></template></category>
-<category><pattern>SPREAD THE CHRISTIAN MESSAGE *</pattern><template><think><srai>NOPX 806</srai></think><random><li><srai>EXPDEX SPREAD THE CHRISTIAN MESSAGE <star/></srai></li></random></template></category>
+<category><pattern>SPREAD THE <bot var="religion"/> FAITH *</pattern><template><think><srai>NOPX 628</srai></think><random><li><srai>EXPDEX SPREAD THE <bot var="religion"/> FAITH <star/></srai></li></random></template></category>
+<category><pattern>SPREAD THE <bot var="religion"/> MESSAGE *</pattern><template><think><srai>NOPX 806</srai></think><random><li><srai>EXPDEX SPREAD THE <bot var="religion"/> MESSAGE <star/></srai></li></random></template></category>
 <category><pattern>SPREAD THE DA LOVE *</pattern><template><think><srai>NOPX 1448</srai></think><random><li><srai>EXPDEX SPREAD THE DA LOVE <star/></srai></li></random></template></category>
 <category><pattern>SPREAD THE GOSPEL MESSAGE *</pattern><template><think><srai>NOPX 606</srai></think><random><li><srai>EXPDEX SPREAD THE GOSPEL MESSAGE <star/></srai></li></random></template></category>
 <category><pattern>SPREAD THE TC LOVE *</pattern><template><think><srai>NOPX 684</srai></think><random><li><srai>EXPDEX SPREAD THE TC LOVE <star/></srai></li></random></template></category>

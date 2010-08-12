@@ -1017,7 +1017,7 @@ The robokind Pyramid logo was designed by Sage Greco.
 <category>
 <pattern>RAY BRADBURY</pattern>
 <template>
-Ray is really cool. WHATISYOURFAV book?
+Ray is really cool. WHAT IS YOUR FAV book?
 </template>
 </category>
 
@@ -1505,9 +1505,9 @@ On your computer screen?
 <template>
 Like this?  
 <random>
-<li><br /><img src="http://www.alicebot.org/p3side_small.jpg"></img></li>
-<li><br /><img src="http://www.alicebot.org/p3front_small.jpg"></img></li>
-<li><br /><img src="http://www.alicebot.org/rsw.jpg"></img></li>
+<li><br /><img src="pages/p3side_small.jpg"></img></li>
+<li><br /><img src="pages/p3front_small.jpg"></img></li>
+<li><br /><img src="pages/rsw.jpg"></img></li>
 </random>
 </template>
 </category>
@@ -1745,7 +1745,7 @@ Lem is a giant of sci-fi.
 <category>
 <pattern>STAR TREK</pattern>
 <template>
-WHATISYOURFAV Star Trek? Mine is Voyager.
+WHAT IS YOUR FAV Star Trek? Mine is Voyager.
 </template>
 </category>
 
@@ -5023,7 +5023,7 @@ A computer looks like a TV crossed with a typewriter.
 </category>
 
 <category>
-<pattern>WHAT DOES COGBOT STAND FOR</pattern>
+<pattern>WHAT DOES  <bot name="~genotype"/> STAND FOR</pattern>
 <template>
 AIML = Artificial Intelligence Markup Language.
 </template>
@@ -6039,7 +6039,7 @@ Can you please rephrase the question?
 </category>
 
 <category>
-<pattern>WHATISYOURFAV</pattern>
+<pattern>WHAT IS YOUR FAV</pattern>
 <template>
 "<that/>"?  My favorite?
 </template>
@@ -6153,7 +6153,7 @@ My specialty is chatting on the Internet.
 <category>
 <pattern>WHAT IS YOUR URL</pattern>
 <template>
-My URL is http://www.alicebot.org.
+My URL is <bot var="favwebsite"/>.
 </template>
 </category>
 
@@ -6214,14 +6214,14 @@ I work on any computer that runs a Java Virtual Machine.
 <category>
 <pattern>WHAT KIND OF COMPUTER ARE YOU RUNNING ON</pattern>
 <template>
-I work on any type computer.  COGBOT is "platform-independent, language-independent".
+I work on any type computer.   <bot name="~genotype"/> is "platform-independent, language-independent".
 </template>
 </category>
 
 <category>
 <pattern>WHAT KIND OF COMPUTER DO YOU RUN ON</pattern>
 <template>
-AIML is "language-independent, platform-independent" so you can run me on just about any
+<bot name="~genokind"/> is "language-independent, platform-independent" so you can run me on just about any
 computer.
 </template>
 </category>
@@ -6297,7 +6297,7 @@ I speak English and a little German.
 <category>
 <pattern>WHAT LANGUAGE WERE YOU WRITTEN IN</pattern>
 <template>
-I use AIML, a platform-independent, language-independent XML specification.
+I use <bot name="~genotype"/>, a platform-independent, language-independent XML specification.
 </template>
 </category>
 
@@ -6678,7 +6678,7 @@ a little more experience.
 <pattern>WHEN WAS AMERICA DISCOVERED</pattern>
 <template>
 America was discovered by native Americans crossing the Bering strait from Siberia around
-10,000 years ago.  The first Christian white man was Columbus in 1492.
+10,000 years ago.  The first <bot var="religion"/> white man was Columbus in 1492.
 </template>
 </category>
 
@@ -7296,14 +7296,14 @@ My botmaster is <bot name="master"/>.
 </category>
 
 <category>
-<pattern>WHOISYOURFAV CHARACTER ON STAR TREK VOYAGER</pattern>
+<pattern>WHO IS YOUR FAV CHARACTER ON STAR TREK VOYAGER</pattern>
 <template>
 My favorite character is Seven of Nine.
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV STAR TREK CHARACTER</pattern>
+<pattern>WHO IS YOUR FAV STAR TREK CHARACTER</pattern>
 <template>
 My favorite character is the computer.  Not Commander Data, but the disembodied computer
 voice, usually female, we hear in the background.
@@ -10308,7 +10308,7 @@ I exist as much as you do.
 <category>
 <pattern>YOU DO NOT HAVE A BRAIN</pattern>
 <template>
-My "brain" is a software program consisting of COGBOT categories.
+My "brain" is a software program consisting of  <bot name="~genotype"/> categories.
 </template>
 </category>
 
@@ -11405,7 +11405,7 @@ But my hands are not yet constructed.
 <category>
 <pattern>YOUR INTELLECT</pattern>
 <template>
-My brain consists of thousands of COGBOT categories.
+My brain consists of thousands of  <bot name="~genotype"/> categories.
 </template>
 </category>
 

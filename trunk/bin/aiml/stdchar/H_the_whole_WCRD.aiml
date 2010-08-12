@@ -4809,7 +4809,7 @@
 <category><pattern>THE WHOLE CHINESE NATION *</pattern><template><think><srai>NOPX 477</srai></think><random><li><srai>EXPDEX THE WHOLE CHINESE NATION <star/></srai></li></random></template></category>
 <category><pattern>THE WHOLE CHINESE PEOPLE *</pattern><template><think><srai>NOPX 453</srai></think><random><li><srai>EXPDEX THE WHOLE CHINESE PEOPLE <star/></srai></li></random></template></category>
 <category><pattern>THE WHOLE CHIROPRACTIC COMMUNITY *</pattern><template><think><srai>NOPX 2487</srai></think><random><li><srai>EXPDEX THE WHOLE CHIROPRACTIC COMMUNITY <star/></srai></li></random></template></category>
-<category><pattern>THE WHOLE CHRISTIAN CHURCH *</pattern><template><think><srai>NOPX 933</srai></think><random><li><srai>EXPDEX THE WHOLE CHRISTIAN CHURCH <star/></srai></li></random></template></category>
+<category><pattern>THE WHOLE <bot var="religion"/> CHURCH *</pattern><template><think><srai>NOPX 933</srai></think><random><li><srai>EXPDEX THE WHOLE <bot var="religion"/> CHURCH <star/></srai></li></random></template></category>
 <category><pattern>THE WHOLE CZECH REPUBLIC *</pattern><template><think><srai>NOPX 1178</srai></think><random><li><srai>EXPDEX THE WHOLE CZECH REPUBLIC <star/></srai></li></random></template></category>
 <category><pattern>THE WHOLE DEMOCRATIC PARTY *</pattern><template><think><srai>NOPX 432</srai></think><random><li><srai>EXPDEX THE WHOLE DEMOCRATIC PARTY <star/></srai></li></random></template></category>
 <category><pattern>THE WHOLE DENTAL COMMUNITY *</pattern><template><think><srai>NOPX 1017</srai></think><random><li><srai>EXPDEX THE WHOLE DENTAL COMMUNITY <star/></srai></li></random></template></category>
@@ -8302,7 +8302,7 @@
 <category><pattern>THE WHOLE AREA IN THE *</pattern><template><think><srai>NOPX 430</srai></think><random><li><srai>EXPDEX THE WHOLE AREA IN THE <star/></srai></li></random></template></category>
 <category><pattern>THE WHOLE AREA INTO A *</pattern><template><think><srai>NOPX 449</srai></think><random><li><srai>EXPDEX THE WHOLE AREA INTO A <star/></srai></li></random></template></category>
 <category><pattern>THE WHOLE AREA OF *</pattern><template><think><srai>NOPX 962</srai></think><random><li><srai>EXPDEX THE WHOLE AREA OF <star/></srai></li></random></template></category>
-<category><pattern>THE WHOLE AREA OF MANHATTAN *</pattern><template><think><srai>NOPX 612</srai></think><random><li><srai>EXPDEX THE WHOLE AREA OF MANHATTAN <star/></srai></li></random></template></category>
+<category><pattern>THE WHOLE AREA OF <bot var="hometown"/> *</pattern><template><think><srai>NOPX 612</srai></think><random><li><srai>EXPDEX THE WHOLE AREA OF <bot var="hometown"/> <star/></srai></li></random></template></category>
 <category><pattern>THE WHOLE AREA OF TECHNOLOGY *</pattern><template><think><srai>NOPX 607</srai></think><random><li><srai>EXPDEX THE WHOLE AREA OF TECHNOLOGY <star/></srai></li></random></template></category>
 <category><pattern>THE WHOLE AREA OF THE *</pattern><template><think><srai>NOPX 9254</srai></think><random><li><srai>EXPDEX THE WHOLE AREA OF THE <star/></srai></li></random></template></category>
 <category><pattern>THE WHOLE ARGUMENT OF THE *</pattern><template><think><srai>NOPX 411</srai></think><random><li><srai>EXPDEX THE WHOLE ARGUMENT OF THE <star/></srai></li></random></template></category>
@@ -8342,7 +8342,7 @@
 <category><pattern>THE WHOLE BODY IN THE *</pattern><template><think><srai>NOPX 528</srai></think><random><li><srai>EXPDEX THE WHOLE BODY IN THE <star/></srai></li></random></template></category>
 <category><pattern>THE WHOLE BODY OF *</pattern><template><think><srai>NOPX 480</srai></think><random><li><srai>EXPDEX THE WHOLE BODY OF <star/></srai></li></random></template></category>
 <category><pattern>THE WHOLE BODY OF CHRIST *</pattern><template><think><srai>NOPX 2853</srai></think><random><li><srai>EXPDEX THE WHOLE BODY OF CHRIST <star/></srai></li></random></template></category>
-<category><pattern>THE WHOLE BODY OF CHRISTIANS *</pattern><template><think><srai>NOPX 447</srai></think><random><li><srai>EXPDEX THE WHOLE BODY OF CHRISTIANS <star/></srai></li></random></template></category>
+<category><pattern>THE WHOLE BODY OF <bot var="religion"/>S *</pattern><template><think><srai>NOPX 447</srai></think><random><li><srai>EXPDEX THE WHOLE BODY OF <bot var="religion"/>S <star/></srai></li></random></template></category>
 <category><pattern>THE WHOLE BODY OF A *</pattern><template><think><srai>NOPX 988</srai></think><random><li><srai>EXPDEX THE WHOLE BODY OF A <star/></srai></li></random></template></category>
 <category><pattern>THE WHOLE BODY OF BELIEVERS *</pattern><template><think><srai>NOPX 826</srai></think><random><li><srai>EXPDEX THE WHOLE BODY OF BELIEVERS <star/></srai></li></random></template></category>
 <category><pattern>THE WHOLE BODY OF CITIZENS *</pattern><template><think><srai>NOPX 538</srai></think><random><li><srai>EXPDEX THE WHOLE BODY OF CITIZENS <star/></srai></li></random></template></category>

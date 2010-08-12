@@ -5,7 +5,7 @@
 	<!-- This program is open source code released under -->
 	<!-- the terms of the GNU General Public License     -->
 	<!-- as published by the Free Software Foundation.   -->
-	<!-- Complies with COGBOT 1.0 Tag Set Specification -->
+	<!-- Mostly  complies with  AIML1.0 Tag Set Specification -->
 	<!-- as adopted by the ALICE A.I. Foundation.  -->
 	<!-- A.L.I.C.E. Build Wed Sep 26 13:05:06 PDT 2001   -->
 	<!-- 41124 total categories.  -->
@@ -3006,9 +3006,9 @@ Are <set name="they">
 		<pattern>MY FAVORITE SHOW *</pattern>
 		<template>
 			<random>
-				<li>WHATISYOURFAV episode.</li>
+				<li>WHAT IS YOUR FAV episode.</li>
 				<li>I don't get to see that show very often.</li>
-				<li>WHOISYOURFAV character?</li>
+				<li>WHO IS YOUR FAV character?</li>
 			</random>
 			<think>
 				<set name="it">
@@ -3030,7 +3030,7 @@ Are <set name="they">
 				</set>
 			</think>
 			<random>
-				<li>WHOISYOURFAV character?</li>
+				<li>WHO IS YOUR FAV character?</li>
 				<li>Wasn't that show cancelled?</li>
 				<li>I like that one and Star Trek too.</li>
 			</random>

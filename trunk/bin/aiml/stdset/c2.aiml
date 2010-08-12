@@ -5,7 +5,7 @@
 	<!-- This program is open source code released under -->
 	<!-- the terms of the GNU General Public License     -->
 	<!-- as published by the Free Software Foundation.   -->
-	<!-- Complies with COGBOT 1.0 Tag Set Specification -->
+	<!-- Mostly  complies with  AIML1.0 Tag Set Specification -->
 	<!-- as adopted by the ALICE A.I. Foundation.  -->
 	<!-- A.L.I.C.E. Build Wed Sep 26 13:05:06 PDT 2001   -->
 	<!-- 41124 total categories.  -->
@@ -2180,22 +2180,22 @@ conversations simultanées.
 	</category>
 	<category>
 		<pattern>COMMENT IL T A CREE</pattern>
-		<template>J ai été ecrit en JAVA et en AIML.
+		<template>J ai été ecrit en JAVA et en <bot name="~genotype"/>.
 </template>
 	</category>
 	<category>
 		<pattern>COMMENT IL VOUS A CREE</pattern>
-		<template>J ai été ecrit en JAVA et en AIML.
+		<template>J ai été ecrit en JAVA et en <bot name="~genotype"/>.
 </template>
 	</category>
 	<category>
 		<pattern>COMMENT ILS T ONT CREE</pattern>
-		<template>J ai été ecrit en JAVA et en AIML.
+		<template>J ai été ecrit en JAVA et en <bot name="~genotype"/>.
 </template>
 	</category>
 	<category>
 		<pattern>COMMENT ILS VOUS ONT CREE</pattern>
-		<template>J ai été ecrit en JAVA et en AIML.
+		<template>J ai été ecrit en JAVA et en <bot name="~genotype"/>.
 </template>
 	</category>
 	<category>

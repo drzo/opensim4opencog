@@ -82,8 +82,8 @@
 <!-- p=-65.7535560313183 	:who is saying bush * ? -->
 <category><pattern>I HEAR CHRIS *</pattern><template><think><srai>NOPX 469</srai></think><random><li><srai>EXPDEX I HEAR CHRIS <star/></srai></li></random></template></category>
 <!-- p=-65.7535560313183 	:who is saying chris * ? -->
-<category><pattern>I HEAR CHRISTIANS *</pattern><template><think><srai>NOPX 432</srai></think><random><li><srai>EXPDEX I HEAR CHRISTIANS <star/></srai></li></random></template></category>
-<!-- p=-65.7535560313183 	:who is saying christians * ? -->
+<category><pattern>I HEAR <bot var="religion"/>S *</pattern><template><think><srai>NOPX 432</srai></think><random><li><srai>EXPDEX I HEAR <bot var="religion"/>S <star/></srai></li></random></template></category>
+<!-- p=-65.7535560313183 	:who is saying <bot var="religion"/>s * ? -->
 <category><pattern>I HEAR CHRISTMAS *</pattern><template><think><srai>NOPX 719</srai></think><random><li><srai>EXPDEX I HEAR CHRISTMAS <star/></srai></li></random></template></category>
 <!-- p=-65.7535560313183 	:who is saying christmas * ? -->
 <category><pattern>I HEAR DAVID *</pattern><template><think><srai>NOPX 498</srai></think><random><li><srai>EXPDEX I HEAR DAVID <star/></srai></li></random></template></category>

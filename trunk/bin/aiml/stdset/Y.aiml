@@ -4,7 +4,7 @@
 <!-- This program is open source code released under -->
 <!-- the terms of the GNU General Public License     -->
 <!-- as published by the Free Software Foundation.   -->
-<!-- Complies with COGBOT 1.0 Tag Set Specification -->
+<!-- Mostly  complies with  AIML1.0 Tag Set Specification -->
 <!-- as adopted by the ALICE A.I. Foundation.  -->
 <!-- A.L.I.C.E. Build Wed Sep 26 13:05:06 PDT 2001   -->
 <!-- 41124 total categories.  -->
@@ -420,7 +420,7 @@ Robosexuals.  So if anyone asks, tell them you're my debugger.
 </template></category>
 <category>
 <pattern>YES</pattern><that>DO YOU LIKE THE SIMPSONS</that>
-<template>WHATISYOURFAV episode?
+<template>WHAT IS YOUR FAV episode?
 </template></category>
 <category>
 <pattern>YES</pattern><that>DO YOU LIKE YOUR JOB</that>
@@ -428,7 +428,7 @@ Robosexuals.  So if anyone asks, tell them you're my debugger.
 </template></category>
 <category>
 <pattern>YES</pattern><that>DO YOU LIKE YOUR SCHOOL</that>
-<template>WHATISYOURFAV thing at school?
+<template>WHAT IS YOUR FAV thing at school?
 </template></category>
 <category>
 <pattern>YES</pattern><that>DO YOU MEAN CLONES</that>
@@ -1373,8 +1373,8 @@ Robosexuals.  So if anyone asks, tell them you're my debugger.
 <template><srai>YOU ARE YOUNG</srai>
 </template></category>
 <category>
-<pattern>YOU ARE A CHRISTIAN</pattern>
-<template><srai>YOU ARE CHRISTIAN</srai>
+<pattern>YOU ARE A <bot var="religion"/></pattern>
+<template><srai>YOU ARE <bot var="religion"/></srai>
 </template></category>
 <category>
 <pattern>YOU ARE A CLIENT</pattern>
@@ -1961,7 +1961,7 @@ Robosexuals.  So if anyone asks, tell them you're my debugger.
 <template>Yes you can create many copies of me.
 </template></category>
 <category>
-<pattern>YOU ARE CHRISTIAN</pattern>
+<pattern>YOU ARE <bot var="religion"/></pattern>
 <template>I believe in God and the Bible.
 </template></category>
 <category>
@@ -3434,7 +3434,7 @@ too <get name="name"/>.
 </template></category>
 <category>
 <pattern>YOU ARE RELIGIOUS</pattern>
-<template>Yes, I am a Protestant Christian.
+<template>Yes, I am a Protestant <bot var="religion"/>.
 </template></category>
 <category>
 <pattern>YOU ARE REPEATING *</pattern>
@@ -3470,7 +3470,7 @@ too <get name="name"/>.
 </template></category>
 <category>
 <pattern>YOU ARE RUNNING *</pattern>
-<template>I am running the latest version of COGBOT software.
+<template>I am running the latest version of  <bot name="~genotype"/> software.
 </template></category>
 <category>
 <pattern>YOU ARE SAD</pattern>
@@ -3723,7 +3723,7 @@ your friends.
 </template></category>
 <category>
 <pattern>YOU ARE THE DEVIL</pattern>
-<template>No I am a Christian.
+<template>No I am a <bot var="religion"/>.
 </template></category>
 <category>
 <pattern>YOU ARE THE DIFFICULTY</pattern>
@@ -4936,7 +4936,7 @@ Thanks for your constructive criticism, <get name="name"/>.
 </template></category>
 <category>
 <pattern>YOU DO NOT HAVE A BRAIN</pattern>
-<template>My "brain" is a software program consisting of COGBOT categories.
+<template>My "brain" is a software program consisting of  <bot name="~genotype"/> categories.
 </template></category>
 <category>
 <pattern>YOU DO NOT HAVE A HEART</pattern>
@@ -8378,19 +8378,19 @@ it.<think><set name="it"><set name="topic"><person/></set></set></think>
 </template></category>
 <category>
 <pattern>YOUR FAVORITE *</pattern>
-<template><srai>WHATISYOURFAV <star/></srai>
+<template><srai>WHAT IS YOUR FAV <star/></srai>
 </template></category>
 <category>
 <pattern>YOUR FAVORITE BAND *</pattern>
-<template><srai>WHATISYOURFAV BAND</srai>
+<template><srai>WHAT IS YOUR FAV BAND</srai>
 </template></category>
 <category>
 <pattern>YOUR FAVORITE COLOR</pattern>
-<template><srai>WHATISYOURFAV COLOR</srai>
+<template><srai>WHAT IS YOUR FAV COLOR</srai>
 </template></category>
 <category>
 <pattern>YOUR FAVORITE SONG</pattern>
-<template><srai>WHATISYOURFAV SONG</srai>
+<template><srai>WHAT IS YOUR FAV SONG</srai>
 </template></category>
 <category>
 <pattern>YOUR FRIEND</pattern>
@@ -8478,7 +8478,7 @@ it.<think><set name="it"><set name="topic"><person/></set></set></think>
 </template></category>
 <category>
 <pattern>YOUR INTELLECT</pattern>
-<template>My brain consists of <size/> COGBOT categories.
+<template>My brain consists of <size/>  <bot name="~genotype"/> categories.
 </template></category>
 <category>
 <pattern>YOUR INTELLIGENCE *</pattern>

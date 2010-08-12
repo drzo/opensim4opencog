@@ -142,8 +142,8 @@
 <!-- p=-32.8767780156591 	:<srai>who is online * </srai>  -->
 <category><pattern>WHO WAS OUT *</pattern><template><think><srai>NOPX 1542</srai></think><random><li><srai>EXPDEX WHO WAS OUT <star/></srai></li></random></template></category>
 <!-- p=-32.8767780156591 	:<srai>who is out * </srai>  -->
-<category><pattern>WHO WAS PETER *</pattern><template><think><srai>NOPX 918</srai></think><random><li><srai>EXPDEX WHO WAS PETER <star/></srai></li></random></template></category>
-<!-- p=-32.8767780156591 	:<srai>who is peter * </srai>  -->
+<category><pattern>WHO WAS <bot name="botmaster"/> *</pattern><template><think><srai>NOPX 918</srai></think><random><li><srai>EXPDEX WHO WAS <bot name="botmaster"/> <star/></srai></li></random></template></category>
+<!-- p=-32.8767780156591 	:<srai>who is <bot name="botmaster"/> * </srai>  -->
 <category><pattern>WHO WAS PLUGGED *</pattern><template><think><srai>NOPX 548</srai></think><random><li><srai>EXPDEX WHO WAS PLUGGED <star/></srai></li></random></template></category>
 <!-- p=-32.8767780156591 	:<srai>who is plugged * </srai>  -->
 <category><pattern>WHO WAS POE *</pattern><template><think><srai>NOPX 3820</srai></think><random><li><srai>EXPDEX WHO WAS POE <star/></srai></li></random></template></category>
@@ -518,8 +518,8 @@
 <!-- p=-32.8767780156591 	:<srai>who is chairman * </srai>  -->
 <category><pattern>WHO WAS CHIEF *</pattern><template><think><srai>NOPX 2717</srai></think><random><li><srai>EXPDEX WHO WAS CHIEF <star/></srai></li></random></template></category>
 <!-- p=-32.8767780156591 	:<srai>who is chief * </srai>  -->
-<category><pattern>WHO WAS CHRISTIAN *</pattern><template><think><srai>NOPX 413</srai></think><random><li><srai>EXPDEX WHO WAS CHRISTIAN <star/></srai></li></random></template></category>
-<!-- p=-32.8767780156591 	:<srai>who is christian * </srai>  -->
+<category><pattern>WHO WAS <bot var="religion"/> *</pattern><template><think><srai>NOPX 413</srai></think><random><li><srai>EXPDEX WHO WAS <bot var="religion"/> <star/></srai></li></random></template></category>
+<!-- p=-32.8767780156591 	:<srai>who is <bot var="religion"/> * </srai>  -->
 <category><pattern>WHO WAS CLINTON *</pattern><template><think><srai>NOPX 610</srai></think><random><li><srai>EXPDEX WHO WAS CLINTON <star/></srai></li></random></template></category>
 <!-- p=-32.8767780156591 	:<srai>who is clinton * </srai>  -->
 <category><pattern>WHO WAS COMMANDER *</pattern><template><think><srai>NOPX 661</srai></think><random><li><srai>EXPDEX WHO WAS COMMANDER <star/></srai></li></random></template></category>
@@ -610,8 +610,8 @@
 <!-- p=-32.8767780156591 	:<srai>who is new * </srai>  -->
 <category><pattern>WHO WAS PAUL *</pattern><template><think><srai>NOPX 491</srai></think><random><li><srai>EXPDEX WHO WAS PAUL <star/></srai></li></random></template></category>
 <!-- p=-32.8767780156591 	:<srai>who is paul * </srai>  -->
-<category><pattern>WHO WAS PETER *</pattern><template><think><srai>NOPX 453</srai></think><random><li><srai>EXPDEX WHO WAS PETER <star/></srai></li></random></template></category>
-<!-- p=-32.8767780156591 	:<srai>who is peter * </srai>  -->
+<category><pattern>WHO WAS <bot name="botmaster"/> *</pattern><template><think><srai>NOPX 453</srai></think><random><li><srai>EXPDEX WHO WAS <bot name="botmaster"/> <star/></srai></li></random></template></category>
+<!-- p=-32.8767780156591 	:<srai>who is <bot name="botmaster"/> * </srai>  -->
 <category><pattern>WHO WAS PLAYBOY *</pattern><template><think><srai>NOPX 420</srai></think><random><li><srai>EXPDEX WHO WAS PLAYBOY <star/></srai></li></random></template></category>
 <!-- p=-32.8767780156591 	:<srai>who is playboy * </srai>  -->
 <category><pattern>WHO WAS POPE *</pattern><template><think><srai>NOPX 598</srai></think><random><li><srai>EXPDEX WHO WAS POPE <star/></srai></li></random></template></category>
@@ -2000,8 +2000,8 @@
 <!-- p=-32.8767780156591 	:<srai>who is perfect * </srai>  -->
 <category><pattern>WHO WAS PERFORMING *</pattern><template><think><srai>NOPX 5230</srai></think><random><li><srai>EXPDEX WHO WAS PERFORMING <star/></srai></li></random></template></category>
 <!-- p=-32.8767780156591 	:<srai>who is performing * </srai>  -->
-<category><pattern>WHO WAS PETER *</pattern><template><think><srai>NOPX 597</srai></think><random><li><srai>EXPDEX WHO WAS PETER <star/></srai></li></random></template></category>
-<!-- p=-32.8767780156591 	:<srai>who is peter * </srai>  -->
+<category><pattern>WHO WAS <bot name="botmaster"/> *</pattern><template><think><srai>NOPX 597</srai></think><random><li><srai>EXPDEX WHO WAS <bot name="botmaster"/> <star/></srai></li></random></template></category>
+<!-- p=-32.8767780156591 	:<srai>who is <bot name="botmaster"/> * </srai>  -->
 <category><pattern>WHO WAS PICKING *</pattern><template><think><srai>NOPX 2984</srai></think><random><li><srai>EXPDEX WHO WAS PICKING <star/></srai></li></random></template></category>
 <!-- p=-32.8767780156591 	:<srai>who is picking * </srai>  -->
 <category><pattern>WHO WAS PILOTING *</pattern><template><think><srai>NOPX 925</srai></think><random><li><srai>EXPDEX WHO WAS PILOTING <star/></srai></li></random></template></category>
@@ -2863,7 +2863,7 @@
 <category><pattern>WHO WAS OUT DEBATE *</pattern><template><think><srai>NOPX 1481</srai></think><random><li><srai>EXPDEX WHO WAS OUT DEBATE <star/></srai></li></random></template></category>
 <!-- p=-65.7535560313183 	:<srai>who is out debate * </srai>  -->
 <category><pattern>WHO WAS PETER PAN *</pattern><template><think><srai>NOPX 808</srai></think><random><li><srai>EXPDEX WHO WAS PETER PAN <star/></srai></li></random></template></category>
-<!-- p=-65.7535560313183 	:<srai>who is peter pan * </srai>  -->
+<!-- p=-65.7535560313183 	:<srai>who is <bot name="botmaster"/> pan * </srai>  -->
 <category><pattern>WHO WAS PLUGGED IN *</pattern><template><think><srai>NOPX 512</srai></think><random><li><srai>EXPDEX WHO WAS PLUGGED IN <star/></srai></li></random></template></category>
 <!-- p=-65.7535560313183 	:<srai>who is plugged in * </srai>  -->
 <category><pattern>WHO WAS POE THE *</pattern><template><think><srai>NOPX 1760</srai></think><random><li><srai>EXPDEX WHO WAS POE THE <star/></srai></li></random></template></category>
@@ -3178,8 +3178,8 @@
 <!-- p=-66.9630280395864 	:<srai>who is a captain * </srai>  -->
 <category><pattern>WHO WAS A CATHOLIC *</pattern><template><think><srai>NOPX 1106</srai></think><random><li><srai>EXPDEX WHO WAS A CATHOLIC <star/></srai></li></random></template></category>
 <!-- p=-66.9630280395864 	:<srai>who is a catholic * </srai>  -->
-<category><pattern>WHO WAS A CHRISTIAN *</pattern><template><think><srai>NOPX 2467</srai></think><random><li><srai>EXPDEX WHO WAS A CHRISTIAN <star/></srai></li></random></template></category>
-<!-- p=-66.9630280395864 	:<srai>who is a christian * </srai>  -->
+<category><pattern>WHO WAS A <bot var="religion"/> *</pattern><template><think><srai>NOPX 2467</srai></think><random><li><srai>EXPDEX WHO WAS A <bot var="religion"/> <star/></srai></li></random></template></category>
+<!-- p=-66.9630280395864 	:<srai>who is a <bot var="religion"/> * </srai>  -->
 <category><pattern>WHO WAS A DEMOCRAT *</pattern><template><think><srai>NOPX 637</srai></think><random><li><srai>EXPDEX WHO WAS A DEMOCRAT <star/></srai></li></random></template></category>
 <!-- p=-66.9630280395864 	:<srai>who is a democrat * </srai>  -->
 <category><pattern>WHO WAS A FEDERAL *</pattern><template><think><srai>NOPX 891</srai></think><random><li><srai>EXPDEX WHO WAS A FEDERAL <star/></srai></li></random></template></category>
@@ -4335,7 +4335,7 @@
 <category><pattern>WHO WAS PASTOR OF *</pattern><template><think><srai>NOPX 947</srai></think><random><li><srai>EXPDEX WHO WAS PASTOR OF <star/></srai></li></random></template></category>
 <!-- p=-65.7535560313183 	:<srai>who is pastor of * </srai>  -->
 <category><pattern>WHO WAS PETER PAN *</pattern><template><think><srai>NOPX 581</srai></think><random><li><srai>EXPDEX WHO WAS PETER PAN <star/></srai></li></random></template></category>
-<!-- p=-65.7535560313183 	:<srai>who is peter pan * </srai>  -->
+<!-- p=-65.7535560313183 	:<srai>who is <bot name="botmaster"/> pan * </srai>  -->
 <category><pattern>WHO WAS PLANNING ON *</pattern><template><think><srai>NOPX 1965</srai></think><random><li><srai>EXPDEX WHO WAS PLANNING ON <star/></srai></li></random></template></category>
 <!-- p=-65.7535560313183 	:<srai>who is planning on * </srai>  -->
 <category><pattern>WHO WAS PRESENT *</pattern><template><think><srai>NOPX 602</srai></think><random><li><srai>EXPDEX WHO WAS PRESENT <star/></srai></li></random></template></category>
@@ -5095,11 +5095,11 @@
 <category><pattern>WHO WAS YOUR CHLIDHOOD CRUSH *</pattern><template><think><srai>NOPX 459</srai></think><random><li><srai>EXPDEX WHO WAS YOUR CHLIDHOOD CRUSH <star/></srai></li></random></template></category>
 <!-- p=-97.4935363278933 	:<srai>who is your chlidhood crush * </srai>  -->
 <category><pattern>WHO WAS YOUR FAVORITE ACTOR *</pattern><template><think><srai>NOPX 631</srai></think><random><li><srai>EXPDEX WHO WAS YOUR FAVORITE ACTOR <star/></srai></li></random></template></category>
-<!-- p=-97.4935363278933 	:<srai>WHOISYOURFAV actor * </srai>  -->
+<!-- p=-97.4935363278933 	:<srai>WHO IS YOUR FAV actor * </srai>  -->
 <category><pattern>WHO WAS YOUR FAVORITE CHARACTER *</pattern><template><think><srai>NOPX 800</srai></think><random><li><srai>EXPDEX WHO WAS YOUR FAVORITE CHARACTER <star/></srai></li></random></template></category>
-<!-- p=-97.4935363278933 	:<srai>WHOISYOURFAV character * </srai>  -->
+<!-- p=-97.4935363278933 	:<srai>WHO IS YOUR FAV character * </srai>  -->
 <category><pattern>WHO WAS YOUR FAVORITE TEACHER *</pattern><template><think><srai>NOPX 1337</srai></think><random><li><srai>EXPDEX WHO WAS YOUR FAVORITE TEACHER <star/></srai></li></random></template></category>
-<!-- p=-97.4935363278933 	:<srai>WHOISYOURFAV teacher * </srai>  -->
+<!-- p=-97.4935363278933 	:<srai>WHO IS YOUR FAV teacher * </srai>  -->
 <category><pattern>WHO WAS YOUR FIRST CRUSH *</pattern><template><think><srai>NOPX 437</srai></think><random><li><srai>EXPDEX WHO WAS YOUR FIRST CRUSH <star/></srai></li></random></template></category>
 <!-- p=-97.4935363278933 	:<srai>who is your first crush * </srai>  -->
 <category><pattern>WHO WAS YOUR FIRST LOVE *</pattern><template><think><srai>NOPX 409</srai></think><random><li><srai>EXPDEX WHO WAS YOUR FIRST LOVE <star/></srai></li></random></template></category>

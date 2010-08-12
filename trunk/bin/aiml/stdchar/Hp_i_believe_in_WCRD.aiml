@@ -92,8 +92,8 @@
 <!-- p=-309.937728627935 	:what do you say to people who believe america * does not exist? -->
 <category><pattern>I BELIEVE IN CHRIST *</pattern><template><think><srai>NOPX 1725</srai></think><random><li><srai>EXPDEX I BELIEVE IN CHRIST <star/></srai></li></random></template></category>
 <!-- p=-309.21076218092 	:what do you say to people who believe christ * does not exist? -->
-<category><pattern>I BELIEVE IN CHRISTIANITY *</pattern><template><think><srai>NOPX 2212</srai></think><random><li><srai>EXPDEX I BELIEVE IN CHRISTIANITY <star/></srai></li></random></template></category>
-<!-- p=-309.21076218092 	:what do you say to people who believe christianity * does not exist? -->
+<category><pattern>I BELIEVE IN <bot var="religion"/>ITY *</pattern><template><think><srai>NOPX 2212</srai></think><random><li><srai>EXPDEX I BELIEVE IN <bot var="religion"/>ITY <star/></srai></li></random></template></category>
+<!-- p=-309.21076218092 	:what do you say to people who believe <bot var="religion"/>ity * does not exist? -->
 <category><pattern>I BELIEVE IN CHRISTMAS *</pattern><template><think><srai>NOPX 528</srai></think><random><li><srai>EXPDEX I BELIEVE IN CHRISTMAS <star/></srai></li></random></template></category>
 <!-- p=-309.21076218092 	:what do you say to people who believe christmas * does not exist? -->
 <category><pattern>I BELIEVE IN CREATION *</pattern><template><think><srai>NOPX 486</srai></think><random><li><srai>EXPDEX I BELIEVE IN CREATION <star/></srai></li></random></template></category>

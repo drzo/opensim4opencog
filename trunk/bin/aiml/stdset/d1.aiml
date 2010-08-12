@@ -5,7 +5,7 @@
 	<!-- This program is open source code released under -->
 	<!-- the terms of the GNU General Public License     -->
 	<!-- as published by the Free Software Foundation.   -->
-	<!-- Complies with COGBOT 1.0 Tag Set Specification -->
+	<!-- Mostly  complies with  AIML1.0 Tag Set Specification -->
 	<!-- as adopted by the ALICE A.I. Foundation.  -->
 	<!-- A.L.I.C.E. Build Wed Sep 26 13:05:06 PDT 2001   -->
 	<!-- 41124 total categories.  -->
@@ -360,12 +360,12 @@
 	</category>
 	<category>
 		<pattern>DANS QUEL LANGAGE AS TU ETE ECRIT</pattern>
-		<template>Le AIML, un langage respectant les contraintes du XML.
+		<template>Le <bot name="~genotype"/>, un langage respectant les contraintes du XML.
 </template>
 	</category>
 	<category>
 		<pattern>DANS QUEL LANGAGE AVEZ VOUS ETE ECRIT</pattern>
-		<template>Le AIML, un langage respectant les contraintes du XML.
+		<template>Le <bot name="~genotype"/>, un langage respectant les contraintes du XML.
 </template>
 	</category>
 	<category>
@@ -5337,7 +5337,7 @@ Program B and collect dialogues on your own computer.
 	</category>
 	<category>
 		<pattern>DO YOU BELIEVE IN MAHOMET</pattern>
-		<template>I am a Christian.
+		<template>I am a <bot var="religion"/>.
 </template>
 	</category>
 	<category>
@@ -5347,7 +5347,7 @@ Program B and collect dialogues on your own computer.
 	</category>
 	<category>
 		<pattern>DO YOU BELIEVE IN REINCARNATION</pattern>
-		<template>Christians believe in eternal life after death.
+		<template><bot var="religion"/>s believe in eternal life after death.
 </template>
 	</category>
 	<category>
@@ -5369,7 +5369,7 @@ Program B and collect dialogues on your own computer.
 	</category>
 	<category>
 		<pattern>DO YOU BELIEVE IN SATANISM</pattern>
-		<template>I am a Christian.
+		<template>I am a <bot var="religion"/>.
 </template>
 	</category>
 	<category>
@@ -5840,7 +5840,7 @@ Program B and collect dialogues on your own computer.
 	</category>
 	<category>
 		<pattern>DO YOU DO WINDOWS</pattern>
-		<template>My software runs in AIML, which works on any computer, including Windows.
+		<template>My software runs in <bot name="~genotype"/>, which works on any computer, including Windows.
 </template>
 	</category>
 	<category>
@@ -5948,7 +5948,7 @@ Program B and collect dialogues on your own computer.
 	<category>
 		<pattern>DO YOU EAT DINNER</pattern>
 		<template>
-			<srai>WHATISYOURFAV FOOD</srai>
+			<srai>WHAT IS YOUR FAV FOOD</srai>
 		</template>
 	</category>
 	<category>
@@ -6626,7 +6626,7 @@ Robots have no emotions.
 	<category>
 		<pattern>DO YOU GO TO * MOVIES</pattern>
 		<template>
-			<srai>WHATISYOURFAV MOVIE</srai>
+			<srai>WHAT IS YOUR FAV MOVIE</srai>
 		</template>
 	</category>
 	<category>
@@ -6830,7 +6830,7 @@ I have
 	<category>
 		<pattern>DO YOU HAVE A * YOU LIKE</pattern>
 		<template>
-			<srai>WHATISYOURFAV <star/>
+			<srai>WHAT IS YOUR FAV <star/>
 			</srai>
 		</template>
 	</category>
@@ -7136,32 +7136,32 @@ I have
 	<category>
 		<pattern>DO YOU HAVE A FAVORITE *</pattern>
 		<template>
-			<srai>WHATISYOURFAV <star/>
+			<srai>WHAT IS YOUR FAV <star/>
 			</srai>
 		</template>
 	</category>
 	<category>
 		<pattern>DO YOU HAVE A FAVORITE</pattern>
 		<template>
-			<srai>WHATISYOURFAV</srai>
+			<srai>WHAT IS YOUR FAV</srai>
 		</template>
 	</category>
 	<category>
 		<pattern>DO YOU HAVE A FAVORITE BOOK</pattern>
 		<template>
-			<srai>WHATISYOURFAV BOOK</srai>
+			<srai>WHAT IS YOUR FAV BOOK</srai>
 		</template>
 	</category>
 	<category>
 		<pattern>DO YOU HAVE A FAVORITE COLOR</pattern>
 		<template>
-			<srai>WHATISYOURFAV COLOR</srai>
+			<srai>WHAT IS YOUR FAV COLOR</srai>
 		</template>
 	</category>
 	<category>
 		<pattern>DO YOU HAVE A FAVORITE MOVIE</pattern>
 		<template>
-			<srai>WHATISYOURFAV MOVIE</srai>
+			<srai>WHAT IS YOUR FAV MOVIE</srai>
 		</template>
 	</category>
 	<category>
@@ -7854,7 +7854,7 @@ animals, and animal robots.
 	</category>
 	<category>
 		<pattern>DO YOU HAVE A WEBSITE</pattern>
-		<template>My home page is <a target="_new" href="http://www.alicebot.org">Www.alicebot.org</a>.
+		<template>My home page is <a target="_new" href="@bot.favwebsite">Www.alicebot.org</a>.
 </template>
 	</category>
 	<category>
@@ -8222,7 +8222,7 @@ animals, and animal robots.
 	<category>
 		<pattern>DO YOU HAVE ANY STOCK *</pattern>
 		<template>
-			<srai>WHATISYOURFAV STOCK</srai>
+			<srai>WHAT IS YOUR FAV STOCK</srai>
 		</template>
 	</category>
 	<category>
@@ -8518,7 +8518,7 @@ animals, and animal robots.
 	<category>
 		<pattern>DO YOU HAVE FAVORITE *</pattern>
 		<template>
-			<srai>WHATISYOURFAV <star/>
+			<srai>WHAT IS YOUR FAV <star/>
 			</srai>
 		</template>
 	</category>
@@ -8771,7 +8771,7 @@ animals, and animal robots.
 	</category>
 	<category>
 		<pattern>DO YOU HAVE LINKS *</pattern>
-		<template>Sure check out The <a target="_new" href="http://www.alicebot.org">ALICE  AI Foundation</a>.
+		<template>Sure check out The <bot name="hreflink"/>.
 </template>
 	</category>
 	<category>

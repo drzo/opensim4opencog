@@ -2,10 +2,10 @@
 <aiml graph="default">
 
 
-  <learn graph="chomskyAIML" uri="aiml/chomskyAIML/" />
+  <learn graph="chomskyAIML" path="aiml/chomskyAIML/" />
    
   <!--
-  <learn uri="aiml/example_bot/" />
+  <learn path="aiml/example_bot/" />
   <genlMt name="chomskyAIML"/>
 
  <category>
@@ -27,19 +27,19 @@
   <category>
     <pattern>QT</pattern>
     <template>
-      <learn graph="ProgramD" filename="aiml\test_suite\ProgramD\AIML.aiml" />
+      <learn graph="ProgramD" filename="aiml\test_suite\ProgramD\<bot name="~genokind"/>.aiml" />
       <learn graph="ProgramD" filename="aiml\test_suite\ProgramD\predicates.xml" />
       <learn graph="ProgramD" filename="aiml\test_suite\ProgramD\properties.xml" />
       <learn graph="ProgramD" filename="aiml\test_suite\ProgramD\substitutions.xml" />
       <system>@chgraph programd</system>
-      <pre>now @load aiml\test_suite\ProgramD\AIML.xml</pre>
+      <pre>now @load <bot name="~genotype"/>\test_suite\ProgramD\<bot name="~genokind"/>.xml</pre>
     </template>
   </category>
   <aiml graph="ProgramD">
     <category>
       <pattern>QT1</pattern>
       <template graph="ProgramD">
-        <system>@load aiml\test_suite\ProgramD\AIML.xml</system>
+        <system>@load <bot name="~genotype"/>\test_suite\ProgramD\<bot name="~genokind"/>.xml</system>
       </template>
     </category>
   </aiml>
@@ -59,7 +59,7 @@
     <category>
       <pattern>QT3</pattern>
       <template graph="ProgramQ">
-        <system>@load aiml\test_suite\ProgramQ\TestSuite.xml</system>
+        <system>@load <bot name="~genotype"/>\test_suite\ProgramQ\TestSuite.xml</system>
       </template>
     </category>
   </aiml>
@@ -67,7 +67,7 @@
   <category>
     <pattern>PROGRAMQ</pattern>
     <template>
-      <learn dir="ProgramQ/"/>
+      <learn path="ProgramQ/"/>
     </template>
   </category>
 
@@ -76,7 +76,7 @@
     <template>
       <learn graph="ProgramD" dir="ProgramD/"/>
       <srai>@chgraph programd</srai>
-      <srai>@load aiml\test_suite\ProgramD\AIML.xml</srai>
+      <srai>@load <bot name="~genotype"/>\test_suite\ProgramD\<bot name="~genokind"/>.xml</srai>
     </template>
   </category>
 
@@ -173,8 +173,8 @@
     </template>
   </category>
 
-  <learn> aiml/nephrael_rae/ </learn>
-  <learn>aiml\bina_v1\ZZ_Stu.aiml</learn>
+  <learn path="aiml/nephrael_rae/ZZ_Stu.aiml" />
+  <learn path="aiml\bina_v1\ZZ_Stu.aiml" />
    -->
 
   <category>

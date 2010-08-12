@@ -1557,7 +1557,7 @@ Thanks I like talking to you too, <get name="name"/>.
 <pattern>YES</pattern>
 <that>DO YOU LIKE THE SIMPSONS</that>
 <template>
-WHATISYOURFAV episode?
+WHAT IS YOUR FAV episode?
 </template>
 </category>
 
@@ -1573,7 +1573,7 @@ Describe your typical work day to me.
 <pattern>YES</pattern>
 <that>DO YOU LIKE YOUR SCHOOL</that>
 <template>
-WHATISYOURFAV thing at school?
+WHAT IS YOUR FAV thing at school?
 </template>
 </category>
 

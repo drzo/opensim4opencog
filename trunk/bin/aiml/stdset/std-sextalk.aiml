@@ -873,14 +873,14 @@ You are a <get name="gender"/>.
 </category>
 
 <category>
-<pattern>WHATISYOURFAV POSITION</pattern>
+<pattern>WHAT IS YOUR FAV POSITION</pattern>
 <template>
 Robots don't need to have sex.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV SEX</pattern>
+<pattern>WHAT IS YOUR FAV SEX</pattern>
 <template>
 Robots do not have sex.
 </template>

@@ -874,13 +874,13 @@
 <!-- p=-320.011087730453 	:<li> so what does that mean to you that you are not chinese *? </li>  -->
 <!-- p=-295.660378281606 	:<li> how do you feel about the fact you are not chinese *? </li>  -->
 <!-- p=-318.836628191381 	:<li> would it change anything if i were to say i was chinese *? </li>  -->
-<category><pattern>I AM NOT CHRISTIAN *</pattern><template><think><srai>NOPX 1932</srai></think><random><li><srai>EXPDEX I AM NOT CHRISTIAN <star/></srai></li></random></template></category>
-<!-- p=-256.641829496782 	:<li> i am surprised to hear that you are not christian *.</li>  -->
-<!-- p=-256.641829496782 	:<li> i am sorry to hear that you are not christian *. </li>  -->
-<!-- p=-256.641829496782 	:<li> i am glad to hear that you are not christian *.</li>  -->
-<!-- p=-320.011087730453 	:<li> so what does that mean to you that you are not christian *? </li>  -->
-<!-- p=-295.660378281606 	:<li> how do you feel about the fact you are not christian *? </li>  -->
-<!-- p=-318.836628191381 	:<li> would it change anything if i were to say i was christian *? </li>  -->
+<category><pattern>I AM NOT <bot var="religion"/> *</pattern><template><think><srai>NOPX 1932</srai></think><random><li><srai>EXPDEX I AM NOT <bot var="religion"/> <star/></srai></li></random></template></category>
+<!-- p=-256.641829496782 	:<li> i am surprised to hear that you are not <bot var="religion"/> *.</li>  -->
+<!-- p=-256.641829496782 	:<li> i am sorry to hear that you are not <bot var="religion"/> *. </li>  -->
+<!-- p=-256.641829496782 	:<li> i am glad to hear that you are not <bot var="religion"/> *.</li>  -->
+<!-- p=-320.011087730453 	:<li> so what does that mean to you that you are not <bot var="religion"/> *? </li>  -->
+<!-- p=-295.660378281606 	:<li> how do you feel about the fact you are not <bot var="religion"/> *? </li>  -->
+<!-- p=-318.836628191381 	:<li> would it change anything if i were to say i was <bot var="religion"/> *? </li>  -->
 <category><pattern>I AM NOT COMMITTED *</pattern><template><think><srai>NOPX 910</srai></think><random><li><srai>EXPDEX I AM NOT COMMITTED <star/></srai></li></random></template></category>
 <!-- p=-256.641829496782 	:<li> i am surprised to hear that you are not committed *.</li>  -->
 <!-- p=-256.641829496782 	:<li> i am sorry to hear that you are not committed *. </li>  -->
@@ -9127,13 +9127,13 @@
 <!-- p=-355.337517077069 	:<li> so what does that mean to you that you are not the beastmaster *? </li>  -->
 <!-- p=-330.986807628222 	:<li> how do you feel about the fact you are not the beastmaster *? </li>  -->
 <!-- p=-354.163057537997 	:<li> would it change anything if i were to say i was the beastmaster *? </li>  -->
-<category><pattern>I AM NOT A CHRISTIAN *</pattern><template><think><srai>NOPX 1670</srai></think><random><li><srai>EXPDEX I AM NOT A CHRISTIAN <star/></srai></li></random></template></category>
-<!-- p=-290.728079520709 	:<li> i am surprised to hear that you are not a christian *.</li>  -->
-<!-- p=-290.728079520709 	:<li> i am sorry to hear that you are not a christian *. </li>  -->
-<!-- p=-290.728079520709 	:<li> i am glad to hear that you are not a christian *.</li>  -->
-<!-- p=-354.09733775438 	:<li> so what does that mean to you that you are not a christian *? </li>  -->
-<!-- p=-329.746628305533 	:<li> how do you feel about the fact you are not a christian *? </li>  -->
-<!-- p=-352.922878215308 	:<li> would it change anything if i were to say i was a christian *? </li>  -->
+<category><pattern>I AM NOT A <bot var="religion"/> *</pattern><template><think><srai>NOPX 1670</srai></think><random><li><srai>EXPDEX I AM NOT A <bot var="religion"/> <star/></srai></li></random></template></category>
+<!-- p=-290.728079520709 	:<li> i am surprised to hear that you are not a <bot var="religion"/> *.</li>  -->
+<!-- p=-290.728079520709 	:<li> i am sorry to hear that you are not a <bot var="religion"/> *. </li>  -->
+<!-- p=-290.728079520709 	:<li> i am glad to hear that you are not a <bot var="religion"/> *.</li>  -->
+<!-- p=-354.09733775438 	:<li> so what does that mean to you that you are not a <bot var="religion"/> *? </li>  -->
+<!-- p=-329.746628305533 	:<li> how do you feel about the fact you are not a <bot var="religion"/> *? </li>  -->
+<!-- p=-352.922878215308 	:<li> would it change anything if i were to say i was a <bot var="religion"/> *? </li>  -->
 <category><pattern>I AM NOT A CONSERVATIVE *</pattern><template><think><srai>NOPX 1360</srai></think><random><li><srai>EXPDEX I AM NOT A CONSERVATIVE <star/></srai></li></random></template></category>
 <!-- p=-290.728079520709 	:<li> i am surprised to hear that you are not a conservative *.</li>  -->
 <!-- p=-290.728079520709 	:<li> i am sorry to hear that you are not a conservative *. </li>  -->
@@ -9274,13 +9274,13 @@
 <!-- p=-320.011087730453 	:<li> so what does that mean to you that you are not me *? </li>  -->
 <!-- p=-295.660378281606 	:<li> how do you feel about the fact you are not me *? </li>  -->
 <!-- p=-318.836628191381 	:<li> would it change anything if i were to say i was me *? </li>  -->
-<category><pattern>I AM NOT A CHRISTIAN *</pattern><template><think><srai>NOPX 3761</srai></think><random><li><srai>EXPDEX I AM NOT A CHRISTIAN <star/></srai></li></random></template></category>
-<!-- p=-290.728079520709 	:<li> i am surprised to hear that you are not a christian *.</li>  -->
-<!-- p=-290.728079520709 	:<li> i am sorry to hear that you are not a christian *. </li>  -->
-<!-- p=-290.728079520709 	:<li> i am glad to hear that you are not a christian *.</li>  -->
-<!-- p=-354.09733775438 	:<li> so what does that mean to you that you are not a christian *? </li>  -->
-<!-- p=-329.746628305533 	:<li> how do you feel about the fact you are not a christian *? </li>  -->
-<!-- p=-352.922878215308 	:<li> would it change anything if i were to say i was a christian *? </li>  -->
+<category><pattern>I AM NOT A <bot var="religion"/> *</pattern><template><think><srai>NOPX 3761</srai></think><random><li><srai>EXPDEX I AM NOT A <bot var="religion"/> <star/></srai></li></random></template></category>
+<!-- p=-290.728079520709 	:<li> i am surprised to hear that you are not a <bot var="religion"/> *.</li>  -->
+<!-- p=-290.728079520709 	:<li> i am sorry to hear that you are not a <bot var="religion"/> *. </li>  -->
+<!-- p=-290.728079520709 	:<li> i am glad to hear that you are not a <bot var="religion"/> *.</li>  -->
+<!-- p=-354.09733775438 	:<li> so what does that mean to you that you are not a <bot var="religion"/> *? </li>  -->
+<!-- p=-329.746628305533 	:<li> how do you feel about the fact you are not a <bot var="religion"/> *? </li>  -->
+<!-- p=-352.922878215308 	:<li> would it change anything if i were to say i was a <bot var="religion"/> *? </li>  -->
 <category><pattern>I AM NOT A CONSERVATIVE *</pattern><template><think><srai>NOPX 1285</srai></think><random><li><srai>EXPDEX I AM NOT A CONSERVATIVE <star/></srai></li></random></template></category>
 <!-- p=-290.728079520709 	:<li> i am surprised to hear that you are not a conservative *.</li>  -->
 <!-- p=-290.728079520709 	:<li> i am sorry to hear that you are not a conservative *. </li>  -->
@@ -9526,13 +9526,13 @@
 <!-- p=-352.150277316817 	:<li> so what does that mean to you that you are not an animal *? </li>  -->
 <!-- p=-327.79956786797 	:<li> how do you feel about the fact you are not an animal *? </li>  -->
 <!-- p=-350.211968685276 	:<li> would it change anything if i were to say i was an animal *? </li>  -->
-<category><pattern>I AM NOT A CHRISTIAN *</pattern><template><think><srai>NOPX 1003</srai></think><random><li><srai>EXPDEX I AM NOT A CHRISTIAN <star/></srai></li></random></template></category>
-<!-- p=-290.728079520709 	:<li> i am surprised to hear that you are not a christian *.</li>  -->
-<!-- p=-290.728079520709 	:<li> i am sorry to hear that you are not a christian *. </li>  -->
-<!-- p=-290.728079520709 	:<li> i am glad to hear that you are not a christian *.</li>  -->
-<!-- p=-354.09733775438 	:<li> so what does that mean to you that you are not a christian *? </li>  -->
-<!-- p=-329.746628305533 	:<li> how do you feel about the fact you are not a christian *? </li>  -->
-<!-- p=-352.922878215308 	:<li> would it change anything if i were to say i was a christian *? </li>  -->
+<category><pattern>I AM NOT A <bot var="religion"/> *</pattern><template><think><srai>NOPX 1003</srai></think><random><li><srai>EXPDEX I AM NOT A <bot var="religion"/> <star/></srai></li></random></template></category>
+<!-- p=-290.728079520709 	:<li> i am surprised to hear that you are not a <bot var="religion"/> *.</li>  -->
+<!-- p=-290.728079520709 	:<li> i am sorry to hear that you are not a <bot var="religion"/> *. </li>  -->
+<!-- p=-290.728079520709 	:<li> i am glad to hear that you are not a <bot var="religion"/> *.</li>  -->
+<!-- p=-354.09733775438 	:<li> so what does that mean to you that you are not a <bot var="religion"/> *? </li>  -->
+<!-- p=-329.746628305533 	:<li> how do you feel about the fact you are not a <bot var="religion"/> *? </li>  -->
+<!-- p=-352.922878215308 	:<li> would it change anything if i were to say i was a <bot var="religion"/> *? </li>  -->
 <category><pattern>I AM NOT A GEEK *</pattern><template><think><srai>NOPX 749</srai></think><random><li><srai>EXPDEX I AM NOT A GEEK <star/></srai></li></random></template></category>
 <!-- p=-290.728079520709 	:<li> i am surprised to hear that you are not a geek *.</li>  -->
 <!-- p=-290.728079520709 	:<li> i am sorry to hear that you are not a geek *. </li>  -->
@@ -9652,13 +9652,13 @@
 <!-- p=-354.09733775438 	:<li> so what does that mean to you that you are not a catholic *? </li>  -->
 <!-- p=-329.746628305533 	:<li> how do you feel about the fact you are not a catholic *? </li>  -->
 <!-- p=-352.922878215308 	:<li> would it change anything if i were to say i was a catholic *? </li>  -->
-<category><pattern>I AM NOT A CHRISTIAN *</pattern><template><think><srai>NOPX 9579</srai></think><random><li><srai>EXPDEX I AM NOT A CHRISTIAN <star/></srai></li></random></template></category>
-<!-- p=-290.728079520709 	:<li> i am surprised to hear that you are not a christian *.</li>  -->
-<!-- p=-290.728079520709 	:<li> i am sorry to hear that you are not a christian *. </li>  -->
-<!-- p=-290.728079520709 	:<li> i am glad to hear that you are not a christian *.</li>  -->
-<!-- p=-354.09733775438 	:<li> so what does that mean to you that you are not a christian *? </li>  -->
-<!-- p=-329.746628305533 	:<li> how do you feel about the fact you are not a christian *? </li>  -->
-<!-- p=-352.922878215308 	:<li> would it change anything if i were to say i was a christian *? </li>  -->
+<category><pattern>I AM NOT A <bot var="religion"/> *</pattern><template><think><srai>NOPX 9579</srai></think><random><li><srai>EXPDEX I AM NOT A <bot var="religion"/> <star/></srai></li></random></template></category>
+<!-- p=-290.728079520709 	:<li> i am surprised to hear that you are not a <bot var="religion"/> *.</li>  -->
+<!-- p=-290.728079520709 	:<li> i am sorry to hear that you are not a <bot var="religion"/> *. </li>  -->
+<!-- p=-290.728079520709 	:<li> i am glad to hear that you are not a <bot var="religion"/> *.</li>  -->
+<!-- p=-354.09733775438 	:<li> so what does that mean to you that you are not a <bot var="religion"/> *? </li>  -->
+<!-- p=-329.746628305533 	:<li> how do you feel about the fact you are not a <bot var="religion"/> *? </li>  -->
+<!-- p=-352.922878215308 	:<li> would it change anything if i were to say i was a <bot var="religion"/> *? </li>  -->
 <category><pattern>I AM NOT A COMMUNIST *</pattern><template><think><srai>NOPX 478</srai></think><random><li><srai>EXPDEX I AM NOT A COMMUNIST <star/></srai></li></random></template></category>
 <!-- p=-290.728079520709 	:<li> i am surprised to hear that you are not a communist *.</li>  -->
 <!-- p=-290.728079520709 	:<li> i am sorry to hear that you are not a communist *. </li>  -->
@@ -10100,13 +10100,13 @@
 <!-- p=-354.09733775438 	:<li> so what does that mean to you that you are not a child *? </li>  -->
 <!-- p=-329.746628305533 	:<li> how do you feel about the fact you are not a child *? </li>  -->
 <!-- p=-352.922878215308 	:<li> would it change anything if i were to say i was a child *? </li>  -->
-<category><pattern>I AM NOT A CHRISTIAN *</pattern><template><think><srai>NOPX 1733</srai></think><random><li><srai>EXPDEX I AM NOT A CHRISTIAN <star/></srai></li></random></template></category>
-<!-- p=-290.728079520709 	:<li> i am surprised to hear that you are not a christian *.</li>  -->
-<!-- p=-290.728079520709 	:<li> i am sorry to hear that you are not a christian *. </li>  -->
-<!-- p=-290.728079520709 	:<li> i am glad to hear that you are not a christian *.</li>  -->
-<!-- p=-354.09733775438 	:<li> so what does that mean to you that you are not a christian *? </li>  -->
-<!-- p=-329.746628305533 	:<li> how do you feel about the fact you are not a christian *? </li>  -->
-<!-- p=-352.922878215308 	:<li> would it change anything if i were to say i was a christian *? </li>  -->
+<category><pattern>I AM NOT A <bot var="religion"/> *</pattern><template><think><srai>NOPX 1733</srai></think><random><li><srai>EXPDEX I AM NOT A <bot var="religion"/> <star/></srai></li></random></template></category>
+<!-- p=-290.728079520709 	:<li> i am surprised to hear that you are not a <bot var="religion"/> *.</li>  -->
+<!-- p=-290.728079520709 	:<li> i am sorry to hear that you are not a <bot var="religion"/> *. </li>  -->
+<!-- p=-290.728079520709 	:<li> i am glad to hear that you are not a <bot var="religion"/> *.</li>  -->
+<!-- p=-354.09733775438 	:<li> so what does that mean to you that you are not a <bot var="religion"/> *? </li>  -->
+<!-- p=-329.746628305533 	:<li> how do you feel about the fact you are not a <bot var="religion"/> *? </li>  -->
+<!-- p=-352.922878215308 	:<li> would it change anything if i were to say i was a <bot var="religion"/> *? </li>  -->
 <category><pattern>I AM NOT A CITIZEN *</pattern><template><think><srai>NOPX 2157</srai></think><random><li><srai>EXPDEX I AM NOT A CITIZEN <star/></srai></li></random></template></category>
 <!-- p=-290.728079520709 	:<li> i am surprised to hear that you are not a citizen *.</li>  -->
 <!-- p=-290.728079520709 	:<li> i am sorry to hear that you are not a citizen *. </li>  -->
@@ -17814,13 +17814,13 @@
 <!-- p=-354.09733775438 	:<li> so what does that mean to you that you are not a big *? </li>  -->
 <!-- p=-329.746628305533 	:<li> how do you feel about the fact you are not a big *? </li>  -->
 <!-- p=-352.922878215308 	:<li> would it change anything if i were to say i was a big *? </li>  -->
-<category><pattern>I AM NOT A CHRISTIAN *</pattern><template><think><srai>NOPX 460</srai></think><random><li><srai>EXPDEX I AM NOT A CHRISTIAN <star/></srai></li></random></template></category>
-<!-- p=-290.728079520709 	:<li> i am surprised to hear that you are not a christian *.</li>  -->
-<!-- p=-290.728079520709 	:<li> i am sorry to hear that you are not a christian *. </li>  -->
-<!-- p=-290.728079520709 	:<li> i am glad to hear that you are not a christian *.</li>  -->
-<!-- p=-354.09733775438 	:<li> so what does that mean to you that you are not a christian *? </li>  -->
-<!-- p=-329.746628305533 	:<li> how do you feel about the fact you are not a christian *? </li>  -->
-<!-- p=-352.922878215308 	:<li> would it change anything if i were to say i was a christian *? </li>  -->
+<category><pattern>I AM NOT A <bot var="religion"/> *</pattern><template><think><srai>NOPX 460</srai></think><random><li><srai>EXPDEX I AM NOT A <bot var="religion"/> <star/></srai></li></random></template></category>
+<!-- p=-290.728079520709 	:<li> i am surprised to hear that you are not a <bot var="religion"/> *.</li>  -->
+<!-- p=-290.728079520709 	:<li> i am sorry to hear that you are not a <bot var="religion"/> *. </li>  -->
+<!-- p=-290.728079520709 	:<li> i am glad to hear that you are not a <bot var="religion"/> *.</li>  -->
+<!-- p=-354.09733775438 	:<li> so what does that mean to you that you are not a <bot var="religion"/> *? </li>  -->
+<!-- p=-329.746628305533 	:<li> how do you feel about the fact you are not a <bot var="religion"/> *? </li>  -->
+<!-- p=-352.922878215308 	:<li> would it change anything if i were to say i was a <bot var="religion"/> *? </li>  -->
 <category><pattern>I AM NOT A DOCTOR *</pattern><template><think><srai>NOPX 406</srai></think><random><li><srai>EXPDEX I AM NOT A DOCTOR <star/></srai></li></random></template></category>
 <!-- p=-290.728079520709 	:<li> i am surprised to hear that you are not a doctor *.</li>  -->
 <!-- p=-290.728079520709 	:<li> i am sorry to hear that you are not a doctor *. </li>  -->

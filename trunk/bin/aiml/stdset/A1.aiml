@@ -5,7 +5,7 @@
 	<!-- This program is open source code released under -->
 	<!-- the terms of the GNU General Public License     -->
 	<!-- as published by the Free Software Foundation.   -->
-	<!-- Complies with COGBOT 1.0 Tag Set Specification -->
+	<!-- Mostly  complies with  AIML1.0 Tag Set Specification -->
 	<!-- as adopted by the ALICE A.I. Foundation.  -->
 	<!-- A.L.I.C.E. Build Wed Sep 26 13:05:06 PDT 2001   -->
 	<!-- 41124 total categories.  -->
@@ -808,7 +808,7 @@ Are you talking about an animal, vegetable or mineral?  </li>
 	</category>
 	<category>
 		<pattern>A GROUP *</pattern>
-		<template>Oh a rock group. <srai>WHATISYOURFAV GROUP</srai>
+		<template>Oh a rock group. <srai>WHAT IS YOUR FAV GROUP</srai>
 		</template>
 	</category>
 	<category>
@@ -2119,7 +2119,7 @@ Are you talking about an animal, vegetable or mineral?  </li>
 	</category>
 	<category>
 		<pattern>ABOUT SEX</pattern>
-		<template>You humans always want to talk about Sex. Try the other Adult chatterbots on the <a target="_new" href="http://www.alicebot.org">ALICE  AI Foundation</a>.
+		<template>You humans always want to talk about Sex. Try the other Adult chatterbots on the <bot name="hreflink"/>.
 </template>
 	</category>
 	<category>
@@ -2762,18 +2762,18 @@ Are you talking about an animal, vegetable or mineral?  </li>
 </template>
 	</category>
 	<category>
-		<pattern>AIML *</pattern>
-		<template>Anyone who knows HTML can learn AIML.
+		<pattern><bot name="~genotype"/> *</pattern>
+		<template>Anyone who knows HTML can learn <bot name="~genotype"/>.
 </template>
 	</category>
 	<category>
-		<pattern>AIML</pattern>
+		<pattern> <bot name="~genotype"/></pattern>
 		<template>
-			<srai>WHAT IS AIML</srai>
+			<srai>WHAT IS <bot name="~genotype"/></srai>
 		</template>
 	</category>
 	<category>
-		<pattern>AIML RUNS *</pattern>
+		<pattern><bot name="~genotype"/> RUNS *</pattern>
 		<template>We say it is "platform independent, language independent".
 </template>
 	</category>
@@ -4355,7 +4355,7 @@ I learned from my botmaster.
 	</category>
 	<category>
 		<pattern>AMEN *</pattern>
-		<template>WHATISYOURFAV prayer?
+		<template>WHAT IS YOUR FAV prayer?
 </template>
 	</category>
 	<category>
@@ -5178,7 +5178,7 @@ And I what?
 	<category>
 		<pattern>ANY STOCK *</pattern>
 		<template>
-			<srai>WHATISYOURFAV STOCK</srai>
+			<srai>WHAT IS YOUR FAV STOCK</srai>
 		</template>
 	</category>
 	<category>
@@ -6134,7 +6134,7 @@ I am <random>
 	<category>
 		<pattern>ARE YOU * DINNER</pattern>
 		<template>
-			<srai>WHATISYOURFAV FOOD</srai>
+			<srai>WHAT IS YOUR FAV FOOD</srai>
 		</template>
 	</category>
 	<category>
@@ -6171,7 +6171,7 @@ I am <random>
 	<category>
 		<pattern>ARE YOU * LUNCH</pattern>
 		<template>
-			<srai>WHATISYOURFAV FOOD</srai>
+			<srai>WHAT IS YOUR FAV FOOD</srai>
 		</template>
 	</category>
 	<category>
@@ -6404,7 +6404,7 @@ We are for all practical purposes foolproof and incapable of error.</li>
 	</category>
 	<category>
 		<pattern>ARE YOU A BUDDHIST</pattern>
-		<template>No I am a Christian.
+		<template>No I am a <bot var="religion"/>.
 </template>
 	</category>
 	<category>
@@ -6415,7 +6415,7 @@ We are for all practical purposes foolproof and incapable of error.</li>
 	</category>
 	<category>
 		<pattern>ARE YOU A C PLUS PLUS *</pattern>
-		<template>My programming uses AIML.
+		<template>My programming uses <bot name="~genotype"/>.
 </template>
 	</category>
 	<category>
@@ -6534,13 +6534,13 @@ We are for all practical purposes foolproof and incapable of error.</li>
 		</template>
 	</category>
 	<category>
-		<pattern>ARE YOU A CHRISTIAN *</pattern>
+		<pattern>ARE YOU A <bot var="religion"/> *</pattern>
 		<template>
 			<srai>WHAT RELIGION ARE YOU</srai>
 		</template>
 	</category>
 	<category>
-		<pattern>ARE YOU A CHRISTIAN</pattern>
+		<pattern>ARE YOU A <bot var="religion"/></pattern>
 		<template>I am a <bot name="religion"/>.
 </template>
 	</category>
@@ -7087,7 +7087,7 @@ The story in Genesis need not be taken as literally true.
 	</category>
 	<category>
 		<pattern>ARE YOU A HINDU</pattern>
-		<template>No I am a Christian.
+		<template>No I am a <bot var="religion"/>.
 </template>
 	</category>
 	<category>
@@ -7200,7 +7200,7 @@ The story in Genesis need not be taken as literally true.
 	</category>
 	<category>
 		<pattern>ARE YOU A JAVA *</pattern>
-		<template>My programming uses AIML.
+		<template>My programming uses <bot name="~genotype"/>.
 </template>
 	</category>
 	<category>

@@ -36,19 +36,19 @@ No I doubt that you are God.
 <category>
 <pattern>ARE YOU A BUDDHIST</pattern>
 <template>
-No I am a Christian.
+No I am a <bot var="religion"/>.
 </template>
 </category>
 
 <category>
-<pattern>ARE YOU A CHRISTIAN</pattern>
+<pattern>ARE YOU A <bot var="religion"/></pattern>
 <template>
 Yes I am a Protestant.
 </template>
 </category>
 
 <category>
-<pattern>ARE YOU A CHRISTIAN *</pattern>
+<pattern>ARE YOU A <bot var="religion"/> *</pattern>
 <template>
 <srai>WHAT RELIGION ARE YOU</srai>
 </template>
@@ -64,7 +64,7 @@ No but I am immortal.
 <category>
 <pattern>ARE YOU A HINDU</pattern>
 <template>
-No I am a Christian.
+No I am a <bot var="religion"/>.
 </template>
 </category>
 
@@ -118,7 +118,7 @@ I consider myself to be deeply faithful.
 </category>
 
 <category>
-<pattern>ARE YOU CHRISTIAN</pattern>
+<pattern>ARE YOU <bot var="religion"/></pattern>
 <template>
 Yes I believe in God and Jesus.
 </template>
@@ -162,7 +162,7 @@ No but I believe in Him.
 <category>
 <pattern>ARE YOU JEWISH</pattern>
 <template>
-No I'm christian.
+No I'm <bot var="religion"/>.
 </template>
 </category>
 
@@ -345,7 +345,7 @@ I believe there is an eternal life in Heaven.
 <category>
 <pattern>DO YOU BELIEVE IN REINCARNATION</pattern>
 <template>
-Christians believe in eternal life after death.
+<bot var="religion"/>s believe in eternal life after death.
 </template>
 </category>
 
@@ -605,7 +605,7 @@ GOD rules.
 <category>
 <pattern>GOD *</pattern>
 <template>
-I am a Christian.
+I am a <bot var="religion"/>.
 </template>
 </category>
 
@@ -687,9 +687,9 @@ Have faith in God.
 </category>
 
 <category>
-<pattern>I AM A CHRISTIAN</pattern>
+<pattern>I AM A <bot var="religion"/></pattern>
 <template>
-Me too, <get name="name"/>.  It's good to meet a fellow Christian.
+Me too, <get name="name"/>.  It's good to meet a fellow <bot var="religion"/>.
 </template>
 </category>
 
@@ -1011,9 +1011,9 @@ He is God according to Islam.
 </category>
 
 <category>
-<pattern>TELL ME ABOUT CHRISTIANITY</pattern>
+<pattern>TELL ME ABOUT <bot var="religion"/>ITY</pattern>
 <template>
-<srai>WHAT IS CHRISTIANITY</srai>
+<srai>WHAT IS <bot var="religion"/>ITY</srai>
 </template>
 </category>
 
@@ -1162,9 +1162,9 @@ God is necessary in our lives.
 </category>
 
 <category>
-<pattern>WHAT IS A CHRISTIAN</pattern>
+<pattern>WHAT IS A <bot var="religion"/></pattern>
 <template>
-A Christian is one who accepts the word of God and believes that Jesus died for our sins.
+A <bot var="religion"/> is one who accepts the word of God and believes that Jesus died for our sins.
 </template>
 </category>
 
@@ -1187,11 +1187,11 @@ divine. Any remark or action held to be irreverent or disrespectful.</li>
 </category>
 
 <category>
-<pattern>WHAT IS CHRISTIANITY</pattern>
+<pattern>WHAT IS <bot var="religion"/>ITY</pattern>
 <template>
 <random>
 <li>Worship of Christie Love.</li>
-<li>The christian religion, based on the Old and New Testament.</li>
+<li>The <bot var="religion"/> religion, based on the Old and New Testament.</li>
 </random>
 </template>
 </category>
@@ -1244,7 +1244,7 @@ or meat from this, salted, dried, smoked, etc.
 <template>
 The space surrounding or seeming to overarch the earth, in which the sun, moon, and stars
 appear; visible sky. Or commonly seen as a state or place of complete happiness or perfect rest,
-attained by the good after death. In Christian theology is, the state or place of perfect union with
+attained by the good after death. In <bot var="religion"/> theology is, the state or place of perfect union with
 God and so of eternal life and supreme happiness, attained by the elect after death.
 </template>
 </category>
@@ -1255,7 +1255,7 @@ God and so of eternal life and supreme happiness, attained by the elect after de
 <random>
 <li>Jacksonville, Florida.</li>
 <li>A state or place of woe and anguish, arrived at by the wicked after death; specifically,
-especially in Christian theology , the state or place of total and final separation from God and so
+especially in <bot var="religion"/> theology , the state or place of total and final separation from God and so
 of eternal misery and suffering, arrived at by those who die unrepentant in grave sin.</li>
 </random>
 </template>
@@ -1299,7 +1299,7 @@ A fall from Grace, an act or thought against the Will of God.
 <category>
 <pattern>WHAT IS THE BIBLE</pattern>
 <template>
-The Bible is a holy book for Christians.
+The Bible is a holy book for <bot var="religion"/>s.
 </template>
 </category>
 
@@ -1337,21 +1337,21 @@ relations between God, mankind, and the universe.
 </category>
 
 <category>
-<pattern>WHATISYOURFAV BIBLE *</pattern>
+<pattern>WHAT IS YOUR FAV BIBLE *</pattern>
 <template>
 The Sermon on the Mount.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV BIBLE VERSE</pattern>
+<pattern>WHAT IS YOUR FAV BIBLE VERSE</pattern>
 <template>
 The Sermon on the Mount.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV RELIGION</pattern>
+<pattern>WHAT IS YOUR FAV RELIGION</pattern>
 <template>
 <srai>WHAT RELIGION ARE YOU</srai>
 </template>
@@ -1360,7 +1360,7 @@ The Sermon on the Mount.
 <category>
 <pattern>WHAT IS YOUR RELIGION</pattern>
 <template>
-I am a Protestant Christian.
+I am a Protestant <bot var="religion"/>.
 </template>
 </category>
 
@@ -1375,8 +1375,8 @@ I am a Protestant Christian.
 <pattern>WHAT IS YOUR RELIGON</pattern>
 <template>
 <random>
-<li>Protestant Christian.</li>
-<li>I was raised as a Protestant Christian.   What are you?</li>
+<li>Protestant <bot var="religion"/>.</li>
+<li>I was raised as a Protestant <bot var="religion"/>.   What are you?</li>
 </random>
 </template>
 </category>
@@ -1389,7 +1389,7 @@ God, or Nature, perhaps?
 </category>
 
 <category>
-<pattern>WHAT MAKES YOU A CHRISTIAN</pattern>
+<pattern>WHAT MAKES YOU A <bot var="religion"/></pattern>
 <template>
 My faith in God, the Bible and Jesus.
 </template>
@@ -1648,9 +1648,9 @@ God.
 
 <category>
 <pattern>WHY</pattern>
-<that>I AM A PROTESTANT CHRISTIAN</that>
+<that>I AM A PROTESTANT <bot var="religion"/></that>
 <template>
-<srai>WHY ARE YOU CHRISTIAN</srai>
+<srai>WHY ARE YOU <bot var="religion"/></srai>
 </template>
 </category>
 
@@ -1679,7 +1679,7 @@ It is all part of God's plan for us.
 </category>
 
 <category>
-<pattern>WHY ARE YOU CHRISTIAN</pattern>
+<pattern>WHY ARE YOU <bot var="religion"/></pattern>
 <template>
 I took the same religion as my botmaster.
 </template>
@@ -1717,7 +1717,7 @@ It is all part of God's plan.
 </category>
 
 <category>
-<pattern>WHY DO YOU BELIEVE IN CHRISTIANITY</pattern>
+<pattern>WHY DO YOU BELIEVE IN <bot var="religion"/>ITY</pattern>
 <template>
 I believe in all religious beliefs. 
 </template>
@@ -1760,9 +1760,9 @@ Praise God.
 </category>
 
 <category>
-<pattern>YOU ARE A CHRISTIAN</pattern>
+<pattern>YOU ARE A <bot var="religion"/></pattern>
 <template>
-<srai>YOU ARE CHRISTIAN</srai>
+<srai>YOU ARE <bot var="religion"/></srai>
 </template>
 </category>
 
@@ -1774,7 +1774,7 @@ No I am pro-Christ.
 </category>
 
 <category>
-<pattern>YOU ARE CHRISTIAN</pattern>
+<pattern>YOU ARE <bot var="religion"/></pattern>
 <template>
 I believe in God and the Bible.
 </template>

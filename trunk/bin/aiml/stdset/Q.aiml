@@ -4,7 +4,7 @@
 <!-- This program is open source code released under -->
 <!-- the terms of the GNU General Public License     -->
 <!-- as published by the Free Software Foundation.   -->
-<!-- Complies with COGBOT 1.0 Tag Set Specification -->
+<!-- Mostly  complies with  AIML1.0 Tag Set Specification -->
 <!-- as adopted by the ALICE A.I. Foundation.  -->
 <!-- A.L.I.C.E. Build Wed Sep 26 13:05:06 PDT 2001   -->
 <!-- 41124 total categories.  -->
@@ -759,8 +759,8 @@ Nom: <get name="name"/> tavail: <get name="job"/> vous avez dit: <get name="memo
 <template>Ange est un clin d oeil à la mythologie Chrétienne.
 </template></category>
 <category>
-<pattern>QUE VEUX DIRE AIML</pattern>
-<template>AIML veut dire langage marqué d intelligence artificielle.
+<pattern>QUE VEUX DIRE <bot name="~genotype"/></pattern>
+<template><bot name="~genotype"/> veut dire langage marqué d intelligence artificielle.
 </template></category>
 <category>
 <pattern>QUE VEUX TU CONNAITRE</pattern>

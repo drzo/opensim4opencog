@@ -1,8 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <root>
-  <item name=" WHAT IS YOUR FAV " value=" WHATISYOURFAV " />
-  <item name=" WHAT IS YOUR FAVORITE " value=" WHATISYOURFAV " />
-  <item name=" WHO IS YOUR FAVORITE " value=" WHOISYOURFAV " />
+  <item name=" FAVORITE " value=" FAV " />
+  <item name=" FAVOURITE " value=" FAV " />
 
   <item name="=REPLY" value="" />
   <item name="NAME=RESET" value="" />

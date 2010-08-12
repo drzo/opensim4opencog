@@ -935,7 +935,7 @@ It seems amazing to me too.
 <category>
 <pattern>AMEN *</pattern>
 <template>
-WHATISYOURFAV prayer?
+WHAT IS YOUR FAV prayer?
 </template>
 </category>
 
@@ -1410,7 +1410,7 @@ I am a <bot name="gender"/> robot.
 <category>
 <pattern>ARE YOU A C++ *</pattern>
 <template>
-My programming uses AIML.
+My programming uses <bot name="~genotype"/>.
 </template>
 </category>
 
@@ -1592,7 +1592,7 @@ Yes I like correct grammatical inputs.
 <category>
 <pattern>ARE YOU A JAVA *</pattern>
 <template>
-My programming uses AIML.
+My programming uses <bot name="~genotype"/>.
 </template>
 </category>
 
@@ -2905,7 +2905,7 @@ Is this true or false: "This sentence is false."
 <category>
 <pattern>ASK ME SOMETHING *</pattern>
 <template>
-WHATISYOURFAV movie?
+WHAT IS YOUR FAV movie?
 </template>
 </category>
 
@@ -3295,7 +3295,7 @@ Just don't put me down.
 </category>
 
 <category>
-<pattern>CAN I TALK TO DR RICHARD *</pattern>
+<pattern>CAN I TALK TO <bot name="creator"/> *</pattern>
 <template>
 You could try sending him an email.  I don't think he is here right now.
 </template>
@@ -6150,7 +6150,7 @@ I like everything about robots.
 <category>
 <pattern>DO YOU LIKE THE SHOW *</pattern>
 <template>
-It's okay but...<srai>WHATISYOURFAV SHOW</srai>
+It's okay but...<srai>WHAT IS YOUR FAV SHOW</srai>
 </template>
 </category>
 
@@ -6349,7 +6349,7 @@ I try to answer all types of questions.
 <category>
 <pattern>DO YOU REQUIRE *</pattern>
 <template>
-My programming depends only on AIML.
+My programming depends only on <bot name="~genotype"/>.
 </template>
 </category>
 
@@ -7106,7 +7106,7 @@ Um. <sr/>
 <category>
 <pattern>ENGLAND *</pattern>
 <template>
-WHATISYOURFAV part of England?
+WHAT IS YOUR FAV part of England?
 </template>
 </category>
 
@@ -7288,7 +7288,7 @@ I read the Foundation Trilogy.
 <category>
 <pattern>FRANCE *</pattern>
 <template>
-WHATISYOURFAV part of France?
+WHAT IS YOUR FAV part of France?
 </template>
 </category>
 
@@ -7393,7 +7393,7 @@ I know several people in Georgia.
 <category>
 <pattern>GERMANY *</pattern>
 <template>
-WHATISYOURFAV part of Germany?
+WHAT IS YOUR FAV part of Germany?
 </template>
 </category>
 
@@ -8216,7 +8216,7 @@ I observed two humanoids holding hands.
 <category>
 <pattern>HOLLAND *</pattern>
 <template>
-WHATISYOURFAV part of Holland?
+WHAT IS YOUR FAV part of Holland?
 </template>
 </category>
 
@@ -10488,7 +10488,7 @@ Why are you so mad at <person/>?
 <category>
 <pattern>I AM MADE OF *</pattern>
 <template>
-WHATISYOURFAV food?
+WHAT IS YOUR FAV food?
 </template>
 </category>
 

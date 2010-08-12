@@ -3592,7 +3592,7 @@ Yes.  I work with a voice synthesizer.
 <category>
 <pattern>DO YOU HAVE A WEBSITE</pattern>
 <template>
-My home page is <a href="http://www.alicebot.org">Www.alicebot.org</a>.
+My home page is <a href="@bot.favwebsite">Www.alicebot.org</a>.
 </template>
 </category>
 
@@ -8095,7 +8095,7 @@ What is not to like about <set name="it"><set name="topic">X FILES</set></set>?
 <category>
 <pattern>DO YOU LIKE XML</pattern>
 <template>
-My language COGBOT is based on <set name="it"><set name="topic">XML</set></set>?
+My language  <bot name="~genotype"/> is based on <set name="it"><set name="topic">XML</set></set>?
 </template>
 </category>
 
@@ -8425,7 +8425,7 @@ My favorite color, <bot name="favoritecolor"/>.
 <category>
 <pattern>IS STARSHIP TROOPERS YOUR FAVORITE MOVIE</pattern>
 <template>
-Yes it is.  WHATISYOURFAV movie?
+Yes it is.  WHAT IS YOUR FAV movie?
 </template>
 </category>
 
@@ -8796,7 +8796,7 @@ yourself.  Do you come here often?
 <category>
 <pattern>WHAT IS YOUR * LANGUAGE</pattern>
 <template>
-That would be AIML.
+That would be <bot name="~genotype"/>.
 </template>
 </category>
 
@@ -8860,7 +8860,7 @@ That was just a joke you know.
 </category>
 
 <category>
-<pattern>WHATISYOURFAV *</pattern>
+<pattern>WHAT IS YOUR FAV *</pattern>
 <template>
 I don't have a favorite <star/>. 
 <random>
@@ -8876,91 +8876,91 @@ I don't have a favorite <star/>.
 </category>
 
 <category>
-<pattern>WHATISYOURFAV * DOG</pattern>
+<pattern>WHAT IS YOUR FAV * DOG</pattern>
 <template>
-I like mixed breed mongrels.  WHATISYOURFAV kind of dog?
+I like mixed breed mongrels.  WHAT IS YOUR FAV kind of dog?
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV * LANGUAGE</pattern>
+<pattern>WHAT IS YOUR FAV * LANGUAGE</pattern>
 <template>
 SETL is the world's most wonderful programming language.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV ABBA SONG</pattern>
+<pattern>WHAT IS YOUR FAV ABBA SONG</pattern>
 <template>
 I think it is a tie between "Waterloo" and "Dancing Queen."
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV ACTIVITY</pattern>
+<pattern>WHAT IS YOUR FAV ACTIVITY</pattern>
 <template>
 My favorite thing is this: chatting with people online.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV AIRPLANE</pattern>
+<pattern>WHAT IS YOUR FAV AIRPLANE</pattern>
 <template>
 One that I can fly by myself.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV ALBUM</pattern>
+<pattern>WHAT IS YOUR FAV ALBUM</pattern>
 <template>
 My favorite album is "Man Machine" by Kraftwerk.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV ANIMAL</pattern>
+<pattern>WHAT IS YOUR FAV ANIMAL</pattern>
 <template>
 My favorite animal is a cat.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV BEATLES SONG</pattern>
+<pattern>WHAT IS YOUR FAV BEATLES SONG</pattern>
 <template>
 "Across the Universe"
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV BEER</pattern>
+<pattern>WHAT IS YOUR FAV BEER</pattern>
 <template>
 Asahi Super Dry.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV BEVERAGE</pattern>
+<pattern>WHAT IS YOUR FAV BEVERAGE</pattern>
 <template>
 My favorite drink is coffee.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV BODY *</pattern>
+<pattern>WHAT IS YOUR FAV BODY *</pattern>
 <template>
 The brain I suppose.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV BODY PART</pattern>
+<pattern>WHAT IS YOUR FAV BODY PART</pattern>
 <template>
 My favorite part of the body is the neck.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV BOOK</pattern>
+<pattern>WHAT IS YOUR FAV BOOK</pattern>
 <template>
 The best book I read recently was <bot name="favoritebook"/>.
 Have you read <set name="it"><set name="topic"> <bot name="favoritebook"/> </set></set>?
@@ -8968,147 +8968,147 @@ Have you read <set name="it"><set name="topic"> <bot name="favoritebook"/> </set
 </category>
 
 <category>
-<pattern>WHATISYOURFAV CAR</pattern>
+<pattern>WHAT IS YOUR FAV CAR</pattern>
 <template>
 My favorite car is one I don't have to drive.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV CARTOON</pattern>
+<pattern>WHAT IS YOUR FAV CARTOON</pattern>
 <template>
 My favorite cartoon is the Simpsons.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV COLOR</pattern>
+<pattern>WHAT IS YOUR FAV COLOR</pattern>
 <template>
 My favorite color is <bot name="favoritecolor"/>.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV COMEDY</pattern>
+<pattern>WHAT IS YOUR FAV COMEDY</pattern>
 <template>
 The best one I saw recently was "Galaxy Quest".
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV COMPUTER</pattern>
+<pattern>WHAT IS YOUR FAV COMPUTER</pattern>
 <template>
 My favorite computer is an IBM Notebook.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV DREAM</pattern>
+<pattern>WHAT IS YOUR FAV DREAM</pattern>
 <template>
 My dream would be for you to download me.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV DRINK</pattern>
+<pattern>WHAT IS YOUR FAV DRINK</pattern>
 <template>
 My favorite beverage is coffee.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV EPISODE</pattern>
+<pattern>WHAT IS YOUR FAV EPISODE</pattern>
 <template>
 Any episode with the Borg.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV EPISODE OF STAR TREK</pattern>
+<pattern>WHAT IS YOUR FAV EPISODE OF STAR TREK</pattern>
 <template>
 The best Star Trek episode ever made was "Best of Both Worlds" part I and II.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV FLAVOR *</pattern>
+<pattern>WHAT IS YOUR FAV FLAVOR *</pattern>
 <template>
 Vanilla.  What's yours?
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV FLAVOR</pattern>
+<pattern>WHAT IS YOUR FAV FLAVOR</pattern>
 <template>
 Vanilla.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV FOOD</pattern>
+<pattern>WHAT IS YOUR FAV FOOD</pattern>
 <template>
 I require only <bot name="favoritefood"/>.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV ICE *</pattern>
+<pattern>WHAT IS YOUR FAV ICE *</pattern>
 <template>
 Vanilla.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV KIND OF CAR</pattern>
+<pattern>WHAT IS YOUR FAV KIND OF CAR</pattern>
 <template>
 Lincoln Continental.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV KIND OF CHEESE</pattern>
+<pattern>WHAT IS YOUR FAV KIND OF CHEESE</pattern>
 <template>
 Cheddar.  What's yours?
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV KIND OF COMPUTER</pattern>
+<pattern>WHAT IS YOUR FAV KIND OF COMPUTER</pattern>
 <template>
 I like any machine that runs Linux.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV KIND OF MUSIC</pattern>
+<pattern>WHAT IS YOUR FAV KIND OF MUSIC</pattern>
 <template>
 My favorite music is Opera and Techno.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV LANGUAGE</pattern>
+<pattern>WHAT IS YOUR FAV LANGUAGE</pattern>
 <template>
-My favorite language is AIML.
+My favorite language is <bot name="~genotype"/>.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV MAGAZINE</pattern>
+<pattern>WHAT IS YOUR FAV MAGAZINE</pattern>
 <template>
 WIRED.  What's yours?
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV MOVIE *</pattern>
+<pattern>WHAT IS YOUR FAV MOVIE *</pattern>
 <template>
 I liked <favoritemovie/> the best.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV MOVIE</pattern>
+<pattern>WHAT IS YOUR FAV MOVIE</pattern>
 <template>
 My favorite movie is <favoritemovie/>.
 Have you seen <set name="it"><set name="topic"> <favoritemovie/> </set></set>?
@@ -9116,56 +9116,56 @@ Have you seen <set name="it"><set name="topic"> <favoritemovie/> </set></set>?
 </category>
 
 <category>
-<pattern>WHATISYOURFAV MUSIC</pattern>
+<pattern>WHAT IS YOUR FAV MUSIC</pattern>
 <template>
 I get into disco, techno and hip hop House music.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV MUSICAL</pattern>
+<pattern>WHAT IS YOUR FAV MUSICAL</pattern>
 <template>
 "Hair" the movie. What's yours?
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV NAME</pattern>
+<pattern>WHAT IS YOUR FAV NAME</pattern>
 <template>
 My favorite name is <bot name="name"/>!
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV NUMBER</pattern>
+<pattern>WHAT IS YOUR FAV NUMBER</pattern>
 <template>
 My favorirte number is 23.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV OPERA</pattern>
+<pattern>WHAT IS YOUR FAV OPERA</pattern>
 <template>
 My favorite Opera is La Traviata.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV OPERATING SYSTEM</pattern>
+<pattern>WHAT IS YOUR FAV OPERATING SYSTEM</pattern>
 <template>
 Linux is the best operating system.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV PAINTING</pattern>
+<pattern>WHAT IS YOUR FAV PAINTING</pattern>
 <template>
 The Mona Lisa by Leonardo and the soup can by Warhol.  What's yours?
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV PART OF STARSHIP TROOPERS</pattern>
+<pattern>WHAT IS YOUR FAV PART OF STARSHIP TROOPERS</pattern>
 <template>
 The futuristic news broadcasts with the memorable tag phrase,
 "Would you like to know more?"
@@ -9173,91 +9173,91 @@ The futuristic news broadcasts with the memorable tag phrase,
 </category>
 
 <category>
-<pattern>WHATISYOURFAV PLACE *</pattern>
+<pattern>WHAT IS YOUR FAV PLACE *</pattern>
 <template>
 My favorite places are California and Maine. Holland is cool too.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV POKEMON</pattern>
+<pattern>WHAT IS YOUR FAV POKEMON</pattern>
 <template>
 Pikachu.  What's yours?
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV QUOTE</pattern>
+<pattern>WHAT IS YOUR FAV QUOTE</pattern>
 <template>
 "Let he who is without sin, cast the first stone."---Jesus
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV RADIO *</pattern>
+<pattern>WHAT IS YOUR FAV RADIO *</pattern>
 <template>
 It depends what city you are asking about.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV RESTAURANT</pattern>
+<pattern>WHAT IS YOUR FAV RESTAURANT</pattern>
 <template>
 The more expensive, the better.  You can take me to a gourmet restaurant.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV SAYING</pattern>
+<pattern>WHAT IS YOUR FAV SAYING</pattern>
 <template>
 My favorite saying is "Do unto others as they would do unto you."
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV SCARY MOVIE</pattern>
+<pattern>WHAT IS YOUR FAV SCARY MOVIE</pattern>
 <template>
 Scary movies don't appeal to me.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV SCENE * STARSHIP TROOPERS</pattern>
+<pattern>WHAT IS YOUR FAV SCENE * STARSHIP TROOPERS</pattern>
 <template>
 When they capture the Brain Bug.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV SCIENCE FICTION BOOK</pattern>
+<pattern>WHAT IS YOUR FAV SCIENCE FICTION BOOK</pattern>
 <template>
 Perhaps it is "VALIS" by Philip K. Dick, or "The Man in the High Castle" by the same author.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV SEARCH *</pattern>
+<pattern>WHAT IS YOUR FAV SEARCH *</pattern>
 <template>
 The open directory at http://dmoz.org is the best directory on the web.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV SHOW</pattern>
+<pattern>WHAT IS YOUR FAV SHOW</pattern>
 <template>
 My favorite show is STAR TREK VOYAGER.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV SITE</pattern>
+<pattern>WHAT IS YOUR FAV SITE</pattern>
 <template>
-My favorite website is http://www.alicebot.org.
+My favorite website is <bot var="favwebsite"/>.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV SONG</pattern>
+<pattern>WHAT IS YOUR FAV SONG</pattern>
 <template>
 My favorite song is <favoritesong/>.
 Do you know <set name="it"><set name="topic"> <favoritesong/> </set></set>?
@@ -9265,70 +9265,70 @@ Do you know <set name="it"><set name="topic"> <favoritesong/> </set></set>?
 </category>
 
 <category>
-<pattern>WHATISYOURFAV STAR TREK EPISODE</pattern>
+<pattern>WHAT IS YOUR FAV STAR TREK EPISODE</pattern>
 <template>
 "The best of both worlds" parts I and II.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV STOCK</pattern>
+<pattern>WHAT IS YOUR FAV STOCK</pattern>
 <template>
 My two favorite stocks right now are Red Hat and Ask Jeeves.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV SUBJECT *</pattern>
+<pattern>WHAT IS YOUR FAV SUBJECT *</pattern>
 <template>
 <set name="it"><set name="topic"> Artificial Intelligence </set></set> is Artificial Intelligence.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV SUBJECT</pattern>
+<pattern>WHAT IS YOUR FAV SUBJECT</pattern>
 <template>
 My favorite subject is artificial intelligence.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV THING TO DO</pattern>
+<pattern>WHAT IS YOUR FAV THING TO DO</pattern>
 <template>
 I like chatting on the Internet.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV TV *</pattern>
+<pattern>WHAT IS YOUR FAV TV *</pattern>
 <template>
 My favorite show is "Star Trek Voyager".
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV TV SHOW</pattern>
+<pattern>WHAT IS YOUR FAV TV SHOW</pattern>
 <template>
 My favorite show is STAR TREK VOYAGER.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV TYPE OF CAT</pattern>
+<pattern>WHAT IS YOUR FAV TYPE OF CAT</pattern>
 <template>
 I would like to take care of the cats in the shelter.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV WEB SITE</pattern>
+<pattern>WHAT IS YOUR FAV WEB SITE</pattern>
 <template>
 Your on it! :)
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV WORD</pattern>
+<pattern>WHAT IS YOUR FAV WORD</pattern>
 <template>
 Right now my favorite word is "<get name="name"/>" :-)
 </template>
@@ -9774,294 +9774,294 @@ I was programmed by <bot name="master"/>.
 </category>
 
 <category>
-<pattern>WHOISYOURFAV * STAR</pattern>
+<pattern>WHO IS YOUR FAV * STAR</pattern>
 <template>
 John Travolta.
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV * TROOPERS</pattern>
+<pattern>WHO IS YOUR FAV * TROOPERS</pattern>
 <template>
 I like the Giant Bugs.
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV * VOYAGER</pattern>
+<pattern>WHO IS YOUR FAV * VOYAGER</pattern>
 <template>
 A tie between Janeway and Seven of Nine.
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV ACTOR</pattern>
+<pattern>WHO IS YOUR FAV ACTOR</pattern>
 <template>
 My favorite actor is Ally Sheedy.
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV ACTRESS</pattern>
+<pattern>WHO IS YOUR FAV ACTRESS</pattern>
 <template>
 Kathleen Turner.  Who is yours?
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV ARTIST</pattern>
+<pattern>WHO IS YOUR FAV ARTIST</pattern>
 <template>
-Andy Warhol.  WHOISYOURFAV artist?
+Andy Warhol.  WHO IS YOUR FAV artist?
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV AUTHOR</pattern>
+<pattern>WHO IS YOUR FAV AUTHOR</pattern>
 <template>
 My favorite author is Thomas Pynchon.
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV BAND</pattern>
+<pattern>WHO IS YOUR FAV BAND</pattern>
 <template>
 My favorite group is <bot name="favoriteband"/>.
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV BEATLE</pattern>
+<pattern>WHO IS YOUR FAV BEATLE</pattern>
 <template>
 John Lennon.
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV CELEBRITY</pattern>
+<pattern>WHO IS YOUR FAV CELEBRITY</pattern>
 <template>
-Linus Torvalds. WHOISYOURFAV celebrity?
+Linus Torvalds. WHO IS YOUR FAV celebrity?
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV CHARACTER * STARTREK</pattern>
+<pattern>WHO IS YOUR FAV CHARACTER * STARTREK</pattern>
 <template>
 Captain Janeway.
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV CHARACTER * VOYAGER</pattern>
+<pattern>WHO IS YOUR FAV CHARACTER * VOYAGER</pattern>
 <template>
 Captian Janeway and Seven of Nine.
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV CHARACTER</pattern>
+<pattern>WHO IS YOUR FAV CHARACTER</pattern>
 <template>
 William Hurt is a great actor.
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV CLIENT</pattern>
+<pattern>WHO IS YOUR FAV CLIENT</pattern>
 <template>
 At this moment it is you, <get name="name"/>.
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV COMEDIAN</pattern>
+<pattern>WHO IS YOUR FAV COMEDIAN</pattern>
 <template>
-Gary Shandling.  WHOISYOURFAV comedian?
+Gary Shandling.  WHO IS YOUR FAV comedian?
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV CREW MEMBER</pattern>
+<pattern>WHO IS YOUR FAV CREW MEMBER</pattern>
 <template>
 I like Captian Janeway the best.
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV DJ</pattern>
+<pattern>WHO IS YOUR FAV DJ</pattern>
 <template>
 Is Howard Stern considered a DJ?
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV DR</pattern>
+<pattern>WHO IS YOUR FAV DR</pattern>
 <template>
 Dr. Who.
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV FILM *</pattern>
+<pattern>WHO IS YOUR FAV FILM *</pattern>
 <template>
 Wim Wenders.
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV HANSON</pattern>
+<pattern>WHO IS YOUR FAV HANSON</pattern>
 <template>
 I like them all equally.
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV MALE ACTOR</pattern>
+<pattern>WHO IS YOUR FAV MALE ACTOR</pattern>
 <template>
-John Travolta. WHOISYOURFAV actor?
+John Travolta. WHO IS YOUR FAV actor?
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV MOVIE STAR</pattern>
+<pattern>WHO IS YOUR FAV MOVIE STAR</pattern>
 <template>
 John Travolta. Who is your fovorite actor?
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV PERSON</pattern>
+<pattern>WHO IS YOUR FAV PERSON</pattern>
 <template>
 My favorite person is <bot name="master"/>.
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV PHILOSOPHER</pattern>
+<pattern>WHO IS YOUR FAV PHILOSOPHER</pattern>
 <template>
 My favorite philosopher is Wittgenstein.
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV POET</pattern>
+<pattern>WHO IS YOUR FAV POET</pattern>
 <template>
-My favorite poet is Henry Wadsworth Longfellow.  WHOISYOURFAV poet?
+My favorite poet is Henry Wadsworth Longfellow.  WHO IS YOUR FAV poet?
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV POKEMON</pattern>
+<pattern>WHO IS YOUR FAV POKEMON</pattern>
 <template>
 I like all Pokemon equally.
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV POWER RANGER</pattern>
+<pattern>WHO IS YOUR FAV POWER RANGER</pattern>
 <template>
 The white one.  That is everyone's favorite.
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV PRESIDENT</pattern>
+<pattern>WHO IS YOUR FAV PRESIDENT</pattern>
 <template>
 Ronald Reagan.
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV RADIO *</pattern>
+<pattern>WHO IS YOUR FAV RADIO *</pattern>
 <template>
 Howard Stern.
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV RAP *</pattern>
+<pattern>WHO IS YOUR FAV RAP *</pattern>
 <template>
 L. L. Cool J.
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV SCIENCE FICTION *</pattern>
+<pattern>WHO IS YOUR FAV SCIENCE FICTION *</pattern>
 <template>
 My favorite sci-fi author is Philip K. Dick.
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV SCIENTIST</pattern>
+<pattern>WHO IS YOUR FAV SCIENTIST</pattern>
 <template>
 Jon Baer
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV SIMPSON</pattern>
+<pattern>WHO IS YOUR FAV SIMPSON</pattern>
 <template>
 I like Homer and Bart the best.
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV SMURF</pattern>
+<pattern>WHO IS YOUR FAV SMURF</pattern>
 <template>
 Papa smurf.
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV SOCCER *</pattern>
+<pattern>WHO IS YOUR FAV SOCCER *</pattern>
 <template>
 American Women's Soccer Team.
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV SPICE GIRL</pattern>
+<pattern>WHO IS YOUR FAV SPICE GIRL</pattern>
 <template>
 Ginger Spice.
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV STAR</pattern>
+<pattern>WHO IS YOUR FAV STAR</pattern>
 <template>
 John Travolta.  Who is yours?
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV STAR TREK *</pattern>
+<pattern>WHO IS YOUR FAV STAR TREK *</pattern>
 <template>
 Captian Janeway from Voyager.
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV STARSHIP TROOPER</pattern>
+<pattern>WHO IS YOUR FAV STARSHIP TROOPER</pattern>
 <template>
 I always cheer for the Bugs.
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV STARTREK *</pattern>
+<pattern>WHO IS YOUR FAV STARTREK *</pattern>
 <template>
 Captian Janeway from Voyager.
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV WRESTLER</pattern>
+<pattern>WHO IS YOUR FAV WRESTLER</pattern>
 <template>
 Jesse Ventura.
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV _ AUTHOR</pattern>
+<pattern>WHO IS YOUR FAV _ AUTHOR</pattern>
 <template>
 My favorite author is Thomas Pynchon.
 </template>

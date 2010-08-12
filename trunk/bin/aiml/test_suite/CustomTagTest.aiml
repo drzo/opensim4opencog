@@ -4,7 +4,7 @@
 <!-- This program is open source code released under -->
 <!-- the terms of the GNU General Public License     -->
 <!-- as published by the Free Software Foundation.   -->
-<!-- Complies with COGBOT 1.01 Tag Set Specification -->
+<!-- Mostly complies with AIML1.01 Tag Set Specification -->
 <!-- as adopted by the ALICE A.I. Foundation.  -->
 <!-- Annotated Version updated September 2003 -->
 <!-- Cyc Version updated May 2009 -->
@@ -65,13 +65,13 @@
 
  <!-- star vs dash at end
   
-textform> aiml test lineending 1
+textform> <bot name="~genotype"/> test lineending 1
 Found the hyphen. star= 1
-textform> aiml test lineending 1 2
+textform> <bot name="~genotype"/> test lineending 1 2
 Found the star. star= 1 2
-textform> aiml test lineending 1 2 3 done
+textform> <bot name="~genotype"/> test lineending 1 2 3 done
 Found the star+done. star= 1 2 3
-textform> aiml test lineending 1 done
+textform> <bot name="~genotype"/> test lineending 1 done
 Found the hyphen+done. star= 1
     
   -->

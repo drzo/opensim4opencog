@@ -2719,7 +2719,7 @@
 <category><pattern>SOMEONE LIKE OSAMA *</pattern><template><think><srai>NOPX 570</srai></think><random><li><srai>EXPDEX SOMEONE LIKE OSAMA <star/></srai></li></random></template></category>
 <category><pattern>SOMEONE LIKE PAT *</pattern><template><think><srai>NOPX 852</srai></think><random><li><srai>EXPDEX SOMEONE LIKE PAT <star/></srai></li></random></template></category>
 <category><pattern>SOMEONE LIKE PAUL *</pattern><template><think><srai>NOPX 1633</srai></think><random><li><srai>EXPDEX SOMEONE LIKE PAUL <star/></srai></li></random></template></category>
-<category><pattern>SOMEONE LIKE PETER *</pattern><template><think><srai>NOPX 1094</srai></think><random><li><srai>EXPDEX SOMEONE LIKE PETER <star/></srai></li></random></template></category>
+<category><pattern>SOMEONE LIKE <bot name="botmaster"/> *</pattern><template><think><srai>NOPX 1094</srai></think><random><li><srai>EXPDEX SOMEONE LIKE <bot name="botmaster"/> <star/></srai></li></random></template></category>
 <category><pattern>SOMEONE LIKE RICHARD *</pattern><template><think><srai>NOPX 926</srai></think><random><li><srai>EXPDEX SOMEONE LIKE RICHARD <star/></srai></li></random></template></category>
 <category><pattern>SOMEONE LIKE ROBERT *</pattern><template><think><srai>NOPX 873</srai></think><random><li><srai>EXPDEX SOMEONE LIKE ROBERT <star/></srai></li></random></template></category>
 <category><pattern>SOMEONE LIKE ROGER *</pattern><template><think><srai>NOPX 419</srai></think><random><li><srai>EXPDEX SOMEONE LIKE ROGER <star/></srai></li></random></template></category>
@@ -5567,7 +5567,7 @@
 <category><pattern>SOMEONE BEARING A STRIKING *</pattern><template><think><srai>NOPX 415</srai></think><random><li><srai>EXPDEX SOMEONE BEARING A STRIKING <star/></srai></li></random></template></category>
 <category><pattern>SOMEONE BECAUSE YOUR RESUME *</pattern><template><think><srai>NOPX 686</srai></think><random><li><srai>EXPDEX SOMEONE BECAUSE YOUR RESUME <star/></srai></li></random></template></category>
 <category><pattern>SOMEONE BECOME A HABITUAL *</pattern><template><think><srai>NOPX 916</srai></think><random><li><srai>EXPDEX SOMEONE BECOME A HABITUAL <star/></srai></li></random></template></category>
-<category><pattern>SOMEONE BECOMES A CHRISTIAN *</pattern><template><think><srai>NOPX 531</srai></think><random><li><srai>EXPDEX SOMEONE BECOMES A CHRISTIAN <star/></srai></li></random></template></category>
+<category><pattern>SOMEONE BECOMES A <bot var="religion"/> *</pattern><template><think><srai>NOPX 531</srai></think><random><li><srai>EXPDEX SOMEONE BECOMES A <bot var="religion"/> <star/></srai></li></random></template></category>
 <category><pattern>SOMEONE BECOMES A JUDGE *</pattern><template><think><srai>NOPX 558</srai></think><random><li><srai>EXPDEX SOMEONE BECOMES A JUDGE <star/></srai></li></random></template></category>
 <category><pattern>SOMEONE BEFORE A CRIME *</pattern><template><think><srai>NOPX 889</srai></think><random><li><srai>EXPDEX SOMEONE BEFORE A CRIME <star/></srai></li></random></template></category>
 <category><pattern>SOMEONE BEHIND THE SCENES *</pattern><template><think><srai>NOPX 637</srai></think><random><li><srai>EXPDEX SOMEONE BEHIND THE SCENES <star/></srai></li></random></template></category>
@@ -6351,7 +6351,7 @@
 <category><pattern>SOMEONE INTO YOUR LIFE *</pattern><template><think><srai>NOPX 809</srai></think><random><li><srai>EXPDEX SOMEONE INTO YOUR LIFE <star/></srai></li></random></template></category>
 <category><pattern>SOMEONE INTRODUCES A TRADEMARK *</pattern><template><think><srai>NOPX 1304</srai></think><random><li><srai>EXPDEX SOMEONE INTRODUCES A TRADEMARK <star/></srai></li></random></template></category>
 <category><pattern>SOMEONE INVITE ME UNK *</pattern><template><think><srai>NOPX 790</srai></think><random><li><srai>EXPDEX SOMEONE INVITE ME UNK <star/></srai></li></random></template></category>
-<category><pattern>SOMEONE IS A CHRISTIAN *</pattern><template><think><srai>NOPX 521</srai></think><random><li><srai>EXPDEX SOMEONE IS A CHRISTIAN <star/></srai></li></random></template></category>
+<category><pattern>SOMEONE IS A <bot var="religion"/> *</pattern><template><think><srai>NOPX 521</srai></think><random><li><srai>EXPDEX SOMEONE IS A <bot var="religion"/> <star/></srai></li></random></template></category>
 <category><pattern>SOMEONE IS A BAD *</pattern><template><think><srai>NOPX 418</srai></think><random><li><srai>EXPDEX SOMEONE IS A BAD <star/></srai></li></random></template></category>
 <category><pattern>SOMEONE IS A BIT *</pattern><template><think><srai>NOPX 611</srai></think><random><li><srai>EXPDEX SOMEONE IS A BIT <star/></srai></li></random></template></category>
 <category><pattern>SOMEONE IS A GOOD *</pattern><template><think><srai>NOPX 2117</srai></think><random><li><srai>EXPDEX SOMEONE IS A GOOD <star/></srai></li></random></template></category>

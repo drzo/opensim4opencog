@@ -81,7 +81,7 @@
 <category><pattern>I CALLED PALM *</pattern><template><think><srai>NOPX 680</srai></think><random><li><srai>EXPDEX I CALLED PALM <star/></srai></li></random></template></category>
 <category><pattern>I CALLED PANASONIC *</pattern><template><think><srai>NOPX 788</srai></think><random><li><srai>EXPDEX I CALLED PANASONIC <star/></srai></li></random></template></category>
 <category><pattern>I CALLED PAUL *</pattern><template><think><srai>NOPX 933</srai></think><random><li><srai>EXPDEX I CALLED PAUL <star/></srai></li></random></template></category>
-<category><pattern>I CALLED PETER *</pattern><template><think><srai>NOPX 567</srai></think><random><li><srai>EXPDEX I CALLED PETER <star/></srai></li></random></template></category>
+<category><pattern>I CALLED <bot name="botmaster"/> *</pattern><template><think><srai>NOPX 567</srai></think><random><li><srai>EXPDEX I CALLED <bot name="botmaster"/> <star/></srai></li></random></template></category>
 <category><pattern>I CALLED PRE *</pattern><template><think><srai>NOPX 6311</srai></think><random><li><srai>EXPDEX I CALLED PRE <star/></srai></li></random></template></category>
 <category><pattern>I CALLED QWEST *</pattern><template><think><srai>NOPX 447</srai></think><random><li><srai>EXPDEX I CALLED QWEST <star/></srai></li></random></template></category>
 <category><pattern>I CALLED RICHARD *</pattern><template><think><srai>NOPX 408</srai></think><random><li><srai>EXPDEX I CALLED RICHARD <star/></srai></li></random></template></category>

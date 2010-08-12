@@ -98,7 +98,7 @@
 <category><pattern>I KNEW NOTHING *</pattern><template><think><srai>NOPX 851</srai></think><random><li><srai>EXPDEX I KNEW NOTHING <star/></srai></li></random></template></category>
 <category><pattern>I KNEW NICK *</pattern><template><think><srai>NOPX 495</srai></think><random><li><srai>EXPDEX I KNEW NICK <star/></srai></li></random></template></category>
 <category><pattern>I KNEW PAUL *</pattern><template><think><srai>NOPX 1671</srai></think><random><li><srai>EXPDEX I KNEW PAUL <star/></srai></li></random></template></category>
-<category><pattern>I KNEW PETER *</pattern><template><think><srai>NOPX 607</srai></think><random><li><srai>EXPDEX I KNEW PETER <star/></srai></li></random></template></category>
+<category><pattern>I KNEW <bot name="botmaster"/> *</pattern><template><think><srai>NOPX 607</srai></think><random><li><srai>EXPDEX I KNEW <bot name="botmaster"/> <star/></srai></li></random></template></category>
 <category><pattern>I KNEW RICHARD *</pattern><template><think><srai>NOPX 558</srai></think><random><li><srai>EXPDEX I KNEW RICHARD <star/></srai></li></random></template></category>
 <category><pattern>I KNEW ROBERT *</pattern><template><think><srai>NOPX 437</srai></think><random><li><srai>EXPDEX I KNEW ROBERT <star/></srai></li></random></template></category>
 <category><pattern>I KNEW SAM *</pattern><template><think><srai>NOPX 499</srai></think><random><li><srai>EXPDEX I KNEW SAM <star/></srai></li></random></template></category>

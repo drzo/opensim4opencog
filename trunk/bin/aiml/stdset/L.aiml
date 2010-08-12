@@ -5,7 +5,7 @@
 	<!-- This program is open source code released under -->
 	<!-- the terms of the GNU General Public License     -->
 	<!-- as published by the Free Software Foundation.   -->
-	<!-- Complies with COGBOT 1.0 Tag Set Specification -->
+	<!-- Mostly  complies with  AIML1.0 Tag Set Specification -->
 	<!-- as adopted by the ALICE A.I. Foundation.  -->
 	<!-- A.L.I.C.E. Build Wed Sep 26 13:05:06 PDT 2001   -->
 	<!-- 41124 total categories.  -->
@@ -833,9 +833,9 @@
 		</template>
 	</category>
 	<category>
-		<pattern>LE AIML</pattern>
+		<pattern>LE <bot name="~genotype"/></pattern>
 		<template>
-			<srai>QU EST CE QUE LE AIML</srai>
+			<srai>QU EST CE QUE LE <bot name="~genotype"/></srai>
 		</template>
 	</category>
 	<category>
@@ -2532,7 +2532,7 @@
 </template>
 	</category>
 	<category>
-		<pattern>LIST TWELVE BASIC APPLET TIPS FOR COGBOT USERS</pattern>
+		<pattern>LIST TWELVE BASIC APPLET TIPS FOR  <bot name="~genotype"/> USERS</pattern>
 		<template>
 			<br/>
 1. Applets are notoriously hard to debug; you are not dumb.<br/>

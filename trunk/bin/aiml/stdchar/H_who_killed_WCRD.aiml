@@ -69,7 +69,7 @@
 <category><pattern>WHO KILLED WILLIAM *</pattern><template><think><srai>NOPX 691</srai></think><random><li><srai>EXPDEX WHO KILLED WILLIAM <star/></srai></li></random></template></category>
 <category><pattern>WHO KILLED THE *</pattern><template><think><srai>NOPX 11639</srai></think><random><li><srai>EXPDEX WHO KILLED THE <star/></srai></li></random></template></category>
 <category><pattern>WHO KILLED BAMBI *</pattern><template><think><srai>NOPX 445</srai></think><random><li><srai>EXPDEX WHO KILLED BAMBI <star/></srai></li></random></template></category>
-<category><pattern>WHO KILLED CHRISTIANITY *</pattern><template><think><srai>NOPX 1110</srai></think><random><li><srai>EXPDEX WHO KILLED CHRISTIANITY <star/></srai></li></random></template></category>
+<category><pattern>WHO KILLED <bot var="religion"/>ITY *</pattern><template><think><srai>NOPX 1110</srai></think><random><li><srai>EXPDEX WHO KILLED <bot var="religion"/>ITY <star/></srai></li></random></template></category>
 <category><pattern>WHO KILLED COCK *</pattern><template><think><srai>NOPX 722</srai></think><random><li><srai>EXPDEX WHO KILLED COCK <star/></srai></li></random></template></category>
 <category><pattern>WHO KILLED DEYDA *</pattern><template><think><srai>NOPX 610</srai></think><random><li><srai>EXPDEX WHO KILLED DEYDA <star/></srai></li></random></template></category>
 <category><pattern>WHO KILLED JFK *</pattern><template><think><srai>NOPX 749</srai></think><random><li><srai>EXPDEX WHO KILLED JFK <star/></srai></li></random></template></category>
@@ -152,7 +152,7 @@
 <category><pattern>WHO KILLED HARRY FIELD *</pattern><template><think><srai>NOPX 1544</srai></think><random><li><srai>EXPDEX WHO KILLED HARRY FIELD <star/></srai></li></random></template></category>
 <category><pattern>WHO KILLED HIS BROTHER *</pattern><template><think><srai>NOPX 522</srai></think><random><li><srai>EXPDEX WHO KILLED HIS BROTHER <star/></srai></li></random></template></category>
 <category><pattern>WHO KILLED KURT COBAIN *</pattern><template><think><srai>NOPX 1099</srai></think><random><li><srai>EXPDEX WHO KILLED KURT COBAIN <star/></srai></li></random></template></category>
-<category><pattern>WHO KILLED LACI PETERSON *</pattern><template><think><srai>NOPX 1091</srai></think><random><li><srai>EXPDEX WHO KILLED LACI PETERSON <star/></srai></li></random></template></category>
+<category><pattern>WHO KILLED LACI <bot name="botmaster"/>SON *</pattern><template><think><srai>NOPX 1091</srai></think><random><li><srai>EXPDEX WHO KILLED LACI <bot name="botmaster"/>SON <star/></srai></li></random></template></category>
 <category><pattern>WHO KILLED MARTHA MOXLEY *</pattern><template><think><srai>NOPX 576</srai></think><random><li><srai>EXPDEX WHO KILLED MARTHA MOXLEY <star/></srai></li></random></template></category>
 <category><pattern>WHO KILLED MARTIN LUTHER *</pattern><template><think><srai>NOPX 511</srai></think><random><li><srai>EXPDEX WHO KILLED MARTIN LUTHER <star/></srai></li></random></template></category>
 <category><pattern>WHO KILLED MR CHIPPENDALE *</pattern><template><think><srai>NOPX 4617</srai></think><random><li><srai>EXPDEX WHO KILLED MR CHIPPENDALE <star/></srai></li></random></template></category>

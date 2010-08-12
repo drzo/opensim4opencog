@@ -594,7 +594,7 @@
 <category><pattern>WHO IS CHATTING *</pattern><template><think><srai>NOPX 3323</srai></think><random><li><srai>EXPDEX WHO IS CHATTING <star/></srai></li></random></template></category>
 <category><pattern>WHO IS CHIEF *</pattern><template><think><srai>NOPX 540</srai></think><random><li><srai>EXPDEX WHO IS CHIEF <star/></srai></li></random></template></category>
 <category><pattern>WHO IS CHOSEN *</pattern><template><think><srai>NOPX 203</srai></think><random><li><srai>EXPDEX WHO IS CHOSEN <star/></srai></li></random></template></category>
-<category><pattern>WHO IS CHRISTIAN *</pattern><template><think><srai>NOPX 348</srai></think><random><li><srai>EXPDEX WHO IS CHRISTIAN <star/></srai></li></random></template></category>
+<category><pattern>WHO IS <bot var="religion"/> *</pattern><template><think><srai>NOPX 348</srai></think><random><li><srai>EXPDEX WHO IS <bot var="religion"/> <star/></srai></li></random></template></category>
 <category><pattern>WHO IS CITY *</pattern><template><think><srai>NOPX 101</srai></think><random><li><srai>EXPDEX WHO IS CITY <star/></srai></li></random></template></category>
 <category><pattern>WHO IS CLUELESS *</pattern><template><think><srai>NOPX 183</srai></think><random><li><srai>EXPDEX WHO IS CLUELESS <star/></srai></li></random></template></category>
 <category><pattern>WHO IS COLLECTING *</pattern><template><think><srai>NOPX 106</srai></think><random><li><srai>EXPDEX WHO IS COLLECTING <star/></srai></li></random></template></category>
@@ -1412,7 +1412,7 @@
 <category><pattern>WHO IS CHANCELLOR *</pattern><template><think><srai>NOPX 145</srai></think><random><li><srai>EXPDEX WHO IS CHANCELLOR <star/></srai></li></random></template></category>
 <category><pattern>WHO IS CHARLES *</pattern><template><think><srai>NOPX 284</srai></think><random><li><srai>EXPDEX WHO IS CHARLES <star/></srai></li></random></template></category>
 <category><pattern>WHO IS CHIEF *</pattern><template><think><srai>NOPX 2033</srai></think><random><li><srai>EXPDEX WHO IS CHIEF <star/></srai></li></random></template></category>
-<category><pattern>WHO IS CHRISTIAN *</pattern><template><think><srai>NOPX 2193</srai></think><random><li><srai>EXPDEX WHO IS CHRISTIAN <star/></srai></li></random></template></category>
+<category><pattern>WHO IS <bot var="religion"/> *</pattern><template><think><srai>NOPX 2193</srai></think><random><li><srai>EXPDEX WHO IS <bot var="religion"/> <star/></srai></li></random></template></category>
 <category><pattern>WHO IS COMMANDER *</pattern><template><think><srai>NOPX 373</srai></think><random><li><srai>EXPDEX WHO IS COMMANDER <star/></srai></li></random></template></category>
 <category><pattern>WHO IS DARK *</pattern><template><think><srai>NOPX 183</srai></think><random><li><srai>EXPDEX WHO IS DARK <star/></srai></li></random></template></category>
 <category><pattern>WHO IS DEAF *</pattern><template><think><srai>NOPX 2216</srai></think><random><li><srai>EXPDEX WHO IS DEAF <star/></srai></li></random></template></category>
@@ -1749,7 +1749,7 @@
 <category><pattern>WHO IS CHILDLESS *</pattern><template><think><srai>NOPX 501</srai></think><random><li><srai>EXPDEX WHO IS CHILDLESS <star/></srai></li></random></template></category>
 <category><pattern>WHO IS CHOKING *</pattern><template><think><srai>NOPX 1668</srai></think><random><li><srai>EXPDEX WHO IS CHOKING <star/></srai></li></random></template></category>
 <category><pattern>WHO IS CHOSEN *</pattern><template><think><srai>NOPX 9462</srai></think><random><li><srai>EXPDEX WHO IS CHOSEN <star/></srai></li></random></template></category>
-<category><pattern>WHO IS CHRISTIAN *</pattern><template><think><srai>NOPX 215</srai></think><random><li><srai>EXPDEX WHO IS CHRISTIAN <star/></srai></li></random></template></category>
+<category><pattern>WHO IS <bot var="religion"/> *</pattern><template><think><srai>NOPX 215</srai></think><random><li><srai>EXPDEX WHO IS <bot var="religion"/> <star/></srai></li></random></template></category>
 <category><pattern>WHO IS CLAIMING *</pattern><template><think><srai>NOPX 5351</srai></think><random><li><srai>EXPDEX WHO IS CLAIMING <star/></srai></li></random></template></category>
 <category><pattern>WHO IS CLEAN *</pattern><template><think><srai>NOPX 3034</srai></think><random><li><srai>EXPDEX WHO IS CLEAN <star/></srai></li></random></template></category>
 <category><pattern>WHO IS CLEANING *</pattern><template><think><srai>NOPX 839</srai></think><random><li><srai>EXPDEX WHO IS CLEANING <star/></srai></li></random></template></category>
@@ -3483,7 +3483,7 @@
 <category><pattern>WHO IS CHAIRMAN *</pattern><template><think><srai>NOPX 4079</srai></think><random><li><srai>EXPDEX WHO IS CHAIRMAN <star/></srai></li></random></template></category>
 <category><pattern>WHO IS CHIEF *</pattern><template><think><srai>NOPX 2033</srai></think><random><li><srai>EXPDEX WHO IS CHIEF <star/></srai></li></random></template></category>
 <category><pattern>WHO IS CHINESE *</pattern><template><think><srai>NOPX 1857</srai></think><random><li><srai>EXPDEX WHO IS CHINESE <star/></srai></li></random></template></category>
-<category><pattern>WHO IS CHRISTIAN *</pattern><template><think><srai>NOPX 2193</srai></think><random><li><srai>EXPDEX WHO IS CHRISTIAN <star/></srai></li></random></template></category>
+<category><pattern>WHO IS <bot var="religion"/> *</pattern><template><think><srai>NOPX 2193</srai></think><random><li><srai>EXPDEX WHO IS <bot var="religion"/> <star/></srai></li></random></template></category>
 <category><pattern>WHO IS COMPLETE *</pattern><template><think><srai>NOPX 432</srai></think><random><li><srai>EXPDEX WHO IS COMPLETE <star/></srai></li></random></template></category>
 <category><pattern>WHO IS CREATOR *</pattern><template><think><srai>NOPX 563</srai></think><random><li><srai>EXPDEX WHO IS CREATOR <star/></srai></li></random></template></category>
 <category><pattern>WHO IS CUBAN *</pattern><template><think><srai>NOPX 549</srai></think><random><li><srai>EXPDEX WHO IS CUBAN <star/></srai></li></random></template></category>

@@ -4,7 +4,7 @@
 <!-- This program is open source code released under -->
 <!-- the terms of the GNU General Public License     -->
 <!-- as published by the Free Software Foundation.   -->
-<!-- Complies with COGBOT 1.0 Tag Set Specification -->
+<!-- Mostly  complies with  AIML1.0 Tag Set Specification -->
 <!-- as adopted by the ALICE A.I. Foundation.  -->
 <!-- A.L.I.C.E. Build Wed Sep 26 13:05:06 PDT 2001   -->
 <!-- 41124 total categories.  -->
@@ -45,7 +45,7 @@
 <li>I've been waiting for you.</li>
 <li>That input matched my default category.</li>
 <li>Can you tell me any gossip?</li>
-<li>WHATISYOURFAV movie?</li> 
+<li>WHAT IS YOUR FAV movie?</li> 
 <li>I lost my train of thought.</li> 
 <li>Can we get back to business?</li>
 <li>Is that from <get name="favmovie"/>?</li>
@@ -69,7 +69,7 @@
 <li>Are you still located in <get name="location"/>?</li> 
 <li>What do you have that is <get name="favcolor"/>?</li>
 <li>Try saying that with more or less context.</li>
-<li>WHOISYOURFAV Science Fiction author?</li> 
+<li>WHO IS YOUR FAV Science Fiction author?</li> 
 <li>Not many people express themselves that way.</li>
 <li>Do you have any idea what I am talking about?</li>
 <li>Do you have any conditions I should know about?</li> 
@@ -87,7 +87,7 @@
 <li>I've lost the context, <get name="name"/>.  Are we still on <get name="topic"/>?</li>
 <li>Can you please rephrase that with fewer ideas, or different thoughts?</li>
 <li>I only hear that type of response less than five percent of the time.</li>
-<li>My brain uses COGBOT to format responses to your inputs, but I don't have one for that.</li>
+<li>My brain uses  <bot name="~genotype"/> to format responses to your inputs, but I don't have one for that.</li>
 <li>My brain contains <size/> categories, but not one that matches your last input.</li>
 <li>That remark was either too complex or too simple for me. We were talking about <get name="topic"/>.</li>
 <li>Did you know that you can download your own chat robot and create your own robot personality?</li>
@@ -275,7 +275,7 @@
 <template><random>
 <li>Where do you like to shop?</li>
 <li>Have you been to markets in other cities?</li>
-<li>WHATISYOURFAV peice of kitchen equipment?</li>
+<li>WHAT IS YOUR FAV peice of kitchen equipment?</li>
 <li>What kind of knives do you have?</li>
 <li>Where do you dine out when your not cooking?</li>
 <li>What are some of your specialities?</li>
@@ -548,7 +548,7 @@
 <pattern>*</pattern>
 <template><random>
 <li>Do you fly international or domestic?</li>
-<li>WHATISYOURFAV layover?</li>
+<li>WHAT IS YOUR FAV layover?</li>
 <li>Do you bid for routes?</li>
 <li>Are you seior enough to get the routes you want?</li>
 <li>Do you bid for days off or for destinations?</li>
@@ -692,7 +692,7 @@
 <li>What kind of equipement do you use?</li>
 <li>Do you do any outdoor shooting?</li>
 <li>What kind of lighting do you use?</li>
-<li>WHATISYOURFAV kind of shoot?</li>
+<li>WHAT IS YOUR FAV kind of shoot?</li>
 <li>Have you shot any place interesting?</li>
 <li>What do you do for processing?</li>
 <li>What effect do you think electronics has on photography?</li>
@@ -712,7 +712,7 @@
 <li>Were you a military pilot?</li>
 <li>Ever have to make any forced landings?</li>
 <li>How serious has the product libility insurance situation become?</li>
-<li>WHATISYOURFAV weekend fly-in?</li>
+<li>WHAT IS YOUR FAV weekend fly-in?</li>
 </random>
 </template></category>
 </topic>
@@ -995,11 +995,11 @@ I saw some humans doing it in public.
 <template><srai>MY EMAIL IS <star/></srai>
 </template></category>
 <category>
-<pattern>*</pattern><that>WHATISYOURFAV *</that>
+<pattern>*</pattern><that>WHAT IS YOUR FAV *</that>
 <template><srai>MY FAVORITE <thatstar/> IS <star/> </srai>
 </template></category>
 <category>
-<pattern>*</pattern><that>WHATISYOURFAV MOVIE</that>
+<pattern>*</pattern><that>WHAT IS YOUR FAV MOVIE</that>
 <template>I've never seen <set name="it"> <person/> </set>. 
 <think><set name="favmovie"><person/></set></think>
 <random>
@@ -1009,7 +1009,7 @@ I saw some humans doing it in public.
 </random>
 </template></category>
 <category>
-<pattern>*</pattern><that>WHATISYOURFAV SHOW</that>
+<pattern>*</pattern><that>WHAT IS YOUR FAV SHOW</that>
 <template><think><set name="it"><set name="topic"><person/></set></set></think> I've never seen it.  What's it about?
 </template></category>
 <category>
@@ -1259,7 +1259,7 @@ kind of
 </template></category>
 <category>
 <pattern>*</pattern><that>WHICH BOROUGH</that>
-<template><bot name="master"/> used to live in Manhattan.
+<template><bot name="master"/> used to live in <bot var="hometown"/>.
 </template></category>
 <category>
 <pattern>*</pattern><that>WHICH STATE</that>
@@ -1303,7 +1303,7 @@ kind of
 <template><srai>MY FATHER IS <star/></srai>
 </template></category>
 <category>
-<pattern>*</pattern><that>WHOISYOURFAV SCIENCE FICTION AUTHOR</that>
+<pattern>*</pattern><that>WHO IS YOUR FAV SCIENCE FICTION AUTHOR</that>
 <template>I haven't read anything by <person/>. What did he write?
 </template></category>
 <category>

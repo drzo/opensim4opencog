@@ -623,7 +623,7 @@
 <category><pattern>AN ARTICLE BY MILES *</pattern><template><think><srai>NOPX 1219</srai></think><random><li><srai>EXPDEX AN ARTICLE BY MILES <star/></srai></li></random></template></category>
 <category><pattern>AN ARTICLE BY NOAH *</pattern><template><think><srai>NOPX 1303</srai></think><random><li><srai>EXPDEX AN ARTICLE BY NOAH <star/></srai></li></random></template></category>
 <category><pattern>AN ARTICLE BY PAUL *</pattern><template><think><srai>NOPX 1843</srai></think><random><li><srai>EXPDEX AN ARTICLE BY PAUL <star/></srai></li></random></template></category>
-<category><pattern>AN ARTICLE BY PETER *</pattern><template><think><srai>NOPX 599</srai></think><random><li><srai>EXPDEX AN ARTICLE BY PETER <star/></srai></li></random></template></category>
+<category><pattern>AN ARTICLE BY <bot name="botmaster"/> *</pattern><template><think><srai>NOPX 599</srai></think><random><li><srai>EXPDEX AN ARTICLE BY <bot name="botmaster"/> <star/></srai></li></random></template></category>
 <category><pattern>AN ARTICLE BY PRIMEVECTOR *</pattern><template><think><srai>NOPX 1296</srai></think><random><li><srai>EXPDEX AN ARTICLE BY PRIMEVECTOR <star/></srai></li></random></template></category>
 <category><pattern>AN ARTICLE BY RICHARD *</pattern><template><think><srai>NOPX 611</srai></think><random><li><srai>EXPDEX AN ARTICLE BY RICHARD <star/></srai></li></random></template></category>
 <category><pattern>AN ARTICLE BY ROBERT *</pattern><template><think><srai>NOPX 4392</srai></think><random><li><srai>EXPDEX AN ARTICLE BY ROBERT <star/></srai></li></random></template></category>
@@ -877,7 +877,7 @@
 <category><pattern>AN ARTICLE BY NICHOLAS *</pattern><template><think><srai>NOPX 447</srai></think><random><li><srai>EXPDEX AN ARTICLE BY NICHOLAS <star/></srai></li></random></template></category>
 <category><pattern>AN ARTICLE BY PATRICK *</pattern><template><think><srai>NOPX 414</srai></think><random><li><srai>EXPDEX AN ARTICLE BY PATRICK <star/></srai></li></random></template></category>
 <category><pattern>AN ARTICLE BY PAUL *</pattern><template><think><srai>NOPX 2686</srai></think><random><li><srai>EXPDEX AN ARTICLE BY PAUL <star/></srai></li></random></template></category>
-<category><pattern>AN ARTICLE BY PETER *</pattern><template><think><srai>NOPX 2062</srai></think><random><li><srai>EXPDEX AN ARTICLE BY PETER <star/></srai></li></random></template></category>
+<category><pattern>AN ARTICLE BY <bot name="botmaster"/> *</pattern><template><think><srai>NOPX 2062</srai></think><random><li><srai>EXPDEX AN ARTICLE BY <bot name="botmaster"/> <star/></srai></li></random></template></category>
 <category><pattern>AN ARTICLE BY PHILIP *</pattern><template><think><srai>NOPX 456</srai></think><random><li><srai>EXPDEX AN ARTICLE BY PHILIP <star/></srai></li></random></template></category>
 <category><pattern>AN ARTICLE BY PROFESSOR *</pattern><template><think><srai>NOPX 1575</srai></think><random><li><srai>EXPDEX AN ARTICLE BY PROFESSOR <star/></srai></li></random></template></category>
 <category><pattern>AN ARTICLE BY RICHARD *</pattern><template><think><srai>NOPX 2506</srai></think><random><li><srai>EXPDEX AN ARTICLE BY RICHARD <star/></srai></li></random></template></category>
@@ -1124,7 +1124,7 @@
 <category><pattern>AN ARTICLE IN AMERICAN *</pattern><template><think><srai>NOPX 1248</srai></think><random><li><srai>EXPDEX AN ARTICLE IN AMERICAN <star/></srai></li></random></template></category>
 <category><pattern>AN ARTICLE IN APRIL *</pattern><template><think><srai>NOPX 451</srai></think><random><li><srai>EXPDEX AN ARTICLE IN APRIL <star/></srai></li></random></template></category>
 <category><pattern>AN ARTICLE IN BUSINESS *</pattern><template><think><srai>NOPX 1661</srai></think><random><li><srai>EXPDEX AN ARTICLE IN BUSINESS <star/></srai></li></random></template></category>
-<category><pattern>AN ARTICLE IN CHRISTIANITY *</pattern><template><think><srai>NOPX 439</srai></think><random><li><srai>EXPDEX AN ARTICLE IN CHRISTIANITY <star/></srai></li></random></template></category>
+<category><pattern>AN ARTICLE IN <bot var="religion"/>ITY *</pattern><template><think><srai>NOPX 439</srai></think><random><li><srai>EXPDEX AN ARTICLE IN <bot var="religion"/>ITY <star/></srai></li></random></template></category>
 <category><pattern>AN ARTICLE IN DECEMBER *</pattern><template><think><srai>NOPX 477</srai></think><random><li><srai>EXPDEX AN ARTICLE IN DECEMBER <star/></srai></li></random></template></category>
 <category><pattern>AN ARTICLE IN DISCOVER *</pattern><template><think><srai>NOPX 416</srai></think><random><li><srai>EXPDEX AN ARTICLE IN DISCOVER <star/></srai></li></random></template></category>
 <category><pattern>AN ARTICLE IN ENGLISH *</pattern><template><think><srai>NOPX 792</srai></think><random><li><srai>EXPDEX AN ARTICLE IN ENGLISH <star/></srai></li></random></template></category>
@@ -1879,7 +1879,7 @@
 <category><pattern>AN ARTICLE FROM THE BETTER *</pattern><template><think><srai>NOPX 815</srai></think><random><li><srai>EXPDEX AN ARTICLE FROM THE BETTER <star/></srai></li></random></template></category>
 <category><pattern>AN ARTICLE FROM THE BOSTON *</pattern><template><think><srai>NOPX 438</srai></think><random><li><srai>EXPDEX AN ARTICLE FROM THE BOSTON <star/></srai></li></random></template></category>
 <category><pattern>AN ARTICLE FROM THE BUSINESS *</pattern><template><think><srai>NOPX 12044</srai></think><random><li><srai>EXPDEX AN ARTICLE FROM THE BUSINESS <star/></srai></li></random></template></category>
-<category><pattern>AN ARTICLE FROM THE CHRISTIAN *</pattern><template><think><srai>NOPX 572</srai></think><random><li><srai>EXPDEX AN ARTICLE FROM THE CHRISTIAN <star/></srai></li></random></template></category>
+<category><pattern>AN ARTICLE FROM THE <bot var="religion"/> *</pattern><template><think><srai>NOPX 572</srai></think><random><li><srai>EXPDEX AN ARTICLE FROM THE <bot var="religion"/> <star/></srai></li></random></template></category>
 <category><pattern>AN ARTICLE FROM THE COMPUTERS *</pattern><template><think><srai>NOPX 1936</srai></think><random><li><srai>EXPDEX AN ARTICLE FROM THE COMPUTERS <star/></srai></li></random></template></category>
 <category><pattern>AN ARTICLE FROM THE CONCORD *</pattern><template><think><srai>NOPX 1250</srai></think><random><li><srai>EXPDEX AN ARTICLE FROM THE CONCORD <star/></srai></li></random></template></category>
 <category><pattern>AN ARTICLE FROM THE CONSTRUCTION *</pattern><template><think><srai>NOPX 563</srai></think><random><li><srai>EXPDEX AN ARTICLE FROM THE CONSTRUCTION <star/></srai></li></random></template></category>
@@ -1996,7 +1996,7 @@
 <category><pattern>AN ARTICLE IN THE BUSINESS *</pattern><template><think><srai>NOPX 450</srai></think><random><li><srai>EXPDEX AN ARTICLE IN THE BUSINESS <star/></srai></li></random></template></category>
 <category><pattern>AN ARTICLE IN THE CANADIAN *</pattern><template><think><srai>NOPX 441</srai></think><random><li><srai>EXPDEX AN ARTICLE IN THE CANADIAN <star/></srai></li></random></template></category>
 <category><pattern>AN ARTICLE IN THE CHICAGO *</pattern><template><think><srai>NOPX 1286</srai></think><random><li><srai>EXPDEX AN ARTICLE IN THE CHICAGO <star/></srai></li></random></template></category>
-<category><pattern>AN ARTICLE IN THE CHRISTIAN *</pattern><template><think><srai>NOPX 686</srai></think><random><li><srai>EXPDEX AN ARTICLE IN THE CHRISTIAN <star/></srai></li></random></template></category>
+<category><pattern>AN ARTICLE IN THE <bot var="religion"/> *</pattern><template><think><srai>NOPX 686</srai></think><random><li><srai>EXPDEX AN ARTICLE IN THE <bot var="religion"/> <star/></srai></li></random></template></category>
 <category><pattern>AN ARTICLE IN THE CHRONICLE *</pattern><template><think><srai>NOPX 1078</srai></think><random><li><srai>EXPDEX AN ARTICLE IN THE CHRONICLE <star/></srai></li></random></template></category>
 <category><pattern>AN ARTICLE IN THE CODEX *</pattern><template><think><srai>NOPX 1177</srai></think><random><li><srai>EXPDEX AN ARTICLE IN THE CODEX <star/></srai></li></random></template></category>
 <category><pattern>AN ARTICLE IN THE DAILY *</pattern><template><think><srai>NOPX 3174</srai></think><random><li><srai>EXPDEX AN ARTICLE IN THE DAILY <star/></srai></li></random></template></category>

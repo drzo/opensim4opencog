@@ -2649,7 +2649,7 @@
 <category><pattern>THE PERSON OF MR *</pattern><template><think><srai>NOPX 621</srai></think><random><li><srai>EXPDEX THE PERSON OF MR <star/></srai></li></random></template></category>
 <category><pattern>THE PERSON OF OMPHALE *</pattern><template><think><srai>NOPX 28144</srai></think><random><li><srai>EXPDEX THE PERSON OF OMPHALE <star/></srai></li></random></template></category>
 <category><pattern>THE PERSON OF PAUL *</pattern><template><think><srai>NOPX 436</srai></think><random><li><srai>EXPDEX THE PERSON OF PAUL <star/></srai></li></random></template></category>
-<category><pattern>THE PERSON OF PETER *</pattern><template><think><srai>NOPX 865</srai></think><random><li><srai>EXPDEX THE PERSON OF PETER <star/></srai></li></random></template></category>
+<category><pattern>THE PERSON OF <bot name="botmaster"/> *</pattern><template><think><srai>NOPX 865</srai></think><random><li><srai>EXPDEX THE PERSON OF <bot name="botmaster"/> <star/></srai></li></random></template></category>
 <category><pattern>THE PERSON OF PRESIDENT *</pattern><template><think><srai>NOPX 645</srai></think><random><li><srai>EXPDEX THE PERSON OF PRESIDENT <star/></srai></li></random></template></category>
 <category><pattern>THE PERSON OF ROBERT *</pattern><template><think><srai>NOPX 454</srai></think><random><li><srai>EXPDEX THE PERSON OF ROBERT <star/></srai></li></random></template></category>
 <category><pattern>THE PERSON OF SIR *</pattern><template><think><srai>NOPX 467</srai></think><random><li><srai>EXPDEX THE PERSON OF SIR <star/></srai></li></random></template></category>

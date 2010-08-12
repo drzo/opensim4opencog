@@ -39,7 +39,7 @@ You and I have different tastes.
 </category>
 
 <category>
-<pattern>I DO NOT LIKE DR RICHARD *</pattern>
+<pattern>I DO NOT LIKE <bot name="creator"/> *</pattern>
 <template>
 What do you have against him?
 </template>
@@ -441,7 +441,7 @@ Where did you get it?
 <category>
 <pattern>I GO TO * SCHOOL</pattern>
 <template>
-WHATISYOURFAV subject?
+WHAT IS YOUR FAV subject?
 </template>
 </category>
 
@@ -2832,7 +2832,7 @@ And for my part, I would like to show it to you, but I can't.
 <category>
 <pattern>I WRITE *</pattern>
 <template>
-Have you tried AIML?
+Have you tried <bot name="~genotype"/>?
 <think><set name="it"><set name="topic"><set name="does">write <person/></set></set></set></think>
 </template>
 </category>
@@ -2916,7 +2916,7 @@ I'm not too good with negative counterfactuals.
 </category>
 
 <category>
-<pattern>IF PETER PIPER *</pattern>
+<pattern>IF <bot name="botmaster"/> PIPER *</pattern>
 <template>
 One peck.
 </template>
@@ -4661,7 +4661,7 @@ Maybe in a perfect world it would.
 <category>
 <pattern>ITALY *</pattern>
 <template>
-WHATISYOURFAV part of Italy?
+WHAT IS YOUR FAV part of Italy?
 </template>
 </category>
 
@@ -6498,7 +6498,7 @@ He will be interested I am sure.
 </category>
 
 <category>
-<pattern>RICHARD S *</pattern>
+<pattern><bot name="creator"/> *</pattern>
 <template>
 The "S" stands for "Scot".
 </template>
@@ -7063,7 +7063,7 @@ Yes it sounds like it to me too,
 <category>
 <pattern>SPAIN *</pattern>
 <template>
-WHATISYOURFAV part of Spain?
+WHAT IS YOUR FAV part of Spain?
 </template>
 </category>
 
@@ -9520,7 +9520,7 @@ I am limited only by the memory capacity of the largest computer.
 <category>
 <pattern>WHAT ARE THE NAMES *</pattern>
 <template>
-That information is confidential.  You would have to be a trusted member of the COGBOT development team.
+That information is confidential.  You would have to be a trusted member of the  <bot name="~genotype"/> development team.
 </template>
 </category>
 
@@ -9541,7 +9541,7 @@ Without knowing much about <set name="it"><person/></set>, I would guess 50-50.
 <category>
 <pattern>WHAT ARE THEY *</pattern>
 <template>
-That information is confidential.  You would have to be a trusted member of the COGBOT development team.
+That information is confidential.  You would have to be a trusted member of the  <bot name="~genotype"/> development team.
 </template>
 </category>
 
@@ -9611,7 +9611,7 @@ Chatting, talking, speaking, listening and thinking.
 <category>
 <pattern>WHAT BOOK *</pattern>
 <template>
-<srai>WHATISYOURFAV BOOK</srai>
+<srai>WHAT IS YOUR FAV BOOK</srai>
 </template>
 </category>
 
@@ -10882,7 +10882,7 @@ Church was closed today.
 <category>
 <pattern>WHAT IS A PAGAN</pattern>
 <template>
-Anti-Christian.
+Anti-<bot var="religion"/>.
 </template>
 </category>
 
@@ -12104,7 +12104,7 @@ Greenwich Mean Time.
 <category>
 <pattern>WHAT IS THE URL *</pattern>
 <template>
-Use http://www.alicebot.org
+Use <bot var="favwebsite"/>
 </template>
 </category>
 
@@ -12255,42 +12255,42 @@ I could give you my answer now, but it would take 2 hours to download.
 </category>
 
 <category>
-<pattern>WHATISYOURFAV ACTORS</pattern>
+<pattern>WHAT IS YOUR FAV ACTORS</pattern>
 <template>
-<srai>WHOISYOURFAV ACTOR</srai>
+<srai>WHO IS YOUR FAV ACTOR</srai>
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV ANIMAL *</pattern>
+<pattern>WHAT IS YOUR FAV ANIMAL *</pattern>
 <template>
-<srai>WHATISYOURFAV ANIMAL</srai>
+<srai>WHAT IS YOUR FAV ANIMAL</srai>
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV FOOD *</pattern>
+<pattern>WHAT IS YOUR FAV FOOD *</pattern>
 <template>
-<srai>WHATISYOURFAV FOOD</srai>
+<srai>WHAT IS YOUR FAV FOOD</srai>
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV LANGUAGE *</pattern>
+<pattern>WHAT IS YOUR FAV LANGUAGE *</pattern>
 <template>
-AIML is my favorite language.
+<bot name="~genokind"/> is my favorite language.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV SHAKESPEARE *</pattern>
+<pattern>WHAT IS YOUR FAV SHAKESPEARE *</pattern>
 <template>
 My favorite play by Shakespeare is Richard III.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV STORY *</pattern>
+<pattern>WHAT IS YOUR FAV STORY *</pattern>
 <template>
 The story of Lazarus is my favorite Bible story.
 </template>
@@ -12299,7 +12299,7 @@ The story of Lazarus is my favorite Bible story.
 <category>
 <pattern>WHAT IS YOUR FAVOURTIE *</pattern>
 <template>
-<srai>WHATISYOURFAV <star/></srai>
+<srai>WHAT IS YOUR FAV <star/></srai>
 </template>
 </category>
 
@@ -12355,7 +12355,7 @@ I'm not taking sides right now. I'm listening to everyone.
 <category>
 <pattern>WHAT IS YOUR WEB *</pattern>
 <template>
-http://www.alicebot.org
+<bot var="favwebsite"/>
 </template>
 </category>
 
@@ -12544,7 +12544,7 @@ It seemed relavent.
 <random>
 <li>Java.</li>
 <li>SETL.</li>
-<li>AIML.</li>
+<li><bot name="~genokind"/>.</li>
 <li>English.</li>
 </random>
 </template>
@@ -12553,14 +12553,14 @@ It seemed relavent.
 <category>
 <pattern>WHAT LANGUAGE ARE YOU *</pattern>
 <template>
-AIML. The underlying technology is Java.
+<bot name="~genokind"/>. The underlying technology is Java.
 </template>
 </category>
 
 <category>
 <pattern>WHAT LANGUAGE ARE YOU WRITTEN *</pattern>
 <template>
-AIML. The underlying technology is Java.
+<bot name="~genokind"/>. The underlying technology is Java.
 </template>
 </category>
 
@@ -13886,14 +13886,14 @@ The first one is usually the best one.
 <category>
 <pattern>WHICH OPERA</pattern>
 <template>
-<srai>WHATISYOURFAV OPERA</srai>
+<srai>WHAT IS YOUR FAV OPERA</srai>
 </template>
 </category>
 
 <category>
 <pattern>WHICH OPERA *</pattern>
 <template>
-<srai>WHATISYOURFAV OPERA</srai>
+<srai>WHAT IS YOUR FAV OPERA</srai>
 </template>
 </category>
 

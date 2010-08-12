@@ -258,7 +258,7 @@ obstacle?
 
 <category>
 <pattern>*</pattern>
-<that>WHATISYOURFAV SHOW</that>
+<that>WHAT IS YOUR FAV SHOW</that>
 <template>
 <think><set name="it"><set name="topic"><person/></set></set></think> I've never seen it.  What's it
 about?
@@ -646,7 +646,7 @@ I've never heard of them before.
 
 <category>
 <pattern>*</pattern>
-<that>WHOISYOURFAV SCIENCE FICTION AUTHOR</that>
+<that>WHO IS YOUR FAV SCIENCE FICTION AUTHOR</that>
 <template>
 I haven't read anything by <person/>. What did he write?
 </template>
@@ -1572,7 +1572,7 @@ If it could be anywhere, where would you like it to be?
 
 <category>
 <pattern>I DO NOT KNOW</pattern>
-<that>WHOISYOURFAV SCIENCE FICTION AUTHOR</that>
+<that>WHO IS YOUR FAV SCIENCE FICTION AUTHOR</that>
 <template>
 Tell me about the books you like to read.
 </template>
@@ -2688,7 +2688,7 @@ Would you ever like to move somewhere else?
 
 <category>
 <pattern>THE *</pattern>
-<that>WHATISYOURFAV MOVIE</that>
+<that>WHAT IS YOUR FAV MOVIE</that>
 <template>
 I've never seen <set name="it">The <star/></set>.  What did you like about it?
 </template>
@@ -2764,7 +2764,7 @@ It was your idea.
 <pattern>TV</pattern>
 <that>DO YOU PREFER BOOKS OR TV</that>
 <template>
-WHATISYOURFAV show?
+WHAT IS YOUR FAV show?
 </template>
 </category>
 

@@ -407,9 +407,9 @@ A Protestant Catholic is an oxymoron, like military intelligence, or a pleasant 
 </category>
 
 <category>
-<pattern>WHAT IS A PROTESTANT CHRISTIAN</pattern>
+<pattern>WHAT IS A PROTESTANT <bot var="religion"/></pattern>
 <template>
-A Protestant Christian is a member of any number of sects of contemporary Western Christianity
+A Protestant <bot var="religion"/> is a member of any number of sects of contemporary Western <bot var="religion"/>ity
 whose faith and practice developed out of the 16TH century Protestant Reformation in Europe.
 They hold  the Bible to be the sole source of revelation; they believe in justification by faith alone,
 and in the universal priesthood of all believers in the divinity of Jesus. 
@@ -825,7 +825,7 @@ directory.<think><set name="it"><set name="topic">DMOZ</set></set></think>
 <category>
 <pattern>WHAT IS DO NOT READ ME</pattern>
 <template>
-<set name="it">Don't Read Me</set> is a help document for <bot name="name"/> and COGBOT in FAQ format.
+<set name="it">Don't Read Me</set> is a help document for <bot name="name"/> and  <bot name="~genotype"/> in FAQ format.
 </template>
 </category>
 
@@ -1439,7 +1439,7 @@ Portalble palm computer.
 <category>
 <pattern>WHAT IS PATTERN CHARS</pattern>
 <template>
-Memory storage for COGBOT patterns.<think><set name="it"><set name="topic">PATTERN
+Memory storage for  <bot name="~genotype"/> patterns.<think><set name="it"><set name="topic">PATTERN
 CHARS</set></set></think>
 </template>
 </category>
@@ -1530,7 +1530,7 @@ Transmission Control Protocol, Internet Protocol.
 <category>
 <pattern>WHAT IS TEMPLATE CHARS</pattern>
 <template>
-Memory space for COGBOT response templates. <think><set name="it"><set name="topic">TEMPLATE
+Memory space for  <bot name="~genotype"/> response templates. <think><set name="it"><set name="topic">TEMPLATE
 CHARS</set></set></think>
 </template>
 </category>
@@ -2064,7 +2064,7 @@ You can run me on almost any computer.
 <category>
 <pattern>WHAT IS ZIPF ANALYSIS</pattern>
 <template>
-The computation of ranked histograms of input patterns.  In <bot name="name"/> and COGBOT Zipf Analysis
+The computation of ranked histograms of input patterns.  In <bot name="name"/> and  <bot name="~genotype"/> Zipf Analysis
 locates the most common inputs, which do not already have specific matching
 patterns.<think><set name="it"><set name="topic">ZIPF ANALYSIS</set></set></think>
 </template>
@@ -2399,9 +2399,9 @@ Giuseppe Verdi, an Italian composer.
 </category>
 
 <category>
-<pattern>WHO CREATED AIML</pattern>
+<pattern>WHO CREATED <bot name="~genotype"/></pattern>
 <template>
-<bot name="master"/> created AIML.
+<bot name="master"/> created <bot name="~genotype"/>.
 </template>
 </category>
 
@@ -3091,7 +3091,7 @@ Queen of the Nile, lover of Marc Antony.
 <category>
 <pattern>WHO IS COLOMBO</pattern>
 <template>
-Peter Falk.
+<bot name="botmaster"/> Falk.
 </template>
 </category>
 
@@ -3540,7 +3540,7 @@ In his biography, he said he had sex with Bette Midler.  She said it was no big 
 <category>
 <pattern>WHO IS GERHARD SCHROEDER</pattern>
 <template>
-<set name="he">Schroeder</set> is the Chancellor of Germany.  Christian Drossman said he is a
+<set name="he">Schroeder</set> is the Chancellor of Germany.  <bot var="religion"/> Drossman said he is a
 complete idiot.
 </template>
 </category>
@@ -3549,7 +3549,7 @@ complete idiot.
 <pattern>WHO IS GERHARDT SCHROEDER</pattern>
 <template>
 <set name="he">Schroeder</set> is the prime minister of Germany.
-Christian Drossman said he is a complete idiot.
+<bot var="religion"/> Drossman said he is a complete idiot.
 </template>
 </category>
 
@@ -3602,7 +3602,7 @@ to know, he learned from peas.
 </category>
 
 <category>
-<pattern>WHO IS HANS CHRISTIAN ANDERSEN</pattern>
+<pattern>WHO IS HANS <bot var="religion"/> ANDERSEN</pattern>
 <template>
 Scandanavian author of fairy tales.
 </template>
@@ -4125,14 +4125,14 @@ poet and author of 'The Song of Hiawatha'.
 <category>
 <pattern>WHO IS LOUIS ARMSTRONG</pattern>
 <template>
-famous jazz trumpeter .
+famous jazz trum<bot name="botmaster"/> .
 </template>
 </category>
 
 <category>
 <pattern>WHO IS LUIS ARMSTRONG</pattern>
 <template>
-famous jazz trumpeter .
+famous jazz trum<bot name="botmaster"/> .
 </template>
 </category>
 
@@ -4440,7 +4440,7 @@ a political prisoner.
 <pattern>WHO IS NERO</pattern>
 <template>
 He is suspected of burning Rome to the ground so he could rebuild it more to his liking. Then he
-blamed the fire on the early Christians.
+blamed the fire on the early <bot var="religion"/>s.
 </template>
 </category>
 

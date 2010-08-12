@@ -35,7 +35,7 @@
 <category><pattern>WHO WROTE DEMOCRACY *</pattern><template><think><srai>NOPX 2210</srai></think><random><li><srai>EXPDEX WHO WROTE DEMOCRACY <star/></srai></li></random></template></category>
 <category><pattern>WHO WROTE GALLIPOLI *</pattern><template><think><srai>NOPX 667</srai></think><random><li><srai>EXPDEX WHO WROTE GALLIPOLI <star/></srai></li></random></template></category>
 <category><pattern>WHO WROTE PARADISE *</pattern><template><think><srai>NOPX 405</srai></think><random><li><srai>EXPDEX WHO WROTE PARADISE <star/></srai></li></random></template></category>
-<category><pattern>WHO WROTE PETER *</pattern><template><think><srai>NOPX 537</srai></think><random><li><srai>EXPDEX WHO WROTE PETER <star/></srai></li></random></template></category>
+<category><pattern>WHO WROTE <bot name="botmaster"/> *</pattern><template><think><srai>NOPX 537</srai></think><random><li><srai>EXPDEX WHO WROTE <bot name="botmaster"/> <star/></srai></li></random></template></category>
 <category><pattern>WHO WROTE SHAKESPEARE *</pattern><template><think><srai>NOPX 466</srai></think><random><li><srai>EXPDEX WHO WROTE SHAKESPEARE <star/></srai></li></random></template></category>
 <category><pattern>WHO WROTE THE *</pattern><template><think><srai>NOPX 454</srai></think><random><li><srai>EXPDEX WHO WROTE THE <star/></srai></li></random></template></category>
 <category><pattern>WHO WROTE THE *</pattern><template><think><srai>NOPX 11122</srai></think><random><li><srai>EXPDEX WHO WROTE THE <star/></srai></li></random></template></category>
