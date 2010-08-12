@@ -189,7 +189,7 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        public string ToString()
+        public override string ToString()
         {
             string s="";
             foreach (string m in machines.Keys )

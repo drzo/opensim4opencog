@@ -51,7 +51,7 @@ namespace RTParser.AIMLTagHandlers
 
         #region Overrides of AIMLFormatingTagHandler
 
-        protected Unifiable Format(Unifiable text)
+        protected override Unifiable Format(Unifiable text)
         {
             if (!templateNodeInnerText.IsEmpty)
             {
@@ -61,7 +61,7 @@ namespace RTParser.AIMLTagHandlers
             return Unifiable.Empty;
         }
 
-        protected ISettingsDictionary GetDictionary()
+        protected override ISettingsDictionary GetDictionary()
         {
             return request.Graph.GetSubstitutions(GetSubstutionName(), true);
 

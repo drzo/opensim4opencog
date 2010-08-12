@@ -23,10 +23,10 @@ namespace RTParser
         }
     }
 
-    public class QuerySettingsImpl : QuerySettings
+    sealed public class QuerySettingsImpl : QuerySettings
     {
 
-        public QuerySettingsImpl(QuerySettings settings) : base(settings)
+        public QuerySettingsImpl(QuerySettingsReadOnly settings) : base(settings)
         {
         }
 
@@ -112,6 +112,8 @@ namespace RTParser
 
             //  GraphMaster gm = r.Graph;
             //  if (gm != null) w.Graph = gm;
+            //  string gn = r.GraphName;
+            //  if (gn != null)  w.GraphName = gn;
 
         }
 
