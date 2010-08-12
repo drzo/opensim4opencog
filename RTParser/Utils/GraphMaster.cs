@@ -110,7 +110,8 @@ namespace RTParser.Utils
         {
             graphName = gn;
             theBot = bot;
-            Srai = "current";
+            // most graphs try to recuse on themselves until otehrwise stated (like in make-parent)
+            Srai = gn;
             RootNode.Graph = this;
             PostParentRootNode.Graph = this;
         }

@@ -31,7 +31,7 @@ namespace RTParser.Utils
 
         public override string GraphName
         {
-            get { return TheRequest.GraphName; }
+            get { return ((QuerySettingsReadOnly)TheRequest).GraphName; }
             set { TheRequest.GraphName = value; }
         }
 

@@ -11,7 +11,7 @@ using RTParser.Variables;
 namespace RTParser
 {
 
-    public interface Request : QuerySettingsReadOnly,QuerySettingsSettable
+    public interface Request : QuerySettingsSettable, QuerySettingsReadOnly
     {
         int depth { get; set; }
         Unifiable Topic { get; set; }
@@ -65,7 +65,7 @@ namespace RTParser
         int DebugLevel { get; set; }
         Unifiable That { get; set; }
         PrintOptions WriterOptions { get; }
-        string GraphName { get; set; }
+        // inherited from base  string GraphName { get; set; }
     }
 
     /// <summary>
@@ -268,12 +268,41 @@ namespace RTParser
             {
                 if (sGraph != null)
                     return sGraph;
+                GraphMaster probably = user.ListeningGraph;
                 if (ParentRequest != null)
                 {
                     var pg = ParentRequest.Graph;
-                    if (pg != null) return pg;
+                    if (pg != null) return probably = pg;
                 }
-                return user.ListeningGraph;
+                if (ovGraph != null)
+                {
+                    if (probably != null)
+                    {
+                        // very good!
+                        if (probably.ScriptingName == ovGraph) return probably;
+                        if (probably.ScriptingName == null)
+                        {
+                            // not  so good!
+                            return probably;
+                        }
+                        if (probably.ScriptingName.Contains(ovGraph)) return probably;
+                        // transtiton
+                        var newprobably = probably.GetGraph(ovGraph);
+                        if (newprobably != probably)
+                        {
+                            user.WriteLine("Changing request graph " + probably + " -> " + newprobably + " for " + this);
+                            probably = newprobably;
+                        }
+                    }
+                    else
+                    {
+                        probably = TargetBot.GetGraph(ovGraph, TargetBot.GraphMaster);
+                        {
+                            user.WriteLine("Changing request graph " + probably + " -> " + null + " for " + this);
+                        }
+                    }
+                }
+                return probably;
             }
             set { sGraph = value; }
         }
@@ -291,12 +320,21 @@ namespace RTParser
                     return ovGraph;
                 if (ParentRequest != null)
                 {
-                    var pg = ParentRequest.GraphName;
+                    var pg = ((QuerySettingsReadOnly)ParentRequest).GraphName;
                     if (pg != null) return pg;
                 }
-                return user.GraphName;
+                string ugn = user.GraphName;
+                if (ugn != null) return ugn;
+                GraphMaster gm = Graph;
+                if (gm != null) ugn = gm.ScriptingName;
+                return ugn;
             }
-            set { ovGraph = value; }
+            set
+            {
+                if (sGraph != null)
+                    sGraph = sGraph.GetGraph(value);
+                ovGraph = value;
+            }
         }
 
         private Unifiable _topic;

@@ -654,11 +654,13 @@ namespace RTParser.Utils
                 {
                     return v;
                 }
+                /*
                 if (Unifiable.IsNullOrEmpty(v))
                 {
                     if (!Unifiable.IsNullOrEmpty(recursiveResult))
                         ;// v = recursiveResult;
                 }
+                 */
                 return CheckValue(v);
             }
             else
