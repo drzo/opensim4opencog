@@ -427,7 +427,7 @@ aiml_error(E):-  trace,debugFmt('~q~n',[error(E)]),!.
 % ===============================================================================================
 %  Save Categories
 % ===============================================================================================
-aimlCateOrder([graph,topic,that,pattern,flags,call,guard,template,userdict]).
+aimlCateOrder([graph,topic,that,[pattern,input],flags,call,guard,template,userdict]).
 
 assertCate(Ctx,Cate):- convert_template(Ctx,Cate,Assert),!,assertCate1(Ctx,Assert).
 
@@ -442,7 +442,7 @@ lineUp(Ctx,[O|Order],Assert,D,[N=RR|Result]):-
    lineUp(Ctx,Order,Assert,D,Result).
 lineUp(_Ctx,[],_,_,[]).
 
-lineUp1(_Ctx,[N|L],ATTRIBS,_D,N,R):-member(O,[N|L]),member(O=R,ATTRIBS),!.
+lineUp1(_Ctx,[N|L],ATTRIBS,_D,N,R):-member(O,[N|L]),member(OI=R,ATTRIBS),atomsSameCI(O,OI),!.
 lineUp1(Ctx,[N|_],_,D1,N,D2):- default_value(Ctx,N,D1,D2),!.
 lineUp1(_Ctx,N,ATTRIBS,_D,N,R):-member(N=R,ATTRIBS),!.
 lineUp1(Ctx,N,_,D1,N,D2):-default_value(Ctx,N,D1,D2),!.
@@ -468,7 +468,7 @@ innerTagLikeThat(that).
 innerTagLikeThat(guard).
 innerTagLikeThat(call).
 
-
+isPatternTag(Tag):-member(Tag,[that,pattern,input,topic,flags]).
 
 
 each_category(Ctx,ATTRIBS,TAGS,element(TAG,ALIST,PATTERN)):-  innerTagLikeThat(That), member(element(That,WA,WP), PATTERN),!,
@@ -493,7 +493,7 @@ pushCateElement(Ctx,INATTRIBS,element(Tag,ATTRIBS,INNER_XML)):- member(Tag,[topi
  debugOnFailureAiml((
    findall(element(category,ALIST,LIST),member(element(category,ALIST,LIST),INNER_XML),ALLCATEGORIES),
    takeout(element(category,_,_),INNER_XML,NONCATE),
-   append(ATTRIBS,INATTRIBS,OUTATTRIBS),
+   append(ATTRIBS,INATTRIBS,OUTATTRIBS),trace,
    load_mapcar(each_category(Ctx,OUTATTRIBS,NONCATE),ALLCATEGORIES))).
 
 % flag/topic
@@ -539,15 +539,25 @@ gatherEach(Ctx,NEWATTRIBS,[element(TAG,ALIST,PATTERN)|NOPATTERNS],RESULTS):- inn
       takeout(element(That,WA,WP),PATTERN,NOTHAT),
       gatherEach(Ctx,NEWATTRIBS,[element(That,WA,WP),element(TAG,ALIST,NOTHAT)|NOPATTERNS],RESULTS).
 
-gatherEach(Ctx,NEWATTRIBS,[element(TAG,ALIST,PATTERN)|NOPATTERNS],[TAG=PATTERN|Result]):- 
+gatherEach(Ctx,NEWATTRIBS,[element(TAG,ALIST,PATTERN_IN)|NOPATTERNS],[TAG=PATTERN_OUT|Result]):- transformPattern(TAG,PATTERN_IN,PATTERN_OUT),
       gatherEach(Ctx,NEWATTRIBS,NOPATTERNS,ResultM),append(ALIST,ResultM,Result),!.
 
 
 each_template(Ctx,M):-debugFmt('FAILURE'(each_template(Ctx,M))),trace.
 each_that(Ctx,M):-debugFmt('FAILURE'(each_that(Ctx,M))),trace.
 
+transformPattern(TAG,PATTERN_IN,PATTERN_OUT):-isPatternTag(TAG),convert_pattern(PATTERN_IN,PATTERN_OUT),!.
+transformPattern(_TAG,PATTERN,PATTERN):-!.
 
+convert_pattern(PATTERN_IN,PATTERN_OUT):-convert_template(PATTERN_IN,PATTERN_MID),upcaseWords(PATTERN_MID,PATTERN_OUT),!.
 
+upcaseWords([PATTERN],[PATTERN]):- (var(PATTERN);number(PATTERN)).
+upcaseWords(PATTERN,[PATTERN]):- (var(PATTERN);number(PATTERN)).
+upcaseWords([],[]):-!.
+upcaseWords([I|IN],[O|OUT]):- upcaseWords(I,O1),upcaseWords(IN,O2),!,append(O1,O2,OUT),!.
+upcaseWords(IN,OUT):- atom(IN),upcase_atom(IN,MID),atomSplit(MID,OUT),!.
+upcaseWords(element(TAG,ATTRIBS,IN),element(TAG,ATTRIBS,OUT)):-upcaseWords(IN,OUT),!.
+upcaseWords(IN,OUT):- IN=..[I|N],OUT=..[I|UT], upcaseWords(N,UT),!.
 
 % ===============================================================================================
 %  Popping when Building categories
