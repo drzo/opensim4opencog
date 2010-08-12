@@ -485,7 +485,7 @@ traceAll:-!.
 
 % :- tell(listing1),listing,told.
 
-:- guitracer.
+%:- guitracer.
 
 %:- do.
 
