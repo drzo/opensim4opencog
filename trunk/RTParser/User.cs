@@ -753,6 +753,8 @@ namespace RTParser
         private string _saveToDirectory;
         private bool needsSave;
         private bool insideSave;
+        private bool needAiml = false;
+        private readonly List<CrossAppDomainDelegate> OnNeedAIML = new List<CrossAppDomainDelegate>();
 
         public void SyncDirectory(string userdir)
         {
@@ -834,13 +836,17 @@ namespace RTParser
                 LoadUserAiml(userdir);
                 WriteLine("Loaded " + userdir);
             }
+            else
+            {
+                WriteLine("USERTRACE: Not LoadDirectory0 " + userdir);
+            }
         }
 
         public void LoadUserSettings(string userdir)
         {
             if (HostSystem.DirExists(userdir))
             {
-                foreach (string s in HostSystem.GetFiles(userdir))
+                foreach (string s in HostSystem.GetFiles(userdir, "*.xml"))
                 {
                     LoadUserSettings(s);
                 }
@@ -864,12 +870,24 @@ namespace RTParser
         {
             if (HostSystem.DirExists(userdir))
             {
-                foreach (string s in HostSystem.GetFiles(userdir))
-                {
-                    LoadUserAiml(s);
-                }
+                AddTodoItem(() =>
+                            {
+                                string[] hostSystemGetFiles = HostSystem.GetFiles(userdir, "*.aiml");
+                                if (hostSystemGetFiles != null && hostSystemGetFiles.Length > 0)
+                                {
+                                    var request1 = new AIMLbot.Request("load user aiml ", this, bot, null);
+                                    request1.TimesOutAt = DateTime.Now + new TimeSpan(0, 15, 0);
+                                    request1.Graph = ListeningGraph;
+                                    request1.LoadingFrom = userdir;
+                                    var options1 = request1.LoadOptions; //LoaderOptions.GetDefault(request);
+                                    request1.Loader.loadAIMLURI(userdir, options1.Value);
+                                    return;
+                                }
+                            });
                 return;
             }
+            // process previous todo list
+            DoPendingTodoList();
             if (!HostSystem.FileExists(userdir) || !userdir.EndsWith(".aiml")) return;
             var request = new AIMLbot.Request("load user aiml ", this, bot, null);
             request.TimesOutAt = DateTime.Now + new TimeSpan(0, 15, 0);
@@ -877,6 +895,41 @@ namespace RTParser
             request.LoadingFrom = userdir;
             var options = request.LoadOptions; //LoaderOptions.GetDefault(request);
             request.Loader.loadAIMLURI(userdir, options.Value);
+        }
+
+        public void AddTodoItem(CrossAppDomainDelegate action)
+        {
+            lock (OnNeedAIML)
+            {
+                if (needAiml)
+                {
+                    action();
+                    return;
+                }
+                OnNeedAIML.Add(action);
+            }
+        }
+
+        private void DoPendingTodoList()
+        {
+            lock (OnNeedAIML)
+            {
+                if (needAiml) return;
+                needAiml = true;
+                List<CrossAppDomainDelegate> todo = new List<CrossAppDomainDelegate>(OnNeedAIML);
+                OnNeedAIML.Clear();
+                foreach (var list in todo)
+                {
+                    try
+                    {
+                        list();
+                    }
+                    catch (Exception e)
+                    {
+                        WriteLine("DoNeedAIML: " + e);
+                    }
+                }
+            }
         }
 
         #region Implementation of ISettingsDictionary
@@ -957,6 +1010,7 @@ namespace RTParser
 
         public Request CreateRequest(string s)
         {
+            DoPendingTodoList();
             return new AIMLbot.Request(s, this, bot, CurrentRequest);
         }
     }

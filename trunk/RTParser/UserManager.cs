@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Virtualization;
 using RTParser.Utils;
@@ -206,6 +207,7 @@ namespace RTParser
         {
             lock (BotUsers)
             {
+                string username = fullname;
                 fullname = CleanupFromname(fullname);
                 User myUser = new AIMLbot.User(key, this);
                 myUser.UserName = fullname;
@@ -216,22 +218,95 @@ namespace RTParser
                 GraphMaster g = GetUserGraph(key);
                 g.AddGenlMT(GraphMaster);
                 myUser.ListeningGraph = g;
-                myUser.Predicates.addSetting("name", fullname);
+                myUser.Predicates.addSetting("name", username);
                 myUser.Predicates.InsertFallback(() => AllUserPreds);
                 this.GlobalSettings.AddChild("user." + key + ".", ()=>  myUser.Predicates);
 
                 myUser.Predicates.AddChild("bot.", () => BotAsUser.Predicates);
 
                 string userdir = GetUserDir(key);
+                if (fullname.Contains("doug"))
+                {
+                    writeToLog("USERTRACE: Loading User " + fullname);
+                }
                 myUser.SyncDirectory(userdir);
                 return myUser;
             }
         }
 
+        public int LoadUsers(string key)
+        {
+            var regex = new Regex(key, RegexOptions.IgnoreCase);
+            int users = 0;
+            string k1 = key.Replace("_", " ");
+            foreach (var fsn in HostSystem.GetDirectories(PathToUserDir))
+            {
+                string[] files = HostSystem.GetFiles(fsn, "*.xml");
+                if (files == null || files.Length == 0) continue;
+
+                string s = fsn;
+                if (fsn.StartsWith(PathToUserDir))
+                {
+                    s = s.Substring(PathToUserDir.Length);
+                }
+                if (s.StartsWith("/"))
+                {
+                    s = s.Substring(1);
+                }
+                if (s.StartsWith("\\"))
+                {
+                    s = s.Substring(1);
+                }
+                if (regex.IsMatch(s))
+                {
+                    s = s.Replace("_", " ").Replace("~", " ").Replace("  ", " ");
+                    User user = FindOrCreateUser(s);
+                    users++;
+                }
+            }
+            return users;
+        }
+
         private string GetUserDir(string key)
         {
             string userDir = HostSystem.Combine(PathToUserDir, key);
-            return HostSystem.ToRelativePath(userDir);
+            var luserDir = HostSystem.ToRelativePath(userDir);
+            if (HostSystem.DirExists(luserDir))
+            {
+                return luserDir;
+            }
+            string k1 =  key.Replace("_", " ");
+            foreach (var fsn in HostSystem.GetDirectories(PathToUserDir))
+            {
+                string s = fsn;
+                if (fsn.StartsWith(PathToUserDir))
+                {
+                    s = s.Substring(PathToUserDir.Length);
+                }
+                if (s.StartsWith("/"))
+                {
+                    s = s.Substring(1); 
+                }
+                if (s.StartsWith("\\"))
+                {
+                    s = s.Substring(1);
+                }
+                string s1 = "^" + s.Replace(".", "\\.").Replace("~", ".*").
+                                      Replace("~", ".*").Replace("_", "\\b").
+                                      Replace("\\b\\b", "\\b") + "$";
+
+                var regex = new Regex(s1);
+                if (regex.IsMatch(k1))
+                {
+                    luserDir = HostSystem.ToRelativePath(fsn);
+                    if (HostSystem.DirExists(luserDir))
+                    {
+                        return luserDir;
+                    }
+                    return fsn;
+                }
+            }
+            return luserDir;
         }
 
 

@@ -3632,6 +3632,7 @@ The AIMLbot program.
             {
                 writeToLog("Didnt find personal directories with stem: '{0}'", myName);
             }
+            LoadUsers(".*");
         }
 
         internal static void writeDebugLine(string message, params object[] args)
