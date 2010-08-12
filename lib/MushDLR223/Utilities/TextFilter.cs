@@ -85,9 +85,11 @@ namespace MushDLR223.Utilities
             if (lastOutput == message) return;
             if (message.Length > 10 && lastOutput.Contains(message)) return;
             if (lastOutput.Length > 10 && message.Contains(lastOutput)) return;
-            console("{0}", message);
+            console("{0}", ClipString(message, Clip));
             lastOutput = message;
         }
+
+        public int Clip { get; set; }
 
         public bool ShouldPrint(string message)
         {
@@ -492,5 +494,25 @@ namespace MushDLR223.Utilities
         }
 
         #endregion
+
+
+        public static string ClipString(string info, int len)
+        {
+            if (info==null) return null;
+            if (len < 1) return info;
+            int il = info.Length;
+            if (info.Length<=len) return info;
+            string lfch = (info.Contains("\0")
+                               ? "\0"
+                               : !info.Contains("\r") ? "\n" : info.Contains("\r\n") ? "\r\n" : "\r");
+            int find = info.IndexOf(lfch);
+            if (find == -1)
+            {
+                len = len - 1;
+                len = len/2;
+                return info.Substring(0, len) + " ..." + lfch + ".. " + info.Substring(il - len);
+            }
+            return ClipString(info.Substring(0, find - 1), len) + lfch + ClipString(info.Substring(find + 1), len);
+        }
     }
 }

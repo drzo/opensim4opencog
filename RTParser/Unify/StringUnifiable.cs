@@ -98,7 +98,7 @@ namespace RTParser
                     vLength -= 2;
                     continue;
                 }
-                if (v.StartsWith("~"))
+                if (v.StartsWith("~") || v.StartsWith("<bot"))
                 {
                     Flags |= UFlags.NO_BINDS_STARS;
                     v = v.Substring(1);
@@ -656,7 +656,7 @@ namespace RTParser
 
         override public bool StoreWildCard()
         {
-            return !str.StartsWith("~");// && !str.StartsWith("TAG-");           
+            return !str.StartsWith("~") && !str.StartsWith("<bot ");           
         }
 
         public override bool IsAnySingleUnit()

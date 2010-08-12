@@ -92,10 +92,9 @@ namespace RTParser
         /// </summary>
         public bool StaticLoader = true;
 
-        public static string AIMLDEBUGSETTINGS =
+        public static string AIMLDEBUGSETTINGS = "clear -spam +user +bina +error +aimltrace +cyc +dictlog -tscore +loaded";
         //    "clear +*";
-        "clear -spam +user +error +aimltrace +cyc -dictlog -tscore +loaded";
-        public static readonly TextFilter LoggedWords = new TextFilter() { "-dictlog +error" }; //maybe should be ERROR", "STARTUP
+        public static readonly TextFilter LoggedWords = new TextFilter() { "+*", "+STARTUP", "+ERROR","-DICTLOGMAYBE" }; //maybe should be ERROR", "STARTUP
         public User LastUser;
         public User BotAsUser;
         public User ExemplarUser;
@@ -2006,9 +2005,9 @@ namespace RTParser
                     if (isTraced)
                     {
                         string aIMLLoaderParentTextAndSourceInfo = AIMLLoader.ParentTextAndSourceInfo(templateNode);
-                        if (aIMLLoaderParentTextAndSourceInfo.Length>80)
+                        if (aIMLLoaderParentTextAndSourceInfo.Length>120)
                         {
-                            aIMLLoaderParentTextAndSourceInfo = aIMLLoaderParentTextAndSourceInfo.Substring(0, 70) + "...";
+                            aIMLLoaderParentTextAndSourceInfo = TextFilter.ClipString(aIMLLoaderParentTextAndSourceInfo, 220);
                         }
                         writeToLog("AIMLTRACE '{0}' IsOutputSentence={1}", o, aIMLLoaderParentTextAndSourceInfo);
                     }
@@ -3942,7 +3941,7 @@ namespace RTParser.AIMLTagHandlers
                 return Succeed();
             }
             string currentNodeOuterXml = templateNode.OuterXml;
-            if (currentNodeOuterXml.Length > 80) currentNodeOuterXml = currentNodeOuterXml.Substring(0, 60) + "...";
+            if (currentNodeOuterXml.Length > 80) currentNodeOuterXml = TextFilter.ClipString(currentNodeOuterXml, 220);
             writeToLog("ImmediateAiml: " + currentNodeOuterXml);
             /*
                <TestCase name="connect">
