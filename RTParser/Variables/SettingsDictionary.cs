@@ -873,6 +873,16 @@ namespace RTParser.Variables
             if (TrimKeys) name = name.Trim();
             
             name = name.ToUpper();
+            if (true) name = name.Replace("FAVORITE", "FAV");
+
+            if (false) foreach (var k in new string[] { "FAVORITE", "FAV" })
+                {
+
+                    if (name.StartsWith(k))
+                    {
+                        if (name.Length > k.Length) name = name.Substring(k.Length);
+                    }
+                }  else
             if (false)foreach (var k in new string[] { "FAVORITE", "FAV" })
             {
 
