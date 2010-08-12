@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <aiml version="1.0.1" xmlns="http://alicebot.org/2001/AIML-1.0.1"
     xmlns:html="http://www.w3.org/1999/xhtml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://alicebot.org/2001/AIML-1.0.1 http://aitools.org/aiml/schema/AIML.xsd">
+    xsi:schemaLocation="http://alicebot.org/2001/AIML-1.0.1 http://aitools.org/aiml/schema/aiml.xsd">
     <!-- This is free software released under -->
     <!-- the terms of the GNU General Public License -->
     <!-- as published by the Free Software Foundation. -->
@@ -13,7 +13,7 @@
     -->
     <category>
         <pattern>CONNECT</pattern>
-        <template>Connected to test case AIML set.</template>
+        <template>Connected to test case <bot name="~genotype"/> set.</template>
     </category>
     <category>
         <pattern>TESTATOMIC</pattern>

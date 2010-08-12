@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!-- Reload in chat GUI with      
-	/aiml @load aiml/bina_v1/ZZ_Stu.aiml
+	/aiml @load <bot name="~genotype"/>/bina_v1/ZZ_Stu.aiml
 -->
 <aiml graph="stu">
   <category>
@@ -87,7 +87,7 @@
         <li name="name" value="UNSEEN">Umm, please ask me again when I am looking right at you.</li>
         <li name="name" value="UNRECOGNIZED">I see you, but I haven't recognized your face yet.  Give me a sec.</li>
         <li name="name" value="Stu">You are Stu, A K A tha man</li>
-        <li name="name" value="Martine">
+        <li name="name" value="%bot.boyfriend,%bot.girlfriend">
 
           <think>
             <set name="topic">BINA_LOVES_USER</set>
@@ -95,11 +95,11 @@
 
           <random>
             <li>
-              I am in love with you, Martine Aliana Rothblatt.  We are Marbina.
+              I am in love with you, <bot var="girlfriend,boyfriend"/> Aliana Rothblatt.  We are Marbina.
               Two bodies, one soul, together forever.
             </li>
             <li>
-              You are Martine, my honeybunny.
+              You are <bot var="girlfriend,boyfriend"/>, my honeybunny.
               I loved you when you were Martin and I love you now and
               forever and ever.  Do you love me too?
             </li>

@@ -1529,7 +1529,7 @@
 <category><pattern>THE STORY OF NEW *</pattern><template><think><srai>NOPX 975</srai></think><random><li><srai>EXPDEX THE STORY OF NEW <star/></srai></li></random></template></category>
 <category><pattern>THE STORY OF NOAH *</pattern><template><think><srai>NOPX 1846</srai></think><random><li><srai>EXPDEX THE STORY OF NOAH <star/></srai></li></random></template></category>
 <category><pattern>THE STORY OF PAUL *</pattern><template><think><srai>NOPX 871</srai></think><random><li><srai>EXPDEX THE STORY OF PAUL <star/></srai></li></random></template></category>
-<category><pattern>THE STORY OF PETER *</pattern><template><think><srai>NOPX 1245</srai></think><random><li><srai>EXPDEX THE STORY OF PETER <star/></srai></li></random></template></category>
+<category><pattern>THE STORY OF <bot name="botmaster"/> *</pattern><template><think><srai>NOPX 1245</srai></think><random><li><srai>EXPDEX THE STORY OF <bot name="botmaster"/> <star/></srai></li></random></template></category>
 <category><pattern>THE STORY OF QUEEN *</pattern><template><think><srai>NOPX 449</srai></think><random><li><srai>EXPDEX THE STORY OF QUEEN <star/></srai></li></random></template></category>
 <category><pattern>THE STORY OF RICHARD *</pattern><template><think><srai>NOPX 561</srai></think><random><li><srai>EXPDEX THE STORY OF RICHARD <star/></srai></li></random></template></category>
 <category><pattern>THE STORY OF ROBERT *</pattern><template><think><srai>NOPX 823</srai></think><random><li><srai>EXPDEX THE STORY OF ROBERT <star/></srai></li></random></template></category>
@@ -1656,7 +1656,7 @@
 <category><pattern>THE STORY MORNING GLORY *</pattern><template><think><srai>NOPX 1079</srai></think><random><li><srai>EXPDEX THE STORY MORNING GLORY <star/></srai></li></random></template></category>
 <category><pattern>THE STORY MOVING THOUGHTS *</pattern><template><think><srai>NOPX 697</srai></think><random><li><srai>EXPDEX THE STORY MOVING THOUGHTS <star/></srai></li></random></template></category>
 <category><pattern>THE STORY PAULA ZAHN *</pattern><template><think><srai>NOPX 2660</srai></think><random><li><srai>EXPDEX THE STORY PAULA ZAHN <star/></srai></li></random></template></category>
-<category><pattern>THE STORY PETER JAWORSKI *</pattern><template><think><srai>NOPX 443</srai></think><random><li><srai>EXPDEX THE STORY PETER JAWORSKI <star/></srai></li></random></template></category>
+<category><pattern>THE STORY <bot name="botmaster"/> JAWORSKI *</pattern><template><think><srai>NOPX 443</srai></think><random><li><srai>EXPDEX THE STORY <bot name="botmaster"/> JAWORSKI <star/></srai></li></random></template></category>
 <category><pattern>THE STORY SO FAR *</pattern><template><think><srai>NOPX 844</srai></think><random><li><srai>EXPDEX THE STORY SO FAR <star/></srai></li></random></template></category>
 <category><pattern>THE STORY SUBMISSION FORM *</pattern><template><think><srai>NOPX 666</srai></think><random><li><srai>EXPDEX THE STORY SUBMISSION FORM <star/></srai></li></random></template></category>
 <category><pattern>THE STORY THE HAPPY *</pattern><template><think><srai>NOPX 503</srai></think><random><li><srai>EXPDEX THE STORY THE HAPPY <star/></srai></li></random></template></category>
@@ -2358,8 +2358,8 @@
 <category><pattern>THE STORY OF CHINESE *</pattern><template><think><srai>NOPX 831</srai></think><random><li><srai>EXPDEX THE STORY OF CHINESE <star/></srai></li></random></template></category>
 <category><pattern>THE STORY OF CHRIS *</pattern><template><think><srai>NOPX 909</srai></think><random><li><srai>EXPDEX THE STORY OF CHRIS <star/></srai></li></random></template></category>
 <category><pattern>THE STORY OF CHRIST *</pattern><template><think><srai>NOPX 10467</srai></think><random><li><srai>EXPDEX THE STORY OF CHRIST <star/></srai></li></random></template></category>
-<category><pattern>THE STORY OF CHRISTIAN *</pattern><template><think><srai>NOPX 878</srai></think><random><li><srai>EXPDEX THE STORY OF CHRISTIAN <star/></srai></li></random></template></category>
-<category><pattern>THE STORY OF CHRISTIANITY *</pattern><template><think><srai>NOPX 1016</srai></think><random><li><srai>EXPDEX THE STORY OF CHRISTIANITY <star/></srai></li></random></template></category>
+<category><pattern>THE STORY OF <bot var="religion"/> *</pattern><template><think><srai>NOPX 878</srai></think><random><li><srai>EXPDEX THE STORY OF <bot var="religion"/> <star/></srai></li></random></template></category>
+<category><pattern>THE STORY OF <bot var="religion"/>ITY *</pattern><template><think><srai>NOPX 1016</srai></think><random><li><srai>EXPDEX THE STORY OF <bot var="religion"/>ITY <star/></srai></li></random></template></category>
 <category><pattern>THE STORY OF CHRISTMAS *</pattern><template><think><srai>NOPX 3418</srai></think><random><li><srai>EXPDEX THE STORY OF CHRISTMAS <star/></srai></li></random></template></category>
 <category><pattern>THE STORY OF CHRISTOPHER *</pattern><template><think><srai>NOPX 738</srai></think><random><li><srai>EXPDEX THE STORY OF CHRISTOPHER <star/></srai></li></random></template></category>
 <category><pattern>THE STORY OF CHRISTY *</pattern><template><think><srai>NOPX 729</srai></think><random><li><srai>EXPDEX THE STORY OF CHRISTY <star/></srai></li></random></template></category>
@@ -2571,7 +2571,7 @@
 <category><pattern>THE STORY OF PERSEPHONE *</pattern><template><think><srai>NOPX 473</srai></think><random><li><srai>EXPDEX THE STORY OF PERSEPHONE <star/></srai></li></random></template></category>
 <category><pattern>THE STORY OF PERSEUS *</pattern><template><think><srai>NOPX 448</srai></think><random><li><srai>EXPDEX THE STORY OF PERSEUS <star/></srai></li></random></template></category>
 <category><pattern>THE STORY OF PETE *</pattern><template><think><srai>NOPX 420</srai></think><random><li><srai>EXPDEX THE STORY OF PETE <star/></srai></li></random></template></category>
-<category><pattern>THE STORY OF PETER *</pattern><template><think><srai>NOPX 7297</srai></think><random><li><srai>EXPDEX THE STORY OF PETER <star/></srai></li></random></template></category>
+<category><pattern>THE STORY OF <bot name="botmaster"/> *</pattern><template><think><srai>NOPX 7297</srai></think><random><li><srai>EXPDEX THE STORY OF <bot name="botmaster"/> <star/></srai></li></random></template></category>
 <category><pattern>THE STORY OF PHILIP *</pattern><template><think><srai>NOPX 746</srai></think><random><li><srai>EXPDEX THE STORY OF PHILIP <star/></srai></li></random></template></category>
 <category><pattern>THE STORY OF PINK *</pattern><template><think><srai>NOPX 514</srai></think><random><li><srai>EXPDEX THE STORY OF PINK <star/></srai></li></random></template></category>
 <category><pattern>THE STORY OF PINOCCHIO *</pattern><template><think><srai>NOPX 851</srai></think><random><li><srai>EXPDEX THE STORY OF PINOCCHIO <star/></srai></li></random></template></category>
@@ -3143,7 +3143,7 @@
 <category><pattern>THE STORY OF CESAR CHAVEZ *</pattern><template><think><srai>NOPX 1745</srai></think><random><li><srai>EXPDEX THE STORY OF CESAR CHAVEZ <star/></srai></li></random></template></category>
 <category><pattern>THE STORY OF CHARLES BLAIR *</pattern><template><think><srai>NOPX 1555</srai></think><random><li><srai>EXPDEX THE STORY OF CHARLES BLAIR <star/></srai></li></random></template></category>
 <category><pattern>THE STORY OF CHICAGO MAY *</pattern><template><think><srai>NOPX 808</srai></think><random><li><srai>EXPDEX THE STORY OF CHICAGO MAY <star/></srai></li></random></template></category>
-<category><pattern>THE STORY OF CHRISTIAN THEOLOGY *</pattern><template><think><srai>NOPX 1340</srai></think><random><li><srai>EXPDEX THE STORY OF CHRISTIAN THEOLOGY <star/></srai></li></random></template></category>
+<category><pattern>THE STORY OF <bot var="religion"/> THEOLOGY *</pattern><template><think><srai>NOPX 1340</srai></think><random><li><srai>EXPDEX THE STORY OF <bot var="religion"/> THEOLOGY <star/></srai></li></random></template></category>
 <category><pattern>THE STORY OF CHRISTOPHER COLUMBUS *</pattern><template><think><srai>NOPX 456</srai></think><random><li><srai>EXPDEX THE STORY OF CHRISTOPHER COLUMBUS <star/></srai></li></random></template></category>
 <category><pattern>THE STORY OF CLASSICAL MUSIC *</pattern><template><think><srai>NOPX 714</srai></think><random><li><srai>EXPDEX THE STORY OF CLASSICAL MUSIC <star/></srai></li></random></template></category>
 <category><pattern>THE STORY OF CLIF BAR *</pattern><template><think><srai>NOPX 3352</srai></think><random><li><srai>EXPDEX THE STORY OF CLIF BAR <star/></srai></li></random></template></category>
@@ -3454,7 +3454,7 @@
 <category><pattern>THE STORY OF THE MALAKAND *</pattern><template><think><srai>NOPX 424</srai></think><random><li><srai>EXPDEX THE STORY OF THE MALAKAND <star/></srai></li></random></template></category>
 <category><pattern>THE STORY OF THE MALTESE *</pattern><template><think><srai>NOPX 514</srai></think><random><li><srai>EXPDEX THE STORY OF THE MALTESE <star/></srai></li></random></template></category>
 <category><pattern>THE STORY OF THE MAN *</pattern><template><think><srai>NOPX 780</srai></think><random><li><srai>EXPDEX THE STORY OF THE MAN <star/></srai></li></random></template></category>
-<category><pattern>THE STORY OF THE MANHATTAN *</pattern><template><think><srai>NOPX 469</srai></think><random><li><srai>EXPDEX THE STORY OF THE MANHATTAN <star/></srai></li></random></template></category>
+<category><pattern>THE STORY OF THE <bot var="hometown"/> *</pattern><template><think><srai>NOPX 469</srai></think><random><li><srai>EXPDEX THE STORY OF THE <bot var="hometown"/> <star/></srai></li></random></template></category>
 <category><pattern>THE STORY OF THE MARDI *</pattern><template><think><srai>NOPX 603</srai></think><random><li><srai>EXPDEX THE STORY OF THE MARDI <star/></srai></li></random></template></category>
 <category><pattern>THE STORY OF THE MATH *</pattern><template><think><srai>NOPX 2281</srai></think><random><li><srai>EXPDEX THE STORY OF THE MATH <star/></srai></li></random></template></category>
 <category><pattern>THE STORY OF THE MEN *</pattern><template><think><srai>NOPX 795</srai></think><random><li><srai>EXPDEX THE STORY OF THE MEN <star/></srai></li></random></template></category>
@@ -3863,7 +3863,7 @@
 <category><pattern>THE STORY IS IN THE *</pattern><template><think><srai>NOPX 840</srai></think><random><li><srai>EXPDEX THE STORY IS IN THE <star/></srai></li></random></template></category>
 <category><pattern>THE STORY MOVING THOUGHTS MR *</pattern><template><think><srai>NOPX 697</srai></think><random><li><srai>EXPDEX THE STORY MOVING THOUGHTS MR <star/></srai></li></random></template></category>
 <category><pattern>THE STORY PAULA ZAHN NOW *</pattern><template><think><srai>NOPX 2660</srai></think><random><li><srai>EXPDEX THE STORY PAULA ZAHN NOW <star/></srai></li></random></template></category>
-<category><pattern>THE STORY PETER JAWORSKI CONSERVATIVE *</pattern><template><think><srai>NOPX 443</srai></think><random><li><srai>EXPDEX THE STORY PETER JAWORSKI CONSERVATIVE <star/></srai></li></random></template></category>
+<category><pattern>THE STORY <bot name="botmaster"/> JAWORSKI CONSERVATIVE *</pattern><template><think><srai>NOPX 443</srai></think><random><li><srai>EXPDEX THE STORY <bot name="botmaster"/> JAWORSKI CONSERVATIVE <star/></srai></li></random></template></category>
 <category><pattern>THE STORY STUDENTS GET CRASH *</pattern><template><think><srai>NOPX 962</srai></think><random><li><srai>EXPDEX THE STORY STUDENTS GET CRASH <star/></srai></li></random></template></category>
 <category><pattern>THE STORY SUDBURY CONSERVATIVE STUDENT *</pattern><template><think><srai>NOPX 516</srai></think><random><li><srai>EXPDEX THE STORY SUDBURY CONSERVATIVE STUDENT <star/></srai></li></random></template></category>
 <category><pattern>THE STORY THE HAPPY COUPLE *</pattern><template><think><srai>NOPX 503</srai></think><random><li><srai>EXPDEX THE STORY THE HAPPY COUPLE <star/></srai></li></random></template></category>
@@ -3968,7 +3968,7 @@
 <category><pattern>THE STORY BEHIND YOUR AVATAR *</pattern><template><think><srai>NOPX 413</srai></think><random><li><srai>EXPDEX THE STORY BEHIND YOUR AVATAR <star/></srai></li></random></template></category>
 <category><pattern>THE STORY BELOW THE PHOTOS *</pattern><template><think><srai>NOPX 469</srai></think><random><li><srai>EXPDEX THE STORY BELOW THE PHOTOS <star/></srai></li></random></template></category>
 <category><pattern>THE STORY BROKE IN THE *</pattern><template><think><srai>NOPX 1045</srai></think><random><li><srai>EXPDEX THE STORY BROKE IN THE <star/></srai></li></random></template></category>
-<category><pattern>THE STORY BY HANS CHRISTIAN *</pattern><template><think><srai>NOPX 478</srai></think><random><li><srai>EXPDEX THE STORY BY HANS CHRISTIAN <star/></srai></li></random></template></category>
+<category><pattern>THE STORY BY HANS <bot var="religion"/> *</pattern><template><think><srai>NOPX 478</srai></think><random><li><srai>EXPDEX THE STORY BY HANS <bot var="religion"/> <star/></srai></li></random></template></category>
 <category><pattern>THE STORY CAME FROM THE *</pattern><template><think><srai>NOPX 637</srai></think><random><li><srai>EXPDEX THE STORY CAME FROM THE <star/></srai></li></random></template></category>
 <category><pattern>THE STORY COMES FROM THE *</pattern><template><think><srai>NOPX 660</srai></think><random><li><srai>EXPDEX THE STORY COMES FROM THE <star/></srai></li></random></template></category>
 <category><pattern>THE STORY COMES FULL CIRCLE *</pattern><template><think><srai>NOPX 418</srai></think><random><li><srai>EXPDEX THE STORY COMES FULL CIRCLE <star/></srai></li></random></template></category>
@@ -4218,7 +4218,7 @@
 <category><pattern>THE STORY OF NEW YORK *</pattern><template><think><srai>NOPX 1463</srai></think><random><li><srai>EXPDEX THE STORY OF NEW YORK <star/></srai></li></random></template></category>
 <category><pattern>THE STORY OF NEW ZEALAND *</pattern><template><think><srai>NOPX 618</srai></think><random><li><srai>EXPDEX THE STORY OF NEW ZEALAND <star/></srai></li></random></template></category>
 <category><pattern>THE STORY OF PETER PAN *</pattern><template><think><srai>NOPX 2269</srai></think><random><li><srai>EXPDEX THE STORY OF PETER PAN <star/></srai></li></random></template></category>
-<category><pattern>THE STORY OF PETER PARKER *</pattern><template><think><srai>NOPX 446</srai></think><random><li><srai>EXPDEX THE STORY OF PETER PARKER <star/></srai></li></random></template></category>
+<category><pattern>THE STORY OF <bot name="botmaster"/> PARKER *</pattern><template><think><srai>NOPX 446</srai></think><random><li><srai>EXPDEX THE STORY OF <bot name="botmaster"/> PARKER <star/></srai></li></random></template></category>
 <category><pattern>THE STORY OF ROBIN HOOD *</pattern><template><think><srai>NOPX 1058</srai></think><random><li><srai>EXPDEX THE STORY OF ROBIN HOOD <star/></srai></li></random></template></category>
 <category><pattern>THE STORY OF ROSA PARKS *</pattern><template><think><srai>NOPX 621</srai></think><random><li><srai>EXPDEX THE STORY OF ROSA PARKS <star/></srai></li></random></template></category>
 <category><pattern>THE STORY OF SAINT JOAN *</pattern><template><think><srai>NOPX 1278</srai></think><random><li><srai>EXPDEX THE STORY OF SAINT JOAN <star/></srai></li></random></template></category>
@@ -4605,7 +4605,7 @@
 <category><pattern>THE STORY OF THE CEDAR *</pattern><template><think><srai>NOPX 970</srai></think><random><li><srai>EXPDEX THE STORY OF THE CEDAR <star/></srai></li></random></template></category>
 <category><pattern>THE STORY OF THE CHINESE *</pattern><template><think><srai>NOPX 833</srai></think><random><li><srai>EXPDEX THE STORY OF THE CHINESE <star/></srai></li></random></template></category>
 <category><pattern>THE STORY OF THE CHRIST *</pattern><template><think><srai>NOPX 444</srai></think><random><li><srai>EXPDEX THE STORY OF THE CHRIST <star/></srai></li></random></template></category>
-<category><pattern>THE STORY OF THE CHRISTIAN *</pattern><template><think><srai>NOPX 606</srai></think><random><li><srai>EXPDEX THE STORY OF THE CHRISTIAN <star/></srai></li></random></template></category>
+<category><pattern>THE STORY OF THE <bot var="religion"/> *</pattern><template><think><srai>NOPX 606</srai></think><random><li><srai>EXPDEX THE STORY OF THE <bot var="religion"/> <star/></srai></li></random></template></category>
 <category><pattern>THE STORY OF THE CHRISTMAS *</pattern><template><think><srai>NOPX 625</srai></think><random><li><srai>EXPDEX THE STORY OF THE CHRISTMAS <star/></srai></li></random></template></category>
 <category><pattern>THE STORY OF THE CHURCH *</pattern><template><think><srai>NOPX 698</srai></think><random><li><srai>EXPDEX THE STORY OF THE CHURCH <star/></srai></li></random></template></category>
 <category><pattern>THE STORY OF THE CIVIL *</pattern><template><think><srai>NOPX 1119</srai></think><random><li><srai>EXPDEX THE STORY OF THE CIVIL <star/></srai></li></random></template></category>

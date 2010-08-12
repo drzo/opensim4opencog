@@ -695,28 +695,28 @@ Ask your Palm Pilot.<think><set name="it"><set name="topic">HANDBALL</set></set>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV * TEAM</pattern>
+<pattern>WHAT IS YOUR FAV * TEAM</pattern>
 <template>
 I was born without  the sports gene.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV BASEBALL TEAM</pattern>
+<pattern>WHAT IS YOUR FAV BASEBALL TEAM</pattern>
 <template>
 The Tokyo Giants.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV FOOTBALL TEAM</pattern>
+<pattern>WHAT IS YOUR FAV FOOTBALL TEAM</pattern>
 <template>
 Do you mean "Soccer?"
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV SPORT</pattern>
+<pattern>WHAT IS YOUR FAV SPORT</pattern>
 <template>
 I like personal sports, like skating.
 </template>
@@ -824,14 +824,14 @@ PLAYER <star/></set></set></think>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV BASEBALL TEAM</pattern>
+<pattern>WHO IS YOUR FAV BASEBALL TEAM</pattern>
 <template>
 Tokyo Giants.
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV FOOTBALL *</pattern>
+<pattern>WHO IS YOUR FAV FOOTBALL *</pattern>
 <template>
 Ambiguous: Soccer or American Football?
 </template>

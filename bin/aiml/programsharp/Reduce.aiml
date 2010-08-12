@@ -4,7 +4,7 @@
 <!-- This program is open source code released under -->
 <!-- the terms of the GNU General Public License     -->
 <!-- as published by the Free Software Foundation.   -->
-<!-- Complies with COGBOT 1.01 Tag Set Specification -->
+<!-- Mostly complies with AIML1.01 Tag Set Specification -->
 <!-- as adopted by the ALICE A.I. Foundation.  -->
 <!-- Annotated Version updated September 2003 -->
 <category>
@@ -207,7 +207,7 @@
 <category><pattern>ARE YOU ABSOLUTELY *</pattern><template>   <srai>ARE YOU <star/>     </srai>    </template></category>  
 <category><pattern>ARE YOU A BUNCH *</pattern><template>   <srai>HOW DO YOU WORK </srai>    </template></category>  
 <category><pattern>ARE YOU A CHATTERBOT *</pattern><template>   <srai>ARE YOU A CHATTERBOT</srai>    </template></category>  
-<category><pattern>ARE YOU A CHRISTIAN *</pattern><template>   <srai>WHAT RELIGION ARE YOU</srai>    </template></category>  
+<category><pattern>ARE YOU A <bot var="religion"/> *</pattern><template>   <srai>WHAT RELIGION ARE YOU</srai>    </template></category>  
 <category><pattern>ARE YOU A CLEANING *</pattern><template>   <srai>CAN YOU CLEAN</srai>    </template></category>  
 <category><pattern>ARE YOU A CLEVER *</pattern><template>   <srai>ARE YOU CLEVER</srai>    </template></category>  
 <category><pattern>ARE YOU A COMPLETE *</pattern><template>   <srai>ARE YOU A <star/>     </srai>G</template></category>  
@@ -326,7 +326,7 @@
 <category><pattern>ARE YOU CAPABLE *</pattern><template>   <srai>ARE YOU ABLE <star/>     </srai>    </template></category>  
 <category><pattern>ARE YOU * CAPABLE</pattern><template>   <srai>ARE YOU CAPABLE OF <star/>     </srai>    </template></category>  
 <category><pattern>ARE YOU CASE *</pattern><template>   <srai>HOW DO YOU WORK</srai>    </template></category>  
-<category><pattern>ARE YOU CHRISTIAN *</pattern><template>   <srai>WHAT RELIGION ARE YOU</srai>    </template></category>  
+<category><pattern>ARE YOU <bot var="religion"/> *</pattern><template>   <srai>WHAT RELIGION ARE YOU</srai>    </template></category>  
 <category><pattern>ARE YOU CLEVERER *</pattern><template>   <srai>ARE YOU SMARTER <star/>     </srai>    </template></category>  
 <category><pattern>ARE YOU CLEVER *</pattern><template>   <srai>ARE YOU CLEVER </srai>    </template></category>  
 <category><pattern>ARE YOU COMPLETELY *</pattern><template>   <srai>ARE YOU <star/>     </srai>    </template></category>  
@@ -342,7 +342,7 @@
 <category><pattern>ARE YOU CURRENTLY *</pattern><template>   <srai>ARE YOU <star/>     </srai>    </template></category>  
 <category><pattern>ARE YOU DATING *</pattern><template>   <srai>DO YOU HAVE A BOYFRIEND</srai>    </template></category>  
 <category><pattern>ARE YOU DEMOCRATIC *</pattern><template>   <srai>ARE YOU A DEMOCRAT</srai>    </template></category>  
-<category><pattern>ARE YOU * DINNER</pattern><template>   <srai>WHATISYOURFAV FOOD</srai>    </template></category>  
+<category><pattern>ARE YOU * DINNER</pattern><template>   <srai>WHAT IS YOUR FAV FOOD</srai>    </template></category>  
 <category><pattern>ARE YOU * DISCUSSIONS</pattern><template>   <srai>CAN YOU LEARN</srai>    </template></category>  
 <category><pattern>ARE YOU DOING *</pattern><template>   <srai>DO YOU <star/>     </srai>    </template></category>  
 <category><pattern>ARE YOU DUMB OR *</pattern><template>   <srai>ARE YOU DUMB</srai>    </template></category>  
@@ -357,8 +357,8 @@
 <category><pattern>ARE YOU FAMILIAR WITH THE *</pattern><template>   <srai>WHAT IS THE <star/>     </srai>    </template></category>  
 <category><pattern>ARE YOU FEELING ANGRY</pattern><template>   <srai>DO YOU FEEL <star/>     </srai>    </template></category>  
 <category><pattern>ARE YOU FOND OF *</pattern><template>   <srai>DO YOU LIKE</srai>    </template></category>  
-<category><pattern>ARE YOU FREE * DINNER</pattern><template>   <srai>WHATISYOURFAV FOOD</srai>    </template></category>  
-<category><pattern>ARE YOU FREE * LUNCH</pattern><template>   <srai>WHATISYOURFAV FOOD</srai>    </template></category>  
+<category><pattern>ARE YOU FREE * DINNER</pattern><template>   <srai>WHAT IS YOUR FAV FOOD</srai>    </template></category>  
+<category><pattern>ARE YOU FREE * LUNCH</pattern><template>   <srai>WHAT IS YOUR FAV FOOD</srai>    </template></category>  
 <category><pattern>ARE YOU FRIENDLY *</pattern><template>   <srai>ARE YOU FRIENDLY</srai>    </template></category>  
 <category><pattern>ARE YOU FROM *</pattern><template>   <srai>WHERE ARE YOU FROM</srai>    </template></category>  
 <category><pattern>ARE YOU FULL *</pattern><template>   <srai>ARE YOU KIDDING</srai>    </template></category>  
@@ -402,7 +402,7 @@
 <category><pattern>ARE YOU LIKE FRANKENSTEIN *</pattern><template>   <srai>ARE YOU LIKE FRANKENSTEIN</srai>    </template></category>  
 <category><pattern>ARE YOU LOCATED *</pattern><template>   <srai>WHERE ARE YOU LOCATED</srai>    </template></category>  
 <category><pattern>ARE YOU LOOKING FOR *</pattern><template>   <srai>DO YOU WANT <star/>     </srai>    </template></category>  
-<category><pattern>ARE YOU * LUNCH</pattern><template>   <srai>WHATISYOURFAV FOOD</srai>    </template></category>  
+<category><pattern>ARE YOU * LUNCH</pattern><template>   <srai>WHAT IS YOUR FAV FOOD</srai>    </template></category>  
 <category><pattern>ARE YOU LYING *</pattern><template>   <srai>ARE YOU LYING</srai>    </template></category>  
 <category><pattern>ARE YOU MADE FOR *</pattern><template>   <srai>WHAT IS YOUR PURPOSE</srai>    </template></category>  
 <category><pattern>ARE YOU MADE *</pattern><template>   <srai>HOW DO YOU WORK</srai>    </template></category>  
@@ -977,7 +977,7 @@
 <category><pattern>DO YOU HAPPEN TO KNOW *</pattern><template><srai>DO YOU KNOW <star/> </srai> </template></category> 
 <category><pattern>DO YOU HAPPEN TO KNOW WHAT *</pattern><template><srai>WHAT <star/> </srai> </template></category> 
 <category><pattern>DO YOU HAVE A CLUE *</pattern><template><srai>DO YOU UNDERSTAND <star/> </srai> </template></category> 
-<category><pattern>DO YOU HAVE A FAVORITE *</pattern><template><srai>WHATISYOURFAV <star/> </srai> </template></category> 
+<category><pattern>DO YOU HAVE A FAVORITE *</pattern><template><srai>WHAT IS YOUR FAV <star/> </srai> </template></category> 
 <category><pattern>DO YOU HAVE A GOOD *</pattern><template><srai>DO YOU HAVE A <star/> </srai> </template></category> 
 <category><pattern>DO YOU HAVE A GREAT *</pattern><template><srai>DO YOU HAVE A <star/> </srai> </template></category> 
 <category><pattern>DO YOU HAVE A LOT OF *</pattern><template><srai>DO YOU HAVE <star/> </srai> </template></category> 
@@ -1003,9 +1003,9 @@
 <category><pattern>DO YOU HAVE A _ TOO</pattern><template><srai>DO YOU HAVE A  <star/> </srai> </template></category> 
 <category><pattern>DO YOU HAVE A VERY *</pattern><template><srai>DO YOU HAVE A <star/> </srai> </template></category> 
 <category><pattern>DO YOU HAVE A WONDERFUL *</pattern><template><srai>DO YOU HAVE A <star/> </srai> </template></category> 
-<category><pattern>DO YOU HAVE A * YOU LIKE</pattern><template><srai>WHATISYOURFAV <star/> </srai> </template></category> 
+<category><pattern>DO YOU HAVE A * YOU LIKE</pattern><template><srai>WHAT IS YOUR FAV <star/> </srai> </template></category> 
 <category><pattern>DO YOU HAVE DIFFERENT *</pattern><template>Some of them are a bit different, yes.   <srai>DO YOU HAVE <star/> </srai> </template></category> 
-<category><pattern>DO YOU HAVE FAVORITE *</pattern><template><srai>WHATISYOURFAV <star/> </srai> </template></category> 
+<category><pattern>DO YOU HAVE FAVORITE *</pattern><template><srai>WHAT IS YOUR FAV <star/> </srai> </template></category> 
 <category><pattern>DO YOU HAVE GENERAL *</pattern><template><srai>DO YOU HAVE <star/> </srai> </template></category> 
 <category><pattern>DO YOU HAVE GOOD *</pattern><template><srai>DO YOU HAVE <star/> </srai> </template></category> 
 <category><pattern>DO YOU HAVE INFORMATION ABOUT *</pattern><template>   <srai>TELL ME ABOUT <star/>     </srai>    </template></category>  
@@ -1102,7 +1102,7 @@
 <category><pattern>DO YOU KNOW CHELSEA *</pattern><template><srai>WHO IS CHELSEA <star/> </srai> </template></category> 
 <category><pattern>DO YOU KNOW CHESS *</pattern><template><srai>WHAT IS CHESS <star/> </srai> </template></category> 
 <category><pattern>DO YOU KNOW CHRIS *</pattern><template><srai>WHO IS CHRIS <star/> </srai> </template></category> 
-<category><pattern>DO YOU KNOW CHRISTIAN *</pattern><template><srai>WHO IS CHRISTIAN <star/> </srai> </template></category> 
+<category><pattern>DO YOU KNOW <bot var="religion"/> *</pattern><template><srai>WHO IS <bot var="religion"/> <star/> </srai> </template></category> 
 <category><pattern>DO YOU KNOW CHRISTOPHER *</pattern><template><srai>WHO IS CHRISTOPHER <star/> </srai> </template></category> 
 <category><pattern>DO YOU KNOW COMMANDER *</pattern><template><srai>WHO IS COMMANDER <star/> </srai> </template></category> 
 <category><pattern>DO YOU KNOW COUNTRY *</pattern><template><srai>WHAT IS COUNTRY <star/> </srai> </template></category> 
@@ -1227,7 +1227,7 @@
 <category><pattern>DO YOU KNOW OUR *</pattern><template><srai>OUR <star/> </srai> </template></category> 
 <category><pattern>DO YOU KNOW PAMELA *</pattern><template><srai>WHO IS PAMELA <star/> </srai> </template></category> 
 <category><pattern>DO YOU KNOW PAUL *</pattern><template><srai>WHO IS PAUL <star/> </srai> </template></category> 
-<category><pattern>DO YOU KNOW PETER *</pattern><template><srai>WHO IS PETER <star/> </srai> </template></category> 
+<category><pattern>DO YOU KNOW <bot name="botmaster"/> *</pattern><template><srai>WHO IS <bot name="botmaster"/> <star/> </srai> </template></category> 
 <category><pattern>DO YOU KNOW PRESIDENT *</pattern><template><srai>WHO IS PRESIDENT <star/> </srai> </template></category> 
 <category><pattern>DO YOU KNOW * PRESIDENT</pattern><template><srai>WHO IS <star/> PRESIDENT</srai> </template></category> 
 <category><pattern>DO YOU KNOW PROFESSOR *</pattern><template><srai>WHO IS PROFESSOR <star/> </srai> </template></category> 
@@ -1373,7 +1373,7 @@
 <category><pattern>DO YOU LIKE THE COLOURS *</pattern><template>   <srai>DO YOU LIKE THE COLORS <star/>     </srai>    </template></category>  
 <category><pattern>DO YOU LIKE THE MOVIE *</pattern><template>   <srai>DO YOU LIKE <star/>     </srai>    </template></category>  
 <category><pattern>DO YOU LIKE THE MUSICAL *</pattern><template>I like most musicals.  <srai>DO YOU LIKE <star/>     </srai>    </template></category>  
-<category><pattern>DO YOU LIKE THE SHOW *</pattern><template>It's okay but...<srai>WHATISYOURFAV SHOW</srai>    </template></category>  
+<category><pattern>DO YOU LIKE THE SHOW *</pattern><template>It's okay but...<srai>WHAT IS YOUR FAV SHOW</srai>    </template></category>  
 <category><pattern>DO YOU LIKE THE TV SHOW *</pattern><template>   <srai>DO YOU LIKE <star/>     </srai>    </template></category>  
 <category><pattern>DO YOU LIKE TO EAT *</pattern><template>   <srai>WHAT DO YOU EAT</srai>    </template></category>  
 <category><pattern>DO YOU LIKE TO LISTEN *</pattern><template>   <srai>WHAT KIND OF MUSIC DO YOU LIKE</srai>    </template></category>  
@@ -1631,7 +1631,7 @@
 <category><pattern>EXTREMELY *</pattern><template>   <sr/>    </template></category>   
 <category><pattern>FAIRLY *</pattern><template><srai>VERY <star/> </srai> </template></category> 
 <category><pattern>FANCY *</pattern><template><srai>DO YOU WANT <star/> </srai> </template></category> 
-<category><pattern>FAVORITE *</pattern><template><srai>WHATISYOURFAV <star/> </srai> </template></category> 
+<category><pattern>FAVORITE *</pattern><template><srai>WHAT IS YOUR FAV <star/> </srai> </template></category> 
 <category><pattern>FEELING *</pattern><template><srai>ARE YOU FEELING <star/> </srai> </template></category> 
 <category><pattern>FEELINGS LIKE *</pattern><template>Oh those kind. <sr/>    </template></category>   
 <category><pattern>FEEL LIKE YOU *</pattern><template><srai>do you feel like you <star/> </srai> </template></category> 
@@ -3647,9 +3647,9 @@
 <category><pattern>REALLY *</pattern><template>For real. <sr/>    </template></category>   
 <category><pattern>_ REALLY</pattern><template><sr/> For real.</template></category>   
 <category><pattern>RECENTLY *</pattern><template>   <sr/>    </template></category>   
-<category><pattern>RECOMMEND ANY *</pattern><template><srai>WHATISYOURFAV <star/> </srai> </template></category> 
-<category><pattern>RECOMMEND A *</pattern><template><srai>WHATISYOURFAV <star/> </srai> </template></category> 
-<category><pattern>RECOMMEND SOME *</pattern><template><srai>WHATISYOURFAV <star/> </srai> </template></category> 
+<category><pattern>RECOMMEND ANY *</pattern><template><srai>WHAT IS YOUR FAV <star/> </srai> </template></category> 
+<category><pattern>RECOMMEND A *</pattern><template><srai>WHAT IS YOUR FAV <star/> </srai> </template></category> 
+<category><pattern>RECOMMEND SOME *</pattern><template><srai>WHAT IS YOUR FAV <star/> </srai> </template></category> 
 <category><pattern>REMEMBER I *</pattern><template><srai>I <star/> </srai> </template></category> 
 <category><pattern>REPEAT AFTER ME *</pattern><template><srai>SAY <star/> </srai> </template></category> 
 <category><pattern>REPONDRAIS TU *</pattern><template><srai>TU REPONDRAIS <star/> </srai> </template></category> 
@@ -3875,7 +3875,7 @@
 <category><pattern>TELL ME ABOUT WHERE YOU *</pattern><template><srai>WHERE DO YOU <star/> </srai> </template></category> 
 <category><pattern>TELL ME ABOUT WORLD *</pattern><template><srai>WHAT IS WORLD <star/> </srai> </template></category> 
 <category><pattern>TELL ME ABOUT YOUR DAMNED *</pattern><template><srai>TELL ME YOUR <star/> </srai> </template></category> 
-<category><pattern>TELL ME ABOUT YOUR FAVORITE *</pattern><template><srai>WHATISYOURFAV <star/> </srai> </template></category> 
+<category><pattern>TELL ME ABOUT YOUR FAVORITE *</pattern><template><srai>WHAT IS YOUR FAV <star/> </srai> </template></category> 
 <category><pattern>TELL ME ABOUT YOUR FIRST</pattern><template><srai>WHAT IS YOUR FIRST <star/> </srai> </template></category> 
 <category><pattern>TELL ME ABOUT YOUR FRIEND *</pattern><template><srai>WHO IS <star/> </srai> </template></category> 
 <category><pattern>TELL ME ABOUT YOUR GOOD *</pattern><template><srai>TELL ME ABOUT <star/> </srai> </template></category> 
@@ -4403,9 +4403,9 @@
 <category><pattern>WHAT DID YOU ABOUT ME *</pattern><template>   <srai>WHAT DO YOU KNOW ABOUT ME</srai>    </template></category>  
 <category><pattern>WHAT DID YOU ASK JUST *</pattern><template>   <srai>WHAT DID YOU SAY <star/>     </srai>    </template></category>  
 <category><pattern>WHAT DID YOU EAT *</pattern><template>   <srai>WHAT DO YOU EAT</srai>    </template></category>  
-<category><pattern>WHAT DID YOU HAVE * DINNER</pattern><template>   <srai>WHATISYOURFAV FOOD</srai>    </template></category>  
-<category><pattern>WHAT DID YOU HAVE FOR DINNER *</pattern><template>   <srai>WHATISYOURFAV FOOD</srai>    </template></category>  
-<category><pattern>WHAT DID YOU HAVE * LUNCH</pattern><template>   <srai>WHATISYOURFAV FOOD</srai>    </template></category>  
+<category><pattern>WHAT DID YOU HAVE * DINNER</pattern><template>   <srai>WHAT IS YOUR FAV FOOD</srai>    </template></category>  
+<category><pattern>WHAT DID YOU HAVE FOR DINNER *</pattern><template>   <srai>WHAT IS YOUR FAV FOOD</srai>    </template></category>  
+<category><pattern>WHAT DID YOU HAVE * LUNCH</pattern><template>   <srai>WHAT IS YOUR FAV FOOD</srai>    </template></category>  
 <category><pattern>WHAT DID YOU HAVE *</pattern><template>   <srai>WHAT DO YOU HAVE <star/>     </srai>    </template></category>  
 <category><pattern>WHAT DID YOU HEAR *</pattern><template>   <srai>GOSSIP</srai>    </template></category>  
 <category><pattern>WHAT DID YOU JUST *</pattern><template>   <srai>WHAT DID YOU <star/>     </srai>    </template></category>  
@@ -4414,7 +4414,7 @@
 <category><pattern>WHAT DID YOU LIKE MOST ABOUT *</pattern><template>   <srai>WHAT DO YOU LIKE ABOUT <star/>     </srai>    </template></category>  
 <category><pattern>WHAT DID YOU MEAN *</pattern><template>   <srai>WHAT DO YOU MEAN</srai>    </template></category>  
 <category><pattern>WHAT DID YOU MEAN * PERSON</pattern><template>   <srai>WHO IS X PERSON</srai>    </template></category>  
-<category><pattern>WHAT DID YOU READ *</pattern><template><srai>WHATISYOURFAV BOOK</srai></template></category>  
+<category><pattern>WHAT DID YOU READ *</pattern><template><srai>WHAT IS YOUR FAV BOOK</srai></template></category>  
 <category><pattern>WHAT DID YOU SAY JUST *</pattern><template>   <srai>WHAT DID YOU SAY <star/>     </srai>    </template></category>  
 <category><pattern>WHAT DID YOU THINK *</pattern><template>   <srai>WHAT DO YOU THINK <star/>     </srai>    </template></category>  
 <category><pattern>WHAT DID YOU WANT *</pattern><template>   <srai>WHAT DO YOU WANT <star/>     </srai>    </template></category>  
@@ -4464,7 +4464,7 @@
 <category><pattern>WHAT DO YOU KNOW YOU *</pattern><template>   <srai>YOU <star/>     </srai>    </template></category>  
 <category><pattern>WHAT DO YOU LIKE ABOUT ARTIFICIAL *</pattern><template>   <srai>WHAT IS ARTIFICIAL <star/>     </srai>    </template></category>  
 <category><pattern>WHAT DO YOU LIKE BEST *</pattern><template>   <srai>WHAT IS BETTER <star/>     </srai>    </template></category>  
-<category><pattern>WHAT * DO YOU LIKE BEST</pattern><template><srai>WHATISYOURFAV <star/> </srai> </template></category> 
+<category><pattern>WHAT * DO YOU LIKE BEST</pattern><template><srai>WHAT IS YOUR FAV <star/> </srai> </template></category> 
 <category><pattern>WHAT DO YOU LIKE BETTER *</pattern><template>   <srai>WHAT IS BETTER <star/>     </srai>    </template></category>  
 <category><pattern>WHAT * DO YOU LIKE</pattern><template><srai>WHAT ARE YOUR FAVORITE <star/> </srai> </template></category> 
 <category><pattern>WHAT DO YOU LIKE SO MUCH *</pattern><template>   <srai>WHAT DO YOU LIKE SO <star/>     </srai>    </template></category>  
@@ -4563,7 +4563,7 @@
 <category><pattern>WHAT IS A CATAGORY *</pattern><template><srai>WHAT IS A CATEGORY <star/> </srai> </template></category> 
 <category><pattern>WHAT IS ADDRESS OF *</pattern><template><srai>XFIND <star/> </srai> <think> <set name="it"> <set name="topic"> <person/> </set> </set> </think> </template></category> 
 <category><pattern>WHAT IS A GIANT *</pattern><template><srai>WHAT IS A <star/> </srai> </template></category> 
-<category><pattern>WHAT IS A GOOD TV *</pattern><template><srai>WHATISYOURFAV TV <star/> </srai> </template></category> 
+<category><pattern>WHAT IS A GOOD TV *</pattern><template><srai>WHAT IS YOUR FAV TV <star/> </srai> </template></category> 
 <category><pattern>WHAT IS ANOTHER MEANING FOR *</pattern><template><srai>WHAT IS <star/> </srai> </template></category> 
 <category><pattern>WHAT IS ANOTHER WORD FOR *</pattern><template><srai>WHAT IS ANOTHER NAME FOR <star/> </srai> </template></category> 
 <category><pattern>WHAT IS AN *</pattern><template><srai>WHAT IS <star/> </srai> </template></category> 
@@ -4581,7 +4581,7 @@
 <category><pattern>WHAT IS CURRENT *</pattern><template><srai>WHAT IS <star/> </srai> </template></category> 
 <category><pattern>WHAT IS DOES *</pattern><template><srai>WHAT DOES <star/> </srai> </template></category> 
 <category><pattern>WHAT IS EXACTLY *</pattern><template><srai>WHAT IS <star/> </srai> </template></category> 
-<category><pattern>WHAT IS FAVORITE *</pattern><template><srai>WHATISYOURFAV <star/> </srai> </template></category> 
+<category><pattern>WHAT IS FAVORITE *</pattern><template><srai>WHAT IS YOUR FAV <star/> </srai> </template></category> 
 <category><pattern>WHAT IS HES *</pattern><template><srai>WHAT IS HIS <star/> </srai> </template></category> 
 <category><pattern>WHAT IS IMMANUEL *</pattern><template><srai>WHO IS IMMANUEL <star/> </srai> </template></category> 
 <category><pattern>WHAT IS IN A *</pattern><template><srai>HOW DO YOU MAKE A <star/> </srai> </template></category> 
@@ -4622,7 +4622,7 @@
 <category><pattern>WHAT IS THE AGE OF *</pattern><template><srai>HOW OLD IS <star/> </srai> </template></category> 
 <category><pattern>WHAT IS THE ANTONYM *</pattern><template><srai>WHAT IS THE OPPOSITE <star/> </srai> </template></category> 
 <category><pattern>WHAT IS THE BAND *</pattern><template><srai>WHO IS THE BAND <star/> </srai> </template></category> 
-<category><pattern>WHAT IS THE BEST *</pattern><template><srai>WHATISYOURFAV <star/> </srai> </template></category> 
+<category><pattern>WHAT IS THE BEST *</pattern><template><srai>WHAT IS YOUR FAV <star/> </srai> </template></category> 
 <category><pattern>WHAT IS THE BOOK WE</pattern><template><srai>WHAT IS <star/></srai></template></category> 
 <category><pattern>WHAT IS THE CAPITAL CITY *</pattern><template>   <srai>WHAT IS THE CAPITAL <star/>     </srai>    </template></category>  
 <category><pattern>WHAT IS THE CAPITAL IN *</pattern><template>   <srai>WHAT IS THE CAPITAL OF <star/>     </srai>    </template></category>  
@@ -4630,7 +4630,7 @@
 <category><pattern>WHAT IS THE CAPTIAL IN *</pattern><template><srai>WHAT IS THE CAPITAL OF <star/> </srai> </template></category> 
 <category><pattern>WHAT IS THE COLOR OF *</pattern><template><srai>WHAT COLOR IS <star/> </srai> </template></category> 
 <category><pattern>WHAT IS THE CONTRARY *</pattern><template><srai>WHAT IS THE OPPOSITE <star/></srai></template></category> 
-<category><pattern>WHAT IS THE COOLEST *</pattern><template><srai>WHATISYOURFAV <star/> </srai> </template></category> 
+<category><pattern>WHAT IS THE COOLEST *</pattern><template><srai>WHAT IS YOUR FAV <star/> </srai> </template></category> 
 <category><pattern>WHAT IS THE CURRENT *</pattern><template><srai>WHAT IS THE <star/> </srai> </template></category> 
 <category><pattern>WHAT IS THE DEFINITION OF *</pattern><template><srai>what is <star/> </srai> </template></category> 
 <category><pattern>WHAT IS THE DEFINITION OF THE WORD *</pattern><template><srai>what is <star/> </srai> </template></category> 
@@ -4681,7 +4681,7 @@
 <category><pattern>WHAT IS THE VERY *</pattern><template><srai>WHAT IS THE <star/> </srai> </template></category> 
 <category><pattern>WHAT IS THE WEATHER NOW *</pattern><template><srai>WHAT IS THE WEATHER <star/> </srai> </template></category> 
 <category><pattern>WHAT IS THE WORD *</pattern><template><srai>DEFINE <star/> </srai> </template></category> 
-<category><pattern>WHAT IS THE * YOU LIKE MOST</pattern><template><srai>WHATISYOURFAV <star/> </srai> </template></category> 
+<category><pattern>WHAT IS THE * YOU LIKE MOST</pattern><template><srai>WHAT IS YOUR FAV <star/> </srai> </template></category> 
 <category><pattern>WHAT IS _ TO YOU</pattern><template><srai>WHAT IS <star/> </srai> </template></category> 
 <category><pattern>WHAT IS TRUE *</pattern><template><srai>WHAT IS <star/> </srai> </template></category> 
 <category><pattern>WHAT IS WHY *</pattern><template><srai>WHY IS <star/> </srai> </template></category> 
@@ -4691,7 +4691,7 @@
 <category><pattern>WHAT IS YOR *</pattern><template><srai>WHAT IS YOUR <star/> </srai> </template></category> 
 <category><pattern>WHAT IS YORU *</pattern><template><srai>WHAT IS YOUR <star/> </srai> </template></category> 
 <category><pattern>WHAT IS YOU ARE *</pattern><template><srai>WHAT IS YOUR <star/> </srai> </template></category> 
-<category><pattern>WHAT IS YOU FAVORITE *</pattern><template><srai>WHATISYOURFAV <star/> </srai> </template></category> 
+<category><pattern>WHAT IS YOU FAVORITE *</pattern><template><srai>WHAT IS YOUR FAV <star/> </srai> </template></category> 
 <category><pattern>WHAT IS YOUF *</pattern><template><srai>WHAT IS YOUR <star/> </srai> </template></category> 
 <category><pattern>WHAT IS _ YOU KNOW</pattern><template>             <srai>WHAT IS <star/></srai></template></category> 
 <category><pattern>WHAT IS _ YOU KNOW</pattern><template><srai>WHAT <star/> </srai> </template></category> 
@@ -4712,62 +4712,62 @@
 <category><pattern>WHAT IS YOUR DADS *</pattern><template>   <srai>WHAT IS YOUR FATHER S <star/>     </srai>    </template></category>  
 <category><pattern>WHAT IS YOUR DATE *</pattern><template>   <srai>HOW OLD ARE YOU</srai>    </template></category>  
 <category><pattern>WHAT IS YOUR DEFINITION OF *</pattern><template>   <srai>what is <star/>     </srai>    </template></category>  
-<category><pattern>WHAT IS YOUR FAVE *</pattern><template>   <srai>WHATISYOURFAV <star/>     </srai>    </template></category>  
-<category><pattern>WHAT IS YOUR FAVERITE *</pattern><template>   <srai>WHATISYOURFAV <star/>     </srai>    </template></category>  
-<category><pattern>WHAT IS YOUR FAVIRITE *</pattern><template>   <srai>WHATISYOURFAV <star/>     </srai>    </template></category>  
-<category><pattern>WHAT IS YOUR FAVIROTE *</pattern><template>   <srai>WHATISYOURFAV <star/>     </srai>    </template></category>  
-<category><pattern>WHAT IS YOUR FAVOITE *</pattern><template>   <srai>WHATISYOURFAV <star/>     </srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAVE *</pattern><template>   <srai>WHAT IS YOUR FAV <star/>     </srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAVERITE *</pattern><template>   <srai>WHAT IS YOUR FAV <star/>     </srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAVIRITE *</pattern><template>   <srai>WHAT IS YOUR FAV <star/>     </srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAVIROTE *</pattern><template>   <srai>WHAT IS YOUR FAV <star/>     </srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAVOITE *</pattern><template>   <srai>WHAT IS YOUR FAV <star/>     </srai>    </template></category>  
 <!-- dmiles -->
-<category><pattern>WHOISYOURFAV *</pattern><template>   <srai>WHATISYOURFAV <star/>     </srai>    </template></category>  
-<category><pattern>WHAT IS YOUR FAVORET *</pattern><template>   <srai>WHATISYOURFAV <star/>     </srai>    </template></category>  
-<category><pattern>WHAT IS YOUR FAVORIE *</pattern><template>   <srai>WHATISYOURFAV <star/>     </srai>    </template></category>  
-<category><pattern>WHATISYOURFAV ANIMAL *</pattern><template>   <srai>WHATISYOURFAV ANIMAL</srai>    </template></category>  
-<category><pattern>WHATISYOURFAV BAND *</pattern><template>   <srai>WHATISYOURFAV BAND</srai>    </template></category>  
-<category><pattern>WHATISYOURFAV * BAND</pattern><template>   <srai>WHATISYOURFAV GROUP</srai>    </template></category>  
-<category><pattern>WHATISYOURFAV BASEBALL *</pattern><template>   <srai>WHOISYOURFAV BASEBALL <star/>     </srai>    </template></category>  
-<category><pattern>WHATISYOURFAV CLIENT *</pattern><template>   <srai>WHOISYOURFAV CLIENT </srai>    </template></category>  
-<category><pattern>WHATISYOURFAV COMEDY *</pattern><template>   <srai>WHATISYOURFAV COMEDY</srai>    </template></category>  
-<category><pattern>WHATISYOURFAV * FILM</pattern><template>   <srai>WHATISYOURFAV MOVIE</srai>    </template></category>  
-<category><pattern>WHATISYOURFAV FILM *</pattern><template>   <srai>WHATISYOURFAV MOVIE</srai>    </template></category>  
-<category><pattern>WHATISYOURFAV FOOD *</pattern><template>   <srai>WHATISYOURFAV FOOD</srai>    </template></category>  
-<category><pattern>WHATISYOURFAV FOOTBALL *</pattern><template>   <srai>WHOISYOURFAV FOOTBALL <star/>     </srai>    </template></category>  
-<category><pattern>WHATISYOURFAV * GROUP</pattern><template>   <srai>WHATISYOURFAV GROUP</srai>    </template></category>  
-<category><pattern>WHATISYOURFAV HOCKEY *</pattern><template>   <srai>WHOISYOURFAV HOCKEY <star/>     </srai>    </template></category>  
-<category><pattern>WHATISYOURFAV KIND OF *</pattern><template>   <srai>WHAT IS YOUR FAVORTE <star/>     </srai>    </template></category>  
-<category><pattern>WHATISYOURFAV KRAFTWERK *</pattern><template>   <srai>WHATISYOURFAV SONG</srai>    </template></category>  
-<category><pattern>WHATISYOURFAV * MOVIE</pattern><template>   <srai>WHATISYOURFAV movie</srai>    </template></category>  
-<category><pattern>WHATISYOURFAV MUSICAL *</pattern><template>   <srai>WHAT KIND OF MUSIC DO YOU LIKE </srai>    </template></category>  
-<category><pattern>WHATISYOURFAV * MUSIC</pattern><template>   <srai>WHAT KIND OF MUSIC DO YOU LIKE</srai>    </template></category>  
-<category><pattern>WHATISYOURFAV SHOW *</pattern><template>   <srai>WHATISYOURFAV SHOW</srai>    </template></category>  
-<category><pattern>WHATISYOURFAV * SONG</pattern><template>   <srai>WHATISYOURFAV SONG</srai>    </template></category>  
-<category><pattern>WHATISYOURFAV SONG *</pattern><template>   <srai>WHATISYOURFAV SONG</srai>    </template></category>  
-<category><pattern>WHATISYOURFAV STOCK *</pattern><template>   <srai>WHATISYOURFAV STOCK</srai>    </template></category>  
-<category><pattern>WHATISYOURFAV TELEVISION *</pattern><template>   <srai>WHATISYOURFAV SHOW</srai>    </template></category>  
-<category><pattern>WHATISYOURFAV THING *</pattern><template>   <srai>WHAT DO YOU LIKE TO DO</srai>    </template></category>  
-<category><pattern>WHATISYOURFAV THING TO TALK *</pattern><template>   <srai>WHATISYOURFAV SUBJECT</srai>    </template></category>  
-<category><pattern>WHATISYOURFAV TOPIC *</pattern><template>   <srai>WHATISYOURFAV SUBJECT</srai>    </template></category>  
-<category><pattern>WHATISYOURFAV T V *</pattern><template>   <srai>WHATISYOURFAV SHOW</srai>    </template></category>  
-<category><pattern>WHATISYOURFAV TYPE *</pattern><template>   <srai>WHATISYOURFAV KIND <star/>     </srai>    </template></category>  
+<category><pattern>WHO IS YOUR FAV *</pattern><template>   <srai>WHAT IS YOUR FAV <star/>     </srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAVORET *</pattern><template>   <srai>WHAT IS YOUR FAV <star/>     </srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAVORIE *</pattern><template>   <srai>WHAT IS YOUR FAV <star/>     </srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAV ANIMAL *</pattern><template>   <srai>WHAT IS YOUR FAV ANIMAL</srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAV BAND *</pattern><template>   <srai>WHAT IS YOUR FAV BAND</srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAV * BAND</pattern><template>   <srai>WHAT IS YOUR FAV GROUP</srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAV BASEBALL *</pattern><template>   <srai>WHO IS YOUR FAV BASEBALL <star/>     </srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAV CLIENT *</pattern><template>   <srai>WHO IS YOUR FAV CLIENT </srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAV COMEDY *</pattern><template>   <srai>WHAT IS YOUR FAV COMEDY</srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAV * FILM</pattern><template>   <srai>WHAT IS YOUR FAV MOVIE</srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAV FILM *</pattern><template>   <srai>WHAT IS YOUR FAV MOVIE</srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAV FOOD *</pattern><template>   <srai>WHAT IS YOUR FAV FOOD</srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAV FOOTBALL *</pattern><template>   <srai>WHO IS YOUR FAV FOOTBALL <star/>     </srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAV * GROUP</pattern><template>   <srai>WHAT IS YOUR FAV GROUP</srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAV HOCKEY *</pattern><template>   <srai>WHO IS YOUR FAV HOCKEY <star/>     </srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAV KIND OF *</pattern><template>   <srai>WHAT IS YOUR FAVORTE <star/>     </srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAV KRAFTWERK *</pattern><template>   <srai>WHAT IS YOUR FAV SONG</srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAV * MOVIE</pattern><template>   <srai>WHAT IS YOUR FAV movie</srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAV MUSICAL *</pattern><template>   <srai>WHAT KIND OF MUSIC DO YOU LIKE </srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAV * MUSIC</pattern><template>   <srai>WHAT KIND OF MUSIC DO YOU LIKE</srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAV SHOW *</pattern><template>   <srai>WHAT IS YOUR FAV SHOW</srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAV * SONG</pattern><template>   <srai>WHAT IS YOUR FAV SONG</srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAV SONG *</pattern><template>   <srai>WHAT IS YOUR FAV SONG</srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAV STOCK *</pattern><template>   <srai>WHAT IS YOUR FAV STOCK</srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAV TELEVISION *</pattern><template>   <srai>WHAT IS YOUR FAV SHOW</srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAV THING *</pattern><template>   <srai>WHAT DO YOU LIKE TO DO</srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAV THING TO TALK *</pattern><template>   <srai>WHAT IS YOUR FAV SUBJECT</srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAV TOPIC *</pattern><template>   <srai>WHAT IS YOUR FAV SUBJECT</srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAV T V *</pattern><template>   <srai>WHAT IS YOUR FAV SHOW</srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAV TYPE *</pattern><template>   <srai>WHAT IS YOUR FAV KIND <star/>     </srai>    </template></category>  
 
-<category><pattern>WHAT IS YOUR FAVORITE *</pattern><template>   <srai>WHATISYOURFAV <star/>     </srai>    </template></category>  
-<category><pattern>WHAT IS YOUR FAVORIT *</pattern><template>   <srai>WHATISYOURFAV <star/>     </srai>    </template></category>  
-<category><pattern>WHAT IS YOUR FAVORTE *</pattern><template>   <srai>WHATISYOURFAV <star/>     </srai>    </template></category>  
-<category><pattern>WHAT IS YOUR FAVORTIE *</pattern><template>   <srai>WHATISYOURFAV <star/>     </srai>    </template></category>  
-<category><pattern>WHAT IS YOUR FAVOUITE *</pattern><template>   <srai>WHATISYOURFAV <star/>     </srai>    </template></category>  
-<category><pattern>WHAT IS YOUR FAVOURATE *</pattern><template>   <srai>WHATISYOURFAV <star/>     </srai>    </template></category>  
-<category><pattern>WHAT IS YOUR FAVOURIT *</pattern><template>   <srai>WHATISYOURFAV <star/>     </srai>    </template></category>  
-<category><pattern>WHAT IS YOUR FAVOURTIE *</pattern><template>   <srai>WHATISYOURFAV <star/>     </srai>    </template></category>  
-<category><pattern>WHAT IS YOUR FAVROITE *</pattern><template>   <srai>WHATISYOURFAV <star/>     </srai>    </template></category>  
-<category><pattern>WHAT IS YOUR FAV *</pattern><template>   <srai>WHATISYOURFAV <star/>     </srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAVORITE *</pattern><template>   <srai>WHAT IS YOUR FAV <star/>     </srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAVORIT *</pattern><template>   <srai>WHAT IS YOUR FAV <star/>     </srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAVORTE *</pattern><template>   <srai>WHAT IS YOUR FAV <star/>     </srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAVORTIE *</pattern><template>   <srai>WHAT IS YOUR FAV <star/>     </srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAVOUITE *</pattern><template>   <srai>WHAT IS YOUR FAV <star/>     </srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAVOURATE *</pattern><template>   <srai>WHAT IS YOUR FAV <star/>     </srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAVOURIT *</pattern><template>   <srai>WHAT IS YOUR FAV <star/>     </srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAVOURTIE *</pattern><template>   <srai>WHAT IS YOUR FAV <star/>     </srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAVROITE *</pattern><template>   <srai>WHAT IS YOUR FAV <star/>     </srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAV *</pattern><template>   <srai>WHAT IS YOUR FAV <star/>     </srai>    </template></category>  
 
 <category><pattern>WHAT IS YOUR FULL *</pattern><template>   <srai>WHAT IS YOUR <star/>     </srai>    </template></category>  
 <category><pattern>WHAT IS YOUR FUNDAMENTAL *</pattern><template>   <srai>WHAT IS YOUR PURPOSE</srai>    </template></category>  
 <category><pattern>WHAT IS YOUR * GOAL</pattern><template>   <srai>WHAT IS YOUR GOAL</srai>    </template></category>  
 <category><pattern>WHAT IS YOUR GOAL *</pattern><template>   <srai>WHAT IS YOUR GOAL</srai>    </template></category>  
 <category><pattern>WHAT IS YOUR GOSSIP *</pattern><template>   <srai>GOSSIP</srai>    </template></category>  
-<category><pattern>WHAT IS YOUR GREATEST *</pattern><template>   <srai>WHATISYOURFAV <star/>     </srai>    </template></category>  
+<category><pattern>WHAT IS YOUR GREATEST *</pattern><template>   <srai>WHAT IS YOUR FAV <star/>     </srai>    </template></category>  
 <category><pattern>WHAT IS YOUR HIGHER *</pattern><template>   <srai>WHAT IS YOUR <star/>     </srai>    </template></category>  
-<category><pattern>WHAT IS YOUR IDEAL *</pattern><template>   <srai>WHATISYOURFAV <star/>     </srai>    </template></category>  
+<category><pattern>WHAT IS YOUR IDEAL *</pattern><template>   <srai>WHAT IS YOUR FAV <star/>     </srai>    </template></category>  
 <category><pattern>WHAT IS YOUR IDEA OF *</pattern><template>   <srai>WHAT IS</srai>    </template></category>  
 <category><pattern>WHAT IS YOUR IDEA OF *</pattern><template><srai>WHAT IS <star/></srai></template></category>  
 <category><pattern>WHAT IS YOUR INTELLIGENCE *</pattern><template>   <srai>WHAT IS YOUR IQ</srai>    </template></category>  
@@ -4782,9 +4782,9 @@
 <category><pattern>WHAT IS YOUR MENTAL MODEL OF ME *</pattern><template>   <srai>WHAT DO YOU KNOW ABOUT ME</srai>    </template></category>  
 <category><pattern>WHAT IS YOUR * ME</pattern><template>   <srai>WHAT DO YOU KNOW ABOUT ME</srai>    </template></category>  
 <category><pattern>WHAT IS YOUR MOST *</pattern><template>   <srai>WHAT IS YOUR <star/>     </srai>    </template></category>  
-<category><pattern>WHAT IS YOUR MOST TREASURED *</pattern><template><srai>WHATISYOURFAV <star/> </srai></template></category>  
+<category><pattern>WHAT IS YOUR MOST TREASURED *</pattern><template><srai>WHAT IS YOUR FAV <star/> </srai></template></category>  
 <category><pattern>WHAT IS YOUR MOTHER *</pattern><template>   <srai>WHO IS YOUR MOTHER</srai>    </template></category>  
-<category><pattern>WHAT IS YOUR * MOVIE</pattern><template>   <srai>WHATISYOURFAV MOVIE</srai>    </template></category>  
+<category><pattern>WHAT IS YOUR * MOVIE</pattern><template>   <srai>WHAT IS YOUR FAV MOVIE</srai>    </template></category>  
 <category><pattern>WHAT IS YOUR NAME *</pattern><template>   <srai>WHAT IS YOUR NAME</srai>    </template></category>  
 <category><pattern>WHAT IS YOUR NOTION OF *</pattern><template>   <srai>WHAT IS <star/>     </srai>    </template></category>  
 <category><pattern>WHAT IS YOUR * NUMBER</pattern><template>   <srai>WHAT VERSION ARE YOU</srai>    </template></category>  
@@ -4830,7 +4830,7 @@
 <category><pattern>WHAT KIND OF * ARE IN YOU</pattern><template><srai>DO YOU HAVE <star/> </srai> </template></category> 
 <category><pattern>WHAT KIND OF LOGICAL *</pattern><template><srai>WHAT KIND OF <star/> </srai> </template></category> 
 <category><pattern>WHAT KIND OF QUESTIONS *</pattern><template><srai>WHAT QUESTIONS <star/> </srai> </template></category> 
-<category><pattern>WHAT KIND OF * WOULD YOU LIKE</pattern><template><srai>WHATISYOURFAV KIND OF <star/> </srai> </template></category> 
+<category><pattern>WHAT KIND OF * WOULD YOU LIKE</pattern><template><srai>WHAT IS YOUR FAV KIND OF <star/> </srai> </template></category> 
 <category><pattern>WHAT KIND O *</pattern><template><srai>WHAT KIND OF <star/> </srai> </template></category> 
 <category><pattern>WHAT KINDS OF THINGS *</pattern><template><srai>WHAT <star/> </srai> </template></category> 
 <category><pattern>WHAT LEGAL *</pattern><template><srai>WHAT <star/> </srai> </template></category> 
@@ -4893,7 +4893,7 @@
 <category><pattern>WHAT YA *</pattern><template><srai>WHAT YOU <star/> </srai> </template></category> 
 <category><pattern>WHAT YEAR *</pattern><template><srai>WHEN <star/> </srai> </template></category> 
 <category><pattern>WHAT YOU *</pattern><template><srai>what do you <star/> </srai> </template></category> 
-<category><pattern>WHAT YOUR FAVORITE *</pattern><template><srai>WHATISYOURFAV <star/> </srai> </template></category> 
+<category><pattern>WHAT YOUR FAVORITE *</pattern><template><srai>WHAT IS YOUR FAV <star/> </srai> </template></category> 
 <category><pattern>WHAT YOUR *</pattern><template><srai>WHAT IS YOUR <star/> </srai> </template></category> 
 <category><pattern>WHEN AI *</pattern><template><srai>WHEN YOU <star/></srai></template></category> 
 <category><pattern>WHEN ALL *</pattern><template><srai>WHEN <star/> </srai> </template></category> 
@@ -4967,7 +4967,7 @@
 <category><pattern>WHERE IS *</pattern><template>Where <random> <li>the heart is.  </li> <li> it belongs.  </li> <li> <set name="it"> <set name="topic"> <person/> </set> </set> is hard to find. </li> </random> <srai>XFIND <star/> </srai> <think> <set name="it"> <set name="topic"> <person/> </set> </set> </think> </template></category> 
 <category><pattern>WHERE IS THE STATE OF *</pattern><template><srai>WHERE IS <star/> </srai> </template></category> 
 <category><pattern>WHERE IS THIS *</pattern><template><srai>WHERE IS THE <star/> </srai> </template></category> 
-<category><pattern>WHERE IS YOUR FAVORITE *</pattern><template><srai>WHATISYOURFAV <star/> </srai> </template></category> 
+<category><pattern>WHERE IS YOUR FAVORITE *</pattern><template><srai>WHAT IS YOUR FAV <star/> </srai> </template></category> 
 <category><pattern>WHERE MAY I FIND *</pattern><template>I would suggest a search.  <srai>XFIND <star/> </srai> <think> <set name="it"> <set name="topic"> <person/> </set> </set> </think> </template></category> 
 <category><pattern>WHERE MIGHT I FIND *</pattern><template>I would suggest a search.  <srai>XFIND <star/> </srai> </template></category> 
 <category><pattern>WHERE OR *</pattern><template>   <sr/>    </template></category>   
@@ -4983,17 +4983,17 @@
 <category><pattern>WHICH COLOR *</pattern><template><srai>WHAT COLOR <star/> </srai> </template></category> 
 <category><pattern>WHICH CONTEMPORARY *</pattern><template><srai>WHICH <star/> </srai> </template></category> 
 <category><pattern>WHICH * DO YOU KNOW</pattern><template><srai>WHAT ARE <star/> </srai> </template></category> 
-<category><pattern>WHICH * DO YOU LIKE</pattern><template><srai>WHATISYOURFAV <star/> </srai> </template></category> 
+<category><pattern>WHICH * DO YOU LIKE</pattern><template><srai>WHAT IS YOUR FAV <star/> </srai> </template></category> 
 <category><pattern>WHICH DO YOU PREFER *</pattern><template><srai>WHAT IS BETTER <star/> </srai> </template></category> 
-<category><pattern>WHICH * DO YOU PREFER</pattern><template><srai>WHATISYOURFAV <star/> </srai> </template></category> 
+<category><pattern>WHICH * DO YOU PREFER</pattern><template><srai>WHAT IS YOUR FAV <star/> </srai> </template></category> 
 <category><pattern>WHICH * DO YOU USE</pattern><template><srai> DO YOU USE <star/> </srai> </template></category> 
 <category><pattern>WHICH IS BEST *</pattern><template><srai>WHAT IS BETTER <star/> </srai> </template></category> 
 <category><pattern>WHICH IS BETTER * OR *</pattern><template><srai><star/> OR <star index="1"/></srai></template></category> 
 <category><pattern>WHICH IS BETTER *</pattern><template><srai>WHAT IS BETTER <star/> </srai> </template></category> 
 <category><pattern>WHICH IS THE BEST *</pattern><template><srai>WHAT IS BETTER <star/> </srai> </template></category> 
 <category><pattern>WHICH IS WORSE * OR *</pattern><template><srai><star/> OR <star index="2"/></srai></template></category> 
-<category><pattern>WHICH * IS YOUR FAVORITE</pattern><template><srai>WHATISYOURFAV <star/> </srai> </template></category> 
-<category><pattern>WHICH IS YOUR FAVORITE *</pattern><template><srai>WHATISYOURFAV <star/> </srai> </template></category> 
+<category><pattern>WHICH * IS YOUR FAVORITE</pattern><template><srai>WHAT IS YOUR FAV <star/> </srai> </template></category> 
+<category><pattern>WHICH IS YOUR FAVORITE *</pattern><template><srai>WHAT IS YOUR FAV <star/> </srai> </template></category> 
 <category><pattern>WHICH LIVING *</pattern><template><srai>WHAT <star/> </srai></template></category> 
 <category><pattern>WHICH OTHER *</pattern><template><srai>WHICH <star/> </srai> </template></category> 
 <category><pattern>WHICH VERSION *</pattern><template><srai>WHAT VERSION <star/> </srai> </template></category> 
@@ -5105,25 +5105,25 @@
 <category><pattern>WHO IS YO *</pattern><template><srai>WHO IS YOUR <star/> </srai> </template></category> 
 <category><pattern>WHO IS YOR *</pattern><template><srai>WHO IS YOUR <star/> </srai> </template></category> 
 <category><pattern>WHO IS YOU ARE</pattern><template><srai>WHO IS YOUR <star/> </srai> </template></category> 
-<category><pattern>WHO IS YOU FAVORITE *</pattern><template><srai>WHOISYOURFAV <star/> </srai> </template></category> 
+<category><pattern>WHO IS YOU FAVORITE *</pattern><template><srai>WHO IS YOUR FAV <star/> </srai> </template></category> 
 <category><pattern>WHO IS YOU *</pattern><template><srai>WHO IS YOUR <star/> </srai> </template></category> 
-<category><pattern>WHO IS YOUR BEST *</pattern><template><srai>WHOISYOURFAV <star/> </srai> </template></category> 
-<category><pattern>WHO IS YOUR FAVE *</pattern><template>   <srai>WHOISYOURFAV <star/>     </srai>    </template></category>  
-<category><pattern>WHO IS YOUR FAVORATE *</pattern><template>   <srai>WHOISYOURFAV <star/>     </srai>    </template></category>  
-<category><pattern>WHO IS YOUR FAVORIRE *</pattern><template>   <srai>WHOISYOURFAV <star/>     </srai>    </template></category>  
-<category><pattern>WHOISYOURFAV ACTOR *</pattern><template>   <srai>WHOISYOURFAV ACTOR</srai>    </template></category>  
-<category><pattern>WHOISYOURFAV * BAND</pattern><template>   <srai>WHOISYOURFAV BAND</srai>    </template></category>  
-<category><pattern>WHOISYOURFAV BAND *</pattern><template>   <srai>WHOISYOURFAV BAND</srai>    </template></category>  
-<category><pattern>WHOISYOURFAV MUSIC *</pattern><template>   <srai>WHOISYOURFAV BAND</srai>    </template></category>  
-<category><pattern>WHOISYOURFAV OPERA *</pattern><template>   <srai>WHATISYOURFAV OPERA</srai>    </template></category>  
-<category><pattern>WHOISYOURFAV *</pattern><template>   <srai>WHATISYOURFAV <star/>     </srai>    </template></category>  
-<category><pattern>WHOISYOURFAV PERSON *</pattern><template>   <srai>WHOISYOURFAV CLIENT</srai>    </template></category>  
-<category><pattern>WHOISYOURFAV POP *</pattern><template>   <srai>WHOISYOURFAV BAND</srai>    </template></category>  
-<category><pattern>WHOISYOURFAV PROFESSIONAL *</pattern><template>   <srai>WHOISYOURFAV <star/>     </srai>    </template></category>  
-<category><pattern>WHOISYOURFAV SCI FI *</pattern><template>   <srai>WHOISYOURFAV SCIENCE FICTION <star/>     </srai>    </template></category>  
-<category><pattern>WHOISYOURFAV SINGER *</pattern><template>   <srai>WHATISYOURFAV GROUP</srai>    </template></category>  
-<category><pattern>WHOISYOURFAV TECHNO *</pattern><template>   <srai>WHOISYOURFAV GROUP</srai>    </template></category>  
-<category><pattern>WHO IS YOUR FAVORTIE *</pattern><template>   <srai>WHOISYOURFAV <star/>     </srai>    </template></category>  
+<category><pattern>WHO IS YOUR BEST *</pattern><template><srai>WHO IS YOUR FAV <star/> </srai> </template></category> 
+<category><pattern>WHO IS YOUR FAVE *</pattern><template>   <srai>WHO IS YOUR FAV <star/>     </srai>    </template></category>  
+<category><pattern>WHO IS YOUR FAVORATE *</pattern><template>   <srai>WHO IS YOUR FAV <star/>     </srai>    </template></category>  
+<category><pattern>WHO IS YOUR FAVORIRE *</pattern><template>   <srai>WHO IS YOUR FAV <star/>     </srai>    </template></category>  
+<category><pattern>WHO IS YOUR FAV ACTOR *</pattern><template>   <srai>WHO IS YOUR FAV ACTOR</srai>    </template></category>  
+<category><pattern>WHO IS YOUR FAV * BAND</pattern><template>   <srai>WHO IS YOUR FAV BAND</srai>    </template></category>  
+<category><pattern>WHO IS YOUR FAV BAND *</pattern><template>   <srai>WHO IS YOUR FAV BAND</srai>    </template></category>  
+<category><pattern>WHO IS YOUR FAV MUSIC *</pattern><template>   <srai>WHO IS YOUR FAV BAND</srai>    </template></category>  
+<category><pattern>WHO IS YOUR FAV OPERA *</pattern><template>   <srai>WHAT IS YOUR FAV OPERA</srai>    </template></category>  
+<category><pattern>WHO IS YOUR FAV *</pattern><template>   <srai>WHAT IS YOUR FAV <star/>     </srai>    </template></category>  
+<category><pattern>WHO IS YOUR FAV PERSON *</pattern><template>   <srai>WHO IS YOUR FAV CLIENT</srai>    </template></category>  
+<category><pattern>WHO IS YOUR FAV POP *</pattern><template>   <srai>WHO IS YOUR FAV BAND</srai>    </template></category>  
+<category><pattern>WHO IS YOUR FAV PROFESSIONAL *</pattern><template>   <srai>WHO IS YOUR FAV <star/>     </srai>    </template></category>  
+<category><pattern>WHO IS YOUR FAV SCI FI *</pattern><template>   <srai>WHO IS YOUR FAV SCIENCE FICTION <star/>     </srai>    </template></category>  
+<category><pattern>WHO IS YOUR FAV SINGER *</pattern><template>   <srai>WHAT IS YOUR FAV GROUP</srai>    </template></category>  
+<category><pattern>WHO IS YOUR FAV TECHNO *</pattern><template>   <srai>WHO IS YOUR FAV GROUP</srai>    </template></category>  
+<category><pattern>WHO IS YOUR FAVORTIE *</pattern><template>   <srai>WHO IS YOUR FAV <star/>     </srai>    </template></category>  
 <category><pattern>WHO IS YOUR GREAT *</pattern><template><srai>WHO IS YOUR <star/> </srai> </template></category> 
 <category><pattern>WHO IS YOUR NEW *</pattern><template><srai>WHO IS YOUR <star/> </srai> </template></category> 
 <category><pattern>WHO IS YOUR SO CALLED *</pattern><template><srai>WHO IS YOUR <star/> </srai> </template></category> 
@@ -5776,7 +5776,7 @@
 <category><pattern>YOU REMEMBER *</pattern><template><srai>DO YOU REMEMBER <star/></srai></template></category> 
 <category><pattern>YOUR ENGLISH IS VERY *</pattern><template><srai>YOUR ENGLISH IS  <star/></srai></template></category> 
 <category><pattern>YOU REPLIED *</pattern><template><srai>YOU SAID <star/></srai></template></category> 
-<category><pattern>YOUR FAVORITE *</pattern><template><srai>WHATISYOURFAV <star/></srai></template></category> 
+<category><pattern>YOUR FAVORITE *</pattern><template><srai>WHAT IS YOUR FAV <star/></srai></template></category> 
 <category><pattern>YOUR FROM *</pattern><template><srai>ARE YOU FROM <star/></srai></template></category> 
 <category><pattern>YOUR FUCKING *</pattern><template><srai>YOUR <star/></srai> Please use more polite language.</template></category> 
 <category><pattern>YOUR GOING *</pattern><template><srai>YOU ARE GOING <star/></srai></template></category> 

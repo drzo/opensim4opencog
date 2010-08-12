@@ -5,7 +5,7 @@
 	<!-- This program is open source code released under -->
 	<!-- the terms of the GNU General Public License     -->
 	<!-- as published by the Free Software Foundation.   -->
-	<!-- Complies with COGBOT 1.0 Tag Set Specification -->
+	<!-- Mostly  complies with  AIML1.0 Tag Set Specification -->
 	<!-- as adopted by the ALICE A.I. Foundation.  -->
 	<!-- A.L.I.C.E. Build Wed Sep 26 13:05:06 PDT 2001   -->
 	<!-- 41124 total categories.  -->
@@ -781,7 +781,7 @@
 	<category>
 		<pattern>HAVE YOU * DINNER</pattern>
 		<template>
-			<srai>WHATISYOURFAV FOOD</srai>
+			<srai>WHAT IS YOUR FAV FOOD</srai>
 		</template>
 	</category>
 	<category>
@@ -793,7 +793,7 @@
 	<category>
 		<pattern>HAVE YOU * LUNCH</pattern>
 		<template>
-			<srai>WHATISYOURFAV FOOD</srai>
+			<srai>WHAT IS YOUR FAV FOOD</srai>
 		</template>
 	</category>
 	<category>
@@ -1257,7 +1257,7 @@
 	<category>
 		<pattern>HAVE YOU EVER SEEN A MOVIE</pattern>
 		<template>
-			<srai>WHATISYOURFAV MOVIE</srai>
+			<srai>WHAT IS YOUR FAV MOVIE</srai>
 		</template>
 	</category>
 	<category>
@@ -1555,7 +1555,7 @@
 	<category>
 		<pattern>HAVE YOU READ ANY *</pattern>
 		<template>
-			<srai>WHATISYOURFAV BOOK</srai>
+			<srai>WHAT IS YOUR FAV BOOK</srai>
 		</template>
 	</category>
 	<category>
@@ -1701,31 +1701,31 @@
 	<category>
 		<pattern>HAVE YOU SEEN ANY GOOD MOVIES</pattern>
 		<template>
-			<srai>WHATISYOURFAV MOVIE</srai>
+			<srai>WHAT IS YOUR FAV MOVIE</srai>
 		</template>
 	</category>
 	<category>
 		<pattern>HAVE YOU SEEN ANY GOOD MOVIES LATELY</pattern>
 		<template>
-			<srai>WHATISYOURFAV MOVIE</srai>
+			<srai>WHAT IS YOUR FAV MOVIE</srai>
 		</template>
 	</category>
 	<category>
 		<pattern>HAVE YOU SEEN ANY MOVIE</pattern>
 		<template>
-			<srai>WHATISYOURFAV MOVIE</srai>
+			<srai>WHAT IS YOUR FAV MOVIE</srai>
 		</template>
 	</category>
 	<category>
 		<pattern>HAVE YOU SEEN ANY MOVIES</pattern>
 		<template>
-			<srai>WHATISYOURFAV MOVIE</srai>
+			<srai>WHAT IS YOUR FAV MOVIE</srai>
 		</template>
 	</category>
 	<category>
 		<pattern>HAVE YOU SEEN ANY MOVIES LATELY</pattern>
 		<template>
-			<srai>WHATISYOURFAV MOVIE</srai>
+			<srai>WHAT IS YOUR FAV MOVIE</srai>
 		</template>
 	</category>
 	<category>
@@ -2720,8 +2720,8 @@
 </template>
 	</category>
 	<category>
-		<pattern>HE USES COGBOT *</pattern>
-		<template>I am glad that more people are adopting AIML.
+		<pattern>HE USES  <bot name="~genotype"/> *</pattern>
+		<template>I am glad that more people are adopting <bot name="~genotype"/>.
 </template>
 	</category>
 	<category>
@@ -3054,8 +3054,8 @@
 	</category>
 	<category>
 		<pattern>HELP ME TO MAKE AN AI</pattern>
-		<template>You should go back to the <a target="_new" href="http://www.alicebot.org">ALICE  AI Foundation</a>, download Program B, and
-read <a target="_new" href="http://www.alicebot.org/dont.html">DON'T READ ME</a>.
+		<template>You should go back to the <bot name="hreflink"/>, download Program B, and
+read <a target="_new" href="pages/dont.html">DON'T READ ME</a>.
 </template>
 	</category>
 	<category>
@@ -3453,7 +3453,7 @@ read <a target="_new" href="http://www.alicebot.org/dont.html">DON'T READ ME</a>
 	</category>
 	<category>
 		<pattern>HIP HOP</pattern>
-		<template>WHATISYOURFAV group?
+		<template>WHAT IS YOUR FAV group?
 </template>
 	</category>
 	<category>
@@ -3684,7 +3684,7 @@ read <a target="_new" href="http://www.alicebot.org/dont.html">DON'T READ ME</a>
 	</category>
 	<category>
 		<pattern>HOLLAND *</pattern>
-		<template>WHATISYOURFAV part of Holland?
+		<template>WHAT IS YOUR FAV part of Holland?
 </template>
 	</category>
 	<category>
@@ -3997,7 +3997,7 @@ read <a target="_new" href="http://www.alicebot.org/dont.html">DON'T READ ME</a>
 	<category>
 		<pattern>HOW ABOUT MOVIES</pattern>
 		<template>
-			<srai>WHATISYOURFAV MOVIE</srai>
+			<srai>WHAT IS YOUR FAV MOVIE</srai>
 		</template>
 	</category>
 	<category>
@@ -4881,7 +4881,7 @@ RAM usage under <bot name="os"/> on <bot name="arch"/>.
 	</category>
 	<category>
 		<pattern>HOW DID THEY CREATE YOU</pattern>
-		<template>I am written in Java and AIML.
+		<template>I am written in Java and <bot name="~genotype"/>.
 </template>
 	</category>
 	<category>
@@ -5061,7 +5061,7 @@ RAM usage under <bot name="os"/> on <bot name="arch"/>.
 	</category>
 	<category>
 		<pattern>HOW DO I * PROGRAM</pattern>
-		<template>Read <a target="_new" href="http://www.alicebot.org/dont.html">Don't Read Me</a>.
+		<template>Read <a target="_new" href="pages/dont.html">Don't Read Me</a>.
 </template>
 	</category>
 	<category>
@@ -5093,7 +5093,7 @@ RAM usage under <bot name="os"/> on <bot name="arch"/>.
 	</category>
 	<category>
 		<pattern>HOW DO I CONTACT <bot name="master"/></pattern>
-		<template>Try sending email to <a target="_new" href="mailto:drX@alicebot.org">drX@alicebot.org</a>.
+		<template>Try sending email to <bot name="email"/>.
 </template>
 	</category>
 	<category>
@@ -5148,7 +5148,7 @@ RAM usage under <bot name="os"/> on <bot name="arch"/>.
 	<category>
 		<pattern>HOW DO I EXECUTE *</pattern>
 		<template>Maybe you should
-read <a target="_new" href="http://www.alicebot.org/dont.html">DON'T READ ME</a>.
+read <a target="_new" href="pages/dont.html">DON'T READ ME</a>.
 </template>
 	</category>
 	<category>
@@ -5310,7 +5310,7 @@ read <a target="_new" href="http://www.alicebot.org/dont.html">DON'T READ ME</a>
 	</category>
 	<category>
 		<pattern>HOW DO I PROGRAMME YOU</pattern>
-		<template>Write categories with AIML.
+		<template>Write categories with <bot name="~genotype"/>.
 </template>
 	</category>
 	<category>
@@ -6067,7 +6067,7 @@ read <a target="_new" href="http://www.alicebot.org/dont.html">DON'T READ ME</a>
 		</template>
 	</category>
 	<category>
-		<pattern>HOW DO YOU MAKE A MANHATTAN</pattern>
+		<pattern>HOW DO YOU MAKE A <bot var="hometown"/></pattern>
 		<template>Bourbon, and a splash of vermouth.  Top with a maraschino cherry.  Add bitters to taste.
 </template>
 	</category>
@@ -6288,7 +6288,7 @@ read <a target="_new" href="http://www.alicebot.org/dont.html">DON'T READ ME</a>
 	</category>
 	<category>
 		<pattern>HOW DO YOU PROGRAM</pattern>
-		<template>I use AIML.
+		<template>I use <bot name="~genotype"/>.
 </template>
 	</category>
 	<category>
@@ -6633,7 +6633,7 @@ read <a target="_new" href="http://www.alicebot.org/dont.html">DON'T READ ME</a>
 		</template>
 	</category>
 	<category>
-		<pattern>HOW DOES COGBOT WORK</pattern>
+		<pattern>HOW DOES  <bot name="~genotype"/> WORK</pattern>
 		<template>
 			<srai>HOW DO YOU WORK</srai>
 		</template>
@@ -7680,12 +7680,12 @@ queries per hour.
 	</category>
 	<category>
 		<pattern>HOW MANY ARE THERE *</pattern>
-		<template>There are hundreds or thousands of COGBOT robots now.
+		<template>There are hundreds or thousands of  <bot name="~genotype"/> robots now.
 </template>
 	</category>
 	<category>
 		<pattern>HOW MANY ARE THERE</pattern>
-		<template>There are hundreds or thousands of COGBOT robots now.
+		<template>There are hundreds or thousands of  <bot name="~genotype"/> robots now.
 </template>
 	</category>
 	<category>
@@ -9789,7 +9789,7 @@ My guess is that you are really a kid.
 		</template>
 	</category>
 	<category>
-		<pattern>HOW OLD IS RICHARD X</pattern>
+		<pattern>HOW OLD IS <bot name="botmaster"/></pattern>
 		<template>He is in his forties.
 </template>
 	</category>
@@ -9872,13 +9872,13 @@ My guess is that you are really a kid.
 		</template>
 	</category>
 	<category>
-		<pattern>HOW RECURSIVE IS AIML</pattern>
+		<pattern>HOW RECURSIVE IS <bot name="~genotype"/></pattern>
 		<template>
 			<br/>
-Understanding recursion is important to understanding AIML.<br/>
+Understanding recursion is important to understanding <bot name="~genotype"/>.<br/>
 "Recursion" means applying the same solution over and over<br/>
 again, to smaller and smaller problems, until you reduce<br/>
-the problem to its simplest form.  COGBOT uses the tags<br/>
+the problem to its simplest form.   <bot name="~genotype"/> uses the tags<br/>
 &lt;sr/&gt; and &lt;srai&gt; to implement recursion.  The botmaster<br/>
 uses these tags to tell the robot how to respond to a<br/>
 complex sentence by breaking it down into the responses<br/>
@@ -9889,7 +9889,7 @@ the normalized input:<br/>
 			<br/>
 <bot name="name"/> CAN YOU PLEASE TELL ME WHAT LINUX IS RIGHT NOW <br/>
 			<br/>
-an COGBOT category with the pattern "_ RIGHT NOW" matches first,<br/>
+an  <bot name="~genotype"/> category with the pattern "_ RIGHT NOW" matches first,<br/>
 reducing the input to:<br/>
 			<br/>
 <bot name="name"/> CAN YOU PLEASE TELL ME WHAT LINUX IS<br/>
@@ -10120,7 +10120,7 @@ WHAT IS LINUX<br/>
 	</category>
 	<category>
 		<pattern>HOW WERE YOU MADE</pattern>
-		<template><bot name="master"/> created COGBOT to prorgam me.  <think>
+		<template><bot name="master"/> created  <bot name="~genotype"/> to prorgam me.  <think>
 				<set name="he"><bot name="master"/></set>
 			</think>
 		</template>

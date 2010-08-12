@@ -4,7 +4,7 @@
 <!-- This program is open source code released under -->
 <!-- the terms of the GNU General Public License     -->
 <!-- as published by the Free Software Foundation.   -->
-<!-- Complies with COGBOT 1.01 Tag Set Specification -->
+<!-- Mostly complies with AIML1.01 Tag Set Specification -->
 <!-- as adopted by the ALICE A.I. Foundation.  -->
 <!-- Annotated Version updated September 2003 -->
 <category><pattern>WHAT IS AMSTERDAM</pattern><template>   <set name="it">Amsterdam</set> is a city in Holland.  Neither the political capital nor the largest city, Amsterdam is the best known city in the Netherlands.</template></category> 
@@ -142,7 +142,7 @@
 <category><pattern>WHAT IS THE CAPITAL _ GUADELOUPE</pattern><template>Basse-Terre.   <think>      <set name="it">       <set name="topic">guadeloupe</set>      </set>     </think>    </template></category>  
 <category><pattern>WHAT IS THE CAPITAL _ GUAM</pattern><template>Agana.   <think>      <set name="it">       <set name="topic">guam</set>      </set>     </think>    </template></category>  
 <category><pattern>WHAT IS THE CAPITAL _ GUATEMALA</pattern><template>Guatemala.   <think>      <set name="it">       <set name="topic">guatemala</set>      </set>     </think>    </template></category>  
-<category><pattern>WHAT IS THE CAPITAL _ GUERNSEY</pattern><template>Saint Peter Port.   <think>      <set name="it">       <set name="topic">guernsey</set>      </set>     </think>    </template></category>  
+<category><pattern>WHAT IS THE CAPITAL _ GUERNSEY</pattern><template>Saint <bot name="botmaster"/> Port.   <think>      <set name="it">       <set name="topic">guernsey</set>      </set>     </think>    </template></category>  
 <category><pattern>WHAT IS THE CAPITAL _ GUINEA BISSAU</pattern><template>Bissau.   <think>      <set name="it">       <set name="topic">guinea-bissau</set>      </set>     </think>    </template></category>  
 <category><pattern>WHAT IS THE CAPITAL _ GUINEA</pattern><template>Conakry.   <think>      <set name="it">       <set name="topic">guinea</set>      </set>     </think>    </template></category>  
 <category><pattern>WHAT IS THE CAPITAL _ GUYANA</pattern><template>Georgetown.   <think>      <set name="it">       <set name="topic">guyana</set>      </set>     </think>    </template></category>  
@@ -614,7 +614,7 @@
 <category><pattern>WHERE IS MALI</pattern><template>Western Africa, southwest of Algeria.   <think>      <set name="it">       <set name="topic">mali</set>      </set>     </think>    </template></category>  
 <category><pattern>WHERE IS MALTA</pattern><template>   <set name="it">      <set name="topic"> MALTA </set>     </set> is an island in the Mediterranian sea, south of Sicily.</template></category>  
 <category><pattern>WHERE IS MANCHESTER</pattern><template>Machester is a city in western England.</template></category>  
-<category><pattern>WHERE IS MANHATTAN</pattern><template>   <set name="it">Manhattan</set> is the island center of New York City.</template></category>  
+<category><pattern>WHERE IS <bot var="hometown"/></pattern><template>   <set name="it"><bot var="hometown"/></set> is the center of the world.</template></category>  
 <category><pattern>WHERE IS MANILA</pattern><template>   <set name="it">Manila</set> is a city in the Phillipines.</template></category>  
 <category><pattern>WHERE IS MARSHALL ISLANDS</pattern><template>Oceania, group of atolls and reefs in the North Pacific Ocean, about one-half of the way from Hawaii to Papua New Guinea.   <think>      <set name="it">       <set name="topic">marshall islands</set>      </set>     </think>    </template></category>  
 <category><pattern>WHERE IS MARS</pattern><template>   <set name="it">      <set name="topic"> MARS </set>     </set> is the fourth planet from the Sun.</template></category>  

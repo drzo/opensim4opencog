@@ -8,10 +8,10 @@
 <!-- Last updated: 6/23/2001 -->
 
 <!-- 
-This file contains test cases to verify the correct operations of the ALICEBOT.
-It should be placed in the directory where all the standard bot AIML files are
+This file contains test cases to verify the correct operations of the  <bot name="~genotype"/>.
+It should be placed in the directory where all the standard bot <bot name="~genotype"/> files are
 located.  It expects to find and use some of the standard predicates, and CATEGORIES
-found in the core AIML set.
+found in the core <bot name="~genotype"/> set.
 Each test case is documented with what is expected to be the correct response.  They
 should be written to be as self contained as possible.
  -->

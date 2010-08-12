@@ -82,7 +82,7 @@ That is interesting.<br />
 
 <category>
 <pattern>*</pattern>
-<that>WHATISYOURFAV COLOR</that>
+<that>WHAT IS YOUR FAV COLOR</that>
 <template>
 <think><set name="favcolor"><star/></set></think>
 That is a nice color.<br />
@@ -92,7 +92,7 @@ That is a nice color.<br />
 
 <category>
 <pattern>_</pattern>
-<that>WHATISYOURFAV MOVIE</that>
+<that>WHAT IS YOUR FAV MOVIE</that>
 <template>
 <think><set name="favmovie"><star/></set></think>
 I've never seen <set name="it"><star/></set>. 
@@ -421,11 +421,11 @@ You seem intelligent to me.
 <li name="age" value="">How old are you?</li> 
 <li name="sign" value="">What is your sign?</li> 
 <li name="job" value="">What is your occupation?</li> 
-<li name="favmovie" value="">WHATISYOURFAV movie?</li>
+<li name="favmovie" value="">WHAT IS YOUR FAV movie?</li>
 <li name="location" value="">Where are you located?</li> 
 <li name="eyecolor" value="">What color are your eyes?</li>
 <li name="haircolor" value="">What color is your hair?</li>
-<li name="favcolor" value="">WHATISYOURFAV color?</li>
+<li name="favcolor" value="">WHAT IS YOUR FAV color?</li>
 <li><srai>ASKRANDOMQUESTION</srai></li> 
 </condition>
 </template>
@@ -435,11 +435,11 @@ You seem intelligent to me.
 <pattern>ASKQUESTION2</pattern>
 <template>
 <condition>
-<li name="favcolor" value="">WHATISYOURFAV color?</li>
+<li name="favcolor" value="">WHAT IS YOUR FAV color?</li>
 <li name="haircolor" value="">What color is your hair?</li>
 <li name="eyecolor" value="">What color are your eyes?</li>
 <li name="location" value="">Where are you located?</li> 
-<li name="favmovie" value="">WHATISYOURFAV movie?</li>
+<li name="favmovie" value="">WHAT IS YOUR FAV movie?</li>
 <li name="job" value="">What is your occupation?</li> 
 <li name="sign" value="">What is your sign?</li> 
 <li name="age" value="">How old are you?</li> 
@@ -452,13 +452,13 @@ You seem intelligent to me.
 <pattern>ASKQUESTION3</pattern>
 <template>
 <condition>
-<li name="favmovie" value="">WHATISYOURFAV movie?</li>
+<li name="favmovie" value="">WHAT IS YOUR FAV movie?</li>
 <li name="haircolor" value="">What color is your hair?</li>
 <li name="eyecolor" value="">What color are your eyes?</li>
 <li name="age" value="">How old are you?</li> 
 <li name="location" value="">Where are you located?</li> 
 <li name="job" value="">What is your occupation?</li> 
-<li name="favcolor" value="">WHATISYOURFAV color?</li>
+<li name="favcolor" value="">WHAT IS YOUR FAV color?</li>
 <li name="sign" value="">What is your sign?</li> 
 <li><srai>ASKRANDOMQUESTION</srai></li> 
 </condition>
@@ -474,8 +474,8 @@ You seem intelligent to me.
 <li name="age" value="">How old are you?</li> 
 <li name="eyecolor" value="">What color are your eyes?</li>
 <li name="location" value="">Where are you located?</li> 
-<li name="favmovie" value="">WHATISYOURFAV movie?</li>
-<li name="favcolor" value="">WHATISYOURFAV color?</li>
+<li name="favmovie" value="">WHAT IS YOUR FAV movie?</li>
+<li name="favcolor" value="">WHAT IS YOUR FAV color?</li>
 <li name="sign" value="">What is your sign?</li> 
 <li><srai>ASKRANDOMQUESTION</srai></li> 
 </condition>
@@ -532,8 +532,8 @@ personality?</li>
 <li>What do you like to do?</li>
 <li>What do you look like?</li>
 <li>What do you really want to ask me?</li> 
-<li>WHATISYOURFAV food?</li>
-<li>WHATISYOURFAV song?</li>
+<li>WHAT IS YOUR FAV food?</li>
+<li>WHAT IS YOUR FAV song?</li>
 <li>What kind of food do you like?</li>
 <li><srai>ASKGENDERQUESTION</srai></li>
 <li>What kind of music do you like?</li>
@@ -542,7 +542,7 @@ personality?</li>
 <li>When do you think artificial intelligence will replace lawyers?</li>
 <li>Who are you talking about?</li>
 <li>Where can I find a boyfriend?</li>
-<li>WHOISYOURFAV science fiction author?</li>
+<li>WHO IS YOUR FAV science fiction author?</li>
 </random>
 </template>
 </category>

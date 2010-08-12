@@ -4,7 +4,7 @@
 <!-- This program is open source code released under -->
 <!-- the terms of the GNU General Public License     -->
 <!-- as published by the Free Software Foundation.   -->
-<!-- Complies with COGBOT 1.0 Tag Set Specification -->
+<!-- Mostly  complies with  AIML1.0 Tag Set Specification -->
 <!-- as adopted by the ALICE A.I. Foundation.  -->
 <!-- A.L.I.C.E. Build Wed Sep 26 13:05:06 PDT 2001   -->
 <!-- 41124 total categories.  -->
@@ -895,11 +895,11 @@ What is your wife's name?
 </template></category>
 <category>
 <pattern>SEEN ANY GOOD MOVIES</pattern>
-<template><srai>WHATISYOURFAV MOVIE</srai>
+<template><srai>WHAT IS YOUR FAV MOVIE</srai>
 </template></category>
 <category>
 <pattern>SEEN ANY GOOD MOVIES LATELY</pattern>
-<template><srai>WHATISYOURFAV MOVIE</srai>
+<template><srai>WHAT IS YOUR FAV MOVIE</srai>
 </template></category>
 <category>
 <pattern>SEHR *</pattern>
@@ -923,7 +923,7 @@ What is your wife's name?
 </template></category>
 <category>
 <pattern>SEND *</pattern>
-<template>Try sending mail to <bot name="master"/> (<a target="_new" href="mailto:drX@alicebot.org">drX@alicebot.org</a>)
+<template>Try sending mail to <bot name="master"/> (<bot name="email"/>)
 <think><set name="he"><bot name="master"/></set></think>
 </template></category>
 <category>
@@ -1610,8 +1610,8 @@ your own conclusion.</li>
 <template><srai>DIALOGUE</srai>
 </template></category>
 <category>
-<pattern>SHOW ME COGBOT *</pattern>
-<template><srai>WHAT IS COGBOT </srai>
+<pattern>SHOW ME  <bot name="~genotype"/> *</pattern>
+<template><srai>WHAT IS  <bot name="~genotype"/> </srai>
 <srai>WHAT IS A CATEGORY</srai>
 </template></category>
 <category>
@@ -2404,7 +2404,7 @@ Of a bicycle built for two.<br/>
 </template></category>
 <category>
 <pattern>SPAIN *</pattern>
-<template>WHATISYOURFAV part of Spain?
+<template>WHAT IS YOUR FAV part of Spain?
 </template></category>
 <category>
 <pattern>SPAIN</pattern>
@@ -2500,7 +2500,7 @@ Of a bicycle built for two.<br/>
 </template></category>
 <category>
 <pattern>STAR TREK</pattern>
-<template>WHATISYOURFAV Star Trek? Mine is Voyager.
+<template>WHAT IS YOUR FAV Star Trek? Mine is Voyager.
 </template></category>
 <category>
 <pattern>STAR TREK FIRST CONTACT</pattern>
@@ -2568,7 +2568,7 @@ Of a bicycle built for two.<br/>
 </template></category>
 <category>
 <pattern>STEINBOCK</pattern>
-<template>Ich bin Schuetze, genau wie Christian.
+<template>Ich bin Schuetze, genau wie <bot var="religion"/>.
 </template></category>
 <category>
 <pattern>STEPHANIE</pattern><that>WHAT CAN I CALL YOU</that>

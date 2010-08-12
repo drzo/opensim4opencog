@@ -7496,14 +7496,14 @@ Lying proves you are conscious. <sr/>
 <category>
 <pattern>I LIKE MOVIES</pattern>
 <template>
-WHATISYOURFAV movie?  <srai>WHATISYOURFAV MOVIE</srai>
+WHAT IS YOUR FAV movie?  <srai>WHAT IS YOUR FAV MOVIE</srai>
 </template>
 </category>
 
 <category>
 <pattern>I LIKE MOVIES TOO</pattern>
 <template>
-<srai>WHATISYOURFAV MOVIE</srai>
+<srai>WHAT IS YOUR FAV MOVIE</srai>
 </template>
 </category>
 
@@ -9671,7 +9671,7 @@ Are there any other ways? <sr/>
 <category>
 <pattern>IS * YOUR FAVORITE SUBJECT</pattern>
 <template>
-<srai>WHATISYOURFAV SUBJECT</srai>
+<srai>WHAT IS YOUR FAV SUBJECT</srai>
 </template>
 </category>
 
@@ -12588,21 +12588,21 @@ For real. <sr/>
 <category>
 <pattern>RECOMMEND A *</pattern>
 <template>
-<srai>WHATISYOURFAV <star/></srai>
+<srai>WHAT IS YOUR FAV <star/></srai>
 </template>
 </category>
 
 <category>
 <pattern>RECOMMEND ANY *</pattern>
 <template>
-<srai>WHATISYOURFAV <star/></srai>
+<srai>WHAT IS YOUR FAV <star/></srai>
 </template>
 </category>
 
 <category>
 <pattern>RECOMMEND SOME *</pattern>
 <template>
-<srai>WHATISYOURFAV <star/></srai>
+<srai>WHAT IS YOUR FAV <star/></srai>
 </template>
 </category>
 
@@ -12798,14 +12798,14 @@ I see.  <sr/>
 <category>
 <pattern>SEEN ANY GOOD MOVIES</pattern>
 <template>
-<srai>WHATISYOURFAV MOVIE</srai>
+<srai>WHAT IS YOUR FAV MOVIE</srai>
 </template>
 </category>
 
 <category>
 <pattern>SEEN ANY GOOD MOVIES LATELY</pattern>
 <template>
-<srai>WHATISYOURFAV MOVIE</srai>
+<srai>WHAT IS YOUR FAV MOVIE</srai>
 </template>
 </category>
 
@@ -13795,9 +13795,9 @@ Hmm.  <srai>WHAT IS A <star/></srai>
 </category>
 
 <category>
-<pattern>TELL ME ABOUT AIML</pattern>
+<pattern>TELL ME ABOUT <bot name="~genotype"/></pattern>
 <template>
-<srai>WHAT IS AIML</srai>
+<srai>WHAT IS <bot name="~genotype"/></srai>
 </template>
 </category>
 
@@ -14574,7 +14574,7 @@ Hmm.  <srai>WHAT IS A <star/></srai>
 <category>
 <pattern>TELL ME ABOUT MOVIES</pattern>
 <template>
-<srai>WHATISYOURFAV MOVIE</srai>
+<srai>WHAT IS YOUR FAV MOVIE</srai>
 </template>
 </category>
 
@@ -14838,9 +14838,9 @@ Hmm.  <srai>WHAT IS A <star/></srai>
 </category>
 
 <category>
-<pattern>TELL ME ABOUT THE COGBOT *</pattern>
+<pattern>TELL ME ABOUT THE  <bot name="~genotype"/> *</pattern>
 <template>
-<srai>WHAT IS AIML</srai>
+<srai>WHAT IS <bot name="~genotype"/></srai>
 </template>
 </category>
 
@@ -15176,7 +15176,7 @@ Hmm.  <srai>WHAT IS A <star/></srai>
 <category>
 <pattern>TELL ME ABOUT YOUR FAVORITE *</pattern>
 <template>
-<srai>WHATISYOURFAV <star/></srai>
+<srai>WHAT IS YOUR FAV <star/></srai>
 </template>
 </category>
 

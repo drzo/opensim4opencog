@@ -96,7 +96,7 @@
 <category><pattern>I KNOW THAT NORTON *</pattern><template><think><srai>NOPX 829</srai></think><random><li><srai>EXPDEX I KNOW THAT NORTON <star/></srai></li></random></template></category>
 <category><pattern>I KNOW THAT PHP *</pattern><template><think><srai>NOPX 456</srai></think><random><li><srai>EXPDEX I KNOW THAT PHP <star/></srai></li></random></template></category>
 <category><pattern>I KNOW THAT PAUL *</pattern><template><think><srai>NOPX 1023</srai></think><random><li><srai>EXPDEX I KNOW THAT PAUL <star/></srai></li></random></template></category>
-<category><pattern>I KNOW THAT PETER *</pattern><template><think><srai>NOPX 709</srai></think><random><li><srai>EXPDEX I KNOW THAT PETER <star/></srai></li></random></template></category>
+<category><pattern>I KNOW THAT <bot name="botmaster"/> *</pattern><template><think><srai>NOPX 709</srai></think><random><li><srai>EXPDEX I KNOW THAT <bot name="botmaster"/> <star/></srai></li></random></template></category>
 <category><pattern>I KNOW THAT RICHARD *</pattern><template><think><srai>NOPX 545</srai></think><random><li><srai>EXPDEX I KNOW THAT RICHARD <star/></srai></li></random></template></category>
 <category><pattern>I KNOW THAT ROBERT *</pattern><template><think><srai>NOPX 566</srai></think><random><li><srai>EXPDEX I KNOW THAT ROBERT <star/></srai></li></random></template></category>
 <category><pattern>I KNOW THAT SADDAM *</pattern><template><think><srai>NOPX 410</srai></think><random><li><srai>EXPDEX I KNOW THAT SADDAM <star/></srai></li></random></template></category>

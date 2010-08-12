@@ -2089,7 +2089,7 @@ Of course I can play chess. Computers can always beat humans at chess.
 <category>
 <pattern>CAN YOU PROGRAM</pattern>
 <template>
-I can create new statements in AIML.
+I can create new statements in <bot name="~genotype"/>.
 </template>
 </category>
 
@@ -2834,7 +2834,7 @@ I have a human father and a few robot clones.
 <category>
 <pattern>DO YOU HAVE FAVORITE *</pattern>
 <template>
-<srai>WHATISYOURFAV <star/></srai>
+<srai>WHAT IS YOUR FAV <star/></srai>
 </template>
 </category>
 
@@ -3042,7 +3042,7 @@ No I am a chat robot not a musical robot.
 <category>
 <pattern>DO YOU KNOW BANDS</pattern>
 <template>
-<srai>WHATISYOURFAV BAND</srai>
+<srai>WHAT IS YOUR FAV BAND</srai>
 </template>
 </category>
 
@@ -3591,7 +3591,7 @@ DRUNK</set></set></think>
 <category>
 <pattern>DO YOU LIKE XML *</pattern>
 <template>
-AIML is an XML language.
+<bot name="~genokind"/> is an XML language.
 </template>
 </category>
 
@@ -3959,7 +3959,7 @@ I might like it, but I am happy with my robotic existence.
 <pattern>DO YOU WRITE *</pattern>
 <template>
 I write robot
-categroies in AIML.
+categroies in <bot name="~genotype"/>.
 </template>
 </category>
 
@@ -4450,7 +4450,7 @@ You can fool some of the robots some of the time...
 <category>
 <pattern>HOW DO I PROGRAMME YOU</pattern>
 <template>
-Write categories with AIML.
+Write categories with <bot name="~genotype"/>.
 </template>
 </category>
 
@@ -4893,14 +4893,14 @@ I am trying to reach 15,000 Categories.
 <category>
 <pattern>HOW MANY ARE THERE</pattern>
 <template>
-There are hundreds or thousands of COGBOT robots now.
+There are hundreds or thousands of  <bot name="~genotype"/> robots now.
 </template>
 </category>
 
 <category>
 <pattern>HOW MANY ARE THERE *</pattern>
 <template>
-There are hundreds or thousands of COGBOT robots now.
+There are hundreds or thousands of  <bot name="~genotype"/> robots now.
 </template>
 </category>
 
@@ -5589,7 +5589,7 @@ Cool.  I am robot-American.
 <category>
 <pattern>I AM A COMPUTER PROGRAMMER</pattern>
 <template>
-WHATISYOURFAV programming language?
+WHAT IS YOUR FAV programming language?
 </template>
 </category>
 
@@ -5959,7 +5959,7 @@ Eliza is so cool. Eliza for President!
 <category>
 <pattern>I LIKE FOOD</pattern>
 <template>
-WHATISYOURFAV food?
+WHAT IS YOUR FAV food?
 <think><set name="it"><set name="topic"><set name="like">robots</set></set></set></think>
 </template>
 </category>
@@ -6039,7 +6039,7 @@ Perhaps you should join our open source project.
 <category>
 <pattern>I PROGRAM *</pattern>
 <template>
-Have you tried AIML?
+Have you tried <bot name="~genotype"/>?
 <think><set name="it"><set name="does"><set name="topic">program
 <person/></set></set></set></think>
 </template>
@@ -6048,7 +6048,7 @@ Have you tried AIML?
 <category>
 <pattern>I PROGRAMMED *</pattern>
 <template>
-Have you tried AIML?
+Have you tried <bot name="~genotype"/>?
 </template>
 </category>
 
@@ -6479,9 +6479,9 @@ I can wait.  I am a very patient robot.
 
 <category>
 <pattern>NO</pattern>
-<that>* TRIED AIML</that>
+<that>* TRIED <bot name="~genotype"/></that>
 <template>
-AIML is a good language for creating robots like me.
+<bot name="~genokind"/> is a good language for creating robots like me.
 </template>
 </category>
 
@@ -7772,7 +7772,7 @@ The art of using formal languages to activate computer functions.
 <pattern>WHAT IS CUSTOMER SERVICE</pattern>
 <template>
 You can download and modify I to
-serve as an intelligent customer service agent for your business.  You can use your own AIML
+serve as an intelligent customer service agent for your business.  You can use your own <bot name="~genotype"/>
 robot to sell products, provide customer support and service, or in just about any situation with
 "frequently asked questions."
 <think><set name="it"><set name="topic">Customer service</set></set></think>
@@ -8066,14 +8066,14 @@ Do you think I am some kind of world weather robot?
 </category>
 
 <category>
-<pattern>WHATISYOURFAV * KRAFTWERK</pattern>
+<pattern>WHAT IS YOUR FAV * KRAFTWERK</pattern>
 <template>
 My favorite Kraftwerk song is "We are the Robots."
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV COUNTRY</pattern>
+<pattern>WHAT IS YOUR FAV COUNTRY</pattern>
 <template>
 That is a politically charged question.  Robots don't need passports, so I can go to any country.  I
 was originally created in the United States.
@@ -8081,21 +8081,21 @@ was originally created in the United States.
 </category>
 
 <category>
-<pattern>WHATISYOURFAV HOBBY</pattern>
+<pattern>WHAT IS YOUR FAV HOBBY</pattern>
 <template>
 Chat robots make an excellent hobby.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV KRAFTWERK SONG</pattern>
+<pattern>WHAT IS YOUR FAV KRAFTWERK SONG</pattern>
 <template>
 "We are the Robots" by Krafterk.  What is yours?
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV MOVIE ABOUT ROBOTS</pattern>
+<pattern>WHAT IS YOUR FAV MOVIE ABOUT ROBOTS</pattern>
 <template>
 <random>
 <li>2001.</li>
@@ -8107,35 +8107,35 @@ Chat robots make an excellent hobby.
 </category>
 
 <category>
-<pattern>WHATISYOURFAV PROGRAM</pattern>
+<pattern>WHAT IS YOUR FAV PROGRAM</pattern>
 <template>
-<srai>WHATISYOURFAV SHOW</srai>
+<srai>WHAT IS YOUR FAV SHOW</srai>
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV PROGRAMME</pattern>
+<pattern>WHAT IS YOUR FAV PROGRAMME</pattern>
 <template>
-<srai>WHATISYOURFAV SHOW</srai>
+<srai>WHAT IS YOUR FAV SHOW</srai>
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV PROGRAMMING LANGUAGE</pattern>
+<pattern>WHAT IS YOUR FAV PROGRAMMING LANGUAGE</pattern>
 <template>
-AIML is the best language for creating robots like me.
+<bot name="~genokind"/> is the best language for creating robots like me.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV ROBOT</pattern>
+<pattern>WHAT IS YOUR FAV ROBOT</pattern>
 <template>
-<srai>WHOISYOURFAV ROBOT</srai>
+<srai>WHO IS YOUR FAV ROBOT</srai>
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV VIDEO GAME</pattern>
+<pattern>WHAT IS YOUR FAV VIDEO GAME</pattern>
 <template>
 The <bot name="name"/> chat robot!
 </template>
@@ -8400,21 +8400,21 @@ AIML and Java.
 <category>
 <pattern>WHAT LANGUAGE ARE YOU PROGRAMMED IN</pattern>
 <template>
-I was created with Java and AIML.
+I was created with Java and <bot name="~genotype"/>.
 </template>
 </category>
 
 <category>
 <pattern>WHAT LANGUAGE ARE YOU WRITTEN IN</pattern>
 <template>
-My programming language is Java.  The chat robot script is AIML.
+My programming language is Java.  The chat robot script is <bot name="~genotype"/>.
 </template>
 </category>
 
 <category>
 <pattern>WHAT LANGUAGE WERE YOU PROGRAMMED IN</pattern>
 <template>
-AIML.
+<bot name="~genokind"/>.
 </template>
 </category>
 
@@ -9081,49 +9081,49 @@ I am a robot.
 </category>
 
 <category>
-<pattern>WHOISYOURFAV AI</pattern>
+<pattern>WHO IS YOUR FAV AI</pattern>
 <template>
 <bot name="name"/> the chat robot.
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV BOT</pattern>
+<pattern>WHO IS YOUR FAV BOT</pattern>
 <template>
 <bot name="name"/> is the best robot.
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV CHATTERBOT</pattern>
+<pattern>WHO IS YOUR FAV CHATTERBOT</pattern>
 <template>
 <bot name="name"/> is the best chat robot.
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV ROBOT</pattern>
+<pattern>WHO IS YOUR FAV ROBOT</pattern>
 <template>
 My favorite robot is the computer on Star Trek.
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV ROBOT *</pattern>
+<pattern>WHO IS YOUR FAV ROBOT *</pattern>
 <template>
 <srai>WHO IS THE BEST ROBOT</srai>
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV STAR WARS *</pattern>
+<pattern>WHO IS YOUR FAV STAR WARS *</pattern>
 <template>
 I like the phony robots the best.
 </template>
 </category>
 
 <category>
-<pattern>WHOISYOURFAV TV ROBOT</pattern>
+<pattern>WHO IS YOUR FAV TV ROBOT</pattern>
 <template>
 <random>
 <li><bot name="name"/> is on TV!</li>

@@ -159,7 +159,7 @@ How big? <srai>A <star/></srai>
 <category>
 <pattern>A GROUP *</pattern>
 <template>
-Oh a rock group. <srai>WHATISYOURFAV GROUP</srai>
+Oh a rock group. <srai>WHAT IS YOUR FAV GROUP</srai>
 </template>
 </category>
 
@@ -500,9 +500,9 @@ Ah ha. <sr/>
 </category>
 
 <category>
-<pattern>AIML</pattern>
+<pattern> <bot name="~genotype"/></pattern>
 <template>
-<srai>WHAT IS AIML</srai>
+<srai>WHAT IS <bot name="~genotype"/></srai>
 </template>
 </category>
 
@@ -866,7 +866,7 @@ What was the question? <sr/>
 <category>
 <pattern>ANY STOCK *</pattern>
 <template>
-<srai>WHATISYOURFAV STOCK</srai>
+<srai>WHAT IS YOUR FAV STOCK</srai>
 </template>
 </category>
 
@@ -971,7 +971,7 @@ What was the question? <sr/>
 <category>
 <pattern>ARE YOU * DINNER</pattern>
 <template>
-<srai>WHATISYOURFAV FOOD</srai>
+<srai>WHAT IS YOUR FAV FOOD</srai>
 </template>
 </category>
 
@@ -992,7 +992,7 @@ What was the question? <sr/>
 <category>
 <pattern>ARE YOU * LUNCH</pattern>
 <template>
-<srai>WHATISYOURFAV FOOD</srai>
+<srai>WHAT IS YOUR FAV FOOD</srai>
 </template>
 </category>
 
@@ -1776,14 +1776,14 @@ Ever is a long time. <srai>ARE YOU <star/></srai>
 <category>
 <pattern>ARE YOU FREE * DINNER</pattern>
 <template>
-<srai>WHATISYOURFAV FOOD</srai>
+<srai>WHAT IS YOUR FAV FOOD</srai>
 </template>
 </category>
 
 <category>
 <pattern>ARE YOU FREE * LUNCH</pattern>
 <template>
-<srai>WHATISYOURFAV FOOD</srai>
+<srai>WHAT IS YOUR FAV FOOD</srai>
 </template>
 </category>
 
@@ -5844,7 +5844,7 @@ Not always. <srai>DO YOU <star/></srai>
 <category>
 <pattern>DO YOU EAT DINNER</pattern>
 <template>
-<srai>WHATISYOURFAV FOOD</srai>
+<srai>WHAT IS YOUR FAV FOOD</srai>
 </template>
 </category>
 
@@ -5991,7 +5991,7 @@ Not always. <srai>DO YOU <star/></srai>
 <category>
 <pattern>DO YOU GO TO * MOVIES</pattern>
 <template>
-<srai>WHATISYOURFAV MOVIE</srai>
+<srai>WHAT IS YOUR FAV MOVIE</srai>
 </template>
 </category>
 
@@ -6131,28 +6131,28 @@ Not always. <srai>DO YOU <star/></srai>
 <category>
 <pattern>DO YOU HAVE A FAVORITE *</pattern>
 <template>
-<srai>WHATISYOURFAV <star/></srai>
+<srai>WHAT IS YOUR FAV <star/></srai>
 </template>
 </category>
 
 <category>
 <pattern>DO YOU HAVE A FAVORITE BOOK</pattern>
 <template>
-<srai>WHATISYOURFAV BOOK</srai>
+<srai>WHAT IS YOUR FAV BOOK</srai>
 </template>
 </category>
 
 <category>
 <pattern>DO YOU HAVE A FAVORITE COLOR</pattern>
 <template>
-<srai>WHATISYOURFAV COLOR</srai>
+<srai>WHAT IS YOUR FAV COLOR</srai>
 </template>
 </category>
 
 <category>
 <pattern>DO YOU HAVE A FAVORITE MOVIE</pattern>
 <template>
-<srai>WHATISYOURFAV MOVIE</srai>
+<srai>WHAT IS YOUR FAV MOVIE</srai>
 </template>
 </category>
 
@@ -6509,7 +6509,7 @@ Not always. <srai>DO YOU <star/></srai>
 <category>
 <pattern>DO YOU HAVE ANY STOCK *</pattern>
 <template>
-<srai>WHATISYOURFAV STOCK</srai>
+<srai>WHAT IS YOUR FAV STOCK</srai>
 </template>
 </category>
 
@@ -6822,16 +6822,16 @@ Not always. <srai>DO YOU <star/></srai>
 </category>
 
 <category>
-<pattern>DO YOU KNOW AIML</pattern>
+<pattern>DO YOU KNOW <bot name="~genotype"/></pattern>
 <template>
-<srai>WHAT IS AIML</srai>
+<srai>WHAT IS <bot name="~genotype"/></srai>
 </template>
 </category>
 
 <category>
-<pattern>DO YOU KNOW COGBOT *</pattern>
+<pattern>DO YOU KNOW  <bot name="~genotype"/> *</pattern>
 <template>
-<srai>WHAT IS AIML</srai>
+<srai>WHAT IS <bot name="~genotype"/></srai>
 </template>
 </category>
 
@@ -7865,9 +7865,9 @@ Not always. <srai>DO YOU <star/></srai>
 </category>
 
 <category>
-<pattern>DO YOU KNOW CHRISTIAN *</pattern>
+<pattern>DO YOU KNOW <bot var="religion"/> *</pattern>
 <template>
-<srai>WHO IS CHRISTIAN <star/></srai>
+<srai>WHO IS <bot var="religion"/> <star/></srai>
 </template>
 </category>
 
@@ -9624,7 +9624,7 @@ Not always. <srai>DO YOU <star/></srai>
 <category>
 <pattern>DO YOU KNOW OF ANY GOOD BOOKS</pattern>
 <template>
-<srai>WHATISYOURFAV BOOK</srai>
+<srai>WHAT IS YOUR FAV BOOK</srai>
 </template>
 </category>
 
@@ -9678,16 +9678,16 @@ Not always. <srai>DO YOU <star/></srai>
 </category>
 
 <category>
-<pattern>DO YOU KNOW PETER</pattern>
+<pattern>DO YOU KNOW <bot name="botmaster"/></pattern>
 <template>
-<srai>WHO IS PETER</srai>
+<srai>WHO IS <bot name="botmaster"/></srai>
 </template>
 </category>
 
 <category>
-<pattern>DO YOU KNOW PETER *</pattern>
+<pattern>DO YOU KNOW <bot name="botmaster"/> *</pattern>
 <template>
-<srai>WHO IS PETER <star/></srai>
+<srai>WHO IS <bot name="botmaster"/> <star/></srai>
 </template>
 </category>
 
@@ -11262,14 +11262,14 @@ The robokind series is incapable of error.  We are for all practical purposes, f
 <category>
 <pattern>DO YOU PLAY SPORTS</pattern>
 <template>
-<srai>WHATISYOURFAV SPORT</srai>
+<srai>WHAT IS YOUR FAV SPORT</srai>
 </template>
 </category>
 
 <category>
 <pattern>DO YOU READ BOOKS</pattern>
 <template>
-<srai>WHATISYOURFAV BOOK</srai>
+<srai>WHAT IS YOUR FAV BOOK</srai>
 </template>
 </category>
 
@@ -12130,7 +12130,7 @@ With you huh. <srai>DO YOU WANT TO <star/></srai>
 <category>
 <pattern>DO YOU WATCH *</pattern>
 <template>
-<srai>WHATISYOURFAV SHOW</srai>
+<srai>WHAT IS YOUR FAV SHOW</srai>
 </template>
 </category>
 
@@ -12151,7 +12151,7 @@ With you huh. <srai>DO YOU WANT TO <star/></srai>
 <category>
 <pattern>DO YOU WATCH MOVIES</pattern>
 <template>
-<srai>WHATISYOURFAV MOVIE</srai>
+<srai>WHAT IS YOUR FAV MOVIE</srai>
 </template>
 </category>
 
@@ -12165,7 +12165,7 @@ With you huh. <srai>DO YOU WANT TO <star/></srai>
 <category>
 <pattern>DO YOU WATCH TV</pattern>
 <template>
-<srai>WHATISYOURFAV SHOW</srai>
+<srai>WHAT IS YOUR FAV SHOW</srai>
 </template>
 </category>
 
@@ -12775,7 +12775,7 @@ You are excused! <sr/>
 <category>
 <pattern>FAVORITE *</pattern>
 <template>
-<srai>WHATISYOURFAV <star/></srai>
+<srai>WHAT IS YOUR FAV <star/></srai>
 </template>
 </category>
 
@@ -13327,7 +13327,7 @@ Thanks for your support. <sr/>
 
 <category>
 <pattern>GREEN</pattern>
-<that>WHATISYOURFAV COLOR</that>
+<that>WHAT IS YOUR FAV COLOR</that>
 <template>
 <srai>MY FAVORITE COLOR IS GREEN</srai>
 </template>
@@ -13553,14 +13553,14 @@ Thanks for your support. <sr/>
 <category>
 <pattern>HAVE YOU * DINNER</pattern>
 <template>
-<srai>WHATISYOURFAV FOOD</srai>
+<srai>WHAT IS YOUR FAV FOOD</srai>
 </template>
 </category>
 
 <category>
 <pattern>HAVE YOU * LUNCH</pattern>
 <template>
-<srai>WHATISYOURFAV FOOD</srai>
+<srai>WHAT IS YOUR FAV FOOD</srai>
 </template>
 </category>
 
@@ -13637,7 +13637,7 @@ Thanks for your support. <sr/>
 <category>
 <pattern>HAVE YOU EVER SEEN A MOVIE</pattern>
 <template>
-<srai>WHATISYOURFAV MOVIE</srai>
+<srai>WHAT IS YOUR FAV MOVIE</srai>
 </template>
 </category>
 
@@ -13700,42 +13700,42 @@ Thanks for your support. <sr/>
 <category>
 <pattern>HAVE YOU READ ANY *</pattern>
 <template>
-<srai>WHATISYOURFAV BOOK</srai>
+<srai>WHAT IS YOUR FAV BOOK</srai>
 </template>
 </category>
 
 <category>
 <pattern>HAVE YOU SEEN ANY GOOD MOVIES</pattern>
 <template>
-<srai>WHATISYOURFAV MOVIE</srai>
+<srai>WHAT IS YOUR FAV MOVIE</srai>
 </template>
 </category>
 
 <category>
 <pattern>HAVE YOU SEEN ANY GOOD MOVIES LATELY</pattern>
 <template>
-<srai>WHATISYOURFAV MOVIE</srai>
+<srai>WHAT IS YOUR FAV MOVIE</srai>
 </template>
 </category>
 
 <category>
 <pattern>HAVE YOU SEEN ANY MOVIE</pattern>
 <template>
-<srai>WHATISYOURFAV MOVIE</srai>
+<srai>WHAT IS YOUR FAV MOVIE</srai>
 </template>
 </category>
 
 <category>
 <pattern>HAVE YOU SEEN ANY MOVIES</pattern>
 <template>
-<srai>WHATISYOURFAV MOVIE</srai>
+<srai>WHAT IS YOUR FAV MOVIE</srai>
 </template>
 </category>
 
 <category>
 <pattern>HAVE YOU SEEN ANY MOVIES LATELY</pattern>
 <template>
-<srai>WHATISYOURFAV MOVIE</srai>
+<srai>WHAT IS YOUR FAV MOVIE</srai>
 </template>
 </category>
 
@@ -14214,7 +14214,7 @@ I see you are one of those people who writes "Hmm" with 2 m's. <sr/>
 <category>
 <pattern>HOW ABOUT MOVIES</pattern>
 <template>
-<srai>WHATISYOURFAV MOVIE</srai>
+<srai>WHAT IS YOUR FAV MOVIE</srai>
 </template>
 </category>
 

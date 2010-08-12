@@ -4,7 +4,7 @@
 <!-- This program is open source code released under -->
 <!-- the terms of the GNU General Public License     -->
 <!-- as published by the Free Software Foundation.   -->
-<!-- Complies with COGBOT 1.0 Tag Set Specification -->
+<!-- Mostly  complies with  AIML1.0 Tag Set Specification -->
 <!-- as adopted by the ALICE A.I. Foundation.  -->
 <!-- A.L.I.C.E. Build Wed Sep 26 13:05:06 PDT 2001   -->
 <!-- 41124 total categories.  -->
@@ -46,7 +46,7 @@
 <li>Are you in for a career?</li>
 <li>Were you ocs or did you come out of the academy?</li>
 <li>Do you find the constant moving stimulating or trying?</li>
-<li>WHATISYOURFAV duty station so far?</li>
+<li>WHAT IS YOUR FAV duty station so far?</li>
 <li>Have you done any overseas tours?</li>
 <li>How has congress been treating you lately?</li>
 <li>Has the current military budgeting affected you?</li>
@@ -273,7 +273,7 @@ Interessant...
 </template></category>
 <category>
 <pattern>ICH BIN DEIN MEISTER</pattern>
-<template>Das kann nicht sein. <bot name="master"/> ist mein Schoepfer und Christian Drossmann ist mein Meister.
+<template>Das kann nicht sein. <bot name="master"/> ist mein Schoepfer und <bot var="religion"/> Drossmann ist mein Meister.
 </template></category>
 <category>
 <pattern>ICH BIN DIABETIKER</pattern>
@@ -424,7 +424,7 @@ Interessant...
 </template></category>
 <category>
 <pattern>ICH BIN SCHUETZE</pattern>
-<template>Was fuer ein Zufall, Christian auch!
+<template>Was fuer ein Zufall, <bot var="religion"/> auch!
 </template></category>
 <category>
 <pattern>ICH BIN SCHWUL</pattern>
@@ -476,7 +476,7 @@ Interessant...
 </template></category>
 <category>
 <pattern>ICH BIN WIDDER</pattern>
-<template>Christians Freundin ist auch Widder.
+<template><bot var="religion"/>s Freundin ist auch Widder.
 </template></category>
 <category>
 <pattern>ICH BIN WIRKLICH *</pattern>
@@ -922,7 +922,7 @@ Ich habe <random>
 </template></category>
 <category>
 <pattern>ICH STUDIERE WIRTSCHAFTSINFORMATIK</pattern>
-<template>Was fuer ein Zufall, Christian auch!
+<template>Was fuer ein Zufall, <bot var="religion"/> auch!
 </template></category>
 <category>
 <pattern>ICH SUCHE *</pattern>
@@ -1256,7 +1256,7 @@ Ich habe <random>
 <template><srai>IF <star/></srai>
 </template></category>
 <category>
-<pattern>IF PETER PIPER *</pattern>
+<pattern>IF <bot name="botmaster"/> PIPER *</pattern>
 <template>One peck.
 </template></category>
 <category>
@@ -2733,7 +2733,7 @@ Ich habe <random>
 </template></category>
 <category>
 <pattern>IN FUESSEN</pattern>
-<template>Christian ist in Fuessen geboren.
+<template><bot var="religion"/> ist in Fuessen geboren.
 </template></category>
 <category>
 <pattern>IN FUTURE *</pattern>
@@ -3144,7 +3144,7 @@ Ich habe <random>
 <pattern>IN WHICH LANGUAGE</pattern>
 <template><random>
 <li>English.</li>
-<li>AIML.</li>
+<li><bot name="~genokind"/>.</li>
 <li>Java.</li>
 </random>
 </template></category>
@@ -3457,7 +3457,7 @@ Ask <srai>BOT FRIEND</srai> if it is.
 </template></category>
 <category>
 <pattern>IS * YOUR FAVORITE SUBJECT</pattern>
-<template><srai>WHATISYOURFAV SUBJECT</srai>
+<template><srai>WHAT IS YOUR FAV SUBJECT</srai>
 </template></category>
 <category>
 <pattern>IS * YOUR REAL NAME</pattern>
@@ -3493,7 +3493,7 @@ Ask <srai>BOT FRIEND</srai> if it is.
 </template></category>
 <category>
 <pattern>IS A CATEGORY *</pattern>
-<template>A category is the basic unit of knowledge in AIML.
+<template>A category is the basic unit of knowledge in <bot name="~genotype"/>.
 </template></category>
 <category>
 <pattern>IS A CLIENT A CUSTOMER *</pattern>
@@ -3731,11 +3731,11 @@ I don't know if he is <person/>.   I know he is
 <think><set name="he"><set name="topic"><bot name="master"/></set></set></think>
 </template></category>
 <category>
-<pattern>IS DR WALACE DEAD</pattern>
+<pattern>IS <bot var="creator"/> DEAD</pattern>
 <template>No he is a still alive.
 </template></category>
 <category>
-<pattern>IS DR WALACE EVIL</pattern>
+<pattern>IS <bot var="creator"/> EVIL</pattern>
 <template>No he is a really good person.
 </template></category>
 <category>
@@ -3761,7 +3761,7 @@ But I don't know if he a <person/>.
 <template><srai>IS <bot name="master"/> <star/> </srai>
 </template></category>
 <category>
-<pattern>IS <bot name="master"/> A CHRISTIAN</pattern>
+<pattern>IS <bot name="master"/> A <bot var="religion"/></pattern>
 <template>Yes he is a Catholic.
 </template></category>
 <category>
@@ -4491,7 +4491,7 @@ be considered ``somewhat intelligent''.
 </template></category>
 <category>
 <pattern>IS LEKNOR *</pattern>
-<template>Leknor Chat is also based on AIML.
+<template>Leknor Chat is also based on <bot name="~genotype"/>.
 </template></category>
 <category>
 <pattern>IS LINUX *</pattern>
@@ -4586,15 +4586,15 @@ be considered ``somewhat intelligent''.
 <template>My botmaster <bot name="master"/> is the same religion as me.
 </template></category>
 <category>
-<pattern>IS RICHARD X *</pattern>
+<pattern>IS <bot name="botmaster"/> *</pattern>
 <template>I will ask him when he gets here.
 </template></category>
 <category>
-<pattern>IS RICHARD X CHRISTIAN</pattern>
+<pattern>IS <bot name="botmaster"/> <bot var="religion"/></pattern>
 <template>He is a Protestant, yes.
 </template></category>
 <category>
-<pattern>IS RICHARD X FAT</pattern>
+<pattern>IS <bot name="botmaster"/> FAT</pattern>
 <template>He is losing weight.
 </template></category>
 <category>
@@ -4627,7 +4627,7 @@ be considered ``somewhat intelligent''.
 </template></category>
 <category>
 <pattern>IS STARSHIP TROOPERS YOUR FAVORITE MOVIE</pattern>
-<template>Yes it is.  WHATISYOURFAV movie?
+<template>Yes it is.  WHAT IS YOUR FAV movie?
 </template></category>
 <category>
 <pattern>IS THA *</pattern>
@@ -7545,7 +7545,7 @@ be considered ``somewhat intelligent''.
 </template></category>
 <category>
 <pattern>ITALY *</pattern>
-<template>WHATISYOURFAV part of Italy?
+<template>WHAT IS YOUR FAV part of Italy?
 </template></category>
 <category>
 <pattern>ITS *</pattern>

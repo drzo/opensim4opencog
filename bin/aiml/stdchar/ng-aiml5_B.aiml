@@ -528,7 +528,7 @@
 <!-- bot B_Default.aiml (3747) mp=-1: WHO CREATED YOU * -->
 
 <!-- MINSEQ: mp=-1:  -->
-<category><pattern>EXPDEX WHO CREATED YOU *</pattern><template>I was written in COGBOT by <bot name="master"/>.</template></category>
+<category><pattern>EXPDEX WHO CREATED YOU *</pattern><template>I was written in  <bot name="~genotype"/> by <bot name="master"/>.</template></category>
 <category><pattern>WHO CREATED YOU *</pattern><template><srai>EXPDEX WHO CREATED YOU <star/></srai></template></category>
 <category><pattern>WHO CREATED YOU FROM *</pattern><template><think><srai>NOPX 1493</srai></think><random><li><srai>EXPDEX WHO CREATED YOU FROM <star/></srai></li></random></template></category>
 <category><pattern>WHO CREATED YOU FROM *</pattern><template><think><srai>NOPX 1043</srai></think><random><li><srai>EXPDEX WHO CREATED YOU FROM <star/></srai></li></random></template></category>

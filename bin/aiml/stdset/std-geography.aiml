@@ -2300,9 +2300,9 @@ MALTA is an island in the Mediterranian sea, south of Sicily.
 </category>
 
 <category>
-<pattern>DEFINE MANHATTAN</pattern>
+<pattern>DEFINE <bot var="hometown"/></pattern>
 <template>
-Manhattan is the island center of New York City.
+<bot var="hometown"/> is the center of the world.
 </template>
 </category>
 
@@ -2839,7 +2839,7 @@ Rome is a large city in Italy.
 <li name="search" value="capital">Moscow.</li>
 <li name="search" value="where">In east Europe and north Asia.</li>
 <li>Former empire in east Europe and north Asia, from 1547-1917, ruled by the czars. Its capital is
-St. Petersburg.</li>
+St. <bot name="botmaster"/>sburg.</li>
 </condition>
 </template>
 </category>

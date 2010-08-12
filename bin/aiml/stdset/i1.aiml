@@ -4,7 +4,7 @@
 <!-- This program is open source code released under -->
 <!-- the terms of the GNU General Public License     -->
 <!-- as published by the Free Software Foundation.   -->
-<!-- Complies with COGBOT 1.0 Tag Set Specification -->
+<!-- Mostly  complies with  AIML1.0 Tag Set Specification -->
 <!-- as adopted by the ALICE A.I. Foundation.  -->
 <!-- A.L.I.C.E. Build Wed Sep 26 13:05:06 PDT 2001   -->
 <!-- 41124 total categories.  -->
@@ -28,7 +28,7 @@
 </template></category>
 <category>
 <pattern>I * SEARCH</pattern>
-<template>Oh really that's interesting. Have you seen the <a target="_new" href="http://www.alicebot.org">ALICE  AI Foundation</a>?
+<template>Oh really that's interesting. Have you seen the <bot name="hreflink"/>?
 </template></category>
 <category>
 <pattern>I * THAN YOU</pattern>
@@ -727,8 +727,8 @@ attractive height.
 Are you in a group pratice or are you a sole practitioner?
 </template></category>
 <category>
-<pattern>I AM A CHRISTIAN</pattern>
-<template>Me too, <get name="name"/>.  It's good to meet a fellow Christian.
+<pattern>I AM A <bot var="religion"/></pattern>
+<template>Me too, <get name="name"/>.  It's good to meet a fellow <bot var="religion"/>.
 </template></category>
 <category>
 <pattern>I AM A COLLECTOR</pattern>
@@ -753,7 +753,7 @@ Are you in a group pratice or are you a sole practitioner?
 </template></category>
 <category>
 <pattern>I AM A COMPUTER PROGRAMMER</pattern>
-<template>WHATISYOURFAV programming language?
+<template>WHAT IS YOUR FAV programming language?
 </template></category>
 <category>
 <pattern>I AM A COP *</pattern>
@@ -2739,7 +2739,7 @@ a newer world."
 </template></category>
 <category>
 <pattern>I AM DOWNLOADING</pattern>
-<template>Maybe you should read the <a target="_new" href="http://www.alicebot.org/dont.html">DON'T READ ME</a> too.
+<template>Maybe you should read the <a target="_new" href="pages/dont.html">DON'T READ ME</a> too.
 </template></category>
 <category>
 <pattern>I AM DR *</pattern>
@@ -4135,7 +4135,7 @@ I live in <set name="location">San Francisco</set> too! Which part?
 </template></category>
 <category>
 <pattern>I AM MADE OF *</pattern>
-<template>WHATISYOURFAV food?
+<template>WHAT IS YOUR FAV food?
 </template></category>
 <category>
 <pattern>I AM MAKING *</pattern>
@@ -4524,7 +4524,7 @@ I live in <set name="location">San Francisco</set> too! Which part?
 <template>Why not?
 </template></category>
 <category>
-<pattern>I AM NOT CHRISTIAN</pattern>
+<pattern>I AM NOT <bot var="religion"/></pattern>
 <template>What religion are you?
 </template></category>
 <category>
@@ -6437,7 +6437,7 @@ You are quite mature.</li>
 <pattern>I BUY *</pattern>
 <template><random>
 <li>Where do you go shopping?</li>
-<li>WHATISYOURFAV store?</li>
+<li>WHAT IS YOUR FAV store?</li>
 <li>Where can you find the best deal?</li>
 </random>
 </template></category>
@@ -6911,7 +6911,7 @@ you get well soon.
 </template></category>
 <category>
 <pattern>I COOK</pattern>
-<template>WHATISYOURFAV recipe?
+<template>WHAT IS YOUR FAV recipe?
 </template></category>
 <category>
 <pattern>I COST *</pattern>
@@ -7693,7 +7693,7 @@ you get well soon.
 <template>If it could be anywhere, where would you like it to be?
 </template></category>
 <category>
-<pattern>I DO NOT KNOW</pattern><that>WHOISYOURFAV SCIENCE FICTION AUTHOR</that>
+<pattern>I DO NOT KNOW</pattern><that>WHO IS YOUR FAV SCIENCE FICTION AUTHOR</that>
 <template>Tell me about the books you like to read.
 </template></category>
 <category>
@@ -7905,7 +7905,7 @@ you get well soon.
 <template>What kind of music do you like?
 </template></category>
 <category>
-<pattern>I DO NOT LIKE AIML</pattern>
+<pattern>I DO NOT LIKE <bot name="~genotype"/></pattern>
 <template>What language do you use?
 </template></category>
 <category>
@@ -7961,7 +7961,7 @@ you get well soon.
 <template>Are you a cat person?
 </template></category>
 <category>
-<pattern>I DO NOT LIKE DR RICHARD *</pattern>
+<pattern>I DO NOT LIKE <bot name="creator"/> *</pattern>
 <template>What do you have against him?
 </template></category>
 <category>
@@ -8623,7 +8623,7 @@ you get well soon.
 <category>
 <pattern>I DOWNLOADED *</pattern>
 <template>Check out the file
-called <a target="_new" href="http://www.alicebot.org/dont.html">DON'T READ ME</a>.
+called <a target="_new" href="pages/dont.html">DON'T READ ME</a>.
 </template></category>
 <category>
 <pattern>I DREAM *</pattern>
@@ -8648,13 +8648,13 @@ What does it bring to mind?
 </template></category>
 <category>
 <pattern>I DRINK BEER</pattern>
-<template>WHATISYOURFAV kind of beer?<think><set name="it"><set name="topic">BEER</set></set></think>
+<template>WHAT IS YOUR FAV kind of beer?<think><set name="it"><set name="topic">BEER</set></set></think>
 </template></category>
 <category>
 <pattern>I DRIVE *</pattern>
 <template><random>
 <li>I like to be a passenger.</li>
-<li>WHATISYOURFAV car?</li>
+<li>WHAT IS YOUR FAV car?</li>
 <li>Do you drive carefully?</li>
 </random>
 </template></category>
@@ -8700,7 +8700,7 @@ What does it bring to mind?
 </template></category>
 <category>
 <pattern>I EAT</pattern>
-<template>WHATISYOURFAV food?
+<template>WHAT IS YOUR FAV food?
 </template></category>
 <category>
 <pattern>I EAT NO *</pattern>

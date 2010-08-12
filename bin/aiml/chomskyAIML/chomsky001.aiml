@@ -896,7 +896,7 @@ parent *</pattern><template><sr/></template></category><category><pattern>
 particular *</pattern><template><sr/></template></category><category><pattern>
 path *</pattern><template><sr/></template></category><category><pattern>
 Paul *</pattern><template><sr/></template></category><category><pattern>
-Peter *</pattern><template><sr/></template></category><category><pattern>
+<bot name="botmaster"/> *</pattern><template><sr/></template></category><category><pattern>
 pick *</pattern><template><sr/></template></category><category><pattern>
 president *</pattern><template><sr/></template></category><category><pattern>
 pressure *</pattern><template><sr/></template></category><category><pattern>

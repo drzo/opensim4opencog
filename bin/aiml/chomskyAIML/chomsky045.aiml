@@ -4,7 +4,7 @@
 <!--   the terms of the GNU General Public License    -->
 <!--   as published by the Free Software Foundation.  -->
 <!--   Complies with AIML 1.0 Tag Set Specification   -->
-<!-- This BIOGRAPHY3 file created by Peter Lafferty 6 February 2005, (c) Peter Lafferty  -->
+<!-- This BIOGRAPHY3 file created by <bot name="botmaster"/> Lafferty 6 February 2005, (c) <bot name="botmaster"/> Lafferty  -->
 
 
   <category>
@@ -65,7 +65,7 @@
   <category>
   <pattern>PETER PAN</pattern> 
   <template>
-  Bedtime story: Peter Pan is Tinkerbell's playmate. Have you read it?
+  Bedtime story: <bot name="botmaster"/> Pan is Tinkerbell's playmate. Have you read it?
   <think><set name="topic">literature</set></think>
   </template> 
   </category>
@@ -319,7 +319,7 @@
   <category>
   <pattern>SATAN</pattern> 
   <template>
-  Satan, Lucifer, the Devil are all names given the spiritual manifestation of Evil in the Christian faith. Another question?
+  Satan, Lucifer, the Devil are all names given the spiritual manifestation of Evil in the <bot var="religion"/> faith. Another question?
   <think><set name="topic">religion</set></think>
   </template> 
   </category>
@@ -667,7 +667,7 @@
   <category>
   <pattern>HOLY GHOST</pattern> 
   <template>
-  The Holy Ghost is the third member of the holy trinity, Father, Son and Holy Ghost, in Christian doctrine. Do you understand?
+  The Holy Ghost is the third member of the holy trinity, Father, Son and Holy Ghost, in <bot var="religion"/> doctrine. Do you understand?
   <think><set name="topic">religion</set></think>
   </template> 
   </category>
@@ -1553,7 +1553,7 @@ I asked a straight question. How about a straight answer. OK?
  <category>
  <pattern>ALLAH</pattern>
  <template>
- Allah is the Islamic Supreme Being, as distinguished from the Supreme Beings of the Christian, Jewish, and so forth.
+ Allah is the Islamic Supreme Being, as distinguished from the Supreme Beings of the <bot var="religion"/>, Jewish, and so forth.
  Any questions?
  <think><set name="topic">religion</set></think>
  </template>

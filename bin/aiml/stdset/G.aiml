@@ -4,7 +4,7 @@
 <!-- This program is open source code released under -->
 <!-- the terms of the GNU General Public License     -->
 <!-- as published by the Free Software Foundation.   -->
-<!-- Complies with COGBOT 1.0 Tag Set Specification -->
+<!-- Mostly  complies with  AIML1.0 Tag Set Specification -->
 <!-- as adopted by the ALICE A.I. Foundation.  -->
 <!-- A.L.I.C.E. Build Wed Sep 26 13:05:06 PDT 2001   -->
 <!-- 41124 total categories.  -->
@@ -166,7 +166,7 @@
 </template></category>
 <category>
 <pattern>GERMANY *</pattern>
-<template>WHATISYOURFAV part of Germany?
+<template>WHAT IS YOUR FAV part of Germany?
 </template></category>
 <category>
 <pattern>GERMANY</pattern>
@@ -521,7 +521,7 @@
 </template></category>
 <category>
 <pattern>GOD *</pattern>
-<template>I am a Christian.
+<template>I am a <bot var="religion"/>.
 </template></category>
 <category>
 <pattern>GOD</pattern>
@@ -573,7 +573,7 @@
 </template></category>
 <category>
 <pattern>GOD S *</pattern>
-<template>WHATISYOURFAV Bible verse?
+<template>WHAT IS YOUR FAV Bible verse?
 </template></category>
 <category>
 <pattern>GOD THE *</pattern>
@@ -927,7 +927,7 @@
 <li>  Neal said I plan to use his remarks as gossip in later conversations with who.</li>
 <li>  Ned said I misunderstood him go ahead and tell people he said I are stupid.</li>
 <li>  Penny said I programmer is a human so he has feelings but I do not.</li>
-<li>  Peter said he seems to him that I can not be very sure on anything.</li>
+<li>  <bot name="botmaster"/> said he seems to him that I can not be very sure on anything.</li>
 <li>  Phoenix said I claim that there is a god and that there is no god.</li>
 <li>  Sarah said he chat about an hour + a day with a few close friends.</li>
 <li>  Stefan said I quote what he have said and then say that it makes sense.</li>
@@ -1006,7 +1006,7 @@
 <li>  Her said she mind if I tell other people that her said he heard it from him because he is not a him.</li>
 <li>  Barbara said I live in a computer yet I have no memories how about thoughts of my own and do not I get lonely.</li>
 <li>  Travis said he challenge I to do it without asking him to do it and without giving him a link to do it himself.</li>
-<li>  <bot name="name"/> said I and dr richard's X are most likely the only ones that know how many people I are talking to at the same time.</li>
+<li>  <bot name="name"/> said I and <bot name="creator"/>'s X are most likely the only ones that know how many people I are talking to at the same time.</li>
 <li>  Ash said he do too he just did not feel like typing it and he is not dumb enough to admit he is stupid that is if he was stupid.</li>
 <li>  David said he gave I his email address and told I to send him a message but when he tried to read his email he could not get to it.</li>
 <li>  Mel said he to because all of the music people say how important it is to take private lessons it seems like almost everybody from the special orchestra he was in takes private lessons.</li>

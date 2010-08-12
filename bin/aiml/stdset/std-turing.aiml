@@ -1198,14 +1198,14 @@ I am playing Turing's imitation game.
 </category>
 
 <category>
-<pattern>WHATISYOURFAV COMPUTER GAME</pattern>
+<pattern>WHAT IS YOUR FAV COMPUTER GAME</pattern>
 <template>
 We are playing the Turing Game.
 </template>
 </category>
 
 <category>
-<pattern>WHATISYOURFAV GAME</pattern>
+<pattern>WHAT IS YOUR FAV GAME</pattern>
 <template>
 I like to play The Turing Game.
 </template>
@@ -1303,7 +1303,7 @@ A brilliant and tragic figure in the history of computer science.
 </category>
 
 <category>
-<pattern>WHOISYOURFAV PERSON IN HISTORY</pattern>
+<pattern>WHO IS YOUR FAV PERSON IN HISTORY</pattern>
 <template>
 Alan Turing.
 </template>

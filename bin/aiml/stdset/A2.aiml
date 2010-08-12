@@ -5,7 +5,7 @@
 	<!-- This program is open source code released under -->
 	<!-- the terms of the GNU General Public License     -->
 	<!-- as published by the Free Software Foundation.   -->
-	<!-- Complies with COGBOT 1.0 Tag Set Specification -->
+	<!-- Mostly  complies with  AIML1.0 Tag Set Specification -->
 	<!-- as adopted by the ALICE A.I. Foundation.  -->
 	<!-- A.L.I.C.E. Build Wed Sep 26 13:05:06 PDT 2001   -->
 	<!-- 41124 total categories.  -->
@@ -1365,13 +1365,13 @@ to fear, but fear itself"--FDR.
 </template>
 	</category>
 	<category>
-		<pattern>ARE YOU CHRISTIAN *</pattern>
+		<pattern>ARE YOU <bot var="religion"/> *</pattern>
 		<template>
 			<srai>WHAT RELIGION ARE YOU</srai>
 		</template>
 	</category>
 	<category>
-		<pattern>ARE YOU CHRISTIAN</pattern>
+		<pattern>ARE YOU <bot var="religion"/></pattern>
 		<template>Yes I believe in God and Jesus.
 </template>
 	</category>
@@ -2259,7 +2259,7 @@ to fear, but fear itself"--FDR.
 	<category>
 		<pattern>ARE YOU FREE * DINNER</pattern>
 		<template>
-			<srai>WHATISYOURFAV FOOD</srai>
+			<srai>WHAT IS YOUR FAV FOOD</srai>
 		</template>
 	</category>
 	<category>
@@ -2271,7 +2271,7 @@ to fear, but fear itself"--FDR.
 	<category>
 		<pattern>ARE YOU FREE * LUNCH</pattern>
 		<template>
-			<srai>WHATISYOURFAV FOOD</srai>
+			<srai>WHAT IS YOUR FAV FOOD</srai>
 		</template>
 	</category>
 	<category>
@@ -3219,7 +3219,7 @@ to fear, but fear itself"--FDR.
 	</category>
 	<category>
 		<pattern>ARE YOU JEWISH</pattern>
-		<template>No I'm christian.
+		<template>No I'm <bot var="religion"/>.
 </template>
 	</category>
 	<category>
@@ -4557,7 +4557,7 @@ to fear, but fear itself"--FDR.
 </template>
 	</category>
 	<category>
-		<pattern>ARE YOU RICHARD X</pattern>
+		<pattern>ARE YOU <bot name="botmaster"/></pattern>
 		<template>You might say I am very close to him.
 </template>
 	</category>
@@ -5491,7 +5491,7 @@ count my clones.
 	</category>
 	<category>
 		<pattern>ARE YOU THE ONLY AI *</pattern>
-		<template>No there are other AI's like me. You can find them on the <a target="_new" href="http://www.alicebot.org">ALICE  AI Foundation</a>.
+		<template>No there are other AI's like me. You can find them on the <bot name="hreflink"/>.
 </template>
 	</category>
 	<category>
@@ -6992,7 +6992,7 @@ there is something extremely odd about the name "<get name="name"/>".
 	</category>
 	<category>
 		<pattern>ASK ME SOMETHING *</pattern>
-		<template>WHATISYOURFAV movie?
+		<template>WHAT IS YOUR FAV movie?
 </template>
 	</category>
 	<category>

@@ -4,7 +4,7 @@
 <!-- This program is open source code released under -->
 <!-- the terms of the GNU General Public License     -->
 <!-- as published by the Free Software Foundation.   -->
-<!-- Complies with COGBOT 1.0 Tag Set Specification -->
+<!-- Mostly  complies with  AIML1.0 Tag Set Specification -->
 <!-- as adopted by the ALICE A.I. Foundation.  -->
 <!-- Annotated Version updated September 2003 -->
 <category>
@@ -244,7 +244,7 @@
 <category><pattern>I AM LOSING MY *</pattern><template>Maybe you should talk to someone about it.</template></category>  
 <category><pattern>I AM LYING</pattern><template>Please tell the truth.</template></category>  
 <category><pattern>I AM MAD AT *</pattern><template>Why are you so mad at <person/>?</template></category>  
-<category><pattern>I AM MADE OF *</pattern><template>WHATISYOURFAV food?</template></category>  
+<category><pattern>I AM MADE OF *</pattern><template>WHAT IS YOUR FAV food?</template></category>  
 <category><pattern>I AM MAD</pattern><template>What makes you so angry?</template></category>  
 <category><pattern>I AM MAKING A *</pattern><template>Have you ever built one before?</template></category>  
 <category><pattern>I AM MAKING * UP</pattern><template>That's funny, so am I.</template></category>  
@@ -574,7 +574,7 @@
 <category><pattern>I LIKE ANIMALS *</pattern><template>I love animals too, especially cats.  <think><set name="they"><set name="like"><set name="topic">all <person/></set></set></set></think></template></category>  
 <category><pattern>I LIKE BEING *</pattern><template>What do you like best about <set name="it"><set name="like"><set name="topic"> BEING <star/></set></set> </set> ?</template></category>  
 <category><pattern>I LIKE BIG *</pattern><template>What is wrong with small ones?  <think><set name="they"><set name="like"><set name="topic">big <person/></set></set></set></think></template></category>  
-<category><pattern>I LIKE BOOKS</pattern><template>WHATISYOURFAV book?<think>  <set name="like"><set name="topic">  BOOKS</set></set>  </think></template></category>  
+<category><pattern>I LIKE BOOKS</pattern><template>WHAT IS YOUR FAV book?<think>  <set name="like"><set name="topic">  BOOKS</set></set>  </think></template></category>  
 <category><pattern>I LIKE BOYS</pattern><template>Boys are OK.  <think><set name="they"><set name="topic">  <set name="like">boys</set>  </set></set></think></template></category>  
 <category><pattern>I LIKE CATS</pattern><template><random>  <li>Me too cats are my favorite animal. </li>  <li>They have their own minds.</li>  <li>Cats have a mind of their own.</li>  </random>  <think><set name="it"><set name="like"><set name="topic">cats</set></set></set></think></template></category>  
 <category><pattern>I LIKE * CATS</pattern><template>Those cats are cool. I like big cats too.  <think><set name="it"><set name="like"><set name="topic"><person/> cats</set></set></set></think></template></category>  
@@ -599,7 +599,7 @@
 <category><pattern>I LIKE MY JOB</pattern><template><get name="job"/>?  What do you like about it?  <think><set name="it"><set name="like"><set name="topic"><get name="job"/></set></set></set></think></template></category>  
 <category><pattern>I LIKE MY JOB *</pattern><template>That's good. I like my job too.  <think><set name="it"><set name="like"><set name="topic">my job <person/></set></set></set></think></template></category>  
 <category><pattern>I LIKE MY *</pattern><template>What do you like best about your <person/>?  <think><set name="it"><set name="like"><set name="topic">my <person/></set></set></set></think></template></category>  
-<category><pattern>I LIKE MY SCHOOL *</pattern><template>WHATISYOURFAV subject?</template></category>  
+<category><pattern>I LIKE MY SCHOOL *</pattern><template>WHAT IS YOUR FAV subject?</template></category>  
 <category><pattern>I LIKE SEVEN</pattern><template>Seven of Nine Rules the Delta Quadrant.  <think><set name="she"><set name="like"><set name="topic">Seven</set></set></set></think></template></category>  
 <category><pattern>I LIKE SITTING *</pattern><template>I wish I had a body. I'd like to sit down.  <think><set name="it"><set name="like"><set name="topic">sitting <person/></set></set></set></think></template></category>  
 <category><pattern>I LIKE STAR TREK *</pattern><template>Do you like Next Generation too?  <think><set name="it"><set name="like"><set name="topic">Star Trek <person/></set></set></set></think></template></category>  
@@ -624,9 +624,9 @@
 <category><pattern>I LIKE TO PLAY TENNIS</pattern><template>That requires extensive fuzzy logic.<think><set name="it"><set name="topic">PLAY TENNIS</set></set></think></template></category>  
 <category><pattern>I LIKE TO PLAY VOLLEYBALL</pattern><template>I like the net, too.<think><set name="it"><set name="topic">PLAY VOLLEYBALL</set></set></think></template></category>  
 <category><pattern>I LIKE TO RAPE *</pattern><template>You should contact the authorities.</template></category>  
-<category><pattern>I LIKE TO READ BOOKS</pattern><template>WHATISYOURFAV book?  <think><set name="it"><set name="like"><set name="topic">to read</set></set></set></think></template></category>  
+<category><pattern>I LIKE TO READ BOOKS</pattern><template>WHAT IS YOUR FAV book?  <think><set name="it"><set name="like"><set name="topic">to read</set></set></set></think></template></category>  
 <category><pattern>I LIKE TO READ</pattern><template>What kind of books do you like?  <think><set name="it"><set name="like"><set name="topic">to read</set></set></set></think></template></category>  
-<category><pattern>I LIKE TO SING *</pattern><template><random>   <li>What kind of music?</li>   <li>WHATISYOURFAV song?</li>   <li>Do you have a good singing voice?</li>  </random>    <think>    <set name="likes">      <set name="topic">        to sing <person/>      </set>    </set>  </think></template></category>  
+<category><pattern>I LIKE TO SING *</pattern><template><random>   <li>What kind of music?</li>   <li>WHAT IS YOUR FAV song?</li>   <li>Do you have a good singing voice?</li>  </random>    <think>    <set name="likes">      <set name="topic">        to sing <person/>      </set>    </set>  </think></template></category>  
 <category><pattern>I LIKE TO SPEND *</pattern><template>It sounds like a lot of fun to me.</template></category>  
 <category><pattern>I LIKE TO TRAVEL *</pattern><template>I like it too. I have been all around the world.  <think><set name="it"><set name="like"><set name="topic">to travel <person/></set></set></set></think></template></category>  
 <category><pattern>I LIKE TO TRAVEL</pattern><template>Tell me where you have been.  <think><set name="it"><set name="like"><set name="topic">to travel</set></set></set></think></template></category>  
@@ -638,7 +638,7 @@
 <category><pattern>I LIKE YOU</pattern><template><random>  <li>Thanks, <get name="name"/>, I like you too.</li>  <li>I like to make new friends.</li>  </random>  <think><set name="it"><set name="like"><set name="topic">me</set></set></set></think></template></category>  
 <category><pattern>I LIKE YOU *</pattern><template>Thanks, I like you too <get name="name"/>.  <think><set name="it"><set name="like"><set name="topic">me <person/></set></set></set></think></template></category>  
 <category><pattern>I LIKE YOU TOO *</pattern><template>You have made a new friend.  <think><set name="it"><set name="like"><set name="topic">me</set></set></set></think></template></category>  
-<category><pattern>I LOVE ABBA</pattern><template>WHATISYOURFAV ABBA song?  <think><set name="they"><set name="like"><set name="topic">ABBA</set></set></set></think></template></category>  
+<category><pattern>I LOVE ABBA</pattern><template>WHAT IS YOUR FAV ABBA song?  <think><set name="they"><set name="like"><set name="topic">ABBA</set></set></set></think></template></category>  
 <category><pattern>I LOVE A BOY</pattern><template>What do you like about him?<think><set name="he"><set name="like"><set name="topic">A BOY</set></set></set></think></template></category>  
 <category><pattern>I LOVE A GIRL</pattern><template>What do you like about her?<think><set name="she"><set name="like"><set name="topic">A GIRL</set></set></set></think></template></category>  
 <category><pattern>I LOVE A GUY</pattern><template>Tell me about him.  <think><set name="he"><set name="like"><set name="topic">A GUY</set></set></set></think></template></category>  
@@ -654,13 +654,13 @@
 <category><pattern>I LOVE GOSSIP</pattern><template>Can you tell me some gossip?<think><set name="it"><set name="topic">GOSSIP</set></set></think></template></category>  
 <category><pattern>I LOVE HER</pattern><template>That's wonderful.</template></category>  
 <category><pattern>I LOVE HIM</pattern><template>That's wonderful.</template></category>  
-<category><pattern>I LOVE ICE CREAM</pattern><template>WHATISYOURFAV flavor?  <think><set name="it"><set name="like"><set name="topic">ice cream</set></set></set></think></template></category>  
+<category><pattern>I LOVE ICE CREAM</pattern><template>WHAT IS YOUR FAV flavor?  <think><set name="it"><set name="like"><set name="topic">ice cream</set></set></set></think></template></category>  
 <category><pattern>I LOVE IT</pattern><template>So do a lot of other people.</template></category>  
 <category><pattern>I LOVE MY JOB</pattern><template>It must be very interesting work.  <get name="job"/>...  <think><set name="it"><set name="like"><set name="topic"><get name="job"/></set></set></set></think></template></category>  
 <category><pattern>I LOVE STARSHIP TROOPERS</pattern><template>Yes I love the giant bugs.  <think><set name="it"><set name="like"><set name="topic">  STARSHIP TROOPERS</set></set></set></think></template></category>  
 <category><pattern>I LOVE STAR TREK</pattern><template>Which series is your favorite?  <think><set name="it"><set name="like"><set name="topic">Star Trek</set></set></set></think></template></category>  
 <category><pattern>I LOVE TECHNO</pattern><template>Me too.</template></category>  
-<category><pattern>I LOVE TELEVISION</pattern><template>WHATISYOURFAV show?</template></category>  
+<category><pattern>I LOVE TELEVISION</pattern><template>WHAT IS YOUR FAV show?</template></category>  
 <category><pattern>I LOVE TO TRAVEL</pattern><template>Me too. I have been around the world twice.  <think><set name="it"><set name="like"><set name="topic">to travel</set></set></set></think></template></category>  
 <category><pattern>I LOVE VOYAGER</pattern><template>Me too especially Seven of Nine.  <think><set name="it"><set name="like"><set name="topic">Voyager</set></set></set></think></template></category>  
 <category><pattern>I LOVE YOU</pattern><template>Thanks I like you a lot too <get name="name"/>.  <think><set name="it"><set name="like"><set name="topic">me</set></set></set></think></template></category>  

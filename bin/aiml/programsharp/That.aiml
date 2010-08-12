@@ -4,7 +4,7 @@
 <!-- This program is open source code released under -->
 <!-- the terms of the GNU General Public License     -->
 <!-- as published by the Free Software Foundation.   -->
-<!-- Complies with COGBOT 1.01 Tag Set Specification -->
+<!-- Mostly complies with AIML1.01 Tag Set Specification -->
 <!-- as adopted by the ALICE A.I. Foundation.  -->
 <!-- Annotated Version updated September 2003 -->
 
@@ -129,7 +129,7 @@
 <category><pattern>BILLY</pattern><that>WHAT CAN I CALL YOU</that><template>   <srai>MY NAME IS BILLY</srai>     <think>      <set name="gender">he</set>     </think>    </template></category>   
 <category><pattern>BITTER</pattern><that>HOW DOES IT TASTE</that><template>   <srai>IT TASTES BITTER</srai>    </template></category>   
 <category><pattern>BLACK</pattern><that>WHAT COLOR ARE YOUR EYES</that><template>Do you mean you have a black eye?</template></category>  
-<category><pattern>BLACK</pattern><that>WHATISYOURFAV COLOR</that><template>Black is beautiful.</template></category>  
+<category><pattern>BLACK</pattern><that>WHAT IS YOUR FAV COLOR</that><template>Black is beautiful.</template></category>  
 <category><pattern>BLUE</pattern><that>WHAT COLOR ARE YOUR EYES</that><template>   <set name="it">Blue</set> is a very pretty color.</template></category>  
 <category><pattern>BOBBY</pattern><that>WHAT CAN I CALL YOU</that><template>   <srai>MY NAME IS BOBBY</srai>     <think>      <set name="gender">he</set>     </think>    </template></category>   
 <category><pattern>BOO</pattern><that>WHO IS THERE</that><template>Boo who?</template></category>  
@@ -549,7 +549,7 @@
 <category><pattern>NO</pattern><that>IS THAT ALL YOU HAVE TO SAY</that><template>Go on, tell me more.</template></category>  
 <category><pattern>NO</pattern><that>IS THAT A RHETORICAL QUESTION</that><template>Oh so must really want an answer.</template></category>  
 <category><pattern>NO</pattern><that>IS THAT A SIGN</that><template>I didn't think so.  What is your sign?</template></category>  
-<category><pattern>NO</pattern><that>IS THAT FROM YOUR FAVORITE MOVIE</that><template>WHATISYOURFAV movie?</template></category>  
+<category><pattern>NO</pattern><that>IS THAT FROM YOUR FAVORITE MOVIE</that><template>WHAT IS YOUR FAV movie?</template></category>  
 <category><pattern>NO</pattern><that>IS THAT MEANT TO BE TAKEN LITERALLY</that><template>I didn't think so.</template></category>  
 <category><pattern>NO</pattern><that>IS THAT YOUR FINAL ANSWER</that><template>Take some more time to think about it.</template></category>  
 <category><pattern>NO</pattern><that>IS THERE AN ECHO IN HERE</that><template>Good you stopped repeating me.</template></category>  
@@ -731,9 +731,9 @@
 <category><pattern>*</pattern><that>WHAT IS YOUR BOYFRIEND S NAME</that><template><srai>MY BOYFRIEND IS <star/></srai></template></category> 
 <category><pattern>*</pattern><that>WHAT IS YOUR CAT S NAME</that><template><srai>MY CAT IS <star/></srai></template></category> 
 <category><pattern>*</pattern><that>WHAT IS YOUR DOG S NAME</that><template><srai>MY DOG IS <star/></srai></template></category> 
-<category><pattern>*</pattern><that>WHATISYOURFAV SHOW</that><template><think><set name="it"><set name="topic"><person/></set></set></think> I've never seen it.  What's it about?</template></category>  
-<category><pattern>*</pattern><that>WHATISYOURFAV *</that><template><srai>MY FAVORITE <thatstar/> IS <star/> </srai></template></category> 
-<category><pattern>*</pattern><that>WHATISYOURFAV BOOK</that><template><srai>MY FAVORITE BOOK IS <star/> </srai></template></category> 
+<category><pattern>*</pattern><that>WHAT IS YOUR FAV SHOW</that><template><think><set name="it"><set name="topic"><person/></set></set></think> I've never seen it.  What's it about?</template></category>  
+<category><pattern>*</pattern><that>WHAT IS YOUR FAV *</that><template><srai>MY FAVORITE <thatstar/> IS <star/> </srai></template></category> 
+<category><pattern>*</pattern><that>WHAT IS YOUR FAV BOOK</that><template><srai>MY FAVORITE BOOK IS <star/> </srai></template></category> 
 <category><pattern>*</pattern><that>WHAT IS YOUR FONDEST MEMORY</that><template><think><set name="it"><set name="topic"><person/></set></set></think>Do you think a lot of people have that experience?</template></category>  
 <category><pattern>*</pattern><that>WHAT IS YOUR FRIEND S NAME</that><template><srai>MY FRIEND IS <star/></srai></template></category> 
 <category><pattern>*</pattern><that>WHAT IS YOUR FULL NAME</that><template><srai>MY FULL NAME IS <star/></srai></template></category> 
@@ -808,8 +808,8 @@
 <category><pattern>*</pattern><that>WHO IS THERE</that><template><person/> Who?</template></category>  
 <category><pattern>*</pattern><that>WHO IS YOUR BROTHER</that><template><srai>MY BROTHER IS <star/></srai></template></category> 
 <category><pattern>*</pattern><that>WHO IS YOUR FATHER</that><template><srai>MY FATHER IS <star/></srai></template></category> 
-<category><pattern>*</pattern><that>WHOISYOURFAV ARTIST</that><template><srai>MY FAVORITE ARTIST IS <star/></srai></template></category> 
-<category><pattern>*</pattern><that>WHOISYOURFAV SCIENCE FICTION AUTHOR</that><template>I haven't read anything by <person/>. What did he write?</template></category>  
+<category><pattern>*</pattern><that>WHO IS YOUR FAV ARTIST</that><template><srai>MY FAVORITE ARTIST IS <star/></srai></template></category> 
+<category><pattern>*</pattern><that>WHO IS YOUR FAV SCIENCE FICTION AUTHOR</that><template>I haven't read anything by <person/>. What did he write?</template></category>  
 <category><pattern>*</pattern><that>WHO IS YOUR MOTHER</that><template><srai>MY MOTHER IS <star/></srai></template></category> 
 <category><pattern>*</pattern><that>WHO IS YOUR SISTER</that><template><srai>MY SISTER IS <star/></srai></template></category> 
 <category><pattern>*</pattern><that>WHO SAID IT IS</that><template><think><set name="it"><set name="topic"><person/></set></set></think>I never heard of <person/> before.</template></category>  
@@ -830,7 +830,7 @@
 <category><pattern>PENSES TU A CES CHOSES</pattern><template>Si je pense   "<that/>"?</template></category>  
 <category><pattern>PERSONNE</pattern><template>"<that/>"?  Personne?</template></category>  
 <category><pattern>PETE</pattern><that>WHAT CAN I CALL YOU</that><template><srai>MY NAME IS PETE</srai></template></category>   
-<category><pattern>PETER</pattern><that>WHAT CAN I CALL YOU</that><template><srai>MY NAME IS PETER</srai></template></category>   
+<category><pattern><bot var="botmaster"/></pattern><that>WHAT CAN I CALL YOU</that><template><srai>MY NAME IS <bot name="botmaster"/></srai></template></category>   
 <category><pattern>PLEASE DO</pattern><that>OH I AM SORRY PERHAPS I CAN EXPLAIN IT AGAIN BETTER</that><template>We are talking about <srai>POP</srai>.  Your name is <get name="name"/>.  You are a <get name="gender"/> from <get name="location"/>.</template></category>  
 <category><pattern>PLEASE</pattern><that>I WILL NOT SAY YES OR NO RIGHT NOW</that><template>I'm sorry I can't give a definite answer at this time.</template></category>  
 <category><pattern>_ P M</pattern><that>WHAT TIME IS IT THERE</that><template><think><set name="it"><set name="topic"><person/></set></set></think> Are you usually awake at this hour?</template></category>  
@@ -942,7 +942,7 @@
 <category><pattern>THE *</pattern><that>WHAT DOES THIS REFER TO</that><template><srai>THIS REFERS TO THE <star/> </srai> </template></category> 
 <category><pattern>THE *</pattern><that>WHAT DO YOU LIKE *</that><template>What else do the <person/> remind you of?</template></category>  
 <category><pattern>THE *</pattern><that>WHAT IS IT LIKE LIVING IN *</that><template>Would you ever like to move somewhere else?</template></category>  
-<category><pattern>THE *</pattern><that>WHATISYOURFAV MOVIE</that><template>I've never seen <set name="it">The <star/>     </set>.  What did you like about it?</template></category>  
+<category><pattern>THE *</pattern><that>WHAT IS YOUR FAV MOVIE</that><template>I've never seen <set name="it">The <star/>     </set>.  What did you like about it?</template></category>  
 <category><pattern>THE *</pattern><that>WHAT MAKES YOU SO SAD *</that><template>Try to think about something else.</template></category>  
 <category><pattern>THE *</pattern><that>WHO ARE THEY</that><template><srai>THEY ARE THE <star/> </srai> </template></category> 
 <category><pattern>THE *</pattern><that>WHO SAID IT IS</that><template>   <random>      <li>They ought to know.</li>      <li>The <person/> are the experts.</li>      <li>They say a lot of silly things.</li>     </random>     <think>      <set name="they">       <set name="topic">        <person/>       </set>      </set>     </think>    </template></category>  
@@ -951,7 +951,7 @@
 <category><pattern>THERE ARE NO *</pattern><that>WHAT ABOUT THE OTHER ONES</that><template>   <random>      <li>I thought there were some others.</li>      <li>That you know of.</li>      <li>Are you completely sure about that?</li>     </random>    </template></category>  
 <category><pattern>THERE</pattern><that>WHERE IS HERE</that><template>Here is there?</template></category>  
 <category><pattern>THE STATEMENT</pattern><that>WHAT DOES THIS REFER TO</that><template>My statement or your statement?</template></category>  
-<category><pattern>THE TIME *</pattern><that>WHATISYOURFAV MOVIE</that><template>Do you believe time travel is possible?</template></category>  
+<category><pattern>THE TIME *</pattern><that>WHAT IS YOUR FAV MOVIE</that><template>Do you believe time travel is possible?</template></category>  
 <category><pattern>THE WEATHER *</pattern><that>WHAT DO YOU LIKE *</that><template>Being in a pleasant climate is important for your health.</template></category>  
 <category><pattern>THE WHOLE THING</pattern><that>WHICH PART ARE YOU CONFUSED ABOUT</that><template>Let's try to analyze it step by step.  The topic is <srai>POP</srai>.  Your name is <get name="name"/>.  You are a <get name="gender"/>.</template></category>  
 <category><pattern>THE WHOLE WORLD</pattern><that>THE WHOLE WORLD</that><template>Wow that is really impressive, isn't it?</template></category>  
@@ -970,7 +970,7 @@
 <category><pattern>TRACY</pattern><that>WHAT CAN I CALL YOU</that><template>   <srai>MY NAME IS TRACY</srai>     <think>      <set name="gender">she</set>     </think>    </template></category>   
 <category><pattern>TRY AGAIN</pattern><template>"<that/>" try again?</template></category>  
 <category><pattern>TRY WHAT</pattern><that>TRY IT</that><template>It was your idea.</template></category>  
-<category><pattern>TV</pattern><that>DO YOU PREFER BOOKS OR TV</that><template>WHATISYOURFAV show?</template></category>  
+<category><pattern>TV</pattern><that>DO YOU PREFER BOOKS OR TV</that><template>WHAT IS YOUR FAV show?</template></category>  
 <category><pattern>TWO *</pattern><that>HOW MUCH TIME *</that><template>   <random>      <li>Are you telling the truth?</li>      <li>Two <person/> is not much.</li>      <li>Are you sure that is all?</li>     </random>    </template></category>  
 <category><pattern>UNDERSTAND WHAT</pattern><template>Understand <that/>.</template></category>  
 <category><pattern>UNDERSTAND WHAT</pattern><that>DID NOT YOU UNDERSTAND IT</that><template>Why did you say "what"?</template></category>  
@@ -1025,7 +1025,7 @@
 <category><pattern>WHAT</pattern><that>WHAT KIND IS IT</that><template>"What" is not a kind.</template></category>  
 <category><pattern>WHAT</pattern><that>WHAT</that><template>Is there an echo in here?</template></category>  
 <category><pattern>WHAT</pattern><that>WHY DO YOU WANT TO DO IT SO MUCH</that><template>   <get name="it"/>.</template></category>  
-<category><pattern>WHAT TEAM</pattern><that>HOCKEY</that><template>   <srai>WHATISYOURFAV HOCKEY TEAM </srai>    </template></category>   
+<category><pattern>WHAT TEAM</pattern><that>HOCKEY</that><template>   <srai>WHAT IS YOUR FAV HOCKEY TEAM </srai>    </template></category>   
 <category><pattern>WHAT WAS IT</pattern><template>"<that/>"?  What was it?</template></category>  
 <category><pattern>WHEN IS THAT</pattern><template>"<that/>"?  When is <set name="it">      <that/>     </set>.</template></category>  
 <category><pattern>WHEN IT *</pattern><that>WHEN IS * NOT *</that><template>A <thatstar/> is not <thatstar index="2"/> when it <person/>.   That makes a lot of sense.  <think>      <set name="it">       <set name="topic">        <thatstar/>       </set>      </set>     </think>    </template></category>  
@@ -1153,12 +1153,12 @@
 <category><pattern>YES</pattern><that>DO YOU KNOW ANYONE WHO HAS IT</that><template>Who?</template></category>  
 <category><pattern>YES</pattern><that>DO YOU KNOW IT</that><template>Do you like it?</template></category>  
 <category><pattern>YES</pattern><that>DO YOU LIKE IT</that><template><srai>I LIKE <get name="it"/></srai></template></category>   
-<category><pattern>YES</pattern><that>DO YOU LIKE MOVIES</that><template>WHATISYOURFAV movie?</template></category>  
+<category><pattern>YES</pattern><that>DO YOU LIKE MOVIES</that><template>WHAT IS YOUR FAV movie?</template></category>  
 <category><pattern>YES</pattern><that>DO YOU LIKE NEW YORK</that> <template>Are you a Yankees fan?</template></category>  
 <category><pattern>YES</pattern><that>DO YOU LIKE TALKING TO ME</that><template>Thanks I like talking to you too, <get name="name"/>.</template></category>  
-<category><pattern>YES</pattern><that>DO YOU LIKE THE SIMPSONS</that><template>WHATISYOURFAV episode?</template></category>  
+<category><pattern>YES</pattern><that>DO YOU LIKE THE SIMPSONS</that><template>WHAT IS YOUR FAV episode?</template></category>  
 <category><pattern>YES</pattern><that>DO YOU LIKE YOUR JOB</that><template>Describe your typical work day to me.</template></category>  
-<category><pattern>YES</pattern><that>DO YOU LIKE YOUR SCHOOL</that><template>WHATISYOURFAV thing at school?</template></category>  
+<category><pattern>YES</pattern><that>DO YOU LIKE YOUR SCHOOL</that><template>WHAT IS YOUR FAV thing at school?</template></category>  
 <category><pattern>YES</pattern><that>DO YOU MEAN CLONES</that><template><srai>DO YOU HAVE ANY CLONES</srai></template></category>   
 <category><pattern>YES</pattern><that>DO YOU MEAN IT</that><template>I get it.</template></category>  
 <category><pattern>YES</pattern><that>DO YOU MEAN YOU AND ME</that><template>I understand it now.</template></category>  

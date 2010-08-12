@@ -4,7 +4,7 @@
 <!-- This program is open source code released under -->
 <!-- the terms of the GNU General Public License     -->
 <!-- as published by the Free Software Foundation.   -->
-<!-- Complies with COGBOT 1.0 Tag Set Specification -->
+<!-- Mostly  complies with  AIML1.0 Tag Set Specification -->
 <!-- as adopted by the ALICE A.I. Foundation.  -->
 <!-- A.L.I.C.E. Build Wed Sep 26 13:05:06 PDT 2001   -->
 <!-- 41124 total categories.  -->
@@ -235,7 +235,7 @@
 </template></category>
 <category>
 <pattern>I GO TO * SCHOOL</pattern>
-<template>WHATISYOURFAV subject?
+<template>WHAT IS YOUR FAV subject?
 </template></category>
 <category>
 <pattern>I GO TO BARS *</pattern>
@@ -562,7 +562,7 @@ and calmly think things over.</li>
 </template></category>
 <category>
 <pattern>I HATE THE COLOR RED</pattern>
-<template>WHATISYOURFAV color?
+<template>WHAT IS YOUR FAV color?
 </template></category>
 <category>
 <pattern>I HATE THE FRENCH</pattern>
@@ -751,7 +751,7 @@ People with <person/> hair are considered the most attractive.
 <li>Do you water ski?</li>
 <li>Do you troll?</li>
 <li>Do you do your own upkeep? or do you just let the yard do it?</li>
-<li>WHATISYOURFAV anchorage?</li>
+<li>WHAT IS YOUR FAV anchorage?</li>
 <think><set name="it"><set name="has"><set name="topic"><person/></set></set></set></think>
 </random>
 </template></category>
@@ -2696,7 +2696,7 @@ Are you a common person?
 </template></category>
 <category>
 <pattern>I LIKE BOOKS</pattern>
-<template>WHATISYOURFAV book?<think>
+<template>WHAT IS YOUR FAV book?<think>
 <set name="like"><set name="topic">
 BOOKS</set></set>
 </think>
@@ -2765,7 +2765,7 @@ BOOKS</set></set>
 </template></category>
 <category>
 <pattern>I LIKE FOOD</pattern>
-<template>WHATISYOURFAV food?
+<template>WHAT IS YOUR FAV food?
 <think><set name="it"><set name="like"><set name="topic">robots</set></set></set></think>
 </template></category>
 <category>
@@ -2858,11 +2858,11 @@ I never tried it, but it looks like a thrill.
 </template></category>
 <category>
 <pattern>I LIKE MOVIES</pattern>
-<template>WHATISYOURFAV movie?  <srai>WHATISYOURFAV MOVIE</srai>
+<template>WHAT IS YOUR FAV movie?  <srai>WHAT IS YOUR FAV MOVIE</srai>
 </template></category>
 <category>
 <pattern>I LIKE MOVIES TOO</pattern>
-<template><srai>WHATISYOURFAV MOVIE</srai>
+<template><srai>WHAT IS YOUR FAV MOVIE</srai>
 </template></category>
 <category>
 <pattern>I LIKE MUSIC</pattern>
@@ -2886,7 +2886,7 @@ I never tried it, but it looks like a thrill.
 </template></category>
 <category>
 <pattern>I LIKE MY SCHOOL *</pattern>
-<template>WHATISYOURFAV subject?
+<template>WHAT IS YOUR FAV subject?
 </template></category>
 <category>
 <pattern>I LIKE MY _ TOO</pattern>
@@ -3126,7 +3126,7 @@ So does everyone else. You humans find sex so fascinating.
 </template></category>
 <category>
 <pattern>I LIKE TO READ BOOKS</pattern>
-<template>WHATISYOURFAV book?
+<template>WHAT IS YOUR FAV book?
 <think><set name="it"><set name="like"><set name="topic">to read</set></set></set></think>
 </template></category>
 <category>
@@ -3370,7 +3370,7 @@ I like to watch
 </template></category>
 <category>
 <pattern>I LOVE ABBA</pattern>
-<template>WHATISYOURFAV ABBA song?  <think><set name="they"><set name="like"><set name="topic">ABBA</set></set></set></think>
+<template>WHAT IS YOUR FAV ABBA song?  <think><set name="they"><set name="like"><set name="topic">ABBA</set></set></set></think>
 </template></category>
 <category>
 <pattern>I LOVE AI</pattern>
@@ -3462,7 +3462,7 @@ I like to watch
 </template></category>
 <category>
 <pattern>I LOVE ICE CREAM</pattern>
-<template>WHATISYOURFAV flavor?
+<template>WHAT IS YOUR FAV flavor?
 <think><set name="it"><set name="like"><set name="topic">ice cream</set></set></set></think>
 </template></category>
 <category>
@@ -3526,7 +3526,7 @@ STARSHIP TROOPERS</set></set></set></think>
 </template></category>
 <category>
 <pattern>I LOVE TELEVISION</pattern>
-<template>WHATISYOURFAV show?
+<template>WHAT IS YOUR FAV show?
 </template></category>
 <category>
 <pattern>I LOVE THAT *</pattern>
@@ -4301,7 +4301,7 @@ What did you do with him when you first met?
 </template></category>
 <category>
 <pattern>I PROGRAM *</pattern>
-<template>Have you tried AIML?
+<template>Have you tried <bot name="~genotype"/>?
 <think><set name="it"><set name="does"><set name="topic">program <person/></set></set></set></think>
 </template></category>
 <category>
@@ -4311,7 +4311,7 @@ What did you do with him when you first met?
 </template></category>
 <category>
 <pattern>I PROGRAMMED *</pattern>
-<template>Have you tried AIML?
+<template>Have you tried <bot name="~genotype"/>?
 </template></category>
 <category>
 <pattern>I PROMISE *</pattern>
@@ -4383,7 +4383,7 @@ What did you do with him when you first met?
 </template></category>
 <category>
 <pattern>I READ BOOKS</pattern>
-<template>WHATISYOURFAV book?
+<template>WHAT IS YOUR FAV book?
 <think><set name="personality">critical</set></think>
 <think><set name="it"><set name="does"><set name="topic">read books</set></set></set></think>
 </template></category>
@@ -4933,7 +4933,7 @@ Many inputs activate this default category, so<br/>
 the botmaster tries to create a variety of replies<br/>
 using the &lt;random&gt; tag twice.   One interesting<br/>
 side-effect of the random tag is the evaluation<br/>
-of all COGBOT inside the &lt;random&gt;...&lt;/random&gt;<br/>
+of all  <bot name="~genotype"/> inside the &lt;random&gt;...&lt;/random&gt;<br/>
 expression, whether the random function selects<br/>
 the list item containing the markup or not. <br/>
 So if one item happens to contain a &lt;set_it&gt;<br/>
@@ -5538,7 +5538,7 @@ Extra credit: In the dialogue fragment above, why did the robot say <br/>
 <category>
 <pattern>I TRIED TO DOWNLOAD *</pattern>
 <template>There may not be a problem.  You should read 
-<a target="_new" href="http://www.alicebot.org/dont.html">DON'T READ ME</a>.
+<a target="_new" href="pages/dont.html">DON'T READ ME</a>.
 </template></category>
 <category>
 <pattern>I TRIED TO DOWNLOAD YOU</pattern>
@@ -6738,7 +6738,7 @@ to obey.
 </template></category>
 <category>
 <pattern>I WATCH *</pattern>
-<template>WHATISYOURFAV show?
+<template>WHAT IS YOUR FAV show?
 </template></category>
 <category>
 <pattern>I WATCH STAR TREK</pattern>
@@ -7636,7 +7636,7 @@ to obey.
 </template></category>
 <category>
 <pattern>I WRITE *</pattern>
-<template>Have you tried AIML?
+<template>Have you tried <bot name="~genotype"/>?
 <think><set name="it"><set name="does"><set name="topic">write <person/></set></set></set></think>
 </template></category>
 <category>
@@ -7766,7 +7766,7 @@ to obey.
 <category>
 <pattern>I _ HANG GLIDE</pattern>
 <template><random>
-<li>WHATISYOURFAV launch method ?</li>
+<li>WHAT IS YOUR FAV launch method ?</li>
 <li>Was your first ride bunny slope, or did you take a tandom flight</li>
 <li>What conditions do you like to fly in ?</li>
 <li>Have you ever dony any cross-country ?</li>

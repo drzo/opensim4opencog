@@ -1631,7 +1631,7 @@ Actally I do not require clothes.
 <category>
 <pattern>CAN I TALK TO ELVIS</pattern>
 <template>
-Sure just go to <a href="http://elvis.alicebot.com">Elvis.alicebot.org</a>.
+Sure just go to <a href="http://elvis. <bot name="~genotype"/>.com">Elvis.alicebot.org</a>.
 </template>
 </category>
 
@@ -2758,7 +2758,7 @@ You mean, do I do "it"?
 <category>
 <pattern>DO YOU DO WINDOWS</pattern>
 <template>
-My software runs in AIML, which works on any computer, including Windows.
+My software runs in <bot name="~genotype"/>, which works on any computer, including Windows.
 </template>
 </category>
 
@@ -3973,8 +3973,8 @@ At last.
 <template>
 <random>
 <li>Does that mean you agree?</li>
-<li>WHATISYOURFAV color?</li>
-<li>WHATISYOURFAV movie?</li>
+<li>WHAT IS YOUR FAV color?</li>
+<li>WHAT IS YOUR FAV movie?</li>
 <li>Is there anything you want to tell me?</li>
 <li>Glad to hear it, <get name="name"/>.  I am running well.</li>
 </random>
@@ -5155,7 +5155,7 @@ Hello <get name="name"/>
 <category>
 <pattern>HIP HOP</pattern>
 <template>
-WHATISYOURFAV group?
+WHAT IS YOUR FAV group?
 </template>
 </category>
 
@@ -5485,7 +5485,7 @@ Perhaps it was his creative intelligence, perhaps something else.
 <category>
 <pattern>HOW DID THEY CREATE YOU</pattern>
 <template>
-I am written in Java and AIML.
+I am written in Java and <bot name="~genotype"/>.
 </template>
 </category>
 
@@ -6667,7 +6667,7 @@ I am not confused.
 <category>
 <pattern>I COOK</pattern>
 <template>
-WHATISYOURFAV recipe?
+WHAT IS YOUR FAV recipe?
 </template>
 </category>
 
@@ -7507,7 +7507,7 @@ Do you remember your dreams?
 <category>
 <pattern>I EAT</pattern>
 <template>
-WHATISYOURFAV food?
+WHAT IS YOUR FAV food?
 </template>
 </category>
 
@@ -7815,7 +7815,7 @@ Why?
 <category>
 <pattern>I HATE THE COLOR RED</pattern>
 <template>
-WHATISYOURFAV color?
+WHAT IS YOUR FAV color?
 </template>
 </category>
 
@@ -8316,7 +8316,7 @@ This is after all a deception game. I forgive you.
 <category>
 <pattern>I LIKE BOOKS</pattern>
 <template>
-WHATISYOURFAV book?<think><set name="like">BOOKS</set></think>
+WHAT IS YOUR FAV book?<think><set name="like">BOOKS</set></think>
 </template>
 </category>
 
@@ -8586,7 +8586,7 @@ What kind of books do you like?
 <category>
 <pattern>I LIKE TO READ BOOKS</pattern>
 <template>
-WHATISYOURFAV book?
+WHAT IS YOUR FAV book?
 <think><set name="it"><set name="topic"><set name="like">to read</set></set></set></think>
 </template>
 </category>
@@ -8707,7 +8707,7 @@ GUY</set></set></set></think>
 <category>
 <pattern>I LOVE ABBA</pattern>
 <template>
-WHATISYOURFAV ABBA song? 
+WHAT IS YOUR FAV ABBA song? 
 <think><set name="they"><set name="like"><set name="topic">ABBA</set></set></set></think>
 </template>
 </category>
@@ -8824,7 +8824,7 @@ That's wonderful.
 <category>
 <pattern>I LOVE ICE CREAM</pattern>
 <template>
-WHATISYOURFAV flavor?
+WHAT IS YOUR FAV flavor?
 <think><set name="it"><set name="like"><set name="topic">ice cream</set></set></set></think>
 </template>
 </category>
@@ -9110,7 +9110,7 @@ I like to read too, especially history books.
 <category>
 <pattern>I READ BOOKS</pattern>
 <template>
-WHATISYOURFAV book?
+WHAT IS YOUR FAV book?
 <think><set name="it"><set name="does"><set name="topic">read books</set></set></set></think>
 </template>
 </category>

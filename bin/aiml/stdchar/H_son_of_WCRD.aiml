@@ -141,7 +141,7 @@
 <category><pattern>SON OF CHARLIE *</pattern><template><think><srai>NOPX 484</srai></think><random><li><srai>EXPDEX SON OF CHARLIE <star/></srai></li></random></template></category>
 <category><pattern>SON OF CHEEP *</pattern><template><think><srai>NOPX 1023</srai></think><random><li><srai>EXPDEX SON OF CHEEP <star/></srai></li></random></template></category>
 <category><pattern>SON OF CHEESE *</pattern><template><think><srai>NOPX 714</srai></think><random><li><srai>EXPDEX SON OF CHEESE <star/></srai></li></random></template></category>
-<category><pattern>SON OF CHRISTIAN *</pattern><template><think><srai>NOPX 480</srai></think><random><li><srai>EXPDEX SON OF CHRISTIAN <star/></srai></li></random></template></category>
+<category><pattern>SON OF <bot var="religion"/> *</pattern><template><think><srai>NOPX 480</srai></think><random><li><srai>EXPDEX SON OF <bot var="religion"/> <star/></srai></li></random></template></category>
 <category><pattern>SON OF CHRISTOPHER *</pattern><template><think><srai>NOPX 941</srai></think><random><li><srai>EXPDEX SON OF CHRISTOPHER <star/></srai></li></random></template></category>
 <category><pattern>SON OF CHUCK *</pattern><template><think><srai>NOPX 1401</srai></think><random><li><srai>EXPDEX SON OF CHUCK <star/></srai></li></random></template></category>
 <category><pattern>SON OF CLARENCE *</pattern><template><think><srai>NOPX 587</srai></think><random><li><srai>EXPDEX SON OF CLARENCE <star/></srai></li></random></template></category>
@@ -327,7 +327,7 @@
 <category><pattern>SON OF PAUL *</pattern><template><think><srai>NOPX 1206</srai></think><random><li><srai>EXPDEX SON OF PAUL <star/></srai></li></random></template></category>
 <category><pattern>SON OF PERCY *</pattern><template><think><srai>NOPX 414</srai></think><random><li><srai>EXPDEX SON OF PERCY <star/></srai></li></random></template></category>
 <category><pattern>SON OF PERDITION *</pattern><template><think><srai>NOPX 3240</srai></think><random><li><srai>EXPDEX SON OF PERDITION <star/></srai></li></random></template></category>
-<category><pattern>SON OF PETER *</pattern><template><think><srai>NOPX 4948</srai></think><random><li><srai>EXPDEX SON OF PETER <star/></srai></li></random></template></category>
+<category><pattern>SON OF <bot name="botmaster"/> *</pattern><template><think><srai>NOPX 4948</srai></think><random><li><srai>EXPDEX SON OF <bot name="botmaster"/> <star/></srai></li></random></template></category>
 <category><pattern>SON OF PHILIP *</pattern><template><think><srai>NOPX 1230</srai></think><random><li><srai>EXPDEX SON OF PHILIP <star/></srai></li></random></template></category>
 <category><pattern>SON OF PIGSTYLE *</pattern><template><think><srai>NOPX 33202</srai></think><random><li><srai>EXPDEX SON OF PIGSTYLE <star/></srai></li></random></template></category>
 <category><pattern>SON OF PRIAM *</pattern><template><think><srai>NOPX 449</srai></think><random><li><srai>EXPDEX SON OF PRIAM <star/></srai></li></random></template></category>
@@ -699,7 +699,7 @@
 <category><pattern>SON OF CHINESE *</pattern><template><think><srai>NOPX 774</srai></think><random><li><srai>EXPDEX SON OF CHINESE <star/></srai></li></random></template></category>
 <category><pattern>SON OF CHRIS *</pattern><template><think><srai>NOPX 1225</srai></think><random><li><srai>EXPDEX SON OF CHRIS <star/></srai></li></random></template></category>
 <category><pattern>SON OF CHRIST *</pattern><template><think><srai>NOPX 403</srai></think><random><li><srai>EXPDEX SON OF CHRIST <star/></srai></li></random></template></category>
-<category><pattern>SON OF CHRISTIAN *</pattern><template><think><srai>NOPX 8050</srai></think><random><li><srai>EXPDEX SON OF CHRISTIAN <star/></srai></li></random></template></category>
+<category><pattern>SON OF <bot var="religion"/> *</pattern><template><think><srai>NOPX 8050</srai></think><random><li><srai>EXPDEX SON OF <bot var="religion"/> <star/></srai></li></random></template></category>
 <category><pattern>SON OF CHRISTINE *</pattern><template><think><srai>NOPX 470</srai></think><random><li><srai>EXPDEX SON OF CHRISTINE <star/></srai></li></random></template></category>
 <category><pattern>SON OF CHRISTOPHER *</pattern><template><think><srai>NOPX 4887</srai></think><random><li><srai>EXPDEX SON OF CHRISTOPHER <star/></srai></li></random></template></category>
 <category><pattern>SON OF CHUCK *</pattern><template><think><srai>NOPX 718</srai></think><random><li><srai>EXPDEX SON OF CHUCK <star/></srai></li></random></template></category>
@@ -1457,7 +1457,7 @@
 <category><pattern>SON OF PERRY *</pattern><template><think><srai>NOPX 813</srai></think><random><li><srai>EXPDEX SON OF PERRY <star/></srai></li></random></template></category>
 <category><pattern>SON OF PERSEUS *</pattern><template><think><srai>NOPX 414</srai></think><random><li><srai>EXPDEX SON OF PERSEUS <star/></srai></li></random></template></category>
 <category><pattern>SON OF PETE *</pattern><template><think><srai>NOPX 495</srai></think><random><li><srai>EXPDEX SON OF PETE <star/></srai></li></random></template></category>
-<category><pattern>SON OF PETER *</pattern><template><think><srai>NOPX 19026</srai></think><random><li><srai>EXPDEX SON OF PETER <star/></srai></li></random></template></category>
+<category><pattern>SON OF <bot name="botmaster"/> *</pattern><template><think><srai>NOPX 19026</srai></think><random><li><srai>EXPDEX SON OF <bot name="botmaster"/> <star/></srai></li></random></template></category>
 <category><pattern>SON OF PETHUEL *</pattern><template><think><srai>NOPX 770</srai></think><random><li><srai>EXPDEX SON OF PETHUEL <star/></srai></li></random></template></category>
 <category><pattern>SON OF PETRUS *</pattern><template><think><srai>NOPX 411</srai></think><random><li><srai>EXPDEX SON OF PETRUS <star/></srai></li></random></template></category>
 <category><pattern>SON OF PHARAOH *</pattern><template><think><srai>NOPX 3355</srai></think><random><li><srai>EXPDEX SON OF PHARAOH <star/></srai></li></random></template></category>
@@ -2060,7 +2060,7 @@
 <category><pattern>SON OF PALEFACE *</pattern><template><think><srai>NOPX 647</srai></think><random><li><srai>EXPDEX SON OF PALEFACE <star/></srai></li></random></template></category>
 <category><pattern>SON OF PATRIOT ACT *</pattern><template><think><srai>NOPX 416</srai></think><random><li><srai>EXPDEX SON OF PATRIOT ACT <star/></srai></li></random></template></category>
 <category><pattern>SON OF PERDITION *</pattern><template><think><srai>NOPX 617</srai></think><random><li><srai>EXPDEX SON OF PERDITION <star/></srai></li></random></template></category>
-<category><pattern>SON OF PETER TOSH *</pattern><template><think><srai>NOPX 1640</srai></think><random><li><srai>EXPDEX SON OF PETER TOSH <star/></srai></li></random></template></category>
+<category><pattern>SON OF <bot name="botmaster"/> TOSH *</pattern><template><think><srai>NOPX 1640</srai></think><random><li><srai>EXPDEX SON OF <bot name="botmaster"/> TOSH <star/></srai></li></random></template></category>
 <category><pattern>SON OF PIGSTYLE *</pattern><template><think><srai>NOPX 33192</srai></think><random><li><srai>EXPDEX SON OF PIGSTYLE <star/></srai></li></random></template></category>
 <category><pattern>SON OF QUMANA BLOG *</pattern><template><think><srai>NOPX 448</srai></think><random><li><srai>EXPDEX SON OF QUMANA BLOG <star/></srai></li></random></template></category>
 <category><pattern>SON OF ROUNDER BANJO *</pattern><template><think><srai>NOPX 712</srai></think><random><li><srai>EXPDEX SON OF ROUNDER BANJO <star/></srai></li></random></template></category>
@@ -2143,7 +2143,7 @@
 <category><pattern>SON OF CHARLES LINDBERGH *</pattern><template><think><srai>NOPX 628</srai></think><random><li><srai>EXPDEX SON OF CHARLES LINDBERGH <star/></srai></li></random></template></category>
 <category><pattern>SON OF CHARLES MARTEL *</pattern><template><think><srai>NOPX 504</srai></think><random><li><srai>EXPDEX SON OF CHARLES MARTEL <star/></srai></li></random></template></category>
 <category><pattern>SON OF CHARLES V *</pattern><template><think><srai>NOPX 488</srai></think><random><li><srai>EXPDEX SON OF CHARLES V <star/></srai></li></random></template></category>
-<category><pattern>SON OF CHRISTIAN GOD *</pattern><template><think><srai>NOPX 4309</srai></think><random><li><srai>EXPDEX SON OF CHRISTIAN GOD <star/></srai></li></random></template></category>
+<category><pattern>SON OF <bot var="religion"/> GOD *</pattern><template><think><srai>NOPX 4309</srai></think><random><li><srai>EXPDEX SON OF <bot var="religion"/> GOD <star/></srai></li></random></template></category>
 <category><pattern>SON OF COLIN POWELL *</pattern><template><think><srai>NOPX 432</srai></think><random><li><srai>EXPDEX SON OF COLIN POWELL <star/></srai></li></random></template></category>
 <category><pattern>SON OF COLOR ME *</pattern><template><think><srai>NOPX 740</srai></think><random><li><srai>EXPDEX SON OF COLOR ME <star/></srai></li></random></template></category>
 <category><pattern>SON OF CROWN PRINCE *</pattern><template><think><srai>NOPX 675</srai></think><random><li><srai>EXPDEX SON OF CROWN PRINCE <star/></srai></li></random></template></category>
@@ -2788,7 +2788,7 @@
 <category><pattern>SON OF MAN THE SON *</pattern><template><think><srai>NOPX 2474</srai></think><random><li><srai>EXPDEX SON OF MAN THE SON <star/></srai></li></random></template></category>
 <category><pattern>SON OF NIXON RACHEL LUCAS *</pattern><template><think><srai>NOPX 596</srai></think><random><li><srai>EXPDEX SON OF NIXON RACHEL LUCAS <star/></srai></li></random></template></category>
 <category><pattern>SON OF NIXON SONDRA K *</pattern><template><think><srai>NOPX 6273</srai></think><random><li><srai>EXPDEX SON OF NIXON SONDRA K <star/></srai></li></random></template></category>
-<category><pattern>SON OF PETER TOSH *</pattern><template><think><srai>NOPX 1636</srai></think><random><li><srai>EXPDEX SON OF PETER TOSH <star/></srai></li></random></template></category>
+<category><pattern>SON OF <bot name="botmaster"/> TOSH *</pattern><template><think><srai>NOPX 1636</srai></think><random><li><srai>EXPDEX SON OF <bot name="botmaster"/> TOSH <star/></srai></li></random></template></category>
 <category><pattern>SON OF QUMANA BLOG EDITOR *</pattern><template><think><srai>NOPX 448</srai></think><random><li><srai>EXPDEX SON OF QUMANA BLOG EDITOR <star/></srai></li></random></template></category>
 <category><pattern>SON OF ROUNDER BANJO *</pattern><template><think><srai>NOPX 545</srai></think><random><li><srai>EXPDEX SON OF ROUNDER BANJO <star/></srai></li></random></template></category>
 <category><pattern>SON OF SIRACH BARUCH LETTER *</pattern><template><think><srai>NOPX 1698</srai></think><random><li><srai>EXPDEX SON OF SIRACH BARUCH LETTER <star/></srai></li></random></template></category>

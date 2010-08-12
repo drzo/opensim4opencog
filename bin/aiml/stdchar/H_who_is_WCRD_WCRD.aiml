@@ -274,7 +274,7 @@
 <category><pattern>WHO IS A BIG *</pattern><template><think><srai>NOPX 462</srai></think><random><li><srai>EXPDEX WHO IS A BIG <star/></srai></li></random></template></category>
 <category><pattern>WHO IS A CANDIDATE *</pattern><template><think><srai>NOPX 1092</srai></think><random><li><srai>EXPDEX WHO IS A CANDIDATE <star/></srai></li></random></template></category>
 <category><pattern>WHO IS A CARER *</pattern><template><think><srai>NOPX 408</srai></think><random><li><srai>EXPDEX WHO IS A CARER <star/></srai></li></random></template></category>
-<category><pattern>WHO IS A CHRISTIAN *</pattern><template><think><srai>NOPX 1222</srai></think><random><li><srai>EXPDEX WHO IS A CHRISTIAN <star/></srai></li></random></template></category>
+<category><pattern>WHO IS A <bot var="religion"/> *</pattern><template><think><srai>NOPX 1222</srai></think><random><li><srai>EXPDEX WHO IS A <bot var="religion"/> <star/></srai></li></random></template></category>
 <category><pattern>WHO IS A GOD *</pattern><template><think><srai>NOPX 1957</srai></think><random><li><srai>EXPDEX WHO IS A GOD <star/></srai></li></random></template></category>
 <category><pattern>WHO IS A GOOD *</pattern><template><think><srai>NOPX 462</srai></think><random><li><srai>EXPDEX WHO IS A GOOD <star/></srai></li></random></template></category>
 <category><pattern>WHO IS A HINDU *</pattern><template><think><srai>NOPX 645</srai></think><random><li><srai>EXPDEX WHO IS A HINDU <star/></srai></li></random></template></category>
@@ -791,7 +791,7 @@
 <category><pattern>WHO IS A CERTIFIED *</pattern><template><think><srai>NOPX 1301</srai></think><random><li><srai>EXPDEX WHO IS A CERTIFIED <star/></srai></li></random></template></category>
 <category><pattern>WHO IS A CHARTERED *</pattern><template><think><srai>NOPX 485</srai></think><random><li><srai>EXPDEX WHO IS A CHARTERED <star/></srai></li></random></template></category>
 <category><pattern>WHO IS A CHINESE *</pattern><template><think><srai>NOPX 440</srai></think><random><li><srai>EXPDEX WHO IS A CHINESE <star/></srai></li></random></template></category>
-<category><pattern>WHO IS A CHRISTIAN *</pattern><template><think><srai>NOPX 6127</srai></think><random><li><srai>EXPDEX WHO IS A CHRISTIAN <star/></srai></li></random></template></category>
+<category><pattern>WHO IS A <bot var="religion"/> *</pattern><template><think><srai>NOPX 6127</srai></think><random><li><srai>EXPDEX WHO IS A <bot var="religion"/> <star/></srai></li></random></template></category>
 <category><pattern>WHO IS A CUBAN *</pattern><template><think><srai>NOPX 426</srai></think><random><li><srai>EXPDEX WHO IS A CUBAN <star/></srai></li></random></template></category>
 <category><pattern>WHO IS A DJ *</pattern><template><think><srai>NOPX 545</srai></think><random><li><srai>EXPDEX WHO IS A DJ <star/></srai></li></random></template></category>
 <category><pattern>WHO IS A DEMOCRAT *</pattern><template><think><srai>NOPX 2017</srai></think><random><li><srai>EXPDEX WHO IS A DEMOCRAT <star/></srai></li></random></template></category>
@@ -880,7 +880,7 @@
 <category><pattern>WHO IS A CHIEF *</pattern><template><think><srai>NOPX 586</srai></think><random><li><srai>EXPDEX WHO IS A CHIEF <star/></srai></li></random></template></category>
 <category><pattern>WHO IS A CHILD *</pattern><template><think><srai>NOPX 7471</srai></think><random><li><srai>EXPDEX WHO IS A CHILD <star/></srai></li></random></template></category>
 <category><pattern>WHO IS A CHOSEN *</pattern><template><think><srai>NOPX 493</srai></think><random><li><srai>EXPDEX WHO IS A CHOSEN <star/></srai></li></random></template></category>
-<category><pattern>WHO IS A CHRISTIAN *</pattern><template><think><srai>NOPX 488</srai></think><random><li><srai>EXPDEX WHO IS A CHRISTIAN <star/></srai></li></random></template></category>
+<category><pattern>WHO IS A <bot var="religion"/> *</pattern><template><think><srai>NOPX 488</srai></think><random><li><srai>EXPDEX WHO IS A <bot var="religion"/> <star/></srai></li></random></template></category>
 <category><pattern>WHO IS A CHRONIC *</pattern><template><think><srai>NOPX 653</srai></think><random><li><srai>EXPDEX WHO IS A CHRONIC <star/></srai></li></random></template></category>
 <category><pattern>WHO IS A CITIZEN *</pattern><template><think><srai>NOPX 19802</srai></think><random><li><srai>EXPDEX WHO IS A CITIZEN <star/></srai></li></random></template></category>
 <category><pattern>WHO IS A CITY *</pattern><template><think><srai>NOPX 489</srai></think><random><li><srai>EXPDEX WHO IS A CITY <star/></srai></li></random></template></category>
@@ -2075,7 +2075,7 @@
 <category><pattern>WHO IS CALLED UNK *</pattern><template><think><srai>NOPX 903</srai></think><random><li><srai>EXPDEX WHO IS CALLED UNK <star/></srai></li></random></template></category>
 <category><pattern>WHO IS CALLED CHRIST *</pattern><template><think><srai>NOPX 3991</srai></think><random><li><srai>EXPDEX WHO IS CALLED CHRIST <star/></srai></li></random></template></category>
 <category><pattern>WHO IS CALLED GOD *</pattern><template><think><srai>NOPX 457</srai></think><random><li><srai>EXPDEX WHO IS CALLED GOD <star/></srai></li></random></template></category>
-<category><pattern>WHO IS CALLED PETER *</pattern><template><think><srai>NOPX 2230</srai></think><random><li><srai>EXPDEX WHO IS CALLED PETER <star/></srai></li></random></template></category>
+<category><pattern>WHO IS CALLED <bot name="botmaster"/> *</pattern><template><think><srai>NOPX 2230</srai></think><random><li><srai>EXPDEX WHO IS CALLED <bot name="botmaster"/> <star/></srai></li></random></template></category>
 <category><pattern>WHO IS CALLED AS *</pattern><template><think><srai>NOPX 599</srai></think><random><li><srai>EXPDEX WHO IS CALLED AS <star/></srai></li></random></template></category>
 <category><pattern>WHO IS CALLED BY *</pattern><template><think><srai>NOPX 2724</srai></think><random><li><srai>EXPDEX WHO IS CALLED BY <star/></srai></li></random></template></category>
 <category><pattern>WHO IS CALLED FOR *</pattern><template><think><srai>NOPX 1554</srai></think><random><li><srai>EXPDEX WHO IS CALLED FOR <star/></srai></li></random></template></category>
@@ -3478,7 +3478,7 @@
 <category><pattern>WHO IS NOT UNK *</pattern><template><think><srai>NOPX 1690</srai></think><random><li><srai>EXPDEX WHO IS NOT UNK <star/></srai></li></random></template></category>
 <category><pattern>WHO IS NOT AMERICAN *</pattern><template><think><srai>NOPX 533</srai></think><random><li><srai>EXPDEX WHO IS NOT AMERICAN <star/></srai></li></random></template></category>
 <category><pattern>WHO IS NOT CATHOLIC *</pattern><template><think><srai>NOPX 694</srai></think><random><li><srai>EXPDEX WHO IS NOT CATHOLIC <star/></srai></li></random></template></category>
-<category><pattern>WHO IS NOT CHRISTIAN *</pattern><template><think><srai>NOPX 1062</srai></think><random><li><srai>EXPDEX WHO IS NOT CHRISTIAN <star/></srai></li></random></template></category>
+<category><pattern>WHO IS NOT <bot var="religion"/> *</pattern><template><think><srai>NOPX 1062</srai></think><random><li><srai>EXPDEX WHO IS NOT <bot var="religion"/> <star/></srai></li></random></template></category>
 <category><pattern>WHO IS NOT COOL *</pattern><template><think><srai>NOPX 543</srai></think><random><li><srai>EXPDEX WHO IS NOT COOL <star/></srai></li></random></template></category>
 <category><pattern>WHO IS NOT GOD *</pattern><template><think><srai>NOPX 781</srai></think><random><li><srai>EXPDEX WHO IS NOT GOD <star/></srai></li></random></template></category>
 <category><pattern>WHO IS NOT JEWISH *</pattern><template><think><srai>NOPX 2447</srai></think><random><li><srai>EXPDEX WHO IS NOT JEWISH <star/></srai></li></random></template></category>

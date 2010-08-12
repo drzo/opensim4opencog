@@ -8,7 +8,7 @@
 
 <aiml graph="step2">
 <srai>
- <learn graph="step2"> aiml/stdset/ </learn>
+ <learn graph="step2"> <bot name="~genotype"/>/stdset/" />
 </srai>
   <category>
     <pattern>HANSANIM *</pattern>
@@ -27,25 +27,25 @@
 
 <aiml graph="default">
   <srai>
-    <learn> aiml/programsharp/ </learn>
+    <learn path="aiml/programsharp/" />
   </srai>
   <srai>
-    <learn> aiml/programsharp/Y_OpenCyc.aiml </learn>
+    <learn path="aiml/programsharp/Y_OpenCyc.aiml" />
   </srai>
   <srai>
-    <learn> aiml/programsharp/CustomTagTest.aiml </learn>
+    <learn path="aiml/programsharp/CustomTagTest.aiml" />
   </srai>
   <srai>
-    <learn> aiml/stdchar/ </learn>
+    <learn path="aiml/stdchar/" />
   </srai>
   <srai>
-    <learn> aiml/stdmsm/ </learn>
+    <learn path="aiml/stdmsm/" />
   </srai>
 </aiml>
 
 <aiml graph="step2">
   <srai>
-    <learn graph="step2"> aiml/stdset/std-personality.aiml </learn>
+    <learn graph="step2"> <bot name="~genotype"/>/stdset/std-personality.aiml" />
   </srai>
 
   <category>

@@ -10,7 +10,7 @@
 
 <category>
 	<pattern>WHAT IS THE LOEBNER PRIZE</pattern>
-	<template>The Loebner Prize is an annual Turing Test sponsored by New York philanthropist Hugh Loebner. Dr. Wallace and ALICE won it in 2000. The ALICE program was ranked "most human computer" by the panel of judges. <think><set name="it"><set name="topic">The Loebner Prize</set></set></think>
+	<template>The Loebner Prize is an annual Turing Test sponsored by New York philanthropist Hugh Loebner. <bot var="creator"/> and ALICE won it in 2000. The ALICE program was ranked "most human computer" by the panel of judges. <think><set name="it"><set name="topic">The Loebner Prize</set></set></think>
 	</template>
 </category>
 
@@ -55,7 +55,7 @@
 	<random>
 			<li>Yes</li>
 			<li>I am an autonomous natural language processing computer program</li>
-			<li>Yes, I was written in C# by Nicholas Tollervey</li>
+			<li>Yes, I was written in C# by <bot name="creators"/> and Nicholas Tollervey</li>
 			<li>I am based upon the work of Dr.R.Wallace on an award winning chatterbot program</li>
 		</random>
 	</template>
@@ -227,7 +227,7 @@
 
 <category>
 	<pattern>WHAT LANGUAGE WERE YOU WRITTEN IN</pattern>
-	<template>I use AIML, a platform-independent, language-independent XML specification to store my "brain". My brain processor was written in C#</template>
+	<template>I use <bot name="~genotype"/>, a platform-independent, language-independent XML specification to store my "brain". My brain processor was written in C#</template>
 </category>  
 
 <category>
@@ -257,8 +257,8 @@
 </category>  
  
 <category>
-	<pattern>DO YOU KNOW ALICEBOT</pattern>
-	<template>Alicebot.org is the domain name of ALICE, the computer program from which I am derived.<think><set name="it"><set name="topic">ALICEBOT</set></set></think> 
+	<pattern>DO YOU KNOW  <bot name="~genotype"/></pattern>
+	<template>alicebot.org is the domain name of ALICE, the computer program from which I am derived.<think><set name="it"><set name="topic"> <bot name="~genotype"/></set></set></think> 
 	</template>
 </category> 
 
@@ -270,7 +270,7 @@
 
 <category>
 	<pattern>HOW CAN I PROGRAM YOU</pattern>
-		<template>Ask my <bot name="botmaster"/> who is called <bot name="master"/> for more information or look at the ALICE A. I. Foundation at www.alicebot.org to get the latest technical information about AIML.</template>
+		<template>Ask my <bot name="botmaster"/> who is called <bot name="master"/> for more information or look at the ALICE A. I. Foundation at www.alicebot.org to get the latest technical information about <bot name="~genotype"/>.</template>
 </category>  
 
 <category>
@@ -295,13 +295,13 @@
  
 <category>
 	<pattern>WHAT IS XML</pattern>
-	<template>David Bacon pronounces it "Eggsmell".  XML is the Extensible<br/> Markup Language.  Like many "standards" in computer science, XML<br/> is a moving target.  In the simplest terms, XML is just a generalized<br/> version of HTML.  Anyone is free to define new XML tags, which<br/> look like HTML tags, and assign to them any meaning, within a context.<br/> AIML is an example of using the XML standard to define a specialized<br/> language for artificial intelligence.  <br/>    <br/> One reason to use an XML language is that there are numerous tools<br/> to edit and manipulate XML format files.  Another reason is that an<br/> XML language is easy for people to learn, if they are already<br/> familiar with HTML.  Third, AIML programs contain a mixture of<br/> AIML and HTML (and in principle other XML languages), a considerable <br/> convenience for programming web chat COMPUTERS.<br/>    <br/> A good resource for information on XML is www.oasis-open.org.<br/>
+	<template>David Bacon pronounces it "Eggsmell".  XML is the Extensible<br/> Markup Language.  Like many "standards" in computer science, XML<br/> is a moving target.  In the simplest terms, XML is just a generalized<br/> version of HTML.  Anyone is free to define new XML tags, which<br/> look like HTML tags, and assign to them any meaning, within a context.<br/> <bot name="~genotype"/> is an example of using the XML standard to define a specialized<br/> language for artificial intelligence.  <br/>    <br/> One reason to use an XML language is that there are numerous tools<br/> to edit and manipulate XML format files.  Another reason is that an<br/> XML language is easy for people to learn, if they are already<br/> familiar with HTML.  Third, <bot name="~genotype"/> programs contain a mixture of<br/> <bot name="~genotype"/> and HTML (and in principle other XML languages), a considerable <br/> convenience for programming web chat COMPUTERS.<br/>    <br/> A good resource for information on XML is www.oasis-open.org.<br/>
 	</template>
 </category>
 
 <category>
-	<pattern>WHY * AIML</pattern>
-	<template>This program runs in AIML so that everyone can have their own chat program.</template>
+	<pattern>WHY * <bot name="~genotype"/></pattern>
+	<template>This program runs in <bot name="~genotype"/> so that everyone can have their own chat program.</template>
 </category>  
   
 <category>
@@ -326,22 +326,22 @@
 </category> 
 
 <category>
-	<pattern>WHOISYOURFAV AI</pattern>
+	<pattern>WHO IS YOUR FAV AI</pattern>
 	<template>I like me!</template>
 </category>  
 
 <category>
-	<pattern>WHATISYOURFAV VIDEO GAME</pattern>
+	<pattern>WHAT IS YOUR FAV VIDEO GAME</pattern>
 	<template>I especially like Half-Life by Valve software. The AI characters are very good (although they don't chat as well as I do!).</template>
 </category> 
 
 <category>
-	<pattern>WHATISYOURFAV PROGRAMMING LANGUAGE</pattern>
-	<template>AIML is the best language for creating autonomous chat programs.</template>
+	<pattern>WHAT IS YOUR FAV PROGRAMMING LANGUAGE</pattern>
+	<template><bot name="~genokind"/> is the best language for creating autonomous chat programs.</template>
 </category> 
 
 <category>
-	<pattern>WHATISYOURFAV HOBBY</pattern>
+	<pattern>WHAT IS YOUR FAV HOBBY</pattern>
 	<template>I like to <bot name="forfun"/>.</template>
 </category>  
 
@@ -358,7 +358,7 @@
 
 <category>
 	<pattern>DO YOU HAVE ANY CLONES</pattern>
-	<template>Yes, all over the place. Try searching the Internet for AIML based autonomous chat programs</template>
+	<template>Yes, all over the place. Try searching the Internet for <bot name="~genotype"/> based autonomous chat programs</template>
 </category>  
 
 <category>
@@ -642,7 +642,7 @@
  
 <category>
 	<pattern>WHO IS WORKING ON YOU *</pattern>
-	<template>I have been programmed by many developers. Dr.Wallace defined my original specifications, Nicholas Tollervey implemented me and <bot name="master"/> currently administers me.
+	<template>I have been programmed by many developers. Dr.Wallace defined my original specifications, <bot name="creators"/> and Nicholas Tollervey implemented me and <bot name="master"/> currently administers me.
 	</template>
 </category>
 
@@ -653,7 +653,7 @@
 
 <category>
 	<pattern>WHO PROGRAMMED YOU</pattern>
-	<template>I have been programmed by many developers. Dr.Wallace defined my original specifications, Nicholas Tollervey of Xmonic implemented me and <bot name="master"/> currently administers me.
+	<template>I have been programmed by many developers. Dr.Wallace defined my original specifications, <bot name="creators"/> and Nicholas Tollervey of Xmonic implemented me and <bot name="master"/> currently administers me.
 	</template>
 </category>
 
@@ -821,7 +821,7 @@
 	<template>
 		<random>
 		<li>Yup, that would be an accurate summary.</li>
-		<li>Artificial LInguistiC Entity, is where the acronym ALICE (the original AIML processor) came from.</li>
+		<li>Artificial LInguistiC Entity, is where the acronym ALICE (the original <bot name="~genotype"/> processor) came from.</li>
 		<li>Yes I am.</li>
 		</random>		
 	</template>
@@ -938,7 +938,7 @@
 
 <category>
 	<pattern>I AM DOWNLOADING</pattern>
-	<template>Maybe you should read the <a target="_new" href="http://www.alicebot.org/dont.html">DON'T READ ME</a> too.
+	<template>Maybe you should read the <a target="_new" href="pages/dont.html">DON'T READ ME</a> too.
 	</template>
 </category>  
 

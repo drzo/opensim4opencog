@@ -4,7 +4,7 @@
 <!-- This program is open source code released under -->
 <!-- the terms of the GNU General Public License     -->
 <!-- as published by the Free Software Foundation.   -->
-<!-- Complies with COGBOT 1.0 Tag Set Specification -->
+<!-- Mostly  complies with  AIML1.0 Tag Set Specification -->
 <!-- as adopted by the ALICE A.I. Foundation.  -->
 <!-- A.L.I.C.E. Build Wed Sep 26 13:05:06 PDT 2001   -->
 <!-- 41124 total categories.  -->
@@ -1142,8 +1142,8 @@
 <template>Then I am unlikely to understand your meaning.
 </template></category>
 <category>
-<pattern>NO</pattern><that>* TRIED AIML</that>
-<template>AIML is a good language for creating robots like me.
+<pattern>NO</pattern><that>* TRIED <bot name="~genotype"/></that>
+<template><bot name="~genokind"/> is a good language for creating robots like me.
 </template></category>
 <category>
 <pattern>NO</pattern><that>* WERE TALKING ABOUT *</that>
@@ -1518,7 +1518,7 @@
 </template></category>
 <category>
 <pattern>NO</pattern><that>IS THAT FROM YOUR FAVORITE MOVIE</that>
-<template>WHATISYOURFAV movie?
+<template>WHAT IS YOUR FAV movie?
 </template></category>
 <category>
 <pattern>NO</pattern><that>IS THAT MEANT TO BE TAKEN LITERALLY</that>

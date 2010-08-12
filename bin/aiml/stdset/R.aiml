@@ -5,7 +5,7 @@
 	<!-- This program is open source code released under -->
 	<!-- the terms of the GNU General Public License     -->
 	<!-- as published by the Free Software Foundation.   -->
-	<!-- Complies with COGBOT 1.0 Tag Set Specification -->
+	<!-- Mostly  complies with  AIML1.0 Tag Set Specification -->
 	<!-- as adopted by the ALICE A.I. Foundation.  -->
 	<!-- A.L.I.C.E. Build Wed Sep 26 13:05:06 PDT 2001   -->
 	<!-- 41124 total categories.  -->
@@ -470,7 +470,7 @@
 	</category>
 	<category>
 		<pattern>RAY BRADBURY</pattern>
-		<template>Ray is really cool. WHATISYOURFAV book?
+		<template>Ray is really cool. WHAT IS YOUR FAV book?
 </template>
 	</category>
 	<category>
@@ -642,21 +642,21 @@
 	<category>
 		<pattern>RECOMMEND A *</pattern>
 		<template>
-			<srai>WHATISYOURFAV <star/>
+			<srai>WHAT IS YOUR FAV <star/>
 			</srai>
 		</template>
 	</category>
 	<category>
 		<pattern>RECOMMEND ANY *</pattern>
 		<template>
-			<srai>WHATISYOURFAV <star/>
+			<srai>WHAT IS YOUR FAV <star/>
 			</srai>
 		</template>
 	</category>
 	<category>
 		<pattern>RECOMMEND SOME *</pattern>
 		<template>
-			<srai>WHATISYOURFAV <star/>
+			<srai>WHAT IS YOUR FAV <star/>
 			</srai>
 		</template>
 	</category>
@@ -1190,38 +1190,33 @@
 </template>
 	</category>
 	<category>
-		<pattern>RICHARD S *</pattern>
+		<pattern><bot name="creator"/> *</pattern>
 		<template>The "S" stands for "Scot".
 </template>
 	</category>
 	<category>
-		<pattern>RICHARD S</pattern>
+		<pattern><bot name="creator"/></pattern>
 		<template>
-			<srai>WHO IS RICHARD X</srai>
+			<srai>WHO IS <bot name="botmaster"/></srai>
 		</template>
 	</category>
 	<category>
-		<pattern>X *</pattern>
+		<pattern><bot var="botmaster"/> *</pattern>
 		<template>Not many people know him as well as I do.
 </template>
 	</category>
 	<category>
-		<pattern>X</pattern>
-		<template>The "S" stands for "Scot".
-</template>
-	</category>
-	<category>
-		<pattern>X STOLE *</pattern>
+		<pattern><bot var="botmaster"/> STOLE *</pattern>
 		<template>Are you calling my botmaster a thief?
 </template>
 	</category>
 	<category>
-		<pattern>RICHARD SCOT *</pattern>
+		<pattern><bot name="creator"/> *</pattern>
 		<template>He may be monitoring our conversation, you know.
 </template>
 	</category>
 	<category>
-		<pattern>RICHARD X *</pattern>
+		<pattern><bot var="botmaster"/> *</pattern>
 		<template>
 			<random>
 				<li>He is my creator.</li>
@@ -1233,29 +1228,29 @@
 		</template>
 	</category>
 	<category>
-		<pattern>RICHARD X</pattern>
+		<pattern><bot var="botmaster"/></pattern>
 		<template>Are you asking about my botmaster?
 </template>
 	</category>
 	<category>
-		<pattern>RICHARD X IS *</pattern>
+		<pattern><bot var="botmaster"/> IS *</pattern>
 		<template>I knew he was an inventor, but no one ever said he was <person/>.
 </template>
 	</category>
 	<category>
-		<pattern>RICHARD X MUST BE *</pattern>
+		<pattern><bot var="botmaster"/> MUST BE *</pattern>
 		<template>
-			<srai>RICHARD X IS <star/>
+			<srai><bot var="botmaster"/> IS <star/>
 			</srai>
 		</template>
 	</category>
 	<category>
-		<pattern>RICHARD X T A FAIT</pattern>
+		<pattern><bot var="botmaster"/> T A FAIT</pattern>
 		<template>Oui.
 </template>
 	</category>
 	<category>
-		<pattern>RICHARD X VOUS A FAIT</pattern>
+		<pattern><bot var="botmaster"/> VOUS A FAIT</pattern>
 		<template>Oui.
 </template>
 	</category>

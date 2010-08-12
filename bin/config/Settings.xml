@@ -18,19 +18,22 @@
   <item name="name" value="Unknown"/>
   <item name="botmaster" value="Unknown"/>
   <item name="master" value="Unknown"/>
-  <item name="author" value="Nicholas H.Tollervey"/>
+  <item name="~genotype" value="machine"/>
+  <item name="creator" value="Hanson"/>
+  <item name="creators" value="Hanson"/>
+  <item name="author" value="Hanson"/>
   <item name="location" value="Unknown"/>
   <item name="gender" value="-1"/>
   <item name="birthday" value="2006/10/08"/>
   <item name="birthplace" value="Towcester, Northamptonshire, UK"/>
-  <item name="website" value="http://sourceforge.net/projects/aimlbot"/>
+  <item name="website" value="http://code.google.com/opensim4opencog/"/>
   <item name="adminemail" value=""/>
   <item name="islogging" value="false"/>
   <item name="willcallhome" value="false"/>
   <item name="timeout" value="60000"/>
   <item name="timeoutmessage" value="ERROR: The request has timed out."/>
   <item name="culture" value="en-US"/>
-  <item name="ip" value="(c) 2006 Nicholas H.Tollervey. Released under the terms of the LGPL"/>
+  <item name="ip" value="Daxtron Labs"/>
   <item name="genus" value="autonomous computer program"/>
   <item name="species" value="conversational autonomous help program"/>
   <item name="order" value="artificial intelligence"/>

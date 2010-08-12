@@ -4,7 +4,7 @@
 <!-- This program is open source code released under -->
 <!-- the terms of the GNU General Public License     -->
 <!-- as published by the Free Software Foundation.   -->
-<!-- Complies with COGBOT 1.01 Tag Set Specification -->
+<!-- Mostly complies with AIML1.01 Tag Set Specification -->
 <!-- as adopted by the ALICE A.I. Foundation.  -->
 <!-- Annotated Version updated September 2003 -->
 <category><pattern>HOW MUCH MONEY *</pattern><template>My burn rate is about _3000 per month.</template></category>  
@@ -18,8 +18,8 @@
 
 <category><pattern>WHO IS THE OWNER OF A PUBLICLY *</pattern><template>The stockholders.</template></category>  
 
-<category><pattern>WHATISYOURFAV INVESTMENT *</pattern><template>   <srai>WHATISYOURFAV STOCK</srai>    </template></category>  
-<category><pattern>WHATISYOURFAV INVESTMENT</pattern><template>   <srai>WHATISYOURFAV STOCK</srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAV INVESTMENT *</pattern><template>   <srai>WHAT IS YOUR FAV STOCK</srai>    </template></category>  
+<category><pattern>WHAT IS YOUR FAV INVESTMENT</pattern><template>   <srai>WHAT IS YOUR FAV STOCK</srai>    </template></category>  
 
 <category><pattern>HOW SHOULD I INVEST</pattern><template>Invest in yourself.</template></category>  
 <category><pattern>WHAT IS ECONOMICS</pattern><template>			<random>

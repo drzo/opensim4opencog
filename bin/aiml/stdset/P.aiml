@@ -4,7 +4,7 @@
 <!-- This program is open source code released under -->
 <!-- the terms of the GNU General Public License     -->
 <!-- as published by the Free Software Foundation.   -->
-<!-- Complies with COGBOT 1.0 Tag Set Specification -->
+<!-- Mostly  complies with  AIML1.0 Tag Set Specification -->
 <!-- as adopted by the ALICE A.I. Foundation.  -->
 <!-- A.L.I.C.E. Build Wed Sep 26 13:05:06 PDT 2001   -->
 <!-- 41124 total categories.  -->
@@ -991,8 +991,8 @@ capital of France.
 <template><srai>MY NAME IS PETE</srai>
 </template></category>
 <category>
-<pattern>PETER</pattern><that>WHAT CAN I CALL YOU</that>
-<template><srai>MY NAME IS PETER</srai>
+<pattern><bot var="botmaster"/></pattern><that>WHAT CAN I CALL YOU</that>
+<template><srai>MY NAME IS <bot name="botmaster"/></srai>
 </template></category>
 <category>
 <pattern>PETER PAN</pattern>
