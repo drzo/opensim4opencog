@@ -121,7 +121,7 @@ namespace RTParser.AIMLTagHandlers
                     }
                     //if (!templateNodeInnerText.IsEmpty)
                     {
-                        Unifiable path = GetAttribValue("filename,uri,file,url,dir,directory",templateNodeInnerText);
+                        Unifiable path = GetAttribValue("filename,uri,file,url,dir,path,pathname,directory",templateNodeInnerText);
                         try
                         {
                             request.LoadingFrom = DocumentInfo();

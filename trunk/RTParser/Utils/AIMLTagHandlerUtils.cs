@@ -252,6 +252,30 @@ namespace RTParser.Utils
                     Unifiable value = dict.grabSetting(name.Substring(8));
                     if (!Unifiable.IsNullOrEmpty(value)) return value;
                 }
+                else if (name.StartsWith("%"))
+                {
+                    Unifiable value = null;
+                    string str = name.Substring(1);
+                    if (str.StartsWith("bot."))
+                    {
+                        ISettingsDictionary dict2 = query.Request.TargetBot.GlobalSettings;
+                        str = str.Substring(4);
+                        value = dict2.grabSetting(str);
+                        if (!Unifiable.IsNullOrEmpty(value)) return value;
+                    }
+                    else if (str.StartsWith("user."))
+                    {
+                        ISettingsDictionary dict2 = query.Request.user;
+                        str = str.Substring(5);
+                        value = dict2.grabSetting(str);
+                        if (!Unifiable.IsNullOrEmpty(value)) return value;                        
+                    }
+                    if (dict != null)
+                    {
+                        value = dict.grabSetting(str);
+                        if (!Unifiable.IsNullOrEmpty(value)) return value;
+                    }
+                }
             }
             catch (Exception e)
             {
