@@ -8,7 +8,7 @@
 
 <aiml graph="step2">
 <srai>
- <learn graph="step2"> <bot name="~genotype"/>/stdset/" />
+ <learn graph="step2" path="aiml/stdset/" />
 </srai>
   <category>
     <pattern>HANSANIM *</pattern>
@@ -45,7 +45,7 @@
 
 <aiml graph="step2">
   <srai>
-    <learn graph="step2"> <bot name="~genotype"/>/stdset/std-personality.aiml" />
+    <learn graph="step2" path="aiml/stdset/std-personality.aiml" />
   </srai>
 
   <category>
