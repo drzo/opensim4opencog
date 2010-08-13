@@ -7,6 +7,7 @@
   <item name="cycself" value="#$Cyc" />
   <item name="id" value="doug_miles" />
   <item name="graphname" value="doug_miles" />
+  <item name="name" value="doug miles" />
   <item name="he" value="somebody" />
   <item name="she" value="somebody" />
   <item name="it" value="something" />
@@ -53,5 +54,4 @@
   <item name="me" value="Douglas Miles" />
   <item name="host" value="abc80c6c-e1b3-4c3f-aa36-04e6271ccdc3" />
   <item name="userdir" value="aiml\users\doug~_miles" />
-  <item name="name" value="doug miles" />
 </root>
