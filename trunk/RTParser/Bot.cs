@@ -94,7 +94,7 @@ namespace RTParser
 
         public static string AIMLDEBUGSETTINGS = "clear -spam +user +bina +error +aimltrace +cyc +dictlog -tscore +loaded";
         //    "clear +*";
-        public static readonly TextFilter LoggedWords = new TextFilter() { "+*", "+STARTUP", "+ERROR","-DICTLOGMAYBE" }; //maybe should be ERROR", "STARTUP
+        public static readonly TextFilter LoggedWords = new TextFilter() { "+*", "+STARTUP", "+ERROR","-DICTLOG" }; //maybe should be ERROR", "STARTUP
         public User LastUser;
         public User BotAsUser;
         public User ExemplarUser;
