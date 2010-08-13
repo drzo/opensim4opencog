@@ -656,6 +656,7 @@ namespace RTParser
 
         override public bool StoreWildCard()
         {
+            if (IsFlag(UFlags.NO_BINDS_STARS)) return false;
             return !str.StartsWith("~") && !str.StartsWith("<bot ");           
         }
 
