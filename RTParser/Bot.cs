@@ -94,7 +94,7 @@ namespace RTParser
 
         public static string AIMLDEBUGSETTINGS = "clear -spam +user +bina +error +aimltrace +cyc +dictlog -tscore +loaded";
         //    "clear +*";
-        public static readonly TextFilter LoggedWords = new TextFilter() { "+*", "+STARTUP", "+ERROR","-DICTLOG" }; //maybe should be ERROR", "STARTUP
+        public static readonly TextFilter LoggedWords = new TextFilter() { "+*", "+STARTUP", "+ERROR","+DICTLOG" }; //maybe should be ERROR", "STARTUP
         public User LastUser;
         public User BotAsUser;
         public User ExemplarUser;
@@ -601,6 +601,7 @@ namespace RTParser
             }
 #endif
             this.setup();
+            GlobalSettings.IsTraced = true;
         }
 
 
@@ -724,10 +725,15 @@ namespace RTParser
                 this.AllUserPreds = new SettingsDictionary("bot.alluserpred", this, null);
                 this.SetPredicateReturn = new SettingsDictionary("chat.setpredicatereturn", this, null);
 
-                BotAsUser = new AIMLbot.User("HeardSelfSay", this);
+                BotAsUser = new AIMLbot.User("heardselfsay", this);
                 BotAsUser.IsRoleAcct = true;
                 BotAsUser.ListeningGraph = HeardSelfSayGraph;
                 BotAsUser.Predicates = GlobalSettings;
+                GlobalSettings.IsTraced = true;
+                BotAsUser.UserDirectory = "aiml/users/heardselfsay";
+                BotAsUser.UserID = "heardselfsay";
+                BotAsUser.UserName = "heardselfsay";
+                BotUsers["heardselfsay"] = BotAsUser;
 
                 User guser = ExemplarUser = new AIMLbot.User("globalPreds", this);
                 BotUsers["globalpreds"] = guser;
@@ -877,7 +883,7 @@ namespace RTParser
                                                                          });
 
             var GlobalSettings = thiz.GlobalSettings;
-
+            GlobalSettings.IsTraced = true;
 
             // Checks for some important default settings
             GlobalSettings.loadSettings(HostSystemCombine(pathToSettings, "settings.xml"), request);
@@ -919,6 +925,7 @@ namespace RTParser
             thiz.writeToLog("Files left to process = " + files.Count);
             foreach (var list in files)
             {
+                GlobalSettings.IsTraced = true;
                 GlobalSettings.loadSettings(list, request);
             }
         }
@@ -3030,7 +3037,7 @@ The AIMLbot program.
             myBot.isAcceptingUserInput = false;
             myBot.loadAIMLFromDefaults();
             writeLine("-----------------------------------------------------------------");
-            myBot.LoadPersonalDirectories(myName);
+            myBot.SetName(myName);
             myBot.isAcceptingUserInput = true;
 
             string evidenceCode = "<topic name=\"collectevidencepatterns\"> " +
@@ -3634,7 +3641,13 @@ The AIMLbot program.
                 request.GraphsAcceptingUserInput = prev;
             }
         }
-
+        public void SetName(string myName)
+        {
+            LoadPersonalDirectories(myName);
+            BotAsUser.UserName = myName;
+            BotAsUser.addSetting("name", myName);
+            BotAsUser.removeSetting("userdir");
+        }
         public void LoadPersonalDirectories(string myName)
         {
             bool loaded = LoadPersonalDirectory(myName);
