@@ -636,6 +636,7 @@ namespace RTParser
                 request.Filename = path;
                 LoaderOptions options = request.LoadOptions;
                 request.Loader.loadAIMLURI(path, options);
+                ReloadHooks.Add(() => request.Loader.loadAIMLURI(path, options));
             }
             finally
             {
@@ -1571,6 +1572,13 @@ namespace RTParser
             lock (user.QueryLock)
             {
                 res = Chat0000(request, user, G);
+// ReSharper disable ConditionIsAlwaysTrueOrFalse
+                if (res.OutputSentenceCount == 0)
+// ReSharper restore ConditionIsAlwaysTrueOrFalse
+                {
+                    request.IncreaseLimits(1);
+                    res = Chat0000(request, user, G);
+                }
             }
             undoStack.UndoAll();
             return res;
@@ -1699,7 +1707,14 @@ namespace RTParser
                             DLRConsole.SystemFlush();
                         }
                     }
+                    request.IncreaseLimits(1);
                     ProccessTemplates(request, result, out solutions, out hasMoreSolutions);
+                    if (result.OutputSentenceCount == 0)
+                    {
+                        request.IncreaseLimits(1);
+                        writeToLog("AIMLTRACE: bumping up limits 2 times " + request);
+                        ProccessTemplates(request, result, out solutions, out hasMoreSolutions);
+                    }
                 }
 
                 if (isTraced || result.OutputSentenceCount != 1)
@@ -1793,7 +1808,7 @@ namespace RTParser
                                 return;
                             }
                             //break; // KHC: single vs. Multiple
-                            if ((createdOutput) && (request.ProcessMultipleTemplates == false)) break;
+                            if ((createdOutput) && (((QuerySettingsReadOnly)request).ProcessMultipleTemplates == false)) break;
                         }
                         catch (Exception e)
                         {
@@ -3252,6 +3267,7 @@ The AIMLbot program.
                 }
                 LoaderOptions reqLoadOptionsValue = request.LoadOptions.Value;
                 Loader.loadAIMLURI(args, reqLoadOptionsValue);
+                // maybe request.TargetBot.ReloadHooks.Add(() => request.Loader.loadAIMLURI(args, reqLoadOptionsValue));
                 console("Done with " + args);
                 return true;
             }
@@ -3390,7 +3406,7 @@ The AIMLbot program.
                 return myUser.DoUserCommand(args, console);
             }
 
-            if (showHelp) console("@ls <graph> - * --  lists all graph elements matching some elements");
+            if (showHelp) console("@ls <graph> - * --  lists all graph elements matching some elements \n Example that lists only efualt patterns: " + @"@ls ^\<category\>\<pattern\>\*\</pattern\>\<te");
 
             if (cmd == "ls")
             {

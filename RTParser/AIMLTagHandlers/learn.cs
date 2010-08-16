@@ -136,7 +136,10 @@ namespace RTParser.AIMLTagHandlers
                                 writeToLogWarn("ERROR! Attempted (but failed) to <learn> some new AIML from the following URI: '{0}' - '{1}'", path, s);
                             }
                             else
-                            {                                
+                            {
+                                loaderOptions.LoadingFrom0 = DocumentInfo();
+                                loaderOptions.Loading0 = path;
+                                loaderOptions.CtxGraph = request.Graph;
                                 request.Loader.loadAIMLURI(path, loaderOptions);
                                 return path; // Succeed();
                             }

@@ -241,7 +241,7 @@ namespace RTParser.Utils
             //RProcessor.ReloadHooks.Add(() => loadAIMLFile0(path, loadOpts, forceReload));
             Request request = loadOpts.TheRequest;
             loadOpts = EnsureOptions(loadOpts, request, path);
-
+            //request.TargetBot.ReloadHooks.Add(() => request.Loader.loadAIMLFile0(path, loadOpts, forceReload));
 
             if (!HostSystem.FileExists(path))
             {
@@ -451,6 +451,8 @@ namespace RTParser.Utils
             {
                 writeToLog("ERROR! Ensuring loadOpts.Filename='{0}' but path='{1}'", fn, path);
             }
+            fn = fn.Replace("\\", "/");
+            path = path.Replace("\\", "/");
             if (!fn.Contains(path) && !path.Contains(fn))
             {
                 writeToLog("WARNING! Ensuring loadOpts.Filename='{0}' but path='{1}'", fn, path);

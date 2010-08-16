@@ -358,7 +358,7 @@ namespace RTParser.Utils
                 {
                     break;
                 }
-                if (!request.ProcessMultiplePatterns)
+                if (!((QuerySettingsReadOnly)request).ProcessMultiplePatterns)
                 {
                     break;
                 }
@@ -385,7 +385,7 @@ namespace RTParser.Utils
                     {
                         break;
                     }
-                    if (!request.ProcessMultiplePatterns)
+                    if (!((QuerySettingsReadOnly)request).ProcessMultiplePatterns)
                     {
                         break;
                     }
