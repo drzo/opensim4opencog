@@ -42,6 +42,21 @@ namespace RTParser
 
     abstract public class QuerySettings : QuerySettingsSettable
     {
+        public void IncreaseLimits(int minsAndMaxes)
+        {
+            IncreaseLimits(this, minsAndMaxes, minsAndMaxes);
+        }
+        public static void IncreaseLimits(QuerySettingsSettable request, int mins, int maxs)
+        {
+            //request.MinOutputs = ((QuerySettingsReadOnly)request).MinOutputs + mins;
+            request.MinTemplates = ((QuerySettingsReadOnly)request).MinTemplates + mins;
+            request.MinPatterns = ((QuerySettingsReadOnly)request).MinPatterns + mins;
+            //request.MaxOutputs = ((QuerySettingsReadOnly)request).MaxOutputs + maxs;
+            request.MaxTemplates = ((QuerySettingsReadOnly)request).MaxTemplates + maxs;
+            request.MaxPatterns = ((QuerySettingsReadOnly)request).MaxPatterns + maxs;
+            request.ProcessMultipleTemplates = true;
+            request.ProcessMultiplePatterns = true;
+        }
 
         public static int UNLIMITED = 999;
         public static QuerySettings AIMLDefaults = new QuerySettingsImpl(null)
@@ -221,6 +236,7 @@ namespace RTParser
 
     public interface QuerySettingsSettable : QuerySettingsReadOnly
     {
+        void IncreaseLimits(int minsAndMaxes);
         /// <summary>
         /// Some patterns implies multiple templates
         /// </summary>

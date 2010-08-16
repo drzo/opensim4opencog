@@ -6,7 +6,7 @@ namespace RTParser.Utils
     public class LoaderOptions
     {
         //public LoaderOptions prevoious;
-        public readonly Request TheRequest;
+        public readonly RequestImpl TheRequest;
         private string _curently_loading;
         public bool DebugFiles;
         public bool recurse;
@@ -16,13 +16,16 @@ namespace RTParser.Utils
         {
             get
             {
-               // if (_specified_Graph != null) return _specified_Graph;
+                if (_specified_Graph != null)
+                {
+                    return _specified_Graph;
+                }
                 return TheRequest.Graph;
             }
             set
             {
-                TheRequest.Graph = value;
                 _specified_Graph = value;
+                TheRequest.sGraph = value;
             }
         }
 
@@ -123,6 +126,8 @@ namespace RTParser.Utils
 
         public static bool operator ==(LoaderOptions thiz, LoaderOptions other)
         {
+            if (ReferenceEquals(null, thiz)) return ReferenceEquals(null, other);
+            if (ReferenceEquals(null, other)) return false;
             return thiz.Equals(other);
         }
 

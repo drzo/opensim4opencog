@@ -27,11 +27,12 @@ namespace RTParser
         ISettingsDictionary Predicates { get; }
         Proof Proof { get; set; }
 
-        int MaxTemplates { get; set; }
-        int MaxPatterns { get; set; }
-        int MaxOutputs { get; set; }
-        bool ProcessMultiplePatterns { get; set; }
-        bool ProcessMultipleTemplates { get; set; }
+        //int MaxTemplates { get; set; }
+        //int MaxPatterns { get; set; }
+        //int MaxOutputs { get; set; }
+        //bool ProcessMultiplePatterns { get; set; }
+        //bool ProcessMultipleTemplates { get; set; }
+        //void IncreaseLimits(int i);
         QueryList TopLevel { get; set; }
         SubQuery CurrentQuery { get; }
         bool hasTimedOut { get; set; }
@@ -158,6 +159,7 @@ namespace RTParser
                 ApplySettings(parent, this);
                 Proof = parent.Proof;
                 this.ParentRequest = parent;
+                this.lastOptions = parent.LoadOptions;
                 Graph = parent.Graph;
                 MaxInputs = 1;
             }
@@ -200,14 +202,23 @@ namespace RTParser
             set { Graph.GraphsAcceptingUserInput = value; }
         }
 
+        public LoaderOptions lastOptions;
         public LoaderOptions LoadOptions
         {
             get
             {
-                return new LoaderOptions(this, Graph);
+                // when we change to s struct, lastOptions will never be null
+// ReSharper disable ConditionIsAlwaysTrueOrFalse
+                if (lastOptions == null || lastOptions.TheRequest == null)
+// ReSharper restore ConditionIsAlwaysTrueOrFalse
+                {
+                    lastOptions = new LoaderOptions(this, Graph);
+                }
+                return lastOptions;
             }
             set
             {
+                lastOptions = value;
                 Graph = value.CtxGraph;
                 Filename = value.CurrentFilename;
                 LoadingFrom = value.CurrentlyLoadingFrom;
@@ -261,7 +272,7 @@ namespace RTParser
         private string _filename;
         private string _loadingfrom;
 
-        private GraphMaster sGraph = null;
+        internal GraphMaster sGraph = null;
         public GraphMaster Graph
         {
             get
@@ -304,7 +315,16 @@ namespace RTParser
                 }
                 return probably;
             }
-            set { sGraph = value; }
+            set
+            {
+                if (value != null)
+                {
+                    ovGraph = value.GraphName;
+                }
+                LoaderOptions lo = LoadOptions;
+                lo.CtxGraph = value;
+                sGraph = value;
+            }
         }
 
         private string ovGraph = null;

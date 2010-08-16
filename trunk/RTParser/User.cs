@@ -593,7 +593,7 @@ namespace RTParser
             if (sf > 0)
             {
                 String newClip = sentence.Substring(0, sf - 1);
-                RTPBot.writeDebugLine("AIMLTRACE !REWRITE THAT QUESTION " + sentence + " => " + newClip);
+               // RTPBot.writeDebugLine("AIMLTRACE !REWRITE THAT QUESTION " + sentence + " => " + newClip);
                 if (newClip.Length > 4) sentence = newClip;
             }
             sentence = sentence.Trim(new char[] { '.', ' ', '!', '?' });
@@ -605,7 +605,7 @@ namespace RTParser
                 {
                     newClip = newClip.Substring(1).TrimStart();
                 }
-                RTPBot.writeDebugLine("AIMLTRACE !REWRITE THAT SENT " + sentence + " => " + newClip);
+             //   RTPBot.writeDebugLine("AIMLTRACE !REWRITE THAT SENT " + sentence + " => " + newClip);
                 if (newClip.Length > 4) sentence = newClip;
             }
             return sentence;
