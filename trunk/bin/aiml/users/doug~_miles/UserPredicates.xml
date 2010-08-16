@@ -4,10 +4,35 @@
   <fallback name="doug_miles.predicates.evalprefix" />
   <synchon name="doug_miles.predicates.evalprefix" />
   <prefixes name="bot." value="bot.globalsettings" />
+  <item name="xmlns:xsi" value="http://www.w3.org/2001/XMLSchema-instance" />
+  <item name="xsi:schemaLocation" value="http://aitools.org/programd/4.6/bot-configuration http://aitools.org/programd/4.6/bot-configuration.xsd" />
   <item name="cycself" value="#$Cyc" />
   <item name="id" value="doug_miles" />
   <item name="graphname" value="doug_miles" />
-  <item name="name" value="doug miles" />
+  <item name="passed" value="" />
+  <item name="failed" value="" />
+  <item name="master" value="unknown" />
+  <item name="birthplace" value="unknown" />
+  <item name="favoritebook" value="unknown" />
+  <item name="favoritecolor" value="unknown" />
+  <item name="favoriteband" value="unknown" />
+  <item name="favoritefood" value="unknown" />
+  <item name="favoritesong" value="unknown" />
+  <item name="favoritemovie" value="unknown" />
+  <item name="forfun" value="unknown" />
+  <item name="friends" value="unknown" />
+  <item name="kindmusic" value="unknown" />
+  <item name="question" value="unknown" />
+  <item name="talkabout" value="unknown" />
+  <item name="wear" value="unknown" />
+  <item name="website" value="unknown" />
+  <item name="language" value="unknown" />
+  <item name="that" value="something" />
+  <item name="who" value="someone" />
+  <item name="what" value="something" />
+  <item name="when" value="sometime" />
+  <item name="why" value="some reason" />
+  <item name="how" value="some way" />
   <item name="he" value="somebody" />
   <item name="she" value="somebody" />
   <item name="it" value="something" />
@@ -54,4 +79,5 @@
   <item name="me" value="Douglas Miles" />
   <item name="host" value="abc80c6c-e1b3-4c3f-aa36-04e6271ccdc3" />
   <item name="userdir" value="aiml\users\doug~_miles" />
+  <item name="name" value="doug miles" />
 </root>

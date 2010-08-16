@@ -368,7 +368,7 @@ namespace AIMLBotModule
         {
             if (MyBotNullWarning()) return;
             if (!NeedPersonalConfig) return;
-            string myName = GetName().ToLower().Trim().Replace(" ", "_");
+            string myName = GetName().ToLower().Trim().Replace("_", " ");
             if (string.IsNullOrEmpty(myName)) return;
             NeedPersonalConfig = false;
             LoadPersonalDirectories(myName);
@@ -377,7 +377,7 @@ namespace AIMLBotModule
         private void LoadPersonalDirectories(string myName)
         {
             if (MyBotNullWarning()) return;
-            MyBot.LoadPersonalDirectories(myName);
+            MyBot.SetName(myName);
         }
 
         public void SetChatOnOff(string username, bool value)

@@ -747,17 +747,23 @@ namespace RTParser
         public string UserDirectory
         {
             get { return _saveToDirectory; }
-            set { _saveToDirectory = value; }
+            set
+            {
+                _saveToDirectory = value;
+                Predicates.addSetting("userdir", value);
+            }
         }
 
         private string _saveToDirectory;
         private bool needsSave;
         private bool insideSave;
+        private bool noLoad = true;
         private bool needAiml = false;
         private readonly List<CrossAppDomainDelegate> OnNeedAIML = new List<CrossAppDomainDelegate>();
 
         public void SyncDirectory(string userdir)
         {
+            noLoad = false;
             lock (SaveLock)
             {
                 if (insideSave) return;
@@ -832,6 +838,7 @@ namespace RTParser
         {
             if (HostSystem.DirExists(userdir))
             {
+                if (noLoad) return;
                 LoadUserSettings(userdir);
                 LoadUserAiml(userdir);
                 WriteLine("Loaded " + userdir);
@@ -846,6 +853,7 @@ namespace RTParser
         {
             if (HostSystem.DirExists(userdir))
             {
+                if (noLoad) return;
                 foreach (string s in HostSystem.GetFiles(userdir, "*.xml"))
                 {
                     LoadUserSettings(s);
@@ -880,7 +888,16 @@ namespace RTParser
                                     request1.Graph = ListeningGraph;
                                     request1.LoadingFrom = userdir;
                                     var options1 = request1.LoadOptions; //LoaderOptions.GetDefault(request);
-                                    request1.Loader.loadAIMLURI(userdir, options1.Value);
+                                    var gs = bot.GlobalSettings;
+                                    try
+                                    {
+                                        bot.GlobalSettings = Predicates;
+                                        request1.Loader.loadAIMLURI(userdir, options1.Value);
+                                    }
+                                    finally
+                                    {
+                                        bot.GlobalSettings = gs;
+                                    }
                                     return;
                                 }
                             });

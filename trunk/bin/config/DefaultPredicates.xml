@@ -4,6 +4,12 @@
   <item name="he" value="somebody" />
   <item name="she" value="somebody" />
   <item name="it" value="something" />
+  <item name="that" value="something" />
+  <item name="who" value="someone" />
+  <item name="what" value="something" />
+  <item name="when" value="sometime" />
+  <item name="why" value="some reason" />
+  <item name="how" value="some way" />
   <item name="they" value="something" />
   <item name="age" value="unknown" />
   <item name="birthday" value="unknown" />
