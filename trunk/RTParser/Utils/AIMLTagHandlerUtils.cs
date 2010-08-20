@@ -201,46 +201,58 @@ namespace RTParser.Utils
             }
             return defaultIfEmpty();
         }
-
         static public Unifiable ReduceStar(string name, SubQuery query, ISettingsDictionary dict)
+        {
+            string[] nameSplit = name.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var nameS in nameSplit)
+            {
+                var r = AltStar(nameS, query, dict);
+                if (!Unifiable.IsNullOrEmpty(r))
+                {
+                    return r;
+                }                
+            }
+            return name;
+        }
+        static public Unifiable AltStar(string name, SubQuery query, ISettingsDictionary dict)
         {
             try
             {
                 if (name.StartsWith("star_"))
                 {
-                    name = GetDictData(query.InputStar, name, 5);
+                    return GetDictData(query.InputStar, name, 5);
                 }
                 else if (name.StartsWith("inputstar_"))
                 {
-                    name = GetDictData(query.InputStar, name, 10);
+                    return GetDictData(query.InputStar, name, 10);
                 }
                 else if (name.StartsWith("input_"))
                 {
-                    name = GetDictData(query.InputStar, name, 6);
+                    return GetDictData(query.InputStar, name, 6);
                 }
                 else if (name.StartsWith("thatstar_"))
                 {
-                    name = GetDictData(query.ThatStar, name, 9);
+                    return GetDictData(query.ThatStar, name, 9);
                 }
                 else if (name.StartsWith("that_"))
                 {
-                    name = GetDictData(query.ThatStar, name, 5);
+                    return GetDictData(query.ThatStar, name, 5);
                 }
                 else if (name.StartsWith("topicstar_"))
                 {
-                    name = GetDictData(query.TopicStar, name, 10);
+                    return GetDictData(query.TopicStar, name, 10);
                 }
                 else if (name.StartsWith("topic_"))
                 {
-                    name = GetDictData(query.TopicStar, name, 6);
+                    return GetDictData(query.TopicStar, name, 6);
                 }
                 else if (name.StartsWith("guardstar_"))
                 {
-                    name = GetDictData(query.GuardStar, name, 10);
+                    return GetDictData(query.GuardStar, name, 10);
                 }
                 else if (name.StartsWith("guard_"))
                 {
-                    name = GetDictData(query.GuardStar, name, 6);
+                    return GetDictData(query.GuardStar, name, 6);
                 }
                 else if (name.StartsWith("@"))
                 {
@@ -281,7 +293,7 @@ namespace RTParser.Utils
             {
                 RTPBot.writeDebugLine("" + e);
             }
-            return name;
+            return null;
         }
 
         private static Unifiable GetDictData(List<Unifiable> unifiables, string name, int startChars)
