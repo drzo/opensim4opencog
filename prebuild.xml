@@ -758,6 +758,42 @@
          <Match path="." pattern="AssemblyInfo.cs"/>
      </Files>
 </Project>
+
+
+ <Project name="CSProlog" path="RTParser/Prolog" type="Exe" frameworkVersion="v3_5">
+     <Configuration name="Debug">
+       <Options>
+           <OutputPath>../../bin/</OutputPath>
+       </Options>
+     </Configuration>
+     <Configuration name="Release">
+       <Options>
+           <OutputPath>../../bin/</OutputPath>
+       </Options>
+     </Configuration>
+
+     <ReferencePath>../../bin/</ReferencePath>
+     <Reference name="System" localCopy="false"/>
+     <Reference name="System.Core" localCopy="false"/>
+     <Reference name="System.Data" localCopy="false"/>
+     <Reference name="System.Data.DataSetExtensions" localCopy="false"/>
+     <Reference name="System.Deployment" localCopy="false"/>
+     <Reference name="System.Drawing" localCopy="false"/>
+     <Reference name="System.Windows.Forms" localCopy="false"/>
+     <Reference name="System.Xml" localCopy="false"/>
+     <Reference name="System.Xml.Linq" localCopy="false"/>
+      <Reference name="MushDLR223"  localCopy="false"/>
+      <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
+      <Reference name="IKVM.Runtime.dll" localCopy="false"/>
+      <Reference name="IKVM.Runtime.JNI.dll" localCopy="false"/>
+      
+     <Files>
+         <Match path="." pattern="*.cs"  recurse="true"  subType="Form">  <Exclude name="AssemblyInfo.cs"/><Exclude name="Plugins/"/></Match>
+         <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource">  <Exclude name="AssemblyInfo.cs"/><Exclude name="Plugins/"/></Match>
+         <Match path="." pattern="AssemblyInfo.cs"/>
+     </Files>
+</Project>
+
 <!--
 
 
@@ -1734,5 +1770,6 @@ app -->
   </Solution>
 
 </Prebuild>
+
 
 

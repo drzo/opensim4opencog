@@ -29,7 +29,6 @@ using System.Collections.Specialized;
 using System.Globalization;
 #if mswindows
 using System.Runtime.InteropServices;
-using MushDLR223.Utilities;
 
 #endif
 
@@ -39,8 +38,8 @@ namespace RTParser.Prolog
     {
         #region static readonly properties
         public static readonly string DefaultExtension = ".pl";
-        public static readonly TextReader StdIn = DLRConsole.In;
-        public static readonly TextWriter StdOut = DLRConsole.Out;
+        public static readonly TextReader StdIn = Console.In;
+        public static readonly TextWriter StdOut = Console.Out;
         #endregion
 
         #region private properties
