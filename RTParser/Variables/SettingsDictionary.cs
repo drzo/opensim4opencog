@@ -833,15 +833,17 @@ namespace RTParser.Variables
 
         private string TransformName(string name)
         {
+            string nn = name;
+            name = name.ToUpper();
+            int len = name.Length;
             if (Subst)
             {
-                string nn = name;
-                int len = name.Length;
                 name = name.Replace("\\b", " ").Trim();
-                name = name.ToUpper();
-                if (name == nn) return nn;
-                return name;
+            } else
+            {
+                name = name.Replace("FAVORITE", "FAV");
             }
+            if (name == nn) return nn;
             return name;
         }
 
