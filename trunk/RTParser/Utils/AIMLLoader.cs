@@ -249,18 +249,19 @@ namespace RTParser.Utils
                 if (loadOpts.recurse) loadAIMLURI(path, loadOpts);
                 return;
             }
+            GraphMaster master = loadOpts.CtxGraph;
             try
             {
                 // load the document
-                if (loadOpts.CtxGraph.IsFileLoaded(path))
+                if (master.IsFileLoaded(path))
                 {
                     if (!forceReload) return;
-                    writeToLog("Already loaded! (but loading again) " + path + " from " + loadOpts.CtxGraph);
+                    writeToLog("Already loaded! (but loading again) " + path + " from " + master);
                     //return;
                 }
                 else
-                    writeToLog("Processing AIML file: " + path + " from " + loadOpts.CtxGraph);
-                loadOpts.CtxGraph.AddFileLoaded(path);
+                    writeToLog("Processing AIML file: " + path + " from " + master);
+                master.AddFileLoaded(path);
                 var tr = HostSystem.OpenRead(path);
                 try
                 {
@@ -281,12 +282,12 @@ namespace RTParser.Utils
                     HostSystem.Close(tr);
                 }
 
-                writeToLog("Loaded AIMLFile: '{0}'", path + " from " + loadOpts.CtxGraph);
+                writeToLog("Loaded AIMLFile: '{0}'", path + " from " + master);
                 return;
             }
             catch (Exception e)
             {
-                loadOpts.CtxGraph.RemoveFileLoaded(path);
+                master.RemoveFileLoaded(path);
                 writeToLog("Error in AIML Stacktrace: " + path + "\n  " + e.Message + "\n" + e.StackTrace);
                 writeToLog("Error in AIML file: " + path + " Message " + e.Message);
             }
@@ -685,23 +686,27 @@ namespace RTParser.Utils
             // o.k., add the processed AIML to the GraphMaster structure
             if (!categoryPath.IsEmpty)
             {
-                try
+                GraphMaster pathCtxGraph = path.CtxGraph;
+                lock (pathCtxGraph.LockerObject)
                 {
-                    CategoryInfo categoryInfo = CategoryInfo.GetCategoryInfo(patternInfo, cateNode, path);
-                    categoryInfo.SetCategoryTag(categoryPath, patternInfo, categoryInfo,
-                                                  outerNode, templateNode, guard, thatInfo);
-                    GraphMaster pathCtxGraph = path.CtxGraph;
-                    pathCtxGraph.addCategoryTag(categoryPath, patternInfo, categoryInfo,
-                                                outerNode, templateNode, guard, thatInfo);
-                    return categoryInfo;
-                }
-                catch (Exception e)
-                {
-                    string s = "ERROR! Failed to load a new category into the graphmaster where the path = " +
-                               categoryPath + " and templateNode = " + templateNode.OuterXml +
-                               " produced by a category in the file: " + path + "\n";
-                    writeToLog(s + e + "\n" + s);
-                    return null;
+                    try
+                    {
+                        CategoryInfo categoryInfo = CategoryInfo.GetCategoryInfo(patternInfo, cateNode, path);
+                        categoryInfo.SetCategoryTag(categoryPath, patternInfo, categoryInfo,
+                                                    outerNode, templateNode, guard, thatInfo);
+
+                        pathCtxGraph.addCategoryTag(categoryPath, patternInfo, categoryInfo,
+                                                    outerNode, templateNode, guard, thatInfo);
+                        return categoryInfo;
+                    }
+                    catch (Exception e)
+                    {
+                        string s = "ERROR! Failed to load a new category into the graphmaster where the path = " +
+                                   categoryPath + " and templateNode = " + templateNode.OuterXml +
+                                   " produced by a category in the file: " + path + "\n";
+                        writeToLog(s + e + "\n" + s);
+                        return null;
+                    }
                 }
             }
             else
@@ -1248,8 +1253,8 @@ namespace RTParser.Utils
             padWildCards = xml2.IndexOfAny("\\:/".ToCharArray(), 0) == -1;
 
             if (!padWildCards) padchars = null;
-            
-            String s = "";
+
+            var s = new StringBuilder(inlen);
 
             bool chgd = false;
             bool xmlFound = false;
@@ -1316,10 +1321,10 @@ namespace RTParser.Utils
                 }
                 if (pendingWhitespace)
                 {
-                    s += ' ';
+                    s.Append(' ');
                     pendingWhitespace = false;
                 }
-                s += c0;
+                s.Append(c0);
                 lastChar = c0;
             }
             if (pendingWhitespace) chgd = true;
@@ -1334,13 +1339,13 @@ namespace RTParser.Utils
             {
                 if (len != inlen)
                 {
-                    return s;
+                    return s.ToString();
                 }
                 return xml2;
             }
             //s = s.Replace("<star index=\"1\"", "<star");
 
-            return s;
+            return s.ToString();
         }
 
         public static string CleanWhitepacesLower(string xml2)

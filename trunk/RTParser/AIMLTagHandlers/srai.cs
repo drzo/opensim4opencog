@@ -127,7 +127,7 @@ namespace RTParser.AIMLTagHandlers
 
 
                         string requestGraphSrai = request.Graph.Srai;
-                        subRequest.Graph = request.Graph.GetGraph(requestGraphSrai);
+                        subRequest.Graph = request.GetGraph(requestGraphSrai);
 
                         var ti = query.CurrentTemplate;
                         if (ti != null) subRequest.UsedTemplates.Add(ti);
