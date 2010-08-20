@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using cogbot.Listeners;
+using MushDLR223.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
 
@@ -12,7 +13,7 @@ namespace cogbot.TheOpenSims
 
         static public void WriteLine(string s, params object[] args)
         {
-            SimAssetStore.WriteLine(s,args);
+            SimAssetStore.WriteLine(s, args);
         }
         //   public abstract bool NeedsRequest{ get; set;}
         //     public abstract bool SameAsset(SimAsset animation);
@@ -38,7 +39,7 @@ namespace cogbot.TheOpenSims
             {
                 if (_ServerAsset == null)
                 {
-                    if (PullServerAsset && AssetID!=UUID.Zero)
+                    if (PullServerAsset && AssetID != UUID.Zero)
                     {
                         GridClient c = Store.Client;
                         if (c != null && c.Network.Connected)
@@ -47,11 +48,11 @@ namespace cogbot.TheOpenSims
                             c.Assets.RequestAsset(AssetID, AssetType, true, On_AssetDownloaded);
                         }
                         else
-                        {              
-                           // PullServerAsset = false;
+                        {
+                            // PullServerAsset = false;
                             Store.Enqueue(() =>
                                                         {
-                                                            Thread.Sleep(10);                                                       
+                                                            Thread.Sleep(10);
                                                             var v = ServerAsset;
                                                         });
                         }
@@ -91,7 +92,7 @@ namespace cogbot.TheOpenSims
             AssetID = anim;
             Name = name;
             //lock (SimAssetStore.SimAssets)
-                SimAssetStore.SimAssets.Add(this);
+            SimAssetStore.SimAssets.Add(this);
         }
         public SimAsset(UUID anim, String name, AssetType type)
         {
@@ -99,7 +100,7 @@ namespace cogbot.TheOpenSims
             Name = name;
             AssetType = type;
             //lock (SimAssetStore.SimAssets) 
-                SimAssetStore.SimAssets.Add(this);
+            SimAssetStore.SimAssets.Add(this);
         }
 
         public bool Matches(String s)
@@ -205,7 +206,7 @@ namespace cogbot.TheOpenSims
             {
                 if (value == UUID.Zero) return;
                 //lock (SimAssetStore.uuidAsset)
-                    SimAssetStore.uuidAsset[value] = this;
+                SimAssetStore.uuidAsset[value] = this;
                 lock (AssetIDs)
                 {
                     if (AssetIDs.Contains(value)) return;
@@ -218,7 +219,7 @@ namespace cogbot.TheOpenSims
         {
             get
             {
-                if (Item!=null)
+                if (Item != null)
                 {
                     return Item.Name;
                 }
@@ -291,7 +292,7 @@ namespace cogbot.TheOpenSims
                 {
                     if (AssetID != UUID.Zero)
                     {
-                        ServerAsset = CreateAssetWrapper(AssetType,AssetID,value);
+                        ServerAsset = CreateAssetWrapper(AssetType, AssetID, value);
                     }
                     return;
                 }
@@ -342,14 +343,14 @@ namespace cogbot.TheOpenSims
                     asset = new AssetCallingCard(uuid, data);
                     break;
                 default:
-                    throw new NotImplementedException( "Unimplemented asset type: " + type);
+                    throw new NotImplementedException("Unimplemented asset type: " + type);
             }
             return asset;
         }
 
         public virtual float Length
         {
-            get { return 3;  }
+            get { return 3; }
         }
 
         public virtual bool IsContinuousEffect
@@ -387,6 +388,19 @@ namespace cogbot.TheOpenSims
 
             }
             return false;
+        }
+
+        public static bool Decode(Asset sa)
+        {
+            try
+            {
+                return sa.Decode();
+            }
+            catch (Exception exception)
+            {
+                DLRConsole.SystemWriteLine("decoded " + sa.GetType() + " " + exception);
+                return false;
+            }
         }
     }
 }
