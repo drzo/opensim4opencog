@@ -30,6 +30,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 
 namespace OpenMetaverse.Rendering
 {
@@ -74,6 +75,19 @@ namespace OpenMetaverse.Rendering
             return mesh;
         }
 
+        /// <summary>
+        /// Generates a basic mesh structure from a sculpted primitive and
+        /// texture
+        /// </summary>
+        /// <param name="prim">Sculpted primitive to generate the mesh from</param>
+        /// <param name="sculptTexture">Sculpt texture</param>
+        /// <param name="lod">Level of detail to generate the mesh at</param>
+        /// <returns>The generated mesh</returns>
+        public SimpleMesh GenerateSimpleSculptMesh(Primitive prim, Bitmap sculptTexture, DetailLevel lod)
+        {
+            throw new NotImplementedException();
+        }
+
         public FacetedMesh GenerateFacetedMesh(Primitive prim, DetailLevel lod)
         {
             Path path = GeneratePath();
@@ -86,6 +100,19 @@ namespace OpenMetaverse.Rendering
             mesh.Faces = GenerateFaces(prim);
 
             return mesh;
+        }
+
+        /// <summary>
+        /// Generates a series of faces for a sculpted prim, each face 
+        /// containing a mesh and metadata
+        /// </summary>
+        /// <param name="prim">Sculpted primitive to generate the mesh from</param>
+        /// <param name="sculptTexture">Sculpt texture</param>
+        /// <param name="lod">Level of detail to generate the mesh at</param>
+        /// <returns>The generated mesh</returns>
+        public FacetedMesh GenerateFacetedSculptMesh(Primitive prim, Bitmap sculptTexture, DetailLevel lod)
+        {
+            throw new NotImplementedException();
         }
 
         public void TransformTexCoords(List<Vertex> vertices, Vector3 center, Primitive.TextureEntryFace teFace)

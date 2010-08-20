@@ -1434,7 +1434,7 @@ namespace OpenMetaverse
             //Agent update callback
             Client.Network.RegisterCallback(PacketType.AgentDataUpdate, AgentDataUpdateHandler);
             // Animation callback
-            Client.Network.RegisterCallback(PacketType.AvatarAnimation, AvatarAnimationHandler);
+            Client.Network.RegisterCallback(PacketType.AvatarAnimation, AvatarAnimationHandler, false);
             // Object colliding into our agent callback
             Client.Network.RegisterCallback(PacketType.MeanCollisionAlert, MeanCollisionAlertHandler);
             // Region Crossing
@@ -3686,7 +3686,8 @@ namespace OpenMetaverse
 
             if (m_AnimationsChanged != null)
             {
-                OnAnimationsChanged(new AnimationsChangedEventArgs(this.SignaledAnimations));
+                ThreadPool.QueueUserWorkItem(delegate(object o)
+                { OnAnimationsChanged(new AnimationsChangedEventArgs(this.SignaledAnimations)); });
             }
 
         }
