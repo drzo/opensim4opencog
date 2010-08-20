@@ -216,22 +216,37 @@ namespace RTParser
                 bool roleAcct = IsRoleAcctName(fullname);
                 myUser.IsRoleAcct = roleAcct;
                 GraphMaster g = GetUserGraph(key);
-                g.AddGenlMT(GraphMaster);
+                OnBotCreated(() => { g.AddGenlMT(GraphMaster); });
+                
                 myUser.ListeningGraph = g;
                 myUser.Predicates.addSetting("name", username);
                 myUser.Predicates.InsertFallback(() => AllUserPreds);
                 this.GlobalSettings.AddChild("user." + key + ".", ()=>  myUser.Predicates);
 
-                myUser.Predicates.AddChild("bot.", () => BotAsUser.Predicates);
+                OnBotCreated(() => { myUser.Predicates.AddChild("bot.", () => BotAsUser.Predicates); });
+                
 
                 string userdir = GetUserDir(key);
-                if (fullname.Contains("doug"))
-                {
-                    writeToLog("USERTRACE: Loading User " + fullname);
-                }
                 myUser.SyncDirectory(userdir);
                 return myUser;
             }
+        }
+
+        private List<Action> OnBotCreatedHooks = new List<Action>();
+        private void OnBotCreated(Action action)
+        {
+            lock (OnBotCreatedHooks)
+            {
+                if (BotAsUser != null) action();
+                else OnBotCreatedHooks.Add(action);
+            }
+        }
+
+        private void EnsureDefaultUsers()
+        {
+            LastUser = FindOrCreateUser(UNKNOWN_PARTNER);
+            LastUser.IsRoleAcct = true;
+            LoadUsers(".*");
         }
 
         public int LoadUsers(string key)
@@ -641,7 +656,7 @@ namespace RTParser
                 }
             }
             fromname = fromname.Trim();
-            return fromname.Trim().Replace(" ", "_").Replace(".", "_").Replace("-", "_").Replace("__", "_");
+            return ToScriptableName(fromname);
         }
 
         public string KeyFromUsername(string fromname)

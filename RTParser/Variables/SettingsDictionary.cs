@@ -479,14 +479,14 @@ namespace RTParser.Variables
             {
                 //loadSettingNode(dict, myNode.Attributes, false, true, request);
 
-                dict = request.Graph.GetSubstitutions("input", true);
+                dict = request.GetSubstitutions("input", true);
                 foreach (XmlNode n in myNode.ChildNodes)
                 {
                     string nn = n.Name.ToLower();
                     /// ProgramQ            ProgramD
                     if (nn != "substitution" && nn != "substitute")
                     {
-                        var chgdict = request.Graph.GetSubstitutions(nn, false);
+                        var chgdict = request.GetSubstitutions(nn, false);
                         if (chgdict != null)
                         {
                             settingsDict.writeToLog("switching to substitutions: " + chgdict);

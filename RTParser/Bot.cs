@@ -83,7 +83,7 @@ namespace RTParser
             string s = GetType().Name;
             if (GlobalSettings != null)
             {
-                s += " name=" + GlobalSettings.grabSettingNoDebug("name");
+                s += " name=" + GlobalSettings.grabSettingNoDebug("name") + " (" + NamePath + ")";
             }
             return s;
         }
@@ -98,12 +98,18 @@ namespace RTParser
         public User LastUser;
         public User BotAsUser;
         public User ExemplarUser;
+        public string NamePath;
+        public string NameAsSet;
         //public Request BotAsRequestUsed = null;
         public Request GetBotRequest(string s)
         {           
             var r = new AIMLbot.Request(s, BotAsUser, this, null);
             Result res = new AIMLbot.Result(BotAsUser, this, r, null);
             res._CurrentQuery = new SubQuery(s, res, r);
+            OnBotCreated(()=>
+                             {
+                                 res.user = r.user = BotAsUser;
+                             });
             r.IsTraced = true;
             r.StartedOn = DateTime.Now;
             // times out in 15 minutes
@@ -485,9 +491,7 @@ namespace RTParser
             get { return GraphMaster.Size + HeardSelfSayGraph.Size; }
         }
 
-
         private GraphMaster _g;
-
         private GraphMaster _h;
 
 
@@ -496,12 +500,30 @@ namespace RTParser
         /// </summary>
         public GraphMaster GraphMaster
         {
-            get { return GetGraph("default", _g); }
+            get
+            {
+                if (_g != null) return _g;
+                if (String.IsNullOrEmpty(NamePath))
+                {
+                    writeToLog("No graphmapster!");
+                    return null;
+                }
+                return GetGraph(NamePath, _g);
+            }
         }
 
         public GraphMaster HeardSelfSayGraph
         {
-            get { return GetGraph("heardselfsay", _h); }
+            get
+            {
+                if (_h != null) return _h;
+                if (String.IsNullOrEmpty(NamePath))
+                {
+                    writeToLog("No HeardSelfSayGraph!");
+                    return null;
+                }
+                return GetGraph(NamePath + "_heardselfsay", _h);
+            }
         }
 
 
@@ -562,16 +584,25 @@ namespace RTParser
 
         #endregion
 
+        public static int BotNumberCreated = 0;
         /// <summary>
         /// Ctor
         /// </summary>
         public RTPBot()
             : base(QuerySettings.CogbotDefaults)
         {
-            _g = new GraphMaster("default", this);
-            _h = new GraphMaster("heardselfsay", this);
-            GraphsByName.Add("default", _g);
-            GraphsByName.Add("heardselfsay", _h);
+            lock (OneAtATime)
+            {
+                EnsureStaticInit();
+                BotNumberCreated++;
+                EnsureBotInit(BotNumberCreated == 1);
+            }
+
+        }
+        public void EnsureBotInit(bool wasFirst)
+        {
+            //LocalGraphsByName["default"] =
+            //EnsureLocalGraphs();
             TheNLKB = new NatLangDb(this);
             //            BotAsRequestUsed = new AIMLbot.Request("-bank-input-", BotAsUser, this, null);
             AddExcuteHandler("aiml", EvalAIMLHandler);
@@ -619,6 +650,10 @@ namespace RTParser
         /// Loads AIML from .aiml files into the graphmaster "brain" of the Proccessor
         /// </summary>
         public void loadAIMLFromDefaults()
+        {
+            
+        }
+        public void loadAIMLFromDefaults0()
         {
             loadConfigs(this, PathToConfigFiles, GetBotRequest("-loadAimlFromDefaults-"));
             loadAIMLAndSettings(PathToAIML);
@@ -686,7 +721,7 @@ namespace RTParser
                 {
                     loader = new AIMLLoader(this, request);
                 }
-                request.Loader.loadAIMLNode(newAIML.DocumentElement, filename, request);
+                loader.loadAIMLNode(newAIML.DocumentElement, filename, request);
             }
             finally
             {
@@ -725,17 +760,8 @@ namespace RTParser
                 this.AllUserPreds = new SettingsDictionary("bot.alluserpred", this, null);
                 this.SetPredicateReturn = new SettingsDictionary("chat.setpredicatereturn", this, null);
 
-                BotAsUser = new AIMLbot.User("heardselfsay", this);
-                BotAsUser.IsRoleAcct = true;
-                BotAsUser.ListeningGraph = HeardSelfSayGraph;
-                BotAsUser.Predicates = GlobalSettings;
-                GlobalSettings.IsTraced = true;
-                BotAsUser.UserDirectory = "aiml/users/heardselfsay";
-                BotAsUser.UserID = "heardselfsay";
-                BotAsUser.UserName = "heardselfsay";
-                BotUsers["heardselfsay"] = BotAsUser;
 
-                User guser = ExemplarUser = new AIMLbot.User("globalPreds", this);
+                User guser = ExemplarUser = LastUser = new AIMLbot.User("globalPreds", this);
                 BotUsers["globalpreds"] = guser;
                 guser.IsRoleAcct = true;
                 guser.Predicates.clearSettings();
@@ -744,22 +770,22 @@ namespace RTParser
                 guser.Predicates.maskSetting("name");
                 guser.Predicates.maskSetting("id");
 
-                loadGlobalBotSettings(); 
-                
-                LastUser = FindOrCreateUser(UNKNOWN_PARTNER);
-                LastUser.IsRoleAcct = true;
-
-                Request request = GetBotRequest("-bot setup-");
-                if (Loader == null)
-                {
-                    Loader = new AIMLLoader(this, request);
-                }
-                clojureInterpreter.Intern("BotAsUser", BotAsUser);
                 this.CustomTags = new Dictionary<string, TagHandler>();
                 //this.GraphMaster = new GraphMaster();
                 //this.HeardSelfSayGraph = new GraphMaster();
                 if (HostSystem.FileExists("AIMLbot.dll")) loadCustomTagHandlers("AIMLbot.dll");
                 if (HostSystem.FileExists("AIMLbot.exe")) loadCustomTagHandlers("AIMLbot.exe");
+
+
+                // try a safe default setting for the settings xml file
+                // Checks for some important default settings
+                SetSaneGlobals(this.GlobalSettings);
+                string pathToSettings = HostSystem.Combine(RuntimeDirectory,
+                                                           HostSystem.Combine("config", "Settings.xml"));
+                Request request = GetBotRequest("<!- Loads settings from: '" + pathToSettings + "' -->");
+                this.loadSettingsFile(pathToSettings, request);
+                // RE-Checks for some important default settings
+                SetSaneGlobals(this.GlobalSettings);
 
                 string names_str = "markovx.trn 5ngram.ngm";
                 string[] nameset = names_str.Split(' ');
@@ -827,10 +853,6 @@ namespace RTParser
         /// </summary>
         public void loadGlobalBotSettings()
         {
-            // try a safe default setting for the settings xml file
-            string path = HostSystem.Combine(RuntimeDirectory, HostSystem.Combine("config", "Settings.xml"));
-            var request = GetBotRequest("<!- Loads settings based upon the default location of the Settings.xml -->");
-            this.loadSettingsFile(path, request);
         }
 
         public void ReloadAll()
@@ -885,6 +907,8 @@ namespace RTParser
             var GlobalSettings = thiz.GlobalSettings;
             GlobalSettings.IsTraced = true;
 
+            if (request == null) request = thiz.GetBotRequest("<!- Loads Configs from: '" + pathToSettings + "' -->");
+
             // Checks for some important default settings
             GlobalSettings.loadSettings(HostSystemCombine(pathToSettings, "settings.xml"), request);
             GlobalSettings.loadSettings(HostSystemCombine(pathToSettings, "core.xml"), request);
@@ -937,12 +961,9 @@ namespace RTParser
         /// <param name="pathToSettings">Path to the settings xml file</param>
         public void loadSettingsFile(string pathToSettings, Request request)
         {
+            if (request == null) request = GetBotRequest("<!- Loads settings from: '" + pathToSettings + "' -->");
             ReloadHooks.Add(() => loadSettingsFile(pathToSettings, request));
-            this.GlobalSettings.loadSettings(pathToSettings, request);
-
-            // Checks for some important default settings
-            SetSaneGlobals(this.GlobalSettings);
-
+            this.GlobalSettings.loadSettings(pathToSettings, request);            
             loadConfigs(this, HostSystem.GetBaseDir(pathToSettings), request);
         }
 
@@ -1507,6 +1528,10 @@ namespace RTParser
 
         private string swapPerson(string inputString)
         {
+            if (Loader == null)
+            {
+                Loader = new AIMLLoader(this, GetBotRequest("swapPerson " + inputString));
+            }
             string temp = Loader.Normalize(inputString, true);
             //temp = ApplySubstitutions.Substitute(this, this.PersonSubstitutions, temp);
             temp = ApplySubstitutions.Substitute(this.Person2Substitutions, temp);
@@ -2779,6 +2804,10 @@ The AIMLbot program.
             string evalTemplate = "<template>" + cmd + "</template>";
             var node = AIMLTagHandler.getNode(evalTemplate);
             node.ReadOnly = false;
+            if (Loader == null)
+            {
+                Loader = new AIMLLoader(this, GetBotRequest("EvalAIMLHandler " + cmd));
+            }
             var res = ImmediateAiml(node, user, Loader, null);
             return res;
         }
@@ -2876,7 +2905,8 @@ The AIMLbot program.
         }
 
 
-        public Dictionary<string, GraphMaster> GraphsByName = new Dictionary<string, GraphMaster>();
+        public static Dictionary<string, GraphMaster> GraphsByName = new Dictionary<string, GraphMaster>();
+        public Dictionary<string, GraphMaster> LocalGraphsByName = new Dictionary<string, GraphMaster>();
         public CycDatabase TheCyc;
         public NatLangDb TheNLKB;
         public bool UseInlineThat = true;
@@ -2891,12 +2921,17 @@ The AIMLbot program.
 
         public GraphMaster GetUserGraph(string graphPath)
         {
+            graphPath = graphPath.ToLower().Trim(); 
             GraphMaster g;
             lock (GraphsByName)
             {
+                if (LocalGraphsByName.TryGetValue(graphPath, out g))
+                {
+                    return g;
+                }
                 if (!GraphsByName.TryGetValue(graphPath, out g))
                 {
-                    g = GraphsByName[graphPath] = new GraphMaster(graphPath, this);
+                    g = GraphsByName[graphPath] = new GraphMaster(graphPath);
                 }
             }
             return g;
@@ -2907,14 +2942,22 @@ The AIMLbot program.
             if (g != null) return g;
             if (graphPath == null)
             {
+                if (current==null)
+                {
+                    
+                }
                 return current;
             }
-            graphPath = graphPath.ToLower().Trim();
+            graphPath = ToScriptableName(graphPath.Trim());
             lock (GraphsByName)
             {
+                if (LocalGraphsByName.TryGetValue(graphPath, out g))
+                {
+                    return g;
+                }
                 if (!GraphsByName.TryGetValue(graphPath, out g))
                 {
-                    g = GraphsByName[graphPath] = new GraphMaster(graphPath, this);
+                    g = GraphsByName[graphPath] = new GraphMaster(graphPath);
                 }
             }
             return g;
@@ -2926,22 +2969,22 @@ The AIMLbot program.
             {
                 return current;
             }
-            graphPath = graphPath.ToLower().Trim();
+            graphPath = ToScriptableName(graphPath.Trim());
 
             if (graphPath == "current" || graphPath == "")
             {
                 return current;
             }
 
-            if (graphPath == "default")
-            {
-                return _g;
-            }
+            //if (graphPath == "default")
+            //{
+            //    return _g;
+            //}
 
-            if (graphPath == "heardselfsay")
-            {
-                return _h;
-            }
+            //if (graphPath == "heardselfsay")
+            //{
+            //    return _h;
+            //}
 
             if (graphPath == "parent")
             {
@@ -2952,12 +2995,21 @@ The AIMLbot program.
             GraphMaster g;
             lock (GraphsByName)
             {
+                if (LocalGraphsByName.TryGetValue(graphPath, out g))
+                {
+                    return g;
+                }
                 if (!GraphsByName.TryGetValue(graphPath, out g))
                 {
                     return null;
                 }
             }
             return g;
+        }
+
+        public static string ToScriptableName(string path)
+        {
+            return path.ToLower().Trim().Replace(" ", "_").Replace(".", "_").Replace("-", "_").Replace("__", "_");
         }
 
         static void MainConsoleWriteLn(string fmt, params object[] ps)
@@ -3035,7 +3087,6 @@ The AIMLbot program.
             writeLine("Botname: " + myName);
             writeLine(Environment.NewLine);
             myBot.isAcceptingUserInput = false;
-            myBot.loadAIMLFromDefaults();
             writeLine("-----------------------------------------------------------------");
             myBot.SetName(myName);
             myBot.isAcceptingUserInput = true;
@@ -3446,6 +3497,16 @@ The AIMLbot program.
                 if (args == "")
                 {
                     console("-----------------------------------------------------------------");
+                    foreach (var ggg in GraphMaster.CopyOf(LocalGraphsByName))
+                    {
+                        console("-----------------------------------------------------------------");
+                        string n = ggg.Key;
+                        GraphMaster gm = ggg.Value;
+                        console("" + gm + " key='" + n + "'");
+                        gm.WriteMetaHeaders(console, printOptions);
+                        console("-----------------------------------------------------------------");
+                    }
+                    console("-----------------------------------------------------------------");
                     foreach (var ggg in GraphMaster.CopyOf(GraphsByName))
                     {
                         console("-----------------------------------------------------------------");
@@ -3635,32 +3696,97 @@ The AIMLbot program.
             {
                 request.GraphsAcceptingUserInput = false;
                 loadAIMLFromURI(file, request);
+                foreach (var s1 in HostSystem.GetFiles(file, "*Settings*.xml"))
+                {
+                    loadSettingsFile(s1, request);
+                }
             }
             finally
             {
                 request.GraphsAcceptingUserInput = prev;
             }
         }
+
         public void SetName(string myName)
         {
-            LoadPersonalDirectories(myName);
+            //char s1 = myName[1];
+
+            NameAsSet = myName;
+            //new AIMLbot.User("heardselfsay", this)
+            BotAsUser = FindOrCreateUser(myName);
+            clojureInterpreter.Intern("BotAsUser", BotAsUser);
+            BotAsUser.IsRoleAcct = true;
+            BotAsUser.Predicates = GlobalSettings;
+            GlobalSettings.IsTraced = true;
+            //BotAsUser.UserDirectory = "aiml/users/heardselfsay";
+            //BotAsUser.UserID = "heardselfsay";
+            //BotAsUser.UserName = "heardselfsay";
+            //BotUsers["heardselfsay"] = BotAsUser;            
             BotAsUser.UserName = myName;
-            BotAsUser.addSetting("name", myName);
+            BotAsUser.addSetting("name", myName);            
             BotAsUser.removeSetting("userdir");
+            NamePath = ToScriptableName(NameAsSet);
+            BotAsUser.UserID = NamePath;
+            BotAsUser.SaveDirectory(BotAsUser.UserDirectory);
+            string dgn = NamePath + "_default";
+            string hgn = NamePath + "_heardselfsay";
+            lock (GraphsByName)
+            {
+                if (String.IsNullOrEmpty(NamePath))
+                {
+                    throw new NullReferenceException("SetName! = " + myName);
+                }
+                if (_g == null)
+                {
+                    _g = new GraphMaster(dgn);
+                    _h = new GraphMaster(hgn);
+                    _g.AddGenlMT(GraphsByName["default"]);
+                    _h.AddGenlMT(GraphsByName["heardselfsay"]);
+                    GraphsByName.Add(dgn, _g);
+                    GraphsByName.Add(hgn, _h);
+                }
+            }
+            var vv = HeardSelfSayGraph;
+            if (vv != null) BotAsUser.ListeningGraph = vv;
+            lock (OnBotCreatedHooks)
+            {
+                foreach (var list in OnBotCreatedHooks)
+                {
+                    list();
+                }
+                OnBotCreatedHooks.Clear();
+            }
+            loadAIMLFromDefaults0();
+            EnsureDefaultUsers();
+            LoadPersonalDirectories(myName);
+            BotAsUser.SaveDirectory(BotAsUser.UserDirectory);
         }
+
+        public static bool StaticInitStarted = false;
+        public static object OneAtATime = new object();
+        static void EnsureStaticInit()
+        {
+            lock (OneAtATime)
+            {
+                if (StaticInitStarted) return;
+                StaticInitStarted = true;
+                GraphsByName["default"] = new GraphMaster("default");
+                GraphsByName["heardselfsay"] = new GraphMaster("heardselfsay");
+            }
+        }
+
         public void LoadPersonalDirectories(string myName)
         {
             bool loaded = LoadPersonalDirectory(myName);
             if (!loaded)
             {
-                myName = myName.Replace(" ", "_").ToLower();
+                myName = ToScriptableName(myName.Trim());
                 loaded = LoadPersonalDirectory(myName);
             }
             if (!loaded)
             {
                 writeToLog("Didnt find personal directories with stem: '{0}'", myName);
             }
-            LoadUsers(".*");
         }
 
         internal static void writeDebugLine(string message, params object[] args)
@@ -3737,6 +3863,11 @@ The AIMLbot program.
                 return "-BOT-ID-NULL-";
             }
             set { throw new NotImplementedException(); }
+        }
+
+        public ISettingsDictionary Predicates
+        {
+            get { return GlobalSettings; }
         }
 
         #endregion

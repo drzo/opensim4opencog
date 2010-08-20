@@ -67,6 +67,8 @@ namespace RTParser
         Unifiable That { get; set; }
         PrintOptions WriterOptions { get; }
         // inherited from base  string GraphName { get; set; }
+        ISettingsDictionary GetSubstitutions(string name, bool b);
+        GraphMaster GetGraph(string srai);
     }
 
     /// <summary>
@@ -279,12 +281,17 @@ namespace RTParser
             {
                 if (sGraph != null)
                     return sGraph;
-                GraphMaster probably = user.ListeningGraph;
                 if (ParentRequest != null)
                 {
                     var pg = ParentRequest.Graph;
-                    if (pg != null) return probably = pg;
+                    if (pg != null) return pg;
                 }
+                if (user == null)
+                {
+                    if (ovGraph == null) return null;
+                    return TargetBot.GetGraph(ovGraph, null);
+                }
+                GraphMaster probably = user.ListeningGraph;
                 if (ovGraph != null)
                 {
                     if (probably != null)
@@ -298,7 +305,7 @@ namespace RTParser
                         }
                         if (probably.ScriptingName.Contains(ovGraph)) return probably;
                         // transtiton
-                        var newprobably = probably.GetGraph(ovGraph);
+                        var newprobably = TargetBot.GetGraph(ovGraph, probably);
                         if (newprobably != probably)
                         {
                             user.WriteLine("Changing request graph " + probably + " -> " + newprobably + " for " + this);
@@ -319,7 +326,7 @@ namespace RTParser
             {
                 if (value != null)
                 {
-                    ovGraph = value.GraphName;
+                    ovGraph = value.ScriptingName;
                 }
                 LoaderOptions lo = LoadOptions;
                 lo.CtxGraph = value;
@@ -351,10 +358,15 @@ namespace RTParser
             }
             set
             {
-                if (sGraph != null)
-                    sGraph = sGraph.GetGraph(value);
+               // if (sGraph != null)
+                sGraph = GetGraph(value);
                 ovGraph = value;
             }
+        }
+
+        public GraphMaster GetGraph(string value)
+        {
+           return TargetBot.GetGraph(value, sGraph);
         }
 
         private Unifiable _topic;
@@ -589,6 +601,16 @@ namespace RTParser
                 return user.WriterOptions;
             }
             set { iopts = value; }
+        }
+
+        public ISettingsDictionary GetSubstitutions(string named, bool createIfMissing)
+        {
+            return TargetBot.GetDictionary(named, "substitutions", createIfMissing);
+        }
+
+        public ISettingsDictionary GetDictionary(string named, string type, bool createIfMissing)
+        {
+            return TargetBot.GetDictionary(named, type, createIfMissing);
         }
 
         public IList<Result> UsedResults { get; set; }

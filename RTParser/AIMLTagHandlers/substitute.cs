@@ -63,7 +63,7 @@ namespace RTParser.AIMLTagHandlers
 
         protected override ISettingsDictionary GetDictionary()
         {
-            return request.Graph.GetSubstitutions(GetSubstutionName(), true);
+            return request.GetSubstitutions(GetSubstutionName(), true);
 
         }
 
@@ -132,7 +132,7 @@ namespace RTParser.Utils
 
         protected virtual ISettingsDictionary GetDictionary()
         {
-            ISettingsDictionary dict = request.Graph.GetSubstitutions(templateNode.Name.ToLower(), false);
+            ISettingsDictionary dict = request.GetSubstitutions(templateNode.Name.ToLower(), false);
             if (dict != null)
             {
                 return dict;
