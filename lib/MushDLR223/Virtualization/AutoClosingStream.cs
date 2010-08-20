@@ -103,6 +103,7 @@ namespace MushDLR223.Virtualization
                 writeToLog("ERROR Autoclosed: " + e);
                 throw e;
             }
+            UnderlyingStream = null;
         }
 
         public void AddToName(string name)
@@ -126,7 +127,11 @@ namespace MushDLR223.Virtualization
 
         protected override void Dispose(bool disposing)
         {
-            UnderlyingStream.Dispose();
+            if (UnderlyingStream!=null)
+            {
+                UnderlyingStream.Dispose();
+                UnderlyingStream = null;
+            }
             base.Dispose(disposing);
             IsClosed = true;
         }
