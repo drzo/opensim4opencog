@@ -434,8 +434,8 @@ namespace OpenMetaverse
         {
             Client = client;
 
-            Client.Network.RegisterCallback(PacketType.ObjectUpdate, ObjectUpdateHandler);
-            Client.Network.RegisterCallback(PacketType.ImprovedTerseObjectUpdate, ImprovedTerseObjectUpdateHandler);
+            Client.Network.RegisterCallback(PacketType.ObjectUpdate, ObjectUpdateHandler, false);
+            Client.Network.RegisterCallback(PacketType.ImprovedTerseObjectUpdate, ImprovedTerseObjectUpdateHandler, false);
             Client.Network.RegisterCallback(PacketType.ObjectUpdateCompressed, ObjectUpdateCompressedHandler);
             Client.Network.RegisterCallback(PacketType.ObjectUpdateCached, ObjectUpdateCachedHandler);
             Client.Network.RegisterCallback(PacketType.KillObject, KillObjectHandler);
@@ -2015,7 +2015,12 @@ namespace OpenMetaverse
                         prim.AngularVelocity = objectupdate.AngularVelocity;
                         #endregion
 
-                        OnObjectUpdate(new PrimEventArgs(simulator, prim, update.RegionData.TimeDilation, isNewObject, attachment));
+                        EventHandler<PrimEventArgs> handler = m_ObjectUpdate;
+                        if (handler != null)
+                        {
+                            ThreadPool.QueueUserWorkItem(delegate(object o)
+                            { handler(this, new PrimEventArgs(simulator, prim, update.RegionData.TimeDilation, isNewObject, attachment)); });
+                        }
 
                         break;
                     #endregion Prim and Foliage
@@ -2229,7 +2234,12 @@ namespace OpenMetaverse
                         (Primitive)GetPrimitive(simulator, update.LocalID, UUID.Zero);
 
                     // Fire the pre-emptive notice (before we stomp the object)
-                    OnTerseObjectUpdate(new TerseObjectUpdateEventArgs(simulator, obj, update, terse.RegionData.TimeDilation));
+                    EventHandler<TerseObjectUpdateEventArgs> handler = m_TerseObjectUpdate;
+                    if (handler != null)
+                    {
+                        ThreadPool.QueueUserWorkItem(delegate(object o)
+                        { handler(this, new TerseObjectUpdateEventArgs(simulator, obj, update, terse.RegionData.TimeDilation)); });
+                    }
 
                     #region Update Client.Self
                     if (update.LocalID == Client.Self.localID)
@@ -2511,7 +2521,9 @@ namespace OpenMetaverse
 
                     bool isAttachment = (flags & CompressedFlags.HasNameValues) != 0 && prim.ParentID != 0;
 
-                    OnObjectUpdate(new PrimEventArgs(simulator, prim, update.RegionData.TimeDilation, isNew, isAttachment));
+                    EventHandler<PrimEventArgs> handler = m_ObjectUpdate;
+                    if (handler != null)
+                        handler(this, new PrimEventArgs(simulator, prim, update.RegionData.TimeDilation, isNew, isAttachment));
 
                     #endregion
                 }
@@ -2855,6 +2867,15 @@ namespace OpenMetaverse
                     prim.PathEnd = 1f;
                     prim.PathScaleX = 1f;
                     prim.PathScaleY = 0.25f;
+                    prim.PathRevolutions = 1f;
+                    break;
+                case PrimType.Sculpt:
+                    prim.ProfileCurve = ProfileCurve.Circle;
+                    prim.PathCurve = PathCurve.Circle;
+                    prim.ProfileEnd = 1f;
+                    prim.PathEnd = 1f;
+                    prim.PathScaleX = 1f;
+                    prim.PathScaleY = 0.5f;
                     prim.PathRevolutions = 1f;
                     break;
                 default:

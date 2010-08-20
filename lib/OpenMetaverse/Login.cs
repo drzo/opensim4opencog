@@ -819,7 +819,7 @@ namespace OpenMetaverse
 
         /// <summary>A list of packets obtained during the login process which 
         /// networkmanager will log but not process</summary>
-        private readonly List<string> UDPBlacklist = new List<string>();
+        public readonly List<string> UDPBlacklist = new List<string>();
         #endregion
 
         #region Public Methods

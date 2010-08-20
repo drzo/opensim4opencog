@@ -53,7 +53,8 @@ namespace OpenMetaverse.StructuredData
         private const int int32Length = 4;
         private const int doubleLength = 8;
 
-        private static byte[] llsdBinaryHead = Encoding.ASCII.GetBytes("<?llsd/binary?>\n");
+        private const string llsdBinaryHead = "<? llsd/binary ?>";
+        private const string llsdBinaryHead2 = "<?llsd/binary?>";
         private const byte undefBinaryValue = (byte)'!';
         private const byte trueBinaryValue = (byte)'1';
         private const byte falseBinaryValue = (byte)'0';
@@ -69,6 +70,8 @@ namespace OpenMetaverse.StructuredData
         private const byte mapBeginBinaryMarker = (byte)'{';
         private const byte mapEndBinaryMarker = (byte)'}';
         private const byte keyBinaryMarker = (byte)'k';
+
+        private static readonly byte[] llsdBinaryHeadBytes = Encoding.ASCII.GetBytes(llsdBinaryHead);
 
         /// <summary>
         /// 
@@ -96,9 +99,10 @@ namespace OpenMetaverse.StructuredData
 
             SkipWhiteSpace(stream);
 
-            bool result = FindByteArray(stream, llsdBinaryHead);
-            if (!result)
+            if (!FindString(stream, llsdBinaryHead) && !FindString(stream, llsdBinaryHead2))
                 throw new OSDException("Failed to decode binary LLSD");
+
+            SkipWhiteSpace(stream);
 
             return ParseLLSDBinaryElement(stream);
         }
@@ -127,7 +131,7 @@ namespace OpenMetaverse.StructuredData
         {
             MemoryStream stream = new MemoryStream(initialBufferSize);
 
-            stream.Write(llsdBinaryHead, 0, llsdBinaryHead.Length);
+            stream.Write(llsdBinaryHeadBytes, 0, llsdBinaryHeadBytes.Length);
             SerializeLLSDBinaryElement(stream, data);
             return stream;
         }
@@ -376,7 +380,7 @@ namespace OpenMetaverse.StructuredData
         /// <param name="stream"></param>
         /// <param name="toFind"></param>
         /// <returns></returns>
-        public static bool FindByteArray(Stream stream, byte[] toFind)
+        public static bool FindString(Stream stream, string toFind)
         {
             int lastIndexToFind = toFind.Length - 1;
             int crrIndex = 0;
@@ -389,7 +393,7 @@ namespace OpenMetaverse.StructuredData
                     (crrIndex <= lastIndexToFind)
                   )
             {
-                if (toFind[crrIndex] == (byte)bt)
+                if (toFind[crrIndex].ToString().Equals(((char)bt).ToString(), StringComparison.InvariantCultureIgnoreCase))
                 {
                     found = true;
                     crrIndex++;
