@@ -29,7 +29,7 @@ namespace RTParser.Prolog
     {
         private static PrologEngine engine = new PrologEngine();
 
-        public static void Main(string[] args)
+        public static void Main0(string[] args)
         {
             // Event handler catches CTRL+C and prevents it from ending the application
             Console.CancelKeyPress += new ConsoleCancelEventHandler(Console_CancelKeyPress);
