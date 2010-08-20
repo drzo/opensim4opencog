@@ -52,7 +52,7 @@ namespace cogbot.TheOpenSims
         protected override string GuessAssetName()
         {
             if (ServerAsset == null) return null;
-            ServerAsset.Decode();
+            Decode(ServerAsset);
             AssetSound S = (AssetSound)ServerAsset;
             AssetData = S.AssetData;
             return UnknownName;

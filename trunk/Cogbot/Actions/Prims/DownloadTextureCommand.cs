@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Threading;
+using cogbot.TheOpenSims;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
 
@@ -50,7 +51,7 @@ namespace cogbot.Actions.SimExport
                 {
                     if (resultState == TextureRequestState.Finished)
                     {
-                        if (Asset != null && Asset.Decode())
+                        if (Asset != null && SimAsset.Decode(Asset))
                         {
                             try { File.WriteAllBytes(Asset.AssetID + ".jp2", Asset.AssetData); }
                             catch (Exception ex) { Logger.Log(ex.Message, Helpers.LogLevel.Error, Client, ex); }

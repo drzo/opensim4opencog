@@ -120,7 +120,7 @@ namespace cogbot.TheOpenSims
             }
             String s = "";
             if (ServerAsset == null) return null;
-            ServerAsset.Decode();
+            Decode(ServerAsset);
             AssetGesture gestureAsset = GetGesture();
             for (int i = 0; i < gestureAsset.Sequence.Count; i++)
             {
