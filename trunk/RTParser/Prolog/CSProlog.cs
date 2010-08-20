@@ -40,7 +40,7 @@ namespace RTParser.Prolog
         }
 #endif
 
-        public static void Main(string[] args)
+        public static void Main0(string[] args)
         {
 #if mswindows // this part was a (failed) experiment to handle ^C and capture the ';' if you want another solution.
             // It migth work under VS2005

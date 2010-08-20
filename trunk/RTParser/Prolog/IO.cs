@@ -65,7 +65,7 @@ namespace RTParser.Prolog
             }
             catch (Exception e)
             {
-                RTPBot.writeDebugLine("ERROR " + e);
+               Console.WriteLine("ERROR " + e);
             }
             return msg;
         }

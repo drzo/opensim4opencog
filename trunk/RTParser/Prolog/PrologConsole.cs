@@ -57,5 +57,14 @@ namespace RTParser.Prolog
         {
             get { return DLRConsole.KeyAvailable; }
         }
+
+        public static TextReader In
+        {
+            get { return DLRConsole.In; }
+        }
+        public static TextWriter Out
+        {
+            get { return DLRConsole.Out; }
+        }
     }
 }
