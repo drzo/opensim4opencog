@@ -40,7 +40,7 @@ namespace RTParser.Prolog
         }
 #endif
 
-        public static void Main0(string[] args)
+        public static void Main(string[] args)
         {
 #if mswindows // this part was a (failed) experiment to handle ^C and capture the ';' if you want another solution.
             // It migth work under VS2005
@@ -72,7 +72,7 @@ namespace RTParser.Prolog
                 Console.WriteLine("| under certain conditions. Enter 'license.' at the command prompt for details.");
 
                 Console.WriteLine("?-[aimlbotFromCS],[load],sentence(E,[what,rivers,are,there,?],[],[],[]).");
-
+                /*
 
                 string sr = "['cynd/logicmoo_module_aiml.pro'].";
                 e.ExecuteQuery(ref sr);
@@ -82,7 +82,7 @@ namespace RTParser.Prolog
                     sr = "alicebot2(['HI'],X).";
                     e.ExecuteQuery(ref sr);
                 }
-
+                */
                 foreach (var call in args)
                 {
                     string str = call;

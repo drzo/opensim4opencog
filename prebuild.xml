@@ -788,7 +788,7 @@
       <Reference name="IKVM.Runtime.JNI.dll" localCopy="false"/>
       
      <Files>
-         <Match path="." pattern="*.cs"  recurse="true"  subType="Form">  <Exclude name="AssemblyInfo.cs"/><Exclude name="Plugins/"/></Match>
+         <Match path="." pattern="*.cs"  recurse="true"  subType="Form">  <Exclude name="AssemblyInfo.cs"/><Exclude name="Plugins/"/><Exclude name="PrologConsole.cs/"/></Match>
          <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource">  <Exclude name="AssemblyInfo.cs"/><Exclude name="Plugins/"/></Match>
          <Match path="." pattern="AssemblyInfo.cs"/>
      </Files>
