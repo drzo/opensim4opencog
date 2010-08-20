@@ -148,7 +148,7 @@ tag_eval(Ctx,element(system,ATTRIBS,INNER_XML),Output):-
          attributeValue(Ctx,ATTRIBS,[lang],Value,'bot'),        
          systemCall(Ctx,Value,Rendered,Output),!.
 
-
+systemCall(_Ctx,'bot',['@'|DONE],template([did,DONE])):-!.
 systemCall(Ctx,'bot',['@load'],template([loaded,Ctx])):-!.
 systemCall(Ctx,'bot',['@load',Filename],template([loaded,Filename])):-
     current_value(Ctx,graph,GraphI), 
@@ -159,7 +159,7 @@ systemCall(Ctx,'bot',['@load',Filename],template([loaded,Filename])):-
 systemCall(Ctx,'bot',['@chgraph',Graph],['@chgraph',Graph]):-  set_current_value(Ctx,graph,Graph),!.
 systemCall(_Ctx,_Lang,[],[]):-!.
 systemCall(Ctx,Lang,[Eval],Out):-systemCall(Ctx,Lang,Eval,Out).
-systemCall(Ctx,Lang,Eval,Out):-once((atom(Eval),atomSplit(Eval,Atoms))),Atoms=[_|_],!,systemCall(Ctx,Lang,Atoms,Out).
+systemCall(Ctx,Lang,Eval,Out):-once((atom(Eval),atomSplit(Eval,Atoms))),Atoms=[_,_|_],!,trace,systemCall(Ctx,Lang,Atoms,Out).
 systemCall(_Ctx,Lang,Eval,writeq(evaled(Lang,Eval))):- aiml_error(evaled(Lang,Eval)).
 
 % ===================================================================
