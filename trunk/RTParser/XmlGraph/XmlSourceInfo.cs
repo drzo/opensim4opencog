@@ -70,29 +70,38 @@ namespace RTParser.Utils
             {
                 DocumentInNormalize = false;
             }
+            LineTracker = null;
         }
 
         public bool DocumentHasNormalized = false;
         public bool DocumentInNormalize = false;
         public override void Load(Stream reader)
         {
+            IXmlLineInfo prev = LineTracker;
             try
             {
-                if (reader is IXmlLineInfo)
+                try
                 {
-                    LineTracker = (IXmlLineInfo)reader;
+                    if (reader is IXmlLineInfo)
+                    {
+                        LineTracker = (IXmlLineInfo)reader;
+                    }
+                    else
+                    {
+                        Load(CreateXmlTextReader(reader));
+                        return;
+                    }
+                    base.Load(reader);
+                    Normalize();
                 }
-                else
+                catch (Exception e)
                 {
-                    Load(CreateXmlTextReader(reader));
-                    return;
+                    writeToLog("ERROR " + e);
                 }
-                base.Load(reader);
-                Normalize();
             }
-            catch (Exception e)
+            finally
             {
-                writeToLog("ERROR " + e);
+                LineTracker = prev;
             }
         }
 
@@ -169,22 +178,30 @@ namespace RTParser.Utils
         public override void Load(XmlReader reader)
         {
             CheckReader(reader.Settings);
-            if (reader is IXmlLineInfo)
+            IXmlLineInfo prev = LineTracker;
+            try
             {
-                LineTracker = (IXmlLineInfo)reader;
+                if (reader is IXmlLineInfo)
+                {
+                    LineTracker = (IXmlLineInfo)reader;
+                }
+                if (!reader.EOF)
+                {
+                    try
+                    {
+                        base.Load(reader);
+                        Normalize();
+                    }
+                    catch (Exception e)
+                    {
+                        writeToLog("ERROR " + e);
+                        throw e;
+                    }
+                }
             }
-            if (!reader.EOF)
+            finally
             {
-                try
-                {
-                    base.Load(reader);
-                    Normalize();
-                }
-                catch (Exception e)
-                {
-                    writeToLog("ERROR " + e);
-                    throw e;
-                }
+                LineTracker = prev;
             }
         }
 
@@ -207,36 +224,36 @@ namespace RTParser.Utils
 
         public override void Load(TextReader reader)
         {
-            if (reader is IXmlLineInfo)
+            IXmlLineInfo prev = LineTracker;
+            try
             {
-                LineTracker = (IXmlLineInfo)reader;
+                if (reader is IXmlLineInfo)
+                {
+                    LineTracker = (IXmlLineInfo) reader;
+                }
+                base.Load(reader);
+                Normalize();
             }
-            base.Load(reader);
-            Normalize();
+            finally
+            {
+                LineTracker = prev;
+            }
         }
 
         public override string ToString()
         {
             return InfoString ?? base.ToString();
         }
-        private Stream LineInfoReader;
         public IXmlLineInfo LineTracker;
         public string InfoString;
-        private bool PresrveWhitespace = false;
         public bool MustSpaceWildcards = false;
         public bool MustSpaceAttributeValues = false;
         private string currentNodeType;
-        private string prevNodeType;
+        //private string prevNodeType;
         private string currentAttributeName;
 
-        public XmlDocumentLineInfo(Stream lineInfoReader, string toString)
-        {
-            InfoString = toString;
-            LineInfoReader = lineInfoReader;
-        }
         public XmlDocumentLineInfo(string toString, bool presrveWhite)
         {
-            PresrveWhitespace = true;
             InfoString = toString;
         }
 
@@ -258,6 +275,9 @@ namespace RTParser.Utils
         public override XmlNode ReadNode(XmlReader reader)
         {
             CheckReader(reader.Settings);
+            IXmlLineInfo prev = LineTracker;
+            try
+            {
             if (reader is IXmlLineInfo)
             {
                 LineTracker = (IXmlLineInfo)reader;
@@ -271,6 +291,11 @@ namespace RTParser.Utils
 
                 writeToLog("ERROR: " + e);
                 throw e;
+            }
+            }
+            finally
+            {
+                LineTracker = prev;
             }
         }
 
@@ -375,7 +400,7 @@ namespace RTParser.Utils
                         break;
                 }
 
-                prevNodeType = currentNodeType;
+               // prevNodeType = currentNodeType;
                 currentNodeType = localName;
                 elem = new LineInfoElement(prefix, localName, namespaceURI, this);
             }
