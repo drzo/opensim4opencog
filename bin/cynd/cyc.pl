@@ -2132,16 +2132,15 @@ sterm_to_pterm_list([S|STERM],[P|PTERM]):-!,
 sterm_to_pterm_list(VAR,[VAR]).
 
 
+atomSplit(Atom,WordsO):- atom(Atom),
+   concat_atom(Words1,' ',Atom),!, atomSplit2(Words1,Words),!,Words=WordsO.
 
-atomSplit(Atom,Words):-var(Atom),!,
-   concat_atom(Words,' ',Atom),!.
-atomSplit(Atom,WordsO):-atom(Atom),
-   concat_atom(Words1,' ',Atom),!,
-   atomSplit2(Words1,Words),!,Words=WordsO.
+atomSplit(Atom,Words):-var(Atom),ground(Words),!,concat_atom(Words,' ',AtomO),!,Atom=AtomO.
 
-atomSplit2([],[]).
-atomSplit2([W|S],[A,Mark|Words]):- member(Mark,['.',',','?']),atom_concat(A,Mark,W),not(A=''),!,atomSplit2(S,Words).
-atomSplit2([W|S],[Mark,A|Words]):- member(Mark,['.',',','?']),atom_concat(Mark,A,W),not(A=''),!,atomSplit2(S,Words).
+atomSplit2([],[]):-!.
+atomSplit2([Mark|S],[Mark|Words]):- member(Mark,['.',',','?']),atomSplit2(S,Words),!.
+atomSplit2([W|S],[A,Mark|Words]):- member(Mark,['.',',','?']),atom_concat(A,Mark,W),!,atomSplit2(S,Words).
+atomSplit2([W|S],[Mark,A|Words]):- member(Mark,['.',',','?']),atom_concat(Mark,A,W),!,atomSplit2(S,Words).
 atomSplit2([W|S],[W|Words]):-atomSplit2(S,Words).
 
 
