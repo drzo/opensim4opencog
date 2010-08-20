@@ -22,7 +22,7 @@ alldiscontiguous:-!.
 
 :-multifile(what/3).
 :-multifile(response/2).
-:-dynamic(aimlCate/1).
+%:-dynamic(aimlCate/1).
 
 atom_contains(F,C):-notrace((atom(F),sub_atom(F,_,_,_,C))).
 
@@ -40,7 +40,7 @@ main_loop1(Atom):- current_input(In),!,
             alicebot(Atom),!.
 
 main_loop:-repeat,main_loop1(_),fail.
-:-abolish(aimlCate/9).
+%:-abolish(aimlCate/9).
 :-dynamic(aimlCate/9).
 
 callInteractive(Term,Var):-catch(callInteractive0(Term,Var),E,aiml_error(E)),!.
@@ -123,6 +123,7 @@ alicebotCTX(_Ctx,Input):- atom(Input),catch(((atom_to_term(Input,Term,Vars),call
 alicebotCTX(Ctx,Input):- once((alicebotCTX(Ctx,Input,Resp),say(Ctx,Resp))),!.
 alicebotCTX(Ctx,_):- say(Ctx,'-no response-').
 
+alicebotCTX(_Ctx,[],_):-debugFmt('no input'),!,fail.
 alicebotCTX(Ctx,Input,Resp):- atom(Input),!,
       getWordTokens(Input,TokensO),!,Tokens=TokensO,
       alicebotCTX(Ctx,Tokens,Resp),!.
@@ -240,8 +241,10 @@ computeAnswer(Ctx,Votes,element(GET, ATTRIBS, INNER),Resp,VotesO):- !, computeEl
 
 computeAnswer(_,Votes,IN,_,_):-debugFmt(computeAnswer(_,Votes,IN,_,_)),fail.
 
-% <srai>s
-computeAnswer(Ctx,Votes,srai(Input),O,VotesO):- !,flatten([Input],Flat),computeSRAI(Ctx,Votes,Flat,Mid,VotesM),debugOnFailureAiml(expandVariables(Ctx,VotesM,Mid,O,VotesO)).
+% <srai>s   
+computeAnswer(Ctx,Votes,srai(Input),O,VotesO):- !,flatten([Input],Flat),
+   debugOnFailureAiml(computeSRAI(Ctx,Votes,Flat,Mid,VotesM)),
+   debugOnFailureAiml(expandVariables(Ctx,VotesM,Mid,O,VotesO)).
 
 
 computeAnswer(Ctx,Votes,get(ATTRIBS),Resp,VotesO):- !,computeAnswer(Ctx,Votes,get(user,ATTRIBS),Resp,VotesO).
@@ -317,39 +320,48 @@ computeAnswer(Ctx,Votes,GETATTRIBS, Resp,VotesO):- GETATTRIBS=..[GET,ATTRIBS,INN
 % Apply Input Match
 % ===============================================================================================
 
-computeSRAI(_Ctx,_Votes,[],_,_):-!,fail.
-computeSRAI(Ctx,Votes,Input,TopicStarO,VotesO):- notrace(((computeSRAI2(Ctx,Votes,Input,TopicStarO,VotesO),TopicStarO \= [*]))).
+computeSRAI(_Ctx,_Votes,[],_,_):- !, fail.
+computeSRAI(Ctx,Votes,Input,TopicStarO,VotesO):-
+  findall(TopicStarM=VotesM,notrace(((computeSRAI2(Ctx,Votes,Input,TopicStarM,VotesM)))),FOUND),
+  FOUND=[_|_], !, member(TopicStarO=VotesO,FOUND), 
+  TopicStarO \= [*].
+
+computeSRAI(Ctx,Votes,Input,_,_):- debugFmt(computeSRAI2(Ctx,Votes,Input)),fail.
+%computeSRAI(Ctx,Votes,Input,TopicStarO,VotesO):- computeSRAI2(Ctx,Votes,Input,TopicStarO,VotesO),TopicStarO \= [*].
+
+% this next line is what it does on fallback
+%computeSRAI(Ctx,Votes,[B|Flat],[B|TopicStarO],VotesO):-computeSRAI(Ctx,Votes,Flat,TopicStarO,VotesO).
 
 computeSRAI2(Ctx,Votes,Input,TopicStarO,VotesO):-
-	 getLastSaid(WhatSaid),
-	 set_matchit(Input,MatchIt),get_aiml_what(Ctx,What,MatchIt,Out),
-	 rateMatch(What,WhatSaid,What,NewTopic,TopicVote,TopicStar), 
+	 getLastSaid(ThatSaid),
+	 set_matchit(Input,MatchIt),
+         trace,
+         get_aiml_that(Ctx,SaidThat,MatchIt,Out),
+	 rateMatch(SaidThat,ThatSaid,SaidThat,NewTopic,TopicVote,TopicStar), 
 	 rateMatch(MatchIt,Input,Out,Next,Voted,_), 
 	 flatten([Next],NextO),
 	 subst(NextO,topicstar,TopicStar,TopicStarO),
 	 VotesO is Votes * (Voted + TopicVote).
 
-% this next line is what it does on fallback
-%computeSRAI(Ctx,Votes,[B|Flat],[B|TopicStarO],VotesO):-computeSRAI(Ctx,Votes,Flat,TopicStarO,VotesO).
 
 set_matchit([Input|_],[Input|_]).
 set_matchit([Input|_],[_,Input|_]).
 set_matchit([_,Input|_],[_,Input|_]).
 
-%get_aiml_what(Ctx,What,Match,OOut):-get_aiml_cyc(What,Match,Out),(([srai(Out)] = OOut);OOut=Out).
-get_aiml_what(_Ctx,What,Match,Out):-what(What, Match,Out).
-get_aiml_what(_Ctx,[*],Match,Out):-response(Match,Out).
+%get_aiml_that(Ctx,SaidThat,Match,OOut):-get_aiml_cyc(SaidThat,Match,Out),(([srai(Out)] = OOut);OOut=Out).
+get_aiml_that(_Ctx,SaidThat,Match,Out):-what(SaidThat, Match,Out).
+get_aiml_that(_Ctx,[*],Match,Out):-response(Match,Out).
 
 %%%%aimlCate(graph,topic,that,pattern,flags,call,guard,template,userdict).
-get_aiml_what(_Ctx,[T|HAT],Match,Out):-aimlCate(_Graph,_Topic,[T|HAT],Match,_Flags,_Call,_Guard,Out,_userdict).
-get_aiml_what(_Ctx,[*],Match,Out):-aimlCate(_Graph,_Topic,(*),Match,_Flags,_Call,_Guard,Out,_userdict).
+get_aiml_that(_Ctx,[T|HAT],Match,Out):-aimlCate(_Graph,_Topic,[T|HAT],Match,_Flags,_Call,_Guard,Out,_userdict).
+get_aiml_that(_Ctx,[*],Match,Out):-aimlCate(_Graph,_Topic,that,Match,_Flags,_Call,_Guard,Out,_userdict).
 
 %get_aiml_cyc([*],[String|ListO],[Obj,*]):-poStr(Obj,[String|List]),append(List,[*],ListO).
 %get_aiml_cyc([*],[String,*],[Obj,*]):-poStr(Obj,String).
 
 
 % ===============================================================================================
-% Rate Match
+% Rate Match -  rateMatch(Markup,Original,InputBefore,InputAfter,Cost,Consumed)
 % ===============================================================================================
 rateMatch([],[],Out,Out,1,[]):-!.
 
@@ -423,19 +435,12 @@ aimlDebugFmt(X):-debugFmt(X),!.
 
 traceCall(A):-trace(A,[-all,+fail]),A,!.
 
-debugOnFailureAiml((A,B)):- debugOnFailureAiml1(A),debugOnFailureAiml(B).
+debugOnFailureAiml(Call):- Call,!.
+debugOnFailureAiml((A,B)):- debugOnFailureAiml(A),debugOnFailureAiml(B).
 debugOnFailureAiml(debugOnFailureAiml(Call)):-!,debugOnFailureAiml(Call).
-debugOnFailureAiml(Call):-debugOnFailureAiml1(Call).
-
-debugOnFailureAiml1(debugOnFailureAiml(Call)):-debugOnFailureAiml1(Call).
-debugOnFailureAiml1((A,B)):- trace, debugOnFailureAiml1(A),debugOnFailureAiml1(B).
-debugOnFailureAiml1(Call):- catch(once(Call),E,(debugFmt(caugth(Call,E),fail))),!.
-debugOnFailureAiml1(Call):- traceAll,debugFmt(tracing(Call)),debug,trace,Call.
-
-
-throwOnFailureAiml((A,B)):- !,throwOnFailureAiml(A),!,throwOnFailureAiml(B),!.
-throwOnFailureAiml(Call):- Call;throw(Call).
-
+%debugOnFailureAiml(Call):- Call,!.
+debugOnFailureAiml(Call):- catch(once(Call),E,(debugFmt(caugth(Call,E),Call))),!.
+debugOnFailureAiml(Call):- traceAll,debugFmt(tracing(Call)),debug,trace,Call.
 
 
 takeout(_,[],[]):-!.
