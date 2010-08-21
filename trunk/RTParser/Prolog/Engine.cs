@@ -1,9 +1,14 @@
-#if VISUAL_STUDIO
+#if (!STANDARD)
 #define debugging
 #define arg1index
 #define mswindows
 #define newor
 #define partialengine
+#endif
+
+#if (!VISUAL_STUDIO)
+#undef mswindows
+#undef persistent
 #endif
 
 /*-----------------------------------------------------------------------------------------
@@ -285,14 +290,21 @@ namespace RTParser.Prolog
 #endif
     }
 
-
+    public class CSPrologException : ApplicationException
+    {
+        public CSPrologException(string msg) : base(msg) { }
+        public CSPrologException() : base() { }
+    }
+    internal class AbortQueryException : CSPrologException
+    {
+        public AbortQueryException(string msg) : base(msg) { }
+        public AbortQueryException() : base() { }        
+    }
     public partial class PrologEngine
     {
         #region private members
 
         private bool halted = false;
-        public class CSPrologException : ApplicationException { }
-        private class AbortQueryException : CSPrologException { }
         //private static Parser seeParser = Globals.CurrentParser = new Parser (ps);   /////////////// is dit wel nodig? !!!!!!!!!!!!!!!!!!!!!!!!!!
         private string currentInputName;
         //private ThreadStart   seeParserRun;
@@ -1478,7 +1490,7 @@ PrologIO.Verbose)
                     else if (!t2.IsVar)
                         return false;
 
-                    ArrayList ta = parser.TerminalList;
+                    var ta = parser.TerminalList;
                     ArrayList oa = new ArrayList();
                     int pr1;
                     string op1;

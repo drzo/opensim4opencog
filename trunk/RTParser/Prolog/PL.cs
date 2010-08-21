@@ -1,10 +1,14 @@
-#if VISUAL_STUDIO
+#if (!STANDARD)
 #define debugging
 #define arg1index
 #define mswindows
 #define newor
+#define partialengine
 #endif
 
+#if (!VISUAL_STUDIO)
+#undef mswindows
+#endif
 
 //#define debug
 namespace RTParser.Prolog
@@ -18,6 +22,8 @@ namespace RTParser.Prolog
     using System.Globalization;
     using System.Threading;
     using System.Diagnostics;
+    using System.Collections.Generic;
+    //using TrieArrayList = System.Collections.ArrayList;// System.Collections.Generic.HashSet<System.IComparable>;
 
     /* _______________________________________________________________________________________________
       |                                                                                               |
@@ -36,12 +42,12 @@ namespace RTParser.Prolog
     // Parser Generator version 4.0 -- Date/Time: 29-6-2007 8:24:32
 
     #region Exceptions
-    internal class ParserException : ApplicationException
+    internal class ParserException : CSPrologException
     {
         public ParserException(string msg) : base(msg) { }
     }
 
-    internal class SyntaxException : ApplicationException
+    internal class SyntaxException : CSPrologException
     {
         public SyntaxException(string msg) : base(msg) { }
     }
@@ -862,6 +868,146 @@ namespace RTParser.Prolog
     }
     #endregion XmlExpression
 
+    #region TRIEARRYALIST
+    public class TrieComparer
+#if tcomp
+        <T> : IComparer<T>, IComparer where T : IComparable
+#else
+        :IComparer
+#endif
+    {
+        #region Implementation of IComparer
+
+        /// <summary>
+        /// Compares two objects and returns a value indicating whether one is less than, equal to, or greater than the other.
+        /// </summary>
+        /// <returns>
+        /// Value 
+        ///                     Condition 
+        ///                     Less than zero 
+        ///                 <paramref name="x"/> is less than <paramref name="y"/>. 
+        ///                     Zero 
+        ///                 <paramref name="x"/> equals <paramref name="y"/>. 
+        ///                     Greater than zero 
+        ///                 <paramref name="x"/> is greater than <paramref name="y"/>. 
+        /// </returns>
+        /// <param name="x">The first object to compare. 
+        ///                 </param><param name="y">The second object to compare. 
+        ///                 </param><exception cref="T:System.ArgumentException">Neither <paramref name="x"/> nor <paramref name="y"/> implements the <see cref="T:System.IComparable"/> interface.
+        ///                     -or- 
+        ///                 <paramref name="x"/> and <paramref name="y"/> are of different types and neither one can handle comparisons with the other. 
+        ///                 </exception><filterpriority>2</filterpriority>
+        public int Compare(object x, object y)
+        {
+            return ((IComparable)x).CompareTo(y);
+        }
+#if tcomp
+        #region IComparer<T> Members
+
+        int IComparer<T>.Compare(T x, T y)
+        {
+            return x.CompareTo(y);
+        }
+        public int Compare(T x, T y)
+        {
+            return x.CompareTo(y);
+            ///return x.ToString().CompareTo(y.ToString());
+        }
+
+        #endregion
+#endif
+
+        #endregion
+    }
+    public class TrieArrayList : TrieArrayListImpl<IComparable>
+    {
+      
+#if tcomp
+        public static IComparer Comparitor = new TrieComparer<IComparable>();
+#else
+        public static IComparer Comparitor = new TrieComparer();
+#endif
+    }
+    public class TrieArrayListImpl<T> //: ArrayList
+        : IEnumerable
+    {
+
+        private ArrayList list;
+        public TrieArrayListImpl()
+        {
+            list = new ArrayList();
+        }
+        public void Add(T node)
+        {
+            list.Add(node);
+        }
+
+        public void Insert(int i, T node)
+        {
+            list.Insert(i, node);
+        }
+
+        public int Count
+        {
+            get { return list.Count; }
+        }
+
+        public int BinarySearch(int value)
+        {
+#if mswindows
+            return list.BinarySearch(value);
+#else
+            return list.BinarySearch(value, TrieArrayList.Comparitor);
+#endif
+        }
+        public int BinarySearch(char value)
+        {
+#if mswindows
+            return list.BinarySearch(value);
+#else
+            return list.BinarySearch(value, TrieArrayList.Comparitor);
+#endif
+        }
+
+        #region Implementation of IEnumerable
+
+        /// <summary>
+        /// Returns an enumerator that iterates through a collection.
+        /// </summary>
+        /// <returns>
+        /// An <see cref="T:System.Collections.IEnumerator"/> object that can be used to iterate through the collection.
+        /// </returns>
+        /// <filterpriority>2</filterpriority>
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return list.GetEnumerator();
+        }
+
+        #endregion
+
+        public void RemoveAt(int i)
+        {
+            list.RemoveAt(i);
+        }
+
+        public void Remove(T descr)
+        {
+            list.Remove(descr);
+        }
+
+        public void TrimToSize()
+        {
+            list.TrimToSize();
+        }
+
+        public T this[int i]
+        {
+            get { return (T)list[i]; }
+        }
+    }
+
+    #endregion
+
     #region Parser
     public class Parser
     {
@@ -925,14 +1071,14 @@ namespace RTParser.Prolog
         {
             char keyChar;
             TermDescr termRec;
-            ArrayList subTrie;
+            TrieArrayList subTrie;
 
             public static TrieNode Match; // Result of CompareTo == 0, undefined otherwise. For performance only.
             public char KeyChar { get { return keyChar; } set { keyChar = value; } }
             public TermDescr TermRec { get { return termRec; } set { termRec = value; } }
-            public ArrayList SubTrie { get { return subTrie; } set { subTrie = value; } }
+            public TrieArrayList SubTrie { get { return subTrie; } set { subTrie = value; } }
 
-            public TrieNode(char k, ArrayList s, TermDescr t)
+            public TrieNode(char k, TrieArrayList s, TermDescr t)
             {
                 keyChar = k;
                 subTrie = s;
@@ -983,10 +1129,10 @@ namespace RTParser.Prolog
             }
 
 
-            public static void ToArrayList(TrieNode node, bool atRoot, ref ArrayList a)
+            public static void ToArrayList(TrieNode node, bool atRoot, ref TrieArrayList a)
             {
                 if (!atRoot) // skip root
-                    if (node.termRec != null) a.Add(node.termRec.OVal);
+                    if (node.termRec != null) a.Add((TrieNode)node.termRec.OVal);
                 if (node.subTrie != null)
                     foreach (TrieNode subTrie in node.subTrie) ToArrayList(subTrie, false, ref a);
             }
@@ -1005,17 +1151,16 @@ namespace RTParser.Prolog
 
         #region Trie
         private enum DupMode { dupIgnore, dupAccept, dupError };
-
         private class Trie
         {
             public static readonly int UNDEF = -1;
             private TrieNode root = new TrieNode('\x0', null, null);
-            private ArrayList indices = new ArrayList();
+            private TrieArrayList indices = Trie.MakeArrayList();
             private Hashtable names = new Hashtable();
-            private ArrayList curr;
+            private TrieArrayList curr;
             private DupMode dupMode = DupMode.dupError;
             private bool caseSensitive = false; // every term to lowercase
-            private ArrayList currSub;
+            private TrieArrayList currSub;
             public bool AtLeaf { get { return (currSub == null); } }
 
             public Trie()
@@ -1061,15 +1206,26 @@ namespace RTParser.Prolog
                 Add(key, iVal, oVal, 0);
             }
 
-
             public void Add(string key, int iVal, object oVal, int type)
+            {
+                try
+                {
+                    Add0(key, iVal, oVal, type);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Trie.Add({0},{1},{2},{3})" + e, key, iVal, oVal, type);
+                }
+            }
+
+            private void Add0(string key, int iVal, object oVal, int type)
             {
                 if (key == null || key == "")
                     throw new Exception("*** Trie.Add: Attempt to insert a null- or empty key");
 
                 if (!caseSensitive) key = key.ToLower();
 
-                if (root.SubTrie == null) root.SubTrie = new ArrayList();
+                if (root.SubTrie == null) root.SubTrie = Trie.MakeArrayList();
 
                 curr = root.SubTrie;
                 int imax = key.Length - 1;
@@ -1100,7 +1256,7 @@ namespace RTParser.Prolog
                                 throw new Exception(String.Format("*** Attempt to insert duplicate key '{0}'", key));
                             return;
                         }
-                        if (node.SubTrie == null) node.SubTrie = new ArrayList();
+                        if (node.SubTrie == null) node.SubTrie = Trie.MakeArrayList();
                         curr = node.SubTrie;
                         i++;
                     }
@@ -1116,12 +1272,17 @@ namespace RTParser.Prolog
 
                                 return;
                             }
-                            node.SubTrie = new ArrayList();
+                            node.SubTrie = Trie.MakeArrayList();
                             node.SubTrie.Add(next = new TrieNode(key[++i], null, null));
                             node = next;
                         }
                     }
                 }
+            }
+
+            private static TrieArrayList MakeArrayList()
+            {
+                return new TrieArrayList();
             }
 
 
@@ -1205,13 +1366,13 @@ namespace RTParser.Prolog
             }
 
 
-            public ArrayList TerminalsOf(int i)
+            public TrieArrayList TerminalsOf(int i)
             {
                 int k = indices.BinarySearch(i);
 
                 if (k < 0) return null;
 
-                ArrayList result = new ArrayList();
+                var result = Trie.MakeArrayList();
                 int k0 = k;
 
                 while (true)
@@ -1245,7 +1406,7 @@ namespace RTParser.Prolog
 
                 ts.ToIntArray(out ii);
 
-                ArrayList a;
+                TrieArrayList a;
 
                 foreach (int i in ii)
                 {
@@ -1322,7 +1483,7 @@ namespace RTParser.Prolog
             {
                 names.Remove(i);
 
-                ArrayList a = TerminalsOf(i);
+                TrieArrayList a = TerminalsOf(i);
 
                 if (a != null) foreach (TermDescr td in a) Remove(td.Image);
             }
@@ -1344,9 +1505,9 @@ namespace RTParser.Prolog
             }
 
 
-            internal ArrayList ToArrayList()
+            internal TrieArrayList ToArrayList()
             {
-                ArrayList a = new ArrayList();
+                var a = Trie.MakeArrayList();
 
                 TrieNode.ToArrayList(root, true, ref a);
 
@@ -1901,7 +2062,7 @@ namespace RTParser.Prolog
         private int eoLineCount;
         private int lineCount = 0;
         public int LineCount { get { return lineCount; } }
-        public ArrayList TerminalList
+        public TrieArrayList TerminalList
         {
             get { return terminalTable.ToArrayList(); }
         }

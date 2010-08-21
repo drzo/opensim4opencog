@@ -1,8 +1,13 @@
-#if VISUAL_STUDIO
+#if (!STANDARD)
 #define debugging
 #define arg1index
 #define mswindows
 #define newor
+#define partialengine
+#endif
+
+#if (!VISUAL_STUDIO)
+#undef mswindows
 #endif
 
 /*-----------------------------------------------------------------------------------------

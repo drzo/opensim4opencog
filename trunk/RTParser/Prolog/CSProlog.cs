@@ -1,8 +1,21 @@
-#if VISUAL_STUDIO
+#if (!STANDARD)
 #define debugging
 #define arg1index
 #define mswindows
 #define newor
+#define partialengine
+#endif
+
+#undef ctrlc
+
+#if (!VISUAL_STUDIO)
+#undef mswindows
+#endif
+
+#if mswindows
+#define ctrlc
+#else
+#undef ctrlc
 #endif
 
 /*-----------------------------------------------------------------------------------------
@@ -31,18 +44,18 @@ namespace RTParser.Prolog
 {
     class CSPrologMain
     {
-#if mswindows
+#if ctrlc
         public static void CtrlHandler(ConsoleCtrl.ConsoleEvent consoleEvent)
         {
             Console.WriteLine("Event: {0}", consoleEvent);
 
-            throw new Exception(consoleEvent.ToString());
+            throw new AbortQueryException(consoleEvent.ToString());
         }
 #endif
 
         public static void Main(string[] args)
         {
-#if mswindows // this part was a (failed) experiment to handle ^C and capture the ';' if you want another solution.
+#if ctrlc   // this part was a (failed) experiment to handle ^C and capture the ';' if you want another solution.
             // It migth work under VS2005
             ConsoleCtrl cc = new ConsoleCtrl();    // DOES NOT WORK !!!! (although the small test below does!!)
             cc.ControlEvent += new ConsoleCtrl.ControlEventHandler(CtrlHandler);
@@ -62,7 +75,7 @@ namespace RTParser.Prolog
 #if mswindows
                 Console.WriteLine("| Welcome to C#Prolog MS-Windows version {0} release {1}", e.VERSION, e.RELEASE);
 #else
-        Console.WriteLine ("| Welcome to C#Prolog Mono version {0} release {1}", e.VERSION, e.RELEASE);
+                Console.WriteLine ("| Welcome to C#Prolog Mono version {0} release {1}", e.VERSION, e.RELEASE);
 #endif
                 Console.WriteLine("|");
                 Console.WriteLine("| Copyright (C) 2007 John Pool");
@@ -163,11 +176,17 @@ namespace RTParser.Prolog
     /// Class to catch console control events (ie CTRL-C) in C#.
     /// Calls SetConsoleCtrlHandler() in Win32 API
     /// </summary>
-#if mswindows
+
     public class ConsoleCtrl : IDisposable
     {
+#if ctrlc
         [DllImport("kernel32.dll")]
         static extern bool SetConsoleCtrlHandler(ControlEventHandler e, bool add);
+#else 
+        static bool SetConsoleCtrlHandler(ControlEventHandler e, bool add) {
+            return true;
+        }
+#endif
 
         /// <summary>
         /// The event that occurred.
@@ -231,6 +250,5 @@ namespace RTParser.Prolog
             if (ControlEvent != null) ControlEvent(consoleEvent);
         }
     }
-#endif
 }
 
