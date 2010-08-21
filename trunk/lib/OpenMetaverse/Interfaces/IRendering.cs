@@ -61,6 +61,27 @@ namespace OpenMetaverse.Rendering
         SimpleMesh GenerateSimpleMesh(Primitive prim, DetailLevel lod);
 
         /// <summary>
+        /// Generates a series of faces, each face containing a mesh and
+        /// metadata
+        /// </summary>
+        /// <param name="prim">Primitive to generate the mesh from</param>
+        /// <param name="lod">Level of detail to generate the mesh at</param>
+        /// <returns>The generated mesh</returns>
+        FacetedMesh GenerateFacetedMesh(Primitive prim, DetailLevel lod);
+
+        /// <summary>
+        /// Apply texture coordinate modifications from a
+        /// <seealso cref="TextureEntryFace"/> to a list of vertices
+        /// </summary>
+        /// <param name="vertices">Vertex list to modify texture coordinates for</param>
+        /// <param name="center">Center-point of the face</param>
+        /// <param name="teFace">Face texture parameters</param>
+        void TransformTexCoords(List<Vertex> vertices, Vector3 center, Primitive.TextureEntryFace teFace);
+    }
+
+    public interface IFacetedRendering
+    {
+        /// <summary>
         /// Generates a basic mesh structure from a sculpted primitive and
         /// texture
         /// </summary>
@@ -71,15 +92,6 @@ namespace OpenMetaverse.Rendering
         SimpleMesh GenerateSimpleSculptMesh(Primitive prim, Bitmap sculptTexture, DetailLevel lod);
 
         /// <summary>
-        /// Generates a series of faces, each face containing a mesh and
-        /// metadata
-        /// </summary>
-        /// <param name="prim">Primitive to generate the mesh from</param>
-        /// <param name="lod">Level of detail to generate the mesh at</param>
-        /// <returns>The generated mesh</returns>
-        FacetedMesh GenerateFacetedMesh(Primitive prim, DetailLevel lod);
-
-        /// <summary>
         /// Generates a series of faces for a sculpted prim, each face 
         /// containing a mesh and metadata
         /// </summary>
@@ -88,14 +100,5 @@ namespace OpenMetaverse.Rendering
         /// <param name="lod">Level of detail to generate the mesh at</param>
         /// <returns>The generated mesh</returns>
         FacetedMesh GenerateFacetedSculptMesh(Primitive prim, Bitmap sculptTexture, DetailLevel lod);
-
-        /// <summary>
-        /// Apply texture coordinate modifications from a
-        /// <seealso cref="TextureEntryFace"/> to a list of vertices
-        /// </summary>
-        /// <param name="vertices">Vertex list to modify texture coordinates for</param>
-        /// <param name="center">Center-point of the face</param>
-        /// <param name="teFace">Face texture parameters</param>
-        void TransformTexCoords(List<Vertex> vertices, Vector3 center, Primitive.TextureEntryFace teFace);
     }
 }
