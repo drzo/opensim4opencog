@@ -78,7 +78,76 @@
       </Project>
       -->
 
-          <Project name="LAIR.ResourceAPIs.WordNet" path="lib/WordNet.net/WordNet" type="Library" rootNamespace="LAIR.ResourceAPIs.WordNet" frameworkVersion="v3_5">
+          <Project name="LAIR.ResourceAPIs.PennBank" path="lib/PennBank.net/PennBank" type="Library" rootNamespace="LAIR.ResourceAPIs.PennBank" frameworkVersion="v3_5">
+           <Configuration name="Debug">
+             <Options>
+               <OutputPath>../../../bin/</OutputPath>
+               <XmlDocFile>LAIR.ResourceAPIs.PennBank.XML</XmlDocFile>
+              </Options>
+           </Configuration>
+           <Configuration name="Release">
+             <Options>
+               <OutputPath>../../../bin/</OutputPath>
+               <XmlDocFile>LAIR.ResourceAPIs.PennBank.XML</XmlDocFile>
+             </Options>
+           </Configuration>
+
+           <ReferencePath>../../bin/</ReferencePath>
+           <Reference name="System"/>
+           <Reference name="System.Core"/>
+           <Reference name="System.Xml"/>
+           <Reference name="System.Data"/>
+           <Reference name="System.Data.DataSetExtensions"/>
+           <Reference name="log4net.dll" localCopy="false"/>
+           <Reference name="MySql.Data.dll" localCopy="false"/>
+           <Reference name="LAIR.Collections.dll" localCopy="false"/>
+           <Reference name="LAIR.Extensions.dll" localCopy="false"/>
+           <Reference name="LAIR.GraphViz.dll" localCopy="false"/>
+           <Reference name="LAIR.IO.dll" localCopy="false"/>
+           <Reference name="LAIR.MachineLearning.dll" localCopy="false"/>
+           <Reference name="LAIR.XML.dll" localCopy="false"/>
+           <Reference name="LAIR.Misc.dll" localCopy="false"/>
+           <Files>
+             <Match pattern="*.cs" recurse="true"/>
+           </Files>
+         </Project>
+
+          <Project name="LAIR.ResourceAPIs.NomBank" path="lib/NomBank.net/NomBank" type="Library" rootNamespace="LAIR.ResourceAPIs.NomBank" frameworkVersion="v3_5">
+        <Configuration name="Debug">
+          <Options>
+            <OutputPath>../../../bin/</OutputPath>
+            <XmlDocFile>LAIR.ResourceAPIs.NomBank.XML</XmlDocFile>
+           </Options>
+        </Configuration>
+        <Configuration name="Release">
+          <Options>
+            <OutputPath>../../../bin/</OutputPath>
+            <XmlDocFile>LAIR.ResourceAPIs.NomBank.XML</XmlDocFile>
+          </Options>
+        </Configuration>
+
+        <ReferencePath>../../bin/</ReferencePath>
+        <Reference name="System"/>
+        <Reference name="System.Core"/>
+        <Reference name="System.Xml"/>
+        <Reference name="System.Data"/>
+        <Reference name="System.Data.DataSetExtensions"/>
+        <Reference name="log4net.dll" localCopy="false"/>
+        <Reference name="MySql.Data.dll" localCopy="false"/>
+        <Reference name="LAIR.Collections.dll" localCopy="false"/>
+        <Reference name="LAIR.Extensions.dll" localCopy="false"/>
+        <Reference name="LAIR.GraphViz.dll" localCopy="false"/>
+        <Reference name="LAIR.IO.dll" localCopy="false"/>
+        <Reference name="LAIR.MachineLearning.dll" localCopy="false"/>
+        <Reference name="LAIR.XML.dll" localCopy="false"/>
+        <Reference name="LAIR.Misc.dll" localCopy="false"/>
+        <Reference name="LAIR.ResourceAPIs.PennBank" localCopy="false"/>
+        <Files>
+          <Match pattern="*.cs" recurse="true"/>
+        </Files>
+      </Project>
+
+      <Project name="LAIR.ResourceAPIs.WordNet" path="lib/WordNet.net/WordNet" type="Library" rootNamespace="LAIR.ResourceAPIs.WordNet" frameworkVersion="v3_5">
         <Configuration name="Debug">
           <Options>
             <OutputPath>../../../bin/</OutputPath>
@@ -98,19 +167,18 @@
         <Reference name="System.Xml"/>
         <Reference name="System.Data"/>
         <Reference name="System.Data.DataSetExtensions"/>
-        <Reference name="log4net"/>
-        <Reference name="MySql.Data"/>
-        <Reference name="LAIR.Collections"/>
-        <Reference name="LAIR.Extensions"/>
-        <Reference name="LAIR.GraphViz"/>
-        <Reference name="LAIR.IO"/>
-        <Reference name="LAIR.MachineLearning"/>
-        <Reference name="LAIR.XML"/>
+        <Reference name="log4net.dll" localCopy="false"/>
+        <Reference name="MySql.Data.dll" localCopy="false"/>
+        <Reference name="LAIR.Collections.dll" localCopy="false"/>
+        <Reference name="LAIR.Extensions.dll" localCopy="false"/>
+        <Reference name="LAIR.GraphViz.dll" localCopy="false"/>
+        <Reference name="LAIR.IO.dll" localCopy="false"/>
+        <Reference name="LAIR.MachineLearning.dll" localCopy="false"/>
+        <Reference name="LAIR.XML.dll" localCopy="false"/>
         <Files>
           <Match pattern="*.cs" recurse="true"/>
         </Files>
       </Project>
-
 
     <Project name="SwiPlCs" path="contrib/SwiPlCs" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
@@ -432,8 +500,8 @@
       <Reference name="IKVM.Runtime.dll" localCopy="false"/>
       <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
       <Reference name="MushDLR223"  localCopy="false"/>
-      <Reference name="LAIR.Collections"/>
-      <Reference name="LAIR.ResourceAPIs.WordNet"/>
+      <Reference name="LAIR.Collections.dll" localCopy="false"/>
+      <Reference name="LAIR.ResourceAPIs.WordNet" localCopy="false"/>
       <Reference name="Microsoft.JScript"  localCopy="false"/>
 
       <Files>
@@ -764,11 +832,13 @@
      <Configuration name="Debug">
        <Options>
            <OutputPath>../../bin/</OutputPath>
+           <CompilerDefines>TRACE;DEBUG</CompilerDefines>
        </Options>
      </Configuration>
      <Configuration name="Release">
        <Options>
            <OutputPath>../../bin/</OutputPath>
+           <CompilerDefines>TRACE</CompilerDefines>
        </Options>
      </Configuration>
 
@@ -1702,7 +1772,13 @@ app -->
       <Reference name="AIMLbot" />
       <Reference name="AIMLBotModule" />
       <Reference name="Cogbot.exe" />
-      <Reference name="LAIR.Collections"/>
+        <Reference name="MySql.Data.dll" localCopy="false"/>
+        <Reference name="LAIR.Collections.dll" localCopy="false"/>
+        <Reference name="LAIR.Extensions.dll" localCopy="false"/>
+        <Reference name="LAIR.GraphViz.dll" localCopy="false"/>
+        <Reference name="LAIR.IO.dll" localCopy="false"/>
+        <Reference name="LAIR.MachineLearning.dll" localCopy="false"/>
+        <Reference name="LAIR.XML.dll" localCopy="false"/>
       <Reference name="LAIR.ResourceAPIs.WordNet"/>
       <Reference name="MushDLR223"  localCopy="false"/>
       <Reference name="CogbotRadegastPluginModule" />

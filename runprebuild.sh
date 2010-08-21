@@ -28,6 +28,8 @@ cp lib/LookingGlass-svn/bin/*.* bin/
 cp NullBuild.txt lib/Radegast.Plugin.Speech/RadSpeechWin/RadSpeechWin.dll.build
 
 #delay building LookingGlass on Linux
+find ./lib/LookingGlass-svn/src -iname "*.build" -exec cp NullBuild.txt '{}' \;
+
 cp NullBuild.txt ./lib/LookingGlass-svn/src/LookingGlass.Renderer/LookingGlass.Renderer.dll.build
 cp NullBuild.txt ./lib/LookingGlass-svn/src/LookingGlass.World/LookingGlass.World.dll.build
 cp NullBuild.txt ./lib/LookingGlass-svn/src/LookingGlass.Radegast/LookingGlass.Radegast.dll.build
