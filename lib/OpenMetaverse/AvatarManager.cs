@@ -743,10 +743,7 @@ namespace OpenMetaverse
                 Simulator simulator = e.Simulator;
 
                 AvatarAppearancePacket appearance = (AvatarAppearancePacket)packet;
-                simulator.ObjectsAvatars.ForEach(delegate(Avatar av)
-                {
-                    if (av.ID == appearance.Sender.ID)
-                    {
+
                         List<byte> visualParams = new List<byte>();
                         foreach (AvatarAppearancePacket.VisualParamBlock block in appearance.VisualParam)
                         {
@@ -759,16 +756,15 @@ namespace OpenMetaverse
                         Primitive.TextureEntryFace defaultTexture = textureEntry.DefaultTexture;
                         Primitive.TextureEntryFace[] faceTextures = textureEntry.FaceTextures;
 
+                Avatar av = simulator.ObjectsAvatars.Find((Avatar a) => { return a.ID == appearance.Sender.ID; });
+                if (av != null)
+                {
                         av.Textures = textureEntry;
                         av.VisualParameters = visualParams.ToArray();
+                }
 
-                        if (m_AvatarAppearance != null)
-                        {
                             OnAvatarAppearance(new AvatarAppearanceEventArgs(simulator, appearance.Sender.ID, appearance.Sender.IsTrial,
                                 defaultTexture, faceTextures, visualParams));
-                        }
-                    }
-                });
             }
         }
 

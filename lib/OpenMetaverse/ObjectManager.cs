@@ -2261,6 +2261,7 @@ namespace OpenMetaverse
                         obj.Acceleration = update.Acceleration;
                         obj.AngularVelocity = update.AngularVelocity;
                         obj.PrimData.State = update.State;
+                        if (update.Textures != null)
                         obj.Textures = update.Textures;
                     }
 

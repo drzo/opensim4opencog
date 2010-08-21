@@ -1,4 +1,4 @@
-﻿﻿/* 
+﻿/*
  * Copyright (c) 2009, openmetaverse.org 
  * All rights reserved. 
  * 
