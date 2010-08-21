@@ -709,6 +709,17 @@ namespace MushDLR223.ScriptEngines
             }
             return objs;
         }
+
+        public static object EvalScriptInterpreter(string src, string lang, object seff, OutputDelegate wl)
+        {
+            var si = LoadScriptInterpreter(lang, seff);
+            object so = si.Read("EvalScriptInterpreter read: " + src, new StringReader(src.ToString()), wl);
+            if (so is CmdResult) return (CmdResult) so;
+            if (so == null) return new CmdResult("void", true);
+            if (si.Eof(so)) return new CmdResult("EOF " + so, true);
+            object o = si.Eval(so);
+            return o;
+        }
     }
 
     internal class VerifyEx : Exception
