@@ -87,7 +87,7 @@
 <li value="paul">male</li>
 <li value="pedro">male</li>
 <li value="pete">male</li>
-<li value="peter">male</li>
+<li value="%botmaster">male</li>
 <li value="rick">male</li>
 <li value="robert">male</li>
 <li value="sam">male</li>

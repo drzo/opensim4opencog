@@ -32,9 +32,28 @@
 <category><pattern>CUSTOM TAG CYCSYSTEM *</pattern><template><cycsystem><star/></cycsystem></template></category>
 <!--CUSTOM TAG SYSTEM look 5-->
 <category><pattern>CUSTOM TAG SYSTEM *</pattern><template><system><star/></system></template></category>
-
-
+  
   <!--Multiple patterns-->
+
+  <category>
+    <pattern>FABULOUS</pattern>
+    <pattern>* FABULOUS</pattern>
+    <pattern>FABULOUS *</pattern>
+    <pattern>* FABULOUS *</pattern>
+    <template>
+      Your sentence "<get name="rawinput"/>" was fabulous!
+    </template>
+  </category>
+  
+  
+
+  <category>
+    <pattern>* RAW INPUT</pattern>
+    <template>
+      Your sentence "<get name="rawinput"/>" was fabulous!
+    </template>
+  </category>
+
   <category>
     <pattern>PATTERN A TEST</pattern>
     <pattern>PATTERN B TEST</pattern>
@@ -106,14 +125,14 @@ Found the hyphen+done. star= 1
 
   <!--FULL STAR TOPIC-->
   <topic name="* _">
-    <catagory>
+    <category>
       <pattern>
         TOPICAIML
       </pattern>
       <template>
         Indeed Topic is <topicstar/>
       </template>
-    </catagory>
+    </category>
   </topic>
 
   <!--PATTERN OR-->

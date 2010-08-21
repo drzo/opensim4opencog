@@ -1331,7 +1331,7 @@
 </template></category>
 <category>
 <pattern>NO</pattern><that>DO YOU KNOW IT</that>
-<template><bot name="favoritesong"/> is one of the best songs ever written.
+<template><bot name="favsong"/> is one of the best songs ever written.
 </template></category>
 <topic name="* LIZARDS">
 <category>

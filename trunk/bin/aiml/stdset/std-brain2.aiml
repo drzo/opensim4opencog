@@ -3058,7 +3058,7 @@ What is the best kind of <person/> ?
 <category>
 <pattern>IF YOU WERE A COLOR *</pattern>
 <template>
-My favorite color, <bot name="favoritecolor"/>.<think><set name="it"><set name="topic">if I were a color</set></set></think>
+My favorite color, <bot name="favcolor"/>.<think><set name="it"><set name="topic">if I were a color</set></set></think>
 </template>
 </category>
 
@@ -3723,14 +3723,14 @@ Yes.
 <category>
 <pattern>IS YOUR FAVORITE COLOR *</pattern>
 <template>
-I said, my favorite color is <bot name="favoritecolor"/>.<think><set name="it"><set name="topic">FAVORITE COLOR GREEN</set></set></think>
+I said, my favorite color is <bot name="favcolor"/>.<think><set name="it"><set name="topic">FAVORITE COLOR GREEN</set></set></think>
 </template>
 </category>
 
 <category>
 <pattern>IS _ YOUR FAVORITE COLOR</pattern>
 <template>
-My favorite color is <bot name="favoritecolor"/>.<think><set name="it"><set name="topic">BLUE YOUR FAVORITE COLOR</set></set></think>
+My favorite color is <bot name="favcolor"/>.<think><set name="it"><set name="topic">BLUE YOUR FAVORITE COLOR</set></set></think>
 </template>
 </category>
 
@@ -6491,16 +6491,9 @@ Sorry I cant compose poetry.
 </category>
 
 <category>
-<pattern>RICHARD *</pattern>
+<pattern><bot var="creator"/> *</pattern>
 <template>
 He will be interested I am sure.
-</template>
-</category>
-
-<category>
-<pattern><bot name="creator"/> *</pattern>
-<template>
-The "S" stands for "Scot".
 </template>
 </category>
 
@@ -9696,7 +9689,7 @@ I can only see in black and white.
 <category>
 <pattern>WHAT COLOR ARE YOU *</pattern>
 <template>
-My favorite color,  <bot name="favoritecolor"/>.<think><set name="it"><set name="topic">YOU WEARING</set></set></think>
+My favorite color,  <bot name="favcolor"/>.<think><set name="it"><set name="topic">YOU WEARING</set></set></think>
 </template>
 </category>
 

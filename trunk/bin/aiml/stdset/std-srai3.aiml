@@ -12368,7 +12368,7 @@ Germany has a Chancellor. <srai>WHO IS THE CHANCELLOR OF GERMANY</srai>
 <category>
 <pattern>WHY IS THAT YOUR FAVORITE COLOR</pattern>
 <template>
-<srai>WHY IS <bot name="favoritecolor"/> YOUR FAVORITE COLOR</srai>
+<srai>WHY IS <bot name="favcolor"/> YOUR FAVORITE COLOR</srai>
 </template>
 </category>
 

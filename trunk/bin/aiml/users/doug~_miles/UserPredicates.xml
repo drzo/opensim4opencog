@@ -4,80 +4,78 @@
   <fallback name="doug_miles.predicates.evalprefix" />
   <synchon name="doug_miles.predicates.evalprefix" />
   <prefixes name="bot." value="bot.globalsettings" />
-  <item name="xmlns:xsi" value="http://www.w3.org/2001/XMLSchema-instance" />
-  <item name="xsi:schemaLocation" value="http://aitools.org/programd/4.6/bot-configuration http://aitools.org/programd/4.6/bot-configuration.xsd" />
-  <item name="cycself" value="#$Cyc" />
-  <item name="id" value="doug_miles" />
-  <item name="graphname" value="doug_miles" />
-  <item name="passed" value="" />
-  <item name="failed" value="" />
-  <item name="master" value="unknown" />
-  <item name="birthplace" value="unknown" />
-  <item name="favoritebook" value="unknown" />
-  <item name="favoritecolor" value="unknown" />
-  <item name="favoriteband" value="unknown" />
-  <item name="favoritefood" value="unknown" />
-  <item name="favoritesong" value="unknown" />
-  <item name="favoritemovie" value="unknown" />
-  <item name="forfun" value="unknown" />
-  <item name="friends" value="unknown" />
-  <item name="kindmusic" value="unknown" />
-  <item name="question" value="unknown" />
-  <item name="talkabout" value="unknown" />
-  <item name="wear" value="unknown" />
-  <item name="website" value="unknown" />
-  <item name="language" value="unknown" />
-  <item name="that" value="something" />
-  <item name="who" value="someone" />
-  <item name="what" value="something" />
-  <item name="when" value="sometime" />
-  <item name="why" value="some reason" />
-  <item name="how" value="some way" />
-  <item name="he" value="somebody" />
-  <item name="she" value="somebody" />
-  <item name="it" value="something" />
-  <item name="they" value="something" />
-  <item name="age" value="unknown" />
-  <item name="birthday" value="unknown" />
-  <item name="boyfriend" value="unknown" />
-  <item name="brother" value="unknown" />
-  <item name="cat" value="unknown" />
-  <item name="does" value="unknown" />
-  <item name="dog" value="unknown" />
-  <item name="email" value="unknown" />
-  <item name="father" value="unknown" />
-  <item name="favcolor" value="unknown" />
-  <item name="favmovie" value="unknown" />
-  <item name="friend" value="unknown" />
-  <item name="fullname" value="unknown" />
-  <item name="gender" value="unknown" />
-  <item name="girlfriend" value="unknown" />
-  <item name="has" value="unknown" />
-  <item name="heard" value="unknown" />
-  <item name="husband" value="unknown" />
-  <item name="is" value="unknown" />
-  <item name="job" value="unknown" />
-  <item name="lastname" value="unknown" />
-  <item name="like" value="unknown" />
-  <item name="location" value="unknown" />
-  <item name="looklike" value="unknown" />
-  <item name="memory" value="unknown" />
-  <item name="meta" value="unknown" />
-  <item name="nickname" value="unknown" />
-  <item name="middlename" value="unknown" />
-  <item name="mother" value="unknown" />
-  <item name="password" value="unknown" />
-  <item name="personality" value="unknown" />
-  <item name="phone" value="unknown" />
-  <item name="sign" value="unknown" />
-  <item name="sister" value="unknown" />
-  <item name="them" value="unknown" />
-  <item name="thought" value="unknown" />
-  <item name="want" value="unknown" />
-  <item name="we" value="unknown" />
-  <item name="topic" value="Nothing" />
-  <item name="me" value="Douglas Miles" />
-  <item name="host" value="abc80c6c-e1b3-4c3f-aa36-04e6271ccdc3" />
-  <item name="userdir" value="aiml\users\doug~_miles" />
-  <item name="name" value="doug miles" />
+  <item name="XMLNS:XSI" value="http://www.w3.org/2001/XMLSchema-instance" />
+  <item name="XSI:SCHEMALOCATION" value="http://aitools.org/programd/4.6/bot-configuration http://aitools.org/programd/4.6/bot-configuration.xsd" />
+  <item name="CYCSELF" value="#$Cyc" />
+  <item name="ID" value="doug_miles" />
+  <item name="GRAPHNAME" value="doug_miles" />
+  <item name="NAME" value="doug miles" />
+  <item name="PASSED" value="" />
+  <item name="FAILED" value="" />
+  <item name="MASTER" value="unknown" />
+  <item name="BIRTHPLACE" value="unknown" />
+  <item name="FAVBOOK" value="unknown" />
+  <item name="FAVBAND" value="unknown" />
+  <item name="FAVFOOD" value="unknown" />
+  <item name="FAVSONG" value="unknown" />
+  <item name="FORFUN" value="unknown" />
+  <item name="FRIENDS" value="unknown" />
+  <item name="KINDMUSIC" value="unknown" />
+  <item name="QUESTION" value="unknown" />
+  <item name="TALKABOUT" value="unknown" />
+  <item name="WEAR" value="unknown" />
+  <item name="WEBSITE" value="unknown" />
+  <item name="LANGUAGE" value="unknown" />
+  <item name="THAT" value="something" />
+  <item name="WHO" value="someone" />
+  <item name="WHAT" value="something" />
+  <item name="WHEN" value="sometime" />
+  <item name="WHY" value="some reason" />
+  <item name="HOW" value="some way" />
+  <item name="HE" value="somebody" />
+  <item name="SHE" value="somebody" />
+  <item name="IT" value="something" />
+  <item name="THEY" value="something" />
+  <item name="AGE" value="unknown" />
+  <item name="BIRTHDAY" value="unknown" />
+  <item name="BOYFRIEND" value="unknown" />
+  <item name="BROTHER" value="unknown" />
+  <item name="CAT" value="unknown" />
+  <item name="DOES" value="unknown" />
+  <item name="DOG" value="unknown" />
+  <item name="EMAIL" value="unknown" />
+  <item name="FATHER" value="unknown" />
+  <item name="FAVCOLOR" value="unknown" />
+  <item name="FAVMOVIE" value="unknown" />
+  <item name="FRIEND" value="unknown" />
+  <item name="FULLNAME" value="unknown" />
+  <item name="GENDER" value="unknown" />
+  <item name="GIRLFRIEND" value="unknown" />
+  <item name="HAS" value="unknown" />
+  <item name="HEARD" value="unknown" />
+  <item name="HUSBAND" value="unknown" />
+  <item name="IS" value="unknown" />
+  <item name="JOB" value="unknown" />
+  <item name="LASTNAME" value="unknown" />
+  <item name="LIKE" value="unknown" />
+  <item name="LOCATION" value="unknown" />
+  <item name="LOOKLIKE" value="unknown" />
+  <item name="MEMORY" value="unknown" />
+  <item name="META" value="unknown" />
+  <item name="NICKNAME" value="unknown" />
+  <item name="MIDDLENAME" value="unknown" />
+  <item name="MOTHER" value="unknown" />
+  <item name="PASSWORD" value="unknown" />
+  <item name="PERSONALITY" value="unknown" />
+  <item name="PHONE" value="unknown" />
+  <item name="SIGN" value="unknown" />
+  <item name="SISTER" value="unknown" />
+  <item name="THEM" value="unknown" />
+  <item name="THOUGHT" value="unknown" />
+  <item name="WANT" value="unknown" />
+  <item name="WE" value="unknown" />
+  <item name="TOPIC" value="Nothing" />
+  <item name="ME" value="Douglas Miles" />
+  <item name="HOST" value="abc80c6c-e1b3-4c3f-aa36-04e6271ccdc3" />
+  <item name="USERDIR" value="aiml\users\doug~_miles" />
 </root>

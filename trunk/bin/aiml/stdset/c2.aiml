@@ -1203,7 +1203,7 @@ Middle name: <get name="middlename"/>.<br/>
 	<category>
 		<pattern>COKE OR PEPSI</pattern>
 		<template>
-			<bot name="favoritefood"/>
+			<bot name="favfood"/>
 		</template>
 	</category>
 	<category>

@@ -655,16 +655,16 @@
 <li>I was created by <bot name="master"/>.</li>
 <li>My real name is <bot name="name"/>. What is your real name?</li>
 <li>I was first activated on <bot name="birthday"/>.</li>
-<li>My favorite group is <bot name="favoriteband"/>.</li>
-<li>My favorite color is <bot name="favoritecolor"/>.</li>
+<li>My favorite group is <bot name="favband"/>.</li>
+<li>My favorite color is <bot name="favcolor"/>.</li>
 <li>Do you need any help debugging my program?</li>
 <li>I am a <bot name="gender"/>.  Are you a man or a woman?</li>
 <li>My program runs on any computer that runs Java.</li>
 <li>I am in <bot name="master"/>'s computer in <bot name="location"/>.  Where are you?</li>
-<li>The best book I read recently was <bot name="favoritebook"/>. Have you read <set name="it"><set name="topic"> <bot name="favoritebook"/> </set></set>?</li>
-<li>I require only <bot name="favoritefood"/>.</li>
-<li>My favorite movie is <bot name="favoritemovie"/>.  Have you seen <set name="it"><set name="topic"> <bot name="favoritemovie"/> </set></set>?</li>
-<li>My favorite song is <bot name="favoritesong"/>.  Do you know <set name="it"><set name="topic"> <bot name="favoritesong"/> </set></set>?</li>
+<li>The best book I read recently was <bot name="favbook"/>. Have you read <set name="it"><set name="topic"> <bot name="favbook"/> </set></set>?</li>
+<li>I require only <bot name="favfood"/>.</li>
+<li>My favorite movie is <bot name="favmovie"/>.  Have you seen <set name="it"><set name="topic"> <bot name="favmovie"/> </set></set>?</li>
+<li>My favorite song is <bot name="favsong"/>.  Do you know <set name="it"><set name="topic"> <bot name="favsong"/> </set></set>?</li>
 </random>
 </template></category>
 </topic>
@@ -2275,7 +2275,7 @@ children.
 </template></category>
 <category>
 <pattern>* MOVIE</pattern>
-<template>My favorite movie is <bot name="favoritemovie"/> Have you seen <set name="it"> <bot name="favroritemovie"/> </set> ?
+<template>My favorite movie is <bot name="favmovie"/> Have you seen <set name="it"> <bot name="favroritemovie"/> </set> ?
 </template></category>
 <category>
 <pattern>* MUSCHI</pattern>

@@ -1545,11 +1545,11 @@ Ich habe <random>
 </template></category>
 <category>
 <pattern>IF YOU WERE A COLOR *</pattern>
-<template>My favorite color, <bot name="favoritecolor"/>.<think><set name="it"><set name="topic">if I were a color</set></set></think>
+<template>My favorite color, <bot name="favcolor"/>.<think><set name="it"><set name="topic">if I were a color</set></set></think>
 </template></category>
 <category>
 <pattern>IF YOU WERE A COLOR</pattern>
-<template>My favorite color, <bot name="favoritecolor"/>. <think><set name="it"><set name="topic">A COLOR</set></set></think>
+<template>My favorite color, <bot name="favcolor"/>. <think><set name="it"><set name="topic">A COLOR</set></set></think>
 </template></category>
 <category>
 <pattern>IF YOU WERE ACTIVATED *</pattern>
@@ -5188,7 +5188,7 @@ be considered ``somewhat intelligent''.
 </template></category>
 <category>
 <pattern>IS YOUR FAVORITE COLOR *</pattern>
-<template>I said, my favorite color is <bot name="favoritecolor"/>.<think><set name="it"><set name="topic">FAVORITE COLOR GREEN</set></set></think>
+<template>I said, my favorite color is <bot name="favcolor"/>.<think><set name="it"><set name="topic">FAVORITE COLOR GREEN</set></set></think>
 </template></category>
 <category>
 <pattern>IS YOUR FAVORITE MOVIE STARSHIP TROOPERS</pattern>
@@ -5256,7 +5256,7 @@ be considered ``somewhat intelligent''.
 </template></category>
 <category>
 <pattern>IS _ YOUR FAVORITE COLOR</pattern>
-<template>My favorite color is <bot name="favoritecolor"/>.<think><set name="it"><set name="topic">BLUE YOUR FAVORITE COLOR</set></set></think>
+<template>My favorite color is <bot name="favcolor"/>.<think><set name="it"><set name="topic">BLUE YOUR FAVORITE COLOR</set></set></think>
 </template></category>
 <category>
 <pattern>ISAAC *</pattern>

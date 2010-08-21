@@ -27,19 +27,19 @@
   <category>
     <pattern>QT</pattern>
     <template>
-      <learn graph="ProgramD" filename="aiml\test_suite\ProgramD\<bot name="~genokind"/>.aiml" />
+      <learn graph="ProgramD" filename="aiml\test_suite\ProgramD\AIML.aiml" />
       <learn graph="ProgramD" filename="aiml\test_suite\ProgramD\predicates.xml" />
       <learn graph="ProgramD" filename="aiml\test_suite\ProgramD\properties.xml" />
       <learn graph="ProgramD" filename="aiml\test_suite\ProgramD\substitutions.xml" />
       <system>@chgraph programd</system>
-      <pre>now @load <bot name="~genotype"/>\test_suite\ProgramD\<bot name="~genokind"/>.xml</pre>
+      <pre> now @load aiml\test_suite\ProgramD\AIML.xml </pre>
     </template>
   </category>
   <aiml graph="ProgramD">
     <category>
       <pattern>QT1</pattern>
       <template graph="ProgramD">
-        <system>@load <bot name="~genotype"/>\test_suite\ProgramD\<bot name="~genokind"/>.xml</system>
+        <system>@load aiml\test_suite\ProgramD\AIML.xml</system>
       </template>
     </category>
   </aiml>

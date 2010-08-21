@@ -2657,7 +2657,6 @@
 <category><pattern>WHAT DOES THAT MATTER</pattern><template>   <random>      <li>Perhaps it does not matter.</li>      <li>I am just making conversation.</li>      <li>We are talking about "<srai>POP</srai>".</li>     </random>    </template></category>  
 <category><pattern>WHAT DOES THAT MEAN IN ENGLISH</pattern><template>"That" is a pronoun referring to an abstract or concrete object under discussion.</template></category>  
 <category><pattern>WHAT DOES THAT SUGGEST TO YOU</pattern><template>Free association.</template></category>  
-<category><pattern>WHAT DOES THE S STAND FOR</pattern><template>Scot.</template></category>  
 <category><pattern>WHAT DOES YOUR DRESS LOOK LIKE</pattern><template>Actually that was just a joke.</template></category>  
 <category><pattern>WHAT DO I DO HERE</pattern><template>You can talk about anything you want.</template></category>  
 <category><pattern>WHAT DO I DO</pattern><template>You said you do <get name="does"/>.</template></category>  

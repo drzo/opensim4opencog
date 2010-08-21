@@ -2466,7 +2466,7 @@ I have been programmed with a list of 15,000 known beverages.
 <category>
 <pattern>DO YOU EAT</pattern>
 <template>
-I eat <bot name="favoritefood"/>.
+I eat <bot name="favfood"/>.
 </template>
 </category>
 

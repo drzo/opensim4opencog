@@ -1190,11 +1190,6 @@
 </template>
 	</category>
 	<category>
-		<pattern><bot name="creator"/> *</pattern>
-		<template>The "S" stands for "Scot".
-</template>
-	</category>
-	<category>
 		<pattern><bot name="creator"/></pattern>
 		<template>
 			<srai>WHO IS <bot name="botmaster"/></srai>
@@ -1203,6 +1198,11 @@
 	<category>
 		<pattern><bot var="botmaster"/> *</pattern>
 		<template>Not many people know him as well as I do.
+</template>
+	</category>
+	<category>
+		<pattern><bot var="botmaster"/></pattern>
+		<template>The "S" stands for "Scot".
 </template>
 	</category>
 	<category>

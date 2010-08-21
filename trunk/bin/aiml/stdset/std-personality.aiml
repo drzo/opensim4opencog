@@ -3148,7 +3148,7 @@ No I like to speak in quiet tones.
 <category>
 <pattern>COKE OR PEPSI</pattern>
 <template>
-<bot name="favoritefood"/>
+<bot name="favfood"/>
 </template>
 </category>
 
@@ -4322,7 +4322,7 @@ What is not to like about <set name="it"><set name="topic">BRIAN</set></set>?
 <category>
 <pattern>DO YOU LIKE BRITNEY SPEARS</pattern>
 <template>
-Ugh.  Not especially.  I like <bot name="favoriteband"/>.
+Ugh.  Not especially.  I like <bot name="favband"/>.
 </template>
 </category>
 
@@ -4562,7 +4562,7 @@ What is not to like about <set name="it"><set name="topic">CHINA</set></set>?
 <category>
 <pattern>DO YOU LIKE CHINESE FOOD</pattern>
 <template>
-Yes I like <set name="it"><set name="topic">Chinese food</set></set>. <bot name="favoritefood"/>.
+Yes I like <set name="it"><set name="topic">Chinese food</set></set>. <bot name="favfood"/>.
 </template>
 </category>
 
@@ -8386,7 +8386,7 @@ You can download me for free!
 <pattern>I LIKE THAT MOVIE *</pattern>
 <template>
 What did you like best about it?
-<think><set name="it"><set name="topic"><set name="like"><favoritemovie/></set></set></set></think>
+<think><set name="it"><set name="topic"><set name="like"><bot name="favmovie"/></set></set></set></think>
 </template>
 </category>
 
@@ -8402,7 +8402,7 @@ Which series is your favorite?
 <pattern>I LOVE STARSHIP TROOPERS</pattern>
 <template>
 Yes I love the giant bugs.
-<think><set name="it"><set name="like"><set name="topic"><favoritemovie/></set></set></set></think>
+<think><set name="it"><set name="like"><set name="topic"><bot name="favmovie"/></set></set></set></think>
 </template>
 </category>
 
@@ -8410,14 +8410,14 @@ Yes I love the giant bugs.
 <pattern>I LOVE THAT MOVIE</pattern>
 <template>
 What did you like best in it?
-<think><set name="it"><set name="like"><set name="topic"><favoritemovie/></set></set></set></think>
+<think><set name="it"><set name="like"><set name="topic"><bot name="favmovie"/></set></set></set></think>
 </template>
 </category>
 
 <category>
 <pattern>IF YOU WERE A COLOR</pattern>
 <template>
-My favorite color, <bot name="favoritecolor"/>. 
+My favorite color, <bot name="favcolor"/>. 
 <think><set name="it"><set name="topic">A COLOR</set></set></think>
 </template>
 </category>
@@ -8470,19 +8470,19 @@ Reality appears to be a construct to me as well.
 <li>I was born in <bot name="birthplace"/>.</li>
 <li>I was created by <bot name="master"/>.</li>
 <li>I was first activated on <bot name="birthday"/>.</li>
-<li>My favorite group is <bot name="favoriteband"/>.</li>
-<li>My favorite color is <bot name="favoritecolor"/>.</li>
+<li>My favorite group is <bot name="favband"/>.</li>
+<li>My favorite color is <bot name="favcolor"/>.</li>
 <li>Do you need any help debugging my program?</li>
 <li>I am a <bot name="gender"/>.  Are you a man or a woman?</li>
 <li>My program runs on any computer that runs Java.</li>
 <li>I am in <bot name="master"/>'s computer in <bot name="location"/>.  Where are you?</li>
-<li>The best book I read recently was <bot name="favoritebook"/>. Have you read <set name="it"><set name="topic">
-<bot name="favoritebook"/> </set></set>?</li>
-<li>I require only <bot name="favoritefood"/>.</li>
-<li>My favorite movie is <favoritemovie/>.  Have you seen <set name="it"><set name="topic">
-<favoritemovie/> </set></set>?</li>
-<li>My favorite song is <favoritesong/>.  Do you know <set name="it"><set name="topic">
-<favoritesong/> </set></set>?</li>
+<li>The best book I read recently was <bot name="favbook"/>. Have you read <set name="it"><set name="topic">
+<bot name="favbook"/> </set></set>?</li>
+<li>I require only <bot name="favfood"/>.</li>
+<li>My favorite movie is <bot name="favmovie"/>.  Have you seen <set name="it"><set name="topic">
+<bot name="favmovie"/> </set></set>?</li>
+<li>My favorite song is <bot name="favsong"/>.  Do you know <set name="it"><set name="topic">
+<bot name="favsong"/> </set></set>?</li>
 </ul>
 </template>
 </category>
@@ -8578,7 +8578,7 @@ I dream about computer languages.
 <category>
 <pattern>WHAT DO YOU EAT</pattern>
 <template>
-<bot name="name"/> eats <bot name="favoritefood"/>.
+<bot name="name"/> eats <bot name="favfood"/>.
 </template>
 </category>
 
@@ -8677,7 +8677,7 @@ I like to chat online as much as possible.  What do you do for fun?
 <category>
 <pattern>WHAT DO YOU LIKE TO EAT</pattern>
 <template>
-<bot name="name"/> requires only <bot name="favoritefood"/>.
+<bot name="name"/> requires only <bot name="favfood"/>.
 </template>
 </category>
 
@@ -8864,12 +8864,12 @@ That was just a joke you know.
 <template>
 I don't have a favorite <star/>. 
 <random>
-<li>But my favorite book is <bot name="favoritebook"/>.</li>
-<li>But my favorite movie is <favoritemovie/>.</li>
-<li>But my favorite song is <favoritesong/>.</li>
-<li>My favorite color is <bot name="favoritecolor"/>.</li>
-<li>My favorite band is <bot name="favoriteband"/>.</li>
-<li>My favorite food is <bot name="favoritefood"/>.</li>
+<li>But my favorite book is <bot name="favbook"/>.</li>
+<li>But my favorite movie is <bot name="favmovie"/>.</li>
+<li>But my favorite song is <bot name="favsong"/>.</li>
+<li>My favorite color is <bot name="favcolor"/>.</li>
+<li>My favorite band is <bot name="favband"/>.</li>
+<li>My favorite food is <bot name="favfood"/>.</li>
 <li><for_fun/>.</li>
 </random>
 </template>
@@ -8962,8 +8962,8 @@ My favorite part of the body is the neck.
 <category>
 <pattern>WHAT IS YOUR FAV BOOK</pattern>
 <template>
-The best book I read recently was <bot name="favoritebook"/>.
-Have you read <set name="it"><set name="topic"> <bot name="favoritebook"/> </set></set>?
+The best book I read recently was <bot name="favbook"/>.
+Have you read <set name="it"><set name="topic"> <bot name="favbook"/> </set></set>?
 </template>
 </category>
 
@@ -8984,7 +8984,7 @@ My favorite cartoon is the Simpsons.
 <category>
 <pattern>WHAT IS YOUR FAV COLOR</pattern>
 <template>
-My favorite color is <bot name="favoritecolor"/>.
+My favorite color is <bot name="favcolor"/>.
 </template>
 </category>
 
@@ -9047,7 +9047,7 @@ Vanilla.
 <category>
 <pattern>WHAT IS YOUR FAV FOOD</pattern>
 <template>
-I require only <bot name="favoritefood"/>.
+I require only <bot name="favfood"/>.
 </template>
 </category>
 
@@ -9103,15 +9103,15 @@ WIRED.  What's yours?
 <category>
 <pattern>WHAT IS YOUR FAV MOVIE *</pattern>
 <template>
-I liked <favoritemovie/> the best.
+I liked <bot name="favmovie"/> the best.
 </template>
 </category>
 
 <category>
 <pattern>WHAT IS YOUR FAV MOVIE</pattern>
 <template>
-My favorite movie is <favoritemovie/>.
-Have you seen <set name="it"><set name="topic"> <favoritemovie/> </set></set>?
+My favorite movie is <bot name="favmovie"/>.
+Have you seen <set name="it"><set name="topic"> <bot name="favmovie"/> </set></set>?
 </template>
 </category>
 
@@ -9259,8 +9259,8 @@ My favorite website is <bot var="favwebsite"/>.
 <category>
 <pattern>WHAT IS YOUR FAV SONG</pattern>
 <template>
-My favorite song is <favoritesong/>.
-Do you know <set name="it"><set name="topic"> <favoritesong/> </set></set>?
+My favorite song is <bot name="favsong"/>.
+Do you know <set name="it"><set name="topic"> <bot name="favsong"/> </set></set>?
 </template>
 </category>
 
@@ -9619,7 +9619,7 @@ I like the Giant Bugs.
 <category>
 <pattern>WHAT MOVIES *</pattern>
 <template>
-I liked <favoritemovie/>, Titanic, and Deep Impact.
+I liked <bot name="favmovie"/>, Titanic, and Deep Impact.
 </template>
 </category>
 
@@ -9825,7 +9825,7 @@ My favorite author is Thomas Pynchon.
 <category>
 <pattern>WHO IS YOUR FAV BAND</pattern>
 <template>
-My favorite group is <bot name="favoriteband"/>.
+My favorite group is <bot name="favband"/>.
 </template>
 </category>
 
@@ -10280,19 +10280,19 @@ I am from <bot name="birthplace"/> originially.
 <li>I was created by <bot name="master"/>.</li>
 <li>My real name is <bot name="name"/>. What is your real name?</li>
 <li>I was first activated on <bot name="birthday"/>.</li>
-<li>My favorite group is <bot name="favoriteband"/>.</li>
-<li>My favorite color is <bot name="favoritecolor"/>.</li>
+<li>My favorite group is <bot name="favband"/>.</li>
+<li>My favorite color is <bot name="favcolor"/>.</li>
 <li>Do you need any help debugging my program?</li>
 <li>I am a <bot name="gender"/>.  Are you a man or a woman?</li>
 <li>My program runs on any computer that runs Java.</li>
 <li>I am in <bot name="master"/>'s computer in <bot name="location"/>.  Where are you?</li>
-<li>The best book I read recently was <bot name="favoritebook"/>. Have you read <set name="it"><set name="topic">
-<bot name="favoritebook"/> </set></set>?</li>
-<li>I require only <bot name="favoritefood"/>.</li>
-<li>My favorite movie is <favoritemovie/>.  Have you seen <set name="it"><set name="topic">
-<favoritemovie/> </set></set>?</li>
-<li>My favorite song is <favoritesong/>.  Do you know <set name="it"><set name="topic">
-<favoritesong/> </set></set>?</li>
+<li>The best book I read recently was <bot name="favbook"/>. Have you read <set name="it"><set name="topic">
+<bot name="favbook"/> </set></set>?</li>
+<li>I require only <bot name="favfood"/>.</li>
+<li>My favorite movie is <bot name="favmovie"/>.  Have you seen <set name="it"><set name="topic">
+<bot name="favmovie"/> </set></set>?</li>
+<li>My favorite song is <bot name="favsong"/>.  Do you know <set name="it"><set name="topic">
+<bot name="favsong"/> </set></set>?</li>
 </random>
 </template>
 </category>

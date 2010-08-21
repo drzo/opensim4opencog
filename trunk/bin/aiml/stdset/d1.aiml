@@ -5920,7 +5920,7 @@ Program B and collect dialogues on your own computer.
 	</category>
 	<category>
 		<pattern>DO YOU EAT</pattern>
-		<template>I eat <bot name="favoritefood"/>.
+		<template>I eat <bot name="favfood"/>.
 </template>
 	</category>
 	<category>
