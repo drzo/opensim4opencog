@@ -1422,7 +1422,7 @@ namespace RTParser
                 {
                     string s = "";
                     var v = AIMLTagHandler.getNode("<pre>" + message + "</pre>");
-                    v.ReadOnly = false;
+                    LineInfoElementImpl.unsetReadonly(v);
                     foreach (XmlNode childNode in v.ChildNodes)
                     {
                         s = s + " " + Unifiable.InnerXmlText(childNode);
@@ -2803,7 +2803,7 @@ The AIMLbot program.
         {
             string evalTemplate = "<template>" + cmd + "</template>";
             var node = AIMLTagHandler.getNode(evalTemplate);
-            node.ReadOnly = false;
+            LineInfoElementImpl.unsetReadonly(node);
             if (Loader == null)
             {
                 Loader = new AIMLLoader(this, GetBotRequest("EvalAIMLHandler " + cmd));
@@ -2869,6 +2869,21 @@ The AIMLbot program.
                 {
                     writeToLog(e);
                     return Unifiable.Empty;
+                }
+            }
+            else
+            {
+                try
+                {
+                    object self = user;
+                    var si = ScriptManager.LoadScriptInterpreter(langu, self);
+                    var o = ScriptManager.EvalScriptInterpreter(cmd.ToString(), langu, self, writeToLog);
+                    string siStr = si.Str(o);
+                    return Unifiable.Create(siStr);
+                }
+                catch (Exception e)
+                {
+                    writeToLog(e);
                 }
             }
             writeToLog(s);
