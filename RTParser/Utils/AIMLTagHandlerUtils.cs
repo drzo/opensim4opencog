@@ -24,7 +24,7 @@ namespace RTParser.Utils
         public Unifiable GetStarContent()
         {
             XmlNode starNode = Utils.AIMLTagHandler.getNode("<star/>", templateNode);
-            LineInfoElement.unsetReadonly(starNode);
+            LineInfoElementImpl.unsetReadonly(starNode);
             star recursiveStar = new star(this.Proc, this.user, this.query, this.request, this.result, starNode);
             return recursiveStar.Transform();
         }
@@ -409,83 +409,6 @@ namespace RTParser.Utils
             }
         }
 
-        /// <summary>
-        /// Helper method that turns the passed Unifiable into an XML node
-        /// </summary>
-        /// <param name="outerXML">the Unifiable to XMLize</param>
-        /// <returns>The XML node</returns>
-        public static LineInfoElement getNode00(string outerXML)
-        {
-            var sr = new StringReader(outerXML);
-            try
-            {
-                XmlDocumentLineInfo doc = new XmlDocumentLineInfo("From " + outerXML, false);
-                doc.Load(sr);
-                if (doc.ChildNodes.Count == 0)
-                {
-                    RTPBot.writeDebugLine("NULL outerXML=" + outerXML);
-                    return null;
-                }
-                if (doc.ChildNodes.Count != 1)
-                {
-                    RTPBot.writeDebugLine("1 != outerXML=" + outerXML);
-                }
-                var temp = doc.FirstChild;
-                if (temp is LineInfoElement)
-                {
-                    LineInfoElement li = (LineInfoElement)temp;
-                    li.ReadOnly = false;
-                    return (LineInfoElement)temp; //.FirstChild;}
-                }
-                return (LineInfoElement)temp; //.FirstChild;}
-            }
-            catch (Exception exception)
-            {
-                RTPBot.writeDebugLine("outerXML=" + outerXML);
-                throw exception;
-            }
-        }
-        public static LineInfoElement getNode00(string outerXML, XmlNode templateNode)
-        {
-            var sr = new StringReader(outerXML);
-            try
-            {
-                string named = "From " + outerXML;
-                if (templateNode != null)
-                {
-                    named = "" + templateNode.OwnerDocument;
-                    if (string.IsNullOrEmpty(named)) named = "from: " + templateNode.OuterXml;
-                }
-                XmlDocumentLineInfo doc =
-                    new XmlDocumentLineInfo(named, true);
-                doc.Load(sr);
-                var de = doc.DocumentElement;
-                if (doc.ChildNodes.Count == 0)
-                {
-                    RTPBot.writeDebugLine("NULL outerXML=" + outerXML);
-                    //  return null;
-                }
-                if (doc.ChildNodes.Count != 1)
-                {
-                    RTPBot.writeDebugLine("1 != outerXML=" + outerXML);
-                }
-                var temp = doc.FirstChild;
-                if (temp is LineInfoElement)
-                {
-                    LineInfoElement li = (LineInfoElement)temp;
-                    li.SetParentFromNode(templateNode);
-                    li.ReadOnly = false;
-                    return (LineInfoElement)temp; //.FirstChild;}
-                }
-                return (LineInfoElement)temp; //.FirstChild;}
-            }
-            catch (Exception exception)
-            {
-                RTPBot.writeDebugLine("ERROR outerXML='" + outerXML + "'\n" + exception + "\n" + AIMLLoader.LocationInfo(templateNode));
-                throw exception;
-            }
-        }
-
         #region Helper methods
 
         public override string ToString()
@@ -508,7 +431,7 @@ namespace RTParser.Utils
             string s = templateNode.OuterXml.Trim();
             if (String.IsNullOrEmpty(s))
             {
-                LineInfoElement li = (LineInfoElement)templateNode;
+                var li = templateNode;
                 s = s + " " + li.OwnerDocument.ToString();
                 if (Parent != null && Parent != this)
                 {
@@ -526,24 +449,24 @@ namespace RTParser.Utils
         public string LineNumberInfo()
         {
             string s = "<!--";
-            if (templateNode is LineInfoElement)
+            if (templateNode is IXmlLineInfo)
             {
-                LineInfoElement li = (LineInfoElement)templateNode;
-                if (li.lineNumber == 0)
+                IXmlLineInfo li = (IXmlLineInfo)templateNode;
+                if (li.LineNumber == 0)
                 {
-                    s = s + " " + li.OwnerDocument.ToString();
+                    s = s + " " + templateNode.OwnerDocument.ToString();
                     if (Parent != null && Parent != this)
                     {
                         s = s + " " + Parent.LineNumberInfo();
                     }
                     else
                     {
-                        s = s + " (" + li.lineNumber + ":" + li.linePosition + ")";
+                        s = s + " (" + li.LineNumber + ":" + li.LinePosition + ")";
                     }
                 }
                 else
                 {
-                    s = s + " (" + li.OwnerDocument.ToString() + ":line " + li.lineNumber + "," + li.linePosition + ") ";
+                    s = s + " (" + templateNode.OwnerDocument.ToString() + ":line " + li.LineNumber + "," + li.LinePosition + ") ";
                 }
             }
             return s + "-->";
@@ -552,9 +475,9 @@ namespace RTParser.Utils
         public string DocumentInfo()
         {
             string s = null;
-            if (templateNode is LineInfoElement)
+            if (templateNode != null)
             {
-                LineInfoElement li = (LineInfoElement)templateNode;
+                var li = templateNode;
                 s = "" + li.OwnerDocument;
                 if (!string.IsNullOrEmpty(s)) return s;
                 if (Parent != null && Parent != this)

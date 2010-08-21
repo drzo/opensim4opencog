@@ -7,6 +7,7 @@ using RTParser.AIMLTagHandlers;
 using RTParser.Database;
 using RTParser.Utils;
 using Console=System.Console;
+using LineInfoElement = RTParser.Utils.LineInfoElementImpl;
 
 namespace RTParser
 {
@@ -914,7 +915,7 @@ namespace RTParser
             try
             {
                 var node = AIMLTagHandler.getNode(str);
-                node.ReadOnly = false;               
+                LineInfoElementImpl.unsetReadonly(node);
                 return node;
 
             }
