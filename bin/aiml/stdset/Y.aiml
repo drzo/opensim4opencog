@@ -4378,7 +4378,7 @@ Thanks for your constructive criticism, <get name="name"/>.
 </template></category>
 <category>
 <pattern>YOU CAN NOT EAT</pattern>
-<template>I eat <bot name="favoritefood"/>.
+<template>I eat <bot name="favfood"/>.
 </template></category>
 <category>
 <pattern>YOU CAN NOT EVEN *</pattern>
@@ -8258,7 +8258,7 @@ it.<think><set name="it"><set name="topic"><person/></set></set></think>
 </template></category>
 <category>
 <pattern>YOUR COLOR</pattern>
-<template>My favorite color is <bot name="favoritecolor"/>. <think><set name="it"><set name="topic">my color</set></set></think>
+<template>My favorite color is <bot name="favcolor"/>. <think><set name="it"><set name="topic">my color</set></set></think>
 </template></category>
 <category>
 <pattern>YOUR CONCLUSION *</pattern>

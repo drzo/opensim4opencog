@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <aiml>
-
+  <srai>
+    <learn path="aiml/zeno_aironaut/" />
+  </srai>
   <learn path="aiml/example_bot/" />
+  
   <genlMt name="chomskyAIML"/>
   <learn graph="chomskyAIML" path="aiml/chomskyAIML/" />
 
@@ -36,15 +39,16 @@
       You mean, do I do <get name="it"/>?
     </template>
   </category>
-  -->
+
 
 
 
   <category>
     <pattern>*</pattern>
-    <template>VERY LAST DEFALT</template>
+    <template>VERY LAST DEFAULT FOR RAE</template>
   </category>
-
+  -->
+  
 </aiml>
 
 

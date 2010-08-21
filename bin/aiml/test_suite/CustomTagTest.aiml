@@ -125,14 +125,14 @@ Found the hyphen+done. star= 1
 
   <!--FULL STAR TOPIC-->
   <topic name="* _">
-    <catagory>
+    <category>
       <pattern>
         TOPICAIML
       </pattern>
       <template>
         Indeed Topic is <topicstar/>
       </template>
-    </catagory>
+    </category>
   </topic>
 
   <!--PATTERN OR-->

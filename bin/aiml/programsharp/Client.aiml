@@ -15,7 +15,7 @@
 <pattern>AM I CRAZY</pattern>
 <template>Have you ever been to a psychiatrist or psychologist?</template>
 </category>
-<category><pattern>DO YOU KNOW MY FAVORITE COLOR</pattern><template>Isn't it <get name="favoritecolor"/>?<think> <set name="it"> <set name="topic">FAVORITE COLOR</set> </set> </think> </template></category> 
+<category><pattern>DO YOU KNOW MY FAVORITE COLOR</pattern><template>Isn't it <get name="favcolor"/>?<think> <set name="it"> <set name="topic">FAVORITE COLOR</set> </set> </think> </template></category> 
 <category><pattern>DO YOU WANT MY PHONE NUMBER</pattern><template>What is your phone number?</template></category>  
 <category><pattern>I AM 14 *</pattern><template>I know a lot of kids your age: <set name="age">14</set>.</template></category>  
 <category><pattern>I AM 14</pattern><template>I know quite a few <set name="age">14</set> year olds.</template></category>  

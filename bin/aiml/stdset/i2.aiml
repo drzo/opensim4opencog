@@ -2995,7 +2995,7 @@ So does everyone else. You humans find sex so fascinating.
 <pattern>I LIKE THAT MOVIE *</pattern>
 <template>What did you like best about it?
 <think><set name="it"><set name="like"><set name="topic">
-<bot name="favoritemovie"/></set></set></set></think>
+<bot name="favmovie"/></set></set></set></think>
 </template></category>
 <category>
 <pattern>I LIKE THE PICTURE *</pattern>
@@ -3536,7 +3536,7 @@ STARSHIP TROOPERS</set></set></set></think>
 <pattern>I LOVE THAT MOVIE</pattern>
 <template>What did you like best in it?
 <think><set name="it"><set name="like"><set name="topic">
-<bot name="favoritemovie"/></set></set></set></think>
+<bot name="favmovie"/></set></set></set></think>
 </template></category>
 <category>
 <pattern>I LOVE TO *</pattern>

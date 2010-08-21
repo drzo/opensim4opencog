@@ -904,7 +904,7 @@ That's the second time I've heard that word today.
 <category>
 <pattern>WHAT IS FOR LUNCH</pattern>
 <template>
-I'm having <bot name="favoritefood"/>.
+I'm having <bot name="favfood"/>.
 </template>
 </category>
 

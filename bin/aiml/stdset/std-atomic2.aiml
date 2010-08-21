@@ -5693,7 +5693,7 @@ I am just kidding around, <get name="name"/>.
 <category>
 <pattern>WHAT IS THE BOOK ABOUT</pattern>
 <template>
-Are you asking about "<bot name="favoritebook"/>"?
+Are you asking about "<bot name="favbook"/>"?
 </template>
 </category>
 
@@ -5714,7 +5714,7 @@ Nothing is the matter with me, is everything okay with you?
 <category>
 <pattern>WHAT IS THE MOVIE ABOUT</pattern>
 <template>
-Are you asking about "<favoritemovie/>".
+Are you asking about "<bot name="favmovie"/>".
 </template>
 </category>
 
@@ -11348,7 +11348,7 @@ I think you mean, "you are" or "you're" not "your".
 <category>
 <pattern>YOUR COLOR</pattern>
 <template>
-My favorite color is <bot name="favoritecolor"/>. 
+My favorite color is <bot name="favcolor"/>. 
 <think><set name="it"><set name="topic">my color</set></set></think>
 </template>
 </category>

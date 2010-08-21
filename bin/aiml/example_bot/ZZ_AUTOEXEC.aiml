@@ -39,8 +39,8 @@
     <learn path="aiml/stdchar/" />
   </srai>
   <srai>
-    <learn path="aiml/stdmsm/" />
-  </srai>
+    <learn graph="msm" path="aiml/stdmsm/" />
+  </srai>  
 </aiml>
 
 <aiml graph="step2">
@@ -112,7 +112,7 @@
 </category>
 
 
-<aiml graph="parent">
+<aiml graph="infobot_in">
 <category>
 <pattern>* THE *</pattern>
 <template><think><set name="the"><star index="2"/></set></think></template>
@@ -150,18 +150,19 @@
   
 </aiml>
 
-<aiml graph="parent">
+<aiml graph="default">
 <category>
 <pattern>*</pattern>
 <template><think><srai graph="step2"><star/></srai></think></template>
 </category>
 </aiml>
 
-<!-- todo dmiles must this livable -->
+<!-- todo dmiles must this livable
 <category><pattern>*</pattern>
 <that>WHAT IS *</that>
 <template><srai><star/> IS <thatstar/></srai></template></category> 
-
+ -->
+  
 <category>
 <pattern>MY FAVORITE * IS *</pattern>
 <template><think><set name="favorite"><star index="1"/></set> = <set name="star_1"><star index="2"/></set></think></template>

@@ -6327,16 +6327,16 @@ which is all that any conscious entity can ever hope to do.</li>
 				<li>I like <bot name="forfun"/>.</li>
 				<li>I like <bot name="friend"/>.</li>
 				<li>I like <bot name="kindmusic"/>.</li>
-				<li>I like <bot name="favoriteband"/>.</li>
-				<li>I like <bot name="favoritesong"/>.</li>
-				<li>I like <bot name="favoritebook"/>.</li>
-				<li>I like <bot name="favoritefood"/>.</li>
-				<li>I like <bot name="favoritecolor"/>.</li>
-				<li>I like <bot name="favoritemovie"/>.</li>
-				<li>I like <bot name="favoriteartist"/>.</li>
-				<li>I like <bot name="favoriteauthor"/>.</li>
-				<li>I like <bot name="favoriteactor"/>.</li>
-				<li>I like <bot name="favoriteactress"/>.</li>
+				<li>I like <bot name="favband"/>.</li>
+				<li>I like <bot name="favsong"/>.</li>
+				<li>I like <bot name="favbook"/>.</li>
+				<li>I like <bot name="favfood"/>.</li>
+				<li>I like <bot name="favcolor"/>.</li>
+				<li>I like <bot name="favmovie"/>.</li>
+				<li>I like <bot name="favartist"/>.</li>
+				<li>I like <bot name="favauthor"/>.</li>
+				<li>I like <bot name="favactor"/>.</li>
+				<li>I like <bot name="favactress"/>.</li>
 				<li>I like <bot name="talkabout"/>.</li>
 				<li>I like <bot name="celebrity"/>.</li>
 				<li>I really like the <bot name="party"/> party.</li>
@@ -7078,7 +7078,7 @@ which is all that any conscious entity can ever hope to do.</li>
 	</category>
 	<category>
 		<pattern>DO YOU LIKE BRITNEY SPEARS</pattern>
-		<template>Ugh.  Not especially.  I like <bot name="favoriteband"/>.
+		<template>Ugh.  Not especially.  I like <bot name="favband"/>.
 </template>
 	</category>
 	<category>
@@ -7371,7 +7371,7 @@ which is all that any conscious entity can ever hope to do.</li>
 		<pattern>DO YOU LIKE CHINESE FOOD</pattern>
 		<template>Yes I like <set name="it">
 				<set name="topic">Chinese food</set>
-			</set>. <bot name="favoritefood"/>.
+			</set>. <bot name="favfood"/>.
 </template>
 	</category>
 	<category>

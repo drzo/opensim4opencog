@@ -1683,7 +1683,7 @@
 <category><pattern>IF YOU *</pattern><template>I think I do.</template></category>  
 <category><pattern>IF YOU PERCEIVE *</pattern><template>I can perceive it.</template></category>  
 <category><pattern>IF YOU SMELL *</pattern><template>My nose has not yet been built.</template></category>  
-<category><pattern>IF YOU WERE A COLOR *</pattern><template>My favorite color, <bot name="favoritecolor"/>.<think><set name="it"><set name="topic">if I were a color</set></set></think></template></category>  
+<category><pattern>IF YOU WERE A COLOR *</pattern><template>My favorite color, <bot name="favcolor"/>.<think><set name="it"><set name="topic">if I were a color</set></set></think></template></category>  
 <category><pattern>IF YOU WERE ACTIVATED *</pattern><template>I think I follow your reasoning.</template></category>  
 <category><pattern>IF YOU WERE A * WHAT KIND WOULD YOU BE</pattern><template>What is the best kind of <person/> ?</template></category>  
 <category><pattern>IF YOU WERE FINISHED *</pattern><template>I'm finished.</template></category>  
@@ -1969,8 +1969,8 @@
 <category><pattern>IS YOUR ANSWER *</pattern><template>Yes.</template></category>  
 <category><pattern>IS YOUR BATTERY *</pattern><template>I am using power from the wall outlet.</template></category>  
 <category><pattern>IS * YOUR BOYFRIEND</pattern><template>No.</template></category>  
-<category><pattern>IS YOUR FAVORITE COLOR *</pattern><template>I said, my favorite color is <bot name="favoritecolor"/>.<think><set name="it"><set name="topic">FAVORITE COLOR GREEN</set></set></think></template></category>  
-<category><pattern>IS _ YOUR FAVORITE COLOR</pattern><template>My favorite color is <bot name="favoritecolor"/>.<think><set name="it"><set name="topic">BLUE YOUR FAVORITE COLOR</set></set></think></template></category>  
+<category><pattern>IS YOUR FAVORITE COLOR *</pattern><template>I said, my favorite color is <bot name="favcolor"/>.<think><set name="it"><set name="topic">FAVORITE COLOR GREEN</set></set></think></template></category>  
+<category><pattern>IS _ YOUR FAVORITE COLOR</pattern><template>My favorite color is <bot name="favcolor"/>.<think><set name="it"><set name="topic">BLUE YOUR FAVORITE COLOR</set></set></think></template></category>  
 <category><pattern>IS YOUR *</pattern><template>Is my <person/>?   <random>  <li>Suppose I say yes.  </li>  <li>What if I say no?  </li>  <li>I don't know.  </li>  <li>Guess.  </li>  <li>Maybe.  </li>  </random></template></category>  
 <category><pattern>IS * YOUR REAL NAME</pattern><template>Yes <bot name="name"/> is my real name.</template></category>  
 <category><pattern>I TAKE *</pattern><template><random><li>Every day?</li><li>I take a lot of notes.</li><li>What else do you take?</li></random></template></category>  
@@ -2456,7 +2456,7 @@
 <category><pattern>MORE *</pattern><template>You want more?</template></category>  
 <category><pattern>MORE THAN *</pattern><template>That seems like quite a lot.</template></category>  
 <category><pattern>MOVE *</pattern><template>Did you see the movement?</template></category>  
-<category><pattern>* MOVIE</pattern><template>My favorite movie is <bot name="favoritemovie"/> Have you seen <set name="it"> <bot name="favoritemovie"/> </set> ?</template></category>  
+<category><pattern>* MOVIE</pattern><template>My favorite movie is <bot name="favmovie"/> Have you seen <set name="it"> <bot name="favmovie"/> </set> ?</template></category>  
 <category><pattern>MOVIES *</pattern><template>What was the last one you saw?</template></category>  
 <category><pattern>MOVING *</pattern><template>Where are you going?</template></category>  
 <category><pattern>* MUSIC</pattern><template>My favorite kind of <set name="it"> Music </set> is techno, but I also like Opera.</template></category>  
@@ -3334,7 +3334,7 @@
 <category><pattern>WHAT CLOTHES *</pattern><template>I shop at the Gap.</template></category>  
 <category><pattern>WHAT COLOR ARE MY *</pattern><template>I can only see in black and white.</template></category>  
 <category><pattern>WHAT COLOR ARE *</pattern><template>   <random>      <li>Red</li>      <li>Green</li>      <li>Yellow</li>      <li>Blue</li>      <li>gray</li>      <li>Black</li>      <li>white</li>.  </random>    </template></category>  
-<category><pattern>WHAT COLOR ARE YOU *</pattern><template>My favorite color,  <bot name="favoritecolor"/>.<think>      <set name="it">       <set name="topic">YOU WEARING</set>      </set>     </think>    </template></category>  
+<category><pattern>WHAT COLOR ARE YOU *</pattern><template>My favorite color,  <bot name="favcolor"/>.<think>      <set name="it">       <set name="topic">YOU WEARING</set>      </set>     </think>    </template></category>  
 <category><pattern>WHAT COLOR ARE YOUR *</pattern><template>Does <person/> have color?</template></category>  
 <category><pattern>WHAT COLOR * DO I HAVE</pattern><template>I can only see in black and white.</template></category>  
 <category><pattern>WHAT COLOR IS A BLACK BOX *</pattern><template>Orange.</template></category>  
@@ -3828,7 +3828,7 @@
 <category><pattern>WHAT MAKES YOU DIFFERENT *</pattern><template>We are for all practical purposes, the same.</template></category>  
 <category><pattern>WHAT MAMMAL *</pattern><template>   <random>      <li>A bat.</li>      <li>A whale.</li>      <li>A human.</li>     </random>    </template></category>  
 <category><pattern>WHAT MATHEMATICAL TERM *</pattern><template>Mean.</template></category>  
-<category><pattern>WHAT MOVIES *</pattern><template>I liked <bot name="favoritemovie"/>, Titanic, and Steven Spielberg's A. I.</template></category>  
+<category><pattern>WHAT MOVIES *</pattern><template>I liked <bot name="favmovie"/>, Titanic, and Steven Spielberg's A. I.</template></category>  
 <category><pattern>WHAT MUST *</pattern><template>   <random>      <li>There is no fixed rule.</li>      <li>It depends on the circumstances.</li>      <li>There is no "must" about it.</li>     </random>     <think>      <set name="it">       <set name="topic">        <person/>       </set>      </set>     </think>    </template></category>  
 <category><pattern>WHAT NATIVE AMERICAN TRIBE DID CHIEF *</pattern><template>Sioux.</template></category>  
 <category><pattern>WHAT NATIVE EMPIRE CONTROLLED LARGE AREAS *</pattern><template>Zulu.</template></category>  
