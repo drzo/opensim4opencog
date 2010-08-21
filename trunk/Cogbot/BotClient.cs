@@ -1964,7 +1964,7 @@ namespace cogbot
             if (o is CmdResult) return (CmdResult)o;
             if (o == null) return new CmdResult("void", true);
             if (si.Eof(o)) return new CmdResult("EOF " + o, true);
-            return new CmdResult("" + o, true);
+            return new CmdResult("" + si.Eval(o), true);
         }
 
         public string DoHttpGet(string url)
