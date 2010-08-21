@@ -13,6 +13,7 @@ using MushDLR223.Utilities;
 using RTParser.Variables;
 using UPath = RTParser.Unifiable;
 using MushDLR223.Virtualization;
+using LineInfoElement = RTParser.Utils.LineInfoElementImpl;
 
 namespace RTParser.Utils
 {
@@ -785,8 +786,8 @@ namespace RTParser.Utils
                 patternString = MatchKeyClean(patternString.Replace(thatString, ""));
                 var newLineInfoPattern = AIMLTagHandler.getNode("<pattern>" + patternString + "</pattern>", patternNode);
                 //TODO BEFORE COMMIT DMILES
-                newLineInfoPattern.ReadOnly = true;
-                newLineInfoPattern.SetParentFromNode((LineInfoElement)patternNode);
+                LineInfoElementImpl.SetParentFromNode(newLineInfoPattern, patternNode);
+                LineInfoElementImpl.SetReadOnly(newLineInfoPattern);
                 patternNode = newLineInfoPattern;
                 patternText = Unifiable.Create(Unifiable.InnerXmlText(patternNode));
             }
@@ -804,7 +805,8 @@ namespace RTParser.Utils
             get
             {
                 var ps = AIMLTagHandler.getNode("<pattern name=\"*\">*</pattern>");
-                ps.ReadOnly = true;
+                LineInfoElementImpl.SetReadOnly(ps);
+
                 return ps;
             }
         }
@@ -1552,17 +1554,17 @@ namespace RTParser.Utils
 
             XmlNode oc = node.CloneNode(true);
 
-            LineInfoElement xmlNode = oc as LineInfoElement;
+            LineInfoElement xmlNode = (LineInfoElement) (oc as IXmlLineInfo);
             if (xmlNode == null)
             {
-                xmlNode = AIMLTagHandler.getNode(node.OuterXml, node);
-                xmlNode.ReadOnly = false;
+                xmlNode = (LineInfoElement) AIMLTagHandler.getNode(node.OuterXml, node);
+                LineInfoElementImpl.unsetReadonly(xmlNode);
             }
             else
             {
-                xmlNode.ReadOnly = false;
+                LineInfoElementImpl.unsetReadonly(xmlNode);
             }
-            xmlNode.ReadOnly = false;
+            LineInfoElementImpl.unsetReadonly(xmlNode);
             return xmlNode;
         }
 

@@ -11,7 +11,7 @@ using MushDLR223.Utilities;
 using RTParser.Variables;
 using UPath = RTParser.Unifiable;
 using MushDLR223.Virtualization;
-
+using LineInfoElement = RTParser.Utils.LineInfoElementImpl;
 namespace RTParser.Utils
 {
 
@@ -73,8 +73,8 @@ namespace RTParser.Utils
             LineTracker = null;
         }
 
-        public bool DocumentHasNormalized = false;
-        public bool DocumentInNormalize = false;
+        public bool DocumentHasNormalized = true;
+        public bool DocumentInNormalize = true;
         public override void Load(Stream reader)
         {
             IXmlLineInfo prev = LineTracker;
@@ -698,7 +698,7 @@ namespace RTParser.Utils
             {
                 LineInfoElement lie = (LineInfoElement)xmlNode;
                 lineNumber = lie.LineNumber;
-                linePosition = lie.linePosition;
+                linePosition = lie.LinePosition;
                 charPos = lie.charPos;
             }
         }
@@ -714,9 +714,9 @@ namespace RTParser.Utils
     }
 
 
-    public class LineInfoElement : XmlElement, AIMLLineInfo
+    public class LineInfoElementImpl : XmlElement, AIMLLineInfo
     {
-        internal LineInfoElement(string prefix, string localname, string nsURI, XmlDocument doc)
+        internal LineInfoElementImpl(string prefix, string localname, string nsURI, XmlDocument doc)
             : base(prefix, localname, nsURI, doc)
         {
             XmlDocumentLineInfo.CheckNode(this);
@@ -1037,7 +1037,8 @@ namespace RTParser.Utils
         {
             RTPBot.writeDebugLine("ERROR  " + s + " on XML node: '" + this + "'");
         }
-        private bool _whenReadOnly = true;
+
+        private static bool _whenReadOnly = true;
         
 
         public override bool IsReadOnly
@@ -1139,6 +1140,20 @@ namespace RTParser.Utils
         {
             XmlNode p = chilz.ParentNode;
             p.RemoveChild(chilz);
+        }
+
+        public static void SetReadOnly(XmlNode node)
+        {
+            AIMLLineInfo lie = node as AIMLLineInfo;
+            if (node.IsReadOnly)
+            {
+                lie.ReadOnly = true;
+            }
+        }
+
+        internal static void SetParentFromNode(XmlNode newLineInfoPattern, XmlNode patternNode)
+        {
+            ((LineInfoElementImpl)newLineInfoPattern).SetParentFromNode(patternNode);
         }
     } // End LineInfoElement class.
 

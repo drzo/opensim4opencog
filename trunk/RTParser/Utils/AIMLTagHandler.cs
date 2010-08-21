@@ -8,6 +8,8 @@ using System.Threading;
 using System.Xml;
 using RTParser.AIMLTagHandlers;
 using RTParser.Variables;
+//using LineInfoElement = System.Xml.XmlNode;
+using LineInfoElement = RTParser.Utils.LineInfoElementImpl;
 
 namespace RTParser.Utils
 {
@@ -522,7 +524,7 @@ namespace RTParser.Utils
         /// </summary>
         /// <param name="outerXML">the Unifiable to XMLize</param>
         /// <returns>The XML node</returns>
-        public static LineInfoElement getNode(string outerXML)
+        public static XmlNode getNode(string outerXML)
         {
             var sr = new StringReader(outerXML);
             try
@@ -553,7 +555,7 @@ namespace RTParser.Utils
                 throw exception;
             }
         }
-        public static LineInfoElement getNode(string outerXML, XmlNode templateNode)
+        public static XmlNode getNode(string outerXML, XmlNode templateNode)
         {
             var sr = new StringReader(outerXML);
             try
@@ -666,8 +668,8 @@ namespace RTParser.Utils
             else
             {
                 string resultNodeInnerXML = tagHandler.Transform();
-                LineInfoElement resultNode = AIMLTagHandler.getNode("<node>" + resultNodeInnerXML + "</node>", templateNode);
-                resultNode.ReadOnly = false;
+                var resultNode = AIMLTagHandler.getNode("<node>" + resultNodeInnerXML + "</node>", templateNode);
+                LineInfoElementImpl.unsetReadonly(resultNode);
                 if (resultNode.HasChildNodes)
                 {
                     var recursiveResult = Unifiable.CreateAppendable();

@@ -40,7 +40,7 @@ namespace RTParser.AIMLTagHandlers
                 Unifiable starContent = GetStarContent();
 
                 XmlNode sraiNode = RTParser.Utils.AIMLTagHandler.getNode(String.Format("<srai>{0}</srai>", starContent), templateNode);
-                LineInfoElement.unsetReadonly(sraiNode);
+                LineInfoElementImpl.unsetReadonly(sraiNode);
                 srai sraiHandler = new srai(this.Proc, this.user, this.query, this.request, this.result, sraiNode);
                 return sraiHandler.Transform();
             }

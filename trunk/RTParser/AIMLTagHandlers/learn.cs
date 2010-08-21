@@ -57,7 +57,7 @@ namespace RTParser.AIMLTagHandlers
         private XmlNode EvalChild(XmlNode templateNode)
         {
             XmlNode attach = templateNode.CloneNode(false);// //AIMLLoader.CopyNode(templateNode, false);
-            LineInfoElement.unsetReadonly(attach);
+            LineInfoElementImpl.unsetReadonly(attach);
             if (templateNode.HasChildNodes)
             {
                 // recursively check
@@ -65,22 +65,22 @@ namespace RTParser.AIMLTagHandlers
                 {
                     if (childNode.LocalName=="eval")
                     {
-                        LineInfoElement tchiuld = getNode("<template>" + childNode.InnerXml + "</template>", childNode);
-                        LineInfoElement.unsetReadonly(tchiuld);
+                        var tchiuld = getNode("<template>" + childNode.InnerXml + "</template>", childNode);
+                        LineInfoElementImpl.unsetReadonly(tchiuld);
                         Unifiable processChildNode = ProcessChildNode(tchiuld, ReadOnly, false);
                         SaveResultOnChild(childNode, processChildNode);
-                        LineInfoElement readNode = getNode("<node>" + Unifiable.InnerXmlText(childNode) + "</node>", childNode);
-                        LineInfoElement.unsetReadonly(readNode);
+                        var readNode = getNode("<node>" + Unifiable.InnerXmlText(childNode) + "</node>", childNode);
+                        LineInfoElementImpl.unsetReadonly(readNode);
                         if (readNode.ChildNodes.Count == 1)
                         {
                             XmlNode chilz = readNode.ChildNodes[0];
-                            LineInfoElement.chopParent(chilz);
+                            LineInfoElementImpl.chopParent(chilz);
                             attach.AppendChild(chilz);
                             continue;
                         }
                         foreach (XmlNode child in readNode.ChildNodes)
                         {
-                            LineInfoElement.unsetReadonly(child);
+                            LineInfoElementImpl.unsetReadonly(child);
                             attach.AppendChild(child.CloneNode(true));
                         }
                         continue;
