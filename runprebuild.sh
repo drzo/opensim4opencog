@@ -9,6 +9,7 @@ cp lib/Radegast/*.config bin/
 rm -f lib/Radegast/libop*
 cp lib/Radegast/*.so bin/
 cp lib/Radegast/*.dylib bin/
+cp lib/PennBank.net/TreeBankGrapher/bin/Release/*.dll bin/
 
 cp lib/Radegast/*.ico /tmp
 cp -a lib/Radegast/Resources/ /tmp/

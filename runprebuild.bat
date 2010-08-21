@@ -18,6 +18,7 @@ del lib\LookingGlass-svn\bin\PrimMesher.dll
 del lib\LookingGlass-svn\bin\Radegast.exe
 del lib\LookingGlass-svn\bin\OpenMetav*.*
 copy lib\LookingGlass-svn\bin\*.* bin\
+copy lib\PennBank.net\TreeBankGrapher\bin\Release\*.dll bin\
 pause
 
 exit /b 0
