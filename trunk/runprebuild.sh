@@ -48,3 +48,6 @@ rm -rf bin/RadSpeechWin*.*
 
 echo copied assembies
 
+echo To just build CSProloge.exe
+echo "./runprebuild.sh ;  find -iname \"*.build\" -not -name Cogbot.build -not -name CSProlog.*.build -exec cp NullBuild.txt '{}' \; ; nant "
+
