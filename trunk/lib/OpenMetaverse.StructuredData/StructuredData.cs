@@ -80,7 +80,7 @@ namespace OpenMetaverse.StructuredData
     /// <summary>
     /// 
     /// </summary>
-    public class OSD
+    public partial class OSD
     {
         public virtual OSDType Type { get { return OSDType.Unknown; } }
 
