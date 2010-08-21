@@ -102,6 +102,7 @@
            <Reference name="MySql.Data.dll" localCopy="false"/>
            <Reference name="LAIR.Collections.dll" localCopy="false"/>
            <Reference name="LAIR.Extensions.dll" localCopy="false"/>
+           <Reference name="LAIR.ResourceAPIs.NomBank" localCopy="false"/>
            <Reference name="LAIR.GraphViz.dll" localCopy="false"/>
            <Reference name="LAIR.IO.dll" localCopy="false"/>
            <Reference name="LAIR.MachineLearning.dll" localCopy="false"/>
@@ -141,11 +142,12 @@
         <Reference name="LAIR.MachineLearning.dll" localCopy="false"/>
         <Reference name="LAIR.XML.dll" localCopy="false"/>
         <Reference name="LAIR.Misc.dll" localCopy="false"/>
-        <Reference name="LAIR.ResourceAPIs.PennBank" localCopy="false"/>
+        <Reference name="LAIR.ResourceAPIs.PennBank" localCopy="false"/> 
         <Files>
           <Match pattern="*.cs" recurse="true"/>
         </Files>
       </Project>
+
 
       <Project name="LAIR.ResourceAPIs.WordNet" path="lib/WordNet.net/WordNet" type="Library" rootNamespace="LAIR.ResourceAPIs.WordNet" frameworkVersion="v3_5">
         <Configuration name="Debug">
@@ -180,7 +182,7 @@
         </Files>
       </Project>
 
-    <Project name="SwiPlCs" path="contrib/SwiPlCs" type="Library" frameworkVersion="v3_5">
+    <Project name="SwiPlCs" path="contrib/SWIPlCs" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
           <OutputPath>../../bin/</OutputPath>
@@ -465,7 +467,7 @@
       <Reference name="ABCL.Net.dll" localCopy="false"/>
       <Reference name="log4net.dll" localCopy="false"/>
       <Reference name="HttpServer.dll" localCopy="false"/>
-      <Reference name="SwiPlCs" localCopy="false"/>
+      <Reference name="SwiPlCs.dll" localCopy="false"/>
       <Reference name="System" localCopy="false"/>
       <Reference name="DotLisp.dll" localCopy="false"/>
       <Reference name="OpenCyc.dll" localCopy="false"/>
@@ -786,8 +788,7 @@
          <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource">  <Exclude name="AssemblyInfo.cs"/><Exclude name="Plugins/"/></Match>
      </Files>
 </Project>
-
-
+    
     <Project name="PrologScriptEngine" path="contrib/PrologScriptEngine" type="Library" frameworkVersion="v3_5">
      <Configuration name="Debug">
        <Options>
@@ -817,7 +818,7 @@
       <Reference name="OpenMetaverseTypes" localCopy="false"/>      
       <Reference name="DotLisp" localCopy="false"/>
       <Reference name="AIMLbot" localCopy="false"/>
-      <Reference name="SwiPlCs" localCopy="false"/>
+      <Reference name="SwiPlCs.dll" localCopy="false"/>
       <Reference name="Radegast.exe" localCopy="false"/>
       
      <Files>
@@ -1814,7 +1815,7 @@ app -->
       <Reference name="RadSpeechLin" />
       <Reference name="RadSpeechWin" />
       <Reference name="CommandLine.dll"  localCopy="false" />
-      <Reference name="SwiPlCs" localCopy="false"/>
+      <Reference name="SwiPlCs.dll" localCopy="false"/>
       <Reference name="System" localCopy="false"/>
       <Reference name="System.Data" />
       <Reference name="System.Drawing" localCopy="false"/>
