@@ -197,7 +197,7 @@ graph_or_file(_Ctx,ATTRIBS, Filename, [nosuchfile(Filename,ATTRIBS)]).
 % ============================================
 % Test Suite 
 % ============================================
-tag_eval(Ctx,element('testsuite',ATTRIBS,LIST),prologCall(load_mapcar(call,RESULT))):- withAttributes(Ctx,filelevel,ATTRIBS,aiml_eval_each(Ctx,LIST,RESULT)),!.
+tag_eval(Ctx,element('testsuite',ATTRIBS,LIST),prologCall(maplist_safe(call,RESULT))):- withAttributes(Ctx,filelevel,ATTRIBS,aiml_eval_each(Ctx,LIST,RESULT)),!.
    
 tag_eval(Ctx,element(TC,ATTRIBS,LIST),prologCall(TESTCALL)):- member(TC,['testcase','TestCase']),     
  debugOnFailureAiml((
