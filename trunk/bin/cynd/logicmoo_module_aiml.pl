@@ -40,8 +40,9 @@ main_loop1(Atom):- current_input(In),!,
             alicebot(Atom),!.
 
 main_loop:-repeat,main_loop1(_),fail.
-%:-abolish(aimlCate/9).
-:-dynamic(aimlCate/9).
+%:-abolish(aimlCate/10).
+
+ :-dynamic(aimlCate/12). 
 
 callInteractive(Term,Var):-catch(callInteractive0(Term,Var),E,aiml_error(E)),!.
 
@@ -59,8 +60,9 @@ makeAimlContext_1(
       settings([_|_Graph],[_|_Topic2],[_Username|_],[_Input|_]))).
 
 % ===============================================================================================
-% ALICE IN PROLOG
+% UTILS
 % ===============================================================================================
+
 
 %getWordTokens(WORDS,TOKENS):-concat_atom(TOKENS,' ',WORDS).
 %is_string(S):-string(S).
@@ -92,6 +94,59 @@ randomPick(List,Ele):-length(List,Len),Pick is random(Len),nth0(Pick,List,Ele),!
 
 all_upper_atom(X):-toUppercase(X,N),N=X.
 
+
+ifThen(When,Do):-When->Do;true.
+
+atom_concat_safe(L,R,A):- ((atom(A),(atom(L);atom(R))) ; ((atom(L),atom(R)))), !, atom_concat(L,R,A),!.
+concat_atom_safe(List,Sep,[Atom]):-atom(Atom),!,concat_atom(List,Sep,Atom),!.
+concat_atom_safe(List,Sep,Atom):-atom(Atom),!,concat_atom(ListM,Sep,Atom),!,List = ListM.
+concat_atom_safe(List,Sep,Atom):- concat_atom(List,Sep,Atom),!.
+
+upcase_atom_safe(A,B):-atom(A),upcase_atom(A,B).
+
+%appendPred(Pred,X,NEWPRED):- Pred=..ARGS, append(ARGS,[X],NEWARGS),NEWPRED=..NEWARGS,!.
+
+/*
+maplist_safe(Pred,LIST):-prolog_must(nonvar(Pred)),prolog_must(nonvar(LIST)),
+      findall(E, ((member(E,LIST),debugOnFailureAiml(apply(Pred,[E])))),LISTO),!,debugOnFailureAiml(LIST=LISTO).
+
+maplist_safe(Pred,LIST):-findall(E,(member(E,LIST),apply(Pred,[E])),LISTO),LIST=LISTO.
+
+*/
+
+maplist_safe(_Pred,[]):-!.
+maplist_safe(Pred,LIST):-findall(E,(member(E,LIST),debugOnFailureAiml(apply(Pred,[E]))),LISTO),!,debugOnFailureAiml(LIST=LISTO),!.
+% maybe needs copy_term? 
+%maplist_safe(Pred,[X|L]):- debugOnFailureAiml((appendPred(Pred,X,NEWPRED),copy_term(a(Pred,X,NEWPRED),a(_Pred0,X0,NEWPRED0)))),
+%   debugOnFailureAiml(NEWPRED0),!,debugOnFailureAiml(X=X0), debugOnFailureAiml(maplist_safe(Pred,L)),!.
+
+
+maplist_safe23(Pred,List,List2):-maplist_safe(Pred,List),!,debugOnFailure(List=List2).
+
+maplist_safe(_Pred,[],[]):-!.
+maplist_safe(Pred,[A|B],Out):- debugOnFailureAiml(apply(Pred,[A,AA])),!,maplist_safe(Pred,B,BB),!, Out =[AA|BB].
+
+/*
+
+maplist_safe(Pred,[A|B],Out):- apply(Pred,[A,AA]),maplist_safe(Pred,B,BB), Out=[AA|BB].
+
+*/
+
+clean_codes(X,Y):-trim(X,Y),!.
+clean_codes(X,X).
+
+%clean_out_atom(X,Y):-atomSplit(X,C),delete(C,'',O),concat_atom_safe(C,' ',Y).
+clean_out_atom(X,Y):-atom_codes(X,C),clean_codes(C,D),!,atom_codes(X,D),!,Y=X.
+
+mapWords(_,PATTERN,[PATTERN]):- (var(PATTERN);number(PATTERN)),!.
+mapWords(_,[],OUT):-!,[]=OUT.
+mapWords(Pred,IN,OUT):- once(call(Pred,IN,MID)), debugOnFailureAiml((MID=IN -> flatten([MID],OUT) ; mapWords(Pred,MID,OUT))).
+mapWords(Pred,[I|IN],OUT):-!,debugOnFailureAiml((mapWords(Pred,I,O1),mapWords(Pred,IN,O2),!,append(O1,O2,OUT))),!.
+mapWords(Pred,IN,OUT):-atom(IN),debugOnFailureAiml((atomSplit(IN,MID),!,mapWords(Pred,MID,OUT))),!.
+mapWords(Pred,IN,[OUT]):-debugOnFailureAiml((compound(IN), IN=..INP, append(Left,[Last],INP), mapWords(Pred,Last,UT),!, append(Left,[UT],OUTP),!, OUT =.. OUTP)).
+mapWords(_,IN,[IN]):-trace,!.
+
+
 :-dynamic(default_channel/1).
 :-dynamic(default_user/1).
 
@@ -108,6 +163,10 @@ dumpList(_,AB):-debugFmt(dumpList(AB)),!.
 dumpList(_,[]):-!.
 %dumpList(Ctx,[A|B]):-!,say(Ctx,A),dumpList(Ctx,B),!.
 %dumpList(Ctx,B):-say(Ctx,dumpList(B)).
+
+% ===============================================================================================
+% ALICE IN PROLOG
+% ===============================================================================================
 
 say(X):-currentContext(Ctx),say(Ctx,X),!.
 say(Ctx,X):- aiml_eval(Ctx,X,Y),!,debugFmt(Y),!.
@@ -343,7 +402,6 @@ computeSRAI2(Ctx,Votes,Input,TopicStarO,VotesO):-
 	 subst(NextO,topicstar,TopicStar,TopicStarO),
 	 VotesO is Votes * (Voted + TopicVote).
 
-
 set_matchit([Input|_],[Input|_]).
 set_matchit([Input|_],[_,Input|_]).
 set_matchit([_,Input|_],[_,Input|_]).
@@ -353,8 +411,8 @@ get_aiml_that(_Ctx,SaidThat,Match,Out):-what(SaidThat, Match,Out).
 get_aiml_that(_Ctx,[*],Match,Out):-response(Match,Out).
 
 %%%%aimlCate(graph,topic,that,pattern,flags,call,guard,template,userdict).
-get_aiml_that(_Ctx,[T|HAT],Match,Out):-aimlCate(_Graph,_Topic,[T|HAT],Match,_Flags,_Call,_Guard,Out,_userdict).
-get_aiml_that(_Ctx,[*],Match,Out):-aimlCate(_Graph,_Topic,that,Match,_Flags,_Call,_Guard,Out,_userdict).
+get_aiml_that(_Ctx,[T|HAT],Match,Out):-aimlCate(_Graph,_Precall,_Topic,[T|HAT],Match,_Flags,_Call,_Guard,Out,_userdict,_,_).
+get_aiml_that(_Ctx,[*],Match,Out):-aimlCate(_Graph,_Precall,_Topic,that,Match,_Flags,_Call,_Guard,Out,_userdict,_,_).
 
 %get_aiml_cyc([*],[String|ListO],[Obj,*]):-poStr(Obj,[String|List]),append(List,[*],ListO).
 %get_aiml_cyc([*],[String,*],[Obj,*]):-poStr(Obj,String).
@@ -435,12 +493,13 @@ aimlDebugFmt(X):-debugFmt(X),!.
 
 traceCall(A):-trace(A,[-all,+fail]),A,!.
 
-debugOnFailureAiml(Call):- Call,!.
-debugOnFailureAiml((A,B)):- debugOnFailureAiml(A),debugOnFailureAiml(B).
-debugOnFailureAiml(debugOnFailureAiml(Call)):-!,debugOnFailureAiml(Call).
-%debugOnFailureAiml(Call):- Call,!.
-debugOnFailureAiml(Call):- catch(once(Call),E,(debugFmt(caugth(Call,E),Call))),!.
-debugOnFailureAiml(Call):- traceAll,debugFmt(tracing(Call)),debug,trace,Call.
+debugOnFailureAiml(Call):- debugOnFailureAiml1(Call),notrace,!.
+
+debugOnFailureAiml1(Call):-Call,!.
+%debugOnFailureAiml1((A,B)):- debugOnFailureAiml1(A),debugOnFailureAiml1(B).
+%debugOnFailureAiml1(Call):- catch(once(Call),E,(debugFmt(caugth(Call,E)),beenCaugth(Call))),!.
+debugOnFailureAiml1(Call):- beenCaugth(Call).
+beenCaugth(Call):- traceAll,debugFmt(tracing(Call)),debug,trace,!,Call.
 
 
 takeout(_,[],[]):-!.
