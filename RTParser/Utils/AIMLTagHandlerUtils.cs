@@ -5,6 +5,8 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using RTParser.AIMLTagHandlers;
 using RTParser.Variables;
+using StringAppendableUnifiable = RTParser.StringAppendableUnifiableImpl;
+//using StringAppendableUnifiable = System.Text.StringBuilder;
 
 namespace RTParser.Utils
 {

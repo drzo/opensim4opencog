@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
 using RTParser.Database;
 using RTParser.Utils;
 using UPath = RTParser.Unifiable;
+using StringAppendableUnifiable = RTParser.StringAppendableUnifiableImpl;
+//using StringAppendableUnifiable = System.Text.StringBuilder;
 
 namespace RTParser
 {
@@ -177,6 +180,11 @@ namespace RTParser
         {
             if (value == null) return null;
             Unifiable u;
+            if (false)
+            {
+                u = new StringUnifiable(value);
+                return (StringUnifiable) u;
+            }
             if (true)
                 lock (internedUnifiables)
                 {
@@ -199,6 +207,10 @@ namespace RTParser
                     if (!internedUnifiables.TryGetValue(key, out u))
                     {
                         u = internedUnifiables[key] = new StringUnifiable(value, true);
+                        if ((internedUnifiables.Count % 10000)==0)
+                        {
+                            writeToLog("internedUnifiables.Count=" + internedUnifiables.Count);
+                        }
                     }
                     return (StringUnifiable)u;
                 }
@@ -401,8 +413,8 @@ namespace RTParser
 
         internal static StringAppendableUnifiable CreateAppendable()
         {
-            var u = new StringAppendableUnifiable();
-            return u;
+            return new StringAppendableUnifiable();
+         //   return new StringBuilder(10);
         }
 
         public static Unifiable ThatTag = Create("TAG-THAT");

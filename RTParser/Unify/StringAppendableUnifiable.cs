@@ -5,17 +5,17 @@ using RTParser.Utils;
 
 namespace RTParser
 {
-    public class StringAppendableUnifiable : StringUnifiable, UnifiableList
+    public class StringAppendableUnifiableImpl : StringUnifiable, UnifiableList
     {
         public override Unifiable Frozen(SubQuery subquery)
         {
             string str0 = ToValue(subquery);
-            var u = new StringAppendableUnifiable();
+            var u = new StringAppendableUnifiableImpl();
             u.str = str0;           
             return u;
         }
 
-        public StringAppendableUnifiable()
+        public StringAppendableUnifiableImpl()
         {
             Flags |= UFlags.APPENDABLE;
         }
@@ -74,6 +74,11 @@ namespace RTParser
         public int Length
         {
             get { return str.Length; }
+            set
+            {
+                str = str.Substring(0, value);
+                SpoilCache();
+            }
         }
     }
 
