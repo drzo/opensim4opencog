@@ -56,7 +56,138 @@ main_loop1(Atom):- current_input(In),!,
 main_loop:-repeat,main_loop1(_),fail.
 %:-abolish(aimlCate/10).
 
- :-dynamic(aimlCate/12). 
+% ===================================================================
+%  aimlCate database decl
+% ===================================================================
+
+:-dynamic(aimlCateSigCached/1).
+aimlCateSig(X):-aimlCateSigCached(X),!.
+aimlCateSig(Pred):-aimlCateOrder(List),length(List,L),functor(Pred,aimlCate,L),asserta(aimlCateSigCached(Pred)),!.
+
+aimlCateOrder([graph,precall,topic,that,[pattern,input],flags,call,guard,template,userdict,lineno,filename]).
+
+% [graph,precall,topic,that,pattern,flags,call,guard,template,userdict]
+cateMemberTags(Result):- aimlCateOrder(List), findall(E,(member(E0,List),once((E0=[E|_];E0=E))), Result).
+
+
+makeAimlCateSig(Ctx,ListOfValues,Pred):-aimlCateSig(Pred),!,makeAimlCate(Ctx,ListOfValues,Pred,current_value),!.
+
+:- aimlCateOrder(List),length(List,L),dynamic(aimlCate/L),multifile(aimlCate/L). 
+
+% ===================================================================
+%  AimlContexts
+%   They hold name-values in
+%     -- assoc/1 lists
+%     -- open tailed lists
+%     -- frame/1 contains one or more of the above
+
+%% v/3s 
+%  = v(Value,Setter,KeyDestructor)
+
+%% frame/3s
+%  = frame(Named,Destructor,Ctx)
+
+
+% ===================================================================
+
+makeAimlContext(Name,Ctx):-makeAimlContext1(Name,Ctx),!,setCtxValue(withAiml,Ctx,[assert_new,writeqnl]).
+
+makeAimlContext1(Gensym_Key, [frame(Gensym_Key,throw(no_destructor),[assoc(AL)|_])|_]):-    
+   list_to_assoc([a-v(is_a),a-v(is_a2),b-v(is_b)],AL).
+
+unwrapValue(v(ValueHolder,_SetterFun,_KeyDestroyer),Value):-!,unwrapValue(ValueHolder,Value).
+unwrapValue(deleted,_):-!,fail.
+unwrapValue(Value,Value):-!.
+
+bestSetterFn(v(_,Setter,_),_OuterSetter,Setter):-!.
+bestSetterFn(_Value,OuterSetter,OuterSetter).
+
+
+getCtxValue(Name,Ctx,Value):-get_ctx_holder(Ctx,Holder),get_o_value(Name,Holder,HValue,_Setter),!, unwrapValue(HValue,Value).
+setCtxValue(Name,Ctx,Value):-get_ctx_holder(Ctx,Holder),get_o_value(Name,Holder,HValue,Setter),!,
+  (unwrapValue(HValue,Value);call(Setter,Value)),!.
+setCtxValue(Name,Ctx,Value):-addCtxValue(Name,Ctx,Value).
+
+addCtxValue(Name,Ctx,Value):-get_ctx_holderFreeSpot(Ctx,Name=v(Value,_,Destructor),Destructor),!.
+
+remCtxValue(Name,Ctx,_Value):-setCtxValue(Name,Ctx,deleted).
+
+
+pushCtxFrame(Name,Ctx,NewValues):-get_ctx_holderFreeSpot(Ctx,Holder,GuestDest),!,Holder=frame(Name,GuestDest,NewValues).
+
+popCtxFrame(Name,Ctx,PrevValues):-get_ctx_frame_holder(Ctx,Name,Frame),Frame = frame(Name,Destructor,PrevValues),Destructor,!.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%% get the frame holder
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+get_ctx_frame_holder(Ctx,Name,R):-compound(Ctx),get_ctx_frame_holder1(Ctx,Name,R).
+get_ctx_frame_holder1(v(_Ctx),_Name,_R):-!,fail.
+get_ctx_frame_holder1(frame(Name,Dest,Ctx),Name,R):- R = frame(Name,Dest,Ctx),!.
+get_ctx_frame_holder1([H|T],Name,R):- nonvar(H), !, ( get_ctx_frame_holder(T,Name,R);get_ctx_frame_holder1(H,Name,R)) .
+%%get_ctx_frame_holder1(Ctx,Name,Ctx):-!,get_ctx_frame_holder1(Ctx,Name,R).
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%% get the holders areas last in first out %%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%% get_ctx_holder(+Ctx, -PlaceToSearch),
+
+get_ctx_holder(Ctx,R):-compound(Ctx),get_ctx_holder1(Ctx,R).
+get_ctx_holder1([H|T],R):- nonvar(H), !, ( get_ctx_holder(T,R);get_ctx_holder1(H,R)) .
+get_ctx_holder1(v(_Ctx),_R):-!,fail.%% get_ctx_holder(Ctx,R).
+get_ctx_holder1(frame(_N,_Dest,Ctx),R):-!,get_ctx_holder(Ctx,R).
+%get_ctx_holder1(Ctx,R):- functor(Ctx,F,A),A<3,!,fail.
+get_ctx_holder1(assoc(Ctx),assoc(Ctx)):-!.
+get_ctx_holder1(Ctx,Ctx).
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%% find a free area to place a: vv(name,val) %%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%% get_ctx_holderFreeSpot(+Ctx, -Put_NV, -CallToRemoveNV)
+
+get_ctx_holderFreeSpot(Ctx,NamedValue,Destruct):-compound(Ctx),get_ctx_holderFreeSpot1(Ctx,NamedValue,Destruct).
+
+get_ctx_holderFreeSpot1(assoc(_Ctx),_,_):-!,fail.
+get_ctx_holderFreeSpot1(frame(Key,_Inner_Dest,Ctx),NamedValue,Destruct):- nonvar(Key), !, get_ctx_holderFreeSpot1(Ctx,NamedValue,Destruct).
+get_ctx_holderFreeSpot1(Ctx,NamedValue,Destruct):-functor(Ctx,F,A),!,get_ctx_holderFreeSpot1(Ctx,F,A,NamedValue,Destruct).
+
+get_ctx_holderFreeSpot1(Ctx,'.',2,NamedValue,nb_setarg(Ctx,2,NEXT)):-arg(2,Ctx,Try1), var(Try1),!, Try1 = [NamedValue|NEXT].
+get_ctx_holderFreeSpot1(Ctx,'.',2,NamedValue,Destruct):-arg(2,Ctx,Try2),get_ctx_holderFreeSpot(Try2,NamedValue,Destruct).
+
+%%get_ctx_holderFreeSpot1(Ctx,_,_,NamedValue,_):-!,fail.
+%%get_ctx_holderFreeSpot1(Ctx,_,_,NamedValue,nb_setarg(Ctx,N,NEXT)):-arg(N,Ctx,Try3),var(Try3),!, Try3 = [NamedValue|NEXT].
+%%get_ctx_holderFreeSpot1(Ctx,_,_,NamedValue,Destruct):-arg(N,Ctx,Try4),get_ctx_holderFreeSpot(Try4,NamedValue,Destruct).
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%% find the value holder associated with a keyname
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+get_ctx_value(Name,Ctx,Value,Setter):-nonvar(Name),var(Value),get_o_value(Name,Ctx,Value,OuterSetter),bestSetterFn(Value,OuterSetter,Setter).
+
+get_o_value(Name,Ctx,Value,Setter):-compound(Ctx),get_o_value1(Name,Ctx,Value,Setter).
+get_o_value1(Name,assoc(Ctx),Value,throw(cannot_set(Name))):- get_assoc(Name,Ctx,Value),!.
+get_o_value1(Name,frame(Key,_Inner_Dest,Ctx),Value,Setter):- nonvar(Key), get_o_value(Name,Ctx,Value,Setter),!.
+get_o_value1(Name,[H|T],Value,Setter):- !,(get_o_value(Name,T,Value,Setter);get_o_value1(Name,H,Value,Setter)).
+get_o_value1(Name,Pred,Value,Setter):-functor(Pred,F,A),!,get_n_value(Name,Pred,F,A,Value,Setter).
+
+get_n_value(Name,Name,_F,_A,_Value,_):-!,fail.
+get_n_value(Name,Pred,Name,1,Value,nb_setarg(1,Pred)):-arg(1,Pred,Value).
+get_n_value(Name,Pred,Name,_,Value,Setter):- arg(1,Pred,Value),!,arg(2,Pred,Setter). %% value can actually be 'Pred'
+get_n_value(Name,Pred,Dash,2,Value,nb_setarg(2,Pred)):-arg(1,Pred,Name),member(Dash,[=,-,vv]),!, arg(2,Pred,Value).
+%%get_n_value(Name,Pred,'.',2,Value,Setter):-arg(2,Pred,Try1), get_o_value(Name,Try1,Value,Setter);(arg(1,Pred,Try2),get_o_value(Name,Try2,Value,Setter)).
+%%get_n_value(Name,Pred,_,_,Value,Setter):- !, arg(_,Pred,Try2),get_o_value(Name,Try2,Value,Setter).
+
+
+makeAimlContext_666(
+   aimlcontext(
+      stars([_Pattern|_],[_Topic|_],[_That|_],[_|_Guard]),
+      settings([_|_Graph],[_|_Topic2],[_Username|_],[_Input|_]))).
+
+% ===============================================================================================
+% UTILS
+% ===============================================================================================
 
 callInteractive(Term,Var):-catch(callInteractive0(Term,Var),E,aiml_error(E)),!.
 
@@ -65,17 +196,7 @@ callInteractive0(Term,Var):- call(Term),writeq(Term:Var),nl,fail.
 callInteractive0(_,_):-!.
 
 atomsSameCI(Name1,Name2):-downcase_atom(Name1,D1),downcase_atom(Name2,D2),!,D1=D2.
-currentContext(X):-makeAimlContext(X),!.
-
-makeAimlContext(_).
-makeAimlContext_1(
-   aimlcontext(
-      stars([_Pattern|_],[_Topic|_],[_That|_],[_|_Guard]),
-      settings([_|_Graph],[_|_Topic2],[_Username|_],[_Input|_]))).
-
-% ===============================================================================================
-% UTILS
-% ===============================================================================================
+currentContext(Name,X):-makeAimlContext(Name,X),!.
 
 
 %getWordTokens(WORDS,TOKENS):-concat_atom(TOKENS,' ',WORDS).
@@ -171,7 +292,7 @@ mapWords(_,IN,[IN]):-trace,!.
 toCodes(B,A):-cyc:stringToCodelist(B,AO),(is_list(A) -> A=AO ; string_to_list(AO,A)),!.
 
 
-dumpList(B):-currentContext(Ctx),dumpList(Ctx,B).
+dumpList(B):-currentContext(dumpList,Ctx),dumpList(Ctx,B).
 dumpList(_,AB):-debugFmt(dumpList(AB)),!.
 
 dumpList(_,[]):-!.
@@ -182,15 +303,15 @@ dumpList(_,[]):-!.
 % ALICE IN PROLOG
 % ===============================================================================================
 
-say(X):-currentContext(Ctx),say(Ctx,X),!.
+say(X):-currentContext(say(X),Ctx),say(Ctx,X),!.
 say(Ctx,X):- aiml_eval(Ctx,X,Y),!,debugFmt(Y),!.
 
 alicebot:-repeat,
 	read_line_with_nl(user,Codes,[]),
-        makeAimlContext(Ctx),
+        makeAimlContext(alicebot,Ctx),
         once((atom_codes(Atom,Codes),alicebotCTX(Ctx,Atom))),fail.
 
-alicebot(Input):- currentContext(Ctx),!,alicebotCTX(Ctx,Input).
+alicebot(Input):- currentContext(alicebot(Input),Ctx),!,alicebotCTX(Ctx,Input).
 
 alicebotCTX(_Ctx,Input):- atom(Input),catch(((atom_to_term(Input,Term,Vars),callInteractive0(Term,Vars))),_,fail),!.
 alicebotCTX(Ctx,Input):- once((alicebotCTX(Ctx,Input,Resp),say(Ctx,Resp))),!.
@@ -208,7 +329,7 @@ alicebotCTX(Ctx,Tokens,Resp):-
    removePMark(UCase,Atoms),!,
    alicebot2(Ctx,Atoms,Resp),!.
 
-alicebot2(Atoms,Resp):- currentContext(Ctx),!,alicebot2(Ctx,Atoms,Resp).
+alicebot2(Atoms,Resp):- currentContext(alicebot2(Atoms),Ctx),!,alicebot2(Ctx,Atoms,Resp).
 
 alicebot2(Ctx,Atoms,Resp):-	
    retractall(posibleResponse(_,_)),
