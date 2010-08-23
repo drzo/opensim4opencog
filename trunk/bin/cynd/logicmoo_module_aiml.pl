@@ -18,6 +18,20 @@
 
 
 
+
+global_pathname(B,A):-absolute_file_name(B,A),!.
+global_pathname(B,A):-relative_pathname(B,A).
+relative_pathname(Path,Relative):-absolute_file_name(Path,[relative_to('./')],Absolute),member(Rel,['./','../','../../']),absolute_file_name(Rel,Clip),
+   canonical_pathname(Absolute,AbsoluteA),
+   canonical_pathname(Clip,ClipA),
+   atom_concat(ClipA,RelativeA,AbsoluteA),!,atom_concat(Rel,RelativeA,Relative),!.
+relative_pathname(Path,Relative):-canonical_pathname(Path,Relative),!.
+
+canonical_pathname(Absolute,AbsoluteB):-prolog_to_os_filename(AbsoluteA,Absolute),expand_file_name(AbsoluteA,[AbsoluteB]),!.
+
+
+
+
 alldiscontiguous:-!.
 
 :-multifile(what/3).
@@ -493,13 +507,28 @@ aimlDebugFmt(X):-debugFmt(X),!.
 
 traceCall(A):-trace(A,[-all,+fail]),A,!.
 
-debugOnFailureAiml(Call):- debugOnFailureAiml1(Call),notrace,!.
 
-debugOnFailureAiml1(Call):-Call,!.
-%debugOnFailureAiml1((A,B)):- debugOnFailureAiml1(A),debugOnFailureAiml1(B).
-%debugOnFailureAiml1(Call):- catch(once(Call),E,(debugFmt(caugth(Call,E)),beenCaugth(Call))),!.
-debugOnFailureAiml1(Call):- beenCaugth(Call).
-beenCaugth(Call):- traceAll,debugFmt(tracing(Call)),debug,trace,!,Call.
+debugOnFailureAiml(Call):-!,(Call;(trace,Call)),!.
+
+debugOnFailureAiml((A,B)):- !,debugOnFailureAiml(A),!,debugOnFailureAiml(B),!.
+debugOnFailureAiml(Call):- Call,!.
+%debugOnFailureAiml(Call):- debugOnFailureAimlTrace(Call),!.
+debugOnFailureAiml(Call):- beenCaugth(Call),!.
+
+debugOnFailureAimlTrace(debugOnFailureAiml(Call)):-!,debugOnFailureAimlTrace(Call),!.
+debugOnFailureAimlTrace((A,B)):- !,debugOnFailureAimlTrace(A),!,debugOnFailureAimlTrace(B),!.
+debugOnFailureAimlTrace(Call):- debugOnFailureAimlTrace1(Call),debugFmt(success(Call)),!.
+debugOnFailureAimlTrace(Call):- debugFmt(faild(Call)),!,fail.
+
+
+debugOnFailureAimlTrace1((A,B)):- !,debugOnFailureAimlTrace1(A),!,debugOnFailureAimlTrace1(B),!.
+debugOnFailureAimlTrace1(Call):- functor(Call,F,A),member(F/A,[retract/_,retractall/_]),!,debugFmt(fakingCall(Call)),numbervars(Call,0,_),!.
+debugOnFailureAimlTrace1(Call):- Call,!.
+
+beenCaugth(debugOnFailureAiml(Call)):- !, beenCaugth(Call).
+beenCaugth((A,B)):- !,debugOnFailureAiml(A),!,beenCaugth(B).
+%beenCaugth(Call):- catch(once(Call),E,(debugFmt(caugth(Call,E)),beenCaugth(Call))),!.
+beenCaugth(Call):- traceAll,debugFmt(tracing(Call)),debug,trace,Call.
 
 
 takeout(_,[],[]):-!.
