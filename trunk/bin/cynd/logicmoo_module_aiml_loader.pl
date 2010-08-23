@@ -22,7 +22,16 @@
 
 pp_listing(_Pred):-!. %%functor(Pred,F,A),functor(FA,F,A),listing(F),nl,findall(NV,predicate_property(FA,NV),LIST),writeq(LIST),nl,!.
 
-printPredCount(Pred):-!,functor(Pred,F,A),functor(FA,F,A), predicate_property(FA,number_of_clauses(N1)),debugFmt(num_clauses(F,A,N1)),!.
+
+
+printPredCount(Pred):-arg(_,Pred,NG),nonvar(NG),!,
+   findall(Pred,Pred,LEFTOVERS),
+   length(LEFTOVERS,N1),
+   debugFmt(num_clauses(Pred,N1)),!.
+
+printPredCount(Pred):-!,functor(Pred,F,A),functor(FA,F,A), predicate_property(FA,number_of_clauses(N1)),debugFmt(num_clauses(F/A,N1)),!.
+
+
 
 :-dynamic(aimlCateSigCached/1).
 aimlCateSig(X):-aimlCateSigCached(X),!.
@@ -36,13 +45,16 @@ attributeOrTagValue(Ctx,ATTRIBS,NameS,ValueO,_Else,_XML):- notrace((attributeVal
 attributeOrTagValue(Ctx,_ATTRIBS,NameS,ValueO,Else,XML):- notrace((findTagValue(Ctx,XML,NameS,ValueO,Else))),!.
 
 
-attributeValue(Ctx,ATTRIBS,NameS,ValueO,Else):- notrace((attributeValue0(Ctx,ATTRIBS,NameS,ValueI,Else), aiml_eval_to_unit(Ctx,ValueI,ValueO))).
+attributeValue(Ctx,ATTRIBS,NameS,ValueO,Else):- notrace((attributeValue0(Ctx,ATTRIBS,NameS,ValueI,Else), aiml_eval_to_unit(Ctx,ValueI,ValueO))),!.
+attributeValue(Ctx,ATTRIBS,NameS,ValueO,Else):-   trace,attributeValue0(Ctx,ATTRIBS,NameS,ValueI,Else), aiml_eval_to_unit(Ctx,ValueI,ValueO),!.
 
-attributeValue0(_Ctx,ATTRIBS,NameS,ValueO,_Else):-member(Name,NameS), member(NameE=ValueO,ATTRIBS), atomsSameCI(Name,NameE),!.
-attributeValue0(Ctx,_ATTRIBS,NameS,ValueO,current_value):-member(Name,NameS),current_value(Ctx,Name,ValueO).
+attributeValue0(_Ctx,ATTRIBS,NameS,ValueO,_Else):- member(Name,NameS), member(NameE=ValueO,ATTRIBS), atomsSameCI(Name,NameE),!.
+attributeValue0(Ctx,_ATTRIBS,NameS,ValueO,current_value):-member(Name,NameS), current_value(Ctx,Name,ValueO),valuePresent(ValueO),!.
 attributeValue0(_Ctx,_ATTRIBS,_NameS,_Value,Failure):-failure==Failure,!,fail.
-attributeValue0(Ctx,ATTRIBS,NameS,Value,Error):-error==Error,aiml_error(attributeValue(Ctx,ATTRIBS,NameS,Value,error)).
+attributeValue0(Ctx,ATTRIBS,NameS,Value,Error):-error==Error,  
+   aiml_error(attributeValue(Ctx,ATTRIBS,NameS,Value,error)).
 attributeValue0(_Ctx,_ATTRIBS,_Name,ValueO,Else):-ValueO=Else,!.
+
 
 
 findTagValue(Ctx,XML,NameS,ValueO,_Else):-member(Name,NameS),
@@ -117,21 +129,22 @@ load_aiml_files(Ctx,F):-exists_directory(F),!,aiml_files(F,Files),!,debugOnFailu
 load_aiml_files(Ctx,F):-debugOnFailureAiml(expand_file_name(F,FILES)),debugOnFailureAiml(load_aiml_files(Ctx,FILES)),!.
 
 
-aiml_files(F,Files):-atom_concat_safe(F,'/',WithSlashes),absolute_file_name(WithSlashes,[relative_to('./')],WithOneSlash),
-                    atom_concat_safe(WithOneSlash,'/*.aiml',Mask),expand_file_name(Mask,Files),!.
 aiml_files(F,Files):-atom(F),sub_atom(F,_Before,_Len,_After,'*'),!,expand_file_name(F,Files),!.
+aiml_files(F,Files):-atom_concat_safe(F,'/',WithSlashes),absolute_file_name(WithSlashes,[relative_to('./')],WithOneSlash),
+                    atom_concat_safe(WithOneSlash,'*.aiml',Mask),expand_file_name(Mask,Files),!.
 
 
 
 aimlOption(rebuild_Aiml_Files,true).
 
-create_aiml_file(Ctx,F):-
+create_aiml_file(Ctx,F0):-
+   global_pathname(F0,F),
    debugFmt(create_aiml_file(F)),
    atom_concat_safe(F,'.pl',PLNAME),
    create_aiml_file2(Ctx,F,PLNAME),!.
 
 
-create_aiml_file2(_Ctx,F,PLNAME):-
+create_aiml_file2(_Ctx,F,PLNAME):- fail, %% for now
    exists_file(PLNAME),
    time_file_safe(PLNAME,PLTime), % fails on non-existent
    time_file_safe(F,FTime),
@@ -147,16 +160,20 @@ create_aiml_file2(Ctx,File,PLNAME):-
    (format('%-----------------------------------------~n')),
         listing(CateSig),
         retractall(CateSig),
+        flag(cateSigCount,PREV_cateSigCount,0),
    (format('%-----------------------------------------~n')),
-        fileToLineInfoElements(Ctx,File),             
+        fileToLineInfoElements(Ctx,File),!,             
    (format('%-----------------------------------------~n')),
-        listing(lineInfoElement),
+        findall(lineInfoElement(File,A,B,C),((lineInfoElement(File,A,B,C),(format('~q.~n',[lineInfoElement(File,A,B,C)])))),_),
    (format('%-----------------------------------------~n')),
         listing(xmlns),
    (format('%-----------------------------------------~n')),
         told,
+        flag(cateSigCount,NEW_cateSigCount,PREV_cateSigCount),
         printPredCount(lineInfoElement(File,_,_,_)),
-        printPredCount(CateSig),!.
+        printPredCount(CateSig),!,
+        debugFmt('NEW_cateSigCount=~q~n',[NEW_cateSigCount]),!.
+
 
 /*
 create_aiml_file2xxx(Ctx,F,PLNAME):-
@@ -174,38 +191,46 @@ create_aiml_file2xxx(Ctx,F,PLNAME):-
    ifThen(Dofile,(told /*,[PLNAME]*/ )))),!.
 */
 
-%% sgml_parser_defs(PARSER_DEFAULTS,PARSER_CALLBACKS)
-sgml_parser_defs([defaults(false),space(remove),number(integer), qualify_attributes(false),  /*shorttag(false),*/
-         %%call(decl, on_decl),
+%% sgml_parser_defs(PARSER_DEFAULTS,PARSER_CALLBACKS) /*shorttag(false),*/
+sgml_parser_defs(
+  [defaults(false), space(remove),number(integer), qualify_attributes(false), 
+         %call(decl, on_decl),
          %call(pi, on_pi),call(xmlns, on_xmlns),call(urlns, xmlns),call(error,xml_error),
          dialect(xml)
          ],
          [max_errors(0),call(begin, on_begin),call(end, on_end)]).
 
 
-
 :-dynamic(lineInfoElement/4).
 
 % gather line numbers
-fileToLineInfoElements(Ctx,File):-
+fileToLineInfoElements(Ctx,F0):-
+   global_pathname(F0,File),
+ debugOnFailureAiml((
         open(File, read, In, [type(binary)]),
         new_sgml_parser(Parser, []),
         sgml_parser_defs(PARSER_DEFAULTS,PARSER_CALLBACKS),
-        maplist_safe(set_sgml_parser(Parser),[file(File)|PARSER_DEFAULTS]),!,
+        maplist_safe(set_sgml_parser(Parser),[file(File)|PARSER_DEFAULTS]),
         %% todo offset(Offset)
-        sgml_parse(Parser,[source(In)|PARSER_CALLBACKS]),!, 
+        sgml_parse(Parser,[source(In)|PARSER_CALLBACKS]),
         close(In),!,
-        fileToLineInfoElements2(Ctx,File),!.
+        fileToLineInfoElements2(Ctx,File))).
 
 % gather line contents
-fileToLineInfoElements2(Ctx,F):-!,
+fileToLineInfoElements2(Ctx,File):-!,
   sgml_parser_defs(PARSER_DEFAULTS,_PARSER_CALLBACKS),
-  load_structure(F,Whole, [file(F)|PARSER_DEFAULTS]),
-   ATTRIBS = [filename=F],!,
+  load_structure(File,Whole, [file(File)|PARSER_DEFAULTS]),
+   ATTRIBS = [filename=File],!,
+   addAttribsToXML(ATTRIBS,Whole,Wholer),!,
    pushAttributes(Ctx,filelevel,ATTRIBS),
-   load_aiml_structure(Ctx,Whole),!,
+   load_aiml_structure(Ctx,Wholer),!,
    popAttributes(Ctx,filelevel,ATTRIBS),!.
   
+
+
+addAttribsToXML(Attribs,element(Tag,Pre,Content),element(Tag,Post,Content)):-append(Pre,Attribs,Post),!.
+addAttribsToXML(Attribs,[H|T],OUT):-maplist_safe(addAttribsToXML(Attribs),[H|T],OUT),!.
+addAttribsToXML(Attribs,OUT,OUT):-!,debugFmt(addAttribsToXML(Attribs,OUT,OUT)),!.
 
 :-dynamic(in_aiml_tag/1).
 :-dynamic(inLineNum).
@@ -226,14 +251,12 @@ on_begin(Tag, Attr, Parser) :- skipOver(not(inLineNum)),
         get_sgml_parser(Parser,line(Line)),
         get_sgml_parser(Parser,charpos(Offset)),
         get_sgml_parser(Parser,file(File)),
+        global_pathname(File,Pathname),
       %  get_sgml_parser(Parser,source(Stream)),
         skipOver(asserta(inLineNum)),
 %        load_structure(Stream,Content,[line(Line)|PARSER_DEFAULTS]),!,
-       skipOver( sgml_parse(Parser,
-                   [ document(Content),
-                     parse(input)
-                   ])),
-        NEW = lineInfoElement(File,Line:Offset,graph, element(Tag, Attr, Content)),
+ %      skipOver( sgml_parse(Parser,[ document(Content),parse(input)])),
+        NEW = lineInfoElement(Pathname,Line:Offset, Context, element(Tag, Attr, no_content_yet)),
         %%debugFmt(NEW),
         skipOver(ignore(retract(inLineNum))),
         skipOver(asserta(in_aiml_tag(AimlAttr))),
@@ -268,10 +291,13 @@ load_aiml_structure_lineno(Attributes,Ctx,L):-maplist_safe(load_inner_aiml_linen
 
 %% offset
 load_inner_aiml_lineno(Attributes,Ctx,element(Tag,Attribs,ContentIn)):-
-   debugOnFailureAiml(current_value(Ctx,filename,File)),
-   retract(lineInfoElement(File,Line:Offset, graph, element(Tag, _Attr0, fooobarish))),
-   %%NEW = lineInfoElement(File,Line:Offset,Attributes, element(Tag, Attribs, ContentIn)),
-   load_aiml_structure(Ctx,element(Tag,[lfile=File,lineno=Line,lattribs=Attributes,offset=Offset|Attribs],ContentIn)),!.
+   append(Attributes,Attribs,RightAttribs),
+   debugOnFailureAiml(attributeValue(Ctx,RightAttribs,[pathname,filename],File,error)),
+   MATCH = lineInfoElement(File,Line:Offset, Context, element(Tag, Attribs, no_content_yet)),
+   retract(MATCH),
+   Context=[Tag0,aiml|More],
+   NewAttribs  = [filename=File,lineno=Line,lattribs=Attributes,offset=Offset|RightAttribs],
+   load_aiml_structure(Ctx,element(Tag,NewAttribs,ContentIn)),!.
 
    /*
 
@@ -280,7 +306,7 @@ load_inner_aiml_lineno(Attributes,Ctx,element(Tag,Attribs,ContentIn)):-
    retract((lineInfoElement(File0,Line0:Offset0,graph, element(_Tag0, _Attr0, _Content0)))),
    debugOnFailureAiml(call(OLD)),
 
-   MATCH = lineInfoElement(File,Line:Offset,graph, element(Tag, Attribs, _ContentIn)),!,
+   MATCH = lineInfoElement(File,Line:Offset,Context, element(Tag, Attribs, _ContentIn)),!,
    debugOnFailureAiml((call(MATCH),!,not(not((Line:Offset)==(Line0:Offset0))),retract(OLD),
    load_aiml_structure(Ctx,element(Tag,[filename=File0,lineno=Line0,offset=Offset0|Attribs],ContentIn)),
         NEW = lineInfoElement(File,Line:Offset,Attributes, element(Tag, Attribs, ContentIn)),
@@ -546,7 +572,7 @@ aiml_error(E):-  trace,debugFmt('~q~n',[error(E)]),!.
 % ===============================================================================================
 %  Save Categories
 % ===============================================================================================
-aimlCateOrder([graph,precall,topic,that,[pattern,input],flags,call,guard,template,userdict,lineno,lfile]).
+aimlCateOrder([graph,precall,topic,that,[pattern,input],flags,call,guard,template,userdict,lineno,filename]).
 
 assertCate(Ctx,Cate):- debugOnFailureAiml((convert_template(Ctx,Cate,Assert),!,assertCate1(Ctx,Assert))).
 
@@ -557,7 +583,7 @@ assertCate1(Ctx,Assert):-
 
 arg2OfList(LIST,LISTO):-maplist_safe(arg2,LIST,LISTO),!.
 arg2(_=Value,Value):-!.
-arg2(Value,Value):-trace.
+arg2(Value,Value):-!.
 
 assertCate2(Ctx,LIST):- arg2OfList(LIST,LISTO),
       NEW =.. [aimlCate|LISTO],
@@ -567,7 +593,8 @@ assertCate2(Ctx,LIST):- arg2OfList(LIST,LISTO),
 % assertCate3(Ctx,NEW):-NEW,!.
  assertCate3(_Ctx,NEW):-
   %debugFmt('~q.~n',[NEW]),
-  (format('~q.~n',[NEW])),!.
+  (format('~q.~n',[NEW])),!,
+  flag(cateSigCount,X,X+1).
 
 
 lineUp(Ctx,[O|Order],Assert,D,[N=RR|Result]):-
@@ -603,7 +630,7 @@ innerTagLikeThat(guard).
 innerTagLikeThat(call).
 innerTagLikeThat(precall).
 
-infoTagLikeLineNumber(X):-member(X,[lineno,filename,lfile]).
+infoTagLikeLineNumber(X):-member(X,[lineno,pathname,filename]).
 
 isPatternTag(Tag):-member(Tag,[that,pattern,input,topic,flags,guard]).
 
@@ -723,8 +750,16 @@ grabNameValue(_Ctx,Scope,Name,Value):-dict(Scope,Name,Value),prolog_must(ground(
 grabNameValue(_Ctx,Scope,Name,Value):-dict(Scope2,Name,Value),Scope\=Scope2,ground(Name=Value),!,checkValue(Value).
 grabNameValue(_Ctx,_Scope,_Name,Value):-trace,ignore(Value=(*)),!.
 
-checkValue(V):-prolog_must(ground(V)),term_to_atom(V,A),!,concat_atom_safe([_,_|_],'ERROR',A) -> trace ; true. 
 
+valueMP(Var,M):- member(M, [var(Var), Var=missing, Var=[], Var=(*) , (Var=(-(_))) ]),M,!.
+valueMP(V,(V='ERROR')):-prolog_must(ground(V)),term_to_atom(V,A), concat_atom_safe([_,_|_],'ERROR',A),!.
+
+
+checkValue(Value):- valueMP(Value,M),throw(M),!.
+checkValue(_):-!.
+
+valuePresent(Value):- valueMP(Value,_M),!,fail.
+valuePresent(_):-!.
 
 popCateElements(Ctx,CateO):- popCateElements1(Ctx,Cate1),popCateElements2(Ctx,Cate2),append(Cate1,Cate2,Cate),!,CateO=Cate.
 popCateElements1(Ctx,CateO):- findall(Tag=DCG,cateNodes1(Ctx,category,Tag,DCG),Cate),!,CateO=Cate.
@@ -895,7 +930,7 @@ cateFallback([
        pattern='ERROR PATTERN',
        guard='*',
        lineno = (-1),
-       lfile=missing,
+       filename=missing,
        template='ERROR TEMPLATE'|MORE]):-findall(N=V,defaultPredicates(N,V),MORE).
 
 
