@@ -32,34 +32,37 @@ namespace RTParser.Utils
 
         public override void Normalize()
         {
-            if (DocumentHasNormalized || DocumentInNormalize) 
+            if (NeedCleanAttribs)
             {
-               // writeToLog("In normalization already");
-                return;
-            }
-
-            if (DocumentElement != null)
-            {
-                var attrs = DocumentElement.Attributes;
-                if (attrs != null)
+                NeedCleanAttribs = false;
+                if (DocumentElement != null)
                 {
-                    var list = new List<XmlAttribute>();
-                    foreach (XmlAttribute s in attrs)
+                    var attrs = DocumentElement.Attributes;
+                    if (attrs != null)
                     {
-                        if (s.LocalName == "xmlns")
+                        var list = new List<XmlAttribute>();
+                        foreach (XmlAttribute s in attrs)
                         {
-                            list.Add(s);
+                            if (s.LocalName == "xmlns")
+                            {
+                                list.Add(s);
+                            }
                         }
-                    }
-                    foreach (XmlAttribute s in list)
-                    {
+                        foreach (XmlAttribute s in list)
+                        {
 
-                        DocumentElement.RemoveAttributeNode(s.LocalName, s.NamespaceURI);
+                            DocumentElement.RemoveAttributeNode(s.LocalName, s.NamespaceURI);
+                        }
                     }
                 }
             }
-
             SuspendLineInfo = true;
+            LineTracker = null;
+            if (DocumentHasNormalized || DocumentInNormalize)
+            {
+                // writeToLog("In normalization already");
+                return;
+            }
             DocumentInNormalize = true;
             try
             {
@@ -70,11 +73,11 @@ namespace RTParser.Utils
             {
                 DocumentInNormalize = false;
             }
-            LineTracker = null;
         }
 
         public bool DocumentHasNormalized = true;
         public bool DocumentInNormalize = true;
+        public bool NeedCleanAttribs = true;
         public override void Load(Stream reader)
         {
             IXmlLineInfo prev = LineTracker;
@@ -335,7 +338,7 @@ namespace RTParser.Utils
             if (LineTracker != null)
             {
                 AIMLLineInfo nodeL = node as AIMLLineInfo;
-                if (!SuspendLineInfo && nodeL != null)
+                if (!SuspendLineInfo && nodeL != null && LineTracker != null)
                     nodeL.SetLineInfo(LineTracker.LineNumber, LineTracker.LinePosition);
             }
             if (node is AIMLXmlInfo) (node as AIMLXmlInfo).ReadOnly = true;

@@ -259,14 +259,14 @@ namespace RTParser
                         }
                         else
                         {
-                            Unifiable paths = Unifiable.CreateAppendable();
+                            var paths = Unifiable.CreateAppendable();
                             foreach (UPath pattern in this.NormalizedPaths)
                             {
                                 //return pattern;
                                 paths.Append(pattern.LegacyPath + Environment.NewLine);
                             }
                             this.bot.writeToLog("The bot could not find any response for the input: " + this.RawInput + " with the path(s): " +
-                                Environment.NewLine + paths.AsNodeXML() + " from the user with an id: " + this.user.UserID.AsString());
+                                Environment.NewLine + paths.ToString() + " from the user with an id: " + this.user.UserID.AsString());
                             return Unifiable.Empty;
                         }
                     }
@@ -285,7 +285,7 @@ namespace RTParser
 
                 }
                 int resultsLeft = MaxPrintResults;
-                Unifiable result = Unifiable.CreateAppendable();
+                var result = Unifiable.CreateAppendable();
                 lock (OutputSentences) foreach (string sentence in OutputSentences)
                     {
                         String sentenceForOutput = sentence.Replace("  ", " ").Trim();
@@ -296,9 +296,9 @@ namespace RTParser
                         }
                         result.Append(sentenceForOutput + " ");
                         resultsLeft--;
-                        if (resultsLeft < 1) return result;
+                        if (resultsLeft < 1) return result.ToString();
                     }
-                return result;//.Trim();
+                return result.ToString();//.Trim();
             }
         }
 

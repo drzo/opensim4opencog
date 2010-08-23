@@ -5,6 +5,8 @@ using System.Text;
 using System.Xml;
 using UPath = RTParser.Unifiable;
 using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
+using StringAppendableUnifiable = RTParser.StringAppendableUnifiableImpl;
+//using StringAppendableUnifiable = System.Text.StringBuilder;
 
 
 namespace RTParser.Utils
@@ -473,9 +475,9 @@ namespace RTParser.Utils
         private Node evaluateNext(int at, string[] splitPath, SubQuery query, Request request, MatchState matchstate, StringAppendableUnifiable wildcard)
         {
             var vv = evaluateFirst(at, splitPath, query, request, matchstate, wildcard);
-            if (wildcard.AsString().Trim().Length>0 )
+            if (wildcard.ToString().Trim().Length > 0)
             {
-                if (vv == null || vv.disabled || vv.NoEnabledTemplates) return null;                
+                if (vv == null || vv.disabled || vv.NoEnabledTemplates) return null;
             }
             if (vv == null || vv.disabled || vv.NoEnabledTemplates) return null;
             return vv;
@@ -541,7 +543,7 @@ namespace RTParser.Utils
                 if (!childNodeWord.IsAnySingleUnit()) continue;
 
                 // add the next word to the wildcard match 
-                StringAppendableUnifiable newWildcard = Unifiable.CreateAppendable();
+                var newWildcard = Unifiable.CreateAppendable();
                 storeWildCard(firstWord, newWildcard);
 
                 // move down into the identified branch of the GraphMaster structure
@@ -559,7 +561,7 @@ namespace RTParser.Utils
                             case MatchState.UserInput:
                                 if (childNodeWord.StoreWildCard()) Insert(query.InputStar, newWildcard.ToString());
                                 // added due to this match being the end of the line
-                                newWildcard.Clear(); // Remove(0, newWildcard.Length);
+                                newWildcard.Length = 0; // Remove(0, newWildcard.Length);
                                 break;
                             default:
                                 var stars = query.GetMatchList(matchstate);
@@ -653,7 +655,7 @@ namespace RTParser.Utils
                         // and then clear it for subsequent wildcards
                         var stars = query.GetMatchList(matchstate);
                         if (childNodeWord.StoreWildCard()) Insert(stars, newWildcard.ToString());
-                        newWildcard.Clear();
+                        newWildcard.Length = 0;
                     }
                     return result;
                 }
@@ -689,7 +691,7 @@ namespace RTParser.Utils
                             case MatchState.UserInput:
                                 Insert(query.InputStar, newWildcard.ToString());
                                 // added due to this match being the end of the line
-                                if (childNodeWord.StoreWildCard()) newWildcard.Clear();// Remove(0, newWildcard.Length);
+                                if (childNodeWord.StoreWildCard()) newWildcard.Length = 0;// Remove(0, newWildcard.Length);
                                 break;
                             default:
                                 var stars = query.GetMatchList(matchstate);
@@ -717,7 +719,7 @@ namespace RTParser.Utils
             // AIML files have been set up to include a "* <that> * <topic> *" catch-all this
             // state won't be reached. Remember to empty the surplus to requirements wildcard matches
             //wildcard = new StringBuilder();
-            wildcard.Clear();
+            wildcard.Length = 0;
             return null;/// string.Empty;
         }
 
@@ -801,7 +803,7 @@ namespace RTParser.Utils
                 return;
             }
 
-            if (!wildcard.IsEmpty)
+            if (wildcard.Length > 0)
             {
                 wildcard.Append(" ");
             }

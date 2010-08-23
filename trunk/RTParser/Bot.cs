@@ -2777,7 +2777,7 @@ The AIMLbot program.
             message = message.Replace("*MESSAGE*", errorMessage);
             message = message.Replace("*RAWINPUT*", request.rawInput);
             message = message.Replace("*USER*", request.user.UserID);
-            Unifiable paths = Unifiable.CreateAppendable();
+            var paths = Unifiable.CreateAppendable();
             foreach (Unifiable path in request.CurrentResult.NormalizedPaths)
             {
                 paths.Append(path.LegacyPath + Environment.NewLine);
@@ -3225,7 +3225,7 @@ The AIMLbot program.
 
         public bool BotDirective(User user, string input, OutputDelegate console)
         {
-            Request request = user.CreateRequest(input);
+            Request request = (user ?? LastUser ?? BotAsUser).CreateRequest(input);
             return BotDirective(request, input, console);
             
         }
