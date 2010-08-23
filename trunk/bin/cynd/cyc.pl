@@ -3705,7 +3705,7 @@ writeModePop(_Pop):-!.
 %debugFmt([-1]).
 %debugFmt([[-1]]).
 %debugFmt(T):- isCycOption(opt_debug=off),!.
-debugFmt(Stuff):-!,debugFmt('% ~w~n',[Stuff]).
+debugFmt(Stuff):-!,debugFmt('% ~q~n',[Stuff]).
 debugFmt(T):-!,
 	((
 	if_prolog(swi,
