@@ -66,7 +66,7 @@ join_pathnames(First,Second,Full):-var(First),nonvar(Full),
 
 directory_of_file(File,Start,Hints,Dir):- member(Dir,Hints),join_pathnames(Dir,File,Path), exists_file(Path),!.
 
-:- cogbot_pl_dir(D)->Try=D;D='cy ,join_pathnames('cogbot.pl',),file_exists(NewFile)))) -> retract(cogbot_pl_dir(D)).
+:- cogbot_pl_dir(D)->Try=D;D='cynd',join_pathnames('cogbot.pl',),file_exists(NewFile)))) -> retract(cogbot_pl_dir(D)).
 :- ignore(( not(cogbot_pl_dir(D)),file_exists('cogbot.pl'),asserta(cogbot_pl_dir('./')) )).
 
 
