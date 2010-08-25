@@ -73,7 +73,13 @@ render_value(template,ListOut,Render):-aiml_eval(_Ctx,ListOut,Render),!.
 aiml_eval_each(Ctx,[A|ATTRXML],[R|RESULT]):-aiml_eval0(Ctx,A,R),!,aiml_eval_each(Ctx,ATTRXML,RESULT).
 aiml_eval_each(_Ctx,[],[]):-!.
 
-aiml_eval(Ctx,TAGATTRXML,RESULT):-aiml_eval0(Ctx,TAGATTRXML,RESULT),!.
+
+aiml_eval(Ctx,TAGATTRXML,RESULT):- immediateCall(aiml_eval(Ctx,TAGATTRXML,RESULT)),aiml_eval0(Ctx,TAGATTRXML,RESULT),!.
+
+
+immediateCall(:-(Call)):-!,immediateCall0(:-(Call)),!.
+immediateCall((Call)):-immediateCall0(:-(Call)),!.
+immediateCall0(C):-hideIfNeeded(C,Call), (format('~q.~n',[Call])),debugFmt(Call),!.
 
 
 %aiml_eval0(Ctx,[ValueI],ValueO):-atom(ValueI),!,aiml_eval(Ctx,ValueI,ValueO),!.

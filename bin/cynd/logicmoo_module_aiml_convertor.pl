@@ -66,8 +66,8 @@ convert_element(Ctx,Input,Out):-convert_ele(Ctx,Input,M),!,M=Out,!.
 
 
       
-nameOrValue(ALIST, _VALUE, NORV, 0):-member(name=NORV,ALIST),!.
-nameOrValue(ALIST, _VALUE, NORV, 0):-member(var=NORV,ALIST),!.
+nameOrValue(ALIST, _VALUE, NORV, 0):-lastMember(name=NORV,ALIST),!.
+nameOrValue(ALIST, _VALUE, NORV, 0):-lastMember(var=NORV,ALIST),!.
 nameOrValue(_XATS, VALUE, NORV, 1):- NORV = VALUE.
 
 convert_ele(_Ctx,_X,Y):-nonvar(Y),throw_safe(nonvar(Y)).
@@ -154,8 +154,9 @@ convert_ele(Ctx,element(Tag, A, B),element(Tag, A, BB)):- member(Tag,[category,s
 convert_ele(_Ctx,O,O).
 
 
-convert_attributes(Ctx,[B|A],[BB|AA]):-convert_attribute(B,BB),convert_attributes(Ctx,A,AA).
-convert_attributes(_Ctx,[],[]).
+convert_attributes(Ctx,A,AAA):- convert_attributes0(Ctx,A,AA),list_to_set_safe(AA,AAA).
+convert_attributes0(Ctx,[B|A],[BB|AA]):-convert_attribute(B,BB),convert_attributes0(Ctx,A,AA).
+convert_attributes0(_Ctx,[],[]).
 
 convert_attribute(A=B,AA=BB):-convert_name(A,AA),convert_template(_Ctx,B,BB).
 
@@ -167,4 +168,92 @@ convert_name0(Attrib,uri):-pathAttrib(Attrib),!.
 
 % ===================================================================
 % ===================================================================
+
+% ===============================================================================================
+%  refomat type transformations
+% ===============================================================================================
+
+isVerbatumTag(N):-memberchk(N,[call,precall,srcfile,srcdir,lineno,srcinfo]),!.
+isVerbatumTag(N):-pathAttrib(N),!.
+
+
+transformTagData(Ctx,[Name|S],Else,ValueI,ValueO):- member(N,[Name|S]),transformTagData0(Ctx,N,Else,ValueI,ValueO).
+transformTagData(Ctx,[Name|S],Else,ValueI,ValueO):- member(N,[Name|S]),!,transformTagData1(Ctx,N,Else,ValueI,ValueO).
+transformTagData(Ctx,Tag,Else,ValueI,ValueO):-transformTagData0(Ctx,Tag,Else,ValueI,ValueO).
+transformTagData(Ctx,Tag,Else,ValueI,ValueO):-transformTagData1(Ctx,Tag,Else,ValueI,ValueO).
+
+transformTagData0(_Ctx,TAG,_Default,[*],TAG).
+transformTagData0(_Ctx,TAG,_Default,*,TAG).
+transformTagData0(Ctx,Tag,_Else,ValueI,ValueO):- ValueI==current_value, current_value(Ctx,Tag,ValueO),!.
+transformTagData0(_Ctx,N,Else,ValueO,ValueO):-isVerbatumTag(N),!, member(Else,[current_value]),!.
+transformTagData0(Ctx,TAG,_Default,PATTERN_IN,PATTERN_OUT):-isPatternTag(TAG),convert_pattern(Ctx,PATTERN_IN,PATTERN_OUT),!.
+transformTagData0(Ctx,TAG,_Default,PATTERN_IN,PATTERN_OUT):-isOutputTag(TAG),convert_template_pred(Ctx,=,PATTERN_IN,PATTERN_OUT),!.
+
+transformTagData1(_Ctx,TAG,_Default,PATTERN_IN,PATTERN_OUT):- member(TAG,[userdict,graph]),upcase_atom_safe(PATTERN_IN,PATTERN_OUT),!.
+transformTagData1(_Ctx,TAG,_Default,PATTERN_IN,PATTERN_OUT):-infoTagLikeLineNumber(TAG),!,PATTERN_IN=PATTERN_OUT.
+
+transformTagData1(Ctx,TAG,Default,PATTERN_IN,PATTERN_OUT):- debugFmt(transformTagData(TAG,Default,PATTERN_IN)), 
+                 convert_template_pred(Ctx,upcase_atom_safe,PATTERN_IN,PATTERN_OUT),!.
+transformTagData1(Ctx,_N,_Default,R,RR):-convert_template(Ctx,R,RR),!. 
+transformTagData1(_Ctx,_TAG,_Default,PATTERN,PATTERN):-!.
+
+% ===============================================================================================
+% ===============================================================================================
+
+convert_pattern(Ctx,PATTERN_IN,PATTERN_OUT):- convert_template_pred(Ctx,upcase_atom_safe,PATTERN_IN,PATTERN_OUT),!.
+
+convert_template_pred(Ctx,Pred,PATTERN_IN,PATTERN_OUT):- convert_template(Ctx,PATTERN_IN,PATTERN_MID),!,
+     debugOnFailureAiml(mapWords(Pred,PATTERN_MID,PATTERN_OUT)),!.
+
+
+transform_aiml_structure(catagory,category,OldProps,OldProps,NEWPATTERN,NEWPATTERN).
+transform_aiml_structure(alice,aiml,OldProps,OldProps,NEWPATTERN,NEWPATTERN).
+transform_aiml_structure('name','bot',OldProps,[name=['name']|OldProps],NEWPATTERN,NEWPATTERN).
+transform_aiml_structure(OldName,NewName,OldProps,NewProps,NEWPATTERN,NEWPATTERN):-
+      specialIndex(OldName,NewName,AddProps),append(AddProps,OldProps,NewProps).
+
+specialIndex(justbeforethat,that,[index=(2:1)]).
+specialIndex(justthat ,input,[index=2]).
+specialIndex(beforethat,input,[index=3]).
+
+specialIndex(load,learn,[]).
+specialIndex(set_female,set,[name=gender,value=female]).
+
+specialIndex(getname,name,[name=[name]]).
+specialIndex(gettopic,name,[name=[name]]).
+
+specialIndex(personf,formatter,[type=url_encode]).
+specialIndex(Name,formatter,[type=Method]):-formatterMethod(Name,Method).
+
+
+formatterProc(Dict):-member(Dict,[formal,uppercase,lowercase,sentence,gossip,think,(format)]).
+formatterMethod(NamedMethod,NamedMethod):-formatterProc(NamedMethod).
+
+
+evaluatorsDicts(Dict):-member(Dict,[system,javascript,eval,
+                                     cycquery,cycsystem,cycassert,
+                                     fortunecookie,substitute,learn,aiml,genlMt,think,
+                                     substitute,srai,testsuite,testcase]).
+
+
+%substitutionDictsName(input,pattern).
+substitutionDictsName(N,N):-substitutionDicts(N).
+
+substitutionDicts(input).
+substitutionDicts(output).
+substitutionDicts(gender).
+substitutionDicts(person).
+substitutionDicts(person2).
+substitutionDicts(person3).
+%substitutionDicts(Dict):-evaluatorsDicts(Dict).
+
+
+tagType(Tag,immediate):-evaluatorsDicts(Tag),!.
+tagType(Tag,pushable):-cateFallback(LIST),member([Tag=_],LIST).
+tagType(Tag,insideCate):-cateMember(Tag).
+
+tagType(Tag,requiredCate):-member(Tag,[pattern,template]).
+tagType(Tag,optionalCate):-cateMember(Tag),not(tagType(Tag,requiredCate)).
+
+
 
