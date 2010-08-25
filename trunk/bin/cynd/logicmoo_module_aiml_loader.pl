@@ -39,7 +39,7 @@ load_aiml_files.
 load_aiml_files(Files):-currentContext(load_aiml_files,Ctx),load_aiml_files(Ctx,Files),!,do_pending_loads(Ctx).
 
 load_aiml_files(Ctx,File):- not(is_list(File);atom(File)),!, debugOnFailureAiml((load_aiml_structure(Ctx,File),!,do_pending_loads(Ctx))).
-load_aiml_files(Ctx,File):- withAttributes(Ctx,[withCategory=[writeqnl,assert_new]],with_files(load_single_aiml_file(Ctx),File)),!,do_pending_loads(Ctx).
+load_aiml_files(Ctx,File):- withAttributes(Ctx,[withCategory=[writeqnl,asserta_new]],with_files(load_single_aiml_file(Ctx),File)),!,do_pending_loads(Ctx).
 
 
 translate_aiml_files(Files):-currentContext(translate_aiml_files,Ctx),translate_aiml_files(Ctx,Files),!.
@@ -68,8 +68,8 @@ load_single_aiml_file(Ctx,F0):-
    global_pathname(F0,File),
    cateForFile(Ctx,File,FileMatch),
    atom_concat_safe(File,'.pl',PLNAME),
-   create_aiml_file2(Ctx,File,PLNAME,FileMatch),!,
-   assert(pending_aiml_file(File,PLNAME)))),!.
+   create_aiml_file2(Ctx,File,PLNAME,FileMatch,[load]),!,
+   asserta(pending_aiml_file(File,PLNAME)))),!.
 
 
 translate_single_aiml_file(Ctx,F0):-
@@ -77,7 +77,7 @@ translate_single_aiml_file(Ctx,F0):-
    global_pathname(F0,File),
    cateForFile(Ctx,File,FileMatch),
    atom_concat_safe(File,'.pl',PLNAME),
-   create_aiml_file2(Ctx,File,PLNAME,FileMatch))),!.
+   create_aiml_file2(Ctx,File,PLNAME,FileMatch,[noload]))),!.
 
 translate_aiml_structure(X,X).
 
@@ -100,31 +100,38 @@ do_pending_loads:-withCurrentContext(do_pending_loads).
 do_pending_loads(Ctx):-forall(retract(pending_aiml_file(File,PLNAME)),load_pending_aiml_file(Ctx,File,PLNAME)).
 
 load_pending_aiml_file(Ctx,File,PLNAME):- debugFmt(load_pending_aiml_file(Ctx,File,PLNAME)),
-  catch(debugOnFailureAiml(dynamic_load(File,PLNAME)),E,(debugFmt(E),assert(pending_aiml_file(File,PLNAME)))),!.
+  catch(debugOnFailureAiml(dynamic_load(File,PLNAME)),E,(debugFmt(E),asserta(pending_aiml_file(File,PLNAME)))),!.
 
-create_aiml_file2(_Ctx,File,PLNAME,FileMatch):- creating_aiml_file(File,PLNAME),!, throw_safe(already(creating_aiml_file(File,PLNAME),FileMatch)).
-create_aiml_file2(_Ctx,File,PLNAME,FileMatch):- loaded_aiml_file(File,PLNAME),!, throw_safe(already(loaded_aiml_file(File,PLNAME),FileMatch)).
+create_aiml_file2(_Ctx,File,PLNAME,FileMatch,_Load):- creating_aiml_file(File,PLNAME),!, throw_safe(already(creating_aiml_file(File,PLNAME),FileMatch)).
+create_aiml_file2(_Ctx,File,PLNAME,FileMatch,_Load):- loaded_aiml_file(File,PLNAME),!, throw_safe(already(loaded_aiml_file(File,PLNAME),FileMatch)).
 
-create_aiml_file2(_Ctx,File,PLNAME,_FileMatch):-
+create_aiml_file2(_Ctx,File,PLNAME,_FileMatch,Load):-
    exists_file(PLNAME),
    time_file_safe(PLNAME,PLTime), % fails on non-existent
    time_file_safe(File,FTime),
    %not(aimlOption(rebuild_Aiml_Files,true)),
    PLTime > FTime,!,
-   debugFmt(up_to_date(create_aiml_file(File,PLNAME))),!.
+   debugFmt(up_to_date(create_aiml_file(File,PLNAME))),!,
+   ignore((member(load,Load),asserta(pending_aiml_file(File,PLNAME)))),!.
 
-create_aiml_file2(Ctx,File,PLNAME,FileMatch):-        
+create_aiml_file2(Ctx,File,PLNAME,FileMatch,Load):-        
         asserta(creating_aiml_file(File,PLNAME)),
         debugFmt(doing(create_aiml_file(File,PLNAME))),
         aimlCateSig(CateSig),!,
+   (format('%-----------------------------------------~n')),
         printPredCount('Cleaning',FileMatch,_CP),
    (format('%-----------------------------------------~n')),
         unify_listing(FileMatch),
         retractall(FileMatch),
-   tell(PLNAME),
+   (format('%-----------------------------------------~n')),
+
+ tell(PLNAME),
         flag(cateSigCount,PREV_cateSigCount,0),
    (format('%-----------------------------------------~n')),
-        fileToLineInfoElements(Ctx,File),!,             
+      withAttributes(Ctx,[withCategory=[asserta_cate]],
+               ( fileToLineInfoElements(Ctx,File,AILSTRUCTURES), 
+                  load_aiml_structure(Ctx,AILSTRUCTURES))),
+
    (format('%-----------------------------------------~n')),
         unify_listing(FileMatch),
    (format('%-----------------------------------------~n')),
@@ -142,7 +149,17 @@ create_aiml_file2(Ctx,File,PLNAME,FileMatch):-
         retractall(lineInfoElement(File,_,_,_)),
         retractall(xmlns(_,_,_)),        
         retractall(creating_aiml_file(File,PLNAME)),
-        ignore((FM == 0 , retractall(loaded_aiml_file(File,PLNAME)),assert(pending_aiml_file(File,PLNAME)))),!.
+        ignore((FM == 0, PREV_cateSigCount>0, retractall(loaded_aiml_file(File,PLNAME)),  member(load,Load), asserta(pending_aiml_file(File,PLNAME)))),!.
+
+
+        /*
+
+        copy_term(NEW,OLD),
+      aimlCateOrder(Order)
+         ignore(retract(OLD)),
+
+        */
+asserta_cate(NEW):-asserta(NEW).
 
 /*
 create_aiml_file2xxx(Ctx,File,PLNAME):-
@@ -170,12 +187,12 @@ sgml_parser_defs(
          [max_errors(0),call(begin, on_begin),call(end, on_end)]).
 
 
-:-dynamic(lineInfoElement/4).
 
 % gather line numbers
-fileToLineInfoElements(Ctx,F0):-
+fileToLineInfoElements(Ctx,F0,XMLSTRUCTURES):-
    global_pathname(F0,File),
  debugOnFailureAiml((
+       retractall(lineInfoElement(File,_,_,_)),
         open(File, read, In, [type(binary)]),
         new_sgml_parser(Parser, []),
         sgml_parser_defs(PARSER_DEFAULTS,PARSER_CALLBACKS),
@@ -183,23 +200,43 @@ fileToLineInfoElements(Ctx,F0):-
         %% todo offset(Offset)
         sgml_parse(Parser,[source(In)|PARSER_CALLBACKS]),
         close(In),!,
-        fileToLineInfoElements2(Ctx,File))).
+        fileToLineInfoElements2(Ctx,File,XMLSTRUCTURES))).
 
 % gather line contents
-fileToLineInfoElements2(Ctx,File):-!,
+fileToLineInfoElements2(Ctx,File,XMLSTRUCTURES):-!,
   sgml_parser_defs(PARSER_DEFAULTS,_PARSER_CALLBACKS),
   load_structure(File,Whole, [file(File)|PARSER_DEFAULTS]),
-   ATTRIBS = [srcfile=File],!,
-   addAttribsToXML(ATTRIBS,Whole,Wholer),!,
-   pushAttributes(Ctx,filelevel,ATTRIBS),
-   load_aiml_structure(Ctx,Wholer),!,
-   popAttributes(Ctx,filelevel,ATTRIBS),!.
-  
+   load_inner_aiml_w_lineno(File,[],[],[],Ctx,Whole,XMLSTRUCTURES).
+
+load_inner_aiml_w_lineno(_SrcFile,_OuterTag,_Parent,_Attributes,_Ctx,Atom,Atom):-(atomic(Atom);var(Atom)),!.
+load_inner_aiml_w_lineno(SrcFile,OuterTag,Parent,Attributes,Ctx,[H|T],LL):-!, 
+      maplist_safe(load_inner_aiml_w_lineno(SrcFile,OuterTag,Parent,Attributes,Ctx),[H|T],LL),!.
+
+%% offset
+load_inner_aiml_w_lineno(SrcFile,[OuterTag|PREV],Parent,Attributes,Ctx,element(Tag,Attribs,ContentIn),element(Tag,NewAttribs,ContentOut)):-
+   Context=[Tag,OuterTag|_],
+   MATCH = lineInfoElement(SrcFile,Line:Offset, Context, element(Tag, Attribs, no_content_yet)),   
+   MATCH,!,
+   ignore(Line = nonfile),
+   ignore(Offset = nonfile),
+   mergeAppend(Attributes,Attribs,RightAttribs),
+   mergeAppend([srcfile=SrcFile,srcinfo=Line:Offset],RightAttribs,NewAttribs),
+   ignore(retract(MATCH)),
+   (member(Tag,[aiml,topic]) ->  NextAttribs = NewAttribs ; NextAttribs = []),
+   maplist_safe(load_inner_aiml_w_lineno(SrcFile,[Tag,OuterTag|PREV],Parent,NextAttribs,Ctx),ContentIn,ContentOut),!.
+
+load_inner_aiml_w_lineno(SrcFile,MORE,Parent,Attributes,Ctx,element(Tag,Attribs,ContentIn),element(Tag,RightAttribs,ContentOut)):-
+   mergeAppend(Attributes,Attribs,RightAttribs),
+   load_inner_aiml_w_lineno(SrcFile,[Tag|MORE],Parent,[],Ctx,ContentIn,ContentOut),!.
+
+load_inner_aiml_w_lineno(SrcFile,OuterTag,Parent,Attributes,Ctx,L,LL):-trace,
+   debugFmt(load_inner_aiml_w_lineno(SrcFile,OuterTag,Parent,Attributes,Ctx,L,LL)),!.
 
 
-addAttribsToXML(Attribs,element(Tag,Pre,Content),element(Tag,Post,Content)):-append(Pre,Attribs,Post),!.
+addAttribsToXML(Attribs,element(Tag,Pre,Content),element(Tag,Post,Content)):-mergeAppend(Pre,Attribs,Post),!.
 addAttribsToXML(Attribs,[H|T],OUT):-maplist_safe(addAttribsToXML(Attribs),[H|T],OUT),!.
 addAttribsToXML(Attribs,OUT,OUT):-!,debugFmt(addAttribsToXML(Attribs,OUT,OUT)),!.
+
 
 :-dynamic(in_aiml_tag/1).
 :-dynamic(inLineNum).
@@ -261,14 +298,14 @@ load_aiml_structure_lineno(Attributes,Ctx,L):-maplist_safe(load_inner_aiml_linen
 
 %% offset
 load_inner_aiml_lineno(Attributes,Ctx,element(Tag,Attribs,ContentIn)):-
-   append(Attributes,Attribs,RightAttribs),
+   mergeAppend(Attributes,Attribs,RightAttribs),
    debugOnFailureAiml(attributeValue(Ctx,RightAttribs,[srcfile,srcdir],File,error)),
    MATCH = lineInfoElement(File,Line:Offset, Context, element(Tag, Attribs, no_content_yet)),
    ignore(MATCH),
    Context=[_Tag0,aiml|_More],
    ignore(Line = nonfile),
    ignore(Offset = nonfile),
-   NewAttribs  = [srcfile=File,lineno=Line,lattribs=Attributes,offset=Offset|RightAttribs],
+   NewAttribs  = [srcfile=File,lineno=Line:Offset|RightAttribs],
    ignore(retract(MATCH)),
    load_aiml_structure(Ctx,element(Tag,NewAttribs,ContentIn)),!.
 
@@ -281,7 +318,7 @@ load_inner_aiml_lineno(Attributes,Ctx,element(Tag,Attribs,ContentIn)):-
 
    MATCH = lineInfoElement(File,Line:Offset,Context, element(Tag, Attribs, _ContentIn)),!,
    debugOnFailureAiml((call(MATCH),!,not(not((Line:Offset)==(Line0:Offset0))),retract(OLD),
-   load_aiml_structure(Ctx,element(Tag,[srcfile=File0,lineno=Line0,offset=Offset0|Attribs],ContentIn)),
+   load_aiml_structure(Ctx,element(Tag,[srcinfo=File0:Line0-Offset0|Attribs],ContentIn)),
         NEW = lineInfoElement(File,Line:Offset,Attributes, element(Tag, Attribs, ContentIn)),
         assertz(NEW))),!.
 
@@ -300,6 +337,7 @@ load_aiml_structure(Ctx,element(aiml,ALIST,LIST)):-
 
 % \n\n\n
 load_aiml_structure(Ctx,O):-atomic(O),!,aimlDebugFmt(load_aiml_structure(Ctx,O)),!.
+
 
 % topic/category/flags/that
 load_aiml_structure(Ctx,element(Tag,ALIST,INNER_XML)):- member(Tag,[topic,category,flags,that]),!,
@@ -518,7 +556,7 @@ innerTagPriority(userdict,[template,postpattern]).
 innerTagPriority(template,[template,postpattern]).
 
 
-infoTagLikeLineNumber(X):-member(X,[lineno,srcdir,srcfile]).
+infoTagLikeLineNumber(X):-member(X,[lineno,srcdir,srcfile,srcinfo]).
 
 isPatternTag(Tag):-member(Tag,[that,pattern,request,response,topic,flags,guard]).
 
@@ -535,7 +573,7 @@ each_category(Ctx,ATTRIBS,TAGS,element(TAG,ALIST,NOCATEGORIES)):-  innerTagLikeT
 each_category(Ctx,ATTRIBS,NOPATTERNS,element(TAG,ALIST,PATTERN)):-
   debugOnFailureAiml((
    replaceAttribute(Ctx,name,TAG,ALIST,PATTRIBS),
-   append(PATTRIBS,ATTRIBS,NEWATTRIBS),
+   mergeAppend(PATTRIBS,ATTRIBS,NEWATTRIBS),
    gatherEach(Ctx,[TAG=PATTERN|NEWATTRIBS],NOPATTERNS,Results),!,
    prolog_must(dumpListHere(Ctx,Results)))),!.
 
@@ -551,14 +589,14 @@ pushCateElement(Ctx,INATTRIBS,element(Tag,ATTRIBS,INNER_XML)):- member(Tag,[topi
    unify_partition(element(category,_,_),INNER_XML,ALLCATEGORIES,NONCATE),
    %findall(element(category,ALIST,LIST),member(element(category,ALIST,LIST),INNER_XML),ALLCATEGORIES),
    %takeout(element(category,_,_),INNER_XML,NONCATE),
-   append(ATTRIBS,INATTRIBS,OUTATTRIBS),
+   mergeAppend(ATTRIBS,INATTRIBS,OUTATTRIBS),
    maplist_safe(each_category(Ctx,OUTATTRIBS,NONCATE),ALLCATEGORIES))).
 
 % flag/topic
 pushCateElement(Ctx,INATTRIBS,element(Tag,ALIST,INNER_XML)):- member(Tag,[topic,flag]),!,
   debugOnFailureAiml(( 
   replaceAttribute(Ctx,name,Tag,ALIST,ATTRIBS),
-  append(ATTRIBS,INATTRIBS,OUTATTRIBS),
+  mergeAppend(ATTRIBS,INATTRIBS,OUTATTRIBS),
   withAttributes(Ctx,OUTATTRIBS,
      maplist_safe(pushCateElement(Ctx,OUTATTRIBS),INNER_XML)))).
 
@@ -569,7 +607,7 @@ pushCateElement(Ctx,INATTRIBS,element(Tag,ATTRIBS,INNER_XML)):- member(Tag,[oute
    unify_partition(element(pattern,_,_),INNER_XML,ALLPATTERNS,NOPATTERNS),
    %findall(element(pattern,ALIST,LIST),member(element(pattern,ALIST,LIST),INNER_XML),ALLPATTERNS),
    %takeout(element(pattern,_,_),INNER_XML,NOPATTERNS),
-   append(ATTRIBS,INATTRIBS,OUTATTRIBS),
+   mergeAppend(ATTRIBS,INATTRIBS,OUTATTRIBS),
    maplist_safe(each_pattern(Ctx,OUTATTRIBS,NOPATTERNS),ALLPATTERNS))),!.
 
 % error
@@ -585,7 +623,7 @@ each_pattern(Ctx,ATTRIBS,TAGS,element(TAG,ALIST,PATTERN)):-  innerTagLikeThat(Th
 each_pattern(Ctx,ATTRIBS,NOPATTERNS,element(TAG,ALIST,PATTERN)):-
   debugOnFailureAiml(( 
    replaceAttribute(Ctx,name,TAG,ALIST,PATTRIBS),
-   append(PATTRIBS,ATTRIBS,NEWATTRIBS),
+   mergeAppend(PATTRIBS,ATTRIBS,NEWATTRIBS),
    gatherEach(Ctx,[TAG=PATTERN|NEWATTRIBS],NOPATTERNS,Results),
    prolog_must(dumpListHere(Ctx,Results)))),!.
 
@@ -606,7 +644,7 @@ gatherEach(Ctx,NEWATTRIBS,[element(TAG,ALIST,PATTERN)|NOPATTERNS],RESULTS):- inn
 
 gatherEach(Ctx,NEWATTRIBS,[element(TAG,ALIST,PATTERN_IN)|NOPATTERNS],[TAG=PATTERN_OUT|Result]):- 
       transformTagData(Ctx,TAG,current_value,PATTERN_IN,PATTERN_OUT),!,
-      gatherEach(Ctx,NEWATTRIBS,NOPATTERNS,ResultM),append(ALIST,ResultM,Result),!.
+      gatherEach(Ctx,NEWATTRIBS,NOPATTERNS,ResultM),mergeAppend(ALIST,ResultM,Result),!.
 
 
 each_template(Ctx,M):-debugFmt('FAILURE'(each_template(Ctx,M))),trace.
@@ -614,102 +652,7 @@ each_that(Ctx,M):-debugFmt('FAILURE'(each_that(Ctx,M))),trace.
 
 
 % ===============================================================================================
-%  refomat type transformations
 % ===============================================================================================
-
-isVerbatumTag(N):-memberchk(N,[call,precall,srcfile,srcdir,lineno]),!.
-isVerbatumTag(N):-pathAttrib(N),!.
-
-
-transformTagData(Ctx,[Name|S],Else,ValueI,ValueO):- member(N,[Name|S]),transformTagData0(Ctx,N,Else,ValueI,ValueO).
-transformTagData(Ctx,[Name|S],Else,ValueI,ValueO):- member(N,[Name|S]),!,transformTagData1(Ctx,N,Else,ValueI,ValueO).
-transformTagData(Ctx,Tag,Else,ValueI,ValueO):-transformTagData0(Ctx,Tag,Else,ValueI,ValueO).
-transformTagData(Ctx,Tag,Else,ValueI,ValueO):-transformTagData1(Ctx,Tag,Else,ValueI,ValueO).
-
-transformTagData0(_Ctx,TAG,_Default,[*],TAG).
-transformTagData0(_Ctx,TAG,_Default,*,TAG).
-transformTagData0(Ctx,Tag,_Else,ValueI,ValueO):- ValueI==current_value, current_value(Ctx,Tag,ValueO),!.
-transformTagData0(_Ctx,N,Else,ValueO,ValueO):-isVerbatumTag(N),!, member(Else,[current_value]),!.
-transformTagData0(Ctx,TAG,_Default,PATTERN_IN,PATTERN_OUT):-isPatternTag(TAG),convert_pattern(Ctx,PATTERN_IN,PATTERN_OUT),!.
-transformTagData0(Ctx,TAG,_Default,PATTERN_IN,PATTERN_OUT):-isOutputTag(TAG),convert_template_pred(Ctx,=,PATTERN_IN,PATTERN_OUT),!.
-
-transformTagData1(_Ctx,TAG,_Default,PATTERN_IN,PATTERN_OUT):- member(TAG,[userdict,graph]),upcase_atom_safe(PATTERN_IN,PATTERN_OUT),!.
-transformTagData1(_Ctx,TAG,_Default,PATTERN_IN,PATTERN_OUT):-infoTagLikeLineNumber(TAG),!,PATTERN_IN=PATTERN_OUT.
-
-transformTagData1(Ctx,TAG,Default,PATTERN_IN,PATTERN_OUT):- debugFmt(transformTagData(TAG,Default,PATTERN_IN)), 
-                 convert_template_pred(Ctx,upcase_atom_safe,PATTERN_IN,PATTERN_OUT),!.
-transformTagData1(Ctx,_N,_Default,R,RR):-convert_template(Ctx,R,RR),!. 
-transformTagData1(_Ctx,_TAG,_Default,PATTERN,PATTERN):-!.
-
-% ===============================================================================================
-% ===============================================================================================
-/*
-transformTagData(_Ctx,TAG,[*],TAG).
-transformTagData(_Ctx,TAG,*,TAG).
-transformTagData(Ctx,TAG,PATTERN_IN,PATTERN_OUT):-isPatternTag(TAG),convert_pattern(Ctx,PATTERN_IN,PATTERN_OUT),!.
-transformTagData(Ctx,TAG,PATTERN_IN,PATTERN_OUT):-isOutputTag(TAG),convert_template_pred(Ctx,=,PATTERN_IN,PATTERN_OUT),!.
-transformTagData(_Ctx,TAG,PATTERN_IN,PATTERN_OUT):- member(TAG,[userdict,graph]),upcase_atom_safe(PATTERN_IN,PATTERN_OUT),!.
-transformTagData(_Ctx,TAG,PATTERN_IN,PATTERN_OUT):-infoTagLikeLineNumber(TAG),!,PATTERN_IN=PATTERN_OUT.
-transformTagData(Ctx,TAG,PATTERN_IN,PATTERN_OUT):- debugFmt(transformTagData(TAG,PATTERN_IN)),convert_template_pred(Ctx,upcase_atom_safe,PATTERN_IN,PATTERN_OUT),!.
-transformTagData(Ctx,_N,R,RR):-trace,convert_template(Ctx,R,RR),!.
-transformTagData(_Ctx,_TAG,PATTERN,PATTERN):-!.
-*/
-convert_pattern(Ctx,PATTERN_IN,PATTERN_OUT):- convert_template_pred(Ctx,upcase_atom_safe,PATTERN_IN,PATTERN_OUT),!.
-
-convert_template_pred(Ctx,Pred,PATTERN_IN,PATTERN_OUT):- convert_template(Ctx,PATTERN_IN,PATTERN_MID),!,
-     debugOnFailureAiml(mapWords(Pred,PATTERN_MID,PATTERN_OUT)),!.
-
-
-transform_aiml_structure(catagory,category,OldProps,OldProps,NEWPATTERN,NEWPATTERN).
-transform_aiml_structure(alice,aiml,OldProps,OldProps,NEWPATTERN,NEWPATTERN).
-transform_aiml_structure('name','bot',OldProps,[name=['name']|OldProps],NEWPATTERN,NEWPATTERN).
-transform_aiml_structure(OldName,NewName,OldProps,NewProps,NEWPATTERN,NEWPATTERN):-
-      specialIndex(OldName,NewName,AddProps),append(AddProps,OldProps,NewProps).
-
-specialIndex(justbeforethat,that,[index=(2:1)]).
-specialIndex(justthat ,input,[index=2]).
-specialIndex(beforethat,input,[index=3]).
-
-specialIndex(load,learn,[]).
-specialIndex(set_female,set,[name=gender,value=female]).
-
-specialIndex(getname,name,[name=[name]]).
-specialIndex(gettopic,name,[name=[name]]).
-
-specialIndex(personf,formatter,[type=url_encode]).
-specialIndex(Name,formatter,[type=Method]):-formatterMethod(Name,Method).
-
-
-formatterProc(Dict):-member(Dict,[formal,uppercase,lowercase,sentence,gossip,think,(format)]).
-formatterMethod(NamedMethod,NamedMethod):-formatterProc(NamedMethod).
-
-
-evaluatorsDicts(Dict):-member(Dict,[system,javascript,eval,
-                                     cycquery,cycsystem,cycassert,
-                                     fortunecookie,substitute,learn,aiml,genlMt,think,
-                                     substitute,srai,testsuite,testcase]).
-
-
-%substitutionDictsName(input,pattern).
-substitutionDictsName(N,N):-substitutionDicts(N).
-
-substitutionDicts(input).
-substitutionDicts(output).
-substitutionDicts(gender).
-substitutionDicts(person).
-substitutionDicts(person2).
-substitutionDicts(person3).
-%substitutionDicts(Dict):-evaluatorsDicts(Dict).
-
-
-tagType(Tag,immediate):-evaluatorsDicts(Tag),!.
-tagType(Tag,pushable):-cateFallback(LIST),member([Tag=_],LIST).
-tagType(Tag,insideCate):-cateMember(Tag).
-
-tagType(Tag,requiredCate):-member(Tag,[pattern,template]).
-tagType(Tag,optionalCate):-cateMember(Tag),not(tagType(Tag,requiredCate)).
-
-
 %%:-abolish(dict/3).
 
 :-retractall(dict(_,_,_)).
@@ -732,7 +675,7 @@ save:-tell(aimlCate),
 
 :-guitracer.
 
-dt:-load_aiml_files('aiml/chomskyAIML/*.aiml').
+dt:- withAttributes(Ctx,[graph='ChomskyAIML'],load_aiml_files(Ctx,'aiml/chomskyAIML/*.aiml')).
 
 do:-load_aiml_files,alicebot.
 

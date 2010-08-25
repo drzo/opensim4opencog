@@ -17,6 +17,7 @@
 
 :-multifile(what/3).
 :-multifile(response/2).
+:-dynamic(lineInfoElement/4).
 
 run_chat_tests:-
    test_call(alicebot('Hi')),
@@ -41,7 +42,7 @@ main_loop:-repeat,main_loop1(_),fail.
 aimlCateSig(X):-aimlCateSigCached(X),!.
 aimlCateSig(Pred):-aimlCateOrder(List),length(List,L),functor(Pred,aimlCate,L),asserta(aimlCateSigCached(Pred)),!.
 
-aimlCateOrder([graph,precall,topic,that,request,pattern,flags,call,guard,userdict,template,lineno,srcfile]).
+aimlCateOrder([graph,precall,topic,that,request,pattern,flags,call,guard,userdict,template,srcinfo,srcfile]).
 
 % [graph,precall,topic,that,pattern,flags,call,guard,template,userdict]
 cateMemberTags(Result):- aimlCateOrder(List), findall(E,(member(E0,List),once((E0=[E|_];E0=E))), Result).
@@ -74,20 +75,23 @@ alicebot:-repeat,
 alicebot(Input):- currentContext(alicebot(Input),Ctx),!,alicebotCTX(Ctx,Input).
 
 alicebotCTX(_Ctx,Input):- atom(Input),catch(((atom_to_term(Input,Term,Vars),callInteractive0(Term,Vars))),_,fail),!.
-alicebotCTX(Ctx,Input):- once((alicebotCTX(Ctx,Input,Resp),say(Ctx,Resp))),!.
-alicebotCTX(Ctx,_):- say(Ctx,'-no response-').
+alicebotCTX(Ctx,Input):- alicebotCTX(Ctx,Input,Resp),!,say(Ctx,Resp),!.
+%%alicebotCTX(Ctx,_):- trace, say(Ctx,'-no response-').
+
 
 alicebotCTX(_Ctx,[],_):-debugFmt('no input'),!,fail.
 alicebotCTX(Ctx,Input,Resp):- atom(Input),!,
       getWordTokens(Input,TokensO),!,Tokens=TokensO,
       alicebotCTX(Ctx,Tokens,Resp),!.
-
 alicebotCTX(Ctx,[TOK|Tokens],Output):- atom(TOK),atom_concat('@',_,TOK),!,systemCall(Ctx,'bot',[TOK|Tokens],Output),debugFmt(Output).
-
 alicebotCTX(Ctx,Tokens,Resp):-
    toUppercase(Tokens,UCase),!,
    removePMark(UCase,Atoms),!,
    alicebot2(Ctx,Atoms,Resp),!.
+alicebotCTX(_Ctx,In,Res):- !,ignore(Res='-no response-'(In)).
+
+
+
 
 alicebot2(Atoms,Resp):- currentContext(alicebot2(Atoms),Ctx),!,alicebot2(Ctx,Atoms,Resp).
 
@@ -241,6 +245,7 @@ computeAnswer(Ctx,Votes,think(Thought),[],VotesO):-!,computeAnswer(Ctx,Votes,Tho
 computeAnswer(Ctx,Votes,get(user,X),Resp,VotesO):-getAliceMem(X,E),!,computeAnswer(Ctx,Votes,E,Resp,VotesM),VotesO is VotesM * 1.1.
 computeAnswer(_Ctx,_Votes,get(_,_),_,_):-!,fail.
 
+computeAnswer(Ctx,Votes,star(pattern,[],[]),Resp,VotesO):-!,computeAnswer(Ctx,Votes,*,Resp,VotesM),VotesO is VotesM * 1.1.
 
 computeAnswer(Ctx,Votes,cycrandom(RAND),O,VotesO):-!, computeAnswer(Ctx,Votes,cyceval(RAND),RO,VotesO),randomPick(RO,O).
 computeAnswer(_Ctx,Votes,cyceval(RAND),O,Votes):-!,  RAND=O. %%computeAnswer(Ctx,Votes,cyceval(RAND),RO,VotesO),randomPick(RO,O).
@@ -276,37 +281,49 @@ computeAnswer(Ctx,Votes,GETATTRIBS, Resp,VotesO):- GETATTRIBS=..[GET,ATTRIBS,INN
 
 computeSRAI(_Ctx,_Votes,[],_,_):- !, fail.
 computeSRAI(Ctx,Votes,Input,TopicStarO,VotesO):-
-  findall(TopicStarM=VotesM,notrace(((computeSRAI2(Ctx,Votes,Input,TopicStarM,VotesM)))),FOUND),
-  FOUND=[_|_], !, member(TopicStarO=VotesO,FOUND), 
-  TopicStarO \= [*].
+  findall(TopicStarM=VotesM:ProofM,notrace(((computeSRAI2(Ctx,Votes,Input,TopicStarM,VotesM,ProofM)))),FOUND),
+  FOUND=[_|_], !, member(TopicStarO=VotesO:Proof,FOUND),
+   debugFmt(computeSRAI(Input,Proof)), TopicStarO \= [*].
 
 computeSRAI(Ctx,Votes,Input,_,_):- debugFmt(computeSRAI2(Ctx,Votes,Input)),fail.
-computeSRAI(Ctx,Votes,Input,TopicStarO,VotesO):- computeSRAI2(Ctx,Votes,Input,TopicStarO,VotesO),TopicStarO \= [*].
+computeSRAI(Ctx,Votes,Input,TopicStarO,VotesO):- computeSRAI2(Ctx,Votes,Input,TopicStarO,VotesO,_Proof),TopicStarO \= [*].
 
 % this next line is what it does on fallback
 %computeSRAI(Ctx,Votes,[B|Flat],[B|TopicStarO],VotesO):-computeSRAI(Ctx,Votes,Flat,TopicStarO,VotesO).
 
-computeSRAI2(Ctx,Votes,Input,TopicStarO,VotesO):-
+computeSRAI2(Ctx,Votes,Input,TopicStarO,VotesO,Proof):-
 	 getLastSaid(ThatSaid),
 	 set_matchit(Input,MatchIt),
          trace,
-         get_aiml_that(Ctx,SaidThat,MatchIt,Out),
+         get_aiml_that(Ctx,SaidThat,MatchIt,Out,Proof),
 	 rateMatch(SaidThat,ThatSaid,SaidThat,NewTopic,TopicVote,TopicStar), 
 	 rateMatch(MatchIt,Input,Out,Next,Voted,_), 
 	 flatten([Next],NextO),
 	 subst(NextO,topicstar,TopicStar,TopicStarO),
 	 VotesO is Votes * (Voted + TopicVote).
 
-set_matchit([Input|_],[Input|_]).
-set_matchit([Input|_],[_,Input|_]).
+set_matchit(Input,Input).
+
+set_matchit(A,B):-member(Mid,[[_,_,_,_],[_,_,_],[_,_],[_]]),sublistspan(Mid,A),sublistspan(Mid,B).
+
+sublistspan(Mid,Full):-sublistspan(_Left,Mid,_Right,Full).
+sublistspan(Left,Mid,Right,Full):-append(Left,MidRight,Full),append(Mid,Right,MidRight).
+
+%set_matchit(A,B):-member(E,A),member(E,B).
+/*
 set_matchit([_,Input|_],[_,Input|_]).
+set_matchit([Input|_],[Input|_]).
+set_matchit([_,_,Input|_],[_,Input|_]).
+set_matchit([_,Input|_],[_,_,Input|_]).
+%%set_matchit([Input|_],[_,Input|_]).
+*/
 
 %get_aiml_that(Ctx,SaidThat,Match,OOut):-get_aiml_cyc(SaidThat,Match,Out),(([srai(Out)] = OOut);OOut=Out).
-get_aiml_that(_Ctx,SaidThat,Match,Out):-what(SaidThat, Match,Out).
-get_aiml_that(_Ctx,[*],Match,Out):-response(Match,Out).
+get_aiml_that(_Ctx,SaidThat,Match,Out,what(SaidThat, Match,Out)):-what(SaidThat, Match,Out).
+get_aiml_that(_Ctx,[*],Match,Out,response(Match,Out)):-response(Match,Out).
 
-get_aiml_that(_CTX,[T|HAT],MATCH,OUT):-aimlCate(_GRAPH,_PRECALL,_TOPIC,[T|HAT],_INPUT,MATCH,_FLAGS,_CALL,_GUARD,_USERDICT,OUT,_LINENO,_SRCFILE).
-get_aiml_that(_CTX,[*],MATCH,OUT):-aimlCate(_GRAPH,_PRECALL,_TOPIC,(*),_INPUT,MATCH,_FLAGS,_CALL,_GUARD,_USERDICT,OUT,_LINENO,_SRCFILE).
+get_aiml_that(_CTX,[T|HAT],MATCH,OUT,aimlCate(_GRAPH,_PRECALL,_TOPIC,[T|HAT],_INPUT,MATCH,_FLAGS,_CALL,_GUARD,_USERDICT,OUT,_LINENO,_SRCFILE)):-aimlCate(_GRAPH,_PRECALL,_TOPIC,[T|HAT],_INPUT,MATCH,_FLAGS,_CALL,_GUARD,_USERDICT,OUT,_LINENO,_SRCFILE).
+get_aiml_that(_CTX,[*],MATCH,OUT,aimlCate(_GRAPH,_PRECALL,_TOPIC,(*),_INPUT,MATCH,_FLAGS,_CALL,_GUARD,_USERDICT,OUT,_LINENO,_SRCFILE)):-aimlCate(_GRAPH,_PRECALL,_TOPIC,(*),_INPUT,MATCH,_FLAGS,_CALL,_GUARD,_USERDICT,OUT,_LINENO,_SRCFILE).
 
 %get_aiml_cyc([*],[String|ListO],[Obj,*]):-poStr(Obj,[String|List]),append(List,[*],ListO).
 %get_aiml_cyc([*],[String,*],[Obj,*]):-poStr(Obj,String).
@@ -319,24 +336,24 @@ rateMatch([],[],Out,Out,1,[]):-!.
 
 rateMatch(Match,Match,Out,Out,1.3,[]):-!.
 
-rateMatch([This|More],[This|More2],Out,OOut,Vote2,Grabbed):-!,
-      rateMatch(More,More2,Out,OOut,Vote,Grabbed),!,
+rateMatch([This|More],[This|More2],Out,OOut,Vote2,Grabbed):-
+      rateMatch(More,More2,Out,OOut,Vote,Grabbed),
       Vote2 is Vote * (1.11).
 
 rateMatch([*],More,Out,OOut,0.77,More):-!,subst(Out,*,More,OOut),!.
 rateMatch(['_'],More,Out,OOut,0.87,More):-!,subst(Out,*,More,OOut),!.
 
-rateMatch([*|Rest],More,Out,OOut,VoteO,Grabbed):-!,
+rateMatch([*|Rest],More,Out,OOut,VoteO,Grabbed):-
       append(Grabbed,Rest,More),
       rateMatch(More,_More2,Out,OOut,Vote,_),
       subst(Out,*,Grabbed,OOut),
-      VoteO is Vote * (0.72),!.
+      VoteO is Vote * (0.72).
 
-rateMatch(['_'|Rest],More,Out,OOut,VoteO,Grabbed):-!,
+rateMatch(['_'|Rest],More,Out,OOut,VoteO,Grabbed):-
       append(Grabbed,Rest,More),
       rateMatch(More,_More2,Out,OOut,Vote,_),
       subst(Out,*,Grabbed,OOut),
-      VoteO is Vote * (0.82),!.
+      VoteO is Vote * (0.82).
             
 
 

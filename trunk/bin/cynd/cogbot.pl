@@ -89,7 +89,7 @@ debugFmtS(Stuff):-!,debugFmt('% ~q~n',[Stuff]).
 
 
 hideIfNeeded(I,I):-var(I),!.
-hideIfNeeded([frame(_,_,_)|_],ctx):-!.
+hideIfNeeded([frame(_,_,_)|_],_):-!.
 hideIfNeeded(Comp,Comp2):-compound(Comp),Comp=..[L,I|ST],hideIfNeeded(I,II),Comp2=..[L,II|ST].
 hideIfNeeded(I,I):-!.
 

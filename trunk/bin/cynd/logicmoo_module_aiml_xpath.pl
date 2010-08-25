@@ -24,14 +24,14 @@
 
 attributeOrTagValue(Ctx,ATTRIBS,NameS,ValueO,_Else):- notrace((attributeValue(Ctx,ATTRIBS,NameS,ValueO,failure))),!.
 attributeOrTagValue(Ctx,XML,NameS,ValueO,_Else):- notrace((findTagValue(Ctx,XML,NameS,ValueO,failure))),!.
-attributeOrTagValue(Ctx,ATTRIBS,NameS,ValueO,_Else):-compound(ATTRIBS),ATTRIBS=..LIST,member(E,LIST),attributeOrTagValue(Ctx,E,NameS,ValueO,failure),!.
+attributeOrTagValue(Ctx,ATTRIBS,NameS,ValueO,_Else):-compound(ATTRIBS),ATTRIBS=..[_|LIST],member(E,LIST),attributeOrTagValue(Ctx,E,NameS,ValueO,failure),!.
 attributeOrTagValue(Ctx,_,NameS,ValueO,ElseVar):-makeParamFallback(Ctx,NameS,ValueO,ElseVar),!.
 
 
 attributeValue(Ctx,ATTRIBS,NameS,ValueO,Else):- notrace((attributeValue0(Ctx,ATTRIBS,NameS,ValueI,Else), aiml_eval_to_unit(Ctx,ValueI,ValueO))),!.
 attributeValue(Ctx,ATTRIBS,NameS,ValueO,Else):-   trace,attributeValue0(Ctx,ATTRIBS,NameS,ValueI,Else), aiml_eval_to_unit(Ctx,ValueI,ValueO),!.
 
-attributeValue0(_Ctx,ATTRIBS,NameS,ValueO,_Else):- member(Name,NameS), member(NameE=ValueO,ATTRIBS), atomsSameCI(Name,NameE),!.
+attributeValue0(_Ctx,ATTRIBS,NameS,ValueO,_Else):- member(Name,NameS), lastMember(NameE=ValueO,ATTRIBS), atomsSameCI(Name,NameE),!.
 attributeValue0(Ctx,_ATTRIBS,NameS,ValueO,current_value):-member(Name,NameS), current_value(Ctx,Name,ValueO),valuePresent(ValueO),!.
 attributeValue0(_Ctx,_ATTRIBS,_NameS,_Value,Failure):-failure==Failure,!,fail.
 attributeValue0(Ctx,ATTRIBS,NameS,Value,Error):-error==Error,  
@@ -146,18 +146,21 @@ dyn_retract(dict(Scope,N,V)):-(retract(dict(Scope,N,V))),!.
 ensureScope(_Ctx,_ATTRIBS,Scope):-nonvar(Scope),!.
 ensureScope(_Ctx,_ATTRIBS,filelevel):-!.
 
+
+
+replaceAttribute(Ctx,Before,After,ALIST,ATTRIBS):-replaceAttribute0(Ctx,Before,After,ALIST,AA),list_to_set_safe(AA,ATTRIBS),!.
 % the endcase
-replaceAttribute(_Ctx,_Before,_After,[],[]):-!.
+replaceAttribute0(_Ctx,_Before,_After,[],[]):-!.
 % only do the first found?
-replaceAttribute(_Ctx,Before,After,[Before=Value|ATTRIBS],[After=Value|ATTRIBS]):-prolog_must(ground(Before+After+Value+ATTRIBS)),!.
+replaceAttribute0(_Ctx,Before,After,[Before=Value|ATTRIBS],[After=Value|ATTRIBS]):-prolog_must(ground(Before+After+Value+ATTRIBS)),!.
 % comment out the line above to do all
-replaceAttribute(Ctx,Before,After,[Before=Value|ALIST],[After=Value|ATTRIBS]):-
-   replaceAttribute(Ctx,Before,After,ALIST,ATTRIBS),!.
+replaceAttribute0(Ctx,Before,After,[Before=Value|ALIST],[After=Value|ATTRIBS]):-
+   replaceAttribute0(Ctx,Before,After,ALIST,ATTRIBS),!.
 % skip over BeforeValue
-replaceAttribute(Ctx,Before,After,[BeforeValue|ALIST],[BeforeValue|ATTRIBS]):-
-   replaceAttribute(Ctx,Before,After,ALIST,ATTRIBS),!.
+replaceAttribute0(Ctx,Before,After,[BeforeValue|ALIST],[BeforeValue|ATTRIBS]):-
+   replaceAttribute0(Ctx,Before,After,ALIST,ATTRIBS),!.
 % the last resort
-replaceAttribute(_Ctx,_Before,_After,B,B):-!.
+replaceAttribute0(_Ctx,_Before,_After,B,B):-!.
 
 
 
@@ -171,7 +174,7 @@ makeSingleTag(Ctx,Name,ATTRIBS,Default,Tag,Result):-atom(Name),!,makeSingleTag(C
 makeSingleTag(Ctx,NameS,ATTRIBS,Default,Tag,ValueO):-makeAimlSingleParam0(Ctx,NameS,ATTRIBS,Default,Tag,ValueI),
       transformTagData(Ctx,Tag,Default,ValueI,ValueO).
 
-makeAimlSingleParam0(_Ctx,[N|NameS],ATTRIBS,_D,N,Value):-member(O,[N|NameS]),member(OI=Value,ATTRIBS),atomsSameCI(O,OI),!.
+makeAimlSingleParam0(_Ctx,[N|NameS],ATTRIBS,_D,N,Value):-member(O,[N|NameS]),lastMember(OI=Value,ATTRIBS),atomsSameCI(O,OI),!.
 makeAimlSingleParam0(Ctx,[N|NameS],_,ElseVar,N,Value):- makeParamFallback(Ctx,[N|NameS],Value,ElseVar),!.
 
 
@@ -231,9 +234,9 @@ cateFallback([
        pattern='ERROR PATTERN',
        guard='*',
        request='*',
-       lineno = (-1),
+       srcinfo=missing,
        srcfile=missing,
-       withCategory=[writeqnl,assert_new],
+       withCategory=[writeqnl,asserta_new],
        template='ERROR TEMPLATE'|MORE]):-findall(N=V,defaultPredicates(N,V),MORE).
 
 pathAttrib(S):-pathAttribS(SS),member(S,SS).
@@ -259,7 +262,7 @@ pathAttribS([uri,loc,filename,url,path,dir,file,pathname,src,location]).
 
 no_cyclic_terms.
 
-makeAimlContext(Name,Ctx):-makeAimlContext1(Name,Ctx),!,setCtxValue(ctx,Ctx,Name).
+makeAimlContext(Name,Ctx):-makeAimlContext1(Name,Ctx),!,setCtxValue(ctx,Ctx,Name),!.
 
 makeAimlContext1(Gensym_Key, [frame(Gensym_Key,no_destructor,[assoc(AL)|_])|_]):-    
    list_to_assoc([

@@ -7,6 +7,7 @@
 % Revision:  $Revision: 1.7 $
 % Revised At:   $Date: 2002/07/11 21:57:28 $
 % ===================================================================
+:-dynamic(lineInfoElement/4).
 
 %:-module()
 %:-include('logicmoo_utils_header.pl'). %<?
@@ -23,9 +24,43 @@ prolog_must(Call):-Call,!.
 prolog_must(Call):-!,aiml_error(Call).
 
 
-assert_new(NEW):-ignore(retract(NEW)),asserta(NEW).
+asserta_new(NEW):-ignore(retract(NEW)),asserta(NEW).
 writeqnl(NEW):-(format('~q.~n',[NEW])),!.
 
+revappend([], Ys, Ys).
+revappend([X|Xs], Ys, Zs) :- revappend(Xs, [X|Ys], Zs).
+
+reverseA(Xs,Ys) :- revappend(Xs,[],Ys).
+
+mergeAppend(L,R,AA):-notrace((mergeAppend0(L,R,A),list_to_set_safe(A,AA))),!.
+mergeAppend0(L,R,R):-var(L),!,var(R),!.
+mergeAppend0(L,R,A):-var(R),append(L,R,A),!.
+mergeAppend0(L,R,A):-var(L),append(L,R,A),!.
+mergeAppend0(L,[R|RR],A):-eqmember(R,L),mergeAppend0(L,RR,A).
+mergeAppend0([L|LL],R,A):-eqmember(L,R),mergeAppend0(LL,R,A).
+mergeAppend0(L,R,A):-append(L,R,A).
+
+eqmember(E,List):-copy_term_numvars(E:List,E0:List0),member(E0,List0).
+
+list_to_set_safe(A,AA):-is_list(A),list_to_set(A,AA).
+list_to_set_safe(A,A).
+
+lastMember(_E,List):-var(List),!,fail.
+lastMember(E,[H|List]):-lastMember(E,List);E=H.
+
+lastMember2(E,List):-to_open_list(_,Closed,_Open,List),reverse(Closed,Rev),member(E,Rev).
+
+%lastMember(End,List) :- append(_,[End|_],List).
+
+addNV(FullList,NV):-append(_Closed,[NV|_],FullList),!.
+
+to_open_list(FullList,Closed,Open,FullList) :- append(Closed,Open,FullList),var(Open),!.
+to_open_list(Closed,Closed,Open,FullList) :- append(Closed,Open,FullList),!.
+
+
+
+
+copy_term_numvars(OLD,NEW):-copy_term(OLD,NEW),numbervars(NEW,0,_).
 
 %%%retractall(E):- retractall(E),functor(E,File,A),dynamic(File/A),!.
 
@@ -46,7 +81,7 @@ printPredCount(Msg,Pred,N1):-!,functor(Pred,File,A),functor(FA,File,A), predicat
 
 dynamic_load(Key,PLNAME):- creating_aiml_file(Key,PLNAME),throw_safe(creating_aiml_file(Key,PLNAME)).
 dynamic_load(Key,PLNAME):- not(ground(dynamic_load(Key,PLNAME))),throw_safe(not(ground(dynamic_load(Key,PLNAME)))).
-dynamic_load(Key,PLNAME):- loaded_aiml_file(Key,PLNAME),trace,throw_safe(loaded_aiml_file(Key,PLNAME)).
+dynamic_load(Key,PLNAME):- loaded_aiml_file(Key,PLNAME),!,debugFmt(loaded_aiml_file(Key,PLNAME)).
 dynamic_load(Key,PLNAME):- assert(loaded_aiml_file(Key,PLNAME)),fail.
 
 dynamic_load(Key,_PLNAME):- nonvar(Key), once(cateForFile(_,Key,Cate)),Cate,!.
