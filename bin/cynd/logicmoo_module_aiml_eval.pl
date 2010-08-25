@@ -35,8 +35,9 @@ aiml_call(Ctx,element(A, B, C)):-tagType(A, immediate),
 aiml_call(Ctx,element(Learn, ATTRIBS, Value)):-  member(Learn,[load,learn]),!,
  debugOnFailureAiml((
      attributeValue(Ctx,ATTRIBS,[graph],Graph,current_value),
-     attributeValue(Ctx,ATTRIBS,[filename,uri,path,dir,file],Filename,Value),
-      withAttributes(Ctx,filelevel,[filename=Filename,graph=Graph|ATTRIBS],
+     pathAttrib(PathAttrib),
+     attributeValue(Ctx,ATTRIBS,PathAttrib,Filename,Value),
+      withAttributes(Ctx,[srcfile=Filename,graph=Graph|ATTRIBS],
       load_aiml_files(Ctx,Filename)))).
 
 aiml_call(Ctx,Call):- Call \= element(_,_,_), callEachElement(Ctx,Call),!.
@@ -92,8 +93,8 @@ aiml_eval0(Ctx,_Num - Msg,Result):-!,aiml_eval(Ctx,Msg,Result),!.
 aiml_eval0(_Ctx,A,B):-atomic(A),!,B=A.
 
 aiml_eval0(Ctx,element(srai,ATTRIBS,DOIT),RETURN):-
-      withAttributes(Ctx,filelevel,ATTRIBS,
-         (aiml_eval_each(Ctx,DOIT,INNER),
+      withAttributes(Ctx,ATTRIBS,
+         (notrace(aiml_eval_each(Ctx,DOIT,INNER)),
           computeAnswer(Ctx,1,srai(INNER),RMID,_Votes))),!,
        RMID=RETURN.
 
@@ -156,9 +157,9 @@ systemCall(Ctx,'bot',['@ctx'],template([loaded,Ctx])):-!,showCtx.
 systemCall(Ctx,'bot',['@load',Filename],template([loaded,Filename])):-
     current_value(Ctx,graph,GraphI), 
     (GraphI=='*'->Graph=default; Graph=GraphI),
-    ATTRIBS=[filename=Filename,graph=Graph],
+    ATTRIBS=[srcfile=Filename,graph=Graph],
     gather_aiml_graph(Ctx,ATTRIBS,Graph,Filename,AIML),
-    withAttributes(Ctx,filelevel,ATTRIBS,load_aiml_structure(Ctx,AIML)),!.
+    withAttributes(Ctx,ATTRIBS,load_aiml_structure(Ctx,AIML)),!.
 systemCall(Ctx,'bot',['@chgraph',Graph],['@chgraph',Graph]):-  set_current_value(Ctx,graph,Graph),!.
 systemCall(_Ctx,_Lang,[],[]):-!.
 systemCall(Ctx,Lang,[Eval],Out):-systemCall(Ctx,Lang,Eval,Out).
@@ -173,34 +174,35 @@ systemCall(_Ctx,Lang,Eval,writeq(evaled(Lang,Eval))):- aiml_error(evaled(Lang,Ev
 tag_eval(Ctx,element(Learn, ATTRIBS, EXTRA),done(new)/*NEW*/):- member(Learn,[load,learn]),
  debugOnFailureAiml((
      attributeValue(Ctx,ATTRIBS,[graph],Graph,current_value),
-     attributeValue(Ctx,ATTRIBS,[filename,uri,path,dir,file],Filename,EXTRA),
+     pathAttrib(PathAttrib),
+     attributeValue(Ctx,ATTRIBS,PathAttrib,Filename,EXTRA),
       gather_aiml_graph(Ctx,ATTRIBS,Graph,Filename,MOREXML),
       append(EXTRA,MOREXML,NEWXML), 
-      ATTRIBSNEW=[filename=Filename,graph=Graph|ATTRIBS],
+      ATTRIBSNEW=[srcfile=Filename,graph=Graph|ATTRIBS],
        NEW = element(aiml,ATTRIBSNEW,NEWXML),  
-        withAttributes(Ctx,filelevel,ATTRIBSNEW,
+        withAttributes(Ctx,ATTRIBSNEW,
             load_aiml_structure(Ctx,NEW)))),!.
 
 
 gather_aiml_graph(Ctx,XML,Graph,Filename,AIML):-
- ATTRIBS=[filename=Filename,graph=Graph|XML],
- withAttributes(Ctx,filelevel,ATTRIBS,graph_or_file(Ctx,ATTRIBS, Filename, AIML)),!.
+ ATTRIBS=[srcfile=Filename,graph=Graph|XML],
+ withAttributes(Ctx,ATTRIBS,graph_or_file(Ctx,ATTRIBS, Filename, AIML)),!.
 
 
 graph_or_file(_Ctx,_ATTRIB, [], []):-!.
 graph_or_file(Ctx,ATTRIBS, [Filename], XML):-atomic(Filename),!,graph_or_file(Ctx,ATTRIBS, Filename, XML).
-graph_or_file(Ctx,ATTRIBS, F, [element(aiml,DIRTRIBS,OUT)]):- DIRTRIBS = [dir=F|ATTRIBS],
+graph_or_file(Ctx,ATTRIBS, F, [element(aiml,DIRTRIBS,OUT)]):- DIRTRIBS = [srcdir=F|ATTRIBS],
       exists_directory(F), 
       aiml_files(F,Files), 
       findall(X, ((member(FF,Files), 
-                   graph_or_file(Ctx,[filename=FF|DIRTRIBS],FF,X))), OUT),!.
+                   graph_or_file(Ctx,[srcfile=FF|DIRTRIBS],FF,X))), OUT),!.
 graph_or_file(_Ctx,_ATTRIB, Filename, XML):-exists_file(Filename),!,load_structure(Filename,XML,[dialect(xml),space(remove)]),!.
 graph_or_file(_Ctx,ATTRIBS, Filename, [nosuchfile(Filename,ATTRIBS)]).
 
 % ============================================
 % Test Suite 
 % ============================================
-tag_eval(Ctx,element('testsuite',ATTRIBS,LIST),prologCall(maplist_safe(call,RESULT))):- withAttributes(Ctx,filelevel,ATTRIBS,aiml_eval_each(Ctx,LIST,RESULT)),!.
+tag_eval(Ctx,element('testsuite',ATTRIBS,LIST),prologCall(maplist_safe(call,RESULT))):- withAttributes(Ctx,ATTRIBS,aiml_eval_each(Ctx,LIST,RESULT)),!.
    
 tag_eval(Ctx,Current,prologCall(TESTCALL)):- Current=element(TC,ATTRIBS,_LIST), member(TC,['testcase','TestCase']),     
  debugOnFailureAiml((
@@ -218,7 +220,7 @@ prologCall(Call):-catch(Call,E,debugFmt(prologCall(Call,E))),!.
 
 testIt(ATTRIBS,Input=ExpectedAnswer,ExpectedKeywords=Result,_Name=_Description,Ctx):-
    (ExpectedKeywords=='*' -> Expected = ExpectedAnswer ;  Expected = ExpectedKeywords),
-    withAttributes(Ctx,filelevel,ATTRIBS,(( runUnitTest(alicebot2(Ctx,Input,Resp),sameBinding(Resp,ExpectedAnswer),Result)))),!.
+    withAttributes(Ctx,ATTRIBS,(( runUnitTest(alicebot2(Ctx,Input,Resp),sameBinding(Resp,ExpectedAnswer),Result)))),!.
 
 
 tag_eval(_Ctx,element(In, ATTRIBS, Value),element(In, ATTRIBS, Value)):- preserveTag(In,_Out),!.
