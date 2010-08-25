@@ -11,9 +11,11 @@
 %:-module()
 %:-include('logicmoo_utils_header.pl'). %<?
 %:- style_check(-singleton).
-:- style_check(-discontiguous).
+%%:- style_check(-discontiguous).
 :- style_check(-atom).
 :- style_check(-string).
+
+:-discontiguous(tag_eval/3).
 
 % ===================================================================
 %  Prolog-like call
@@ -77,8 +79,8 @@ aiml_eval(Ctx,TAGATTRXML,RESULT):-aiml_eval0(Ctx,TAGATTRXML,RESULT),!.
 %aiml_eval0(Ctx,[Value|I],ValueO):-atom(Value),concat_atom([Value|I],' ',ValueI),!,aiml_eval(Ctx,ValueI,ValueO),!.
 %aiml_eval0(Ctx,ValueI,ValueO):- !,ValueI=ValueO,!.
 
-aiml_eval0(Ctx,I,R):- nonvar(R),throw(var(R=aiml_eval0(Ctx,I,R))),!.
-aiml_eval0(Ctx,_ - Calls,_):- var(Calls),throw(var(Ctx=Calls)),!.
+aiml_eval0(Ctx,I,R):- nonvar(R),throw_safe(var(R=aiml_eval0(Ctx,I,R))),!.
+aiml_eval0(Ctx,_ - Calls,_):- var(Calls),throw_safe(var(Ctx=Calls)),!.
 
 aiml_eval0(Ctx,_Num - Msg,Result):-is_list(Msg),!,aiml_eval_each(Ctx,Msg,Result),!.
 
@@ -140,8 +142,8 @@ aiml_eval0(_Ctx,RESULT,RESULT):-!.
 %  system tag impl
 % ===================================================================
 
-tag_eval(Ctx,I,R):- nonvar(R),throw(var(R=tag_eval(Ctx,I,R))),!.
-tag_eval(Ctx,_ - Calls,_):- var(Calls),throw(var(tag_eval(Ctx=Calls))),!.
+tag_eval(Ctx,I,R):- nonvar(R),throw_safe(var(R=tag_eval(Ctx,I,R))),!.
+tag_eval(Ctx,_ - Calls,_):- var(Calls),throw_safe(var(tag_eval(Ctx=Calls))),!.
 
 tag_eval(Ctx,element(system,ATTRIBS,INNER_XML),Output):-
          aiml_eval_each(Ctx,INNER_XML,Rendered),
