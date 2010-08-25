@@ -17,6 +17,8 @@
 
 throw_safe(Exc):-trace,throw(Exc).
 
+atom_contains(F,C):-notrace((atom(F),atom(C),sub_atom(F,_,_,_,C))).
+
 prolog_must(Call):-Call,!.
 prolog_must(Call):-!,aiml_error(Call).
 
@@ -231,8 +233,8 @@ traceCall(A):-trace(A,[-all,+fail]),A,!.
 
 /*
 debugOnFailureAiml(Call):- clause(Call,(_A,_B)),!,clause(Call,Body),trace,debugOnFailureAiml(Body),!.
-*/
 debugOnFailureAiml((A,B)):- !,debugOnFailureAiml(A),!,debugOnFailureAiml(B),!.
+*/
 debugOnFailureAiml(Call):-!,(Call;(trace,Call)),!.
 %debugOnFailureAiml(Call):- debugOnFailureAimlTrace(Call),!.
 debugOnFailureAiml(Call):- beenCaugth(Call),!.

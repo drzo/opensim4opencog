@@ -17,9 +17,6 @@
 
 :-multifile(what/3).
 :-multifile(response/2).
-%:-dynamic(aimlCate/1).
-
-atom_contains(F,C):-notrace((atom(F),sub_atom(F,_,_,_,C))).
 
 run_chat_tests:-
    test_call(alicebot('Hi')),
@@ -35,7 +32,6 @@ main_loop1(Atom):- current_input(In),!,
             alicebot(Atom),!.
 
 main_loop:-repeat,main_loop1(_),fail.
-%:-abolish(aimlCate/10).
 
 % ===================================================================
 %  aimlCate database decl
@@ -45,7 +41,7 @@ main_loop:-repeat,main_loop1(_),fail.
 aimlCateSig(X):-aimlCateSigCached(X),!.
 aimlCateSig(Pred):-aimlCateOrder(List),length(List,L),functor(Pred,aimlCate,L),asserta(aimlCateSigCached(Pred)),!.
 
-aimlCateOrder([graph,precall,topic,that,[pattern,input],flags,call,guard,template,userdict,lineno,filename]).
+aimlCateOrder([graph,precall,topic,that,request,pattern,flags,call,guard,userdict,template,lineno,srcfile]).
 
 % [graph,precall,topic,that,pattern,flags,call,guard,template,userdict]
 cateMemberTags(Result):- aimlCateOrder(List), findall(E,(member(E0,List),once((E0=[E|_];E0=E))), Result).
@@ -167,7 +163,7 @@ computeInner(Ctx,Votes, In, Out) :- expandVariables(Ctx,Votes, In, Out, _VoteMid
 
 
 unused_computeElement(Ctx,Votes, TAG, ATTRIBS, [DO|IT], OUT, NEWVOTE) :- recursiveTag(TAG),!,
-        withAttributes(_Ctx,filelevel,ATTRIBS,((findall(Out,((member(In,[DO|IT]),expandVariables(Ctx,Votes, In, Out, _VoteMid))),INNERDONE),
+        withAttributes(_Ctx,ATTRIBS,((findall(Out,((member(In,[DO|IT]),expandVariables(Ctx,Votes, In, Out, _VoteMid))),INNERDONE),
          NOUT=..[TAG,ATTRIBS,INNERDONE],!,
          computeAnswer(Ctx,Votes,NOUT,OUT,NEWVOTE)))).
 
@@ -188,7 +184,7 @@ computeElement(Ctx,Votes,GET,ATTRIBS,INNER,Resp,VotesO):- computeAnswer(Ctx,Vote
 
 % element inner reductions
 computeAnswer(Ctx,Votes, element(Tag, ATTRIBS, [DO|IT]), OUT, NEWVOTE) :- recursiveTag(Tag),not(DO=(_-_)),!,         
-        withAttributes(_Ctx,template,ATTRIBS,((findall(OutVoteMid,((member(In,[DO|IT]),computeInner(Ctx,Votes, In, OutVoteMid))),INNERDONE),
+        withAttributes(_Ctx,ATTRIBS,((findall(OutVoteMid,((member(In,[DO|IT]),computeInner(Ctx,Votes, In, OutVoteMid))),INNERDONE),
          NOUT=..[Tag,ATTRIBS,INNERDONE],!,
          computeAnswer(Ctx,Votes,NOUT,OUT,NEWVOTE)))).
 
@@ -285,7 +281,7 @@ computeSRAI(Ctx,Votes,Input,TopicStarO,VotesO):-
   TopicStarO \= [*].
 
 computeSRAI(Ctx,Votes,Input,_,_):- debugFmt(computeSRAI2(Ctx,Votes,Input)),fail.
-%computeSRAI(Ctx,Votes,Input,TopicStarO,VotesO):- computeSRAI2(Ctx,Votes,Input,TopicStarO,VotesO),TopicStarO \= [*].
+computeSRAI(Ctx,Votes,Input,TopicStarO,VotesO):- computeSRAI2(Ctx,Votes,Input,TopicStarO,VotesO),TopicStarO \= [*].
 
 % this next line is what it does on fallback
 %computeSRAI(Ctx,Votes,[B|Flat],[B|TopicStarO],VotesO):-computeSRAI(Ctx,Votes,Flat,TopicStarO,VotesO).
@@ -309,9 +305,8 @@ set_matchit([_,Input|_],[_,Input|_]).
 get_aiml_that(_Ctx,SaidThat,Match,Out):-what(SaidThat, Match,Out).
 get_aiml_that(_Ctx,[*],Match,Out):-response(Match,Out).
 
-%%%%aimlCate(graph,topic,that,pattern,flags,call,guard,template,userdict).
-get_aiml_that(_Ctx,[T|HAT],Match,Out):-aimlCate(_Graph,_Precall,_Topic,[T|HAT],Match,_Flags,_Call,_Guard,Out,_userdict,_,_).
-get_aiml_that(_Ctx,[*],Match,Out):-aimlCate(_Graph,_Precall,_Topic,that,Match,_Flags,_Call,_Guard,Out,_userdict,_,_).
+get_aiml_that(_CTX,[T|HAT],MATCH,OUT):-aimlCate(_GRAPH,_PRECALL,_TOPIC,[T|HAT],_INPUT,MATCH,_FLAGS,_CALL,_GUARD,_USERDICT,OUT,_LINENO,_SRCFILE).
+get_aiml_that(_CTX,[*],MATCH,OUT):-aimlCate(_GRAPH,_PRECALL,_TOPIC,(*),_INPUT,MATCH,_FLAGS,_CALL,_GUARD,_USERDICT,OUT,_LINENO,_SRCFILE).
 
 %get_aiml_cyc([*],[String|ListO],[Obj,*]):-poStr(Obj,[String|List]),append(List,[*],ListO).
 %get_aiml_cyc([*],[String,*],[Obj,*]):-poStr(Obj,String).

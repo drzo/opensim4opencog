@@ -116,7 +116,7 @@ convert_ele(_Ctx,element(a, [Target, Link], Name),A):-sformat(S,'<a ~q ~q>~w</a>
 convert_ele(_Ctx,element(a, [Link], Name),A):-sformat(S,'<a ~q>~w</a>',[Link, Name]),string_to_atom(S,A).
 
 %DELAY convert_ele(Ctx,element(get, [name=Var], []),get(Var)):-!.
-convert_ele(_Ctx,element(learn, filename=File),load_any_file(File)):-!.
+convert_ele(_Ctx,element(learn, [N=File]),load_any_file(File)):-pathAttrib(N),!.
 convert_ele(_Ctx,element(sr,ALIST,MORE),element(srai,ALIST,[element(star,ALIST,MORE)])):-!.
 convert_ele(_Ctx,element(star,ALIST,MORE),star(pattern,XLAT2,MORE2)):-!,starIndex(star,pattern,ALIST,MORE,XLAT2,MORE2).
   starIndex(_Tag,_Star,ALIST,MORE,XLAT2,MORE2):-convert_attributes(Ctx,ALIST,XLAT2),convert_template(Ctx,MORE,MORE2),!.
@@ -149,6 +149,8 @@ convert_ele(Ctx,element(A, B, C),INNER_XML):-
       convert_template(Ctx,C,CC),!, 
    (element(A, B, C) == element(AA, BB, CC) ->  INNER_XML=element(AA, BB, CC); convert_element(Ctx,element(AA, BB, CC),INNER_XML)),!.
 
+convert_ele(Ctx,element(Tag, A, B),element(Tag, A, BB)):- member(Tag,[category,srai]), convert_template(Ctx,B,BB).
+
 convert_ele(_Ctx,O,O).
 
 
@@ -161,10 +163,7 @@ convert_name(A,AAA):-convert_name0(A,AA), (A==AA -> AAA=AA ; convert_name(AA,AAA
 
 convert_name0(A,AA):-toLowercase(A,AA).
 convert_name0(var,name).
-convert_name0(file,uri).
-convert_name0(path,uri).
-convert_name0(dir,uri).
-convert_name0(filename,uri).
+convert_name0(Attrib,uri):-pathAttrib(Attrib),!.
 
 % ===================================================================
 % ===================================================================

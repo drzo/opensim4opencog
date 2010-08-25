@@ -79,6 +79,20 @@ directory_of_file(File,Start,Hints,Dir):- member(Dir,Hints),join_pathnames(Dir,F
 
 
 :-['cynd/cyc'].
+
+:-abolish(cyc:debugFmt/1).
+cyc:debugFmt(Stuff):- notrace((debugFmtS(Stuff))),!.
+debugFmtS([]):-!.
+debugFmtS([A|L]):-!,debugFmt('% ~q~n',[[A|L]]).
+debugFmtS(Comp):-hideIfNeeded(Comp,Comp2),!,debugFmt('% ~q~n',[Comp2]).
+debugFmtS(Stuff):-!,debugFmt('% ~q~n',[Stuff]).
+
+
+hideIfNeeded(I,I):-var(I),!.
+hideIfNeeded([frame(_,_,_)|_],ctx):-!.
+hideIfNeeded(Comp,Comp2):-compound(Comp),Comp=..[L,I|ST],hideIfNeeded(I,II),Comp2=..[L,II|ST].
+hideIfNeeded(I,I):-!.
+
 :-['cynd/logicmoo_module_aiml.pl'].
 %%:-assertz(librar
 %file_search_path(X,Y).
