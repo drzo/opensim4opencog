@@ -1,4 +1,3 @@
-
 % ===================================================================
 % File 'logicmoo_module_aiml_loader.pl'
 % Purpose: An Implementation in SWI-Prolog of AIML
@@ -18,29 +17,34 @@
 
 :-dynamic(dict/3).
 
-%%%retractall(E):- retractall(E),functor(E,F,A),dynamic(F/A),!.
+%%%retractall(E):- retractall(E),functor(E,File,A),dynamic(File/A),!.
 
-pp_listing(_Pred):-!. %%functor(Pred,F,A),functor(FA,F,A),listing(F),nl,findall(NV,predicate_property(FA,NV),LIST),writeq(LIST),nl,!.
+pp_listing(_Pred):-!. %%functor(Pred,File,A),functor(FA,File,A),listing(File),nl,findall(NV,predicate_property(FA,NV),LIST),writeq(LIST),nl,!.
 
 
+printPredCount(Msg,Pred,N1):- arg(_,Pred,NG),nonvar(NG),!,
+   findall(Pred,Pred,LEFTOVERS),length(LEFTOVERS,N1),debugFmt(num_clauses(Msg,Pred,N1)),!.
 
-printPredCount(Msg,Pred):-arg(_,Pred,NG),nonvar(NG),!,
-   findall(Pred,Pred,LEFTOVERS),
-   length(LEFTOVERS,N1),
-   debugFmt(num_clauses(Msg,Pred,N1)),!.
+printPredCount(Msg,Pred,N1):-!,functor(Pred,File,A),functor(FA,File,A), predicate_property(FA,number_of_clauses(N1)),debugFmt(num_clauses(Msg,File/A,N1)),!.
 
-printPredCount(Msg,Pred):-!,functor(Pred,F,A),functor(FA,F,A), predicate_property(FA,number_of_clauses(N1)),debugFmt(num_clauses(Msg,F/A,N1)),!.
 
 % ===================================================================
 % attribute searching
 % ===================================================================
 
+attributeOrTagValue(Ctx,ATTRIBS,NameS,ValueO,_Else):- notrace((attributeValue(Ctx,ATTRIBS,NameS,ValueO,failure))),!.
+attributeOrTagValue(Ctx,XML,NameS,ValueO,_Else):- notrace((findTagValue(Ctx,XML,NameS,ValueO,failure))),!.
+attributeOrTagValue(Ctx,ATTRIBS,NameS,ValueO,_Else):-compound(ATTRIBS),ATTRIBS=..LIST,member(E,LIST),attributeOrTagValue(Ctx,E,NameS,ValueO,failure),!.
+attributeOrTagValue(Ctx,_,NameS,ValueO,ElseVar):-makeParamFallback(Ctx,NameS,ValueO,ElseVar),!.
+
+
 attributeValue(Ctx,ATTRIBS,NameS,ValueO,Else):- notrace((attributeValue0(Ctx,ATTRIBS,NameS,ValueI,Else), aiml_eval_to_unit(Ctx,ValueI,ValueO))),!.
+attributeValue(Ctx,ATTRIBS,NameS,ValueO,Else):-   trace,attributeValue0(Ctx,ATTRIBS,NameS,ValueI,Else), aiml_eval_to_unit(Ctx,ValueI,ValueO),!.
 
 attributeValue0(_Ctx,ATTRIBS,NameS,ValueO,_Else):- member(Name,NameS), member(NameE=ValueO,ATTRIBS), atomsSameCI(Name,NameE),!.
-attributeValue0(Ctx,_ATTRIBS,NameS,ValueO, CurrentValue):- CurrentValue == 'current_value', member(Name,NameS), current_value(Ctx,Name,ValueO),valuePresent(ValueO),!.
+attributeValue0(Ctx,_ATTRIBS,NameS,ValueO,current_value):-member(Name,NameS), current_value(Ctx,Name,ValueO),valuePresent(ValueO),!.
 attributeValue0(_Ctx,_ATTRIBS,_NameS,_Value,Failure):-failure==Failure,!,fail.
-attributeValue0(Ctx,ATTRIBS,NameS,Value,Error):-'error'==Error,  
+attributeValue0(Ctx,ATTRIBS,NameS,Value,Error):-error==Error,  
    aiml_error(attributeValue(Ctx,ATTRIBS,NameS,Value,error)).
 attributeValue0(_Ctx,_ATTRIBS,_Name,ValueO,Else):-ValueO=Else,!.
 
@@ -61,17 +65,6 @@ findTagValue(Ctx,XML,[NameE=_|_],ValueO,_Else):-
 
 findTagValue(Ctx,XML,NameS,ValueO,Else):-member(INNERXML,XML),findTagValue(Ctx,INNERXML,NameS,ValueO,Else),!.
 findTagValue(Ctx,_XML,_Name,ValueO,Else):-ValueI=Else,!,aiml_eval_to_unit(Ctx,ValueI,ValueO),!.
-
-current_value(Ctx,Name,ValueI):-notrace(peekNameValue(Ctx,_,Name,ValueI)),!.
-
-
-
-
-
-
-attributeOrTagValue(Ctx,ATTRIBS,NameS,ValueO,_Else,_XML):- notrace((attributeValue(Ctx,ATTRIBS,NameS,ValueO,failure))),!.
-attributeOrTagValue(Ctx,_ATTRIBS,NameS,ValueO,Else,XML):- notrace((findTagValue(Ctx,XML,NameS,ValueO,Else))),!.
-
 
 %['name'='SomeName','Description'='some descr','Input'='error','ExpectedAnswer'='SomeAnswwer']
 
@@ -94,7 +87,7 @@ getAttributeOrTags1(Ctx,[N=_Default|More],ATTRIBS,INNERXML,[N0=ValueO|NormalProp
       getAttributeOrTags1(Ctx,More,ATTRIBS,INNERXML,NormalProps),!.
 
 getAttributeOrTags1(Ctx,[N=Default|More],ATTRIBS,INNERXML,[N=Found|NormalProps]):- 
-      attributeOrTagValue(Ctx,ATTRIBS,[N],Found,Default,INNERXML),
+      attributeOrTagValue(Ctx,ATTRIBS:INNERXML,[N],Found,Default),
       getAttributeOrTags1(Ctx,More,ATTRIBS,INNERXML,NormalProps),!.
 
 getAttributeOrTags1(Ctx,[N=Default|More],ATTRIBS,INNERXML,[N=Default|NormalProps]):- 
@@ -104,8 +97,55 @@ getAttributeOrTags1(Ctx,[N=Default|More],ATTRIBS,INNERXML,[N=Default|NormalProps
 set_current_value(Ctx,N,V):-pushNameValue(Ctx,user,N,V).
 
 % =================================================================================
+% AIML Loader Utils
+% =================================================================================
+
+dynamic_load(Key,PLNAME):- creating_aiml_file(Key,PLNAME),throw(creating_aiml_file(Key,PLNAME)).
+dynamic_load(Key,PLNAME):- not(ground(dynamic_load(Key,PLNAME))),throw(not(ground(dynamic_load(Key,PLNAME)))).
+dynamic_load(Key,PLNAME):- loaded_aiml_file(Key,PLNAME),trace,throw(loaded_aiml_file(Key,PLNAME)).
+dynamic_load(Key,PLNAME):- assert(loaded_aiml_file(Key,PLNAME)),fail.
+
+dynamic_load(Key,_PLNAME):- nonvar(Key), once(cateForFile(_,Key,Cate)),Cate,!.
+
+dynamic_load(_Key,PLNAME):- consult(PLNAME),!.
+dynamic_load(_Key,PLNAME):- %% unload_file(PLNAME),
+     open(PLNAME, read, In, []),
+     repeat,
+      line_count(In,Lineno),
+      %% double_quotes(_DQBool)
+      Options = [variables(_Vars),variable_names(_VarNames),singletons(_Singletons),comment(_Comment)],
+      catch((read_term(In,Term,[syntax_errors(error)|Options])),E,(debugFmt(E),fail)),      
+      load_term(Term,[line_count(Lineno),file(PLNAME),stream(In)|Options]),
+     Term==end_of_file,
+     close(In).
+
+load_term(end_of_file,_Options):-!.
+load_term(Term,Options):-catch(load_term2(Term,Options),E,(debugFmt(error(load_term(Term,Options,E))),throw(E))).
+
+load_term2(':-'(Term),Options):-!,load_dirrective(Term,Options),!.
+load_term2(:-(H,B),Options):-!,load_assert(H,B,Options).
+load_term2(Fact,Options):-!,load_assert(Fact,true,Options).
+
+load_assert(H,B,_Options):-assert((H:-B)),!.
+
+load_dirrective(include(PLNAME),_Options):-  (atom_concat_safe(Key,'.pl',PLNAME);Key=PLNAME),!,dynamic_load(Key,PLNAME).
+load_dirrective(module(M,Preds),_Options):-!,module(M),call(module(M,Preds)).
+load_dirrective(Term,_Options):-!,Term.
+
+showProfilerStatistics(FileMatch):-
+   statistics(global,Mem), MU is (Mem / 1024 / 1024),
+   printPredCount('showProfilerStatistics: '(MU),FileMatch,_N1).
+
+aimlPredCount:-printAll(aimlPredCount(_,_,0)),printAll((aimlPredCount(Pred,File,Count),Count>0),aimlPredCount(Pred,File,Count)).
+aimlPredCount(Pred,File,Count):-source_file(File),atom_contains(File,'aiml'),source_file(Pred,File),functor(Pred,F,A),current_predicate(F/A),
+    predicate_property(Pred,dynamic),predicate_property(Pred,number_of_clauses(Count)).
+
+% =================================================================================
 % AIML Loading
 % =================================================================================
+reloadAimlFiles:-withCurrentContext(reloadAimlFiles).
+reloadAimlFiles(Ctx):-forall(retract(loaded_aiml_file(A,P)),assert(pending_aiml_file(A,P))),do_pending_loads(Ctx).
+
 %%load_aiml_files:- aimlCateSig(CateSig),retractall(CateSig),fail.
 load_aiml_files:-once(load_aiml_files('aiml/test_suite/*.aiml')),fail.
 %%load_aiml_files:-once(load_aiml_files(Ctx,'*.aiml')),fail.
@@ -114,107 +154,137 @@ load_aiml_files.
 
 %%tell(f5),load_aiml_files('part5/*.aiml'),told.
 
+% mandy 206-598-2685
+load_aiml_files(Files):-currentContext(load_aiml_files,Ctx),load_aiml_files(Ctx,Files),!,do_pending_loads(Ctx).
 
-load_aiml_files(Files):-currentContext(load_aiml_files,Ctx),load_aiml_files(Ctx,Files),!.
-load_aiml_files(_Ctx,[]):-!.
-load_aiml_files(Ctx,[F|Rest]):-!,debugOnFailureAiml((load_aiml_files(Ctx,F),load_aiml_files(Ctx,Rest))),!.
-load_aiml_files(Ctx,F):-not(atom(F)),!, debugOnFailureAiml(load_aiml_structure(Ctx,F)),!.
-load_aiml_files(Ctx,F):-exists_file(F),!,debugOnFailureAiml(load_single_aiml_file(Ctx,F)),!.
-load_aiml_files(Ctx,F):-file_name_extension(F,'aiml',Aiml), exists_file(Aiml),!,debugOnFailureAiml(load_single_aiml_file(Ctx,Aiml)),!.
-load_aiml_files(Ctx,F):-exists_directory(F),!,aiml_files(F,Files),!,debugOnFailureAiml(load_aiml_files(Ctx,Files)),!.
-load_aiml_files(Ctx,F):-debugOnFailureAiml(expand_file_name(F,FILES)),debugOnFailureAiml(load_aiml_files(Ctx,FILES)),!.
+load_aiml_files(Ctx,File):- not(is_list(File);atom(File)),!, debugOnFailureAiml((load_aiml_structure(Ctx,File),!,do_pending_loads(Ctx))).
+load_aiml_files(Ctx,File):- setCtxValue(withCategory,Ctx,[writeqnl,assert_new]), with_files(load_single_aiml_file(Ctx),File),!,do_pending_loads(Ctx).
 
 
-aiml_files(F,Files):-atom(F),sub_atom(F,_Before,_Len,_After,'*'),!,expand_file_name(F,Files),!.
-aiml_files(F,Files):-atom_concat_safe(F,'/',WithSlashes),absolute_file_name(WithSlashes,[relative_to('./')],WithOneSlash),
+translate_aiml_files(Files):-currentContext(translate_aiml_files,Ctx),translate_aiml_files(Ctx,Files),!.
+
+translate_aiml_files(Ctx,File):-not(is_list(File);atom(File)),translate_aiml_structure(Ctx,File),!.
+translate_aiml_files(Ctx,File):-with_files(translate_single_aiml_file(Ctx),File),!.
+
+
+with_files(_Verb,[]):-!.
+with_files(Verb,[File|Rest]):-!,maplist_safe(Verb,[File|Rest]),!,do_pending_loads.
+with_files(Verb,File):-exists_directory(File),!,aiml_files(File,Files),with_files(Verb,Files),!.
+with_files(Verb,File):-exists_file(File),!,with_files(Verb,[File]).
+with_files(Verb,File):-expand_file_name(File,FILES),not([File]=FILES),with_files(Verb,FILES),!.
+with_files(Verb,File):-file_name_extension(File,'aiml',Aiml), exists_file(Aiml),!,with_files(Verb,[File]).
+with_files(Verb,File):-debugOnFailureAiml(call(Verb,File)).
+%%with_files(Verb,File):-throw(error(existence_error(source_sink, File),functor(Verb,F,A),context(F/A, 'No such file or directory'))).
+
+aiml_files(File,Files):-atom(File),sub_atom(File,_Before,_Len,_After,'*'),!,expand_file_name(File,Files),!.
+aiml_files(File,Files):-atom_concat_safe(File,'/',WithSlashes),absolute_file_name(WithSlashes,[relative_to('./')],WithOneSlash),
                     atom_concat_safe(WithOneSlash,'*.aiml',Mask),expand_file_name(Mask,Files),!.
 
-aimlOption(rebuild_Aiml_Files,true).
+aimlOption(rebuild_Aiml_Files,false).
 
 load_single_aiml_file(Ctx,F0):-
-   global_pathname(F0,F),
-   atom_concat_safe(F,'.pl',PLNAME),
-   create_aiml_file2(Ctx,F,PLNAME),!,
-   makeAimlCate(Ctx,[filename=F],FileMatch),
-   printPredCount('Cleaning',FileMatch),
-   retractall(FileMatch),
-   debugOnFailureAiml(dynamic_load(PLNAME)),
-   printPredCount('Loaded',FileMatch).
+  debugOnFailureAiml((
+   global_pathname(F0,File),
+   cateForFile(Ctx,File,FileMatch),
+   atom_concat_safe(File,'.pl',PLNAME),
+   create_aiml_file2(Ctx,File,PLNAME,FileMatch),!,
+   assert(pending_aiml_file(File,PLNAME)))),!.
 
-dynamic_load(File):- %%load_files(Files, []).
-     unload_file(File),
-     open(File, read, In, []),
-     repeat,line_count(In,Lineno),
-     %% double_quotes(_DQBool)
-     Options = [variables(_Vars),variable_names(_VarNames),singletons(_Singletons),comment(_Comment)],
-     catch((read_term(In,Term,[syntax_errors(error)|Options])),E,(debugFmt(E),fail)),      
-     load_term(In,Term,[line_count(Lineno),file(File),stream(In)|Options],TODO),TODO.
 
-load_term(In,end_of_file,Options,close(In)):-member(stream(In),Options),!.
-load_term(In,Term,Options,TODO):-catch((load_term2(Term,Options),TODO=fail),E,(debugFmt(error(load_term(Term,Options),E)),TODO=(close(In),throw(E)))).   
+translate_single_aiml_file(Ctx,F0):-
+  debugOnFailureAiml((
+   global_pathname(F0,File),
+   cateForFile(Ctx,File,FileMatch),
+   atom_concat_safe(File,'.pl',PLNAME),
+   create_aiml_file2(Ctx,File,PLNAME,FileMatch))),!.
 
-load_term2(':-'(Term),Options):-!,load_dirrective(Term,Options),!.
-load_term2(:-(H,B),Options):-!,load_assert(H,B,Options).
-load_term2(Fact,Options):-!,load_assert(Fact,true,Options).
+translate_aiml_structure(X,X).
 
-load_assert(H,B,_Options):-assert((H:-B)),!.
+cateForFile(_Ctx,File,aimlCate(_A,_B,_C,_D,_E,_F,_G,_H,_I,_J,_K, File)):-!.
+cateForFile(Ctx,File,FileMatch):- trace,withNamedValue(Ctx,[anonvarsFroCate=true], makeAimlCate(Ctx,[filename=File],FileMatch)),!.
 
-load_dirrective(include(File),_Options):-!,dynamic_load(File).
-load_dirrective(module(Term),_Options):-!,Term.
-load_dirrective(module(M,Preds),_Options):-!,module(M),call(module(M,Preds)).
-load_dirrective((Term),_Options):-!,Term.
+withNamedValue(Ctx,[N=V],Call):-withAttributes(Ctx,withNamedValue,[N=V],Call),!.
 
 % =================================================================================
 % AIML -> Prolog pretransating
 % =================================================================================
-:-dynamic(creating_aiml_file2/2).
-create_aiml_file2(_Ctx,File,PLNAME):-creating_aiml_file2(File,PLNAME),!,
-   debugFmt(already(creating_aiml_file2(File,PLNAME))).
 
-create_aiml_file2(_Ctx,File,PLNAME):-
+withCurrentContext(Goal):-prolog_must(atom(Goal)),debugOnFailureAiml((currentContext(Goal,Ctx),call(Goal,Ctx))).
+
+:-dynamic(creating_aiml_file/2).
+:-dynamic(loaded_aiml_file/2).
+:-dynamic(pending_aiml_file/2).
+
+do_pending_loads:-withCurrentContext(do_pending_loads).
+do_pending_loads(Ctx):-forall(retract(pending_aiml_file(File,PLNAME)),load_pending_aiml_file(Ctx,File,PLNAME)).
+
+load_pending_aiml_file(Ctx,File,PLNAME):- debugFmt(load_pending_aiml_file(Ctx,File,PLNAME)),
+  catch(debugOnFailureAiml(dynamic_load(File,PLNAME)),E,(debugFmt(E),assert(pending_aiml_file(File,PLNAME)))),!.
+
+create_aiml_file2(_Ctx,File,PLNAME,FileMatch):- creating_aiml_file(File,PLNAME),!, throw(already(creating_aiml_file(File,PLNAME),FileMatch)).
+create_aiml_file2(_Ctx,File,PLNAME,FileMatch):- loaded_aiml_file(File,PLNAME),!, throw(already(loaded_aiml_file(File,PLNAME),FileMatch)).
+
+create_aiml_file2(_Ctx,File,PLNAME,_FileMatch):-
    exists_file(PLNAME),
    time_file_safe(PLNAME,PLTime), % fails on non-existent
    time_file_safe(File,FTime),
-   not(aimlOption(rebuild_Aiml_Files,true)),
+   %not(aimlOption(rebuild_Aiml_Files,true)),
    PLTime > FTime,!,
-   debugFmt(reusing(create_aiml_file(File,PLNAME))),!.
+   debugFmt(up_to_date(create_aiml_file(File,PLNAME))),!.
 
-create_aiml_file2(Ctx,File,PLNAME):-
-        asserta(creating_aiml_file2(File,PLNAME)),
+create_aiml_file2(Ctx,File,PLNAME,FileMatch):-        
+        asserta(creating_aiml_file(File,PLNAME)),
         debugFmt(doing(create_aiml_file(File,PLNAME))),
-        aimlCateSig(CateSig),
-        retractall(lineInfoElement(File,_,_,_)),
-        retractall(xmlns(_,_,_)),
+        aimlCateSig(CateSig),!,
+        printPredCount('Cleaning',FileMatch,_CP),
         tell(PLNAME),
    (format('%-----------------------------------------~n')),
-        listing(CateSig),
-        retractall(CateSig),
+        unify_listing(FileMatch),
+        retractall(FileMatch),
         flag(cateSigCount,PREV_cateSigCount,0),
    (format('%-----------------------------------------~n')),
         fileToLineInfoElements(Ctx,File),!,             
    (format('%-----------------------------------------~n')),
-        findall(lineInfoElement(File,A,B,C),((lineInfoElement(File,A,B,C),(format('~q.~n',[lineInfoElement(File,A,B,C)])))),_),
+        unify_listing(FileMatch),
    (format('%-----------------------------------------~n')),
         listing(xmlns),
    (format('%-----------------------------------------~n')),
         told,
         flag(cateSigCount,NEW_cateSigCount,PREV_cateSigCount),
-        printPredCount('Errant Lines',lineInfoElement(File,_,_,_)),
-        printPredCount('Total Categories',CateSig),!,
+        printPredCount('Errant Lines',lineInfoElement(File,_,_,_),_EL),
+        printPredCount('Total Categories',CateSig,_TC),!,
         debugFmt('NEW_cateSigCount=~q~n',[NEW_cateSigCount]),!,
-        retractall(creating_aiml_file2(File,PLNAME)),!.
+        statistics(global,Mem),MU is (Mem / 1024 / 1024),
+        debugFmt(statistics(global,MU)),!,
+        printPredCount('Loaded',FileMatch, FM),
+       %% retractall(FileMatch),
+        retractall(lineInfoElement(File,_,_,_)),
+        retractall(xmlns(_,_,_)),        
+        retractall(creating_aiml_file(File,PLNAME)),
+        ignore((FM == 0 , retractall(loaded_aiml_file(File,PLNAME)),assert(pending_aiml_file(File,PLNAME)))),!.
 
 
+unify_listing(FileMatch):-functor(FileMatch,F,A),unify_listing(FileMatch,F,A),!.
+
+unify_listing(FileMatch,F,A):- (format('~n/* Prediate:  ~q / ~q  ~n',[F,A,FileMatch])),fail.
+unify_listing(FileMatch,_F,_A):- printAll(predicate_property(FileMatch,PP),PP),fail.
+unify_listing(FileMatch,_F,_A):- (format('~n ~q. ~n */ ~n',[FileMatch])),fail.
+unify_listing(FileMatch,F,A):-predicate_property(FileMatch,dynamic),(format(':-dynamic(~q).~n',[F/A])),fail.
+unify_listing(FileMatch,F,A):-predicate_property(FileMatch,multifile),(format(':-multifile(~q).~n',[F/A])),fail.
+unify_listing(FileMatch,_F,_A):- printAll(FileMatch).
+
+printAll(FileMatch):-printAll(FileMatch,FileMatch).
+printAll(Call,Print):-forall(Call,(format('~q.~n',[Print]))).
 
 /*
-create_aiml_file2xxx(Ctx,F,PLNAME):-
+create_aiml_file2xxx(Ctx,File,PLNAME):-
   debugOnFailureAiml((
      Dofile = true,
      aimlCateSig(CateSig),
    ifThen(Dofile,tell(PLNAME)),
-   (format(user_error,'%~w~n',[F])),
-   load_structure(F,X,[dialect(xml),space(remove)]),!,  
-   ATTRIBS = [filename=F],!,
+   (format(user_error,'%~w~n',[File])),
+   load_structure(File,X,[dialect(xml),space(remove)]),!,  
+   ATTRIBS = [filename=File],!,
    pushAttributes(Ctx,filelevel,ATTRIBS),
    load_aiml_structure_list(Ctx,X),!,
    popAttributes(Ctx,filelevel,ATTRIBS),!,
@@ -348,7 +418,6 @@ load_inner_aiml_lineno(Attributes,Ctx,element(Tag,Attribs,ContentIn)):-
 
    */
 
-
 %catagory
 load_aiml_structure(Ctx,element(catagory,ALIST,LIST)):-load_aiml_structure(Ctx,element(category,ALIST,LIST)),!.
 
@@ -464,8 +533,8 @@ load_substs(Ctx,element(Tag,ALIST,LIST)):- substitutionDictsName(Tag,Dict),
 load_substs(Ctx,element(substitute,ATTRIBS,LIST)):-
    debugOnFailureAiml((
       peekNameValue(Ctx,filelevel,dictionary,substitutions(Catalog)),
-      attributeOrTagValue(Ctx,ATTRIBS,[find,name,before],Find,error,LIST),
-      attributeOrTagValue(Ctx,ATTRIBS,[replace,value,after],Replace,error,LIST),
+      attributeOrTagValue(Ctx,element(substitute,ATTRIBS,LIST),[find,name,before],Find,error),
+      attributeOrTagValue(Ctx,element(substitute,ATTRIBS,LIST),[replace,value,after],Replace,error),
       debugOnFailureAiml(load_dict_structure(Ctx,dict(substitutions(Catalog),Find,Replace))))),!.
 
 % substitutions
@@ -475,8 +544,8 @@ load_dict_structure(Ctx,element(substitution,ATTRIBS,LIST)):- load_substs(Ctx,el
 
 load_dict_structure(Ctx,substitute(Dict,Find,Replace)):-
   debugOnFailureAiml((
-      convert_text(Find,F),!,convert_text(Replace,Resp),!,
-      load_dict_structure(Ctx,dict(substitutions(Dict),F,Resp)))),!.
+      convert_text(Find,File),!,convert_text(Replace,Resp),!,
+      load_dict_structure(Ctx,dict(substitutions(Dict),File,Resp)))),!.
 
 % actual assertions
 load_dict_structure(_Ctx,dict(Dict,Name,Value)):-
@@ -490,7 +559,7 @@ convert_text([],''):-!.
 convert_text(C,D):-is_list(C),!,convert_text_list(C,D),!.
 convert_text(A,O):-atom(A),!,convert_atom(A,O).
 convert_text(A,''):-ignore_aiml(A),!.
-convert_text(E,F):-aiml_error(convert_text(E,F)),!,E=F.
+convert_text(E,File):-aiml_error(convert_text(E,File)),!,E=File.
 
 
 convert_text_list([],[]):-!.
@@ -499,7 +568,7 @@ convert_text_list(M,C):-delete(M,'',B), (M == B -> C=B ; convert_text_list(B,C))
 convert_text_list([A|AA],BBB):-convert_text(A,B),convert_text_list(AA,BB),!,flattem_append(B,BB,BBB0),!,BBB=BBB0.
 
 convert_atom(A,Z):-convert_atom0(A,Y),!,Y=Z.
-convert_atom(E,F):-aiml_error(convert_atom(E,F)),!,E=F.
+convert_atom(E,File):-aiml_error(convert_atom(E,File)),!,E=File.
 %convert_atom(A,C):-atom_to_number(A,C),!.
 convert_atom0(A,A):-concat_atom_safe([A],' ',A).
 convert_atom0(A,C):-atomSplit(A,M),!,convert_text(M,C),!.
@@ -511,8 +580,8 @@ flattem_append(A,B,BBB):-flatten([A],AA),!,flatten([B],BB),!,append(AA,BB,BBB),!
 :-dynamic(replace_t/5).
 :-dynamic(response_t/5).
                 
-saveFAttribute(Ctx,F,A):-saveDFAttribute(Ctx,F,A),!.
-saveFAttribute(Ctx,F,A):-asserta(saveDFAttribute(Ctx,F,A)),dynamic(F/A).
+saveFAttribute(Ctx,File,A):-saveDFAttribute(Ctx,File,A),!.
+saveFAttribute(Ctx,File,A):-asserta(saveDFAttribute(Ctx,File,A)),dynamic(File/A).
 
 tagType(Tag,immediate):-evaluatorsDicts(Tag),!.
 
@@ -543,6 +612,8 @@ popNameValue(_Ctx,Scope,N,V):-
    prolog_must(ground(popNameValue1(Scope,N,V))),!.
 
 dyn_retract(dict(Scope,N,V)):-(retract(dict(Scope,N,V))),!.
+
+peekNameValue(_Ctx,Scope,N,V):-dict(Scope,N,V),!.
 
 
 
@@ -588,7 +659,7 @@ classifySingle('_',var('_')).
 classifySingle(*,var('*')).
 classifySingle(Atom,in):-atom(Atom),all_upper_atom(Atom).
 classifySingle(Atom,out):-atom(Atom).
-classifySingle(Atom,spec(F)):-compound(Atom),functor(Atom,F,_).
+classifySingle(Atom,spec(File)):-compound(Atom),functor(Atom,File,_).
 classifySingle(_Atom,unknown).
 
                                         
@@ -632,21 +703,26 @@ arg2(_UnboundDefault,Value,Value):-!.
 
 makeAimlCate2(_Ctx,LIST,UnboundDefault,Value):- arg2OfList(UnboundDefault,LIST,LISTO), Value =.. [aimlCate|LISTO],!.
 
-makeAimlParams(Ctx,[O|Order],Assert,UnboundDefault,[N=RR|Result]):-
-   makeAimlSingleParam(Ctx,O,Assert,UnboundDefault,N,R),transformTagData(Ctx,N,R,RR),!,
+makeAimlParams(Ctx,[O|Order],Assert,UnboundDefault,[Tag=RR|Result]):-
+   makeAimlSingleTag(Ctx,O,Assert,UnboundDefault,Tag,RR),
    makeAimlParams(Ctx,Order,Assert,UnboundDefault,Result),!.
-
 makeAimlParams(_Ctx,[],_,_,[]).
 
-makeAimlSingleParam(_Ctx,[N|L],ATTRIBS,_D,N,R):-member(O,[N|L]),member(OI=R,ATTRIBS),atomsSameCI(O,OI),!.
-makeAimlSingleParam(Ctx,[N|_],_,D1,N,D2):- makeParamResult(Ctx,N,D1,D2),!.
-makeAimlSingleParam(_Ctx,N,ATTRIBS,_D,N,R):-member(N=R,ATTRIBS),!.
-makeAimlSingleParam(Ctx,N,_,D1,N,UnboundDefault):-makeParamResult(Ctx,N,D1,UnboundDefault),!.
 
-makeParamResult(Ctx,N,current_value,UnboundDefault):-current_value(Ctx,N,UnboundDefault),!.
-makeParamResult(Ctx,N,current_value,UnboundDefault):-peekNameValue(Ctx,_,N,UnboundDefault),!.
-makeParamResult(_Ctx,_N,UnboundDefault,UnboundDefault):-!.
+makeAimlSingleTag(Ctx,Name,ATTRIBS,Default,Tag,Result):-atom(Name),!,makeAimlSingleTag(Ctx,[Name],ATTRIBS,Default,Tag,Result).
+makeAimlSingleTag(Ctx,NameS,ATTRIBS,Default,Tag,ValueO):-makeAimlSingleParam0(Ctx,NameS,ATTRIBS,Default,Tag,ValueI),
+      transformTagData(Ctx,Tag,Default,ValueI,ValueO).
 
+makeAimlSingleParam0(_Ctx,[N|NameS],ATTRIBS,_D,N,Value):-member(O,[N|NameS]),member(OI=Value,ATTRIBS),atomsSameCI(O,OI),!.
+makeAimlSingleParam0(Ctx,[N|NameS],_,ElseVar,N,Value):- makeParamFallback(Ctx,[N|NameS],Value,ElseVar),!.
+
+makeParamFallback(Ctx,Name,Value,ElseVar):-atom(Name),!,makeParamFallback(Ctx,[Name],Value,ElseVar).
+makeParamFallback(_Ctx,_NameS,Value,ElseVar):-'var'(ElseVar),!,Value=ElseVar,!.
+makeParamFallback(_Ctx,_NameS,_Value,'failure'):-!,fail.
+makeParamFallback(_Ctx,_NameS,_Value,'call'(Prolog)):-!,Prolog.
+makeParamFallback(Ctx,NameS,Value,'error'):-aiml_error(makeParamFallback(Ctx,NameS,Value,error)),throw(allbackValue(Ctx,NameS,Value,error)),!.
+makeParamFallback(Ctx,NameS,ValueO, 'current_value'):- member(Name,NameS),current_value(Ctx,Name,ValueO),valuePresent(ValueO),!.
+makeParamFallback(_Ctx,_NameS,ValueO,Else):-ValueO=Else,!.
 
 % ===============================================================================================
 %  Load Categories
@@ -723,9 +799,9 @@ each_pattern(Ctx,ATTRIBS,NOPATTERNS,element(TAG,ALIST,PATTERN)):-
    gatherEach(Ctx,[TAG=PATTERN|NEWATTRIBS],NOPATTERNS,Results),
    prolog_must(dumpListHere(Ctx,Results)))),!.
 
-dumpListHere(Ctx,CateProperties):- %%debugFmt(CateProperties),
-   current_value(Ctx,withAiml,DoWhat),
-   debugOnFailureAiml((assertCate(Ctx,CateProperties,DoWhat))).
+dumpListHere(Ctx,DumpListHere):- %%debugFmt(DumpListHere),
+   current_value(Ctx,withCategory,Verbs),
+   debugOnFailureAiml((assertCate(Ctx,DumpListHere,Verbs))).
 %%dumpListHere([]):-debugFmt(dumpListHere).
 %%dumpListHere([R|Results]):-debugFmt(R),dumpListHere(Results),!.
 
@@ -736,7 +812,7 @@ gatherEach(Ctx,NEWATTRIBS,[element(TAG,ALIST,PATTERN)|NOPATTERNS],RESULTS):- inn
       gatherEach(Ctx,NEWATTRIBS,[element(That,WA,WP),element(TAG,ALIST,NOTHAT)|NOPATTERNS],RESULTS),!.
 
 gatherEach(Ctx,NEWATTRIBS,[element(TAG,ALIST,PATTERN_IN)|NOPATTERNS],[TAG=PATTERN_OUT|Result]):- 
-      transformTagData(Ctx,TAG,PATTERN_IN,PATTERN_OUT),!,
+      transformTagData(Ctx,TAG,current_value,PATTERN_IN,PATTERN_OUT),!,
       gatherEach(Ctx,NEWATTRIBS,NOPATTERNS,ResultM),append(ALIST,ResultM,Result),!.
 
 
@@ -744,7 +820,35 @@ each_template(Ctx,M):-debugFmt('FAILURE'(each_template(Ctx,M))),trace.
 each_that(Ctx,M):-debugFmt('FAILURE'(each_that(Ctx,M))),trace.
 
 
+% ===============================================================================================
+%  refomat type transformations
+% ===============================================================================================
 
+isVerbatumTag(N):-memberchk(N,[call,precall,filename]),!.
+
+transformTagData(Ctx,[Name|S],Else,ValueI,ValueO):- member(N,[Name|S]),transformTagData0(Ctx,N,Else,ValueI,ValueO).
+transformTagData(Ctx,[Name|S],Else,ValueI,ValueO):- member(N,[Name|S]),!,transformTagData1(Ctx,N,Else,ValueI,ValueO).
+transformTagData(Ctx,Tag,Else,ValueI,ValueO):-transformTagData0(Ctx,Tag,Else,ValueI,ValueO).
+transformTagData(Ctx,Tag,Else,ValueI,ValueO):-transformTagData1(Ctx,Tag,Else,ValueI,ValueO).
+
+transformTagData0(_Ctx,TAG,_Default,[*],TAG).
+transformTagData0(_Ctx,TAG,_Default,*,TAG).
+transformTagData0(Ctx,Tag,_Else,ValueI,ValueO):- ValueI==current_value, current_value(Ctx,Tag,ValueO),!.
+transformTagData0(_Ctx,N,_Else,ValueO,ValueO):-isVerbatumTag(N),!, member(ValueO,[current_value]),!.
+transformTagData0(Ctx,TAG,_Default,PATTERN_IN,PATTERN_OUT):-isPatternTag(TAG),convert_pattern(Ctx,PATTERN_IN,PATTERN_OUT),!.
+transformTagData0(Ctx,TAG,_Default,PATTERN_IN,PATTERN_OUT):-isOutputTag(TAG),convert_template_pred(Ctx,=,PATTERN_IN,PATTERN_OUT),!.
+
+transformTagData1(_Ctx,TAG,_Default,PATTERN_IN,PATTERN_OUT):- member(TAG,[userdict,graph]),upcase_atom_safe(PATTERN_IN,PATTERN_OUT),!.
+transformTagData1(_Ctx,TAG,_Default,PATTERN_IN,PATTERN_OUT):-infoTagLikeLineNumber(TAG),!,PATTERN_IN=PATTERN_OUT.
+
+transformTagData1(Ctx,TAG,Default,PATTERN_IN,PATTERN_OUT):- debugFmt(transformTagData(TAG,Default,PATTERN_IN)), 
+                 convert_template_pred(Ctx,upcase_atom_safe,PATTERN_IN,PATTERN_OUT),!.
+transformTagData1(Ctx,_N,_Default,R,RR):-convert_template(Ctx,R,RR),!. 
+transformTagData1(_Ctx,_TAG,_Default,PATTERN,PATTERN):-!.
+
+% ===============================================================================================
+% ===============================================================================================
+/*
 transformTagData(_Ctx,TAG,[*],TAG).
 transformTagData(_Ctx,TAG,*,TAG).
 transformTagData(Ctx,TAG,PATTERN_IN,PATTERN_OUT):-isPatternTag(TAG),convert_pattern(Ctx,PATTERN_IN,PATTERN_OUT),!.
@@ -754,7 +858,7 @@ transformTagData(_Ctx,TAG,PATTERN_IN,PATTERN_OUT):-infoTagLikeLineNumber(TAG),!,
 transformTagData(Ctx,TAG,PATTERN_IN,PATTERN_OUT):- debugFmt(transformTagData(TAG,PATTERN_IN)),convert_template_pred(Ctx,upcase_atom_safe,PATTERN_IN,PATTERN_OUT),!.
 transformTagData(Ctx,_N,R,RR):-trace,convert_template(Ctx,R,RR),!.
 transformTagData(_Ctx,_TAG,PATTERN,PATTERN):-!.
-
+*/
 convert_pattern(Ctx,PATTERN_IN,PATTERN_OUT):- convert_template_pred(Ctx,upcase_atom_safe,PATTERN_IN,PATTERN_OUT),!.
 
 convert_template_pred(Ctx,Pred,PATTERN_IN,PATTERN_OUT):- convert_template(Ctx,PATTERN_IN,PATTERN_MID),!,
@@ -774,10 +878,12 @@ peekCateElements(Ctx,Cate):- cateMemberTags(CATETAGS), peekAttributes(Ctx,CATETA
 peekAttributes(Ctx,[Name|SList],Scope,[Name=Value|Results]):- peekNameValue(Ctx,Scope,Name,Value),peekAttributes(Ctx,SList,Scope,Results),!.
 peekAttributes(_Ctx,[],_Scope,[]):-!.
 
+current_value(Ctx,Name,ValueI):-peekNameValue(Ctx,_,Name,ValueI).
+
 peekNameValue(Ctx,_Scope,Name,Value):-getCtxValue(Name,Ctx,Value),!.
 peekNameValue(_Ctx,Scope,Name,Value):-dict(Scope,Name,Value),prolog_must(ground(Scope:Name=Value)),!.
+peekNameValue(Ctx,List,Name,Value):- nonvar(List),not(atom(List)),attributeOrTagValue(Ctx,List,Name,Value,fail),!.
 peekNameValue(_Ctx,Scope,Name,Value):-dict(Scope2,Name,Value),Scope\=Scope2,ground(Name=Value),!,checkValue(Value).
-peekNameValue(_Ctx,Scope,N,V):-dict(Scope,N,V),!.
 peekNameValue(_Ctx,_Scope,_Name,Value):-trace,ignore(Value=(*)),!.
 
 
@@ -883,7 +989,7 @@ convert_ele(_Ctx,element(a, [Target, Link], Name),A):-sformat(S,'<a ~q ~q>~w</a>
 convert_ele(_Ctx,element(a, [Link], Name),A):-sformat(S,'<a ~q>~w</a>',[Link, Name]),string_to_atom(S,A).
 
 %DELAY convert_ele(Ctx,element(get, [name=Var], []),get(Var)):-!.
-convert_ele(_Ctx,element(learn, filename=F),load_any_file(F)):-!.
+convert_ele(_Ctx,element(learn, filename=File),load_any_file(File)):-!.
 convert_ele(_Ctx,element(sr,ALIST,MORE),element(srai,ALIST,[element(star,ALIST,MORE)])):-!.
 convert_ele(_Ctx,element(star,ALIST,MORE),star(pattern,XLAT2,MORE2)):-!,starIndex(star,pattern,ALIST,MORE,XLAT2,MORE2).
   starIndex(_Tag,_Star,ALIST,MORE,XLAT2,MORE2):-convert_attributes(Ctx,ALIST,XLAT2),convert_template(Ctx,MORE,MORE2),!.

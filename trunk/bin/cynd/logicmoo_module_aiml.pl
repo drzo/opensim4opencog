@@ -90,27 +90,31 @@ makeAimlCateSig(Ctx,ListOfValues,Pred):-aimlCateSig(Pred),!,makeAimlCate(Ctx,Lis
 
 % ===================================================================
 
-makeAimlContext(Name,Ctx):-makeAimlContext1(Name,Ctx),!,setCtxValue(withAiml,Ctx,[assert_new,writeqnl]).
+makeAimlContext(Name,Ctx):-makeAimlContext1(Name,Ctx),!,setCtxValue(ctx,Ctx,Name).
 
 makeAimlContext1(Gensym_Key, [frame(Gensym_Key,throw(no_destructor),[assoc(AL)|_])|_]):-    
    list_to_assoc([a-v(is_a),a-v(is_a2),b-v(is_b)],AL).
 
-unwrapValue(v(ValueHolder,_SetterFun,_KeyDestroyer),Value):-!,unwrapValue(ValueHolder,Value).
-unwrapValue(deleted,_):-!,fail.
-unwrapValue(Value,Value):-!.
+
+unwrapValue(HValue,TValue):-TValue==deleted,!,not(unwrapValue1(HValue,_)),!.
+unwrapValue(HValue,TValue):-unwrapValue1(HValue,Value),!,TValue=Value.
+
+unwrapValue1(v(ValueHolder,_SetterFun,_KeyDestroyer),Value):-!,unwrapValue1(ValueHolder,Value).
+unwrapValue1(deleted,_):-!,fail.
+unwrapValue1(Value,Value):-!.
 
 bestSetterFn(v(_,Setter,_),_OuterSetter,Setter):-!.
 bestSetterFn(_Value,OuterSetter,OuterSetter).
 
+getCtxValue(Name,Ctx,Value):-notrace(get_ctx_holder(Ctx,Holder)),get_o_value(Name,Holder,HValue,_Setter),!, unwrapValue(HValue,Value).
 
-getCtxValue(Name,Ctx,Value):-get_ctx_holder(Ctx,Holder),get_o_value(Name,Holder,HValue,_Setter),!, unwrapValue(HValue,Value).
-setCtxValue(Name,Ctx,Value):-get_ctx_holder(Ctx,Holder),get_o_value(Name,Holder,HValue,Setter),!,
-  (unwrapValue(HValue,Value);call(Setter,Value)),!.
-setCtxValue(Name,Ctx,Value):-addCtxValue(Name,Ctx,Value).
+setCtxValue(Name,Ctx,Value):-get_ctx_holder(Ctx,Holder),get_o_value(Name,Holder,HValue,Setter),unwrapValue(HValue,CurrentValue),!,(CurrentValue=Value;call(Setter,Value)),!.
+setCtxValue(Name,Ctx,Value):-addCtxValue1(Name,Ctx,Value),!.
 
-addCtxValue(Name,Ctx,Value):-get_ctx_holderFreeSpot(Ctx,Name=v(Value,_,Destructor),Destructor),!.
+addCtxValue(Name,Ctx,Value):-addCtxValue1(Name,Ctx,Value),!.
+addCtxValue1(Name,Ctx,Value):-get_ctx_holderFreeSpot(Ctx,Name=v(Value,_,Destructor),Destructor),!.
 
-remCtxValue(Name,Ctx,_Value):-setCtxValue(Name,Ctx,deleted).
+remCtxValue(Name,Ctx,_Value):-setCtxValue(Name,Ctx,deleted),!.
 
 
 pushCtxFrame(Name,Ctx,NewValues):-get_ctx_holderFreeSpot(Ctx,Holder,GuestDest),!,Holder=frame(Name,GuestDest,NewValues).
@@ -179,11 +183,6 @@ get_n_value(Name,Pred,Dash,2,Value,nb_setarg(2,Pred)):-arg(1,Pred,Name),member(D
 %%get_n_value(Name,Pred,'.',2,Value,Setter):-arg(2,Pred,Try1), get_o_value(Name,Try1,Value,Setter);(arg(1,Pred,Try2),get_o_value(Name,Try2,Value,Setter)).
 %%get_n_value(Name,Pred,_,_,Value,Setter):- !, arg(_,Pred,Try2),get_o_value(Name,Try2,Value,Setter).
 
-
-makeAimlContext_666(
-   aimlcontext(
-      stars([_Pattern|_],[_Topic|_],[_That|_],[_|_Guard]),
-      settings([_|_Graph],[_|_Topic2],[_Username|_],[_Input|_]))).
 
 % ===============================================================================================
 % UTILS
@@ -444,7 +443,7 @@ computeAnswer(Ctx,Votes,srai(Input),O,VotesO):- !,flatten([Input],Flat),
 computeAnswer(Ctx,Votes,get(ATTRIBS),Resp,VotesO):- !,computeAnswer(Ctx,Votes,get(user,ATTRIBS),Resp,VotesO).
 computeAnswer(Ctx,Votes,get(WHO,[X]),Resp,VotesO):- !,computeAnswer(Ctx,Votes,get(WHO,X),Resp,VotesO).
 computeAnswer(Ctx,Votes,get([WHO],X),Resp,VotesO):- !,computeAnswer(Ctx,Votes,get(WHO,X),Resp,VotesO).
-computeAnswer(Ctx,Votes,get(name=NAME,MORE),Resp,VotesO):- !,computeAnswer(Ctx,Votes,get(user,[name=NAME|MORE]),Resp,VotesO).
+computeAnswer(Ctx,Votes,get(name=NAME,MORE),Resp,VotesO):- !, computeAnswer(Ctx,Votes,get(user,[name=NAME|MORE]),Resp,VotesO).
 computeAnswer(Ctx,Votes,get(ATTRIBS),Resp,VotesO):- delete(ATTRIBS,type=bot,NEW),!,computeAnswer(Ctx,Votes,get(bot,NEW),Resp,VotesO).
 computeAnswer(Ctx,Votes,get(TYPE),Resp,VotesO):- !,computeAnswer(Ctx,Votes,get(user,TYPE),Resp,VotesO).
 
@@ -628,11 +627,11 @@ aimlDebugFmt(X):-debugFmt(X),!.
 
 traceCall(A):-trace(A,[-all,+fail]),A,!.
 
-
-debugOnFailureAiml(Call):-!,(Call;(trace,Call)),!.
-
+/*
+debugOnFailureAiml(Call):- clause(Call,(_A,_B)),!,clause(Call,Body),trace,debugOnFailureAiml(Body),!.
+*/
 debugOnFailureAiml((A,B)):- !,debugOnFailureAiml(A),!,debugOnFailureAiml(B),!.
-debugOnFailureAiml(Call):- Call,!.
+debugOnFailureAiml(Call):-!,(Call;(trace,Call)),!.
 %debugOnFailureAiml(Call):- debugOnFailureAimlTrace(Call),!.
 debugOnFailureAiml(Call):- beenCaugth(Call),!.
 
@@ -702,5 +701,6 @@ traceAll:-!.
 %:- guitracer.
 
 %:- do.
+
 
 
