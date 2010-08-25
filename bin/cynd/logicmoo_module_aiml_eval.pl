@@ -150,6 +150,7 @@ tag_eval(Ctx,element(system,ATTRIBS,INNER_XML),Output):-
 
 systemCall(_Ctx,'bot',['@'|DONE],template([did,DONE])):-!.
 systemCall(Ctx,'bot',['@load'],template([loaded,Ctx])):-!.
+systemCall(Ctx,'bot',['@ctx'],template([loaded,Ctx])):-!,showCtx.
 systemCall(Ctx,'bot',['@load',Filename],template([loaded,Filename])):-
     current_value(Ctx,graph,GraphI), 
     (GraphI=='*'->Graph=default; Graph=GraphI),
@@ -199,14 +200,13 @@ graph_or_file(_Ctx,ATTRIBS, Filename, [nosuchfile(Filename,ATTRIBS)]).
 % ============================================
 tag_eval(Ctx,element('testsuite',ATTRIBS,LIST),prologCall(maplist_safe(call,RESULT))):- withAttributes(Ctx,filelevel,ATTRIBS,aiml_eval_each(Ctx,LIST,RESULT)),!.
    
-tag_eval(Ctx,element(TC,ATTRIBS,LIST),prologCall(TESTCALL)):- member(TC,['testcase','TestCase']),     
+tag_eval(Ctx,Current,prologCall(TESTCALL)):- Current=element(TC,ATTRIBS,_LIST), member(TC,['testcase','TestCase']),     
  debugOnFailureAiml((
-     getAttributeOrTags(Ctx,['name'='SomeName'],ATTRIBS,LIST,Name),
-     getAttributeOrTags(Ctx,['Input'='ERROR Input'],ATTRIBS,LIST,Input),
-     getAttributeOrTags(Ctx,['Description'='No Description'],ATTRIBS,LIST,Description),
-     getAttributeOrTags(Ctx,['ExpectedAnswer'='ERROR ExpectedAnswer'],ATTRIBS,LIST,ExpectedAnswer),
-     getAttributeOrTags(Ctx,['ExpectedKeywords'='*'],ATTRIBS,LIST,ExpectedKeywords),
-     %%,'Description'='some descr','Input'='UKN','ExpectedAnswer'='SomeAnswwer'     
+     attributeOrTagValue(Ctx,Current,['name'],Name,'SomeName'),
+     attributeOrTagValue(Ctx,Current,['Input','Pattern'],Input,'ERROR Input'),
+     attributeOrTagValue(Ctx,Current,['Description'],Description,'No Description'),
+     attributeOrTagValue(Ctx,Current,['ExpectedAnswer'],ExpectedAnswer,'ERROR ExpectedAnswer'),
+     attributeOrTagValue(Ctx,Current,['ExpectedKeywords'],ExpectedKeywords,'*'),
      (ExpectedKeywords=='*' -> Expected = ExpectedAnswer ;  Expected = ExpectedKeywords),     
      TESTCALL = testIt(ATTRIBS,Input=ExpectedAnswer,ExpectedKeywords=_Result,Name=Description,Ctx),
      debugFmt(testIt([Name,Description,Input,ExpectedAnswer,ExpectedKeywords,Expected])))),!.
