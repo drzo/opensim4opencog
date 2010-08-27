@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Text;
 using MushDLR223.ScriptEngines;
@@ -59,12 +60,29 @@ namespace MushDLR223.Utilities
         }
         public override void Flush()
         {
+            string toWrite = "";
             lock (locker)
             {
                 StringWriter s = sw;
                 sw = new StringWriter();
                 s.Flush();
-                output(s.ToString().TrimEnd());                
+                toWrite = s.ToString().TrimEnd();
+            }
+            try
+            {
+                output(toWrite);
+            }
+            catch (Exception e)
+            {
+                System.Console.Error.WriteLine("" + e);
+                try
+                {
+                    output(toWrite);
+                }
+                catch (Exception)
+                {
+                    System.Console.Error.WriteLine("" + toWrite);
+                }
             }
         }
 
