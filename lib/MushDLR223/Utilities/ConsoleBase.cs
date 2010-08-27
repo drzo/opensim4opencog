@@ -1111,7 +1111,21 @@ namespace MushDLR223.Utilities
         {
             foreach (TextWriter o in Outputs)
             {
-                o.Write(format, args);
+                try
+                {
+                    if (args == null || args.Length == 0)
+                    {
+                        o.Write(format);
+                    }
+                    else
+                    {
+                        o.Write(format, args);
+                    }
+                }
+                catch (Exception e)
+                {
+                    System.Console.Error.WriteLine("" + e);
+                }
             }
         }
 
@@ -1120,11 +1134,14 @@ namespace MushDLR223.Utilities
         {
             get
             {
-                if (_outputs.Count==0)
+                lock (_outputs)
                 {
-                    AddOutput(Console.Out);
+                    if (_outputs.Count == 0)
+                    {
+                        AddOutput(Console.Out);
+                    }
+                    return new List<TextWriter>(_outputs);
                 }
-                return _outputs;
             }
         }
 
@@ -1148,7 +1165,14 @@ namespace MushDLR223.Utilities
         {
             foreach (TextWriter o in Outputs)
             {
-                o.WriteLine();
+                try
+                {
+                    o.WriteLine();
+                }
+                catch (Exception e)
+                {
+                    System.Console.Error.WriteLine("" + e);
+                }
             }
         }
         public static ConsoleKeyInfo ReadKey(bool b)

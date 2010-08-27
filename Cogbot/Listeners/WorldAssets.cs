@@ -207,7 +207,7 @@ namespace cogbot.Listeners
                 ImageDownload image = RegionMasterTexturePipeline.Cache.GetCachedImage(id);
                 if (image == null)
                 {
-                    DLRConsole.DebugWriteLine("AssetTexture is null?! " + id);
+                    Debug("AssetTexture is null?! " + id);
                 }
                 else
                 {

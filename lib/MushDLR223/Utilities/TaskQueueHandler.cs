@@ -21,8 +21,12 @@ namespace MushDLR223.Utilities
         readonly int WAIT_AFTER;
         public bool IsDisposing = false;
         private string WaitingString = "";
-        private object WaitingStringLock = new object();
+        private readonly object WaitingStringLock = new object();
+        readonly object WaitingPingLock = new object();
         public OutputDelegate debugOutput;
+        bool WaitingOnPing = false;
+        public double MAX_PING_WAIT_TIME = 2;  // ping wiat time should be less than 2 seconds when going in
+
 
         public bool IsRunning
         {
@@ -189,7 +193,7 @@ namespace MushDLR223.Utilities
 
         void EventQueue_Ping()
         {
-            bool WaitingOnPing = false;
+
             while (!(IsDisposing))
             {
                 if (EventQueueHandler != null)
@@ -201,44 +205,69 @@ namespace MushDLR223.Utilities
                     }
                 Thread.Sleep(PING_TIME);
                 if (_noQueue) continue;
-                if (Busy || WaitingOnPing)
+                if (Busy)
                 {
                     if (LastBusy == sequence)
                     {
                         TimeSpan t = DateTime.UtcNow - BusyStart;
-                        if (DebugQueue) WriteLine("TOOK LONGER THAN {0} secs = {1} in Queue={2}",
-                                           PING_TIME.TotalSeconds, t.TotalSeconds, EventQueue.Count);
+                        if (DebugQueue)
+                            WriteLine("TOOK LONGER THAN {0} secs = {1} in Queue={2}",
+                                      PING_TIME.TotalSeconds, t.TotalSeconds, EventQueue.Count);
                     }
                     LastBusy = sequence;
                     continue;
                 }
                 DateTime oldnow = DateTime.UtcNow;
                 int count = EventQueue.Count;
-                if (WaitingOnPing)
+                lock (WaitingPingLock)
                 {
-                    continue;
-                }
-                WaitingOnPing = true;
-                Enqueue(() =>
-                {
-                    WaitingOnPing = false;
-                    if (sequence > 1) sequence--;
-                    DateTime now = DateTime.UtcNow;
-                    TimeSpan timeSpan = now - oldnow;
-                    double secs = timeSpan.TotalSeconds;
-                    if (secs < 2)
+                    bool wasWaitingOnPing = false;
+                    wasWaitingOnPing = WaitingOnPing;
+
+                    if (wasWaitingOnPing)
                     {
-                        // WriteLine("PONG: " + Name + " " + timeSpan.TotalMilliseconds + " ms");
-                        GoodPings++;
+                        if (LastBusy == sequence)
+                        {
+                            TimeSpan t = DateTime.UtcNow - BusyStart;
+                            if (DebugQueue)
+                                WriteLine("PING TOOK LONGER THAN {0} secs = {1} in Queue={2}",
+                                          PING_TIME.TotalSeconds, t.TotalSeconds, EventQueue.Count);
+                        }
+                        LastBusy = sequence;
+                        continue;
                     }
-                    else
-                    {
-                        if (DebugQueue) WriteLine("{0} secs for {1} after {2} GoodPing(s)",
-                                           timeSpan.TotalSeconds, count, GoodPings);
-                        GoodPings = 0;
-                    }
+                    WaitingOnPing = true;
+
+                    Enqueue(() =>
+                                {
+                                    lock (WaitingPingLock)
+                                    {
+                                        // todo can this ever happen?
+                                        if (!WaitingOnPing) return;
+                                    }
+                                    if (sequence > 1) sequence--;
+                                    DateTime now = DateTime.UtcNow;
+                                    TimeSpan timeSpan = now - oldnow;
+                                    double secs = timeSpan.TotalSeconds;
+                                    if (secs < MAX_PING_WAIT_TIME)
+                                    {
+                                        // WriteLine("PONG: " + Name + " " + timeSpan.TotalMilliseconds + " ms");
+                                        GoodPings++;
+                                    }
+                                    else
+                                    {
+                                        if (DebugQueue)
+                                            WriteLine("{0} secs for {1} after {2} GoodPing(s)",
+                                                      timeSpan.TotalSeconds, count, GoodPings);
+                                        GoodPings = 0;
+                                    }
+                                    lock (WaitingPingLock)
+                                    {
+                                        WaitingOnPing = false;
+                                    }
+                                }
+                        );
                 }
-                    );
             }
             // ReSharper disable FunctionNeverReturns
         }
