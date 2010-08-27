@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using MushDLR223.ScriptEngines;
+using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
 using RTParser.Utils;
 using RTParser.Variables;
@@ -282,7 +283,23 @@ namespace RTParser
             return users;
         }
 
-        private string GetUserDir(string key)
+        readonly public object ListUserDirs = new object();
+        public string GetUserDir(string key)
+        {
+            lock (ListUserDirs)
+            {
+                try
+                {
+                    return GetUserDir0(key);
+                }
+                catch (Exception e)
+                {
+                    writeToLog(e);
+                    return null;                    
+                }
+            }
+        }
+        private string GetUserDir0(string key)
         {
             string userDir = HostSystem.Combine(PathToUserDir, key);
             var luserDir = HostSystem.ToRelativePath(userDir);
@@ -310,7 +327,16 @@ namespace RTParser
                                       Replace("~", ".*").Replace("_", "\\b").
                                       Replace("\\b\\b", "\\b") + "$";
 
-                var regex = new Regex(s1);
+                Regex regex;
+                try
+                {
+                    regex = new Regex(s1);
+                }
+                catch (Exception e)
+                {
+                    writeToLog("new Regex '" + s1 + "' " + e);
+                    continue;
+                }
                 if (regex.IsMatch(k1))
                 {
                     luserDir = HostSystem.ToRelativePath(fsn);
