@@ -10,6 +10,9 @@
   <srai>
     <learn>aiml/chomskyAIML/</learn>
   </srai>
+  <srai>
+    <learn path="aiml/special/Lucene.aiml" />
+  </srai>  
   <category>
     <pattern>*</pattern>
     <template>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<!-- suggest this file is learnt via graph="defualt" ussualy -->
+<aiml>
+ 
+ <category>
+   <pattern>REMEMBER *</pattern>
+   <template>
+    <think><dbpush><person/></dbpush></think>
+      Ok. I will remember. 
+   </template>
+  </category>
+
+ <category>
+   <pattern>CHECK *</pattern>
+   <template>
+     Let me think ... <think><dbquery><person/></dbquery></think>      
+   </template>
+  </category>
+  
+</aiml>
