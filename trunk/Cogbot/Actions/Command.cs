@@ -406,7 +406,7 @@ namespace cogbot.Actions
             }
             catch (Exception e)
             {
-                DLRConsole.SystemWriteLine(e);
+                DLRConsole.DebugWriteLine(e);
             }
             return Result("Success " + Name, true);
         }

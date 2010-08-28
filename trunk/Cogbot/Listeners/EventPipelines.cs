@@ -186,7 +186,7 @@ namespace cogbot.Listeners
                                    }
                                    catch (Exception e)
                                    {
-                                       DLRConsole.SystemWriteLine(e);
+                                       DLRConsole.DebugWriteLine(e);
                                    }
                                };
                 if (ExecSynchronous)
