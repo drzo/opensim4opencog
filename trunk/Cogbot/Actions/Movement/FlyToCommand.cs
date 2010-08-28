@@ -16,7 +16,7 @@ namespace cogbot.Actions.Movement
         Vector3 target = new Vector3();
         Vector2 target0 = new Vector2();
         float diff, olddiff, saveolddiff;
-        int startTime = 0;
+        private DateTime startTime = DateTime.MinValue;
         int duration = 10000;
         EventHandler<TerseObjectUpdateEventArgs> callback; 
 
@@ -48,7 +48,7 @@ namespace cogbot.Actions.Movement
 
             if (true)
             {
-                startTime = Environment.TickCount;
+                startTime = DateTime.Now;
                 FlyToAction fta = new FlyToAction(TheSimAvatar, position);
                 if (true)
                 {
@@ -62,7 +62,7 @@ namespace cogbot.Actions.Movement
                     fta.RegCallback();
                     while (KeepFollowing)
                     {
-                        if (Environment.TickCount - startTime > duration)
+                        if (DateTime.Now.Subtract(startTime).TotalMilliseconds > duration)
                         {
                             return Failure("Timer Complete");
                         }
@@ -87,7 +87,7 @@ namespace cogbot.Actions.Movement
 
 
             Client.Objects.TerseObjectUpdate += callback;
-            startTime = Environment.TickCount;
+            startTime = DateTime.Now;
             Client.Self.Movement.Fly = true;
             Client.Self.Movement.AtPos = true;
             Client.Self.Movement.AtNeg = false;
@@ -104,7 +104,7 @@ namespace cogbot.Actions.Movement
 
         private void Objects_OnObjectUpdated(object s, TerseObjectUpdateEventArgs e)
         {
-            if (startTime == 0) return;
+            if (startTime == DateTime.MinValue) return;
             if (e.Update.LocalID == Client.Self.LocalID)
             {
                 XYMovement();
@@ -126,7 +126,7 @@ namespace cogbot.Actions.Movement
                     Debug("At Target");
                 }
             }
-            if (Environment.TickCount - startTime > duration)
+            if (DateTime.Now.Subtract(startTime).TotalMilliseconds > duration)
             {
                 EndFlyto();
                 Debug("End Flyto");
@@ -191,7 +191,7 @@ namespace cogbot.Actions.Movement
 
         private void EndFlyto()
         {
-            startTime = 0;
+            startTime = DateTime.MinValue;
             Client.Self.Movement.AtPos = false;
             Client.Self.Movement.AtNeg = false;
             Client.Self.Movement.UpPos = false;

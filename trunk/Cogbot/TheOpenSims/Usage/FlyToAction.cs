@@ -70,7 +70,7 @@ namespace cogbot.TheOpenSims
 
             BotClient Client = TheBot.GetGridClient();
             RegCallback();
-            startTime = Environment.TickCount;
+            startTime = DateTime.Now;
             Client.Self.Movement.Fly = true;
             Client.Self.Movement.AtPos = true;
             Client.Self.Movement.AtNeg = false;
@@ -92,7 +92,7 @@ namespace cogbot.TheOpenSims
         }
         Vector2 target0 = new Vector2();
         float diff, olddiff, saveolddiff;
-        int startTime = 0;
+        private DateTime startTime = DateTime.MinValue;
         //   int duration = 10000;
         readonly EventHandler<TerseObjectUpdateEventArgs> callback;
 
@@ -185,7 +185,7 @@ namespace cogbot.TheOpenSims
                     }
                     else
                     {
-                        if (startTime + 60000 > Environment.TickCount)
+                        if (startTime.AddMinutes(1) > DateTime.Now)
                         {
                             DoZ = true;
                         }
@@ -234,7 +234,7 @@ namespace cogbot.TheOpenSims
         private void Objects_OnObjectUpdated(object s , TerseObjectUpdateEventArgs e)
         {
             BotClient Client = TheBot.GetGridClient();
-            if (startTime == 0)
+            if (startTime == DateTime.MinValue)
             {
                 DeRegCallback();
                 return;
@@ -327,7 +327,7 @@ namespace cogbot.TheOpenSims
 
         public void EndFlyto()
         {
-            startTime = 0;
+            startTime = DateTime.MinValue;
             BotClient Client = TheBot.GetGridClient();
             Client.Self.Movement.AtPos = false;
             Client.Self.Movement.AtNeg = false;

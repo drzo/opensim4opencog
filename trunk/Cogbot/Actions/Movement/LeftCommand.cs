@@ -39,11 +39,11 @@ namespace cogbot.Actions.Movement
                 // Convert to milliseconds
                 duration *= 1000;
 
-                int start = Environment.TickCount;
+                DateTime start = DateTime.Now;
 
                 Client.Self.Movement.LeftPos = true;
 
-                while (Environment.TickCount - start < duration)
+                while (DateTime.Now.Subtract(start).TotalMilliseconds < duration)
                 {
                     // The movement timer will do this automatically, but we do it here as an example
                     // and to make sure updates are being sent out fast enough
