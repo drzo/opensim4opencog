@@ -529,6 +529,7 @@
       <Reference name="MushDLR223"  localCopy="false"/>
       <Reference name="LAIR.Collections.dll" localCopy="false"/>
       <Reference name="LAIR.ResourceAPIs.WordNet" localCopy="false"/>
+      <Reference name="Lucene.Net" localCopy="false"/>      
       <Reference name="Microsoft.JScript"  localCopy="false"/>
 
       <Files>
