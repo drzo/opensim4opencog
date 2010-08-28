@@ -1040,7 +1040,7 @@ namespace RTParser
 
         public bool CanGiveResponseNow()
         {
-            return (DateTime.Now.Subtract(LastResponseGivenTime).TotalSeconds <
+            return (DateTime.Now.Subtract(LastResponseGivenTime).TotalSeconds >
                 // ReSharper disable PossibleLossOfFraction
              (60 / MaxRespondToChatPerMinute));
             // ReSharper restore PossibleLossOfFraction
