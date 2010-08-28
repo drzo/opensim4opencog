@@ -642,9 +642,9 @@ namespace MushDLR223.Utilities
 
                     int count = cmdline.Length;
 
-                    SystemWrite("  ");
+                    SystemWrite0("  ");
                     while (count-- > 0)
-                        SystemWrite(" ");
+                        SystemWrite0(" ");
 
                     y = SetCursorTop(y);
                     CursorLeft = 0;
@@ -667,9 +667,9 @@ namespace MushDLR223.Utilities
 
                     int count = cmdline.Length;
 
-                    SystemWrite("  ");
+                    SystemWrite0("  ");
                     while (count-- > 0)
-                        SystemWrite(" ");
+                        SystemWrite0(" ");
 
                     y = SetCursorTop(y);
                     CursorLeft = 0;
@@ -695,18 +695,18 @@ namespace MushDLR223.Utilities
                     {
                         if (color != ConsoleColor.White)
                             SystemForegroundColor = color;
-                        if (args.Length == 0) SystemWriteLine(format);
-                        else SystemWriteLine(format, args);
+                        if (args.Length == 0) SystemWriteLine0(format);
+                        else SystemWriteLine0(format, args);
                         ResetColor();
                     }
                     catch (ArgumentNullException)
                     {
                         // Some older systems dont support coloured text.
-                        SystemWriteLine(format, args);
+                        SystemWriteLine0(format, args);
                     }
                     catch (FormatException e)
                     {
-                        SystemWriteLine("FormatException " + format + " ex=" + e);
+                        SystemWriteLine0("FormatException " + format + " ex=" + e);
                     }
                 }
             }
@@ -725,21 +725,21 @@ namespace MushDLR223.Utilities
 
                     // SystemWriteLine("[" + sender + "] ");
 
-                    SystemWrite("[");
+                    SystemWrite0("[");
 
                     try
                     {
                         SystemForegroundColor = color;
-                        SystemWrite(sender);
+                        SystemWrite0(sender);
                         ResetColor();
                     }
                     catch (ArgumentNullException)
                     {
                         // Some older systems dont support coloured text.
-                        SystemWriteLine(sender);
+                        SystemWriteLine0(sender);
                     }
 
-                    SystemWrite("] \t");
+                    SystemWrite0("] \t");
                 }
             }
             catch (ObjectDisposedException)
@@ -774,16 +774,16 @@ namespace MushDLR223.Utilities
                     new_y--;
                     CursorLeft = 0;
                     CursorTop = BufferHeight - 1;
-                    SystemWriteLine(" ");
+                    SystemWriteLine0(" ");
                 }
 
                 y = SetCursorTop(y);
                 CursorLeft = 0;
 
                 if (echo)
-                    SystemWrite("{0}{1}", prompt, cmdline);
+                    SystemWrite0("{0}{1}", prompt, cmdline);
                 else
-                    SystemWrite("{0}", prompt);
+                    SystemWrite0("{0}", prompt);
 
                 SetCursorLeft(new_x);
                 SetCursorTop(new_y);
@@ -803,7 +803,7 @@ namespace MushDLR223.Utilities
                     int count = cmdline.Length + prompt.Length;
 
                     while (count-- > 0)
-                        SystemWrite(" ");
+                        SystemWrite0(" ");
 
                     y = SetCursorTop(y);
                     CursorLeft = 0;
@@ -831,7 +831,7 @@ namespace MushDLR223.Utilities
             {
                 if (y == -1)
                 {
-                    SystemWriteLine(text);
+                    SystemWriteLine0(text);
 
                     return;
                 }
@@ -842,12 +842,12 @@ namespace MushDLR223.Utilities
                 int count = cmdline.Length + prompt.Length;
 
                 while (count-- > 0)
-                    SystemWrite(" ");
+                    SystemWrite0(" ");
 
                 y = SetCursorTop(y);
                 CursorLeft = 0;
 
-                SystemWriteLine(text);
+                SystemWriteLine0(text);
 
                 y = CursorTop;
 
@@ -913,7 +913,7 @@ namespace MushDLR223.Utilities
                 }
                 else
                 {
-                    SystemWriteLine("Valid options are " + OptionA + " or " + OptionB);
+                    SystemWriteLine0("Valid options are " + OptionA + " or " + OptionB);
                     temp = CmdPrompt(prompt, defaultresponse);
                 }
             }
@@ -943,7 +943,7 @@ namespace MushDLR223.Utilities
 
             if (gui)
             {
-                SystemWrite("{0}", prompt);
+                SystemWrite0("{0}", prompt);
                 string cmdinput = DLRConsole.ReadLine();
 
                 if (isCommand)
@@ -966,7 +966,7 @@ namespace MushDLR223.Utilities
             }
 
             CursorLeft = 0; // Needed for mono
-            SystemWrite(" "); // Needed for mono
+            SystemWrite0(" "); // Needed for mono
 
             lock (cmdline)
             {
@@ -1008,7 +1008,7 @@ namespace MushDLR223.Utilities
                             CursorLeft = 0;
                             y = SetCursorTop(y);
 
-                            SystemWrite("{0}{1} ", prompt, cmdline);
+                            SystemWrite0("{0}{1} ", prompt, cmdline);
 
                             break;
                         case ConsoleKey.End:
@@ -1056,7 +1056,7 @@ namespace MushDLR223.Utilities
                             CursorLeft = 0;
                             y = SetCursorTop(y);
 
-                            SystemWriteLine("{0}{1}", prompt, cmdline);
+                            SystemWriteLine0("{0}{1}", prompt, cmdline);
 
                             lock (cmdline)
                             {
@@ -1092,22 +1092,107 @@ namespace MushDLR223.Utilities
 
         public static void DebugWriteLine(string format, params object[] args)
         {
-            SystemWriteLine(format, args);
+            format = GetCallerFormat(format);
+            SystemWriteLine0(format, args);
         }
-
+        private static void SystemWriteLine0(string format, params object[] args)
+        {
+            SystemWrite0(format, args);
+            SystemWriteLine();
+        }
         public static void SystemWriteLine(string format, params object[] args)
         {
-            SystemWrite(format, args);
-            SystemWriteLine();
+            SystemWriteLine0(format, args);
         }
-
-        public static void SystemWriteLine(object arg)
+        private static string GetCallerFormat(string format)
         {
-            SystemWrite("" + arg);
-            SystemWriteLine();
+// ReSharper disable ConditionIsAlwaysTrueOrFalse
+            if (false) return format;
+// ReSharper restore ConditionIsAlwaysTrueOrFalse
+            if (!format.StartsWith("["))
+            {
+                int fc = format.IndexOf(":");
+                if (fc>1)
+                {
+                    string prefix = format.Substring(0, fc);
+                    if (prefix.Contains(" "))
+                    {
+                        prefix = CurrentCaller;
+                        fc = -1;
+                    } else
+                    {
+                        prefix = prefix.ToUpper();
+                    }
+                    format = "[" + prefix + "] " + format.Substring(fc + 1);
+                } else
+                {
+                    format = "[" + CurrentCaller + "] " + format;                    
+                }
+            }
+            return format;
+        }
+        public static void SystemWriteLine0(string arg)
+        {
+            SystemWriteLine0("{0}", arg);
+        }
+        public static void DebugWriteLine(object arg)
+        {            
+            SystemWriteLine0(GetCallerFormat(""+arg));
+        }
+        public static void DebugWrite(string arg)
+        {
+            SystemWrite0("" + arg);
+        }
+        public static void SystemWrite(string format, params object[] args)
+        {
+            SystemWrite0(format, args);
         }
 
-        public static void SystemWrite(string format, params object[] args)
+        public static void SystemWrite(string format)
+        {
+            SystemWrite0(format, null);
+        }
+
+        static public string CurrentCaller
+        {
+            get
+            {
+                var st = new System.Diagnostics.StackTrace(true).GetFrames();
+                if (st == null) return "NULL";
+                if (st.Length > 4)
+                {
+                    int skip = 4;
+                    for (int i = 0; i < st.Length; i++)
+                    {
+                        StackFrame s = st[i];
+                        if (skip-- > 0) continue;
+                        return CallerName(s);
+                    }
+                }
+                return CallerName(st[st.Length-1]);
+            }
+        }
+
+        private static string CallerName(StackFrame frame)
+        {
+            string str = null;
+            if (frame == null) return str;            
+            var m = frame.GetMethod();
+            if (m != null)
+            {
+                str =frame.GetMethod().Name;
+                if (str.StartsWith("get_")) str = str.Substring(4);
+                else if (str.StartsWith("set_")) str = str.Substring(4);
+
+                str = frame.GetMethod().DeclaringType.Name + "_" + str;
+
+                if (!string.IsNullOrEmpty(str)) return str.ToUpper();
+            }
+            var mo = frame.GetFileName() +"_"+ frame.GetFileLineNumber();
+            return str;
+        }
+
+        public static void SystemWrite0(string format, params object[] args)
         {
             foreach (TextWriter o in Outputs)
             {
@@ -1115,7 +1200,7 @@ namespace MushDLR223.Utilities
                 {
                     if (args == null || args.Length == 0)
                     {
-                        o.Write(format);
+                        o.Write(args);
                     }
                     else
                     {
@@ -1125,6 +1210,7 @@ namespace MushDLR223.Utilities
                 catch (Exception e)
                 {
                     System.Console.Error.WriteLine("" + e);
+                    o.Write(SafeFormat(format, args));
                 }
             }
         }
@@ -1148,16 +1234,16 @@ namespace MushDLR223.Utilities
         public static void AddOutput(TextWriter writer)
         {
             if (writer != ConsoleOut && writer != null)
-             {
-                 _outputs.Add(writer);
-             }
+            {
+                lock (_outputs) _outputs.Add(writer);
+            }
         }
 
         public static void RemoveOutput(TextWriter writer)
         {
             if (writer != ConsoleOut && writer != null)
             {
-                _outputs.Remove(writer);
+                lock (_outputs) _outputs.Remove(writer);
             }
         }
 
@@ -1171,7 +1257,7 @@ namespace MushDLR223.Utilities
                 }
                 catch (Exception e)
                 {
-                    System.Console.Error.WriteLine("" + e);
+                    System.Console.Error.WriteLine("" + e + " in " + o);
                 }
             }
         }
@@ -1203,6 +1289,32 @@ namespace MushDLR223.Utilities
         public static void SystemFlush()
         {
             Console.Out.Flush();
+        }
+
+        public static string SafeFormat(string fmt, params object[] args)
+        {
+            string str = fmt;
+            if (args != null && args.Length > 0)
+            {
+                try
+                {
+                    str = string.Format(fmt, args);
+                }
+                catch (Exception e)
+                {
+                    System.Console.Error.WriteLine("SafeFormat: " + e);
+                    System.Console.Error.WriteLine("f: " + fmt);
+                    int ii = 0;
+                    foreach (var o in args)
+                    {                        
+                        ii++;
+                        string arg = " " + ii + ": " + o;
+                        System.Console.Error.WriteLine(arg);
+                        str += arg;
+                    }
+                }
+            }
+            return str;
         }
     }
 }

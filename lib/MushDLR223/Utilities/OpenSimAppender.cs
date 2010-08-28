@@ -78,11 +78,11 @@ namespace MushDLR223.Utilities
                 // Get some direct matches $1 $4 is a
                 if (matches.Count == 1)
                 {
-                    DLRConsole.SystemWrite(matches[0].Groups["Front"].Value);
-                    DLRConsole.SystemWrite("[");
+                    DLRConsole.SystemWrite0(matches[0].Groups["Front"].Value);
+                    DLRConsole.SystemWrite0("[");
 
                     WriteColorText(DeriveColor(matches[0].Groups["Category"].Value), matches[0].Groups["Category"].Value);
-                    DLRConsole.SystemWrite("]:");
+                    DLRConsole.SystemWrite0("]:");
 
                     if (le.Level == Level.Error)
                     {
@@ -94,18 +94,18 @@ namespace MushDLR223.Utilities
                     }
                     else
                     {
-                        DLRConsole.SystemWrite(matches[0].Groups["End"].Value);
+                        DLRConsole.SystemWrite0(matches[0].Groups["End"].Value);
                     }
                     DLRConsole.SystemWriteLine();
                 }
                 else
                 {
-                    DLRConsole.SystemWrite(loggingMessage);
+                    DLRConsole.SystemWrite0(loggingMessage);
                 }
             }
             catch (Exception e)
             {
-                DLRConsole.SystemWriteLine("Couldn't write out log message: {0}", e.ToString());
+                DLRConsole.DebugWriteLine("Couldn't write out log message: {0}", e.ToString());
             }
             finally
             {
@@ -123,13 +123,13 @@ namespace MushDLR223.Utilities
                     try
                     {
                         DLRConsole.SystemForegroundColor = color;
-                        DLRConsole.SystemWrite(sender);
+                        DLRConsole.SystemWrite0(sender);
                         DLRConsole.SystemResetColor();
                     }
                     catch (ArgumentNullException)
                     {
                         // Some older systems dont support coloured text.
-                        DLRConsole.SystemWriteLine(sender);
+                        DLRConsole.SystemWriteLine0(sender);
                     }
                 }
             }
