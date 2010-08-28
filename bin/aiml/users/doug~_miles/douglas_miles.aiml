@@ -2,7 +2,8 @@
 <aiml graph="douglas_miles">
   <genlMt name="default"/>
   <genlMt name="chomskyAIML"/>
-  <learn graph="chomskyAIML" path="aiml/chomskyAIML/"/>
+  <genlMt name="OPENCYC"/>
+  <!--<learn graph="chomskyAIML" path="aiml/chomskyAIML/"/>-->
   <!--  <system>@cloj MyBot.GraphsByName.chomsky<bot name="~genokind"/>.Srai </system> -->
  <!-- vocabulary name="douglas_miles" -->
  <!-- templates=0 thats=0 patterns=0 topics=0  -->

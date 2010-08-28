@@ -328,7 +328,7 @@ A <a href="http://en.wikipedia.org/wiki/King" target="_blank">King</a> is the ma
   <li>Hi, <get name="name"/>. How are you?</li>
   <li>Hi, <get name="name"/>. How are you today?</li>
   <li><get name="name"/>. That's a nice name.</li>
-  <li>Hi, are you the <get name="name"/> I was speaking to a while ago?</li>
+  <li>Hire you the <get name="name"/> I was speaking to a while ago?</li>
   <li>Hello, <get name="name"/>.</li>
   <li>Hi there, <get name="name"/>. What do you want to talk about?</li>
   <li>Hi <get name="name"/>, was it you I was speaking to a while back?</li>
