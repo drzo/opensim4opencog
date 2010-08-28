@@ -70,14 +70,14 @@ namespace cogbot.Listeners
                 if (ID == null)
                 {
                     int tried = 20;
-                    int giveUpTick = Environment.TickCount + 1 * 60000;
+                    var giveUpTick = DateTime.Now.AddMinutes(1);// +1 * 60000;
                     while (ID == null)
                     {
                         ID = StartTextureDownload(uUID);
                         if (ID == null)
                         {
                             lock (TexturesSkipped) if (TexturesSkipped.Contains(uUID)) return null;
-                            if (Environment.TickCount > giveUpTick)
+                            if (DateTime.Now > giveUpTick)
                             {
                                 lock (TexturesSkipped) TexturesSkipped.Add(uUID);
                                 //if (Settings.LOG_LEVEL == Helpers.LogLevel.Warning)
