@@ -27,7 +27,7 @@ namespace RTParser
         public ListAsSet<TemplateInfo> DisabledTemplates = new ListAsSet<TemplateInfo>();
         public ListAsSet<QueryList> AllQueries = new ListAsSet<QueryList>();
 
-        public int LastResponseGivenTime = 0;
+        public DateTime LastResponseGivenTime = DateTime.Now;
         public bool RespondToChat = true;
         public int MaxRespondToChatPerMinute = 10;
 
@@ -593,7 +593,7 @@ namespace RTParser
             if (sf > 0)
             {
                 String newClip = sentence.Substring(0, sf - 1);
-               // RTPBot.writeDebugLine("AIMLTRACE !REWRITE THAT QUESTION " + sentence + " => " + newClip);
+                // RTPBot.writeDebugLine("AIMLTRACE !REWRITE THAT QUESTION " + sentence + " => " + newClip);
                 if (newClip.Length > 4) sentence = newClip;
             }
             sentence = sentence.Trim(new char[] { '.', ' ', '!', '?' });
@@ -605,7 +605,7 @@ namespace RTParser
                 {
                     newClip = newClip.Substring(1).TrimStart();
                 }
-             //   RTPBot.writeDebugLine("AIMLTRACE !REWRITE THAT SENT " + sentence + " => " + newClip);
+                //   RTPBot.writeDebugLine("AIMLTRACE !REWRITE THAT SENT " + sentence + " => " + newClip);
                 if (newClip.Length > 4) sentence = newClip;
             }
             return sentence;
@@ -1029,6 +1029,19 @@ namespace RTParser
         {
             DoPendingTodoList();
             return new AIMLbot.Request(s, this, bot, CurrentRequest);
+        }
+
+        public void StampResponseGiven()
+        {
+            LastResponseGivenTime = DateTime.Now;
+        }
+
+        public bool CanGiveResponseNow()
+        {
+            return (DateTime.Now.Subtract(LastResponseGivenTime).TotalSeconds <
+                // ReSharper disable PossibleLossOfFraction
+             (60 / MaxRespondToChatPerMinute));
+            // ReSharper restore PossibleLossOfFraction
         }
     }
 }

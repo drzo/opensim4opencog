@@ -493,8 +493,7 @@ namespace AIMLBotModule
                             if (String.IsNullOrEmpty(resp)) return;
                             if (UseThrottle)
                             {
-                                if (Environment.TickCount - myUser.LastResponseGivenTime <
-                                    (60000 / myUser.MaxRespondToChatPerMinute))
+                                if ((myUser.CanGiveResponseNow()))
                                 {
                                     WriteLine("AIML_OnInstantMessage Reply is too fast: {0}: {1}->{2}", myUser, message, resp);
                                     return; //too early to respond.. but still listened
@@ -559,7 +558,7 @@ namespace AIMLBotModule
                                 UseRealism = false;
 
                             }
-                            myUser.LastResponseGivenTime = Environment.TickCount;
+                            myUser.StampResponseGiven();
                         }, "AIML_OnInstantMessage: " + myUser + ": " + message);
         }
 
@@ -640,8 +639,7 @@ namespace AIMLBotModule
                         {
                             string resp = AIMLInterp(message, myUser);
                             if (String.IsNullOrEmpty(resp)) return;
-                            if (Environment.TickCount - myUser.LastResponseGivenTime <
-                                (60000 / myUser.MaxRespondToChatPerMinute))
+                            if (MyUser.CanGiveResponseNow())
                             {
                                 WriteLine("AIML_OnChat Reply is too fast {0}: {1}->{2}", myUser, message, resp);
 
@@ -658,7 +656,7 @@ namespace AIMLBotModule
                                 return;
                             }
                             StringChat(resp, type);
-                            myUser.LastResponseGivenTime = Environment.TickCount;
+                            myUser.StampResponseGiven();
                         }, "AIML_OnChat: " + myUser + ": " + message);
         }
 
