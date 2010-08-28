@@ -92,7 +92,7 @@ namespace RTParser
         /// </summary>
         public bool StaticLoader = true;
 
-        public static string AIMLDEBUGSETTINGS = "clear -spam +user +bina +error +aimltrace +cyc +dictlog -tscore +loaded";
+        public static string AIMLDEBUGSETTINGS = "clear -spam +user +bina +error +aimltrace +cyc -dictlog -tscore +loaded";
         //    "clear +*";
         public static readonly TextFilter LoggedWords = new TextFilter() { "+*", "+STARTUP", "+ERROR","+DICTLOG" }; //maybe should be ERROR", "STARTUP
         public User LastUser;
@@ -3024,6 +3024,13 @@ The AIMLbot program.
 
         public static string ToScriptableName(string path)
         {
+            string sk = "";
+            foreach (var s in path)
+            {
+                if (IsOkForNameChar(s))
+                    sk += s;
+            }
+            path = sk;
             return path.ToLower().Trim().Replace(" ", "_").Replace(".", "_").Replace("-", "_").Replace("__", "_");
         }
 

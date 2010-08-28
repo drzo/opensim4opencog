@@ -286,11 +286,17 @@ namespace RTParser
         readonly public object ListUserDirs = new object();
         public string GetUserDir(string key)
         {
+            string sk = "";
+            foreach (var s in key)
+            {
+                if (IsOkForNameChar(s))
+                    sk += s;
+            }
             lock (ListUserDirs)
             {
                 try
                 {
-                    return GetUserDir0(key);
+                    return GetUserDir0(sk);
                 }
                 catch (Exception e)
                 {
@@ -691,7 +697,7 @@ namespace RTParser
             {
                 if (LastUser != null)
                 {
-                    fromname = LastUser.UserID;
+                    fromname = LastUser.UserName;
                 }
             }
             if (UnknowableName(fromname))
@@ -705,6 +711,11 @@ namespace RTParser
         {
             //if (LastUser != null && LastUser.IsKnownAs(fromname)) return false;
             return (string.IsNullOrEmpty(fromname) || fromname.Trim() == "null");
+        }
+
+        public static bool IsOkForNameChar(char s)
+        {
+            return s == '_' || s == ' ' || s == '-' || char.IsLetterOrDigit(s);
         }
     }
 }
