@@ -808,10 +808,12 @@ namespace RTParser
                 WriteLine("Cannot SaveDirectory {0}", userdir);
                 return;
             }
-            WriteLine("Saveing User Directory {0}", userdir);
+            // or WriteLine but this is spammy 
+            OutputDelegate logger = TextFilter.DEVNULL;
+            logger("DEBUG9 Saving User Directory {0}", userdir);
             Predicates.SaveTo(userdir, "user.predicates", "UserPredicates.xml");
             GraphMaster gm = bot.GetGraph(UserID, ListeningGraph);
-            gm.WriteToFile(UserID, HostSystem.Combine(userdir, UserID) + ".saved", PrintOptions.SAVE_TO_FILE);
+            gm.WriteToFile(UserID, HostSystem.Combine(userdir, UserID) + ".saved", PrintOptions.SAVE_TO_FILE, logger);
         }
 
         public void LoadDirectory(string userdir)

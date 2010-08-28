@@ -677,8 +677,11 @@ namespace RTParser.Utils
         //}
 
         #endregion
-
         public void WriteToFile(string name, string filename, PrintOptions printOptions)
+        {
+            WriteToFile(name, filename, printOptions, writeToLog);
+        }
+        public void WriteToFile(string name, string filename, PrintOptions printOptions, OutputDelegate logger)
         {
             lock (LockerObject)
             {
@@ -700,16 +703,22 @@ namespace RTParser.Utils
                 {
                     PrintToWriter(CopyOf(CategoryInfos), printOptions, fs, written);
                 }
+                catch (Exception e)
+                {
+                    writeToLog("ERROR {0}", e);
+                    logger("ERROR {0}", e);
+                    throw;
+                }
                 finally
                 {
                     fs.WriteLine("</aiml>");
                     fs.Flush();
                     fs.Close();
-                    writeToLog("COMPLETE WRITTING " + this + " to " + filename + " written=" + CountOF(written) +
-                               " skipped=" + CountOF(skipped) + " original=" + CountOF(CategoryInfos));
-                    this.CategoryInfos = written;
-                    Size = CategoryInfos.Count;
                 }
+                logger("COMPLETE WRITTING " + this + " to " + filename + " written=" + CountOF(written) +
+                           " skipped=" + CountOF(skipped) + " original=" + CountOF(CategoryInfos));
+                this.CategoryInfos = written;
+                Size = CategoryInfos.Count;
             }
         }
 
