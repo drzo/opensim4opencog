@@ -382,6 +382,7 @@ namespace MushDLR223.Utilities
         public static TextFilter TheGlobalLogFilter = new TextFilter()
                                                           {
                                                               "clear",
+                                                              "+*",
                                                               "-dictlog"
                                                           };
                                  

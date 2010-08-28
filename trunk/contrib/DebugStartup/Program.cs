@@ -95,7 +95,7 @@ namespace ABuildStartup
             }
         }
 
-        private static TextFilter filter = new TextFilter() { "+*" };
+        public static TextFilter filter = DLRConsole.TheGlobalLogFilter;// //new TextFilter() { "+*" };
         static public void FilteredWriteLine(string str, params object[] args)
         {
 
@@ -114,6 +114,9 @@ namespace ABuildStartup
         public static void Main0(string[] args)
         {
             args = args ?? new string[0];
+            //if (args.Length == 0) args = new string[] { "--httpd", "--aiml", "Nephrael", "Rae" };
+            //if (args.Length == 0) args = new string[] { "--httpd", "--aiml", "Zeno", "Aironaut" };
+            //if (args.Length == 0) args = new string[] { "--httpd", "--aiml", "BinaBot", "Daxeline" };
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
@@ -140,6 +143,7 @@ namespace ABuildStartup
             if (ClientManager.arguments.GetAfter("--swipl", out oArgs))
             {
                 string[] newArgs = oArgs;
+                if (newArgs.Length==0) newArgs = new string[]{"-f","cynd/cogbot.pl"};
                 AllocConsole();
                 DoAndExit(() => PrologClient.Main(newArgs));
             }
