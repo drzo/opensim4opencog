@@ -13,7 +13,7 @@
     -->
     <category>
         <pattern>CONNECT</pattern>
-        <template>Connected to test case <bot name="~genotype"/> set.</template>
+        <template>Connected to test case AIML set.</template>
     </category>
     <category>
         <pattern>TESTATOMIC</pattern>

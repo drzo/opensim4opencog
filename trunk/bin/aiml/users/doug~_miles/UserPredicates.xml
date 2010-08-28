@@ -9,7 +9,7 @@
   <item name="CYCSELF" value="#$Cyc" />
   <item name="ID" value="doug_miles" />
   <item name="GRAPHNAME" value="doug_miles" />
-  <item name="NAME" value="doug miles" />
+  <item name="XMLNS" value="http://aitools.org/programd/4.6/bot-configuration" />
   <item name="PASSED" value="" />
   <item name="FAILED" value="" />
   <item name="MASTER" value="unknown" />
@@ -78,4 +78,5 @@
   <item name="ME" value="Douglas Miles" />
   <item name="HOST" value="abc80c6c-e1b3-4c3f-aa36-04e6271ccdc3" />
   <item name="USERDIR" value="aiml\users\doug~_miles" />
+  <item name="NAME" value="doug miles" />
 </root>
