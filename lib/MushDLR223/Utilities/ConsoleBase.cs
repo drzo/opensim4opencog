@@ -379,6 +379,22 @@ namespace MushDLR223.Utilities
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
+        public static TextFilter TheGlobalLogFilter = new TextFilter()
+                                                          {
+                                                              "clear",
+                                                              "-dictlog"
+                                                          };
+                                 
+        static public string ShouldPrint(string str, params object[] args)
+        {
+            string printStr = DLRConsole.SafeFormat(str, args);
+            if (!TheGlobalLogFilter.ShouldPrint(printStr))
+            {
+                return null;
+            }
+            return printStr;
+        }
+
         static private readonly object m_syncRoot = new object();
 
         static private int y = -1;
@@ -1092,8 +1108,10 @@ namespace MushDLR223.Utilities
 
         public static void DebugWriteLine(string format, params object[] args)
         {
+            format = ShouldPrint(format, args);
+            if (format == null) return;
             format = GetCallerFormat(format);
-            SystemWriteLine0(format, args);
+            SystemWriteLine0(format);
         }
         private static void SystemWriteLine0(string format, params object[] args)
         {
@@ -1102,7 +1120,9 @@ namespace MushDLR223.Utilities
         }
         public static void SystemWriteLine(string format, params object[] args)
         {
-            SystemWriteLine0(format, args);
+            format = ShouldPrint(format, args);
+            if (format == null) return;
+            SystemWriteLine0(format);
         }
         private static string GetCallerFormat(string format)
         {
@@ -1186,7 +1206,7 @@ namespace MushDLR223.Utilities
             return str;
         }
 
-        public static void SystemWrite0(string format, params object[] args)
+        internal static void SystemWrite0(string format, params object[] args)
         {
             foreach (TextWriter o in Outputs)
             {
