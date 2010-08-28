@@ -90,7 +90,7 @@ namespace RTParser.AIMLTagHandlers
                 foreach (WordNetEngine.POS p in Enum.GetValues(typeof(WordNetEngine.POS)))
                     if (p != WordNetEngine.POS.None)
                     {
-                        if (p.ToString().ToLower().Equals(wnPos))
+                        if (p.ToString().ToLower().Equals(wnPos) || p.ToString().ToLower().StartsWith(wnPos))
                         {
                             ourPOS = p;
                         }
