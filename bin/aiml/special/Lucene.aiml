@@ -14,7 +14,7 @@
  <category>
    <pattern>CHECK *</pattern>
    <template>
-     Let me think ... <think><dbquery><person/></dbquery></think>      
+     Let me think ... <dbquery><person/></dbquery>
    </template>
   </category>
   
