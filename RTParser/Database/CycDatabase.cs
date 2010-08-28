@@ -422,11 +422,9 @@ namespace RTParser.Database
         {
             Unifiable result = "(EVAL-SUBL " + cmd + ")";
             CycAccess access = GetCycAccess;
-            DLRConsole.SystemWrite(result);
-            DLRConsole.SystemFlush();
             if (!UseCyc)
             {
-                DLRConsole.SystemWriteLine("NOT USE CYC");
+                writeToLog("NOT USE CYC " + result);
                 return null;// "NIL";
             }
             try
@@ -446,6 +444,7 @@ namespace RTParser.Database
             }
             catch (Exception e)
             {
+                DLRConsole.DebugWriteLine(result);
                 TheBot.writeToLog(e);
                 DLRConsole.DebugWriteLine("\n" + e);
                 DLRConsole.SystemFlush();
