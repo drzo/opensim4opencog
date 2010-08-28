@@ -293,7 +293,7 @@ namespace cogbot.TheOpenSims
             if (noteable)
             //if (theAvatar.Name.Contains("rael"))
             {
-                DLRConsole.SystemWriteLine(SE);
+                DLRConsole.DebugWriteLine(SE);
             }
             return noteable;
         }
@@ -1602,7 +1602,7 @@ namespace cogbot.TheOpenSims
 
         private void Write(string s)
         {
-            DLRConsole.SystemWrite(s);
+            DLRConsole.DebugWrite(s);
         }
 
         public override bool GotoTarget(SimPosition pos)

@@ -125,7 +125,7 @@ namespace CogbotRadegastPluginModule
                 }
                 catch (Exception exception)
                 {
-                    DLRConsole.SystemWriteLine(exception);
+                    DLRConsole.DebugWriteLine(exception);
                 }
             }
             if (handlerDelegate != null)

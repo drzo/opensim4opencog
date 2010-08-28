@@ -1182,25 +1182,7 @@ namespace cogbot
 
         private static void VeryRealWriteLine(string s, object[] args)
         {
-            string str = s;
-            if (args != null && args.Length > 0)
-            {
-                try
-                {
-                    str = string.Format(s, args);
-                }
-                catch (Exception e)
-                {
-                    System.Console.Error.WriteLine("VeryRealWriteLine: " + e);
-                    System.Console.Error.WriteLine("f: " + s);
-                    int ii = 0;
-                    foreach (var o in args)
-                    {
-                        ii++;
-                        System.Console.Error.WriteLine(" " + ii + ": " + o);
-                    }
-                }
-            }
+            string str = DLRConsole.SafeFormat(s, args);            
             VeryRealWriteLine_Log(Color.Green, "", "", str);
         }
 

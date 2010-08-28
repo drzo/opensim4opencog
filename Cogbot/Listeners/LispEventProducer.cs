@@ -273,8 +273,8 @@ namespace cogbot.Listeners
             }
             catch (Exception e)
             {
-                DLRConsole.SystemWriteLine(eval);
-                DLRConsole.SystemWriteLine("Caused: " + e);
+                DLRConsole.DebugWriteLine(eval + " Caused");
+                DLRConsole.DebugWriteLine(e);
             }
             return true;
         }

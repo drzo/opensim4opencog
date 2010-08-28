@@ -73,7 +73,7 @@ namespace cogbot.Actions.Estate
             else
             {
                 //DLRConsole.WriteLine("Progress: {0}/{1} {2}/{3} {4}", upload.XferID, upload.ID, upload.Transferred, upload.Size, upload.Success);
-                DLRConsole.SystemWrite(".");
+                DLRConsole.DebugWrite(".");
             }
         }
 

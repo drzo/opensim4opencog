@@ -86,7 +86,7 @@ namespace cogbot.Listeners
                     occUpdate++;
                     if (occUpdate % 100 == 0)
                     {
-                        DLRConsole.SystemWrite("." + occUpdate);
+                        DLRConsole.DebugWrite("." + occUpdate);
                         DLRConsole.SystemFlush();
                     }
                     if (RealMeshes >= MaxMeshes || !WorldObjects.MaintainCollisions) break;
