@@ -327,7 +327,7 @@ namespace MushDLR223.Utilities
             }
         }
 
-        static void DEVNULL(string s, object[] args)
+        static public void DEVNULL(string s, object[] args)
         {
         }
 
