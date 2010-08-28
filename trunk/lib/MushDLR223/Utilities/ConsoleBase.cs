@@ -1131,7 +1131,7 @@ namespace MushDLR223.Utilities
             }
             return format;
         }
-        public static void SystemWriteLine0(string arg)
+        internal static void SystemWriteLine0(string arg)
         {
             SystemWriteLine0("{0}", arg);
         }
@@ -1147,12 +1147,6 @@ namespace MushDLR223.Utilities
         {
             SystemWrite0(format, args);
         }
-
-        public static void SystemWrite(string format)
-        {
-            SystemWrite0(format, null);
-        }
-
         static public string CurrentCaller
         {
             get
@@ -1200,7 +1194,7 @@ namespace MushDLR223.Utilities
                 {
                     if (args == null || args.Length == 0)
                     {
-                        o.Write(args);
+                        o.Write(format);
                     }
                     else
                     {

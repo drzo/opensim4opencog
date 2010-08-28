@@ -1112,6 +1112,27 @@ namespace cogbot
             }
 
         }
+
+        public void DebugWriteLine(string str, params object[] args)
+        {
+            try
+            {
+                if (str == null) return;
+                if (args != null && args.Length > 0) str = String.Format(str, args);
+                if (str == "") return;
+                if (str.StartsWith("$bot")) str = str.Substring(4);
+                str = str.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "\r\n").Trim();
+                string SelfName = String.Format("{0}", GetName());
+                str = str.Replace("$bot", SelfName);
+                if (str.StartsWith(SelfName)) str = str.Substring(SelfName.Length).Trim();
+                ClientManager.SetDebugConsole(__TheRadegastInstance);
+                ClientManager.WriteLine(str);
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(GetName() + " exeption " + ex, Helpers.LogLevel.Error, ex);
+            }            
+        }
         public void WriteLine(string str, params object[] args)
         {
             try

@@ -819,7 +819,7 @@ namespace AIMLBotModule
             if (Monitor.TryEnter(writeLock, 1000))
             {
                 writeLock.Enqueue(() => {
-                    if (logAimlToClient && client!=null) client.WriteLine(s, args);
+                    if (logAimlToClient && client != null) client.DebugWriteLine(s, args);
                     Logger.DebugLog(string.Format(string.Format("[AIMLBOT] {0} {1}", GetName(), s), args));
                 });
                 Monitor.Exit(writeLock);
