@@ -1126,7 +1126,7 @@ namespace cogbot
                 str = str.Replace("$bot", SelfName);
                 if (str.StartsWith(SelfName)) str = str.Substring(SelfName.Length).Trim();
                 ClientManager.SetDebugConsole(__TheRadegastInstance);
-                ClientManager.WriteLine(str);
+                ClientManager.DebugWriteLine(str);
             }
             catch (Exception ex)
             {

@@ -438,26 +438,36 @@ namespace cogbot
             WriteLine(str, args);   
         }
         static  string lastStr = "";
+        static public TextFilter TheGlobalLogFilter
+        {
+            get
+            {
+                return DLRConsole.TheGlobalLogFilter;
+            }
+        }
         public void WriteLine(string str, params object[] args)
         {
-
             if (args == null || args.Length == 0)
             {
                 args = new object[] { str };
                 str = "{0}";
             }
-            
+            string printStr = DLRConsole.ShouldPrint(str, args);
+            if (printStr==null)
+            {
+                return;
+            }
             if (outputDelegate == null || outputDelegate == WriteLine)
             {
-                GlobalWriteLine(str, args);
+                GlobalWriteLine(printStr);
             }
             else
             {
                 if (outputDelegate != GlobalWriteLine)
                 {
-                    GlobalWriteLine(str, args);
+                    GlobalWriteLine(printStr);
                 }
-                outputDelegate(str, args);
+                outputDelegate(printStr);
             }
         }
 
@@ -1192,10 +1202,10 @@ namespace cogbot
         public static void VeryRealWriteLine_Log(Color color, string timeStamp, string named, string mesg)
         {
             RichTextBox rtbLog = TheDebugConsoleRTB;
-            if (rtbLog==null)
+            if (rtbLog == null)
             {
                 var O = Console.Out;
-                if (O==null) return;
+                if (O == null) return;
                 O.WriteLine(mesg);
                 return;
             }
@@ -1205,20 +1215,28 @@ namespace cogbot
                     rtbLog.BeginInvoke(new MethodInvoker(() => VeryRealWriteLine_Log(color, timeStamp, named, mesg)));
                 return;
             }
-            rtbLog.SelectionColor = Color.FromKnownColor(KnownColor.WindowText);
-            if (!String.IsNullOrEmpty(timeStamp))
+            Color prev = rtbLog.SelectionColor;
+            try
             {
-                rtbLog.AppendText(string.Format("{0} ", timeStamp));
-            }
-            if (!String.IsNullOrEmpty(named))
-            {
-                rtbLog.AppendText("[");
-                rtbLog.SelectionColor = color;
-                rtbLog.AppendText(named);
                 rtbLog.SelectionColor = Color.FromKnownColor(KnownColor.WindowText);
-                rtbLog.AppendText("]: - ");
+                if (!String.IsNullOrEmpty(timeStamp))
+                {
+                    rtbLog.AppendText(string.Format("{0} ", timeStamp));
+                }
+                if (!String.IsNullOrEmpty(named))
+                {
+                    rtbLog.AppendText("[");
+                    rtbLog.SelectionColor = color;
+                    rtbLog.AppendText(named);
+                    rtbLog.SelectionColor = Color.FromKnownColor(KnownColor.WindowText);
+                    rtbLog.AppendText("]: - ");
+                }
+                rtbLog.AppendText(string.Format("{0}{1}", mesg, Environment.NewLine));
             }
-            rtbLog.AppendText(string.Format("{0}{1}", mesg, Environment.NewLine));
+            finally
+            {
+                rtbLog.SelectionColor = prev;
+            }
         }
 
         public OutputDelegate outputDelegate
@@ -1235,7 +1253,7 @@ namespace cogbot
         }
 
         public static void GlobalWriteLine(string str, params object[] args)
-        {
+        {            
             string check = string.Format(str, args);
             if (lastStr == check)
             {

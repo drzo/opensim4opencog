@@ -15,22 +15,11 @@ namespace cogbot.Actions.System
             Usage = "Filters out console messages";
             Category = CommandCategory.BotClient;
         }
-
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
-            if (args.Length == 0)
-                return Success("Logging is " + Settings.LOG_LEVEL);
-
-            args[0] = args[0].ToLower();
-            foreach (var s in typeof(Helpers.LogLevel).GetFields())
-            {
-                if (s.Name.ToLower().StartsWith(args[0]))
-                {
-                    Settings.LOG_LEVEL = (Helpers.LogLevel)s.GetValue(null);
-                    return Success("Logging is set to " + Settings.LOG_LEVEL);
-                }
-            }
-            return ShowUsage();// " debug [level] where level is one of None, Debug, Error, Info, Warn";
+            string ss = Parser.Rejoin(args, 0);
+            ClientManager.TheGlobalLogFilter.UpateLogging(ss,WriteLine);
+            return Success("filter: " + ss);
         }
     }
 }
