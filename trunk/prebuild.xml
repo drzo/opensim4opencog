@@ -78,6 +78,32 @@
       </Project>
       -->
 
+    <Project name="Lucene.Net" path="lib/Lucene/src/Lucene.Net" type="Library" frameworkVersion="v3_5">
+      <Configuration name="Debug">
+        <Options>
+          <OutputPath>../../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release">
+        <Options>
+          <OutputPath>../../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <ReferencePath>../../../../bin/</ReferencePath>
+      <Reference name="System" localCopy="false"/>
+      <Reference name="System.Core" localCopy="false"/>
+      <Reference name="System.Configuration" localCopy="false"/>
+      <Reference name="System.Runtime.Remoting" localCopy="false"/>
+      <Reference name="System.Data" localCopy="false"/>
+      <Reference name="System.Data.DataSetExtensions" localCopy="false"/>
+      <Reference name="System.Deployment" localCopy="false"/>
+      <Reference name="System.Xml" localCopy="false"/>
+      <Reference name="System.Xml.Linq" localCopy="false"/>
+      <Files>
+        <Match pattern="*.cs" recurse="true"/>
+      </Files>
+    </Project>
+
           <Project name="LAIR.ResourceAPIs.PennBank" path="lib/PennBank.net/PennBank" type="Library" rootNamespace="LAIR.ResourceAPIs.PennBank" frameworkVersion="v3_5">
            <Configuration name="Debug">
              <Options>
@@ -230,7 +256,6 @@
           <Options>
             <OutputPath>../../bin/</OutputPath>
             <XmlDocFile>OpenMetaverseTypes.XML</XmlDocFile>
-            <PlatformTarget>anycpu</PlatformTarget>
           </Options>
         </Configuration>
 
@@ -1087,10 +1112,8 @@
        </Options>
      </Configuration>
      <Configuration name="Release">
-       <Options>
-         
+       <Options>         
          <OutputPath>../../bin/</OutputPath>
-         <PlatformTarget>anycpu</PlatformTarget>
        </Options>
      </Configuration>
 
@@ -1760,13 +1783,13 @@ app -->
   <Configuration name="Debug">
     <Options>
       <OutputPath>../../bin/</OutputPath>
-      <PlatformTarget>x86</PlatformTarget>
+<!--     <PlatformTarget>x86</PlatformTarget> -->
     </Options>
   </Configuration>
   <Configuration name="Release">
     <Options>
       <OutputPath>../../bin/</OutputPath>
-      <PlatformTarget>x86</PlatformTarget>
+      <!--     <PlatformTarget>x86</PlatformTarget> -->
     </Options>
   </Configuration>
       <!--<Reference name="Mono.Addins.dll" localCopy="false"/>-->
@@ -1842,6 +1865,28 @@ app -->
   </Files>
   </Project>
 
+    <Project name="ABuildStartup32" path="contrib/DebugStartup32" type="Exe" frameworkVersion="v3_5">
+      <Configuration name="Debug">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+          <PlatformTarget>x86</PlatformTarget>
+        </Options>
+      </Configuration>
+      <Configuration name="Release">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+          <PlatformTarget>x86</PlatformTarget>
+        </Options>
+      </Configuration>
+      <ReferencePath>../../bin/</ReferencePath>
+      <Reference name="System" localCopy="false"/>
+      <Reference name="ABuildStartup.exe" localCopy="false"/>
+      <Files>
+        <Match pattern="*.cs" recurse="true"/>
+        <!--<Match pattern="frm*.cs" subType="Form"/>-->
+        <Match pattern="*.resx" buildAction="EmbeddedResource" recurse="true"/>
+      </Files>
+    </Project>
 
   </Solution>
 
