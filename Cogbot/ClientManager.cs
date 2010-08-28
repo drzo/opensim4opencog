@@ -433,7 +433,10 @@ namespace cogbot
             ScriptExecutor bbn = GetBotByName("" + o);
             return bbn ?? LastBotClient;
         }
-
+        public void DebugWriteLine(string str, params object[] args)
+        {
+            WriteLine(str, args);   
+        }
         static  string lastStr = "";
         public void WriteLine(string str, params object[] args)
         {
