@@ -258,7 +258,7 @@ namespace RTParser.Variables
                         }
                         catch (Exception e)
                         {
-                            writeToLog("loadSettings: " + pathToSettings + "\n" + e);
+                            writeToLog("ERROR loadSettings '{1}'\n {0} ", e, pathToSettings);
                         }
                     }
                     else
@@ -324,7 +324,9 @@ namespace RTParser.Variables
 
         private void writeToLog(string message, params object[] args)
         {
-            if (message.Trim().ToLower().StartsWith("error")) message = "-DICTRACE: " + message;
+            string tol = message.Trim().ToLower();
+            if (tol.StartsWith("error")) message = "-DICTRACE: " + message;
+            if (!tol.Contains("dictlog")) message = "DICTLOG: " + message;         
             if (bot != null) bot.writeToLog(message, args); else RTPBot.writeDebugLine(message, args);
         }
 
@@ -553,7 +555,7 @@ namespace RTParser.Variables
                     ParentProvider pp = settingsDict.FindDictionary(name, null);
                     if (pp==null|| pp()==null)
                     {
-                        settingsDict.writeToLog("Cannot ResolveToObject settings line {0} in {1}", name, settingsDict);
+                        settingsDict.writeToLog("DEBUG9 Cannot ResolveToObject settings line {0} in {1}", name, settingsDict);
                         return;
                     }
                     switch (lower)
@@ -671,7 +673,7 @@ namespace RTParser.Variables
             var rtpbotobjCol = MushDLR223.ScriptEngines.ScriptManager.ResolveToObject(this, name);
             if (rtpbotobjCol == null || rtpbotobjCol.Count == 0)
             {
-                writeToLog("Cannot ResolveToObject settings line {0} in {1}", name, this);
+                writeToLog("DEBUG9 Cannot ResolveToObject settings line {0} in {1}", name, this);
                 return fallback;
             }
             //if (tr)
