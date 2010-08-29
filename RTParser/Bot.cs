@@ -1978,7 +1978,7 @@ namespace RTParser
             TemplateInfo templateInfo = null;//
             if (false)
             {
-                templateInfo = new TemplateInfo(templateNode, null, null, null, null);
+                templateInfo = new TemplateInfo(templateNode, null, null, null);
             }
             bool templateSucceeded;
             bool createdOutput;

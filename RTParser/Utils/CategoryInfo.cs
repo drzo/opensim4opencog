@@ -16,17 +16,23 @@ namespace RTParser.Utils
             get { return srcNode; }
         }
 
-        public XmlNode Template
+        public TemplateInfo Template;
+
+        public XmlNode TemplateXml
         {
             get { return AIMLLoader.FindNode("template", Category, null); }
         }
 
-        public XmlNode Topic
+        public TopicInfo Topic;
+
+        public XmlNode TopicXml
         {
             get { return AIMLLoader.FindNodeOrHigher("topic", Category, null); }
         }
 
-        public XmlNode That
+        public ThatInfo That;
+
+        public XmlNode ThatXml
         {
             get { return AIMLLoader.FindNodeOrHigher("that", Category, null); }
         }
@@ -34,8 +40,8 @@ namespace RTParser.Utils
         public PatternInfo Pattern;
         // public GuardInfo Guard;
         public string Filename;
-        public List<TemplateInfo> TemplateInfos = new List<TemplateInfo>();
-        private object node;
+        //public List<TemplateInfo> TemplateInfos = new List<TemplateInfo>();
+        //private object node;
 
         public CategoryInfo(PatternInfo pattern, XmlNode cateNode, LoaderOptions options)
             : base(cateNode)
@@ -56,7 +62,8 @@ namespace RTParser.Utils
 
         public void AddTemplate(TemplateInfo templateInfo)
         {
-            TemplateInfos.Add(templateInfo);
+            Template = templateInfo;
+          //  TemplateInfos.Add(templateInfo);
         }
 
         public static CategoryInfo GetCategoryInfo(PatternInfo info, XmlNode node, LoaderOptions filename)
@@ -114,12 +121,20 @@ namespace RTParser.Utils
                     }
                 }
             }
-            var topic1 = this.Topic;
+            var topic1 = this.TopicXml;
             bool hasTopic = topic1 != null;
             if (hasTopic)
             {
                 s += "<topic name=\"";
-                var n = AIMLTagHandler.GetAttribValue(topic1, "name", () => (string) null, null);
+                var n = AIMLTagHandler.GetAttribValue(topic1, "name", () => (string)null, null);
+                s += n;
+                s += "\">";
+            }
+            else if (Topic != null && !Topic.IsCatchAll)
+            {
+                hasTopic = true;
+                s += "<topic name=\"";
+                var n = (string) Topic.FullPath;
                 s += n;
                 s += "\">";
             }

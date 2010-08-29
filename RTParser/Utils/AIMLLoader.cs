@@ -652,7 +652,7 @@ namespace RTParser.Utils
             return CIs;
         }
 
-        private CategoryInfo addCatNode(XmlNode cateNode, XmlNode patternNode, LoaderOptions path, XmlNode templateNode,
+        private CategoryInfo addCatNode(XmlNode cateNode, XmlNode patternNode, LoaderOptions loaderOpts, XmlNode templateNode,
             Unifiable topicName, XmlNode outerNode)
         {
             XmlNode guardnode = FindNode("guard", cateNode, null);
@@ -671,7 +671,7 @@ namespace RTParser.Utils
             patternNode = newPattern;
             XmlNode topicTagText = extractThat(patternNode, "topic", cateNode, out patternText, out newPattern);
             patternNode = newPattern;
-            if (path.DebugFiles && !ContansNoInfo(topicTagText.InnerXml))
+            if (loaderOpts.DebugFiles && !ContansNoInfo(topicTagText.InnerXml))
             {
                 var s = RTPBot.GetAttribValue(topicTagText, "name", Unifiable.STAR);
                 if (topicName != s)
@@ -680,19 +680,19 @@ namespace RTParser.Utils
                 }
             }
             Unifiable categoryPath = generateCPath(patternText, that, cond, topicName, false);
-            PatternInfo patternInfo = PatternInfo.GetPattern(path, patternNode, categoryPath);
-            TopicInfo topicInfo = TopicInfo.FindTopic(path, topicName);
-            ThatInfo thatInfo = ThatInfo.GetPattern(path, that);
+            PatternInfo patternInfo = PatternInfo.GetPattern(loaderOpts, patternNode, categoryPath);
+            TopicInfo topicInfo = TopicInfo.FindTopic(loaderOpts, topicName);
+            ThatInfo thatInfo = ThatInfo.GetPattern(loaderOpts, that);
 
             // o.k., add the processed AIML to the GraphMaster structure
             if (!categoryPath.IsEmpty)
             {
-                GraphMaster pathCtxGraph = path.CtxGraph;
+                GraphMaster pathCtxGraph = loaderOpts.CtxGraph;
                 lock (pathCtxGraph.LockerObject)
                 {
                     try
                     {
-                        CategoryInfo categoryInfo = CategoryInfo.GetCategoryInfo(patternInfo, cateNode, path);
+                        CategoryInfo categoryInfo = CategoryInfo.GetCategoryInfo(patternInfo, cateNode, loaderOpts);
                         categoryInfo.SetCategoryTag(categoryPath, patternInfo, categoryInfo,
                                                     outerNode, templateNode, guard, thatInfo);
 
@@ -704,7 +704,7 @@ namespace RTParser.Utils
                     {
                         string s = "ERROR! Failed to load a new category into the graphmaster where the path = " +
                                    categoryPath + " and templateNode = " + templateNode.OuterXml +
-                                   " produced by a category in the file: " + path + "\n";
+                                   " produced by a category in the file: " + loaderOpts + "\n";
                         writeToLog(s + e + "\n" + s);
                         return null;
                     }
@@ -712,7 +712,7 @@ namespace RTParser.Utils
             }
             else
             {
-                writeToLog("ERROR WARNING! Attempted to load a new category with an empty patternNode where the path = " + categoryPath + " and templateNode = " + templateNode.OuterXml + " produced by a category in the file: " + path);
+                writeToLog("ERROR WARNING! Attempted to load a new category with an empty patternNode where the path = " + categoryPath + " and templateNode = " + templateNode.OuterXml + " produced by a category in the file: " + loaderOpts);
                 return null;
             }
         }

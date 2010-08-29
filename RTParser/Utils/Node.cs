@@ -119,19 +119,6 @@ namespace RTParser.Utils
         /// <param name="path">the path for the category</param>
         /// <param name="template">the template to find at the end of the path</param>
         /// <param name="filename">the file that was the source of this category</param>
-        static public Node addCategoryTagUnused(Node start, Unifiable path, PatternInfo patternInfo, CategoryInfo category, XmlNode outerTemplate, XmlNode templateNode, GuardInfo guard, ThatInfo thatInfo, GraphMaster master)
-        {
-            if (templateNode == null)
-            {
-                throw new XmlException("The category with a pattern: " + path + " found in file: " + category +
-                                       " has an empty template tag. ABORTING");
-            }
-            //String ts = outTemplate.OuterXml;
-            Node thiz = start.addPathNodeChilds(path);
-            thiz.addTerminal(templateNode, category, guard, thatInfo, master, patternInfo);
-            return thiz;
-        }
-
         public TemplateInfo addTerminal(XmlNode templateNode, CategoryInfo category, GuardInfo guard, ThatInfo thatInfo, GraphMaster master, PatternInfo patternInfo)
         {
             const bool RemoveDupes = true; //slows it down but maybe important to do
@@ -151,21 +138,17 @@ namespace RTParser.Utils
                     string newGuard = guard != null ? guard.OuterXml : null;
                     string newThat = thatInfo != null ? thatInfo.OuterXml : null;
                     List<TemplateInfo> dupes = null;
-
                     int nodeNum = 0;
                     this.TemplateInfos.ForEach(delegate(TemplateInfo temp)
                                                    {
-                                                       var categoryinfo1 = category;
-                                                       var categoryinfo2 = temp.CategoryInfo;
+                                                       //var categoryinfo1 = category;
+                                                       //var categoryinfo2 = temp.CategoryInfo;
                                                        string oldGuard = temp.Guard != null ? temp.Guard.OuterXml : null;
                                                        string oldThat = temp.That != null ? temp.That.OuterXml : null;
                                                        if (AIMLLoader.AimlSame(newStr, temp.Output.OuterXml))
                                                            if (AIMLLoader.AimlSame(newGuard, oldGuard))
                                                                if (AIMLLoader.AimlSame(newThat, oldThat))
                                                                {
-                                                                   if (temp.CategoryInfo == category)
-                                                                   {
-                                                                   }
                                                                    if (nodeNum == 0)
                                                                    {
                                                                        //TemplateInfo redundant = TemplateInfo.GetTemplateInfo(templateNode, guard, thatInfo, this, category);
@@ -226,24 +209,20 @@ namespace RTParser.Utils
             }
 
             // last in first out addition
-            TemplateInfo newTemplateInfo = TemplateInfo.GetTemplateInfo(templateNode, guard, thatInfo, this, category);
-            newTemplateInfo.That = thatInfo;
+            TemplateInfo newTemplateInfo = TemplateInfo.GetTemplateInfo(templateNode, guard, thatInfo, this, category);            
             // this.That = thatInfo;
             PatternInfo pat = patternInfo;
             if (category != null)
             {
+                category.That = thatInfo;
                 category.AddTemplate(newTemplateInfo);
                 pat = category.Pattern;
             }
             if (pat != null)
             {
-                if (pat.FullPath.AsString().Contains("CODA*"))
-                {
-                    writeToLog("ERROR because LoopsFrom so SKIPPING! " + pat + "==" + newTemplateInfo + "");                    
-                }
                 if (thatInfo != null && thatInfo.FullPath.AsString() == "*")
                 {
-                    if (patternInfo.LoopsFrom(newTemplateInfo))
+                    if (patternInfo.LoopsFrom(newTemplateInfo.InnerXml))
                     {
                         writeToLog("ERROR because LoopsFrom so SKIPPING! " + pat + "==" + newTemplateInfo + "");
                         if (this.TemplateInfos.Count == 0)
