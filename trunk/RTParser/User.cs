@@ -32,6 +32,7 @@ namespace RTParser
         public int MaxRespondToChatPerMinute = 10;
 
         public static int DefaultMaxResultsSaved = 5;
+        public static bool NeverSaveUsers = false;
         public int MaxResultsSaved = DefaultMaxResultsSaved;
         public bool IsRoleAcct = false;
 
@@ -52,6 +53,7 @@ namespace RTParser
         private void SaveOften(object state)
         {
             if (IsRoleAcct) return;
+            if (NeverSave) return;
             lock (SaveLock)
             {
                 if (!needsSave)
@@ -759,11 +761,13 @@ namespace RTParser
         private bool needsSave;
         private bool insideSave;
         private bool noLoad = true;
+        public bool NeverSave = NeverSaveUsers;
         private bool needAiml = false;
         private readonly List<CrossAppDomainDelegate> OnNeedAIML = new List<CrossAppDomainDelegate>();
 
         public void SyncDirectory(string userdir)
         {
+            if (_saveToDirectory == null) _saveToDirectory = userdir;
             noLoad = false;
             lock (SaveLock)
             {
@@ -786,6 +790,7 @@ namespace RTParser
             }
             try
             {
+                if (NeverSave) return;
                 SaveDirectory0(userdir);
             }
             finally

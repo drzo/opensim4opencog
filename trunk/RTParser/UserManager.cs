@@ -181,6 +181,8 @@ namespace RTParser
             lock (BotUsers)
             {
                 if (BotUsers.ContainsKey(key)) return BotUsers[key];
+                key = KeyFromUsername(fromname);
+                if (BotUsers.ContainsKey(key)) return BotUsers[key];
                 if (UnknowableName(fromname))
                 {
                     var unk = UNKNOWN_PARTNER.ToLower();
@@ -210,6 +212,7 @@ namespace RTParser
             {
                 string username = fullname;
                 fullname = CleanupFromname(fullname);
+                key = key.ToLower();
                 User myUser = new AIMLbot.User(key, this);
                 myUser.UserName = fullname;
                 writeToLog("USERTRACE: New User " + fullname);
