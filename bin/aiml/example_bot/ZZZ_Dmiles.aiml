@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<aiml graph="default">
+  
+<!--
+  <category>
+    <pattern>*</pattern>
+    <template>
+      <srai>STDCATCHALL-NEXVER</srai>
+    </template>
+  </category>
+-->
+
+  <learn graph="default" path="aiml/example_bot/" />
+
+  <category>
+    <pattern>TOELIZA *</pattern>
+    <template>
+      <srai graph="eliza">
+        <star/>
+      </srai>
+    </template>
+  </category>
+
+  <srai graph="eliza">
+      <learn graph="eliza" path="../jliza/" />
+  </srai>
+
+
+  <aiml graph="default">
+    <category>
+      <pattern>YES</pattern>
+      <that>CAN YOU BE *</that>
+      <template>
+        Then please do be <set name="will">
+          <thatstar/>
+        </set>
+      </template>
+    </category>
+
+    <category>
+      <pattern>NO</pattern>
+      <that>CAN YOU BE *</that>
+      <template>
+        Then please try to be <set name="will">
+          <thatstar/>
+        </set>
+      </template>
+    </category>
+
+    <category>
+      <pattern>_</pattern>
+      <pattern>*</pattern>
+      <that>CAN YOU BE *</that>
+      <template>
+        So that means yes that you'll be <set name="will">
+          <thatstar/>
+        </set>
+      </template>
+    </category>
+
+    <category>
+      <pattern>YES</pattern>
+      <that>SO THAT MEANS *</that>
+      <template>
+        Then <get name="will"/>
+      </template>
+    </category>
+
+    <category>
+      <pattern>NO</pattern>
+      <that>SO THAT MEANS *</that>
+      <template>
+        why not <get name="will"/>?
+      </template>
+    </category>
+
+  </aiml>
+  
+</aiml>
+
