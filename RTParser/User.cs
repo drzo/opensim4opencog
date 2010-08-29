@@ -312,6 +312,7 @@ namespace RTParser
                 //this.Predicates.addSetting("topic", "NOTOPIC");
                 SaveTimer = new Timer(SaveOften, this, new TimeSpan(0, 5, 0), new TimeSpan(0, 5, 0));
                 needsSave = true;
+                StampResponseGiven();
             }
             else
             {
@@ -1040,9 +1041,16 @@ namespace RTParser
 
         public bool CanGiveResponseNow()
         {
-            return (DateTime.Now.Subtract(LastResponseGivenTime).TotalSeconds >
+            // KHC: TODO Revisit, response time seemed more like minute fractions than totalseconds for whole struct
+            // could be
+            DateTime thisResponseTime = DateTime.Now;
+            TimeSpan TSP = thisResponseTime.Subtract(LastResponseGivenTime);
+            double  timedelay = Math.Abs(TSP.TotalSeconds);
+            double secPerChat = (double) ((double) 60 / (double)MaxRespondToChatPerMinute);
+            return ( timedelay >
                 // ReSharper disable PossibleLossOfFraction
-             (60 / MaxRespondToChatPerMinute));
+                     secPerChat
+             );
             // ReSharper restore PossibleLossOfFraction
         }
     }
