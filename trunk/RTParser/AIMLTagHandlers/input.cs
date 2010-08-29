@@ -57,10 +57,12 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessChange()
         {
-            if (CheckNode("index,justthat,beforethat"))
+            if (CheckNode("input,justthat,beforethat,request"))
             {
                 if (AttributesCount(templateNode, "index") == 0)
                 {
+                    string ixml = templateNode.InnerXml;
+
                     return this.user.getInputSentence(offetFrom - 1);
                 }
                 string at = GetAttribValue("index", null);

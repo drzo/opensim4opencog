@@ -1599,5 +1599,11 @@ namespace RTParser.Utils
             }
             return CopyNode(pattern, true);
         }
+
+        public static bool IsHtmlTag(string name)
+        {
+            return " html head body font pre p div br dd td th tr table frame frameset &ltl &gt; input option select  " // etc
+                .Contains(" " + name.ToLower()+ " ");
+        }
     }
 }
