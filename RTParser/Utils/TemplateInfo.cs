@@ -35,7 +35,7 @@ namespace RTParser.Utils
             }
 
             // TODO: write your implementation of Equals() here
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
             return base.Equals(obj);            
         }
 
