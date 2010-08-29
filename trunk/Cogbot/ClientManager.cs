@@ -1254,7 +1254,7 @@ namespace cogbot
 
         public static void GlobalWriteLine(string str, params object[] args)
         {            
-            string check = string.Format(str, args);
+            string check = DLRConsole.SafeFormat(str, args);
             if (lastStr == check)
             {
                 return;
@@ -1266,11 +1266,11 @@ namespace cogbot
 
             if (Filter != null)
             {
-                Filter(str, args);
+                Filter(check);
             }
             else
             {
-                Real(str, args);
+                Real(check);
             }
         }
 
