@@ -493,7 +493,7 @@ namespace AIMLBotModule
                             if (String.IsNullOrEmpty(resp)) return;
                             if (UseThrottle)
                             {
-                                if ((myUser.CanGiveResponseNow()))
+                                if ((!myUser.CanGiveResponseNow()))
                                 {
                                     WriteLine("AIML_OnInstantMessage Reply is too fast: {0}: {1}->{2}", myUser, message, resp);
                                     return; //too early to respond.. but still listened
@@ -639,7 +639,7 @@ namespace AIMLBotModule
                         {
                             string resp = AIMLInterp(message, myUser);
                             if (String.IsNullOrEmpty(resp)) return;
-                            if (MyUser.CanGiveResponseNow())
+                            if (!MyUser.CanGiveResponseNow())
                             {
                                 WriteLine("AIML_OnChat Reply is too fast {0}: {1}->{2}", myUser, message, resp);
 
@@ -1203,7 +1203,7 @@ namespace AIMLBotModule
             string s = args[0];
             if (s == "on" || s == "@on")
             {
-                RespondToChatByDefaultAllUsers = true;
+                 RespondToChatByDefaultAllUsers = true;
                 SetChatOnOff(String.Join(" ", args, 1, args.Length - 1), true);
                 writeLine("WorldObjects.RespondToChatByDefaultAllUsers = true;");
             }
