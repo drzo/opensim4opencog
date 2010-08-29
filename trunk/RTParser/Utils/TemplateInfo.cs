@@ -8,13 +8,44 @@ namespace RTParser.Utils
     public class TemplateInfo : OutputInfo, IAIMLInfo
     {
         public GuardInfo Guard;
-        public ThatInfo That;
+
+        public ThatInfo That
+        {
+            get { return CategoryInfo.That; }
+        }
         public CategoryInfo CategoryInfo;
         public Node GraphmasterNode;
         public double Rating = 1.0;
         public SubQuery Query;
         public Unifiable TextSaved;
 
+        // override object.Equals
+        public override bool Equals(object obj)
+        {
+            //       
+            // See the full list of guidelines at
+            //   http://go.microsoft.com/fwlink/?LinkID=85237  
+            // and also the guidance for operator== at
+            //   http://go.microsoft.com/fwlink/?LinkId=85238
+            //
+
+            if (obj == null || GetType() != obj.GetType())
+            {
+                return false;
+            }
+
+            // TODO: write your implementation of Equals() here
+            throw new NotImplementedException();
+            return base.Equals(obj);            
+        }
+
+// override object.GetHashCode
+        public override int GetHashCode()
+        {
+            // TODO: write your implementation of GetHashCode() here
+            throw new NotImplementedException();
+            return base.GetHashCode();
+        }
         public GraphMaster Graph
         {
             get
@@ -69,7 +100,7 @@ namespace RTParser.Utils
             }
         }
 
-        public TemplateInfo(XmlNode template, GuardInfo guard, ThatInfo that, Node patternNode, CategoryInfo categoryInfo)
+        public TemplateInfo(XmlNode template, GuardInfo guard, Node patternNode, CategoryInfo categoryInfo)
             : base(template)
         {
             if (template.Name != "template")
@@ -77,7 +108,7 @@ namespace RTParser.Utils
                 throw new UnauthorizedAccessException();
             }
             Guard = guard;
-            That = that;
+            //That = that;
             GraphmasterNode = patternNode;
             CategoryInfo = categoryInfo;
             try
@@ -102,14 +133,14 @@ namespace RTParser.Utils
                        AIMLLoader.LocationEscapedInfo(tryit);
             }
             string s = base.ToString();
-            if (Guard != null)
-            {
-                s = s + Guard.ToString();
-            }
-            if (That != null)
-            {
-                s = s + That.OuterXml;
-            }
+            /*            if (Guard != null)
+                        {
+                            s = s + Guard.ToString();
+                        }
+                        if (That != null)
+                        {
+                            s = s + That.OuterXml;
+                        }*/
             return s;
         }
 
@@ -119,7 +150,7 @@ namespace RTParser.Utils
             try
             {
                 NoInfo = false;
-                return new TemplateInfo(template, guard, thatInfo, node, category);
+                return new TemplateInfo(template, guard, /* thatInfo, */ node, category);
             }
             finally
             {

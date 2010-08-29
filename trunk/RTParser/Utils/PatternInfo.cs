@@ -26,17 +26,18 @@ namespace RTParser.Utils
             return loaderOptions.CtxGraph.FindPattern(pattern, unifiable);
         }
 
-        internal bool LoopsFrom(TemplateInfo newTemplateInfo)
+        internal bool LoopsFrom(string innerXml)
         {
             var p = FullPath.AsString().ToLower();
             p = p.Replace("_", "*");
             p = AIMLLoader.CleanWhitepacesLower(p);
             p = "<srai>" + p + "</srai>";
 
-            var t = newTemplateInfo.InnerXml.ToLower();
+            var t = innerXml.ToLower();
             t = AIMLLoader.CleanWhitepacesLower(t);
-            t = t.Replace("<star index=\"1\"/>", "*");
-            t = t.Replace("<sr/>", "<srai>*</srai>");
+            t = t.Replace("<star index=\"1\"/>", " * ");
+            t = t.Replace("<star/>", " * ");
+            t = t.Replace("<sr/>", " * ");
 
             if (t.Contains(p))
             {
