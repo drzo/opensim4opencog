@@ -207,9 +207,11 @@ namespace RTParser
                     if (!internedUnifiables.TryGetValue(key, out u))
                     {
                         u = internedUnifiables[key] = new StringUnifiable(value, true);
-                        if ((internedUnifiables.Count % 10000)==0)
+// ReSharper disable ConditionIsAlwaysTrueOrFalse
+                        if (false && (internedUnifiables.Count % 10000)==0)
+// ReSharper restore ConditionIsAlwaysTrueOrFalse
                         {
-                            writeToLog("internedUnifiables.Count=" + internedUnifiables.Count);
+                            writeToLog("DEBUG9 internedUnifiables.Count=" + internedUnifiables.Count);
                         }
                     }
                     return (StringUnifiable)u;
