@@ -56,7 +56,7 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessChange()
         {
-            if (CheckNode("that,justbeforethat"))
+            if (CheckNode("that,justbeforethat,response"))
             {
                 if (AttributesCount(templateNode, "index") == 0)
                 {

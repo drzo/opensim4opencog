@@ -2379,6 +2379,9 @@ namespace RTParser
                     case "id":
                         tagHandler = new AIMLTagHandlers.id(this, user, query, request, result, node);
                         break;
+                    case "request":
+                        tagHandler = new AIMLTagHandlers.input(this, user, query, request, result, node, 1);
+                        break;
                     case "input":
                         tagHandler = new AIMLTagHandlers.input(this, user, query, request, result, node, 1);
                         break;
@@ -2393,6 +2396,7 @@ namespace RTParser
                         break;
                     case "learn":
                     case "load":
+                    case "noload": // the commented version of <load>
                         tagHandler = new AIMLTagHandlers.learn(this, user, query, request, result, node);
                         break;
                     case "lowercase":
@@ -2433,6 +2437,9 @@ namespace RTParser
                         tagHandler = new AIMLTagHandlers.that(this, user, query, request, result, node, 1);
                         break;
                     case "justbeforethat": //treated as <that index="2,1"/>
+                        tagHandler = new AIMLTagHandlers.that(this, user, query, request, result, node, 2);
+                        break;
+                    case "response": //treated as <that index="1,1"/>
                         tagHandler = new AIMLTagHandlers.that(this, user, query, request, result, node, 2);
                         break;
                     case "thatstar":
@@ -2582,6 +2589,10 @@ namespace RTParser
                     default:
                         break;
                 }
+            }
+            if (AIMLLoader.IsHtmlTag(node.Name))
+            {
+                return new AIMLTagHandlers.recursiveVerbatum(node, this, user, query, request, result, node, true);
             }
             if (tagHandler == null)
             {
