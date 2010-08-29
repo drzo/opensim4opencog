@@ -43,7 +43,7 @@ namespace RTParser.Utils
         public override int GetHashCode()
         {
             // TODO: write your implementation of GetHashCode() here
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
             return base.GetHashCode();
         }
         public GraphMaster Graph
