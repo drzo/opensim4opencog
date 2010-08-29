@@ -171,6 +171,63 @@ namespace RTParser.Database
         }
 
         /// <summary>
+        /// This method searches for the search query, then deletes those with a score equal to the top ranked.
+        /// </summary>
+        /// <param name="query">The search term as a string that the caller wants to search for within the
+        /// index as referenced by this object.</param>
+
+        public void DeleteTopScoring(string searchQuery)
+        {
+            // Searching:
+            ulong[] ids;
+            string[] results;
+            float[] scores;
+
+            int numHits;
+            // find it
+            Console.WriteLine("Replacing best \"{0}\"...", searchQuery);
+            //Search(query, out ids, out results, out scores);
+            IndexSearcher indexSearcher = new IndexSearcher(_directory);
+            try
+            {
+                QueryParser queryParser = new QueryParser(_fieldName, _analyzer);
+                Query query = queryParser.Parse(searchQuery);
+                Hits hits = indexSearcher.Search(query);
+                numHits = hits.Length();
+
+                // if we want to do something smarter later
+                ids = new ulong[numHits];
+                results = new string[numHits];
+                scores = new float[numHits];
+                for (int i = 0; i < numHits; ++i)
+                {
+                    float score = hits.Score(i);
+                    string text = hits.Doc(i).Get(_fieldName);
+                    string idAsText = hits.Doc(i).Get(MyLuceneIndexer.DOC_ID_FIELD_NAME);
+                    ids[i] = UInt64.Parse(idAsText);
+                    results[i] = text;
+                    scores[i] = score;
+                }
+                if (numHits > 0)
+                {
+                    float topscore = scores[0];
+                    for (int i = 0; i < numHits; i++)
+                    {
+                        if (scores[i] == topscore)
+                        {
+                            indexSearcher.GetIndexReader().DeleteDocument(i);
+                        }
+                    }
+                }
+
+            }
+            finally
+            {
+                indexSearcher.Close();
+            }
+
+       }
+        /// <summary>
         /// This method searches for the search term passed by the caller.
         /// </summary>
         /// <param name="searchTerm">The search term as a string that the caller wants to search for within the
