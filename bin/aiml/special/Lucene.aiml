@@ -6,8 +6,7 @@
  <category>
    <pattern>REMEMBER *</pattern>
    <template>
-    <think><dbpush><person/></dbpush></think>
-      Ok. I will remember. 
+     <think><dbpush><person/></dbpush></think>
    </template>
   </category>
 
