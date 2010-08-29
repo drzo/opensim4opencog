@@ -286,11 +286,14 @@ namespace RTParser
                                     {
                                         if (str.Contains("_")) Flags |= UFlags.SHORT_WILDCARD;
                                         else if (str.Contains("*")) Flags |= UFlags.LONG_WILDCARD;
-                                        else
-                                        {
-                                            Flags |= UFlags.NO_BINDS_STARS;
-                                        }
+                                        //else
+                                        //{
+                                        //    Flags |= UFlags.NO_BINDS_STARS;
+                                        //}
                                     }
+                                    if (found.Contains("BINDSTAR=\"TRUE\"")) Flags |= UFlags.BINDS_STARS;
+                                    else Flags |= UFlags.NO_BINDS_STARS;
+
                                 }
                                 else
                                 {
