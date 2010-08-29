@@ -77,7 +77,9 @@ namespace RTParser.Utils
         private bool UnTraced = false;
         private readonly List<GraphMaster> FallBacksGraphs = new List<GraphMaster>();
         public bool IsBusy;
-        private List<TemplateInfo> UnusedTemplates = new List<TemplateInfo>();
+// ReSharper disable FieldCanBeMadeReadOnly.Local
+        private List<TemplateInfo> UnusedTemplates = null;
+// ReSharper restore FieldCanBeMadeReadOnly.Local
 
         public GraphMaster Parent
         {
@@ -116,6 +118,8 @@ namespace RTParser.Utils
             Srai = gn;
             RootNode.Graph = this;
             PostParentRootNode.Graph = this;
+            UnusedTemplates = null;
+            //UnusedTemplates = new List<TemplateInfo>();
         }
 
         public PatternInfo FindPattern(XmlNode pattern, Unifiable unifiable)
@@ -798,6 +802,7 @@ namespace RTParser.Utils
         {
             lock (LockerObject)
             {
+                if (UnusedTemplates == null) return;
                 lock (Templates)
                 {
                     //  Templates.Remove(redundant);
