@@ -138,7 +138,7 @@ namespace MushDLR223.Utilities
             }
         }
 
-        private static ConsoleColor DeriveColor(string input)
+        public static ConsoleColor DeriveColor(string input)
         {
             // it is important to do Abs, hash values can be negative
             return Colors[(Math.Abs(input.ToUpper().GetHashCode()) % Colors.Length)];
