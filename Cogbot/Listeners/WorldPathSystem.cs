@@ -101,12 +101,12 @@ namespace cogbot.Listeners
 
         private static void Debug(string p)
         {
-            DLRConsole.SystemWriteLine(p);
+            DLRConsole.DebugWriteLine(p);
         }
 
         private void Error(string p)
         {
-            DLRConsole.SystemWriteLine(p);
+            DLRConsole.DebugWriteLine(p);
             throw new NotImplementedException();
         }
 

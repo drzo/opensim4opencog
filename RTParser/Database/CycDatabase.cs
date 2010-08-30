@@ -431,7 +431,7 @@ namespace RTParser.Database
             {
                 string str = "(list " + cmd + ")";
                 Object oresult = access.converseList(str).first();
-                DLRConsole.SystemWriteLine(str + " => " + oresult);
+                DLRConsole.DebugWriteLine(str + " => " + oresult);
                 result = "" + oresult;
                 if (oresult is CycObject)
                 {

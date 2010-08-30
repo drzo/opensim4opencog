@@ -56,7 +56,7 @@ namespace cogbot.TheOpenSims
             {
                 if (!Target.IsRegionAttached)
                 {
-                    DLRConsole.SystemWriteLine("" + this + " Not regions attached " + Target);
+                    DLRConsole.DebugWriteLine("" + this + " Not regions attached " + Target);
                     Thread.Sleep(2000);
                     continue;
                 }

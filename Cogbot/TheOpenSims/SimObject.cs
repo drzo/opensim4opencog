@@ -500,7 +500,7 @@ namespace cogbot.TheOpenSims
                     {
                         if (prim.ID != ID)
                         {
-                            DLRConsole.SystemWriteLine("\n Different UUID! {0}", prim);
+                            DLRConsole.DebugWriteLine("ERROR: Different UUID! {0}", prim);
                         }
                         _primRefs.Add(prim);
                         //DLRConsole.WriteLine("\n Different prims {0}", prim);

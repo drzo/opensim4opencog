@@ -3450,7 +3450,7 @@ The AIMLbot program.
                 else
                 {
                     ListAsSet<TemplateInfo> CId = myUser.DisabledTemplates;
-                    List<TemplateInfo> CI = myUser.UsedTemplates;
+                    var CI = myUser.UsedTemplates;
                     if (args == "disable")
                     {
                         foreach (var C in CI)
@@ -3860,16 +3860,27 @@ The AIMLbot program.
 
         internal static void writeDebugLine(string message, params object[] args)
         {
-            lock (LoggedWords) LoggedWords.writeDebugLine(DLRConsole.SystemWriteLine, message, args);
+            bool printIt = false;
+            lock (LoggedWords)
+            {
+               printIt = LoggedWords.writeDebugLine(DLRConsole.DebugWriteLine, message, args);
+            }
             //if (args != null && args.Length >= 0)
             {
                 try
                 {
+                    bool wasStopped = true;
                     string real = string.Format(message, args);
                     message = real.ToUpper();
                     if (message.Contains("ERROR") && !message.Contains("TIMEOUTMESSAGE"))
-                        Breakpoint(real);
-                    else if (message.Contains("EXCEPTION")) Breakpoint(real);
+                    {
+                        wasStopped = Breakpoint(real);
+                    }
+                    else if (message.Contains("EXCEPTION"))
+                    {
+                        wasStopped = Breakpoint(real);
+                    }
+                    if (!wasStopped && !printIt) DLRConsole.DebugWriteLine(real);
                 }
                 catch (Exception)
                 {
@@ -3877,17 +3888,17 @@ The AIMLbot program.
             }
         }
 
-        public static void Breakpoint(string err)
+        public static bool Breakpoint(string err)
         {
             if (skipMany > 0)
             {
                 skipMany--;
-                return;
+                return false;
             }
             DLRConsole.SystemWriteLine("" + err);
             if (!UseBreakpointOnError)
             {
-                return;
+                return false;
             }
             DLRConsole.SystemWriteLine("press enter of enter a number to skip breakpoints");
             string p = DLRConsole.ReadLine();
@@ -3896,6 +3907,7 @@ The AIMLbot program.
             {
                 skipMany = skipNext;
             }
+            return true;
         }
 
         public bool SameUser(string old, string next)

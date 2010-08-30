@@ -18,7 +18,7 @@ namespace MushDLR223.Utilities
 
         }
         private string lastOutput = "xoxoxoxoxoxoxoxoxoxoxoxoxdo";
-        public void writeDebugLine(OutputDelegate console, string message, params object[] args)
+        public bool writeDebugLine(OutputDelegate console, string message, params object[] args)
         {
             console = console ?? DLRConsole.SystemWriteLine;
             try
@@ -53,12 +53,15 @@ namespace MushDLR223.Utilities
                 {                   
                     PrintMessage(console, message);
                 }
+                return printIt;
             }
             catch (Exception e)
             {
                 DLRConsole.DebugWriteLine("" + e);
                 console(message + " --> " + e);
+                return false;
             }
+            return true;
         }
 
         private void PrintMessage(OutputDelegate console, string message)

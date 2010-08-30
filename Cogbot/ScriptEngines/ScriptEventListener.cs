@@ -45,9 +45,9 @@ namespace cogbot.ScriptEngines
                     }
                     catch (Exception e)
                     {
-                        DLRConsole.SystemWriteLine("!Exception: " + e.GetBaseException().Message);
-                        DLRConsole.SystemWriteLine("error occured: " + e.Message);
-                        DLRConsole.SystemWriteLine("        Stack: " + e.StackTrace.ToString());
+                        DLRConsole.DebugWriteLine("!Exception: " + e.GetBaseException().Message);
+                        DLRConsole.DebugWriteLine("error occured: " + e.Message);
+                        DLRConsole.DebugWriteLine("        Stack: " + e.StackTrace.ToString());
                     }
                     Thread.Sleep(5);
                 }
@@ -62,13 +62,13 @@ namespace cogbot.ScriptEngines
             try
             {
                 StringReader stringCodeReader = new System.IO.StringReader(lispCode);
-                codeTree = taskInterperter.Read("enqueueLispEvent", stringCodeReader, DLRConsole.SystemWriteLine);
+                codeTree = taskInterperter.Read("enqueueLispEvent", stringCodeReader, DLRConsole.DebugWriteLine);
                 if (taskInterperter.Eof(codeTree))
                     return null;
             }
             catch (Exception e)
             {
-                DLRConsole.SystemWriteLine(lispCode + " -> " + e);
+                DLRConsole.DebugWriteLine(lispCode + " -> " + e);
                 return null;
             }
             return codeTree;
@@ -84,7 +84,7 @@ namespace cogbot.ScriptEngines
 
         public void enqueueLispEvent(string lispCode)
         {
-            DLRConsole.SystemWriteLine(":: " + lispCode);
+            DLRConsole.DebugWriteLine(":: " + lispCode);
             try
             {
                 enqueueLispTask(taskInterperter.Read("enqueueLispEvent", new StringReader(lispCode), DLRConsole.DebugWriteLine));
@@ -415,10 +415,10 @@ namespace cogbot.ScriptEngines
             }
             catch (Exception e)
             {
-                DLRConsole.SystemWriteLine("!Exception: " + e.GetBaseException().Message);
-                DLRConsole.SystemWriteLine("error occured: " + e.Message);
-                DLRConsole.SystemWriteLine("        Stack: " + e.StackTrace.ToString());
-                DLRConsole.SystemWriteLine("     LispCode: " + codeString);
+                DLRConsole.DebugWriteLine("!Exception: " + e.GetBaseException().Message);
+                DLRConsole.DebugWriteLine("error occured: " + e.Message);
+                DLRConsole.DebugWriteLine("        Stack: " + e.StackTrace.ToString());
+                DLRConsole.DebugWriteLine("     LispCode: " + codeString);
             }
         }
 

@@ -46,7 +46,7 @@ namespace cogbot.Listeners
                 {
                     if (o==null)
                     {
-                        DLRConsole.SystemWriteLine("bd args in " + eventName);
+                        DLRConsole.DebugWriteLine("bd args in " + eventName);
                     }
                 }
 

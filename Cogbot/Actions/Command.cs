@@ -384,7 +384,7 @@ namespace cogbot.Actions
         {
             failure++;
             WriteLine(usage);
-            DLRConsole.SystemWriteLine(usage);
+            DLRConsole.DebugWriteLine(usage);
             return Result(usage, false);
         }
 
@@ -402,7 +402,7 @@ namespace cogbot.Actions
             }
             try
             {
-                DLRConsole.SystemWriteLine(usage);
+                DLRConsole.DebugWriteLine(usage);
             }
             catch (Exception e)
             {
