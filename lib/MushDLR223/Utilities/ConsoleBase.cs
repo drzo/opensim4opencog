@@ -1112,7 +1112,7 @@ namespace MushDLR223.Utilities
             if (format == null) return;
             string sender;
             string getCallerFormat = GetCallerFormat(format, out sender);
-            WriteNewLine(DeriveColor(sender), sender, ConsoleColor.Gray, "{0}", getCallerFormat);
+            WriteNewLine(DeriveColor(sender), sender, ConsoleColor.Gray, "{0}", format);
         }
         private static void SystemWriteLine0(string format, params object[] args)
         {

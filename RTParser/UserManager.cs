@@ -215,7 +215,7 @@ namespace RTParser
                 key = key.ToLower();
                 User myUser = new AIMLbot.User(key, this);
                 myUser.UserName = fullname;
-                writeToLog("USERTRACE: New User " + fullname);
+                writeToLog("USERTRACE: New User " + fullname + " -DEBUG9");
                 BotUsers[key] = myUser;
                 bool roleAcct = IsRoleAcctName(fullname);
                 myUser.IsRoleAcct = roleAcct;

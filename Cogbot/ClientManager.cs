@@ -447,7 +447,10 @@ namespace cogbot
                                                       {
                                                           "clear",
                                                           "+*",
+                                                          "+ERROR",
                                                           "-dictlog",
+                                                          "-settingsdict",
+                                                          "-DEBUG9",
                                                           "-simmesh",
                                                       };
 
@@ -1193,38 +1196,49 @@ namespace cogbot
 
         private static void VeryRealWriteLine(string s, params object[] args)
         {
-            string format = TheUILogFilter.SafeFormatShould(s, args);
+            string format = DLRConsole.SafeFormat(s, args);
+            if (string.IsNullOrEmpty(format)) return;
+            format = format.Trim();
             if (string.IsNullOrEmpty(format)) return;
             string prefix;
-            string getCallerFormat = DLRConsole.GetCallerFormat(format, out prefix);
-            string[] split = getCallerFormat.Split(new [] {"\r\n", "\r", "\n"}, StringSplitOptions.None);
+            format = DLRConsole.GetCallerFormat(format, out prefix);
+            if (string.IsNullOrEmpty(format)) return;
+            format = format.Replace("\r\n", "\n").Replace("\r", "\n").Trim();
+            if (string.IsNullOrEmpty(format)) return;
+            if (!TheUILogFilter.ShouldPrint(prefix + ": " + format)) return;
+            string[] split = format.Split(new[] {"\n"}, StringSplitOptions.None);
             Color color = DeriveColor(prefix);
-            if (split.Length > 1)
+            foreach (string s1 in split)
             {
-                foreach (string s1 in split)
-                {
-                    VeryRealWriteLine_Log(color, "", prefix, s1);                    
-                }
-                return;
+                VeryRealWriteLine_Log(color, "", prefix, s1);
             }
-            VeryRealWriteLine_Log(color, "", prefix, getCallerFormat);
         }
 
         private static int ColorIndex = 0;
-        private static readonly Color[] Colors = {
-            Color.DarkBlue,
-            Color.DarkGreen,
-            Color.DarkCyan,
-            Color.DarkMagenta,
-            Color.HotPink,
-            Color.Gray,
-            Color.DarkGray,
-            Color.Blue,
-            Color.Green,
-            Color.Cyan,
-            Color.Magenta,
-            Color.Yellow
-        };
+
+        private static readonly Color[] Colors =
+            {
+                Color.DarkBlue,
+                Color.DarkGreen,
+                Color.DarkCyan,
+                Color.DarkMagenta,
+                Color.MediumPurple,
+                Color.HotPink,
+                Color.Gray,
+                Color.DarkGray,
+                Color.Blue,
+                Color.Green,
+                Color.Red,
+                Color.Cyan,
+                Color.Magenta,
+                //Color.Goldenrod,
+                Color.Orchid,
+                Color.OliveDrab,
+                Color.Orange,
+                Color.MediumSpringGreen,
+                Color.Black,
+                Color.Peru,
+            };
 
         readonly static Dictionary<string,Color> Name2Color = new Dictionary<string, Color>();
         public static Color DeriveColor(string input)
@@ -1238,6 +1252,7 @@ namespace cogbot
                     ColorIndex++;
                     if (ColorIndex >= Colors.Length) ColorIndex = 0;
                     color = Name2Color[input] = Colors[ColorIndex];
+                    // Console.Out.WriteLine("Color is " + color + " for " + input);
                 }
                 return color;
             }

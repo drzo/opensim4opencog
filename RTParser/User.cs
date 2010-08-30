@@ -849,11 +849,11 @@ namespace RTParser
                 if (noLoad) return;
                 LoadUserSettings(userdir);
                 LoadUserAiml(userdir);
-                WriteLine("Loaded " + userdir);
+                WriteLine("USERTRACE: LoadDirectory " + userdir + " -DEBUG9");
             }
             else
             {
-                WriteLine("USERTRACE: Not LoadDirectory0 " + userdir);
+                WriteLine("USERTRACE: Not LoadDirectory " + userdir);
             }
         }
 

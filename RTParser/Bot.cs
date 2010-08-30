@@ -1112,7 +1112,7 @@ namespace RTParser
             bool writeToConsole = outputDelegate == null;
             try
             {
-                if (args != null && args.Length != 0) message = String.Format(message, args);
+                if (args != null && args.Length > 0) message = String.Format(message, args);
             }
             catch (Exception)
             {
@@ -1120,8 +1120,7 @@ namespace RTParser
             }
             if (String.IsNullOrEmpty(message)) return;
 
-            message = message.Trim() + Environment.NewLine;
-
+            //message = message.Trim() + Environment.NewLine;
             if (outputDelegate != null)
             {
                 try
@@ -1132,18 +1131,12 @@ namespace RTParser
                 {
                     writeToConsole = true;
                 }
-                if (writeToConsole || true) writeDebugLine(message);
-                message = string.Format("[{0}]: {1}", DateTime.Now.ToString(), message.Trim());
             }
-            else
+            if (outputDelegate != writeDebugLine)
             {
-                //if (writeToConsole)
-                writeDebugLine(message);
-                //                message = string.Format("[{0}]: {1}{2}", DateTime.Now.ToString(), message.Trim(), Environment.NewLine);
-                message = string.Format("[{0}]: {1}", DateTime.Now.ToString(), message.Trim());
-                //string m = message.AsString().ToLower();
-                //if (m.Contains("error") || m.Contains("excep"))
+                if (writeToConsole) writeDebugLine(message);
             }
+            message = string.Format("[{0}]: {1}", DateTime.Now.ToString(), message.Trim());
             writeToLog0(message);
         }
 
@@ -1172,7 +1165,7 @@ namespace RTParser
                         writer = logFile.AppendText();
                     }
 
-                    foreach (Unifiable msg in this.LogBuffer)
+                    foreach (string msg in this.LogBuffer)
                     {
                         writer.WriteLine(msg);
                     }
@@ -2589,6 +2582,8 @@ namespace RTParser
                         return new AIMLTagHandlers.verbatum(node.InnerXml, this, user, query, request, result, node);
                     case "p":
                         return new AIMLTagHandlers.verbatum("\n\n", this, user, query, request, result, node);
+                    case "meta":
+                        return new AIMLTagHandlers.verbatum(node.OuterXml, this, user, query, request, result, node);
                     default:
                         break;
                 }
