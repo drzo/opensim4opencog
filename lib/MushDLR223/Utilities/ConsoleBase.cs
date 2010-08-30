@@ -1110,10 +1110,9 @@ namespace MushDLR223.Utilities
         {
             format = ShouldPrint(format, args);
             if (format == null) return;
-            string prefix;
-            string getCallerFormat = GetCallerFormat(format, out prefix);
-            format = "[" + prefix + "] " + getCallerFormat;
-            SystemWriteLine0(format);
+            string sender;
+            string getCallerFormat = GetCallerFormat(format, out sender);
+            WriteNewLine(DeriveColor(sender), sender, ConsoleColor.Gray, "{0}", getCallerFormat);
         }
         private static void SystemWriteLine0(string format, params object[] args)
         {
