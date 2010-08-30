@@ -3837,6 +3837,8 @@ The AIMLbot program.
         {
             lock (OneAtATime)
             {
+                var tc = DLRConsole.TransparentCallers;
+                lock (tc) tc.Add(typeof (RTPBot));
                 if (StaticInitStarted) return;
                 StaticInitStarted = true;
                 GraphsByName["default"] = new GraphMaster("default");

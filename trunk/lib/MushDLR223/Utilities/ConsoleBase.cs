@@ -383,7 +383,6 @@ namespace MushDLR223.Utilities
                                                           {
                                                               "clear",
                                                               "+*",
-                                                              "-dictlog"
                                                           };
                                  
         static public string ShouldPrint(string str, params object[] args)
@@ -1111,13 +1110,32 @@ namespace MushDLR223.Utilities
         {
             format = ShouldPrint(format, args);
             if (format == null) return;
-            format = GetCallerFormat(format);
+            string prefix;
+            string getCallerFormat = GetCallerFormat(format, out prefix);
+            format = "[" + prefix + "] " + getCallerFormat;
             SystemWriteLine0(format);
         }
         private static void SystemWriteLine0(string format, params object[] args)
         {
-            SystemWrite0(format, args);
-            SystemWriteLine();
+            foreach (TextWriter o in Outputs)
+            {
+                try
+                {
+                    if (args == null || args.Length == 0)
+                    {
+                        o.WriteLine(format);
+                    }
+                    else
+                    {
+                        o.WriteLine(format, args);
+                    }
+                }
+                catch (Exception e)
+                {
+                    System.Console.Error.WriteLine("" + e);
+                    o.WriteLine(SafeFormat(format, args));
+                }
+            }
         }
         public static void SystemWriteLine(string format, params object[] args)
         {
@@ -1125,7 +1143,7 @@ namespace MushDLR223.Utilities
             if (format == null) return;
             SystemWriteLine0(format);
         }
-        private static string GetCallerFormat(string format)
+        public static string GetCallerFormat(string format, out string prefix)
         {
 // ReSharper disable ConditionIsAlwaysTrueOrFalse
             if (false) return format;
@@ -1135,7 +1153,7 @@ namespace MushDLR223.Utilities
                 int fc = format.IndexOf(":");
                 if (fc>1)
                 {
-                    string prefix = format.Substring(0, fc);
+                    prefix = format.Substring(0, fc);
                     if (prefix.Contains(" "))
                     {
                         prefix = CurrentCaller;
@@ -1144,10 +1162,24 @@ namespace MushDLR223.Utilities
                     {
                         prefix = prefix.ToUpper();
                     }
-                    format = "[" + prefix + "] " + format.Substring(fc + 1);
+                    format = format.Substring(fc + 1);
+                    return format;
                 } else
                 {
-                    format = "[" + CurrentCaller + "] " + format;                    
+                    prefix = CurrentCaller;
+                    return format;
+                }
+            } else
+            {
+                int fc = format.IndexOf("]");
+                if (fc == -1)
+                {
+                    prefix = CurrentCaller;
+                    return format;
+                } else
+                {
+                    prefix = format.Substring(1, fc - 1);
+                    return format.Substring(fc + 1);
                 }
             }
             return format;
@@ -1157,8 +1189,11 @@ namespace MushDLR223.Utilities
             SystemWriteLine0("{0}", arg);
         }
         public static void DebugWriteLine(object arg)
-        {            
-            SystemWriteLine0(GetCallerFormat(""+arg));
+        {
+            string prefix;
+            string getCallerFormat = GetCallerFormat("" + arg, out prefix);
+            getCallerFormat = "[" + prefix + "] " + getCallerFormat;
+            SystemWriteLine0(getCallerFormat);
         }
         public static void DebugWrite(string arg)
         {
@@ -1174,25 +1209,22 @@ namespace MushDLR223.Utilities
             {
                 var st = new System.Diagnostics.StackTrace(true).GetFrames();
                 if (st == null) return "NULL";
-                if (st.Length > 4)
                 {
-                    int skip = 3;
                     for (int i = 0; i < st.Length; i++)
                     {
                         StackFrame s = st[i];
-                        if (skip-- > 0) continue;
                         var m = s.GetMethod();
                         if (m != null)
                         {
                             Type caller = m.ReflectedType ?? m.DeclaringType;
                             if (caller == null) continue;
-                            if (TransparentCallers.Contains(caller)) continue;
-                            if (OpacheCallers.Contains(caller)) return CallerName(s);
+                            lock (TransparentCallers) if (TransparentCallers.Contains(caller)) continue;
+                            lock (OpacheCallers) if (OpacheCallers.Contains(caller)) return CallerName(s);
                         }
                         return CallerName(s);
                     }
                 }
-                return CallerName(st[st.Length-1]);
+                return CallerName(st[st.Length - 1]);
             }
         }
 
@@ -1240,15 +1272,16 @@ namespace MushDLR223.Utilities
 
         static readonly HashSet<TextWriter> _outputs = new HashSet<TextWriter>();
 
-        private static HashSet<Type> TransparentCallers = new HashSet<Type>()
-                                                              {
-                                                                  typeof (OpenSimAppender),
-                                                                  typeof (DLRConsole),
-                                                                  typeof (System.Console),
-                                                                  typeof (TextFilter),
-                                                              };
+        public static readonly HashSet<Type> TransparentCallers = new HashSet<Type>()
+                                                                      {
+                                                                          typeof (OpenSimAppender),
+                                                                          typeof (DLRConsole),
+                                                                          typeof (System.Console),
+                                                                          typeof (OutputDelegateWriter),
+                                                                          typeof (TextFilter),
+                                                                      };
 
-        private static HashSet<Type> OpacheCallers = new HashSet<Type>()
+        public static readonly HashSet<Type> OpacheCallers = new HashSet<Type>()
                                                               {
                                                               };
 

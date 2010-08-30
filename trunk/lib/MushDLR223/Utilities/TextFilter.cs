@@ -517,5 +517,12 @@ namespace MushDLR223.Utilities
             }
             return ClipString(info.Substring(0, find - 1), len) + lfch + ClipString(info.Substring(find + 1), len);
         }
+
+        public string SafeFormatShould(string str, params object[] args)
+        {
+            str = DLRConsole.SafeFormat(str, args);
+            if (!ShouldPrint(str)) return null;
+            return str;
+        }
     }
 }

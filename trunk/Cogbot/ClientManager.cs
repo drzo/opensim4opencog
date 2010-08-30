@@ -155,6 +155,10 @@ namespace cogbot
                 SingleInstance = this;                
             }
             DLRConsole.AddOutput(new OutputDelegateWriter(VeryRealWriteLine));
+            HashSet<Type> col = DLRConsole.TransparentCallers;
+            lock (col) col.Add(typeof(ClientManager));
+            lock (col) col.Add(typeof(Command));
+            lock (col) col.Add(typeof (BotClient));
             config = new Configuration();
             config.loadConfig();
             DefaultAccount.LoadFromConfig(config);
@@ -438,25 +442,19 @@ namespace cogbot
             WriteLine(str, args);   
         }
         static  string lastStr = "";
-        static public TextFilter TheGlobalLogFilter
-        {
-            get
-            {
-                return DLRConsole.TheGlobalLogFilter;
-            }
-        }
+
+        public static TextFilter TheUILogFilter = new TextFilter()
+                                                      {
+                                                          "clear",
+                                                          "+*",
+                                                          "-dictlog",
+                                                          "-simmesh",
+                                                      };
+
         public void WriteLine(string str, params object[] args)
         {
-            if (args == null || args.Length == 0)
-            {
-                args = new object[] { str };
-                str = "{0}";
-            }
-            string printStr = DLRConsole.ShouldPrint(str, args);
-            if (printStr==null)
-            {
-                return;
-            }
+            string printStr = TheUILogFilter.SafeFormatShould(str, args);
+            if (string.IsNullOrEmpty(printStr)) return; 
             if (outputDelegate == null || outputDelegate == WriteLine)
             {
                 GlobalWriteLine(printStr);
@@ -1193,10 +1191,58 @@ namespace cogbot
         public static bool dosBox;
         public static bool noGUI;
 
-        private static void VeryRealWriteLine(string s, object[] args)
+        private static void VeryRealWriteLine(string s, params object[] args)
         {
-            string str = DLRConsole.SafeFormat(s, args);            
-            VeryRealWriteLine_Log(Color.Green, "", "", str);
+            string format = TheUILogFilter.SafeFormatShould(s, args);
+            if (string.IsNullOrEmpty(format)) return;
+            string prefix;
+            string getCallerFormat = DLRConsole.GetCallerFormat(format, out prefix);
+            string[] split = getCallerFormat.Split(new [] {"\r\n", "\r", "\n"}, StringSplitOptions.None);
+            Color color = DeriveColor(prefix);
+            if (split.Length > 1)
+            {
+                foreach (string s1 in split)
+                {
+                    VeryRealWriteLine_Log(color, "", prefix, s1);                    
+                }
+                return;
+            }
+            VeryRealWriteLine_Log(color, "", prefix, getCallerFormat);
+        }
+
+        private static int ColorIndex = 0;
+        private static readonly Color[] Colors = {
+            Color.DarkBlue,
+            Color.DarkGreen,
+            Color.DarkCyan,
+            Color.DarkMagenta,
+            Color.HotPink,
+            Color.Gray,
+            Color.DarkGray,
+            Color.Blue,
+            Color.Green,
+            Color.Cyan,
+            Color.Magenta,
+            Color.Yellow
+        };
+
+        readonly static Dictionary<string,Color> Name2Color = new Dictionary<string, Color>();
+        public static Color DeriveColor(string input)
+        {
+            input = input.ToUpper();
+            lock(Name2Color)
+            {
+                Color color;
+                if (!Name2Color.TryGetValue(input, out color))
+                {
+                    ColorIndex++;
+                    if (ColorIndex >= Colors.Length) ColorIndex = 0;
+                    color = Name2Color[input] = Colors[ColorIndex];
+                }
+                return color;
+            }
+            // it is important to do Abs, hash values can be negative
+            return Colors[(Math.Abs(input.GetHashCode()) % Colors.Length)];
         }
 
         public static void VeryRealWriteLine_Log(Color color, string timeStamp, string named, string mesg)
