@@ -170,7 +170,7 @@ namespace cogbot
             }
         }
 
-        private List<Thread> botCommandThreads = new ListAsSet<Thread>();
+        private IList<Thread> botCommandThreads = new ListAsSet<Thread>();
         readonly public XmlScriptInterpreter XmlInterp;
         public UUID GroupID = UUID.Zero;
         public Dictionary<UUID, GroupMember> GroupMembers = null; // intialized from a callback

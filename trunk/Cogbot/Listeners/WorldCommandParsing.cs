@@ -247,9 +247,9 @@ namespace cogbot.Listeners
             return name;
         }
 
-        public List<SimObject> GetRelations(ICollection re)
+        public ListAsSet<SimObject> GetRelations(ICollection re)
         {
-            ListAsSet<SimObject> more = new ListAsSet<SimObject>();
+            var more = new ListAsSet<SimObject>();
             foreach (var OP in re)
             {
                 SimObject O = AsSimObject(OP);
@@ -267,7 +267,7 @@ namespace cogbot.Listeners
 
         private List<SimObject> GetParents(ICollection primitives)
         {
-            ListAsSet<SimObject> more = new ListAsSet<SimObject>();
+            var more = new List<SimObject>();
             foreach (var OP in primitives)
             {
                 SimObject O = AsSimObject(OP);
@@ -275,7 +275,8 @@ namespace cogbot.Listeners
                 SimObject P = O.Parent;
                 if (P != O)
                 {
-                    more.AddTo(P);
+                    if (!more.Contains(P))
+                        more.Add(P);
                 }
             }
             return more;
@@ -283,7 +284,7 @@ namespace cogbot.Listeners
 
         private List<SimObject> GetChildren(ICollection primitives)
         {
-            ListAsSet<SimObject> more = new ListAsSet<SimObject>();
+            var more = new List<SimObject>();
             foreach (var OP in primitives)
             {
                 SimObject O = AsSimObject(OP);
@@ -348,13 +349,14 @@ namespace cogbot.Listeners
             {
                 SimObject oo = AsSimObject(o);
                 if (oo == null) continue;
-                prims.Add(oo);
+                if (!prims.Contains(oo))
+                    prims.Add(oo);
             }
         }
 
         public List<SimObject> GetPrimitives(string[] args, out int argsUsed)
         {
-            List<SimObject> prims = new List<SimObject>();
+            var prims = new List<SimObject>();
             if (args.Length == 0)
             {
                 argsUsed = 0;
@@ -409,7 +411,10 @@ namespace cogbot.Listeners
             argsUsed = 0;
             return null;
         }
-
+        public List<SimObject> FilterSimObjects(string[] args, out int argsUsed, ListAsSet<SimObject> prims)
+        {
+            lock (prims) return FilterSimObjects(args, out argsUsed, prims.CopyOf());
+        }
         public List<SimObject> FilterSimObjects(string[] args, out int argsUsed, List<SimObject> prims)
         {
             int consume = args.Length;
@@ -448,7 +453,7 @@ namespace cogbot.Listeners
             {
                 prims = FilterSimObjects(Parser.SplitOff(args, 1), out argsUsed, prims);
                 argsUsed++;
-                prims = GetRelations(prims);
+                prims = GetRelations(prims).CopyOf();
             }
             else if (arg0Lower == "parentof")
             {

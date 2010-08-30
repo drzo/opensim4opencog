@@ -339,8 +339,10 @@ namespace cogbot.TheOpenSims
         public ListAsSet<SimObject> GetKnownObjects()
         {
             ScanNewObjects(3, SightRange, false);
-            //lock (KnownSimObjects) 
-                SortByDistance(KnownSimObjects);
+            //lock (KnownSimObjects)
+            //   SortByDistance(KnownSimObjects.RealListT);
+            // or 
+            KnownSimObjects.Sort(CompareDistance);
             return KnownSimObjects;
         }
 

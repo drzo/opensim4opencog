@@ -846,7 +846,7 @@ namespace cogbot.TheOpenSims
                 if (WasKilled!=value) //already
                 {
                     WasKilled = value;
-                    List<SimObject> AttachedChildren0 = Children;
+                    var AttachedChildren0 = Children;
                     lock (AttachedChildren0)
                         foreach (SimObject C in AttachedChildren0)
                         {
