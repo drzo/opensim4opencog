@@ -41,10 +41,10 @@ namespace cogbot.Listeners
 
             if (eventName.EndsWith("On-Image-Receive-Progress")) return true;
             if (eventName.EndsWith("Look-At")) return true;
-            DLRConsole.SystemWriteLine("\n" + eventName);
+            DLRConsole.DebugWriteLine("\n" + eventName);
             for (int i = 0; i < paramNames.Length;i++ )
             {
-                DLRConsole.SystemWriteLine(" " + paramNames[i] + ": " + client.argString(parameters[i]));
+                DLRConsole.DebugWriteLine(" " + paramNames[i] + ": " + client.argString(parameters[i]));
             }
             return true;
         }

@@ -648,7 +648,7 @@ namespace MushDLR223.Utilities
             }
         }
 
-        static private void WriteNewLine(ConsoleColor senderColor, string sender, ConsoleColor color, string format, params object[] args)
+        static public void WriteNewLine(ConsoleColor senderColor, string sender, ConsoleColor color, string format, params object[] args)
         {
             lock (cmdline)
             {
@@ -697,7 +697,7 @@ namespace MushDLR223.Utilities
             }
         }
 
-        static private void WriteConsoleLine(ConsoleColor color, string format, params object[] args)
+        static public void WriteConsoleLine(ConsoleColor color, string format, params object[] args)
         {
             try
             {
@@ -1176,11 +1176,19 @@ namespace MushDLR223.Utilities
                 if (st == null) return "NULL";
                 if (st.Length > 4)
                 {
-                    int skip = 4;
+                    int skip = 3;
                     for (int i = 0; i < st.Length; i++)
                     {
                         StackFrame s = st[i];
                         if (skip-- > 0) continue;
+                        var m = s.GetMethod();
+                        if (m != null)
+                        {
+                            Type caller = m.ReflectedType ?? m.DeclaringType;
+                            if (caller == null) continue;
+                            if (TransparentCallers.Contains(caller)) continue;
+                            if (OpacheCallers.Contains(caller)) return CallerName(s);
+                        }
                         return CallerName(s);
                     }
                 }
@@ -1195,11 +1203,11 @@ namespace MushDLR223.Utilities
             var m = frame.GetMethod();
             if (m != null)
             {
-                str =frame.GetMethod().Name;
-                if (str.StartsWith("get_")) str = str.Substring(4);
-                else if (str.StartsWith("set_")) str = str.Substring(4);
+                //str =frame.GetMethod().Name;
+                //if (str.StartsWith("get_")) str = str.Substring(4);
+                //else if (str.StartsWith("set_")) str = str.Substring(4);
 
-                str = frame.GetMethod().DeclaringType.Name + "_" + str;
+                str = frame.GetMethod().DeclaringType.Name;// +"_" + str;
 
                 if (!string.IsNullOrEmpty(str)) return str.ToUpper();
             }
@@ -1231,6 +1239,19 @@ namespace MushDLR223.Utilities
         }
 
         static readonly HashSet<TextWriter> _outputs = new HashSet<TextWriter>();
+
+        private static HashSet<Type> TransparentCallers = new HashSet<Type>()
+                                                              {
+                                                                  typeof (OpenSimAppender),
+                                                                  typeof (DLRConsole),
+                                                                  typeof (System.Console),
+                                                                  typeof (TextFilter),
+                                                              };
+
+        private static HashSet<Type> OpacheCallers = new HashSet<Type>()
+                                                              {
+                                                              };
+
         protected static IEnumerable Outputs
         {
             get

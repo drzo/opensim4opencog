@@ -148,7 +148,7 @@ namespace CogbotRadegastPluginModule
             }
             if (chatConsole == null)
             {
-                DLRConsole.SystemWriteLine(str, args);
+                DLRConsole.DebugWriteLine(str, args);
             }
             else
             {

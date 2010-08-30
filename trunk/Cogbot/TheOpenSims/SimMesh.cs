@@ -188,7 +188,7 @@ namespace cogbot.TheOpenSims
                     int b = InnerBoxes.Count;
                     InnerBoxes = Box3Fill.Simplify((List<Box3Fill>)InnerBoxes);
                     if (b>3000)
-                        DLRConsole.SystemWrite("Simplfy mesh {0} -> {1} ", b, InnerBoxes.Count + " " + OuterBox.Mass + " " + this.GetObjectName());
+                        DLRConsole.DebugWriteLine("Simplfy mesh {0} -> {1} ", b, InnerBoxes.Count + " " + OuterBox.Mass + " " + this.GetObjectName());
                 }
                 AddPos(Position);
             }
@@ -459,7 +459,7 @@ namespace cogbot.TheOpenSims
 
         private static void Error(string s, string sculptDataString)
         {
-            DLRConsole.SystemWriteLine(s + " " + sculptDataString);
+            DLRConsole.DebugWriteLine("" + s + " ERROR: " + sculptDataString);
         }
 
 

@@ -395,7 +395,7 @@ namespace MushDLR223.ScriptEngines
         {
             return;
             string[] s = GetAfterIndex(0);
-            OutputDelegate d = DLRConsole.SystemWriteLine;	
+            OutputDelegate d = DLRConsole.DebugWriteLine;	
             foreach (var a in s)
             {
                 d(a);

@@ -200,7 +200,7 @@ namespace cogbot.Listeners
             string prefix = "client." +t.Name.Replace("Manager", "");
             foreach (var eventInfo in t.GetEvents())
             {
-                DLRConsole.SystemWriteLine(prefix + "." + eventInfo.Name + "+=Invoke;");
+                DLRConsole.DebugWriteLine(prefix + "." + eventInfo.Name + "+=Invoke;");
                 //LispDelegate newLispDelegate = new LispDelegate(this, manager, eventInfo);
                 //eventInfo.AddEventHandler(manager, newLispDelegate.GetDelegate()); //psuedocode
             }

@@ -1156,7 +1156,7 @@ namespace cogbot.TheOpenSims
             }
             catch (Exception exception)
             {
-                DLRConsole.SystemWriteLine("" + exception);
+                DLRConsole.DebugWriteLine("ERROR {0}", exception);
             }
 
         }

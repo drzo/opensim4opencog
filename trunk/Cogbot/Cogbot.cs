@@ -84,24 +84,11 @@ namespace cogbot
             return Console.ReadLine();
         }
 
-        public static void WriteLine(string str, object[] args)
+        public static void WriteLine(string str, params object[] args)
         {
             if (consoleBase==null)
             {
-                try
-                {
-                    if (args == null || args.Length == 0)
-                    {
-                        args = new object[] { str };
-                        str = "{0}";
-                    }
-                    DLRConsole.SystemWriteLine(str, args);
-                }
-                catch (FormatException)
-                {
-
-                    DLRConsole.SystemWriteLine(str);
-                }      
+                DLRConsole.DebugWriteLine(str, args);
                 return;
             }
             int index = str.IndexOf("]");

@@ -293,7 +293,7 @@ namespace cogbot.Actions.Objects
             }
             catch (Exception e)
             {
-                DLRConsole.SystemWriteLine("" + e);
+                DLRConsole.DebugWriteLine("ERROR {0}", e);
             }
         }
 

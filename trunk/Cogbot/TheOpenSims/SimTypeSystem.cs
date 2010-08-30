@@ -309,7 +309,7 @@ namespace cogbot.TheOpenSims
                     fi.SetValue(usage.ChangeActual, ff);
                     continue;
                 }
-                DLRConsole.SystemWriteLine("ERROR: SimBots.ini-like dirrective unknown: '" + s + "'");
+                DLRConsole.DebugWriteLine("ERROR: SimBots.ini-like dirrective unknown: '" + s + "'");
             }
         }
 

@@ -144,7 +144,7 @@ namespace cogbot.Utilities
             }
             catch (Exception e)
             {
-                DLRConsole.SystemWriteLine("" + e);
+                DLRConsole.DebugWriteLine("ERROR {0}", e);
             }
 
         }

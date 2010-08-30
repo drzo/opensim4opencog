@@ -1186,7 +1186,7 @@ namespace cogbot
         public static Thread MainThread;
 
         public static OutputDelegate Filter = null;
-        public static OutputDelegate Real = DLRConsole.SystemWriteLine;
+        public static OutputDelegate Real = DLRConsole.DebugWriteLine;
 
         public static RichTextBox TheDebugConsoleRTB = null;
         public static bool AllocedConsole;

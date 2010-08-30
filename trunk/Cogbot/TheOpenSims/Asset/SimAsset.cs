@@ -398,7 +398,7 @@ namespace cogbot.TheOpenSims
             }
             catch (Exception exception)
             {
-                DLRConsole.SystemWriteLine("decoded " + sa.GetType() + " " + exception);
+                DLRConsole.DebugWriteLine("decoded " + sa.GetType() + " " + exception);
                 return false;
             }
         }
