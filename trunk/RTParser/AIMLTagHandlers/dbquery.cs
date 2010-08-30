@@ -55,15 +55,15 @@ namespace RTParser.AIMLTagHandlers
 
                     Unifiable templateNodeInnerValue = Recurse();
                     string searchTerm1 = (string)templateNodeInnerValue;
-                    Console.WriteLine("Searching for the term \"{0}\"...", searchTerm1);
+                    writeToLog("Searching for the term \"{0}\"...", searchTerm1);
                     this.user.bot.LuceneIndexer.Search(searchTerm1, out ids, out results, out scores);
                     numHits = ids.Length;
-                    Console.WriteLine("Number of hits == {0}.", numHits);
+                    writeToLog("Number of hits == {0}.", numHits);
                     for (int i = 0; i < numHits; ++i)
                     {
-                        Console.WriteLine("{0}) Doc-id: {1}; Content: \"{2}\" with score {3}.", i + 1, ids[i], results[i], scores[i]);
+                        writeToLog("{0}) Doc-id: {1}; Content: \"{2}\" with score {3}.", i + 1, ids[i], results[i], scores[i]);
                     }
-                    Console.WriteLine();
+                   // Console.WriteLine();
 
 
 
@@ -93,5 +93,11 @@ namespace RTParser.AIMLTagHandlers
             return Unifiable.Empty;
 
         }
+
+        private void writeToLog(string s, params object[] p)
+        {
+            this.user.bot.writeToLog("DBQUERY: " + s, p);
+        }
+
     }
 }

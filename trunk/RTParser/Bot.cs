@@ -856,6 +856,7 @@ namespace RTParser
 
                 Console.WriteLine("*** Start Lucene ***");
                 LuceneIndexer = new MyLuceneIndexer(PathToLucene, fieldName);
+                LuceneIndexer.TheBot = this;
                 LuceneIndexer.wordNetEngine = wordNetEngine;
                 Console.WriteLine("*** DONE Lucene ***");
 
