@@ -1121,7 +1121,7 @@ namespace cogbot.Listeners
         {
             List<SimObject> ret = new List<SimObject>();
             TheSimAvatar.ScanNewObjects(10, 100, false);
-            List<SimObject> set = TheSimAvatar.GetKnownObjects();
+            var set = TheSimAvatar.GetKnownObjects();
             lock (set) set.ForEach(prim => ret.Add(prim));
             //foreach (Primitive prim in prims[simulator.Handle].ForEach.Values)
             //{
@@ -1137,7 +1137,8 @@ namespace cogbot.Listeners
             List<Primitive> ps = new List<Primitive>();
             foreach (SimObject os in ret)
             {
-                ps.Add(os.Prim);
+                var osp = os.Prim;
+                ListAsSet<Primitive>.AddIfMissing(ps, osp);
             }
             return ps;
         }

@@ -173,7 +173,7 @@ namespace TheSimiansModule
         /// </summary>
         public double MaxSupportedZChange = 2d;
 
-        private List<SimObject> InterestingObjects = new List<SimObject>();
+        private ListAsSet<SimObject> InterestingObjects = new ListAsSet<SimObject>();
 
         public ParrotAction(SimActor a)
             : base(String.Format("AvatarThinkerThread for {0}", a))
@@ -396,10 +396,10 @@ namespace TheSimiansModule
 
             int show = 10;
 
-            List<SimObject> KnowsAboutList = Actor.GetKnownObjects();
+            var KnowsAboutList = Actor.GetKnownObjects();
             lock (KnowsAboutList)
             {
-                KnowsAboutList.Sort(CompareObjects);
+                KnowsAboutList.RealListT.Sort(CompareObjects);
                 s += String.Format("\nKnowsAboutList: {0}", KnowsAboutList.Count);
                 foreach (SimObject item in KnowsAboutList)
                 {

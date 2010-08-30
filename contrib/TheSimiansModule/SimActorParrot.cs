@@ -71,7 +71,7 @@ namespace TheSimiansModule
         /// </summary>
         public double MaxSupportedZChange = 2d;
 
-        private List<SimObject> InterestingObjects = new List<SimObject>();
+        private IList<SimObject> InterestingObjects = new List<SimObject>();
 
         public SimParrotActor(SimActor a) : base(String.Format("AvatarParrot for {0}", a))
         {
@@ -286,7 +286,7 @@ namespace TheSimiansModule
 
             int show = 10;
 
-            List<SimObject> KnowsAboutList = ObservedActor.GetKnownObjects();
+            var KnowsAboutList = ObservedActor.GetKnownObjects();
             lock (KnowsAboutList)
             {
                 KnowsAboutList.Sort(CompareObjects);
@@ -376,7 +376,7 @@ namespace TheSimiansModule
 
         public List<BotAction> GetPossibleActions(double maxXYDistance, double maxZDist)
         {
-            List<SimObject> KnownObjects = ObservedActor.GetKnownObjects();
+            var KnownObjects = ObservedActor.GetKnownObjects();
             double myZ = ObservedActor.GlobalPosition.Z;
             List<SimObject> useObjects = new List<SimObject>();
             foreach (SimObject O in KnownObjects)
