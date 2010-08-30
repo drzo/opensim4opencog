@@ -15,6 +15,7 @@ using Lucene.Net.Store;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
+using RTParser.Utils;
 
 namespace RTParser.Database
 {
@@ -28,6 +29,7 @@ namespace RTParser.Database
         private ulong _docid=0;
         private static System.IO.FileInfo _path;
         public WordNetEngine wordNetEngine;
+        public RTPBot TheBot;
 
         Lucene.Net.Store.Directory _directory;// = new RAMDirectory();
         Analyzer _analyzer;// = new StandardAnalyzer();
@@ -137,7 +139,7 @@ namespace RTParser.Database
 
             int numHits;
             // find it
-            Console.WriteLine("Replacing best \"{0}\"...", searchQuery);
+            writeToLog("LUCENE:Replacing best \"{0}\"...", searchQuery);
             //Search(query, out ids, out results, out scores);
             IndexSearcher indexSearcher = new IndexSearcher(_directory);
             try
@@ -194,10 +196,10 @@ namespace RTParser.Database
                     if (linecount % 1000 == 0) 
                     {
                         // batch a 1000
-                        RTPBot.writeDebugLine("Lucene learn {0}", linecount);
+                        writeToLog("Lucene learn {0}", linecount);
                         int numIndexedb = Index(contentIdPairs);
-                        Console.WriteLine("Indexed {0} lines.", numIndexedb);
-                        Console.WriteLine();
+                        writeToLog("Indexed {0} lines.", numIndexedb);
+                        
                         contentIdPairs = new Dictionary<ulong, string>();
                     }
                     line = line.Trim();
@@ -209,14 +211,14 @@ namespace RTParser.Database
                 tr.Close();
                 // Indexing:
                 int numIndexed = Index(contentIdPairs);
-                Console.WriteLine("Indexed {0} lines.", numIndexed);
-                Console.WriteLine();
+                writeToLog("Indexed {0} lines.", numIndexed);
+                
 
-                RTPBot.writeDebugLine("Last Line Mlearn {0}", linecount);
+                writeToLog("Last Line Mlearn {0}", linecount);
             }
             else
             {
-                Console.WriteLine("LUCENE: LoadFileByLines cannot find file '{0}'", filename);
+               writeToLog(" LoadFileByLines cannot find file '{0}'", filename);
             }
 
         }
@@ -237,7 +239,7 @@ namespace RTParser.Database
 
             int numHits;
             // find it
-            Console.WriteLine("Replacing best \"{0}\"...", searchQuery);
+            writeToLog("Replacing best \"{0}\"...", searchQuery);
             //Search(query, out ids, out results, out scores);
             IndexSearcher indexSearcher = new IndexSearcher(_directory);
             try
@@ -377,7 +379,7 @@ namespace RTParser.Database
             try { synStartSet = wordNetEngine.GetSynSets("entity", ourPOS); }
             catch (Exception)
             {
-                Console.WriteLine("Invalid Start SynSet ID");
+                writeToLog("Invalid Start SynSet ID");
                 return returnText;
             }
 
@@ -389,7 +391,7 @@ namespace RTParser.Database
                 try { synDestSet = wordNetEngine.GetSynSets(focusWord, ourPOS); }
                 catch (Exception)
                 {
-                    Console.WriteLine("Invalid Dest SynSet ID");
+                    writeToLog("Invalid Dest SynSet ID");
                     continue;
                 }
                 int numlinks = 0;
@@ -445,5 +447,12 @@ namespace RTParser.Database
             }
             return returnText.Trim();
         }
+        private void writeToLog(string s, params object[] p)
+        {
+            TheBot.writeToLog("LUCENE: " + s, p);
+        }
     }
+
+
+
 }
