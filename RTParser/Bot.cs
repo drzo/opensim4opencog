@@ -2568,6 +2568,9 @@ namespace RTParser
                     case "dbdelete":
                         tagHandler = new AIMLTagHandlers.dbdelete(this, user, query, request, result, node);
                         break;
+                    case "dbload":
+                        tagHandler = new AIMLTagHandlers.dbload(this, user, query, request, result, node);
+                        break;
 
 
                     case "regex":

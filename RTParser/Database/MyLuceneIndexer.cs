@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.IO;
+
 using LAIR.Collections.Generic;
 using LAIR.ResourceAPIs.WordNet;
 using Lucene.Net.Analysis;
@@ -10,6 +12,9 @@ using Lucene.Net.Index;
 using Lucene.Net.QueryParsers;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
+using MushDLR223.ScriptEngines;
+using MushDLR223.Utilities;
+using MushDLR223.Virtualization;
 
 namespace RTParser.Database
 {
@@ -90,10 +95,10 @@ namespace RTParser.Database
                 document.Add(bodyField);
                 // Undisambiguated Hyponyms of nouns in text
                 string wn_hypo = WordNetExpand(text,true);
-                Field bodyField2 = new Field(HYPO_FIELD_NAME, wn_hypo, Field.Store.YES, Field.Index.TOKENIZED);
-                document.Add(bodyField2);
+                Field wnHypoField = new Field(HYPO_FIELD_NAME, wn_hypo, Field.Store.YES, Field.Index.TOKENIZED);
+                document.Add(wnHypoField);
                 // The doc ID
-                Field idField = new Field(DOC_ID_FIELD_NAME, (id).ToString(), Field.Store.YES, Field.Index.TOKENIZED);
+                Field idField = new Field(DOC_ID_FIELD_NAME, (id).ToString(), Field.Store.YES, Field.Index.NOT_ANALYZED);
                 document.Add(idField);
 
                 indexWriter.AddDocument(document);
@@ -170,6 +175,53 @@ namespace RTParser.Database
             Insert(myText);
         }
 
+
+
+        public void LoadFileByLines(string filename)
+        {
+            string line;
+            long linecount = 0;
+
+            if (HostSystem.FileExists(filename))
+            {
+                string absoluteFileName = HostSystem.GetAbsolutePath(filename);
+                System.IO.TextReader tr = new StreamReader(absoluteFileName);
+                Dictionary<ulong, string> contentIdPairs = new Dictionary<ulong, string>();
+
+                while ((linecount < 80000) && ((line = tr.ReadLine()) != null))
+                {
+                    linecount++;
+                    if (linecount % 1000 == 0) 
+                    {
+                        // batch a 1000
+                        RTPBot.writeDebugLine("Lucene learn {0}", linecount);
+                        int numIndexedb = Index(contentIdPairs);
+                        Console.WriteLine("Indexed {0} lines.", numIndexedb);
+                        Console.WriteLine();
+                        contentIdPairs = new Dictionary<ulong, string>();
+                    }
+                    line = line.Trim();
+                    if (line.Length != 0 && line[0] != '#')
+                    {
+                        contentIdPairs.Add(IncDocId(), line);
+                    }
+                }
+                tr.Close();
+                // Indexing:
+                int numIndexed = Index(contentIdPairs);
+                Console.WriteLine("Indexed {0} lines.", numIndexed);
+                Console.WriteLine();
+
+                RTPBot.writeDebugLine("Last Line Mlearn {0}", linecount);
+            }
+            else
+            {
+                Console.WriteLine("LUCENE: LoadFileByLines cannot find file '{0}'", filename);
+            }
+
+        }
+
+
         /// <summary>
         /// This method searches for the search query, then deletes those with a score equal to the top ranked.
         /// </summary>
@@ -210,14 +262,22 @@ namespace RTParser.Database
                 }
                 if (numHits > 0)
                 {
+                    //IndexReader indexReader = indexSearcher.GetIndexReader();
+                    IndexWriter indexWriter = new IndexWriter(_directory, _analyzer);
                     float topscore = scores[0];
                     for (int i = 0; i < numHits; i++)
                     {
                         if (scores[i] == topscore)
                         {
-                            indexSearcher.GetIndexReader().DeleteDocument(i);
+                            //indexSearcher.GetIndexReader().DeleteDocument(i);
+                            //indexReader.DeleteDocuments(new Term( MyLuceneIndexer.DOC_ID_FIELD_NAME, ids[i].ToString () ) );
+                            indexWriter.DeleteDocuments(new Term( MyLuceneIndexer.DOC_ID_FIELD_NAME, ids[i].ToString () ) );
                         }
                     }
+                    //indexReader.Commit();
+                    //indexReader.Close();
+                    indexWriter.Commit();
+                    indexWriter.Close();
                 }
 
             }
