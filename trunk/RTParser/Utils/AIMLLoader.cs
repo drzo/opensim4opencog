@@ -539,6 +539,10 @@ namespace RTParser.Utils
                                         () =>
                                         loadAIMLNodes(currentNode.ChildNodes, loadOpts, request));
                 }
+                else if (currentNodeName == "meta" || currentNodeName == "#comment")
+                {
+                    // skip fo now
+                }
                 else
                 {
                     loadOpts.RProcessor.ImmediateAiml(currentNode, request, this, null);
