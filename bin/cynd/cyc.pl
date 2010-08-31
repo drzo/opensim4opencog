@@ -2132,17 +2132,24 @@ sterm_to_pterm_list([S|STERM],[P|PTERM]):-!,
 sterm_to_pterm_list(VAR,[VAR]).
 
 
-atomSplit(Atom,WordsO):- atom(Atom),
-   concat_atom(Words1,' ',Atom),!, atomSplit2(Words1,Words),!,Words=WordsO.
+atomSplit(Atom,WordsO):- atomSplit(Atom,WordsO,[' ','\'',';',',','"','`',':','?','!','.','\n','\t','\r','\\','*','%','(',')']),!.
 
-atomSplit(Atom,Words):-var(Atom),ground(Words),!,concat_atom(Words,' ',AtomO),!,Atom=AtomO.
+atomSplit(Atom,WordsO,List):- atom(Atom), concat_atom(Words1,' ',Atom),!, atomSplit2(Words1,Words,List),!,Words=WordsO.
+atomSplit(Atom,Words,[Space|List]):-var(Atom),ground(Words),!,concat_atom(Words,Space,AtomO),!,Atom=AtomO.
 
-atomSplit2([],[]):-!.
-atomSplit2([Mark|S],[Mark|Words]):- member(Mark,['.',',','?']),atomSplit2(S,Words),!.
-atomSplit2([W|S],[A,Mark|Words]):- member(Mark,['.',',','?']),atom_concat(A,Mark,W),!,atomSplit2(S,Words).
-atomSplit2([W|S],[Mark,A|Words]):- member(Mark,['.',',','?']),atom_concat(Mark,A,W),!,atomSplit2(S,Words).
-atomSplit2([W|S],[W|Words]):-atomSplit2(S,Words).
 
+atomSplit2([],[],_List):-!.
+atomSplit2([Mark|S],[Mark|Words],List):- member(Mark,List),!,atomSplit2(S,Words,List),!.
+atomSplit2([W|S],[A,Mark|Words],List):- member(Mark,List),atom_concat(A,Mark,W),!,atomSplit2(S,Words,List).
+atomSplit2([W|S],[Mark,A|Words],List):- member(Mark,List),atom_concat(Mark,A,W),!,atomSplit2(S,Words,List).
+atomSplit2([Word|S],Words,List):- member(Space,List),concat_atom(Atoms,Space,Word),Atoms=[_,_|_],interleave(Atoms,Space,Left),
+                  atomSplit2(S,Right,List),append(Left,Right,WordsM),!,atomSplit2(WordsM,Words,List),!.
+atomSplit2([W|S],[W|Words],List):-atomSplit2(S,Words,List).
+
+interleave([''],Space,[Space]):-!.
+interleave([Atom],_Space,[Atom]):-!.
+interleave([''|More],Space,[Space|Result]):-interleave(More,Space,Result),!.
+interleave([Atom|More],Space,[Atom,Space|Result]):-interleave(More,Space,Result),!.
 
 pterm_to_sterm(VAR,VAR):-isNonCompound(VAR),!.
 pterm_to_sterm([X|L],[Y|Ls]):-!,pterm_to_sterm(X,Y),pterm_to_sterm(L,Ls),!.
@@ -2894,34 +2901,39 @@ listingToString(Pred,RS):-
       toCycApiExpression(R2,_,R),escapeString(R,RS),!.
 
 
-toUppercase(VAR,VAR):-var(VAR),!.
-toUppercase([],[]):-!.
+noCaseChange([],[]):-!.
+noCaseChange(VAR,VAR):-var(VAR),!.
+noCaseChange(MiXed):-atom(MiXed),atom_concat('#$',_,MiXed),!.
+noCaseChange(c(VAR),c(VAR)):-!.
+
+toUppercase(MiXed,MiXed):-noCaseChange(MiXed),!.
 toUppercase(V,V2):-string(V),!,atom_codes(V,VC),toUppercase(VC,CVC),string_to_atom(V2,CVC),!.
 toUppercase(95,45):-!.
 toUppercase(I,O):-integer(I),!,to_upper(I,O).
 toUppercase([A|L],[AO|LO]):-
    toUppercase(A,AO),!,
    toUppercase(L,LO),!.
-toUppercase(MiXed,UPPER):-atom(MiXed),!,
+toUppercase(MiXed,CASED):-atom(MiXed),upcase_atom(MiXed,CASED),!.
+toUppercase(MiXed,CASED):-atom(MiXed),!,
    atom_codes(MiXed,Codes),
    toUppercase(Codes,UCodes),
-   atom_codes(UPPER,UCodes),!.
-toUppercase(MiXed,UPPER):-compound(MiXed),MiXed=..MList,toUppercase(MList,UList),!,UPPER=..UList.
+   atom_codes(CASED,UCodes),!.
+toUppercase(MiXed,CASED):-compound(MiXed),MiXed=..MList,toUppercase(MList,UList),!,CASED=..UList.
 toUppercase(A,A).
 
-toLowercase(VAR,VAR):-var(VAR),!.
+toLowercase(MiXed,MiXed):-noCaseChange(MiXed),!.
 toLowercase(V,V2):-string(V),!,atom_codes(V,VC),toLowercase(VC,CVC),string_to_atom(V2,CVC),!.
-toLowercase([],[]):-!.
 toLowercase(95,45):-!.
 toLowercase(I,O):-integer(I),!,to_lower(I,O).
 toLowercase([A|L],[AO|LO]):-
    toLowercase(A,AO),!,
    toLowercase(L,LO),!.
-toLowercase(MiXed,UPPER):-atom(MiXed),!,
+toLowercase(MiXed,CASED):-atom(MiXed),downcase_atom(MiXed,CASED),!.
+toLowercase(MiXed,CASED):-atom(MiXed),!,
    atom_codes(MiXed,Codes),
    toLowercase(Codes,UCodes),
-   atom_codes(UPPER,UCodes),!.
-toLowercase(MiXed,UPPER):-compound(MiXed),MiXed=..MList,toLowercase(MList,UList),!,UPPER=..UList.
+   atom_codes(CASED,UCodes),!.
+toLowercase(MiXed,CASED):-compound(MiXed),MiXed=..MList,toLowercase(MList,UList),!,CASED=..UList.
 toLowercase(A,A).
 
 
