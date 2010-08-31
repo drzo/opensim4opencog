@@ -212,9 +212,14 @@ namespace AIMLBotModule
         {
             handler.Enqueue(() => StartupListener0());
             handler.Start();
-        }
+        } 
 
+        static readonly object SILStartupListener00 = new object ();
         public void StartupListener0()
+        {
+            lock (SILStartupListener00) StartupListener00();            
+        }
+        public void StartupListener00()
         {
             lock (RegisterTalkToCmdLock)
             {
@@ -231,7 +236,7 @@ namespace AIMLBotModule
             }
             try
             {
-                MyBot = new RTPBot();
+                var MyBot = new RTPBot();
                 MyBot.outputDelegate = WriteLine;
                 MyBot.isAcceptingUserInput = false;
                 MyBot.AddExcuteHandler("bot", BotExecHandler);
@@ -242,6 +247,7 @@ namespace AIMLBotModule
                 MyBot.isAcceptingUserInput = true;
                 MyBot.outputDelegate = WriteLine;
                 String ss = client.GetName();
+                this.MyBot = MyBot;
                 LoadPersonalConfig();
                 MyBot.WriteConfig();
                 // wont get here unless there was no problem
@@ -266,7 +272,7 @@ namespace AIMLBotModule
             }
             catch (Exception e)
             {
-                WriteLine("" + e);
+                WriteLine("ERROR {0}", e);
             }
         }
 

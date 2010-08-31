@@ -1710,7 +1710,21 @@ namespace cogbot
         private void RegisterListener(Listener listener)
         {
             // listeners[listener.GetModuleName()] = listener;
-            OneAtATimeQueue.Enqueue(() => listener.StartupListener());
+
+            OneAtATimeQueue.Enqueue(() =>
+                                        {
+                                            string mname = listener.GetModuleName();
+                                            try
+                                            {
+                                                WriteLine("LISTENER STARTUP: " + mname);
+                                                listener.StartupListener();
+                                                WriteLine("LISTENER STARTUP COMPLETE: " + listener.GetModuleName());
+                                            }
+                                            catch (Exception e)
+                                            {
+                                                WriteLine("LISTENER STARTUP FAILED: " + listener.GetModuleName() + " " + e);
+                                            }
+                                        });
         }
 
         internal void RegisterType(Type t)
