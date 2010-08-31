@@ -17947,21 +17947,17 @@ I like watching football on TV.</template>
 <template><random><li>You are a smart human. You ask me a question about it.</li><li>I supply the answers, you are supposed to ask the questions.</li></random> <think><set name="emotion">OK</set></think></template>
 </category>
 
- 
 
+<!--
 <category>
 <pattern>* * * * * * * * * * * * * * * * * * * *</pattern>
-
-
 </category>
-
- 
 
 <category>
 <pattern>* * * * * * * * * * * * * * * * * * *</pattern>
-
-
 </category>
+ -->
+ 
 
  
 
@@ -21635,20 +21631,18 @@ Yippee!</template>
 
  
 
+<!--
+
 <category>
 <pattern>* * * * * * * * * * * * * * * * * * * * * *</pattern>
-
-
 </category>
-
- 
 
 <category>
 <pattern>* * * * * * * * * * * * * * * * * * * * *</pattern>
-
-
 </category>
 
+ -->
+ 
  
 
 <category>

@@ -5888,13 +5888,13 @@ I am a real person.</template>
 </category>
 
  
-
+<!--
 <category>
 <pattern>MY NAME IS * *</pattern>
 
 <template><srai>MY NAME IS <star/></srai></template>
 </category>
-
+-->
  
 
 <category>
