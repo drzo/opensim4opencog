@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--Substitutions are grouped according to several AIML interpreter functions.-->
+<substitutions xmlns="http://aitools.org/programd/4.6/bot-configuration"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://aitools.org/programd/4.6/bot-configuration http://aitools.org/programd/4.6/bot-configuration.xsd">
+  <!--Input substitutions correct spelling mistakes and convert
+        "sentence"-ending characters into characters that will not be
+        identified as sentence enders.-->
+
+  <depersonalize>
+    <property name="isSubsts">True</property>
+    <substitute find="my" replace="${bot.name}'s"/>
+    <substitute find="your" replace="${user.name}'s"/>
+    <substitute find="me" replace="${bot.name}"/>
+    <substitute find="I'm" replace="${bot.name} is"/>
+    <substitute find="I" replace="${bot.name}"/>
+    <substitute find="you" replace="${user.name}"/>
+
+    <substitute find="we" replace="${user.name} and ${bot.name}"/>
+    <substitute find="us" replace="${user.name} and ${bot.name}"/>
+    <substitute find="our" replace="${user.name}'s and ${bot.name}'s"/>
+
+    <substitute find="they" replace="${user.they},${bot.they}"/>
+    <substitute find="them" replace="${user.they},${bot.they}"/>
+    <substitute find="their" replace="${user.they}'s,${bot.they}'s"/>
+
+    <substitute find="him" replace="${user.he},${bot.he}"/>
+    <substitute find="he" replace="${user.he},${bot.he}"/>
+    <substitute find="his" replace="${user.he}'s,${bot.he}'s"/>
+
+    <substitute find="her" replace="${user.she},${bot.she}"/>
+    <substitute find="she" replace="${user.she},${bot.she}"/>
+    <substitute find="hers" replace="${user.she}'s,${bot.she}'s"/>
+
+    <substitute find="it" replace="${user.it},${bot.it}"/>
+    <substitute find="it s" replace="${user.it}'s,${bot.it}'s"/>
+    <substitute find="that" replace="${user.what},${bot.what}"/>
+
+    <substitute find="am" replace="is"/>
+    <substitute find="are" replace="is"/>
+    <substitute find="were" replace="was"/>
+  </depersonalize>
+
+  <personalize>
+    <property name="isSubsts">True</property>
+    <substitute replace="my" find="${bot.name}'s"/>
+    <substitute replace="your" find="${user.name}'s"/>
+    <substitute replace="me" find="${bot.name}"/>
+    <substitute replace="I am" find="${bot.name} is"/>
+    <substitute replace="I" find="${bot.name}"/>
+    <substitute replace="you" find="${user.name}"/>
+
+    <substitute replace="we" find="${user.name} and ${bot.name}"/>
+    <substitute replace="us" find="${user.name} and ${bot.name}"/>
+    <substitute replace="our" find="${user.name}'s and ${bot.name}'s"/>
+
+    <substitute replace="they" find="${user.they},${bot.they}"/>
+    <substitute replace="them" find="${user.they},${bot.they}"/>
+    <substitute replace="their" find="${user.they}'s,${bot.they}'s"/>
+
+    <substitute replace="he" find="${user.he},${bot.he}"/>
+    <substitute replace="him" find="${user.he},${bot.he}"/>
+    <substitute replace="his" find="${user.he}'s,${bot.he}'s"/>
+
+    <substitute replace="she" find="${user.she},${bot.she}"/>
+    <substitute replace="her" find="${user.she},${bot.she}"/>
+    <substitute replace="hers" find="${user.she}'s,${bot.she}'s"/>
+
+    </personalize>
+
+
+  <output>
+    <property name="isSubsts">True</property>
+    <substitute replace="my" find="${bot.name}'s"/>
+    <substitute replace="your" find="${user.name}'s"/>
+    <substitute replace="I" find="${bot.name}"/>
+    <substitute replace="I am" find="${bot.name} is"/>
+    <substitute replace="you were" find="${user.name} was"/>
+    <substitute replace="you are" find="${user.name} is"/>
+    <substitute replace="we" find="${user.name} and ${bot.name}"/>
+    <substitute replace="us" find="${user.name} and ${bot.name}"/>
+    <substitute replace="our" find="${user.name}'s and ${bot.name}'s"/>
+  </output>
+</substitutions>
