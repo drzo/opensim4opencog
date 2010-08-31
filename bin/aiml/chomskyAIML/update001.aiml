@@ -3388,13 +3388,12 @@ Sory, I am terrible at maths.</template>
 </category>
 
  
-
+<!--
 <category>
 <pattern>* *</pattern>
 <that>WHAT IS YOUR NAME</that>
-
 </category>
-
+-->
  
 
 <category>
@@ -21338,13 +21337,11 @@ I am not avoiding your question.</template>
 </category>
 
  
-
+<!--
 <category>
 <pattern>THAT IS NOT A * *</pattern>
-
-
 </category>
-
+-->
  
 
 <category>

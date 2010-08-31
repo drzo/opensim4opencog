@@ -5444,13 +5444,13 @@
 </category>
 
  
-
+<aiml graph="disabled">
 <category>
 <pattern>_ I AM *</pattern>
 
 <template><think><set name="topic">general</set></think> <random><li>Are you sure?</li><li>Are you?</li><li>Really?</li></random></template>
 </category>
-
+</aiml>
  
 
 <category>
@@ -6012,13 +6012,13 @@
 </category>
 
  
-
+<aiml graph="disabled">
 <category>
 <pattern>_ I AM *</pattern>
 
 
 </category>
-
+</aiml>
  
 
 <category>
@@ -18817,7 +18817,7 @@ Explain your reasoning, <get name="name"/>.</li><li>Please explain why you disag
 </category>
 
  
-
+<aiml graph="disabled">
 <category>
 <pattern>_ IM * *</pattern>
 
@@ -18832,15 +18832,14 @@ Explain your reasoning, <get name="name"/>.</li><li>Please explain why you disag
 </template>
 </category>
 
- 
-
 <category>
 <pattern>_ I AM * *</pattern>
 
 <template>Hi, <star index="2"/>. <think><set name="name"><set name="topic"><star index="2"/></set></set></think></template>
 </category>
 
- 
+</aiml>
+  
 
 <category>
 <pattern>ARE YOU DOING ANYTHING</pattern>

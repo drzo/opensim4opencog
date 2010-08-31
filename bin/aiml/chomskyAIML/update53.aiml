@@ -10016,13 +10016,13 @@ Say "Hi, Sonia" for me.</template>
 </category>
 
  
-
+<!--
 <category>
 <pattern>* *</pattern>
 
 
 </category>
-
+-->
  
 
 <category>

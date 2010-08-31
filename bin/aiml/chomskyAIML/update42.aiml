@@ -1853,13 +1853,13 @@ Jail is prison, the slammer.</template>
 </category>
 
  
-
+<!--
 <category>
 <pattern>* * * * * * * * * * * * * * * * * * * * * * *</pattern>
 
 
 </category>
-
+-->
  
 
 <category>

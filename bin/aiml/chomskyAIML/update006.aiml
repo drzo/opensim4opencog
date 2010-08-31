@@ -16702,7 +16702,7 @@ Sure I understand. <srai>WHAT IS THE TOPIC</srai> You said: <input index="1"/>, 
 <template><srai>AI</srai></template>
 </category>
 
- 
+
 
 <category>
 <pattern>* HELLO</pattern>
@@ -16723,7 +16723,7 @@ Sure I understand. <srai>WHAT IS THE TOPIC</srai> You said: <input index="1"/>, 
  
 
 
- 
+<aiml graph="disabled">
 
 <category>
 <pattern>_ I AM *</pattern>
@@ -16734,7 +16734,7 @@ Sure I understand. <srai>WHAT IS THE TOPIC</srai> You said: <input index="1"/>, 
 </random></template>
 </category>
 
- 
+</aiml>
 
 <category>
 <pattern>*</pattern>
@@ -21821,13 +21821,14 @@ Couldn't put Humpty back again.</template>
 </category>
 
  
+<aiml graph="disabled">
 
 <category>
 <pattern>_ I AM *</pattern>
 
 
 </category>
-
+</aiml>
  
 
 <category>

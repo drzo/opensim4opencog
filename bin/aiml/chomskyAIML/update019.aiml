@@ -18836,6 +18836,7 @@ I have many girl friends.</template>
 </category>
 
  
+<!--
 
 <category>
 <pattern>SET * *</pattern>
@@ -18851,7 +18852,7 @@ I have many girl friends.</template>
 <template><think><set name="topic">general</set></think><sr/></template>
 </category>
 
- 
+--> 
 
 <category>
 <pattern>YOU DO NOT LIKE ME *</pattern>
