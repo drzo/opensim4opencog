@@ -143,6 +143,22 @@ namespace RTParser.AIMLTagHandlers
 
             if (templateNode.NodeType == XmlNodeType.Comment) return Succeed();
 
+            // pull from late bound sustituion dictionaries
+            var sd = request.GetSubstitutions(currentNodeName, false);
+            if (sd != null)
+            {
+                if (!Unifiable.IsNull(RecurseResult))
+                {
+                    return RecurseResult;
+                }
+                Func<Unifiable, Unifiable> Format = (v) => RTParser.Normalize.ApplySubstitutions.Substitute(sd, templateNodeInnerText);
+                if (isRecursive && !ReadOnly)
+                {
+                    return RecurseResult = Format(TransformAtomically(null, true));
+                }
+                return RecurseResult = TransformAtomically(Format, false);
+            }
+
             if (RTPBot.UnknownTagsAreBotVars)
             {
                 var v = Proc.GlobalSettings.grabSetting(currentNodeName);

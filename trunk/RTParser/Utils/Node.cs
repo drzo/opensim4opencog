@@ -361,23 +361,83 @@ namespace RTParser.Utils
 
         static string ToKey(string fs0)
         {
-            const bool doEs = false;
+            const bool doEs = true;
+            const bool doSEs = true;
             fs0 = fs0.ToUpper().Trim();
+            var fs00 = fs0;
             string fs = fs0;
             int fl = fs.Length;
-            if (fl > 3)
+            if (fl == 0)
             {
-                if (fs[fl - 1] == 'S')
+                return "";
+            }
+            char c0 = fs0[fl - 1];
+            char c = c0;
+            if (fl > 4)
+            {
+                if (c == 'S')
                 {
-                    if (doEs && fs[fl - 2] == 'E') fs = fs.Substring(0, fl - 2);
-                    else fs = fs.Substring(0, fl - 1);
-
+                    if (doSEs && fs.EndsWith("SSES"))
+                    {
+                        fs = fs.Substring(0, fl - 2);
+                    }
+                    else if (doSEs && fs.EndsWith("SSED"))
+                    {
+                        fs = fs.Substring(0, fl - 2);
+                    }
+                    else
+                    {
+                        char c2 = fs[fl - 2];
+                        if (c2 == 'S') // preserve ss 
+                        {
+                        }
+                        if (c2 == 'E') // preserve es 
+                        {
+                            if (doEs) fs = fs.Substring(0, fl - 2);
+                            else
+                            {
+                                fs = fs.Substring(0, fl - 1);
+                            }
+                        }
+                        else if ("AEIOU".IndexOf(c2) >= 0)
+                        {
+                            if (doEs && c2 == 'E') fs = fs.Substring(0, fl - 2);
+                        }
+                        else fs = fs.Substring(0, fl - 1);
+                    }
                 }
-                else if (doEs && fs[fl - 1] == 'E')
+                c = fs[fs.Length - 1];
+                if (c == 'D')
+                {
+                    if (doSEs && fs.EndsWith("SSED"))
+                    {
+                        fs = fs.Substring(0, fl - 2);
+                    }
+                    else
+                    {
+                        char c2 = fs[fl - 2];
+                        if (c2 == 'E') // preserve 
+                        {
+                            c2 = fs[fl - 3];
+                            if ("AEIOU".IndexOf(c2) == -1)
+                            {
+                                fs = fs.Substring(0, fl - 2);
+                            }
+                        }
+                    }
+                }
+                c = fs[fs.Length - 1];
+                if (doEs && c == 'E')
+                {
+                    fs = fs.Substring(0, fl - 1);
+                }
+                c = fs[fs.Length - 1];
+                if (doEs && c == 'S')
                 {
                     fs = fs.Substring(0, fl - 1);
                 }
             }
+            //if (c0 == 'E' || c0 == 'S' || c0 == 'D') Console.Error.WriteLine(fs00 + "->" + fs);
             if (fs0 == fs) return fs0;
             return fs;
         }

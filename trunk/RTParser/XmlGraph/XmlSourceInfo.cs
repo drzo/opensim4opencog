@@ -747,7 +747,7 @@ namespace RTParser.Utils
         {
             if (linenum < lineNumber)
             {
-                writeToLog("too small");
+                writeToLog("Line number too small");
                 return;
             } 
 
@@ -874,7 +874,7 @@ namespace RTParser.Utils
                         }
                         catch (Exception e)
                         {
-                            writeToLog("newnode.AppendChild " + e);
+                            writeToLog("ERROR: newnode.AppendChild " + e);
                         }
                     }
                 var ats = Attributes;
@@ -893,7 +893,7 @@ namespace RTParser.Utils
                         }
                         catch (Exception e)
                         {
-                            newnode.writeToLog("newnode.AppendChild " + e);
+                            newnode.writeToLog("ERROR: newnode.AppendChild " + e);
                         }
                     }
                 newnode.protect = newnodeWas;
@@ -916,7 +916,7 @@ namespace RTParser.Utils
                         }
                         catch (Exception e)
                         {
-                            newnode.writeToLog("newnode.AppendChild " + e);
+                            newnode.writeToLog("ERROR: newnode.AppendChild " + e);
                         }
                     }
                 newnode.protect = false;
@@ -939,13 +939,12 @@ namespace RTParser.Utils
                 {
                     writeToLog("ERROR RemoveChild on ReadOnly ");
                 }
-                ReadOnly = false;
                 _whenReadOnly = false;
                 return base.RemoveChild(newChild);
             }
             catch (Exception e)
             {
-                writeToLog("newnode.AppendChild " + e);
+                writeToLog("ERROR: newnode.AppendChild " + e);
                 return null;
             } finally
             {
@@ -968,7 +967,7 @@ namespace RTParser.Utils
             }
             catch (Exception e)
             {
-                writeToLog("newnode.AppendChild " + e);
+                writeToLog("ERROR: newnode.AppendChild " + e);
                 return null;
             }
         }
@@ -1014,7 +1013,7 @@ namespace RTParser.Utils
                 if (InnerXml == value) return;
                 if (protect)
                 {
-                    writeToLog("InnerXml Should not be changed to " + value);
+                    writeToLog("WARNING: InnerXml Should not be changed to \"" + value + "\"");
                 }
                 base.InnerXml = value;
             }
@@ -1030,7 +1029,7 @@ namespace RTParser.Utils
             {
                 if (protect)
                 {
-                    writeToLog("InnerText Should not be changed to " + value);
+                    writeToLog("WARNING: InnerText Should not be changed to \"" + value + "\"");
                 }
                 base.InnerText = value;
             }
@@ -1038,7 +1037,7 @@ namespace RTParser.Utils
 
         private void writeToLog(string s)
         {
-            RTPBot.writeDebugLine("ERROR  " + s + " on XML node: '" + this + "'");
+            RTPBot.writeDebugLine(s + " on XML node: '" + this + "'");
         }
 
         private static bool _whenReadOnly = true;
@@ -1078,9 +1077,20 @@ namespace RTParser.Utils
             }
             set
             {
-                protect = value;
-
-                foreach (object node in ChildNodes)
+                bool vitalChange = false;
+                if (protect != IsReadOnly)
+                {
+                    vitalChange = true;
+                }
+                if (protect != value)
+                {
+                    protect = value;
+                    if (!vitalChange) 
+                    {
+                        vitalChange = true;
+                    }
+                }
+                foreach (XmlNode node in ChildNodes)
                 {
                     if (node is AIMLXmlInfo)
                     {
@@ -1088,7 +1098,18 @@ namespace RTParser.Utils
                     }
                     else
                     {
-                        writeToLog("Child is not a AIMLXmlInfo: " + node);
+                        if (!node.IsReadOnly && !value)
+                        {
+                            writeToLog("Non Readonly Child is not a AIMLXmlInfo: " + node);
+                        }
+                        if (vitalChange)
+                        {
+                            writeToLog("ERROR: Child is not a AIMLXmlInfo: " + node);
+                        }
+                        else
+                        {
+                            writeToLog("WARNING: Child is not a AIMLXmlInfo: " + node);
+                        }
                     }
                 }
                 foreach (object node in Attributes)

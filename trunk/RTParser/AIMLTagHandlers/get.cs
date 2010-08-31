@@ -1,6 +1,7 @@
 using System;
 using System.Xml;
 using System.Text;
+using RTParser.Database;
 using RTParser.Utils;
 using RTParser.Variables;
 
@@ -59,55 +60,18 @@ namespace RTParser.AIMLTagHandlers
 
         protected Unifiable ProcessChange0()
         {
-            if (this.templateNode.Name.ToLower() == "get")
+            if (CheckNode("get"))
             {
                 string name = GetAttribValue(templateNode, "name,var", () => templateNodeInnerText, query);
                 Unifiable defaultVal = GetAttribValue("default", Unifiable.Empty);
                 ISettingsDictionary dict = query;
-                if (GetAttribValue("type", "") == "bot") dict = request.TargetBot.GlobalSettings;
-                string realName;
-                Unifiable resultGet = SettingsDictionary.grabSettingDefualt(dict, name, out realName);
-
-                if (ReferenceEquals(resultGet, null))
-                {
-                    resultGet = Unifiable.NULL;
-                }
-                // if ((!String.IsNullOrEmpty(result)) && (!result.IsWildCard())) return result; // we have a local one
-                
-                // try to use a global blackboard predicate
-                bool newlyCreated;
-                RTParser.User gUser = this.user.bot.FindOrCreateUser("globalPreds", out newlyCreated);
-                Unifiable gResult = SettingsDictionary.grabSettingDefualt(gUser.Predicates, name, out realName);
-
-                if ((Unifiable.IsUnknown(resultGet)) && (!Unifiable.IsUnknown(gResult)))
-                {
-                    // result=nothing, gResult=something => return gResult
-                    writeToLog("SETTINGS OVERRIDE " + gResult);
-                    return gResult;
-                }
-                string sresultGet = resultGet.ToValue(query);
-                if (sresultGet != null && sresultGet.ToUpper() == "UNKNOWN")
-                {
-                    return sresultGet + " " + name;
-                }
-                if (!String.IsNullOrEmpty(sresultGet))
-                {
-                    if (!String.IsNullOrEmpty(gResult))
-                    {
-                        // result=*, gResult=something => return gResult
-                        if (resultGet.IsWildCard()) return gResult;
-                        Succeed();
-                        // result=something, gResult=something => return result
-                        return resultGet;
-                    }
-                    else
-                    {
-                        // result=something, gResult=nothing => return result
-                        return resultGet;
-                    }
-                }
-                // default => return defaultVal
-                return defaultVal;
+                string dictName = GetDictName("type,dict");
+                Unifiable gName = GetAttribValue("global_name", name);
+                bool succeed;
+                var v = NamedValuesFromSettings.GetSettingForType(dictName, query, query, name, gName, defaultVal,
+                                                                  out succeed);
+                if (succeed) Succeed();
+                return v;
             }
             return Unifiable.Empty;
         }

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using AIMLbot;
+using RTParser.Database;
 using RTParser.Variables;
 using UPath = RTParser.Unifiable;
 using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
@@ -22,6 +23,12 @@ namespace RTParser.Utils
         {
             //get 
             { return Request.TargetSettings.SettingNames(depth); }
+        }
+
+        public ISettingsDictionary TargetSettings
+        {
+            get
+            { return Request.TargetSettings; }
         }
 
         #region Attributes
@@ -277,6 +284,15 @@ namespace RTParser.Utils
         public bool CanUseNode(Node node)
         {
             return TopLevel.CanUseNode(node);
+        }
+
+        public ISettingsDictionary GetDictionary(string named)
+        {
+            SubQuery query = this;
+            if (named == null) return query;
+            string lnamed = named.ToLower();
+            if (lnamed == "query") return query;
+            return Request.GetDictionary(named);
         }
     }
 #if _FALSE_

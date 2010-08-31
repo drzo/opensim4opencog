@@ -23,6 +23,40 @@ namespace RTParser.Utils
             }
         }
 
+        internal string GetDictName(string tryFirst)
+        {
+            string type = GetAttribValue(tryFirst, null);
+            if (type == null)
+            {
+                string uname = GetAttribValue("user", null);
+                if (uname != null) type = GetNamedType("user", uname);
+                string bname = GetAttribValue("bot", null);
+                if (bname != null) type = GetNamedType("bot", bname);
+            }
+            return type;
+        }
+
+        internal static string GetNamedType(string name, string value)
+        {
+            if (value != null)
+            {
+                value = value.ToLower();
+                if (value == "true" || value == "t" || value == "yes" || value == "y")
+                {
+                    return name;
+                }
+                if (value == "false" || value == "f" || value == "no" || value == "n")
+                {
+                    return null;
+                }
+                else
+                {
+                    return value;
+                }
+            }
+            return value;
+        }
+
         public Unifiable GetStarContent()
         {
             XmlNode starNode = Utils.AIMLTagHandler.getNode("<star/>", templateNode);

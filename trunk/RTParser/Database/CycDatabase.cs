@@ -478,7 +478,8 @@ namespace RTParser.Database
             string s = CleanupCyc0(text);
             if (s=="NIL")
             {
-                writeToLog("became nil: " + text);
+                writeToLog("ERROR: became nil: " + text);
+                return text;
             }
             return s;
         }
