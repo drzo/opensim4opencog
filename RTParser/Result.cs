@@ -96,6 +96,10 @@ namespace RTParser
         }
         public void AddOutputSentences(TemplateInfo ti, string unifiable)
         {
+            AddOutputSentences0(ti, unifiable);
+        }
+        public void AddOutputSentences0(TemplateInfo ti, string unifiable)
+        {
             
             if (null == unifiable)
             {
@@ -115,7 +119,7 @@ namespace RTParser
                 string[] sents = unifiable.Split(new string[] { "<br/>", "&p;" }, StringSplitOptions.RemoveEmptyEntries);
                 foreach (var s in sents)
                 {
-                    AddOutputSentences(ti, s);
+                    AddOutputSentences0(ti, s);
                 }
                 return;
             }
@@ -124,7 +128,7 @@ namespace RTParser
                 string[] sents = unifiable.Split(new string[] { ". ", "? " }, StringSplitOptions.RemoveEmptyEntries);
                 foreach (var s in sents)
                 {
-                    AddOutputSentences(ti, s);
+                    AddOutputSentences0(ti, s);
                 }
                 return;
             }

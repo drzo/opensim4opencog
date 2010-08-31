@@ -2,6 +2,7 @@ using System;
 using System.Xml;
 using System.Text;
 using System.IO;
+using RTParser.Database;
 using RTParser.Utils;
 using RTParser.Variables;
 
@@ -39,40 +40,30 @@ namespace RTParser.AIMLTagHandlers
         {
         }
         
-        public StreamWriter chatTrace;
+        //public StreamWriter chatTrace;
 
         protected override Unifiable ProcessChange()
         {
             if (RecurseResult != null) return RecurseResult;
-            string name = this.templateNode.Name.ToLower();
-            if (name == "bot")
+            Unifiable defaultVal = GetAttribValue("default", Unifiable.Empty);
+            if (CheckNode("bot"))
             {
-                name = GetAttribValue(new[] { "name", "var" }, () => templateNodeInnerText.Trim());          
-            }
-                Unifiable defaultVal = GetAttribValue("default", Unifiable.Empty);
-                //if (name == "name") return "Bina";
-                string realName;
-                Unifiable value = SettingsDictionary.grabSettingDefualt(Proc.GlobalSettings, name ,out realName);
-                
-                if (Unifiable.IsNullOrEmpty(value))
-                {
-                    return defaultVal;
-                }
-                if (value.ToUpper() == "UNKNOWN")
-                {
-                    return ("unknown " + name);
-                }
-                if (name != "name") Succeed();
-                var v2 = value.ToValue(query);
-                if (!Unifiable.IsNullOrEmpty(v2))
-                {
-                    value = v2;
-                }
+                string name = GetAttribValue(templateNode, "name,var", () => templateNodeInnerText, query);
+                ISettingsDictionary dict = query;
+                string dictName = GetDictName("type,dict");
+                if (dictName == null) dictName = "bot"; 
+                Unifiable gName = GetAttribValue("global_name", name);
+                bool succeed;
+                var value = NamedValuesFromSettings.GetSettingForType(dictName, query, Proc.GlobalSettings, name, gName,
+                                                                      defaultVal, out succeed);
+                if (succeed && name != "name") Succeed();
                 if (!Unifiable.IsNullOrEmpty(value))
                 {
                     RecurseResult = value;
                 }
                 return value;
+            }
+            return defaultVal;
         }
     }
 }

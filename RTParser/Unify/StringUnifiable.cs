@@ -240,7 +240,7 @@ namespace RTParser
                         case '(':
                             if (c1 == ')' && len == 2)
                                 return UFlags.IS_FALSE;
-                            break;                        
+                            break;
                         case 'O':
                             if (c1 == 'N')
                                 return UFlags.IS_TRUE;
@@ -263,6 +263,9 @@ namespace RTParser
                                 if (str.StartsWith("TAG-")) Flags |= UFlags.IS_TAG;
                             }
                             break;
+                        case '_':
+                            Flags |= UFlags.SHORT_WILDCARD;
+                            break;
                         case '*':
                             Flags |= UFlags.LONG_WILDCARD;
                             break;
@@ -275,62 +278,72 @@ namespace RTParser
                         case '#':
                             Flags |= UFlags.REG_CLASS | UFlags.IS_TRUE | UFlags.IS_EXACT;
                             break;
-                        default:
-                            if (len > 3)
+                        case '<':
                             {
-                                if (c == '<')
-                                {
-                                    Flags |= UFlags.LAZY_XML;
+                                Flags |= UFlags.LAZY_XML;
 
-                                    if (UFlags.LAZY_XML == Flags)
-                                    {
-                                        if (str.Contains("_")) Flags |= UFlags.SHORT_WILDCARD;
-                                        else if (str.Contains("*")) Flags |= UFlags.LONG_WILDCARD;
-                                        //else
-                                        //{
-                                        //    Flags |= UFlags.NO_BINDS_STARS;
-                                        //}
-                                    }
-                                    if (found.Contains("BINDSTAR=\"TRUE\"")) Flags |= UFlags.BINDS_STARS;
-                                    else Flags |= UFlags.NO_BINDS_STARS;
-
-                                }
-                                else
+                                if (UFlags.LAZY_XML == Flags)
                                 {
-                                    int wh = str.IndexOf(' ');
-                                    if (wh > 1) Flags |= UFlags.MORE_THAN_ONE;
-                                    else Flags |= UFlags.ONLY_ONE;
-                                    Flags |= UFlags.IS_EXACT;
+                                    if (str.Contains("_")) Flags |= UFlags.SHORT_WILDCARD;
+                                    else if (str.Contains("*")) Flags |= UFlags.LONG_WILDCARD;
+                                    //else
+                                    //{
+                                    //    Flags |= UFlags.NO_BINDS_STARS;
+                                    //}
                                 }
+                                if (found.Contains(">#$"))
+                                    Flags |= UFlags.REG_CLASS | UFlags.IS_TRUE | UFlags.IS_EXACT;
+                                if (found.Contains("BINDSTAR=\"TRUE\"") || found.Contains("BIND>") ||
+                                    found.Contains("STAR>")) Flags |= UFlags.BINDS_STARS;
+                                else Flags |= UFlags.NO_BINDS_STARS;
+                                break;
+                            }
+                        default:
+                            if (char.IsLetter(c))
+                            {
+                                Flags |= UFlags.IS_EXACT;
+                            }
+                            else if (char.IsNumber(c) || c == '%')
+                            {
+                                Flags |= UFlags.IS_EXACT;
+                            }
+                            else if (char.IsPunctuation(c) || c == '%')
+                            {
+                                Flags |= UFlags.IS_PUNCT;
+                            }
+                            else
+                            {
+                              //  Flags |= UFlags.IS_EXACT;
                             }
                             break;
-
                     }
 
 
-                    if (c == '_')
-                        Flags |= UFlags.SHORT_WILDCARD;
-                    else if (c == '*')
-                        Flags |= UFlags.LONG_WILDCARD;
-                    else if (Flags == UFlags.NO_FLAGS)
+                    if (Flags == UFlags.NO_FLAGS)
                     {
                         if (char.IsLetter(c))
                         {
-                            return UFlags.IS_EXACT;
+                            Flags |= UFlags.IS_EXACT;
                         }
                         else if (char.IsNumber(c) || c == '%')
                         {
-                            return UFlags.IS_EXACT;
+                            Flags |= UFlags.IS_EXACT;
                         }
                         else if (char.IsPunctuation(c) || c == '%')
                         {
-                            return UFlags.IS_PUNCT;
+                            Flags |= UFlags.IS_PUNCT;
                         }
-                        return UFlags.IS_EXACT;
+                        Flags |= UFlags.IS_EXACT;
                     }
+
+
+                    int wh = str.IndexOf(' ');
+                    if (wh > 1) Flags |= UFlags.MORE_THAN_ONE;
+                    else Flags |= UFlags.ONLY_ONE;
+                    Flags |= UFlags.IS_EXACT;
+
                     return Flags;
                 }
-
             }
         }
 

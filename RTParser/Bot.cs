@@ -92,8 +92,8 @@ namespace RTParser
 
         public static string AIMLDEBUGSETTINGS = "clear -spam +user +bina +error +aimltrace +cyc -dictlog -tscore +loaded";
         //    "clear +*";
-        public static string[] RUNTIMESETTINGS = { "-GRAPH", "-USER"};
-        public static readonly TextFilter LoggedWords = new TextFilter() { "CLEAR", "+*", "+STARTUP", "+ERROR", "-AIMLLOADER", "-DEBUG9", "-ASSET" }; //maybe should be ERROR", "STARTUP
+        public static string[] RUNTIMESETTINGS = { "-GRAPH", "-USER" };
+        public static readonly TextFilter LoggedWords = new TextFilter() { "CLEAR", "+*", "+STARTUP", "+ERROR", "+EXCEPTION", "+GRAPH", "+AIMLFILE", "-AIMLLOADER", "-DEBUG9", "-ASSET" }; //maybe should be ERROR", "STARTUP
         public User LastUser;
         public User BotAsUser;
         public User ExemplarUser;
@@ -101,11 +101,13 @@ namespace RTParser
         public string NameAsSet;
         //public Request BotAsRequestUsed = null;
         public Request GetBotRequest(string s)
-        {           
+        {
+            s = s.Trim();
+            if (!s.StartsWith("<")) s = "<!-- " + s.Replace("<!--", "<#").Replace("-->", "#>") + " -->";
             var r = new AIMLbot.Request(s, BotAsUser, this, null);
             Result res = new AIMLbot.Result(BotAsUser, this, r, null);
             res._CurrentQuery = new SubQuery(s, res, r);
-            OnBotCreated(()=>
+            OnBotCreated(() =>
                              {
                                  res.user = r.user = BotAsUser;
                              });
@@ -191,7 +193,7 @@ namespace RTParser
         public SettingsDictionary AllUserPreds;
 
 
-      
+
         /// <summary>
         /// Holds information about the available custom tag handling classes (if loaded)
         /// Key = class name
@@ -666,7 +668,7 @@ namespace RTParser
         /// </summary>
         public void loadAIMLFromDefaults()
         {
-            
+
         }
         public void loadAIMLFromDefaults0()
         {
@@ -745,6 +747,10 @@ namespace RTParser
 
         }
 
+        public ISettingsDictionary GetSetPredicateReturn()
+        {
+            return SetPredicateReturn;
+        }
         /// <summary>
         /// Instantiates the dictionary objects and collections associated with this class
         /// </summary>
@@ -753,9 +759,12 @@ namespace RTParser
             var prev = isAcceptingUserInput;
             try
             {
-
-                isAcceptingUserInput = false;
+                isAcceptingUserInput = false; 
+                
+                this.SetPredicateReturn = new SettingsDictionary("chat.setpredicatereturn", this, null);
+                
                 this.GlobalSettings = new SettingsDictionary("bot.globalsettings", this, null);
+                this.GlobalSettings.InsertSettingReturnTypes(GetSetPredicateReturn);
 
                 this.GenderSubstitutions = new SettingsDictionary("nl.substitutions.gender", this, null);
                 RegisterSubstitutions("gender", GenderSubstitutions);
@@ -771,9 +780,10 @@ namespace RTParser
 
                 //ParentProvider provider = new ParentProvider(() => GlobalSettings);
                 this.DefaultPredicates = new SettingsDictionary("bot.defaultpredicates", this, null);
+                this.DefaultPredicates.InsertSettingReturnTypes(GetSetPredicateReturn);
                 this.HeardPredicates = new SettingsDictionary("chat.heardpredicates", this, null);
                 this.AllUserPreds = new SettingsDictionary("bot.alluserpred", this, null);
-                this.SetPredicateReturn = new SettingsDictionary("chat.setpredicatereturn", this, null);
+                this.AllUserPreds.InsertSettingReturnTypes(GetSetPredicateReturn);
 
 
                 User guser = ExemplarUser = LastUser = new AIMLbot.User("globalPreds", this);
@@ -797,7 +807,7 @@ namespace RTParser
                 SetSaneGlobals(this.GlobalSettings);
                 string pathToSettings = HostSystem.Combine(RuntimeDirectory,
                                                            HostSystem.Combine("config", "Settings.xml"));
-                Request request = GetBotRequest("<!- Loads settings from: '" + pathToSettings + "' -->");
+                Request request = GetBotRequest("<!-- Loads settings from: '" + pathToSettings + "' -->");
                 this.loadSettingsFile(pathToSettings, request);
                 // RE-Checks for some important default settings
                 SetSaneGlobals(this.GlobalSettings);
@@ -957,19 +967,21 @@ namespace RTParser
             thiz.InputSubstitutions.loadSettings(HostSystemCombine(pathToSettings, "substitutions.xml"), request);
 
 
+
             // Grab the splitters for this Proccessor
             thiz.loadSplitters(HostSystemCombine(pathToSettings, GlobalSettings.grabSetting("splittersfile")));
             thiz.loadSplitters(HostSystemCombine(pathToSettings, GlobalSettings.grabSetting("sentence-splitters")));
             thiz.loadSplitters(HostSystemCombine(pathToSettings, "sentence-splitters.xml"));
 
-            
-            
+
+
             var guser = thiz.FindUser("globalPreds");
             SettingsDictionary.loadSettings(guser.Predicates, HostSystemCombine(pathToSettings, "globalpreds.xml"),
-                true, false, request);
+                true, false, request);          
             thiz.writeToLog("Files left to process = " + files.Count);
             foreach (var list in files)
             {
+                writeDebugLine("AIMLLOADER: loadSettings " + list);
                 GlobalSettings.IsTraced = true;
                 GlobalSettings.loadSettings(list, request);
             }
@@ -982,9 +994,9 @@ namespace RTParser
         /// <param name="pathToSettings">Path to the settings xml file</param>
         public void loadSettingsFile(string pathToSettings, Request request)
         {
-            if (request == null) request = GetBotRequest("<!- Loads settings from: '" + pathToSettings + "' -->");
+            if (request == null) request = GetBotRequest("<!-- Loads settings from: '" + pathToSettings + "' -->");
             ReloadHooks.Add(() => loadSettingsFile(pathToSettings, request));
-            this.GlobalSettings.loadSettings(pathToSettings, request);            
+            this.GlobalSettings.loadSettings(pathToSettings, request);
             loadConfigs(this, HostSystem.GetBaseDir(pathToSettings), request);
         }
 
@@ -1445,7 +1457,7 @@ namespace RTParser
                 }
                 catch (Exception)
                 {
-                    
+
                     throw;
                 }
             }
@@ -1480,7 +1492,7 @@ namespace RTParser
                         if (LR != null)
                         {
                             LR.AddOutputSentences(null, message);
-                            
+
                         }
                     }
                 }
@@ -1618,9 +1630,9 @@ namespace RTParser
             lock (user.QueryLock)
             {
                 res = Chat0000(request, user, G);
-// ReSharper disable ConditionIsAlwaysTrueOrFalse
+                // ReSharper disable ConditionIsAlwaysTrueOrFalse
                 if (res.OutputSentenceCount == 0)
-// ReSharper restore ConditionIsAlwaysTrueOrFalse
+                // ReSharper restore ConditionIsAlwaysTrueOrFalse
                 {
                     request.IncreaseLimits(1);
                     res = Chat0000(request, user, G);
@@ -1801,7 +1813,7 @@ namespace RTParser
                 if (isTraced)
                     writeToLog("ERROR {0} getting back {1}", request, nai);
                 result = request.CreateResult(request);
-                result.AddOutputSentences(null, nai);
+                request.AddOutputSentences(null, nai, result);
                 return result;
             }
 
@@ -2066,7 +2078,7 @@ namespace RTParser
                     if (isTraced)
                     {
                         string aIMLLoaderParentTextAndSourceInfo = AIMLLoader.ParentTextAndSourceInfo(templateNode);
-                        if (aIMLLoaderParentTextAndSourceInfo.Length>120)
+                        if (aIMLLoaderParentTextAndSourceInfo.Length > 120)
                         {
                             aIMLLoaderParentTextAndSourceInfo = TextFilter.ClipString(aIMLLoaderParentTextAndSourceInfo, 220);
                         }
@@ -2074,7 +2086,7 @@ namespace RTParser
                     }
                     createdOutput = true;
                     templateSucceeded = true;
-                    result.AddOutputSentences(templateInfo, o);
+                    request.AddOutputSentences(templateInfo, o, result);
                 }
                 else
                 {
@@ -2130,7 +2142,7 @@ namespace RTParser
                         writeToLog(query.Graph + ": GUARD SUCCESS '{0}' TEMPLATE={1}", o, AIMLLoader.ParentTextAndSourceInfo(templateNode));
                     templateSucceeded = true;
                     createdOutput = true;
-                    result.AddOutputSentences(templateInfo, o);
+                    request.AddOutputSentences(templateInfo, o, result);
                     return tagHandler;
                 }
                 else
@@ -2159,17 +2171,33 @@ namespace RTParser
             return o.Length > 0;
         }
 
-        public string AsOutputSentence(string sentence)
+        public string AsOutputSentence(string sentenceIn)
         {
-            if (sentence == null)
+            if (sentenceIn == null)
             {
                 return null;
             }
-            sentence = ApplySubstitutions.Substitute(OutputSubstitutions, sentence);
+            sentenceIn = sentenceIn.Trim();
+            if (sentenceIn == "")
+            {
+                return "";
+            }
+            var sentence = "";
+            string xmlsentenceIn = ToNonSilentTags(sentenceIn);
+            if (xmlsentenceIn == "")
+            {
+                return "";
+            }
+            sentence = ApplySubstitutions.Substitute(OutputSubstitutions, xmlsentenceIn);
+            if (sentenceIn != sentence)
+            {
+                writeToLog("SUBTS: " + sentenceIn + " -> " + sentence);
+            }
             sentence = CleanupCyc(sentence);
             sentence = ApplySubstitutions.Substitute(OutputSubstitutions, sentence);
             return sentence.Trim();
         }
+
 
         /// <summary>
         /// Recursively evaluates the template nodes returned from the Proccessor
@@ -2571,6 +2599,9 @@ namespace RTParser
                         tagHandler = new AIMLTagHandlers.regex(this, user, query, request, result, node);
                         break;
 
+                    case "bind": // <bind>#$isa</bind>
+                        tagHandler = new AIMLTagHandlers.bind(this, user, query, request, result, node);
+                        break;
 
                     case "#text":
                         if (!liText) return null;
@@ -2660,7 +2691,7 @@ namespace RTParser
 
                         if (this.CustomTags.ContainsKey(nodename))
                         {
-                            TagHandler customTagHandler = (TagHandler) this.CustomTags[node.Name.ToLower()];
+                            TagHandler customTagHandler = (TagHandler)this.CustomTags[node.Name.ToLower()];
 
                             AIMLTagHandler newCustomTag = customTagHandler.Instantiate(this.LateBindingAssemblies, user,
                                                                                        query,
@@ -2979,7 +3010,7 @@ The AIMLbot program.
 
         public GraphMaster GetUserGraph(string graphPath)
         {
-            graphPath = graphPath.ToLower().Trim(); 
+            graphPath = graphPath.ToLower().Trim();
             GraphMaster g;
             lock (GraphsByName)
             {
@@ -3000,9 +3031,9 @@ The AIMLbot program.
             if (g != null) return g;
             if (graphPath == null)
             {
-                if (current==null)
+                if (current == null)
                 {
-                    
+
                 }
                 return current;
             }
@@ -3179,7 +3210,7 @@ The AIMLbot program.
             {
                 myUser = myBot.LastUser;
                 writeLine("-----------------------------------------------------------------");
-                string input = TextFilter.ReadLineFromInput(DLRConsole.SystemWrite, myUser.UserName + "> ");                
+                string input = TextFilter.ReadLineFromInput(DLRConsole.SystemWrite, myUser.UserName + "> ");
                 if (input == null)
                 {
                     Environment.Exit(0);
@@ -3277,7 +3308,7 @@ The AIMLbot program.
         {
             Request request = (user ?? LastUser ?? BotAsUser).CreateRequest(input);
             return BotDirective(request, input, console);
-            
+
         }
 
         public bool BotDirective(Request request, string input, OutputDelegate console)
@@ -3418,7 +3449,7 @@ The AIMLbot program.
                 return BotAsUser.DoUserCommand(args, console);
             }
 
-            PrintOptions printOptions = request.WriterOptions??PrintOptions.CONSOLE_LISTING;
+            PrintOptions printOptions = request.WriterOptions ?? PrintOptions.CONSOLE_LISTING;
             printOptions.ClearHistory();
 
             if (showHelp) console("@proof [[clear]|[save [filename.aiml]]] - clears or prints a content buffer being used");
@@ -3431,7 +3462,7 @@ The AIMLbot program.
                 if (args.StartsWith("save"))
                 {
                     args = args.Substring(4).Trim();
-                    string hide = AIMLLoader.GetTemplateSource(myUser.UsedTemplates,printOptions);
+                    string hide = AIMLLoader.GetTemplateSource(myUser.UsedTemplates, printOptions);
                     console(hide);
                     if (args.Length > 0) HostSystem.AppendAllText(args, hide + "\n");
                     return true;
@@ -3456,7 +3487,7 @@ The AIMLbot program.
                         }
                         CI.Clear();
                     }
-                    if (args == "enable" || args=="reset")
+                    if (args == "enable" || args == "reset")
                     {
                         foreach (var C in CId)
                         {
@@ -3700,11 +3731,19 @@ The AIMLbot program.
 
         public void WriteConfig()
         {
-            TheCyc.WriteConfig();
-            GraphMaster.WriteConfig();
-            RTPBot.writeDebugLine("Bot loaded");
+            lock (BotUsers) lock (OnBotCreatedHooks)
+            {
+                TheCyc.WriteConfig();
+                GraphMaster.WriteConfig();
+                RTPBot.writeDebugLine("Bot loaded");
+            }
         }
         public bool LoadPersonalDirectory(string myName)
+        {
+            lock (BotUsers) lock (OnBotCreatedHooks) return LoadPersonalDirectory0(myName);
+            
+        } 
+        private bool LoadPersonalDirectory0(string myName)
         {
             ReloadHooks.Add(() => LoadPersonalDirectory(myName));
             bool loaded = false;
@@ -3743,8 +3782,11 @@ The AIMLbot program.
             }
             return loaded;
         }
-
         public void UsePersonalDir(string file)
+        {
+            lock (BotUsers) lock (OnBotCreatedHooks) UsePersonalDir0(file);            
+        }
+        private void UsePersonalDir0(string file)
         {
             if (!HostSystem.DirExists(file))
             {
@@ -3771,8 +3813,11 @@ The AIMLbot program.
                 request.GraphsAcceptingUserInput = prev;
             }
         }
-
         public void SetName(string myName)
+        {
+            lock (BotUsers) lock (OnBotCreatedHooks) SetName0(myName);            
+        }
+        private void SetName0(string myName)
         {
             //char s1 = myName[1];
 
@@ -3788,7 +3833,7 @@ The AIMLbot program.
             //BotAsUser.UserName = "heardselfsay";
             //BotUsers["heardselfsay"] = BotAsUser;            
             BotAsUser.UserName = myName;
-            BotAsUser.addSetting("name", myName);            
+            BotAsUser.addSetting("name", myName);
             BotAsUser.removeSetting("userdir");
             NamePath = ToScriptableName(NameAsSet);
             BotAsUser.UserID = NamePath;
@@ -3834,15 +3879,18 @@ The AIMLbot program.
             lock (OneAtATime)
             {
                 var tc = DLRConsole.TransparentCallers;
-                lock (tc) tc.Add(typeof (RTPBot));
+                lock (tc) tc.Add(typeof(RTPBot));
                 if (StaticInitStarted) return;
                 StaticInitStarted = true;
                 GraphsByName["default"] = new GraphMaster("default");
                 GraphsByName["heardselfsay"] = new GraphMaster("heardselfsay");
             }
         }
-
         public void LoadPersonalDirectories(string myName)
+        {
+            lock (BotUsers) lock (OnBotCreatedHooks) LoadPersonalDirectories0(myName);
+        }
+        public void LoadPersonalDirectories0(string myName)
         {
             bool loaded = LoadPersonalDirectory(myName);
             if (!loaded)
@@ -3861,7 +3909,7 @@ The AIMLbot program.
             bool printIt = false;
             lock (LoggedWords)
             {
-               printIt = LoggedWords.writeDebugLine(DLRConsole.DebugWriteLine, message, args);
+                printIt = LoggedWords.writeDebugLine(DLRConsole.DebugWriteLine, message, args);
             }
             //if (args != null && args.Length >= 0)
             {
@@ -3951,33 +3999,119 @@ The AIMLbot program.
 
         #endregion
 
-        public SettingsDictionary GetDictionary(string named, string type, bool createIfMissing)
+        public ISettingsDictionary GetDictionary(string name)
+        {
+            var rtpbotobjCol = MushDLR223.ScriptEngines.ScriptManager.ResolveToObject(this, name);
+            if (rtpbotobjCol == null || rtpbotobjCol.Count == 0)
+            {
+                lock (AllDictionaries) return GetDictionary0(name);
+            }
+            //if (tr)
+            foreach (var o in rtpbotobjCol)
+            {
+                var pp = o as ParentProvider;
+                var pi = o as ISettingsDictionary;
+                var pu = o as User;
+                if (pp != null)
+                {
+                    pi = pp();
+                }
+                if (pi != null)
+                {
+                    return pi;
+                }
+                if (pu != null)
+                {
+                    return pu;
+                }
+            }
+            return null;
+        }
+
+        public ISettingsDictionary GetDictionary0(string named)
+        {
+            Func<ISettingsDictionary, SettingsDictionary> SDCAST = SettingsDictionary.ToSettingsDictionary;
+            //dict = FindDict(type, query, dict);
+            if (named == null) return null;
+            string key = named.ToLower().Trim();
+            if (key == "") return null;
+            if (key == "bot" || key == "predicates") return SDCAST(GlobalSettings);
+            // try to use a global blackboard predicate
+            RTParser.User gUser = ExemplarUser;
+            if (key == "globalpreds") return SDCAST(gUser);
+            if (key == "allusers") return SDCAST(AllUserPreds);
+            lock (AllDictionaries)
+            {
+                ISettingsDictionary dict;
+                if (AllDictionaries.TryGetValue(key, out dict))
+                {
+                    return SDCAST(dict);
+                }
+            }
+            string[] path = named.Split(new[] {'.'});
+            if (path.Length == 1)
+            {
+                var user = FindUser(key);
+                if (user != null) return user;
+            }
+            else
+            {
+                if (path[0] == "bot" || path[0] == "users" || path[0] == "char" || path[0] == "nl")
+                {
+                    var f = GetDictionary(string.Join(".", path, 1, path.Length - 1));
+                    if (f != null) return SDCAST(f);
+                }
+                if (path[0] == "substitutions")
+                {
+                    var f = GetDictionary(string.Join(".", path, 1, path.Length - 1), "substitutions", true);
+                    if (f != null) return SDCAST(f);
+                }
+                else
+                {
+                    var f = GetDictionary(path[0]);
+                    if (f != null)
+                    {
+                        var sd = SDCAST(f);
+                        var pp = sd.FindDictionary(string.Join(".", path, 1, path.Length - 1), null);
+                        if (pp != null)
+                        {
+                            var pi = pp();
+                            if (pi != null) return SDCAST(pi);
+                        }
+                    }
+                }
+            }
+            return null;
+
+        }
+
+        public ISettingsDictionary GetDictionary(string named, string type, bool createIfMissing)
         {
             lock (AllDictionaries)
             {
-                string key = type + "." + named;
-                named = named.ToLower();
+                string key = (type + "." + named).ToLower();
                 ISettingsDictionary dict;
                 if (!AllDictionaries.TryGetValue(key, out dict))
                 {
+                    var sdict = GetDictionary(named);
+                    if (sdict != null) return sdict;
                     if (createIfMissing)
                     {
-                        if (type.Contains("subst"))
-                        {
-                            writeToLog("ERROR CREATING " + key);
-                        }
-                        dict = AllDictionaries[key] = new SettingsDictionary(named, this, null);
-                        loadDictionary(dict, named, type);
+                        dict = AllDictionaries[key] = AllDictionaries[named] = new SettingsDictionary(named, this, null);
+                        User user = LastUser ?? ExemplarUser ?? BotAsUser;
+                        Request r = user.CurrentRequest ?? user.CreateRequest(" loadDictionary" + named + " from " + type);
+                        loadDictionary(dict, named, type, r);
                     }
                 }
-                return (SettingsDictionary)dict;
+                return dict;
             }
         }
 
-        private void loadDictionary(ISettingsDictionary dictionary, string path, string type)
+        private void loadDictionary(ISettingsDictionary dictionary, string path, string type, Request r0)
         {
             User user = LastUser ?? ExemplarUser ?? BotAsUser;
-            Request r = user.CurrentRequest ?? user.LastResult.request;
+            Request r = r0 ??
+                        user.CurrentRequest ?? user.CreateRequest(" loadDictionary" + dictionary + " from " + type);
             int loaded = 0;
             foreach (string p in GetSearchRoots(r))
             {
@@ -3988,9 +4122,18 @@ The AIMLbot program.
                         var named = HostSystem.Combine(p, path + s0 + s1);
                         if (HostSystem.FileExists(named))
                         {
-                            SettingsDictionary.loadSettings(dictionary, named, true, false, r);
-                            loaded++;
-                            break;
+                            try
+                            {
+                                SettingsDictionary.loadSettings(dictionary, named, true, false, r);
+                                loaded++;
+                                break;
+                            }
+                            catch (Exception e)
+                            {
+                                writeToLog("ERROR {0}", e);
+                                //continue;
+                                throw;
+                            }
                         }
                     }
                 }
@@ -3998,20 +4141,36 @@ The AIMLbot program.
             }
             if (loaded == 0)
             {
-                writeToLog("");
+                writeToLog("WARNING: Cannot find " + path + " for " + type);
+            }
+        }
+        public void RegisterDictionary(string named, SettingsDictionary dict)
+        {
+            named = named.ToLower().Trim().Replace("  ", " ");
+            string key = named.Replace(" ","_");
+            RegisterDictionary(named, dict, true);
+        }
+        public void RegisterDictionary(string key, SettingsDictionary dict, bool always)
+        {            
+            lock (AllDictionaries)
+            {
+                string[] path = key.Split(new[] {'.'});
+                if (always || !AllDictionaries.ContainsKey(key)) AllDictionaries[key] = dict;                    
+                if (path.Length > 1)
+                {
+                    if (path[0] == "bot" || path[0] == "users" || path[0] == "char" || path[0] == "nl")
+                    {
+                        string join = string.Join(".", path, 1, path.Length - 1);
+                        RegisterDictionary(join, dict, false);
+                    }
+                }
             }
         }
 
-
         private void RegisterSubstitutions(string named, SettingsDictionary dict)
         {
-            lock (AllDictionaries)
-            {
-                named = named.ToLower();
-                dict.IsTraced = false;
-                string key = "substitutions" + "." + named;
-                AllDictionaries[key] = dict;
-            }
+            dict.IsTraced = false;
+            RegisterDictionary("substitutions" + "." + named, dict);
         }
 
         protected IEnumerable GetSearchRoots(Request request)
@@ -4050,6 +4209,41 @@ The AIMLbot program.
                 nodes.AddRange(nodeE);
             }
             return nodes;
+        }
+        static string ToNonSilentTags(string sentenceIn)
+        {
+            var nodeO = AIMLTagHandler.getNode("<node>" + sentenceIn + "</node>");
+            LineInfoElementImpl.notReadonly(nodeO);
+            return VisibleRendering(nodeO.ChildNodes);
+        }
+        private static string VisibleRendering(XmlNodeList nodeS)
+        {
+            var sentenceIn = "";
+            foreach (XmlNode nodeO in nodeS)
+            {
+                sentenceIn = sentenceIn + " " + VisibleRendering(nodeO);
+            }
+            return sentenceIn.Trim().Replace("  ", " ");
+        }
+        private static string VisibleRendering(XmlNode nodeO)
+        {
+            if (nodeO.NodeType == XmlNodeType.Comment) return "";
+            if (nodeO.NodeType == XmlNodeType.Element)
+            {
+                string nodeName = nodeO.Name.ToLower();
+                if (nodeName == "think") return "";
+                if (nodeName == "debug") return "";
+                if (nodeName == "template" || nodeName == "template")
+                {
+                    return VisibleRendering(nodeO.ChildNodes);
+                }
+                return nodeO.OuterXml;
+            }
+            if (nodeO.NodeType == XmlNodeType.Text)
+            {
+                return nodeO.InnerText;
+            }
+            return nodeO.OuterXml;
         }
     }
 }

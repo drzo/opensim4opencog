@@ -1,6 +1,8 @@
 using System;
 using System.Xml;
 using System.Text;
+using RTParser.Database;
+using RTParser.Utils;
 using RTParser.Variables;
 
 namespace RTParser.AIMLTagHandlers
@@ -45,61 +47,33 @@ namespace RTParser.AIMLTagHandlers
         //i been writeing a new language for AI trickery.. i am a little assumed but not enough to stop writting it.. and I handling cuts.. by the fact 
         protected override Unifiable ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "set")
+            if (CheckNode("set"))
             {
                 var templateNodeInnerText = Recurse();
                 Unifiable name = GetAttribValue("name,var", null);
-                Unifiable gName = GetAttribValue("global_name", null);
-                // try to use a global blackboard predicate
-                bool newlyCreated;
-                RTParser.User gUser = this.user.bot.FindOrCreateUser("globalPreds", out newlyCreated);
-                if (newlyCreated) gUser.IsRoleAcct = true;
+                Unifiable value = GetAttribValue("value", null);
+                string gName = GetAttribValue("global_name", null);
+                string dictName = GetDictName("type");
 
-                var thisRequestPredicates = this.request.Predicates;
-                if (GetAttribValue("type", null) == "bot") thisRequestPredicates = request.TargetBot.GlobalSettings;
-                if (!Unifiable.IsNull(name))
+                Unifiable defaultVal = GetAttribValue("default", Unifiable.Empty);
+                if (name == null)
                 {
-                    if (!templateNodeInnerText.IsEmpty)
-                    {
-                        if (!Unifiable.IsNull(gName)) gUser.Predicates.addSetting(gName, templateNodeInnerText);
-                        return SetAndReturn(name, thisRequestPredicates, templateNodeInnerText);
-                    }
-                    else
-                    {
-                        // remove the predicate
-                        if (!Unifiable.IsNull(gName)) gUser.Predicates.removeSetting(gName);
-                        thisRequestPredicates.removeSetting(name);
-                        return SetAndReturn(name, thisRequestPredicates, templateNodeInnerText);
-                        //return Unifiable.Empty;
-                    }
+                    //recursive form like <set>name value Unifiable</set>
+                    name = templateNodeInnerText.First();
+                    templateNodeInnerText = templateNodeInnerText.Rest();
                 }
-                else  //recursive form like <set>name value Unifiable</set>
+                string setReturn = GetAttribValue(templateNode, "set-return",
+                                                  () => ((string)Proc.GetSetPredicateReturn().grabSetting(name)),
+                                                  query);
+                if (value == null)
                 {
-                    Unifiable nv = Recurse();
-                    //Unifiable fsp = nv.Split();//
-                    //new char[] { ' ', '\n', '\t', '\r' }, StringSplitOptions.RemoveEmptyEntries);
-                    name = nv.First();
-                    Unifiable joined = nv.Rest();// Unifiable.Join(" ", fsp, 1, fsp.Length - 1);
-                    if (joined.IsEmpty)
-                    {
-                        thisRequestPredicates.removeSetting(name);
-                        return Unifiable.Empty;
-                    }
-                    if (!Unifiable.IsNull(gName)) gUser.Predicates.addSetting(gName, templateNodeInnerText);
-                    return SetAndReturn(name, thisRequestPredicates, joined);
+                    value = templateNodeInnerText;
                 }
+                if (value.IsEmpty) value = defaultVal;
+                return NamedValuesFromSettings.SetSettingForType(dictName, query, query, name, gName, value, setReturn);
             }
             return Unifiable.Empty;
         }
 
-        private Unifiable SetAndReturn(Unifiable name, ISettingsDictionary thisRequestPredicates, Unifiable value)
-        {
-            thisRequestPredicates.addSetting(name, value);
-            string ret = Proc.SetPredicateReturn.grabSetting(name);
-            if (ret == null) ret = "value";
-            else ret = ret.ToLower();
-            if (ret == "name") return name;
-            return thisRequestPredicates.grabSetting(name);
-        }
     }
 }

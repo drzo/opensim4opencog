@@ -69,6 +69,8 @@ namespace RTParser
         // inherited from base  string GraphName { get; set; }
         ISettingsDictionary GetSubstitutions(string name, bool b);
         GraphMaster GetGraph(string srai);
+        void AddOutputSentences(TemplateInfo ti, string nai, Result result);
+        ISettingsDictionary GetDictionary(string named);
     }
 
     /// <summary>
@@ -369,6 +371,12 @@ namespace RTParser
            return TargetBot.GetGraph(value, sGraph);
         }
 
+        public void AddOutputSentences(TemplateInfo ti, string nai, Result result)
+        {
+            result = result ?? CurrentResult;
+            result.AddOutputSentences0(ti, nai);   
+        }
+
         private Unifiable _topic;
         public Unifiable Flags { get; set; }
         public QueryList TopLevel { get; set; }
@@ -608,10 +616,51 @@ namespace RTParser
             return TargetBot.GetDictionary(named, "substitutions", createIfMissing);
         }
 
-        public ISettingsDictionary GetDictionary(string named, string type, bool createIfMissing)
+        public ISettingsDictionary GetDictionary(string named)
         {
-            return TargetBot.GetDictionary(named, type, createIfMissing);
+            return GetDictionary(named, CurrentQuery);
         }
+        public ISettingsDictionary GetDictionary(string named,  ISettingsDictionary dictionary)
+        {
+            if (named == null)
+            {
+                if (dictionary != null) return dictionary;
+                if (CurrentQuery != null) return CurrentQuery;
+                if (user != null) return user;
+                return TargetSettings;
+            }
+            if (named == "user") return CheckedValue(named, user);
+            if (named == "query") return CheckedValue(named, CurrentQuery);
+            if (named == "request") return CheckedValue(named, TargetSettings);
+            if (named == "bot") return CheckedValue(named, TargetBot.GlobalSettings);
+
+            string[] path = named.Split(new[] { '.' });
+            if (path.Length > 1)
+            {
+                var v = GetDictionary(path[0]);
+                if (v != null)
+                {
+                    var vp = GetDictionary(string.Join(".", path, 0, path.Length - 1), v);
+                    if (vp != null) return vp;
+                }
+            }
+            if (ParentRequest == null)
+            {
+                return TargetBot.GetDictionary(named);
+            }
+            else
+            {
+                var v = ParentRequest.GetDictionary(named);
+                if (v != null) return v;
+            }
+            return null;
+        }
+
+        private ISettingsDictionary CheckedValue(string named, ISettingsDictionary d)
+        {
+            return d;
+        }
+
 
         public IList<Result> UsedResults { get; set; }
 
