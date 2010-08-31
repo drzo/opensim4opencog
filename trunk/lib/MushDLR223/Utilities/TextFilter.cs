@@ -99,34 +99,39 @@ namespace MushDLR223.Utilities
             if (message == null) return false;
             string msgTest = message.ToUpper();
             bool printIt = false;
+            bool hideIt = false;
+            bool positive = false;
+            bool negative = false;
             lock (AnyOf)
                 foreach (string s in AnyOf)
                 {
-                    if (s == "*") printIt = true;
+                    if (s == "*") positive = true;
                     else if (msgTest.Contains(s))
                     {
                         printIt = true;
                         break;
                     }
                 }
-            if (printIt)
+            //if (printIt)
             {
                 lock (ExceptFor)
                     foreach (string s in ExceptFor)
                     {
                         if (s == "*")
                         {
-                            printIt = false;
+                            negative = true;
                             break;
                         }
                         if (msgTest.Contains(s))
                         {
-                            printIt = false;
+                            hideIt = true;
                             break;
                         }
                     }
             }
-            return printIt;
+            if (negative) return printIt;
+            if (positive) return !hideIt || printIt;
+            return printIt && !hideIt;
         }
 
         public void UpateLogging(string sa, OutputDelegate od)
