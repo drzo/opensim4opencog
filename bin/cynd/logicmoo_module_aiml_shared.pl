@@ -18,8 +18,6 @@
 
 throw_safe(Exc):-trace,throw(Exc).
 
-atom_contains(F,C):-notrace((atom(F),atom(C),sub_atom(F,_,_,_,C))).
-
 prolog_must(Call):-Call,!.
 prolog_must(Call):-!,aiml_error(Call).
 
@@ -32,7 +30,7 @@ revappend([X|Xs], Ys, Zs) :- revappend(Xs, [X|Ys], Zs).
 
 reverseA(Xs,Ys) :- revappend(Xs,[],Ys).
 
-mergeAppend(L,R,AA):-notrace((mergeAppend0(L,R,A),list_to_set_safe(A,AA))),!.
+appendAttributes(_Ctx,L,R,AA):-noaimltrace((mergeAppend0(L,R,A),list_to_set_safe(A,AA))),!.
 mergeAppend0(L,R,R):-var(L),!,var(R),!.
 mergeAppend0(L,R,A):-var(R),append(L,R,A),!.
 mergeAppend0(L,R,A):-var(L),append(L,R,A),!.
@@ -42,17 +40,29 @@ mergeAppend0(L,R,A):-append(L,R,A).
 
 eqmember(E,List):-copy_term_numvars(E:List,E0:List0),member(E0,List0).
 
-list_to_set_safe(A,AA):-is_list(A),list_to_set(A,AA).
-list_to_set_safe(A,A).
+list_to_set_safe(A,A):-(var(A);atomic(A)),!.
+list_to_set_safe([A|AA],BB):- (not(not(lastMember(A,AA))) -> list_to_set_safe(AA,BB) ; (list_to_set_safe(AA,NB),BB=[A|NB])),!.
+
 
 lastMember(_E,List):-var(List),!,fail.
 lastMember(E,[H|List]):-lastMember(E,List);E=H.
+
+lastMember(E,List,Rest):-lastMember(E,List),!,delete_safe(List,E,Rest),!.
+
+delete_safe(List,_E,Rest):-var(List),!,Rest=List.
+delete_safe(List,E,Rest):-is_list(List),!,delete(List,E,Rest).
+delete_safe([H|List],E,Rest):- H==E,!,delete_safe(List,E,Rest).
+delete_safe([H|List],E,[H|Rest]):-delete_safe(List,E,Rest).
+
+
+getKeyValue(FullList,N=V):-lastMember(N=V,FullList),!.
+addKeyValue(FullList,N=V):-append(_Closed,[N=V|_],FullList),!.
+
 
 lastMember2(E,List):-to_open_list(_,Closed,_Open,List),reverse(Closed,Rev),member(E,Rev).
 
 %lastMember(End,List) :- append(_,[End|_],List).
 
-addNV(FullList,NV):-append(_Closed,[NV|_],FullList),!.
 
 to_open_list(FullList,Closed,Open,FullList) :- append(Closed,Open,FullList),var(Open),!.
 to_open_list(Closed,Closed,Open,FullList) :- append(Closed,Open,FullList),!.
@@ -166,19 +176,55 @@ callInteractive(Term,Var):-catch(callInteractive0(Term,Var),E,aiml_error(E)),!.
 callInteractive0(Term,Var):- call(Term),writeq(Term:Var),nl,fail.
 callInteractive0(_,_):-!.
 
-atomsSameCI(Name1,Name2):-downcase_atom(Name1,D1),downcase_atom(Name2,D2),!,D1=D2.
 currentContext(Name,X):-makeAimlContext(Name,X),!.
 
 
 %getWordTokens(WORDS,TOKENS):-concat_atom(TOKENS,' ',WORDS).
 %is_string(S):-string(S).
 
+removePMark(UCase,Atoms):-append(AtomsPre,[Last],UCase),member(Last,[?,('.'),(','),('\n')]),!,removePMark(AtomsPre,Atoms).
+removePMark(Atoms,Atoms).
+
+randomPick(List,Ele):-length(List,Len),Pick is random(Len),nth0(Pick,List,Ele),!.
+
+%================================================================
+% Atom / String functions
+%================================================================
+atomsSameCI(Name1,Name1):-!.
+atomsSameCI(Name1,Name2):-atom(Name1),atom(Name2),downcase_atom(Name1,D1),downcase_atom(Name2,D2),!,D1=D2.
+
+clean_codes(X,Y):-trim(X,Y),!.  % actually cyc:trim/2
+clean_codes(X,X).
+
+%clean_out_atom(X,Y):-atomSplit(X,C),delete(C,'',O),concat_atom_safe(C,' ',Y).
+clean_out_atom(X,Y):-atom_codes(X,C),clean_codes(C,D),!,atom_codes(X,D),!,Y=X.
+
+atomSplit(A,B):-cyc:atomSplit(A,BB),BB=B.
+
+all_upper_atom(X):-toUppercase(X,N),!,N=X.
+
+atom_concat_safe(L,R,A):- ((atom(A),(atom(L);atom(R))) ; ((atom(L),atom(R)))), !, atom_concat(L,R,A),!.
+
+concat_atom_safe(List,Sep,[Atom]):-atom(Atom),!,concat_atom(List,Sep,Atom),!.
+concat_atom_safe(List,Sep,Atom):-atom(Atom),!,concat_atom(ListM,Sep,Atom),!,List = ListM.
+concat_atom_safe(List,Sep,Atom):- concat_atom(List,Sep,Atom),!.
+
+upcase_atom_safe(A,B):-atom(A),upcase_atom(A,B),!.
+
+atom_contains(F,C):-notrace((atom(F),atom(C),sub_atom(F,_,_,_,C))).
+
+toCodes(B,A):-cyc:stringToCodelist(B,AO),(is_list(A) -> A=AO ; string_to_list(AO,A)),!.
+
+% convert any term to 'atom' string
 convert_to_string(I,ISO):-
                 term_to_string(I,IS),!,
 		string_to_list(IS,LIST),!,
 		list_replace(LIST,92,[92,92],LISTM),
-		list_replace(LISTM,34,[92,34],LISTO),
-		string_to_atom(ISO,LISTO),!.
+		list_replace(LISTM,34,[92,34],LISTO),!,
+		string_to_atom_safe(ISO,LISTO),!.
+
+string_to_atom_safe(ISO,LISTO):-LISTO==[],!,string_to_atom(ISO,'').
+string_to_atom_safe(ISO,LISTO):-string_to_atom(ISO,LISTO).
 
 list_replace(List,Char,Replace,NewList):-
 	append(Left,[Char|Right],List),
@@ -187,73 +233,35 @@ list_replace(List,Char,Replace,NewList):-
 	append(NewLeft,NewRight,NewList),!.
 list_replace(List,_Char,_Replace,List):-!.
 
+term_to_string(I,IS):- catch(string_to_atom(IS,I),_,fail),!.
+term_to_string(I,IS):- term_to_atom(I,A),string_to_atom(IS,A),!.
 
-term_to_string(I,IS):- catch(string_to_atom(IS,I),_,(term_to_atom(I,A),string_to_atom(IS,A))),!.
-%well i played with a couple few differnt environment impls.. they have their pros cons.. one impl.. that was unique is that an array of "binding pairs" live in an arraylist.. to be "in" an environment it meant that you held an "index" into the arry list that as you went backwards you'd find your bindings.. each symbol had a java int field "lastBindingIndex" .. that was a "hint" to where you could fastforward the backwards search .. end named binding context also had a "index" to when you leave a named block.. you could quickly reset the top of an index.
-
-atomSplit(A,B):-cyc:atomSplit(A,B).
-
-removePMark(UCase,Atoms):-append(AtomsPre,[Last],UCase),member(Last,[?,('.'),(',')]),!,removePMark(AtomsPre,Atoms).
-removePMark(Atoms,Atoms).
-
-randomPick(List,Ele):-length(List,Len),Pick is random(Len),nth0(Pick,List,Ele),!.
-
-all_upper_atom(X):-toUppercase(X,N),N=X.
-
-
-ifThen(When,Do):-When->Do;true.
-
-atom_concat_safe(L,R,A):- ((atom(A),(atom(L);atom(R))) ; ((atom(L),atom(R)))), !, atom_concat(L,R,A),!.
-concat_atom_safe(List,Sep,[Atom]):-atom(Atom),!,concat_atom(List,Sep,Atom),!.
-concat_atom_safe(List,Sep,Atom):-atom(Atom),!,concat_atom(ListM,Sep,Atom),!,List = ListM.
-concat_atom_safe(List,Sep,Atom):- concat_atom(List,Sep,Atom),!.
-
-upcase_atom_safe(A,B):-atom(A),upcase_atom(A,B).
-
-%appendPred(Pred,X,NEWPRED):- Pred=..ARGS, append(ARGS,[X],NEWARGS),NEWPRED=..NEWARGS,!.
-
-/*
-maplist_safe(Pred,LIST):-prolog_must(nonvar(Pred)),prolog_must(nonvar(LIST)),
-      findall(E, ((member(E,LIST),debugOnFailureAiml(apply(Pred,[E])))),LISTO),!,debugOnFailureAiml(LIST=LISTO).
-
-maplist_safe(Pred,LIST):-findall(E,(member(E,LIST),apply(Pred,[E])),LISTO),LIST=LISTO.
-
-*/
+%================================================================
+% maplist/[2,3]
+% this must succeed  maplist_safe(=,[X,X,X],[1,2,3]).
+% well if its not "maplist" what shall we call it?
+%================================================================
+% so far only the findall version works .. the other runs out of local stack!?
 
 maplist_safe(_Pred,[]):-!.
-maplist_safe(Pred,LIST):-findall(E,(member(E,LIST),debugOnFailureAiml(apply(Pred,[E]))),LISTO),!,debugOnFailureAiml(LIST=LISTO),!.
-% maybe needs copy_term? 
-%maplist_safe(Pred,[X|L]):- debugOnFailureAiml((appendPred(Pred,X,NEWPRED),copy_term(a(Pred,X,NEWPRED),a(_Pred0,X0,NEWPRED0)))),
-%   debugOnFailureAiml(NEWPRED0),!,debugOnFailureAiml(X=X0), debugOnFailureAiml(maplist_safe(Pred,L)),!.
-
-
-maplist_safe23(Pred,List,List2):-maplist_safe(Pred,List),!,debugOnFailure(List=List2).
+maplist_safe(Pred,LIST):-findall(E,(member(E,LIST),debugOnFailureAiml(apply(Pred,[E]))),LISTO), debugOnFailureAiml(LIST=LISTO),!.
+%% though this should been fine %%  maplist_safe(Pred,[A|B]):- copy_term(Pred+A, Pred0+A0), debugOnFailureAiml(once(call(Pred0,A0))),     maplist_safe(Pred,B),!.
 
 maplist_safe(_Pred,[],[]):-!.
-maplist_safe(Pred,[A|B],Out):- debugOnFailureAiml(apply(Pred,[A,AA])),!,maplist_safe(Pred,B,BB),!, Out =[AA|BB].
+maplist_safe(Pred,LISTIN, LIST):-!, findall(EE, ((member(E,LISTIN),debugOnFailureAiml(apply(Pred,[E,EE])))), LISTO),  debugOnFailureAiml(LIST=LISTO),!.
+%% though this should been fine %% maplist_safe(Pred,[A|B],OUT):- copy_term(Pred+A, Pred0+A0), debugOnFailureAiml(once(call(Pred0,A0,AA))),  maplist_safe(Pred,B,BB), !, OUT=[AA|BB].
 
-/*
+%================================================================
+% decends tree
+%================================================================
 
-maplist_safe(Pred,[A|B],Out):- apply(Pred,[A,AA]),maplist_safe(Pred,B,BB), Out=[AA|BB].
-
-*/
-
-clean_codes(X,Y):-trim(X,Y),!.
-clean_codes(X,X).
-
-%clean_out_atom(X,Y):-atomSplit(X,C),delete(C,'',O),concat_atom_safe(C,' ',Y).
-clean_out_atom(X,Y):-atom_codes(X,C),clean_codes(C,D),!,atom_codes(X,D),!,Y=X.
-
-mapWords(_,PATTERN,[PATTERN]):- (var(PATTERN);number(PATTERN)),!.
-mapWords(_,[],OUT):-!,[]=OUT.
-mapWords(Pred,IN,OUT):- once(call(Pred,IN,MID)), debugOnFailureAiml((MID=IN -> flatten([MID],OUT) ; mapWords(Pred,MID,OUT))).
-mapWords(Pred,[I|IN],OUT):-!,debugOnFailureAiml((mapWords(Pred,I,O1),mapWords(Pred,IN,O2),!,append(O1,O2,OUT))),!.
-mapWords(Pred,IN,OUT):-atom(IN),debugOnFailureAiml((atomSplit(IN,MID),!,mapWords(Pred,MID,OUT))),!.
-mapWords(Pred,IN,[OUT]):-debugOnFailureAiml((compound(IN), IN=..INP, append(Left,[Last],INP), mapWords(Pred,Last,UT),!, append(Left,[UT],OUTP),!, OUT =.. OUTP)).
-mapWords(_,IN,[IN]):-trace,!.
-
-
-toCodes(B,A):-cyc:stringToCodelist(B,AO),(is_list(A) -> A=AO ; string_to_list(AO,A)),!.
+map_tree_to_list(_,PATTERN,[PATTERN]):- (var(PATTERN);number(PATTERN)),!.
+map_tree_to_list(_,[],OUT):-!,[]=OUT.
+map_tree_to_list(Pred,IN,OUT):- once(call(Pred,IN,MID)), debugOnFailureAiml((MID=IN -> flatten([MID],OUT) ; map_tree_to_list(Pred,MID,OUT))).
+map_tree_to_list(Pred,[I|IN],OUT):-!,debugOnFailureAiml((map_tree_to_list(Pred,I,O1),map_tree_to_list(Pred,IN,O2),!,append(O1,O2,OUT))),!.
+map_tree_to_list(Pred,IN,OUT):-atom(IN),debugOnFailureAiml((atomSplit(IN,MID),!,map_tree_to_list(Pred,MID,OUT))),!.
+map_tree_to_list(Pred,IN,[OUT]):-debugOnFailureAiml((compound(IN), IN=..INP, append(Left,[Last],INP), map_tree_to_list(Pred,Last,UT),!, append(Left,[UT],OUTP),!, OUT =.. OUTP)).
+map_tree_to_list(_,IN,[IN]):-trace,!.
 
 
 dumpList(B):-currentContext(dumpList,Ctx),dumpList(Ctx,B).
@@ -264,7 +272,13 @@ dumpList(_,[]):-!.
 %dumpList(Ctx,B):-say(Ctx,dumpList(B)).
 
 
+ifThen(When,Do):-When->Do;true.
+
 traceCall(A):-trace(A,[-all,+fail]),A,!.
+
+debugOnFailureAimlEach((A,B)):- !,debugOnFailureAimlEach(A),!,debugOnFailureAimlEach(B),!.
+debugOnFailureAimlEach(Call):-(Call;(trace,Call)),!.
+
 
 /*
 debugOnFailureAiml(Call):- clause(Call,(_A,_B)),!,clause(Call,Body),trace,debugOnFailureAiml(Body),!.
@@ -277,7 +291,7 @@ debugOnFailureAiml(Call):- beenCaugth(Call),!.
 debugOnFailureAimlTrace(debugOnFailureAiml(Call)):-!,debugOnFailureAimlTrace(Call),!.
 debugOnFailureAimlTrace((A,B)):- !,debugOnFailureAimlTrace(A),!,debugOnFailureAimlTrace(B),!.
 debugOnFailureAimlTrace(Call):- debugOnFailureAimlTrace1(Call),debugFmt(success(Call)),!.
-debugOnFailureAimlTrace(Call):- debugFmt(faild(Call)),!,fail.
+debugOnFailureAimlTrace(Call):- debugFmt(faild(Call)),!,trace,Call.
 
 
 debugOnFailureAimlTrace1((A,B)):- !,debugOnFailureAimlTrace1(A),!,debugOnFailureAimlTrace1(B),!.

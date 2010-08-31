@@ -52,10 +52,11 @@ convert_template(_Ctx,X,_Y):-var(X),throw_safe(var(X)).
 convert_template(_Ctx,_X,Y):-nonvar(Y),throw_safe(nonvar(Y)).
 convert_template(_Ctx,[],[]):-!.
 convert_template(_Ctx,[ATOM],O):-atom(ATOM),!,atomSplit(ATOM,LIST),!,toAtomList(LIST,O),!.
-convert_template(Ctx,[I|P],GOOD):- atom(I),atomSplit(I,LIST),!,toAtomList(LIST,O),!,convert_element(Ctx,P,L),!,flatten([O,L],GOOD),!.
+convert_template(Ctx,[I|P],GOOD):- atom(I),atomSplit(I,LIST),!,toAtomList(LIST,O),!,convert_template(Ctx,P,L),!,flatten([O,L],GOOD),!.
 convert_template(Ctx,[I|P],L):- ignore_aiml(I),!,convert_template(Ctx,P,L),!.
-convert_template(Ctx,[I|P],[O|L]):- convert_element(Ctx,I,O),!,convert_template(Ctx,P,L),!.
-convert_template(Ctx,P,PO):-convert_element(Ctx,P,PO).
+convert_template(Ctx,[I|P],GOOD):- convert_template(Ctx,I,O),!,convert_template(Ctx,P,L),!,flatten([O,L],GOOD),!.
+convert_template(Ctx,element(TAG,ATTRIBS,P),element(TAG,ATTRIBS,PO)):-convert_template(Ctx,P,PO),!.
+convert_template(Ctx,P,PO):-convert_element(Ctx,P,PO),!.
 
 
 toAtomList(A,O):-delete(A,'',O),!.
@@ -87,9 +88,9 @@ convert_ele(Ctx,element(catagory, A, B),Out):-convert_ele(Ctx,element(category, 
 %%convert_ele(Ctx,element(Tag, A, B),BB):- member(Tag,[category,srai]), convert_template(Ctx,element(Tag, A, B),BB).
 
 % bot/get/set
-convert_ele(Ctx,element(bot, ALIST, VALUE),get(bot,NAME)):-nameOrValue(ALIST,VALUE,NORV,_),convert_template(Ctx,NORV,NAME).
-convert_ele(Ctx,element(get, ALIST, VALUE),get(user,NAME)):-nameOrValue(ALIST,VALUE,NORV,_),convert_template(Ctx,NORV,NAME).
-convert_ele(Ctx,element(set, ALIST, VALUE),set(user,NAME,VALUEO)):-nameOrValue(ALIST,VALUE,NORV,0),convert_template(Ctx,NORV,NAME),
+convert_ele(Ctx,element(bot, ALIST, VALUE),element(get,[type=bot,var=NAME|ALIST],VALUE)):-nameOrValue(ALIST,VALUE,NORV,_),convert_template(Ctx,NORV,NAME).
+convert_ele(Ctx,element(get, ALIST, VALUE),element(get,[type=user,var=NAME|ALIST],VALUE)):-nameOrValue(ALIST,VALUE,NORV,_),convert_template(Ctx,NORV,NAME).
+convert_ele(Ctx,element(set, ALIST, VALUE),element(set,[type=user,var=NAME|ALIST],VALUEO)):-nameOrValue(ALIST,VALUE,NORV,0),convert_template(Ctx,NORV,NAME),
       convert_template(Ctx,VALUE,VALUEO),!.
 
 % get_xxx/set_xxx
@@ -184,8 +185,8 @@ transformTagData(Ctx,Tag,Else,ValueI,ValueO):-transformTagData1(Ctx,Tag,Else,Val
 
 transformTagData0(_Ctx,TAG,_Default,[*],TAG).
 transformTagData0(_Ctx,TAG,_Default,*,TAG).
-transformTagData0(Ctx,Tag,_Else,ValueI,ValueO):- ValueI==current_value, current_value(Ctx,Tag,ValueO),!.
-transformTagData0(_Ctx,N,Else,ValueO,ValueO):-isVerbatumTag(N),!, member(Else,[current_value]),!.
+transformTagData0(Ctx,Tag,_Else,ValueI,ValueO):- ValueI=='$current_value', current_value(Ctx,Tag,ValueO),!.
+transformTagData0(_Ctx,N,Else,ValueO,ValueO):-isVerbatumTag(N),!, member(Else,['$current_value']),!.
 transformTagData0(Ctx,TAG,_Default,PATTERN_IN,PATTERN_OUT):-isPatternTag(TAG),convert_pattern(Ctx,PATTERN_IN,PATTERN_OUT),!.
 transformTagData0(Ctx,TAG,_Default,PATTERN_IN,PATTERN_OUT):-isOutputTag(TAG),convert_template_pred(Ctx,=,PATTERN_IN,PATTERN_OUT),!.
 
@@ -203,8 +204,7 @@ transformTagData1(_Ctx,_TAG,_Default,PATTERN,PATTERN):-!.
 convert_pattern(Ctx,PATTERN_IN,PATTERN_OUT):- convert_template_pred(Ctx,upcase_atom_safe,PATTERN_IN,PATTERN_OUT),!.
 
 convert_template_pred(Ctx,Pred,PATTERN_IN,PATTERN_OUT):- convert_template(Ctx,PATTERN_IN,PATTERN_MID),!,
-     debugOnFailureAiml(mapWords(Pred,PATTERN_MID,PATTERN_OUT)),!.
-
+     debugOnFailureAiml(map_tree_to_list(Pred,PATTERN_MID,PATTERN_OUT)),!.
 
 transform_aiml_structure(catagory,category,OldProps,OldProps,NEWPATTERN,NEWPATTERN).
 transform_aiml_structure(alice,aiml,OldProps,OldProps,NEWPATTERN,NEWPATTERN).
