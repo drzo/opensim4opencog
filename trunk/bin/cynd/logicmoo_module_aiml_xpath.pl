@@ -22,47 +22,61 @@
 % attribute searching
 % ===================================================================
 
-attributeOrTagValue(Ctx,ATTRIBS,NameS,ValueO,_Else):- notrace((attributeValue(Ctx,ATTRIBS,NameS,ValueO,failure))),!.
-attributeOrTagValue(Ctx,XML,NameS,ValueO,_Else):- notrace((findTagValue(Ctx,XML,NameS,ValueO,failure))),!.
-attributeOrTagValue(Ctx,ATTRIBS,NameS,ValueO,_Else):-compound(ATTRIBS),ATTRIBS=..[_|LIST],member(E,LIST),attributeOrTagValue(Ctx,E,NameS,ValueO,failure),!.
-attributeOrTagValue(Ctx,_,NameS,ValueO,ElseVar):-makeParamFallback(Ctx,NameS,ValueO,ElseVar),!.
+attributeOrTagValue(Ctx,ATTRIBS,NameS,ValueO,_Else):- noaimltrace((attributeValue(Ctx,ATTRIBS,NameS,ValueO,'$failure'))),!.
+attributeOrTagValue(Ctx,XML,NameS,ValueO,_Else):- noaimltrace((findTagValue(Ctx,XML,NameS,ValueO,'$failure'))),!.
+attributeOrTagValue(Ctx,ATTRIBS,NameS,ValueO,_Else):-compound(ATTRIBS),ATTRIBS=..[_|LIST],member(E,LIST),
+   attributeOrTagValue(Ctx,E,NameS,ValueO,'$failure'),!.
+attributeOrTagValue(Ctx,_,NameS,ValueO,ElseVar):-ElseVar\=='$failure',makeParamFallback(Ctx,NameS,ValueO,ElseVar),!.
 
-
-attributeValue(Ctx,ATTRIBS,NameS,ValueO,Else):- notrace((attributeValue0(Ctx,ATTRIBS,NameS,ValueI,Else), aiml_eval_to_unit(Ctx,ValueI,ValueO))),!.
-attributeValue(Ctx,ATTRIBS,NameS,ValueO,Else):-   trace,attributeValue0(Ctx,ATTRIBS,NameS,ValueI,Else), aiml_eval_to_unit(Ctx,ValueI,ValueO),!.
+attributeValue(Ctx,ATTRIBS,NameS,ValueO,Else):- noaimltrace((attributeValue0(Ctx,ATTRIBS,NameS,ValueI,Else), aiml_eval_to_unit(Ctx,ValueI,ValueO))),!.
+attributeValue(Ctx,ATTRIBS,NameS,ValueO,Else):-   Else\=='$failure',attributeValue0(Ctx,ATTRIBS,NameS,ValueI,Else), aiml_eval_to_unit(Ctx,ValueI,ValueO),!.
 
 attributeValue0(_Ctx,ATTRIBS,NameS,ValueO,_Else):- member(Name,NameS), lastMember(NameE=ValueO,ATTRIBS), atomsSameCI(Name,NameE),!.
-attributeValue0(Ctx,_ATTRIBS,NameS,ValueO,current_value):-member(Name,NameS), current_value(Ctx,Name,ValueO),valuePresent(ValueO),!.
-attributeValue0(_Ctx,_ATTRIBS,_NameS,_Value,Failure):-failure==Failure,!,fail.
-attributeValue0(Ctx,ATTRIBS,NameS,Value,Error):-error==Error,  
-   aiml_error(attributeValue(Ctx,ATTRIBS,NameS,Value,error)).
+attributeValue0(Ctx,_ATTRIBS,NameS,Value,ElseVar):- makeParamFallback(Ctx,NameS,Value,ElseVar),!.
+/*
+attributeValue0(Ctx,_ATTRIBS,NameS,ValueO,'$current_value'):-member(Name,NameS), current_value(Ctx,Name,ValueO),valuePresent(ValueO),!.
+attributeValue0(_Ctx,_ATTRIBS,_NameS,_Value,Failure):-'$failure'==Failure,!,fail.
+attributeValue0(Ctx,ATTRIBS,NameS,Value,Error):- '$error'==Error,  
+   aiml_error(attributeValue(Ctx,ATTRIBS,NameS,Value,'$error')).
 attributeValue0(_Ctx,_ATTRIBS,_Name,ValueO,Else):-ValueO=Else,!.
+*/
 
+findTagValue(_Ctx,XML,_NameS,_ValueO,_Else):-var(XML),!,fail.
 
+findTagValue(Ctx,XML,NameS,ValueO,Else):-
+      member(Name,NameS),
+      findTagValue(Ctx,XML,Name,ValueO,Else),!.
 
-findTagValue(Ctx,XML,NameS,ValueO,_Else):-member(Name,NameS),
-         member(element(NameE,_ATTRIBS,ValueI),XML),
-         atomsSameCI(Name,NameE), aiml_eval_to_unit(Ctx,ValueI,ValueO),!.
-findTagValue(Ctx,XML,[NameE|_],ValueO,_Else):-
-         member(element(NameA,ATTRIBS,ValueI),XML),member(_=NameI,ATTRIBS),
-         atomsSameCI(NameA,NameE),atomsSameCI(NameA,NameI),
-         aiml_eval_to_unit(Ctx,ValueI,ValueO),!.
+findTagValue(Ctx,XML,NameS,ValueO,Else):-
+      member(element(NameE,ATTRIBS,ValueI),XML),
+      findTagValue(Ctx,element(NameE,ATTRIBS,ValueI),NameS,ValueO,Else),!.
+
+findTagValue(Ctx,XML,Name,ValueO,Else):-!,
+      findTagValue0(Ctx,XML,Name,ValueO,Else).
+
+findTagValue0(Ctx,element(NameE,ATTRIBS,ValueI),Name,ValueO,Else):- 
+      atomsSameCI(Name,NameE),!,
+   aiml_select_unit(Ctx,NameE,element(NameE,ATTRIBS,ValueI),ValueO),!.
+
+findTagValue0(Ctx,element(NameE,ATTRIBS,ValueI),Name,ValueO,Else):-
+      lastMember(name=Name,ATTRIBS,Rest),atomsSameCI(Name,NameE),!,
+   aiml_select_unit(Ctx,Name,element(NameE,Rest,ValueI),ValueO),!.
 
 findTagValue(Ctx,XML,[NameE=_|_],ValueO,_Else):-
-         member(element(NameA,ATTRIBS,ValueI),XML),member(_=NameI,ATTRIBS),
-         atomsSameCI(NameA,NameE),atomsSameCI(NameA,NameI),
-         aiml_eval_to_unit(Ctx,ValueI,ValueO),!.
+      member(element(NameA,ATTRIBS,ValueI),XML),member(_=NameI,ATTRIBS),
+     atomsSameCI(NameA,NameE),atomsSameCI(NameA,NameI),
+     aiml_select_unit(Ctx,ValueI,ValueO),!.
 
-findTagValue(Ctx,XML,NameS,ValueO,Else):-member(INNERXML,XML),findTagValue(Ctx,INNERXML,NameS,ValueO,Else),!.
-findTagValue(Ctx,_XML,_Name,ValueO,Else):-ValueI=Else,!,aiml_eval_to_unit(Ctx,ValueI,ValueO),!.
+aiml_select_unit(Ctx,NameA,element(NameA,[],ValueI),ValueO):-aiml_eval_to_unit(Ctx,ValueI,ValueO),!.
+aiml_select_unit(Ctx,_NameA,ValueI,ValueO):-aiml_eval_to_unit(Ctx,ValueI,ValueO),!.
 
-%['name'='SomeName','Description'='some descr','Input'='error','ExpectedAnswer'='SomeAnswwer']
-
+%['name'='SomeName','Description'='some descr','Input'='$error','ExpectedAnswer'='SomeAnswwer']
+/*
 getAttributeOrTags(Ctx,[N=Default|More],ATTRIBS,INNERXML,Var):- var(Var),!,
-  notrace((getAttributeOrTags1(Ctx,[N=Default|More],ATTRIBS,INNERXML,[_=Var|_NormalProps]))),!.
+  noaimltrace((getAttributeOrTags1(Ctx,[N=Default|More],ATTRIBS,INNERXML,[_=Var|_NormalProps]))),!.
 
 getAttributeOrTags(Ctx,[N=Default|More],ATTRIBS,INNERXML,[N0=Var|NormalProps]):-
-  notrace((getAttributeOrTags1(Ctx,[N=Default|More],ATTRIBS,INNERXML,[N0=Var|NormalProps]))),!.
+  noaimltrace((getAttributeOrTags1(Ctx,[N=Default|More],ATTRIBS,INNERXML,[N0=Var|NormalProps]))),!.
 
 :-trace(getAttributeOrTags/5, -fail).
 
@@ -82,7 +96,7 @@ getAttributeOrTags1(Ctx,[N=Default|More],ATTRIBS,INNERXML,[N=Found|NormalProps])
 
 getAttributeOrTags1(Ctx,[N=Default|More],ATTRIBS,INNERXML,[N=Default|NormalProps]):- 
       getAttributeOrTags1(Ctx,More,ATTRIBS,INNERXML,NormalProps),!.
-
+*/
 
 set_current_value(Ctx,N,V):-pushNameValue(Ctx,user,N,V).
 
@@ -103,12 +117,29 @@ peekAttributes(_Ctx,[],_Scope,[]):-!.
 
 current_value(Ctx,Name,ValueI):-peekNameValue(Ctx,_,Name,ValueI).
 
-peekNameValue(Ctx,_Scope,Name,Value):-getCtxValue(Name,Ctx,Value),!.
-peekNameValue(_Ctx,Scope,Name,Value):-dict(Scope,Name,Value),prolog_must(ground(Scope:Name=Value)),!.
-peekNameValue(Ctx,List,Name,Value):- nonvar(List),not(atom(List)),attributeOrTagValue(Ctx,List,Name,Value,fail),!.
-peekNameValue(_Ctx,Scope,Name,Value):-dict(Scope2,Name,Value),Scope\=Scope2,ground(Name=Value),!,checkValue(Value).
-peekNameValue(_Ctx,_Scope,_Name,Value):-trace,ignore(Value=(*)),!.
+peekNameValue(Ctx,Scope,Name,Value):-peekNameValue(Ctx,Scope,Name,Value,Failed),ignore((Value==Failed,trace,Value = '*')),!.
 
+peekNameValue(Ctx,Scope,Name,Value,Else):-nonvar(Value),!,checkNameValue(Ctx,Scope,Name,Value,Else).
+peekNameValue(Ctx,_Scope,Name,Value,_ElseVar):-getCtxValue(Name,Ctx,Value),!.
+peekNameValue(Ctx,List,Name,Value,_ElseVar):- nonvar(List),not(atom(List)),attributeOrTagValue(Ctx,List,Name,Value,'$failure'),!.
+peekNameValue(_Ctx,Scope,Name,Value,_ElseVar):-dict(Scope,Name,Value),prolog_must(ground(Scope:Name=Value)),!.
+peekNameValue(_Ctx,Scope,Name,Value,_ElseVar):-nonvar(Scope),dict(Scope2,Name,Value),Scope\=Scope2,ground(Name=Value),!,checkValue(Value).
+peekNameValue(Ctx,_Scope,Name,Value,ElseVar):-makeParamFallback(Ctx,Name,Value,ElseVar),!.
+%%peekNameValue(_Ctx,_Scope,_Name,Value,ElseVar):-ignore(Value=ElseVar),!.
+
+checkNameValue(Ctx,Scope,[Name],Value,Else):-!,peekNameValue(Ctx,Scope,Name,ValueVar,Else),!,checkValue(ValueVar),valuesMatch(Ctx,ValueVar,Value),!.
+checkNameValue(Ctx,Scope,Name,Value,Else):-peekNameValue(Ctx,Scope,Name,ValueVar,Else),!,checkValue(ValueVar),valuesMatch(Ctx,ValueVar,Value),!.
+
+valuesMatch(_Ctx,_V,A):-A=='*'.
+valuesMatch(_Ctx,V,_A):-V=='*'.
+valuesMatch(_Ctx,V,A):-V=A.
+valuesMatch(Ctx,V,A):-compound(V),convertToMatchable(V,VV),!,valuesMatch0(Ctx,VV,A).
+valuesMatch(Ctx,V,A):-compound(A),convertToMatchable(A,AA),!,valuesMatch0(Ctx,V,AA).
+
+valuesMatch0(_Ctx,V,A):-V=A.
+valuesMatch0(Ctx,[V|VV],[A|AA]):-valuesMatch0(Ctx,V,A),!,valuesMatch0(Ctx,VV,AA).
+valuesMatch0(Ctx,[V],A):-!,valuesMatch0(Ctx,V,A).
+valuesMatch0(Ctx,V,[A]):-!,valuesMatch0(Ctx,V,A).
 
 valueMP(Var,M):- member(M, [var(Var), Var=missing, Var=[], Var=(*) , (Var=(-(_))) ]),M,!.
 valueMP(V,(V='ERROR')):-prolog_must(ground(V)),term_to_atom(V,A), concat_atom_safe([_,_|_],'ERROR',A),!.
@@ -124,13 +155,12 @@ valuePresent(_):-!.
 popAttributes(Ctx,Scope,[N=V|L]):- !,prolog_must(ground([N=V|L])),popNameValue(Ctx,Scope,N,V),!,popAttributes(Ctx,Scope,L),!.
 popAttributes(_Ctx,_Scope,[]).
 
-withAttributes(_Ctx,[],Call):-debugOnFailureAiml(Call),!.
+withAttributes(_Ctx,ATTRIBS,Call):-ATTRIBS==[],!,Call.
 withAttributes(Ctx,ATTRIBS,Call):-prolog_must(ground(ATTRIBS)),
- debugOnFailureAiml((
    ensureScope(Ctx,ATTRIBS,Scope),
-    pushAttributes(Ctx,Scope,ATTRIBS),
+    once(pushAttributes(Ctx,Scope,ATTRIBS)),
     Call,
-    popAttributes(Ctx,Scope,ATTRIBS))).
+    once(popAttributes(Ctx,Scope,ATTRIBS)).
 
 
 pushNameValue(_Ctx,Scope,N,V):-
@@ -148,7 +178,7 @@ ensureScope(_Ctx,_ATTRIBS,filelevel):-!.
 
 
 
-replaceAttribute(Ctx,Before,After,ALIST,ATTRIBS):-replaceAttribute0(Ctx,Before,After,ALIST,AA),list_to_set_safe(AA,ATTRIBS),!.
+replaceAttribute(Ctx,Before,After,ALIST,ATTRIBS):- replaceAttribute0(Ctx,Before,After,ALIST,AA),list_to_set_safe(AA,ATTRIBS),!.
 % the endcase
 replaceAttribute0(_Ctx,_Before,_After,[],[]):-!.
 % only do the first found?
@@ -185,11 +215,13 @@ makeAimlSingleParam0(Ctx,[N|NameS],_,ElseVar,N,Value):- makeParamFallback(Ctx,[N
 makeParamFallback(Ctx,Name,Value,ElseVar):-var(ElseVar),!,throw_safe(makeParamFallback(Ctx,Name,Value,ElseVar)).
 makeParamFallback(Ctx,Name,Value,ElseVar):-atom(Name),!,makeParamFallback(Ctx,[Name],Value,ElseVar).
 makeParamFallback(_Ctx,_NameS,Value,ElseVar):-'var'(ElseVar),!,Value=ElseVar,!.
-makeParamFallback(_Ctx,_NameS,_Value,'failure'):-!,fail.
-makeParamFallback(_Ctx,_NameS,_Value,'call'(Prolog)):-!,Prolog.
-makeParamFallback(Ctx,NameS,Value,'error'):-aiml_error(makeParamFallback(Ctx,NameS,Value,error)),throw_safe(allbackValue(Ctx,NameS,Value,error)),!.
-makeParamFallback(Ctx,NameS,ValueO, 'current_value'):- member(Name,NameS),current_value(Ctx,Name,ValueO),valuePresent(ValueO),!.
+makeParamFallback(_Ctx,_NameS,_Value,'$failure'):-!,fail.
+makeParamFallback(_Ctx,_NameS,_Value,'$call'(Prolog)):-!,Prolog.
+makeParamFallback(Ctx,NameS,Value,'$error'):-aiml_error(makeParamFallback(Ctx,NameS,Value,'$error')),throw_safe(fallbackValue(Ctx,NameS,Value,'$error')),!.
+makeParamFallback(Ctx,NameS,ValueO, '$current_value'):- member(Name,NameS),current_value(Ctx,Name,ValueO),valuePresent(ValueO),!.
+makeParamFallback(_Ctx,_NameS,_Value,'$succeed'):-!.
 makeParamFallback(_Ctx,_NameS,ValueO,Else):-ValueO=Else,!.
+makeParamFallback(_Ctx,_NameS,ValueO,Else):-trace,debugFmt(ignore(ValueO=Else)),!.
 
 % ===============================================================================================
 %  Popping when Building categories
@@ -218,25 +250,27 @@ cateNodes2a(Scope,Tag,DCGO):-peekNameValue(_Ctx,Other,Tag,DCG),Other\==Scope,!,D
 cateNodes2a(Scope,Tag,DCGO):-aiml_error(peekNameValue(_Ctx,Scope,Tag,DCG)),!,DCG=DCGO.
 
 defaultPredicates(N,V):-member(N,[username,botname]),V='*'.
-
+defaultPredicatesS([topic='*',
+             precall='true',
+             call='true',
+             flags='*',
+             that='*',
+             dictionary='userdict',
+             userdict='user',
+             substitutions='input',
+             graph='default',
+             guard='*',
+             request='*',
+             lang='bot']).
+defaultPredicates(N,V):-defaultPredicatesS(S),member(N=V,S).
+ 
 cateMember(Tag):-cateMemberTags(List),member(Tag,List).
 
 cateFallback([
-       topic='*',
-       precall='true',
-       call='true',
-       flags='*',
-       that='*',
-       dictionary='userdict',
-       userdict='user',
-       substitutions='input',
-       graph='default',
-       pattern='ERROR PATTERN',
-       guard='*',
-       request='*',
        srcinfo=missing,
        srcfile=missing,
        withCategory=[writeqnl,asserta_new],
+       pattern='ERROR PATTERN',
        template='ERROR TEMPLATE'|MORE]):-findall(N=V,defaultPredicates(N,V),MORE).
 
 pathAttrib(S):-pathAttribS(SS),member(S,SS).
@@ -256,6 +290,7 @@ pathAttribS([uri,loc,filename,url,path,dir,file,pathname,src,location]).
 %% frame/3s
 %  = frame(Named,Destructor,Ctx)
 
+%well i played with a couple few differnt environment impls.. they have their pros cons.. one impl.. that was unique is that an array of "binding pairs" live in an arraylist.. to be "in" an environment it meant that you held an "index" into the arry list that as you went backwards you'd find your bindings.. each symbol had a java int field "lastBindingIndex" .. that was a "hint" to where you could fastforward the backwards search .. end named binding context also had a "index" to when you leave a named block.. you could quickly reset the top of an index.
 
 % ===================================================================
 :-dynamic(no_cyclic_terms).
@@ -281,7 +316,7 @@ unwrapValue1(Value,Value):-!.
 bestSetterFn(v(_,Setter,_),_OuterSetter,Setter):-!.
 bestSetterFn(_Value,OuterSetter,OuterSetter).
 
-getCtxValue(Name,Ctx,Value):-checkCtx(Ctx),notrace(get_ctx_holder(Ctx,Holder)),get_o_value(Name,Holder,HValue,_Setter),!, unwrapValue(HValue,Value).
+getCtxValue(Name,Ctx,Value):-checkCtx(Ctx),noaimltrace(get_ctx_holder(Ctx,Holder)),get_o_value(Name,Holder,HValue,_Setter),!, unwrapValue(HValue,Value).
 
 setCtxValue(Name,Ctx,Value):-checkCtx(Ctx),get_ctx_holder(Ctx,Holder),get_o_value(Name,Holder,HValue,Setter),unwrapValue(HValue,CurrentValue),!,(CurrentValue=Value;call(Setter,Value)),!.
 setCtxValue(Name,Ctx,Value):-checkCtx(Ctx),addCtxValue1(Name,Ctx,Value),!.
@@ -329,7 +364,7 @@ get_ctx_holder1(Ctx,Ctx).
 %%%%% get_ctx_holderFreeSpot(+Ctx, -Put_NV, -CallToRemoveNV)
 
 get_ctx_holderFreeSpot(Ctx,NamedValue,no_destructor(holder)):-no_cyclic_terms,!,get_ctx_holderFreeSpot0(Ctx,NamedValue,_NO_Destruct),!.
-get_ctx_holderFreeSpot(Ctx,NamedValue,Destruct):-notrace(get_ctx_holderFreeSpot0(Ctx,NamedValue,Destruct)).
+get_ctx_holderFreeSpot(Ctx,NamedValue,Destruct):-noaimltrace(get_ctx_holderFreeSpot0(Ctx,NamedValue,Destruct)).
 
 get_ctx_holderFreeSpot0(Ctx,NamedValue,Destruct):-compound(Ctx),get_ctx_holderFreeSpot1(Ctx,NamedValue,Destruct).
 
@@ -351,7 +386,7 @@ get_ctx_holderFreeSpot1(Ctx,'.',2,NamedValue,Destruct):-arg(2,Ctx,Try2),get_ctx_
 get_ctx_value(Name,Ctx,Value,Setter):-nonvar(Name),var(Value),get_o_value(Name,Ctx,Value,OuterSetter),bestSetterFn(Value,OuterSetter,Setter).
 
 get_o_value(Name,Ctx,Value,no_setter(Name)):-no_cyclic_terms,!,get_o_value0(Name,Ctx,Value,_HIDE_Setter),!.
-get_o_value(Name,Ctx,Value,Setter):-notrace(get_o_value0(Name,Ctx,Value,Setter)),!.
+get_o_value(Name,Ctx,Value,Setter):-noaimltrace(get_o_value0(Name,Ctx,Value,Setter)),!.
 
 get_o_value0(Name,Ctx,Value,Setter):-compound(Ctx),get_o_value1(Name,Ctx,Value,Setter).
 get_o_value1(Name,assoc(Ctx),Value,set_assoc):- get_assoc(Name,Ctx,Value),!.
