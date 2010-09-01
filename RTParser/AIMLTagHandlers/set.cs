@@ -1,16 +1,5 @@
-using System;
 using System.Xml;
-using System.Text;
 using RTParser.Database;
-using RTParser.Variables;
-
-using Lucene.Net.Store;
-using Lucene.Net.Analysis;
-using Lucene.Net.Analysis.Standard;
-using Lucene.Net.Index;
-using Lucene.Net.Documents;
-using Lucene.Net.Search;
-using Lucene.Net.QueryParsers;
 
 namespace RTParser.AIMLTagHandlers
 {
