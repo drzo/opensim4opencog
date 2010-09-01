@@ -171,6 +171,10 @@ namespace RTParser.Utils
         }
 
         public RTPBot RProcessor;
+        public User CurrentUser
+        {
+            get { return Request.user;  }
+        }
 
         public Unifiable grabSetting(string name)
         {

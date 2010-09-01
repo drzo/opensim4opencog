@@ -90,10 +90,10 @@ namespace RTParser.Database
                 udict.addSetting(name, value);
 
             }
-            return ReturnSetSetting(udict, name, setReturn);
+            return ReturnSetSetting(query.CurrentUser, udict, name, value, setReturn);
         }
 
-        public static Unifiable ReturnSetSetting(ISettingsDictionary dict, string name, string setReturn)
+        public static Unifiable ReturnSetSetting(User user, ISettingsDictionary dict, string name,Unifiable value, string setReturn)
         {
             string defRet;
             string realName;
@@ -101,6 +101,7 @@ namespace RTParser.Database
             {
                 setReturn = SettingsDictionary.grabSetName(dict, name, out realName);
             }
+            user.bot.LuceneIndexer.assertTriple(user.UserName, name, value);
             if (setReturn == null)
             {
                 defRet = "value";
