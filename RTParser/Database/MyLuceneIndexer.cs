@@ -381,7 +381,7 @@ namespace RTParser.Database
             Insert(factoidSRV);
         }
 
-        public String queryTriple(string subject, string relation)
+        public String queryTriple(string subject, string relation, XmlNode templateNode, bool useSynonyms)
         {
             writeToLog("queryTriple {0}, {1}, {2}", subject, relation);
             string factoidSR = String.Format("{0} {1} is", subject, relation);
@@ -407,6 +407,17 @@ namespace RTParser.Database
                 string failPrefix = RTPBot.GetAttribValue(templateNode, "failprefix", "").ToLower();
                 string thresholdStr = RTPBot.GetAttribValue(templateNode, "threshold", "0").ToLower();
                 float threshold = float.Parse(thresholdStr);
+
+                // if synonyms is overriden??
+                string synonyms = RTPBot.GetAttribValue(templateNode, "wordnet,synonyms", null);
+                if (synonyms!=null)
+                {
+                    bool synonymsTF;
+                    if (Unifiable.TryParseBool(synonyms, out synonymsTF))
+                    {
+                        useSynonyms = synonymsTF;
+                    }
+                }
 
                 dbgLog("Searching for the term \"{0}\"...", searchTerm1);
                 Search(searchTerm1, out ids, out results, out scores, useSynonyms);

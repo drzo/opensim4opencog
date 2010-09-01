@@ -700,6 +700,37 @@ namespace RTParser
         {
             return IsUnitMatcher;
         }
+
+        public static bool TryParseBool(string parse, out bool tf)
+        {
+            if (IsNullOrEmpty(parse))
+            {
+                tf = default(Boolean);
+                return false;
+            }
+            parse = parse.ToUpper();
+            if (IsFalseOrNo(parse))
+            {
+                tf = false;
+                return true;
+            }
+            if (IsTrueOrYes(parse))
+            {
+                tf = true;
+                return true;
+            }
+            tf = default(Boolean);
+            return false;
+        }
+
+        public static bool IsFalseOrNo(string tst)
+        {
+            return (tst == "NO" || tst == "" || tst == "N" || tst == "FALSE" || tst == "F" || tst == "NIL");
+        }
+        public static bool IsTrueOrYes(string tst)
+        {
+            return (tst == "YES" || tst == "Y" || tst == "TRUE" || tst == "T");
+        }
     }
 }
 
