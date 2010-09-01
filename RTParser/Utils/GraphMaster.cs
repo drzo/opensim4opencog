@@ -285,7 +285,7 @@ namespace RTParser.Utils
             }
         }
 
-        public void addCategoryTag(Unifiable generatedPath, PatternInfo patternInfo, CategoryInfo category, XmlNode outerNode, XmlNode templateNode, GuardInfo guard, ThatInfo thatInfo)
+        public void addCategoryTag(Unifiable generatedPath, PatternInfo patternInfo, CategoryInfo category, XmlNode outerNode, XmlNode templateNode, GuardInfo guard, ThatInfo thatInfo, List<XmlNode> additionalRules)
         {
             if (SilentTagsInPutParent && AIMLLoader.IsSilentTag(templateNode))
             {
@@ -293,7 +293,7 @@ namespace RTParser.Utils
                 this.Parents.Add(parent1);
                 parent1.SilentTagsInPutParent = false;
                 writeToLog("Adding to Parent " + category);
-                parent1.addCategoryTag(generatedPath, patternInfo, category, outerNode, templateNode, guard, thatInfo);
+                parent1.addCategoryTag(generatedPath, patternInfo, category, outerNode, templateNode, guard, thatInfo, additionalRules);
                 return;
             }
 
@@ -304,7 +304,7 @@ namespace RTParser.Utils
             }
             Node thiz = rootNode.addPathNodeChilds(generatedPath);
             int countBefore = thiz.TemplateInfoCount;
-            TemplateInfo info = thiz.addTerminal(templateNode, category, guard, thatInfo, this, patternInfo);
+            TemplateInfo info = thiz.addTerminal(templateNode, category, guard, thatInfo, this, patternInfo, additionalRules);
             int countAfter = thiz.TemplateInfoCount;
             /*
              * Node created = Node.addCategoryTag(node, generatedPath, patternInfo,
@@ -525,13 +525,13 @@ namespace RTParser.Utils
             }
         }
 
-        private void writeToLog(string message, params object[] args)
+        internal void writeToLog(string message, params object[] args)
         {
             RTPBot.writeDebugLine("GRAPH: " + message + " in " + ToString(), args);
         }
 
 
-        public void RemoveGenlMT(GraphMaster fallback)
+        public void RemoveGenlMT(GraphMaster fallback, OutputDelegate writeToLog)
         {
             lock (LockerObject)
             {
@@ -552,7 +552,7 @@ namespace RTParser.Utils
             }
         }
 
-        internal void AddGenlMT(GraphMaster fallback)
+        internal void AddGenlMT(GraphMaster fallback, OutputDelegate writeToLog)
         {
             lock (LockerObject)
             {
@@ -568,7 +568,7 @@ namespace RTParser.Utils
                         FallBacksGraphs.Add(fallback);
                         writeToLog("GENLMT ADDING " + fallback + " TO " + this);
                     }
-                    fallback.RemoveGenlMT(this);
+                    fallback.RemoveGenlMT(this, writeToLog);
                 }
             }
         }
@@ -630,6 +630,7 @@ namespace RTParser.Utils
                     Templates.Add(templateInfo);
                 lock (CategoryInfos)
                     CategoryInfos.Add(templateInfo.CategoryInfo);
+                if (UnusedTemplates != null) UnusedTemplates.Remove(templateInfo);
             }
         }
 
@@ -645,7 +646,20 @@ namespace RTParser.Utils
             {
                 lock (Templates)
                     Templates.Remove(templateInfo);
-
+                lock (CategoryInfos)
+                    CategoryInfos.Remove(templateInfo.CategoryInfo);
+                if (UnusedTemplates != null) UnusedTemplates.Add(templateInfo);
+            }
+        }
+        public void DisableTemplate(TemplateInfo templateInfo)
+        {
+            lock (LockerObject)
+            {
+                lock (Templates)
+                    Templates.Remove(templateInfo);
+                lock (CategoryInfos)
+                    CategoryInfos.Remove(templateInfo.CategoryInfo);
+                if (UnusedTemplates != null) UnusedTemplates.Add(templateInfo);
             }
         }
 

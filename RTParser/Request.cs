@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using MushDLR223.Utilities;
 using RTParser;
 using RTParser.AIMLTagHandlers;
 using RTParser.Utils;
@@ -561,7 +562,16 @@ namespace RTParser
 
         public void writeToLog(string message, params object[] args)
         {
-            TargetBot.writeToLog(message, args);
+            string prefix = ToString();
+            prefix = DLRConsole.SafeFormat("REQUEST: " + message + " while " + prefix, args);
+
+            message = prefix.ToUpper();
+            if (message.Contains("ERROR") || message.Contains("WARN"))
+            {
+                DLRConsole.DebugWriteLine(prefix);
+            }
+            DLRConsole.SystemFlush();
+            TargetBot.writeToLog(prefix);
         }
 
         public override int DebugLevel

@@ -689,6 +689,7 @@ namespace RTParser
                 request.Filename = path;
                 LoaderOptions options = request.LoadOptions;
                 request.Loader.loadAIMLURI(path, options);
+                request.Loader.DumpErrors(DLRConsole.DebugWriteLine, false);
                 ReloadHooks.Add(() => request.Loader.loadAIMLURI(path, options));
             }
             finally
@@ -3060,7 +3061,7 @@ The AIMLbot program.
             }
             graphPath = ToScriptableName(graphPath.Trim());
 
-            if (graphPath == "current" || graphPath == "")
+            if (graphPath == "current" || graphPath == "" || graphPath == "disabled")
             {
                 return current;
             }
@@ -3738,15 +3739,14 @@ The AIMLbot program.
                 RTPBot.writeDebugLine("Bot loaded");
             }
         }
-        public bool LoadPersonalDirectory(string myName)
+        public string LoadPersonalDirectory(string myName)
         {
-            lock (BotUsers) lock (OnBotCreatedHooks) return LoadPersonalDirectory0(myName);
-            
-        } 
-        private bool LoadPersonalDirectory0(string myName)
+            return UserOper(() => LoadPersonalDirectory0(myName), QuietLogger);
+        }
+        private string LoadPersonalDirectory0(string myName)
         {
             ReloadHooks.Add(() => LoadPersonalDirectory(myName));
-            bool loaded = false;
+            string loaded = null;
 
             // this is the personal "config file" only.. aiml stored elsewhere
             string file = HostSystem.Combine("config", myName);
@@ -3754,7 +3754,7 @@ The AIMLbot program.
             if (HostSystem.DirExists(file))
             {
                 writeToLog("LoadPersonalDirectories: '{0}'", file);
-                loaded = true;
+                loaded = file;
                 loadSettingsFile(HostSystem.Combine(file, "Settings.xml"), request);
             }
 
@@ -3762,7 +3762,7 @@ The AIMLbot program.
             if (HostSystem.DirExists(file))
             {
                 UsePersonalDir(file); ;
-                loaded = true;
+                loaded = file;
             }
 
             // this is the personal "config file" only.. aiml stored elsewhere
@@ -3770,7 +3770,7 @@ The AIMLbot program.
             if (HostSystem.DirExists(file))
             {
                 writeToLog("LoadPersonalDirectories: '{0}'", file);
-                loaded = true;
+                loaded = file;
                 loadSettingsFile(HostSystem.Combine(file, "Settings.xml"), request);
             }
 
@@ -3778,7 +3778,7 @@ The AIMLbot program.
             if (HostSystem.DirExists(file))
             {
                 UsePersonalDir(file); ;
-                loaded = true;
+                loaded = file;
             }
             return loaded;
         }
@@ -3813,11 +3813,11 @@ The AIMLbot program.
                 request.GraphsAcceptingUserInput = prev;
             }
         }
-        public void SetName(string myName)
+        public string SetName(string myName)
         {
-            lock (BotUsers) lock (OnBotCreatedHooks) SetName0(myName);            
+            return UserOper(() => SetName0(myName), writeDebugLine);          
         }
-        private void SetName0(string myName)
+        private string SetName0(string myName)
         {
             //char s1 = myName[1];
 
@@ -3850,8 +3850,8 @@ The AIMLbot program.
                 {
                     _g = new GraphMaster(dgn);
                     _h = new GraphMaster(hgn);
-                    _g.AddGenlMT(GraphsByName["default"]);
-                    _h.AddGenlMT(GraphsByName["heardselfsay"]);
+                    _g.AddGenlMT(GraphsByName["default"], writeToLog);
+                    _h.AddGenlMT(GraphsByName["heardselfsay"], writeToLog);
                     GraphsByName.Add(dgn, _g);
                     GraphsByName.Add(hgn, _h);
                 }
@@ -3868,8 +3868,9 @@ The AIMLbot program.
             }
             loadAIMLFromDefaults0();
             EnsureDefaultUsers();
-            LoadPersonalDirectories(myName);
+            string official = LoadPersonalDirectories(myName);
             BotAsUser.SaveDirectory(BotAsUser.UserDirectory);
+            return official ?? BotAsUser.UserDirectory;
         }
 
         public static bool StaticInitStarted = false;
@@ -3886,22 +3887,23 @@ The AIMLbot program.
                 GraphsByName["heardselfsay"] = new GraphMaster("heardselfsay");
             }
         }
-        public void LoadPersonalDirectories(string myName)
+        public string LoadPersonalDirectories(string myName)
         {
-            lock (BotUsers) lock (OnBotCreatedHooks) LoadPersonalDirectories0(myName);
+            return LoadPersonalDirectories0(myName);
         }
-        public void LoadPersonalDirectories0(string myName)
+        public string LoadPersonalDirectories0(string myName)
         {
-            bool loaded = LoadPersonalDirectory(myName);
-            if (!loaded)
+            string loaded = LoadPersonalDirectory(myName);
+            if (string.IsNullOrEmpty(loaded))
             {
                 myName = ToScriptableName(myName.Trim());
                 loaded = LoadPersonalDirectory(myName);
             }
-            if (!loaded)
-            {
+            if (string.IsNullOrEmpty(loaded))
+            {               
                 writeToLog("Didnt find personal directories with stem: '{0}'", myName);
             }
+            return loaded;
         }
 
         internal static void writeDebugLine(string message, params object[] args)
@@ -4210,40 +4212,58 @@ The AIMLbot program.
             }
             return nodes;
         }
+
         static string ToNonSilentTags(string sentenceIn)
         {
             var nodeO = AIMLTagHandler.getNode("<node>" + sentenceIn + "</node>");
             LineInfoElementImpl.notReadonly(nodeO);
-            return VisibleRendering(nodeO.ChildNodes);
+            return VisibleRendering(nodeO.ChildNodes, skip, flatten);
         }
-        private static string VisibleRendering(XmlNodeList nodeS)
+
+
+        public static string VisibleRendering(XmlNodeList nodeS)
+        {
+            return VisibleRendering(nodeS, skip, flatten);
+        }
+
+        private static List<string> skip = new List<string>()
+                                               {
+                                                   "#comment",
+                                               //    "debug",
+                                               };
+
+        private static List<string> flatten = new List<string>()
+                                               {
+                                                   "template",
+                                                   "pattern",
+                                               };
+
+        private static string VisibleRendering(XmlNodeList nodeS, List<string> skip, List<string> flatten)
         {
             var sentenceIn = "";
             foreach (XmlNode nodeO in nodeS)
             {
-                sentenceIn = sentenceIn + " " + VisibleRendering(nodeO);
+                sentenceIn = sentenceIn + " " + VisibleRendering(nodeO, skip, flatten);
             }
             return sentenceIn.Trim().Replace("  ", " ");
         }
-        private static string VisibleRendering(XmlNode nodeO)
+        private static string VisibleRendering(XmlNode nodeO, List<string> skip, List<string> flatten)
         {
             if (nodeO.NodeType == XmlNodeType.Comment) return "";
-            if (nodeO.NodeType == XmlNodeType.Element)
+            string nodeName = nodeO.Name.ToLower();
+            if (skip.Contains(nodeName)) return "";
+            if (flatten.Contains(nodeName))
             {
-                string nodeName = nodeO.Name.ToLower();
-                if (nodeName == "think") return "";
-                if (nodeName == "debug") return "";
-                if (nodeName == "template" || nodeName == "template")
-                {
-                    return VisibleRendering(nodeO.ChildNodes);
-                }
-                return nodeO.OuterXml;
+                return VisibleRendering(nodeO.ChildNodes, skip, flatten);
             }
-            if (nodeO.NodeType == XmlNodeType.Text)
-            {
-                return nodeO.InnerText;
-            }
+            if (nodeO.NodeType == XmlNodeType.Element) return nodeO.OuterXml;
+            if (nodeO.NodeType == XmlNodeType.Text) return nodeO.InnerText;            
             return nodeO.OuterXml;
+        }
+
+        public static string RenderInner(XmlNode nodeO)
+        {
+            return VisibleRendering(nodeO.ChildNodes, skip, flatten);
         }
     }
 }

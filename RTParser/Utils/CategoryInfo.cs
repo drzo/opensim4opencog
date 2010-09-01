@@ -40,6 +40,7 @@ namespace RTParser.Utils
         public PatternInfo Pattern;
         // public GuardInfo Guard;
         public string Filename;
+        public List<XmlNode> Preconds;
         //public List<TemplateInfo> TemplateInfos = new List<TemplateInfo>();
         //private object node;
 
@@ -62,6 +63,7 @@ namespace RTParser.Utils
 
         public void AddTemplate(TemplateInfo templateInfo)
         {
+            if (Template != null && Template != templateInfo) throw new InvalidCastException("non null " + Template);
             Template = templateInfo;
           //  TemplateInfos.Add(templateInfo);
         }
@@ -157,10 +159,16 @@ namespace RTParser.Utils
             return Regex.Matches(s, pattern).Count > 0;
         }
 
+        public void AddPrecondition(XmlNode info)
+        {
+            if (Preconds==null) Preconds=new List<XmlNode>();
+            Preconds.Add(info);
+        }
         public void AddPrecondition(ThatInfo info)
         {
-
+            AddPrecondition(info.PatternNode);
         }
+
         public void SetCategoryTag(Unifiable generatedPath, PatternInfo patternInfo, CategoryInfo category, XmlNode outerNode, XmlNode templateNode, GuardInfo guard, ThatInfo thatInfo)
         {
 #if false
