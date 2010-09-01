@@ -357,6 +357,30 @@ namespace RTParser.Database
 
         }
 
+        public void assertTriple(string subject, string relation, string value)
+        {
+            writeToLog("assertTriple ({0}, {1}, {2}",subject,relation,value);
+            string factoidSRV = String.Format("{0} {1} is {2}", subject, relation, value);
+            Insert(factoidSRV);
+        }
+
+        public void retractTriple(string subject, string relation, string value)
+        {
+            writeToLog("assertTriple ({0}, {1}, {2}", subject, relation, value);
+            string factoidSRV = String.Format("{0} {1} is {2}", subject, relation, value);
+            DeleteTopScoring(factoidSRV);
+
+        }
+
+        public void updateTriple(string subject, string relation, string value)
+        {
+            writeToLog("assertTriple ({0}, {1}, {2}", subject, relation, value);
+            string factoidSR = String.Format("{0} {1}", subject, relation, value);
+            string factoidSRV = String.Format("{0} {1} is {2}", subject, relation, value);
+            DeleteTopScoring(factoidSR);
+            Insert(factoidSRV);
+        }
+
         public string WordNetExpand(string inputString,bool queryhook)
         {
             string [] words  = inputString.Split(' ');
@@ -441,15 +465,30 @@ namespace RTParser.Database
                 if (returnText.Contains("imaginary_being")) { returnText = returnText + " who"; }
                 if (returnText.Contains("causal_agent")) { returnText = returnText + " who"; }
                 
-                if (returnText.Contains("entity")) { returnText = returnText + " what"; }
+                if (returnText.Contains("object")) { returnText = returnText + " what"; }
                 if (returnText.Contains("location")) { returnText = returnText + " where"; }
                 if (returnText.Contains("time_period")) { returnText = returnText + " when"; }
+                if (returnText.Contains("amount")) { returnText = returnText + " how much how many"; }
+                if (returnText.Contains("measure")) { returnText = returnText + "  how much how many"; }
+                if (returnText.Contains("quantity")) { returnText = returnText + "  how much how many"; }
+
             }
+                // filter out "stop concepts" which have a > 70% occurance and thus low info content
+                returnText = returnText.Replace("entity", "");
+                returnText = returnText.Replace("abstraction", "");
+                returnText = returnText.Replace("abstract", "");
+                returnText = returnText.Replace("unit", "");
+                returnText = returnText.Replace("physical", "");
+                returnText = returnText.Replace("yes", "");
             return returnText.Trim();
         }
         private void writeToLog(string s, params object[] p)
         {
-            TheBot.writeToLog("LUCENE: " + s, p);
+            //bool tempB = TheBot.IsLogging;
+            //TheBot.IsLogging = true;
+            //TheBot.writeToLog("LUCENE: " + s, p);
+            //TheBot.IsLogging = tempB;
+            DLRConsole.DebugWriteLine("LUCENE: " + s, p);
         }
     }
 
