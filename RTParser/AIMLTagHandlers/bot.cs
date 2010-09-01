@@ -55,7 +55,7 @@ namespace RTParser.AIMLTagHandlers
                 Unifiable gName = GetAttribValue("global_name", name);
                 bool succeed;
                 var value = NamedValuesFromSettings.GetSettingForType(dictName, query, Proc.GlobalSettings, name, gName,
-                                                                      defaultVal, out succeed);
+                                                                      defaultVal, out succeed, templateNode);
                 if (succeed && name != "name") Succeed();
                 if (!Unifiable.IsNullOrEmpty(value))
                 {

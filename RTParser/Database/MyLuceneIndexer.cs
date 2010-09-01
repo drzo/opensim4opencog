@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
-
+using System.Xml;
 using LAIR.Collections.Generic;
 using LAIR.ResourceAPIs.WordNet;
 using Lucene.Net.Analysis;
@@ -297,7 +297,7 @@ namespace RTParser.Database
         /// <param name="ids">An out parameter that is populated by this method for the caller with docments ids.</param>
         /// <param name="results">An out parameter that is populated by this method for the caller with docments text.</param>
         /// <param name="scores">An out parameter that is populated by this method for the caller with docments scores.</param>
-        public void Search(string searchTerm, out ulong[] ids, out string[] results, out float[] scores)
+        public void Search(string searchTerm, out ulong[] ids, out string[] results, out float[] scores, bool useWordnet)
         {
             IndexSearcher indexSearcher = new IndexSearcher(_directory);
             try
@@ -366,7 +366,7 @@ namespace RTParser.Database
 
         public void retractTriple(string subject, string relation, string value)
         {
-            writeToLog("assertTriple ({0}, {1}, {2}", subject, relation, value);
+            writeToLog("retractTriple ({0}, {1}, {2}", subject, relation, value);
             string factoidSRV = String.Format("{0} {1} is {2}", subject, relation, value);
             DeleteTopScoring(factoidSRV);
 
@@ -374,11 +374,81 @@ namespace RTParser.Database
 
         public void updateTriple(string subject, string relation, string value)
         {
-            writeToLog("assertTriple ({0}, {1}, {2}", subject, relation, value);
+            writeToLog("updateTriple ({0}, {1}, {2}", subject, relation, value);
             string factoidSR = String.Format("{0} {1}", subject, relation, value);
             string factoidSRV = String.Format("{0} {1} is {2}", subject, relation, value);
             DeleteTopScoring(factoidSR);
             Insert(factoidSRV);
+        }
+
+        public String queryTriple(string subject, string relation)
+        {
+            writeToLog("queryTriple ({0}, {1}, {2}", subject, relation, "WHAT");
+            string factoidSR = String.Format("{0} {1} is", subject, relation);
+           // DeleteTopScoring(factoidSR);
+          //  Insert(factoidSRV);
+            return String.Empty;
+        }
+
+        public Unifiable callDBQuery(string searchTerm1, OutputDelegate dbgLog, Func<string, Unifiable> OnFalure, XmlNode templateNode, bool useSynonyms)
+        {
+            try
+            {
+                dbgLog = dbgLog ?? writeToLog;
+                // Searching:
+                ulong[] ids;
+                string[] results;
+                float[] scores;
+
+                int numHits;
+
+                string maxReplyStr = RTPBot.GetAttribValue(templateNode, "max", "1").ToLower();
+                int maxReply = Int16.Parse(maxReplyStr);
+                string failPrefix = RTPBot.GetAttribValue(templateNode, "failprefix", "").ToLower();
+                string thresholdStr = RTPBot.GetAttribValue(templateNode, "threshold", "0").ToLower();
+                float threshold = float.Parse(thresholdStr);
+
+                dbgLog("Searching for the term \"{0}\"...", searchTerm1);
+                Search(searchTerm1, out ids, out results, out scores, useSynonyms);
+                numHits = ids.Length;
+                dbgLog("Number of hits == {0}.", numHits);
+                for (int i = 0; i < numHits; ++i)
+                {
+                    dbgLog("{0}) Doc-id: {1}; Content: \"{2}\" with score {3}.", i + 1, ids[i], results[i], scores[i]);
+                }
+
+                float topScore = 0;
+                if (numHits > 0) topScore = scores[0];
+                // Console.WriteLine();
+
+
+
+
+                if ((numHits > 0) && (topScore >= threshold))
+                {
+                    // should be weighted but lets just use the highest scoring
+                    string reply = "";
+                    if (numHits < maxReply) maxReply = numHits;
+                    for (int i = 0; i < maxReply; i++)
+                    {
+                        reply = reply + " " + results[i];
+                    }
+                    Unifiable converseMemo = reply.Trim();
+                    dbgLog(" reply = {0}", reply);
+
+                    //Unifiable converseMemo = this.user.bot.conversationStack.Pop();
+                    return converseMemo;
+                }
+                else
+                {
+                    return OnFalure(failPrefix);
+                }
+
+            }
+            catch
+            {
+                return Unifiable.Empty;
+            }
         }
 
         public string WordNetExpand(string inputString,bool queryhook)
@@ -482,6 +552,7 @@ namespace RTParser.Database
                 returnText = returnText.Replace("yes", "");
             return returnText.Trim();
         }
+
         private void writeToLog(string s, params object[] p)
         {
             //bool tempB = TheBot.IsLogging;
