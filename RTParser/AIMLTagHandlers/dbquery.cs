@@ -18,6 +18,9 @@ using Lucene.Net.Index;
 using Lucene.Net.Documents;
 using Lucene.Net.Search;
 using Lucene.Net.QueryParsers;
+using MushDLR223.ScriptEngines;
+using MushDLR223.Utilities;
+using MushDLR223.Virtualization;
 
 namespace RTParser.AIMLTagHandlers
 {
@@ -55,6 +58,12 @@ namespace RTParser.AIMLTagHandlers
 
                     Unifiable templateNodeInnerValue = Recurse();
                     string searchTerm1 = (string)templateNodeInnerValue;
+                    string maxReplyStr = GetAttribValue("max", "1").ToLower();
+                    int maxReply = Int16.Parse(maxReplyStr);
+                    string failPrefix = GetAttribValue("failprefix", "").ToLower();
+                    string thresholdStr = GetAttribValue("threshold", "0").ToLower();
+                    float threshold = float.Parse(thresholdStr);
+
                     writeToLog("Searching for the term \"{0}\"...", searchTerm1);
                     this.user.bot.LuceneIndexer.Search(searchTerm1, out ids, out results, out scores);
                     numHits = ids.Length;
@@ -63,22 +72,34 @@ namespace RTParser.AIMLTagHandlers
                     {
                         writeToLog("{0}) Doc-id: {1}; Content: \"{2}\" with score {3}.", i + 1, ids[i], results[i], scores[i]);
                     }
+                    
+                    float topScore = 0;
+                    if (numHits>0) topScore=scores[0];
                    // Console.WriteLine();
 
 
 
 
-                    if (numHits > 0)
+                    if ((numHits > 0)&&(topScore >= threshold))
                     {
                         // should be weighted but lets just use the highest scoring
-                        Unifiable converseMemo = results[0];
+                        string reply = "";
+                        if (numHits<maxReply) maxReply =numHits;
+                        for (int i = 0; i < maxReply; i++)
+                        {
+                            reply = reply + " " + results[i];
+                        }
+                        Unifiable converseMemo = reply.Trim();
+                        writeToLog(" reply = {0}", reply);
+
                         //Unifiable converseMemo = this.user.bot.conversationStack.Pop();
                         return converseMemo;
                     }
                     else
                     {
                         Unifiable starContent = Recurse();
-                        XmlNode sraiNode = RTParser.Utils.AIMLTagHandler.getNode(String.Format("<srai>{0}</srai>", starContent), templateNode);
+                        string sariCallStr  = failPrefix +" "+ (string)starContent;
+                        XmlNode sraiNode = RTParser.Utils.AIMLTagHandler.getNode(String.Format("<srai>{0}</srai>", sariCallStr.Trim()), templateNode);
                         srai sraiHandler = new srai(this.Proc, this.user, this.query, this.request, this.result, sraiNode);
                         return sraiHandler.Transform();
                     }
@@ -96,7 +117,13 @@ namespace RTParser.AIMLTagHandlers
 
         private void writeToLog(string s, params object[] p)
         {
-            this.user.bot.writeToLog("DBQUERY: " + s, p);
+            //this.user.bot.writeToLog("DBQUERY: " + s, p);
+            //bool tempB = this.user.bot.IsLogging;
+            //this.user.bot.IsLogging = true;
+            // base.user.bot.writeToLog("DBQUERY: " + s, p);
+            //this.user.bot.IsLogging = tempB;
+            DLRConsole.DebugWriteLine("DBQUERY: " + s, p);
+
         }
 
     }

@@ -629,6 +629,7 @@ namespace RTParser
             if (str.EndsWith("*")) return true;
             if (char.IsLetterOrDigit(str[0])) return false;
             if (str.StartsWith("<regex")) return false;
+            if (str.StartsWith("<lexis")) return false;
             return IsFlag(UFlags.LONG_WILDCARD);
             if (str == ("*")) return true;
             if (str == ("^")) return true;
