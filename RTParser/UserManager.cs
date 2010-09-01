@@ -25,7 +25,8 @@ namespace RTParser
                 userTraceRedir = output;
                 try
                 {
-                    lock (OnBotCreatedHooks) lock (BotUsers) return action();
+                    //lock (OnBotCreatedHooks) 
+                    lock (BotUsers) return action();
                 }
                 catch (Exception e)
                 {

@@ -1123,7 +1123,7 @@ namespace RTParser
         /// <param name="message">The message to log</param>
         public void writeToLog(string message, params object[] args)
         {
-            bool writeToConsole = outputDelegate == null;
+            bool writeToConsole = true;// outputDelegate == null;
             try
             {
                 if (args != null && args.Length > 0) message = String.Format(message, args);
@@ -3732,7 +3732,7 @@ The AIMLbot program.
 
         public void WriteConfig()
         {
-            lock (BotUsers) lock (OnBotCreatedHooks)
+            lock (BotUsers) ///lock (OnBotCreatedHooks)
             {
                 TheCyc.WriteConfig();
                 GraphMaster.WriteConfig();
