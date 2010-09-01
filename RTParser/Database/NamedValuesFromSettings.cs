@@ -86,14 +86,16 @@ namespace RTParser.Database
             }
             else
             {
+                User user = query.CurrentUser;
+                user.bot.LuceneIndexer.assertTriple(user.UserName, name, value);
                 if (!String.IsNullOrEmpty(gName)) gUser.Predicates.addSetting(gName, value);
                 udict.addSetting(name, value);
 
             }
-            return ReturnSetSetting(query.CurrentUser, udict, name, value, setReturn);
+            return ReturnSetSetting(udict, name, setReturn);
         }
 
-        public static Unifiable ReturnSetSetting(User user, ISettingsDictionary dict, string name,Unifiable value, string setReturn)
+        public static Unifiable ReturnSetSetting(ISettingsDictionary dict, string name, string setReturn)
         {
             string defRet;
             string realName;
@@ -101,7 +103,6 @@ namespace RTParser.Database
             {
                 setReturn = SettingsDictionary.grabSetName(dict, name, out realName);
             }
-            user.bot.LuceneIndexer.assertTriple(user.UserName, name, value);
             if (setReturn == null)
             {
                 defRet = "value";
