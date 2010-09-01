@@ -69,7 +69,7 @@ namespace RTParser.AIMLTagHandlers
                 Unifiable gName = GetAttribValue("global_name", name);
                 bool succeed;
                 var v = NamedValuesFromSettings.GetSettingForType(dictName, query, query, name, gName, defaultVal,
-                                                                  out succeed);
+                                                                  out succeed, templateNode);
                 if (succeed) Succeed();
                 return v;
             }

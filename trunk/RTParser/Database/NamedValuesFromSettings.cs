@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Xml;
 using RTParser;
 using RTParser.Utils;
 using RTParser.Variables;
@@ -10,7 +11,7 @@ namespace RTParser.Database
 {
     public class NamedValuesFromSettings
     {
-        static public Unifiable GetSettingForType(string type, SubQuery query, ISettingsDictionary dict, string name, string gName, Unifiable defaultVal, out bool succeed)
+        static public Unifiable GetSettingForType(string type, SubQuery query, ISettingsDictionary dict, string name, string gName, Unifiable defaultVal, out bool succeed, XmlNode node)
         {
             Request request = query.Request;
             RTPBot TargetBot = request.TargetBot;

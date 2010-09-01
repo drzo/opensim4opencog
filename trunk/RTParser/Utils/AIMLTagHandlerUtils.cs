@@ -183,6 +183,7 @@ namespace RTParser.Utils
 
         static public Unifiable GetAttribValue(XmlNode node, string attribName, Func<string> defaultIfEmpty, SubQuery sq)
         {
+            if (node == null) return defaultIfEmpty();
             bool found = false;
             Unifiable u = Unifiable.NULL;
             if (node.Attributes == null) return defaultIfEmpty();
