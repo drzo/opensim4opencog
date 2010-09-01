@@ -11513,7 +11513,7 @@
 </category>
   
 <category><pattern>I AM NOT _ I AM *</pattern>
-<template><think><srai>I AM NOT <star index="1"/></srai><think><srai>I AM <star index="2"/></srai>
+<template><think><srai>I AM NOT <star index="1"/></srai></think><srai>I AM <star index="2"/></srai>
 <think><set name="topic">reduce</set></think></template>
 </category>
   
