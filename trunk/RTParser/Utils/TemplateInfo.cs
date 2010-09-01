@@ -13,6 +13,10 @@ namespace RTParser.Utils
         {
             get { return CategoryInfo.That; }
         }
+        public List<XmlNode> Preconds
+        {
+            get { return CategoryInfo.Preconds; }
+        }
         public CategoryInfo CategoryInfo;
         public Node GraphmasterNode;
         public double Rating = 1.0;
@@ -150,7 +154,8 @@ namespace RTParser.Utils
             try
             {
                 NoInfo = false;
-                return new TemplateInfo(template, guard, /* thatInfo, */ node, category);
+                return new TemplateInfo(template, guard,  node, category);
+                if (thatInfo != null) category.That = thatInfo;
             }
             finally
             {

@@ -85,11 +85,11 @@ namespace RTParser.AIMLTagHandlers
                 {
                     if (deleteLink)
                     {
-                        FROM.RemoveGenlMT(TO);
+                        FROM.RemoveGenlMT(TO, writeToLog);
                     }
                     else
                     {
-                        FROM.AddGenlMT(TO);
+                        FROM.AddGenlMT(TO, writeToLog);
                     }
                     return Succeed("GENLMT: " + FROM + " => " + name + " => " + TO);
                 }

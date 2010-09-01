@@ -119,15 +119,23 @@ namespace RTParser.Utils
         /// <param name="path">the path for the category</param>
         /// <param name="template">the template to find at the end of the path</param>
         /// <param name="filename">the file that was the source of this category</param>
-        public TemplateInfo addTerminal(XmlNode templateNode, CategoryInfo category, GuardInfo guard, ThatInfo thatInfo, GraphMaster master, PatternInfo patternInfo)
+        public TemplateInfo addTerminal(XmlNode templateNode, CategoryInfo category, GuardInfo guard, ThatInfo thatInfo, GraphMaster master, PatternInfo patternInfo, List<XmlNode> additionalRules)
         {
             const bool RemoveDupes = true; //slows it down but maybe important to do
             if (this.TemplateInfos == null)
             {
+                if (templateNode == AIMLLoader.TheTemplateOverwrite)
+                {
+                    return DeleteTemplates();
+                }
                 this.TemplateInfos = new UList();
             }
             else if (RemoveDupes)
             {
+                if (templateNode == AIMLLoader.TheTemplateOverwrite)
+                {
+                    return DeleteTemplates();                    
+                }
                 TemplateInfo returnIt = null;
                 bool returnTemp = false;
                 lock (this.TemplateInfos)
@@ -207,6 +215,10 @@ namespace RTParser.Utils
                 }
                 if (returnTemp) return returnIt;
             }
+            if (templateNode == AIMLLoader.TheTemplateOverwrite)
+            {
+                return DeleteTemplates();
+            }
 
             // last in first out addition
             TemplateInfo newTemplateInfo = TemplateInfo.GetTemplateInfo(templateNode, guard, thatInfo, this, category);            
@@ -256,6 +268,38 @@ namespace RTParser.Utils
             }
             this.TemplateInfos.Insert(0, newTemplateInfo);
             return newTemplateInfo;
+        }
+
+        private TemplateInfo DeleteTemplates()
+        {
+            lock (SyncObject)
+            {
+                if (TemplateInfos != null)
+                {
+                    if (TemplateInfos.Count > 0)
+                    {
+                        if (TemplateInfosDisabled == null) TemplateInfosDisabled = new UList();
+                        foreach (var list in new UList(TemplateInfos))
+                        {
+                            DisableTemplate(list);
+                        }
+                    }
+                    this.TemplateInfos.Clear();
+                    this.TemplateInfos = null;
+                }
+                return null;
+            }
+        }
+
+        private void DisableTemplate(TemplateInfo info)
+        {
+            lock (SyncObject)
+            {
+                if (TemplateInfos != null) TemplateInfos.Remove(info);
+                if (TemplateInfosDisabled == null) TemplateInfosDisabled = new UList();
+                info.Graph.DisableTemplate(info);
+                TemplateInfosDisabled.Add(info);
+            }
         }
 
         /// <summary>
@@ -380,61 +424,87 @@ namespace RTParser.Utils
                     if (doSEs && fs.EndsWith("SSES"))
                     {
                         fs = fs.Substring(0, fl - 2);
+                        fl -= 2;
                     }
                     else if (doSEs && fs.EndsWith("SSED"))
                     {
                         fs = fs.Substring(0, fl - 2);
+                        fl -= 2;
                     }
                     else
                     {
+                        fl = fs.Length;
                         char c2 = fs[fl - 2];
                         if (c2 == 'S') // preserve ss 
                         {
                         }
-                        if (c2 == 'E') // preserve es 
+                        else if (c2 == 'E') // preserve [C]es 
                         {
-                            if (doEs) fs = fs.Substring(0, fl - 2);
+                            if (doEs)
+                            {
+                                fs = fs.Substring(0, fl - 2);
+                                fl -= 2;
+                            }
                             else
                             {
                                 fs = fs.Substring(0, fl - 1);
+                                fl -= 1;
                             }
                         }
                         else if ("AEIOU".IndexOf(c2) >= 0)
                         {
                             if (doEs && c2 == 'E') fs = fs.Substring(0, fl - 2);
+                            fl -= 2;
                         }
-                        else fs = fs.Substring(0, fl - 1);
+                        else
+                        {
+                            fs = fs.Substring(0, fl - 1);
+                            fl -= 1;
+                        }
                     }
                 }
-                c = fs[fs.Length - 1];
-                if (c == 'D')
+                if (fl > 3)
                 {
-                    if (doSEs && fs.EndsWith("SSED"))
+                    c = fs[fl - 1];
+                    if (c == 'D')
                     {
-                        fs = fs.Substring(0, fl - 2);
-                    }
-                    else
-                    {
-                        char c2 = fs[fl - 2];
-                        if (c2 == 'E') // preserve 
+                        if (doSEs && fs.EndsWith("SSED"))
                         {
-                            c2 = fs[fl - 3];
-                            if ("AEIOU".IndexOf(c2) == -1)
+                            fs = fs.Substring(0, fl - 2);
+                            fl = fl - 2;
+                        }
+                        else
+                        {
+                            char c2 = fs[fl - 2];
+                            if (c2 == 'E') // preserve 
                             {
-                                fs = fs.Substring(0, fl - 2);
+                                c2 = fs[fl - 3];
+                                if ("AEIOU".IndexOf(c2) == -1)
+                                {
+                                    fs = fs.Substring(0, fl - 2);
+                                    fl = fl - 2;
+                                }
                             }
                         }
                     }
                 }
-                c = fs[fs.Length - 1];
-                if (doEs && c == 'E')
+                if (fl > 3)
                 {
-                    fs = fs.Substring(0, fl - 1);
+                    c = fs[fl - 1];
+                    if (doEs && c == 'E')
+                    {
+                        fs = fs.Substring(0, fl - 1);
+                        fl = fl - 1;
+                    }
                 }
-                c = fs[fs.Length - 1];
-                if (doEs && c == 'S')
+                if (fl > 3)
                 {
-                    fs = fs.Substring(0, fl - 1);
+                    c = fs[fl - 1];
+                    if (doEs && c == 'S')
+                    {
+                        fs = fs.Substring(0, fl - 1);
+                        fl = fl - 1;
+                    }
                 }
             }
             //if (c0 == 'E' || c0 == 'S' || c0 == 'D') Console.Error.WriteLine(fs00 + "->" + fs);
@@ -600,11 +670,12 @@ namespace RTParser.Utils
                             case MatchState.UserInput:
                                 if (childNodeWord.StoreWildCard()) Insert(query.InputStar, newWildcard.ToString());
                                 // added due to this match being the end of the line
-                                newWildcard.Length = 0; // Remove(0, newWildcard.Length);
+                                newWildcard.Length = 0;  // Remove(0, newWildcard.Length);
                                 break;
                             default:
                                 var stars = query.GetMatchList(matchstate);
                                 if (childNodeWord.StoreWildCard()) Insert(stars, newWildcard.ToString());
+                                newWildcard.Length = 0; 
                                 break;
                         }
                     }
@@ -728,9 +799,12 @@ namespace RTParser.Utils
                         switch (matchstate)
                         {
                             case MatchState.UserInput:
-                                Insert(query.InputStar, newWildcard.ToString());
-                                // added due to this match being the end of the line
-                                if (childNodeWord.StoreWildCard()) newWildcard.Length = 0;// Remove(0, newWildcard.Length);
+                                if (childNodeWord.StoreWildCard())
+                                {
+                                    Insert(query.InputStar, newWildcard.ToString());
+                                    // added due to this match being the end of the line
+                                    newWildcard.Length = 0;// Remove(0, newWildcard.Length);
+                                }
                                 break;
                             default:
                                 var stars = query.GetMatchList(matchstate);

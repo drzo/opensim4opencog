@@ -339,6 +339,10 @@ namespace RTParser.Prolog
     public class FileBuffer : Buffer
     {
         protected FileStream fs;
+        protected long strmLength
+        {
+            get { return fs.Length; }
+        }
     }
 
     // FileReadBuffer
@@ -367,7 +371,7 @@ namespace RTParser.Prolog
             {
                 throw new ParserException(String.Format("*** Could not open file '{0}' for reading", fileName));
             }
-            if (fs.Length >= 2) // try to work out type of file (primitive approach)
+            if (strmLength >= 2) // try to work out type of file (primitive approach)
             {
                 fs.Read(cache, 0, 2);
                 little_endian = (cache[0] == '\xFF' && cache[1] == '\xFE');
@@ -378,7 +382,6 @@ namespace RTParser.Prolog
                 */
             }
         }
-
 
         ~FileReadBuffer()
         {
@@ -396,7 +399,7 @@ namespace RTParser.Prolog
         {
             int i;
             cacheOfs = CACHESIZE * (p / CACHESIZE);
-            if (cacheOfs > fs.Length)
+            if (cacheOfs > strmLength)
                 throw new Exception(String.Format("*** Attempt to read beyond end of FileReadBuffer '{0}'", name));
             else
                 fs.Position = cacheOfs;
@@ -431,7 +434,7 @@ namespace RTParser.Prolog
 
         public override int Length
         {
-            get { return Convert.ToInt32(((little_endian) ? (fs.Length / 2 - 1) : fs.Length)); }
+            get { return Convert.ToInt32(((little_endian) ? (strmLength / 2 - 1) : strmLength)); }
         }
     }
     #endregion FileReadBuffer
@@ -486,7 +489,7 @@ namespace RTParser.Prolog
         public override void SaveToFile(string fileName)
         {
             FileStream f = new FileStream(fileName, FileMode.Create);
-            byte[] b = new byte[fs.Length];
+            byte[] b = new byte[strmLength];
             fs.Read(b, 0, b.Length);
             f.Write(b, 0, b.Length);
             f.Close();
@@ -504,7 +507,7 @@ namespace RTParser.Prolog
 
         public override string ToString()
         {
-            byte[] b = new byte[fs.Length];
+            byte[] b = new byte[strmLength];
             fs.Read(b, 0, b.Length);
             ASCIIEncoding enc = new ASCIIEncoding();
             return enc.GetString(b);
@@ -530,9 +533,9 @@ namespace RTParser.Prolog
 
         public void Append(FileWriteBuffer f)  // f is assumed open for reading
         {
-            byte[] b = new byte[f.fs.Length];
+            byte[] b = new byte[f.strmLength];
             f.fs.Read(b, 0, b.Length);
-            fs.Position = fs.Length;
+            fs.Position = strmLength;
             fs.Write(b, 0, b.Length);
             firstSymbolOnLine = false;
         }
@@ -540,7 +543,7 @@ namespace RTParser.Prolog
 
         public new int Length
         {
-            get { return Convert.ToInt32(fs.Length); }
+            get { return Convert.ToInt32(strmLength); }
             set { fs.SetLength(value); }
         }
 

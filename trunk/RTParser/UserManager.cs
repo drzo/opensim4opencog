@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Xml;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
@@ -15,6 +16,59 @@ namespace RTParser
     public partial class RTPBot
     {
         public static string UNKNOWN_PARTNER = "UNKNOWN_PARTNER";
+
+        private R UserOper<R>(Func<R> action, OutputDelegate output)
+        {
+            OutputDelegate prev = userTraceRedir;
+            try
+            {
+                userTraceRedir = output;
+                try
+                {
+                    lock (OnBotCreatedHooks) lock (BotUsers) return action();
+                }
+                catch (Exception e)
+                {
+                    writeToLog(e);
+                    return default(R);
+                }
+            }
+            finally
+            {
+                userTraceRedir = prev;
+            }
+        }
+
+        public void QuietLogger(string s, params object[] objects)
+        {
+            s = string.Format("USERTRACE: " + s, objects);
+            if (s.ToUpper().Contains("ERROR"))
+            {
+                writeToLog(s, objects);
+            }
+        }
+
+        internal OutputDelegate userTraceRedir;
+        public void writeToUserLog(string s, params object[] objects)
+        {
+            try
+            {
+                s = string.Format("USERTRACE: " + s, objects);
+                if (s.ToUpper().Contains("ERROR"))
+                {
+                    writeToLog(s, objects);
+                } if (userTraceRedir != null)
+                {
+                    userTraceRedir(s);
+                    return;
+                }
+                writeToLog(s);
+            }
+            catch (Exception exception)
+            {
+                writeToLog(exception);
+            }
+        }
 
         public SettingsDictionary Settings
         {
@@ -140,7 +194,12 @@ namespace RTParser
                     + "");
         }
 
-        public void RemoveUser(string name)
+        public bool RemoveUser(string name)
+        {
+            return UserOper(() => RemoveUser0(name), QuietLogger);
+        }
+
+        internal bool RemoveUser0(string name)
         {
             string keyname = KeyFromUsername(name);
             User user;
@@ -148,24 +207,31 @@ namespace RTParser
             {
                 user.Dispose();
                 BotUsers.Remove(name);
-                writeToLog("USERTRACE: REMOVED " + name);
+                writeToUserLog("REMOVED " + name);
             }
             else
                 if (BotUsers.TryGetValue(keyname, out user))
                 {
                     user.Dispose();
                     BotUsers.Remove(keyname);
-                    writeToLog("USERTRACE: REMOVED " + keyname);
+                    writeToUserLog("REMOVED " + keyname);
                 }
                 else
                 {
-                    writeToLog("USERTRACE: rmuser, No user by the name ='" + name + "'");
+                    writeToUserLog("rmuser, No user by the name ='" + name + "'");
+                    return false;
                 }
+            return true;
         }
 
         public User FindOrCreateUser(string fromname)
         {
-            lock (BotUsers)
+            return UserOper(() => FindOrCreateUser0(fromname), QuietLogger);
+        }
+
+        private User FindOrCreateUser0(string fromname)
+        {
+            //lock (BotUsers)
             {
                 bool b;
                 User user = FindOrCreateUser(fromname, out b);
@@ -177,9 +243,14 @@ namespace RTParser
 
         public User FindUser(string fromname)
         {
+            return UserOper(() => FindUser0(fromname), QuietLogger);
+        }
+
+        internal User FindUser0(string fromname)
+        {
             if (IsLastKnownUser(fromname)) return LastUser;
             string key = fromname.ToLower().Trim();
-            lock (BotUsers)
+            //lock (BotUsers)
             {
                 if (BotUsers.ContainsKey(key)) return BotUsers[key];
                 key = KeyFromUsername(fromname);
@@ -187,7 +258,7 @@ namespace RTParser
                 if (UnknowableName(fromname))
                 {
                     var unk = UNKNOWN_PARTNER.ToLower();
-                    if (BotUsers.ContainsKey(unk)) return BotUsers[unk];                    
+                    if (BotUsers.ContainsKey(unk)) return BotUsers[unk];
                 }
                 return null;
             }
@@ -195,8 +266,21 @@ namespace RTParser
 
         public User FindOrCreateUser(string fullname, out bool newlyCreated)
         {
+            var res = UserOper(() =>
+                                   {
+                                       bool newlyCreated0;
+                                       var user0 = FindOrCreateUser0(fullname, out newlyCreated0);
+                                       return new KeyValuePair<User, bool>(user0, newlyCreated0);
+
+                                   }, QuietLogger);
+            newlyCreated = res.Value;
+            return res.Key;
+        }
+
+        internal User FindOrCreateUser0(string fullname, out bool newlyCreated)
+        {
             newlyCreated = false;
-            lock (BotUsers)
+            //lock (BotUsers)
             {
                 string key = KeyFromUsername(fullname);
                 User myUser = FindUser(fullname);
@@ -207,32 +291,39 @@ namespace RTParser
             }
         }
 
-        private User CreateNewUser(string fullname, string key)
+        internal User CreateNewUser(string fullname, string key)
         {
-            lock (BotUsers)
+            return UserOper(() => CreateNewUser0(fullname, key), QuietLogger);
+        }
+
+        private User CreateNewUser0(string fullname, string key)
+        {
+            //lock (BotUsers)
             {
                 string username = fullname;
                 fullname = CleanupFromname(fullname);
                 key = key.ToLower();
                 User myUser = new AIMLbot.User(key, this);
+                myUser.userTrace = writeToUserLog;
                 myUser.UserName = fullname;
-                writeToLog("USERTRACE: New User " + fullname + " -DEBUG9");
+                writeToUserLog("New User " + fullname + " -DEBUG9");
                 BotUsers[key] = myUser;
                 bool roleAcct = IsRoleAcctName(fullname);
                 myUser.IsRoleAcct = roleAcct;
                 GraphMaster g = GetUserGraph(key);
-                OnBotCreated(() => { g.AddGenlMT(GraphMaster); });
-                
+                OnBotCreated(() => { g.AddGenlMT(GraphMaster, myUser.WriteLine); });
+
                 myUser.ListeningGraph = g;
                 myUser.Predicates.addSetting("name", username);
                 myUser.Predicates.InsertFallback(() => AllUserPreds);
-                this.GlobalSettings.AddChild("user." + key + ".", ()=>  myUser.Predicates);
+                this.GlobalSettings.AddChild("user." + key + ".", () => myUser.Predicates);
 
                 OnBotCreated(() => { myUser.Predicates.AddChild("bot.", () => BotAsUser.Predicates); });
-                
+
 
                 string userdir = GetUserDir(key);
                 myUser.SyncDirectory(userdir);
+                myUser.userTrace = null;
                 return myUser;
             }
         }
@@ -247,7 +338,15 @@ namespace RTParser
             }
         }
 
-        private void EnsureDefaultUsers()
+        internal void EnsureDefaultUsers()
+        {
+            UserOper(() =>
+                         {
+                             EnsureDefaultUsers0();
+                             return 0;
+                         }, QuietLogger);
+        }
+        private void EnsureDefaultUsers0()
         {
             LastUser = FindOrCreateUser(UNKNOWN_PARTNER);
             LastUser.IsRoleAcct = true;
@@ -255,6 +354,10 @@ namespace RTParser
         }
 
         public int LoadUsers(string key)
+        {
+            return UserOper(() => LoadUsers0(key), QuietLogger);
+        }
+        internal int LoadUsers0(string key)
         {
             var regex = new Regex(key, RegexOptions.IgnoreCase);
             int users = 0;
@@ -288,6 +391,7 @@ namespace RTParser
         }
 
         readonly public object ListUserDirs = new object();
+
         public string GetUserDir(string key)
         {
             string sk = "";
@@ -297,17 +401,7 @@ namespace RTParser
                     sk += s;
             }
             lock (ListUserDirs)
-            {
-                try
-                {
-                    return GetUserDir0(sk);
-                }
-                catch (Exception e)
-                {
-                    writeToLog(e);
-                    return null;                    
-                }
-            }
+                return UserOper(() => GetUserDir0(key), QuietLogger);
         }
         private string GetUserDir0(string key)
         {
@@ -317,7 +411,7 @@ namespace RTParser
             {
                 return luserDir;
             }
-            string k1 =  key.Replace("_", " ");
+            string k1 = key.Replace("_", " ");
             foreach (var fsn in HostSystem.GetDirectories(PathToUserDir))
             {
                 string s = fsn;
@@ -327,7 +421,7 @@ namespace RTParser
                 }
                 if (s.StartsWith("/"))
                 {
-                    s = s.Substring(1); 
+                    s = s.Substring(1);
                 }
                 if (s.StartsWith("\\"))
                 {
@@ -363,7 +457,12 @@ namespace RTParser
 
         public User ChangeUser(string oldname, string newname)
         {
-            lock (BotUsers)
+            return UserOper(() => ChangeUser0(oldname, newname), QuietLogger);
+        }
+
+        public User ChangeUser0(string oldname, string newname)
+        {
+            //lock (BotUsers)
             {
                 oldname = oldname ?? LastUser.UserName;
                 oldname = CleanupFromname(oldname);
@@ -377,7 +476,7 @@ namespace RTParser
                 User newuser = FindUser(newkey);
                 User olduser = FindUser(oldname);
 
-                writeToLog("USERTRACE: ChangeUser " + oldname + " -> " + newname);
+                writeToUserLog("ChangeUser " + oldname + " -> " + newname);
 
                 WriteUserInfo(writeToLog, " olduser='" + oldname + "' ", olduser);
                 WriteUserInfo(writeToLog, " newuser='" + newname + "' ", newuser);
@@ -386,18 +485,18 @@ namespace RTParser
                 {
                     if (newuser == null)
                     {
-                        writeToLog("USERTRACE: Neigther acct found so creating clean: " + newname);
+                        writeToUserLog("Neigther acct found so creating clean: " + newname);
                         newuser = FindOrCreateUser(newname);
                         LastUser = newuser;
                         return newuser;
                     }
                     if (newuser.IsRoleAcct)
                     {
-                        writeToLog("USERTRACE: User acct IsRole: " + newname);
+                        writeToUserLog("User acct IsRole: " + newname);
                         newuser.UserName = newname;
                         return newuser;
                     }
-                    writeToLog("USERTRACE: User acct found: " + newname);
+                    writeToUserLog("User acct found: " + newname);
                     newuser = FindOrCreateUser(newname);
                     LastUser = newuser;
                     return newuser;
@@ -405,7 +504,7 @@ namespace RTParser
 
                 if (newuser == olduser)
                 {
-                    writeToLog("USERTRACE: Same accts found: " + newname);
+                    writeToUserLog("Same accts found: " + newname);
                     LastUser.UserName = newname;
                     LastUser = newuser;
                     return newuser;
@@ -418,11 +517,11 @@ namespace RTParser
                     {
                         if (olduser.IsRoleAcct)
                         {
-                            writeToLog("USERTRACE: both acct are RoleAcct .. normaly shouldnt happen but just qa boring switchusers ");
+                            writeToUserLog("both acct are RoleAcct .. normaly shouldnt happen but just qa boring switchusers ");
                             LastUser = newuser;
                             return newuser;
                         }
-                        writeToLog("USERTRACE: New acct is RoleAcct .. so rebuilding: " + newkey);
+                        writeToUserLog("New acct is RoleAcct .. so rebuilding: " + newkey);
                         // remove old "new" acct from dict
                         BotUsers.Remove(newkey);
                         // kill its timer!
@@ -433,9 +532,9 @@ namespace RTParser
                     }
                     else
                     {
-                        writeToLog("USERTRACE: old acct is just some other user so just switching to: " + newname);
+                        writeToUserLog("old acct is just some other user so just switching to: " + newname);
                         newuser = FindOrCreateUser(newname);
-// maybe                olduser.Predicates.AddMissingKeys(newuser.Predicates); 
+                        // maybe                olduser.Predicates.AddMissingKeys(newuser.Predicates); 
                         LastUser = newuser;
                         return newuser;
                     }
@@ -444,7 +543,7 @@ namespace RTParser
                 {
                     if (olduser.IsRoleAcct)
                     {
-                        writeToLog("USERTRACE: Copying old RoleAcct .. and making new: " + newuser);
+                        writeToUserLog("Copying old RoleAcct .. and making new: " + newuser);
                         // remove old acct from dict
                         BotUsers.Remove(oldkey);
                         // grab it into new user
@@ -452,7 +551,7 @@ namespace RTParser
                         BotUsers[newkey] = newuser;
                         newuser.IsRoleAcct = false;
                         GraphMaster g = GetUserGraph(newkey);
-                        g.AddGenlMT(GraphMaster);
+                        g.AddGenlMT(GraphMaster, writeToLog);
                         newuser.ListeningGraph = g;
                         newuser.UserID = newkey;
                         newuser.UserName = newname;
@@ -463,24 +562,28 @@ namespace RTParser
                     }
                     else
                     {
-                        writeToLog("USERTRACE: old acct is just some other user so just creating: " + newname);
+                        writeToUserLog("old acct is just some other user so just creating: " + newname);
                         newuser = FindOrCreateUser(newname);
                         LastUser = newuser;
                         return newuser;
                     }
                 }
 
-                writeToLog("USERTRACE: ERROR, Totally lost so using FindOrCreate and switching to: " + newname);
+                writeToUserLog("ERROR, Totally lost so using FindOrCreate and switching to: " + newname);
                 newuser = FindOrCreateUser(newname);
                 LastUser = newuser;
                 return newuser;
             }
         }
 
-
         public User RenameUser(string oldname, string newname)
         {
-            lock (BotUsers)
+            return UserOper(() => RenameUser0(oldname, newname), QuietLogger);
+        }
+
+        public User RenameUser0(string oldname, string newname)
+        {
+            //lock (BotUsers)
             {
                 oldname = oldname ?? LastUser.UserName;
                 oldname = CleanupFromname(oldname);
@@ -493,24 +596,24 @@ namespace RTParser
 
                 User newuser = FindUser(newkey);
                 User olduser = FindUser(oldname);
-                if (olduser==null)
+                if (olduser == null)
                 {
-                    writeToLog("USERTRACE: Neigther acct found so creating clean: " + newname);
+                    writeToUserLog("Neigther acct found so creating clean: " + newname);
                     newuser = FindOrCreateUser(newname);
                     newuser.LoadDirectory(GetUserDir(oldkey));
                     return newuser;
                 }
-                
+
                 if (newuser == olduser)
                 {
-                    writeToLog("USERTRACE: Same accts found: " + newname);
+                    writeToUserLog("Same accts found: " + newname);
                     LastUser.UserName = newname;
                     return newuser;
                 }
 
                 if (newuser != null)
                 {
-                    writeToLog("USERTRACE: both users exists: " + newname);
+                    writeToUserLog("both users exists: " + newname);
                     // remove old acct from dict
                     BotUsers.Remove(oldkey);
                     // grab it into new user
@@ -528,7 +631,7 @@ namespace RTParser
                     return newuser;
                 }
 
-                writeToLog("USERTRACE: Copying old user .. and making new: " + newuser);
+                writeToUserLog("Copying old user .. and making new: " + newuser);
                 // remove old acct from dict
                 BotUsers.Remove(oldkey);
                 // grab it into new user
@@ -546,7 +649,7 @@ namespace RTParser
 
 
 
-                writeToLog("USERTRACE: ChangeUser " + oldname + " -> " + newname);
+                writeToUserLog("ChangeUser " + oldname + " -> " + newname);
 
                 WriteUserInfo(writeToLog, " olduser='" + oldname + "' ", olduser);
                 WriteUserInfo(writeToLog, " newuser='" + newname + "' ", newuser);
@@ -555,24 +658,24 @@ namespace RTParser
                 {
                     if (newuser == null)
                     {
-                        writeToLog("USERTRACE: Neigther acct found so creating clean: " + newname);
+                        writeToUserLog("Neigther acct found so creating clean: " + newname);
                         newuser = FindOrCreateUser(newname);
                         return newuser;
                     }
                     if (newuser.IsRoleAcct)
                     {
-                        writeToLog("USERTRACE: User acct IsRole: " + newname);
+                        writeToUserLog("User acct IsRole: " + newname);
                         newuser.UserName = newname;
                         return newuser;
                     }
-                    writeToLog("USERTRACE: User acct found: " + newname);
+                    writeToUserLog("User acct found: " + newname);
                     newuser = FindOrCreateUser(newname);
                     return newuser;
                 }
 
                 if (newuser == olduser)
                 {
-                    writeToLog("USERTRACE: Same accts found: " + newname);
+                    writeToUserLog("Same accts found: " + newname);
                     LastUser.UserName = newname;
                     return newuser;
                 }
@@ -584,11 +687,10 @@ namespace RTParser
                     {
                         if (olduser.IsRoleAcct)
                         {
-                            writeToLog(
-                                "USERTRACE: both acct are RoleAcct .. normaly shouldnt happen but just qa boring switchusers ");
+                            writeToUserLog("both acct are RoleAcct .. normaly shouldnt happen but just qa boring switchusers ");
                             return newuser;
                         }
-                        writeToLog("USERTRACE: New acct is RoleAcct .. so rebuilding: " + newkey);
+                        writeToUserLog("New acct is RoleAcct .. so rebuilding: " + newkey);
                         // remove old "new" acct from dict
                         BotUsers.Remove(newkey);
                         // kill its timer!
@@ -598,7 +700,7 @@ namespace RTParser
                     }
                     else
                     {
-                        writeToLog("USERTRACE: old acct is just some other user so just switching to: " + newname);
+                        writeToUserLog("old acct is just some other user so just switching to: " + newname);
                         newuser = FindOrCreateUser(newname);
                         return newuser;
                     }
@@ -607,7 +709,7 @@ namespace RTParser
                 {
                     if (olduser.IsRoleAcct)
                     {
-                        writeToLog("USERTRACE: Copying old RoleAcct .. and making new: " + newuser);
+                        writeToUserLog("Copying old RoleAcct .. and making new: " + newuser);
                         // remove old acct from dict
                         BotUsers.Remove(oldkey);
                         // grab it into new user
@@ -615,7 +717,7 @@ namespace RTParser
                         BotUsers[newkey] = newuser;
                         newuser.IsRoleAcct = false;
                         graph = GetUserGraph(newkey);
-                        newuser.ListeningGraph = graph; 
+                        newuser.ListeningGraph = graph;
                         newuser.UserID = newkey;
                         newuser.UserName = newname;
                         newuser.SyncDirectory(GetUserDir(newkey));
@@ -625,13 +727,13 @@ namespace RTParser
                     }
                     else
                     {
-                        writeToLog("USERTRACE: old acct is just some other user so just creating: " + newname);
+                        writeToUserLog("old acct is just some other user so just creating: " + newname);
                         newuser = FindOrCreateUser(newname);
                         return newuser;
                     }
                 }
 
-                writeToLog("USERTRACE: ERROR, Totally lost so using FindOrCreate and switching to: " + newname);
+                writeToUserLog("ERROR, Totally lost so using FindOrCreate and switching to: " + newname);
                 newuser = FindOrCreateUser(newname);
                 return newuser;
             }
@@ -640,7 +742,7 @@ namespace RTParser
         public static bool IsRoleAcctName(string fullname)
         {
             if (UnknowableName(fullname)) return true;
-            if (fullname==null) return true;
+            if (fullname == null) return true;
             fullname = fullname.ToLower();
             return fullname.Contains("global") || fullname.Contains("heard");
         }
@@ -653,7 +755,12 @@ namespace RTParser
 
         public bool IsExistingUsername(string fullname)
         {
-            lock (BotUsers)
+            return UserOper(() => IsExistingUsername0(fullname), QuietLogger);
+        }
+
+        public bool IsExistingUsername0(string fullname)
+        {
+            //lock (BotUsers)
             {
                 fullname = CleanupFromname(fullname);
                 if (null == fullname)
@@ -670,7 +777,7 @@ namespace RTParser
                 if (BotUsers.TryGetValue(key, out user))
                 {
                     if (user.UserID == key || user.UserID == fromname) return true;
-                    writeToLog("USERTRACE WARNING! {0} => {1} <= {2}", fromname, key, user.UserID);
+                    writeToLog("WARNING! {0} => {1} <= {2}", fromname, key, user.UserID);
                     return true;
                 }
                 return false;

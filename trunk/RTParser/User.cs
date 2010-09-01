@@ -652,11 +652,21 @@ namespace RTParser
             return true;
         }
 
+        internal OutputDelegate userTrace;
         public void WriteLine(string s, params object[] objects)
         {
             try
             {
-                bot.writeToLog("USERTRACE: {0} {1}", UserName ?? UserID, string.Format(s, objects));
+                s = string.Format("{0} {1}", UserName ?? UserID, string.Format(s, objects));
+                if (s.ToUpper().Contains("ERROR"))
+                {
+                    bot.writeToLog(s, objects);
+                } if (userTrace != null)
+                {
+                    userTrace(s);
+                    return;
+                }
+                bot.writeToUserLog(s);
             }
             catch (Exception exception)
             {

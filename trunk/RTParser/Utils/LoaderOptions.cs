@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Xml;
 
 namespace RTParser.Utils
 {
@@ -12,6 +13,7 @@ namespace RTParser.Utils
         public bool recurse;
         public string _currently_loadingfrom;
         private GraphMaster _specified_Graph;
+        public List<XmlNode> AdditionalPreconditions = null;
         public GraphMaster CtxGraph
         {
             get
