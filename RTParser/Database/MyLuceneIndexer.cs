@@ -359,14 +359,14 @@ namespace RTParser.Database
 
         public void assertTriple(string subject, string relation, string value)
         {
-            writeToLog("assertTriple ({0}, {1}, {2}",subject,relation,value);
+            writeToLog("assertTriple {0}, {1}, {2}",subject,relation,value);
             string factoidSRV = String.Format("{0} {1} is {2}", subject, relation, value);
             Insert(factoidSRV);
         }
 
         public void retractTriple(string subject, string relation, string value)
         {
-            writeToLog("retractTriple ({0}, {1}, {2}", subject, relation, value);
+            writeToLog("retractTriple {0}, {1}, {2}", subject, relation, value);
             string factoidSRV = String.Format("{0} {1} is {2}", subject, relation, value);
             DeleteTopScoring(factoidSRV);
 
@@ -374,7 +374,7 @@ namespace RTParser.Database
 
         public void updateTriple(string subject, string relation, string value)
         {
-            writeToLog("updateTriple ({0}, {1}, {2}", subject, relation, value);
+            writeToLog("updateTriple {0}, {1}, {2}", subject, relation, value);
             string factoidSR = String.Format("{0} {1}", subject, relation, value);
             string factoidSRV = String.Format("{0} {1} is {2}", subject, relation, value);
             DeleteTopScoring(factoidSR);
@@ -383,7 +383,7 @@ namespace RTParser.Database
 
         public String queryTriple(string subject, string relation)
         {
-            writeToLog("queryTriple ({0}, {1}, {2}", subject, relation, "WHAT");
+            writeToLog("queryTriple {0}, {1}, {2}", subject, relation);
             string factoidSR = String.Format("{0} {1} is", subject, relation);
            // DeleteTopScoring(factoidSR);
           //  Insert(factoidSRV);
@@ -435,8 +435,7 @@ namespace RTParser.Database
                     }
                     Unifiable converseMemo = reply.Trim();
                     dbgLog(" reply = {0}", reply);
-
-                    //Unifiable converseMemo = this.user.bot.conversationStack.Pop();
+                    
                     return converseMemo;
                 }
                 else
