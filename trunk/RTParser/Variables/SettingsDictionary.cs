@@ -397,8 +397,8 @@ namespace RTParser.Variables
             {
                 returnNameWhenSet = returnNameWhenSet.Trim();
                 if (returnNameWhenSet.Length == 0) returnNameWhenSet = "false";
-                else if (IsFalseOrNo(returnNameWhenSet)) returnNameWhenSet = "value";
-                else if (IsrueOrYes(returnNameWhenSet)) returnNameWhenSet = "name";
+                else if (Unifiable.IsFalseOrNo(returnNameWhenSet)) returnNameWhenSet = "value";
+                else if (Unifiable.IsTrueOrYes(returnNameWhenSet)) returnNameWhenSet = "name";
             }
             returnNameWhenSet =
                 RTPBot.GetAttribValue(myNode, "set-return", returnNameWhenSet);
@@ -453,17 +453,6 @@ namespace RTParser.Variables
                 dict.updateSetting(name, new StringUnifiable(value));
                 dict.IsTraced = wasTracing;
             }
-        }
-
-        private static bool IsFalseOrNo(string tst)
-        {
-            tst = tst.ToUpper().Trim();
-            return (tst == "NO" || tst == "" || tst == "N" || tst == "FALSE" || tst == "F" || tst == "NIL");
-        }
-        private static bool IsrueOrYes(string tst)
-        {
-            tst = tst.ToUpper().Trim();
-            return (tst == "YES" || tst == "Y" || tst == "TRUE" || tst == "T");
         }
 
         static public void loadSettingNode(ISettingsDictionary dict, XmlNode myNode, bool overwriteExisting, bool onlyIfUnknown, Request request)
