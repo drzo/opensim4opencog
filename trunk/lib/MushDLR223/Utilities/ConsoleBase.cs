@@ -1212,11 +1212,13 @@ namespace MushDLR223.Utilities
                     for (int i = 0; i < st.Length; i++)
                     {
                         StackFrame s = st[i];
-                        var m = s.GetMethod();
+                        var m = s.GetMethod();                        
                         if (m != null)
                         {
-                            Type caller = m.ReflectedType ?? m.DeclaringType;
+                            MemberInfo caller = m.ReflectedType ?? m.DeclaringType;
                             if (caller == null) continue;
+                            caller = ResolveType(m);
+
                             lock (TransparentCallers) if (TransparentCallers.Contains(caller)) continue;
                             lock (OpacheCallers) if (OpacheCallers.Contains(caller)) return CallerName(s);
                         }
@@ -1238,12 +1240,26 @@ namespace MushDLR223.Utilities
                 //if (str.StartsWith("get_")) str = str.Substring(4);
                 //else if (str.StartsWith("set_")) str = str.Substring(4);
 
-                str = frame.GetMethod().DeclaringType.Name;// +"_" + str;
-
+                MemberInfo type = frame.GetMethod();// +"_" + str;                   
+                type = ResolveType(type);
+                str = type.Name;
                 if (!string.IsNullOrEmpty(str)) return str.ToUpper();
             }
             var mo = frame.GetFileName() +"_"+ frame.GetFileLineNumber();
             return str;
+        }
+
+        private static MemberInfo ResolveType(MemberInfo type)
+        {
+            while (type.DeclaringType != null && type.DeclaringType != type)
+            {
+                type = type.DeclaringType;
+            }
+            while (type.ReflectedType != null && type.ReflectedType != type)
+            {
+                type = type.ReflectedType;
+            }
+            return type;
         }
 
         internal static void SystemWrite0(string format, params object[] args)
@@ -1271,7 +1287,7 @@ namespace MushDLR223.Utilities
 
         static readonly HashSet<TextWriter> _outputs = new HashSet<TextWriter>();
 
-        public static readonly HashSet<Type> TransparentCallers = new HashSet<Type>()
+        public static readonly HashSet<MemberInfo> TransparentCallers = new HashSet<MemberInfo>()
                                                                       {
                                                                           typeof (OpenSimAppender),
                                                                           typeof (DLRConsole),
@@ -1280,7 +1296,7 @@ namespace MushDLR223.Utilities
                                                                           typeof (TextFilter),
                                                                       };
 
-        public static readonly HashSet<Type> OpacheCallers = new HashSet<Type>()
+        public static readonly HashSet<MemberInfo> OpacheCallers = new HashSet<MemberInfo>()
                                                               {
                                                               };
 
