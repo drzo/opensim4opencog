@@ -185,7 +185,16 @@ namespace RTParser.Utils
         public Unifiable grabSetting(string name)
         {
             string realName;
-            var v = SettingsDictionary.grabSettingDefualt(Request.TargetSettings, name, out realName); 
+            ISettingsDictionary dict = Request.TargetSettings;
+            bool succeed;
+            Unifiable v;
+            if (!NamedValuesFromSettings.UseLuceneForGet)
+                v = SettingsDictionary.grabSettingDefaultDict(dict, name, out realName);
+            else
+            {
+                v = NamedValuesFromSettings.GetSettingForType(dict.NameSpace, this, dict, name, out realName, name, null,
+                                                              out succeed, null);
+            }
             return v;
         }
 
@@ -198,7 +207,19 @@ namespace RTParser.Utils
         /// <param name="value">The value associated with this setting</param>
         public bool addSetting(string name, Unifiable value)
         {
-            return Request.addSetting(name, value);
+            if (!NamedValuesFromSettings.UseLuceneForSet)
+            {
+                return Request.addSetting(name, value);
+            }
+            else
+            {
+                string realName;
+                ISettingsDictionary dict = Request.TargetSettings;
+                bool succeed;
+                NamedValuesFromSettings.SetSettingForType(dict.NameSpace, this, dict, name, null, value, null);
+                return true;
+            }
+
         }
 
         public SubQuery CopyOf()

@@ -13,6 +13,11 @@ namespace RTParser.Utils
     /// </summary>
     abstract public class TextTransformer
     {
+        public virtual float CallCanUnify(Unifiable with)
+        {
+            return InputString == with ? Unifiable.UNIFY_TRUE : Unifiable.UNIFY_FALSE;
+        }
+
         #region Attributes
         /// <summary>
         /// Instance of the input Unifiable

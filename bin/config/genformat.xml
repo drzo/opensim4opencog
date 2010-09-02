@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Exxmplae Genformat for the system -->
+<root filename="genformat.xml">
+  <!-- format "false" like this implies that we cannot anglify it -->
+  <item name="he" lucene="false" whword="who"/>
+  <item name="she" lucene="false"/>
+  <item name="it" lucene="false"/>
+  <item name="topic" lucene="false" whword="what"/>
+  <item name="favorite" lucene="false"/>
+  <!-- full format for query and assert -->
+  <item name="birthday" format="$subject birthday is on $value" whword="when"/>
+  <item name="emotion" format="$bot feels $value emotion towards $subject"/>
+  <!-- default format ( same as = "default" )-->
+  <item name="age" format="$subject age is $value" whword="what"/>
+  <!-- "assert | query" mode -->
+  <item name="doing" format="$subject is doing $value | what is $subject doing" whword="what"/>
+  <item name="going" assert="$subject is going to $value" query="where is $subject going" whword="where" />
+</root>

@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Xml;
 using RTParser.AIMLTagHandlers;
+using RTParser.Database;
 using RTParser.Variables;
 //using LineInfoElement = System.Xml.XmlNode;
 using LineInfoElement = RTParser.Utils.LineInfoElementImpl;
@@ -35,9 +36,44 @@ namespace RTParser.Utils
         }
 
         /// <summary>
-        /// Attributes that we use from AIML not intended to be stacked nto user dictionary
+        /// Attributes that we use from AIML not intended to be stacked into user dictionary
         /// </summary>
-        public static ICollection<string> ReservedAttributes = new HashSet<string> { };
+        public static ICollection<string> ReservedAttributes =
+            new HashSet<string>
+                {
+                    "name",
+                    "var",
+                    "index",
+                    "default",
+                    "defaultValue",
+                    "match",
+                    "user",
+                    "bot",
+                    "value",
+                    "type",
+                    "value",
+                    "id",
+                    "graph",
+                    "size",
+                    "evidence",
+                    "prop",
+                    "min",
+                    "max",
+                    "threshold",
+                    "to",
+                    "from",
+                    "max",
+                    "wordnet",
+                    "whword",
+                    "pos",
+                    "constant",
+                    "id",
+                };
+
+        public static ICollection<string> PushableAttributes = new HashSet<string>()
+                                                                   {
+
+                                                                   };
         public bool IsStarted = false;
         protected RTPBot TargetBot
         {
@@ -180,24 +216,29 @@ namespace RTParser.Utils
 
                             }
                             break;
-                        case "name":
-                            continue;
-                        case "index":
-                            continue;
-                        case "default":
-                            continue;
-                        case "match":
-                            continue;
-                        case "value":
-                            continue;
 
                         default:
                             {
 
                                 string n = node.Name;
-                                if (ReservedAttributes.Contains(n))
+                                lock (ReservedAttributes)
                                 {
-                                    continue;
+                                    if (ReservedAttributes.Contains(n))
+                                        continue;
+
+                                    if (!dict.containsSettingCalled(n))
+                                    {
+                                        ReservedAttributes.Add(n);
+                                        request.writeToLog("ReservedAttributes: {0}", n);
+                                    }
+                                    else
+                                    {
+                                        if (!PushableAttributes.Contains(n))
+                                        {
+                                            PushableAttributes.Add(n);
+                                            request.writeToLog("PushableAttributes: {0}", n);
+                                        }
+                                    }
                                 }
                                 Unifiable v = (Unifiable)ReduceStar(node.Value, query, dict);
                                 UndoStack.FindUndoAll(thiz);
@@ -293,6 +334,20 @@ namespace RTParser.Utils
             float score2 = t2.Unify(with, query);
             if (score2 == 0) return score2;
             return (score1 < score2) ? score1 : score2;
+        }
+
+        sealed public override float CallCanUnify(Unifiable with)
+        {
+            bool prev = NamedValuesFromSettings.UseLuceneForGet;
+            try
+            {
+                NamedValuesFromSettings.UseLuceneForGet = false;
+                return CanUnify(with);
+            }
+            finally
+            {
+                NamedValuesFromSettings.UseLuceneForGet = prev;                
+            }
         }
 
         protected Unifiable Failure(string p)
@@ -738,6 +793,27 @@ namespace RTParser.Utils
             }
             //writeToLog("CheckNode change " + name + " -> " + templateNode.Name);
             return true;
+        }
+
+        protected Unifiable GetActualValue(string name, bool preferBotOverUser, out bool succeed)
+        {
+            ISettingsDictionary dict = query;
+            Unifiable defaultVal = GetAttribValue("default,defaultValue", Unifiable.Empty);
+            string dictName = GetDictName("type,dict");
+            if (dictName == null)
+            {
+                dictName = preferBotOverUser ? "bot" : "user";
+            }
+            if (preferBotOverUser)
+            {
+                dict = request.TargetBot.GlobalSettings;
+            }
+            Unifiable gName = GetAttribValue("global_name", name);
+            string realName;
+            Unifiable v = NamedValuesFromSettings.GetSettingForType(
+                dictName, query, dict, name, out realName,
+                gName, defaultVal, out succeed, templateNode);
+            return v;
         }
     }
 }

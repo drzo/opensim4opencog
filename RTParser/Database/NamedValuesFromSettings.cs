@@ -11,7 +11,9 @@ namespace RTParser.Database
 {
     public class NamedValuesFromSettings
     {
-        static public Unifiable GetSettingForType(string type, SubQuery query, ISettingsDictionary dict, string name, string gName, Unifiable defaultVal, out bool succeed, XmlNode node)
+        static public bool UseLuceneForGet = true;
+        static public bool UseLuceneForSet = true;
+        static public Unifiable GetSettingForType(string type, SubQuery query, ISettingsDictionary dict, string name, out string realName, string gName, Unifiable defaultVal, out bool succeed, XmlNode node)
         {
             Request request = query.Request;
             RTPBot TargetBot = request.TargetBot;
@@ -23,8 +25,7 @@ namespace RTParser.Database
             gName = RTPBot.GetAttribValue(node, "global_name", gName);
 
             succeed = false;
-            string realName;
-            Unifiable resultGet = SettingsDictionary.grabSettingDefualt(udict, name, out realName);
+            Unifiable resultGet = SettingsDictionary.grabSettingDefaultDict(udict, name, out realName);
 
             if (ReferenceEquals(resultGet, null))
             {
@@ -33,7 +34,7 @@ namespace RTParser.Database
             // if ((!String.IsNullOrEmpty(result)) && (!result.IsWildCard())) return result; // we have a local one
 
             // try to use a global blackboard predicate
-            Unifiable gResult = SettingsDictionary.grabSettingDefualt(gUser.Predicates, gName, out realName);
+            Unifiable gResult = SettingsDictionary.grabSettingDefaultDict(gUser.Predicates, gName, out realName);
 
             if ((Unifiable.IsUnknown(resultGet)) && (!Unifiable.IsUnknown(gResult)))
             {
@@ -44,9 +45,9 @@ namespace RTParser.Database
             string sresultGet = resultGet.ToValue(query);
 
             // if Unknown or empty
-            if (Unifiable.IsUnknown(sresultGet))
+            if (UseLuceneForGet && Unifiable.IsUnknown(sresultGet))
             {
-                Unifiable userName = dict.grabSetting("username");
+                Unifiable userName = dict.grabSetting("userid");
                 string resultLucene = query.Request.TargetBot.LuceneIndexer.queryTriple(userName, name, node);
                 if (!string.IsNullOrEmpty(resultLucene))
                 {
@@ -61,7 +62,7 @@ namespace RTParser.Database
             }
             if (!String.IsNullOrEmpty(sresultGet))
             {
-                if (!String.IsNullOrEmpty(gResult))
+                if (!Unifiable.IsNullOrEmpty(gResult))
                 {
                     // result=*, gResult=something => return gResult
                     if (resultGet.IsWildCard()) return gResult;
@@ -94,19 +95,19 @@ namespace RTParser.Database
             RTParser.User gUser = TargetBot.ExemplarUser;
 
             string realName;
-            Unifiable resultGet = SettingsDictionary.grabSettingDefualt(udict, name, out realName);
+            Unifiable resultGet = SettingsDictionary.grabSettingDefaultDict(udict, name, out realName);
 
             if (value.IsEmpty)
             {
                 User user = query.CurrentUser;
-                user.bot.LuceneIndexer.retractAllTriple(user.UserName, name);
+                if (UseLuceneForSet) user.bot.LuceneIndexer.retractAllTriple(user.UserName, name);
                 if (!String.IsNullOrEmpty(gName)) gUser.Predicates.removeSetting(gName);
                 udict.removeSetting(name);
             }
             else
             {
                 User user = query.CurrentUser;
-                user.bot.LuceneIndexer.updateTriple(user.UserName, name, value);
+                if (UseLuceneForSet) user.bot.LuceneIndexer.updateTriple(user.UserName, name, value);
                 if (!String.IsNullOrEmpty(gName)) gUser.Predicates.addSetting(gName, value);
                 udict.addSetting(name, value);
 
@@ -130,7 +131,7 @@ namespace RTParser.Database
             if (defRet == "name") return name;
             if (defRet == "value")
             {
-                Unifiable resultGet = SettingsDictionary.grabSettingDefualt(dict, name, out realName);
+                Unifiable resultGet = SettingsDictionary.grabSettingDefaultDict(dict, name, out realName);
                 return resultGet;
             }
             return setReturn;

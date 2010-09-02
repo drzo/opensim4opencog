@@ -376,7 +376,7 @@ namespace RTParser
         {
             if (str==null)
             {
-                writeToLog("ERROR NULL.Tirm()!!");
+                if (DebugNulls) writeToLog("ERROR NULL.Tirm()!!");
                 return NULL;
             }
             string str2 = AIMLLoader.CleanWhitepaces(str);
@@ -388,7 +388,8 @@ namespace RTParser
         {
             if (str==null)
             {
-                return " -U-NULL- ";
+                if (DebugNulls) writeToLog("ERROR AsString  -U-NULL- !! DEBUG9");
+                return null;
             }
             return str;
         }
@@ -428,7 +429,7 @@ namespace RTParser
         {
             if (str == null)
             {
-                writeToLog("ToSTring=NULL");
+                if (DebugNulls) writeToLog("ToSTring=NULL");
                 return null;
             }
             return str;
@@ -589,6 +590,7 @@ namespace RTParser
         }
 
         readonly static char[] BRKCHARS = " \r\n\t".ToCharArray();
+        public static bool DebugNulls;
 
         public override Unifiable First()
         {
@@ -728,9 +730,18 @@ namespace RTParser
                     return false;
                 }
             }
-            if (UniifyPath0(at, tokens, tokenLen, ovs, newAt, minLen, query, out after))
+            bool prev = NamedValuesFromSettings.UseLuceneForGet;
+            try
             {
-                return true;
+                NamedValuesFromSettings.UseLuceneForGet = false;
+                if (UniifyPath0(at, tokens, tokenLen, ovs, newAt, minLen, query, out after))
+                {
+                    return true;
+                }
+            }
+            finally
+            {
+                NamedValuesFromSettings.UseLuceneForGet = prev;
             }
             if (MustBeFast) return false;
 
@@ -892,7 +903,7 @@ namespace RTParser
                 }
                 valueCache = ToValue(query);
                 var tagHandler = GetTagHandler(query);
-                if (tagHandler.CanUnify(ov) == UNIFY_TRUE)
+                if (tagHandler.CallCanUnify(ov) == UNIFY_TRUE)
                 {
                     writeToLog("UnifyLazy: SUCCEED" + ov + " in " + query);
                     return true;

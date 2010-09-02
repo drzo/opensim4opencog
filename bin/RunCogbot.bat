@@ -1,3 +1,9 @@
+
+echo killing lucene database
+del /s lucenedb\*.*
+echo killing users databases
+rd aiml\users /s
+
 del *.bak /s
 
 setlocal

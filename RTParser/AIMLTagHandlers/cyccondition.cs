@@ -2,6 +2,7 @@ using System;
 using System.Xml;
 using System.Text;
 using System.Text.RegularExpressions;
+using RTParser.Database;
 using RTParser.Variables;
 
 namespace RTParser.AIMLTagHandlers
@@ -151,10 +152,8 @@ namespace RTParser.AIMLTagHandlers
                                 {
                                     if (childLINode.Attributes[0].Name.ToLower() == "value")
                                     {
-                                        ISettingsDictionary dict = query;
-                                        if (GetAttribValue("type", "") == "bot") dict = request.TargetBot.GlobalSettings;
-                                        string realName;
-                                        Unifiable actualValue = SettingsDictionary.grabSettingDefualt(dict, name, out realName);
+                                        bool succeed;
+                                        Unifiable actualValue = base.GetActualValue(name, false, out succeed);
                                         Unifiable value = GetAttribValue(childLINode, "value", EmptyFunct, query);
                                         if (IsPredMatch(value, actualValue, query))
                                         {
@@ -186,11 +185,8 @@ namespace RTParser.AIMLTagHandlers
                                 Unifiable value = GetAttribValue(childLINode, "value", EmptyFunct, query);
                                 if ((name.Length > 0) & (!value.IsEmpty))
                                 {
-                                    ISettingsDictionary dict = query;
-                                    if (GetAttribValue("type", "") == "bot") dict = request.TargetBot.GlobalSettings;
-                                    string realName;
-                                    Unifiable actualValue = SettingsDictionary.grabSettingDefualt(dict, name,
-                                                                                                  out realName);
+                                    bool succeed;
+                                    Unifiable actualValue = base.GetActualValue(name, false, out succeed);
                                     if (IsPredMatch(value, actualValue, query))
                                     {
                                         Succeed();

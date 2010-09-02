@@ -981,12 +981,13 @@ namespace RTParser
             thiz.InputSubstitutions.loadSettings(HostSystemCombine(pathToSettings, "substitutions.xml"), request);
 
 
-
             // Grab the splitters for this Proccessor
             thiz.loadSplitters(HostSystemCombine(pathToSettings, GlobalSettings.grabSetting("splittersfile")));
             thiz.loadSplitters(HostSystemCombine(pathToSettings, GlobalSettings.grabSetting("sentence-splitters")));
             thiz.loadSplitters(HostSystemCombine(pathToSettings, "sentence-splitters.xml"));
 
+            // pred-format
+            thiz.SetRelationFormat.loadSettings(HostSystemCombine(pathToSettings, "pred-format.xml"), request);
 
 
             var guser = thiz.FindUser("globalPreds");
@@ -4005,7 +4006,7 @@ The AIMLbot program.
             set { throw new NotImplementedException(); }
         }
 
-        public string BotID
+        public string UserID
         {
             get
             {
@@ -4013,8 +4014,17 @@ The AIMLbot program.
                 if (dict != null)
                 {
                     var botid = dict.grabSettingNoDebug("id");
+                    return botid;
                 }
-                return "-BOT-ID-NULL-";
+                return null;
+            }
+        }
+
+        public string BotID
+        {
+            get
+            {
+                return UserID??"-BOT-ID-NULL-";
             }
             set { throw new NotImplementedException(); }
         }

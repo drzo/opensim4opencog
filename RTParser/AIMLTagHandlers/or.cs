@@ -49,7 +49,7 @@ namespace RTParser.AIMLTagHandlers
                             return ((" " + childNode.InnerText + " ").ToUpper().Contains(srch)) ? OR_TRUE : OR_FALSE;
                         }
                         AIMLTagHandler part = GetChildTagHandler(childNode);
-                        float rate1 = part.CanUnify(with);
+                        float rate1 = part.CallCanUnify(with);
                         if (rate1 == Unifiable.UNIFY_TRUE)
                         {
                             return rate1 + OR_TRUE;

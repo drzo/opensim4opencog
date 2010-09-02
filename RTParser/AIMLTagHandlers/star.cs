@@ -104,7 +104,7 @@ namespace RTParser.AIMLTagHandlers
                                            : STAR_FALSE;
                             }
                             AIMLTagHandler part = GetChildTagHandler(childNode);
-                            if (part.CanUnify(with) > 0) return STAR_FALSE;
+                            if (part.CallCanUnify(with) > 0) return STAR_FALSE;
                         }
                         catch (Exception e)
                         {

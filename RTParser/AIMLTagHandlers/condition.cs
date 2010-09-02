@@ -152,12 +152,8 @@ namespace RTParser.AIMLTagHandlers
                                 {
                                     if (AttributesCount(childLINode, "value") == 1)
                                     {
-                                        ISettingsDictionary dict = query;
-                                        if (GetAttribValue("type", "") == "bot")
-                                            dict = request.TargetBot.GlobalSettings;
-                                        string realName;
-                                        Unifiable actualValue = SettingsDictionary.grabSettingDefualt(dict, name,
-                                                                                                      out realName);
+                                        bool succeed;
+                                        Unifiable actualValue = base.GetActualValue(name, false, out succeed);
                                         Unifiable value = GetAttribValue(childLINode, "value", EmptyFunct, query);
                                         if (IsPredMatch(value, actualValue, query))
                                         {
@@ -191,11 +187,8 @@ namespace RTParser.AIMLTagHandlers
                                 Unifiable value = GetAttribValue(childLINode, "value", EmptyFunct, query);
                                 if ((name.Length > 0) & (!value.IsEmpty))
                                 {
-                                    ISettingsDictionary dict = query;
-                                    if (GetAttribValue("type", "") == "bot") dict = request.TargetBot.GlobalSettings;
-                                    string realName;
-                                    Unifiable actualValue = SettingsDictionary.grabSettingDefualt(dict, name,
-                                                                                                  out realName);
+                                    bool succeed;
+                                    Unifiable actualValue = base.GetActualValue(name, false, out succeed);
                                     if (IsPredMatch(value, actualValue, query))
                                     {
                                         Succeed();

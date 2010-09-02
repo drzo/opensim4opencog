@@ -207,8 +207,8 @@ namespace RTParser.AIMLTagHandlers
                         return Unifiable.Empty;
                     }
                     string realName;
-                    Unifiable actualValue = SettingsDictionary.grabSettingDefualt(dict, varname,
-                                                                                  out realName);
+                    bool succeed;
+                    Unifiable actualValue = base.GetActualValue(name, false, out succeed);
                     if (IsPredMatch(value, actualValue, query))
                     {
                         return Succeed();
