@@ -263,6 +263,34 @@ namespace RTParser.Utils
                         request.LoadOptions = savedOpt;
                     }
                 }
+                else
+                {
+                    string[] pathnames = HostSystem.GetFiles(path);
+                    if (pathnames != null && pathnames.Length > 0)
+                    {
+                        foreach (string pathname in pathnames)
+                        {
+                            Request request = loadOpts.TheRequest;
+                            var savedOpt = request.LoadOptions;
+                            try
+                            {
+                                request.LoadOptions = loadOpts;
+                                total += loadAIMLFile0(pathname, loadOpts, false);
+                            }
+                            finally
+                            {
+                                request.LoadOptions = savedOpt;
+                            }
+
+                        }
+                        return total;
+                    }
+                }
+                String nf = "ERROR: XmlTextReader of AIML files (" + path + ")";
+                var nfe = new FileNotFoundException(nf);
+                RProcessor.writeToLog(nfe);
+                writeToLog(nf);
+                throw nfe;
             }
             catch (Exception e)
             {
@@ -270,11 +298,6 @@ namespace RTParser.Utils
                 writeToLog("ERROR! " + e);
                 throw e;
             }
-            String nf = "ERROR: XmlTextReader of AIML files (" + path + ")";
-            var nfe = new FileNotFoundException(nf);
-            RProcessor.writeToLog(nfe);
-            writeToLog(nf);
-            throw nfe;
         }
 
         /// <summary>
