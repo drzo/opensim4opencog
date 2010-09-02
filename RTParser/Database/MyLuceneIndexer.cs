@@ -55,30 +55,32 @@ namespace RTParser.Database
         private readonly HashSet<string> ExcludeVals = new HashSet<string>();
 
         private void AddDefaultExclusions()
-        {
+                                                  {
             foreach (string str in
                 new[]
                     {
-                        "topic",
-                        "he",
-                        "she",
-                        "name",
-                        "id",
-                        "username",
-                        "userid",
+                                                      "topic",
+                                                      "he",
+                                                      "she",
+                                                      "name",
+                                                      "id",
+                                                      "username",
+                                                      "userid",
+                                                      "they",
                         "",
+                                                      "it",
                         // because  "$user emotion is $value" should be "$bot feels $value emotion towards $user"
                         "emotion", 
                     })
-            {
+                                                           {
                 AddExcludedRelation(str);
             }
             foreach (string str in
                 new[]
                     {
                         "",
-                        "unknown_user",
-                        "unknown.*",
+                                                               "unknown_user",
+                                                               "unknown.*",
                     })
             {
                 AddRegex(ExcludeVals, str);
@@ -246,7 +248,7 @@ namespace RTParser.Database
             if (AssertReducndancyChecks)
             {
                 lock (allContentIdPairs) allContentIdPairs.Add(myText.ToLower(), myDocID);
-            }
+        }
 
             return numIndexed;
         }
@@ -561,23 +563,23 @@ namespace RTParser.Database
             get
             {
                 lock (dbLock)
-                {
+            {
                     IsDbPresent = _IsDbPresent || IndexReader.IndexExists(_directory);
                     return _IsDbPresent;
-                }
+            }
             }
             set
-            {
+        {
                 lock (dbLock)
-                {
+        {
                     if (!_IsDbPresent && value)
-                    {
+        {
                         writeToLog("Noticing IsDbPresent");
-                    }
-                    _IsDbPresent = value;
-                }
             }
+                    _IsDbPresent = value;
         }
+            }
+                }
 
         public int assertTriple(string subject, string relation, string value)
         {
@@ -644,7 +646,7 @@ namespace RTParser.Database
 
             bool tf;
             if (Unifiable.TryParseBool(RTPBot.GetAttribValue(expandWordnet,"wordnet,synonyms", "" + expandWithWordNet), out tf))
-            {
+        {
                 expandWithWordNet = tf ? (WordNetExpander) WordNetExpand : NoWordNetExpander;
             }
 
