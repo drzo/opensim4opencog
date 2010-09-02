@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Xml;
 using LAIR.Collections.Generic;
 using LAIR.ResourceAPIs.WordNet;
@@ -33,6 +34,23 @@ namespace RTParser.Database
 
         Lucene.Net.Store.Directory _directory;// = new RAMDirectory();
         Analyzer _analyzer;// = new StandardAnalyzer();
+
+        private readonly HashSet<string> ExcludeRels = new HashSet<string>()
+                                                  {
+                                                      "topic",
+                                                      "he",
+                                                      "she",
+                                                      "name",
+                                                      "id",
+                                                      "username",
+                                                      "userid",
+                                                  };
+
+        private readonly HashSet<string> ExcludeVals = new HashSet<string>()
+                                                           {
+                                                               "unknown_user",
+                                                               "unknown.*",
+                                                           };
 
         public MyLuceneIndexer(string indexDir, string fieldName)
         {
@@ -359,9 +377,65 @@ namespace RTParser.Database
 
         public void assertTriple(string subject, string relation, string value)
         {
-            writeToLog("assertTriple {0}, {1}, {2}",subject,relation,value);
+            if (IsExcludedSubject(subject))
+            {
+                writeToLog("Excluded Subject: {0}, {1}, {2}", subject, relation, value);
+                return;
+            }
+            if (IsExcludedRelation(relation))
+            {
+                writeToLog("Excluded Relation: {0}, {1}, {2}", subject, relation, value);
+                return;
+            }
+            if (IsExcludedValue(relation))
+            {
+                writeToLog("Excluded Value: {0}, {1}, {2}", subject, relation, value);
+                return;
+            }
+            writeToLog("assertTriple {0}, {1}, {2}", subject, relation, value);
             string factoidSRV = String.Format("{0} {1} is {2}", subject, relation, value);
             Insert(factoidSRV);
+        }
+
+        public bool IsExcludedSubject(string subject)
+        {
+            return IsExcludedValue(subject);
+        }
+        public bool IsExcludedRelation(string value)
+        {
+            return ContainsRegex(ExcludeRels, value);
+        }
+
+        private static void AddRegex(HashSet<string> rels, string value)
+        {
+            lock (rels)
+            {
+                value = value.Replace("_", " ").ToLower();
+                value = value.Replace("~", ".*").ToLower();
+                rels.Add(value);
+            }
+        }
+        private static bool ContainsRegex(HashSet<string> rels, string value)
+        {
+            lock (rels)
+            {
+                value = value.Replace("_", " ").ToLower();
+                if (rels.Contains(value)) return true;
+
+                foreach (var rel in rels)
+                {
+                    if (Regex.IsMatch(value, rel,
+                                  RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace |
+                                  RegexOptions.Singleline)) return true;    
+                }
+
+            }
+            return false;
+        }
+
+        public bool IsExcludedValue(string value)
+        {
+            return ContainsRegex(ExcludeVals, value);
         }
 
         public void retractTriple(string subject, string relation, string value)

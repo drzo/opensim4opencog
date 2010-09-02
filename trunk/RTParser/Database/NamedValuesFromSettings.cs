@@ -19,6 +19,9 @@ namespace RTParser.Database
             // try to use a global blackboard predicate
             RTParser.User gUser = TargetBot.ExemplarUser;
 
+            defaultVal = RTPBot.GetAttribValue(node, "default", defaultVal);
+            gName = RTPBot.GetAttribValue(node, "global_name", gName);
+
             succeed = false;
             string realName;
             Unifiable resultGet = SettingsDictionary.grabSettingDefualt(udict, name, out realName);
