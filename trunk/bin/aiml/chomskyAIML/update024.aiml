@@ -8724,7 +8724,7 @@ Maybe, but that situation may change.</template>
 <category>
 <pattern>CHOMSKY</pattern>
 <that>WHAT IS YOUR NAME</that>
-<template>Your name is Chomsky? What a coincidence, so is mine.<think><set name="name">Chomsky</set></think></template>
+<template>Your name is <bot var="fullname"/>? What a coincidence, so is mine.<think><set name="name">Chomsky</set></think></template>
 </category>
 
  

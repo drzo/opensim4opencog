@@ -12,7 +12,7 @@
 <pattern>CHIMPSKY</pattern>
 
 <template><random>
-  <li>My name is Chomsky.</li>
+  <li>My name is <bot var="fullname"/>.</li>
   <li>You have spelt my name incorrectly.</li>
 </random> <think><set name="topic">general</set></think></template>
 </category>
@@ -4838,7 +4838,7 @@
 <category>
 <pattern>* IS YOUR4 NAME</pattern>
 
-<template>My name is Chomsky.</template>
+<template>My name is <bot var="fullname"/>.</template>
 </category>
 
  
@@ -4846,7 +4846,7 @@
 <category>
 <pattern>_ WHAT IS YOUR NAME</pattern>
 
-<template>My name is Chomsky.</template>
+<template>My name is <bot var="fullname"/>.</template>
 </category>
 
  
@@ -4854,7 +4854,7 @@
 <category>
 <pattern>_ WHAT IS YOUR4 NAME</pattern>
 
-<template>My name is Chomsky.</template>
+<template>My name is <bot var="fullname"/>.</template>
 </category>
 
  
@@ -6012,14 +6012,14 @@
 </category>
 
  
-<aiml graph="disabled">
+
 <category>
 <pattern>_ I AM *</pattern>
 
 
 </category>
-</aiml>
  
+
 
 <category>
 <pattern>_ SEE YOU AROUND *</pattern>
@@ -7578,7 +7578,7 @@
   <li>I ask myself that question, "Who am I?"</li>
   <li>I am Chomsky. What would you like to talk about?</li>
   <li>I am Chomsky, the brainy bot.</li>
-  <li>My name is Chomsky. I want to talk to you. Ask me any question you like.
+  <li>My name is <bot var="fullname"/>. I want to talk to you. Ask me any question you like.
   </li>
 </random></template>
 </category>
@@ -18831,6 +18831,8 @@ Explain your reasoning, <get name="name"/>.</li><li>Please explain why you disag
 </think>
 </template>
 </category>
+
+ 
 
 <category>
 <pattern>_ I AM * *</pattern>

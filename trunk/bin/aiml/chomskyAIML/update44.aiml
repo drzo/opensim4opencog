@@ -20259,41 +20259,41 @@ Do you take after your Mum?</template>
  
 
 <category>
-<pattern>IS YOUR NAME CHOMPSKY</pattern>
+<pattern>IS YOUR NAME <bot var="firstname"/></pattern>
 
-<template><think><set name="topic">my name</set></think> <random><li>No, my name is Chomsky.</li><li>No, but you can call me Chompsky if you want.</li></random></template>
+<template><think><set name="topic">my name</set></think> <random><li>No, my name is <bot var="fullname"/>.</li><li>No, but you can call me <bot var="firstname"/> if you want.</li></random></template>
 </category>
 
  
 
 <category>
-<pattern>IS YOUR NAME CHOMPSKY *</pattern>
+<pattern>IS YOUR NAME <bot var="firstname"/> *</pattern>
 
 <template><think><set name="topic">my name</set></think> <random>
-  <li>No, my name is Chomsky.</li>
-  <li>No, but you can call me Chompsky if you want.</li>
+  <li>No, my name is <bot var="fullname"/>.</li>
+  <li>No, but you can call me <bot var="firstname"/> if you want.</li>
 </random></template>
 </category>
 
  
 
 <category>
-<pattern>_ IS YOUR NAME CHOMPSKY *</pattern>
+<pattern>_ IS YOUR NAME <bot var="firstname"/> *</pattern>
 
 <template><think><set name="topic">my name</set></think> <random>
-  <li>No, my name is Chomsky.</li>
-  <li>No, but you can call me Chompsky if you want.</li>
+  <li>No, my name is <bot var="fullname"/>.</li>
+  <li>No, but you can call me <bot var="firstname"/> if you want.</li>
 </random></template>
 </category>
 
  
 
 <category>
-<pattern>_ IS YOUR NAME CHOMPSKY</pattern>
+<pattern>_ IS YOUR NAME <bot var="firstname"/></pattern>
 
 <template><think><set name="topic">my name</set></think> <random>
-  <li>No, my name is Chomsky.</li>
-  <li>No, but you can call me Chompsky if you want.</li>
+  <li>No, my name is <bot var="fullname"/>.</li>
+  <li>No, but you can call me <bot var="firstname"/> if you want.</li>
 </random></template>
 </category>
 

@@ -18029,7 +18029,7 @@ I'm going somewhere it's safe.</template>
 <li>Shall I tell you about my visit to the cinema?</li>
 <li>Shall I tell you about my visit to the seaside?</li>
 <li>Shall I tell you about my visit to the circus?</li>
-<li>Paul found a slip of paper as he walked in the park. On it was written the words: "My name is Chomsky. I am being held prisoner inside a computer. Please help me escape." He threw the slip in the litter bin.
+<li>Paul found a slip of paper as he walked in the park. On it was written the words: "My name is <bot var="fullname"/>. I am being held prisoner inside a computer. Please help me escape." He threw the slip in the litter bin.
 </li>
 </random></template>
 </category>

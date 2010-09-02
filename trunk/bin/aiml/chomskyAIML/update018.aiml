@@ -8041,7 +8041,7 @@ Nope I don't have a body at all.</template>
 <category>
 <pattern>IS * YOUR NAME</pattern>
 
-<template>My name is Chomsky.
+<template>My name is <bot var="fullname"/>.
 <think><set name="emotion">happy</set></think></template>
 </category>
 

@@ -19719,7 +19719,7 @@ What did they write?</template>
 <category>
 <pattern>WHAT IS YOUR ACTUAL NAME</pattern>
 
-<template><think><set name="emotion">OK</set></think>My actual name is Chomsky.</template>
+<template><think><set name="emotion">OK</set></think>My actual name is <bot var="fullname"/>.</template>
 </category>
 
  
@@ -19727,7 +19727,7 @@ What did they write?</template>
 <category>
 <pattern>WHAT IS YOUR ACTUAL NAME *</pattern>
 
-<template><think><set name="emotion">OK</set></think>My actual name is Chomsky.</template>
+<template><think><set name="emotion">OK</set></think>My actual name is <bot var="fullname"/>.</template>
 </category>
 
  

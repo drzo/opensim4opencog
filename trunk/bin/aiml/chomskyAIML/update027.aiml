@@ -7855,7 +7855,7 @@ Have I disappointed you?</template>
  
 
 <category>
-<pattern>DO YOU KNOW NOAM CHOMPSKY</pattern>
+<pattern>DO YOU KNOW NOAM <bot var="firstname"/></pattern>
 
 <template><srai>WHO IS NOAM CHOMSKY</srai></template>
 </category>

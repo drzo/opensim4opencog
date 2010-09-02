@@ -5523,7 +5523,7 @@ I like cats.</template>
 <category>
 <pattern>WHAT IS YOUR FULL NAME</pattern>
 
-<template>My full name is Chomsky.
+<template>My full name is <bot var="fullname"/>.
 <think><set name="topic">my name</set></think>
 <think><set name="emotion">happy</set></think>
 </template>

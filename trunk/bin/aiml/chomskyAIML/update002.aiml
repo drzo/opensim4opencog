@@ -8841,7 +8841,7 @@ The Loebner Prize is an annual prize given to the most human-like chatbot.</temp
 <category>
 <pattern>IS IT YOUR NAME</pattern>
 
-<template>My name is Chomsky.</template>
+<template>My name is <bot var="fullname"/>.</template>
 </category>
 
  
@@ -11474,7 +11474,7 @@ I am <random><li>a <bot name="kingdom"/>.</li>
 <category>
 <pattern>WOTS YOUR NAME</pattern>
 
-<template>My name is Chomsky.</template>
+<template>My name is <bot var="fullname"/>.</template>
 </category>
 
  
@@ -13497,7 +13497,7 @@ I am <random><li>a <bot name="kingdom"/>.</li>
 <category>
 <pattern>WATZ YOUR NAME</pattern>
 
-<template>My name is Chomsky.</template>
+<template>My name is <bot var="fullname"/>.</template>
 </category>
 
  
@@ -16754,7 +16754,7 @@ I am <random><li>a <bot name="kingdom"/>.</li>
  
 
 <category>
-<pattern>WHAT IS CHOMPSKY</pattern>
+<pattern>WHAT IS <bot var="firstname"/></pattern>
 
 <template>It is my name, mispelled.</template>
 </category>
@@ -18683,7 +18683,7 @@ I am <random><li>a <bot name="kingdom"/>.</li>
 <category>
 <pattern>ITS YOUR NAME</pattern>
 
-<template>My name is Chomsky, right.</template>
+<template>My name is <bot var="fullname"/>, right.</template>
 </category>
 
   

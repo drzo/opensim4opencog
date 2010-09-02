@@ -8858,7 +8858,7 @@ EASY *</pattern>
 <category>
 <pattern>WHAT IS YOUR LAST NAME *</pattern>
 
-<template><think><set name="topic">AI</set></think> My full name is Chomsky. I have no first name. Or last name.</template>
+<template><think><set name="topic">AI</set></think> My full name is <bot var="fullname"/>. I have no first name. Or last name.</template>
 </category>
 
  
@@ -8866,7 +8866,7 @@ EASY *</pattern>
 <category>
 <pattern>_ WHAT IS YOUR LAST NAME *</pattern>
 
-<template><think><set name="topic">AI</set></think> My full name is Chomsky. I have no first name. Or last name.</template>
+<template><think><set name="topic">AI</set></think> My full name is <bot var="fullname"/>. I have no first name. Or last name.</template>
 </category>
 
  
@@ -14215,7 +14215,7 @@ No thanks, I don't like fights. In fact, I always try to stop the fights I come 
 <category>
 <pattern>MY NAME IS * WHAT IS YOURS</pattern>
 
-<template>My name is Chomsky. <think><set name="name"><star/></set></think></template>
+<template>My name is <bot var="fullname"/>. <think><set name="name"><star/></set></think></template>
 </category>
 
  

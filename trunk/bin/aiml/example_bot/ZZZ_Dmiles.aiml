@@ -10,8 +10,6 @@
   </category>
 -->
 
-  <learn graph="default" path="aiml/example_bot/" />
-
   <category>
     <pattern>TOELIZA *</pattern>
     <template>

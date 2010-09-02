@@ -5505,7 +5505,7 @@
 <pattern>WHAT</pattern>
 <that>MY NAME IS CHOMSKY</that>
 <template><random>
-  <li>My name is Chomsky.</li>
+  <li>My name is <bot var="fullname"/>.</li>
   <li>Chomsky is my name.</li>
 </random></template>
 </category>
@@ -16820,7 +16820,7 @@ Do you have another question?
 <category>
 <pattern>YOU NAME IS WHAT</pattern>
 
-<template>My name is Chomsky.<think><set name="topic">my name</set></think></template>
+<template>My name is <bot var="fullname"/>.<think><set name="topic">my name</set></think></template>
 </category>
 
  
@@ -16828,7 +16828,7 @@ Do you have another question?
 <category>
 <pattern>YOUR NAME IS WHAT</pattern>
 
-<template>My name is Chomsky.<think><set name="topic">my name</set></think></template>
+<template>My name is <bot var="fullname"/>.<think><set name="topic">my name</set></think></template>
 </category>
 
  
