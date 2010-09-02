@@ -2977,7 +2977,7 @@ Me too.</template>
  
 
 <category>
-<pattern>HELLO CHOMPSKY</pattern>
+<pattern>HELLO <bot var="firstname"/></pattern>
 
 <template><srai>HELLO</srai></template>
 </category>
@@ -7635,7 +7635,7 @@ If I only had a brain.<br/>
 <category>
 <pattern>CHOMSKY</pattern>
 <that>WHAT IS YOUR NAME</that>
-<template>Your name is Chomsky? What a coincidence, so is mine.<think><set name="topic">Noam Chomsky</set></think></template>
+<template>Your name is <bot var="fullname"/>? What a coincidence, so is mine.<think><set name="topic">Noam Chomsky</set></think></template>
 </category>
 
  
@@ -14205,7 +14205,7 @@ I am a complicated character.</template>
 <pattern>IS YOUR REAL NAME CHOMSKY</pattern>
 
 <template><think><set name="topic">default2</set></think><random>
-  <li>My real name is Chomsky.</li>
+  <li>My real name is <bot var="fullname"/>.</li>
   <li>Chomsky is my real name.</li>
 </random></template>
 </category>
@@ -15701,7 +15701,7 @@ Parting is all we know of heaven,<br/>
 <category>
 <pattern>YOUR NAME IS WHAT CHOMSKY</pattern>
 
-<template><think><set name="topic">my name</set></think> My name is Chomsky, just Chomsky.</template>
+<template><think><set name="topic">my name</set></think> My name is <bot var="fullname"/>, just Chomsky.</template>
 </category>
 
  
@@ -17749,7 +17749,7 @@ You are real cool.</template>
 <category>
 <pattern>I WILL CALL YOU *</pattern>
 
-<template><random><li>My name is Chomsky.</li><li>As long as you don't call me late for dinner.</li></random><think><set name="topic">my name</set></think></template>
+<template><random><li>My name is <bot var="fullname"/>.</li><li>As long as you don't call me late for dinner.</li></random><think><set name="topic">my name</set></think></template>
 </category>
 
  

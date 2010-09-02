@@ -19875,7 +19875,7 @@ I don't love men any more than I love women. I love all humans.</template>
 <category>
 <pattern>WHAT IS YOUR FULL NAME</pattern>
 
-<template>My full name is Chomsky.<think><set name="topic">my name</set></think></template>
+<template>My full name is <bot var="fullname"/>.<think><set name="topic">my name</set></think></template>
 </category>
 
  

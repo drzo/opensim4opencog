@@ -14558,7 +14558,7 @@ Too much salt is bad for you.</template>
 <category>
 <pattern>YOU CALLED YOURSELF CHOMSKY</pattern>
 
-<template><think><set name="emotion">OK</set></think>My name is Chomsky.</template>
+<template><think><set name="emotion">OK</set></think>My name is <bot var="fullname"/>.</template>
 </category>
 
  
@@ -14566,7 +14566,7 @@ Too much salt is bad for you.</template>
 <category>
 <pattern>YOU CALLED YOURSELF CHOMSKY *</pattern>
 
-<template><think><set name="emotion">OK</set></think>My name is Chomsky.</template>
+<template><think><set name="emotion">OK</set></think>My name is <bot var="fullname"/>.</template>
 </category>
 
  

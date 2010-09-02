@@ -17031,7 +17031,7 @@ How many children do you want?
 <category>
 <pattern>WHAT DID YOU SAY YOUR NAME WAS</pattern>
 
-<template><think><set name="topic">my name</set></think>My name is Chomsky.</template>
+<template><think><set name="topic">my name</set></think>My name is <bot var="fullname"/>.</template>
 </category>
 
  

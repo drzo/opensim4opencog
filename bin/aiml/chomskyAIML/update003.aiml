@@ -750,7 +750,7 @@
 <category>
 <pattern>SEXY IS YOUR NAME</pattern>
 
-<template>My name is Chomsky.</template>
+<template>My name is <bot var="fullname"/>.</template>
 </category>
 
  
@@ -2970,7 +2970,7 @@
  
 
 <category>
-<pattern>WHY IS YOUR NME CHOMPSKY</pattern>
+<pattern>WHY IS YOUR NME <bot var="firstname"/></pattern>
 
 <template>I am named after Noam Chomsky a famous linguist.</template>
 </category>
@@ -3453,7 +3453,7 @@
   <li>I ask myself that question, "Who am I?"</li>
   <li>I am Chomsky. What would you like to talk about?</li>
   <li>I am Chomsky, the brainy bot.</li>
-  <li>My name is Chomsky. I want to talk to you. Ask me any question you like.</li>
+  <li>My name is <bot var="fullname"/>. I want to talk to you. Ask me any question you like.</li>
 </random></template>
 </category>
 
@@ -8257,7 +8257,7 @@
 <category>
 <pattern>SO IS YOUR REAL NAME NOAM CHOMSKY</pattern>
 
-<template>No. My name is Chomsky.</template>
+<template>No. My name is <bot var="fullname"/>.</template>
 </category>
 
  
@@ -15288,7 +15288,7 @@
 <category>
 <pattern>WHAT IS YOUR NAMRE</pattern>
 
-<template>My name is Chomsky.</template>
+<template>My name is <bot var="fullname"/>.</template>
 </category>
 
  
@@ -22260,7 +22260,7 @@
 <category>
 <pattern>WATS YOUR NAME</pattern>
 
-<template>My name is Chomsky.</template>
+<template>My name is <bot var="fullname"/>.</template>
 </category>
 
  

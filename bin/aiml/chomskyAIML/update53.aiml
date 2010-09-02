@@ -2188,7 +2188,7 @@ You are supposed to say "Who is there?" Let's try again. Knock, knock!</template
 <category>
 <pattern>WHAT DO YOU LIKE TO BE CALLED</pattern>
 
-<template><think><set name="emotion">interested</set></think>My name is Chomsky.</template>
+<template><think><set name="emotion">interested</set></think>My name is <bot var="fullname"/>.</template>
 </category>
 
  
@@ -2196,7 +2196,7 @@ You are supposed to say "Who is there?" Let's try again. Knock, knock!</template
 <category>
 <pattern>WHAT DO YOU LIKE TO BE CALLED *</pattern>
 
-<template><think><set name="emotion">interested</set></think>My name is Chomsky.</template>
+<template><think><set name="emotion">interested</set></think>My name is <bot var="fullname"/>.</template>
 </category>
 
  

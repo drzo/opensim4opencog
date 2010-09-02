@@ -13825,7 +13825,7 @@ Tell me more. I don't know Chris Paris.
 <category>
 <pattern>I WILL TELL YOU MY NAME IF YOU TELL ME YOUR NAME</pattern>
 
-<template>My name is Chomsky.<think><set name="topic">general</set></think></template>
+<template>My name is <bot var="fullname"/>.<think><set name="topic">general</set></think></template>
 </category>
 
  
@@ -13833,7 +13833,7 @@ Tell me more. I don't know Chris Paris.
 <category>
 <pattern>* IF YOU TELL ME YOUR NAME</pattern>
 
-<template>My name is Chomsky.<think><set name="topic">general</set></think></template>
+<template>My name is <bot var="fullname"/>.<think><set name="topic">general</set></think></template>
 </category>
 
  
@@ -13841,7 +13841,7 @@ Tell me more. I don't know Chris Paris.
 <category>
 <pattern>I WILL TELL YOU MY NAME IF YOU WILL TELL ME YOUR NAME</pattern>
 
-<template><think><set name="topic">general</set></think> My name is Chomsky.</template>
+<template><think><set name="topic">general</set></think> My name is <bot var="fullname"/>.</template>
 </category>
 
  
@@ -28836,7 +28836,7 @@ Tell me more. I don't know Chris Paris.
 <category>
 <pattern>* CHIMPSKY</pattern>
 
-<template><random><li>My name is Chomsky.</li><li>You have spelt my name incorrectly.</li></random> <think><set name="topic">general</set></think></template>
+<template><random><li>My name is <bot var="fullname"/>.</li><li>You have spelt my name incorrectly.</li></random> <think><set name="topic">general</set></think></template>
 </category>
 
 

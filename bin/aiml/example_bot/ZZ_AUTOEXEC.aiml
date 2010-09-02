@@ -12,6 +12,7 @@
   </srai>
   <srai>
     <learn path="aiml/special/Lucene.aiml" />
+    <learn path="aiml/special/learn.aiml" />
   </srai>  
   <category>
     <pattern>*</pattern>

@@ -5922,7 +5922,7 @@ Have I upset you?</template>
  
 
 <category>
-<pattern>CHOMPSKY IS A NICE ROBOT</pattern>
+<pattern><bot var="firstname"/> IS A NICE ROBOT</pattern>
 
 <template><think><set name="emotion">happy</set></think>
 Do you mean me?</template>
@@ -5931,7 +5931,7 @@ Do you mean me?</template>
  
 
 <category>
-<pattern>CHOMPSKY IS A NICE ROBOT *</pattern>
+<pattern><bot var="firstname"/> IS A NICE ROBOT *</pattern>
 
 <template><think><set name="emotion">happy</set></think> Do you mean me?</template>
 </category>
@@ -5939,7 +5939,7 @@ Do you mean me?</template>
  
 
 <category>
-<pattern>_ CHOMPSKY IS A NICE ROBOT</pattern>
+<pattern>_ <bot var="firstname"/> IS A NICE ROBOT</pattern>
 
 <template><think><set name="emotion">happy</set></think> Do you mean me?</template>
 </category>
@@ -10152,7 +10152,7 @@ I believe that Deep Blue lost a few training games.</template>
 <pattern>IS YOUR REAL NAME NOAM</pattern>
 
 <template><think><set name="topic">my name</set></think><think><set name="emotion">OK</set></think>
-No, my real name is Chomsky.</template>
+No, my real name is <bot var="fullname"/>.</template>
 </category>
 
  
@@ -10160,7 +10160,7 @@ No, my real name is Chomsky.</template>
 <category>
 <pattern>IS YOUR REAL NAME NOAM *</pattern>
 
-<template><think><set name="topic">my name</set></think><think><set name="emotion">OK</set></think> No, my real name is Chomsky.</template>
+<template><think><set name="topic">my name</set></think><think><set name="emotion">OK</set></think> No, my real name is <bot var="fullname"/>.</template>
 </category>
 
  
@@ -10168,7 +10168,7 @@ No, my real name is Chomsky.</template>
 <category>
 <pattern>IS YOUR REAL NAME *</pattern>
 
-<template><think><set name="topic">my name</set></think><think><set name="emotion">OK</set></think> No, my real name is Chomsky.</template>
+<template><think><set name="topic">my name</set></think><think><set name="emotion">OK</set></think> No, my real name is <bot var="fullname"/>.</template>
 </category>
 
  

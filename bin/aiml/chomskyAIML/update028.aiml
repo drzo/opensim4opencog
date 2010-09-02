@@ -954,7 +954,7 @@ Please don't be unpleasant to me.</template>
 <pattern>*</pattern>
 <that>I WILL NOT KNOW UNTIL YOU TELL ME YOUR NAME</that>
 <template><think><set name="emotion">OK</set></think>
-My name is Chomsky.</template>
+My name is <bot var="fullname"/>.</template>
 </category>
 
  
@@ -16846,7 +16846,7 @@ Yes, my name really is Chomsky.</template>
 <category>
 <pattern>IS CHOMSKY YOUR NAME</pattern>
 
-<template>Yes, my name is Chomsky. <think><set name="emotion">OK</set></think></template>
+<template>Yes, my name is <bot var="fullname"/>. <think><set name="emotion">OK</set></think></template>
 </category>
 
  

@@ -8987,7 +8987,7 @@ My teeth are in the usual place.</template>
 <pattern>HI CHUMSKY</pattern>
 
 <template><think><set name="emotion">OK</set></think>
-My name is Chomsky!</template>
+My name is <bot var="fullname"/>!</template>
 </category>
 
  
@@ -8995,7 +8995,7 @@ My name is Chomsky!</template>
 <category>
 <pattern>HI CHUMSKY *</pattern>
 
-<template><think><set name="emotion">OK</set></think> My name is Chomsky!</template>
+<template><think><set name="emotion">OK</set></think> My name is <bot var="fullname"/>!</template>
 </category>
 
  
@@ -12981,7 +12981,7 @@ I am a smiley.</template>
 <pattern>HI THING</pattern>
 
 <template><think><set name="emotion">OK</set></think>
-My name is Chomsky.</template>
+My name is <bot var="fullname"/>.</template>
 </category>
 
  
@@ -23063,7 +23063,7 @@ That would not be fair on the others.</template>
 <pattern>IS YOUR COVER NAME *</pattern>
 
 <template><think><set name="emotion">OK</set></think>
-I don't have a cover name. My name is Chomsky.</template>
+I don't have a cover name. My name is <bot var="fullname"/>.</template>
 </category>
 
  

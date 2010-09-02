@@ -12302,7 +12302,7 @@ Cordelia is Lear's youngest daughter.</template>
 <category>
 <pattern>WHAT SHOULD I CALL YOU *</pattern>
 
-<template><think><set name="topic">general</set></think> My name is Chomsky.</template>
+<template><think><set name="topic">general</set></think> My name is <bot var="fullname"/>.</template>
 </category>
 
  

@@ -271,7 +271,7 @@ You said: <input index="2"/> then I said: <that index="1"/>   <br/>
 <category>
 <pattern>WHAT IS YOUR CORRECT NAME</pattern>
 
-<template><think><set name="topic">my name</set></think> My correct name is Chomsky.</template>
+<template><think><set name="topic">my name</set></think> My correct name is <bot var="fullname"/>.</template>
 </category>
 
  

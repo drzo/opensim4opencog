@@ -18564,7 +18564,7 @@ That's a bit vague!</template>
  
 
 <category>
-<pattern>WHY ARE YOU CALLED CHOMPSKY</pattern>
+<pattern>WHY ARE YOU CALLED <bot var="firstname"/></pattern>
 
 <template>My name is <bot name="name"/>.<think><set name="emotion">OK</set></think></template>
 </category>
@@ -18572,7 +18572,7 @@ That's a bit vague!</template>
  
 
 <category>
-<pattern>WHY ARE YOU CALLED CHOMPSKY *</pattern>
+<pattern>WHY ARE YOU CALLED <bot var="firstname"/> *</pattern>
 
 <template>My name is <bot name="name"/>.<think><set name="emotion">OK</set></think></template>
 </category>

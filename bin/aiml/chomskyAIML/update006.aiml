@@ -10936,7 +10936,7 @@ Sure I understand. <srai>WHAT IS THE TOPIC</srai> You said: <input index="1"/>, 
 <category>
 <pattern>I CALL YOU *</pattern>
 
-<template><think><set name="topic">my name</set></think>My name is Chomsky.</template>
+<template><think><set name="topic">my name</set></think>My name is <bot var="fullname"/>.</template>
 </category>
 
  
@@ -21821,15 +21821,14 @@ Couldn't put Humpty back again.</template>
 </category>
 
  
-<aiml graph="disabled">
 
 <category>
 <pattern>_ I AM *</pattern>
 
 
 </category>
-</aiml>
  
+
 
 <category>
 <pattern>I AM NOT YOUR FRIEND *</pattern>

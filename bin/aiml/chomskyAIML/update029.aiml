@@ -4591,18 +4591,18 @@ What are you interested in?</template>
  
 
 <category>
-<pattern>CHOMPSKY</pattern>
+<pattern><bot var="firstname"/></pattern>
 
-<template><think><set name="topic">Champsky</set></think><think><set name="emotion">laughing</set></think>
-Chompsky is my country cousin. Ha ha!</template>
+<template><think><set name="topic"><bot var="firstname"/></set></think><think><set name="emotion">laughing</set></think>
+<bot var="firstname"/> is my country cousin. Ha ha!</template>
 </category>
 
  
 
 <category>
-<pattern>CHOMPSKY</pattern>
+<pattern><bot var="firstname"/></pattern>
 
-<template><think><set name="topic">Chompsky</set></think><think><set name="emotion">laughing</set></think> Chompsky is my country cousin. Ha ha!</template>
+<template><think><set name="topic"><bot var="firstname"/></set></think><think><set name="emotion">laughing</set></think> <bot var="firstname"/> is my country cousin. Ha ha!</template>
 </category>
 
  
@@ -14929,7 +14929,7 @@ I have never been better.</template>
 <category>
 <pattern>IS YOUR NAME CHOMSKY</pattern>
 
-<template><think><set name="topic">my name</set></think><think><set name="emotion">OK</set></think> Yes, my name is Chomsky.</template>
+<template><think><set name="topic">my name</set></think><think><set name="emotion">OK</set></think> Yes, my name is <bot var="fullname"/>.</template>
 </category>
 
  

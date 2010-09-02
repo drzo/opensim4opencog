@@ -2844,7 +2844,7 @@
 <category>
 <pattern>IS YOUR NAME CHOMSKY</pattern>
 
-<template><think><set name="topic">my name</set></think> Yes, my name is Chomsky.</template>
+<template><think><set name="topic">my name</set></think> Yes, my name is <bot var="fullname"/>.</template>
 </category>
 
  

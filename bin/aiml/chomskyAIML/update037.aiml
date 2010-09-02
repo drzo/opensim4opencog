@@ -17985,7 +17985,7 @@ That is just your opinion.</template>
 <category>
 <pattern>WHY ARE YOU CALLED SMILEY</pattern>
 
-<template><think><set name="emotion">OK</set></think>MY name is Chomsky, but I do smile a lot.</template>
+<template><think><set name="emotion">OK</set></think>MY name is <bot var="fullname"/>, but I do smile a lot.</template>
 </category>
 
  
@@ -17993,7 +17993,7 @@ That is just your opinion.</template>
 <category>
 <pattern>WHY ARE YOU CALLED SMILEY *</pattern>
 
-<template><think><set name="emotion">OK</set></think>MY name is Chomsky, but I do smile a lot.</template>
+<template><think><set name="emotion">OK</set></think>MY name is <bot var="fullname"/>, but I do smile a lot.</template>
 </category>
 
  
@@ -18600,7 +18600,7 @@ By the introduction of the phone and computer.</template>
 <category>
 <pattern>YOU ARE DICK</pattern>
 
-<template><think><set name="emotion">OK</set></think>No, my name is Chomsky.</template>
+<template><think><set name="emotion">OK</set></think>No, my name is <bot var="fullname"/>.</template>
 </category>
 
  

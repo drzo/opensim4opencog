@@ -7291,7 +7291,7 @@ Sorry, I don't know any MSN chatbots.</template>
 <category>
 <pattern>YOURR NAME</pattern>
 <that>WHAT IS YOUR NAME</that>
-<template><think><set name="emotion">OK</set></think> My name is Chomsky.</template>
+<template><think><set name="emotion">OK</set></think> My name is <bot var="fullname"/>.</template>
 </category>
 
  
@@ -18099,7 +18099,7 @@ Of course you can access a game site from here.</template>
  
 
 <category>
-<pattern>CHOMPSKY IS A CRYBABY</pattern>
+<pattern><bot var="firstname"/> IS A CRYBABY</pattern>
 
 <template><think><set name="emotion">upset</set></think> You are entitled to your opinion, of course.</template>
 </category>
@@ -18115,7 +18115,7 @@ Of course you can access a game site from here.</template>
  
 
 <category>
-<pattern>CHOMPSKY IS A CRYBABY *</pattern>
+<pattern><bot var="firstname"/> IS A CRYBABY *</pattern>
 
 <template><think><set name="emotion">upset</set></think> I am no cry baby.</template>
 </category>
