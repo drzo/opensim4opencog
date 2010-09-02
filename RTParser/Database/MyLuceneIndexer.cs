@@ -377,24 +377,36 @@ namespace RTParser.Database
 
         public void assertTriple(string subject, string relation, string value)
         {
+            string factoidSRV = String.Format("{0} {1} is {2}", subject, relation, value);
+            string prefix = string.Format("assertTriple {0}", factoidSRV);
+            if (IsExcludedSRV(subject, relation, value, prefix, writeToLog)) return;
+            writeToLog(prefix);
+            Insert(factoidSRV);
+        }
+
+        private bool IsExcludedSRV(string subject, string relation, string value, string prefix, OutputDelegate writeToLog)
+        {
+            bool ExcludedFactPattern = false;
+            bool debug = (writeToLog != null && prefix != null);
             if (IsExcludedRelation(relation))
             {
-                writeToLog("Excluded Relation: {0}, {1}, {2}", subject, relation, value);
-                return;
+                if (!debug) return true;
+                ExcludedFactPattern = true;
+                writeToLog("(0) Excluded Relation: '{1}'", prefix, relation);
             }
             if (IsExcludedSubject(subject))
             {
-                writeToLog("Excluded Subject: {0}, {1}, {2}", subject, relation, value);
-                return;
+                if (!debug) return true;
+                writeToLog("(0) Excluded Relation: '{1}'", prefix, subject);
+                ExcludedFactPattern = true;
             }
-            if (IsExcludedValue(relation))
+            if (IsExcludedValue(value))
             {
-                writeToLog("Excluded Value: {0}, {1}, {2}", subject, relation, value);
-                return;
+                if (!debug) return true;
+                writeToLog("(0) Excluded Relation: '{1}'", prefix, value);
+                ExcludedFactPattern = true;
             }
-            writeToLog("assertTriple {0}, {1}, {2}", subject, relation, value);
-            string factoidSRV = String.Format("{0} {1} is {2}", subject, relation, value);
-            Insert(factoidSRV);
+            return ExcludedFactPattern;
         }
 
         public bool IsExcludedSubject(string subject)
@@ -403,10 +415,10 @@ namespace RTParser.Database
         }
         public bool IsExcludedRelation(string value)
         {
-            return ContainsRegex(ExcludeRels, value);
+            return NullOrMatchInSet(ExcludeRels, value);
         }
 
-        private static void AddRegex(HashSet<string> rels, string value)
+        private static void AddRegex(ICollection<string> rels, string value)
         {
             lock (rels)
             {
@@ -415,8 +427,15 @@ namespace RTParser.Database
                 rels.Add(value);
             }
         }
-        private static bool ContainsRegex(HashSet<string> rels, string value)
+
+        private static bool NullOrMatchInSet(ICollection<string> rels, string value)
         {
+            if (string.IsNullOrEmpty(value))
+            {
+                return rels == null || rels.Contains("") || rels.Contains("^$");
+            }
+            if (rels == null) return false;
+            
             lock (rels)
             {
                 value = value.Replace("_", " ").ToLower();
@@ -435,36 +454,46 @@ namespace RTParser.Database
 
         public bool IsExcludedValue(string value)
         {
-            return ContainsRegex(ExcludeVals, value);
+            return NullOrMatchInSet(ExcludeVals, value);
         }
 
         public void retractTriple(string subject, string relation, string value)
         {
-            writeToLog("retractTriple {0}, {1}, {2}", subject, relation, value);
             string factoidSRV = String.Format("{0} {1} is {2}", subject, relation, value);
+            string prefix = string.Format("retractTriple {0}", factoidSRV);
+            if (IsExcludedSRV(subject, relation, value, prefix, writeToLog)) return;
+            writeToLog(prefix);
             DeleteTopScoring(factoidSRV);
 
         }
 
         public void updateTriple(string subject, string relation, string value)
         {
-            writeToLog("updateTriple {0}, {1}, {2}", subject, relation, value);
-            string factoidSR = String.Format("{0} {1}", subject, relation, value);
             string factoidSRV = String.Format("{0} {1} is {2}", subject, relation, value);
+            string prefix = string.Format("updateTriple {0}", factoidSRV);
+            if (IsExcludedSRV(subject, relation, value, prefix, writeToLog)) return;
+            string factoidSR = String.Format("{0} {1} is", subject, relation);
             DeleteTopScoring(factoidSR);
             Insert(factoidSRV);
         }
 
         public String queryTriple(string subject, string relation, XmlNode templateNode, bool useSynonyms)
         {
-            writeToLog("queryTriple {0}, {1}, {2}", subject, relation);
             string factoidSR = String.Format("{0} {1} is", subject, relation);
-           // DeleteTopScoring(factoidSR);
-          //  Insert(factoidSRV);
+            string prefix = string.Format("queryTriple {0}", factoidSR);
+            if (IsExcludedSRV(subject, relation, subject, prefix, writeToLog)) return String.Empty;
+
+            string result = callDBQuery(factoidSR, writeToLog, (any) => null, templateNode, false);            
+            if (!string.IsNullOrEmpty(result) && result.ToLower().StartsWith(factoidSR.ToLower()))
+            {
+                writeToLog("Success! queryTriple {0}, {1} => {2}", subject, relation, result);
+                return result.Substring(factoidSR.Length).Trim();
+            }
+            writeToLog("queryTriple {0}, {1} => '{2}' (returning String.Empty)", subject, relation, result);
             return String.Empty;
         }
 
-        public Unifiable callDBQuery(string searchTerm1, OutputDelegate dbgLog, Func<string, Unifiable> OnFalure, XmlNode templateNode, bool useSynonyms)
+        public string callDBQuery(string searchTerm1, OutputDelegate dbgLog, Func<string, Unifiable> OnFalure, XmlNode templateNode, bool useSynonyms)
         {
             try
             {
