@@ -155,7 +155,7 @@ namespace cogbot
                 SingleInstance = this;                
             }
             DLRConsole.AddOutput(new OutputDelegateWriter(VeryRealWriteLine));
-            HashSet<Type> col = DLRConsole.TransparentCallers;
+            var col = DLRConsole.TransparentCallers;
             lock (col) col.Add(typeof(ClientManager));
             lock (col) col.Add(typeof(Command));
             lock (col) col.Add(typeof (BotClient));
