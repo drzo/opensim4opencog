@@ -215,7 +215,7 @@ namespace RTParser.Utils
                         request.LoadOptions = loadOpts;
                         request.Filename = path;
                         loadOpts = request.LoadOptions;
-                        RTPBot.loadConfigs(RProcessor, path, request);
+                        //RTPBot.loadConfigs(RProcessor, path, request);
                         total += loadAIMLDir0(path, loadOpts);
                     }
                     finally

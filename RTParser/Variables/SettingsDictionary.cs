@@ -183,17 +183,9 @@ namespace RTParser.Variables
                         item.Attributes.Append(value);
                         root.AppendChild(item);
                     }
-                    foreach (var normalizedName in ProvidersFrom(this.SetReturnProviders))
+                    foreach (var normalizedName in ProvidersFrom(this.MetaProviders))
                     {
-                        XmlNode item = result.CreateNode(XmlNodeType.Element, "settingtypes", "");
-                        XmlAttribute name = result.CreateAttribute("name");
-                        name.Value = normalizedName.NameSpace;
-                        item.Attributes.Append(name);
-                        root.AppendChild(item);
-                    }
-                    foreach (var normalizedName in ProvidersFrom(this.GetSetFormatters))
-                    {
-                        XmlNode item = result.CreateNode(XmlNodeType.Element, "formatter", "");
+                        XmlNode item = result.CreateNode(XmlNodeType.Element, "metaproviders", "");
                         XmlAttribute name = result.CreateAttribute("name");
                         name.Value = normalizedName.NameSpace;
                         item.Attributes.Append(name);
@@ -238,8 +230,7 @@ namespace RTParser.Variables
             this.bot = bot;
             if (!IsSubsts)
             {
-                if (bot.SetPredicateReturn != null) this.InsertSettingReturnTypes(bot.GetSetPredicateReturn);
-                if (bot.SetRelationFormat != null) this.InsertGetSetFormatter(bot.GetSetRelationFormat);
+                if (bot.RelationMetaProps != null) this.InsertMetaProvider(bot.GetRelationMetaProps);
             }
             IsTraced = true;
             if (parent != null) _fallbacks.Add(parent);
@@ -358,7 +349,8 @@ namespace RTParser.Variables
             string tol = message.Trim().ToLower();
             if (tol.StartsWith("error")) message = "-DICTRACE: " + message;
             if (!tol.Contains("dictlog")) message = "DICTLOG: " + message;
-            if (bot != null) bot.writeToLog(message, args); else RTPBot.writeDebugLine(message, args);
+            if (args != null && args.Length > 0) message = String.Format(message, args);
+            if (bot != null) bot.writeToLog(message); else RTPBot.writeDebugLine(message);
         }
 
         /// <summary>
@@ -423,7 +415,7 @@ namespace RTParser.Variables
                 RTPBot.GetAttribValue(myNode, "set-return", returnNameWhenSet);
             if (returnNameWhenSet != null)
             {
-                ToSettingsDictionary(dict).addSetReturn(name, returnNameWhenSet);
+                ToSettingsDictionary(dict).addMetaValue(name, "set-return", returnNameWhenSet);
             }
 
             SettingsDictionary dictionary = ToSettingsDictionary(dict);
@@ -437,32 +429,32 @@ namespace RTParser.Variables
                 if (formatterQA != -1)
                 {
                         // query mode
-                        formatter = formatter.Substring(formatterQA + 2).Trim();
-                        dictionary.addFormatter(name + ".format-assert", formatter);
+                        var formatterQ = formatter.Substring(formatterQA + 2).Trim();
+                        dictionary.addMetaValue(name, "format-assert", formatter);
                         // assert mode
-                        formatter = formatter.Substring(0, formatterQA).Trim();
-                        dictionary.addFormatter(name + ".query-assert", formatter);
+                        var formatterA = formatter.Substring(0, formatterQA).Trim();
+                        dictionary.addMetaValue(name, "query-assert", formatter);
                 } else
                 {
                     // both query/assert
-                    dictionary.addFormatter(name + ".format-assert", englishFormatter);
-                    dictionary.addFormatter(name + ".format-query", englishFormatter);
+                    dictionary.addMetaValue(name , "format-assert", englishFormatter);
+                    dictionary.addMetaValue(name, "format-query", englishFormatter);
                 }
             }
             englishFormatter = RTPBot.GetAttribValue(myNode, "assert,format-assert", null);
             if (englishFormatter != null)
             {
-                dictionary.addFormatter(name + ".format-assert", englishFormatter);
+                dictionary.addMetaValue(name , "format-assert", englishFormatter);
             }
             englishFormatter = RTPBot.GetAttribValue(myNode, "query,format-query", null);
             if (englishFormatter != null)
             {
-                dictionary.addFormatter(name + ".format-query", englishFormatter);
+                dictionary.addMetaValue(name, "format-query", englishFormatter);
             }
             englishFormatter = RTPBot.GetAttribValue(myNode, "whword", null);
             if (englishFormatter != null)
             {
-                dictionary.addFormatter(name + ".format-whword", englishFormatter);
+                dictionary.addMetaValue(name, "format-whword", englishFormatter);
             }
 
             bool dictcontainsLocalCalled = dict.containsLocalCalled(name);
@@ -634,7 +626,7 @@ namespace RTParser.Variables
             SettingsDictionary settingsDict = ToSettingsDictionary(dict);
             if ((lower == "parent" || lower == "override" || lower == "fallback" || lower == "listener"
                 || lower == "provider" || lower == "syncon" || lower == "synchon" || lower == "prefixes"
-                || lower == "settingtypes" || lower == "formatter"))
+                || lower == "metaproviders" || lower == "formatter"))
             {
                 string name = RTPBot.GetAttribValue(myNode, "value,dict,name", null);
                 if (!string.IsNullOrEmpty(name))
@@ -663,11 +655,8 @@ namespace RTParser.Variables
                         case "override":
                             settingsDict.InsertOverrides(pp);
                             return;
-                        case "settingtypes":
-                            settingsDict.InsertSettingReturnTypes(pp);
-                            return;
-                        case "formatter":
-                            settingsDict.InsertGetSetFormatter(pp);
+                        case "metaproviders":
+                            settingsDict.InsertMetaProvider(pp);
                             return;
                         case "prefixes":
                             settingsDict.AddChild(RTPBot.GetAttribValue(myNode, "prefix,name,dict,value", name), pp);
@@ -1320,14 +1309,9 @@ namespace RTParser.Variables
         public bool IsSubsts;
 
 
-        public void InsertSettingReturnTypes(ParentProvider pp)
+        public void InsertMetaProvider(ParentProvider pp)
         {
-            AddSettingToCollection(pp, SetReturnProviders);
-        }
-
-        public void InsertGetSetFormatter(ParentProvider pp)
-        {
-            AddSettingToCollection(pp, GetSetFormatters);
+            AddSettingToCollection(pp, MetaProviders);
         }
 
         public void AddSettingToCollection(ParentProvider pp, List<ParentProvider> cols)
@@ -1384,7 +1368,6 @@ namespace RTParser.Variables
             }
         }
 
-        public List<ParentProvider> GetSetFormatters = new List<ParentProvider>();
         /// <summary>
         /// //"$bot feels $value emotion towards $user";
         /// </summary>
@@ -1395,15 +1378,15 @@ namespace RTParser.Variables
         /// </summary>
         /// <param name="relation"></param>
         /// <returns></returns>
-        public string GetFormatter(string relation)
+        public string GetMeta(string relation, string meta)
         {
             string realName;
-            return WithProviders(this, relation, out realName,
-                                 GetSetFormatters,
+            return WithProviders(this, relation, meta, out realName,
+                                 MetaProviders,
                                  (realName0) => DefaultFormatter.Replace("$relation", realName0));
         }
 
-        public static Unifiable WithProviders(ISettingsDictionary dictionary, string name, out string realName, 
+        public static Unifiable WithProviders(ISettingsDictionary dictionary, string name, string props, out string realName, 
             IEnumerable<ParentProvider> providers, Func<string, Unifiable> Else)
         {
             //SettingsDictionary dictionary = ToSettingsDictionary(dictionary0);
@@ -1417,7 +1400,7 @@ namespace RTParser.Variables
             {
                 foreach (string name0 in name.Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries))
                 {
-                    var un = WithProviders(dictionary, name0, out realName, providers, Else);
+                    var un = WithProviders(dictionary, name0, props, out realName, providers, Else);
                     if (!Unifiable.IsNull(un))
                     {
                         return un;
@@ -1433,10 +1416,11 @@ namespace RTParser.Variables
         }
 
         public string Preposition = "";
-        public List<ParentProvider> SetReturnProviders = new List<ParentProvider>();
+        public List<ParentProvider> MetaProviders = new List<ParentProvider>();
         public Unifiable GetSetReturn(string name, out string realName)
         {
-            return WithProviders(this, name, out realName, SetReturnProviders,
+            const string prop = "set-return";
+            return WithProviders(this, name, prop, out realName, MetaProviders,
                                  realname =>
                                  {
                                      string prep = Preposition;
@@ -1474,22 +1458,18 @@ namespace RTParser.Variables
             return found;
         }
 
-        private void addSetReturn(string name, string value)
+        private void addMetaValue(string name, string subprops,string value)
         {
-            AddToProviders(name + ".set-return", value, SetReturnProviders);
+            AddMetaProviders(name, subprops, value, MetaProviders);
         }
 
-        public void addFormatter(string name, string value)
-        {
-            AddToProviders(name, value, GetSetFormatters);
-        }
-
-        private void AddToProviders(string name, string value, IEnumerable<ParentProvider> providers)
+        private void AddMetaProviders(string name, string subprops, string value, IEnumerable<ParentProvider> providers)
         {
             foreach (ISettingsDictionary s in ProvidersFrom(providers))
             {
-                var v = s.grabSetting(name);
-                if (v == null) s.addSetting(name, value);
+                string np = name + "." + subprops;
+                var v = s.grabSetting(np);
+                s.addSetting(np, value);
             }
         }
 
@@ -1500,13 +1480,9 @@ namespace RTParser.Variables
         public void Clone(ISettingsDictionary target)
         {
             var dt = ToSettingsDictionary(target);
-            lock (SetReturnProviders) foreach (var pp in SetReturnProviders)
+            lock (MetaProviders) foreach (var pp in MetaProviders)
                 {
-                    dt.InsertSettingReturnTypes(pp);
-                }
-            lock (GetSetFormatters) foreach (var pp in GetSetFormatters)
-                {
-                    dt.InsertGetSetFormatter(pp);
+                    dt.InsertMetaProvider(pp);
                 }
             lock (orderedKeys)
             {
