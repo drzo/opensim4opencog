@@ -43,11 +43,12 @@ namespace RTParser.AIMLTagHandlers
             if (CheckNode("dbquery"))
             {               
                 // otherwise take the tag content as a srai (to trip say a random reply)
-                const bool useSynonyms = true; // actually WordNet
+                const bool expandOnNoHits = true; // actually WordNet
+                const float threshold = 0.0f;
                 Unifiable templateNodeInnerValue = Recurse();
                 string searchTerm1 = (string) templateNodeInnerValue;
                 Unifiable converseMemo = TargetBot.LuceneIndexer.callDbQuery(searchTerm1, this.writeToLog, this.OnFalure,
-                                                                        this.templateNode, useSynonyms);
+                                                                        this.templateNode, threshold, expandOnNoHits);
 
                 // if there is a high enough scoring record in Lucene, use up to max number of them?
                 // otherwise there is a conversation memo then pop it??

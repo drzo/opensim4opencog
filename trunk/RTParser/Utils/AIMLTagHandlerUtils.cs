@@ -191,8 +191,14 @@ namespace RTParser.Utils
             return GetAttribValue(templateNode, attribName, () => defaultIfEmpty, query);
         }
 
-        static public Unifiable GetAttribValue(XmlNode node, string attribName, Func<string> defaultIfEmpty, SubQuery sq)
+        static public Unifiable GetAttribValue(XmlNode node, string attribName,  Func<string> defaultIfEmpty, SubQuery sq)
+        {            
+            string realName;
+            return GetAttribValue(node, attribName, out realName, defaultIfEmpty, sq);
+        }
+        static public Unifiable GetAttribValue(XmlNode node, string attribName, out string realName, Func<string> defaultIfEmpty, SubQuery sq)
         {
+            realName = null;
             if (node == null) return defaultIfEmpty();
             bool found = false;
             Unifiable u = Unifiable.NULL;
@@ -205,6 +211,7 @@ namespace RTParser.Utils
                     if (attrib.Name.ToLower() == attribnym)
                     {
                         found = true;
+                        realName = attribnym;
                         var r = ReduceStar(attrib.Value, sq, sq);
                         if (!Unifiable.IsNullOrEmpty(r)) return r;
                         if (Unifiable.IsNull(r)) continue;
@@ -308,7 +315,7 @@ namespace RTParser.Utils
                 }
                 else if (name.StartsWith("%dictvar_"))
                 {
-                    Unifiable value = dict.grabSetting(name.Substring(8));
+                    Unifiable value = value = GetValue(query, dict, name.Substring(8));
                     if (!Unifiable.IsNullOrEmpty(value)) return value;
                 }
                 else if (name.StartsWith("%"))
@@ -317,21 +324,21 @@ namespace RTParser.Utils
                     string str = name.Substring(1);
                     if (str.StartsWith("bot."))
                     {
-                        ISettingsDictionary dict2 = query.Request.TargetBot.GlobalSettings;
+                        var dict2 = query.Request.TargetBot.GlobalSettings;
                         str = str.Substring(4);
-                        value = dict2.grabSetting(str);
+                        value = GetValue(query, dict2, str);
                         if (!Unifiable.IsNullOrEmpty(value)) return value;
                     }
                     else if (str.StartsWith("user."))
                     {
                         ISettingsDictionary dict2 = query.Request.user;
                         str = str.Substring(5);
-                        value = dict2.grabSetting(str);
+                        value = GetValue(query, dict2, str);
                         if (!Unifiable.IsNullOrEmpty(value)) return value;                        
                     }
                     if (dict != null)
                     {
-                        value = dict.grabSetting(str);
+                        value = GetValue(query, dict, str);
                         if (!Unifiable.IsNullOrEmpty(value)) return value;
                     }
                 }
@@ -343,7 +350,23 @@ namespace RTParser.Utils
             return null;
         }
 
-        private static Unifiable GetDictData(List<Unifiable> unifiables, string name, int startChars)
+        private static Unifiable GetValue(SubQuery query, ISettingsDictionary dict2, string str)
+        {
+            Unifiable value;
+            value = dict2.grabSetting(str);
+            return value;
+        }
+
+        private static Unifiable GetDictData(IList<Unifiable> unifiables, string name, int startChars)
+        {
+            var u = GetDictData0(unifiables, name, startChars);
+            string toup = u.ToUpper();
+            if (string.IsNullOrEmpty(toup)) return u;
+            if (char.IsLetterOrDigit(toup[0])) return u;           
+            return u;
+        }
+
+        private static Unifiable GetDictData0(IList<Unifiable> unifiables, string name, int startChars)
         {
             string s = name.Substring(startChars);
 

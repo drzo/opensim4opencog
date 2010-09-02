@@ -63,13 +63,8 @@ namespace RTParser.AIMLTagHandlers
             if (CheckNode("get"))
             {
                 string name = GetAttribValue(templateNode, "name,var", () => templateNodeInnerText, query);
-                Unifiable defaultVal = GetAttribValue("default", Unifiable.Empty);
-                ISettingsDictionary dict = query;
-                string dictName = GetDictName("type,dict");
-                Unifiable gName = GetAttribValue("global_name", name);
                 bool succeed;
-                var v = NamedValuesFromSettings.GetSettingForType(dictName, query, query, name, gName, defaultVal,
-                                                                  out succeed, templateNode);
+                Unifiable v = base.GetActualValue(name, false, out succeed);
                 if (succeed) Succeed();
                 return v;
             }

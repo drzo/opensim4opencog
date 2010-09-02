@@ -725,7 +725,7 @@ namespace RTParser
 
         public static bool IsFalseOrNo(string tst)
         {
-            return (tst == "NO" || tst == "" || tst == "N" || tst == "FALSE" || tst == "F" || tst == "NIL");
+            return (tst == "NO" || tst == "N" || tst == "FALSE" || tst == "F" || tst == "NIL");
         }
         public static bool IsTrueOrYes(string tst)
         {

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -17,6 +18,7 @@ using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
 using RTParser.Utils;
+using RTParser.Variables;
 
 namespace RTParser.Database
 {
@@ -71,6 +73,8 @@ namespace RTParser.Database
                                                       "it",
                         // because  "$user emotion is $value" should be "$bot feels $value emotion towards $user"
                         "emotion", 
+                        "it",
+                        "they",
                     })
                                                            {
                 AddExcludedRelation(str);
@@ -78,12 +82,11 @@ namespace RTParser.Database
             foreach (string str in
                 new[]
                     {
-                        "",
                                                                "unknown_user",
                                                                "unknown.*",
                     })
             {
-                AddRegex(ExcludeVals, str);
+                AddExcludedValue(str);
             }
         }
 
@@ -467,13 +470,13 @@ namespace RTParser.Database
         /// <param name="ids">An out parameter that is populated by this method for the caller with docments ids.</param>
         /// <param name="results">An out parameter that is populated by this method for the caller with docments text.</param>
         /// <param name="scores">An out parameter that is populated by this method for the caller with docments scores.</param>
-        public int Search(string searchTerm, out ulong[] ids, out string[] results, out float[] scores, WordNetExpander expandWithWordNet)
+        public int Search(string searchTerm, out ulong[] ids, out string[] results, out float[] scores, WordNetExpander expandWithWordNet, bool expandOnNoHits)
         {
             lock (dbLock)
             {
                 try
                 {
-                    return Search0(searchTerm, out ids, out results, out scores, expandWithWordNet);
+                    return Search0(searchTerm, out ids, out results, out scores, expandWithWordNet, expandOnNoHits);
                 }
                 catch (Exception e)
                 {
@@ -485,7 +488,7 @@ namespace RTParser.Database
                 }
             }
         }
-        internal int Search0(string searchTerm, out ulong[] ids, out string[] results, out float[] scores, WordNetExpander expandWithWordNet)
+        internal int Search0(string searchTerm, out ulong[] ids, out string[] results, out float[] scores, WordNetExpander expandWithWordNet, bool expandOnNoHits)
         {
             checkDbLock();
             if (!IsDbPresent)
@@ -518,7 +521,7 @@ namespace RTParser.Database
                     scores[i] = score;
                 }
 
-                if (numHits == 0)
+                if (numHits == 0 && expandOnNoHits)
                 {
                     // Try expansion
                     //QueryParser queryParser = new QueryParser(_fieldName, _analyzer);
@@ -583,39 +586,33 @@ namespace RTParser.Database
 
         public int assertTriple(string subject, string relation, string value)
         {
-            string factoidSRV = String.Format("{0} {1} is {2}", subject, relation, value);
-            string prefix = string.Format("assertTriple {0}", factoidSRV);
-            if (IsExcludedSRV(subject, relation, value, prefix, writeToLog)) return -1;
-            writeToLog(prefix);
+            string factoidSRV = GenFormatFactoid(subject, relation, value);
+            if (IsExcludedSRV(subject, relation, value, factoidSRV, writeToLog, "assertTriple")) return -1;
             return Insert(factoidSRV, WordNetExpand);
         }
 
         public int retractTriple(string subject, string relation, string value)
         {
             if (!IsDbPresent) return 0;
-            string factoidSRV = String.Format("{0} {1} is {2}", subject, relation, value);
-            string prefix = string.Format("retractTriple {0}", factoidSRV);
-            if (IsExcludedSRV(subject, relation, value, prefix, writeToLog)) return -1;
-            writeToLog(prefix);
+            string factoidSRV = GenFormatFactoid(subject, relation, value);
+            if (IsExcludedSRV(subject, relation, value, factoidSRV, writeToLog, "retractTriple")) return -1;
             return DeleteTopScoring(factoidSRV, true);
         }
 
         public int retractAllTriple(string subject, string relation)
         {
             if (!IsDbPresent) return 0;
-            string factoidSR = String.Format("{0} {1} is {2}", subject, relation, "");
-            string prefix = string.Format("retractAllTriple {0}", factoidSR);
-            if (IsExcludedSRV(subject, relation, subject, prefix, writeToLog)) return -1;
-            writeToLog(prefix);
+            string factoidSR = GenFormatFactoid(subject, relation, "");
+            if (IsExcludedSRV(subject, relation, "", factoidSR, writeToLog, "retractAllTriple")) return -1;
             return DeleteTopScoring(factoidSR, true);
         }
 
         public int updateTriple(string subject, string relation, string value)
         {
-            string factoidSRV = String.Format("{0} {1} is {2}", subject, relation, value);
-            string prefix = string.Format("updateTriple {0}", factoidSRV);
-            if (IsExcludedSRV(subject, relation, value, prefix, writeToLog)) return -1;
-            string factoidSR = String.Format("{0} {1} is", subject, relation);
+            string factoidSRV = GenFormatFactoid(subject, relation, value);
+            string factoidSR = GenFormatFactoid(subject, relation, "");
+            if (IsExcludedSRV(subject, relation, "", factoidSRV,
+                writeToLog, "updateTriple {0}=> ", factoidSR)) return -1;
             return EnsureLockedDatabase(() =>
                                             {
                                                 int deleted = DeleteTopScoring0(factoidSR, true);
@@ -625,11 +622,24 @@ namespace RTParser.Database
 
         public String queryTriple(string subject, string relation, XmlNode templateNode)
         {
-            string factoidSR = String.Format("{0} {1} is", subject, relation);
-            string prefix = string.Format("queryTriple {0}", factoidSR);
-            if (IsExcludedSRV(subject, relation, subject, prefix, writeToLog)) return String.Empty;
+            string factoidSR = GenFormatFactoid(subject, relation, "");
+            if (IsExcludedSRV(subject, relation, "", factoidSR, writeToLog, "queryTriple")) return String.Empty;
 
-            string result = callDbQuery(factoidSR, writeToLog, (any) => null, templateNode);
+            float threshold = 0.5f;
+            float minTerms = 0.3f;
+            bool expandWithWordNet = true;
+            bool expandOnNoHits = false;
+
+            bool tf;
+            if (Unifiable.TryParseBool(RTPBot.GetAttribValue(templateNode, "expand", null), out tf))
+            {
+                expandOnNoHits = tf;
+            }
+            if (Unifiable.TryParseBool(RTPBot.GetAttribValue(templateNode, "wordnet,synonyms", null), out tf))
+            {
+                expandWithWordNet = tf;
+            }
+            string result = callDbQuery(factoidSR, writeToLog, (any) => null, templateNode, threshold, expandWithWordNet, expandOnNoHits);
             if (!string.IsNullOrEmpty(result) && result.ToLower().StartsWith(factoidSR.ToLower()))
             {
                 writeToLog("Success! queryTriple {0}, {1} => {2}", subject, relation, result);
@@ -638,14 +648,131 @@ namespace RTParser.Database
             writeToLog("queryTriple {0}, {1} => '{2}' (returning String.Empty)", subject, relation, result);
             return String.Empty;
         }
-         
+
+        public int assertDictionary(string subject, SettingsDictionary dictionary)
+        {
+            int asserts = 0;
+            foreach (var relation in dictionary.SettingNames(1))
+            {
+                Unifiable value = dictionary.grabSettingNoDebug(relation);
+                asserts += updateTriple(subject, relation, value);
+            }
+            return asserts;
+        }
+
+        public string GenFormatFactoid(string subject, string relation, string value)
+        {
+             
+            string subj = Entify(subject);
+            string pred = Entify(relation);
+            string botName = Entify(TheBot.UserID);
+
+            var dictionary = TheBot.GetDictionary(subj) as SettingsDictionary;
+
+            bool noValue = string.IsNullOrEmpty(value);
+
+            Unifiable uformatter = GetDictValue(dictionary, pred);
+
+            string formatter;
+            if (Unifiable.IsNullOrEmpty(uformatter) || Unifiable.IsTrueOrYes(uformatter) || uformatter == "default")
+            {
+                formatter = " {0} {1} is {2} ";
+            }
+            else
+            {
+                formatter = (string) uformatter;
+                formatter = " " + formatter + " ";
+                int formatterQA = formatter.IndexOf(" | ");
+                if (formatterQA != -1)
+                {
+                    if (noValue)
+                    {
+                        // query mode
+                        formatter = formatter.Substring(formatterQA + 2).Trim();
+                    }
+                    else
+                    {
+                        // assert mode
+                        formatter = formatter.Substring(0, formatterQA).Trim();
+                    }
+                }
+                else
+                {
+                    if (noValue)
+                    {
+                        // query mode
+                        formatter = GetDictValue(dictionary, relation + ".format-assert");
+                    }
+                    else
+                    {
+                        // assert mode
+                        formatter = GetDictValue(dictionary, relation + ".format-assert");
+                    }
+                }
+
+                var whword = GetDictValue(dictionary, relation + ".format-whword");
+
+                if (!Unifiable.IsNullOrEmpty(whword) && noValue) value = whword;
+ 
+                if (Unifiable.IsFalseOrNo(formatter.Trim().ToUpper()))
+                {
+                    return "false";
+                }
+
+                formatter = SafeReplace(formatter, "$subject", "{0}");
+                formatter = SafeReplace(formatter, "$verb", "{1}");
+                formatter = SafeReplace(formatter, "$object", "{2}");
+
+                formatter = SafeReplace(formatter, "$user", "{0}");
+                formatter = SafeReplace(formatter, "$relation", "{1}");
+                formatter = SafeReplace(formatter, "$value", "{2}");
+
+                formatter = SafeReplace(formatter, "$predicate", pred);
+
+                formatter = SafeReplace(formatter, "$set-return", TheBot.SetPredicateReturn.grabSettingNoDebug(relation));
+                formatter = SafeReplace(formatter, "$default", TheBot.DefaultPredicates.grabSettingNoDebug(relation));
+                formatter = SafeReplace(formatter, "$bot", botName);
+            }            
+
+            string english = " " + String.Format(formatter, subj, pred, Entify(value)).Trim() + " ";
+            english = english.Replace(" I ", subj);
+            english = english.Replace(" you ", botName);
+            english = english.Trim();
+            return english;
+        }
+
+        static string SafeReplace(string formatter,string find, string replace)
+        {
+            formatter = formatter.Replace(" " + find + "'", " " + replace + "'");
+            formatter = formatter.Replace(" " + find + " ", " " + replace + " ");
+            return formatter;
+        }
+
+        private static string Entify(string subject)
+        {
+            if (string.IsNullOrEmpty(subject)) return "";
+            string subj = subject.Replace(" ", "_");
+            return subj.Trim();
+        }
+
+        public Unifiable GetDictValue(SettingsDictionary dict, string relation)
+        {
+            if (dict != null)
+            {
+                string formatter = dict.GetFormatter(relation);
+                if (!Unifiable.IsNullOrEmpty(formatter))
+                    return formatter;
+            }
+            return TheBot.SetRelationFormat.grabSetting(relation);
+        }
+
         public int callDbPush(string myText, XmlNode expandWordnet)
         {
             // the defualt is true
             WordNetExpander expandWithWordNet = WordNetExpand;
 
             bool tf;
-            if (Unifiable.TryParseBool(RTPBot.GetAttribValue(expandWordnet,"wordnet,synonyms", "" + expandWithWordNet), out tf))
+            if (Unifiable.TryParseBool(RTPBot.GetAttribValue(expandWordnet, "wordnet,synonyms", null), out tf))
         {
                 expandWithWordNet = tf ? (WordNetExpander) WordNetExpand : NoWordNetExpander;
             }
@@ -660,25 +787,40 @@ namespace RTParser.Database
             return numIndexed;
         }
 
-        public string callDbQuery(string searchTerm1, OutputDelegate dbgLog, Func<string, Unifiable> OnFalure, XmlNode templateNode)
+        /// <summary>
+        ///  Inspects the templateNode for 
+        ///     max  = 1,
+        ///     failprefix = "",
+        ///     wordnet = true,
+        ///     threshold = 0.0f
+        /// </summary>
+        /// <param name="searchTerm1"></param>
+        /// <param name="dbgLog"></param>
+        /// <param name="OnFalure"></param>
+        /// <param name="templateNode"></param>
+        /// <param name="threshold"> &lt;dbquery&gt; uses 0.0f by default</param>
+        /// <param name="expandOnNoHits"></param>
+        /// <returns></returns>
+        public string callDbQuery(string searchTerm1, OutputDelegate dbgLog, Func<string, Unifiable> OnFalure,
+            XmlNode templateNode, float threshold, bool expandOnNoHits)
         {
             // if synonyms is overriden?? the defualt is true
             bool expandWithWordNet = true;
 
             bool tf;
-            if (Unifiable.TryParseBool(RTPBot.GetAttribValue(templateNode, "wordnet,synonyms", "" + expandWithWordNet),
-                                       out tf))
+            if (Unifiable.TryParseBool(RTPBot.GetAttribValue(templateNode, "wordnet,synonyms", null), out tf))
             {
                 expandWithWordNet = tf;
             }
-            return callDbQuery(searchTerm1, dbgLog, OnFalure, templateNode, expandWithWordNet);
+            return callDbQuery(searchTerm1, dbgLog, OnFalure, templateNode, threshold, expandWithWordNet, expandOnNoHits);
         }
-        public string callDbQuery(string searchTerm1, OutputDelegate dbgLog, Func<string, Unifiable> OnFalure, XmlNode templateNode, bool expandWithWordNet)
+
+        public string callDbQuery(string searchTerm1, OutputDelegate dbgLog, Func<string, Unifiable> OnFalure, XmlNode templateNode, float threshold ,bool expandWithWordNet, bool expandOnNoHits)
         {
-            return EnsureLockedDatabase(() => callDbQuery0(searchTerm1, dbgLog, OnFalure, templateNode, expandWithWordNet)); 
+            return EnsureLockedDatabase(() => callDbQuery0(searchTerm1, dbgLog, OnFalure, templateNode, threshold , expandWithWordNet, expandOnNoHits)); 
         }
-        public string callDbQuery0(string searchTerm1, OutputDelegate dbgLog, Func<string, Unifiable> OnFalure, XmlNode templateNode, bool expandWithWordNet)
-        {
+        public string callDbQuery0(string searchTerm1, OutputDelegate dbgLog, Func<string, Unifiable> OnFalure, XmlNode templateNode,float threshold, bool expandWithWordNet, bool expandOnNoHits)
+        {           
             checkDbLock();
             WordNetExpander wordNetExpander = expandWithWordNet ? (WordNetExpander)WordNetExpand : NoWordNetExpander;
             try
@@ -695,11 +837,18 @@ namespace RTParser.Database
                 string maxReplyStr = RTPBot.GetAttribValue(templateNode, "max", "1").ToLower();
                 int maxReply = Int16.Parse(maxReplyStr);
                 string failPrefix = RTPBot.GetAttribValue(templateNode, "failprefix", "").ToLower();
-                string thresholdStr = RTPBot.GetAttribValue(templateNode, "threshold", "0").ToLower();
-                float threshold = float.Parse(thresholdStr);
+                string thresholdStr = RTPBot.GetAttribValue(templateNode, "threshold", null);
+                if (!string.IsNullOrEmpty(thresholdStr))
+                {
+                    float parsed;
+                    if (float.TryParse(thresholdStr, out parsed))
+                    {
+                        threshold = parsed;
+                    }
+                }
 
                 dbgLog("Searching for the term \"{0}\"...", searchTerm1);
-                Search0(searchTerm1, out ids, out results, out scores, wordNetExpander);
+                Search0(searchTerm1, out ids, out results, out scores, wordNetExpander, expandOnNoHits);
                 numHits = ids.Length;
                 dbgLog("Number of hits == {0}.", numHits);
                 for (int i = 0; i < numHits; ++i)
@@ -856,40 +1005,53 @@ namespace RTParser.Database
         }
 
 
-        private bool IsExcludedSRV(string subject, string relation, string value, string prefix, OutputDelegate writeToLog)
+        private bool IsExcludedSRV(string subject, string relation, string value, string factoidSRV, 
+            OutputDelegate writeToLog, string fmtString, params object[] fmtArgs)
         {
             bool ExcludedFactPattern = false;
-            bool debug = (writeToLog != null && prefix != null);
+            bool debug = (writeToLog != null);
+            fmtString = string.Format(fmtString, fmtArgs);
+            if (factoidSRV == "false")
+            {
+                if (!debug) return true;
+                writeToLog("ExcludedSRV: '{0}' Format '{1}'", fmtString, relation);
+                ExcludedFactPattern = true;
+            }
+            fmtString = factoidSRV + " " + fmtString;
             if (IsExcludedRelation(relation))
             {
                 if (!debug) return true;
-                writeToLog("ExcludedSRV: '{0}' Relation '{1}'", prefix, relation);
+                writeToLog("ExcludedSRV: '{0}' Relation '{1}'", fmtString, relation);
                 if (!ExtremeDebug) return true;
                 ExcludedFactPattern = true;
             }
             if (IsExcludedSubject(subject))
             {
                 if (!debug) return true;
-                writeToLog("ExcludedSRV: '{0}' Subject '{1}'", prefix, subject);
+                writeToLog("ExcludedSRV: '{0}' Subject '{1}'", fmtString, subject);
                 if (!ExtremeDebug) return true;
                 ExcludedFactPattern = true;
             }
             if (IsExcludedValue(value))
             {
                 if (!debug) return true;
-                writeToLog("ExcludedSRV: '{0}' Value '{1}'", prefix, value);
+                writeToLog("ExcludedSRV: '{0}' Value '{1}'", fmtString, value);
                 ExcludedFactPattern = true;
             }
+            if (debug) writeToLog(factoidSRV + " " + fmtString, fmtArgs);
             return ExcludedFactPattern;
         }
 
         public bool IsExcludedSubject(string subject)
         {
+            if (string.IsNullOrEmpty(subject)) return true;
             return IsExcludedValue(subject);
         }
 
         public bool IsExcludedRelation(string value)
         {
+            if (string.IsNullOrEmpty(value)) return true;
+            if (AIMLTagHandler.ReservedAttributes.Contains(value)) return true;
             return NullOrMatchInSet(ExcludeRels, value);
         }
 
@@ -927,7 +1089,10 @@ namespace RTParser.Database
                 value = value.Replace("_", " ").ToLower();
                 foreach (var rel in rels)
                 {
-                    if (Regex.IsMatch(value, rel)) return true;
+                    if (Regex.IsMatch(value, rel))
+                    {
+                        return true;
+                    }
                 }
             }
             return false;

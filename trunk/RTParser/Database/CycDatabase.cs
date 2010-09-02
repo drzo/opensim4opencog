@@ -437,7 +437,7 @@ namespace RTParser.Database
                 {
                     result = ((CycObject)oresult).cyclifyWithEscapeChars();
                 }
-                if (!String.IsNullOrEmpty(filter) && filter == "paraphrase")
+                if (!Unifiable.IsNullOrEmpty(filter) && filter == "paraphrase")
                 {
                     return this.Paraphrase(result);
                 }

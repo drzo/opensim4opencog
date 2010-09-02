@@ -7,10 +7,12 @@ using System.Threading;
 using System.Xml;
 using System.IO;
 using System.Xml.Serialization;
+using Lucene.Net.Store;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
 using RTParser;
+using RTParser.Database;
 using RTParser.Normalize;
 using RTParser.Utils;
 
@@ -209,7 +211,7 @@ namespace RTParser.Variables
                     {
                         XmlNode item = result.CreateNode(XmlNodeType.Element, "item", "");
                         XmlAttribute name = result.CreateAttribute("name");
-                        name.Value = n;
+                        name.Value = n.ToLower();
                         XmlAttribute value = result.CreateAttribute("value");
                         value.Value = this.settingsHash[TransformKey(n)];
                         item.Attributes.Append(name);
@@ -413,6 +415,7 @@ namespace RTParser.Variables
             {
                 returnNameWhenSet = returnNameWhenSet.Trim();
                 if (returnNameWhenSet.Length == 0) returnNameWhenSet = "false";
+                else if (Unifiable.IsNullOrEmpty(returnNameWhenSet)) returnNameWhenSet = "value";
                 else if (Unifiable.IsFalseOrNo(returnNameWhenSet)) returnNameWhenSet = "value";
                 else if (Unifiable.IsTrueOrYes(returnNameWhenSet)) returnNameWhenSet = "name";
             }
@@ -423,11 +426,43 @@ namespace RTParser.Variables
                 ToSettingsDictionary(dict).addSetReturn(name, returnNameWhenSet);
             }
 
+            SettingsDictionary dictionary = ToSettingsDictionary(dict);
             string englishFormatter =
-                RTPBot.GetAttribValue(myNode, "formatter", null);
+                RTPBot.GetAttribValue(myNode, "formatter,pred-format,genformat,format,printf,lucene,english", null);
             if (englishFormatter != null)
             {
-                ToSettingsDictionary(dict).addFormatter(name, englishFormatter);
+                string formatter = englishFormatter;
+                formatter = " " + formatter + " ";
+                int formatterQA = formatter.IndexOf(" | ");
+                if (formatterQA != -1)
+                {
+                        // query mode
+                        formatter = formatter.Substring(formatterQA + 2).Trim();
+                        dictionary.addFormatter(name + ".format-assert", formatter);
+                        // assert mode
+                        formatter = formatter.Substring(0, formatterQA).Trim();
+                        dictionary.addFormatter(name + ".query-assert", formatter);
+                } else
+                {
+                    // both query/assert
+                    dictionary.addFormatter(name + ".format-assert", englishFormatter);
+                    dictionary.addFormatter(name + ".format-query", englishFormatter);
+                }
+            }
+            englishFormatter = RTPBot.GetAttribValue(myNode, "assert,format-assert", null);
+            if (englishFormatter != null)
+            {
+                dictionary.addFormatter(name + ".format-assert", englishFormatter);
+            }
+            englishFormatter = RTPBot.GetAttribValue(myNode, "query,format-query", null);
+            if (englishFormatter != null)
+            {
+                dictionary.addFormatter(name + ".format-query", englishFormatter);
+            }
+            englishFormatter = RTPBot.GetAttribValue(myNode, "whword", null);
+            if (englishFormatter != null)
+            {
+                dictionary.addFormatter(name + ".format-whword", englishFormatter);
             }
 
             bool dictcontainsLocalCalled = dict.containsLocalCalled(name);
@@ -599,7 +634,7 @@ namespace RTParser.Variables
             SettingsDictionary settingsDict = ToSettingsDictionary(dict);
             if ((lower == "parent" || lower == "override" || lower == "fallback" || lower == "listener"
                 || lower == "provider" || lower == "syncon" || lower == "synchon" || lower == "prefixes"
-                || lower == "settingtypes" || lower == "formatters"))
+                || lower == "settingtypes" || lower == "formatter"))
             {
                 string name = RTPBot.GetAttribValue(myNode, "value,dict,name", null);
                 if (!string.IsNullOrEmpty(name))
@@ -1353,7 +1388,7 @@ namespace RTParser.Variables
         /// <summary>
         /// //"$bot feels $value emotion towards $user";
         /// </summary>
-        public String DefaultFormatter = "$user $relation is $value";  //default
+        public String DefaultFormatter = "$subject $relation is $value";  //default
         /// <summary>
         /// $user $relation $value   $robot  $dict
         ///   1      2        3       4       5 
@@ -1441,7 +1476,7 @@ namespace RTParser.Variables
 
         private void addSetReturn(string name, string value)
         {
-            AddToProviders(name, value, SetReturnProviders);
+            AddToProviders(name + ".set-return", value, SetReturnProviders);
         }
 
         public void addFormatter(string name, string value)
@@ -1581,7 +1616,13 @@ namespace RTParser.Variables
             }
         }
 
-        public static Unifiable grabSettingDefualt(ISettingsDictionary dictionary, string name, out string realName)
+        public static Unifiable grabSettingDefault(ISettingsDictionary dictionary, string name, out string realName, SubQuery query)
+        {
+            bool succeed;
+            return NamedValuesFromSettings.GetSettingForType(dictionary.NameSpace, query, dictionary, name, 
+                out realName, name, null, out succeed, null);
+        }
+        public static Unifiable grabSettingDefaultDict(ISettingsDictionary dictionary, string name, out string realName)
         {
             realName = name;
             var un = dictionary.grabSetting(name);
@@ -1590,7 +1631,7 @@ namespace RTParser.Variables
                 if (name.Contains(","))
                     foreach (string name0 in name.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
                     {
-                        un = grabSettingDefualt(dictionary, name0, out realName);
+                        un = grabSettingDefaultDict(dictionary, name0, out realName);
                         if (!Unifiable.IsNull(un))
                         {
                             return un;
@@ -1603,7 +1644,7 @@ namespace RTParser.Variables
                     if (name.StartsWith(chop))
                     {
                         string newName = name.Substring(chop.Length);
-                        return grabSettingDefualt(dictionary, newName, out newName);
+                        return grabSettingDefaultDict(dictionary, newName, out newName);
                     }
                 }
                 foreach (var chop in chops)
