@@ -377,14 +377,14 @@ namespace RTParser.Database
 
         public void assertTriple(string subject, string relation, string value)
         {
-            if (IsExcludedSubject(subject))
-            {
-                writeToLog("Excluded Subject: {0}, {1}, {2}", subject, relation, value);
-                return;
-            }
             if (IsExcludedRelation(relation))
             {
                 writeToLog("Excluded Relation: {0}, {1}, {2}", subject, relation, value);
+                return;
+            }
+            if (IsExcludedSubject(subject))
+            {
+                writeToLog("Excluded Subject: {0}, {1}, {2}", subject, relation, value);
                 return;
             }
             if (IsExcludedValue(relation))
