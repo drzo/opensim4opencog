@@ -169,8 +169,9 @@ namespace RTParser.Utils
                 }
                 catch (Exception e)
                 {
-                    writeToLog("ERROR: " + e);
-                    return default(R);
+                    writeToLog("ERROR: LoaderOper {0}", e);
+                    throw;
+                    //return default(R);
                 }
             }
             finally
