@@ -39,6 +39,17 @@ namespace RTParser.Utils
         /// </summary>
         public static ICollection<string> ReservedAttributes = new HashSet<string> { };
         public bool IsStarted = false;
+        protected RTPBot TargetBot
+        {
+            get
+            {
+                if (query != null) return query.TargetBot;
+                if (result != null) return result.bot;
+                if (request != null) return request.TargetBot;
+                if (user != null) return user.bot;
+                return Proc;
+            }
+        }
 
         /// <summary>
         /// By calling this and not just ProcessChange() 
@@ -482,6 +493,7 @@ namespace RTParser.Utils
         protected Unifiable RecurseResult = Unifiable.NULL;
         protected static Func<string> EmptyFunct = (() => String.Empty);
         protected static Func<string> NullStringFunct = (() => null);
+        private bool IsStarAtomically;
 
 
         protected Unifiable Recurse()
@@ -512,6 +524,13 @@ namespace RTParser.Utils
             }
             else
             {
+                if (IsStarAtomically)
+                {
+                    // atomic version of the node
+                    Unifiable starContent = GetStarContent();
+                    if (!Unifiable.IsNullOrEmpty(starContent))
+                        return starContent;
+                }
                 Unifiable before = Unifiable.InnerXmlText(this.templateNode); //.InnerXml;        
                 return CheckValue(before);
             }

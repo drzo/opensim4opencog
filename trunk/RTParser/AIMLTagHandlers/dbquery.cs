@@ -40,14 +40,13 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "dbquery")
-            {
-                
+            if (CheckNode("dbquery"))
+            {               
                 // otherwise take the tag content as a srai (to trip say a random reply)
                 const bool useSynonyms = true; // actually WordNet
                 Unifiable templateNodeInnerValue = Recurse();
                 string searchTerm1 = (string) templateNodeInnerValue;
-                Unifiable converseMemo = this.request.TargetBot.LuceneIndexer.callDBQuery(searchTerm1, this.writeToLog, this.OnFalure,
+                Unifiable converseMemo = TargetBot.LuceneIndexer.callDbQuery(searchTerm1, this.writeToLog, this.OnFalure,
                                                                         this.templateNode, useSynonyms);
 
                 // if there is a high enough scoring record in Lucene, use up to max number of them?
@@ -68,10 +67,8 @@ namespace RTParser.AIMLTagHandlers
         private Unifiable OnFalure(string failPrefix)
         {
             Unifiable starContent = Recurse();
-            string sariCallStr  = failPrefix +" "+ (string)starContent;
-            XmlNode sraiNode = RTParser.Utils.AIMLTagHandler.getNode(String.Format("<srai>{0}</srai>", sariCallStr.Trim()), templateNode);
-            srai sraiHandler = new srai(this.Proc, this.user, this.query, this.request, this.result, sraiNode);
-            return sraiHandler.Transform();
+            string sariCallStr = failPrefix + " " + (string) starContent;
+            return callSRAI(sariCallStr);
         }
 
         public override void writeToLog(string s, params object[] p)

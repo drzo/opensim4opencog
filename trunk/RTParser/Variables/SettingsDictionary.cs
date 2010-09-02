@@ -7,6 +7,7 @@ using System.Threading;
 using System.Xml;
 using System.IO;
 using System.Xml.Serialization;
+using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
 using RTParser;
@@ -180,9 +181,17 @@ namespace RTParser.Variables
                         item.Attributes.Append(value);
                         root.AppendChild(item);
                     }
-                    foreach (var normalizedName in ProvidersFrom(this.SettingReturnType))
+                    foreach (var normalizedName in ProvidersFrom(this.SetReturnProviders))
                     {
                         XmlNode item = result.CreateNode(XmlNodeType.Element, "settingtypes", "");
+                        XmlAttribute name = result.CreateAttribute("name");
+                        name.Value = normalizedName.NameSpace;
+                        item.Attributes.Append(name);
+                        root.AppendChild(item);
+                    }
+                    foreach (var normalizedName in ProvidersFrom(this.GetSetFormatters))
+                    {
+                        XmlNode item = result.CreateNode(XmlNodeType.Element, "formatter", "");
                         XmlAttribute name = result.CreateAttribute("name");
                         name.Value = normalizedName.NameSpace;
                         item.Attributes.Append(name);
@@ -228,6 +237,7 @@ namespace RTParser.Variables
             if (!IsSubsts)
             {
                 if (bot.SetPredicateReturn != null) this.InsertSettingReturnTypes(bot.GetSetPredicateReturn);
+                if (bot.SetRelationFormat != null) this.InsertGetSetFormatter(bot.GetSetRelationFormat);
             }
             IsTraced = true;
             if (parent != null) _fallbacks.Add(parent);
@@ -254,6 +264,7 @@ namespace RTParser.Variables
         /// <param name="pathToSettings">The file containing the settings</param>
         public void loadSettings(string pathToSettings, Request request)
         {
+            OutputDelegate writeToLog = request.writeToLog;
             if (pathToSettings == null) return;
             lock (orderedKeys)
             {
@@ -292,8 +303,13 @@ namespace RTParser.Variables
         static public void loadSettings(ISettingsDictionary dict0, string pathToSettings,
             bool overwriteExisting, bool onlyIfUnknown, Request request)
         {
-            SettingsDictionary dict = ToSettingsDictionary(dict0);
             if (pathToSettings == null) return;
+            SettingsDictionary dict = ToSettingsDictionary(dict0);
+            OutputDelegate writeToLog = dict.writeToLog;
+            // or else
+// ReSharper disable ConstantNullColescingCondition
+            writeToLog = writeToLog ?? request.writeToLog;
+// ReSharper restore ConstantNullColescingCondition
             lock (dict.orderedKeys)
             {
                 if (pathToSettings.Length > 0)
@@ -308,7 +324,7 @@ namespace RTParser.Variables
                     }
                     if (!HostSystem.FileExists(pathToSettings))
                     {
-                        dict.writeToLog("ERROR No settings found in: " + pathToSettings);
+                        writeToLog("ERROR No settings found in: " + pathToSettings);
                         //throw new FileNotFoundException(pathToSettings);
                         return;
                     }
@@ -320,12 +336,12 @@ namespace RTParser.Variables
                         xmlDoc.Load(stream);
                         HostSystem.Close(stream);
                         loadSettingNode(dict, xmlDoc, overwriteExisting, onlyIfUnknown, request);
-                        dict.writeToLog("Loaded Settings found in: " + pathToSettings);
+                        writeToLog("Loaded Settings found in: " + pathToSettings);
                         if (dict.fromFile == null) dict.fromFile = pathToSettings;
                     }
                     catch (Exception e)
                     {
-                        dict.writeToLog("ERROR loadSettings: " + pathToSettings + "\n" + e);
+                        writeToLog("ERROR loadSettings: " + pathToSettings + "\n" + e);
                     }
                 }
                 else
@@ -405,6 +421,13 @@ namespace RTParser.Variables
             if (returnNameWhenSet != null)
             {
                 ToSettingsDictionary(dict).addSetReturn(name, returnNameWhenSet);
+            }
+
+            string englishFormatter =
+                RTPBot.GetAttribValue(myNode, "formatter", null);
+            if (englishFormatter != null)
+            {
+                ToSettingsDictionary(dict).addFormatter(name, englishFormatter);
             }
 
             bool dictcontainsLocalCalled = dict.containsLocalCalled(name);
@@ -576,7 +599,7 @@ namespace RTParser.Variables
             SettingsDictionary settingsDict = ToSettingsDictionary(dict);
             if ((lower == "parent" || lower == "override" || lower == "fallback" || lower == "listener"
                 || lower == "provider" || lower == "syncon" || lower == "synchon" || lower == "prefixes"
-                || lower == "settingtypes"))
+                || lower == "settingtypes" || lower == "formatters"))
             {
                 string name = RTPBot.GetAttribValue(myNode, "value,dict,name", null);
                 if (!string.IsNullOrEmpty(name))
@@ -607,6 +630,9 @@ namespace RTParser.Variables
                             return;
                         case "settingtypes":
                             settingsDict.InsertSettingReturnTypes(pp);
+                            return;
+                        case "formatter":
+                            settingsDict.InsertGetSetFormatter(pp);
                             return;
                         case "prefixes":
                             settingsDict.AddChild(RTPBot.GetAttribValue(myNode, "prefix,name,dict,value", name), pp);
@@ -1261,7 +1287,12 @@ namespace RTParser.Variables
 
         public void InsertSettingReturnTypes(ParentProvider pp)
         {
-            AddSettingToCollection(pp, SettingReturnType);
+            AddSettingToCollection(pp, SetReturnProviders);
+        }
+
+        public void InsertGetSetFormatter(ParentProvider pp)
+        {
+            AddSettingToCollection(pp, GetSetFormatters);
         }
 
         public void AddSettingToCollection(ParentProvider pp, List<ParentProvider> cols)
@@ -1318,20 +1349,40 @@ namespace RTParser.Variables
             }
         }
 
-        public String NamedPred;
-        public List<ParentProvider> SettingReturnType = new List<ParentProvider>();
-        public static Unifiable grabSetName(ISettingsDictionary dictionary0, string name, out string realName)
+        public List<ParentProvider> GetSetFormatters = new List<ParentProvider>();
+        /// <summary>
+        /// //"$bot feels $value emotion towards $user";
+        /// </summary>
+        public String DefaultFormatter = "$user $relation is $value";  //default
+        /// <summary>
+        /// $user $relation $value   $robot  $dict
+        ///   1      2        3       4       5 
+        /// </summary>
+        /// <param name="relation"></param>
+        /// <returns></returns>
+        public string GetFormatter(string relation)
         {
-            SettingsDictionary dictionary = ToSettingsDictionary(dictionary0);
+            string realName;
+            return WithProviders(this, relation, out realName,
+                                 GetSetFormatters,
+                                 (realName0) => DefaultFormatter.Replace("$relation", realName0));
+        }
 
+        public static Unifiable WithProviders(ISettingsDictionary dictionary, string name, out string realName, 
+            IEnumerable<ParentProvider> providers, Func<string, Unifiable> Else)
+        {
+            //SettingsDictionary dictionary = ToSettingsDictionary(dictionary0);
             realName = name;
-            var un = dictionary.getSetReturn(name);
-            if (!Unifiable.IsNull(un)) return un;
+            foreach (var provider in ProvidersFrom(providers, dictionary))
+            {
+                var v = provider.grabSetting(name);
+                if (!Unifiable.IsNull(v)) return v;
+            }
             if (name.Contains(","))
             {
-                foreach (string name0 in name.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+                foreach (string name0 in name.Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries))
                 {
-                    un = grabSetName(dictionary, name0, out realName);
+                    var un = WithProviders(dictionary, name0, out realName, providers, Else);
                     if (!Unifiable.IsNull(un))
                     {
                         return un;
@@ -1341,22 +1392,30 @@ namespace RTParser.Variables
                         realName = name;
                     }
                 }
-                return dictionary.NamedPred + " " + realName;
+                return Else(realName);
             }
             return null;
         }
 
-        private Unifiable getSetReturn(string name)
+        public string Preposition = "";
+        public List<ParentProvider> SetReturnProviders = new List<ParentProvider>();
+        public Unifiable GetSetReturn(string name, out string realName)
         {
-            foreach (ISettingsDictionary s in ProvidersFrom(SettingReturnType))
-            {
-                var v = s.grabSetting(name);
-                if (v != null) return v;
-            }
-            return null;
+            return WithProviders(this, name, out realName, SetReturnProviders,
+                                 realname =>
+                                 {
+                                     string prep = Preposition;
+                                     return (string.IsNullOrEmpty(prep) ? "" : prep + " ")
+                                            + realname;
+                                 });
         }
 
         private List<ISettingsDictionary> ProvidersFrom(IEnumerable<ParentProvider> providers)
+        {
+            return ProvidersFrom(providers, this);
+        }
+
+        static List<ISettingsDictionary> ProvidersFrom(IEnumerable<ParentProvider> providers, object exceptFor)
         {
             var found = new List<ISettingsDictionary>();
             lock (providers)
@@ -1366,12 +1425,12 @@ namespace RTParser.Variables
                     var res = list();
                     if (res == null)
                     {
-                        writeToLog("NULL provider " + list);
+                        //writeToLog("NULL provider " + list);
                         continue;
                     }
-                    if (res == this)
+                    if (res == exceptFor)
                     {
-                        writeToLog("ERROR: Circular provider " + list);
+                        //writeToLog("ERROR: Circular provider " + list);
                         continue;
                     }
                     found.Add(res);
@@ -1382,7 +1441,17 @@ namespace RTParser.Variables
 
         private void addSetReturn(string name, string value)
         {
-            foreach (ISettingsDictionary s in ProvidersFrom(SettingReturnType))
+            AddToProviders(name, value, SetReturnProviders);
+        }
+
+        public void addFormatter(string name, string value)
+        {
+            AddToProviders(name, value, GetSetFormatters);
+        }
+
+        private void AddToProviders(string name, string value, IEnumerable<ParentProvider> providers)
+        {
+            foreach (ISettingsDictionary s in ProvidersFrom(providers))
             {
                 var v = s.grabSetting(name);
                 if (v == null) s.addSetting(name, value);
@@ -1396,9 +1465,13 @@ namespace RTParser.Variables
         public void Clone(ISettingsDictionary target)
         {
             var dt = ToSettingsDictionary(target);
-            lock (SettingReturnType) foreach (var pp in SettingReturnType)
+            lock (SetReturnProviders) foreach (var pp in SetReturnProviders)
                 {
                     dt.InsertSettingReturnTypes(pp);
+                }
+            lock (GetSetFormatters) foreach (var pp in GetSetFormatters)
+                {
+                    dt.InsertGetSetFormatter(pp);
                 }
             lock (orderedKeys)
             {

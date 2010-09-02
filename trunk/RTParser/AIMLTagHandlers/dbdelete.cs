@@ -46,11 +46,12 @@ namespace RTParser.AIMLTagHandlers
                     // Find and Replace
                     Unifiable templateNodeInnerValue = Recurse();
                     string myText = (string)templateNodeInnerValue;
-                    this.user.bot.LuceneIndexer.DeleteTopScoring(myText);
+                    TargetBot.LuceneIndexer.DeleteTopScoring(myText, templateNode);
 
                 }
-                catch
+                catch (Exception e)
                 {
+                    writeToLog("ERROR: {0}", e);
                 }
 
             }

@@ -41,7 +41,7 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "dbload")
+            if (CheckNode("dbload"))
             {
                 // Simply push the filled in tag contents onto the stack
                 try
@@ -50,18 +50,23 @@ namespace RTParser.AIMLTagHandlers
                     Unifiable templateNodeInnerValue = Recurse();
                     string path = (string)templateNodeInnerValue;
                     path = path.Trim();
-                    if (HostSystem.FileExists(path))
+                    string[] files = HostSystem.GetFiles(path);
+                    if (files != null && files.Length > 0)
                     {
-                        this.user.bot.LuceneIndexer.LoadFileByLines(path);
+                        foreach (string file in files)
+                        {
+                            TargetBot.LuceneIndexer.LoadFileByLines(file, templateNode);                            
+                        }
                     }
                     else
                     {
-                        Console.WriteLine("WARNING: dbload cannot find file :{0}",path);
+                        Console.WriteLine("WARNING: dbload cannot find file :{0}", path);
                     }
 
                 }
-                catch
+                catch (Exception e)
                 {
+                    writeToLog("ERROR: {0}", e);
                 }
 
             }

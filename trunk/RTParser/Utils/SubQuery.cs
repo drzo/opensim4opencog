@@ -170,10 +170,16 @@ namespace RTParser.Utils
             get { return Request.Predicates.NameSpace; }
         }
 
-        public RTPBot RProcessor;
+        private RTPBot _TargetBot;
         public User CurrentUser
         {
             get { return Request.user;  }
+        }
+
+        public RTPBot TargetBot
+        {
+            get { return _TargetBot ?? Request.TargetBot; }
+            set { _TargetBot = value; }
         }
 
         public Unifiable grabSetting(string name)
