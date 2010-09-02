@@ -3801,12 +3801,15 @@ The AIMLbot program.
             bool prev = request.GraphsAcceptingUserInput;
             try
             {
+                // loading of personal configs must be done before and after the AIML files
+                RTPBot.loadConfigs(this, file, request);
                 request.GraphsAcceptingUserInput = false;
                 loadAIMLFromURI(file, request);
                 foreach (var s1 in HostSystem.GetFiles(file, "*Settings*.xml"))
                 {
                     loadSettingsFile(s1, request);
                 }
+                RTPBot.loadConfigs(this, file, request);
             }
             finally
             {

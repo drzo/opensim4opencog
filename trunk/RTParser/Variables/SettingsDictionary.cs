@@ -381,7 +381,7 @@ namespace RTParser.Variables
             }
         }
 
-        private static void loadSetting(ISettingsDictionary dict, string name, string value, string updateOrAddOrDefualt, XmlNode myNode, bool overwriteExisting, bool onlyIfUnknown, Request request)
+        private static void loadNameValueSetting(ISettingsDictionary dict, string name, string value, string updateOrAddOrDefualt, XmlNode myNode, bool overwriteExisting, bool onlyIfUnknown, Request request)
         {
             updateOrAddOrDefualt = updateOrAddOrDefualt.ToLower().Trim();
 
@@ -459,7 +459,7 @@ namespace RTParser.Variables
         {
             lock (dict)
             {
-                loadSettingNode0(dict, myNode, onlyIfUnknown, onlyIfUnknown, request);
+                loadSettingNode0(dict, myNode, overwriteExisting, onlyIfUnknown, request);
             }
         }
         static public void loadSettingNode0(ISettingsDictionary dict, XmlNode myNode, bool overwriteExisting, bool onlyIfUnknown, Request request)
@@ -470,7 +470,7 @@ namespace RTParser.Variables
             if (myNode.NodeType == XmlNodeType.Attribute)
             {
                 // attribues should not overwrite existing? 
-                loadSetting(dict, myNode.Name, myNode.Value, "add", myNode, overwriteExisting, onlyIfUnknown, request);
+                loadNameValueSetting(dict, myNode.Name, myNode.Value, "add", myNode, overwriteExisting, onlyIfUnknown, request);
                 return;
             }
             int atcount = 0;
@@ -537,7 +537,7 @@ namespace RTParser.Variables
                 if (href != null && href.Length > 0)
                 {
                     string name = RTPBot.GetAttribValue(myNode, "id", myNode.Name);
-                    loadSetting(dict, name, href, "add", myNode, false, true, request);
+                    loadNameValueSetting(dict, name, href, "add", myNode, false, true, request);
                     return;
                 }
             }
@@ -575,7 +575,7 @@ namespace RTParser.Variables
             }
             SettingsDictionary settingsDict = ToSettingsDictionary(dict);
             if ((lower == "parent" || lower == "override" || lower == "fallback" || lower == "listener"
-                || lower == "provider" || lower == "syncon" || lower == "synchon" || lower == "prefixes" 
+                || lower == "provider" || lower == "syncon" || lower == "synchon" || lower == "prefixes"
                 || lower == "settingtypes"))
             {
                 string name = RTPBot.GetAttribValue(myNode, "value,dict,name", null);
@@ -672,7 +672,7 @@ namespace RTParser.Variables
                 if (value == null)
                     settingsDict.writeToLog("ERROR cannot make a n/value from " + AIMLLoader.TextAndSourceInfo(myNode));
 
-                loadSetting(dict, name, value, RTPBot.GetAttribValue(myNode, "type", "add"), myNode,
+                loadNameValueSetting(dict, name, value, RTPBot.GetAttribValue(myNode, "type", "add"), myNode,
                             overwriteExisting, onlyIfUnknown, request);
                 return;
             }
@@ -689,7 +689,7 @@ namespace RTParser.Variables
                 if (itext == value)
                 {
                     string name = myNode.Name;
-                    loadSetting(dict, name, value, "add", myNode, false, true, request);
+                    loadNameValueSetting(dict, name, value, "add", myNode, false, true, request);
                     return;
                 }
 
@@ -1278,7 +1278,7 @@ namespace RTParser.Variables
         {
             if (dictionary == null)
             {
-                if (pp==null)
+                if (pp == null)
                 {
                     writeToLog("ERROR: should not place NULL inside self");
                     return;
@@ -1303,9 +1303,9 @@ namespace RTParser.Variables
                         return;
                     }
                     var inner = deep();
-                    if (inner==null)
+                    if (inner == null)
                     {
-                        writeToLog("WARN: NULL Parent IDictionary " + dictionary);                        
+                        writeToLog("WARN: NULL Parent IDictionary " + dictionary);
                     }
                     if (inner == dictionary)
                     {
@@ -1397,9 +1397,9 @@ namespace RTParser.Variables
         {
             var dt = ToSettingsDictionary(target);
             lock (SettingReturnType) foreach (var pp in SettingReturnType)
-            {
-                dt.InsertSettingReturnTypes(pp);
-            }
+                {
+                    dt.InsertSettingReturnTypes(pp);
+                }
             lock (orderedKeys)
             {
                 foreach (string name in this.orderedKeys)
