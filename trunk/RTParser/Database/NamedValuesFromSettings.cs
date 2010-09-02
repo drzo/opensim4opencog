@@ -19,7 +19,7 @@ namespace RTParser.Database
             // try to use a global blackboard predicate
             RTParser.User gUser = TargetBot.ExemplarUser;
 
-            defaultVal = RTPBot.GetAttribValue(node, "default", defaultVal);
+            defaultVal = RTPBot.GetAttribValue(node, "default,defaultValue", defaultVal);
             gName = RTPBot.GetAttribValue(node, "global_name", gName);
 
             succeed = false;
@@ -42,6 +42,19 @@ namespace RTParser.Database
                 return gResult;
             }
             string sresultGet = resultGet.ToValue(query);
+
+            // if Unknown or empty
+            if (Unifiable.IsUnknown(sresultGet))
+            {
+                Unifiable userName = dict.grabSetting("username");
+                string resultLucene = query.Request.TargetBot.LuceneIndexer.queryTriple(userName, name, node, false);
+                if (!string.IsNullOrEmpty(resultLucene))
+                {
+                    return resultLucene;
+                }
+            }
+
+
             if (sresultGet != null && sresultGet.ToUpper() == "UNKNOWN")
             {
                 return sresultGet + " " + name;
@@ -91,7 +104,7 @@ namespace RTParser.Database
             else
             {
                 User user = query.CurrentUser;
-                user.bot.LuceneIndexer.assertTriple(user.UserName, name, value);
+                user.bot.LuceneIndexer.updateTriple(user.UserName, name, value);
                 if (!String.IsNullOrEmpty(gName)) gUser.Predicates.addSetting(gName, value);
                 udict.addSetting(name, value);
 
