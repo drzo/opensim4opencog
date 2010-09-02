@@ -38,7 +38,7 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "dbupdate")
+            if (CheckNode("dbupdate"))
             {
                 // Simply push the filled in tag contents onto the stack
                 try
@@ -46,11 +46,12 @@ namespace RTParser.AIMLTagHandlers
                     // Find and Replace
                     Unifiable templateNodeInnerValue = Recurse();
                     string myText = (string)templateNodeInnerValue;
-                    this.user.bot.LuceneIndexer.Update(myText, myText);
+                    TargetBot.LuceneIndexer.Update(myText, myText, templateNode);
 
                 }
-                catch
+                catch(Exception e)
                 {
+                    writeToLog("ERROR: {0}", e);
                 }
 
             }

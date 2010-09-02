@@ -38,7 +38,7 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "dbpush")
+            if (CheckNode("dbpush"))
             {
                 // Simply push the filled in tag contents onto the stack
                 try
@@ -46,17 +46,11 @@ namespace RTParser.AIMLTagHandlers
                     // what to remember
                     Unifiable templateNodeInnerValue = Recurse();
                     string myText = (string)templateNodeInnerValue;
-                    ulong myDocID = this.user.bot.LuceneIndexer.IncDocId();
-                    Dictionary<ulong, string> contentIdPairs = new Dictionary<ulong, string>();
-                    contentIdPairs.Add(myDocID, myText);
-
-                    // Indexing:
-                    int numIndexed = this.user.bot.LuceneIndexer.Index(contentIdPairs);
-                    Console.WriteLine("Indexed {0} docs.", numIndexed);
-                    Console.WriteLine();
+                    TargetBot.LuceneIndexer.callDbPush(myText, templateNode);
                 }
-                catch
+                catch (Exception e)
                 {
+                    writeToLog("ERROR: {0}", e);
                 }
 
             }

@@ -167,6 +167,11 @@ namespace RTParser
         /// </summary>
         public SettingsDictionary SetPredicateReturn;
         /// <summary>
+        /// A weak name/value association list of what has happened in database  
+        /// </summary>
+        public SettingsDictionary SetRelationFormat;
+
+        /// <summary>
         /// When a tag has no name like <icecream/> it is transformed to <bot name="icecream"></bot>
         /// </summary>
         public static bool UnknownTagsAreBotVars = true;
@@ -444,9 +449,11 @@ namespace RTParser
             }
         }
 
+        private string _dataDir = Environment.CurrentDirectory;
         protected string RuntimeDirectory
         {
-            get { return Environment.CurrentDirectory; }
+            get { return _dataDir ?? Environment.CurrentDirectory; }
+            set { _dataDir = value; }
         }
 
         /// <summary>
@@ -484,7 +491,7 @@ namespace RTParser
             }
         }
         /// <summary>
-        /// The directory to look in for the WordNet3 files
+        /// The directory to look in for the Lucene Index files
         /// </summary>
         public string PathToLucene
         {
@@ -568,7 +575,7 @@ namespace RTParser
         public Stack<string> conversationStack = new Stack<string>();
         public Hashtable wordAttributeHash = new Hashtable();
         public WordNetEngine wordNetEngine; // = new WordNetEngine(HostSystem.Combine(Environment.CurrentDirectory, this.GlobalSettings.grabSetting("wordnetdirectory")), true);
-        public string indexDir = @"C:\dev\Lucene\";
+        //public string indexDir = @"C:\dev\Lucene\";
         public string fieldName = "TEXT_MATTER";
         public MyLuceneIndexer LuceneIndexer;
 
@@ -752,6 +759,10 @@ namespace RTParser
         {
             return SetPredicateReturn;
         }
+        public ISettingsDictionary GetSetRelationFormat()
+        {
+            return SetRelationFormat;
+        }
         /// <summary>
         /// Instantiates the dictionary objects and collections associated with this class
         /// </summary>
@@ -760,10 +771,12 @@ namespace RTParser
             var prev = isAcceptingUserInput;
             try
             {
-                isAcceptingUserInput = false; 
-                
+                isAcceptingUserInput = false;
+
                 this.SetPredicateReturn = new SettingsDictionary("chat.setpredicatereturn", this, null);
-                
+
+                this.SetRelationFormat = new SettingsDictionary("chat.setrelationformat", this, null);
+
                 this.GlobalSettings = new SettingsDictionary("bot.globalsettings", this, null);
                 this.GlobalSettings.InsertSettingReturnTypes(GetSetPredicateReturn);
 
@@ -3061,20 +3074,23 @@ The AIMLbot program.
             }
             graphPath = ToScriptableName(graphPath.Trim());
 
-            if (graphPath == "current" || graphPath == "" || graphPath == "disabled")
+            if (graphPath == "current" || graphPath == "")
             {
                 return current;
             }
 
-            //if (graphPath == "default")
-            //{
-            //    return _g;
-            //}
+            if (false)
+            {
+                if (_g != null && graphPath == "default")
+                {
+                    return _g;
+                }
 
-            //if (graphPath == "heardselfsay")
-            //{
-            //    return _h;
-            //}
+                if (_h != null && graphPath == "heardselfsay")
+                {
+                    return _h;
+                }
+            }
 
             if (graphPath == "parent")
             {
@@ -3883,7 +3899,13 @@ The AIMLbot program.
             lock (OneAtATime)
             {
                 var tc = DLRConsole.TransparentCallers;
-                lock (tc) tc.Add(typeof(RTPBot));
+                lock (tc)
+                {
+                    tc.Add(typeof (RTPBot));
+                    tc.Add(typeof (AIMLbot.Request));
+                    tc.Add(typeof (RequestImpl));
+                    tc.Add(typeof (Request));
+                }
                 if (StaticInitStarted) return;
                 StaticInitStarted = true;
                 GraphsByName["default"] = new GraphMaster("default");

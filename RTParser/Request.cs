@@ -562,8 +562,9 @@ namespace RTParser
 
         public void writeToLog(string message, params object[] args)
         {
+            if (!message.Contains(":")) message = "REQUEST: " + message;
             string prefix = ToString();
-            prefix = DLRConsole.SafeFormat("REQUEST: " + message + " while " + prefix, args);
+            prefix = DLRConsole.SafeFormat(message + " while " + prefix, args);
 
             message = prefix.ToUpper();
             if (message.Contains("ERROR") || message.Contains("WARN"))

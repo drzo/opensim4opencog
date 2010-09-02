@@ -47,7 +47,7 @@ namespace RTParser.Database
             if (Unifiable.IsUnknown(sresultGet))
             {
                 Unifiable userName = dict.grabSetting("username");
-                string resultLucene = query.Request.TargetBot.LuceneIndexer.queryTriple(userName, name, node, false);
+                string resultLucene = query.Request.TargetBot.LuceneIndexer.queryTriple(userName, name, node);
                 if (!string.IsNullOrEmpty(resultLucene))
                 {
                     return resultLucene;
@@ -98,6 +98,8 @@ namespace RTParser.Database
 
             if (value.IsEmpty)
             {
+                User user = query.CurrentUser;
+                user.bot.LuceneIndexer.retractAllTriple(user.UserName, name);
                 if (!String.IsNullOrEmpty(gName)) gUser.Predicates.removeSetting(gName);
                 udict.removeSetting(name);
             }
@@ -118,7 +120,7 @@ namespace RTParser.Database
             string realName;
             if (setReturn == null)
             {
-                setReturn = SettingsDictionary.grabSetName(dict, name, out realName);
+                setReturn = SettingsDictionary.ToSettingsDictionary(dict).GetSetReturn(name, out realName);
             }
             if (setReturn == null)
             {

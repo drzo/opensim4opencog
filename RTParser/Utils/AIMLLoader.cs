@@ -170,7 +170,8 @@ namespace RTParser.Utils
                 catch (Exception e)
                 {
                     writeToLog("ERROR: LoaderOper {0}", e);
-                    throw;
+                    if (RTPBot.NoRuntimeErrors) return default(R);
+                    throw;     
                     //return default(R);
                 }
             }

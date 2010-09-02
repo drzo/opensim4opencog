@@ -15,6 +15,8 @@ namespace RTParser
 {
     public partial class RTPBot
     {
+        public static bool NoRuntimeErrors = false;
+
         public static string UNKNOWN_PARTNER = "UNKNOWN_PARTNER";
 
         private R UserOper<R>(Func<R> action, OutputDelegate output)
@@ -31,7 +33,8 @@ namespace RTParser
                 catch (Exception e)
                 {
                     writeToLog(e);
-                    return default(R);
+                    if (RTPBot.NoRuntimeErrors) return default(R); 
+                    throw;                    
                 }
             }
             finally

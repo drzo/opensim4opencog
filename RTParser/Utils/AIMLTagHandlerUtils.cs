@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Xml;
+using System.Xml.XPath;
 using RTParser.AIMLTagHandlers;
 using RTParser.Variables;
 using StringAppendableUnifiable = RTParser.StringAppendableUnifiableImpl;
@@ -64,6 +65,15 @@ namespace RTParser.Utils
             star recursiveStar = new star(this.Proc, this.user, this.query, this.request, this.result, starNode);
             return recursiveStar.Transform();
         }
+
+        protected Unifiable callSRAI(Unifiable starContent)
+        {
+            XmlNode sraiNode = RTParser.Utils.AIMLTagHandler.getNode(String.Format("<srai>{0}</srai>", starContent), templateNode);
+            LineInfoElementImpl.unsetReadonly(sraiNode);
+            srai sraiHandler = new srai(this.Proc, this.user, this.query, this.request, this.result, sraiNode);
+            return sraiHandler.Transform();
+        }
+
 
         public AIMLTagHandler Parent;
         public void SetParent(AIMLTagHandler handler)
@@ -151,7 +161,7 @@ namespace RTParser.Utils
                         }
                         catch (Exception e)
                         {
-                            RTPBot.writeDebugLine("ERROR: " + e);
+                            RTPBot.writeDebugLine("ERROR: {0}", e);
                         }
 
                     }

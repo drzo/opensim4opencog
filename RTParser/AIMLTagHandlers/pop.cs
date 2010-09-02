@@ -46,9 +46,7 @@ namespace RTParser.AIMLTagHandlers
                     else
                     {
                         Unifiable starContent = Recurse();
-                        XmlNode sraiNode = RTParser.Utils.AIMLTagHandler.getNode(String.Format("<srai>{0}</srai>", starContent), templateNode);
-                        srai sraiHandler = new srai(this.Proc, this.user, this.query, this.request, this.result, sraiNode);
-                        return sraiHandler.Transform();
+                        return callSRAI(starContent);
                     }
 
                 }
