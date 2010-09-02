@@ -289,7 +289,7 @@ namespace RTParser
 
                 }
                 int resultsLeft = MaxPrintResults;
-                var result = Unifiable.CreateAppendable();
+                var result = new StringBuilder();
                 lock (OutputSentences) foreach (string sentence in OutputSentences)
                     {
                         String sentenceForOutput = sentence.Replace("  ", " ").Trim();
