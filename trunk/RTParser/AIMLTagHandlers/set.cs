@@ -59,7 +59,7 @@ namespace RTParser.AIMLTagHandlers
                     templateNodeInnerText = templateNodeInnerText.Rest();
                 }
                 string setReturn = GetAttribValue(templateNode, "set-return",
-                                                  () => ((string) Proc.GetSetPredicateReturn().grabSetting(name)),
+                                                  () => ((string) Proc.GetRelationMetaProps().grabSetting(name)),
                                                   query);
                 if (value == null)
                 {

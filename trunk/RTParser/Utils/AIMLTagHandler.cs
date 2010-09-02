@@ -225,19 +225,27 @@ namespace RTParser.Utils
                                 {
                                     if (ReservedAttributes.Contains(n))
                                         continue;
-
-                                    if (!dict.containsSettingCalled(n))
+                                    bool prev = NamedValuesFromSettings.UseLuceneForGet;
+                                    try
                                     {
-                                        ReservedAttributes.Add(n);
-                                        request.writeToLog("ReservedAttributes: {0}", n);
-                                    }
-                                    else
-                                    {
-                                        if (!PushableAttributes.Contains(n))
+                                        NamedValuesFromSettings.UseLuceneForGet = false;
+                                        if (!dict.containsSettingCalled(n))
                                         {
-                                            PushableAttributes.Add(n);
-                                            request.writeToLog("PushableAttributes: {0}", n);
+                                            ReservedAttributes.Add(n);
+                                            request.writeToLog("ReservedAttributes: {0}", n);
                                         }
+                                        else
+                                        {
+                                            if (!PushableAttributes.Contains(n))
+                                            {
+                                                PushableAttributes.Add(n);
+                                                request.writeToLog("PushableAttributes: {0}", n);
+                                            }
+                                        }
+                                    }
+                                    finally
+                                    {
+                                        NamedValuesFromSettings.UseLuceneForGet = prev;
                                     }
                                 }
                                 Unifiable v = (Unifiable)ReduceStar(node.Value, query, dict);

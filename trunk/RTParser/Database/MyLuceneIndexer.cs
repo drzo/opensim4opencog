@@ -662,7 +662,7 @@ namespace RTParser.Database
 
         public string GenFormatFactoid(string subject, string relation, string value)
         {
-             
+
             string subj = Entify(subject);
             string pred = Entify(relation);
             string botName = Entify(TheBot.UserID);
@@ -670,47 +670,26 @@ namespace RTParser.Database
             var dictionary = TheBot.GetDictionary(subj) as SettingsDictionary;
 
             bool noValue = string.IsNullOrEmpty(value);
-
-            Unifiable uformatter = GetDictValue(dictionary, pred);
-
-            string formatter;
-            if (Unifiable.IsNullOrEmpty(uformatter) || Unifiable.IsTrueOrYes(uformatter) || uformatter == "default")
+            Unifiable formatter;
             {
-                formatter = " {0} {1} is {2} ";
-            }
-            else
-            {
-                formatter = (string) uformatter;
-                formatter = " " + formatter + " ";
-                int formatterQA = formatter.IndexOf(" | ");
-                if (formatterQA != -1)
+                if (noValue)
                 {
-                    if (noValue)
-                    {
-                        // query mode
-                        formatter = formatter.Substring(formatterQA + 2).Trim();
-                    }
-                    else
-                    {
-                        // assert mode
-                        formatter = formatter.Substring(0, formatterQA).Trim();
-                    }
+                    // query mode
+                    formatter = GetDictValue(dictionary, relation, "format-query");
                 }
                 else
                 {
-                    if (noValue)
-                    {
-                        // query mode
-                        formatter = GetDictValue(dictionary, relation + ".format-assert");
-                    }
-                    else
-                    {
-                        // assert mode
-                        formatter = GetDictValue(dictionary, relation + ".format-assert");
-                    }
+                    // assert mode
+                    formatter = GetDictValue(dictionary, relation, "format-assert");
                 }
+            }
+            if (Unifiable.IsNullOrEmpty(formatter) || Unifiable.IsTrueOrYes(formatter) || formatter == "default")
+            {
+                formatter = " {0} {1} is {2} ";
+            }
+            {
 
-                var whword = GetDictValue(dictionary, relation + ".format-whword");
+                var whword = GetDictValue(dictionary, relation, "format-whword");
 
                 if (!Unifiable.IsNullOrEmpty(whword) && noValue) value = whword;
  
@@ -729,10 +708,10 @@ namespace RTParser.Database
 
                 formatter = SafeReplace(formatter, "$predicate", pred);
 
-                formatter = SafeReplace(formatter, "$set-return", TheBot.SetPredicateReturn.grabSettingNoDebug(relation));
+                formatter = SafeReplace(formatter, "$set-return", TheBot.RelationMetaProps.grabSettingNoDebug(relation));
                 formatter = SafeReplace(formatter, "$default", TheBot.DefaultPredicates.grabSettingNoDebug(relation));
                 formatter = SafeReplace(formatter, "$bot", botName);
-            }            
+            }
 
             string english = " " + String.Format(formatter, subj, pred, Entify(value)).Trim() + " ";
             english = english.Replace(" I ", subj);
@@ -755,15 +734,16 @@ namespace RTParser.Database
             return subj.Trim();
         }
 
-        public Unifiable GetDictValue(SettingsDictionary dict, string relation)
+        public Unifiable GetDictValue(SettingsDictionary dict, string relation, string meta)
         {
             if (dict != null)
             {
-                string formatter = dict.GetFormatter(relation);
+                string formatter = dict.GetMeta(relation, meta);
                 if (!Unifiable.IsNullOrEmpty(formatter))
                     return formatter;
             }
-            return TheBot.SetRelationFormat.grabSetting(relation);
+            string prop = relation + "." + meta;
+            return TheBot.RelationMetaProps.grabSetting(prop);
         }
 
         public int callDbPush(string myText, XmlNode expandWordnet)

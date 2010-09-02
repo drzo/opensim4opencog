@@ -163,13 +163,10 @@ namespace RTParser
         public SettingsDictionary HeardPredicates;
 
         /// <summary>
-        /// A weak name/value association list of what has happened in dialog  
+        /// A name+prop/value association list of things like  look.set-return, look.format-whword,
+        /// look.format-assert, look.format-query, look.format-etc,
         /// </summary>
-        public SettingsDictionary SetPredicateReturn;
-        /// <summary>
-        /// A weak name/value association list of what has happened in database  
-        /// </summary>
-        public SettingsDictionary SetRelationFormat;
+        public SettingsDictionary RelationMetaProps;
 
         /// <summary>
         /// When a tag has no name like <icecream/> it is transformed to <bot name="icecream"></bot>
@@ -722,6 +719,7 @@ namespace RTParser
                 string settings = HostSystem.Combine(path, "Settings.xml");
                 if (HostSystem.FileExists(settings)) loadSettingsFile(settings, request);
                 //loading settings first
+                loadConfigs(this, path, request);
                 loadAIMLFromURI(path, request);
             }
             finally
@@ -755,14 +753,11 @@ namespace RTParser
 
         }
 
-        public ISettingsDictionary GetSetPredicateReturn()
+        public ISettingsDictionary GetRelationMetaProps()
         {
-            return SetPredicateReturn;
+            return RelationMetaProps;
         }
-        public ISettingsDictionary GetSetRelationFormat()
-        {
-            return SetRelationFormat;
-        }
+
         /// <summary>
         /// Instantiates the dictionary objects and collections associated with this class
         /// </summary>
@@ -773,12 +768,10 @@ namespace RTParser
             {
                 isAcceptingUserInput = false;
 
-                this.SetPredicateReturn = new SettingsDictionary("chat.setpredicatereturn", this, null);
-
-                this.SetRelationFormat = new SettingsDictionary("chat.setrelationformat", this, null);
+                this.RelationMetaProps = new SettingsDictionary("chat.relationprops", this, null);
 
                 this.GlobalSettings = new SettingsDictionary("bot.globalsettings", this, null);
-                this.GlobalSettings.InsertSettingReturnTypes(GetSetPredicateReturn);
+                this.GlobalSettings.InsertMetaProvider(GetRelationMetaProps);
 
                 this.GenderSubstitutions = new SettingsDictionary("nl.substitutions.gender", this, null);
                 RegisterSubstitutions("gender", GenderSubstitutions);
@@ -794,10 +787,10 @@ namespace RTParser
 
                 //ParentProvider provider = new ParentProvider(() => GlobalSettings);
                 this.DefaultPredicates = new SettingsDictionary("bot.defaultpredicates", this, null);
-                this.DefaultPredicates.InsertSettingReturnTypes(GetSetPredicateReturn);
+                this.DefaultPredicates.InsertMetaProvider(GetRelationMetaProps);
                 this.HeardPredicates = new SettingsDictionary("chat.heardpredicates", this, null);
                 this.AllUserPreds = new SettingsDictionary("bot.alluserpred", this, null);
-                this.AllUserPreds.InsertSettingReturnTypes(GetSetPredicateReturn);
+                this.AllUserPreds.InsertMetaProvider(GetRelationMetaProps);
 
 
                 User guser = ExemplarUser = LastUser = new AIMLbot.User("globalPreds", this);
@@ -986,8 +979,8 @@ namespace RTParser
             thiz.loadSplitters(HostSystemCombine(pathToSettings, GlobalSettings.grabSetting("sentence-splitters")));
             thiz.loadSplitters(HostSystemCombine(pathToSettings, "sentence-splitters.xml"));
 
-            // pred-format
-            thiz.SetRelationFormat.loadSettings(HostSystemCombine(pathToSettings, "pred-format.xml"), request);
+            // genformat.xml
+            thiz.RelationMetaProps.loadSettings(HostSystemCombine(pathToSettings, "genformat.xml"), request);
 
 
             var guser = thiz.FindUser("globalPreds");
@@ -1012,7 +1005,6 @@ namespace RTParser
             if (request == null) request = GetBotRequest("<!-- Loads settings from: '" + pathToSettings + "' -->");
             ReloadHooks.Add(() => loadSettingsFile(pathToSettings, request));
             this.GlobalSettings.loadSettings(pathToSettings, request);
-            loadConfigs(this, HostSystem.GetBaseDir(pathToSettings), request);
         }
 
         private void SetSaneGlobals(ISettingsDictionary settings)
@@ -3464,6 +3456,7 @@ The AIMLbot program.
             if (cmd == "bot")
             {
                 console(HeardPredicates.ToDebugString());
+                console(RelationMetaProps.ToDebugString());
                 return BotAsUser.DoUserCommand(args, console);
             }
 
@@ -3770,9 +3763,8 @@ The AIMLbot program.
             Request request = GetBotRequest("loading personal directory " + myName);
             if (HostSystem.DirExists(file))
             {
-                writeToLog("LoadPersonalDirectories: '{0}'", file);
                 loaded = file;
-                loadSettingsFile(HostSystem.Combine(file, "Settings.xml"), request);
+                loadSettingsFileAndDir(HostSystem.Combine(file, "Settings.xml"), request);
             }
 
             file = HostSystem.Combine("aiml", myName);
@@ -3786,9 +3778,8 @@ The AIMLbot program.
             file = HostSystem.Combine(myName, "config");
             if (HostSystem.DirExists(file))
             {
-                writeToLog("LoadPersonalDirectories: '{0}'", file);
                 loaded = file;
-                loadSettingsFile(HostSystem.Combine(file, "Settings.xml"), request);
+                loadSettingsFileAndDir(HostSystem.Combine(file, "Settings.xml"), request);
             }
 
             file = HostSystem.Combine(myName, "aiml");
@@ -3799,6 +3790,14 @@ The AIMLbot program.
             }
             return loaded;
         }
+
+        private void loadSettingsFileAndDir(string file, Request request)
+        {
+            writeToLog("LoadPersonalDirectories: '{0}'", file);
+            loadSettingsFile(HostSystem.Combine(file, "Settings.xml"), request);
+            loadConfigs(this, file, request);
+        }
+
         public void UsePersonalDir(string file)
         {
             lock (BotUsers) lock (OnBotCreatedHooks) UsePersonalDir0(file);            
@@ -3939,12 +3938,12 @@ The AIMLbot program.
             {
                 printIt = LoggedWords.writeDebugLine(DLRConsole.DebugWriteLine, message, args);
             }
-            //if (args != null && args.Length >= 0)
+            //
             {
                 try
                 {
                     bool wasStopped = true;
-                    string real = string.Format(message, args);
+                    string real = DLRConsole.SafeFormat(message, args);
                     message = real.ToUpper();
                     if (message.Contains("ERROR") && !message.Contains("TIMEOUTMESSAGE"))
                     {
