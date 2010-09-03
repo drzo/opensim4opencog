@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Xml;
+using MushDLR223.ScriptEngines;
 using RTParser;
 using RTParser.Utils;
 using RTParser.Variables;
@@ -16,6 +17,7 @@ namespace RTParser.Database
         static public Unifiable GetSettingForType(string type, SubQuery query, ISettingsDictionary dict, string name, out string realName, string gName, Unifiable defaultVal, out bool succeed, XmlNode node)
         {
             Request request = query.Request;
+            OutputDelegate writeToLog = query.Result.WriteLine;
             RTPBot TargetBot = request.TargetBot;
             ISettingsDictionary udict = FindDict(type, query) ?? dict;
             // try to use a global blackboard predicate
@@ -39,7 +41,7 @@ namespace RTParser.Database
             if ((Unifiable.IsUnknown(resultGet)) && (!Unifiable.IsUnknown(gResult)))
             {
                 // result=nothing, gResult=something => return gResult
-                request.writeToLog("SETTINGS OVERRIDE " + gResult);
+                writeToLog("SETTINGS OVERRIDE " + gResult);
                 return gResult;
             }
             string sresultGet = resultGet.ToValue(query);
@@ -47,7 +49,11 @@ namespace RTParser.Database
             // if Unknown or empty
             if (UseLuceneForGet && Unifiable.IsUnknown(sresultGet))
             {
-                Unifiable userName = dict.grabSetting("userid");
+                Unifiable userName = udict.grabSetting("id");
+                if (Unifiable.IsNullOrEmpty(userName))
+                {
+                    writeToLog("ERROR IsNullOrEmpty id in " + udict.NameSpace);
+                }
                 string resultLucene = query.Request.TargetBot.LuceneIndexer.queryTriple(userName, name, node);
                 if (!string.IsNullOrEmpty(resultLucene))
                 {

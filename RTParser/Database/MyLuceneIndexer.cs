@@ -730,7 +730,8 @@ namespace RTParser.Database
         private static string Entify(string subject)
         {
             if (string.IsNullOrEmpty(subject)) return "";
-            string subj = subject.Replace(" ", "_");
+            string subj = subject.Replace("_", " ");
+            subj = subject.Replace(".", " ");
             return subj.Trim();
         }
 
