@@ -6,7 +6,7 @@
 <!-- Mostly complies with AIML1.01 Tag Set Specification -->
 <!-- as adopted by the ALICE A.I. Foundation.  -->
 <!-- Annotated Version updated September 2003 -->
-<aiml>
+<aiml graph="zz_bot">
 	<category>
 		<pattern>ASL</pattern>
 		<template>
