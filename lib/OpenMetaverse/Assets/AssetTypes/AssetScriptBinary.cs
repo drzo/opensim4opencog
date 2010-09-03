@@ -52,12 +52,12 @@ namespace OpenMetaverse.Assets
         /// <summary>
         /// TODO: Encodes a scripts contents into a LSO Bytecode file
         /// </summary>
-        public override void Encode() { }
+        public override void Encode0() { }
 
         /// <summary>
         /// TODO: Decode LSO Bytecode into a string
         /// </summary>
         /// <returns>true</returns>
-        public override bool Decode() { return true; }
+        public override bool Decode0() { return true; }
     }
 }

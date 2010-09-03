@@ -30,42 +30,33 @@ using OpenMetaverse;
 namespace OpenMetaverse.Assets
 {
     /// <summary>
-    /// Represents an LSL Text object containing a string of UTF encoded characters
+    /// Represents an Animation
     /// </summary>
-    public class AssetScriptText : Asset
+    public class AssetMutable : Asset
     {
+        public AssetType currentType;
+
         /// <summary>Override the base classes AssetType</summary>
-        public override AssetType AssetType { get { return AssetType.LSLText; } }
+        public override AssetType AssetType { get { return currentType; } }
 
-        /// <summary>A string of characters represting the script contents</summary>
-        public string Source;
-
-        /// <summary>Initializes a new AssetScriptText object</summary>
-        public AssetScriptText() { }
+        /// <summary>Default Constructor</summary>
+        public AssetMutable(AssetType type)
+        {
+            currentType = type;
+        }
 
         /// <summary>
-        /// Initializes a new AssetScriptText object with parameters
+        /// Construct an Asset object of type Animation
         /// </summary>
         /// <param name="assetID">A unique <see cref="UUID"/> specific to this asset</param>
         /// <param name="assetData">A byte array containing the raw asset data</param>
-        public AssetScriptText(UUID assetID, byte[] assetData) : base(assetID, assetData) { }
-
-        /// <summary>
-        /// Encode a string containing the scripts contents into byte encoded AssetData
-        /// </summary>
-        public override void Encode0()
+        public AssetMutable(AssetType type, UUID assetID, byte[] assetData)
+            : base(assetID, assetData)
         {
-            AssetData = Utils.StringToBytes(Source);
+            currentType = type;
         }
 
-        /// <summary>
-        /// Decode a byte array containing the scripts contents into a string
-        /// </summary>
-        /// <returns>true if decoding is successful</returns>
-        public override bool Decode0()
-        {
-            Source = Utils.BytesToString(AssetData);
-            return true;
-        }
+        public override void Encode0() { }
+        public override bool Decode0() { return true; }
     }
 }

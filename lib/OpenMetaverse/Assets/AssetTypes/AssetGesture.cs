@@ -276,7 +276,7 @@ namespace OpenMetaverse.Assets
         /// <summary>
         /// Encodes gesture asset suitable for uplaod
         /// </summary>
-        public override void Encode()
+        public override void Encode0()
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("2\n");
@@ -359,7 +359,7 @@ namespace OpenMetaverse.Assets
         /// Decodes gesture assset into play sequence
         /// </summary>
         /// <returns>true if the asset data was decoded successfully</returns>
-        public override bool Decode()
+        public override bool Decode0()
         {
             try
             {
