@@ -23,7 +23,7 @@ namespace MushDLR223.Utilities
         private string WaitingString = "";
         private readonly object WaitingStringLock = new object();
         readonly object WaitingPingLock = new object();
-        public OutputDelegate debugOutput;
+        private OutputDelegate debugOutput = TextFilter.DEVNULL;
         bool WaitingOnPing = false;
         public double MAX_PING_WAIT_TIME = 2;  // ping wiat time should be less than 2 seconds when going in
 
@@ -49,7 +49,9 @@ namespace MushDLR223.Utilities
         {
             lock (TaskQueueHandlers) TaskQueueHandlers.Add(this);
             Name = str;
-            if (msWaitBetween < 1) msWaitBetween = 1;
+            if (msWaitBetween < 10) msWaitBetween = 10;
+            // max ten minutes
+            if (msWaitBetween > 600000) msWaitBetween = 600000;
             WAIT_AFTER = msWaitBetween;
             EventQueuePing = new Thread(EventQueue_Ping) { Name = str + " debug", Priority = ThreadPriority.Lowest };
             if (autoStart) Start();
@@ -65,6 +67,7 @@ namespace MushDLR223.Utilities
                 EventQueueHandler.Start();
             }
             if (EventQueuePing != null && !EventQueuePing.IsAlive) EventQueuePing.Start();
+            debugOutput = DLRConsole.DebugWriteLine;
         }
 
         private bool _noQueue;
@@ -130,6 +133,9 @@ namespace MushDLR223.Utilities
 
         readonly ThreadStart NOTHING = default(ThreadStart);
         private DateTime BusyStart;
+        private ulong todo;
+
+        private bool justLoop = true;
 
         void EventQueue_Handler()
         {
@@ -168,6 +174,11 @@ namespace MushDLR223.Utilities
                     //{
                     // Reset();
                     //}
+                    if (justLoop)
+                    {
+                        Thread.Sleep(WAIT_AFTER);
+                        continue;
+                    }
                     WaitOne();
                 }
                 Busy = false;
@@ -178,6 +189,47 @@ namespace MushDLR223.Utilities
         {
             if (IsDisposing) return;
             WaitingOn.WaitOne();// Thread.Sleep(100);
+        }
+
+        private void WaitOneMaybe()
+        {
+            bool waitOne = true;
+
+            while (waitOne)
+            {
+                if (IsDisposing) return;
+                while (EventQueue.Count == 0)
+                {
+                    if (!WaitingOn.WaitOne(10000))
+                    {
+                        waitOne = true;
+                        continue;
+                    }
+                    else
+                    {
+                        if (EventQueue.Count > 0)
+                        {
+                            return;
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                    }
+                }
+                bool wasBusy;
+                lock (EventQueueLock)
+                {
+                    wasBusy = Busy;
+                }
+                waitOne = wasBusy;
+                if (wasBusy)
+                {
+                    waitOne = true;
+                    continue;
+                }
+            }
+
         }
 
         private void Reset()
@@ -280,6 +332,7 @@ namespace MushDLR223.Utilities
             sequence++;
             try
             {
+                todo--;
                 evt();
                 processed++;
                 Busy = false;
@@ -309,6 +362,7 @@ namespace MushDLR223.Utilities
         public void Enqueue(ThreadStart evt)
         {
             if (IsDisposing) return;
+            todo++;
             if (_noQueue)
             {
                 DoNow(evt);
@@ -324,6 +378,7 @@ namespace MushDLR223.Utilities
         public void AddFirst(ThreadStart evt)
         {
             if (IsDisposing) return;
+            todo++;
             if (NoQueue)
             {
                 DoNow(evt);

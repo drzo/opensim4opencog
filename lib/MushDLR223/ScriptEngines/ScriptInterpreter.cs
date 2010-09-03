@@ -1,13 +1,11 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 
 namespace MushDLR223.ScriptEngines
 {
     public delegate void OutputDelegate(string s, params object[] args);
 
-    public interface ScriptInterpreter: IDisposable
+    public interface ScriptInterpreter : IDisposable
     {
         bool LoadFile(string filename, OutputDelegate WriteLine);
 

@@ -24,7 +24,7 @@ namespace MushDLR223.Utilities
             response = r;
             Server = server;
         }
-        public void WriteLine(string str, object[] args)
+        public void WriteLine(string str, params object[] args)
         {
             try
             {

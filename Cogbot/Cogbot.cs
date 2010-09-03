@@ -66,6 +66,8 @@ namespace cogbot
 
         public void WriteLine(ConsoleColor color, string format, params object[] args)
         {
+            DLRConsole.WriteConsoleLine(color, format, args);
+            /*
             try
             {
                 if (color != ConsoleColor.White)
@@ -76,6 +78,7 @@ namespace cogbot
             {
                 Console.ResetColor();                
             }
+             */
         }
         public string CmdPrompt(string p)
         {
@@ -105,7 +108,7 @@ namespace cogbot
             }
         }
 
-        public static void Notice(string sender, string str, object[] args)
+        public static void Notice(string sender, string str, params object[] args)
         {
             if (consoleBase == null)
             {

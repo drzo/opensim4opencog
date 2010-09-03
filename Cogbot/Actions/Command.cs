@@ -98,7 +98,7 @@ namespace cogbot.Actions
             
         } // constructor
 
-        private void StaticWriteLine(string s, object[] args)
+        private void StaticWriteLine(string s, params object[] args)
         {
             if (_mClient != null) _mClient.WriteLine(Name + ": " + s, args);
         }

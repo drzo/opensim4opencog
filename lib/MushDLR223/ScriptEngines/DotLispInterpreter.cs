@@ -44,7 +44,7 @@ namespace MushDLR223.ScriptEngines
         {
         }
 
-        public void WriteLine(string s, object[] args)
+        public void WriteLine(string s, params object[] args)
         {
             DLRConsole.DebugWriteLine(s, args);
         }

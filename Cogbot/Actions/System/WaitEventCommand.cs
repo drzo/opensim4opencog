@@ -23,7 +23,7 @@ namespace cogbot.Actions.System
             return Success(string.Empty);
         }
 
-        static void WriteNothing(string str, object[] args)
+        static void WriteNothing(string str, params object[] args)
         {
         }
     }

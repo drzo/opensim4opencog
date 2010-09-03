@@ -139,7 +139,7 @@ namespace CogbotRadegastPluginModule
             clientManager.ShutDown();
         }
 
-        private void WriteLine(string str, object[] args)
+        private void WriteLine(string str, params object[] args)
         {
             if (args == null || args.Length == 0)
             {

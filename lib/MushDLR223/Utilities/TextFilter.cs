@@ -9,7 +9,7 @@ namespace MushDLR223.Utilities
 {
     public class TextFilter : ICollection<string>
     {
-        private HashSet<string> AnyOf = new HashSet<string>() {"ERROR", "LOADER"};
+        private HashSet<string> AnyOf = new HashSet<string>() {"+ERROR", "+LOADER"};
         private HashSet<string> ExceptFor = new HashSet<string>() { };
         bool addMode = true;
         bool remMode = false;
@@ -335,7 +335,9 @@ namespace MushDLR223.Utilities
             }
         }
 
-        static public void DEVNULL(string s, object[] args)
+        readonly public static OutputDelegate DEVNULL = DEVNULL0;
+
+        static public void DEVNULL0(string s, params object[] args)
         {
         }
 

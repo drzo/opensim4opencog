@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using DotLisp;
+using MushDLR223.Utilities;
 
 namespace MushDLR223.ScriptEngines
 {
