@@ -10,8 +10,8 @@ namespace RTParser.Utils
     /// 
     /// The protected ProcessChange() method is abstract and should be overridden to contain 
     /// the code for transforming the input text into the output text.
-    /// </summary>
-    abstract public class TextTransformer
+    /// </summary   
+    abstract public class TextTransformer : StaticAIMLUtils
     {
         public virtual float CallCanUnify(Unifiable with)
         {

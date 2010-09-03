@@ -3,6 +3,7 @@ using System.Threading;
 using System.Xml;
 using System.Text;
 using System.IO;
+using MushDLR223.ScriptEngines;
 using RTParser.Utils;
 
 namespace RTParser.AIMLTagHandlers
@@ -55,9 +56,10 @@ namespace RTParser.AIMLTagHandlers
             }
         }
 
+        public static bool UseOriginalProcess = false;
 
         // unsuesd/... just code refernce
-        protected string  OriginalProcessChange()
+        protected string OriginalProcessChange()
         {
             if (this.templateNode.Name.ToLower() == "srai")
             {
@@ -73,7 +75,6 @@ namespace RTParser.AIMLTagHandlers
             return string.Empty;
         }
 
-        static int depth = 0;
         protected override Unifiable ProcessChange()
         {
             string s;
@@ -81,8 +82,24 @@ namespace RTParser.AIMLTagHandlers
             IsStarted = true;
             if (Unifiable.IsNullOrEmpty(RecurseResult))
             {
-                RecurseResult = ProcessChange0();
-                templateNode.InnerXml = "+" + RecurseResult;
+                try
+                {
+                    user.Enter(this);
+                    int userDepth = user.depth;
+                    int sraiDepth = request.GetCurrentDepth();
+                    if (userDepth > 30 || sraiDepth > request.SraiDepth.Max)
+                    {
+                        query.prefix = string.Format("{0}: SRAIDEPTH(user:{1}/request:{2})", request.Graph, userDepth, sraiDepth);
+                        writeToLog("WARNING Depth pretty deep " + templateNode + " returning empty");
+                        return Unifiable.Empty;
+                    }
+                    RecurseResult = UseOriginalProcess ? (Unifiable) OriginalProcessChange() : ProcessChange0();
+                }
+                catch (Exception)
+                {
+                    user.Exit(this);
+                    templateNode.InnerXml = "+" + RecurseResult;
+                }
             }
             return RecurseResult;
         }
@@ -101,29 +118,59 @@ namespace RTParser.AIMLTagHandlers
         }
         protected Unifiable ProcessChange0()
         {
+            string s;
+            if (ResultReady(out s)) return s;
+            if (CheckNode("srai"))
+            {
+                bool chatTraced = Proc.chatTrace;
+                Proc.chatTrace = false;
+                try
+                {
+                    var templateNodeInnerValue = Recurse();
+                    return ProcessChangeSrai(request, query, templateNodeInnerValue, templateNode, initialString, writeToLog);
+                }
+                catch (Exception e)
+                {
+                    writeToLog("ERROR: " + e);
+                    throw;
+                }
+                finally
+                {
+                    Proc.chatTrace = chatTraced;
+                }
+            }
+            return Unifiable.Empty;
+        }
+
+        internal static Unifiable ProcessChangeSrai(Request request, SubQuery query,
+            Unifiable templateNodeInnerValue, XmlNode templateNode, string initialString, OutputDelegate writeToLog)
+        {
             try
             {
-                string s;
-                if (ResultReady(out s)) return s;
+                writeToLog = writeToLog ?? DEVNULL;
+                RTPBot mybot = request.TargetBot;
+                User user = request.user;
+                int depth = user.depth;
+                var thisrequest = request;
+                Result thisresult = request.CurrentResult;
+                string prefix = query.prefix;
+                //string s;
+                //if (ResultReady(out s)) return s;
+                /*
                 int d = request.GetCurrentDepth();
-                object prefix = string.Format("{0}: SRAI({1}/{2})", request.Graph, depth, d);
                 if (d > request.SraiDepth.Max)
                 {
-                    writeToLog(prefix + "WARNING Depth pretty deep " + templateNode + " returning empty");
+                    writeToLog(prefix + " WARNING Depth pretty deep " + templateNode + " returning empty");
                     return Unifiable.Empty;
                 }
-                if (depth > 30)
+                 */
+                //if (CheckNode("srai"))
                 {
-                    writeToLog(prefix + "WARNING Depth pretty deep " + templateNode + " returning empty");
-                    return Unifiable.Empty;
-                }
-                if (this.templateNode.Name.ToLower() == "srai")
-                {
-                    Unifiable templateNodeInnerValue = Recurse();
+                    //Unifiable templateNodeInnerValue = Recurse();
                     if (!templateNodeInnerValue.IsEmpty)
                     {
-                        AIMLbot.Request subRequest = request.CreateSubRequest(templateNodeInnerValue, this.user,
-                                                                              this.Proc, (AIMLbot.Request) request);
+                        AIMLbot.Request subRequest = request.CreateSubRequest(templateNodeInnerValue, user,
+                                                                              mybot, (AIMLbot.Request) request);
 
 
                         string requestGraphSrai = request.Graph.Srai;
@@ -133,9 +180,9 @@ namespace RTParser.AIMLTagHandlers
                         if (ti != null) subRequest.UsedTemplates.Add(ti);
 
                         // make sure we don't keep adding time to the request
-                        bool showDebug = true;
+                        bool showDebug = DebugSRAIs;
                         string subRequestrawInput = subRequest.rawInput;
-                        if (subRequestrawInput.Contains("SYSTEMANIM") || subRequestrawInput.Contains("HANSANIM"))
+                        if (showDebug && subRequestrawInput.Contains("SYSTEMANIM") || subRequestrawInput.Contains("HANSANIM"))
                         {
                             showDebug = false;
                         }
@@ -169,14 +216,16 @@ namespace RTParser.AIMLTagHandlers
                             //subRequest.result = newresult;
                             user.SuspendAdd = true;
                             if (request.IsTraced) subRequest.IsTraced = !showDebug;
-                            subResult = this.Proc.Chat0(subRequest, subRequest.Graph);
+                            subResult = mybot.Chat0(subRequest, subRequest.Graph);
                         }
                         finally
                         {
                             user.SuspendAdd = prevSO;
                             subRequest.GraphsAcceptingUserInput = prev;
                         }
-                        this.request.hasTimedOut = subRequest.hasTimedOut;
+
+
+                        thisrequest.hasTimedOut = subRequest.hasTimedOut;
                         var subQueryRawOutput = subResult.RawOutput.Trim();
                         if (Unifiable.IsNullOrEmpty(subQueryRawOutput))
                         {
@@ -190,7 +239,7 @@ namespace RTParser.AIMLTagHandlers
                                 mybot.writeChatTrace("\"SIN:{0}\" -> \"PATH:{1}\" [label=\"{2}\"] ;\n",
                                                      subRequestrawInput, depth, subResult.NormalizedPaths);
                                 mybot.writeChatTrace("\"PATH:{0}\" -> \"LN:{1}\" [label=\"{2}\"] ;\n", depth, depth,
-                                                     LineNumberTextInfo());
+                                                     AIMLLoader.TextAndSourceInfo(templateNode));
 
                                 mybot.writeChatTrace("\"LN:{0}\" -> \"RPY:MISSING({1})\" ;\n", depth, depth);
                             }
@@ -199,12 +248,14 @@ namespace RTParser.AIMLTagHandlers
                         }
                         else
                         {
-                            string sss = result.ToString();
+                            string sss = thisresult.ToString();
                             if (showDebug)
                             {
                                 writeToLog("{0} SUCCESS RETURN {1}  {2} '{3}'", prefix, subRequestrawInput,
                                            subResult.Score, subQueryRawOutput);
+// ReSharper disable ConditionIsAlwaysTrueOrFalse
                                 if (query != null)
+// ReSharper restore ConditionIsAlwaysTrueOrFalse
                                 {
                                     if (query.CurrentTemplate != null)
                                     {
@@ -215,8 +266,8 @@ namespace RTParser.AIMLTagHandlers
                                     }
                                 }
                             }
-                            this.request.AddSubResult(result);
-                            this.request.AddSubResult(subResult);
+                            thisrequest.AddSubResult(thisresult);
+                            thisrequest.AddSubResult(subResult);
                         }
 
                         if (mybot.chatTrace)
@@ -226,7 +277,7 @@ namespace RTParser.AIMLTagHandlers
                             mybot.writeChatTrace("\"SIN:{0}\" -> \"PATH:{1}\" [label=\"{2}\"] ;\n", subRequestrawInput,
                                                  depth, subResult.NormalizedPaths);
                             mybot.writeChatTrace("\"PATH:{0}\" -> \"LN:{1}\" [label=\"{2}\"] ;\n", depth, depth,
-                                                 LineNumberTextInfo());
+                                                 AIMLLoader.TextAndSourceInfo(templateNode));
                             mybot.writeChatTrace("\"LN:{0}\" -> \"RPY:{1}\" ;\n", depth, subQueryRawOutput);
                         }
                         return subResult.Output;
@@ -244,7 +295,7 @@ namespace RTParser.AIMLTagHandlers
             }
             finally
             {
-                depth--;
+                //depth--;
             }
         }
     }

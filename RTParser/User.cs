@@ -8,6 +8,7 @@ using com.hp.hpl.jena.graph;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using RTParser;
+using RTParser.AIMLTagHandlers;
 using RTParser.Utils;
 using MushDLR223.Virtualization;
 using RTParser.Variables;
@@ -774,6 +775,7 @@ namespace RTParser
         public bool NeverSave = NeverSaveUsers;
         private bool needAiml = false;
         private readonly List<CrossAppDomainDelegate> OnNeedAIML = new List<CrossAppDomainDelegate>();
+        public int depth;
 
         public void SyncDirectory(string userdir)
         {
@@ -825,7 +827,7 @@ namespace RTParser
                 return;
             }
             // or WriteLine but this is spammy 
-            OutputDelegate logger = TextFilter.DEVNULL;
+            OutputDelegate logger = DEVNULL;
             logger("DEBUG9 Saving User Directory {0}", userdir);
             Predicates.SaveTo(userdir, "user.predicates", "UserPredicates.xml");
             GraphMaster gm = bot.GetGraph(UserID, ListeningGraph);
@@ -1067,6 +1069,20 @@ namespace RTParser
                      secPerChat
              );
             // ReSharper restore PossibleLossOfFraction
+        }
+
+        public void Enter(AIMLTagHandler srai)
+        {
+            depth++;
+        }
+
+        public void Exit(AIMLTagHandler srai)
+        {
+            depth--;
+            if (depth==0)
+            {
+                SubQuery.PurgeTagHandlers();
+            }
         }
     }
 }

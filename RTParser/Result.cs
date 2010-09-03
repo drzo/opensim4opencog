@@ -196,7 +196,7 @@ namespace RTParser
             }
         }
 
-        public void WriteLine(string format, object[] args)
+        public void WriteLine(string format, params object[] args)
         {
             lock (OutputSentences) OutputSentences.Add(string.Format(format, args));
         }

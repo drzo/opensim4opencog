@@ -26,7 +26,8 @@ namespace RTParser
     sealed public class QuerySettingsImpl : QuerySettings
     {
 
-        public QuerySettingsImpl(QuerySettingsReadOnly settings) : base(settings)
+        public QuerySettingsImpl(QuerySettingsReadOnly settings)
+            : base(settings)
         {
         }
 
@@ -40,7 +41,7 @@ namespace RTParser
         #endregion
     }
 
-    abstract public class QuerySettings : QuerySettingsSettable
+    abstract public class QuerySettings : StaticAIMLUtils, QuerySettingsSettable
     {
         public void IncreaseLimits(int minsAndMaxes)
         {
@@ -105,7 +106,7 @@ namespace RTParser
             MinPatterns = UNLIMITED,
         };
 
-        protected QuerySettings(QuerySettingsReadOnly defaults)
+        protected QuerySettings(QuerySettingsReadOnly defaults):base()
         {
             ApplySettings(defaults, this);
         }
@@ -140,7 +141,7 @@ namespace RTParser
         /// <summary>
         /// The Graph to start the query on
         /// </summary>
-      //  public abstract GraphMaster Graph { get; set; }
+        //  public abstract GraphMaster Graph { get; set; }
 
         /// <summary>
         /// If the query is being traced
