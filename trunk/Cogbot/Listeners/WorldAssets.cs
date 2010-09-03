@@ -18,11 +18,11 @@ namespace cogbot.Listeners
         /// <summary>
         /// Assets that WorldObjects requested
         /// </summary>
-       private static readonly Dictionary<UUID, AssetType> AssetRequestType = new Dictionary<UUID, AssetType>();
+        private static readonly Dictionary<UUID, AssetType> AssetRequestType = new Dictionary<UUID, AssetType>();
 
         public Asset GetAsset(UUID id)
         {
-           // lock (uuidTypeObject)
+            // lock (uuidTypeObject)
             {
                 Object assetObject;
                 uuidTypeObject.TryGetValue(id, out assetObject);
@@ -51,7 +51,7 @@ namespace cogbot.Listeners
 
         public byte[] TextureBytesFormUUID(UUID uUID)
         {
-            SimAssetStore.FindOrCreateAsset(uUID, AssetType.Texture);
+            SimAsset assettt = SimAssetStore.FindOrCreateAsset(uUID, AssetType.Texture);
             ImageDownload ID = null;
             //lock (uuidTypeObject)
             {
@@ -105,30 +105,6 @@ namespace cogbot.Listeners
             return ID.AssetData;
         }
 
-        public SimAsset RequestAsset(UUID id, AssetType assetType, bool p)
-        {
-            if (id == UUID.Zero) return null;
-            SimAsset sa = SimAssetStore.FindOrCreateAsset(id, assetType);
-            if (!sa.NeedsRequest) return sa;
-            //if (assetType == AssetType.Sound) return sa;
-            if (assetType == AssetType.SoundWAV) return sa;
-            sa.NeedsRequest = false;
-            lock (AssetRequestType) if (AssetRequestType.ContainsKey(id)) return sa;
-            {
-                if (assetType == AssetType.Texture)
-                {
-                    StartTextureDownload(id);
-                    return sa;
-                }
-                RegionMasterTexturePipeline.RequestAsset(id, assetType, p, Assets_OnAssetReceived);
-                lock (AssetRequestType)
-                {
-                    AssetRequestType[id] = assetType;
-                }
-            }
-            return sa;
-        }
-
 
         //public override void Assets_OnXferReceived(XferDownload xfer)
         //{
@@ -136,8 +112,62 @@ namespace cogbot.Listeners
         //    //RegisterUUIDMaybe(xfer.ID, xfer);
         //}
 
+        public SimAsset EnqueueRequestAsset(UUID id, AssetType assetType, bool priority)
+        {
+            if (id == UUID.Zero) return null;
+            SimAsset sa = SimAssetStore.FindOrCreateAsset(id, assetType);
+            if (!sa.NeedsRequest) return sa;
+            lock (AssetRequestType) if (AssetRequestType.ContainsKey(id)) return sa;
+
+            //if (assetType == AssetType.Sound) return sa;
+            if (assetType == AssetType.SoundWAV) return sa;
+            sa.NeedsRequest = false;
+            {
+                lock (AssetRequestType)
+                {
+                    AssetRequestType[id] = assetType;
+
+                    if (assetType == AssetType.Texture)
+                    {
+                        OnConnectedQueue.Enqueue(() => StartTextureDownload(id));
+                        return sa;
+                    }
+                    OnConnectedQueue.Enqueue(
+                        () => RegionMasterTexturePipeline.RequestAsset(id, assetType, priority, Assets_OnAssetReceived));
+                }
+            }
+            return sa;
+        }
+
         public override void Assets_OnAssetReceived(AssetDownload transfer, Asset asset)
         {
+            bool xfrFailed = !transfer.Success;
+            bool decodeFailed = false;
+
+            if (transfer.Success)
+            {
+                try
+                {
+
+                    try
+                    {
+
+                        bool tf = asset.Decode();
+                        decodeFailed = !tf;
+                        Debug("Asset decoded " + tf + " as " + asset.AssetType);
+                    }
+                    catch (Exception ex)
+                    {
+                        decodeFailed = true;
+                        Debug("Asset not decoded: " + ex);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log(ex.Message, Helpers.LogLevel.Error, ex);
+                }
+            }
+
             if (asset == null)
             {
                 lock (AssetRequestType)
@@ -153,6 +183,7 @@ namespace cogbot.Listeners
                 return;
             }
             lock (AssetRequestType)
+            {
                 if (AssetRequestType.ContainsKey(asset.AssetID))
                 {
                     AssetType assetRequestType = AssetRequestType[transfer.AssetID];
@@ -167,8 +198,10 @@ namespace cogbot.Listeners
                 {
                     Debug("Unknown transfer succeeded for " + asset.AssetType + " " + transfer.ID + " ");
                 }
-            RegisterAsset(asset.AssetID, asset);
+                OnAssetDownloaded(asset.AssetID, asset);
+            }
         }
+
         /*
         On-Image-Received
              image: "{OpenMetaverse.ImageDownload,PacketCount=33,Codec=J2C,NotFound=False,Simulator=OpenSim Test (71.197.210.170:9000),PacketsSeen=System.Collections.Generic.SortedList`2[System.UInt16,System.UInt16],ImageType=Normal,DiscardLevel=-1,Priority=1013000,ID=728dd7fa-a688-432d-a4f7-4263b1f97395,Size=33345,AssetData=System.Byte[],Transferred=33345,Success=True,AssetType=Texture}"
@@ -177,8 +210,8 @@ namespace cogbot.Listeners
 
         public override void Assets_OnImageReceived(ImageDownload image, AssetTexture asset)
         {
+            OnAssetDownloaded(asset.AssetID, asset);
             RegisterUUIDMaybe(image.ID, image);
-            RegisterAsset(asset.AssetID, asset);
         }
 
         static int TextureRequested = 0;
@@ -186,15 +219,18 @@ namespace cogbot.Listeners
 
         public ImageDownload StartTextureDownload(UUID id)
         {
-            SimAssetStore.FindOrCreateAsset(id, AssetType.Texture);
+            SimAsset simAsset = SimAssetStore.FindOrCreateAsset(id, AssetType.Texture);
             if (RegionMasterTexturePipeline.Cache.HasAsset(id))
             {
-                return RegionMasterTexturePipeline.Cache.GetCachedImage(id);
+                ImageDownload dl = RegionMasterTexturePipeline.Cache.GetCachedImage(id);
+                if (dl != null)
+                {
+                    simAsset.SetAsset(dl);
+                }
             }
             lock (TexturesSkipped) if (TexturesSkipped.Contains(id)) return null;
             TextureRequested++;
-            client.Assets.RequestImage(id, ImageType.Normal,
-                                                     RegionMasterTexturePipeline_OnDownloadFinished);
+            client.Assets.RequestImage(id, ImageType.Normal, RegionMasterTexturePipeline_OnDownloadFinished);
             return null;
         }
 
@@ -203,7 +239,7 @@ namespace cogbot.Listeners
             if (state == TextureRequestState.Finished)
             {
                 UUID id = asset.AssetID;
-                RegisterAsset(id,asset);
+                OnAssetDownloaded(id, asset);
                 ImageDownload image = RegionMasterTexturePipeline.Cache.GetCachedImage(id);
                 if (image == null)
                 {
@@ -213,7 +249,7 @@ namespace cogbot.Listeners
                 {
                     TextureSuccess++;
                     RegisterUUIDMaybe(id, image);
-                    SimAssetSystem.OnAssetDownloaded(id,asset);
+                    OnAssetDownloaded(id, asset);
                     //lock (uuidTextures) uuidTextures[id] = image;
                 }
             }
@@ -230,174 +266,49 @@ namespace cogbot.Listeners
         }
 
 
-        private void RegisterAsset(UUID uUID, Asset asset)
+        internal void OnAssetDownloaded(UUID uUID, Asset asset)
         {
-            switch (asset.AssetType)
+            WorldObjects.RegisterUUIDMaybe(uUID, asset);
+            SimAsset A = SimAssetStore.FindOrCreateAsset(uUID, asset.AssetType);
+            A.SetAsset(asset);
+            //A.TypeData = asset.AssetData;
+
+
+
+
+            if (false)
             {
-                /// <summary>Unknown asset type</summary>
-                case AssetType.Unknown:
-                    {
-                        break;
-                    } //-1,
-                /// <summary>Texture asset, stores in JPEG2000 J2C stream format</summary>
-                case AssetType.Texture:
-                    {
-                        SimAssetSystem.OnAssetDownloaded(uUID, asset);
-                        break;
-                    } //0,
-                /// <summary>Sound asset</summary>
-                case AssetType.Sound:
-                    {
-                        SimAssetSystem.OnAssetDownloaded(uUID, asset);
-                        break;
-                    } //1,
-                /// <summary>Calling card for another avatar</summary>
-                case AssetType.CallingCard:
-                    {
-                        break;
-                    } //2,
-                /// <summary>Link to a location in world</summary>
-                case AssetType.Landmark:
-                    {
-                        break;
-                    } //3,
-                // <summary>Legacy script asset, you should never see one of these</summary>
-                //[Obsolete]
-                //Script: {break;}//4,
-                /// <summary>Collection of textures and parameters that can be 
-                /// worn by an avatar</summary>
-                case AssetType.Clothing:
-                    {
-                        break;
-                    } //5,
-                /// <summary>Primitive that can contain textures, sounds, 
-                /// scripts and more</summary>
-                case AssetType.Object:
-                    {
-                        break;
-                    } //6,
-                /// <summary>Notecard asset</summary>
-                case AssetType.Notecard:
-                    {
-                        break;
-                    } //7,
-                /// <summary>Holds a collection of inventory items</summary>
-                case AssetType.Folder:
-                    {
-                        break;
-                    } //8,
-                /// <summary>Root inventory folder</summary>
-                case AssetType.RootFolder:
-                    {
-                        break;
-                    } //9,
-                /// <summary>Linden scripting language script</summary>
-                case AssetType.LSLText:
-                    {
-                        break;
-                    } //10,
-                /// <summary>LSO bytecode for a script</summary>
-                case AssetType.LSLBytecode:
-                    {
-                        break;
-                    } //11,
-                /// <summary>Uncompressed TGA texture</summary>
-                case AssetType.TextureTGA:
-                    {
-                        SimAssetSystem.OnAssetDownloaded(uUID, asset);
-                        break;
-                    } //12,
-                /// <summary>Collection of textures and shape parameters that can
-                /// be worn</summary>
-                case AssetType.Bodypart:
-                    {
-                        break;
-                    } //13,
-                /// <summary>Trash folder</summary>
-                case AssetType.TrashFolder:
-                    {
-                        break;
-                    } //14,
-                /// <summary>Snapshot folder</summary>
-                case AssetType.SnapshotFolder:
-                    {
-                        break;
-                    } //15,
-                /// <summary>Lost and found folder</summary>
-                case AssetType.LostAndFoundFolder:
-                    {
-                        break;
-                    } //16,
-                /// <summary>Uncompressed sound</summary>
-                case AssetType.SoundWAV:
-                    {
-                        SimAssetSystem.OnAssetDownloaded(uUID, asset);
-                        break;
-                    } //17,
-                /// <summary>Uncompressed TGA non-square image, not to be used as a
-                /// texture</summary>
-                case AssetType.ImageTGA:
-                    {
-                        SimAssetSystem.OnAssetDownloaded(uUID, asset);
-                        break;
-                    } //18,
-                /// <summary>Compressed JPEG non-square image, not to be used as a
-                /// texture</summary>
-                case AssetType.ImageJPEG:
-                    {
-                        SimAssetSystem.OnAssetDownloaded(uUID, asset);
-                        break;
-                    } //19,
-                /// <summary>Animation</summary>
-                case AssetType.Animation:
-                    SimAssetSystem.OnAssetDownloaded(uUID, asset);
-                    //20,
-                    break;
-                /// <summary>Sequence of animations, sounds, chat, and pauses</summary>
-                case AssetType.Gesture:
-                    {
-                        break;
-                    } //21,
-                /// <summary>Simstate file</summary>
-                case AssetType.Simstate:
-                    {
-                        break;
-                    } //22,
-                default:
-                    {
-                        break;
-                    }
+                BotClient Client = this.client;
+                AutoResetEvent UploadCompleteEvent = new AutoResetEvent(false);
+                if (Client.AnimationFolder == UUID.Zero)
+                    Client.AnimationFolder = Client.Inventory.FindFolderForType(AssetType.Animation);
+
+                DateTime start = new DateTime();
+                Client.Inventory.RequestCreateItemFromAsset(asset.AssetData, A.Name, "Anim captured " + uUID,
+                                                            AssetType.Animation,
+                                                            InventoryType.Animation, Client.AnimationFolder,
+                                                            delegate(bool success, string status, UUID itemID,
+                                                                     UUID assetID)
+                                                            {
+                                                                WriteLine(
+                                                                    String.Format(
+                                                                        "RequestCreateItemFromAsset() returned: Success={0}, Status={1}, ItemID={2}, AssetID={3}",
+                                                                        success, status, itemID, assetID));
+                                                                WriteLine(String.Format("Upload took {0}",
+                                                                                                DateTime.Now.
+                                                                                                    Subtract(start)));
+                                                                UploadCompleteEvent.Set();
+                                                            });
+
+                UploadCompleteEvent.WaitOne();
+
+                //A.Name
+                //SetAnimationName(asset.AssetID, s);
             }
-            RegisterUUIDMaybe(uUID, asset);
+            //              Debug(s);
+            //                        RegisterUUID(asset.AssetID, s);
+
         }
 
-        public static void EnqueueRequestAsset(UUID id, AssetType type, bool b)
-        {
-            OnConnectedQueue.Enqueue(()=>
-            GridMaster.
-            client.Assets.RequestAsset(id, type,true,
-                                         delegate(AssetDownload transfer, Asset asset)
-                                         {
-                                             if (transfer.Success){ try
-                                                 {
-
-                                                     try
-                                                     {
-                                                         bool tf = asset.Decode();
-                                                         Debug("Asset decoded " + tf + " as " + asset.AssetType);
-                                                     }
-                                                     catch (Exception ex)
-                                                     {
-                                                         Debug("Asset not decoded: " + ex);
-                                                     }
-                                                 }
-                                                 catch (Exception ex)
-                                                 {
-                                                     Logger.Log(ex.Message, Helpers.LogLevel.Error, ex);
-                                                 }
-                                             }
-                                             
-                                         }));
-        }
     }
 }

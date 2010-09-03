@@ -2197,7 +2197,7 @@ namespace cogbot.TheOpenSims
                     if (newAnimNumber >= mostCurrentSequence)
                     {
                         mostCurrentSequence = newAnimNumber;
-                        WorldObjects.GridMaster.RequestAsset(key, AssetType.Animation, true);
+                        WorldObjects.GridMaster.EnqueueRequestAsset(key, AssetType.Animation, true);
                         //mostCurrentAnim = key; 
                     }
                     if (ExpectedCurrentAnims.ContainsKey(key))
@@ -2475,7 +2475,7 @@ namespace cogbot.TheOpenSims
                     {
                         mostCurrentSequence0 = newAnimNumber;
                     }
-                    WorldObjects.GridMaster.RequestAsset(i.Key, AssetType.Animation, true);
+                    WorldObjects.GridMaster.EnqueueRequestAsset(i.Key, AssetType.Animation, true);
 
                 }
                 leastCurrentSequence = leastCurrentSequence0;

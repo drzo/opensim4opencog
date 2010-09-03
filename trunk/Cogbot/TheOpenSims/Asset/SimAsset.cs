@@ -8,18 +8,31 @@ using OpenMetaverse.Assets;
 
 namespace cogbot.TheOpenSims
 {
-    abstract public class SimAsset : BotMentalAspect
+    abstract public class SimAssetV : BotMentalAspect
     {
+        #region Implementation of BotMentalAspect
+        public abstract FirstOrderTerm GetTerm();
+        public abstract ICollection<NamedParam> GetInfoMap();
+        #endregion
 
-        static public void WriteLine(string s, params object[] args)
-        {
-            SimAssetStore.WriteLine(s, args);
-        }
         //   public abstract bool NeedsRequest{ get; set;}
         //     public abstract bool SameAsset(SimAsset animation);
         //    public abstract bool HasData();
         //     public abstract float Length { get; }
         //   public abstract bool IsContinuousEffect { get; }
+        public abstract bool HasData();
+        public abstract Asset ServerAsset { get; set; }
+        public abstract byte[] AssetData { get; set; }
+        public abstract bool NeedsRequest { get; set; }
+    }
+
+    abstract public class SimAsset : SimAssetV
+    {
+
+        virtual public void WriteLine(string s, params object[] args)
+        {
+            SimAssetStore.WriteLine(DebugInfo() + ": " + s, args);
+        }
         protected Asset _ServerAsset;
 
         public SimAssetStore Store
@@ -33,50 +46,194 @@ namespace cogbot.TheOpenSims
         }
 
         public bool PullServerAsset = true;
-        public virtual Asset ServerAsset
+        public bool PushAssetToServer = false;
+        public bool Priority = true;
+        private int Requests = 0;
+        private DateTime when;
+        protected static DateTime waitUntil = DateTime.Now;
+        protected static object timerLock = new object();
+
+        public override sealed Asset ServerAsset
         {
             get
             {
-                if (_ServerAsset == null)
+                lock (this)
                 {
-                    if (PullServerAsset && AssetID != UUID.Zero)
+                    if (_ServerAsset != null)
                     {
-                        GridClient c = Store.Client;
-                        if (c != null && c.Network.Connected)
+                        return _ServerAsset;
+                    }
+                    if (this.AssetID == UUID.Zero)
+                    {
+                        return _ServerAsset;
+                    }
+                    if (!PullServerAsset)
+                    {
+                        if (Requests > 10)
                         {
-                            PullServerAsset = false;
-                            c.Assets.RequestAsset(AssetID, AssetType, true, On_AssetDownloaded);
+                            WriteLine("Not PullServerAsset: Giving up on {0} after {1} tries", DebugInfo(), Requests);
+                            return _ServerAsset;
+                        }
+                        return _ServerAsset;
+                    }
+                    else
+                    {
+                        PullServerAsset = false;
+                    }
+                    GridClient c = Store.Client;
+                    string s = null;
+                    if (Store.Client == null)
+                    {
+                        s = "needs client";
+                    }
+                    else
+                    {
+                        if (!c.Network.Connected)
+                        {
+                            s = "needs connect";
+                            c.Network.SimConnected += foo;
                         }
                         else
                         {
-                            // PullServerAsset = false;
-                            Store.Enqueue(() =>
-                                                        {
-                                                            Thread.Sleep(10);
-                                                            var v = ServerAsset;
-                                                        });
+                            s = "needs MakeRequest";
+                            MakeRequest();
                         }
                     }
+                    WriteLine("ASSET: " + s);
                 }
                 return _ServerAsset;
             }
             set
             {
-                _ServerAsset = value;
-                if (value != null)
+                SetAsset(value);
+            }
+        }
+
+        public void foo(object sender, SimConnectedEventArgs e)
+        {
+            BotClient c = Store.Client;
+            c.Network.SimConnected -= foo;
+            lock (this)
+                if (PullServerAsset)
                 {
-                    AssetType = value.AssetType;
-                    AssetID = value.AssetID;
+                    PullServerAsset = false;
+                }
+            if (e.Simulator == c.Network.CurrentSim)
+            {
+                MakeRequest();
+            }
+        }
+
+
+        private bool MakeRequest()
+        {
+            if (AssetID == UUID.Zero) return false;
+            if (AssetType <= 0) return false;
+            if (HasData())
+            {
+                return false;
+            }
+            if (!NeedsRequest) return false;
+
+            GridClient c = Store.Client;
+            if (c != null && c.Network.Connected && NeedsRequest)
+            {
+                if (Requests == 0 || DateTime.Now.Subtract(when).Seconds > 120)
+                {
+                    int ms = 0;
+                    lock (timerLock)
+                    {
+                        ms = waitUntil.Subtract(DateTime.Now).Milliseconds;
+                        waitUntil = DateTime.Now.AddSeconds(3);
+                    }
+                    if (ms > 0)
+                    {
+                        Thread.Sleep(ms);
+                    }
+                    Requests++;                                
+                    WorldObjects.GridMaster.EnqueueRequestAsset(AssetID, AssetType, true);
+                    //c.Assets.RequestAsset(AssetID, AssetType, Priority, On_AssetDownloaded);
+                    when = DateTime.Now;
+                    return true;
+                }
+            }
+            RetryAsset(100);
+            return false;
+        }
+
+        private void RetryAsset(int ms)
+        {
+            Store.Enqueue(() =>
+                              {
+                                  Thread.Sleep(ms);
+                                  var v = ServerAsset;
+                              });
+        }
+
+        public void SetAsset(Asset value)
+        {
+            if (value != null)
+            {
+                lock (value)
+                {
+                    if (value.AssetType > 0)
+                    {
+                        AssetType = value.AssetType;
+                    }
+                    if (value.AssetID != UUID.Zero)
+                    {
+                        AssetID = value.AssetID;
+                    }
+                    byte[] ad = value.AssetData;
+                    if (ad != null && ad.Length > 0)
+                    {
+                        if (_TypeData == null || _TypeData.Length == 0) _TypeData = ad;
+                    }
+
+                    if (AssetComplete) return;
+                    if ((_ServerAsset == value))
+                    {
+                        WriteLine("RE-Got server asset!");
+                    }
+                    AssetComplete = true;
+                    PullServerAsset = false;
+                    NeedsRequest = false;
+                    GuessAssetName();
+                    GetParts();
+                    SimAssetStore.InternAsset(this);
                 }
             }
         }
 
-        private void On_AssetDownloaded(AssetDownload transfer, Asset asset)
+        public void SetAsset(AssetDownload download, Asset asset)
         {
-            PullServerAsset = false;
-            //if (!transfer.Success) PullServerAsset = true;
-            _ServerAsset = asset;
-            GuessAssetName();
+            SetAsset(download);
+            SetAsset(asset);
+        }
+
+        public void SetAsset(AssetDownload download)
+        {
+            bool xferFailed = !download.Success;
+            PullServerAsset = xferFailed;
+            NeedsRequest = xferFailed;
+            if (download.Success)
+            {
+                AssetType = download.AssetType;
+                AssetData = download.AssetData;
+                AssetID = download.AssetID;
+            }
+        }
+
+        public void SetAsset(ImageDownload download)
+        {
+            bool xferFailed = !download.Success;
+            PullServerAsset = xferFailed;
+            NeedsRequest = xferFailed;
+            if (download.Success)
+            {
+                AssetType = download.AssetType;
+                AssetData = download.AssetData;
+            }
         }
 
         readonly public List<string> Meanings = new List<string>();
@@ -113,7 +270,7 @@ namespace cogbot.TheOpenSims
             return ToString();
         }
 
-        public override string ToString()
+        sealed public override string ToString()
         {
             string s = String.Empty;
             lock (_Name)
@@ -177,7 +334,13 @@ namespace cogbot.TheOpenSims
             {
                 if (value == null) return;
                 if (!_Name.Contains(value))
+                {
                     _Name.Add(value);
+                    if (SimAssetStore.downloadedAssetFoldersComplete)
+                    {
+                        WriteLine("SetAssetName: {0} {1}", AssetType, value);
+                    }
+                }
                 if (!SimAssetStore.nameAsset.ContainsKey(value))
                     SimAssetStore.nameAsset[value] = this;
             }
@@ -228,12 +391,12 @@ namespace cogbot.TheOpenSims
         }
 
 
-        public FirstOrderTerm GetTerm()
+        public override FirstOrderTerm GetTerm()
         {
             throw new NotImplementedException();
         }
 
-        public ICollection<NamedParam> GetInfoMap()
+        public override ICollection<NamedParam> GetInfoMap()
         {
             return WorldObjects.GetMemberValues("", this);
         }
@@ -266,44 +429,39 @@ namespace cogbot.TheOpenSims
             return null;
         }
 
-        protected virtual void SaveFile(string tmpname)
-        {
-            //  if (!HasData()) return;
-            //WriteLine("Not implemented save {0} file {1}", this, tmpname);
-        }
-
         private byte[] _TypeData;
-        public virtual byte[] AssetData
+        public sealed override byte[] AssetData
         {
             get
             {
                 if (_TypeData != null) return _TypeData;
-                if (ServerAsset == null) return null;
-                return ServerAsset.AssetData;
+                if (_ServerAsset == null) return null;
+                return _ServerAsset.AssetData;
             }
             set
             {
                 if (_TypeData != null)
                 {
-
+                    int b = _TypeData == null ? -1 : _TypeData.Length;
+                    int a = value == null ? -1 : value.Length;
                 }
                 _TypeData = value;
-                if (ServerAsset == null)
+                if (_ServerAsset == null)
                 {
                     if (AssetID != UUID.Zero)
                     {
-                        ServerAsset = CreateAssetWrapper(AssetType, AssetID, value);
+                        _ServerAsset = CreateAssetWrapper(AssetType, AssetID, value);
                     }
                     return;
                 }
                 else
                 {
-                    ServerAsset.AssetData = value;
+                    _ServerAsset.AssetData = value;
                 }
             }
         }
 
-        private Asset CreateAssetWrapper(AssetType type, UUID uuid, byte[] data)
+        public static Asset CreateAssetWrapper(AssetType type, UUID uuid, byte[] data)
         {
             Asset asset;
 
@@ -343,7 +501,10 @@ namespace cogbot.TheOpenSims
                     asset = new AssetCallingCard(uuid, data);
                     break;
                 default:
-                    throw new NotImplementedException("Unimplemented asset type: " + type);
+                    asset = new AssetMutable(type, uuid, data);
+                    Logger.Log("[OarFile] Not Implemented asset type " + type, Helpers.LogLevel.Error);
+                    //throw new NotImplementedException("Unimplemented asset type: " + type);
+                    break;
             }
             return asset;
         }
@@ -358,13 +519,30 @@ namespace cogbot.TheOpenSims
             get { return true; }
         }
 
-        public virtual bool HasData()
+        public override bool HasData()
         {
-            return ServerAsset != null || _TypeData != null;
+            byte[] d = AssetData;
+            return d != null && d.Length > 0;
         }
 
         private bool _NeedsRequest = true;
-        public virtual bool NeedsRequest
+        private bool AssetComplete;
+
+
+        protected virtual void SaveFile(string tmpname)
+        {
+            //throw new NotImplementedException();
+        }
+
+        private bool needPush = true;
+        public void InternOnRegion(WorldObjects world)
+        {
+            if (!needPush) return;
+            needPush = false;
+            world.SendNewRegionEvent(SimEventType.DATA_UPDATE, "OnAssetInfo", this);
+        }
+
+        public sealed override bool NeedsRequest
         {
             get
             {
@@ -390,8 +568,14 @@ namespace cogbot.TheOpenSims
             return false;
         }
 
+        protected virtual List<SimAsset> GetParts()
+        {
+            return new List<SimAsset>() {this};
+        }
+
         public static bool Decode(Asset sa)
         {
+            if (sa == null) return false;
             try
             {
                 return sa.Decode();

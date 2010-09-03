@@ -11,8 +11,8 @@ namespace cogbot.TheOpenSims
         }
         protected override string GuessAssetName()
         {
-            if (ServerAsset == null) return UnknownName;
-            Decode(ServerAsset);
+            if (_ServerAsset == null) return UnknownName;
+            Decode(_ServerAsset);
             //  Ass S = (AssetCallingCard)ServerAsset;
             //AssetData = S.AssetData;
             return UnknownName;

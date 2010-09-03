@@ -15,59 +15,9 @@ namespace cogbot.TheOpenSims
             : base(uuid, name)
         {
         }
-
-        protected override void SaveFile(string tmpname)
-        {
-            //WriteLine("Not implemented save gesture file " + tmpname);
-        }
-
         public AssetGesture GetGesture()
         {
             return (AssetGesture)ServerAsset;
-        }
-
-        public override Asset ServerAsset
-        {
-          //  get { return base.ServerAsset; }
-            set
-            {
-                base.ServerAsset = value;
-                if (value != null)
-                {
-                    GetParts();
-                }
-            }
-        }
-
-        private byte[] _TypeData;
-        public override byte[] AssetData
-        {
-            get
-            {
-                if (_TypeData != null) return _TypeData;
-                if (ServerAsset == null) return null;
-                return ServerAsset.AssetData;
-            }
-            set
-            {
-                if (_TypeData!=null)
-                {
-                    
-                }
-                _TypeData = value;
-                if (ServerAsset == null)
-                {
-                    if (AssetID != UUID.Zero)
-                    {
-                        ServerAsset = new AssetGesture(AssetID, value);
-                    }
-                    return;
-                }
-                else
-                {
-                    ServerAsset.AssetData = value;
-                }
-            }
         }
 
         private void tbtnReupload_Click(object sender, EventArgs e)
@@ -119,7 +69,7 @@ namespace cogbot.TheOpenSims
                 return Item.Name;
             }
             String s = "";
-            if (ServerAsset == null) return null;
+            if (_ServerAsset == null) return null;
             Decode(ServerAsset);
             AssetGesture gestureAsset = GetGesture();
             for (int i = 0; i < gestureAsset.Sequence.Count; i++)
@@ -132,7 +82,7 @@ namespace cogbot.TheOpenSims
             return UnknownName;
         }
 
-        public List<SimAsset> GetParts()
+        protected override List<SimAsset> GetParts()
         {
 
             AssetGesture gestureAsset = GetGesture();

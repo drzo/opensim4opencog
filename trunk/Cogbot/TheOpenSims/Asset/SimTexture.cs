@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
 
@@ -6,15 +7,19 @@ namespace cogbot.TheOpenSims
 {
     internal class SimTexture : SimAsset
     {
-        private bool _NeedsRequest = true;
-        public override bool NeedsRequest
+        protected override List<SimAsset> GetParts()
         {
-            get
+            try
             {
-                if (HasData()) return false;
-                return _NeedsRequest;
+                GuessAssetName();
+                Decode(ServerAsset);
             }
-            set { _NeedsRequest = value; }
+            catch (System.Exception ex)
+            {
+                WriteLine("" + ex);
+                //_TypeData = null;
+            }
+            return new List<SimAsset>() { this };
         }
 
         public SimTexture(UUID uuid, string name, AssetType type)
@@ -22,38 +27,6 @@ namespace cogbot.TheOpenSims
         {
         }
 
-        public override bool HasData()
-        {
-            return ServerAsset != null || _TypeData != null;
-        }
-
-        protected override void SaveFile(string tmpname)
-        {
-            //WriteLine("Not implemented save texture file " + tmpname);
-        }
-        private byte[] _TypeData;
-        public override byte[] AssetData
-        {
-            get
-            {
-                if (_TypeData != null) return _TypeData;
-                if (ServerAsset == null) return null;
-                return ServerAsset.AssetData;
-            }
-            set
-            {
-                _TypeData = value;
-                if (ServerAsset == null)
-                {
-                    if (AssetID != UUID.Zero)
-                    {
-                        ServerAsset = new AssetTexture(AssetID, value);
-                    }
-                    return;
-                }
-                ServerAsset.AssetData = value;
-            }
-        }
         protected override string GuessAssetName()
         {
             return UnknownName;

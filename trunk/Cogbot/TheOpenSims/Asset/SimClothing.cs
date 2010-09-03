@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using OpenMetaverse;
 
 namespace cogbot.TheOpenSims
@@ -13,7 +14,7 @@ namespace cogbot.TheOpenSims
 
         protected override string GuessAssetName()
         {
-            if (ServerAsset == null) return UnknownName;
+            if (_ServerAsset == null) return UnknownName;
             Decode(ServerAsset);
             //  Ass S = (AssetCallingCard)ServerAsset;
             //AssetData = S.AssetData;
