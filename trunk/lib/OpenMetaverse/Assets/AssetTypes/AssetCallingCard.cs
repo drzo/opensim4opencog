@@ -68,7 +68,7 @@ namespace OpenMetaverse.Assets
         /// <summary>
         /// Encode the raw contents of a string with the specific Callingcard format
         /// </summary>
-        public override void Encode()
+        public override void Encode0()
         {
             string temp = "Callingcard version 2\n";
             temp += "avatar_id " + AvatarID + "\n";
@@ -79,7 +79,7 @@ namespace OpenMetaverse.Assets
         /// Decode the raw asset data, populating the AvatarID and Position
         /// </summary>
         /// <returns>true if the AssetData was successfully decoded to a UUID and Vector</returns>
-        public override bool Decode()
+        public override bool Decode0()
         {
             String text = Utils.BytesToString(AssetData);
             if (text.ToLower().Contains("callingcard version 2"))

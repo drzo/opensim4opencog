@@ -62,7 +62,7 @@ namespace OpenMetaverse.Assets
         /// <summary>
         /// Encode the raw contents of a string with the specific Linden Text properties
         /// </summary>
-        public override void Encode()
+        public override void Encode0()
         {
             string body = BodyText ?? String.Empty;
 
@@ -157,7 +157,7 @@ namespace OpenMetaverse.Assets
         /// Decode the raw asset data including the Linden Text properties
         /// </summary>
         /// <returns>true if the AssetData was successfully decoded</returns>
-        public override bool Decode()
+        public override bool Decode0()
         {
             string data = Utils.BytesToString(AssetData);
             EmbeddedItems = new List<InventoryItem>();

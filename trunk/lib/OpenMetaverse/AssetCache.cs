@@ -143,8 +143,15 @@ namespace OpenMetaverse
             }
             try
             {
-                Logger.DebugLog("Reading " + FileName(assetID) + " from asset cache.");
-                byte[] data = File.ReadAllBytes(FileName(assetID));
+                string fileName = FileName(assetID);
+                bool exists = File.Exists(fileName);
+                if (!exists)
+                {
+                    Logger.DebugLog("Reading " + fileName + " from asset cache. (missing) null");
+                    return null;
+                }
+                Logger.DebugLog("Reading " + fileName + " from asset cache.");
+                byte[] data = File.ReadAllBytes(fileName);
                 return data;
             }
             catch (Exception ex)

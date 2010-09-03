@@ -34,6 +34,7 @@ namespace OpenMetaverse.Assets
     /// </summary>
     public abstract class Asset
     {
+        public bool locked = false;
         /// <summary>A byte array containing the raw asset data</summary>
         public byte[] AssetData;
         /// <summary>True if the asset it only stored on the server temporarily</summary>
@@ -75,13 +76,47 @@ namespace OpenMetaverse.Assets
         /// Regenerates the <code>AssetData</code> byte array from the properties 
         /// of the derived class.
         /// </summary>
-        public abstract void Encode();
-
+        public abstract void Encode0();
+        public void Encode()
+        {
+            lock (this)
+            {
+                Encode0();
+            }
+        }
         /// <summary>
         /// Decodes the AssetData, placing it in appropriate properties of the derived
         /// class.
         /// </summary>
         /// <returns>True if the asset decoding succeeded, otherwise false</returns>
-        public abstract bool Decode();
+        public abstract bool Decode0();
+        public bool Decode()
+        {
+            lock (this)
+            {
+                return Decode0();
+            }
+        }
+
+/*
+
+        protected abstract bool DecodeXml0(string data);
+        public bool DecodeXml(string xmlData)
+        {
+            lock (this)
+            {
+                return DecodeXml0(xmlData);
+            }
+        }
+
+        protected abstract string EncodeXml0();
+        public string EncodeXml()
+        {
+            lock (this)
+            {
+                return EncodeXml0();
+            }
+        }
+        */
     }
 }

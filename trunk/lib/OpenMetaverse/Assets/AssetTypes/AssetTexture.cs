@@ -79,7 +79,7 @@ namespace OpenMetaverse.Assets
         /// Populates the <seealso cref="AssetData"/> byte array with a JPEG2000
         /// encoded image created from the data in <seealso cref="Image"/>
         /// </summary>
-        public override void Encode()
+        public override void Encode0()
         {
             AssetData = OpenJPEG.Encode(Image);
         }
@@ -89,7 +89,7 @@ namespace OpenMetaverse.Assets
         /// <seealso cref="ManagedImage"/> object <seealso cref="Image"/>
         /// </summary>
         /// <returns>True if the decoding was successful, otherwise false</returns>
-        public override bool Decode()
+        public override bool Decode0()
         {
             if (AssetData != null && AssetData.Length > 0)
             {

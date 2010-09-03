@@ -530,21 +530,24 @@ namespace OpenMetaverse
             transfer.Callback = callback;
 
             // Check asset cache first
-            if (callback != null && Cache.HasAsset(assetID))
+            lock (this)
             {
-                byte[] data = Cache.GetCachedAssetBytes(assetID);
-                transfer.AssetData = data;
-                transfer.Success = true;
-                transfer.Status = StatusCode.OK;
+                if (callback != null && Cache.HasAsset(assetID))
+                {
+                    byte[] data = Cache.GetCachedAssetBytes(assetID);
+                    transfer.AssetData = data;
+                    transfer.Success = true;
+                    transfer.Status = StatusCode.OK;
 
-                Asset asset = CreateAssetWrapper(type);
-                asset.AssetData = data;
-                asset.AssetID = assetID;
+                    Asset asset = CreateAssetWrapper(type);
+                    asset.AssetData = data;
+                    asset.AssetID = assetID;
 
-                try { callback(transfer, asset); }
-                catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
+                    try { callback(transfer, asset); }
+                    catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
 
-                return;
+                    return;
+                }
             }
 
             // Add this transfer to the dictionary
@@ -1202,9 +1205,14 @@ namespace OpenMetaverse
                 case AssetType.Gesture:
                     asset = new AssetGesture();
                     break;
+                case AssetType.CallingCard:
+                    asset = new AssetCallingCard();
+                    break;
                 default:
+                    asset = new AssetMutable(type);
+                    asset.locked = true;
                     Logger.Log("Unimplemented asset type: " + type, Helpers.LogLevel.Error, Client);
-                    return null;
+                    break;
             }
 
             return asset;

@@ -69,7 +69,7 @@ namespace OpenMetaverse.Assets
 
         public AssetPrim(string xmlData)
         {
-            DecodeXml(xmlData);
+            DecodeXml0(xmlData);
         }
 
         public AssetPrim(PrimObject parent, List<PrimObject> children)
@@ -84,23 +84,23 @@ namespace OpenMetaverse.Assets
         /// <summary>
         /// 
         /// </summary>
-        public override void Encode()
+        public override void Encode0()
         {
-            AssetData = System.Text.Encoding.UTF8.GetBytes(EncodeXml());
+            AssetData = System.Text.Encoding.UTF8.GetBytes(EncodeXml0());
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public override bool Decode()
+        public override bool Decode0()
         {
             if (AssetData != null && AssetData.Length > 0)
             {
                 try
                 {
                     string xmlData = System.Text.Encoding.UTF8.GetString(AssetData);
-                    DecodeXml(xmlData);
+                    DecodeXml0(xmlData);
                     return true;
                 }
                 catch { }
@@ -109,7 +109,7 @@ namespace OpenMetaverse.Assets
             return false;
         }
 
-        public string EncodeXml()
+        public string EncodeXml0()
         {
             TextWriter textWriter = new StringWriter();
             using (XmlTextWriter xmlWriter = new XmlTextWriter(textWriter))
@@ -120,7 +120,7 @@ namespace OpenMetaverse.Assets
             }
         }
 
-        public bool DecodeXml(string xmlData)
+        public bool DecodeXml0(string xmlData)
         {
             using (XmlTextReader reader = new XmlTextReader(new StringReader(xmlData)))
             {
