@@ -59,8 +59,11 @@ namespace RTParser.Normalize
             System.Collections.Generic.IEnumerable<string> dictionarySettingNames = dictionary.SettingNames(0);
             foreach (string pattern in dictionarySettingNames)
             {
+                if (string.IsNullOrEmpty(pattern)) continue;
                 var vvalue = dictionary.grabSetting(pattern);
                 var value = vvalue.AsString();
+                value = value.Replace("\\b", " ");
+                value = value.ToUpper();
                 string replacement;
                 if (value.Trim().Length == 0)
                 {
@@ -70,12 +73,16 @@ namespace RTParser.Normalize
                 else
                 {
                     value = value.Trim();
+                    if (value == pattern)
+                    {
+                        continue;
+                    }
                     replacement = marker + value.Replace(" ", markerSP) + marker;
                 }
                 string p2 = ApplySubstitutions.makeRegexSafe(pattern);
                 //Unifiable match = "\\b"+@p2.Trim().Replace(" ","\\s*")+"\\b";
                 string match = "\\b" + p2.TrimEnd().TrimStart() + "\\b";
-                //if (Regex.IsMatch(result, match, RegexOptions.IgnoreCase))
+                if (Regex.IsMatch(result, match, RegexOptions.IgnoreCase))
                 {
                     string testResult = Regex.Replace(result, match, replacement, RegexOptions.IgnoreCase);
                     if (false)

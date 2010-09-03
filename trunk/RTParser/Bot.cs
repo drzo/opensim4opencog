@@ -1636,13 +1636,13 @@ namespace RTParser
             undoStack.pushValues(user.Predicates, "input", request.rawInput);
             lock (user.QueryLock)
             {
-                res = Chat0000(request, user, G);
+                res = Chat0000(request, user, G, writeToLog);
                 // ReSharper disable ConditionIsAlwaysTrueOrFalse
                 if (res.OutputSentenceCount == 0)
                 // ReSharper restore ConditionIsAlwaysTrueOrFalse
                 {
                     request.IncreaseLimits(1);
-                    res = Chat0000(request, user, G);
+                    res = Chat0000(request, user, G, writeToLog);
                 }
             }
             undoStack.UndoAll();
@@ -1650,10 +1650,12 @@ namespace RTParser
 
         }
 
-        private AIMLbot.Result Chat0000(Request request, User user, GraphMaster G)
+        private AIMLbot.Result Chat0000(Request request, User user, GraphMaster G, OutputDelegate writeToLog)
         {
+
             //LastUser = user;
             AIMLbot.Result result;
+            writeToLog = writeToLog ?? DEVNULL;
 
             bool isTraced = request.IsTraced || G == null;
             //chatTrace = null;
@@ -1684,7 +1686,7 @@ namespace RTParser
                 catch (Exception e)
                 {
                     isTraced = true;
-                    writeToLog(e);
+                    this.writeToLog(e);
                     writeToLog("ImmediateAiml: ERROR: " + e);
                 }
             }
@@ -1818,7 +1820,7 @@ namespace RTParser
             {
                 string nai = NotAcceptingUserInputMessage;
                 if (isTraced)
-                    writeToLog("ERROR {0} getting back {1}", request, nai);
+                    this.writeToLog("ERROR {0} getting back {1}", request, nai);
                 result = request.CreateResult(request);
                 request.AddOutputSentences(null, nai, result);
                 return result;
@@ -1933,11 +1935,6 @@ namespace RTParser
             }
         }
 
-        public static string GetAttribValue(XmlNode templateNode, string attribName, string defaultIfEmpty)
-        {
-            return AIMLTagHandler.GetAttribValue(templateNode, attribName, () => defaultIfEmpty, null);
-        }
-
         public AIMLbot.Result ImmediateAiml(XmlNode templateNode, Request request0,
             AIMLLoader loader, AIMLTagHandler handler)
         {
@@ -2017,7 +2014,7 @@ namespace RTParser
             return result;
         }
 
-        public AIMLTagHandler proccessResponse(SubQuery query,
+        public IXmlLineInfo proccessResponse(SubQuery query,
             Request request, Result result,
             XmlNode templateNode, GuardInfo sGuard,
             out bool createdOutput, out bool templateSucceeded,
@@ -2048,7 +2045,7 @@ namespace RTParser
             }
         }
 
-        public AIMLTagHandler proccessResponse000(SubQuery query, Request request, Result result,
+        public IXmlLineInfo proccessResponse000(SubQuery query, Request request, Result result,
             XmlNode sOutput, GuardInfo sGuard,
             out bool createdOutput, out bool templateSucceeded,
             AIMLTagHandler handler, TemplateInfo templateInfo,
@@ -4245,59 +4242,6 @@ The AIMLbot program.
                 nodes.AddRange(nodeE);
             }
             return nodes;
-        }
-
-        static string ToNonSilentTags(string sentenceIn)
-        {
-            var nodeO = AIMLTagHandler.getNode("<node>" + sentenceIn + "</node>");
-            LineInfoElementImpl.notReadonly(nodeO);
-            return VisibleRendering(nodeO.ChildNodes, skip, flatten);
-        }
-
-
-        public static string VisibleRendering(XmlNodeList nodeS)
-        {
-            return VisibleRendering(nodeS, skip, flatten);
-        }
-
-        private static List<string> skip = new List<string>()
-                                               {
-                                                   "#comment",
-                                               //    "debug",
-                                               };
-
-        private static List<string> flatten = new List<string>()
-                                               {
-                                                   "template",
-                                                   "pattern",
-                                               };
-
-        private static string VisibleRendering(XmlNodeList nodeS, List<string> skip, List<string> flatten)
-        {
-            var sentenceIn = "";
-            foreach (XmlNode nodeO in nodeS)
-            {
-                sentenceIn = sentenceIn + " " + VisibleRendering(nodeO, skip, flatten);
-            }
-            return sentenceIn.Trim().Replace("  ", " ");
-        }
-        private static string VisibleRendering(XmlNode nodeO, List<string> skip, List<string> flatten)
-        {
-            if (nodeO.NodeType == XmlNodeType.Comment) return "";
-            string nodeName = nodeO.Name.ToLower();
-            if (skip.Contains(nodeName)) return "";
-            if (flatten.Contains(nodeName))
-            {
-                return VisibleRendering(nodeO.ChildNodes, skip, flatten);
-            }
-            if (nodeO.NodeType == XmlNodeType.Element) return nodeO.OuterXml;
-            if (nodeO.NodeType == XmlNodeType.Text) return nodeO.InnerText;            
-            return nodeO.OuterXml;
-        }
-
-        public static string RenderInner(XmlNode nodeO)
-        {
-            return VisibleRendering(nodeO.ChildNodes, skip, flatten);
         }
     }
 }

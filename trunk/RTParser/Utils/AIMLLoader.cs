@@ -22,7 +22,7 @@ namespace RTParser.Utils
     /// A utility class for loading AIML files from disk into the graphmaster structure that 
     /// forms an AIML RProcessor's "brain"
     /// </summary>
-    public class AIMLLoader : XmlNodeEvaluatorImpl
+    public partial class AIMLLoader : XmlNodeEvaluatorImpl
     {
         #region Attributes
         /// <summary>
@@ -44,6 +44,10 @@ namespace RTParser.Utils
         public bool RawUserInput = false;
         #endregion
 
+        public AIMLLoader(RTParser.RTPBot bot)
+        {
+            
+        }
         /// <summary>
         /// Ctor
         /// </summary>
@@ -171,7 +175,7 @@ namespace RTParser.Utils
                 {
                     writeToLog("ERROR: LoaderOper {0}", e);
                     if (RTPBot.NoRuntimeErrors) return default(R);
-                    throw;     
+                    throw;
                     //return default(R);
                 }
             }
@@ -583,7 +587,7 @@ namespace RTParser.Utils
         private int loadAIMLNodes(IEnumerable nodes, LoaderOptions loadOpts, Request request, List<XmlNode> additionalRules)
         {
             int total = 0;
-            if (nodes!=null)
+            if (nodes != null)
             {
 
                 foreach (var node in nodes)
@@ -597,7 +601,7 @@ namespace RTParser.Utils
         public int loadAIMLNode(XmlNode currentNode, LoaderOptions loadOpts, Request request)
         {
             List<XmlNode> additionalRules = loadOpts.AdditionalPreconditions;
-            return LoaderOper(() => loadAIMLNode0((XmlNode) currentNode, loadOpts, request, additionalRules),
+            return LoaderOper(() => loadAIMLNode0((XmlNode)currentNode, loadOpts, request, additionalRules),
                               loadOpts.CtxGraph);
         }
 
@@ -615,7 +619,7 @@ namespace RTParser.Utils
                 string currentNodeName = currentNode.Name.ToLower();
                 if (currentNodeName == "aiml")
                 {
-                    total += InsideLoaderContext(currentNode, request, request.CurrentQuery,() =>loadAIMLNodes(currentNode.ChildNodes, loadOpts, request,additionalRules));
+                    total += InsideLoaderContext(currentNode, request, request.CurrentQuery, () => loadAIMLNodes(currentNode.ChildNodes, loadOpts, request, additionalRules));
                 }
                 else if (currentNodeName == "topic")
                 {
@@ -670,7 +674,7 @@ namespace RTParser.Utils
             //XmlNode node = 
             loadAIMLNode(src, request.LoadOptions, request);
             //if (node == null) return NO_XmlNode;
-            return new XmlNode[] {src};
+            return new XmlNode[] { src };
         }
 
 
@@ -764,14 +768,14 @@ namespace RTParser.Utils
             if (templates.Count == 0)
             {
                 XmlNode TemplateOverwrite = TheTemplateOverwrite;
-                if (TemplateOverwrite!=null)
+                if (TemplateOverwrite != null)
                 {
                     templates = new List<XmlNode>();
                     templates.Add(TemplateOverwrite);
                 }
                 else
                 {
-                    errors += " TEMPLATE MISSING ";                    
+                    errors += " TEMPLATE MISSING ";
                 }
             }
             if (patterns.Count == 0)
@@ -809,8 +813,6 @@ namespace RTParser.Utils
             return CIs;
         }
 
-        static public readonly XmlNode  TheTemplateOverwrite = AIMLTagHandler.getNode("<template></template>");
-        static Dictionary<XmlNode, StringBuilder> ErrorList = new Dictionary<XmlNode, StringBuilder>();
         public Dictionary<XmlNode, StringBuilder> DumpErrors(OutputDelegate action, bool clr)
         {
             lock (ErrorList)
@@ -867,7 +869,8 @@ namespace RTParser.Utils
                 {
                     writeToLog("USING DELETION TEMPALTE " + cateNode);
                     templateNode = TemplateOverwrite;
-                } else
+                }
+                else
                 {
                     errors += " Missing pattern tag ";
                 }
@@ -879,7 +882,7 @@ namespace RTParser.Utils
 
             XmlNode newPattern;
             Unifiable patternText;
-            Func<XmlNode,string> Render = RTPBot.RenderInner;
+            Func<XmlNode, string> Render = RTPBot.RenderInner;
             XmlNode extractThat1 = extractThat(patternNode, "that", cateNode, out patternText, out newPattern);
             string that;
             string ssss = RTPBot.GetAttribValue(extractThat1, "index", null);
@@ -935,7 +938,7 @@ namespace RTParser.Utils
                                                     outerNode, templateNode, guard, thatInfo);
 
                         pathCtxGraph.addCategoryTag(categoryPath, patternInfo, categoryInfo,
-                                                    outerNode, templateNode, guard, thatInfo ,additionalRules);
+                                                    outerNode, templateNode, guard, thatInfo, additionalRules);
                         foreach (var node in additionalRules)
                         {
                             categoryInfo.AddPrecondition(node);
@@ -971,7 +974,7 @@ namespace RTParser.Utils
         {
             string prefix = ToString();
             prefix = DLRConsole.SafeFormat("LOADERTRACE: " + message + " while " + prefix, args);
-            
+
             try
             {
                 this.LoaderRequest00.writeToLog(prefix);
@@ -980,10 +983,6 @@ namespace RTParser.Utils
             catch { }
         }
 
-        private static bool ContansNoInfo(Unifiable cond)
-        {
-            return cond == null || cond == Unifiable.STAR || cond == Unifiable.Empty;
-        }
 
         /// <summary>
         /// Generates a path from a category XML cateNode and topic name
@@ -1039,96 +1038,6 @@ namespace RTParser.Utils
             }
             return that ?? PatternStar;// hatText;//this.generatePath(patternText, thatText, topicName, isUserInput);
         }
-
-        protected static XmlNode PatternStar
-        {
-            get
-            {
-                var ps = AIMLTagHandler.getNode("<pattern name=\"*\">*</pattern>");
-                LineInfoElementImpl.SetReadOnly(ps);
-
-                return ps;
-            }
-        }
-        public bool ThatWideStar = false;
-        public static bool useInexactMatching = false;
-        private OutputDelegate userTraceRedir;
-
-        /// <summary>
-        /// Given a name will try to find a node named "name" in the childnodes or return null
-        /// </summary>
-        /// <param name="name">The name of the node</param>
-        /// <param name="node">The node whose children need searching</param>
-        /// <returns>The node (or null)</returns>
-        static public XmlNode FindNode(string name, XmlNode node, XmlNode ifMissing)
-        {
-            name = name.ToLower();
-            foreach (var n in NamesStrings(name))
-            {
-                foreach (XmlNode child in node.ChildNodes)
-                {
-                    if (AIMLLoader.NameMatches(child, n))
-                    {
-                        return child;
-                    }
-                }
-            }
-            return ifMissing;
-        }
-        static public XmlNode FindNodeOrHigher(string name, XmlNode node, XmlNode ifMissing)
-        {
-            if (node == null) return ifMissing;
-            foreach (var n in NamesStrings(name))
-            {
-                foreach (XmlNode child in node.ChildNodes)
-                {
-                    if (AIMLLoader.NameMatches(child, n))
-                    {
-                        return child;
-                    }
-                }
-            }
-            return FindHigher(name, node.ParentNode, ifMissing);
-        }
-        static public XmlNode FindHigher(string name, XmlNode node, XmlNode ifMissing)
-        {
-            if (node == null) return ifMissing;
-            foreach (var n in NamesStrings(name))
-            {
-                if (AIMLLoader.NameMatches(node, n))
-                {
-                    return node;
-                }
-            }
-            return FindHigher(name, node.ParentNode, ifMissing);
-        }
-
-        private static string[] NamesStrings(string name)
-        {
-            return name.Split(",".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
-        }
-
-        private static bool NameMatches(XmlNode node, string s)
-        {
-            return node.Name.ToLower() == s || node.LocalName.ToLower() == s;
-        }
-
-        static public List<XmlNode> FindNodes(string name, XmlNode node)
-        {
-            name = name.ToLower();
-            if (name.Contains(","))
-                throw new NotImplementedException("Commans in FindNodes " + name + " in " + node.OuterXml);
-            List<XmlNode> nodes = new List<XmlNode>();
-            foreach (XmlNode child in node.ChildNodes)
-            {
-                if (AIMLLoader.NameMatches(child, name))
-                {
-                    nodes.Add(child);
-                }
-            }
-            return nodes;
-        }
-
         /// <summary>
         /// Generates a path from the passed arguments
         /// </summary>
@@ -1291,54 +1200,6 @@ namespace RTParser.Utils
             }
         }
 
-        public static string CleanPunct(string normalizedPattern)
-        {
-            if (normalizedPattern.EndsWith("?") || normalizedPattern.EndsWith(".") || normalizedPattern.EndsWith("!"))
-            {
-                normalizedPattern = normalizedPattern.Substring(0, normalizedPattern.Length - 1).Trim();
-            }
-            return normalizedPattern;
-        }
-
-        private string NoWilds(string pattern)
-        {
-            pattern = pattern.Trim();
-            int pl = pattern.Length;
-            if (pl < 4) return pattern;
-            while (pattern.Contains("*"))
-            {
-                pattern = pattern.Replace("*", " ").Trim();
-            }
-            return pattern;
-        }
-
-        private string PadStars(string pattern)
-        {
-            pattern = pattern.Trim();
-            int pl = pattern.Length;
-            if (pl == 0) return "~*";
-            if (pl == 1) return pattern;
-            if (pl == 2) return pattern;
-            if (char.IsLetterOrDigit(pattern[pl - 1])) pattern = pattern + " ~*";
-            if (char.IsLetterOrDigit(pattern[0])) pattern = "~* " + pattern;
-            return pattern;
-        }
-
-        public static string MatchKeyClean(Unifiable unifiable)
-        {
-            return MatchKeyClean(unifiable.AsString());
-        }
-
-        public static string MatchKeyClean(string s)
-        {
-            s = CleanWhitepaces(s);
-            if (s == "")
-            {
-                return "*";
-            }
-            return s;
-        }
-
         /// <summary>
         /// Given an input, provide a normalized output
         /// </summary>
@@ -1389,7 +1250,7 @@ namespace RTParser.Utils
                 if (isUserInput)
                 {
                     string wwword = word.AsString().Trim(",. \"?".ToCharArray());
-                    if (wwword.Length==0) continue;
+                    if (wwword.Length == 0) continue;
                     normalizedWord = stripper.Transform(word);
                     if (normalizedWord != wwword)
                     {
@@ -1412,439 +1273,6 @@ namespace RTParser.Utils
 
             return Unifiable.ToVMString(result).Replace("  ", " "); // make sure the whitespace is neat
         }
-
-        private int NonAlphaCount(string input)
-        {
-            input = CleanWhitepaces(input);
-            int na = 0;
-            foreach (var s in input)
-            {
-                if (char.IsLetterOrDigit(s)) continue;
-                na++;
-            }
-            return na;
-        }
-
         #endregion
-
-        public static bool AimlSame(string xml1, string xml2)
-        {
-            if (xml1 == xml2) return true;
-            if (xml1 == null) return String.IsNullOrEmpty(xml2);
-            if (xml2 == null) return String.IsNullOrEmpty(xml1);
-            xml1 = CleanWhitepacesLower(xml1);
-            xml2 = CleanWhitepacesLower(xml2);
-            if (xml1.Length != xml2.Length) return false;
-            if (xml1 == xml2) return true;
-            if (xml1.ToUpper() == xml2.ToUpper())
-            {
-                return true;
-            }
-            return false;
-        }
-
-        public static string CleanWhitepaces(string xml2)
-        {
-            return CleanWhitepaces(xml2, null, Unused, Unused);
-        }
-
-        private static bool Unused(char arg1, char arg2)
-        {
-            throw new NotImplementedException();
-            return false;
-        }
-
-
-        public static string CleanWildcards(string text)
-        {
-            if (text == null) return text;
-            if (text.Contains("\""))
-            {
-                return CleanWhitepaces(text);
-            }
-            string clean = text;
-            clean = AIMLLoader.CleanWhitepaces(
-                text, "*",
-                new Func<char, char, bool>((c0, c1) =>
-                                               {
-                                                   if (char.IsLetterOrDigit(c1) || char.IsControl(c1)) return true;
-                                                   if ("\"'".Contains("" + c1)) return false;
-                                                   return false;
-                                               }),
-                new Func<char, char, bool>((c0, c1) =>
-                                               {
-                                                   if (char.IsLetterOrDigit(c0) || char.IsControl(c0)) return true;
-                                                   if ("\"'".Contains("" + c0)) return false;
-                                                   return false;
-                                               }));
-            return clean;
-        }
-
-        public static string CleanWhitepaces(string xml2, string padchars,
-            Func<char, char, bool> ifBefore, Func<char, char, bool> ifAfter)
-        {
-            if (xml2 == null) return xml2;
-            const long maxCleanSize = 2 << 14;
-            int inlen = xml2.Length;
-            if (inlen > maxCleanSize)
-            {
-                return xml2;
-            }
-
-            bool padWildCards = true;
-
-            padWildCards = xml2.IndexOfAny("\\:/".ToCharArray(), 0) == -1;
-
-            if (!padWildCards) padchars = null;
-
-            var s = new StringBuilder(inlen);
-
-            bool chgd = false;
-            bool xmlFound = false;
-            bool inwhite = true;
-            bool pendingWhitespace = false;
-            char lastChar = '\0';
-            foreach (char c0 in xml2)
-            {
-
-                if (c0 <= 32)
-                {
-                    if (inwhite)
-                    {
-                        chgd = true;
-                        continue;
-                    }
-                    inwhite = true;
-                    pendingWhitespace = true;
-                    continue;
-                }
-                switch (c0)
-                {
-                    case '/':
-                        if (lastChar == 'r')
-                        {
-                            xmlFound = true;
-                        }
-                        inwhite = true;
-                        if (pendingWhitespace)
-                        {
-                            chgd = true;
-                            pendingWhitespace = false;
-                        }
-                        break;
-                    case '>':
-                    case '<':
-                    case '\\':
-                        inwhite = true;
-                        if (pendingWhitespace)
-                        {
-                            chgd = true;
-                            pendingWhitespace = false;
-                        }
-                        break;
-                    default:
-                        if (padchars != null)
-                        {
-
-                            bool before = padchars.Contains("" + lastChar);
-                            if (before && ifBefore(lastChar, c0))
-                            {
-                                if (!inwhite) pendingWhitespace = true;
-                            }
-
-                            bool after = padchars.Contains("" + c0);
-                            if (after && ifAfter(lastChar, c0))
-                            {
-                                if (!inwhite) pendingWhitespace = true;
-                            }
-
-                        }
-                        inwhite = false;
-                        break;
-                }
-                if (pendingWhitespace)
-                {
-                    s.Append(' ');
-                    pendingWhitespace = false;
-                }
-                s.Append(c0);
-                lastChar = c0;
-            }
-            if (pendingWhitespace) chgd = true;
-            int len = s.Length;
-            if (xmlFound)
-            {
-                s = s.Replace("<sr/>", "<srai><star index=\"1\"/></srai>");
-                s = s.Replace("star/>", "star index=\"1\"/>");
-                if (len != s.Length) chgd = true;
-            }
-            if (!chgd)
-            {
-                if (len != inlen)
-                {
-                    return s.ToString();
-                }
-                return xml2;
-            }
-            //s = s.Replace("<star index=\"1\"", "<star");
-
-            return s.ToString();
-        }
-
-        public static string CleanWhitepacesLower(string xml2)
-        {
-            if (xml2 == null) return xml2;
-            return CleanWhitepaces(xml2).ToLower().Replace(".", "").Replace("?", "").Replace("!", "");
-        }
-
-        public static bool ContainsAiml(Unifiable unifiable)
-        {
-            String s = unifiable.AsString();
-            if (s.Contains(">") && s.Contains("<")) return true;
-            if (s.Contains("&"))
-            {
-                return true;
-            }
-            return false;
-        }
-
-        public static string NodeInfo(XmlNode templateNode, Func<string, XmlNode, string> funct)
-        {
-            string s = null;
-            XmlNode nxt = templateNode;
-            s = funct("same", nxt);
-            if (s != null) return s;
-            nxt = templateNode.NextSibling;
-            s = funct("next", nxt);
-            if (s != null) return s;
-            nxt = templateNode.PreviousSibling;
-            s = funct("prev", nxt);
-            if (s != null) return s;
-            nxt = templateNode.ParentNode;
-            s = funct("prnt", nxt);
-            if (s != null) return s;
-            return s;
-        }
-
-        public static string LocationEscapedInfo(XmlNode templateNode)
-        {
-            return "<!-- " + LocationInfo(templateNode) + " -->";
-        }
-
-        public static string LocationInfo(XmlNode templateNode)
-        {
-            string lines = NodeInfo(templateNode, LineNoInfo) ?? "(-1,-1)";
-            string doc = NodeInfo(templateNode,
-                                  (
-                                      (strng, node) =>
-                                      {
-                                          if (node == null) return null;
-                                          var od = node.OwnerDocument;
-                                          if (od == null) return null;
-                                          string st = od.ToString().Trim();
-                                          if (st.Length == 0) return null;
-                                          return st;
-                                      }));
-            if (doc == null)
-            {
-                doc = "nodoc";
-            }
-            return doc + ":" + lines;
-        }
-
-        private static string LineNoInfo(string where, XmlNode templateNode)
-        {
-            string s = null;
-            LineInfoElement li = templateNode as LineInfoElement;
-            if (li != null)
-            {
-                if (li.LineNumber != 0 && li.LinePosition != 0)
-                {
-                    return "(" + li.LineNumber + "," + li.LinePosition + ") ";
-                }
-                XmlNode Parent = li.ParentNode;
-                if (Parent != null && Parent != li)
-                {
-                    s = LineNoInfo(where + ".prnt", Parent);
-                }
-            }
-            return s;
-        }
-
-        public static string TextAndSourceInfo(XmlNode templateNode)
-        {
-            return TextInfo(templateNode) + " " + LocationEscapedInfo(templateNode);
-        }
-
-        public static string TextInfo(XmlNode templateNode)
-        {
-            XmlNode textNode = templateNode;//.ParentNode ?? templateNode;
-            string s = CleanWhitepaces(textNode.OuterXml);
-            if (String.IsNullOrEmpty(s))
-            {
-                var Parent = templateNode.ParentNode;
-                if (Parent != null && Parent != templateNode)
-                {
-                    return TextInfo(Parent);
-                }
-                return textNode.OuterXml;
-            }
-            return s;
-        }
-
-        public static string ParentTextAndSourceInfo(XmlNode element)
-        {
-            return TextAndSourceInfo(element.ParentNode ?? element) + " " + LocationEscapedInfo(element);
-        }
-
-        public static void PrintResult(Result result, OutputDelegate console, PrintOptions printOptions)
-        {
-            console("-----------------------------------------------------------------");
-            console("Result: " + result.Graph + " Request: " + result.request);
-            foreach (var s in result.InputSentences)
-            {
-                console("input: \"" + s + "\"");
-            }
-            PrintTemplates(result.UsedTemplates, console, printOptions);
-            foreach (var s in result.SubQueries)
-            {
-                console("\n" + s);
-            }
-            console("-");
-            foreach (var s in result.OutputSentences)
-            {
-                console("outputsentence: " + s);
-            }
-            console("-----------------------------------------------------------------");
-        }
-
-        public static string GetTemplateSource(IEnumerable CI, PrintOptions printOptions)
-        {
-            if (CI == null) return "";
-            var fs = new StringWriter();
-            GraphMaster.PrintToWriter(CI, printOptions, fs, null);
-            return fs.ToString();
-        }
-
-        public static void PrintTemplates(IEnumerable CI, OutputDelegate console, PrintOptions printOptions)
-        {
-            GraphMaster.PrintToWriter(CI, printOptions, new OutputDelegateWriter(console), null);
-        }
-
-        public static string CleanWhitepaces(object info)
-        {
-            if (info is XmlNode)
-            {
-                XmlNode n = (XmlNode)info;
-                if (n.Name == "template") info = n.ParentNode;
-            }
-            if (info is TemplateInfo)
-            {
-                info = ((TemplateInfo)info).CategoryInfo;
-            }
-            return CleanWhitepaces("" + info);
-        }
-
-        public static bool IsSilentTag(XmlNode node)
-        {
-            // if (true) return false;
-            if (node.Name == "think") return true;
-            if (node.NodeType == XmlNodeType.Text)
-            {
-                string innerText = node.InnerText;
-                if (innerText.Trim().Length == 0)
-                {
-                    return true;
-                }
-                return false;
-            }
-            if (node.Name == "template")
-            {
-                foreach (XmlNode xmlNode in node.ChildNodes)
-                {
-                    if (!IsSilentTag(xmlNode)) return false;
-                }
-                if (node.ChildNodes.Count != 1)
-                {
-                    return true;
-                }
-                return true;
-            }
-            return false;
-        }
-
-        public static LineInfoElement CopyNode(XmlNode node, bool copyParent)
-        {
-            if (copyParent)
-            {
-                XmlNode parentNode = node.ParentNode;
-                if (parentNode != null)
-                {
-                    LineInfoElement xmlNode0 = node as LineInfoElement;
-                    int idx = xmlNode0.IndexInBaseParent;
-                    if (idx >= 0)
-                    {
-                        var parentCopy = (LineInfoElement)parentNode.CloneNode(true);
-                        parentCopy.ReadOnly = xmlNode0.ReadOnly;
-                        xmlNode0 = (LineInfoElement)parentCopy.ChildNodes[idx];
-                        xmlNode0.ReadOnly = !copyParent;
-                        return xmlNode0;
-                    }
-                }
-            }
-
-            XmlNode oc = node.CloneNode(true);
-
-            LineInfoElement xmlNode = (LineInfoElement) (oc as IXmlLineInfo);
-            if (xmlNode == null)
-            {
-                xmlNode = (LineInfoElement) AIMLTagHandler.getNode(node.OuterXml, node);
-                LineInfoElementImpl.unsetReadonly(xmlNode);
-            }
-            else
-            {
-                LineInfoElementImpl.unsetReadonly(xmlNode);
-            }
-            LineInfoElementImpl.unsetReadonly(xmlNode);
-            return xmlNode;
-        }
-
-        public static LineInfoElement CopyNode(string newName, XmlNode node, bool copyParent)
-        {
-            var od = node.OwnerDocument;
-            LineInfoElement newnode = (LineInfoElement)node.OwnerDocument.CreateNode(node.NodeType, newName, node.NamespaceURI);
-            newnode.ReadOnly = false;
-            newnode.SetParentFromNode(node);
-            newnode.lParent = ToLineInfoElement(node.ParentNode);
-            var ats = node.Attributes;
-            if (ats != null) foreach (XmlAttribute a in ats)
-                {
-                    XmlAttribute na = od.CreateAttribute(a.Prefix, a.LocalName, a.NamespaceURI);
-                    na.Value = a.Value;
-                    newnode.Attributes.Append(na);
-                }
-            foreach (XmlNode a in node.ChildNodes)
-            {
-                newnode.AppendChild(a.CloneNode(true));
-            }
-            newnode.ReadOnly = node.IsReadOnly;
-            return (LineInfoElement)newnode;
-        }
-
-        public static LineInfoElement ToLineInfoElement(XmlNode pattern)
-        {
-            if (pattern == null) return null;
-            if (pattern is LineInfoElement)
-            {
-                return (LineInfoElement)pattern;
-            }
-            return CopyNode(pattern, true);
-        }
-
-        public static bool IsHtmlTag(string name)
-        {
-            return " html head body font pre p div br dd td th tr table frame frameset &ltl &gt; input option select  " // etc
-                .Contains(" " + name.ToLower()+ " ");
-        }
     }
 }

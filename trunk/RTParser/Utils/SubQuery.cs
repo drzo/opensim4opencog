@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
+using System.Xml;
 using AIMLbot;
 using RTParser.Database;
 using RTParser.Variables;
@@ -110,7 +111,15 @@ namespace RTParser.Utils
         public TemplateInfo CurrentTemplate;
         public Node Pattern;
         public QueryList TopLevel;
-        private Dictionary<string, AIMLTagHandler> TagHandlers;
+        public static void PurgeTagHandlers()
+        {
+            lock (TagHandlerLock)
+            {
+                if (TagHandlers != null) TagHandlers.Clear();
+            }
+        }
+        public static Dictionary<string, AIMLTagHandler> TagHandlers;
+        public static object TagHandlerLock = new object();
 
         public double GetSucceedReward(string type)
         {
@@ -171,6 +180,8 @@ namespace RTParser.Utils
         }
 
         private RTPBot _TargetBot;
+        public string prefix;
+            
         public User CurrentUser
         {
             get { return Request.user;  }
@@ -257,7 +268,7 @@ namespace RTParser.Utils
 
         public AIMLTagHandler GetTagHandler(System.Xml.XmlNode node)
         {
-            lock (this)
+            lock (SubQuery.TagHandlerLock)
             {
 
                 string str = node.OuterXml;
@@ -269,19 +280,22 @@ namespace RTParser.Utils
                 }
                 else if (TagHandlers.TryGetValue(str, out handler))
                 {
-                    return handler;
+                    return (AIMLTagHandler) handler;
                 }
                 SubQuery subquery = this;
-                RTPBot bot = null;
-                User user = null;
-                Request request = null;
-                Result result = null;
+                
+                User user = subquery.CurrentUser;
+                Request request = subquery.Request;
+                RTPBot bot = subquery.TargetBot;
+                Result result = subquery.Result;
+                
                 // if (node.ChildNodes.Count == 0) ;         
                 {
-                    result = subquery.Result;
-                    request = subquery.Request ?? result.request;
+                    user = CurrentUser;
+                    result = result ?? subquery.Result;
+                    request = request ?? subquery.Request ?? result.request;
                     result = result ?? request.CurrentResult;
-                    user = result.user;
+                    user = user ?? result.user;
                     bot = request.TargetBot;
                 }
                 handler = bot.GetTagHandler(user, subquery, request, result, node, null);

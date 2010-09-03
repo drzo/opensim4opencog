@@ -9,9 +9,10 @@ namespace RTParser.Utils
 
     public interface XmlNodeEvaluator
     {
-           IEnumerable<XmlNodeEval> GetEvaluators(XmlNode node);        
+        IEnumerable<XmlNodeEval> GetEvaluators(XmlNode node);
     }
-    abstract public class XmlNodeEvaluatorImpl : XmlNodeEvaluator
+
+    abstract public class XmlNodeEvaluatorImpl : StaticAIMLUtils, XmlNodeEvaluator
     {
         public readonly static IEnumerable<XmlNodeEval> NO_XmlNodeEval = new XmlNodeEval[0];
         public readonly static IEnumerable<XmlNode> NO_XmlNode = new XmlNode[0];

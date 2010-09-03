@@ -52,7 +52,7 @@ namespace RTParser
         string Filename { get; set; }
         string LoadingFrom { get; set; }
 
-        void WriteLine(string s, object[] args);
+        void WriteLine(string s, params object[] args);
         bool IsComplete(Result o);
         bool addSetting(string name, Unifiable unifiable);
         void AddSubResult(Result result);
@@ -477,7 +477,7 @@ namespace RTParser
 
         public DateTime TimesOutAt { get; set;}
 
-        public void WriteLine(string s, object[] args)
+        public void WriteLine(string s, params object[] args)
         {
             if (CurrentResult != null)
             {
