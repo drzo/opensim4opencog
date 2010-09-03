@@ -1631,6 +1631,8 @@ namespace cogbot
                 }
                 else
                 {
+                    if (WorldSystem == null || WorldSystem.SimAssetSystem == null)
+                        return new CmdResult("no world yet for gesture", false);
                     UUID assetID = WorldSystem.SimAssetSystem.GetAssetUUID(text, AssetType.Gesture);
                     if (assetID != UUID.Zero) return ExecuteBotCommand("gesture " + assetID,WriteLine);
                     assetID = WorldSystem.SimAssetSystem.GetAssetUUID(text, AssetType.Animation);

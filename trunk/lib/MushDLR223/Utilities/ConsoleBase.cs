@@ -1,3 +1,4 @@
+// #define USING_log4net
 /*
  * Copyright (c) Contributors, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
@@ -35,6 +36,13 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using log4net;
+using System.Text.RegularExpressions;
+#if USING_log4net
+using log4net.Appender;
+#endif
+using log4net.Core;
+using TheConsole = MushDLR223.Utilities.DLRConsole;
+using SystemConsole = System.Console;
 using MushDLR223.ScriptEngines;
 
 namespace MushDLR223.Utilities
@@ -376,6 +384,9 @@ namespace MushDLR223.Utilities
     }
 
     public class DLRConsole
+#if USING_log4net
+        : AnsiColorTerminalAppender
+#endif
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -387,7 +398,7 @@ namespace MushDLR223.Utilities
                                  
         static public string ShouldPrint(string str, params object[] args)
         {
-            string printStr = DLRConsole.SafeFormat(str, args);
+            string printStr = TheConsole.SafeFormat(str, args);
             if (!TheGlobalLogFilter.ShouldPrint(printStr))
             {
                 return null;
@@ -419,56 +430,64 @@ namespace MushDLR223.Utilities
         }
         protected string m_defaultPrompt;
 
-        private static readonly TextWriter IntitialConsoleOut = Console.Out;
+        public static bool PrintToSystemConsole = true;
+        private static readonly TextWriter InitialConsoleOut = SystemConsole.Out;
         private static readonly TextWriter ConsoleOut = new OutputDelegateWriter(SystemWriteLine);
 
         static DLRConsole()
         {
             //Application.VisualStyleState
-            AddOutput(IntitialConsoleOut);
+            var v0 = InitialConsoleOut;
+            AddOutput(v0);
+            ///SystemConsole.SetOut(ConsoleOut);
         }
 
-        public static ConsoleColor SystemForegroundColor
+
+        public static ConsoleColor ForegroundColor
         {
-            get { return System.Console.ForegroundColor; }
-            set { System.Console.ForegroundColor = value; }
+            get { return SystemConsole.ForegroundColor; }
+            set { SystemConsole.ForegroundColor = value; }
         }
 
         public static int BufferHeight
         {
-            get { return Console.BufferHeight; }
-            set { Console.BufferHeight = value; }
+            get { return SystemConsole.BufferHeight; }
+            set { SystemConsole.BufferHeight = value; }
         }
 
         public static int BufferWidth
         {
-            get { return Console.BufferWidth; }
-            set { Console.BufferWidth = value; }
+            get { return SystemConsole.BufferWidth; }
+            set { SystemConsole.BufferWidth = value; }
         }
         public static int CursorTop
         {
-            get { return Console.CursorTop; }
-            set { Console.CursorTop = value; }
+            get { return SystemConsole.CursorTop; }
+            set { SystemConsole.CursorTop = value; }
         }
         public static int CursorLeft
         {
-            get { return Console.CursorLeft; }
-            set { Console.CursorLeft = value; }
+            get { return SystemConsole.CursorLeft; }
+            set { SystemConsole.CursorLeft = value; }
         }
 
         public static TextWriter Out
         {
-            get { return Console.Out ?? ConsoleOut; }
+            get
+            {
+                TextWriter ret = SystemConsole.Out ?? ConsoleOut ?? InitialConsoleOut;
+                return ret;
+            }
         }
 
         public static TextReader In
         {
-            get { return Console.In; }
+            get { return SystemConsole.In; }
         }
 
         public static void SetIn(TextReader reader)
         {
-            Console.SetIn(reader);
+            SystemConsole.SetIn(reader);
         }
 
         public static void SetOut(TextWriter writer)
@@ -476,19 +495,19 @@ namespace MushDLR223.Utilities
             //var old = Console.Out;
             //RemoveOutput(old);
             AddOutput(writer);
-            Console.SetOut(ConsoleOut);
+            SystemConsole.SetOut(ConsoleOut);
         }
 
         private static readonly object m_LogLock = new object();
         public static event ConsoleCancelEventHandler CancelKeyPress
         {
-            add { lock (m_LogLock) { Console.CancelKeyPress += value; } }
-            remove { lock (m_LogLock) { Console.CancelKeyPress -= value; } }
+            add { lock (m_LogLock) { SystemConsole.CancelKeyPress += value; } }
+            remove { lock (m_LogLock) { SystemConsole.CancelKeyPress -= value; } }
         }
 
         public static bool KeyAvailable
         {
-            get { return Console.KeyAvailable; }
+            get { return SystemConsole.KeyAvailable; }
         }
 
         public DLRConsole(string defaultPrompt)
@@ -513,18 +532,129 @@ namespace MushDLR223.Utilities
             history.Add(text);
         }
 
+        private DLRConsole m_console = null;
+
+        public DLRConsole MConsole
+        {
+            get { return m_console; }
+            set { m_console = value; }
+        }
+
         /// <summary>
         /// derive an ansi color from a string, ignoring the darker colors.
         /// This is used to help automatically bin component tags with colors
         /// in various print functions.
         /// </summary>
         /// <param name="input">arbitrary string for input</param>
-        /// <returns>an ansii color</returns>
-        private static ConsoleColor DeriveColor(string input)
-        {
-            int colIdx = (input.ToUpper().GetHashCode() % 6) + 9;
-            return (ConsoleColor)colIdx;
+        /// <returns>an ansii color</returns>        
+        private static readonly ConsoleColor[] Colors = {
+            ConsoleColor.Gray,
+            // the dark colors don't seem to be visible on some black background terminals like putty :(
+            //ConsoleColor.DarkBlue,
+            //ConsoleColor.DarkGreen,
+            //ConsoleColor.DarkCyan,
+            //ConsoleColor.DarkMagenta,
+            //ConsoleColor.DarkGray,
+            ConsoleColor.Blue,
+            ConsoleColor.DarkRed,
+            ConsoleColor.Green,
+            ConsoleColor.Red,
+            ConsoleColor.Cyan,
+            ConsoleColor.Yellow,
+            ConsoleColor.Magenta,
+            ConsoleColor.DarkYellow
+        };
+
+#if USING_log4net
+        override
+#endif
+        protected void Append(LoggingEvent le)
+         {
+            if (m_console != null)
+                m_console.LockOutput();
+
+            try
+            {
+
+      
+#if USING_log4net
+                string loggingMessage = RenderLoggingEvent(le);
+#else 
+                string loggingMessage = le.ToString();
+#endif
+                string regex = @"^(?<Front>.*?)\[(?<Category>[^\]]+)\]:?(?<End>.*)";
+
+                Regex RE = new Regex(regex, RegexOptions.Multiline);
+                MatchCollection matches = RE.Matches(loggingMessage);
+
+                // Get some direct matches $1 $4 is a
+                if (matches.Count == 1)
+                {
+                    SystemWrite(matches[0].Groups["Front"].Value);
+                    SystemWrite("[");
+
+                    WriteColorText(DeriveColor(matches[0].Groups["Category"].Value), matches[0].Groups["Category"].Value);
+                    SystemWrite("]:");
+
+                    if (le.Level == Level.Error)
+                    {
+                        WriteColorText(ConsoleColor.Red, matches[0].Groups["End"].Value);
+                    }
+                    else if (le.Level == Level.Warn)
+                    {
+                        WriteColorText(ConsoleColor.Yellow, matches[0].Groups["End"].Value);
+                    }
+                    else
+                    {
+                        SystemWrite(matches[0].Groups["End"].Value);
+                    }
+                    SystemWriteLine();
+                }
+                else
+                {
+                    SystemWrite(loggingMessage);
+                }
+            }
+            catch (Exception e)
+            {
+                TheConsole.DebugWriteLine("Couldn't write out log message: {0}", e.ToString());
+            }
+            finally
+            {
+                if (m_console != null)
+                    m_console.UnlockOutput();
+            }
+         }
+        
+        private static int ColorIndex = 0;
+        readonly static Dictionary<string, ConsoleColor> Name2Color = new Dictionary<string, ConsoleColor>();
+        public static ConsoleColor DeriveColor(string input)
+         {
+            input = input.ToUpper();
+            lock (Name2Color)
+            {
+                if (Name2Color.Count == 0)
+                {
+                    // switch from Gray to White if needbe
+                    if (Colors[0] == ForegroundColor)
+                    {
+                        Colors[0] = ConsoleColor.White;
+                    }
+                }
+                ConsoleColor color;
+                if (!Name2Color.TryGetValue(input, out color))
+                {
+                    ColorIndex++;
+                    if (ColorIndex >= Colors.Length) ColorIndex = 0;
+                    color = Name2Color[input] = Colors[ColorIndex];
+                    // Console.Out.WriteLine("ConsoleColor is " + color + " for " + input);
+                }
+                return color;
+            }
+            // it is important to do Abs, hash values can be negative
+            return Colors[(Math.Abs(input.ToUpper().GetHashCode()) % Colors.Length)];
         }
+
 
         /// <summary>
         /// Sends a warning to the current console output
@@ -649,7 +779,7 @@ namespace MushDLR223.Utilities
 
         static public void WriteNewLine(ConsoleColor senderColor, string sender, ConsoleColor color, string format, params object[] args)
         {
-            lock (cmdline)
+            lock (cmdline) lock (m_syncRoot)
             {
                 if (y != -1)
                 {
@@ -666,7 +796,9 @@ namespace MushDLR223.Utilities
                     CursorLeft = 0;
                 }
                 WritePrefixLine(senderColor, sender);
+                omittedPrefix = sender.ToUpper() + ":";
                 WriteConsoleLine(color, format, args);
+                omittedPrefix = "";
                 if (y != -1)
                     y = CursorTop;
             }
@@ -674,7 +806,7 @@ namespace MushDLR223.Utilities
 
         static public void WriteNewLine(ConsoleColor color, string format, params object[] args)
         {
-            lock (cmdline)
+            lock (cmdline) lock (m_syncRoot)
             {
                 if (y != -1)
                 {
@@ -702,23 +834,18 @@ namespace MushDLR223.Utilities
             {
                 lock (m_syncRoot)
                 {
-                    if (args == null || args.Length == 0)
-                    {
-                        args = new object[] { format };
-                        format = "{0}";
-                    }
+                    format = SafeFormat(format, args);
                     try
                     {
-                        if (color != ConsoleColor.White)
-                            SystemForegroundColor = color;
-                        if (args.Length == 0) SystemWriteLine0(format);
-                        else SystemWriteLine0(format, args);
+                        if (color != ForegroundColor)  // ConsoleColor.White
+                            ForegroundColor = color;
+                        else SystemWriteLine0(format);
                         ResetColor();
                     }
                     catch (ArgumentNullException)
                     {
                         // Some older systems dont support coloured text.
-                        SystemWriteLine0(format, args);
+                        SystemWriteLine0(format);
                     }
                     catch (FormatException e)
                     {
@@ -731,6 +858,7 @@ namespace MushDLR223.Utilities
             }
         }
 
+        private static string omittedPrefix = "";
         static private void WritePrefixLine(ConsoleColor color, string sender)
         {
             try
@@ -743,23 +871,31 @@ namespace MushDLR223.Utilities
 
                     SystemWrite0("[");
 
-                    try
-                    {
-                        SystemForegroundColor = color;
-                        SystemWrite0(sender);
-                        ResetColor();
-                    }
-                    catch (ArgumentNullException)
-                    {
-                        // Some older systems dont support coloured text.
-                        SystemWriteLine0(sender);
-                    }
+                    WriteColorText(color, sender);
 
                     SystemWrite0("] \t");
                 }
             }
             catch (ObjectDisposedException)
             {
+            }
+        }
+
+        public static void WriteColorText(ConsoleColor color, string text)
+        {
+            lock (m_syncRoot)
+            {
+                try
+                {
+                    ForegroundColor = color;
+                    SystemWrite0(text);
+                    ResetColor();
+                }
+                catch (ArgumentNullException)
+                {
+                    // Some older systems dont support coloured text.
+                    SystemWrite0(text);
+                }
             }
         }
 
@@ -960,7 +1096,7 @@ namespace MushDLR223.Utilities
             if (gui)
             {
                 SystemWrite0("{0}", prompt);
-                string cmdinput = DLRConsole.ReadLine();
+                string cmdinput = TheConsole.ReadLine();
 
                 if (isCommand)
                 {
@@ -994,7 +1130,7 @@ namespace MushDLR223.Utilities
             {
                 Show();
 
-                ConsoleKeyInfo key = DLRConsole.ReadKey(true);
+                ConsoleKeyInfo key = TheConsole.ReadKey(true);
                 char c = key.KeyChar;
 
                 if (!Char.IsControl(c))
@@ -1116,6 +1252,14 @@ namespace MushDLR223.Utilities
         }
         private static void SystemWriteLine0(string format, params object[] args)
         {
+            if (true)
+            {
+                format = SafeFormat(format, args);
+                if (String.IsNullOrEmpty(format)) return;
+                SystemWriteLine00(format.Trim());
+                return;
+            }
+
             foreach (TextWriter o in Outputs)
             {
                 try
@@ -1131,16 +1275,31 @@ namespace MushDLR223.Utilities
                 }
                 catch (Exception e)
                 {
-                    System.Console.Error.WriteLine("" + e);
+                    SystemConsole.Error.WriteLine("" + e);
                     o.WriteLine(SafeFormat(format, args));
+                }
+            }
+        }
+        private static void SystemWriteLine00(string format)
+        {
+            format = GetFormat(format).TrimEnd();
+            foreach (TextWriter o in Outputs)
+            {
+                try
+                {
+                    o.WriteLine(format);
+                }
+                catch (Exception e)
+                {
+                    SystemConsole.Error.WriteLine("\n" + e + "\n while writeline-ing '" + format + "'");
                 }
             }
         }
         public static void SystemWriteLine(string format, params object[] args)
         {
             format = ShouldPrint(format, args);
-            if (format == null) return;
-            SystemWriteLine0(format);
+            if (String.IsNullOrEmpty(format)) return;
+            SystemWriteLine00(format);
         }
         public static string GetCallerFormat(string format, out string prefix)
         {
@@ -1183,10 +1342,7 @@ namespace MushDLR223.Utilities
             }
             return format;
         }
-        internal static void SystemWriteLine0(string arg)
-        {
-            SystemWriteLine0("{0}", arg);
-        }
+
         public static void DebugWriteLine(object arg)
         {
             string prefix;
@@ -1264,25 +1420,46 @@ namespace MushDLR223.Utilities
 
         internal static void SystemWrite0(string format, params object[] args)
         {
+            format = SafeFormat(format, args);
+            SystemWrite00(format);
+        }
+
+        internal static void SystemWrite00(string format)
+        {
+            format = GetFormat(format);
             foreach (TextWriter o in Outputs)
             {
                 try
                 {
-                    if (args == null || args.Length == 0)
-                    {
-                        o.Write(format);
-                    }
-                    else
-                    {
-                        o.Write(format, args);
-                    }
+                    o.Write(format);
                 }
                 catch (Exception e)
                 {
-                    System.Console.Error.WriteLine("" + e);
-                    o.Write(SafeFormat(format, args));
+                    SystemConsole.Error.WriteLine("\n" + e + "\n while writing '" + format + "'");
                 }
             }
+        }
+
+
+
+        private static string GetFormat(string format)
+        {
+            if (string.IsNullOrEmpty(omittedPrefix)) return format;
+            string fupper =  format.ToUpper();
+            if (fupper.StartsWith(omittedPrefix))
+            {
+                return format.Substring(omittedPrefix.Length).TrimStart();
+            }
+            if (fupper.TrimStart().StartsWith(omittedPrefix.TrimStart()))
+            {
+                int getFrom = fupper.IndexOf(omittedPrefix);
+                if (getFrom>0)
+                {
+                    getFrom += omittedPrefix.Length;
+                }
+                return format.Substring(getFrom).TrimStart();
+            }
+            return format;
         }
 
         static readonly HashSet<TextWriter> _outputs = new HashSet<TextWriter>();
@@ -1291,7 +1468,7 @@ namespace MushDLR223.Utilities
                                                                       {
                                                                           typeof (OpenSimAppender),
                                                                           typeof (DLRConsole),
-                                                                          typeof (System.Console),
+                                                                          typeof (SystemConsole),
                                                                           typeof (OutputDelegateWriter),
                                                                           typeof (TextFilter),
                                                                       };
@@ -1304,14 +1481,19 @@ namespace MushDLR223.Utilities
         {
             get
             {
+                var list = new List<TextWriter>();
                 lock (_outputs)
                 {
                     if (_outputs.Count == 0)
                     {
-                        AddOutput(Console.Out);
+                        list.Add(InitialConsoleOut);
                     }
-                    return new List<TextWriter>(_outputs);
+                    else
+                    {
+                        list.AddRange(_outputs);
+                    }
                 }
+                return list;
             }
         }
 
@@ -1341,38 +1523,38 @@ namespace MushDLR223.Utilities
                 }
                 catch (Exception e)
                 {
-                    System.Console.Error.WriteLine("" + e + " in " + o);
+                    SystemConsole.Error.WriteLine("" + e + " in " + o);
                 }
             }
         }
         public static ConsoleKeyInfo ReadKey(bool b)
         {
-            return System.Console.ReadKey(b);
+            return SystemConsole.ReadKey(b);
         }
 
         public static ConsoleKeyInfo ReadKey()
         {
-            return System.Console.ReadKey();
+            return SystemConsole.ReadKey();
         }
 
         public static string ReadLine()
         {
-            return System.Console.ReadLine();
+            return SystemConsole.ReadLine();
         }
 
         public static void SystemResetColor()
         {
-            System.Console.ResetColor();
+            SystemConsole.ResetColor();
         }
 
         public static void ResetColor()
         {
-            System.Console.ResetColor();
+            SystemConsole.ResetColor();
         }
 
         public static void SystemFlush()
         {
-            Console.Out.Flush();
+            SystemConsole.Out.Flush();
         }
 
         public static string SafeFormat(string fmt, params object[] args)
@@ -1386,14 +1568,14 @@ namespace MushDLR223.Utilities
                 }
                 catch (Exception e)
                 {
-                    System.Console.Error.WriteLine("SafeFormat: " + e);
-                    System.Console.Error.WriteLine("f: " + fmt);
+                    SystemConsole.Error.WriteLine("SafeFormat: " + e);
+                    SystemConsole.Error.WriteLine("f: " + fmt);
                     int ii = 0;
                     foreach (var o in args)
                     {                        
                         ii++;
                         string arg = " " + ii + ": " + o;
-                        System.Console.Error.WriteLine(arg);
+                        SystemConsole.Error.WriteLine(arg);
                         str += arg;
                     }
                 }

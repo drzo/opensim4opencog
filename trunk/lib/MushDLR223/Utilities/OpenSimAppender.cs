@@ -26,6 +26,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using log4net.Appender;
 using log4net.Core;
@@ -55,6 +56,7 @@ namespace MushDLR223.Utilities
             ConsoleColor.Gray,
             //ConsoleColor.DarkGray,
             ConsoleColor.Blue,
+            ConsoleColor.Red,
             ConsoleColor.Green,
             ConsoleColor.Cyan,
             ConsoleColor.Magenta,
@@ -78,11 +80,11 @@ namespace MushDLR223.Utilities
                 // Get some direct matches $1 $4 is a
                 if (matches.Count == 1)
                 {
-                    DLRConsole.SystemWrite0(matches[0].Groups["Front"].Value);
-                    DLRConsole.SystemWrite0("[");
+                    SystemWrite(matches[0].Groups["Front"].Value);
+                    SystemWrite("[");
 
                     WriteColorText(DeriveColor(matches[0].Groups["Category"].Value), matches[0].Groups["Category"].Value);
-                    DLRConsole.SystemWrite0("]:");
+                    SystemWrite("]:");
 
                     if (le.Level == Level.Error)
                     {
@@ -94,13 +96,13 @@ namespace MushDLR223.Utilities
                     }
                     else
                     {
-                        DLRConsole.SystemWrite0(matches[0].Groups["End"].Value);
+                        SystemWrite(matches[0].Groups["End"].Value);
                     }
-                    DLRConsole.SystemWriteLine();
+                    SystemWriteLine();
                 }
                 else
                 {
-                    DLRConsole.SystemWrite0(loggingMessage);
+                    SystemWrite(loggingMessage);
                 }
             }
             catch (Exception e)
@@ -122,14 +124,12 @@ namespace MushDLR223.Utilities
                 {
                     try
                     {
-                        DLRConsole.SystemForegroundColor = color;
-                        DLRConsole.SystemWrite0(sender);
-                        DLRConsole.SystemResetColor();
+                        DLRConsole.WriteColorText(color, sender);
                     }
                     catch (ArgumentNullException)
                     {
                         // Some older systems dont support coloured text.
-                        DLRConsole.SystemWriteLine0(sender);
+                        SystemWrite(sender);
                     }
                 }
             }
@@ -138,8 +138,41 @@ namespace MushDLR223.Utilities
             }
         }
 
+        private static void SystemWrite(string message)
+        {
+            DLRConsole.SystemWrite0(message);
+        }
+
+        private static void SystemWriteLine()
+        {
+            DLRConsole.SystemWriteLine();
+        }
+
+        private static int ColorIndex = 0; 
+        readonly static Dictionary<string, ConsoleColor> Name2Color = new Dictionary<string, ConsoleColor>();
         public static ConsoleColor DeriveColor(string input)
         {
+            input = input.ToUpper();
+            lock (Name2Color)
+            {
+                if (Name2Color.Count==0)
+                {
+                    // switch from Gray to White if needbe
+                    if (Colors[0] == DLRConsole.ForegroundColor)
+                    {
+                        Colors[0] = ConsoleColor.White;
+                    }
+                }
+                ConsoleColor color;
+                if (!Name2Color.TryGetValue(input, out color))
+                {
+                    ColorIndex++;
+                    if (ColorIndex >= Colors.Length) ColorIndex = 0;
+                    color = Name2Color[input] = Colors[ColorIndex];
+                    // Console.Out.WriteLine("ConsoleColor is " + color + " for " + input);
+                }
+                return color;
+            }
             // it is important to do Abs, hash values can be negative
             return Colors[(Math.Abs(input.ToUpper().GetHashCode()) % Colors.Length)];
         }

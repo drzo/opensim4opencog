@@ -186,7 +186,7 @@ public class Interpreter
 
 	public ICollection TraceList{get {return traceList.Keys;}}
 
-	internal void trace(String fname,Object[] args)
+    internal void trace(String fname, params object[] args)
 		{
 		if(!inTrace)
 			{
