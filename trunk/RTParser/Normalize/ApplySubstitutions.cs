@@ -56,7 +56,8 @@ namespace RTParser.Normalize
             string marker = ApplySubstitutions.getMarker(5);
             string markerSP = ApplySubstitutions.getMarker(3);
             string result = " " + Unifiable.ToVMString(target) + " ";
-            foreach (string pattern in dictionary.SettingNames(1))
+            System.Collections.Generic.IEnumerable<string> dictionarySettingNames = dictionary.SettingNames(0);
+            foreach (string pattern in dictionarySettingNames)
             {
                 var vvalue = dictionary.grabSetting(pattern);
                 var value = vvalue.AsString();
@@ -74,7 +75,7 @@ namespace RTParser.Normalize
                 string p2 = ApplySubstitutions.makeRegexSafe(pattern);
                 //Unifiable match = "\\b"+@p2.Trim().Replace(" ","\\s*")+"\\b";
                 string match = "\\b" + p2.TrimEnd().TrimStart() + "\\b";
-                if (Regex.IsMatch(result, match, RegexOptions.IgnoreCase))
+                //if (Regex.IsMatch(result, match, RegexOptions.IgnoreCase))
                 {
                     string testResult = Regex.Replace(result, match, replacement, RegexOptions.IgnoreCase);
                     if (false)
@@ -116,6 +117,7 @@ namespace RTParser.Normalize
         /// <returns>the safe version</returns>
         private static string makeRegexSafe(string input)
         {
+            return Regex.Escape(input);
             string result = input.Replace("\\","");
             result = result.Replace(")", "\\)");
             result = result.Replace("(", "\\(");

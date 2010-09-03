@@ -927,14 +927,15 @@ namespace RTParser.Variables
         private string TransformName(string name)
         {
             string nn = name;
-            name = name.ToUpper();
             int len = name.Length;
             if (IsSubsts)
             {
                 name = name.Replace("\\b", " ").Trim();
+                name = name.ToUpper();
             }
             else
             {
+                name = name.ToUpper();
                 name = name.Replace("FAVORITE", "FAV");
             }
             if (name == nn) return nn;
@@ -1265,8 +1266,14 @@ namespace RTParser.Variables
             {
                 lock (orderedKeys)
                 {
-                    var list = prefixProvideer.SettingNames(depth) as List<String>;
-                    if (list != null && list.Count > 0)
+                    IEnumerable<string> prefixProvideerSettingNames = prefixProvideer.SettingNames(depth);
+                    var list = prefixProvideerSettingNames as List<String>;
+                    if (list==null)
+                    {
+                        list = new List<string>();
+                        list.AddRange(prefixProvideerSettingNames);
+                    }
+                    if (list.Count > 0)
                     {
                         list.AddRange(orderedKeys);
                         return list.ToArray();
