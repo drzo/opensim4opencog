@@ -188,7 +188,7 @@ namespace cogbot.Listeners
             }
             else
             {
-                SimAsset sound = RequestAsset(soundID, AssetType.Sound, true);
+                SimAsset sound = EnqueueRequestAsset(soundID, AssetType.Sound, true);
                 o.OnSound(soundID, gain);
                 SendNewRegionEvent(SimEventType.EFFECT, "On-Single-Sound-Gain-Change", o, sound, gain);
             }
@@ -205,7 +205,7 @@ namespace cogbot.Listeners
             var parentID = e.ParentID;
             var position = e.Position;
             var p = GetRegion(e.RegionHandle).LocalToGlobal(position);
-            RequestAsset(soundID, AssetType.Sound, true);
+            EnqueueRequestAsset(soundID, AssetType.Sound, true);
 
                 EventQueue.Enqueue(() =>
                 {
@@ -223,7 +223,7 @@ namespace cogbot.Listeners
         {
             var soundID = e.SoundID;
             if (!MaintainSounds) return;
-            RequestAsset(soundID, AssetType.Sound, true);
+            EnqueueRequestAsset(soundID, AssetType.Sound, true);
             //base.Sound_OnPreloadSound(soundID, ownerID, objectID);
             //WriteLine("preload sound " + soundID);
         }
@@ -235,7 +235,7 @@ namespace cogbot.Listeners
             var gain = e.Gain;
             var objectID = e.ObjectID;
             if (!MaintainSounds) return;
-            RequestAsset(soundID, AssetType.Sound, true);                
+            EnqueueRequestAsset(soundID, AssetType.Sound, true);                
             EventQueue.Enqueue(() => OnObjectSound(objectID, soundID, gain));
             //SendNewEvent("On-Attach-Sound", soundID, ownerID, objectID, gain, flags);
             //base.Sound_OnAttachSound(soundID, ownerID, objectID, gain, flags);

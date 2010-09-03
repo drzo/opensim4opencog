@@ -112,18 +112,6 @@ namespace cogbot.TheOpenSims
             a.AddType(anims);
         }
 
-        private bool _NeedsRequest = true;
-        public override bool NeedsRequest
-        {
-            get
-            {
-                if (HasData()) return false;
-                if (_Name.Count > 0) return false;
-                return _NeedsRequest;
-            }
-            set { _NeedsRequest = value; }
-        }
-
         public SimAnimation(UUID uuid, string name)
             : base(uuid, name)
         {
@@ -136,6 +124,21 @@ namespace cogbot.TheOpenSims
             if (bvh1.joints.Length != bvh2.joints.Length) return false;
             if (bvh1.Loop != bvh2.Loop) return false;
             return false;
+        }
+
+        protected override List<SimAsset> GetParts()
+        {
+            try
+            {
+                _reader = new BinBVHAnimationReader(AssetData);
+                AnalyzeType();
+            }
+            catch (System.Exception ex)
+            {
+                WriteLine("" + ex);
+                //_TypeData = null;
+            }
+            return new List<SimAsset>() {this};
         }
 
         protected override string GuessAssetName()
@@ -363,46 +366,6 @@ namespace cogbot.TheOpenSims
                 File.WriteAllBytes(tmpname + ".anim", AssetData);
             }
             //WorldObjects.Master.GetModuleName()
-        }
-
-        override public byte[] AssetData
-        {
-            get
-            {
-                if (_TypeData == null)
-                {
-                    foreach (string n in _Name)
-                    {
-                        byte[] N_TypeData;
-                        string usedName;
-                        if (SimAssetStore.BytesFromFile(n, out N_TypeData, out usedName))
-                        {
-                            _TypeData = N_TypeData;
-                            Name = usedName;
-                            break;
-                        }
-
-                    }
-
-                }
-                return _TypeData;
-            }
-            set
-            {
-                if (_TypeData == value)
-                    return;
-                _TypeData = value;
-                try
-                {
-                    _reader = new BinBVHAnimationReader(_TypeData);
-                    AnalyzeType();
-                }
-                catch (System.Exception ex)
-                {
-                    WriteLine("" + ex);
-                    //_TypeData = null;
-                }
-            }
         }
     }
 }

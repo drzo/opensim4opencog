@@ -44,7 +44,7 @@ namespace cogbot.TheOpenSims
         public SimAssetStore(BotClient GC)
         {
             TheStore = this;
-            Client = GC;           
+            Client = GC;                       
             Manager = Client.Inventory;
             Manager.ItemReceived += Inventory_OnItemReceived;
             Manager.TaskItemReceived += Inventory_OnTaskItemReceived;
@@ -95,12 +95,18 @@ namespace cogbot.TheOpenSims
             lock (BusyUpdating) BusyUpdating.Add(folderid);
             Enqueue(() =>
                                   {
+
+                                      bool prev = downloadedAssetFoldersComplete;
+                                      downloadedAssetFoldersComplete = false;
                                       List<InventoryBase> contents = Client.Inventory.FolderContents(folderid,
                                                                                                      Client.Self.AgentID,
                                                                                                      true, true,
-                                                                                                     InventorySortOrder.
-                                                                                                         ByName, 10000);
+                                                                                                     InventorySortOrder.ByName, 10000);
                                       if (contents != null) contents.ForEach(LoadItemOrFolder);
+                                      downloadedAssetFoldersComplete = prev;
+
+
+
                                   //    lock (BusyUpdating) BusyUpdating.Remove(folderid);
                                   });
 
@@ -112,7 +118,7 @@ namespace cogbot.TheOpenSims
         }
 
         private bool downloadedAssetFolders = false;
-        static bool downloadedAssetFoldersComplete = false;
+        public static bool downloadedAssetFoldersComplete = false;
         private void Ensure_Downloaded(object sender, SimConnectedEventArgs e)
         {
             if (downloadedAssetFolders) return;
@@ -126,15 +132,19 @@ namespace cogbot.TheOpenSims
         }
 
          void DownloadAssetFolders()
-        {           
+        {
+            bool prev = downloadedAssetFoldersComplete;
+            downloadedAssetFoldersComplete = false;
             Client.AnimationFolder = Client.Inventory.FindFolderForType(AssetType.Animation);
             LoadFolderId(Client.Inventory.Store.LibraryFolder.UUID);
             LoadFolderId(Client.Inventory.Store.RootFolder.UUID);
-            downloadedAssetFoldersComplete = true;
+             downloadedAssetFoldersComplete = prev;
         }
 
         private void LoadItemOrFolder(InventoryBase IB)
         {
+            bool prev = downloadedAssetFoldersComplete;
+            downloadedAssetFoldersComplete = false;
             if (IB is InventoryItem)
             {
                 InventoryItem II = (InventoryItem)IB;
@@ -144,6 +154,7 @@ namespace cogbot.TheOpenSims
                 return;
             }
             LoadFolderId(IB.UUID);
+            downloadedAssetFoldersComplete = prev;
             lock (BusyUpdating) if (BusyUpdating.Remove(IB.UUID)) return;
             //lock (BusyUpdating) BusyUpdating.Add(IB.UUID);
             //List<InventoryBase> contents = Client.Inventory.FolderContents(IB.UUID, Client.Self.AgentID,
@@ -155,57 +166,9 @@ namespace cogbot.TheOpenSims
             //lock (BusyUpdating) BusyUpdating.Remove(IB.UUID);
         }
 
-
-        internal void OnAssetDownloaded(UUID uUID, Asset asset)
+        internal static void InternAsset(SimAsset asset)
         {
-            SimAsset A = FindOrCreateAsset(uUID, asset.AssetType);
-            if (A.HasData())
-            {
-                
-            }
-            A.ServerAsset = asset;
-            InternAsset(A);
-            //A.TypeData = asset.AssetData;
-
-
-
-
-            if (false)
-            {
-                AutoResetEvent UploadCompleteEvent = new AutoResetEvent(false);
-                if (Client.AnimationFolder == UUID.Zero)
-                    Client.AnimationFolder = Client.Inventory.FindFolderForType(AssetType.Animation);
-
-                DateTime start = new DateTime();
-                Client.Inventory.RequestCreateItemFromAsset(asset.AssetData, A.Name, "Anim captured " + uUID,
-                                                            AssetType.Animation,
-                                                            InventoryType.Animation, Client.AnimationFolder,
-                                                            delegate(bool success, string status, UUID itemID,
-                                                                     UUID assetID)
-                                                            {
-                                                                WriteLine(
-                                                                    String.Format(
-                                                                        "RequestCreateItemFromAsset() returned: Success={0}, Status={1}, ItemID={2}, AssetID={3}",
-                                                                        success, status, itemID, assetID));
-                                                                WriteLine(String.Format("Upload took {0}",
-                                                                                                DateTime.Now.
-                                                                                                    Subtract(start)));
-                                                                UploadCompleteEvent.Set();
-                                                            });
-
-                UploadCompleteEvent.WaitOne();
-
-                //A.Name
-                //SetAnimationName(asset.AssetID, s);
-            }
-            //              Debug(s);
-            //                        RegisterUUID(asset.AssetID, s);
-
-        }
-
-        static void InternAsset(SimAsset asset)
-        {
-            WorldObjects.GridMaster.SendNewRegionEvent(SimEventType.DATA_UPDATE,"OnAssetInfo",asset);
+            asset.InternOnRegion(WorldObjects.GridMaster);
         }
 
 
@@ -1380,10 +1343,6 @@ namespace cogbot.TheOpenSims
             FillAssetNames();
             SimAsset anim = FindOrCreateAsset(uUID, type);
             anim.Name = s;
-            if (downloadedAssetFoldersComplete)
-            {
-                WriteLine("SetAssetName: {0} {1}", type, s);
-            }
             InternAsset(anim);
             return anim;
         }
@@ -1433,8 +1392,7 @@ namespace cogbot.TheOpenSims
         public static SimAsset GetSimAsset(Asset asset)
         {
             SimAsset A = FindOrCreateAsset(asset.AssetID, asset.AssetType);
-            A.ServerAsset = asset;
-            InternAsset(A);
+            A.SetAsset(asset);
             return A;
         }
 
@@ -1477,7 +1435,7 @@ namespace cogbot.TheOpenSims
 
         public static SimAsset FindOrCreateAsset(UUID uUID, AssetType type)
         {
-            SimAsset anim = FindAsset(uUID);  
+            SimAsset anim = FindAsset(uUID);              
             if (anim!=null)
             {
                 return anim;
@@ -1536,7 +1494,6 @@ namespace cogbot.TheOpenSims
                 anim.AssetType = type;
             }
             {
-                WorldObjects.EnqueueRequestAsset(uUID, type, true);
                 InternAsset(anim);
                 return anim;
             }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
@@ -18,40 +19,24 @@ namespace cogbot.TheOpenSims
             //WriteLine("Not implemented save sound file " + tmpname);
         }
 
-        private byte[] _TypeData;
-        public override byte[] AssetData
+        protected override List<SimAsset> GetParts()
         {
-            get
+            try
             {
-                if (_TypeData != null) return _TypeData;
-                if (ServerAsset == null) return null;
-                return ServerAsset.AssetData;
+                GuessAssetName();
+                Decode(ServerAsset);
             }
-            set
+            catch (System.Exception ex)
             {
-                if (_TypeData!=null)
-                {
-                    
-                }
-                _TypeData = value;
-                if (ServerAsset == null)
-                {
-                    if (AssetID != UUID.Zero)
-                    {
-                        ServerAsset = new AssetSound(AssetID, value);
-                    }
-                    return;
-                }
-                else
-                {
-                    ServerAsset.AssetData = value;
-                }
+                WriteLine("" + ex);
+                //_TypeData = null;
             }
+            return new List<SimAsset>() { this };
         }
 
         protected override string GuessAssetName()
         {
-            if (ServerAsset == null) return null;
+            if (_ServerAsset == null) return null;
             Decode(ServerAsset);
             AssetSound S = (AssetSound)ServerAsset;
             AssetData = S.AssetData;
@@ -76,22 +61,6 @@ namespace cogbot.TheOpenSims
                 WriteLine("Notimplemented " + MethodInfo.GetCurrentMethod());
                 return false;
             }
-        }
-
-        public override bool HasData()
-        {
-            return ServerAsset != null || _TypeData != null;
-        }
-
-        private bool _NeedsRequest = true;
-        public override bool NeedsRequest
-        {
-            get
-            {
-                if (HasData()) return false;
-                return _NeedsRequest;
-            }
-            set { _NeedsRequest=value; }
         }
 
         public override bool SameAsset(SimAsset asset)
