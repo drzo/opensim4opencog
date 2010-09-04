@@ -52,6 +52,9 @@ namespace RTParser.Utils
                     "default",
                     "defaultValue",
                     "match",
+                    "matches",
+                    "existing",
+                    "ifUnknown",
                     "user",
                     "bot",
                     "value",
@@ -227,6 +230,17 @@ namespace RTParser.Utils
                                         NamedValuesFromSettings.UseLuceneForGet = prev;
                                     }
                                 }
+
+                                // now require temp vars to say  with_id="tempId"
+                                // to set the id="tempid" teporarily while evalig tags
+                                if (!n.StartsWith("with_"))
+                                {
+                                   continue;
+                                } else
+                                {
+                                    n = n.Substring(5);                                    
+                                }
+
                                 Unifiable v = ReduceStar(node.Value, query, dict);
                                 UndoStack.FindUndoAll(thiz);
                                 savedValues = savedValues ?? UndoStack.GetStackFor(thiz);
