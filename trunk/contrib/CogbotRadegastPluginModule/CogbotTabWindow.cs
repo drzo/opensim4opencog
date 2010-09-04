@@ -720,7 +720,7 @@ namespace CogbotRadegastPluginModule
         }
 
 
-        private readonly TaskQueueHandler writeLock = new TaskQueueHandler("FormWriter", 0);
+        private readonly TaskQueueHandler writeLock = new TaskQueueHandler("FormWriter", TimeSpan.Zero);
         public void WriteLine(string str, params object[] args)
         {
 

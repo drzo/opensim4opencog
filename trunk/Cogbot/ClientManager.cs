@@ -25,7 +25,7 @@ namespace cogbot
 
     public class ClientManager : IDisposable,ScriptExecutorGetter
     {
-        private static readonly TaskQueueHandler OneAtATimeQueue = new TaskQueueHandler("ClientManager OneAtATime", 10, true);
+        private static readonly TaskQueueHandler OneAtATimeQueue = new TaskQueueHandler("ClientManager OneAtATime", new TimeSpan(0, 0, 0, 0, 10), true);
         public static object SingleInstanceLock = new object();
 
         private bool InvokeJoin(string s)

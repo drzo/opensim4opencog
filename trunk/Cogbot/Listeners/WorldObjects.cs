@@ -1,15 +1,9 @@
-    using System;
-    using System.Collections;
-    using System.Collections.Generic;
-    using System.Configuration;
-    using System.Threading;
-using cogbot.Actions;
+using System;
+using System.Collections.Generic;
+using System.Threading;
 using cogbot.TheOpenSims;
-    using MushDLR223.Utilities;
-    using OpenMetaverse;
-using cogbot.Utilities;
-    using PathSystem3D.Navigation;
-using cogbot.ScriptEngines;
+using MushDLR223.Utilities;
+using OpenMetaverse;
 
 namespace cogbot.Listeners
 {
@@ -47,15 +41,16 @@ namespace cogbot.Listeners
         private static readonly Dictionary<ulong, HashSet<uint>> primsSelected = new Dictionary<ulong, HashSet<uint>>();
         private static readonly Dictionary<ulong, List<uint>> primsSelectedOutbox = new Dictionary<ulong, List<uint>>();
 
-        private static readonly TaskQueueHandler PropertyQueue = new TaskQueueHandler("NewObjectQueue", 0);
-        public static readonly TaskQueueHandler ParentGrabber = new TaskQueueHandler("ParentGrabber", 10, false);
+        private static readonly TaskQueueHandler PropertyQueue = new TaskQueueHandler("NewObjectQueue", TimeSpan.FromMilliseconds(1));
+        public static readonly TaskQueueHandler ParentGrabber = new TaskQueueHandler("ParentGrabber", TimeSpan.FromSeconds(1), false);
 
         private static readonly object SelectObjectsTimerLock = new object();
         private static readonly List<ThreadStart> ShutdownHooks = new List<ThreadStart>();
-        private static readonly TaskQueueHandler EventQueue = new TaskQueueHandler("World EventQueue", 0);
-        private static readonly TaskQueueHandler CatchUpQueue = new TaskQueueHandler("Simulator catchup", 30000, false);
-        private static readonly TaskQueueHandler MetaDataQueue = new TaskQueueHandler("MetaData Getter", 0, false);
-        public static readonly TaskQueueHandler OnConnectedQueue = new TaskQueueHandler("OnConnectedQueue", 0, false);
+        private static readonly TaskQueueHandler EventQueue = new TaskQueueHandler("World EventQueue", TimeSpan.FromMilliseconds(1));
+        private static readonly TaskQueueHandler CatchUpQueue = new TaskQueueHandler("Simulator catchup", TimeSpan.FromSeconds(60), false);
+        private static readonly TaskQueueHandler MetaDataQueue = new TaskQueueHandler("MetaData Getter", TimeSpan.FromSeconds(10), false);
+        public static readonly TaskQueueHandler OnConnectedQueue = new TaskQueueHandler("OnConnectedQueue", TimeSpan.FromMilliseconds(20), false);
+        public static readonly TaskQueueHandler SlowConnectedQueue = SimAssetStore.SlowConnectedQueue;
         internal static readonly Dictionary<UUID, object> uuidTypeObject = new Dictionary<UUID, object>();
         private static readonly object WorldObjectsMasterLock = new object();
 
@@ -118,6 +113,7 @@ namespace cogbot.Listeners
                 SimPaths.Dispose();
                 MetaDataQueue.Dispose();
                 OnConnectedQueue.Dispose();
+                SlowConnectedQueue.Dispose();
             }
         }
 

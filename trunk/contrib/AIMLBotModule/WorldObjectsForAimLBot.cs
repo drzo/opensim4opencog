@@ -206,12 +206,14 @@ namespace AIMLBotModule
 
         public RTPBot MyBot;
         public User MyUser;
-        TaskQueueHandler handler = new TaskQueueHandler("AIML Bot ", 1, true);
+        readonly TaskQueueHandler AimlBotReadSimData = new TaskQueueHandler("AIMLBot ReadSim", 1);
+        readonly TaskQueueHandler AimlBotRespond = new TaskQueueHandler("AIMLBot ChatRespond", 1);
 
         public override void StartupListener()
         {
-            handler.Enqueue(() => StartupListener0());
-            handler.Start();
+            AimlBotReadSimData.Enqueue(StartupListener0);
+            AimlBotReadSimData.Enqueue(() => AimlBotRespond.Start());
+            AimlBotReadSimData.Start();
         } 
 
         static readonly object SILStartupListener00 = new object ();
@@ -347,7 +349,7 @@ namespace AIMLBotModule
         }
         private void ReadSimSettings()
         {
-            handler.Enqueue(() => ReadSimSettings0());
+            AimlBotReadSimData.Enqueue(() => ReadSimSettings0());
         }
         private void ReadSimSettings0()
         {
@@ -578,7 +580,7 @@ namespace AIMLBotModule
 
         private void RunTask(ThreadStart action, string name)
         {
-            client.Invoke(name, action);
+            Enqueue(name, () => client.InvokeThread(name, action));
         }
 
         public WorldObjectsForAimLBot(BotClient testClient)
@@ -669,7 +671,23 @@ namespace AIMLBotModule
         public void HeardMyselfSay(UUID uuid, string message)
         {
             if (MyBotNullWarning()) return;
-            MyBot.HeardSelfSay(message);
+            Enqueue("HeardMyselfSay: " + message, () => MyBot.HeardSelfSay(message));
+        }
+
+        private void Enqueue(String name, ThreadStart action)
+        {
+            AimlBotRespond.Enqueue(() =>
+                                       {
+                                           try
+                                           {
+                                               AimlBotRespond.WaitingString = name;
+                                               action();
+                                           }
+                                           catch (Exception e)
+                                           {
+                                               WriteLine("ERROR " + name + " " + e);
+                                           }
+                                       });
         }
 
         static bool MessageTurnsOffChat(string message)

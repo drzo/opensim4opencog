@@ -28,9 +28,10 @@ namespace cogbot.TheOpenSims
 
         internal readonly BotClient Client;
 
-        static private readonly TaskQueueHandler taskQueue = new TaskQueueHandler("SimAssetStore", 1, false);
+        static public readonly TaskQueueHandler taskQueue = new TaskQueueHandler("SimAssetStore (Slowly)", TimeSpan.FromSeconds(6), false);
+        public static readonly TaskQueueHandler SlowConnectedQueue = taskQueue;
 
-        public static void TaskQueueStart()
+        public static void TaskQueueStart() 
         {
             lock (taskQueue)
             {
@@ -51,6 +52,7 @@ namespace cogbot.TheOpenSims
             Manager.FolderUpdated += Inventory_OnFolderUpdated;
             Inventory = Manager.Store;
             Client.Network.SimConnected += Ensure_Downloaded;
+            SlowConnectedQueue.DebugQueue = true;
             FillAssetNames();
         }
 
@@ -153,9 +155,12 @@ namespace cogbot.TheOpenSims
                 A.Item = II;
                 return;
             }
-            LoadFolderId(IB.UUID);
-            downloadedAssetFoldersComplete = prev;
-            lock (BusyUpdating) if (BusyUpdating.Remove(IB.UUID)) return;
+            taskQueue.Enqueue(() =>
+                                  {
+                                      LoadFolderId(IB.UUID);
+                                      downloadedAssetFoldersComplete = prev;
+                                      lock (BusyUpdating) if (BusyUpdating.Remove(IB.UUID)) return;
+                                  });
             //lock (BusyUpdating) BusyUpdating.Add(IB.UUID);
             //List<InventoryBase> contents = Client.Inventory.FolderContents(IB.UUID, Client.Self.AgentID,
             //    true, true, InventorySortOrder.ByName, 30000);
@@ -168,7 +173,8 @@ namespace cogbot.TheOpenSims
 
         internal static void InternAsset(SimAsset asset)
         {
-            asset.InternOnRegion(WorldObjects.GridMaster);
+            taskQueue.Enqueue(() =>
+                              asset.InternOnRegion(WorldObjects.GridMaster));
         }
 
 

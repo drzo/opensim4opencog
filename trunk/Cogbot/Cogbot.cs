@@ -36,6 +36,7 @@ namespace cogbot
         {
             ClientManager.UsingCogbotFromRadgast = false;
             ClientManager.UsingRadgastFromCogbot = true;
+            MainProgram.CommandLine = new CommandLine {DisableSound = false};
 
             if (!ClientManager.AllocedConsole)
             {

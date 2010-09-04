@@ -429,7 +429,7 @@ namespace cogbot.TheOpenSims
             return null;
         }
 
-        private byte[] _TypeData;
+        public byte[] _TypeData;
         public sealed override byte[] AssetData
         {
             get

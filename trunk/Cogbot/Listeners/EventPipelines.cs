@@ -131,7 +131,7 @@ namespace cogbot.Listeners
         readonly TaskQueueHandler taskQueue;
         public SimEventMulticastPipeline(string name)
         {
-            taskQueue = new TaskQueueHandler("SimEventMulticastPipeline " + name, 0);
+            taskQueue = new TaskQueueHandler("SimEventMulticastPipeline " + name, TimeSpan.FromMilliseconds(1));
         }
 
         #endregion

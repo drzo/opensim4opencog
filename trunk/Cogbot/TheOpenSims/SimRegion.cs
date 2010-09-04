@@ -1251,7 +1251,7 @@ namespace cogbot.TheOpenSims
 
         public byte[] TextureBytesToUUID(UUID uUID)
         {
-            return WorldObjects.GridMaster.TextureBytesFormUUID(uUID);
+            return WorldObjects.GridMaster.TextureBytesForUUID(uUID);
         }
 
 
