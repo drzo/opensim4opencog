@@ -365,6 +365,11 @@ namespace RTParser.Utils
             return GetAttribValue(templateNode, attribName, () => defaultIfEmpty, null);
         }
 
+        public static bool TryParseBool(XmlNode templateNode, string attribName, out bool tf)
+        {
+            return Unifiable.TryParseBool(GetAttribValue(templateNode, attribName, null), out tf);
+        }
+
         public static Unifiable GetAttribValue(XmlNode node, string attribName, Func<string> defaultIfEmpty, SubQuery sq)
         {
             string realName;

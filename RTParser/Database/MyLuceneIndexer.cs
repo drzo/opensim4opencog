@@ -377,7 +377,7 @@ namespace RTParser.Database
             // If must contain the exact words (the defualt is false)
             bool mustContainExact = false;
             bool tf;
-            if (Unifiable.TryParseBool(RTPBot.GetAttribValue(templateNode, "exact", "" + mustContainExact), out tf))
+            if (StaticXMLUtil.TryParseBool(templateNode, "exact", out tf))
             {
                 mustContainExact = tf;
             }
@@ -612,7 +612,7 @@ namespace RTParser.Database
             string factoidSRV = GenFormatFactoid(subject, relation, value);
             string factoidSR = GenFormatFactoid(subject, relation, "");
             if (IsExcludedSRV(subject, relation, "", factoidSRV,
-                writeToLog, "updateTriple '{0}'=> ", factoidSR)) return -1;
+                writeToLog, "updateTriple {0} => ", factoidSR)) return -1;
             return EnsureLockedDatabase(() =>
                                             {
                                                 int deleted = DeleteTopScoring0(factoidSR, true);
@@ -631,11 +631,11 @@ namespace RTParser.Database
             bool expandOnNoHits = false;
 
             bool tf;
-            if (Unifiable.TryParseBool(RTPBot.GetAttribValue(templateNode, "expand", null), out tf))
+            if (StaticXMLUtil.TryParseBool(templateNode, "expand", out tf))
             {
                 expandOnNoHits = tf;
             }
-            if (Unifiable.TryParseBool(RTPBot.GetAttribValue(templateNode, "wordnet,synonyms", null), out tf))
+            if (StaticXMLUtil.TryParseBool(templateNode, "wordnet,synonyms", out tf))
             {
                 expandWithWordNet = tf;
             }
@@ -754,8 +754,8 @@ namespace RTParser.Database
             WordNetExpander expandWithWordNet = WordNetExpand;
 
             bool tf;
-            if (Unifiable.TryParseBool(RTPBot.GetAttribValue(expandWordnet, "wordnet,synonyms", null), out tf))
-        {
+            if (StaticXMLUtil.TryParseBool(expandWordnet, "wordnet,synonyms", out tf))
+            {
                 expandWithWordNet = tf ? (WordNetExpander) WordNetExpand : NoWordNetExpander;
             }
 
@@ -790,7 +790,7 @@ namespace RTParser.Database
             bool expandWithWordNet = true;
 
             bool tf;
-            if (Unifiable.TryParseBool(RTPBot.GetAttribValue(templateNode, "wordnet,synonyms", null), out tf))
+            if (StaticXMLUtil.TryParseBool(templateNode, "wordnet,synonyms", out tf))
             {
                 expandWithWordNet = tf;
             }
@@ -992,14 +992,14 @@ namespace RTParser.Database
         {
             bool ExcludedFactPattern = false;
             bool debug = (writeToLog != null);
-            fmtString = string.Format(fmtString, fmtArgs);
+            fmtString = DLRConsole.SafeFormat(fmtString, fmtArgs);
             if (factoidSRV == "false")
             {
                 if (!debug) return true;
                 writeToLog("ExcludedSRV: '{0}' Format '{1}'", fmtString, relation);
                 ExcludedFactPattern = true;
             }
-            fmtString = factoidSRV + " " + fmtString;
+            fmtString += " " + factoidSRV;
             if (IsExcludedRelation(relation))
             {
                 if (!debug) return true;

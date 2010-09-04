@@ -188,7 +188,7 @@ namespace RTParser.Utils
                 string realName;
                 ISettingsDictionary dict = Request.TargetSettings;
                 bool succeed;
-                NamedValuesFromSettings.SetSettingForType(dict.NameSpace, this, dict, name, null, value, null);
+                NamedValuesFromSettings.SetSettingForType(dict.NameSpace, this, dict, name, null, value, null, null);
                 return true;
             }
         }

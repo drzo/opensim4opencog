@@ -480,6 +480,18 @@ namespace RTParser.Utils
             }
 
             actualValue = actualValue.Trim();
+
+            string requiredToUpper = required.ToUpper();
+            if (requiredToUpper=="*")
+            {
+                return !IsUnknown(actualValue);
+            }
+
+            if (Unifiable.IsNullOrEmpty(required) || requiredToUpper == "$MISSING")
+            {
+                return Unifiable.IsNullOrEmpty(actualValue);
+            }
+
             if (actualValue.WillUnify(required, subquery))
             {
                 return true;
@@ -491,7 +503,7 @@ namespace RTParser.Utils
             {
                 return true;
             }
-            if (required.ToUpper() == "UNKNOWN" && (Unifiable.IsUnknown(actualValue)))
+            if (requiredToUpper == "UNKNOWN" && (Unifiable.IsUnknown(actualValue)))
             {
                 return true;
             }

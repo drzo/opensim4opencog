@@ -451,7 +451,7 @@ namespace RTParser
             get { return str; }
         }
 
-        protected override bool IsFalse()
+        public override bool IsFalse()
         {
             if (IsFlag(UFlags.IS_FALSE)) return true;
             if (IsFlag(UFlags.IS_TRUE)) return false;

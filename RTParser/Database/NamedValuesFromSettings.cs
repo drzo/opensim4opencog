@@ -4,13 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using MushDLR223.ScriptEngines;
+using MushDLR223.Utilities;
 using RTParser;
 using RTParser.Utils;
 using RTParser.Variables;
 
 namespace RTParser.Database
 {
-    public class NamedValuesFromSettings
+    public class NamedValuesFromSettings: StaticAIMLUtils
     {
         static public bool UseLuceneForGet = true;
         static public bool UseLuceneForSet = true;
@@ -92,8 +93,11 @@ namespace RTParser.Database
             return query.GetDictionary(named);
         }
 
-        static public Unifiable SetSettingForType(string type, SubQuery query, ISettingsDictionary dict, string name, string gName, Unifiable value, string setReturn)
+        static public Unifiable SetSettingForType(string type, SubQuery query, ISettingsDictionary dict, string name, string gName, Unifiable value, string setReturn, XmlNode templateNode)
         {
+            string _sreturn = setReturn;
+            setReturn = StaticXMLUtil.GetAttribValue(templateNode, "set-return", () => _sreturn, query);
+
             Request request = query.Request;
             RTPBot TargetBot = request.TargetBot;
             ISettingsDictionary udict = FindDict(type, query) ?? dict;
@@ -103,22 +107,85 @@ namespace RTParser.Database
             string realName;
             Unifiable resultGet = SettingsDictionary.grabSettingDefaultDict(udict, name, out realName);
 
+            bool shouldSet = ShouldSet(templateNode, dict, realName, value, resultGet);
+
+            User user = query.CurrentUser;
+            MyLuceneIndexer userbotLuceneIndexer = user.bot.LuceneIndexer;
+            string userName = user.UserID;
+            if (!shouldSet)
+            {
+                writeToLog("!shouldSet ERROR " + dict + " name=" + realName + " value=" + value + " old=" + resultGet);
+                bool shouldSet2 = ShouldSet(templateNode, dict, realName, value, resultGet);
+                return ReturnSetSetting(udict, name, setReturn);
+            }
             if (value.IsEmpty)
             {
-                User user = query.CurrentUser;
-                if (UseLuceneForSet) user.bot.LuceneIndexer.retractAllTriple(user.UserName, name);
+                if (UseLuceneForSet && userbotLuceneIndexer != null) userbotLuceneIndexer.retractAllTriple(userName, name);
                 if (!String.IsNullOrEmpty(gName)) gUser.Predicates.removeSetting(gName);
                 udict.removeSetting(name);
             }
             else
             {
-                User user = query.CurrentUser;
-                if (UseLuceneForSet) user.bot.LuceneIndexer.updateTriple(user.UserName, name, value);
+                if (UseLuceneForSet && userbotLuceneIndexer != null) userbotLuceneIndexer.updateTriple(userName, name, value);
                 if (!String.IsNullOrEmpty(gName)) gUser.Predicates.addSetting(gName, value);
                 udict.addSetting(name, value);
 
             }
             return ReturnSetSetting(udict, name, setReturn);
+        }
+
+        public static void writeToLog(string message, params object[] args)
+        {
+            try
+            {
+                message = DLRConsole.SafeFormat("NAMEVALUES: " + message, args);
+                DLRConsole.DebugWriteLine(message);
+            }
+                // ReSharper disable EmptyGeneralCatchClause
+            catch
+                // ReSharper restore EmptyGeneralCatchClause
+            {
+            }
+        }
+
+        private static bool ShouldSet(XmlNode templateNode, ISettingsDictionary dictionary, string name, Unifiable newValue, Unifiable oldValue)
+        {
+            if (templateNode == null) return true;
+
+            bool onlyIfUnknown;
+            if (StaticXMLUtil.TryParseBool(templateNode, "ifUnknown", out onlyIfUnknown))
+            {
+                if (onlyIfUnknown) return Unifiable.IsUnknown(oldValue);
+            }
+
+            bool overwriteExisting;
+            if (StaticXMLUtil.TryParseBool(templateNode, "overwriteExisting", out overwriteExisting))
+            {
+                if (!overwriteExisting) return Unifiable.IsNullOrEmpty(oldValue);
+                //if (overwriteExisting)                   
+                return true;
+            }
+
+            string oldMatch = StaticXMLUtil.GetAttribValue(templateNode, "existing", null);
+            bool shouldSet = true;
+
+            if (oldMatch != null)
+            {
+                if (!IsPredMatch(oldMatch, oldValue, null))
+                {
+                    shouldSet = false;
+                }
+            }
+            string newMatch = StaticXMLUtil.GetAttribValue(templateNode, "matches", null);
+
+            if (newMatch != null)
+            {
+                if (!IsPredMatch(newMatch, newValue, null))
+                {
+                    shouldSet = false;
+                }
+            }
+            return shouldSet;
         }
 
         public static Unifiable ReturnSetSetting(ISettingsDictionary dict, string name, string setReturn)
