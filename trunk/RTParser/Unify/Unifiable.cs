@@ -12,7 +12,7 @@ using StringAppendableUnifiable = RTParser.StringAppendableUnifiableImpl;
 
 namespace RTParser
 {
-    abstract public class Unifiable
+    abstract public class Unifiable: StaticAIMLUtils
     {
 
         public UFlags Flags = UFlags.NO_FLAGS;
@@ -237,27 +237,6 @@ namespace RTParser
             return ToUpper();
         }
 
-        static public bool IsTrue(Unifiable v)
-        {
-            if (!IsFalse(v))
-            {
-                if (!IsNullOrEmpty(v)) return true;
-                return false;
-            }
-            return true;
-        }
-
-        static public bool IsLogicTF(Unifiable v, SubQuery subquery)
-        {
-            if (IsFalse(v)) return false;
-            String value = v.ToValue(subquery).ToLower();
-            if (value.Length == 0) return false;
-            char c = value[0];
-            if (c == 'n' || c == 'f') return false;
-            return true;           
-        }
-
-
         public static Unifiable Join(string sep, Unifiable[] values, int startIndex, int count)
         {
             if (count == 1)
@@ -281,7 +260,7 @@ namespace RTParser
             Unifiable[] it = new Unifiable[strs.Length];
             for (int i = 0; i < it.Length; i++)
             {
-                it[i] = Create(strs[i].Trim());
+                it[i] = Unifiable.Create(strs[i].Trim());
             }
             return it;
         }
@@ -295,17 +274,6 @@ namespace RTParser
             }
             return it;
         }
-
-        //public static Unifiable Format(string s, params object[] args)
-        //{
-        //    return string.Format(s, args);
-        //}
-
-        //static public bool operator ==(Unifiable t, string s)
-        //{
-        //    return t.AsString().ToLower() == s.ToLower();
-        //}
-
 
         static public bool operator ==(Unifiable t, Unifiable s)
         {
@@ -332,37 +300,6 @@ namespace RTParser
         public static bool operator !=(Unifiable t, Unifiable s)
         {
             return !(t == s);
-        }
-
-        public static bool IsFalse(Unifiable tf)
-        {
-            if (ReferenceEquals(tf, null)) return true;
-            if (ReferenceEquals(tf.Raw, null)) return true;
-            return tf.IsFalse();
-        }
-
-        public static bool IsNullOrEmpty(Object name)
-        {
-            if (name is String)
-            {
-                return ((String) name).Length == 0;
-            }
-            if (IsNull(name)) return true;
-            return (name is Unifiable && ((Unifiable)name).IsEmpty);
-        }
-        public static bool IsNull(Object name)
-        {
-            if (ReferenceEquals(name, null)) return true;
-            return (name is Unifiable && ((Unifiable)name).Raw == null);
-        }
-
-        public static bool IsEMPTY(Object name)
-        {
-            if (name is String)
-            {
-                return ((String)name).Trim().Length == 0;
-            }
-            return (name is Unifiable && ((Unifiable)name).Raw == null);
         }
 
         public static Unifiable operator +(string u, Unifiable more)
@@ -463,7 +400,7 @@ namespace RTParser
             get { return Raw != null && ToUpper().Length == 0; }
         }
 
-        protected virtual bool IsFalse()
+        public virtual bool IsFalse()
         {
             return IsEmpty;            
         }
@@ -661,75 +598,9 @@ namespace RTParser
 
         public abstract string ToUpper();
 
-        public static bool IsUnknown(object unifiable)
-        {
-            if (IsNullOrEmpty(unifiable)) return true;
-            string ss = AIMLLoader.CleanWhitepacesLower(unifiable.ToString());
-            string s = " " + ss.Replace("_", " ").Replace("-", " ") + " ";
-            bool b = s.Contains("unknown") || s.Contains("unrec") || s.Contains("unnam")
-                     || s.Contains("unseen") || s.Contains("default")
-                     || s.Contains(" some") || s.Contains("*") || s.Contains(" _ ")
-                     || s.Contains(" nothing ") || s.Contains("undefined");
-            if (b) return true;
-            if (unifiable is Unifiable)
-            {
-                if (!((Unifiable) unifiable).IsWildCard()) return false;
-                return true;
-            }
-            return false;
-            //switch (s)
-            //{
-            //    case "":
-            //        return true;
-            //    case "unknown":
-            //        return true;
-            //    case "nothing":
-            //        return true;
-            //    case "*":
-            //        return true;
-            //    case "_":
-            //        return true;
-            //    case "undefined":
-            //        return true;
-            //    default:
-            //        return false;
-            //}
-        }
-
         public bool IsAnyWord()
         {
             return IsUnitMatcher;
-        }
-
-        public static bool TryParseBool(string parse, out bool tf)
-        {
-            if (IsNullOrEmpty(parse))
-            {
-                tf = default(Boolean);
-                return false;
-            }
-            parse = parse.ToUpper();
-            if (IsFalseOrNo(parse))
-            {
-                tf = false;
-                return true;
-            }
-            if (IsTrueOrYes(parse))
-            {
-                tf = true;
-                return true;
-            }
-            tf = default(Boolean);
-            return false;
-        }
-
-        public static bool IsFalseOrNo(string tst)
-        {
-            return (tst == "NO" || tst == "N" || tst == "FALSE" || tst == "F" || tst == "NIL");
-        }
-        public static bool IsTrueOrYes(string tst)
-        {
-            return (tst == "YES" || tst == "Y" || tst == "TRUE" || tst == "T");
         }
     }
 }

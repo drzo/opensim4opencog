@@ -8,6 +8,135 @@ namespace RTParser.Utils
 {
     public class TextPatternUtils
     {
+        public static bool TryParseBool(string parse, out bool tf)
+        {
+            if (IsNullOrEmpty(parse))
+            {
+                tf = default(Boolean);
+                return false;
+            }
+            parse = parse.ToUpper();
+            if (IsFalseOrNo(parse))
+            {
+                tf = false;
+                return true;
+            }
+            if (IsTrueOrYes(parse))
+            {
+                tf = true;
+                return true;
+            }
+            tf = default(Boolean);
+            return false;
+        }
+
+        public static bool IsFalseOrNo(string tst)
+        {
+            return (tst == "NO" || tst == "N" || tst == "FALSE" || tst == "F" || tst == "NIL");
+        }
+        public static bool IsTrueOrYes(string tst)
+        {
+            return (tst == "YES" || tst == "Y" || tst == "TRUE" || tst == "T");
+        }
+
+
+        static public bool IsTrue(Unifiable v)
+        {
+            if (!IsFalse(v))
+            {
+                if (!IsNullOrEmpty(v)) return true;
+                return false;
+            }
+            return true;
+        }
+
+        static public bool IsLogicTF(Unifiable v, SubQuery subquery)
+        {
+            if (IsFalse(v)) return false;
+            String value = v.ToValue(subquery).ToLower();
+            if (value.Length == 0) return false;
+            char c = value[0];
+            if (c == 'n' || c == 'f') return false;
+            return true;
+        }
+
+        //public static Unifiable Format(string s, params object[] args)
+        //{
+        //    return string.Format(s, args);
+        //}
+
+        //static public bool operator ==(Unifiable t, string s)
+        //{
+        //    return t.AsString().ToLower() == s.ToLower();
+        //}
+
+
+        public static bool IsFalse(Unifiable tf)
+        {
+            if (ReferenceEquals(tf, null)) return true;
+            if (ReferenceEquals(tf.Raw, null)) return true;
+            return tf.IsFalse();
+        }
+
+        public static bool IsNullOrEmpty(Object name)
+        {
+            if (name is String)
+            {
+                return ((String)name).Length == 0;
+            }
+            if (IsNull(name)) return true;
+            return (name is Unifiable && ((Unifiable)name).IsEmpty);
+        }
+        public static bool IsNull(Object name)
+        {
+            if (ReferenceEquals(name, null)) return true;
+            return (name is Unifiable && ((Unifiable)name).Raw == null);
+        }
+
+        public static bool IsEMPTY(Object name)
+        {
+            if (name is String)
+            {
+                return ((String)name).Trim().Length == 0;
+            }
+            return (name is Unifiable && ((Unifiable)name).Raw == null);
+        }
+
+        public static bool IsUnknown(object unifiable)
+        {
+            if (IsNullOrEmpty(unifiable)) return true;
+            string ss = CleanWhitepacesLower(unifiable.ToString());
+            string s = " " + ss.Replace("_", " ").Replace("-", " ") + " ";
+            bool b = s.Contains("unknown") || s.Contains("unrec") || s.Contains("unnam")
+                     || s.Contains("unseen") || s.Contains("default")
+                     || s.Contains(" some") || s.Contains("*") || s.Contains(" _ ")
+                     || s.Contains(" nothing ") || s.Contains("undefined");
+            if (b) return true;
+            if (unifiable is Unifiable)
+            {
+                if (!((Unifiable)unifiable).IsWildCard()) return false;
+                return true;
+            }
+            return false;
+            //switch (s)
+            //{
+            //    case "":
+            //        return true;
+            //    case "unknown":
+            //        return true;
+            //    case "nothing":
+            //        return true;
+            //    case "*":
+            //        return true;
+            //    case "_":
+            //        return true;
+            //    case "undefined":
+            //        return true;
+            //    default:
+            //        return false;
+            //}
+        }
+
         public static OutputDelegate DEVNULL = TextFilter.DEVNULL;
         public static string CleanWhitepaces(object info)
         {

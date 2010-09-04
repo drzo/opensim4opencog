@@ -59,14 +59,15 @@ namespace RTParser.AIMLTagHandlers
                     templateNodeInnerText = templateNodeInnerText.Rest();
                 }
                 string setReturn = GetAttribValue(templateNode, "set-return",
-                                                  () => ((string) Proc.GetRelationMetaProps().grabSetting(name)),
+                                                  () =>
+                                                  ((string) Proc.GetRelationMetaProps().GetMeta(name, "set-return")),
                                                   query);
                 if (value == null)
                 {
                     value = templateNodeInnerText;
                 }
                 if (value.IsEmpty) value = defaultVal;
-                return NamedValuesFromSettings.SetSettingForType(dictName, query, query, name, gName, value, setReturn);
+                return NamedValuesFromSettings.SetSettingForType(dictName, query, query, name, gName, value, setReturn, templateNode);
             }
             return defaultVal;
         }

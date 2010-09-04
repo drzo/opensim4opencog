@@ -753,7 +753,7 @@ namespace RTParser
 
         }
 
-        public ISettingsDictionary GetRelationMetaProps()
+        public SettingsDictionary GetRelationMetaProps()
         {
             return RelationMetaProps;
         }
