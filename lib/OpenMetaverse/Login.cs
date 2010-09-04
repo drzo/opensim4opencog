@@ -911,7 +911,10 @@ namespace OpenMetaverse
         {
             // FIXME: Now that we're using CAPS we could cancel the current login and start a new one
             if (CurrentContext != null)
-                throw new Exception("Login already in progress");
+            {
+                Logger.DebugLog("Login already in progress: " + CurrentContext, Client);
+                //throw new Exception("Login already in progress");
+            }
 
             LoginEvent.Reset();
             CurrentContext = loginParams;

@@ -218,14 +218,11 @@ namespace OpenMetaverse
         /// <example>UUID.TryParse("11f8aa9c-b071-4242-836b-13b7abe0d489", result)</example>
         public static bool TryParse(string val, out UUID result)
         {
-            if (String.IsNullOrEmpty(val) ||
-                (val[0] == '{' && val.Length != 38) ||
-                (val.Length != 36 && val.Length != 32))
+            if (!CanBeUUID(val))
             {
                 result = UUID.Zero;
                 return false;
             }
-
             try
             {
                 result = Parse(val);
@@ -236,6 +233,34 @@ namespace OpenMetaverse
                 result = UUID.Zero;
                 return false;
             }
+        }
+
+        private static bool CanBeUUID(string val)
+        {
+
+            if (String.IsNullOrEmpty(val))
+            {
+                return false;
+            }
+            int valLength = val.Length;
+            if ((val[0] == '{' && valLength != 38) ||
+                (valLength != 36 && valLength != 32))
+            {
+                return false;
+            }
+            int fd = val.IndexOfAny(" ._@".ToCharArray());
+            if (fd != -1) return false;
+           
+            fd = val.IndexOf('-');
+            if (valLength == 32 && fd == -1)
+            {
+                return false;
+            }
+            if (valLength == 38 || fd != 8)
+            {
+                return false;
+            }
+            return true;
         }
 
         /// <summary>
