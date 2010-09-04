@@ -1,19 +1,13 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text.RegularExpressions;
 using System.Xml;
-using System.Xml.XPath;
-using RTParser.AIMLTagHandlers;
-using RTParser.Variables;
-//using LineInfoElement = System.Xml.XmlNode;
 using LineInfoElement = RTParser.Utils.LineInfoElementImpl;
 using StringAppendableUnifiable = RTParser.StringAppendableUnifiableImpl;
+
 //using StringAppendableUnifiable = System.Text.StringBuilder;
 
 namespace RTParser.Utils
 {
-    abstract public partial class AIMLTagHandler
+    public abstract partial class AIMLTagHandler
     {
         protected void DebugCheck(int i)
         {
@@ -44,8 +38,8 @@ namespace RTParser.Utils
             string s = templateNode.OuterXml.Trim();
             if (String.IsNullOrEmpty(s))
             {
-                var li = templateNode;
-                s = s + " " + li.OwnerDocument.ToString();
+                XmlNode li = templateNode;
+                s = s + " " + li.OwnerDocument;
                 if (Parent != null && Parent != this)
                 {
                     s = s + " " + Parent.LineTextInfo();
@@ -54,7 +48,6 @@ namespace RTParser.Utils
                 {
                     return s;
                 }
-
             }
             return s;
         }
@@ -64,10 +57,10 @@ namespace RTParser.Utils
             string s = "<!--";
             if (templateNode is IXmlLineInfo)
             {
-                IXmlLineInfo li = (IXmlLineInfo)templateNode;
+                IXmlLineInfo li = (IXmlLineInfo) templateNode;
                 if (li.LineNumber == 0)
                 {
-                    s = s + " " + templateNode.OwnerDocument.ToString();
+                    s = s + " " + templateNode.OwnerDocument;
                     if (Parent != null && Parent != this)
                     {
                         s = s + " " + Parent.LineNumberInfo();
@@ -79,7 +72,7 @@ namespace RTParser.Utils
                 }
                 else
                 {
-                    s = s + " (" + templateNode.OwnerDocument.ToString() + ":line " + li.LineNumber + "," + li.LinePosition + ") ";
+                    s = s + " (" + templateNode.OwnerDocument + ":line " + li.LineNumber + "," + li.LinePosition + ") ";
                 }
             }
             return s + "-->";
@@ -90,7 +83,7 @@ namespace RTParser.Utils
             string s = null;
             if (templateNode != null)
             {
-                var li = templateNode;
+                XmlNode li = templateNode;
                 s = "" + li.OwnerDocument;
                 if (!string.IsNullOrEmpty(s)) return s;
                 if (Parent != null && Parent != this)
@@ -100,6 +93,21 @@ namespace RTParser.Utils
                 }
             }
             return s;
+        }
+
+        protected void writeToLogWarn(string unifiable, params object[] objs)
+        {
+            writeToLog("WARNING: " + unifiable, objs);
+        }
+
+        public virtual void writeToLog(string unifiable, params object[] objs)
+        {
+            if (unifiable.ToUpper().StartsWith("ERROR"))
+            {
+                writeToLogWarn("BAD " + unifiable, objs);
+                return;
+            }
+            this.Proc.writeToLog("AIMLTRACE: " + unifiable + " in " + GetType().Name + "  " + LineNumberTextInfo(), objs);
         }
 
         #region Implementation of IXmlLineInfo
@@ -149,21 +157,7 @@ namespace RTParser.Utils
                 return 0;
             }
         }
+
         #endregion
-
-        protected void writeToLogWarn(string unifiable, params object[] objs)
-        {
-            writeToLog("WARNING: " + unifiable, objs);
-        }
-
-        public virtual void writeToLog(string unifiable, params object[] objs)
-        {
-            if (unifiable.ToUpper().StartsWith("ERROR"))
-            {
-                writeToLogWarn("BAD " + unifiable, objs);
-                return;
-            }
-            this.Proc.writeToLog("AIMLTRACE: " + unifiable + " in " + GetType().Name + "  " + LineNumberTextInfo(), objs);
-        }
     }
 }

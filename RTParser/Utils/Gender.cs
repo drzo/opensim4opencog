@@ -1,5 +1,3 @@
-using System;
-
 namespace RTParser.Utils
 {
     /// <summary>

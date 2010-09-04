@@ -1,53 +1,44 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Xml;
-using System.IO;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
-using System.Collections.Generic;
 using RTParser.Database;
 using RTParser.Variables;
-using System.Text;
 
 namespace RTParser.Utils
 {
-    public class StaticAIMLUtils: StaticXMLUtil 
+    public class StaticAIMLUtils : StaticXMLUtil
     {
+        public static readonly XmlNode TheTemplateOverwrite = getNode("<template></template>");
         public static bool DebugSRAIs = true;
         public static bool NoRuntimeErrors = false;
-        public static readonly XmlNode TheTemplateOverwrite = StaticXMLUtil.getNode("<template></template>");
-        public static Dictionary<XmlNode, StringBuilder> ErrorList = new Dictionary<XmlNode, StringBuilder>();
         public static Func<string> EmptyFunct = (() => String.Empty);
+        public static Dictionary<XmlNode, StringBuilder> ErrorList = new Dictionary<XmlNode, StringBuilder>();
+
+        protected static List<string> TagsRecurseToFlatten = new List<string>
+                                                    {
+                                                        "template",
+                                                        "pattern",
+                                                    };
+
+        protected static List<string> TagsWithNoOutput = new List<string>
+                                                 {
+                                                     "#comment",
+                                                     //    "debug",
+                                                 };
+
+        
         public static Func<string> NullStringFunct = (() => null);
-        public static OutputDelegate DEVNULL = TextFilter.DEVNULL;
-        public static bool ThatWideStar = false;
-        public static bool useInexactMatching = false;
-        public static OutputDelegate userTraceRedir;
-        protected static XmlNode PatternStar
-        {
-            get
-            {
-                var ps = StaticXMLUtil.getNode("<pattern name=\"*\">*</pattern>");
-                LineInfoElementImpl.SetReadOnly(ps);
 
-                return ps;
-            }
-        }
-
-
-        protected static List<string> skip = new List<string>()
-                                               {
-                                                   "#comment",
-                                               //    "debug",
-                                               };
-
-        protected static List<string> flatten = new List<string>()
-                                               {
-                                                   "template",
-                                                   "pattern",
-                                               };
+        public static ICollection<string> PushableAttributes = new HashSet<string>
+                                                                   {
+                                                                   };
 
         /// <summary>
         /// Attributes that we use from AIML not intended to be stacked into user dictionary
@@ -84,9 +75,20 @@ namespace RTParser.Utils
                     "id",
                 };
 
-        public static ICollection<string> PushableAttributes = new HashSet<string>()
+        public static bool ThatWideStar;
+        public static bool useInexactMatching;
+        public static OutputDelegate userTraceRedir;
+
+        protected static XmlNode PatternStar
         {
-        };
+            get
+            {
+                XmlNode ps = getNode("<pattern name=\"*\">*</pattern>");
+                LineInfoElementImpl.SetReadOnly(ps);
+
+                return ps;
+            }
+        }
 
 
         protected static R FromLoaderOper<R>(Func<R> action, GraphMaster gm)
@@ -119,10 +121,10 @@ namespace RTParser.Utils
             }
         }
 
-        static public ThreadStart EnterTag(Request request, XmlNode templateNode, SubQuery query)
+        public static ThreadStart EnterTag(Request request, XmlNode templateNode, SubQuery query)
         {
             bool needsUnwind = false;
-            object thiz = (object)query ?? request;
+            object thiz = (object) query ?? request;
             ISettingsDictionary dict = query ?? request.TargetSettings;
             XmlAttributeCollection collection = templateNode.Attributes;
             if (collection != null && collection.Count > 0)
@@ -181,7 +183,6 @@ namespace RTParser.Utils
                                     needsUnwind = true;
                                     request.Topic = newTopic;
                                 }
-
                             }
                             break;
                         case "that":
@@ -193,13 +194,11 @@ namespace RTParser.Utils
                                     needsUnwind = true;
                                     request.That = newThat;
                                 }
-
                             }
                             break;
 
                         default:
                             {
-
                                 string n = node.Name;
                                 lock (ReservedAttributes)
                                 {
@@ -228,7 +227,7 @@ namespace RTParser.Utils
                                         NamedValuesFromSettings.UseLuceneForGet = prev;
                                     }
                                 }
-                                Unifiable v = (Unifiable)ReduceStar(node.Value, query, dict);
+                                Unifiable v = ReduceStar(node.Value, query, dict);
                                 UndoStack.FindUndoAll(thiz);
                                 savedValues = savedValues ?? UndoStack.GetStackFor(thiz);
                                 //savedValues = savedValues ?? query.GetFreshUndoStack();
@@ -243,77 +242,76 @@ namespace RTParser.Utils
                 if (needsUnwind)
                 {
                     return () =>
-                    {
-                        try
-                        {
-
-                            if (savedValues != null)
-                            {
-                                savedValues.UndoAll();
-                            }
-                            if (newGraph != null)
-                            {
-                                var cg = request.Graph;
-                                if (cg == newGraph)
-                                {
-                                    request.writeToLog("LEAVING: {0}  back to {1}", request.Graph, oldGraph);
-                                    request.Graph = oldGraph;
-                                }
-                                else
-                                {
-                                    request.writeToLog(
-                                        "WARNING: UNWIND GRAPH UNEXPECTED CHANGE {0} FROM {1} SETTING TO {2}",
-                                        cg, newGraph, oldGraph);
-                                    request.Graph = oldGraph;
-                                }
-                            }
-                            if (newTopic != null)
-                            {
-                                var ct = request.Topic;
-                                if (newTopic == ct)
-                                {
-                                    request.Topic = oldTopic;
-                                }
-                                else
-                                {
-                                    request.writeToLog(
-                                        "WARNING: UNWIND TOPIC UNEXPECTED CHANGE {0} FROM {1} SETTING TO {2}",
-                                        ct, newTopic, oldTopic);
-                                    request.Topic = oldTopic;
-                                }
-                            }
-                            if (newThat != null)
-                            {
-                                var ct = request.That;
-                                if (newThat == ct)
-                                {
-                                    request.That = oldThat;
-                                }
-                                else
-                                {
-                                    request.writeToLog(
-                                        "WARNING: UNWIND THAT UNEXPECTED CHANGE {0} FROM {1} SETTING TO {2}",
-                                        ct, newThat, oldThat);
-                                    request.That = oldThat;
-                                }
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            request.writeToLog("ERROR " + ex);
-                        }
-                    };
+                               {
+                                   try
+                                   {
+                                       if (savedValues != null)
+                                       {
+                                           savedValues.UndoAll();
+                                       }
+                                       if (newGraph != null)
+                                       {
+                                           GraphMaster cg = request.Graph;
+                                           if (cg == newGraph)
+                                           {
+                                               request.writeToLog("LEAVING: {0}  back to {1}", request.Graph, oldGraph);
+                                               request.Graph = oldGraph;
+                                           }
+                                           else
+                                           {
+                                               request.writeToLog(
+                                                   "WARNING: UNWIND GRAPH UNEXPECTED CHANGE {0} FROM {1} SETTING TO {2}",
+                                                   cg, newGraph, oldGraph);
+                                               request.Graph = oldGraph;
+                                           }
+                                       }
+                                       if (newTopic != null)
+                                       {
+                                           Unifiable ct = request.Topic;
+                                           if (newTopic == ct)
+                                           {
+                                               request.Topic = oldTopic;
+                                           }
+                                           else
+                                           {
+                                               request.writeToLog(
+                                                   "WARNING: UNWIND TOPIC UNEXPECTED CHANGE {0} FROM {1} SETTING TO {2}",
+                                                   ct, newTopic, oldTopic);
+                                               request.Topic = oldTopic;
+                                           }
+                                       }
+                                       if (newThat != null)
+                                       {
+                                           Unifiable ct = request.That;
+                                           if (newThat == ct)
+                                           {
+                                               request.That = oldThat;
+                                           }
+                                           else
+                                           {
+                                               request.writeToLog(
+                                                   "WARNING: UNWIND THAT UNEXPECTED CHANGE {0} FROM {1} SETTING TO {2}",
+                                                   ct, newThat, oldThat);
+                                               request.That = oldThat;
+                                           }
+                                       }
+                                   }
+                                   catch (Exception ex)
+                                   {
+                                       request.writeToLog("ERROR " + ex);
+                                   }
+                               };
                 }
             }
             return () => { };
         }
 
-        static public Unifiable ReduceStar(string name, SubQuery query, ISettingsDictionary dict)
+        public static Unifiable ReduceStar(string name, SubQuery query, ISettingsDictionary dict)
         {
-            string[] nameSplit = name.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-            foreach (var nameS in nameSplit)
+            var nameSplit = name.Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries);
+            foreach (string nameS in nameSplit)
             {
-                var r = AltStar(nameS, query, dict);
+                Unifiable r = AltStar(nameS, query, dict);
                 if (!Unifiable.IsNullOrEmpty(r))
                 {
                     return r;
@@ -321,7 +319,8 @@ namespace RTParser.Utils
             }
             return name;
         }
-        static public Unifiable AltStar(string name, SubQuery query, ISettingsDictionary dict)
+
+        public static Unifiable AltStar(string name, SubQuery query, ISettingsDictionary dict)
         {
             try
             {
@@ -377,7 +376,7 @@ namespace RTParser.Utils
                     string str = name.Substring(1);
                     if (str.StartsWith("bot."))
                     {
-                        var dict2 = query.Request.TargetBot.GlobalSettings;
+                        SettingsDictionary dict2 = query.Request.TargetBot.GlobalSettings;
                         str = str.Substring(4);
                         value = GetValue(query, dict2, str);
                         if (!Unifiable.IsNullOrEmpty(value)) return value;
@@ -412,7 +411,7 @@ namespace RTParser.Utils
 
         private static Unifiable GetDictData(IList<Unifiable> unifiables, string name, int startChars)
         {
-            var u = GetDictData0(unifiables, name, startChars);
+            Unifiable u = GetDictData0(unifiables, name, startChars);
             string toup = u.ToUpper();
             if (string.IsNullOrEmpty(toup)) return u;
             if (char.IsLetterOrDigit(toup[0])) return u;
@@ -425,7 +424,7 @@ namespace RTParser.Utils
 
             if (s == "*" || s == "ALL" || s == "0")
             {
-                var result = Unifiable.CreateAppendable();
+                StringAppendableUnifiableImpl result = Unifiable.CreateAppendable();
                 foreach (Unifiable u in unifiables)
                 {
                     result.Append(u);
@@ -457,7 +456,6 @@ namespace RTParser.Utils
             }
             if (ii >= uc || ii < 0)
             {
-
                 RTPBot.writeDebugLine(" !ERROR -star badindexed 0 < " + i + " < " + uc + " in " + name);
                 return unifiables[ii];
             }
@@ -517,17 +515,17 @@ namespace RTParser.Utils
         {
             console("-----------------------------------------------------------------");
             console("Result: " + result.Graph + " Request: " + result.request);
-            foreach (var s in result.InputSentences)
+            foreach (Unifiable s in result.InputSentences)
             {
                 console("input: \"" + s + "\"");
             }
             PrintTemplates(result.UsedTemplates, console, printOptions);
-            foreach (var s in result.SubQueries)
+            foreach (SubQuery s in result.SubQueries)
             {
                 console("\n" + s);
             }
             console("-");
-            foreach (var s in result.OutputSentences)
+            foreach (string s in result.OutputSentences)
             {
                 console("outputsentence: " + s);
             }
@@ -537,7 +535,7 @@ namespace RTParser.Utils
         public static string GetTemplateSource(IEnumerable CI, PrintOptions printOptions)
         {
             if (CI == null) return "";
-            var fs = new StringWriter();
+            StringWriter fs = new StringWriter();
             GraphMaster.PrintToWriter(CI, printOptions, fs, null);
             return fs.ToString();
         }
@@ -578,20 +576,20 @@ namespace RTParser.Utils
 
         protected static string ToNonSilentTags(string sentenceIn)
         {
-            var nodeO = StaticXMLUtil.getNode("<node>" + sentenceIn + "</node>");
+            XmlNode nodeO = getNode("<node>" + sentenceIn + "</node>");
             LineInfoElementImpl.notReadonly(nodeO);
-            return VisibleRendering(nodeO.ChildNodes, skip, flatten);
+            return VisibleRendering(nodeO.ChildNodes, TagsWithNoOutput, TagsRecurseToFlatten);
         }
 
 
         public static string VisibleRendering(XmlNodeList nodeS)
         {
-            return VisibleRendering(nodeS, skip, flatten);
+            return VisibleRendering(nodeS, TagsWithNoOutput, TagsRecurseToFlatten);
         }
 
         private static string VisibleRendering(XmlNodeList nodeS, List<string> skip, List<string> flatten)
         {
-            var sentenceIn = "";
+            string sentenceIn = "";
             foreach (XmlNode nodeO in nodeS)
             {
                 sentenceIn = sentenceIn + " " + VisibleRendering(nodeO, skip, flatten);
@@ -615,7 +613,7 @@ namespace RTParser.Utils
 
         public static string RenderInner(XmlNode nodeO)
         {
-            return VisibleRendering(nodeO.ChildNodes, skip, flatten);
+            return VisibleRendering(nodeO.ChildNodes, TagsWithNoOutput, TagsRecurseToFlatten);
         }
     }
 }

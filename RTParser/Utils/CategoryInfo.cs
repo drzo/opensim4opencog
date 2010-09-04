@@ -8,41 +8,12 @@ namespace RTParser.Utils
     [Serializable]
     public class CategoryInfo : GraphLinkInfo, IAIMLInfo
     {
-
-        public bool IsDisabled { get; set; }
-
-        public XmlNode Category
-        {
-            get { return srcNode; }
-        }
-
-        public TemplateInfo Template;
-
-        public XmlNode TemplateXml
-        {
-            get { return AIMLLoader.FindNode("template", Category, null); }
-        }
-
-        public TopicInfo Topic;
-
-        public XmlNode TopicXml
-        {
-            get { return AIMLLoader.FindNodeOrHigher("topic", Category, null); }
-        }
-
-        public ThatInfo That;
-
-        public XmlNode ThatXml
-        {
-            get { return AIMLLoader.FindNodeOrHigher("that", Category, null); }
-        }
-
-        public PatternInfo Pattern;
-        // public GuardInfo Guard;
         public string Filename;
+        public PatternInfo Pattern;
         public List<XmlNode> Preconds;
-        //public List<TemplateInfo> TemplateInfos = new List<TemplateInfo>();
-        //private object node;
+        public TemplateInfo Template;
+        public ThatInfo That;
+        public TopicInfo Topic;
 
         public CategoryInfo(PatternInfo pattern, XmlNode cateNode, LoaderOptions options)
             : base(cateNode)
@@ -51,44 +22,33 @@ namespace RTParser.Utils
             Filename = options.CurrentFilename;
         }
 
-        public override string ToString()
+        public bool IsDisabled { get; set; }
+
+        public XmlNode Category
         {
-            return Category.OuterXml + " " + AIMLLoader.LocationEscapedInfo(Category);
+            get { return srcNode; }
         }
 
-        public string XMLInfo()
+        public XmlNode TemplateXml
         {
-            return Category.OuterXml;
+            get { return StaticXMLUtil.FindNode("template", Category, null); }
         }
 
-        public void AddTemplate(TemplateInfo templateInfo)
+        public XmlNode TopicXml
         {
-            if (Template != null && Template != templateInfo) throw new InvalidCastException("non null " + Template);
-            Template = templateInfo;
-          //  TemplateInfos.Add(templateInfo);
+            get { return StaticXMLUtil.FindNodeOrHigher("topic", Category, null); }
         }
 
-        public static CategoryInfo GetCategoryInfo(PatternInfo info, XmlNode node, LoaderOptions filename)
+        public XmlNode ThatXml
         {
-            return filename.CtxGraph.FindCategoryInfo(info, node, filename);
-        }
-
-        public static CategoryInfo MakeCategoryInfo(PatternInfo info, XmlNode node, LoaderOptions filename)
-        {
-            if (NoInfo) return null;
-            return new CategoryInfo(info, node, filename);
-        }
-
-        internal void Check()
-        {
-            throw new NotImplementedException();
+            get { return StaticXMLUtil.FindNodeOrHigher("that", Category, null); }
         }
 
         #region IAIMLInfo Members
 
         string IAIMLInfo.SourceInfo()
         {
-            return AIMLLoader.LocationInfo(Category);
+            return StaticXMLUtil.LocationInfo(Category);
         }
 
         public GraphMaster Graph
@@ -107,7 +67,7 @@ namespace RTParser.Utils
             string graphName = ((IAIMLInfo) this).Graph.ScriptingName;
             if (printOptions.IncludeGraphName)
             {
-                if (graphName!=printOptions.CurrentGraphName)
+                if (graphName != printOptions.CurrentGraphName)
                 {
                     if (printOptions.InsideAiml)
                     {
@@ -119,16 +79,16 @@ namespace RTParser.Utils
                     {
                         printOptions.InsideAiml = true;
                         s += string.Format("\n<aiml graph=\"{0}\">\n", graphName);
-                        printOptions.CurrentGraphName = graphName;                        
+                        printOptions.CurrentGraphName = graphName;
                     }
                 }
             }
-            var topic1 = this.TopicXml;
+            XmlNode topic1 = this.TopicXml;
             bool hasTopic = topic1 != null;
             if (hasTopic)
             {
                 s += "<topic name=\"";
-                var n = AIMLTagHandler.GetAttribValue(topic1, "name", () => (string)null, null);
+                Unifiable n = StaticXMLUtil.GetAttribValue(topic1, "name", () => (string) null, null);
                 s += n;
                 s += "\">";
             }
@@ -136,7 +96,7 @@ namespace RTParser.Utils
             {
                 hasTopic = true;
                 s += "<topic name=\"";
-                var n = (string) Topic.FullPath;
+                string n = (string) Topic.FullPath;
                 s += n;
                 s += "\">";
             }
@@ -150,7 +110,42 @@ namespace RTParser.Utils
             }
             return s;
         }
+
         #endregion
+
+        public override string ToString()
+        {
+            return Category.OuterXml + " " + StaticXMLUtil.LocationEscapedInfo(Category);
+        }
+
+        public string XMLInfo()
+        {
+            return Category.OuterXml;
+        }
+
+        public void AddTemplate(TemplateInfo templateInfo)
+        {
+            if (Template != null && Template != templateInfo) throw new InvalidCastException("non null " + Template);
+            Template = templateInfo;
+            //  TemplateInfos.Add(templateInfo);
+        }
+
+        public static CategoryInfo GetCategoryInfo(PatternInfo info, XmlNode node, LoaderOptions filename)
+        {
+            return filename.CtxGraph.FindCategoryInfo(info, node, filename);
+        }
+
+        public static CategoryInfo MakeCategoryInfo(PatternInfo info, XmlNode node, LoaderOptions filename)
+        {
+            if (NoInfo) return null;
+            return new CategoryInfo(info, node, filename);
+        }
+
+        internal void Check()
+        {
+            throw new NotImplementedException();
+        }
+
         public bool Matches(string pattern)
         {
             if (pattern == null || pattern == "*" || pattern == "") return true;
@@ -161,15 +156,17 @@ namespace RTParser.Utils
 
         public void AddPrecondition(XmlNode info)
         {
-            if (Preconds==null) Preconds=new List<XmlNode>();
+            if (Preconds == null) Preconds = new List<XmlNode>();
             Preconds.Add(info);
         }
+
         public void AddPrecondition(ThatInfo info)
         {
             AddPrecondition(info.PatternNode);
         }
 
-        public void SetCategoryTag(Unifiable generatedPath, PatternInfo patternInfo, CategoryInfo category, XmlNode outerNode, XmlNode templateNode, GuardInfo guard, ThatInfo thatInfo)
+        public void SetCategoryTag(Unifiable generatedPath, PatternInfo patternInfo, CategoryInfo category,
+                                   XmlNode outerNode, XmlNode templateNode, GuardInfo guard, ThatInfo thatInfo)
         {
 #if false
             var node = this.RootNode;

@@ -3,33 +3,30 @@ using System.Xml;
 
 namespace RTParser.Utils
 {
-    public class GraphLinkInfo 
+    public class GraphLinkInfo
     {
-        readonly protected XmlNode srcNode;
-        public static bool NoInfo = false;
+        public static bool NoInfo;
+        protected readonly XmlNode srcNode;
 
         protected GraphLinkInfo(XmlNode template)
         {
             srcNode = template;
 
-            if (XmlDocumentLineInfo.SkipXmlns && this.srcNode.Attributes != null) this.srcNode.Attributes.RemoveNamedItem("xmlns");
+            if (XmlDocumentLineInfo.SkipXmlns && this.srcNode.Attributes != null)
+                this.srcNode.Attributes.RemoveNamedItem("xmlns");
 
             if (NoInfo)
             {
                 throw new InvalidOperationException("now Inof");
             }
+        }
 
-        }
-        public override string ToString()
-        {
-            if (XmlDocumentLineInfo.SkipXmlns && this.srcNode.Attributes != null) this.srcNode.Attributes.RemoveNamedItem("xmlns");
-            return srcNode.OuterXml + " " + AIMLLoader.LocationEscapedInfo(srcNode);
-        }
         public string InnerXml
         {
             get
             {
-                if (XmlDocumentLineInfo.SkipXmlns && this.srcNode.Attributes != null) this.srcNode.Attributes.RemoveNamedItem("xmlns"); 
+                if (XmlDocumentLineInfo.SkipXmlns && this.srcNode.Attributes != null)
+                    this.srcNode.Attributes.RemoveNamedItem("xmlns");
                 return srcNode.InnerXml;
             }
         }
@@ -38,9 +35,17 @@ namespace RTParser.Utils
         {
             get
             {
-                if (XmlDocumentLineInfo.SkipXmlns && this.srcNode.Attributes != null) this.srcNode.Attributes.RemoveNamedItem("xmlns");
+                if (XmlDocumentLineInfo.SkipXmlns && this.srcNode.Attributes != null)
+                    this.srcNode.Attributes.RemoveNamedItem("xmlns");
                 return srcNode.OuterXml;
             }
+        }
+
+        public override string ToString()
+        {
+            if (XmlDocumentLineInfo.SkipXmlns && this.srcNode.Attributes != null)
+                this.srcNode.Attributes.RemoveNamedItem("xmlns");
+            return srcNode.OuterXml + " " + StaticXMLUtil.LocationEscapedInfo(srcNode);
         }
     }
 }

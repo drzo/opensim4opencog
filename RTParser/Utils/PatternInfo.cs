@@ -7,10 +7,10 @@ namespace RTParser.Utils
     [Serializable]
     public class PatternInfo : MatchInfo
     {
-        public Node GraphmasterNode;
         public List<CategoryInfo> CategoryInfos = new List<CategoryInfo>();
+        public Node GraphmasterNode;
 
-        public PatternInfo(XmlNode pattern, Unifiable unifiable):base(pattern,unifiable)
+        public PatternInfo(XmlNode pattern, Unifiable unifiable) : base(pattern, unifiable)
         {
             FullPath = unifiable;
         }
@@ -28,13 +28,13 @@ namespace RTParser.Utils
 
         internal bool LoopsFrom(string innerXml)
         {
-            var p = FullPath.AsString().ToLower();
+            string p = FullPath.AsString().ToLower();
             p = p.Replace("_", "*");
-            p = AIMLLoader.CleanWhitepacesLower(p);
+            p = TextPatternUtils.CleanWhitepacesLower(p);
             p = "<srai>" + p + "</srai>";
 
-            var t = innerXml.ToLower();
-            t = AIMLLoader.CleanWhitepacesLower(t);
+            string t = innerXml.ToLower();
+            t = TextPatternUtils.CleanWhitepacesLower(t);
             t = t.Replace("<star index=\"1\"/>", " * ");
             t = t.Replace("<star/>", " * ");
             t = t.Replace("<sr/>", " * ");
@@ -45,7 +45,8 @@ namespace RTParser.Utils
             }
             return false;
         }
-        internal bool DivergesFrom(TemplateInfo newTemplateInfo,out Unifiable from,out Unifiable to)
+
+        internal bool DivergesFrom(TemplateInfo newTemplateInfo, out Unifiable from, out Unifiable to)
         {
             if (true)
             {
@@ -53,12 +54,12 @@ namespace RTParser.Utils
                 to = "";
                 return false;
             }
-            var p = FullPath.AsString().ToLower();
+            string p = FullPath.AsString().ToLower();
             p = p.Replace("_", "*");
-            p = AIMLLoader.CleanWhitepacesLower(p);
+            p = TextPatternUtils.CleanWhitepacesLower(p);
             p = "<srai>" + p + "</srai>";
-            var t = newTemplateInfo.InnerXml.ToLower();
-            t = AIMLLoader.CleanWhitepacesLower(t);
+            string t = newTemplateInfo.InnerXml.ToLower();
+            t = TextPatternUtils.CleanWhitepacesLower(t);
             t = t.Replace("<star/>", "*");
             t = t.Replace("<sr/>", "<srai>*</srai>");
 
@@ -74,13 +75,14 @@ namespace RTParser.Utils
         private int FirstMismatch(string s1, string s2)
         {
             int i = 0;
-            for(;i<s1.Length;i++)
+            for (; i < s1.Length; i++)
             {
-                if (s1[i]==s2[i]) continue;
+                if (s1[i] == s2[i]) continue;
                 return i - 1;
             }
             return i - 1;
         }
+
         private int LastMismatch(string s1, string s2)
         {
             int i = s1.Length - 1;

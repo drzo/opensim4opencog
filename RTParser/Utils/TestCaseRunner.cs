@@ -8,13 +8,20 @@ namespace RTParser.Utils
 {
     internal class TestCaseRunner : XmlNodeEvaluatorImpl
     {
-        private Request Loader;
-        int passCount;
-        int testCount;
-        int errorCount;
-        int failCount;
-        int fudgeCount;
+        private readonly Request Loader;
+        private int errorCount;
+        private int failCount;
+        private int fudgeCount;
+        private int passCount;
+        private int testCount;
         private bool traceIt;
+
+        public TestCaseRunner(Request loader)
+            : base("Eval", "_")
+        {
+            ResetTests();
+            Loader = loader;
+        }
 
         public void ResetTests()
         {
@@ -25,22 +32,16 @@ namespace RTParser.Utils
             fudgeCount = 0;
         }
 
-        public TestCaseRunner(Request loader)
-            : base("Eval", "_")
-        {
-            ResetTests();
-            Loader = loader;
-        }
-
         public override IEnumerable<XmlNodeEval> GetEvaluators(XmlNode node)
         {
             return base.GetEvaluatorsFromReflection(node);
         }
+
         public IEnumerable<XmlNode> EvalTestSuite(XmlNode src, Request request, OutputDelegate outputdelegate)
         {
             ResetTests();
-            List<XmlNode> list = new List<XmlNode>();
-            foreach (var node in src.ChildNodes)
+            var list = new List<XmlNode>();
+            foreach (object node in src.ChildNodes)
             {
                 bool wasTraceIt = traceIt;
                 testCount++;
@@ -96,7 +97,7 @@ namespace RTParser.Utils
                 bool b;
                 XmlNode result = RunTest(request, src, outputdelegate, out b);
                 if (result == null) return NO_XmlNode;
-                return new[] { result };
+                return new[] {result};
             }
             catch (Exception e)
             {
@@ -107,9 +108,9 @@ namespace RTParser.Utils
 
         private XmlNode RunTest(Request request, XmlNode src, OutputDelegate outputdelegate, out bool m)
         {
-           // request = request ?? Loader.LoaderRequest00;
+            // request = request ?? Loader.LoaderRequest00;
             User user = request.user;
-            var robot = request.TargetBot ?? Loader.TargetBot;
+            RTPBot robot = request.TargetBot ?? Loader.TargetBot;
 
             string tcname = FindNodeOrAttrib(src, "name", null);
             string tcdesc = FindNodeOrAttrib(src, "Description", null);
@@ -118,33 +119,33 @@ namespace RTParser.Utils
             {
                 outputdelegate("ERROR cannot find 'Input' in '" + src.OuterXml + "'");
                 m = false;
-                return AIMLTagHandler.getNode("<template type=\"error\">ERROR cannot find 'Input' in '" + src.OuterXml + "'</template>", src);
+                return getNode(
+                    "<template type=\"error\">ERROR cannot find 'Input' in '" + src.OuterXml + "'</template>", src);
             }
             string userID = FindNodeOrAttrib(src, "UserId,UserName", () => user.UserID);
 
             const string MISSING_EXPECTED_ANSWER = "ExpectedKeywords";
-            List<string> matchTheseToPass = new List<string>();
+            var matchTheseToPass = new List<string>();
             string expectedAnswer = FindNodeOrAttrib(src, "ExpectedAnswer", () => MISSING_EXPECTED_ANSWER);
             expectedAnswer = Fudge(expectedAnswer);
             if (expectedAnswer == MISSING_EXPECTED_ANSWER)
             {
-                List<XmlNode> nodes = AIMLLoader.FindNodes("ExpectedKeywords", src);
+                var nodes = FindNodes("ExpectedKeywords", src);
                 if (nodes == null || nodes.Count == 0)
                 {
                     outputdelegate("ERROR cannot find 'ExpectedAnswer' in '" + src.OuterXml + "'");
                 }
                 else
                 {
-                    foreach (var list in nodes)
+                    foreach (XmlNode list in nodes)
                     {
-
                         string v = Unifiable.InnerXmlText(list);
 
                         matchTheseToPass.Add(".*" + Fudge(v) + ".*");
                     }
                 }
-
-            } else
+            }
+            else
             {
                 matchTheseToPass.Add("^" + Fudge(expectedAnswer) + "$");
             }
@@ -154,7 +155,7 @@ namespace RTParser.Utils
             string resp = "ERROR";
             try
             {
-                var r = robot.GetRequest(input, userID);
+                RequestImpl r = robot.GetRequest(input, userID);
                 r.IsTraced = traceIt;
                 if (traceIt)
                 {
@@ -165,12 +166,13 @@ namespace RTParser.Utils
                 outputdelegate("{0}: {1} ", robot, resp);
                 m = true;
                 int good = 0;
-                foreach (var s in matchTheseToPass)
+                foreach (string s in matchTheseToPass)
                 {
                     if (!Matches(resp, s, FindNodeOrAttrib(src, "MatchType,Match", null)))
                     {
                         m = false;
-                    } else
+                    }
+                    else
                     {
                         good++;
                     }
@@ -204,10 +206,10 @@ namespace RTParser.Utils
         {
             attrs = attrs.Replace("\"", "#").Replace("'", "\"");
             msg = msg.Replace("\"", "#").Replace("'", "\"");
-            return AIMLTagHandler.getNode("<template " + attrs + " >" + attrs + " " + msg + "</template>", src);
+            return getNode("<template " + attrs + " >" + attrs + " " + msg + "</template>", src);
         }
 
-        bool Matches(string resp, string answer, string s)
+        private bool Matches(string resp, string answer, string s)
         {
             if (resp == answer) return true;
             if ((new Regex(answer)).IsMatch(resp))
@@ -228,7 +230,7 @@ namespace RTParser.Utils
 
         private static string Fudge(string expectedAnswer)
         {
-            expectedAnswer = AIMLLoader.CleanPunct(AIMLLoader.CleanWhitepaces(expectedAnswer));
+            expectedAnswer = CleanPunct(CleanWhitepaces(expectedAnswer));
             expectedAnswer = expectedAnswer.Replace("<html:", "<");
             string was = expectedAnswer;
             expectedAnswer = expectedAnswer.Replace("<br xmlns:html=\"http://www.w3.org/1999/xhtml\"/>", " ");
@@ -236,20 +238,20 @@ namespace RTParser.Utils
             if (was != expectedAnswer)
             {
                 expectedAnswer = expectedAnswer.Replace(".", " ");
-                return AIMLLoader.CleanWhitepaces(expectedAnswer);                
+                return CleanWhitepaces(expectedAnswer);
             }
             expectedAnswer = expectedAnswer.Replace(".", " ");
-            return AIMLLoader.CleanWhitepaces(expectedAnswer);
+            return CleanWhitepaces(expectedAnswer);
         }
 
 
-        static string FindNodeOrAttrib(XmlNode myNode, string names, Func<string> defaultNotFound)
+        private static string FindNodeOrAttrib(XmlNode myNode, string names, Func<string> defaultNotFound)
         {
             const string attribNotFOund = "ATTRIB_NOT_FOUND";
-            string value = RTPBot.GetAttribValue(myNode, names, attribNotFOund);
+            string value = GetAttribValue(myNode, names, attribNotFOund);
             if (value == attribNotFOund)
             {
-                XmlNode holder = AIMLLoader.FindNode(names, myNode, null);
+                XmlNode holder = FindNode(names, myNode, null);
                 if (holder != null)
                 {
                     value = Unifiable.InnerXmlText(holder);

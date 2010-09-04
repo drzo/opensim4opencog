@@ -1,13 +1,11 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Text;
 using System.Xml;
 using UPath = RTParser.Unifiable;
 using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
 using StringAppendableUnifiable = RTParser.StringAppendableUnifiableImpl;
-//using StringAppendableUnifiable = System.Text.StringBuilder;
 
+//using StringAppendableUnifiable = System.Text.StringBuilder;
 
 namespace RTParser.Utils
 {
@@ -17,31 +15,31 @@ namespace RTParser.Utils
     [Serializable]
     public class Node
     {
-
         private void writeToLog(string message, params object[] args)
         {
-            RTPBot.writeDebugLine("!NODE: " +  message + " in " +ToString(), args);
+            RTPBot.writeDebugLine("!NODE: " + message + " in " + ToString(), args);
         }
 
-        GraphMaster _graph;
+        private GraphMaster _graph;
+
         public GraphMaster Graph
         {
             get
-            {                
+            {
                 if (_graph != null) return _graph;
                 return SyncObject.Graph;
             }
-            set
-            {
-                _graph = value;
-            }
+            set { _graph = value; }
         }
-        private Node Parent;
+
+        private readonly Node Parent;
+
         public Node(Node P)
         {
             Parent = P;
             SyncObject = P ?? this;
         }
+
         #region Attributes
 
         /// <summary>
@@ -52,11 +50,12 @@ namespace RTParser.Utils
         /// <summary>
         /// The template (if any) associated with this node
         /// </summary>
-        internal UList TemplateInfos = null;//Unifiable.Empty;
+        internal UList TemplateInfos; //Unifiable.Empty;
+
         /// <summary>
         /// The template (if any) associated with this node
         /// </summary>
-        internal UList TemplateInfosDisabled = null;//Unifiable.Empty;
+        internal UList TemplateInfosDisabled; //Unifiable.Empty;
 
         public UList TemplateInfoCopy
         {
@@ -72,6 +71,7 @@ namespace RTParser.Utils
                 }
             }
         }
+
         public int TemplateInfoCount
         {
             get
@@ -95,11 +95,12 @@ namespace RTParser.Utils
         }
 
 #if UNUSED
-        /// <summary>
-        /// The AIML source for the category that defines the template
-        /// </summary>
+    /// <summary>
+    /// The AIML source for the category that defines the template
+    /// </summary>
         private string filename = Unifiable.Empty;
 #endif
+
         /// <summary>
         /// The word that identifies this node to it's ParentResult node
         /// </summary>
@@ -119,12 +120,13 @@ namespace RTParser.Utils
         /// <param name="path">the path for the category</param>
         /// <param name="template">the template to find at the end of the path</param>
         /// <param name="filename">the file that was the source of this category</param>
-        public TemplateInfo addTerminal(XmlNode templateNode, CategoryInfo category, GuardInfo guard, ThatInfo thatInfo, GraphMaster master, PatternInfo patternInfo, List<XmlNode> additionalRules)
+        public TemplateInfo addTerminal(XmlNode templateNode, CategoryInfo category, GuardInfo guard, ThatInfo thatInfo,
+                                        GraphMaster master, PatternInfo patternInfo, List<XmlNode> additionalRules)
         {
             const bool RemoveDupes = true; //slows it down but maybe important to do
             if (this.TemplateInfos == null)
             {
-                if (templateNode == AIMLLoader.TheTemplateOverwrite)
+                if (templateNode == StaticAIMLUtils.TheTemplateOverwrite)
                 {
                     return DeleteTemplates();
                 }
@@ -132,9 +134,9 @@ namespace RTParser.Utils
             }
             else if (RemoveDupes)
             {
-                if (templateNode == AIMLLoader.TheTemplateOverwrite)
+                if (templateNode == StaticAIMLUtils.TheTemplateOverwrite)
                 {
-                    return DeleteTemplates();                    
+                    return DeleteTemplates();
                 }
                 TemplateInfo returnIt = null;
                 bool returnTemp = false;
@@ -153,9 +155,9 @@ namespace RTParser.Utils
                                                        //var categoryinfo2 = temp.CategoryInfo;
                                                        string oldGuard = temp.Guard != null ? temp.Guard.OuterXml : null;
                                                        string oldThat = temp.That != null ? temp.That.OuterXml : null;
-                                                       if (AIMLLoader.AimlSame(newStr, temp.Output.OuterXml))
-                                                           if (AIMLLoader.AimlSame(newGuard, oldGuard))
-                                                               if (AIMLLoader.AimlSame(newThat, oldThat))
+                                                       if (StaticXMLUtil.AimlSame(newStr, temp.Output.OuterXml))
+                                                           if (StaticXMLUtil.AimlSame(newGuard, oldGuard))
+                                                               if (StaticXMLUtil.AimlSame(newThat, oldThat))
                                                                {
                                                                    if (nodeNum == 0)
                                                                    {
@@ -215,13 +217,13 @@ namespace RTParser.Utils
                 }
                 if (returnTemp) return returnIt;
             }
-            if (templateNode == AIMLLoader.TheTemplateOverwrite)
+            if (templateNode == StaticAIMLUtils.TheTemplateOverwrite)
             {
                 return DeleteTemplates();
             }
 
             // last in first out addition
-            TemplateInfo newTemplateInfo = TemplateInfo.GetTemplateInfo(templateNode, guard, thatInfo, this, category);            
+            TemplateInfo newTemplateInfo = TemplateInfo.GetTemplateInfo(templateNode, guard, thatInfo, this, category);
             // this.That = thatInfo;
             PatternInfo pat = patternInfo;
             if (category != null)
@@ -257,7 +259,6 @@ namespace RTParser.Utils
                 }
                 pat.GraphmasterNode = this;
                 if (category != null) pat.AddCategory(category);
-
             }
 
             master.AddTemplate(newTemplateInfo);
@@ -279,7 +280,7 @@ namespace RTParser.Utils
                     if (TemplateInfos.Count > 0)
                     {
                         if (TemplateInfosDisabled == null) TemplateInfosDisabled = new UList();
-                        foreach (var list in new UList(TemplateInfos))
+                        foreach (TemplateInfo list in new UList(TemplateInfos))
                         {
                             DisableTemplate(list);
                         }
@@ -310,7 +311,7 @@ namespace RTParser.Utils
         /// <param name="filename">the file that was the source of this category</param>
         public Node addPathNodeChilds(Unifiable path)
         {
-            return addPathNodeChilds(0 ,path.ToArray());
+            return addPathNodeChilds(0, path.ToArray());
         }
 
         private Node addPathNodeChilds(int from, Unifiable[] path)
@@ -358,7 +359,7 @@ namespace RTParser.Utils
             Node childNode;
             lock (SyncObject)
             {
-                if (this.children!=null && this.children.TryGetValue(fs, out childNode))
+                if (this.children != null && this.children.TryGetValue(fs, out childNode))
                 {
                     initial = childNode.addPathNodeChilds(from + 1, path);
                     found = true;
@@ -366,7 +367,8 @@ namespace RTParser.Utils
 
 
                 if (false) // see if we need ot check new indexing system!
-                    if (!found) foreach (var c in this.children)
+                    if (!found)
+                        foreach (KeyValuePair<string, Node> c in this.children)
                         {
                             string ks = c.Key.ToUpper();
                             if (ks == fs)
@@ -403,12 +405,12 @@ namespace RTParser.Utils
             return initial;
         }
 
-        static string ToKey(string fs0)
+        private static string ToKey(string fs0)
         {
             const bool doEs = true;
             const bool doSEs = true;
             fs0 = fs0.ToUpper().Trim();
-            var fs00 = fs0;
+            string fs00 = fs0;
             string fs = fs0;
             int fl = fs.Length;
             if (fl == 0)
@@ -518,19 +520,19 @@ namespace RTParser.Utils
 
         #region Evaluate Node
 
-
         internal Node GetNextNode()
         {
             if (Parent == null) return null;
             bool useNext = false;
-            lock (SyncObject) foreach (KeyValuePair<string, Node> v in Parent.children)
-            {
-                if (useNext) return v.Value;
-                if (v.Value == this)
+            lock (SyncObject)
+                foreach (KeyValuePair<string, Node> v in Parent.children)
                 {
-                    useNext = true;
+                    if (useNext) return v.Value;
+                    if (v.Value == this)
+                    {
+                        useNext = true;
+                    }
                 }
-            }
             if (useNext)
             {
                 //     writeToLog(String.Format("Last key {0}", ToString()));
@@ -545,11 +547,11 @@ namespace RTParser.Utils
             return word;
         }
 
-        readonly private Node SyncObject;
+        private readonly Node SyncObject;
 
-        public bool disabled = false;
-        public static bool UseZeroArgs = false;
-        public static StringAppendableUnifiable EmptyStringAppendable = new StringAppendableUnifiable();
+        public bool disabled;
+        public static bool UseZeroArgs;
+        public static StringAppendableUnifiableImpl EmptyStringAppendable = new StringAppendableUnifiableImpl();
 
         /// <summary>
         /// Navigates this node (and recusively into child nodes) for a match to the path passed as an argument
@@ -561,9 +563,9 @@ namespace RTParser.Utils
         /// <param name="matchstate">The part of the input path the node represents</param>
         /// <param name="wildcard">The contents of the user input absorbed by the AIML wildcards "_" and "*"</param>
         /// <returns>The template to process to generate the output</returns>
-        public Node evaluate(string path, SubQuery query, Request request, MatchState matchstate, StringAppendableUnifiable wildcard)
+        public Node evaluate(string path, SubQuery query, Request request, MatchState matchstate,
+                             StringAppendableUnifiableImpl wildcard)
         {
-
             // if we've matched all the words in the input sentence and this is the end
             // of the line then return the cCategory for this node
             if (path.Length == 0)
@@ -575,15 +577,15 @@ namespace RTParser.Utils
             }
 
             // otherwise split the input into it's component words
-            string[] splitPath = path.Split(" \r\n\t".ToCharArray());
+            var splitPath = path.Split(" \r\n\t".ToCharArray());
             Node location = evaluateFirst(0, splitPath, query, request, matchstate, wildcard);
             return location;
-            
         }
 
-        private Node evaluateNext(int at, string[] splitPath, SubQuery query, Request request, MatchState matchstate, StringAppendableUnifiable wildcard)
+        private Node evaluateNext(int at, string[] splitPath, SubQuery query, Request request, MatchState matchstate,
+                                  StringAppendableUnifiableImpl wildcard)
         {
-            var vv = evaluateFirst(at, splitPath, query, request, matchstate, wildcard);
+            Node vv = evaluateFirst(at, splitPath, query, request, matchstate, wildcard);
             if (wildcard.ToString().Trim().Length > 0)
             {
                 if (vv == null || vv.disabled || vv.NoEnabledTemplates) return null;
@@ -592,15 +594,16 @@ namespace RTParser.Utils
             return vv;
         }
 
-        public Node evaluateFirst(int at, string[] splitPath,  SubQuery query, Request request, MatchState matchstate, StringAppendableUnifiable wildcard)
+        public Node evaluateFirst(int at, string[] splitPath, SubQuery query, Request request, MatchState matchstate,
+                                  StringAppendableUnifiableImpl wildcard)
         {
             // check for timeout
             // check for timeout
             if (DateTime.Now > request.TimesOutAt)
             {
                 request.writeToLog("TIMEOUT! User: " +
-                                              request.user.UserID + " raw input: \"" +
-                                              request.rawInput + "\" in " + this);
+                                   request.user.UserID + " raw input: \"" +
+                                   request.rawInput + "\" in " + this);
                 request.IsTraced = true;
                 request.hasTimedOut = true;
                 return null; // Unifiable.Empty;
@@ -645,56 +648,57 @@ namespace RTParser.Utils
 
             // first option is to see if this node has a child denoted by the "_" 
             // wildcard. "_" comes first in precedence in the AIML alphabet
-            lock (SyncObject) foreach (KeyValuePair<string, Node> childNodeKV in this.children)
-            {
-                Node childNode = childNodeKV.Value;
-                Unifiable childNodeWord = childNode.word;
-                if (!childNodeWord.IsAnySingleUnit()) continue;
-
-                // add the next word to the wildcard match 
-                var newWildcard = Unifiable.CreateAppendable();
-                storeWildCard(firstWord, newWildcard);
-
-                // move down into the identified branch of the GraphMaster structure
-                var result = childNode.evaluateNext(at + 1, splitPath, query, request, matchstate, newWildcard);
-
-                // and if we get a result from the branch process the wildcard matches and return 
-                // the result
-                if (result != null)
+            lock (SyncObject)
+                foreach (KeyValuePair<string, Node> childNodeKV in this.children)
                 {
-                    if (UseWildcard(newWildcard))
-                    {
-                        // capture and push the star content appropriate to the current matchstate
-                        switch (matchstate)
-                        {
-                            case MatchState.UserInput:
-                                if (childNodeWord.StoreWildCard()) Insert(query.InputStar, newWildcard.ToString());
-                                // added due to this match being the end of the line
-                                newWildcard.Length = 0;  // Remove(0, newWildcard.Length);
-                                break;
-                            default:
-                                var stars = query.GetMatchList(matchstate);
-                                if (childNodeWord.StoreWildCard()) Insert(stars, newWildcard.ToString());
-                                newWildcard.Length = 0; 
-                                break;
-                        }
-                    }
-                    return result;
-                }
-            }
+                    Node childNode = childNodeKV.Value;
+                    Unifiable childNodeWord = childNode.word;
+                    if (!childNodeWord.IsAnySingleUnit()) continue;
 
-            
+                    // add the next word to the wildcard match 
+                    StringAppendableUnifiableImpl newWildcard = Unifiable.CreateAppendable();
+                    storeWildCard(firstWord, newWildcard);
+
+                    // move down into the identified branch of the GraphMaster structure
+                    Node result = childNode.evaluateNext(at + 1, splitPath, query, request, matchstate, newWildcard);
+
+                    // and if we get a result from the branch process the wildcard matches and return 
+                    // the result
+                    if (result != null)
+                    {
+                        if (UseWildcard(newWildcard))
+                        {
+                            // capture and push the star content appropriate to the current matchstate
+                            switch (matchstate)
+                            {
+                                case MatchState.UserInput:
+                                    if (childNodeWord.StoreWildCard()) Insert(query.InputStar, newWildcard.ToString());
+                                    // added due to this match being the end of the line
+                                    newWildcard.Length = 0; // Remove(0, newWildcard.Length);
+                                    break;
+                                default:
+                                    var stars = query.GetMatchList(matchstate);
+                                    if (childNodeWord.StoreWildCard()) Insert(stars, newWildcard.ToString());
+                                    newWildcard.Length = 0;
+                                    break;
+                            }
+                        }
+                        return result;
+                    }
+                }
+
+
             // second option - the nodemapper may have contained a "_" child, but led to no match
             // or it didn't contain a "_" child at all. So get the child nodemapper from this 
             // nodemapper that matches the first word of the input sentence.
-            while (true) 
+            while (true)
             {
                 string firstWord0;
                 //string np;
                 int newAt;
                 Node childNode = LitteralChild(at, splitPath, out firstWord0, out newAt, query);
-                if (childNode==null) break;
-                if (firstWord0!=firstWord)
+                if (childNode == null) break;
+                if (firstWord0 != firstWord)
                 {
                     writeToLog(firstWord + "!=" + firstWord0);
                 }
@@ -728,17 +732,16 @@ namespace RTParser.Utils
 
                 // move down into the identified branch of the GraphMaster structure using the new
                 // matchstate
-                var newWildcard = Unifiable.CreateAppendable();
-                var result = childNode.evaluateNext(newAt, splitPath, query, request, newMatchstate, newWildcard);
+                StringAppendableUnifiableImpl newWildcard = Unifiable.CreateAppendable();
+                Node result = childNode.evaluateNext(newAt, splitPath, query, request, newMatchstate, newWildcard);
                 // and if we get a result from the child return it
                 if (result != null)
                 {
-                    var childNodeWord = childNode.word;
+                    Unifiable childNodeWord = childNode.word;
                     if (!isTag)
                     {
                         if (childNodeWord.IsLitteral())
                         {
-
                         }
                         if (childNodeWord.IsWildCard())
                         {
@@ -776,79 +779,82 @@ namespace RTParser.Utils
             // returned a match, so check to see it contains the "*" wildcard. "*" comes last in
             // precedence in the AIML alphabet.
             bool wisTag = firstWord.StartsWith("TAG-");
-            if (!wisTag) lock (SyncObject) foreach (KeyValuePair<string, Node> childNodeKV in this.children)
-            {
-                Node childNode = childNodeKV.Value;
-                Unifiable childNodeWord = childNode.word;//.Key;
-                if (!childNodeWord.IsLongWildCard()) continue;
-            
-                // o.k. look for the path in the child node denoted by "*"
-                //Node childNode = childNodeKV.Value;
-
-                // add the next word to the wildcard match 
-                var newWildcard = Unifiable.CreateAppendable();
-                storeWildCard(firstWord, newWildcard);
-
-                var result = childNode.evaluateNext(at + 1, splitPath, query, request, matchstate, newWildcard);
-                // and if we get a result from the branch process and return it
-                if (result!=null)
-                {
-                    if (UseWildcard(newWildcard))
+            if (!wisTag)
+                lock (SyncObject)
+                    foreach (KeyValuePair<string, Node> childNodeKV in this.children)
                     {
-                        // capture and push the star content appropriate to the current matchstate
-                        switch (matchstate)
+                        Node childNode = childNodeKV.Value;
+                        Unifiable childNodeWord = childNode.word; //.Key;
+                        if (!childNodeWord.IsLongWildCard()) continue;
+
+                        // o.k. look for the path in the child node denoted by "*"
+                        //Node childNode = childNodeKV.Value;
+
+                        // add the next word to the wildcard match 
+                        StringAppendableUnifiableImpl newWildcard = Unifiable.CreateAppendable();
+                        storeWildCard(firstWord, newWildcard);
+
+                        Node result = childNode.evaluateNext(at + 1, splitPath, query, request, matchstate, newWildcard);
+                        // and if we get a result from the branch process and return it
+                        if (result != null)
                         {
-                            case MatchState.UserInput:
-                                if (childNodeWord.StoreWildCard())
+                            if (UseWildcard(newWildcard))
+                            {
+                                // capture and push the star content appropriate to the current matchstate
+                                switch (matchstate)
                                 {
-                                    Insert(query.InputStar, newWildcard.ToString());
-                                    // added due to this match being the end of the line
-                                    newWildcard.Length = 0;// Remove(0, newWildcard.Length);
+                                    case MatchState.UserInput:
+                                        if (childNodeWord.StoreWildCard())
+                                        {
+                                            Insert(query.InputStar, newWildcard.ToString());
+                                            // added due to this match being the end of the line
+                                            newWildcard.Length = 0; // Remove(0, newWildcard.Length);
+                                        }
+                                        break;
+                                    default:
+                                        var stars = query.GetMatchList(matchstate);
+                                        if (childNodeWord.StoreWildCard()) Insert(stars, newWildcard.ToString());
+                                        break;
                                 }
-                                break;
-                            default:
-                                var stars = query.GetMatchList(matchstate);
-                                if (childNodeWord.StoreWildCard()) Insert(stars, newWildcard.ToString());
-                                break;
+                            }
+                            return result;
                         }
                     }
-                    return result;
-                }
-            }
 
             // o.k. if the nodemapper has failed to match at all: the input contains neither 
             // a "_", the sFirstWord text, or "*" as a means of denoting a child node. However, 
             // if this node is itself representing a wildcard then the search continues to be
             // valid if we proceed with the tail.
             //if ((this.word == "_") || (this.word == "*"))
-            if (!wisTag) if (word.IsAnySingleUnit() || word.IsLongWildCard())
-            {
-                storeWildCard(firstWord, wildcard);
-                var result = this.evaluateNext(at + 1, splitPath, query, request, matchstate, wildcard);
-                return result;
-            }
+            if (!wisTag)
+                if (word.IsAnySingleUnit() || word.IsLongWildCard())
+                {
+                    storeWildCard(firstWord, wildcard);
+                    Node result = this.evaluateNext(at + 1, splitPath, query, request, matchstate, wildcard);
+                    return result;
+                }
 
             // If we get here then we're at a dead end so return an empty string. Hopefully, if the
             // AIML files have been set up to include a "* <that> * <topic> *" catch-all this
             // state won't be reached. Remember to empty the surplus to requirements wildcard matches
             //wildcard = new StringBuilder();
             wildcard.Length = 0;
-            return null;/// string.Empty;
+            return null; /// string.Empty;
         }
 
         protected bool NoEnabledTemplates
         {
             get
             {
-                if (TemplateInfos==null) return true;
+                if (TemplateInfos == null) return true;
                 int tc = TemplateInfos.Count;
-                if (tc==0) return true;
-                if (tc==1) return TemplateInfos[0].IsDisabled;
-                return false;               
+                if (tc == 0) return true;
+                if (tc == 1) return TemplateInfos[0].IsDisabled;
+                return false;
             }
         }
 
-        static void Insert(List<Unifiable> unifiables, string s)
+        private static void Insert(List<Unifiable> unifiables, string s)
         {
             s = s.Replace("TAG-START", "");
             s = s.Replace("TAG-END", "").Trim();
@@ -898,7 +904,7 @@ namespace RTParser.Utils
         }
 
 
-        static public bool UseWildcard(StringAppendableUnifiable newWildcard)
+        public static bool UseWildcard(StringAppendableUnifiableImpl newWildcard)
         {
             if (newWildcard.Length > 0) return true;
             return UseZeroArgs;
@@ -909,7 +915,7 @@ namespace RTParser.Utils
         /// </summary>
         /// <param name="word">The word matched by the wildcard</param>
         /// <param name="wildcard">The contents of the user input absorbed by the AIML wildcards "_" and "*"</param>
-        private static void storeWildCard(Unifiable word, StringAppendableUnifiable wildcard)
+        private static void storeWildCard(Unifiable word, StringAppendableUnifiableImpl wildcard)
         {
             if (word.AsString().StartsWith("TAG-"))
             {
@@ -922,6 +928,7 @@ namespace RTParser.Utils
             }
             wildcard.Append(word);
         }
+
         #endregion
 
         #endregion
