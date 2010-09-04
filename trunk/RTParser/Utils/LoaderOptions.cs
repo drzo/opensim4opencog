@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Xml;
 
@@ -7,13 +6,29 @@ namespace RTParser.Utils
     public class LoaderOptions
     {
         //public LoaderOptions prevoious;
+        public static readonly string MISSING_FILE = "loadopts_MISSING_FILE";
         public readonly RequestImpl TheRequest;
         private string _curently_loading;
-        public bool DebugFiles;
-        public bool recurse;
         public string _currently_loadingfrom;
         private GraphMaster _specified_Graph;
-        public List<XmlNode> AdditionalPreconditions = null;
+        public List<XmlNode> AdditionalPreconditions;
+        public List<CategoryInfo> CategoryInfos;
+        public bool DebugFiles;
+        public bool recurse;
+        public RTPBot RProcessor;
+
+        public LoaderOptions(RequestImpl impl, GraphMaster master)
+        {
+            TheRequest = impl;
+            _curently_loading = impl.Filename;
+            DebugFiles = false;
+            recurse = false;
+            _currently_loadingfrom = impl.LoadingFrom;
+            _specified_Graph = master;
+            RProcessor = impl.TargetBot;
+            CategoryInfos = new List<CategoryInfo>();
+        }
+
         public GraphMaster CtxGraph
         {
             get
@@ -61,37 +76,15 @@ namespace RTParser.Utils
 
         public string CurrentlyLoadingFrom
         {
-            get
-            {
-                return _currently_loadingfrom ?? TheRequest.LoadingFrom;
-            }
+            get { return _currently_loadingfrom ?? TheRequest.LoadingFrom; }
         }
 
-
-        public static readonly string MISSING_FILE = "loadopts_MISSING_FILE";
-        public RTPBot RProcessor;
-        public List<CategoryInfo> CategoryInfos;
 
         public LoaderOptions Value
         {
-            get
-            {
-                return this;
-            }
+            get { return this; }
         }
 
-
-        public LoaderOptions(RequestImpl impl, GraphMaster master)
-        {
-            TheRequest = impl;
-            _curently_loading = impl.Filename;
-            DebugFiles = false;
-            recurse = false;
-            _currently_loadingfrom = impl.LoadingFrom;
-            _specified_Graph = master;
-            RProcessor = impl.TargetBot; 
-            CategoryInfos = new List<CategoryInfo>();
-        }
 
         /*public static LoaderOptions GetDefault(Request r)
         {
@@ -112,8 +105,8 @@ namespace RTParser.Utils
         public bool Equals(LoaderOptions other)
         {
             bool b = Equals(other.CurrentFilename, CurrentFilename)
-                   && other.recurse.Equals(recurse)
-                   && Equals(other.CtxGraph, CtxGraph);
+                     && other.recurse.Equals(recurse)
+                     && Equals(other.CtxGraph, CtxGraph);
             if (b) return b;
             return false;
         }
@@ -122,8 +115,8 @@ namespace RTParser.Utils
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
-            if (obj.GetType() != typeof(LoaderOptions)) return false;
-            return Equals((LoaderOptions)obj);
+            if (obj.GetType() != typeof (LoaderOptions)) return false;
+            return Equals((LoaderOptions) obj);
         }
 
         public static bool operator ==(LoaderOptions thiz, LoaderOptions other)
@@ -144,8 +137,8 @@ namespace RTParser.Utils
             unchecked
             {
                 int result = (_curently_loading != null ? _curently_loading.GetHashCode() : 0);
-                result = (result * 397) ^ recurse.GetHashCode();
-                result = (result * 397) ^ (_specified_Graph != null ? _specified_Graph.GetHashCode() : 0);
+                result = (result*397) ^ recurse.GetHashCode();
+                result = (result*397) ^ (_specified_Graph != null ? _specified_Graph.GetHashCode() : 0);
                 return result;
             }
         }

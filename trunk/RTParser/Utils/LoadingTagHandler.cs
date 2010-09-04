@@ -1,9 +1,8 @@
-using System;
 using System.Xml;
 
 namespace RTParser.Utils
 {
-    abstract public class LoadingTagHandler : RTParser.Utils.AIMLTagHandler
+    public abstract class LoadingTagHandler : AIMLTagHandler
     {
         /// <summary>
         /// Ctor
@@ -14,11 +13,11 @@ namespace RTParser.Utils
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public LoadingTagHandler(RTParser.RTPBot bot,
-                                 RTParser.User user,
-                                 RTParser.Utils.SubQuery query,
-                                 RTParser.Request request,
-                                 RTParser.Result result,
+        public LoadingTagHandler(RTPBot bot,
+                                 User user,
+                                 SubQuery query,
+                                 Request request,
+                                 Result result,
                                  XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -29,13 +28,12 @@ namespace RTParser.Utils
         {
             IsStarted = true;
             isRecursive = true;
-            var recursiveResult = Unifiable.CreateAppendable();
+            StringAppendableUnifiableImpl recursiveResult = Unifiable.CreateAppendable();
             if (templateNode.HasChildNodes)
             {
                 // recursively check
                 foreach (XmlNode childNode in templateNode.ChildNodes)
                 {
-
                     Unifiable processChildNode = ProcessChildNode(childNode, ReadOnly, false);
                     SaveResultOnChild(childNode, processChildNode);
                     recursiveResult.Append(processChildNode);
@@ -66,8 +64,8 @@ namespace RTParser.Utils
             {
                 ProcessChange();
             }
-            var saveOpts = request.LoadOptions;
-            var loaderOptions = saveOpts;
+            LoaderOptions saveOpts = request.LoadOptions;
+            LoaderOptions loaderOptions = saveOpts;
             Unifiable vv = null;
             GraphMaster GM = loaderOptions.CtxGraph;
             int size = GM.Size;
@@ -87,7 +85,7 @@ namespace RTParser.Utils
             int newSize = GM.Size;
             int change = newSize - size;
             string ch = "Loaded " + GM + " was " + size;
-            if (RecurseResult == (string)null)
+            if (RecurseResult == (string) null)
             {
                 return ch;
             }
@@ -98,7 +96,7 @@ namespace RTParser.Utils
 
         public override Unifiable CheckValue(Unifiable value)
         {
-            if (Object.ReferenceEquals(value, Unifiable.Empty)) return value;
+            if (ReferenceEquals(value, Unifiable.Empty)) return value;
             if (value == null)
             {
                 writeToLogWarn("ChackValue NULL");
@@ -126,6 +124,5 @@ namespace RTParser.Utils
                 return value;
             }
         }
-
     }
 }

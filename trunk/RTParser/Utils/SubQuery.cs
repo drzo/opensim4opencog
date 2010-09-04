@@ -1,9 +1,7 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using System.Xml;
-using AIMLbot;
 using RTParser.Database;
 using RTParser.Variables;
 using UPath = RTParser.Unifiable;
@@ -19,17 +17,42 @@ namespace RTParser.Utils
     [Serializable]
     public class SubQuery : ISettingsDictionary
     {
-        public bool IsTraced { get; set; }
-        public IEnumerable<string> SettingNames(int depth)
+        public static object TagHandlerLock = new object();
+        public static Dictionary<string, AIMLTagHandler> TagHandlers;
+        private RTPBot _TargetBot;
+        public TemplateInfo CurrentTemplate;
+        public Node Pattern;
+        public string prefix;
+        public Request Request;
+        public Result Result;
+        public QueryList TopLevel;
+
+        /// <summary>
+        /// Ctor
+        /// </summary>
+        /// <param name="fullPath">The path that this query relates to</param>
+        public SubQuery(Unifiable fullPath, Result res, Request request)
         {
-            //get 
-            { return Request.TargetSettings.SettingNames(depth); }
+            Result = res;
+            Request = request;
+            Graph = request.Graph;
+            this.FullPath = fullPath;
         }
 
         public ISettingsDictionary TargetSettings
         {
-            get
-            { return Request.TargetSettings; }
+            get { return Request.TargetSettings; }
+        }
+
+        public User CurrentUser
+        {
+            get { return Request.user; }
+        }
+
+        public RTPBot TargetBot
+        {
+            get { return _TargetBot ?? Request.TargetBot; }
+            set { _TargetBot = value; }
         }
 
         #region Attributes
@@ -40,24 +63,28 @@ namespace RTParser.Utils
         /// The Graph to start the query on
         /// </summary>
         public GraphMaster Graph { get; set; }
-        
+
         #endregion
+
+        public List<Unifiable> Flags = new List<Unifiable>();
 
         /// <summary>
         /// The path that this query relates to
         /// </summary>
         public string FullPath;
 
-        /// <summary>
-        /// The template found from searching the graphmaster brain with the path 
-        /// </summary>
-        public UList Templates = new UList();
+        public List<Unifiable> GuardStar = new List<Unifiable>();
 
         /// <summary>
         /// If the raw input matches a wildcard then this attribute will contain the block of 
         /// text that the user has inputted that is matched by the wildcard.
         /// </summary>
         public List<Unifiable> InputStar = new List<Unifiable>();
+
+        /// <summary>
+        /// The template found from searching the graphmaster brain with the path 
+        /// </summary>
+        public UList Templates = new UList();
 
         /// <summary>
         /// If the "that" part of the normalized path contains a wildcard then this attribute 
@@ -71,70 +98,18 @@ namespace RTParser.Utils
         /// </summary>
         public List<Unifiable> TopicStar = new List<Unifiable>();
 
-        public List<Unifiable> GuardStar = new List<Unifiable>();
-
-        public List<Unifiable> Flags = new List<Unifiable>();
-
         #endregion
 
-        public override string ToString()
-        {
-            string s = string.Format("\nPATTERN='{0}' I={1} TH={2} TP={3} G={4} TC={5}\nINPUT = '{6}'",
-                                     Pattern, InputStar.Count, ThatStar.Count, TopicStar.Count,
-                                     GuardStar.Count, Templates == null ? 0 : Templates.Count,
-                                     FullPath);
-            if (Templates != null)
-                foreach (var path in Templates)
-                {
-                    s += "\r\n t: " + path;
-                }
-            s += " \r\n";
-            Result r = Result;
-            if (r == null) s += " Result: -no-result- ";
-            else s += " result.Count=" + r.OutputSentenceCount;
-            Request rq = Request;
-            int depth = 0;
-            {
-                while (rq != null)
-                {
-                    depth++;
-                    rq = rq.ParentRequest;
-                }
-            }
-            s += " depth: " + depth;
-            s += " " + Graph;
-            return s;
-        }
+        #region ISettingsDictionary Members
 
-        public Result Result;
-        public Request Request;
-        public TemplateInfo CurrentTemplate;
-        public Node Pattern;
-        public QueryList TopLevel;
-        public static void PurgeTagHandlers()
-        {
-            lock (TagHandlerLock)
-            {
-                if (TagHandlers != null) TagHandlers.Clear();
-            }
-        }
-        public static Dictionary<string, AIMLTagHandler> TagHandlers;
-        public static object TagHandlerLock = new object();
+        public bool IsTraced { get; set; }
 
-        public double GetSucceedReward(string type)
+        public IEnumerable<string> SettingNames(int depth)
         {
-            return 1.0;
-        }
-        /// <summary>
-        /// Ctor
-        /// </summary>
-        /// <param name="fullPath">The path that this query relates to</param>
-        public SubQuery(UPath fullPath, Result res, Request request)
-        {
-            Result = res;
-            Request = request;
-            Graph = request.Graph;
-            this.FullPath = fullPath;
+            //get 
+            {
+                return Request.TargetSettings.SettingNames(depth);
+            }
         }
 
 
@@ -165,7 +140,7 @@ namespace RTParser.Utils
         /// <returns>Existential truth value</returns>
         public bool containsSettingCalled(string name)
         {
-            var value = grabSetting(name);
+            Unifiable value = grabSetting(name);
             return !Unifiable.IsNullOrEmpty(value);
         }
 
@@ -177,20 +152,6 @@ namespace RTParser.Utils
         public string NameSpace
         {
             get { return Request.Predicates.NameSpace; }
-        }
-
-        private RTPBot _TargetBot;
-        public string prefix;
-            
-        public User CurrentUser
-        {
-            get { return Request.user;  }
-        }
-
-        public RTPBot TargetBot
-        {
-            get { return _TargetBot ?? Request.TargetBot; }
-            set { _TargetBot = value; }
         }
 
         public Unifiable grabSetting(string name)
@@ -230,7 +191,50 @@ namespace RTParser.Utils
                 NamedValuesFromSettings.SetSettingForType(dict.NameSpace, this, dict, name, null, value, null);
                 return true;
             }
+        }
 
+        #endregion
+
+        public override string ToString()
+        {
+            string s = string.Format("\nPATTERN='{0}' I={1} TH={2} TP={3} G={4} TC={5}\nINPUT = '{6}'",
+                                     Pattern, InputStar.Count, ThatStar.Count, TopicStar.Count,
+                                     GuardStar.Count, Templates == null ? 0 : Templates.Count,
+                                     FullPath);
+            if (Templates != null)
+                foreach (TemplateInfo path in Templates)
+                {
+                    s += "\r\n t: " + path;
+                }
+            s += " \r\n";
+            Result r = Result;
+            if (r == null) s += " Result: -no-result- ";
+            else s += " result.Count=" + r.OutputSentenceCount;
+            Request rq = Request;
+            int depth = 0;
+            {
+                while (rq != null)
+                {
+                    depth++;
+                    rq = rq.ParentRequest;
+                }
+            }
+            s += " depth: " + depth;
+            s += " " + Graph;
+            return s;
+        }
+
+        public static void PurgeTagHandlers()
+        {
+            lock (TagHandlerLock)
+            {
+                if (TagHandlers != null) TagHandlers.Clear();
+            }
+        }
+
+        public double GetSucceedReward(string type)
+        {
+            return 1.0;
         }
 
         public SubQuery CopyOf()
@@ -266,13 +270,12 @@ namespace RTParser.Utils
             }
         }
 
-        public AIMLTagHandler GetTagHandler(System.Xml.XmlNode node)
+        public AIMLTagHandler GetTagHandler(XmlNode node)
         {
-            lock (SubQuery.TagHandlerLock)
+            lock (TagHandlerLock)
             {
-
                 string str = node.OuterXml;
-                str = AIMLLoader.CleanWhitepaces(str).ToLower();
+                str = TextPatternUtils.CleanWhitepaces(str).ToLower();
                 AIMLTagHandler handler;
                 if (TagHandlers == null)
                 {
@@ -280,15 +283,15 @@ namespace RTParser.Utils
                 }
                 else if (TagHandlers.TryGetValue(str, out handler))
                 {
-                    return (AIMLTagHandler) handler;
+                    return handler;
                 }
                 SubQuery subquery = this;
-                
+
                 User user = subquery.CurrentUser;
                 Request request = subquery.Request;
                 RTPBot bot = subquery.TargetBot;
                 Result result = subquery.Result;
-                
+
                 // if (node.ChildNodes.Count == 0) ;         
                 {
                     user = CurrentUser;
@@ -306,7 +309,7 @@ namespace RTParser.Utils
 
         public void UndoAll()
         {
-             UndoStack.FindUndoAll(this);
+            UndoStack.FindUndoAll(this);
         }
 
         public void AddUndo(ThreadStart undo)
@@ -340,6 +343,7 @@ namespace RTParser.Utils
             return Request.GetDictionary(named);
         }
     }
+
 #if _FALSE_
     public class UList : IEnumerable<TemplateInfo>
     {

@@ -612,7 +612,7 @@ namespace RTParser.Database
             string factoidSRV = GenFormatFactoid(subject, relation, value);
             string factoidSR = GenFormatFactoid(subject, relation, "");
             if (IsExcludedSRV(subject, relation, "", factoidSRV,
-                writeToLog, "updateTriple {0}=> ", factoidSR)) return -1;
+                writeToLog, "updateTriple '{0}'=> ", factoidSR)) return -1;
             return EnsureLockedDatabase(() =>
                                             {
                                                 int deleted = DeleteTopScoring0(factoidSR, true);
@@ -710,6 +710,7 @@ namespace RTParser.Database
 
                 formatter = SafeReplace(formatter, "$set-return", TheBot.RelationMetaProps.grabSettingNoDebug(relation));
                 formatter = SafeReplace(formatter, "$default", TheBot.DefaultPredicates.grabSettingNoDebug(relation));
+                formatter = SafeReplace(formatter, "$botname", botName);
                 formatter = SafeReplace(formatter, "$bot", botName);
             }
 

@@ -1,5 +1,3 @@
-using System;
-
 namespace RTParser.Utils
 {
     /// <summary>
@@ -11,49 +9,14 @@ namespace RTParser.Utils
     /// The protected ProcessChange() method is abstract and should be overridden to contain 
     /// the code for transforming the input text into the output text.
     /// </summary   
-    abstract public class TextTransformer : StaticAIMLUtils
+    public abstract class TextTransformer : StaticAIMLUtils
     {
-        public virtual float CallCanUnify(Unifiable with)
-        {
-            return InputString == with ? Unifiable.UNIFY_TRUE : Unifiable.UNIFY_FALSE;
-        }
-
-        #region Attributes
-        /// <summary>
-        /// Instance of the input Unifiable
-        /// </summary>
-        protected Unifiable inputString;
-        public string initialString;
-
-        /// <summary>
-        /// The Proc that this transformation is connected with
-        /// </summary>
-        public RTParser.RTPBot Proc;
-
-        /// <summary>
-        /// The input Unifiable to be transformed in some way
-        /// </summary>
-        public Unifiable InputString
-        {
-            get{return this.inputString;}
-            set{this.inputString=value;}
-        }
-
-        /// <summary>
-        /// The transformed Unifiable
-        /// </summary>
-        public Unifiable OutputString
-        {
-            get{return this.Transform();}
-        }
-        #endregion
-
         /// <summary>
         /// ctor
         /// </summary>
         /// <param name="bot">The bot this transformer is a part of</param>
         /// <param name="inputString">The input Unifiable to be transformed</param>
-        public TextTransformer(RTParser.RTPBot bot, Unifiable inputString)
+        public TextTransformer(RTPBot bot, Unifiable inputString)
         {
             this.Proc = bot;
             this.inputString = inputString;
@@ -64,7 +27,7 @@ namespace RTParser.Utils
         /// ctor
         /// </summary>
         /// <param name="bot">The bot this transformer is a part of</param>
-        public TextTransformer(RTParser.RTPBot bot)
+        public TextTransformer(RTPBot bot)
         {
             this.Proc = bot;
             this.inputString = Unifiable.Empty;
@@ -77,6 +40,11 @@ namespace RTParser.Utils
         {
             this.Proc = null;
             this.inputString = Unifiable.Empty;
+        }
+
+        public virtual float CallCanUnify(Unifiable with)
+        {
+            return InputString == with ? Unifiable.UNIFY_TRUE : Unifiable.UNIFY_FALSE;
         }
 
         /// <summary>
@@ -121,5 +89,38 @@ namespace RTParser.Utils
         {
             return inputString;
         }
+
+        #region Attributes
+
+        public string initialString;
+
+        /// <summary>
+        /// Instance of the input Unifiable
+        /// </summary>
+        protected Unifiable inputString;
+
+        /// <summary>
+        /// The Proc that this transformation is connected with
+        /// </summary>
+        public RTPBot Proc;
+
+        /// <summary>
+        /// The input Unifiable to be transformed in some way
+        /// </summary>
+        public Unifiable InputString
+        {
+            get { return this.inputString; }
+            set { this.inputString = value; }
+        }
+
+        /// <summary>
+        /// The transformed Unifiable
+        /// </summary>
+        public Unifiable OutputString
+        {
+            get { return this.Transform(); }
+        }
+
+        #endregion
     }
 }

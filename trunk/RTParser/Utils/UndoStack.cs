@@ -7,15 +7,21 @@ namespace RTParser.Utils
 {
     public class UndoStack
     {
-        private Stack<ThreadStart> todo = null;
-        private object objext = null;
+        private static readonly Dictionary<object, UndoStack> ObjectUndoStacks = new Dictionary<object, UndoStack>();
+        private object objext;
+        private Stack<ThreadStart> todo;
+
+        private UndoStack(object o)
+        {
+            objext = o;
+        }
 
         public bool pushValues(ISettingsDictionary settings, string n, Unifiable v)
         {
             bool local = settings.containsLocalCalled(n);
             bool containsAtAll = settings.containsSettingCalled(n);
 
-            var oldValue = settings.grabSetting(n);
+            Unifiable oldValue = settings.grabSetting(n);
             if (oldValue == v)
             {
                 return false;
@@ -23,37 +29,37 @@ namespace RTParser.Utils
             if (!local)
             {
                 settings.addSetting(n, v);
-                AddUndo(new ThreadStart(() =>
-                                            {
-                                                Unifiable newValue = settings.grabSetting(n);
-                                                if (newValue != v)
-                                                {
-                                                    writeToLog("ERROR unexpected '" + n + "'='" + newValue + "' expecting '" +
-                                                               v + "' ");
-                                                }
-                                                settings.removeSetting(n);
-                                            }));
+                AddUndo(() =>
+                            {
+                                Unifiable newValue = settings.grabSetting(n);
+                                if (newValue != v)
+                                {
+                                    writeToLog("ERROR unexpected '" + n + "'='" + newValue + "' expecting '" +
+                                               v + "' ");
+                                }
+                                settings.removeSetting(n);
+                            });
             }
             else
             {
                 settings.updateSetting(n, v);
-                AddUndo(new ThreadStart(() =>
-                                            {
-                                                Unifiable newValue = settings.grabSetting(n);
-                                                if (newValue != v)
-                                                {
-                                                    writeToLog("ERROR unexpected '" + n + "'='" + newValue + "' expecting '" +
-                                                               v + "' ");
-                                                }
-                                                settings.updateSetting(n, oldValue);
-                                            }));
+                AddUndo(() =>
+                            {
+                                Unifiable newValue = settings.grabSetting(n);
+                                if (newValue != v)
+                                {
+                                    writeToLog("ERROR unexpected '" + n + "'='" + newValue + "' expecting '" +
+                                               v + "' ");
+                                }
+                                settings.updateSetting(n, oldValue);
+                            });
             }
             return true;
         }
 
         internal void writeToLog(string message, params object[] args)
         {
-            RTPBot.writeDebugLine( message, args);
+            RTPBot.writeDebugLine(message, args);
         }
 
         public void AddUndo(ThreadStart start)
@@ -88,18 +94,10 @@ namespace RTParser.Utils
             }
         }
 
-        static readonly Dictionary<object, UndoStack> ObjectUndoStacks = new Dictionary<object, UndoStack>();
-
-        private UndoStack(object o)
-        {
-            objext = o;
-        }
-
         public static UndoStack GetStackFor(object o)
         {
             lock (ObjectUndoStacks)
             {
-
                 UndoStack u;
                 if (!ObjectUndoStacks.TryGetValue(o, out u))
                 {
@@ -111,7 +109,7 @@ namespace RTParser.Utils
 
         public static UndoStack FindStackFor(object o)
         {
-            if (o==null) return null;
+            if (o == null) return null;
             lock (ObjectUndoStacks)
             {
                 UndoStack u;
@@ -125,7 +123,7 @@ namespace RTParser.Utils
 
         public static void FindUndoAll(object query)
         {
-            var u = FindStackFor(query);
+            UndoStack u = FindStackFor(query);
             if (u != null) u.UndoAll();
         }
     }

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <substitutions>
+  <skip_input>
 	<substitution>
 		<old>&#1571;</old>
 		<new>&#1575;</new>
@@ -1000,4 +1001,5 @@
     <old>,do </old>
     <new>.  do </new>
   </substitution>
+    </skip_input>
 </substitutions>

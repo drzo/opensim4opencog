@@ -1,6 +1,4 @@
-using System;
 using System.Xml;
-using RTParser.AIMLTagHandlers;
 
 namespace RTParser.Utils
 {
@@ -15,11 +13,11 @@ namespace RTParser.Utils
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public AIMLFormatingTagHandler(RTParser.RTPBot bot,
-                                       RTParser.User user,
-                                       RTParser.Utils.SubQuery query,
-                                       RTParser.Request request,
-                                       RTParser.Result result,
+        public AIMLFormatingTagHandler(RTPBot bot,
+                                       User user,
+                                       SubQuery query,
+                                       Request request,
+                                       Result result,
                                        XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -40,7 +38,7 @@ namespace RTParser.Utils
             }
             if (isRecursive && !ReadOnly)
             {
-                return RecurseResult =  Format(TransformAtomically(FormatEach, true));
+                return RecurseResult = Format(TransformAtomically(FormatEach, true));
             }
             return RecurseResult = TransformAtomically(Format, false);
         }
@@ -54,8 +52,8 @@ namespace RTParser.Utils
         {
             return RecurseResult = ProcessChange();
         }
+
         #endregion
-        
 
         /// <summary>
         /// The subclass only needs to process the non atomic inner text

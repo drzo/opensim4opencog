@@ -1,15 +1,9 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Xml;
 using RTParser.AIMLTagHandlers;
 using RTParser.Database;
 using RTParser.Variables;
-//using LineInfoElement = System.Xml.XmlNode;
 using LineInfoElement = RTParser.Utils.LineInfoElementImpl;
 
 namespace RTParser.Utils
@@ -18,8 +12,44 @@ namespace RTParser.Utils
     /// The template for all classes that handle the AIML tags found within template nodes of a
     /// category.
     /// </summary>
-    abstract public partial class AIMLTagHandler : TextTransformer, IXmlLineInfo
+    public abstract partial class AIMLTagHandler : TextTransformer, IXmlLineInfo
     {
+        /// <summary>
+        /// A representation of the input into the Proc made by the user
+        /// </summary>
+        public Request _request;
+
+        /// <summary>
+        /// A representation of the result to be returned to the user
+        /// </summary>
+        private Result _result0;
+
+        /// <summary>
+        /// A flag to denote if inner tags are to be processed recursively before processing this tag
+        /// </summary>
+        public bool isRecursive = true;
+
+        public bool IsStarAtomically = true;
+        public bool IsStarted;
+        public AIMLTagHandler Parent;
+
+        /// <summary>
+        /// The query that produced this node containing the wildcard matches
+        /// </summary>
+        public SubQuery query;
+
+        protected Unifiable RecurseResult = Unifiable.NULL;
+        internal TemplateInfo templateInfo;
+
+        /// <summary>
+        /// The template node to be processed by the class
+        /// </summary>
+        public XmlNode templateNode;
+
+        /// <summary>
+        /// A representation of the user who made the request
+        /// </summary>
+        public User user;
 
         /// <summary>
         /// Default ctor to use when late binding
@@ -27,6 +57,7 @@ namespace RTParser.Utils
         public AIMLTagHandler()
         {
         }
+
         /// <summary>
         /// Ctor
         /// </summary>
@@ -36,12 +67,12 @@ namespace RTParser.Utils
         /// <param name="request">The request itself</param>
         /// <param name="result">The result to be passed back to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public AIMLTagHandler(RTParser.RTPBot bot,
-                                    RTParser.User user,
-                                    RTParser.Utils.SubQuery query,
-                                    RTParser.Request request,
-                                    RTParser.Result result,
-                                    XmlNode templateNode)
+        public AIMLTagHandler(RTPBot bot,
+                              User user,
+                              SubQuery query,
+                              Request request,
+                              Result result,
+                              XmlNode templateNode)
             : base(bot, templateNode.OuterXml)
         {
             this.user = user;
@@ -53,29 +84,8 @@ namespace RTParser.Utils
             initialString = inputString;
             if (this.templateNode.Attributes != null) this.templateNode.Attributes.RemoveNamedItem("xmlns");
         }
-        /// <summary>
-        /// The template node to be processed by the class
-        /// </summary>
-        public XmlNode templateNode;
-        protected Unifiable RecurseResult = Unifiable.NULL;
-        public bool IsStarAtomically = true;
 
-        /// <summary>
-        /// A flag to denote if inner tags are to be processed recursively before processing this tag
-        /// </summary>
-        public bool isRecursive = true;
-
-        /// <summary>
-        /// A representation of the user who made the request
-        /// </summary>
-        public RTParser.User user;
-
-        /// <summary>
-        /// The query that produced this node containing the wildcard matches
-        /// </summary>
-        public RTParser.Utils.SubQuery query;
-
-        public RTParser.Utils.SubQuery TheQuery
+        public SubQuery TheQuery
         {
             get
             {
@@ -86,11 +96,7 @@ namespace RTParser.Utils
             }
         }
 
-        /// <summary>
-        /// A representation of the input into the Proc made by the user
-        /// </summary>
-        public RTParser.Request _request;
-        public RTParser.Request request
+        public Request request
         {
             get
             {
@@ -104,17 +110,10 @@ namespace RTParser.Utils
                 }
                 return _request;
             }
-            set
-            {
-                _request = value;
-            }
+            set { _request = value; }
         }
 
-        /// <summary>
-        /// A representation of the result to be returned to the user
-        /// </summary>
-        private RTParser.Result _result0;
-        public RTParser.Result  result
+        public Result result
         {
             get
             {
@@ -132,16 +131,61 @@ namespace RTParser.Utils
                 }
                 return _result0;
             }
-            set
-            {
-                _result0 = value;
-            }
+            set { _result0 = value; }
         }
 
         protected bool ReadOnly
         {
             get { return false; }
             set { throw new NotImplementedException(); }
+        }
+
+        protected RTPBot TargetBot
+        {
+            get
+            {
+                if (query != null) return query.TargetBot;
+                if (result != null) return result.bot;
+                if (request != null) return request.TargetBot;
+                if (user != null) return user.bot;
+                return Proc;
+            }
+        }
+
+        protected Unifiable templateNodeInnerText
+        {
+            get
+            {
+                string s2;
+                if (!Unifiable.IsNull(RecurseResult))
+                {
+                    return RecurseResult;
+                }
+                else
+                {
+                    s2 = Recurse();
+                    if (!Unifiable.IsNull(RecurseResult))
+                    {
+                        return RecurseResult;
+                    }
+                }
+                string sr = Unifiable.InnerXmlText(templateNode);
+                return CheckValue(sr);
+            }
+
+            set
+            {
+                if (Unifiable.IsNullOrEmpty(value))
+                {
+                    writeToLog("ERROR ?!?! templateNodeInnerText = " + value);
+                }
+                else if (!value.AsString().Contains("<a href"))
+                    if (ContainsAiml(value))
+                    {
+                        writeToLogWarn("ContainsAiml = " + value);
+                    }
+                templateNode.InnerText = CheckValue(value);
+            }
         }
 
         protected bool ResultReady(out string result0)
@@ -158,20 +202,6 @@ namespace RTParser.Utils
             return false;
         }
 
-        public bool IsStarted = false;
-        protected RTPBot TargetBot
-        {
-            get
-            {
-                if (query != null) return query.TargetBot;
-                if (result != null) return result.bot;
-                if (request != null) return request.TargetBot;
-                if (user != null) return user.bot;
-                return Proc;
-            }
-        }
-
-        public AIMLTagHandler Parent;
         public void SetParent(AIMLTagHandler handler)
         {
             if (handler == this)
@@ -186,7 +216,7 @@ namespace RTParser.Utils
         }
 
         // This was from the original source of the AIML Tag
-        internal TemplateInfo templateInfo;
+
         public TemplateInfo GetTemplateInfo()
         {
             if (templateInfo == null)
@@ -238,7 +268,7 @@ namespace RTParser.Utils
             ThreadStart OnExit = EnterTag(request, templateNode, query);
             try
             {
-                var test = CompleteProcess();
+                Unifiable test = CompleteProcess();
                 if (Unifiable.IsNull(test))
                 {
                     writeToLogWarn("NULL " + test);
@@ -273,7 +303,7 @@ namespace RTParser.Utils
             return (score1 < score2) ? score1 : score2;
         }
 
-        sealed public override float CallCanUnify(Unifiable with)
+        public override sealed float CallCanUnify(Unifiable with)
         {
             bool prev = NamedValuesFromSettings.UseLuceneForGet;
             try
@@ -334,42 +364,6 @@ namespace RTParser.Utils
             return false;
         }
 
-        protected Unifiable templateNodeInnerText
-        {
-            get
-            {
-                string s2;
-                if (!Unifiable.IsNull(RecurseResult))
-                {
-                    return RecurseResult;
-                }
-                else
-                {
-                    s2 = Recurse();
-                    if (!Unifiable.IsNull(RecurseResult))
-                    {
-                        return RecurseResult;
-                    }
-                }
-                string sr = Unifiable.InnerXmlText(templateNode);
-                return CheckValue(sr);
-            }
-
-            set
-            {
-                if (Unifiable.IsNullOrEmpty(value))
-                {
-                    writeToLog("ERROR ?!?! templateNodeInnerText = " + value);
-                }
-                else if (!value.AsString().Contains("<a href"))
-                    if (AIMLLoader.ContainsAiml(value))
-                    {
-                        writeToLogWarn("ContainsAiml = " + value);
-                    }
-                templateNode.InnerText = CheckValue(value);
-            }
-        }
-
         internal string GetDictName(string tryFirst)
         {
             string type = GetAttribValue(tryFirst, null);
@@ -404,7 +398,7 @@ namespace RTParser.Utils
         /// </summary>
         /// <returns>The resulting processed text</returns>
         protected Unifiable TransformAtomically(Func<Unifiable, Unifiable>
-            afterEachOrNull, bool saveResultsOnChildren)
+                                                    afterEachOrNull, bool saveResultsOnChildren)
         {
             afterEachOrNull = afterEachOrNull ?? ((passthru) => passthru);
 
@@ -421,7 +415,7 @@ namespace RTParser.Utils
                     // atomic version of the node
                     Unifiable templateResult = GetStarContent();
 
-                    var a = afterEachOrNull(templateResult);
+                    Unifiable a = afterEachOrNull(templateResult);
                     if (saveResultsOnChildren)
                     {
                         templateNodeInnerText = a;
@@ -432,7 +426,7 @@ namespace RTParser.Utils
                 else
                 {
                     // needs some recursion
-                    var templateResult = Unifiable.CreateAppendable();
+                    StringAppendableUnifiableImpl templateResult = Unifiable.CreateAppendable();
                     foreach (XmlNode childNode in templateNode.ChildNodes)
                     {
                         try
@@ -452,7 +446,6 @@ namespace RTParser.Utils
                         {
                             RTPBot.writeDebugLine("ERROR: {0}", e);
                         }
-
                     }
                     return templateResult;
                 }
@@ -467,7 +460,7 @@ namespace RTParser.Utils
 
         public virtual Unifiable CheckValue(Unifiable value)
         {
-            if (Object.ReferenceEquals(value, Unifiable.Empty)) return value;
+            if (ReferenceEquals(value, Unifiable.Empty)) return value;
             if (value == null)
             {
                 writeToLogWarn("ChackValue NULL");
@@ -537,10 +530,10 @@ namespace RTParser.Utils
                     copyParent = copyChild = protectChildren;
 
                     AIMLTagHandler tagHandlerChild;
-                    var value = Proc.processNode(childNode, query,
-                                                 request, result, user,
-                                                 this, copyChild, copyParent,
-                                                 out tagHandlerChild);
+                    string value = Proc.processNode(childNode, query,
+                                                    request, result, user,
+                                                    this, copyChild, copyParent,
+                                                    out tagHandlerChild);
                     if (Unifiable.IsNull(value))
                     {
                         writeToLogWarn("ERROR NULL AIMLTRACE " + value + " -> " + childNode.OuterXml + "!");
@@ -555,7 +548,7 @@ namespace RTParser.Utils
 
             catch (Exception e)
             {
-                var value = "ERROR: " + e;
+                string value = "ERROR: " + e;
                 writeToLog(value);
                 return value;
             }
@@ -598,7 +591,7 @@ namespace RTParser.Utils
                         if (!Unifiable.IsNullOrEmpty(starContent))
                             return starContent;
                     }
-                    catch (Exception e) 
+                    catch (Exception e)
                     {
                         writeToLogWarn("ERROR {0}", e);
                     }
@@ -606,7 +599,6 @@ namespace RTParser.Utils
                 Unifiable before = Unifiable.InnerXmlText(this.templateNode); //.InnerXml;        
                 return CheckValue(before);
             }
-
         }
 
         /// <summary>
@@ -647,19 +639,18 @@ namespace RTParser.Utils
             XmlNode node = templateNode;
             if (tagHandler.isRecursive)
             {
-                var recursiveResult = Unifiable.CreateAppendable();
+                StringAppendableUnifiableImpl recursiveResult = Unifiable.CreateAppendable();
                 if (node.HasChildNodes)
                 {
                     // recursively check
                     foreach (XmlNode childNode in node.ChildNodes)
                     {
-                        
                         Unifiable processChildNode = ProcessChildNode(childNode, ReadOnly, false);
                         SaveResultOnChild(childNode, processChildNode);
                         recursiveResult.Append(processChildNode);
                     }
                 }
-                var v = tagHandler.Transform();
+                string v = tagHandler.Transform();
                 if (v == recursiveResult)
                 {
                     return v;
@@ -676,11 +667,11 @@ namespace RTParser.Utils
             else
             {
                 string resultNodeInnerXML = tagHandler.Transform();
-                var resultNode = getNode("<node>" + resultNodeInnerXML + "</node>", templateNode);
+                XmlNode resultNode = getNode("<node>" + resultNodeInnerXML + "</node>", templateNode);
                 LineInfoElementImpl.unsetReadonly(resultNode);
                 if (resultNode.HasChildNodes)
                 {
-                    var recursiveResult = Unifiable.CreateAppendable();
+                    StringAppendableUnifiableImpl recursiveResult = Unifiable.CreateAppendable();
                     // recursively check
                     foreach (XmlNode childNode in resultNode.ChildNodes)
                     {
@@ -704,9 +695,9 @@ namespace RTParser.Utils
             //if (value == null) return;
             //if (value == "") return;
             value = CheckValue(value);
-            if (value==null || value.Trim()=="")
+            if (value == null || value.Trim() == "")
             {
-                writeToLog("-!SaveResultOnChild AIMLTRACE " + value + " -> " + node.OuterXml);                
+                writeToLog("-!SaveResultOnChild AIMLTRACE " + value + " -> " + node.OuterXml);
             }
             if (node.NodeType == XmlNodeType.Comment) return;
 
@@ -720,7 +711,7 @@ namespace RTParser.Utils
             if (this.templateNode.Name.ToLower() == name) return true;
             if (name.Contains(","))
             {
-                foreach (var s in name.Split(",".ToCharArray(), StringSplitOptions.RemoveEmptyEntries))
+                foreach (string s in name.Split(",".ToCharArray(), StringSplitOptions.RemoveEmptyEntries))
                 {
                     if (CheckNode(s)) return true;
                 }

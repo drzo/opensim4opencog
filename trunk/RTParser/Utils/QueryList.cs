@@ -1,25 +1,16 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Xml;
 
 namespace RTParser.Utils
 {
     public class QueryList : QuerySettings
     {
-
-        public override string ToString()
-        {
-            lock (this)
-            {
-                String s = TheRequest.ToString() + " " + Environment.NewLine;
-                var noddes = new List<Node>();
-                s += ToString("  Q: ", Bindings);
-                s += ToString("  P: ", PatternsUsed);
-                s += ToString("  T: ", Templates);
-                return s + Environment.NewLine;
-            }
-        }
+        private List<SubQuery> Bindings;
+        public bool NoMoreResults;
+        public List<Node> PatternsUsed;
+        private List<TemplateInfo> Templates;
+        public Request TheRequest;
 
         public QueryList(Request request)
             : base(request)
@@ -31,7 +22,7 @@ namespace RTParser.Utils
 
         public override string GraphName
         {
-            get { return ((QuerySettingsReadOnly)TheRequest).GraphName; }
+            get { return ((QuerySettingsReadOnly) TheRequest).GraphName; }
             set { TheRequest.GraphName = value; }
         }
 
@@ -47,13 +38,6 @@ namespace RTParser.Utils
             get { return PatternsUsed == null ? 0 : PatternsUsed.Count; }
         }
 
-        private List<TemplateInfo> Templates;
-        public List<Node> PatternsUsed;
-        private List<SubQuery> Bindings;
-        public Request TheRequest;
-
-        public bool NoMoreResults;
-
         public bool IsMaxedOut
         {
             get
@@ -67,6 +51,19 @@ namespace RTParser.Utils
                     return true;
                 }
                 return false;
+            }
+        }
+
+        public override string ToString()
+        {
+            lock (this)
+            {
+                String s = TheRequest + " " + Environment.NewLine;
+                var noddes = new List<Node>();
+                s += ToString("  Q: ", Bindings);
+                s += ToString("  P: ", PatternsUsed);
+                s += ToString("  T: ", Templates);
+                return s + Environment.NewLine;
             }
         }
 
@@ -88,7 +85,7 @@ namespace RTParser.Utils
                         writeToLog("PatternsCount=" + PatternsUsed.Count);
                         if (PatternsUsed.Count == 3)
                         {
-                            foreach (var list in PatternsUsed)
+                            foreach (Node list in PatternsUsed)
                             {
                                 writeToLog("Pattern=" + list);
                             }
@@ -127,7 +124,7 @@ namespace RTParser.Utils
             lock (this)
             {
                 bool b = PatternsUsed != null && PatternsUsed.Contains(node);
-                return b;                
+                return b;
             }
         }
 
@@ -152,7 +149,7 @@ namespace RTParser.Utils
             string s = "";
             foreach (object node in c)
             {
-                s += pre + AIMLLoader.CleanWhitepaces(node) + Environment.NewLine;
+                s += pre + CleanWhitepaces(node) + Environment.NewLine;
             }
             s += Environment.NewLine;
             return s;

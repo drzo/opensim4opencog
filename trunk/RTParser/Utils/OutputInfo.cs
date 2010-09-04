@@ -6,16 +6,13 @@ namespace RTParser.Utils
     [Serializable]
     public class OutputInfo : GraphLinkInfo
     {
-
-        public OutputInfo(XmlNode template):base(template)
+        public OutputInfo(XmlNode template) : base(template)
         {
         }
 
-        virtual public XmlNode Output
+        public virtual XmlNode Output
         {
             get { return srcNode; }
         }
-
-
     }
 }

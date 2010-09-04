@@ -6,19 +6,20 @@ namespace RTParser.Utils
     {
         public Unifiable FullPath;
 
-        public bool IsCatchAll
-        {
-            get { return FullPath.IsWildCard(); }
-        }
-        public XmlNode PatternNode
-        {
-            get { return srcNode; }
-        }
-
         public MatchInfo(XmlNode pattern, Unifiable unifiable)
             : base(pattern)
         {
             FullPath = unifiable;
+        }
+
+        public bool IsCatchAll
+        {
+            get { return FullPath.IsWildCard(); }
+        }
+
+        public XmlNode PatternNode
+        {
+            get { return srcNode; }
         }
 
         public string GetKey()

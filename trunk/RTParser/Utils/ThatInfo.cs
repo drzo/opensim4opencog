@@ -7,8 +7,8 @@ namespace RTParser.Utils
     [Serializable]
     public class ThatInfo : MatchInfo
     {
-        public Node GraphmasterNode;
         public List<CategoryInfo> CategoryInfos = new List<CategoryInfo>();
+        public Node GraphmasterNode;
 
         public ThatInfo(XmlNode pattern, Unifiable unifiable)
             : base(pattern, unifiable)
@@ -21,7 +21,7 @@ namespace RTParser.Utils
             CategoryInfos.Add(template);
         }
 
-        public static ThatInfo GetPattern(LoaderOptions loaderOptions,Unifiable unifiable)
+        public static ThatInfo GetPattern(LoaderOptions loaderOptions, Unifiable unifiable)
         {
             return loaderOptions.CtxGraph.FindThat(unifiable);
         }

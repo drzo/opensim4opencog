@@ -7,8 +7,8 @@ namespace RTParser.Utils
     [Serializable]
     public class TopicInfo : MatchInfo
     {
-        public Node GraphmasterNode;
         public List<CategoryInfo> CategoryInfos = new List<CategoryInfo>();
+        public Node GraphmasterNode;
 
         public TopicInfo(XmlNode pattern, Unifiable unifiable)
             : base(pattern, unifiable)
