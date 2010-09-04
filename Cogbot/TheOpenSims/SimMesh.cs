@@ -295,7 +295,7 @@ namespace cogbot.TheOpenSims
                 SculptMesh SM;
                 if (!SculptedMeshes.TryGetValue(Id, out SM))
                 {
-                    byte[] bytes = WorldObjects.GridMaster.TextureBytesFormUUID(SD.SculptTexture);
+                    byte[] bytes = WorldObjects.GridMaster.TextureBytesForUUID(SD.SculptTexture);
                     SM = ToSculptMesh(bytes, primitive.Sculpt, "" + primitive);
                     if (MaintainSculptPool) SculptedMeshes[Id] = SM;
                     //  SM.DumpRaw(".", primitive.ID.ToString(), "sculptMesh" + primitive.LocalID);

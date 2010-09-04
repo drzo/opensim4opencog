@@ -80,7 +80,7 @@ namespace cogbot.Actions
                                                }
                                            };
             String threadName = "ThreadCommnand for " + cmd;
-            TheBotClient.Invoke(threadName,thread);
+            TheBotClient.InvokeThread(threadName, thread);
             return Success(threadName);
         }
     }

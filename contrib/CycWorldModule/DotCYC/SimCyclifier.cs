@@ -51,8 +51,8 @@ namespace CycWorldModule.DotCYC
         }// new Dictionary<string, CycFort>();
         static CycConnectionForm cycConnection;
         static readonly DateTime baseTime = new DateTime(1970, 1, 1, 0, 0, 0);
-        private static readonly TaskQueueHandler cycAccessQueueHandler = new TaskQueueHandler("CycAssertions", 0);
-        public static readonly TaskQueueHandler cycInfoMapSaver = new TaskQueueHandler("CycInfoMapSaver", 0);
+        private static readonly TaskQueueHandler cycAccessQueueHandler = new TaskQueueHandler("CycAssertions", TimeSpan.Zero);
+        public static readonly TaskQueueHandler cycInfoMapSaver = new TaskQueueHandler("CycInfoMapSaver", TimeSpan.Zero);
         private static TaskQueueHandler taskQueueHandler = null;// new TaskQueueHandler("SimCyclifier", 0);
 
         readonly static public Dictionary<object, CycFort> cycTerms = new Dictionary<object, CycFort>(CompareKeys);

@@ -1,12 +1,18 @@
 ﻿using System;
+using System.Drawing;
 using System.IO;
+using System.Net.Mime;
 using System.Threading;
 using System.Collections.Generic;
+using System.Windows.Forms;
 using cogbot.TheOpenSims;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
+using OpenMetaverse.Imaging;
+using Radegast;
 using Object=System.Object;
+using Settings=OpenMetaverse.Settings;
 
 namespace cogbot.Listeners
 {
@@ -49,7 +55,7 @@ namespace cogbot.Listeners
         }
 
 
-        public byte[] TextureBytesFormUUID(UUID uUID)
+        public byte[] TextureBytesForUUID(UUID uUID)
         {
             SimAsset assettt = SimAssetStore.FindOrCreateAsset(uUID, AssetType.Texture);
             ImageDownload ID = null;
@@ -117,25 +123,22 @@ namespace cogbot.Listeners
             if (id == UUID.Zero) return null;
             SimAsset sa = SimAssetStore.FindOrCreateAsset(id, assetType);
             if (!sa.NeedsRequest) return sa;
-            lock (AssetRequestType) if (AssetRequestType.ContainsKey(id)) return sa;
-
-            //if (assetType == AssetType.Sound) return sa;
-            if (assetType == AssetType.SoundWAV) return sa;
-            sa.NeedsRequest = false;
+            if (assetType == AssetType.Texture)
             {
-                lock (AssetRequestType)
-                {
-                    AssetRequestType[id] = assetType;
-
-                    if (assetType == AssetType.Texture)
-                    {
-                        OnConnectedQueue.Enqueue(() => StartTextureDownload(id));
-                        return sa;
-                    }
-                    OnConnectedQueue.Enqueue(
-                        () => RegionMasterTexturePipeline.RequestAsset(id, assetType, priority, Assets_OnAssetReceived));
-                }
+                StartTextureDownload(id);
+                return sa;
             }
+            sa.NeedsRequest = false;
+            if (assetType == AssetType.SoundWAV) return sa;
+            //if (assetType == AssetType.Sound) return sa;
+            lock (AssetRequestType)
+            {
+                if (AssetRequestType.ContainsKey(id)) return sa;
+                AssetRequestType[id] = assetType;
+                SlowConnectedQueue.Enqueue(
+                    () => RegionMasterTexturePipeline.RequestAsset(id, assetType, priority, Assets_OnAssetReceived));
+            }
+
             return sa;
         }
 
@@ -202,6 +205,66 @@ namespace cogbot.Listeners
             }
         }
 
+        public void Init(UUID id)
+        {
+            if (id == UUID.Zero) return;
+            AssetType assetType = AssetType.Texture;
+            SimAsset sa = SimAssetStore.FindOrCreateAsset(id, assetType);
+            if (!sa.NeedsRequest) return;
+ 
+            {
+                StartTextureDownload(id);
+            }
+            sa.NeedsRequest = false;
+            lock (AssetRequestType)
+            {
+                if (AssetRequestType.ContainsKey(id)) return;
+                AssetRequestType[id] = AssetType.Texture;
+            }
+
+            // Callbacks
+            client.Assets.RequestImage(id, ImageType.Normal, 101300.0f, 0, 0, delegate(TextureRequestState state, AssetTexture assetTexture)
+            {
+                if (state == TextureRequestState.Finished)
+                {
+                    Assets_OnImageReceived(assetTexture);
+                    sa.SetAsset(assetTexture);
+                    return;
+                }
+                else if (state == TextureRequestState.Progress)
+                {
+                    // DisplayPartialImage(assetTexture);
+                }
+                else if (state == TextureRequestState.Timeout)
+                {
+                    AssetRequestType.Remove(id);
+                }
+            }, false);
+        }
+
+        private void Assets_OnImageReceived(AssetTexture assetTexture)
+        {
+            try
+            {
+                byte[] jpegdata;
+                ManagedImage imgManaged;
+                Image image;
+                SimAsset sa = SimAssetStore.FindOrCreateAsset(assetTexture.AssetID, assetTexture.AssetType);
+                if (!OpenJPEG.DecodeToImage(assetTexture.AssetData, out imgManaged, out image))
+                {
+                    throw new Exception("decoding failure");
+                }
+                jpegdata = assetTexture.AssetData;
+                sa._TypeData = jpegdata;
+                uuidTypeObject[assetTexture.AssetID] = jpegdata;
+                assetTexture.Decode();
+            }
+            catch (Exception excp)
+            {
+                System.Console.WriteLine("Error decoding image: " + excp.Message);
+            }
+        }
+
         /*
         On-Image-Received
              image: "{OpenMetaverse.ImageDownload,PacketCount=33,Codec=J2C,NotFound=False,Simulator=OpenSim Test (71.197.210.170:9000),PacketsSeen=System.Collections.Generic.SortedList`2[System.UInt16,System.UInt16],ImageType=Normal,DiscardLevel=-1,Priority=1013000,ID=728dd7fa-a688-432d-a4f7-4263b1f97395,Size=33345,AssetData=System.Byte[],Transferred=33345,Success=True,AssetType=Texture}"
@@ -220,17 +283,25 @@ namespace cogbot.Listeners
         public ImageDownload StartTextureDownload(UUID id)
         {
             SimAsset simAsset = SimAssetStore.FindOrCreateAsset(id, AssetType.Texture);
-            if (RegionMasterTexturePipeline.Cache.HasAsset(id))
+            AssetCache Cache = 
+                (RegionMasterTexturePipeline == null ? null : RegionMasterTexturePipeline.Cache);
+            if (Cache != null && Cache.HasAsset(id))
             {
-                ImageDownload dl = RegionMasterTexturePipeline.Cache.GetCachedImage(id);
+                ImageDownload dl = Cache.GetCachedImage(id);
                 if (dl != null)
                 {
                     simAsset.SetAsset(dl);
                 }
+                return dl;
             }
             lock (TexturesSkipped) if (TexturesSkipped.Contains(id)) return null;
-            TextureRequested++;
-            client.Assets.RequestImage(id, ImageType.Normal, RegionMasterTexturePipeline_OnDownloadFinished);
+            lock (AssetRequestType)
+            {
+                if (AssetRequestType.ContainsKey(id)) return null;
+                AssetRequestType[id] = AssetType.Texture;
+            }
+            TextureRequested++;            
+            SlowConnectedQueue.Enqueue(()=>client.Assets.RequestImage(id, ImageType.Normal, RegionMasterTexturePipeline_OnDownloadFinished));
             return null;
         }
 

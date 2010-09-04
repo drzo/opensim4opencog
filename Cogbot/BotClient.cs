@@ -416,7 +416,7 @@ namespace cogbot
             //manager.AddBotClientToTextForm(this);
 
             botPipeline = new SimEventMulticastPipeline(GetName());
-            OneAtATimeQueue = new TaskQueueHandler("BotStartupQueue " + GetName(), 100, true);
+            OneAtATimeQueue = new TaskQueueHandler("BotStartupQueue " + GetName(), new TimeSpan(0, 0, 0, 0, 10), true);
             botPipeline.AddSubscriber(new SimEventTextSubscriber(WriteLine, this));
             // SingleInstance = this;
             ///this = this;// new GridClient();
@@ -818,19 +818,24 @@ namespace cogbot
 
         public void DisplayNotificationInChat(string str)
         {
-            InvokeGUI(() =>
-                       {
-                           WriteLine(str);
-                           ChatConsole cc = (ChatConsole)TheRadegastInstance.TabConsole.Tabs["chat"].Control;
-                           var tp = cc.ChatManager.TextPrinter;
-                           string s = tp.Content;
-                           if (s.Length > 30000)
-                           {
-                               tp.Content = s.Substring(s.Length - 30000);
-                           }
-                           //if (cc.)
-                           TheRadegastInstance.TabConsole.DisplayNotificationInChat(str);
-                       });
+            InvokeGUI(
+                () =>
+                    {
+                        WriteLine(str);
+                        ChatConsole cc = (ChatConsole) TheRadegastInstance.TabConsole.Tabs["chat"].Control;
+                        RichTextBoxPrinter tp = (RichTextBoxPrinter) cc.ChatManager.TextPrinter;
+                        InvokeGUI(cc.rtbChat, () =>
+                                                  {
+                                                      string s = tp.Content;
+                                                      if (s.Length > 30000)
+                                                      {
+                                                          tp.Content = s.Substring(s.Length - 30000);
+                                                      }
+                                                      //if (cc.)
+                                                      TheRadegastInstance.TabConsole.DisplayNotificationInChat(str);
+                                                  });
+
+                    });
         }
 
 
@@ -1931,7 +1936,7 @@ namespace cogbot
                        });
         }
 
-        public Thread Invoke(String name, ThreadStart action)
+        public Thread InvokeThread(String name, ThreadStart action)
         {
             lock (botCommandThreads)
             {
@@ -1964,11 +1969,10 @@ namespace cogbot
                 return tr;
             }
         }
-        public void InvokeGUI(ThreadStart o)
+        public void InvokeGUI(Control mf, ThreadStart o)
         {
             try
             {
-                var mf = TheRadegastInstance.MainForm;
                 if (mf.IsHandleCreated)
                 {
                 }
@@ -1982,6 +1986,11 @@ namespace cogbot
             {
                 WriteLine("ERROR! InvokeGUI " + e);
             }
+        }
+
+        public void InvokeGUI(ThreadStart o)
+        {
+            InvokeGUI(TheRadegastInstance.MainForm, o);
         }
 
         public BotPermissions GetSecurityLevel(UUID uuid)

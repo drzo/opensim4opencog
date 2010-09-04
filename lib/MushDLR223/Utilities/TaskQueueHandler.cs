@@ -8,26 +8,27 @@ namespace MushDLR223.Utilities
     public class TaskQueueHandler : IDisposable
     {
         static public HashSet<TaskQueueHandler> TaskQueueHandlers = new HashSet<TaskQueueHandler>();
+        static public readonly TimeSpan PING_INTERVAL = new TimeSpan(0, 0, 0, 30); //30 seconds
+        static public readonly TimeSpan MAX_PING_WAIT = new TimeSpan(0, 1, 1, 2);  // ping wiat time should be less than 2 seconds when going in
         private Thread EventQueueHandler;
         readonly private Thread EventQueuePing;
         readonly private string Name;
-        static private readonly TimeSpan PING_TIME = new TimeSpan(0, 0, 0, 30); //30 seconds
-        private ulong processed = 0;
-        ulong sequence = 1;
-        ulong failures = 0;
-        private ulong GoodPings = 0;
+        readonly TimeSpan WAIT_AFTER;
+        private ulong TotalComplete = 0;
+        private ulong TotalStarted = 0;
+        private ulong TotalFailures = 0;
+
+        private ulong StartedSinceLastPing = 0;
+        private ulong CompletedSinceLastPing = 0;
         public bool Busy;
-        private ulong LastBusy = 0;
-        readonly int WAIT_AFTER;
+        private ulong GoodPings = 0;
+        private ulong LatePings = 0;
         public bool IsDisposing = false;
-        private string WaitingString = "";
+        public string WaitingString = "";
         private readonly object WaitingStringLock = new object();
         readonly object WaitingPingLock = new object();
         private OutputDelegate debugOutput = TextFilter.DEVNULL;
         bool WaitingOnPing = false;
-        public double MAX_PING_WAIT_TIME = 2;  // ping wiat time should be less than 2 seconds when going in
-
-
         public bool IsRunning
         {
             get
@@ -36,26 +37,53 @@ namespace MushDLR223.Utilities
                 return EventQueueHandler != null && EventQueueHandler.IsAlive;
             }
         }
+        public bool SimplyLoopNoWait = false;
         readonly object EventQueueLock = new object();
-        AutoResetEvent WaitingOn = new AutoResetEvent(false);
+        readonly AutoResetEvent WaitingOn = new AutoResetEvent(false);
         readonly LinkedList<ThreadStart> EventQueue = new LinkedList<ThreadStart>();
-        public static bool DebugQueue = false;
-        public TaskQueueHandler(string str, int msWaitBetween) : this(str,msWaitBetween,true)
+        public bool DebugQueue
         {
-
+            get { return problems || debugRequested; }
+            set { debugRequested = value; }
         }
 
-        public TaskQueueHandler(string str, int msWaitBetween, bool autoStart)
+        private bool debugRequested = false;
+        private bool problems = false;
+
+        public TaskQueueHandler(string str, TimeSpan msWaitBetween)
+            : this(str, msWaitBetween, true)
         {
-            lock (TaskQueueHandlers) TaskQueueHandlers.Add(this);
-            Name = str;
-            if (msWaitBetween < 10) msWaitBetween = 10;
-            // max ten minutes
-            if (msWaitBetween > 600000) msWaitBetween = 600000;
-            WAIT_AFTER = msWaitBetween;
-            EventQueuePing = new Thread(EventQueue_Ping) { Name = str + " debug", Priority = ThreadPriority.Lowest };
+        }
+        public TaskQueueHandler(string str, int msWaitBetween)
+            : this(str, TimeSpan.FromMilliseconds(msWaitBetween), true)
+        {
+        }
+        public TaskQueueHandler(string str, TimeSpan msWaitBetween, bool autoStart)
+            : this(str, msWaitBetween, msWaitBetween, autoStart)
+        {
+        }
+
+        public TaskQueueHandler(string str, TimeSpan msWaitBetween, TimeSpan maxPerOperation, bool autoStart)
+        {
+            lock (TaskQueueHandlers)
+            {
+                BusyEnd = BusyStart;
+                Name = str;
+                TaskQueueHandlers.Add(this);
+
+
+                if (maxPerOperation.TotalMilliseconds < 2) maxPerOperation = TimeSpan.FromMilliseconds(10);
+                MaxPerOperation = maxPerOperation;
+
+                if (msWaitBetween.TotalMilliseconds < 10) msWaitBetween = TimeSpan.FromMilliseconds(10);
+                // max ten minutes
+                if (msWaitBetween.TotalMinutes > 10) msWaitBetween = TimeSpan.FromMinutes(10);
+                WAIT_AFTER = msWaitBetween;
+                EventQueuePing = new Thread(EventQueue_Ping) { Name = str + " debug", Priority = ThreadPriority.Lowest };
+            }
             if (autoStart) Start();
         }
+
 
         public void Start()
         {
@@ -91,26 +119,38 @@ namespace MushDLR223.Utilities
                 Set();
             }
         }
-
         public override string ToString()
+        {
+            return ToDebugString();
+        }
+
+        public string ToDebugString()
         {
             string WaitingS = "Not waiting";
             lock (WaitingStringLock)
             {
-                if (WaitingString.Length>=0)
+                if (WaitingString.Length >= 0)
                 {
                     WaitingS = "WaitingOn: " + WaitingString;
                 }
             }
+
+            string extraMesage =
+                Name
+                + string.Format(" TODO = {0} ", todo)
+                + string.Format(" TOTALS = {0}/{1}/{2} ", TotalComplete, TotalStarted, GetTimeString(OperationTime))
+                + string.Format(" PINGED = {0}/{1}/{2} ", CompletedSinceLastPing, StartedSinceLastPing, GetTimeString(PingLag))
+                ;
+
+            
+
             if (IsDisposing) WaitingS += " IsDisposing";
             if (!IsRunning) WaitingS += " NOT RUNNING";
             return String.Format(
-                "{0} {1} Todo={2} Complete={3} {4} {5} {6}",
-                Busy ? "Busy" : "Idle", 
-                Name,
-                EventQueue.Count, 
-                processed,
-                failures > 0 ? failures + " failures " : "",
+                "{0} {1} {2} {3} {4}",
+                Busy ? "Busy" : "Idle",
+                extraMesage,
+                TotalFailures > 0 ? TotalFailures + " failures " : "",
                 _noQueue ? "NoQueue" : "",
                 WaitingS);
         }
@@ -132,10 +172,13 @@ namespace MushDLR223.Utilities
         }
 
         readonly ThreadStart NOTHING = default(ThreadStart);
-        private DateTime BusyStart;
+        private DateTime BusyStart = DateTime.UtcNow;
+        private DateTime BusyEnd;
+        private TimeSpan OperationTime;
+        private DateTime PingStart;
+        private TimeSpan PingLag;
         private ulong todo;
-
-        private bool justLoop = true;
+        private readonly TimeSpan MaxPerOperation;
 
         void EventQueue_Handler()
         {
@@ -160,7 +203,7 @@ namespace MushDLR223.Utilities
                 if (evt != null && evt != NOTHING)
                 {
                     DoNow(evt);
-                    if (WAIT_AFTER > 1) Thread.Sleep(WAIT_AFTER);
+                    if (WAIT_AFTER.TotalMilliseconds > 1) Thread.Sleep(WAIT_AFTER);
                 }
                 else
                 {
@@ -174,7 +217,7 @@ namespace MushDLR223.Utilities
                     //{
                     // Reset();
                     //}
-                    if (justLoop)
+                    if (SimplyLoopNoWait)
                     {
                         Thread.Sleep(WAIT_AFTER);
                         continue;
@@ -248,103 +291,154 @@ namespace MushDLR223.Utilities
 
             while (!(IsDisposing))
             {
+                ulong startedBeforeWait = TotalStarted;
+                ulong completeBeforeWait = TotalComplete;
+                Thread.Sleep(PING_INTERVAL);
                 if (EventQueueHandler != null)
                     if (!EventQueueHandler.IsAlive)
                     {
-                        WriteLine("Dead " + this);
-                        Thread.Sleep(PING_TIME);
+                        problems = true;
+                        WriteLine("ERROR EventQueueHandler DEAD! " + this.ToDebugString());
                         continue;
                     }
-                Thread.Sleep(PING_TIME);
                 if (_noQueue) continue;
-                if (Busy)
-                {
-                    if (LastBusy == sequence)
-                    {
-                        TimeSpan t = DateTime.UtcNow - BusyStart;
-                        if (DebugQueue)
-                            WriteLine("TOOK LONGER THAN {0} secs = {1} in Queue={2}",
-                                      PING_TIME.TotalSeconds, t.TotalSeconds, EventQueue.Count);
-                    }
-                    LastBusy = sequence;
-                    continue;
-                }
-                DateTime oldnow = DateTime.UtcNow;
-                int count = EventQueue.Count;
                 lock (WaitingPingLock)
                 {
-                    bool wasWaitingOnPing = false;
-                    wasWaitingOnPing = WaitingOnPing;
-
-                    if (wasWaitingOnPing)
+                    todo = (ulong) EventQueue.Count;
+                    if (Busy)
                     {
-                        if (LastBusy == sequence)
+                        TimeSpan t = DateTime.UtcNow - BusyStart;
+                        if (t > MaxPerOperation)
                         {
-                            TimeSpan t = DateTime.UtcNow - BusyStart;
-                            if (DebugQueue)
-                                WriteLine("PING TOOK LONGER THAN {0} secs = {1} in Queue={2}",
-                                          PING_TIME.TotalSeconds, t.TotalSeconds, EventQueue.Count);
+                            problems = true;
+                            WriteLine("BUSY LONGER THAN {0} time = {1} " + ToDebugString(),
+                                      GetTimeString(MaxPerOperation),
+                                      GetTimeString(t));
+                            continue;
                         }
-                        LastBusy = sequence;
+                    }
+                    if (WaitingOnPing)
+                    {
+                        if (completeBeforeWait == TotalComplete)
+                        {
+                            if (startedBeforeWait == TotalStarted)
+                            {
+                                if (todo > 0)
+                                {
+                                    problems = true;
+                                    TimeSpan t = DateTime.UtcNow - BusyEnd;
+                                    WriteLine("NOTHING DONE IN time = {0} " + ToDebugString(), GetTimeString(t));
+                                }
+                            }
+                        }
+
+                        if (Busy /* && (StartedSinceLastPing == 0 && FinishedSinceLastPing == 0)*/)
+                        {
+                            // ReSharper disable ConditionIsAlwaysTrueOrFalse
+                            TimeSpan tt = DateTime.UtcNow - PingStart;
+                            if (tt > PING_INTERVAL)
+                            {
+                                if (DebugQueue)
+                                    WriteLine("PINGER WAITING LONGER THAN {0} time = {1} " + ToDebugString(),
+                                              GetTimeString(PING_INTERVAL),
+                                              GetTimeString(tt));
+                            }
+                            // ReSharper restore ConditionIsAlwaysTrueOrFalse
+                        }
                         continue;
                     }
-                    WaitingOnPing = true;
 
-                    Enqueue(() =>
-                                {
-                                    lock (WaitingPingLock)
-                                    {
-                                        // todo can this ever happen?
-                                        if (!WaitingOnPing) return;
-                                    }
-                                    if (sequence > 1) sequence--;
-                                    DateTime now = DateTime.UtcNow;
-                                    TimeSpan timeSpan = now - oldnow;
-                                    double secs = timeSpan.TotalSeconds;
-                                    if (secs < MAX_PING_WAIT_TIME)
-                                    {
-                                        // WriteLine("PONG: " + Name + " " + timeSpan.TotalMilliseconds + " ms");
-                                        GoodPings++;
-                                    }
-                                    else
-                                    {
-                                        if (DebugQueue)
-                                            WriteLine("{0} secs for {1} after {2} GoodPing(s)",
-                                                      timeSpan.TotalSeconds, count, GoodPings);
-                                        GoodPings = 0;
-                                    }
-                                    lock (WaitingPingLock)
-                                    {
-                                        WaitingOnPing = false;
-                                    }
-                                }
-                        );
+                    if (WaitingOnPing) continue;
+                    PingStart = DateTime.UtcNow;
+                    WaitingOnPing = true;
+                    Enqueue(EventQueue_Pong);
                 }
             }
             // ReSharper disable FunctionNeverReturns
         }
+
+        private void EventQueue_Pong()
+        {
+            lock (WaitingPingLock)
+            {
+                // todo can this ever happen?
+                if (!WaitingOnPing) return;
+            }
+            PingLag = DateTime.UtcNow - PingStart;
+            TotalStarted--;
+            StartedSinceLastPing--;
+            if (PingLag <= MAX_PING_WAIT)
+            {
+                GoodPings++;
+                if (todo > 0)
+                    if (DebugQueue)
+                        WriteLine("PONG: {0} {1}", GetTimeString(PingLag), ToDebugString());
+                LatePings = 0;
+                problems = false;
+            }
+            else
+            {
+                LatePings++;
+                WriteLine("LATE PONG: {0} {1} {2}", LatePings, GetTimeString(PingLag), ToDebugString());
+                GoodPings = 0;
+                problems = true;
+            }
+            lock (WaitingPingLock)
+            {
+                WaitingOnPing = false;
+                StartedSinceLastPing = 0;
+                CompletedSinceLastPing = 0;
+            }
+        }
+
+        internal static string GetTimeString(TimeSpan lag)
+        {
+            string lagString;
+            if (lag.TotalSeconds < 2)
+            {
+                lagString = string.Format("{0}ms", lag.Milliseconds);
+            }
+            else if (lag.TotalMinutes < 2)
+            {
+                lagString = string.Format("{0}secs", lag.TotalSeconds);
+            }
+            else if (lag.TotalHours < 2)
+            {
+                lagString = string.Format("{0}mins", lag.TotalMinutes);
+            }
+            else
+            {
+                lagString = "" + lag + "durration";
+            }
+            return lagString;
+        }
+
         // ReSharper restore FunctionNeverReturns
         private void DoNow(ThreadStart evt)
         {
             if (IsDisposing) return;
             Busy = true;
             BusyStart = DateTime.UtcNow;
-            sequence++;
+            TotalStarted++;
             try
             {
                 todo--;
+                StartedSinceLastPing++;
                 evt();
-                processed++;
+                CompletedSinceLastPing++;
+                TotalComplete++;
                 Busy = false;
             }
             catch (Exception e)
             {
-                failures++;
-                WriteLine("ERROR! " + ToString() + " was " + e + " in " + Thread.CurrentThread);
+                TotalFailures++;
+                WriteLine("ERROR! {0} was {1} in {2}", ToDebugString(), e, Thread.CurrentThread);
             }
             finally
             {
-                sequence++;
+                BusyEnd = DateTime.UtcNow;
+                OperationTime = BusyEnd.Subtract(BusyStart);
+                //TotalStarted++;
                 Busy = false;
             }
         }
