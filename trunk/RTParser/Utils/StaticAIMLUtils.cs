@@ -13,12 +13,12 @@ using RTParser.Variables;
 
 namespace RTParser.Utils
 {
-    public class StaticAIMLUtils : StaticXMLUtil
+    public class StaticAIMLUtils : TextPatternUtils
     {
         public static readonly XmlNode TheTemplateOverwrite = getNode("<template></template>");
         public static bool DebugSRAIs = true;
         public static bool NoRuntimeErrors = false;
-        public static Func<string> EmptyFunct = (() => String.Empty);
+        public static Func<Unifiable> EmptyFunct = (() => Unifiable.Empty);
         public static Dictionary<XmlNode, StringBuilder> ErrorList = new Dictionary<XmlNode, StringBuilder>();
 
         protected static List<string> TagsRecurseToFlatten = new List<string>
@@ -151,7 +151,7 @@ namespace RTParser.Utils
                     {
                         case "graph":
                             {
-                                string graphName = ReduceStar(node.Value, query, dict);
+                                string graphName = ReduceStar<string>(node.Value, query, dict);
                                 if (graphName != null)
                                 {
                                     GraphMaster innerGraph = request.TargetBot.GetGraph(graphName, oldGraph);
@@ -179,7 +179,7 @@ namespace RTParser.Utils
                             break;
                         case "topic":
                             {
-                                newTopic = ReduceStar(node.Value, query, dict);
+                                newTopic = ReduceStar<Unifiable>(node.Value, query, dict);
                                 if (newTopic != null)
                                 {
                                     if (newTopic.IsEmpty) newTopic = "Nothing";
@@ -190,7 +190,7 @@ namespace RTParser.Utils
                             break;
                         case "that":
                             {
-                                newThat = ReduceStar(node.Value, query, dict);
+                                newThat = ReduceStar<Unifiable>(node.Value, query, dict);
                                 if (newThat != null)
                                 {
                                     if (newThat.IsEmpty) newThat = "Nothing";
@@ -241,7 +241,7 @@ namespace RTParser.Utils
                                     n = n.Substring(5);                                    
                                 }
 
-                                Unifiable v = ReduceStar(node.Value, query, dict);
+                                Unifiable v = ReduceStar<Unifiable>(node.Value, query, dict);
                                 UndoStack.FindUndoAll(thiz);
                                 savedValues = savedValues ?? UndoStack.GetStackFor(thiz);
                                 //savedValues = savedValues ?? query.GetFreshUndoStack();
@@ -320,18 +320,109 @@ namespace RTParser.Utils
             return () => { };
         }
 
-        public static Unifiable ReduceStar(string name, SubQuery query, ISettingsDictionary dict)
+
+        public static bool ContainsAiml(Unifiable unifiable)
         {
-            var nameSplit = name.Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries);
+            String s = unifiable.AsString();
+            if (s.Contains(">") && s.Contains("<")) return true;
+            if (s.Contains("&"))
+            {
+                return true;
+            }
+            return false;
+        }
+        public static bool AimlSame(string xml1, string xml2)
+        {
+            if (xml1 == xml2) return true;
+            if (xml1 == null) return String.IsNullOrEmpty(xml2);
+            if (xml2 == null) return String.IsNullOrEmpty(xml1);
+            xml1 = StaticAIMLUtils.CleanWhitepacesLower(xml1).ToLower();
+            xml2 = StaticAIMLUtils.CleanWhitepacesLower(xml2);
+            if (xml1.Length != xml2.Length) return false;
+            if (xml1 == xml2) return true;
+            if (xml1.ToUpper() == xml2.ToUpper())
+            {
+                return true;
+            }
+            return false;
+        }
+
+        public static int FromInsideLoaderContext(XmlNode currentNode, Request request, SubQuery query, Func<int> doit)
+        {
+            int total = 0;
+            query = query ?? request.CurrentQuery;
+            //Result result = query.Result;
+            RTPBot RProcessor = request.TargetBot;
+            AIMLLoader prev = RProcessor.Loader;
+            try
+            {
+                // RProcessor.Loader = this;
+                // Get a list of the nodes that are children of the <aiml> tag
+                // these nodes should only be either <topic> or <category>
+                // the <topic> nodes will contain more <category> nodes
+                string currentNodeName = currentNode.Name.ToLower();
+
+                ThreadStart ts = StaticAIMLUtils.EnterTag(request, currentNode, query);
+                try
+                {
+                    total += doit();
+                }
+                finally
+                {
+                    ts();
+                }
+            }
+            finally
+            {
+                RProcessor.Loader = prev;
+            }
+            return total;
+        }
+       /*
+        protected static int NonAlphaCount(string input)
+        {
+            input = CleanWhitepaces(input);
+            int na = 0;
+            foreach (char s in input)
+            {
+                if (char.IsLetterOrDigit(s)) continue;
+                na++;
+            }
+            return na;
+        }
+
+        public static string NodeInfo(XmlNode templateNode, Func<string, XmlNode, string> funct)
+        {
+            string s = null;
+            XmlNode nxt = templateNode;
+            s = funct("same", nxt);
+            if (s != null) return s;
+            nxt = templateNode.NextSibling;
+            s = funct("next", nxt);
+            if (s != null) return s;
+            nxt = templateNode.PreviousSibling;
+            s = funct("prev", nxt);
+            if (s != null) return s;
+            nxt = templateNode.ParentNode;
+            s = funct("prnt", nxt);
+            if (s != null) return s;
+            return s;
+        }
+        */
+
+        public static T ReduceStar<T>(IConvertible name, SubQuery query, ISettingsDictionary dict) where T : IConvertible
+        {
+            var nameSplit = name.ToString().Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries);
             foreach (string nameS in nameSplit)
             {
                 Unifiable r = AltStar(nameS, query, dict);
                 if (!Unifiable.IsNullOrEmpty(r))
                 {
-                    return r;
+                    StaticXMLUtils.PASSTHRU<T>(r);
                 }
+                continue;
             }
-            return name;
+            return StaticXMLUtils.PASSTHRU<T>(name);
         }
 
         public static Unifiable AltStar(string name, SubQuery query, ISettingsDictionary dict)
@@ -423,27 +514,27 @@ namespace RTParser.Utils
             return value;
         }
 
-        private static Unifiable GetDictData(IList<Unifiable> unifiables, string name, int startChars)
+        private static Unifiable GetDictData<T>(IList<T> unifiables, string name, int startChars)where T : IConvertible
         {
-            Unifiable u = GetDictData0(unifiables, name, startChars);
-            string toup = u.ToUpper();
-            if (string.IsNullOrEmpty(toup)) return u;
-            if (char.IsLetterOrDigit(toup[0])) return u;
-            return u;
+            T u = GetDictData0<T>(unifiables, name, startChars);
+            string toup = u.ToString(FormatProvider).ToUpper();
+            if (string.IsNullOrEmpty(toup)) return PASSTHRU<Unifiable>(u);
+            if (char.IsLetterOrDigit(toup[0])) return PASSTHRU<Unifiable>("" + u);
+            return PASSTHRU<Unifiable>(u);
         }
 
-        private static Unifiable GetDictData0(IList<Unifiable> unifiables, string name, int startChars)
+        private static T GetDictData0<T>(IList<T> unifiables, string name, int startChars) where T : IConvertible
         {
             string s = name.Substring(startChars);
 
             if (s == "*" || s == "ALL" || s == "0")
             {
                 StringAppendableUnifiableImpl result = Unifiable.CreateAppendable();
-                foreach (Unifiable u in unifiables)
+                foreach (T u in unifiables)
                 {
-                    result.Append(u);
+                    result.Append(u.ToString());
                 }
-                return result;
+                return PASSTHRU<T>(result);
             }
 
             int uc = unifiables.Count;
@@ -459,14 +550,14 @@ namespace RTParser.Utils
 
             if (i == 0)
             {
-                if (uc == 0) return "";
+                if (uc == 0) return PASSTHRU<T>("");
             }
             int ii = i - 1;
             if (fromend) ii = uc - i;
             if (uc == 0)
             {
                 RTPBot.writeDebugLine(" !ERROR -star underflow! " + i + " in " + name);
-                return String.Empty;
+                return PASSTHRU<T>(String.Empty);
             }
             if (ii >= uc || ii < 0)
             {

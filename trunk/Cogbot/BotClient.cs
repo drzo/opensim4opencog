@@ -2062,7 +2062,7 @@ namespace cogbot
                 // var reader = new XmlTextReader(sr);
                 //while (reader.Read())
                 {
-                    var doc = new XmlDocument();
+                    var doc = new XmlDocumentLineInfo("XmlTalk: " + text, false);
                     doc.Load(new XmlTextReader(new StringReader(text)));
                     //reader.MoveToElement();
                     foreach (var n in doc.DocumentElement.ChildNodes)

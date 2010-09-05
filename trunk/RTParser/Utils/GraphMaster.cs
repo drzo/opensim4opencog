@@ -178,7 +178,7 @@ namespace RTParser.Utils
                 {
                     if (!Patterns.TryGetValue(pats, out pi))
                     {
-                        Patterns[pats] = pi = new PatternInfo(StaticXMLUtil.ToLineInfoElement(pattern), pats);
+                        Patterns[pats] = pi = new PatternInfo(StaticXMLUtils.ToLineInfoElement(pattern), pats);
                     }
                     else
                     {
@@ -200,7 +200,7 @@ namespace RTParser.Utils
                     if (!Thats.TryGetValue(pats, out pi))
                     {
                         Thats[pats] =
-                            pi = new ThatInfo(StaticXMLUtil.getNode("<that>" + topicName + "</that>"), topicName);
+                            pi = new ThatInfo(StaticXMLUtils.getNode("<that>" + topicName + "</that>"), topicName);
                     }
                     else
                     {
@@ -242,7 +242,7 @@ namespace RTParser.Utils
                     if (!Topics.TryGetValue(pats, out pi))
                     {
                         Topics[pats] =
-                            pi = new TopicInfo(StaticXMLUtil.getNode("<pattern>" + topicName + "</pattern>"), topicName);
+                            pi = new TopicInfo(StaticXMLUtils.getNode("<pattern>" + topicName + "</pattern>"), topicName);
                     }
                     else
                     {

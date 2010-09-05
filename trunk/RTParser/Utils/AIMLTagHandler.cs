@@ -1,10 +1,11 @@
 using System;
 using System.Threading;
 using System.Xml;
+using MushDLR223.Utilities;
 using RTParser.AIMLTagHandlers;
 using RTParser.Database;
 using RTParser.Variables;
-using LineInfoElement = RTParser.Utils.LineInfoElementImpl;
+using LineInfoElement = MushDLR223.Utilities.LineInfoElementImpl;
 
 namespace RTParser.Utils
 {
@@ -334,7 +335,8 @@ namespace RTParser.Utils
             {
                 string type = GetType().Name;
                 double defualtReward = query.GetSucceedReward(type);
-                double score = GetAttribValue(templateNode, "score", defualtReward, query);
+                double score = GetAttribValue<double>(templateNode, "score", () => defualtReward,
+                                                      ReduceStarAttribute<double>);
                 writeToLog("TSCORE {3} {0}*{1}->{2} ",
                            score, query.CurrentTemplate.Rating,
                            query.CurrentTemplate.Rating *= score, score);
@@ -347,6 +349,15 @@ namespace RTParser.Utils
                 return Succeed(ToVisiable(templateNode));
             }
             return s;
+        }
+
+        protected T ReduceStarAttribute<T>(IConvertible arg) where T : IConvertible
+        {
+            return ReduceStar<T>(arg, query, query);
+        }
+        protected Unifiable ReduceStarAttribute(IConvertible arg)
+        {
+            return ReduceStar<Unifiable>(arg, query, query);
         }
 
         public bool WhenTrue(Unifiable unifiable)
@@ -366,12 +377,17 @@ namespace RTParser.Utils
 
         internal string GetDictName(string tryFirst)
         {
-            string type = GetAttribValue(tryFirst, null);
+            return GetDictName(templateNode, tryFirst);
+        }
+
+        static internal string GetDictName(XmlNode templateNode, string tryFirst)
+        {
+            string type = GetAttribValue(templateNode, tryFirst, null);
             if (type == null)
             {
-                string uname = GetAttribValue("user", null);
+                string uname = GetAttribValue(templateNode, "user", null);
                 if (uname != null) type = GetNamedType("user", uname);
-                string bname = GetAttribValue("bot", null);
+                string bname = GetAttribValue(templateNode, "bot", null);
                 if (bname != null) type = GetNamedType("bot", bname);
             }
             return type;
@@ -380,7 +396,7 @@ namespace RTParser.Utils
         public Unifiable GetStarContent()
         {
             XmlNode starNode = getNode("<star/>", templateNode);
-            LineInfoElementImpl.unsetReadonly(starNode);
+            LineInfoElement.unsetReadonly(starNode);
             star recursiveStar = new star(this.Proc, this.user, this.query, this.request, this.result, starNode);
             return recursiveStar.Transform();
         }
@@ -388,7 +404,7 @@ namespace RTParser.Utils
         protected Unifiable callSRAI(Unifiable starContent)
         {
             XmlNode sraiNode = getNode(String.Format("<srai>{0}</srai>", starContent), templateNode);
-            LineInfoElementImpl.unsetReadonly(sraiNode);
+            LineInfoElement.unsetReadonly(sraiNode);
             srai sraiHandler = new srai(this.Proc, this.user, this.query, this.request, this.result, sraiNode);
             return sraiHandler.Transform();
         }
@@ -455,7 +471,7 @@ namespace RTParser.Utils
 
         public string GetAttribValue(string attribName, string defaultIfEmpty)
         {
-            return GetAttribValue(templateNode, attribName, () => defaultIfEmpty, query);
+            return GetAttribValue(templateNode, attribName, () => defaultIfEmpty, query.ReduceStarAttribute<string>);
         }
 
         public virtual Unifiable CheckValue(Unifiable value)
@@ -723,17 +739,23 @@ namespace RTParser.Utils
         protected Unifiable GetActualValue(string name, bool preferBotOverUser, out bool succeed)
         {
             ISettingsDictionary dict = query;
-            Unifiable defaultVal = GetAttribValue("default,defaultValue", Unifiable.Empty);
-            string dictName = GetDictName("type,dict");
+            return GetActualValue(templateNode, name, preferBotOverUser, out succeed, query);
+        }
+
+        static protected Unifiable GetActualValue(XmlNode templateNode, string name, bool preferBotOverUser, out bool succeed, SubQuery query)
+        {
+            ISettingsDictionary dict = query;
+            Unifiable defaultVal = GetAttribValue(templateNode,"default,defaultValue", Unifiable.Empty);
+            string dictName = GetDictName(templateNode, "type,dict");
             if (dictName == null)
             {
                 dictName = preferBotOverUser ? "bot" : "user";
             }
             if (preferBotOverUser)
             {
-                dict = request.TargetBot.GlobalSettings;
+                dict = query.TargetBot.GlobalSettings;
             }
-            Unifiable gName = GetAttribValue("global_name", name);
+            Unifiable gName = GetAttribValue(templateNode, "global_name", name);
             string realName;
             Unifiable v = NamedValuesFromSettings.GetSettingForType(
                 dictName, query, dict, name, out realName,

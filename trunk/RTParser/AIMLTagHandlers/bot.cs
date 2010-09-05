@@ -48,7 +48,7 @@ namespace RTParser.AIMLTagHandlers
             Unifiable defaultVal = GetAttribValue("default", Unifiable.Empty);
             if (CheckNode("bot"))
             {
-                string name = GetAttribValue(templateNode, "name,var", () => templateNodeInnerText, query);
+                string name = GetAttribValue(templateNode, "name,var", () => templateNodeInnerText, ReduceStarAttribute);
                 bool succeed;
                 var value = GetActualValue(name, true, out succeed); // true == "bot";
                 if (succeed && name != "name") Succeed();

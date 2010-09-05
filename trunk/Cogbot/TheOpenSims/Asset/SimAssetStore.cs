@@ -1077,7 +1077,7 @@ namespace cogbot.TheOpenSims
         {
             try
             {
-                XmlDocument doc = new XmlDocument();
+                XmlDocument doc = new XmlDocumentLineInfo();
                 doc.Load(s);
                 foreach (XmlNode node in doc.DocumentElement.ChildNodes)
                 {

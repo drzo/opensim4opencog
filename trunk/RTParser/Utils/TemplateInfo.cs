@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Xml;
+using MushDLR223.Utilities;
 
 namespace RTParser.Utils
 {
@@ -27,7 +28,7 @@ namespace RTParser.Utils
             CategoryInfo = categoryInfo;
             try
             {
-                Rating = double.Parse(StaticXMLUtil.GetAttribValue(template, "score", "1.0"));
+                Rating = double.Parse(StaticXMLUtils.GetAttribValue(template, "score", "1.0"));
             }
             catch
             {
@@ -92,7 +93,7 @@ namespace RTParser.Utils
 
         public XmlNode ClonedOutput
         {
-            get { return StaticXMLUtil.CopyNode(Output, true); }
+            get { return StaticXMLUtils.CopyNode(Output, true); }
         }
 
         #region IAIMLInfo Members
@@ -110,7 +111,7 @@ namespace RTParser.Utils
 
         public string SourceInfo()
         {
-            return StaticXMLUtil.LocationInfo(srcNode);
+            return StaticXMLUtils.LocationInfo(srcNode);
         }
 
         #endregion
@@ -148,7 +149,7 @@ namespace RTParser.Utils
             if (tryit != null)
             {
                 return "" + TextPatternUtils.CleanWhitepaces(tryit.OuterXml) +
-                       StaticXMLUtil.LocationEscapedInfo(tryit);
+                       StaticXMLUtils.LocationEscapedInfo(tryit);
             }
             string s = base.ToString();
             /*            if (Guard != null)

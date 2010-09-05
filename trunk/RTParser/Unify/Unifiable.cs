@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
+using MushDLR223.Utilities;
 using RTParser.Database;
 using RTParser.Utils;
 using UPath = RTParser.Unifiable;
@@ -12,8 +13,60 @@ using StringAppendableUnifiable = RTParser.StringAppendableUnifiableImpl;
 
 namespace RTParser
 {
-    abstract public class Unifiable: StaticAIMLUtils
+    abstract public class Unifiable : StaticAIMLUtils, IConvertible
     {
+        static Unifiable()
+        {
+            StaticXMLUtils.FormatProviderConvertor = FormatProviderConvertor0;
+        }
+
+        public static IConvertible FormatProviderConvertor0(IConvertible arg, Type solid)
+        {
+            IConvertible output = arg;
+            if (Object.ReferenceEquals(arg, null))
+            {
+                return output;
+            }
+            if (solid.IsInstanceOfType(arg))
+            {
+                return arg;
+            }
+            Type rType = arg.GetType();
+            if (solid == typeof(Unifiable) && rType == typeof(string))
+            {
+                string u = (string)arg;
+                return (Unifiable)u;
+            }
+            if (solid == typeof(string) && rType == typeof(Unifiable))
+            {
+                Unifiable u = (Unifiable)arg;
+                return u.AsString();
+            }
+
+            try {
+                string u = arg.ToString(FormatProvider);
+
+                if (solid == typeof (Unifiable))
+                {
+                    return (Unifiable) u;
+                }
+                if (solid == typeof(string))
+                {
+                    return u;
+                }
+                if (solid == typeof(Double))
+                {
+                    return Double.Parse(u);
+                }
+            } catch(Exception exception)
+            {
+                writeToLog("ERROR FormatProviderConvertor " + arg + " to " + solid);
+            }
+            var format = FormatProvider.GetFormat(solid);
+            object oo = arg.ToType(solid, FormatProvider);
+            return (IConvertible) oo;
+        }
+
 
         public UFlags Flags = UFlags.NO_FLAGS;
         public bool IsFlag(UFlags f)
@@ -22,7 +75,7 @@ namespace RTParser
         }
 
         [Flags]
-        public enum UFlags : uint 
+        public enum UFlags : uint
         {
             NO_FLAGS = 0,
             IS_TRUE = 1,
@@ -38,7 +91,7 @@ namespace RTParser
             REG_CLASS = 512,
             ONLY_ONE = 1024,
             ONE_OR_TWO = 2048,
-            MORE_THAN_ONE =4096,
+            MORE_THAN_ONE = 4096,
             IS_TAG = 8192,
             IS_PUNCT = 16384,
             APPENDABLE = 32768,
@@ -94,7 +147,7 @@ namespace RTParser
                         {
                             ss = ss + " " + Unifiable.InnerXmlText(childNode);
                         }
-                      //  return ss;
+                        //  return ss;
                     }
                     string innerText = templateNode.InnerText.Trim();
                     if (templateNode.InnerXml.Length >= templateNode.InnerText.Length)
@@ -160,7 +213,7 @@ namespace RTParser
             throw new ArgumentOutOfRangeException(s);
         }
 
-                
+
         public static implicit operator string(Unifiable value)
         {
             if (ReferenceEquals(value, null))
@@ -170,7 +223,7 @@ namespace RTParser
             return value.AsString();
         }
 
-        static Dictionary<string,Unifiable> internedUnifiables = new Dictionary<string,Unifiable>(20000);
+        static Dictionary<string, Unifiable> internedUnifiables = new Dictionary<string, Unifiable>(20000);
         public static implicit operator Unifiable(string value)
         {
             return MakeStringUnfiable(value);
@@ -183,7 +236,7 @@ namespace RTParser
             if (false)
             {
                 u = new StringUnifiable(value);
-                return (StringUnifiable) u;
+                return (StringUnifiable)u;
             }
             if (true)
                 lock (internedUnifiables)
@@ -197,7 +250,7 @@ namespace RTParser
             string key = AIMLLoader.CleanWhitepaces(value);
             if (value != key)
             {
-             //   writeToLog("Triming? '" + value + "'");
+                //   writeToLog("Triming? '" + value + "'");
                 value = key;
                 //return new StringUnifiable(value);
             }
@@ -207,9 +260,9 @@ namespace RTParser
                     if (!internedUnifiables.TryGetValue(key, out u))
                     {
                         u = internedUnifiables[key] = new StringUnifiable(value, true);
-// ReSharper disable ConditionIsAlwaysTrueOrFalse
-                        if (false && (internedUnifiables.Count % 10000)==0)
-// ReSharper restore ConditionIsAlwaysTrueOrFalse
+                        // ReSharper disable ConditionIsAlwaysTrueOrFalse
+                        if (false && (internedUnifiables.Count % 10000) == 0)
+                        // ReSharper restore ConditionIsAlwaysTrueOrFalse
                         {
                             writeToLog("DEBUG9 internedUnifiables.Count=" + internedUnifiables.Count);
                         }
@@ -327,10 +380,10 @@ namespace RTParser
             {
                 return MakeStringUnfiable((string)p);
             }
-            if (p is Unifiable) return (Unifiable) p;
+            if (p is Unifiable) return (Unifiable)p;
             if (p is XmlNode)
             {
-                var n = (XmlNode) p;
+                var n = (XmlNode)p;
                 string inner = InnerXmlText(n);
                 writeToLog("MAking XML Node " + n.OuterXml + " -> " + inner);
                 StringUnifiable unifiable = MakeStringUnfiable(inner);
@@ -347,13 +400,13 @@ namespace RTParser
         public override string ToString()
         {
             writeToLog("ToSTring");
-            return  GetType().Name + "={" + Raw + "}";//Raw.ToString();}
+            return GetType().Name + "={" + Raw + "}";//Raw.ToString();}
         }
 
         internal static StringAppendableUnifiable CreateAppendable()
         {
             return new StringAppendableUnifiable();
-         //   return new StringBuilder(10);
+            //   return new StringBuilder(10);
         }
 
         public static Unifiable ThatTag = Create("TAG-THAT");
@@ -373,7 +426,7 @@ namespace RTParser
                 s = s.Trim();
                 if (s.Length != 0)
                 {
-                   // writeToLog("was IsEmpty");
+                    // writeToLog("was IsEmpty");
                     return false;
                 }
                 return true;
@@ -402,7 +455,7 @@ namespace RTParser
 
         public virtual bool IsFalse()
         {
-            return IsEmpty;            
+            return IsEmpty;
         }
         public abstract bool IsTag(string s);
         public virtual bool IsWildCard()
@@ -585,9 +638,9 @@ namespace RTParser
         {
             if (unifiable is Unifiable)
             {
-                return ((Unifiable) unifiable).AsString();
+                return ((Unifiable)unifiable).AsString();
             }
-            if (ReferenceEquals(null,unifiable))
+            if (ReferenceEquals(null, unifiable))
             {
                 return "-NULL-";
             }
@@ -602,6 +655,231 @@ namespace RTParser
         {
             return IsUnitMatcher;
         }
+
+        #region Implementation of IConvertible
+
+        /// <summary>
+        /// Returns the <see cref="T:System.TypeCode"/> for this instance.
+        /// </summary>
+        /// <returns>
+        /// The enumerated constant that is the <see cref="T:System.TypeCode"/> of the class or value type that implements this interface.
+        /// </returns>
+        /// <filterpriority>2</filterpriority>
+        TypeCode IConvertible.GetTypeCode()
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Converts the value of this instance to an equivalent Boolean value using the specified culture-specific formatting information.
+        /// </summary>
+        /// <returns>
+        /// A Boolean value equivalent to the value of this instance.
+        /// </returns>
+        /// <param name="provider">An <see cref="T:System.IFormatProvider"/> interface implementation that supplies culture-specific formatting information. 
+        ///                 </param><filterpriority>2</filterpriority>
+        bool IConvertible.ToBoolean(IFormatProvider provider)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Converts the value of this instance to an equivalent Unicode character using the specified culture-specific formatting information.
+        /// </summary>
+        /// <returns>
+        /// A Unicode character equivalent to the value of this instance.
+        /// </returns>
+        /// <param name="provider">An <see cref="T:System.IFormatProvider"/> interface implementation that supplies culture-specific formatting information. 
+        ///                 </param><filterpriority>2</filterpriority>
+        char IConvertible.ToChar(IFormatProvider provider)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Converts the value of this instance to an equivalent 8-bit signed integer using the specified culture-specific formatting information.
+        /// </summary>
+        /// <returns>
+        /// An 8-bit signed integer equivalent to the value of this instance.
+        /// </returns>
+        /// <param name="provider">An <see cref="T:System.IFormatProvider"/> interface implementation that supplies culture-specific formatting information. 
+        ///                 </param><filterpriority>2</filterpriority>
+        sbyte IConvertible.ToSByte(IFormatProvider provider)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Converts the value of this instance to an equivalent 8-bit unsigned integer using the specified culture-specific formatting information.
+        /// </summary>
+        /// <returns>
+        /// An 8-bit unsigned integer equivalent to the value of this instance.
+        /// </returns>
+        /// <param name="provider">An <see cref="T:System.IFormatProvider"/> interface implementation that supplies culture-specific formatting information. 
+        ///                 </param><filterpriority>2</filterpriority>
+        byte IConvertible.ToByte(IFormatProvider provider)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Converts the value of this instance to an equivalent 16-bit signed integer using the specified culture-specific formatting information.
+        /// </summary>
+        /// <returns>
+        /// An 16-bit signed integer equivalent to the value of this instance.
+        /// </returns>
+        /// <param name="provider">An <see cref="T:System.IFormatProvider"/> interface implementation that supplies culture-specific formatting information. 
+        ///                 </param><filterpriority>2</filterpriority>
+        short IConvertible.ToInt16(IFormatProvider provider)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Converts the value of this instance to an equivalent 16-bit unsigned integer using the specified culture-specific formatting information.
+        /// </summary>
+        /// <returns>
+        /// An 16-bit unsigned integer equivalent to the value of this instance.
+        /// </returns>
+        /// <param name="provider">An <see cref="T:System.IFormatProvider"/> interface implementation that supplies culture-specific formatting information. 
+        ///                 </param><filterpriority>2</filterpriority>
+        ushort IConvertible.ToUInt16(IFormatProvider provider)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Converts the value of this instance to an equivalent 32-bit signed integer using the specified culture-specific formatting information.
+        /// </summary>
+        /// <returns>
+        /// An 32-bit signed integer equivalent to the value of this instance.
+        /// </returns>
+        /// <param name="provider">An <see cref="T:System.IFormatProvider"/> interface implementation that supplies culture-specific formatting information. 
+        ///                 </param><filterpriority>2</filterpriority>
+        int IConvertible.ToInt32(IFormatProvider provider)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Converts the value of this instance to an equivalent 32-bit unsigned integer using the specified culture-specific formatting information.
+        /// </summary>
+        /// <returns>
+        /// An 32-bit unsigned integer equivalent to the value of this instance.
+        /// </returns>
+        /// <param name="provider">An <see cref="T:System.IFormatProvider"/> interface implementation that supplies culture-specific formatting information. 
+        ///                 </param><filterpriority>2</filterpriority>
+        uint IConvertible.ToUInt32(IFormatProvider provider)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Converts the value of this instance to an equivalent 64-bit signed integer using the specified culture-specific formatting information.
+        /// </summary>
+        /// <returns>
+        /// An 64-bit signed integer equivalent to the value of this instance.
+        /// </returns>
+        /// <param name="provider">An <see cref="T:System.IFormatProvider"/> interface implementation that supplies culture-specific formatting information. 
+        ///                 </param><filterpriority>2</filterpriority>
+        long IConvertible.ToInt64(IFormatProvider provider)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Converts the value of this instance to an equivalent 64-bit unsigned integer using the specified culture-specific formatting information.
+        /// </summary>
+        /// <returns>
+        /// An 64-bit unsigned integer equivalent to the value of this instance.
+        /// </returns>
+        /// <param name="provider">An <see cref="T:System.IFormatProvider"/> interface implementation that supplies culture-specific formatting information. 
+        ///                 </param><filterpriority>2</filterpriority>
+        ulong IConvertible.ToUInt64(IFormatProvider provider)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Converts the value of this instance to an equivalent single-precision floating-point number using the specified culture-specific formatting information.
+        /// </summary>
+        /// <returns>
+        /// A single-precision floating-point number equivalent to the value of this instance.
+        /// </returns>
+        /// <param name="provider">An <see cref="T:System.IFormatProvider"/> interface implementation that supplies culture-specific formatting information. 
+        ///                 </param><filterpriority>2</filterpriority>
+        float IConvertible.ToSingle(IFormatProvider provider)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Converts the value of this instance to an equivalent double-precision floating-point number using the specified culture-specific formatting information.
+        /// </summary>
+        /// <returns>
+        /// A double-precision floating-point number equivalent to the value of this instance.
+        /// </returns>
+        /// <param name="provider">An <see cref="T:System.IFormatProvider"/> interface implementation that supplies culture-specific formatting information. 
+        ///                 </param><filterpriority>2</filterpriority>
+        double IConvertible.ToDouble(IFormatProvider provider)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Converts the value of this instance to an equivalent <see cref="T:System.Decimal"/> number using the specified culture-specific formatting information.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="T:System.Decimal"/> number equivalent to the value of this instance.
+        /// </returns>
+        /// <param name="provider">An <see cref="T:System.IFormatProvider"/> interface implementation that supplies culture-specific formatting information. 
+        ///                 </param><filterpriority>2</filterpriority>
+        decimal IConvertible.ToDecimal(IFormatProvider provider)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Converts the value of this instance to an equivalent <see cref="T:System.DateTime"/> using the specified culture-specific formatting information.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="T:System.DateTime"/> instance equivalent to the value of this instance.
+        /// </returns>
+        /// <param name="provider">An <see cref="T:System.IFormatProvider"/> interface implementation that supplies culture-specific formatting information. 
+        ///                 </param><filterpriority>2</filterpriority>
+        DateTime IConvertible.ToDateTime(IFormatProvider provider)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Converts the value of this instance to an equivalent <see cref="T:System.String"/> using the specified culture-specific formatting information.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="T:System.String"/> instance equivalent to the value of this instance.
+        /// </returns>
+        /// <param name="provider">An <see cref="T:System.IFormatProvider"/> interface implementation that supplies culture-specific formatting information. 
+        ///                 </param><filterpriority>2</filterpriority>
+        string IConvertible.ToString(IFormatProvider provider)
+        {
+            return AsString();
+        }
+
+        /// <summary>
+        /// Converts the value of this instance to an <see cref="T:System.Object"/> of the specified <see cref="T:System.Type"/> that has an equivalent value, using the specified culture-specific formatting information.
+        /// </summary>
+        /// <returns>
+        /// An <see cref="T:System.Object"/> instance of type <paramref name="conversionType"/> whose value is equivalent to the value of this instance.
+        /// </returns>
+        /// <param name="conversionType">The <see cref="T:System.Type"/> to which the value of this instance is converted. 
+        ///                 </param><param name="provider">An <see cref="T:System.IFormatProvider"/> interface implementation that supplies culture-specific formatting information. 
+        ///                 </param><filterpriority>2</filterpriority>
+        object IConvertible.ToType(Type conversionType, IFormatProvider provider)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
     }
 }
 

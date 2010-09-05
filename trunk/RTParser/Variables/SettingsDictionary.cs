@@ -869,9 +869,12 @@ namespace RTParser.Variables
                 {
                     SettingsLog("ADD LOCAL '" + name + "'=" + str(value) + " ");
                     found = this.removeSetting(name);
+                    if (value != null)
+                    {
+                        this.orderedKeys.Add(name);
+                        this.settingsHash.Add(normalizedName, value);
+                    }
                     updateListeners(name, value, true, !found);
-                    this.orderedKeys.Add(name);
-                    this.settingsHash.Add(normalizedName, value);
                 }
                 else
                 {
@@ -1127,7 +1130,13 @@ namespace RTParser.Variables
             try
             {
                 name = TransformName(name);
-                return grabSetting0(name);
+                var setting = grabSetting0(name);
+                if (Unifiable.IsNull(setting)) return null;
+                if (Unifiable.IsEMPTY(setting))
+                {
+                    return "";
+                }
+                return setting;
             }
             catch (Exception e)
             {
@@ -1136,6 +1145,71 @@ namespace RTParser.Variables
                 return null;
             }
 #endif
+        }
+
+        public string grabSettingOrDefault(string name, string fallback)
+        {
+            foreach (ParentProvider overide in _overides)
+            {
+                ISettingsDictionary dict = overide();
+                if (dict.containsLocalCalled(name))
+                {
+                    string v = grabSettingOrDefault(dict, name, fallback);
+                    SettingsLog("OVERRIDE '{0}'='{1}'", name, str(v));
+                    return v;
+                }
+            }
+            lock (orderedKeys)
+            {
+                string normalizedName = TransformKey(name);
+
+                if (this.settingsHash.ContainsKey(normalizedName))
+                {
+                    string v = this.settingsHash[normalizedName];
+                    if (makedvars.Contains(normalizedName))
+                    {
+                        SettingsLog("MASKED RETURNLOCAL '" + name + "=NULL instead of" + str(v));
+                        return null;
+                    }
+                    SettingsLog("LOCALRETURN '" + name + "'=" + str(v));
+                    return v;
+                }
+                else if (Fallbacks.Count > 0)
+                {
+                    foreach (ISettingsDictionary list in Fallbacks)
+                    {
+                        list.IsTraced = false;
+                        string v = grabSettingOrDefault(list, name, null);
+                        ;
+                        if (v == null) continue;
+
+                        if (makedvars.Contains(normalizedName))
+                        {
+                            SettingsLog("MASKED PARENT '" + name + "=NULL instead of" + str(v));
+                            return null;
+                        }
+                        SettingsLog("RETURN FALLBACK '" + name + "'=" + str(v));
+                        if (!Unifiable.IsFalse(v)) return v;
+                    }
+                    string v0 = Fallbacks[0].grabSetting(name);
+                    if (!Unifiable.IsNull(v0))
+                    {
+                        SettingsLog("RETURN FALLBACK0 '" + name + "'=" + str(v0));
+                        return v0;
+                    }
+                }
+                SettingsLog("MISSING '" + name + "'");
+                return fallback;
+
+            }
+        }
+
+        private string grabSettingOrDefault(ISettingsDictionary dictionary, string name, string o)
+        {
+            if (dictionary.containsLocalCalled(name)) return dictionary.grabSetting(name);
+            if (dictionary.containsSettingCalled(name)) return dictionary.grabSetting(name);
+            return o;
+
         }
 
         public Unifiable grabSetting0(string name)

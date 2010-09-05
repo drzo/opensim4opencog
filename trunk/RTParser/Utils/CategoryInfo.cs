@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Xml;
+using MushDLR223.Utilities;
 
 namespace RTParser.Utils
 {
@@ -31,24 +32,24 @@ namespace RTParser.Utils
 
         public XmlNode TemplateXml
         {
-            get { return StaticXMLUtil.FindNode("template", Category, null); }
+            get { return StaticXMLUtils.FindNode("template", Category, null); }
         }
 
         public XmlNode TopicXml
         {
-            get { return StaticXMLUtil.FindNodeOrHigher("topic", Category, null); }
+            get { return StaticXMLUtils.FindNodeOrHigher("topic", Category, null); }
         }
 
         public XmlNode ThatXml
         {
-            get { return StaticXMLUtil.FindNodeOrHigher("that", Category, null); }
+            get { return StaticXMLUtils.FindNodeOrHigher("that", Category, null); }
         }
 
         #region IAIMLInfo Members
 
         string IAIMLInfo.SourceInfo()
         {
-            return StaticXMLUtil.LocationInfo(Category);
+            return StaticXMLUtils.LocationInfo(Category);
         }
 
         public GraphMaster Graph
@@ -88,7 +89,7 @@ namespace RTParser.Utils
             if (hasTopic)
             {
                 s += "<topic name=\"";
-                Unifiable n = StaticXMLUtil.GetAttribValue(topic1, "name", () => (string) null, null);
+                Unifiable n = StaticXMLUtils.GetAttribValue(topic1, "name", () => (string) null, null);
                 s += n;
                 s += "\">";
             }
@@ -115,7 +116,7 @@ namespace RTParser.Utils
 
         public override string ToString()
         {
-            return Category.OuterXml + " " + StaticXMLUtil.LocationEscapedInfo(Category);
+            return Category.OuterXml + " " + StaticXMLUtils.LocationEscapedInfo(Category);
         }
 
         public string XMLInfo()

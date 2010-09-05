@@ -31,8 +31,8 @@ namespace RTParser
                 catch (Exception e)
                 {
                     writeToLog(e);
-                    if (RTPBot.NoRuntimeErrors) return default(R); 
-                    throw;                    
+                    if (RTPBot.NoRuntimeErrors) return default(R);
+                    throw;
                 }
             }
             finally
@@ -403,12 +403,12 @@ namespace RTParser
                     sk += s;
             }
             lock (ListUserDirs)
-                return UserOper(() => GetUserDir0(key), QuietLogger);
+                return UserOper(() => HostSystem.Slashify(GetUserDir0(key)), QuietLogger);
         }
         private string GetUserDir0(string key)
         {
             string userDir = HostSystem.Combine(PathToUserDir, key);
-            var luserDir = HostSystem.ToRelativePath(userDir);
+            var luserDir = HostSystem.ToRelativePath(userDir, RuntimeDirectory);
             if (HostSystem.DirExists(luserDir))
             {
                 return luserDir;
@@ -445,7 +445,7 @@ namespace RTParser
                 }
                 if (regex.IsMatch(k1))
                 {
-                    luserDir = HostSystem.ToRelativePath(fsn);
+                    luserDir = HostSystem.ToRelativePath(fsn, RuntimeDirectory);
                     if (HostSystem.DirExists(luserDir))
                     {
                         return luserDir;
@@ -829,6 +829,39 @@ namespace RTParser
         public static bool IsOkForNameChar(char s)
         {
             return s == '_' || s == ' ' || s == '-' || char.IsLetterOrDigit(s);
+        }
+
+
+        private string ToPath(string path, out string prefix)
+        {
+            if (path == null)
+            {
+                prefix = null;
+                return null;
+            }
+            string realPath = HostSystem.FirstExisting(path, RuntimeDirectories, out prefix);
+            if (realPath != null) return realPath;
+            return HostSystem.Combine(prefix, path);
+        }
+
+        private string SettingPath(string namePath, string defaultVal)
+        {
+            string retP = SettingPath0(namePath, defaultVal);
+            string ret = HostSystem.ToRelativePath(retP, RuntimeDirectory);
+            string retA = HostSystem.GetAbsolutePath(retP);
+            return ret;
+        }
+        private string SettingPath0(string namePath, string defaultVal)
+        {
+            string prefix;
+            string res = ToPath(this.GlobalSettings.grabSettingOrDefault(namePath, null), out prefix);
+            if (res != null) return res;
+            if (defaultVal != null)
+            {
+                res = ToPath(this.GlobalSettings.grabSettingOrDefault(defaultVal, null), out prefix);
+                if (res != null) return res;
+            }
+            return defaultVal;
         }
     }
 }

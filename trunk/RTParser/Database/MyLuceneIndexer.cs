@@ -45,7 +45,7 @@ namespace RTParser.Database
         /// <summary>
         ///   Assert Redundancy Checks (for loading multple factiods from files
         /// </summary>
-        public bool AssertReducndancyChecks;
+        public bool AssertReducndancyChecks = true;
         private readonly Dictionary<string, ulong> allContentIdPairs = new Dictionary<string, ulong>();
 
         Lucene.Net.Store.Directory _directory;// = new RAMDirectory();
@@ -377,7 +377,7 @@ namespace RTParser.Database
             // If must contain the exact words (the defualt is false)
             bool mustContainExact = false;
             bool tf;
-            if (StaticXMLUtil.TryParseBool(templateNode, "exact", out tf))
+            if (StaticXMLUtils.TryParseBool(templateNode, "exact", out tf))
             {
                 mustContainExact = tf;
             }
@@ -631,11 +631,11 @@ namespace RTParser.Database
             bool expandOnNoHits = false;
 
             bool tf;
-            if (StaticXMLUtil.TryParseBool(templateNode, "expand", out tf))
+            if (StaticXMLUtils.TryParseBool(templateNode, "expand", out tf))
             {
                 expandOnNoHits = tf;
             }
-            if (StaticXMLUtil.TryParseBool(templateNode, "wordnet,synonyms", out tf))
+            if (StaticXMLUtils.TryParseBool(templateNode, "wordnet,synonyms", out tf))
             {
                 expandWithWordNet = tf;
             }
@@ -741,7 +741,7 @@ namespace RTParser.Database
             if (dict != null)
             {
                 string formatter = dict.GetMeta(relation, meta);
-                if (!Unifiable.IsNullOrEmpty(formatter))
+                if (!TextPatternUtils.IsNullOrEmpty(formatter))
                     return formatter;
             }
             string prop = relation + "." + meta;
@@ -751,10 +751,15 @@ namespace RTParser.Database
         public int callDbPush(string myText, XmlNode expandWordnet)
         {
             // the defualt is true
+
+            if (!MayPush(myText))
+            {
+                return -1;
+            }
             WordNetExpander expandWithWordNet = WordNetExpand;
 
             bool tf;
-            if (StaticXMLUtil.TryParseBool(expandWordnet, "wordnet,synonyms", out tf))
+            if (StaticXMLUtils.TryParseBool(expandWordnet, "wordnet,synonyms", out tf))
             {
                 expandWithWordNet = tf ? (WordNetExpander) WordNetExpand : NoWordNetExpander;
             }
@@ -767,6 +772,24 @@ namespace RTParser.Database
             int numIndexed = Index(contentIdPairs, expandWithWordNet);
             writeToLog("Indexed {0} docs.", numIndexed);
             return numIndexed;
+        }
+
+        public bool MayPush(string text)
+        {
+            foreach (var words in text.ToLower().Split(' '))
+            {
+                if (IsExcludedSubject(words))
+                {
+                    writeToLog("ExcludedSRV '{0}' Subject='{1}' ", text, words);
+                    return false;
+                }
+                if (IsExcludedValue(words))
+                {
+                    writeToLog("ExcludedSRV '{0}' Value='{1}' ", text, words);
+                    return false;
+                }
+            }
+            return true;
         }
 
         /// <summary>
@@ -790,7 +813,7 @@ namespace RTParser.Database
             bool expandWithWordNet = true;
 
             bool tf;
-            if (StaticXMLUtil.TryParseBool(templateNode, "wordnet,synonyms", out tf))
+            if (StaticXMLUtils.TryParseBool(templateNode, "wordnet,synonyms", out tf))
             {
                 expandWithWordNet = tf;
             }
@@ -1091,7 +1114,10 @@ namespace RTParser.Database
             //TheBot.IsLogging = true;
             //TheBot.writeToLog("LUCENE: " + s, p);
             //TheBot.IsLogging = tempB;
-            DLRConsole.DebugWriteLine("LUCENE: " + s, p);
+            s = DLRConsole.SafeFormat(s, p);
+
+            if (s.ToUpper().Contains("EXCLUDE")) return;
+            DLRConsole.DebugWriteLine("LUCENE: " + s);
         }
     }
 

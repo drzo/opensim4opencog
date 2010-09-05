@@ -4,9 +4,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Xml;
+using System.Xml.Schema;
 using cogbot.Actions;
 using DotLisp;
 using MushDLR223.ScriptEngines;
+using MushDLR223.Utilities;
 
 namespace cogbot.ScriptEngines
 {
@@ -165,9 +167,10 @@ namespace cogbot.ScriptEngines
 
         public string evalXMLString(TextReader message)
         {
-            XmlDocument xdoc = new XmlDocument();
+            XmlDocumentLineInfo xdoc = new XmlDocumentLineInfo("evalXMLString: " + message, true);
             try
             {
+                //readerSettings.ValidationEventHandler += new ValidationEventHandler(LLSDXmlSchemaValidationHandler);
                 XmlReader reader = new XmlTextReader(message);
                 xdoc.Load(reader);
             }
@@ -193,14 +196,14 @@ namespace cogbot.ScriptEngines
 
 
                 int depth = 0;
-                XmlDocument xdoc = new XmlDocument();
+                var xdoc = new XmlDocumentLineInfo();
                 XmlTextReader reader;
                 StringReader stringReader;
                 if (xcmd.Contains("http:") || xcmd.Contains(".xml"))
                 {
                     // assuming its a file
                     xcmd = xcmd.Trim();
-                    reader = new XmlTextReader(xcmd);
+                    reader = XmlDocumentLineInfo.CreateXmlTextFileReader(xcmd);
                     xdoc.Load(xcmd);
                 }
                 else
