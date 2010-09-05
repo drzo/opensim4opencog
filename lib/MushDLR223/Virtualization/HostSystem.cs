@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -10,14 +9,59 @@ namespace MushDLR223.Virtualization
 {
     public static class HostSystem
     {
-        public static string BackupExt = ".bak";
-        static public readonly object ExistenceLock = new object();
         private static readonly List<Func<string, string[]>> _pathResolvers = new List<Func<string, string[]>>();
+        public static readonly object ExistenceLock = new object();
         public static readonly string[] NO_EXPANSIONS = new string[0];
+        public static string BackupExt = ".bak";
+        public static string DirectorySeparator = "/"; // + Path.DirectorySeparatorChar;
 
         static HostSystem()
         {
             _pathResolvers.Add(ExpandEnvVars);
+        }
+
+        public static IEnumerable<Func<string, string[]>> PathResolvers
+        {
+            get { lock (_pathResolvers) return _pathResolvers.ToArray(); }
+        }
+
+        public static string ToCanonicalDirectory(string directory)
+        {
+            if (directory == null) return null;
+            directory = directory.Trim();
+            if (directory.Length == 0)
+            {
+                directory = ".";
+            }
+            directory = directory.Replace("/./", "/");
+            if (Directory.Exists(directory))
+            {
+                return Slashify(directory);
+            }
+            if (File.Exists(directory))
+            {
+                return directory;
+            }
+            string dn = Path.GetDirectoryName(directory);
+            if (Directory.Exists(dn) && !File.Exists(directory))
+            {
+                return Slashify(directory);
+            }
+            return Slashify(directory);
+        }
+
+        public static string Slashify(string directory)
+        {
+            if (directory == null) return directory;
+            if (directory == "") return "./";
+            if (directory == ".") return "./";
+            directory = ToForwardSlashes(directory);
+            if (File.Exists(directory))
+            {
+                return directory;
+            }
+            if (!directory.EndsWith("\\") && !directory.EndsWith("/")) return directory + "/";
+            return directory;
         }
 
         private static string[] ExpandEnvVars(string arg)
@@ -25,16 +69,11 @@ namespace MushDLR223.Virtualization
             if (arg.StartsWith("%") && arg.EndsWith("%"))
             {
                 string s = Environment.GetEnvironmentVariable(arg.Substring(1, arg.Length - 2));
-                if (!IsNullOrEmpty(s)) return new[] { s };
+                if (!IsNullOrEmpty(s)) return new[] {s};
             }
             return NO_EXPANSIONS;
         }
 
-
-        public static IEnumerable<Func<string, string[]>> PathResolvers
-        {
-            get { lock (_pathResolvers) return _pathResolvers.ToArray(); }
-        }
 
         public static void InsertPathResolver(Func<string, string[]> funct)
         {
@@ -49,23 +88,71 @@ namespace MushDLR223.Virtualization
             }
         }
 
-        public static string ToRelativePath(string str)
-        {
-            return ToRelativePath(str, Environment.CurrentDirectory);
-        }
+
         public static string ToRelativePath(string str, string prefix)
         {
-            var strSaved = str;
+            str = ToForwardSlashes(str);
+            prefix = ToForwardSlashes(prefix);
+            string strSaved = str;
             bool existed = FileOrDirExists(str);
+            bool dirExisted = DirExists(prefix);
+            string prefixFull = GetFullPath(prefix);
+            string strFull = GetFullPath(str);
+            int longer = strFull.Length - prefixFull.Length;
+            string shared = "";
+            if (ToForwardSlashes(strFull).StartsWith(ToForwardSlashes(prefixFull)))
+            {
+                if (longer == 0)
+                {
+                    return "./";
+                }
+                if (longer > 0)
+                {
+                    string relName = strFull.Substring(prefixFull.Length);
+                    if (relName.Length > 1)
+                    {
+                        return relName;
+                    }
+                    return str;
+                }
+                else
+                {
+                    writeToLog("!ToRelativePath " + prefixFull + " -> " + strFull);
+                }
+                return str;
+            }
+            else
+            {
+                int lastMatch = LastMatch(strFull, prefixFull);
+                shared = strFull.Substring(0, lastMatch);
+                strFull = strFull.Substring(lastMatch);
+                prefixFull = prefixFull.Substring(lastMatch);
+                char[] seps = "/\\".ToCharArray();
+                int countOfPrefixFull = prefixFull.Split(seps).Length;
+                string relPath = "";
+                while (--countOfPrefixFull > 0)
+                {
+                    countOfPrefixFull--;
+                    relPath += "../";
+                }
+                int countOfStrFull = strFull.Split(seps).Length;
+                relPath += strFull;
 
-            str = str.Replace("\\", "/");
+                if (lastMatch == 0)
+                {
+                    writeToLog("HERE?! " + relPath);
+                }
+                return relPath;
+            }
+            if (longer == 0) return "./";
+            // str = str.Replace("\\", "/");
             if (DirExists(prefix))
             {
-                prefix = prefix.Replace("\\", "/");
-                if (!prefix.EndsWith("/")) prefix += "/";
-                if (str.StartsWith(prefix)) str = str.Substring(prefix.Length);
-                str = str.Replace("/", "" + Path.DirectorySeparatorChar);
-                if (existed) if (!FileOrDirExists(str))
+                //if (!prefix.EndsWith("/")) prefix += "/";
+                //if (str.StartsWith(prefix)) str = str.Substring(prefix.Length);
+                //  str = str.Replace("/", "" + Path.DirectorySeparatorChar);
+                if (existed)
+                    if (!FileOrDirExists(str))
                     {
                         str = strSaved;
                     }
@@ -73,8 +160,47 @@ namespace MushDLR223.Virtualization
             return str;
         }
 
+        private static int LastMatch(string left, string right)
+        {
+            int llen = left.Length;
+            int at = 0;
+            foreach (char r in right)
+            {
+                if (llen <= 0)
+                {
+                    // short
+                    return at;
+                }
+                char l = left[at];
+
+                if (l != r) return at;
+
+                at++;
+                llen--;
+            }
+            return at;
+        }
+
+        private static string ToForwardSlashes(string str)
+        {
+            return str.Replace("\\", "/").ToLower();
+            if (Directory.Exists(str))
+            {
+                str = ToCanonicalDirectory(str);
+                str = str.Replace("\\", "/").ToLower();
+            }
+        }
+
+        private static string GetFullPath(string str)
+        {
+            String fp = Path.GetFullPath(str);
+            if (Directory.Exists(fp)) fp = ToCanonicalDirectory(fp);
+            return ToForwardSlashes(fp);
+        }
+
         public static bool FileOrDirExists(string str)
         {
+            if (str == null) return false;
             return FileExists(str) || DirExists(str);
         }
 
@@ -92,6 +218,7 @@ namespace MushDLR223.Virtualization
             if (!IsNullOrEmpty(toexitingpath)) pathname = toexitingpath;
             return BackupFile(pathname, true);
         }
+
         public static bool BackupFile(string pathname, bool onlyOne)
         {
             string toexitingpath = ResolveToExistingPath(pathname);
@@ -108,7 +235,6 @@ namespace MushDLR223.Virtualization
                 }
                 return FileMove(pathname, backname);
             }
-
         }
 
         public static bool DeleteFile(string pathname)
@@ -135,7 +261,7 @@ namespace MushDLR223.Virtualization
             if (!IsNullOrEmpty(toexitingpath)) pathname = toexitingpath;
 
             lock (ExistenceLock)
-            {                
+            {
                 if (!FileExists(pathname)) return true;
 
 
@@ -221,11 +347,49 @@ namespace MushDLR223.Virtualization
             }
         }
 
+        public static String[] GetWildFiles(string pathname, out string dirname, out string filemask)
+        {
+            string exists = ResolveToExistingPath(pathname);
+            string[] file;
+            if (exists != null) pathname = exists;
+            if (DirExists(pathname))
+            {
+                filemask = "*";
+                dirname = ToCanonicalDirectory(pathname);
+                string[] files = Directory.GetFiles(dirname, filemask);
+                return files;
+            }
+            filemask = "";
+            dirname = "";
+            while (pathname.Length > 0)
+            {
+                if (DirExists(pathname))
+                {
+                    dirname = ToCanonicalDirectory(pathname);
+                    string[] files = Directory.GetFiles(dirname, filemask);
+                    return files;
+                }
+                {
+                    string lastDir = Path.GetFileName(pathname);
+                    filemask = Combine(lastDir, filemask);
+                    dirname = GetBaseDir(pathname);
+                }
+            }
+            return null;
+        }
+
         public static String[] GetFiles(string pathname)
         {
             string exists = ResolveToExistingPath(pathname);
             if (exists != null) pathname = exists;
             if (DirExists(pathname)) return Directory.GetFiles(pathname);
+
+            string dirname = GetBaseDir(pathname);
+            if (dirname != null && DirExists(dirname))
+            {
+                string filename = Path.GetFileName(pathname);
+                return Directory.GetFiles(dirname, filename);
+            }
             return new string[0];
         }
 
@@ -258,7 +422,7 @@ namespace MushDLR223.Virtualization
             if (before == null) return null;
             return ToAutoCloseStream(before, path);
         }
-        
+
         public static Stream GetStream0(string path)
         {
             string toexitingpath = ResolveToExistingPath(path);
@@ -287,28 +451,28 @@ namespace MushDLR223.Virtualization
 
         public static string ResolveToExistingPath(string path)
         {
-            string physicalPath = ToPhysicalPath(path, true);
+            string physicalPath = ResolveToExistingPath(path, true);
             if (!IsNullOrEmpty(physicalPath)) return physicalPath;
-           // string betterish = null;
+            // string betterish = null;
             foreach (var func in PathResolvers)
             {
                 string[] existings = func(path);
-                if (existings==null) continue;
-                foreach (var existing in existings)
+                if (existings == null) continue;
+                foreach (string existing in existings)
                 {
                     if (!IsNullOrEmpty(existing))
                     {
                         ///    betterish = existing;
-                        string better = ToPhysicalPath(existing, true);
+                        string better = ResolveToExistingPath(existing, true);
                         if (!String.IsNullOrEmpty(better)) return better;
                         return existing;
-                    }                                   
+                    }
                 }
             }
             return null;
         }
 
-        private static string ToPhysicalPath(string path, bool mustExist)
+        private static string ResolveToExistingPath(string path, bool mustExist)
         {
             if (path == null) return null;
             if (File.Exists(path)) return path;
@@ -320,7 +484,7 @@ namespace MushDLR223.Virtualization
                     var uri = new Uri(path);
                     if (uri.IsFile)
                     {
-                        return ToPhysicalPath(uri.AbsolutePath, mustExist);
+                        return ResolveToExistingPath(uri.AbsolutePath, mustExist);
                     }
                 }
                 catch (Exception)
@@ -331,15 +495,33 @@ namespace MushDLR223.Virtualization
             {
                 try
                 {
+                    if (mustExist) return null;
                     var uri = new Uri(path);
                     if (uri.IsFile)
                     {
-                        return ToPhysicalPath(uri.AbsolutePath, mustExist);
+                        return ResolveToExistingPath(uri.AbsolutePath, mustExist);
                     }
                 }
                 catch (Exception)
                 {
                 }
+            }
+            if (InvalidPathname(path))
+            {
+                if (mustExist)
+                {
+                    string d, f;
+                    string[] files = GetWildFiles(path, out d, out f);
+                    if (files == null || files.Length == 0) return null;
+                    if (files.Length == 1)
+                    {
+                        return files[0];
+                    }
+                    string pp = ResolveToExistingPath(d, mustExist);
+                    if (pp == null) return null;
+                    return Combine(pp, f);
+                }
+                return null;
             }
             if (!mustExist)
             {
@@ -355,23 +537,14 @@ namespace MushDLR223.Virtualization
                 string dir = Path.GetExtension(path);
                 if (dir == "gz")
                 {
-                    return delegate(Stream file0)
-                               {
-                                   return new GZipStream(file0, CompressionMode.Decompress);
-                               };
+                    return delegate(Stream file0) { return new GZipStream(file0, CompressionMode.Decompress); };
                 }
                 if (dir == "z")
                 {
-                    return delegate(Stream file0)
-                    {
-                        return new GZipStream(file0, CompressionMode.Decompress);
-                    };
+                    return delegate(Stream file0) { return new GZipStream(file0, CompressionMode.Decompress); };
                 }
             }
-            if (fakeOne) return delegate(Stream stream)
-                        {
-                            return stream;
-                        };
+            if (fakeOne) return delegate(Stream stream) { return stream; };
             return null;
         }
 
@@ -382,7 +555,16 @@ namespace MushDLR223.Virtualization
 
         public static string Combine(string dir, string file)
         {
-            return Path.Combine(dir, file);
+            if (dir == null) return file;
+            string dirpart = ToCanonicalDirectory(dir);
+            if (file == null) return dirpart;
+            file = file.Replace("/./", "/");
+            dirpart = dirpart.Replace("/./", "/");
+            if (file == "./") return dirpart;
+            if (dirpart.EndsWith("./")) dirpart = dirpart.Substring(0, dirpart.Length - 2);
+            if (file.StartsWith("./")) file = file.Substring(2);
+            string res = Path.Combine(dirpart, file);
+            return res;
         }
 
         public static void AppendAllText(string file, string text)
@@ -403,66 +585,129 @@ namespace MushDLR223.Virtualization
         public static string[] GetDirectories(string path)
         {
             return Directory.GetDirectories(path);
-
         }
 
-        public static string ResolveToURI(string pathIn, IEnumerable<String> combine)
+        public static string ResolveToExisting(string pathIn, out string p, params string[] combine)
         {
-
             pathIn = pathIn.Trim();
-            foreach (var s in combine)
+            return FirstExisting(pathIn, combine, out p);
+        }
+
+        public static string ResolveToURI(string pathIn, IEnumerable<String> combine, out string p)
+        {
+            pathIn = pathIn.Trim();
+            string existing = FirstExisting(pathIn, combine, out p);
+            if (existing != null) return existing;
+            return pathIn;
+        }
+
+        public static string FirstExisting(string pathIn, IEnumerable<String> combine, out string p)
+        {
+            pathIn = pathIn.Trim();
+            string prefix = null, fullPath = null;
+
+
+            foreach (string s in combine)
             {
                 string path = Combine(s, pathIn);
-                if (HostSystem.DirExists(path))
-                {
-                    return (new DirectoryInfo(path)).FullName;
-                }
-                if (HostSystem.FileExists(path))
-                {
-                    return (new FileInfo(path)).FullName;
-                }
-                if (Uri.IsWellFormedUriString(path, UriKind.RelativeOrAbsolute))
-                {
-                    try
-                    {
-                        var uri = new Uri(path);
-                        if (uri.IsFile || uri.IsUnc)
-                        {
-                            return uri.AbsolutePath;
-                        }
-                    }
-                    catch (Exception exception)
-                    {
-
-                    }
-                }
-
+                if (path == null) continue;
+                if (!FileOrDirExists(path)) continue;
+                string ss = ToPathname(path);
+                if (ss == null) continue;
+                fullPath = path;
+                prefix = s;
             }
-            return pathIn;
+            p = prefix;
+            return fullPath;
+        }
+
+        private static string ToPathname(string path)
+        {
+            if (DirExists(path))
+            {
+                return (new DirectoryInfo(path)).FullName;
+            }
+            if (FileExists(path))
+            {
+                return (new FileInfo(path)).FullName;
+            }
+            if (Uri.IsWellFormedUriString(path, UriKind.RelativeOrAbsolute))
+            {
+                try
+                {
+                    var uri = new Uri(path);
+                    if (uri.IsFile || uri.IsUnc)
+                    {
+                        return uri.AbsolutePath;
+                    }
+                }
+                catch (Exception exception)
+                {
+                }
+            }
+            return null;
         }
 
         public static string GetBaseDir(string pathname)
         {
-            string exists = ResolveToExistingPath(pathname);
-            if (exists != null) pathname = exists;
+            string s = GetBaseDir0(pathname);
+            string d = ToCanonicalDirectory(Slashify(s));
+            return ToForwardSlashes(d);
+        }
 
-            FileSystemInfo info = new DirectoryInfo(pathname);            
-            if (info.Exists)
+        public static string GetBaseDir0(string pathname)
+        {
+            string exists = ResolveToExistingPath(pathname);
+            if (exists != null)
             {
-                string maybe = info.FullName;
-                if (string.IsNullOrEmpty(maybe)) return maybe;
+                if (exists != pathname)
+                {
+                    pathname = exists;
+                }
+            }
+            exists = Path.GetFullPath(pathname);
+            string file = Path.GetFileName(pathname);
+
+            if (!InvalidPathname(exists))
+            {
+                try
+                {
+                    FileSystemInfo info = new DirectoryInfo(pathname);
+                    if (info.Exists)
+                    {
+                        string maybe = info.FullName;
+                        if (string.IsNullOrEmpty(maybe)) return maybe;
+                    }
+                }
+                catch (Exception)
+                {
+                }
+            }
+            if (Directory.Exists(exists))
+            {
+                var fi = new DirectoryInfo(pathname);
+                DirectoryInfo maybe = fi.Parent;
+                if (maybe != null) return maybe.Name;
             }
             if (File.Exists(exists))
             {
                 var fi = new FileInfo(pathname);
                 string maybe = fi.DirectoryName;
-                if (string.IsNullOrEmpty(maybe)) return maybe;
+                if (!string.IsNullOrEmpty(maybe)) return maybe;
             }
-            return Path.GetDirectoryName(pathname);
+            exists = Path.GetDirectoryName(pathname);
+            return exists;
+        }
+
+        private static bool InvalidPathname(string exists)
+        {
+            char[] pathGetInvalidPathChars = Path.GetInvalidPathChars();
+            return exists.IndexOfAny(pathGetInvalidPathChars) != -1;
         }
 
         public static string GetAbsolutePath(string pathname)
         {
+            if (pathname == null) return pathname;
             string exists = ResolveToExistingPath(pathname);
             if (exists == null) exists = pathname;
             if (Directory.Exists(exists))
@@ -479,7 +724,6 @@ namespace MushDLR223.Virtualization
             if (s != pathname)
             {
                 writeToLog("Absolute path does not exist " + s + " from " + pathname);
-
             }
             return pathname;
         }
@@ -491,7 +735,7 @@ namespace MushDLR223.Virtualization
             {
                 if (stream is AutoClosingStream)
                 {
-                    ((AutoClosingStream)stream).Close0();
+                    ((AutoClosingStream) stream).Close0();
                     return;
                 }
                 stream.Close();
