@@ -342,6 +342,11 @@ namespace RTParser.Utils
             if (lnamed == "query") return query;
             return Request.GetDictionary(named);
         }
+
+        public T ReduceStarAttribute<T>(IConvertible value) where T : IConvertible
+        {
+            return StaticAIMLUtils.ReduceStar<T>(value, this, this);
+        }
     }
 
 #if _FALSE_

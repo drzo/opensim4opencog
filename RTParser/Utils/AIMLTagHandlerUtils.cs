@@ -1,6 +1,6 @@
 using System;
 using System.Xml;
-using LineInfoElement = RTParser.Utils.LineInfoElementImpl;
+using LineInfoElement = MushDLR223.Utilities.LineInfoElementImpl;
 using StringAppendableUnifiable = RTParser.StringAppendableUnifiableImpl;
 
 //using StringAppendableUnifiable = System.Text.StringBuilder;

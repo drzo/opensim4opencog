@@ -11,7 +11,7 @@ using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
 using RTParser.Normalize;
 using UPath = RTParser.Unifiable;
-using LineInfoElement = RTParser.Utils.LineInfoElementImpl;
+using LineInfoElement = MushDLR223.Utilities.LineInfoElementImpl;
 
 namespace RTParser.Utils
 {
@@ -130,24 +130,49 @@ namespace RTParser.Utils
             return total;
         }
 
-        private static string ResolveToURI(string pathIn, LoaderOptions loadOpts)
+        private string ResolveToURI(string pathIn, LoaderOptions loadOpts)
         {
-            string baseFile = GetBaseDirectory(loadOpts);
-            var combine = baseFile != null ? new[] {".", baseFile, "aiml"} : new[] {".", "aiml"};
-            string path = HostSystem.ResolveToURI(pathIn, combine);
-            path = HostSystem.ToRelativePath(path);
-            if (!HostSystem.FileOrDirExists(path))
+            string path = ResolveToURI0(pathIn, loadOpts);
+            if (path!=pathIn)
             {
-                RTPBot.writeDebugLine("WARNING PATH NOT EXIST ERROR: " + path);
+                writeToLog("ResolveToURI '{0}'->'{1}'", pathIn, path);
             }
             return path;
+        }
+        private static string ResolveToURI0(string pathIn, LoaderOptions loadOpts)
+        {
+            string baseFile = GetBaseDirectory(loadOpts);
+            var inPath = HostSystem.ToRelativePath(pathIn, baseFile);
+            IEnumerable<string> combine;
+            //combine = baseFile != null ? new[] { "./", baseFile, "aiml/" } : new[] { "./", "aiml/" };
+            string prefix;
+            combine = loadOpts.TheRequest.TargetBot.RuntimeDirectories;
+            string pathFull = HostSystem.ResolveToURI(pathIn, combine, out prefix);
+            string relPath = HostSystem.ToRelativePath(pathFull, prefix);
+            string rpath = HostSystem.Combine(prefix, relPath);
+            if (HostSystem.FileOrDirExists(rpath))
+            {
+                return rpath;
+            }
+            if (!HostSystem.FileOrDirExists(relPath))
+            {
+                RTPBot.writeDebugLine("WARNING PATH NOT EXIST ERROR: " + relPath);
+            }
+            return relPath;
         }
 
         private static string GetBaseDirectory(LoaderOptions loadOpts)
         {
             string baseFile = loadOpts.CurrentlyLoadingFrom ?? loadOpts.CurrentFilename ?? LoaderOptions.MISSING_FILE;
-            if (baseFile == null) return ".";
-            return HostSystem.GetBaseDir(baseFile);
+            if (baseFile == null)
+            {
+                baseFile = HostSystem.ToCanonicalDirectory(".");
+            }
+            if (baseFile.EndsWith("/") || baseFile.EndsWith("\\")) return HostSystem.ToCanonicalDirectory(baseFile);
+            if (File.Exists(baseFile)) return HostSystem.ToCanonicalDirectory(new FileInfo(baseFile).DirectoryName);
+            if (Directory.Exists(baseFile)) return HostSystem.ToCanonicalDirectory(baseFile);
+            string bd = HostSystem.ToCanonicalDirectory(HostSystem.GetBaseDir(baseFile));
+            return bd;
         }
 
         private R LoaderOper<R>(Func<R> action, GraphMaster gm)
@@ -195,17 +220,22 @@ namespace RTParser.Utils
             return total;
         }
 
-        public int loadAIMLURI0(string path, LoaderOptions loadOpts)
+        public int loadAIMLURI0(string path0, LoaderOptions loadOpts)
         {
             RTPBot RProcessor = loadOpts.RProcessor;
+            string path = path0;
             loadOpts.Loading0 = path;
-            RProcessor.ReloadHooks.Add(() => loadAIMLURI0(path, loadOpts));
-            path = ResolveToURI(path, loadOpts);
+            string pathIn = path;            
+            RProcessor.ReloadHooks.Add(() => loadAIMLURI0(pathIn, loadOpts));
+            path = ResolveToURI(pathIn, loadOpts);
+            string fullPath = HostSystem.GetAbsolutePath(pathIn);
+            if (!HostSystem.FileOrDirExists(path)) path = fullPath;
             int total = 0;
             try
             {
                 if (HostSystem.DirExists(path))
                 {
+                    path = HostSystem.ToCanonicalDirectory(path);
                     Request request = loadOpts.TheRequest;
                     LoaderOptions savedOpt = request.LoadOptions;
                     try
@@ -224,16 +254,23 @@ namespace RTParser.Utils
                 }
                 else if (HostSystem.FileExists(path))
                 {
+                    string hostSystemGetBaseDir = HostSystem.GetBaseDir(pathIn);
                     Request request = loadOpts.TheRequest;
+
+                    string currentPath = HostSystem.ToRelativePath(pathIn, hostSystemGetBaseDir);
                     LoaderOptions savedOpt = request.LoadOptions;
+                    string pop = null;
                     try
                     {
+                        pop = RProcessor.PushSearchPath(hostSystemGetBaseDir);
                         request.LoadOptions = loadOpts;
-                        total += loadAIMLFile0(path, loadOpts, true);
+                        //total += loadAIMLFile0(path, loadOpts, true);
+                        total += loadAIMLFile0(currentPath, loadOpts, true);
                     }
                     finally
                     {
                         request.LoadOptions = savedOpt;
+                        RProcessor.PopSearchPath(pop);
                     }
                     return total;
                 }
@@ -265,26 +302,36 @@ namespace RTParser.Utils
                 }
                 else
                 {
-                    var pathnames = HostSystem.GetFiles(path);
-                    if (pathnames != null && pathnames.Length > 0)
+                    string dir;
+                    string filemask;
+                    var pathnames = HostSystem.GetWildFiles(path, out dir, out filemask);
+                    string pop = null;
+                    try
                     {
-                        foreach (string pathname in pathnames)
-                        {
-                            Request request = loadOpts.TheRequest;
-                            LoaderOptions savedOpt = request.LoadOptions;
-                            try
+                        Request request = loadOpts.TheRequest;
+                        LoaderOptions savedOpt = request.LoadOptions;
+                        pop = RProcessor.PushSearchPath(HostSystem.GetBaseDir(dir));
+                        if (pathnames != null && pathnames.Length > 0)
+                            foreach (string pathname in pathnames)
                             {
-                                request.LoadOptions = loadOpts;
-                                total += loadAIMLFile0(pathname, loadOpts, false);
+                                try
+                                {
+                                    request.LoadOptions = loadOpts;
+                                    total += loadAIMLFile0(pathname, loadOpts, false);
+                                }
+                                finally
+                                {
+                                    request.LoadOptions = savedOpt;
+                                }
                             }
-                            finally
-                            {
-                                request.LoadOptions = savedOpt;
-                            }
-                        }
                         return total;
                     }
+                    finally
+                    {
+                        RProcessor.PopSearchPath(pop);
+                    }
                 }
+
                 String nf = "ERROR: XmlTextReader of AIML files (" + path + ")";
                 FileNotFoundException nfe = new FileNotFoundException(nf);
                 RProcessor.writeToLog(nfe);
@@ -528,8 +575,8 @@ namespace RTParser.Utils
             {
                 writeToLog("ERROR! Ensuring loadOpts.Filename='{0}' but path='{1}'", fn, path);
             }
-            fn = fn.Replace("\\", "/");
-            path = path.Replace("\\", "/");
+            fn = fn.Replace("\\", "/").ToLower();
+            path = path.Replace("\\", "/").ToLower();
             if (!fn.Contains(path) && !path.Contains(fn))
             {
                 writeToLog("WARNING! Ensuring loadOpts.Filename='{0}' but path='{1}'", fn, path);
@@ -691,6 +738,10 @@ namespace RTParser.Utils
             }
 
             Unifiable topicName = GetAttribValue(topicNode, "name,topic", Unifiable.STAR);
+            if (IsNullOrEmpty(topicName))
+            {
+                topicName = GetAttribValue(topicNode, "name,topic", Unifiable.STAR);
+            }
             // process all the category nodes
             foreach (XmlNode cateNode in topicNode.ChildNodes)
             {

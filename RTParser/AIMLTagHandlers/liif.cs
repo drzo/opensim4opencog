@@ -2,6 +2,8 @@
 using System.Xml;
 using System.Text;
 using System.Text.RegularExpressions;
+using MushDLR223.Utilities;
+using RTParser.Utils;
 using RTParser.Variables;
 
 namespace RTParser.AIMLTagHandlers
@@ -119,15 +121,25 @@ namespace RTParser.AIMLTagHandlers
             if (CheckNode("li,if"))
             {
 
+                ISettingsDictionary dist = query;
+                return IfSucceed(templateNode, dist, query, Succeed);
+        
+            }
+            return Succeed();
+        }
 
-                ISettingsDictionary dict = query;
-                if (GetAttribValue("type", "") == "bot" || GetAttribValue("bot", "").ToLower() == "true")
-                    dict = request.TargetBot.GlobalSettings;
+        static Unifiable IfSucceed(XmlNode templateNode, ISettingsDictionary dict, SubQuery query0, Func<Unifiable> Succeed)
+        {
+            lock (templateNode)
+            {
+              //  ISettingsDictionary dict = query;
+                if (GetAttribValue(templateNode, "type", "") == "bot" || GetAttribValue(templateNode,"bot", "").ToLower() == "true")
+                    dict = query0.TargetBot.GlobalSettings;
 
                 bool yesInherit = true;
                 bool noLocal = false;
 
-                string locally = GetAttribValue("scope,type,exists", "");
+                string locally = GetAttribValue(templateNode,"scope,type,exists", "");
                 if (locally.Contains("local"))
                 {
                     yesInherit = false;
@@ -138,8 +150,10 @@ namespace RTParser.AIMLTagHandlers
                     yesInherit = true;
                 }
 
-                string name = GetAttribValue(templateNode, "name,var,if", NullStringFunct, query);
-                string expression = GetAttribValue(templateNode, "expr", NullStringFunct, query);
+                Func<IConvertible, string> query = query0.ReduceStarAttribute<string>;
+
+                string name = GetAttribValue<string>(templateNode, "name,var,if", NullStringFunct, query);
+                string expression = GetAttribValue<string>(templateNode, "expr", NullStringFunct, query);
                 string exists = GetAttribValue(templateNode, "exists", NullStringFunct, query);
                 string contains = GetAttribValue(templateNode, "contains", NullStringFunct, query);
                 Unifiable value = GetAttribValue(templateNode, "value", NullStringFunct, query);
@@ -208,15 +222,15 @@ namespace RTParser.AIMLTagHandlers
                     }
                     string realName;
                     bool succeed;
-                    Unifiable actualValue = base.GetActualValue(name, false, out succeed);
-                    if (IsPredMatch(value, actualValue, query))
+                    //ReduceStar0 query = query0.ReduceStarAttribute;
+                    Unifiable actualValue = GetActualValue(templateNode, name, false, out succeed, query0); 
+                    if (IsPredMatch(value, actualValue, query0))
                     {
                         return Succeed();
                     }
                 }
-
+                return Succeed();
             }
-            return Succeed();
         }
 
         public void UnknownCondition()

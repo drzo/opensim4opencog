@@ -154,7 +154,7 @@ namespace RTParser.AIMLTagHandlers
                                     {
                                         bool succeed;
                                         Unifiable actualValue = base.GetActualValue(name, false, out succeed);
-                                        Unifiable value = GetAttribValue(childLINode, "value", EmptyFunct, query);
+                                        Unifiable value = GetAttribValue(childLINode, "value", EmptyFunct, ReduceStarAttribute<Unifiable>);
                                         if (IsPredMatch(value, actualValue, query))
                                         {
                                             Succeed();
@@ -181,8 +181,8 @@ namespace RTParser.AIMLTagHandlers
 
                             if (cac == 2)
                             {
-                                string name = GetAttribValue(childLINode, "name", EmptyFunct, query);
-                                Unifiable value = GetAttribValue(childLINode, "value", EmptyFunct, query);
+                                string name = GetAttribValue(childLINode, "name", EmptyFunct, ReduceStarAttribute);
+                                Unifiable value = GetAttribValue(childLINode, "value", EmptyFunct, ReduceStarAttribute);
                                 if ((name.Length > 0) & (!value.IsEmpty))
                                 {
                                     bool succeed;
@@ -196,7 +196,7 @@ namespace RTParser.AIMLTagHandlers
                             }
                             if (cac == 1)
                             {
-                                string name = GetAttribValue(childLINode, "name", EmptyFunct, query);
+                                string name = GetAttribValue(childLINode, "name", EmptyFunct, ReduceStarAttribute);
                                 if ((name.Length > 0) && this.query.containsSettingCalled(name))
                                 {
                                     Succeed();

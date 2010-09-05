@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Xml;
+using MushDLR223.Utilities;
 using RTParser.AIMLTagHandlers;
 using RTParser.Database;
 using RTParser.Utils;
 using Console=System.Console;
-using LineInfoElement = RTParser.Utils.LineInfoElementImpl;
+using LineInfoElement = MushDLR223.Utilities.LineInfoElementImpl;
 
 namespace RTParser
 {

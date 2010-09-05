@@ -61,7 +61,7 @@ namespace RTParser.AIMLTagHandlers
                 string setReturn = GetAttribValue(templateNode, "set-return",
                                                   () =>
                                                   ((string) Proc.GetRelationMetaProps().GetMeta(name, "set-return")),
-                                                  query);
+                                                  ReduceStarAttribute<string>);
                 if (value == null)
                 {
                     value = templateNodeInnerText;

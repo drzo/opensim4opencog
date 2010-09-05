@@ -2,6 +2,7 @@ using System;
 using System.Xml;
 using System.Text;
 using System.IO;
+using MushDLR223.Utilities;
 using RTParser.Utils;
 
 namespace RTParser.AIMLTagHandlers
@@ -42,7 +43,7 @@ namespace RTParser.AIMLTagHandlers
             if (templateNode.HasChildNodes)
             {
 
-                XmlNode attach = AIMLLoader.CopyNode("aiml", templateNode, false);
+                XmlNode attach = StaticXMLUtils.CopyNode("aiml", templateNode, false);
                 attach.RemoveAll();
                 // recursively check
                 foreach (XmlNode childNode in templateNode.ChildNodes)

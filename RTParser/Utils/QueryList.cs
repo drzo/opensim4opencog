@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Xml;
 
 namespace RTParser.Utils
 {
@@ -143,16 +144,30 @@ namespace RTParser.Utils
             return Bindings;
         }
 
-        private string ToString(string pre, ICollection c)
+        private static string ToString(string pre, ICollection c)
         {
             if (c == null || c.Count == 0) return Environment.NewLine;
             string s = "";
             foreach (object node in c)
             {
-                s += pre + CleanWhitepaces(node) + Environment.NewLine;
+                s += pre + CleanWhitepacesObject(node) + Environment.NewLine;
             }
             s += Environment.NewLine;
             return s;
+        }
+
+        public static string CleanWhitepacesObject(object info)
+        {
+            if (info is XmlNode)
+            {
+                XmlNode n = (XmlNode)info;
+                if (n.Name == "template") info = n.ParentNode;
+            }
+            if (info is TemplateInfo)
+            {
+                info = ((TemplateInfo)info).CategoryInfo;
+            }
+            return CleanWhitepaces("" + info);
         }
 
         public bool ContainsPattern(KeyValuePair<Unifiable, Node> pair)

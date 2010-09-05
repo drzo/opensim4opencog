@@ -13,7 +13,7 @@ namespace RTParser.Utils
     /// Encapsulates a node in the graphmaster tree structure
     /// </summary>
     [Serializable]
-    public class Node
+    public class Node : StaticAIMLUtils
     {
         private void writeToLog(string message, params object[] args)
         {
@@ -155,9 +155,9 @@ namespace RTParser.Utils
                                                        //var categoryinfo2 = temp.CategoryInfo;
                                                        string oldGuard = temp.Guard != null ? temp.Guard.OuterXml : null;
                                                        string oldThat = temp.That != null ? temp.That.OuterXml : null;
-                                                       if (StaticXMLUtil.AimlSame(newStr, temp.Output.OuterXml))
-                                                           if (StaticXMLUtil.AimlSame(newGuard, oldGuard))
-                                                               if (StaticXMLUtil.AimlSame(newThat, oldThat))
+                                                       if (StaticAIMLUtils.AimlSame(newStr, temp.Output.OuterXml))
+                                                           if (StaticAIMLUtils.AimlSame(newGuard, oldGuard))
+                                                               if (StaticAIMLUtils.AimlSame(newThat, oldThat))
                                                                {
                                                                    if (nodeNum == 0)
                                                                    {
@@ -605,8 +605,15 @@ namespace RTParser.Utils
                                    request.user.UserID + " raw input: \"" +
                                    request.rawInput + "\" in " + this);
                 request.IsTraced = true;
-                request.hasTimedOut = true;
-                return null; // Unifiable.Empty;
+                if (!request.hasTimedOut)
+                {
+                    request.TimesOutAt = DateTime.Now + TimeSpan.FromSeconds(5);
+                    request.hasTimedOut = true;
+                }
+                else
+                {
+                    return null; // Unifiable.Empty;                    
+                }
             }
 
             int pathLength = splitPath.Length - at;

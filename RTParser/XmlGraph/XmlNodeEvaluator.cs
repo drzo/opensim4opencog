@@ -18,7 +18,7 @@ namespace RTParser.Utils
         public readonly static IEnumerable<XmlNode> NO_XmlNode = new XmlNode[0];
 
         protected Type ReflectionType;
-        protected string prefix = "Eval_";
+        protected string prefixE = "Eval_";
         protected string typesufix = "_NodeType";
 
         protected XmlNodeEvaluatorImpl()
@@ -26,10 +26,10 @@ namespace RTParser.Utils
             ReflectionType = GetType(); 
         }
 
-        protected XmlNodeEvaluatorImpl(string prefix, string suffix)
+        protected XmlNodeEvaluatorImpl(string prefix0, string suffix)
             : this()
         {
-            this.prefix = prefix;
+            this.prefixE = prefix0;
             this.typesufix = suffix;
         }
 
@@ -61,9 +61,9 @@ namespace RTParser.Utils
 
         public virtual MethodInfo GetMethodForNode(XmlNode node)
         {
-            MethodInfo mi = ReflectionType.GetMethod(prefix + node.Name);
+            MethodInfo mi = ReflectionType.GetMethod(prefixE + node.Name);
             if (mi != null) return mi;
-            mi = ReflectionType.GetMethod(prefix + node.NodeType.ToString() + typesufix);
+            mi = ReflectionType.GetMethod(prefixE + node.NodeType.ToString() + typesufix);
             return mi;
         }
 

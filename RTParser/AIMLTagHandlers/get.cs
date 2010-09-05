@@ -62,7 +62,7 @@ namespace RTParser.AIMLTagHandlers
         {
             if (CheckNode("get"))
             {
-                string name = GetAttribValue(templateNode, "name,var", () => templateNodeInnerText, query);
+                string name = GetAttribValue(templateNode, "name,var", () => templateNodeInnerText, ReduceStarAttribute);
                 bool succeed;
                 Unifiable v = base.GetActualValue(name, false, out succeed);
                 if (succeed) Succeed();

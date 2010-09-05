@@ -96,7 +96,7 @@ namespace RTParser.Database
         static public Unifiable SetSettingForType(string type, SubQuery query, ISettingsDictionary dict, string name, string gName, Unifiable value, string setReturn, XmlNode templateNode)
         {
             string _sreturn = setReturn;
-            setReturn = StaticXMLUtil.GetAttribValue(templateNode, "set-return", () => _sreturn, query);
+            setReturn = StaticXMLUtils.GetAttribValue<string>(templateNode, "set-return", () => _sreturn, query.ReduceStarAttribute<string>);
 
             Request request = query.Request;
             RTPBot TargetBot = request.TargetBot;
@@ -153,20 +153,20 @@ namespace RTParser.Database
             if (templateNode == null) return true;
 
             bool onlyIfUnknown;
-            if (StaticXMLUtil.TryParseBool(templateNode, "ifUnknown", out onlyIfUnknown))
+            if (StaticXMLUtils.TryParseBool(templateNode, "ifUnknown", out onlyIfUnknown))
             {
                 if (onlyIfUnknown) return Unifiable.IsUnknown(oldValue);
             }
 
             bool overwriteExisting;
-            if (StaticXMLUtil.TryParseBool(templateNode, "overwriteExisting", out overwriteExisting))
+            if (StaticXMLUtils.TryParseBool(templateNode, "overwriteExisting", out overwriteExisting))
             {
                 if (!overwriteExisting) return Unifiable.IsNullOrEmpty(oldValue);
                 //if (overwriteExisting)                   
                 return true;
             }
 
-            string oldMatch = StaticXMLUtil.GetAttribValue(templateNode, "existing", null);
+            string oldMatch = StaticXMLUtils.GetAttribValue(templateNode, "existing", null);
             bool shouldSet = true;
 
             if (oldMatch != null)
@@ -176,7 +176,7 @@ namespace RTParser.Database
                     shouldSet = false;
                 }
             }
-            string newMatch = StaticXMLUtil.GetAttribValue(templateNode, "matches", null);
+            string newMatch = StaticXMLUtils.GetAttribValue(templateNode, "matches", null);
 
             if (newMatch != null)
             {

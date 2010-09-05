@@ -1,5 +1,6 @@
 using System;
 using System.Xml;
+using MushDLR223.Utilities;
 
 namespace RTParser.Utils
 {
@@ -45,7 +46,7 @@ namespace RTParser.Utils
         {
             if (XmlDocumentLineInfo.SkipXmlns && this.srcNode.Attributes != null)
                 this.srcNode.Attributes.RemoveNamedItem("xmlns");
-            return srcNode.OuterXml + " " + StaticXMLUtil.LocationEscapedInfo(srcNode);
+            return srcNode.OuterXml + " " + StaticXMLUtils.LocationEscapedInfo(srcNode);
         }
     }
 }
