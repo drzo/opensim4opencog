@@ -28,16 +28,10 @@ namespace RTParser.Utils
 
         internal bool LoopsFrom(string innerXml)
         {
-            string p = FullPath.AsString().ToLower();
-            p = p.Replace("_", "*");
-            p = TextPatternUtils.CleanWhitepacesLower(p);
+            string p = StaticAIMLUtils.MakeAimlMatchable(FullPath.AsString().Replace("_", "*"));
             p = "<srai>" + p + "</srai>";
 
-            string t = innerXml.ToLower();
-            t = TextPatternUtils.CleanWhitepacesLower(t);
-            t = t.Replace("<star index=\"1\"/>", " * ");
-            t = t.Replace("<star/>", " * ");
-            t = t.Replace("<sr/>", " * ");
+            string t = StaticAIMLUtils.MakeAimlMatchable(innerXml);
 
             if (t.Contains(p))
             {
@@ -54,14 +48,9 @@ namespace RTParser.Utils
                 to = "";
                 return false;
             }
-            string p = FullPath.AsString().ToLower();
-            p = p.Replace("_", "*");
-            p = TextPatternUtils.CleanWhitepacesLower(p);
+            string p = StaticAIMLUtils.MakeAimlMatchable(FullPath.AsString().Replace("_", "*"));
             p = "<srai>" + p + "</srai>";
-            string t = newTemplateInfo.InnerXml.ToLower();
-            t = TextPatternUtils.CleanWhitepacesLower(t);
-            t = t.Replace("<star/>", "*");
-            t = t.Replace("<sr/>", "<srai>*</srai>");
+            string t =  StaticAIMLUtils.MakeAimlMatchable( newTemplateInfo.InnerXml);
 
             int firstTP = FirstMismatch(t, p);
             int lastTP = LastMismatch(t, p);

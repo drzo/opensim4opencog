@@ -1,12 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Xml;
 using MushDLR223.ScriptEngines;
-using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
 using RTParser.Utils;
 using RTParser.Variables;
@@ -16,6 +11,15 @@ namespace RTParser
     public partial class RTPBot
     {
         public static string UNKNOWN_PARTNER = "UNKNOWN_PARTNER";
+        public readonly object ListUserDirs = new object();
+        private readonly List<Action> OnBotCreatedHooks = new List<Action>();
+        internal OutputDelegate userTraceRedir;
+
+        public SettingsDictionary Settings
+        {
+            get { return BotAsUser.Predicates; }
+            set { BotAsUser.Predicates = value; }
+        }
 
         private R UserOper<R>(Func<R> action, OutputDelegate output)
         {
@@ -31,7 +35,7 @@ namespace RTParser
                 catch (Exception e)
                 {
                     writeToLog(e);
-                    if (RTPBot.NoRuntimeErrors) return default(R);
+                    if (NoRuntimeErrors) return default(R);
                     throw;
                 }
             }
@@ -50,7 +54,6 @@ namespace RTParser
             }
         }
 
-        internal OutputDelegate userTraceRedir;
         public void writeToUserLog(string s, params object[] objects)
         {
             try
@@ -59,7 +62,8 @@ namespace RTParser
                 if (s.ToUpper().Contains("ERROR"))
                 {
                     writeToLog(s, objects);
-                } if (userTraceRedir != null)
+                }
+                if (userTraceRedir != null)
                 {
                     userTraceRedir(s);
                     return;
@@ -72,15 +76,8 @@ namespace RTParser
             }
         }
 
-        public SettingsDictionary Settings
-        {
-            get { return BotAsUser.Predicates; }
-            set { BotAsUser.Predicates = value; }
-        }
-
         public bool BotUserDirective(User myUser, string input, OutputDelegate console)
         {
-
             RTPBot myBot = this;
             if (input == null) return false;
             input = input.Trim();
@@ -113,16 +110,19 @@ namespace RTParser
                 myBot.RemoveUser(name);
                 return true;
             }
-            if (showHelp) console("@setuser <full name> -- Finds or creates and acct and changes the LastUser (current user)");
+            if (showHelp)
+                console("@setuser <full name> -- Finds or creates and acct and changes the LastUser (current user)");
             if (cmd == "setuser")
             {
                 myBot.LastUser = myBot.FindOrCreateUser(args);
                 return true;
             }
-            if (showHelp) console("@chuser <full name> [- <old user>] --  'old user' if not specified, uses LastUser. \n  Changes the LastUser (current user) and copies the user settings if the old acct was a 'role acct' and reloads the prevoius role settings.");
+            if (showHelp)
+                console(
+                    "@chuser <full name> [- <old user>] --  'old user' if not specified, uses LastUser. \n  Changes the LastUser (current user) and copies the user settings if the old acct was a 'role acct' and reloads the prevoius role settings.");
             if (cmd == "chuser")
             {
-                string oldUser = null;// myUser ?? LastUser.ShortName ?? "";
+                string oldUser = null; // myUser ?? LastUser.ShortName ?? "";
                 string newUser = args;
                 int lastIndex = args.IndexOf("-");
                 if (lastIndex > 0)
@@ -133,11 +133,13 @@ namespace RTParser
                 myBot.LastUser = myBot.ChangeUser(oldUser, newUser);
                 return true;
             }
-            if (showHelp) console("@rename <full name> [- <old user>] -- if 'old user' if not specified, uses LastUser.\n  if the old user is a role acct, then is the same as @chuser (without resetting current user).  otherwise creates a dictionary alias ");
+            if (showHelp)
+                console(
+                    "@rename <full name> [- <old user>] -- if 'old user' if not specified, uses LastUser.\n  if the old user is a role acct, then is the same as @chuser (without resetting current user).  otherwise creates a dictionary alias ");
             if (cmd == "rename")
             {
                 string user, value;
-                int found = RTPBot.DivideString(args, "-", out user, out value);
+                int found = DivideString(args, "-", out user, out value);
                 if (found == 1)
                 {
                     value = myUser.UserID;
@@ -155,7 +157,8 @@ namespace RTParser
             {
                 console("-----------------------------------------------------------------");
                 console("------------BEGIN USERS----------------------------------");
-                lock (myBot.BotUsers) foreach (var kv in myBot.BotUsers)
+                lock (myBot.BotUsers)
+                    foreach (KeyValuePair<string, User> kv in myBot.BotUsers)
                     {
                         console("-----------------------------------------------------------------");
                         WriteUserInfo(console, "key=" + kv.Key, kv.Value);
@@ -179,7 +182,6 @@ namespace RTParser
 
         public static void WriteUserInfo(OutputDelegate console, string name, User user)
         {
-
             if (user == null)
             {
                 console(name + " NOUSER");
@@ -211,18 +213,17 @@ namespace RTParser
                 BotUsers.Remove(name);
                 writeToUserLog("REMOVED " + name);
             }
+            else if (BotUsers.TryGetValue(keyname, out user))
+            {
+                user.Dispose();
+                BotUsers.Remove(keyname);
+                writeToUserLog("REMOVED " + keyname);
+            }
             else
-                if (BotUsers.TryGetValue(keyname, out user))
-                {
-                    user.Dispose();
-                    BotUsers.Remove(keyname);
-                    writeToUserLog("REMOVED " + keyname);
-                }
-                else
-                {
-                    writeToUserLog("rmuser, No user by the name ='" + name + "'");
-                    return false;
-                }
+            {
+                writeToUserLog("rmuser, No user by the name ='" + name + "'");
+                return false;
+            }
             return true;
         }
 
@@ -259,7 +260,7 @@ namespace RTParser
                 if (BotUsers.ContainsKey(key)) return BotUsers[key];
                 if (UnknowableName(fromname))
                 {
-                    var unk = UNKNOWN_PARTNER.ToLower();
+                    string unk = UNKNOWN_PARTNER.ToLower();
                     if (BotUsers.ContainsKey(unk)) return BotUsers[unk];
                 }
                 return null;
@@ -271,9 +272,8 @@ namespace RTParser
             var res = UserOper(() =>
                                    {
                                        bool newlyCreated0;
-                                       var user0 = FindOrCreateUser0(fullname, out newlyCreated0);
+                                       User user0 = FindOrCreateUser0(fullname, out newlyCreated0);
                                        return new KeyValuePair<User, bool>(user0, newlyCreated0);
-
                                    }, QuietLogger);
             newlyCreated = res.Value;
             return res.Key;
@@ -318,7 +318,7 @@ namespace RTParser
                 myUser.ListeningGraph = g;
                 myUser.Predicates.addSetting("name", username);
                 myUser.Predicates.InsertFallback(() => AllUserPreds);
-                this.GlobalSettings.AddChild("user." + key + ".", () => myUser.Predicates);
+                GlobalSettings.AddChild("user." + key + ".", () => myUser.Predicates);
 
                 OnBotCreated(() => { myUser.Predicates.AddChild("bot.", () => BotAsUser.Predicates); });
 
@@ -330,7 +330,6 @@ namespace RTParser
             }
         }
 
-        private List<Action> OnBotCreatedHooks = new List<Action>();
         private void OnBotCreated(Action action)
         {
             lock (OnBotCreatedHooks)
@@ -348,6 +347,7 @@ namespace RTParser
                              return 0;
                          }, QuietLogger);
         }
+
         private void EnsureDefaultUsers0()
         {
             LastUser = FindOrCreateUser(UNKNOWN_PARTNER);
@@ -359,14 +359,15 @@ namespace RTParser
         {
             return UserOper(() => LoadUsers0(key), QuietLogger);
         }
+
         internal int LoadUsers0(string key)
         {
-            var regex = new Regex(key, RegexOptions.IgnoreCase);
+            Regex regex = new Regex(key, RegexOptions.IgnoreCase);
             int users = 0;
             string k1 = key.Replace("_", " ");
-            foreach (var fsn in HostSystem.GetDirectories(PathToUserDir))
+            foreach (string fsn in HostSystem.GetDirectories(PathToUserDir))
             {
-                string[] files = HostSystem.GetFiles(fsn, "*.xml");
+                var files = HostSystem.GetFiles(fsn, "*.xml");
                 if (files == null || files.Length == 0) continue;
 
                 string s = fsn;
@@ -392,12 +393,10 @@ namespace RTParser
             return users;
         }
 
-        readonly public object ListUserDirs = new object();
-
         public string GetUserDir(string key)
         {
             string sk = "";
-            foreach (var s in key)
+            foreach (char s in key)
             {
                 if (IsOkForNameChar(s))
                     sk += s;
@@ -405,16 +404,17 @@ namespace RTParser
             lock (ListUserDirs)
                 return UserOper(() => HostSystem.Slashify(GetUserDir0(key)), QuietLogger);
         }
+
         private string GetUserDir0(string key)
         {
             string userDir = HostSystem.Combine(PathToUserDir, key);
-            var luserDir = HostSystem.ToRelativePath(userDir, RuntimeDirectory);
+            string luserDir = HostSystem.ToRelativePath(userDir, RuntimeDirectory);
             if (HostSystem.DirExists(luserDir))
             {
                 return luserDir;
             }
             string k1 = key.Replace("_", " ");
-            foreach (var fsn in HostSystem.GetDirectories(PathToUserDir))
+            foreach (string fsn in HostSystem.GetDirectories(PathToUserDir))
             {
                 string s = fsn;
                 if (fsn.StartsWith(PathToUserDir))
@@ -519,7 +519,8 @@ namespace RTParser
                     {
                         if (olduser.IsRoleAcct)
                         {
-                            writeToUserLog("both acct are RoleAcct .. normaly shouldnt happen but just qa boring switchusers ");
+                            writeToUserLog(
+                                "both acct are RoleAcct .. normaly shouldnt happen but just qa boring switchusers ");
                             LastUser = newuser;
                             return newuser;
                         }
@@ -650,7 +651,6 @@ namespace RTParser
                 return newuser;
 
 
-
                 writeToUserLog("ChangeUser " + oldname + " -> " + newname);
 
                 WriteUserInfo(writeToLog, " olduser='" + oldname + "' ", olduser);
@@ -689,7 +689,8 @@ namespace RTParser
                     {
                         if (olduser.IsRoleAcct)
                         {
-                            writeToUserLog("both acct are RoleAcct .. normaly shouldnt happen but just qa boring switchusers ");
+                            writeToUserLog(
+                                "both acct are RoleAcct .. normaly shouldnt happen but just qa boring switchusers ");
                             return newuser;
                         }
                         writeToUserLog("New acct is RoleAcct .. so rebuilding: " + newkey);
@@ -751,8 +752,8 @@ namespace RTParser
 
         public static bool UnknowableName(string user)
         {
-            if (Unifiable.IsNullOrEmpty(user)) return true;
-            return Unifiable.IsUnknown(user);
+            if (IsNullOrEmpty(user)) return true;
+            return IsUnknown(user);
         }
 
         public bool IsExistingUsername(string fullname)
@@ -815,7 +816,7 @@ namespace RTParser
             }
             if (UnknowableName(fromname))
             {
-                fromname = RTPBot.UNKNOWN_PARTNER;
+                fromname = UNKNOWN_PARTNER;
             }
             return CleanupFromname(fromname).ToLower();
         }
@@ -844,7 +845,7 @@ namespace RTParser
             return HostSystem.Combine(prefix, path);
         }
 
-        private string SettingPath(string namePath, string defaultVal)
+        public string GetPathSetting(string namePath, string defaultVal)
         {
             string retP = SettingPath0(namePath, defaultVal);
             string ret = HostSystem.ToRelativePath(retP, RuntimeDirectory);
@@ -854,11 +855,11 @@ namespace RTParser
         private string SettingPath0(string namePath, string defaultVal)
         {
             string prefix;
-            string res = ToPath(this.GlobalSettings.grabSettingOrDefault(namePath, null), out prefix);
+            string res = ToPath(GlobalSettings.grabSettingOrDefault(namePath, null), out prefix);
             if (res != null) return res;
             if (defaultVal != null)
             {
-                res = ToPath(this.GlobalSettings.grabSettingOrDefault(defaultVal, null), out prefix);
+                res = ToPath(GlobalSettings.grabSettingOrDefault(defaultVal, null), out prefix);
                 if (res != null) return res;
             }
             return defaultVal;

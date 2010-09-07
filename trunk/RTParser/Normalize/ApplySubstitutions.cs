@@ -56,6 +56,12 @@ namespace RTParser.Normalize
             string marker = ApplySubstitutions.getMarker(5);
             string markerSP = ApplySubstitutions.getMarker(3);
             string result = " " + Unifiable.ToVMString(target) + " ";
+            result = SubstituteResults(dictionary, marker, markerSP,result);
+            return result.Replace(marker, "").Replace(markerSP, " ");
+        }
+
+        private static string SubstituteResults(ISettingsDictionary dictionary, string marker, string markerSP, string result)
+        {
             System.Collections.Generic.IEnumerable<string> dictionarySettingNames = dictionary.SettingNames(0);
             foreach (string pattern in dictionarySettingNames)
             {
@@ -102,7 +108,7 @@ namespace RTParser.Normalize
                 }
                 
             }
-            return result.Replace(marker, "").Replace(markerSP, " ");
+            return result;
         }
 
         public static string SubstituteRecurse(RTParser.RTPBot bot, SettingsDictionary dictionary, string target)
@@ -124,7 +130,7 @@ namespace RTParser.Normalize
         /// <returns>the safe version</returns>
         private static string makeRegexSafe(string input)
         {
-            return Regex.Escape(input);
+            //return Regex.Escape(input);
             string result = input.Replace("\\","");
             result = result.Replace(")", "\\)");
             result = result.Replace("(", "\\(");

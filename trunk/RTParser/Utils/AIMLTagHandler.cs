@@ -30,7 +30,7 @@ namespace RTParser.Utils
         /// </summary>
         public bool isRecursive = true;
 
-        public bool IsStarAtomically = true;
+        public bool IsStarAtomically = false; // true break it right now
         public bool IsStarted;
         public AIMLTagHandler Parent;
 
@@ -346,7 +346,7 @@ namespace RTParser.Utils
             {
                 if (!Unifiable.IsNullOrEmpty(RecurseResult))
                     return RecurseResult;
-                return Succeed(ToVisiable(templateNode));
+                return Succeed(templateNode.OuterXml);
             }
             return s;
         }
@@ -401,7 +401,7 @@ namespace RTParser.Utils
             return recursiveStar.Transform();
         }
 
-        protected Unifiable callSRAI(Unifiable starContent)
+        protected Unifiable callSRAI(string starContent)
         {
             XmlNode sraiNode = getNode(String.Format("<srai>{0}</srai>", starContent), templateNode);
             LineInfoElement.unsetReadonly(sraiNode);
