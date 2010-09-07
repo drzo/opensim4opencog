@@ -43,8 +43,8 @@ namespace MushDLR223.Utilities
             if (xml1 == xml2) return true;
             if (xml1 == null) return String.IsNullOrEmpty(xml2);
             if (xml2 == null) return String.IsNullOrEmpty(xml1);
-            xml1 = CleanWhitepaces(xml1).ToLower();
-            xml2 = CleanWhitepaces(xml2).ToLower();
+            xml1 = MakeXmlMatchable(xml1);
+            xml2 = MakeXmlMatchable(xml2);
             if (xml1.Length != xml2.Length) return false;
             if (xml1 == xml2) return true;
             if (xml1.ToUpper() == xml2.ToUpper())
@@ -54,9 +54,15 @@ namespace MushDLR223.Utilities
             return false;
         }
 
+        protected static string MakeXmlMatchable(string xml1)
+        {
+            if (xml1 == null) return null;
+            return CleanWhitepaces(xml1.ToLower());
+        }
+
         public static bool IsHtmlTag(string name)
         {
-            return " html head body font pre p div br dd td th tr table frame frameset &ltl &gt; input option select  "
+            return " html head body font pre p div br dd td th tr table frame frameset &ltl &gt; input option select &qt; "
                 .Contains(" " + name.ToLower() + " ");
         }
 
@@ -75,22 +81,49 @@ namespace MushDLR223.Utilities
             return i;
         }
 
-
-        public static bool IsInnerTextOnly(XmlNode node)
+        public static string VisibleRendering(XmlNodeList nodeS, RenderOptions options)
         {
-            string s = node.InnerXml.Trim();
-            if (s == node.InnerText.Trim())
+            string sentenceIn = "";
+            foreach (XmlNode nodeO in nodeS)
             {
-                if (s.Length > 0) return true;
-                return true;
+                sentenceIn = sentenceIn + " " + VisibleRendering(nodeO, options);
             }
-            return false;
+            return sentenceIn.Trim().Replace("  ", " ");
         }
 
 
-        protected static string ToVisiable(XmlNode node)
+        public static string VisibleRendering(XmlNode nodeO, RenderOptions options)
         {
-            string oxml = node.OuterXml;
+            //            if (nodeO.NodeType == XmlNodeType.Comment) return true;
+
+            string nodeName = nodeO.Name.ToLower();
+            if (options.SkipNode(nodeName))
+            {
+                return " ";                
+            }
+            if (options.FlattenChildren(nodeName))
+            {
+                return VisibleRendering(nodeO.ChildNodes, options);
+            }
+            if (nodeO.NodeType == XmlNodeType.Element)
+            {
+                XmlNodeList nodeOChildNodes = nodeO.ChildNodes;
+                if (nodeOChildNodes.Count == 0) return nodeO.OuterXml;
+                string bs = nodeStartXML((XmlElement) nodeO);
+                string visibleRendering = VisibleRendering(nodeOChildNodes, options);
+                if (!string.IsNullOrEmpty(bs))
+                {
+                    visibleRendering = string.Format("{0}{1}</{2}>", bs, visibleRendering, nodeName);
+                }
+                return options.CleanText(visibleRendering);
+            }
+            if (nodeO.NodeType == XmlNodeType.Text) return options.CleanText(nodeO.InnerText);
+            return nodeO.OuterXml;
+        }
+        /*
+        public static string ToVisible(XmlNode node)
+        {
+            string oxml = CleanWhitepaces(node.OuterXml.Replace("<sapi>", " ").Replace("</sapi>", " "));
             if (node.NodeType == XmlNodeType.Attribute)
             {
                 return node.Name + "=\"" + node.Value + "\"";
@@ -105,6 +138,128 @@ namespace MushDLR223.Utilities
             return node.OuterXml;
         }
 
+        public static string ToVisible(string message)
+        {
+            if (message.Contains("<"))
+            {
+                try
+                {
+                    message = CleanWhitepaces(message.Replace("<sapi>", " ").Replace("</sapi>", " "));
+                    string s = "";
+                    XmlNode v = getNode("<sapi>" + message + "</sapi>");
+                    LineInfoElementImpl.unsetReadonly(v);
+                    return ToVisible(v);
+                }
+                catch (Exception)
+                {
+                    throw;
+                }
+            }
+            return message;
+        }
+        */
+
+        public static bool IsInnerTextOnly(XmlNode node)
+        {
+            string s = node.InnerXml.Trim();
+            if (s == node.InnerText.Trim())
+            {
+                if (s.Length > 0) return true;
+                return true;
+            }
+            return false;
+        }
+
+        public static string InnerXmlText(XmlNode templateNode)
+        {
+            string s = InnerXmlText0(templateNode).Trim();
+            while (s.StartsWith("+"))
+            {
+                s = s.Substring(1);
+            }
+            return s;
+        }
+
+        private static string InnerXmlText0(XmlNode templateNode)
+        {
+            if (templateNode == null) return "-NULLXML-";
+            switch (templateNode.NodeType)
+            {
+                case XmlNodeType.None:
+                    break;
+                case XmlNodeType.Element:
+                    if (false && templateNode.InnerText != templateNode.InnerXml)
+                    {
+                        string ss = "";
+                        foreach (XmlNode childNode in templateNode.ChildNodes)
+                        {
+                            ss = ss + " " + InnerXmlText(childNode);
+                        }
+                        //  return ss;
+                    }
+                    string innerText = templateNode.InnerText.Trim();
+                    if (templateNode.InnerXml.Length >= templateNode.InnerText.Length)
+                    {
+                        if (innerText.Length == 0)
+                        {
+                            //writeToLog("return empty?");
+                        }
+                        return templateNode.InnerXml;
+                    }
+                    return templateNode.InnerXml;
+                    break;
+                case XmlNodeType.Attribute:
+                    break;
+                case XmlNodeType.Text:
+                    if (templateNode.InnerXml.Length > 0)
+                    {
+                        return templateNode.InnerText + templateNode.InnerXml;
+                    }
+                    return templateNode.InnerText;
+
+                case XmlNodeType.CDATA:
+                    break;
+                case XmlNodeType.EntityReference:
+                    break;
+                case XmlNodeType.Entity:
+                    {
+                        string ss = "";
+                        foreach (XmlNode childNode in templateNode.ChildNodes)
+                        {
+                            ss = ss + " " + InnerXmlText(childNode);
+                        }
+                        return ss;
+                    }
+                    break;
+                case XmlNodeType.ProcessingInstruction:
+                    break;
+                case XmlNodeType.Comment:
+                    break;
+                case XmlNodeType.Document:
+                    break;
+                case XmlNodeType.DocumentType:
+                    break;
+                case XmlNodeType.DocumentFragment:
+                    break;
+                case XmlNodeType.Notation:
+                    break;
+                case XmlNodeType.Whitespace:
+                    break;
+                case XmlNodeType.SignificantWhitespace:
+                    break;
+                case XmlNodeType.EndElement:
+                    break;
+                case XmlNodeType.EndEntity:
+                    break;
+                case XmlNodeType.XmlDeclaration:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+            string s = String.Format("Unsurported Node Type {0} in {1}", templateNode.NodeType, templateNode.OuterXml);
+            writeDebugLine(s);
+            throw new ArgumentOutOfRangeException(s);
+        }
 
         /// <summary>
         /// Given a name will try to find a node named "name" in the childnodes or return null
@@ -279,19 +434,24 @@ namespace MushDLR223.Utilities
         {
             if (copyParent)
             {
-                XmlNode parentNode = node.ParentNode;
+                XmlNode parentNode = node.ParentNode as XmlElement;
                 if (parentNode != null)
                 {
                     var xmlNode0 = node as LineInfoElementImpl;
-                    int idx = xmlNode0.IndexInBaseParent;
-                    if (idx >= 0)
+                    if (xmlNode0 != null)
                     {
-                        var parentCopy = (LineInfoElementImpl) parentNode.CloneNode(true);
-                        parentCopy.ReadOnly = xmlNode0.ReadOnly;
-                        xmlNode0 = (LineInfoElementImpl) parentCopy.ChildNodes[idx];
-                        xmlNode0.ReadOnly = !copyParent;
-                        return xmlNode0;
+                        int idx = xmlNode0.IndexInBaseParent;
+                        if (idx >= 0)
+                        {
+                            XmlNode parentCopy = parentNode.CloneNode(true);
+                            LineInfoElementImpl.unsetReadonly(parentCopy);
+                            //parentCopy.ReadOnly = xmlNode0.ReadOnly;
+                            var obj = parentCopy.ChildNodes[idx];
+                            LineInfoElementImpl.unsetReadonly(obj);
+                            return (LineInfoElementImpl)obj;
+                        }
                     }
+                    writeDebugLine("cannot copy nodes parent " + node);
                 }
             }
 
@@ -310,6 +470,7 @@ namespace MushDLR223.Utilities
             LineInfoElementImpl.unsetReadonly(xmlNode);
             return xmlNode;
         }
+
 
         public static LineInfoElementImpl CopyNode(string newName, XmlNode node, bool copyParent)
         {
@@ -332,7 +493,7 @@ namespace MushDLR223.Utilities
                 newnode.AppendChild(a.CloneNode(true));
             }
             newnode.ReadOnly = node.IsReadOnly;
-            return newnode;
+            return (LineInfoElementImpl)newnode;
         }
 
         public static LineInfoElementImpl ToLineInfoElement(XmlNode pattern)
@@ -340,7 +501,7 @@ namespace MushDLR223.Utilities
             if (pattern == null) return null;
             if (pattern is LineInfoElementImpl)
             {
-                return (LineInfoElementImpl) pattern;
+                return (LineInfoElementImpl)pattern;
             }
             return CopyNode(pattern, true);
         }
@@ -429,16 +590,16 @@ namespace MushDLR223.Utilities
                     }
                     catch (Exception exception)
                     {
-                        writeDebugLine("AIMLTRACE: DECIMAL " + reduceStar + " " + exception);
+                        writeDebugLine("XMLTRACE: DECIMAL " + reduceStar + " " + exception);
                     }
                 }
             }
             return defaultIfEmpty;
         }
 
-        private static void writeDebugLine(string s)
+        public static void writeDebugLine(string format, params object[] args)
         {
-            throw new NotImplementedException();
+            DLRConsole.DebugWriteLine(format, args);
         }
 
         public static bool TryParseBool(XmlNode templateNode, string attribName, out bool tf)
@@ -480,34 +641,41 @@ namespace MushDLR223.Utilities
 
 
         /// <summary>
-        /// Helper method that turns the passed Unifiable into an XML node
+        /// Helper method that converts passed string into an XML node
         /// </summary>
         /// <param name="outerXML">the Unifiable to XMLize</param>
         /// <returns>The XML node</returns>
-        public static XmlNode getNode(string outerXML)
+        public static XmlNode ParseNode(XmlDocument doc, TextReader sr, string outerXML)
         {
-            var sr = new StringReader(outerXML);
             try
             {
-                var doc = new XmlDocumentLineInfo("From " + outerXML, false);
-                doc.Load(sr);
-                if (doc.ChildNodes.Count == 0)
+                if (outerXML == null)
                 {
-                    writeDebugLine("NULL outerXML=" + outerXML);
+                    outerXML = sr.ReadToEnd();
+                    sr = new StringReader(outerXML);
+                }
+                doc.Load(sr);
+                int childCount = doc.ChildNodes.Count;
+                if (childCount == 0)
+                {
+                    writeDebugLine("ERROR NULL_CHILDS outerXML='{1}'", outerXML);
                     return null;
                 }
-                if (doc.ChildNodes.Count != 1)
+                if (childCount != 1)
                 {
-                    writeDebugLine("1 != outerXML=" + outerXML);
+                    writeDebugLine("ERROR WRONG_NUMBER_OF_CHILDS {0} outerXML='{1}'", childCount, outerXML);
+                    return doc;
                 }
                 XmlNode temp = doc.FirstChild;
                 if (temp is LineInfoElementImpl)
                 {
-                    var li = (LineInfoElementImpl) temp;
-                    return temp; //.FirstChild;}
+                    return temp;
                 }
-                return getNode("<node>" + outerXML + "</node>");
-                //return (LineInfoElement)temp; //.FirstChild;}
+                return temp;
+            }
+            catch (XmlException)
+            {
+                throw;
             }
             catch (Exception exception)
             {
@@ -516,40 +684,46 @@ namespace MushDLR223.Utilities
             }
         }
 
-        public static XmlNode getNode(string outerXML, XmlNode templateNode)
+        /// <summary>
+        /// Helper method that converts passed string into an XML node
+        /// </summary>
+        /// <param name="outerXML">the Unifiable to XMLize</param>
+        /// <returns>The XML node</returns>
+        public static XmlNode getNode(string outerXML)
         {
-            var sr = new StringReader(outerXML);
+            var doc = new XmlDocumentLineInfo("getNode(\"" + outerXML + "\")", false);
             try
             {
-                string named = "From " + outerXML;
-                if (templateNode != null)
-                {
-                    named = "" + templateNode.OwnerDocument;
-                    if (string.IsNullOrEmpty(named)) named = "from: " + templateNode.OuterXml;
-                }
-                XmlDocumentLineInfo doc = null; // templateNode.OwnerDocument as XmlDocumentLineInfo;
-                // ReSharper disable ConditionIsAlwaysTrueOrFalse
-                if (doc == null)
-                    // ReSharper restore ConditionIsAlwaysTrueOrFalse
-                {
-                    doc = new XmlDocumentLineInfo(named, true);
-                }
-                doc.Load(sr);
-                XmlElement de = doc.DocumentElement;
-                //doc.IsReadOnly = false;
-                if (doc.ChildNodes.Count == 0)
-                {
-                    writeDebugLine("NULL outerXML=" + outerXML);
-                    //  return null;
-                }
-                if (doc.ChildNodes.Count != 1)
-                {
-                    writeDebugLine("1 != outerXML=" + outerXML);
-                }
-                XmlNode temp = doc.FirstChild;
+                return ParseNode(doc, new StringReader(outerXML), outerXML);
+                //return (LineInfoElement)temp; //.FirstChild;}
+            }
+            catch (XmlException exception)
+            {
+                writeDebugLine("ERROR NODE-IFYING " + outerXML);
+                return ParseNode(doc, new StringReader("<node>" + outerXML + "</node>"), outerXML);
+            }
+            catch (Exception exception)
+            {
+                writeDebugLine("ERROR outerXML='" + outerXML + "'\n" + exception + "\n");
+                throw;
+            }
+        }
+
+
+        public static XmlNode getNode(string outerXML, XmlNode templateNode)
+        {
+            try
+            {
+                XmlNode temp = getNode(outerXML);
                 if (temp is LineInfoElementImpl)
                 {
-                    var li = (LineInfoElementImpl) temp;
+                    var li = (LineInfoElementImpl)temp;
+                    li.SetParentFromNode(templateNode);
+                    return temp; //.FirstChild;}
+                }
+                if (temp is XmlSourceLineInfo)
+                {
+                    var li = (XmlSourceLineInfo)temp;
                     li.SetParentFromNode(templateNode);
                     return temp; //.FirstChild;}
                 }
@@ -561,6 +735,36 @@ namespace MushDLR223.Utilities
                                LocationInfo(templateNode));
                 throw;
             }
+        }
+
+        private static XmlNode GetXmlTemp(string outerXML, XmlNode templateNode, StringReader sr)
+        {
+            string named = "From " + outerXML;
+            if (templateNode != null)
+            {
+                named = "" + templateNode.OwnerDocument;
+                if (string.IsNullOrEmpty(named)) named = "from: " + templateNode.OuterXml;
+            }
+            XmlDocumentLineInfo doc = null; // templateNode.OwnerDocument as XmlDocumentLineInfo;
+            // ReSharper disable ConditionIsAlwaysTrueOrFalse
+            if (doc == null)
+                // ReSharper restore ConditionIsAlwaysTrueOrFalse
+            {
+                doc = new XmlDocumentLineInfo(named, true);
+            }
+            doc.Load(sr);
+            XmlElement de = doc.DocumentElement;
+            //doc.IsReadOnly = false;
+            if (doc.ChildNodes.Count == 0)
+            {
+                writeDebugLine("NULL outerXML=" + outerXML);
+                //  return null;
+            }
+            if (doc.ChildNodes.Count != 1)
+            {
+                writeDebugLine("1 != outerXML=" + outerXML);
+            }
+            return doc.FirstChild;
         }
 
 
@@ -681,6 +885,22 @@ namespace MushDLR223.Utilities
             //s = s.Replace("<star index=\"1\"", "<star");
 
             return s.ToString();
+        }
+
+        public static string nodeStartXML(XmlElement node)
+        {
+            //StringBuilder sb = new StringBuilder();
+            //XmlWriter writer = XmlWriter.Create(sb);
+            // writer.Write
+            string remove = node.InnerXml;
+            string outer = node.OuterXml;
+            if (remove == "") return outer;
+            int idx = outer.IndexOf(remove);
+            if (idx > 1)
+            {
+                return outer.Substring(0, idx);                
+            }
+            return outer.Replace(remove, "");
         }
     }
 }

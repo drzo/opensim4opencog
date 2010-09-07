@@ -21,7 +21,7 @@ namespace MushDLR223.Utilities
                 new[] {"js", "JavaScript"}
             };
 
-        public static OutputDelegate errorOutput = null;
+        public static OutputDelegate errorOutput;
 
         public static bool SkipXmlns = true;
         public static Func<string, string> TextFormatter = StaticXMLUtils.CleanWhitepaces;
@@ -39,9 +39,9 @@ namespace MushDLR223.Utilities
         public bool DocumentInNormalize = true;
         public string docVersion;
         public string InfoString;
-        public IXmlLineInfo LineTracker = null;
-        public bool MustSpaceAttributeValues = false;
-        public bool MustSpaceWildcards = false;
+        public IXmlLineInfo LineTracker;
+        public bool MustSpaceAttributeValues;
+        public bool MustSpaceWildcards;
         public bool NeedCleanAttribs = true;
         private string preXml = "";
         public bool SuspendLineInfo;
@@ -356,7 +356,7 @@ namespace MushDLR223.Utilities
         {
             CurrentReader = reader;
             CheckSettings(reader.Settings);
-            return (XmlReader) reader;
+            return reader;
         }
 
         private void CheckSettings(XmlReaderSettings settings)
@@ -559,7 +559,7 @@ namespace MushDLR223.Utilities
             var settings = new XmlReaderSettings();
             settings.ValidationType = ValidationType.Schema;
             settings.Schemas.Add("urn:bookstore-schema", "books.xsd");
-            settings.ValidationEventHandler += new ValidationEventHandler(ValidationCallBack);
+            settings.ValidationEventHandler += ValidationCallBack;
 
             // Create a validating reader that wraps the XmlNodeReader object.
             XmlReader reader = XmlReader.Create(nodeReader, settings);
@@ -600,9 +600,10 @@ namespace MushDLR223.Utilities
                  
          */
 
-        internal string TextAndSourceInfo(XmlSourceLineInfo info)
-        {
-            return info.ToString();
+        public string TextAndSourceInfo(XmlNode node)
+        {        
+            string s = StaticXMLUtils.TextInfo(node);
+            return s + " " + StaticXMLUtils.LocationEscapedInfo(node);
         }
 
         internal string FormatTextNode(string text)
