@@ -8,7 +8,9 @@ using System.Threading;
 using System.Xml;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
+using RTParser.AIMLTagHandlers;
 using RTParser.Database;
+using RTParser.Normalize;
 using RTParser.Variables;
 
 namespace RTParser.Utils
@@ -25,12 +27,21 @@ namespace RTParser.Utils
                                                     {
                                                         "template",
                                                         "pattern",
+                                                        "sapi",        
+                                                        "node",
+                                                        "pre",
+                                                        "bold",
                                                     };
 
         protected static List<string> TagsWithNoOutput = new List<string>
                                                  {
                                                      "#comment",
-                                                     //    "debug",
+                                                     //    "debug",                                                                   
+                                                     
+                                                     "br",
+                                                     "br",
+                                                     "br",
+
                                                  };
 
         
@@ -81,6 +92,43 @@ namespace RTParser.Utils
         public static bool ThatWideStar;
         public static bool useInexactMatching;
         public static OutputDelegate userTraceRedir;
+
+        public static readonly RenderOptions TemplateSideRendering =
+            new RenderOptions()
+                {
+                    flatten =
+                        new List<string>(TagsRecurseToFlatten)
+                            {
+                                "node",
+                            },
+
+                    skip = new List<string>(TagsWithNoOutput)
+                               {
+                                   "#comment",
+                                   "silence",
+                                   "bookmark",
+                                   "src",
+                                   //    "debug",
+                               }
+                };
+
+        public static readonly RenderOptions PatternSideRendering =
+            new RenderOptions()
+                {
+                    flatten =
+                        new List<string>(TagsRecurseToFlatten),
+
+                    skip =
+                        new List<string>(TagsWithNoOutput)
+                            {
+                                "#comment",
+                                "silence",
+                                "bookmark",
+                                "src",
+                                "think",
+                                //    "debug",
+                            }
+                };
 
         protected static XmlNode PatternStar
         {
@@ -336,15 +384,23 @@ namespace RTParser.Utils
             if (xml1 == xml2) return true;
             if (xml1 == null) return String.IsNullOrEmpty(xml2);
             if (xml2 == null) return String.IsNullOrEmpty(xml1);
-            xml1 = StaticAIMLUtils.CleanWhitepacesLower(xml1).ToLower();
-            xml2 = StaticAIMLUtils.CleanWhitepacesLower(xml2);
-            if (xml1.Length != xml2.Length) return false;
+            xml1 = MakeAimlMatchable(xml1);
+            xml2 = MakeAimlMatchable(xml2);
             if (xml1 == xml2) return true;
-            if (xml1.ToUpper() == xml2.ToUpper())
-            {
-                return true;
-            }
-            return false;
+            return XmlSame(xml1, xml2);
+        }
+
+        public static string MakeAimlMatchable(string xml1)
+        {
+            if (xml1 == null) return xml1;
+            string t =
+                CleanWhitepaces(MakeMatchable(xml1)
+                                    .Replace("index=\"1\"", " ").Replace("index=\"1,1\"", " ")).Replace("<star/>", " * ");
+            t = t.Replace("<star index=\"1\"/>", " * ");
+            t = t.Replace("<star/>", " * ");
+            t = t.Replace("<sr/>", " * ");
+            t = t.Replace("  ", " ").Trim();
+            return t;           
         }
 
         public static int FromInsideLoaderContext(XmlNode currentNode, Request request, SubQuery query, Func<int> doit)
@@ -690,47 +746,51 @@ namespace RTParser.Utils
             return false;
         }
 
-
-        protected static string ToNonSilentTags(string sentenceIn)
+        internal static string ForOutputTemplate(string sentenceIn)
         {
-            XmlNode nodeO = getNode("<node>" + sentenceIn + "</node>");
-            LineInfoElementImpl.notReadonly(nodeO);
-            return VisibleRendering(nodeO.ChildNodes, TagsWithNoOutput, TagsRecurseToFlatten);
+            return VisibleRendering(getNode("<template>" + sentenceIn + "</template>").ChildNodes, TemplateSideRendering);
         }
-
-
-        public static string VisibleRendering(XmlNodeList nodeS)
+        internal static string ForInputTemplate(string sentenceIn)
         {
-            return VisibleRendering(nodeS, TagsWithNoOutput, TagsRecurseToFlatten);
+            string patternSide =
+                VisibleRendering(getNode("<template>" + sentenceIn + "</template>").ChildNodes, PatternSideRendering);
+            return ForOutputTemplate(patternSide);
         }
-
-        private static string VisibleRendering(XmlNodeList nodeS, List<string> skip, List<string> flatten)
+        /*
+        public string ToEnglish(string sentenceIn, ISettingsDictionary OutputSubstitutions)
         {
-            string sentenceIn = "";
-            foreach (XmlNode nodeO in nodeS)
+            var writeToLog = (OutputDelegate)null;
+            if (sentenceIn == null)
             {
-                sentenceIn = sentenceIn + " " + VisibleRendering(nodeO, skip, flatten);
+                return null;
             }
-            return sentenceIn.Trim().Replace("  ", " ");
-        }
-
-        private static string VisibleRendering(XmlNode nodeO, List<string> skip, List<string> flatten)
-        {
-            if (nodeO.NodeType == XmlNodeType.Comment) return "";
-            string nodeName = nodeO.Name.ToLower();
-            if (skip.Contains(nodeName)) return "";
-            if (flatten.Contains(nodeName))
+            sentenceIn = sentenceIn.Trim();
+            if (sentenceIn == "")
             {
-                return VisibleRendering(nodeO.ChildNodes, skip, flatten);
+                return "";
             }
-            if (nodeO.NodeType == XmlNodeType.Element) return nodeO.OuterXml;
-            if (nodeO.NodeType == XmlNodeType.Text) return nodeO.InnerText;
-            return nodeO.OuterXml;
+            var sentence = "";
+            string xmlsentenceIn = ToEnglishT(sentenceIn);
+            if (xmlsentenceIn == "")
+            {
+                return "";
+            }
+            sentence = ApplySubstitutions.Substitute(OutputSubstitutions, xmlsentenceIn);
+            if (sentenceIn != sentence)
+            {
+                writeToLog("SUBTS: " + sentenceIn + " -> " + sentence);
+            }
+            sentence = CleanupCyc(sentence);
+            sentence = ApplySubstitutions.Substitute(OutputSubstitutions, sentence);
+            return sentence.Trim();
         }
 
-        public static string RenderInner(XmlNode nodeO)
+
+        internal static string ToEnglishT(string sentenceIn)
         {
-            return VisibleRendering(nodeO.ChildNodes, TagsWithNoOutput, TagsRecurseToFlatten);
-        }
+            string patternSide =
+                VisibleRendering(getNode("<template>" + sentenceIn + "</template>").ChildNodes, PatternSideRendering);
+            return ForOutputTemplate(patternSide);
+        }*/
     }
 }

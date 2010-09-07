@@ -933,7 +933,7 @@ namespace RTParser.Utils
 
             XmlNode newPattern;
             Unifiable patternText;
-            Func<XmlNode, string> Render = RenderInner;
+            Func<XmlNode, string> Render = nodeI => VisibleRendering(nodeI, PatternSideRendering);
             XmlNode extractThat1 = extractThat(patternNode, "that", cateNode, out patternText, out newPattern);
             string that;
             string ssss = GetAttribValue(extractThat1, "index", null);
@@ -1305,12 +1305,13 @@ namespace RTParser.Utils
                 Unifiable normalizedWord;
                 if (isUserInput)
                 {
-                    string wwword = word.AsString().Trim(",. \"?".ToCharArray());
+                    string wwword = word.AsString().Trim(",. \"?!".ToCharArray());
                     if (wwword.Length == 0) continue;
                     normalizedWord = stripper.Transform(word);
                     if (normalizedWord != wwword)
                     {
-                        writeToLog("Normalize stripper " + word + "->" + normalizedWord);
+                        if (!wwword.Contains("'"))
+                            writeToLog("Normalize stripper " + word + "->" + normalizedWord);
                     }
                 }
                 else

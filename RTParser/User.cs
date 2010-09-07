@@ -31,6 +31,7 @@ namespace RTParser
         public DateTime LastResponseGivenTime = DateTime.Now;
         public bool RespondToChat = true;
         public int MaxRespondToChatPerMinute = 10;
+        public DateTime NameUsedOrGivenTime = DateTime.Now;
 
         public static int DefaultMaxResultsSaved = 5;
         public static bool NeverSaveUsers = false;
@@ -142,7 +143,7 @@ namespace RTParser
         /// </summary>
         public Unifiable UserID
         {
-            get { return this.id; }
+            get { return this.id ?? Predicates.grabSetting("id"); }
             set
             {
                 this.id = value;
@@ -545,10 +546,10 @@ namespace RTParser
                     if (CurrentRequest.ithat == null)
                     {
                         CurrentRequest.ithat = value;
-                        return;
                     }
+                    CurrentRequest.ithat = value;
+                    return;
                 }
-                CurrentRequest.ithat = value;
             }
 
         }
@@ -561,10 +562,11 @@ namespace RTParser
                 {
                     resltUsed++;
                     if (!r.IsSailent) continue;
-                    String sentence = r.RawOutput;
+                    String sentenceIn = r.RawOutput;
+                    String sentence = this.bot.ToEnglish(sentenceIn);
                     sentence = MainSentence(sentence);
                     sentence = sentence.Trim(new char[] { '.', ' ', '!', '?' });
-                    if (sentence.Length == 0) continue;
+                    if (sentence.Length == 0) continue;                    
                     String ssentence = bot.Loader.Normalize(sentence, true);
                     if (sentence.Length == 0) continue;
                     return sentence;
@@ -729,6 +731,7 @@ namespace RTParser
 
         public void SetOutputSentences(string args)
         {
+            args = ForOutputTemplate(args);
             Result result = LastResult;
             if (result != null)
                 result.SetOutput = args;

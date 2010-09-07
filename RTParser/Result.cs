@@ -192,6 +192,10 @@ namespace RTParser
                 {
                     OutputSentences.Remove(unifiable);                    
                 }
+                if (StaticXMLUtils.ContainsXml(unifiable))
+                {
+                    bot.writeToLog("ERROR:  AddRssult: " + user.UserID + " " + unifiable);
+                }
                 OutputSentences.Add(unifiable);
             }
         }

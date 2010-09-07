@@ -78,12 +78,13 @@ namespace RTParser.Utils
         public static bool IsUnknown(object unifiable)
         {
             if (IsNullOrEmpty(unifiable)) return true;
-            string ss = CleanWhitepacesLower(unifiable.ToString());
+            string ss = MakeMatchable(unifiable.ToString());
             string s = " " + ss.Replace("_", " ").Replace("-", " ") + " ";
             bool b = s.Contains("unknown") || s.Contains("unrec") || s.Contains("unnam")
                      || s.Contains("unseen") || s.Contains("default")
                      || s.Contains(" some") || s.Contains("*") || s.Contains(" _ ")
-                     || s.Contains(" nothing ") || s.Contains("undefined");
+                     || s.Contains(" nothing ") || s.Contains("undefine") 
+                     || s.Contains("$");
             if (b) return true;
             if (unifiable is Unifiable)
             {
@@ -112,10 +113,10 @@ namespace RTParser.Utils
 
         public static OutputDelegate DEVNULL = TextFilter.DEVNULL;
 
-        public static string CleanWhitepacesLower(string xml2)
+        public static string MakeMatchable(string xml2)
         {
             if (xml2 == null) return xml2;
-            return CleanWhitepaces(xml2).ToLower().Replace(".", "").Replace("?", "").Replace("!", "");
+            return CleanWhitepaces(xml2.ToLower().Replace(".", " ").Replace("?", " ").Replace("!", " "));
         }
 
         public static string MatchKeyClean(Unifiable unifiable)
