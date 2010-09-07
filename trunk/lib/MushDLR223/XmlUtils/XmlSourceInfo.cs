@@ -7,6 +7,7 @@ namespace MushDLR223.Utilities
     {
         void SetLineInfo(int number, int position);
         void SetPos(long pos);
+        void SetParentFromNode(XmlNode xmlNode);
     }
 
     public interface XmlSourceInfo
@@ -16,12 +17,30 @@ namespace MushDLR223.Utilities
 
     public class LineInfoElementImpl : XmlElement, XmlSourceLineInfo
     {
+        private XmlDocumentLineInfo _docLineInfo;
+        internal XmlDocumentLineInfo docLineInfo
+        {
+            get
+            {
+                return _docLineInfo ?? OwnerDocument as XmlDocumentLineInfo;
+            }
+            set
+            {
+                _docLineInfo = value;
+            }
+        }
+        public override XmlDocument OwnerDocument
+        {
+            get
+            {
+                return _docLineInfo ?? base.OwnerDocument;
+            }
+        }
         private static bool _whenReadOnly = true;
-        private readonly XmlDocumentLineInfo docLineInfo;
         public long charPos;
         public int lineNumber;
         public int linePosition;
-        public LineInfoElementImpl lParent;
+        public XmlSourceLineInfo lParent;
         public bool protect = true;
 
         internal LineInfoElementImpl(string prefix, string localname, string nsURI, XmlDocument doc)
@@ -36,7 +55,7 @@ namespace MushDLR223.Utilities
         {
             get
             {
-                XmlNode sib = lParent;
+                XmlNode sib = (XmlNode)lParent;
                 if (sib == null)
                 {
                     return IndexInBaseParent;
@@ -66,7 +85,7 @@ namespace MushDLR223.Utilities
             get
             {
                 if (lParent == null) return base.ParentNode;
-                return lParent;
+                return (XmlNode)lParent;
             }
         }
 
@@ -119,6 +138,21 @@ namespace MushDLR223.Utilities
                 }
                 return _whenReadOnly;
             }
+        }
+
+        public override string LocalName
+        {
+            get { return base.LocalName; }
+        }
+
+        public override string Name
+        {
+            get { return base.Name; }
+        }
+
+        public override XmlNodeType NodeType
+        {
+            get { return base.NodeType; }
         }
 
         #region XmlSourceLineInfo Members
@@ -244,9 +278,9 @@ namespace MushDLR223.Utilities
                 lParent = (LineInfoElementImpl) pn;
                 XmlDocumentLineInfo.SuggestLineNo(lParent, this);
             }
-            if (!(xmlNode is LineInfoElementImpl))
+            if (!(xmlNode is IXmlLineInfo))
             {
-                xmlNode = lParent;
+                xmlNode = (XmlNode) lParent;
             }
             if (xmlNode is LineInfoElementImpl)
             {
@@ -277,7 +311,7 @@ namespace MushDLR223.Utilities
 
         public override XmlNode CloneNode(bool deep)
         {
-            var od = (XmlDocumentLineInfo) OwnerDocument;
+            XmlDocument od = OwnerDocument;
             //od.Normalize();
             var newnode = new LineInfoElementImpl(Prefix, LocalName, NamespaceURI, od);
             newnode.CloneOf = CloneOf ?? this;
@@ -395,10 +429,11 @@ namespace MushDLR223.Utilities
 
         public static IXmlLineInfo ToLineInfoElement(XmlNode pattern)
         {
+            //return pattern as IXmlLineInfo
             if (pattern == null) return null;
             if (pattern is IXmlLineInfo)
             {
-                return (IXmlLineInfo) pattern;
+                return (IXmlLineInfo)pattern;
             }
             return null; // CopyNode(pattern, true);
         }
@@ -408,7 +443,7 @@ namespace MushDLR223.Utilities
             XmlDocumentLineInfo.DebugWriteLine(s + " on XML node: '" + this + "'");
         }
 
-        public static void unsetReadonly(XmlSourceLineInfo node)
+        public static void unsetReadonly(LineInfoElementImpl node)
         {
             if (node.ReadOnly)
             {
@@ -416,7 +451,7 @@ namespace MushDLR223.Utilities
             }
         }
 
-        public static void unsetReadonly(LineInfoElementImpl node)
+        public static void unsetReadonly(XmlSourceInfo node)
         {
             if (node.ReadOnly)
             {
@@ -460,6 +495,16 @@ namespace MushDLR223.Utilities
         public static void SetParentFromNode(XmlNode newLineInfoPattern, XmlNode patternNode)
         {
             ((LineInfoElementImpl) newLineInfoPattern).SetParentFromNode(patternNode);
+        }
+
+        public override void WriteContentTo(XmlWriter w)
+        {
+            base.WriteContentTo(w);
+        }
+
+        public override void WriteTo(XmlWriter w)
+        {
+            base.WriteTo(w);
         }
     }
 

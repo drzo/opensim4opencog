@@ -4,7 +4,6 @@ namespace MushDLR223.Utilities
 {
     public class XmlAttributeLineInfo : XmlAttribute, XmlSourceLineInfo
     {
-        private readonly XmlDocumentLineInfo docLineInfo;
         public long charPos;
         public int lineNumber;
         public int linePosition;
@@ -16,9 +15,24 @@ namespace MushDLR223.Utilities
             docLineInfo = doc;
         }
 
+        private XmlDocumentLineInfo _docLineInfo;
+        internal XmlDocumentLineInfo docLineInfo
+        {
+            get
+            {
+                return _docLineInfo ?? OwnerDocument as XmlDocumentLineInfo;
+            }
+            set
+            {
+                _docLineInfo = value;
+            }
+        }
         public override XmlDocument OwnerDocument
         {
-            get { return docLineInfo ?? base.OwnerDocument; }
+            get
+            {
+                return _docLineInfo ?? base.OwnerDocument;
+            }
         }
 
         public override bool IsReadOnly
@@ -124,7 +138,7 @@ namespace MushDLR223.Utilities
         }
 
 
-        internal void SetParentFromNode(XmlNode xmlNode)
+        public void SetParentFromNode(XmlNode xmlNode)
         {
             XmlNode pn = xmlNode.ParentNode;
             if (pn is LineInfoElementImpl)

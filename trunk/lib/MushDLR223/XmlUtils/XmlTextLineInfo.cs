@@ -4,7 +4,25 @@ namespace MushDLR223.Utilities
 {
     public class XmlTextLineInfo : XmlText, XmlSourceLineInfo
     {
-        private readonly XmlDocumentLineInfo docLineInfo;
+        private XmlDocumentLineInfo _docLineInfo;
+        internal XmlDocumentLineInfo docLineInfo
+        {
+            get
+            {
+                return _docLineInfo ?? OwnerDocument as XmlDocumentLineInfo;
+            }
+            set
+            {
+                _docLineInfo = value;
+            }
+        }
+        public override XmlDocument OwnerDocument
+        {
+            get
+            {
+                return _docLineInfo ?? base.OwnerDocument;
+            }
+        }
         public long charPos;
 
         public int lineNumber;
@@ -14,7 +32,7 @@ namespace MushDLR223.Utilities
         public XmlTextLineInfo(string text, XmlDocumentLineInfo info)
             : base(text, info)
         {
-            docLineInfo = info;
+            _docLineInfo = info;
         }
 
         public override bool IsReadOnly
@@ -95,11 +113,12 @@ namespace MushDLR223.Utilities
 
         public override string ToString()
         {
+            if (docLineInfo == null) return StaticXMLUtils.TextAndSourceInfo(this);
             return docLineInfo.TextAndSourceInfo(this);
         }
 
 
-        internal void SetParentFromNode(XmlNode xmlNode)
+        public void SetParentFromNode(XmlNode xmlNode)
         {
             XmlNode pn = xmlNode.ParentNode;
             if (pn is LineInfoElementImpl)
