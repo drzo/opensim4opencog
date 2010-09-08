@@ -14,12 +14,12 @@ namespace MushDLR223.Utilities
         public static IFormatProvider FormatProvider;
         public static Func<IConvertible, Type, IConvertible> FormatProviderConvertor;
 
-        protected static string[] NamesStrings(string name)
+        public static string[] NamesStrings(string name)
         {
             return name.Split(",".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
         }
 
-        protected static bool NameMatches(XmlNode node, string s)
+        public static bool NameMatches(XmlNode node, string s)
         {
             return node.Name.ToLower() == s || node.LocalName.ToLower() == s;
         }
@@ -54,7 +54,7 @@ namespace MushDLR223.Utilities
             return false;
         }
 
-        protected static string MakeXmlMatchable(string xml1)
+        public static string MakeXmlMatchable(string xml1)
         {
             if (xml1 == null) return null;
             return CleanWhitepaces(xml1.ToLower());
@@ -99,7 +99,7 @@ namespace MushDLR223.Utilities
             string nodeName = nodeO.Name.ToLower();
             if (options.SkipNode(nodeName))
             {
-                return " ";                
+                return " ";
             }
             if (options.FlattenChildren(nodeName))
             {
@@ -120,6 +120,7 @@ namespace MushDLR223.Utilities
             if (nodeO.NodeType == XmlNodeType.Text) return options.CleanText(nodeO.InnerText);
             return nodeO.OuterXml;
         }
+
         /*
         public static string ToVisible(XmlNode node)
         {
@@ -328,7 +329,7 @@ namespace MushDLR223.Utilities
             return nodes;
         }
 
-        protected static int NonAlphaCount(string input)
+        public static int NonAlphaCount(string input)
         {
             input = CleanWhitepaces(input);
             int na = 0;
@@ -393,7 +394,7 @@ namespace MushDLR223.Utilities
         private static string LineNoInfo(string where, XmlNode templateNode)
         {
             string s = null;
-            var li = templateNode as LineInfoElementImpl;
+            LineInfoElementImpl li = templateNode as LineInfoElementImpl;
             if (li != null)
             {
                 if (li.LineNumber != 0 && li.LinePosition != 0)
@@ -437,7 +438,7 @@ namespace MushDLR223.Utilities
                 XmlNode parentNode = node.ParentNode as XmlElement;
                 if (parentNode != null)
                 {
-                    var xmlNode0 = node as LineInfoElementImpl;
+                    LineInfoElementImpl xmlNode0 = node as LineInfoElementImpl;
                     if (xmlNode0 != null)
                     {
                         int idx = xmlNode0.IndexInBaseParent;
@@ -446,9 +447,9 @@ namespace MushDLR223.Utilities
                             XmlNode parentCopy = parentNode.CloneNode(true);
                             LineInfoElementImpl.unsetReadonly(parentCopy);
                             //parentCopy.ReadOnly = xmlNode0.ReadOnly;
-                            var obj = parentCopy.ChildNodes[idx];
+                            XmlNode obj = parentCopy.ChildNodes[idx];
                             LineInfoElementImpl.unsetReadonly(obj);
-                            return (LineInfoElementImpl)obj;
+                            return (LineInfoElementImpl) obj;
                         }
                     }
                     writeDebugLine("cannot copy nodes parent " + node);
@@ -457,7 +458,7 @@ namespace MushDLR223.Utilities
 
             XmlNode oc = node.CloneNode(true);
 
-            var xmlNode = (LineInfoElementImpl) (oc as IXmlLineInfo);
+            LineInfoElementImpl xmlNode = (LineInfoElementImpl) (oc as IXmlLineInfo);
             if (xmlNode == null)
             {
                 xmlNode = (LineInfoElementImpl) getNode(node.OuterXml, node);
@@ -475,7 +476,7 @@ namespace MushDLR223.Utilities
         public static LineInfoElementImpl CopyNode(string newName, XmlNode node, bool copyParent)
         {
             XmlDocument od = node.OwnerDocument;
-            var newnode =
+            LineInfoElementImpl newnode =
                 (LineInfoElementImpl) node.OwnerDocument.CreateNode(node.NodeType, newName, node.NamespaceURI);
             newnode.ReadOnly = false;
             newnode.SetParentFromNode(node);
@@ -493,7 +494,7 @@ namespace MushDLR223.Utilities
                 newnode.AppendChild(a.CloneNode(true));
             }
             newnode.ReadOnly = node.IsReadOnly;
-            return (LineInfoElementImpl)newnode;
+            return (LineInfoElementImpl) newnode;
         }
 
         public static LineInfoElementImpl ToLineInfoElement(XmlNode pattern)
@@ -501,7 +502,7 @@ namespace MushDLR223.Utilities
             if (pattern == null) return null;
             if (pattern is LineInfoElementImpl)
             {
-                return (LineInfoElementImpl)pattern;
+                return (LineInfoElementImpl) pattern;
             }
             return CopyNode(pattern, true);
         }
@@ -691,7 +692,7 @@ namespace MushDLR223.Utilities
         /// <returns>The XML node</returns>
         public static XmlNode getNode(string outerXML)
         {
-            var doc = new XmlDocumentLineInfo("getNode(\"" + outerXML + "\")", false);
+            XmlDocumentLineInfo doc = new XmlDocumentLineInfo("getNode(\"" + outerXML + "\")", false);
             try
             {
                 return ParseNode(doc, new StringReader(outerXML), outerXML);
@@ -717,13 +718,13 @@ namespace MushDLR223.Utilities
                 XmlNode temp = getNode(outerXML);
                 if (temp is LineInfoElementImpl)
                 {
-                    var li = (LineInfoElementImpl)temp;
+                    LineInfoElementImpl li = (LineInfoElementImpl) temp;
                     li.SetParentFromNode(templateNode);
                     return temp; //.FirstChild;}
                 }
                 if (temp is XmlSourceLineInfo)
                 {
-                    var li = (XmlSourceLineInfo)temp;
+                    XmlSourceLineInfo li = (XmlSourceLineInfo) temp;
                     li.SetParentFromNode(templateNode);
                     return temp; //.FirstChild;}
                 }
@@ -773,11 +774,12 @@ namespace MushDLR223.Utilities
             return CleanWhitepaces(xml2, null, Unused, Unused);
         }
 
-        protected static bool Unused(char arg1, char arg2)
+        public static bool Unused(char arg1, char arg2)
         {
             throw new NotImplementedException();
             return false;
         }
+
 
         public static string CleanWhitepaces(string xml2, string padchars,
                                              Func<char, char, bool> ifBefore, Func<char, char, bool> ifAfter)
@@ -790,13 +792,15 @@ namespace MushDLR223.Utilities
                 return xml2;
             }
 
-            bool padWildCards = true;
+            if (padchars != null)
+            {
+                if (xml2.IndexOfAny(padchars.ToCharArray(), 0) == -1 || (xml2.IndexOfAny(new[] {'\\', ':', '/'}, 0) > 0))
+                {
+                    padchars = null;
+                }
+            }
 
-            padWildCards = xml2.IndexOfAny("\\:/".ToCharArray(), 0) == -1;
-
-            if (!padWildCards) padchars = null;
-
-            var s = new StringBuilder(inlen);
+            StringBuilder s = new StringBuilder(inlen);
 
             bool chgd = false;
             bool xmlFound = false;
@@ -870,9 +874,12 @@ namespace MushDLR223.Utilities
             int len = s.Length;
             if (xmlFound)
             {
-                s = s.Replace("<sr/>", "<srai><star index=\"1\"/></srai>");
-                s = s.Replace("star/>", "star index=\"1\"/>");
-                if (len != s.Length) chgd = true;
+                s = s.Replace("<sr/>", "<srai><star/></srai>");
+                //s = s.Replace("star/>", "star index=\"1\"/>");
+                if (len != s.Length)
+                {
+                    chgd = true;
+                }
             }
             if (!chgd)
             {
@@ -898,7 +905,7 @@ namespace MushDLR223.Utilities
             int idx = outer.IndexOf(remove);
             if (idx > 1)
             {
-                return outer.Substring(0, idx);                
+                return outer.Substring(0, idx);
             }
             return outer.Replace(remove, "");
         }

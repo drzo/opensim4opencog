@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using MushDLR223.ScriptEngines;
 using TASK = System.Threading.ThreadStart;
@@ -8,12 +9,16 @@ namespace MushDLR223.Utilities
 {
     public class TaskQueueHandler : IDisposable
     {
+        public static readonly OutputDelegate errOutput = System.Console.Error.WriteLine;
         protected ThreadControl LocalThreadControl = new ThreadControl(new ManualResetEvent(false));
-
-        List<ThreadStart> OnFinnaly = new List<ThreadStart>();
+        readonly List<ThreadStart> OnFinnaly = new List<ThreadStart>();
         // ping wiat time should be less than 4 seconds when going in
         public static readonly TimeSpan MAX_PING_WAIT = TimeSpan.FromSeconds(4);
         public static readonly TimeSpan PING_INTERVAL = TimeSpan.FromSeconds(10); // 30 seconds
+        // 10 minutes
+        public static readonly TimeSpan TOO_LONG_INTERVAL = TimeSpan.FromMinutes(10);
+        // 1ms
+        public static readonly TimeSpan TOO_SHORT_INTERVAL = TimeSpan.FromMilliseconds(1);
         public static readonly HashSet<TaskQueueHandler> TaskQueueHandlers = new HashSet<TaskQueueHandler>();
         private readonly LinkedList<TASK> EventQueue = new LinkedList<TASK>();
 
@@ -22,6 +27,8 @@ namespace MushDLR223.Utilities
         private readonly object TaskThreadChangeLock = new object();
         private readonly object PingWaitingLock = new object();
         private readonly object DebugStringLock = new object();
+        private readonly object BusyTrackingLock = new object();
+        
 
         private Thread PingerThread;
         private Thread TaskThread;
@@ -32,8 +39,7 @@ namespace MushDLR223.Utilities
         //public delegate ThreadStart NameThreadStart(string named, ThreadStart action);
 
         private readonly string Name;
-        private readonly TASK NOP = default(TASK);
-
+        private readonly TASK NOP;
         private readonly AutoResetEvent WaitingOn = new AutoResetEvent(false);
         private readonly AutoResetEvent IsCurrentTaskStarted = new AutoResetEvent(false);
         
@@ -44,18 +50,13 @@ namespace MushDLR223.Utilities
         public bool abortable;
 
         private DateTime BusyEnd;
-        private DateTime BusyStart = DateTime.UtcNow;
+        private DateTime BusyStart = DateTime.Now;
         private DateTime PingStart;
 
 
-        private TimeSpan OperationKillTimeout;
-        private TimeSpan PauseBetweenOperations;
-        private TimeSpan LastOperationTimespan;
-        private TimeSpan LastPingLagTime;
-
-
         private ulong CompletedSinceLastPing = 0;
-        public OutputDelegate debugOutput = TextFilter.DEVNULL;
+        public OutputDelegate debugOutput = System.Console.Error.WriteLine;
+
 
         bool aborted = false;
         private bool debugRequested = false;
@@ -65,14 +66,38 @@ namespace MushDLR223.Utilities
         private bool problems = false;
         public bool SimplyLoopNoWait = false;
         private ulong StartedSinceLastPing = 0;
-        private ulong todo;
+        private ulong ExpectedTodo;
         private ulong TotalComplete = 0;
         private ulong TotalFailures = 0;
         private ulong TotalStarted = 0;
         private bool WaitingOnPing = false;
-        public string WaitingString = "";
-        public string LastDebugMessage = "";
+        public string WaitingString = "NO_WAITING";
+        public string LastDebugMessage = "NO_MESG";        
         const string INFO = "$INFO$";
+
+        public TimeSpan PauseBetweenOperations = TOO_SHORT_INTERVAL;
+        private TimeSpan LastOperationTimespan = TOO_LONG_INTERVAL;
+        private TimeSpan LastPingLagTime = TOO_SHORT_INTERVAL;
+        public TimeSpan LastRestTime = TOO_LONG_INTERVAL;
+        private TimeSpan ThisMaxOperationTimespan = TOO_LONG_INTERVAL;
+
+        private TimeSpan _operationKillTimeout = TOO_LONG_INTERVAL;
+        /// <summary>
+        /// When this is set the KillTasksOverTimeLimit should bne false
+        /// </summary>
+        private TimeSpan OperationKillTimeout
+        {
+            get { return _operationKillTimeout; }
+            set
+            {
+                _operationKillTimeout = TOO_LONG_INTERVAL;
+                if (value <= TOO_SHORT_INTERVAL)
+                {
+                    WriteLine("OperationKillTimeout at " + value + " bumping up to " +
+                              TOO_LONG_INTERVAL);
+                }
+            }
+        }
 
         public TaskQueueHandler(string str, TimeSpan msWaitBetween)
             : this(str, msWaitBetween, true)
@@ -85,30 +110,36 @@ namespace MushDLR223.Utilities
         }
 
         public TaskQueueHandler(string str, TimeSpan msWaitBetween, bool autoStart)
-            : this(str, msWaitBetween, msWaitBetween, autoStart)
+            : this(str, msWaitBetween, TimeSpan.MaxValue, autoStart)
         {
         }
 
         public TaskQueueHandler(string str, TimeSpan msWaitBetween, TimeSpan maxPerOperation, bool autoStart)
         {
+            KillTasksOverTimeLimit = false;
+            NOP = NOP ?? (() => { });
             lock (TaskQueueHandlers)
             {
                 BusyEnd = BusyStart;
                 Name = str;
                 TaskQueueHandlers.Add(this);
 
+                // 1ms min - ten minutes max
+                OperationKillTimeout = TimeSpanBetween(maxPerOperation, TOO_SHORT_INTERVAL, TOO_LONG_INTERVAL);
 
-                if (maxPerOperation.TotalMilliseconds < 2) maxPerOperation = TimeSpan.FromMilliseconds(10);
-                OperationKillTimeout = maxPerOperation;
+                // zero secs - ten minutes max
+                PauseBetweenOperations = TimeSpanBetween(msWaitBetween, TimeSpan.Zero, TOO_LONG_INTERVAL);
 
-                if (msWaitBetween.TotalMilliseconds < 10) msWaitBetween = TimeSpan.FromMilliseconds(10);
-                // max ten minutes
-                if (msWaitBetween.TotalMinutes > 10) msWaitBetween = TimeSpan.FromMinutes(10);
-                PauseBetweenOperations = msWaitBetween;
-                PingerThread = new Thread(EventQueue_Ping) { Name = str + " debug", Priority = ThreadPriority.Lowest };
+                PingerThread = new Thread(EventQueue_Ping) {Name = str + " debug", Priority = ThreadPriority.Lowest};
             }
-            KillTasksOverTimeLimit = false;
             if (autoStart) Start();
+        }
+
+        static TimeSpan TimeSpanBetween(TimeSpan orig, TimeSpan low, TimeSpan high)
+        {
+            if (orig < low) return low;
+            if (orig > high) return high;
+            return orig;
         }
 
         public bool IsRunning
@@ -128,7 +159,13 @@ namespace MushDLR223.Utilities
                 lock (EventQueue)
                 {
                     if (_killTasksOverTimeLimit == value) return;
-                    _noQueue = value;
+                    if (OperationKillTimeout <= TOO_SHORT_INTERVAL)
+                    {
+                        WriteLine("OperationKillTimeout at " + TOO_SHORT_INTERVAL + " bumping up to " +
+                                  TOO_LONG_INTERVAL);
+                        OperationKillTimeout = TOO_LONG_INTERVAL;
+                    }
+                    _killTasksOverTimeLimit = value;
                 } // release waiters
                 Set();
             }
@@ -143,10 +180,10 @@ namespace MushDLR223.Utilities
 
         public bool NoQueue
         {
-            get { lock (EventQueue) return _noQueue; }
+            get { lock (EventQueueLock) return _noQueue; }
             set
             {
-                lock (EventQueue)
+                lock (EventQueueLock)
                 {
                     if (_noQueue == value) return;
                     _noQueue = value;
@@ -175,8 +212,8 @@ namespace MushDLR223.Utilities
             }
             try
             {
-                WaitingOn.Set();
-                WaitingOn.Close();
+                NoExceptions<bool>(WaitingOn.Set);
+                NoExceptions(WaitingOn.Close);
             }
             catch (ObjectDisposedException)
             {
@@ -187,20 +224,27 @@ namespace MushDLR223.Utilities
 
         public void Start()
         {
+            lock (BusyTrackingLock)
+            {
+                Start0();
+            }
+        }
+        private void Start0()
+        {
             if (StackerThread == null) StackerThread = new Thread(EventQueue_Handler);
             if (!StackerThread.IsAlive)
             {
-                StackerThread.Name = Name + " worker";
-                StackerThread.Priority = ThreadPriority.Lowest;
+                StackerThread.Name = Name + " worker task queue";
+                StackerThread.Priority = ThreadPriority.BelowNormal;
                 StackerThread.Start();
             }
             if (PingerThread != null && !PingerThread.IsAlive) PingerThread.Start();
-            debugOutput = DLRConsole.DebugWriteLine;
+            debugOutput = debugOutput ?? errOutput;
         }
 
         public override string ToString()
         {
-            return INFO;
+            return ToDebugString(false);
         }
 
 
@@ -216,7 +260,7 @@ namespace MushDLR223.Utilities
                        };
         }
 
-        public string ToDebugString()
+        public string ToDebugString(bool detailed)
         {
             string WaitingS = "Not waiting";
             lock (DebugStringLock)
@@ -229,7 +273,7 @@ namespace MushDLR223.Utilities
 
             string extraMesage =
                 Name
-                + string.Format(" TODO = {0} ", todo)
+                + string.Format(" TODO = {0} ", ExpectedTodo)
                 + string.Format(" TOTALS = {0}/{1}/{2} ", TotalComplete, TotalStarted, GetTimeString(LastOperationTimespan))
                 +
                 string.Format(" PINGED = {0}/{1}/{2} ", CompletedSinceLastPing, StartedSinceLastPing,
@@ -250,6 +294,29 @@ namespace MushDLR223.Utilities
         }
 
         private void EventQueue_Handler()
+        {
+            bool needsExit = false;
+            try
+            {
+                needsExit = System.Threading.Monitor.TryEnter(OneTaskAtATimeLock);
+                if (!needsExit)
+                {
+                    string str = "EventQueue_Handler is locked out!";
+                    WriteLine(str);
+                    throw new InternalBufferOverflowException(str);
+
+                }
+                else
+                {
+                    EventQueue_Handler0();                    
+                }
+            }
+            finally
+            {
+                if (needsExit) System.Threading.Monitor.Exit(OneTaskAtATimeLock);
+            }
+        }
+        private void EventQueue_Handler0()
         {
             while (!(IsDisposing))
             {
@@ -272,7 +339,7 @@ namespace MushDLR223.Utilities
                 if (evt != null && evt != NOP)
                 {
                     DoNow(evt);
-                    if (PauseBetweenOperations.TotalMilliseconds > 1) Thread.Sleep(PauseBetweenOperations);
+                    if (PauseBetweenOperations > TimeSpan.Zero) Thread.Sleep(PauseBetweenOperations);
                 }
                 else
                 {
@@ -288,19 +355,44 @@ namespace MushDLR223.Utilities
                     //}
                     if (SimplyLoopNoWait)
                     {
-                        Thread.Sleep(PauseBetweenOperations);
+                        Thread.Sleep(TOO_SHORT_INTERVAL);
                         continue;
                     }
-                    WaitOne();
+                     WaitOne();
                 }
                 Busy = false;
             }
         }
 
-        private void WaitOne()
+        private bool WaitOne()
         {
-            if (IsDisposing) return;
-            WaitingOn.WaitOne(); // Thread.Sleep(100);
+            return NoExceptions(() =>
+                             {
+                                 bool r = false;
+                                 while (!IsDisposing)
+                                 {
+                                     r = WaitingOn.WaitOne(ThisMaxOperationTimespan);
+                                     if (r) return true;
+                                     errOutput(CreateMessage("WaitOne: TIMEOUT ERROR {0} was {1} ", INFO, GetTimeString(ThisMaxOperationTimespan)));
+                                     problems = true;
+                                     lock (BusyTrackingLock)
+                                     {
+                                         if (BusyEnd < BusyStart)
+                                         {
+                                             LastRestTime = BusyStart.Subtract(BusyEnd);
+                                         }
+                                         var len = DateTime.Now.Subtract(BusyStart);
+                                         errOutput(CreateMessage("Moving on with TIMEOUT {0} was {1} ", INFO, GetTimeString(ThisMaxOperationTimespan)));
+                                         if (ExpectedTodo > 0) return true;////r = true;
+                                         return false;
+                                     }
+                                     if (SimplyLoopNoWait) return false;
+                                     return r;
+                                 }                                
+                                 // ReSharper disable ConditionIsAlwaysTrueOrFalse
+                                 return true;
+                                 // ReSharper restore ConditionIsAlwaysTrueOrFalse
+                             });
         }
 
         private void WaitOneMaybe()
@@ -312,7 +404,7 @@ namespace MushDLR223.Utilities
                 if (IsDisposing) return;
                 while (EventQueue.Count == 0)
                 {
-                    if (!WaitingOn.WaitOne(10000))
+                    if (!WaitingOn.WaitOne(TOO_LONG_INTERVAL))
                     {
                         waitOne = true;
                         continue;
@@ -337,7 +429,9 @@ namespace MushDLR223.Utilities
                 waitOne = wasBusy;
                 if (wasBusy)
                 {
+// ReSharper disable RedundantAssignment
                     waitOne = true;
+// ReSharper restore RedundantAssignment
                     continue;
                 }
             }
@@ -345,14 +439,12 @@ namespace MushDLR223.Utilities
 
         private void Reset()
         {
-            if (IsDisposing) return;
-            WaitingOn.Reset();
+            if (!IsDisposing) NoExceptions<bool>(WaitingOn.Reset);
         }
 
-        private void Set()
+        public bool Set()
         {
-            if (IsDisposing) return;
-            WaitingOn.Set();
+            return (!IsDisposing) && NoExceptions<bool>(WaitingOn.Set);
         }
 
         private void EventQueue_Ping()
@@ -372,10 +464,17 @@ namespace MushDLR223.Utilities
                 if (_noQueue) continue;
                 lock (PingWaitingLock)
                 {
-                    todo = (ulong)EventQueue.Count;
+                    lock (BusyTrackingLock)
+                    {
+                        ExpectedTodo = (ulong)EventQueue.Count;
+                    }
                     if (Busy)
                     {
-                        TimeSpan t = DateTime.UtcNow - BusyStart;
+                        TimeSpan t;
+                        lock (BusyTrackingLock)
+                        {
+                            t = DateTime.Now - BusyStart;
+                        }
                         if (t > OperationKillTimeout)
                         {
                             problems = true;
@@ -395,10 +494,10 @@ namespace MushDLR223.Utilities
                         {
                             if (startedBeforeWait == TotalStarted)
                             {
-                                if (todo > 0)
+                                if (ExpectedTodo > 0)
                                 {
                                     problems = true;
-                                    TimeSpan t = DateTime.UtcNow - BusyEnd;
+                                    TimeSpan t = DateTime.Now - BusyEnd;
                                     WriteLine("NOTHING DONE IN time = {0} " + INFO, GetTimeString(t));
                                 }
                             }
@@ -407,7 +506,7 @@ namespace MushDLR223.Utilities
                         if (Busy /* && (StartedSinceLastPing == 0 && FinishedSinceLastPing == 0)*/)
                         {
                             // ReSharper disable ConditionIsAlwaysTrueOrFalse
-                            TimeSpan tt = DateTime.UtcNow - PingStart;
+                            TimeSpan tt = DateTime.Now - PingStart;
                             if (tt > PING_INTERVAL)
                             {
                                 if (DebugQueue)
@@ -421,7 +520,7 @@ namespace MushDLR223.Utilities
                     }
 
                     if (WaitingOnPing) continue;
-                    PingStart = DateTime.UtcNow;
+                    PingStart = DateTime.Now;
                     WaitingOnPing = true;
                     Enqueue(EventQueue_Pong);
                 }
@@ -436,13 +535,13 @@ namespace MushDLR223.Utilities
                 // todo can this ever happen?
                 if (!WaitingOnPing) return;
             }
-            LastPingLagTime = DateTime.UtcNow - PingStart;
+            LastPingLagTime = DateTime.Now - PingStart;
             TotalStarted--;
             StartedSinceLastPing--;
             if (LastPingLagTime <= MAX_PING_WAIT)
             {
                 GoodPings++;
-                if (todo > 0)
+                if (ExpectedTodo > 0)
                     if (DebugQueue)
                         WriteLine("PONG: {0} {1}", GetTimeString(LastPingLagTime), INFO);
                 LatePings = 0;
@@ -487,32 +586,38 @@ namespace MushDLR223.Utilities
 
         // ReSharper restore FunctionNeverReturns
         private void DoNow(TASK evt)
-        {            
+        {
             if (IsDisposing) return;
             lock (TaskThreadChangeLock)
                 abortable = false;
-            Busy = true;            
-            TotalStarted++;
+            if (InternalEvent(evt))
+            {
+                NoExceptions(evt);
+                return;
+            }
             //var IsCurrentTaskComplete = new ManualResetEvent(false);
             try
             {
-                todo--;
-                BusyStart = DateTime.UtcNow;
-                StartedSinceLastPing++;
-                if (EventQueue_Pong == evt || (evt.Method != null && evt.Method.DeclaringType == GetType()))
+                lock (BusyTrackingLock)
                 {
-                    evt();
+                    Busy = true;
+                    TotalStarted++; ExpectedTodo--;
+                    BusyStart = DateTime.Now;
+                    LastRestTime = BusyStart.Subtract(BusyEnd);
                 }
-                else
+                StartedSinceLastPing++;
                 {
                     Tick(evt);
                     lock (TaskThreadChangeLock)
                         abortable = false;
                     //() => RunWithTimeLimit(evt, "RunWithTimeLimit", OperationKillTimeout));
                 }
-                CompletedSinceLastPing++;
-                TotalComplete++;
-                Busy = false;
+                lock (BusyTrackingLock)
+                {
+                    CompletedSinceLastPing++;
+                    TotalComplete++;
+                    Busy = false;
+                }
             }
             catch (ThreadAbortException e)
             {
@@ -523,15 +628,30 @@ namespace MushDLR223.Utilities
             }
             catch (Exception e)
             {
-                TotalFailures++;
+                lock (BusyTrackingLock)
+                {
+                    TotalFailures++;
+                }
                 WriteLine("ERROR! {0} was {1} in {2}", INFO, e, Thread.CurrentThread);
             }
             finally
             {
-                BusyEnd = DateTime.UtcNow;
-                LastOperationTimespan = BusyEnd.Subtract(BusyStart);
-                //TotalStarted++;
-                Busy = false;
+                lock (BusyTrackingLock)
+                {
+                    BusyEnd = DateTime.Now;
+                    LastOperationTimespan = BusyEnd.Subtract(BusyStart);
+                    if (LastOperationTimespan > TimeSpan.Zero)
+                    {
+                        var proposal = (LastOperationTimespan + LastOperationTimespan);
+                        if (proposal.TotalMilliseconds > 500)
+                        {
+                            ThisMaxOperationTimespan = proposal;
+                            WriteLine00("changeing " + ThisMaxOperationTimespan + " to ");
+                        }
+                    }
+                    //TotalStarted++;
+                    Busy = false;
+                }
                 lock (OnFinnaly)
                 {
                     foreach (ThreadStart onFinal in OnFinnaly)
@@ -541,6 +661,13 @@ namespace MushDLR223.Utilities
                     OnFinnaly.Clear();
                 }
             }
+        }
+
+        private bool InternalEvent(TASK evt)
+        {
+            if (EventQueue_Pong == evt) return true;
+            if (!(evt.Method != null && evt.Method.DeclaringType == GetType())) return false;
+            return true;
         }
 
         private void Tick(TASK evt)
@@ -575,7 +702,7 @@ namespace MushDLR223.Utilities
 
                     aborted = false;
                     abortable = true;
-                    IsCurrentTaskStarted.Set();
+                    NoExceptions<bool>(IsCurrentTaskStarted.Set);
                 }
 
                 evt();
@@ -617,14 +744,22 @@ namespace MushDLR223.Utilities
             bool wasKillTasksOverTimeLimit = KillTasksOverTimeLimit;
             TimeSpan prev = OperationKillTimeout;
             OperationKillTimeout = maxTime;
-            BusyStart = DateTime.UtcNow;
+            control = control ?? new ThreadControl(null);
+            var ctrl = control != null;
+            lock (BusyTrackingLock)
+            {
+                BusyStart = DateTime.Now;
+            }
             KillTasksOverTimeLimit = true;
             try
             {
+                if (control.TaskStart != null) NoExceptions<bool>(control.TaskStart.Set);
                 evt();
+                if (control.TaskEnded != null) NoExceptions<bool>(control.TaskEnded.Set);
             }
             finally
             {
+                if (control.TaskComplete != null) NoExceptions<bool>(control.TaskComplete.Set);
                 OperationKillTimeout = prev;
                 KillTasksOverTimeLimit = wasKillTasksOverTimeLimit;
             }
@@ -664,9 +799,9 @@ namespace MushDLR223.Utilities
                 IsCurrentTaskComplete = IsCurrentTaskComplete ?? new ManualResetEvent(false);
                 //ManualResetEvent IsCurrentTaskComplete = new ManualResetEvent(false);      
                 EventWaitHandle IsCurrentTaskEnded = control.TaskEnded = new AutoResetEvent(false);
-                EventWaitHandle IsCurrentTaskStarted = control.TaskStart = new AutoResetEvent(false);
+                EventWaitHandle isCurrentTaskStarted1 = control.TaskStart = new AutoResetEvent(false);
                 control.ThreadForTask = threadPlace;
-                threadPlace = new Thread(OneTask(evt, IsCurrentTaskStarted, IsCurrentTaskComplete, IsCurrentTaskEnded));
+                threadPlace = new Thread(OneTask(evt, isCurrentTaskStarted1, IsCurrentTaskComplete, IsCurrentTaskEnded));
 
                 control.ThreadForTask = threadPlace;
                 //  lock (OneTaskAtATimeLock)
@@ -718,7 +853,7 @@ namespace MushDLR223.Utilities
                     finally
                     {
 #if !NEW_INERUPT
-                        NoExceptions<bool>(IsCurrentTaskStarted.Reset);
+                        NoExceptions<bool>(isCurrentTaskStarted1.Reset);
 #endif
                     }
                 }
@@ -746,9 +881,14 @@ namespace MushDLR223.Utilities
                     {
 
                         SetEvent(taskStarted);
-                        lock (OneTaskAtATimeLock)
+                        System.Threading.Monitor.Enter(OneTaskAtATimeLock);
+                        try
                         {
                             evt();
+                        }
+                        finally
+                        {
+                            System.Threading.Monitor.Exit(OneTaskAtATimeLock);
                         }
                         SetEvent(taskCompleted);
                     }
@@ -787,8 +927,11 @@ namespace MushDLR223.Utilities
                     {
                         if (abortable)
                         {
-                            aborted = true;                                
-                            TaskThread.Abort();
+                            aborted = true;
+                            lock (OnFinnaly)
+                            {
+                                TaskThread.Abort();
+                            }
                         }
                     }
                     //TaskThread.Suspend();
@@ -799,17 +942,42 @@ namespace MushDLR223.Utilities
 
         public void RestartCurrentTask()
         {
-            StackerThread.Resume();
+            NoExceptions(TaskThread.Resume);
+            NoExceptions(StackerThread.Resume);
         }
 
-
+        private bool inWriteline = false;
         public void WriteLine(string s, params object[] parms)
         {
-            s = DLRConsole.SafeFormat("\n[TASK " + Name + "] " + s, parms);
-            var str = ToDebugString();
-            LastDebugMessage = s;
-            if (s.Contains(INFO)) s = s.Replace(INFO, str);
+            if (inWriteline)
+            {
+                System.Console.Error.WriteLine("inWriteLine!!!!!!!!=" + new Exception().StackTrace);
+                return;
+            }
+            try
+            {
+                inWriteline = true;
+                WriteLine00(s, parms);
+            }
+            catch
+            {
+            }
+            finally
+            {
+                inWriteline = false;
+            }
+        }
 
+        public void WriteLine00(string s, params object[] parms)
+        {
+            debugOutput = debugOutput ?? errOutput;
+            s = CreateMessage(s, parms);
+            LastDebugMessage = s;
+            if (debugOutput == errOutput)
+            {
+                errOutput(s);
+                return;
+            }
             if (debugOutput != DLRConsole.DebugWriteLine)
             {
                 DLRConsole.DebugWriteLine(s);
@@ -817,10 +985,24 @@ namespace MushDLR223.Utilities
             if (debugOutput != null) debugOutput(s);
         }
 
+        private string CreateMessage(string s, params object[] parms)
+        {
+            s = DLRConsole.SafeFormat("..\n[TASK " + Name + "] " + s, parms);
+            if (s.Contains(INFO))
+            {
+                var str = ToDebugString(true);
+                s = s.Replace(INFO, str + "\n...");
+            }
+            return s;
+        }
+
         public void Enqueue(TASK evt)
         {
-            if (IsDisposing) return;
-            todo++;
+            lock (BusyTrackingLock)
+            {
+                if (IsDisposing) return;
+                ExpectedTodo++;
+            }
             if (_noQueue)
             {
                 DoNow(evt);
@@ -836,7 +1018,10 @@ namespace MushDLR223.Utilities
         public void AddFirst(TASK evt)
         {
             if (IsDisposing) return;
-            todo++;
+            lock(BusyTrackingLock)
+            {
+                ExpectedTodo++;
+            }
             if (NoQueue)
             {
                 DoNow(evt);
@@ -876,7 +1061,7 @@ namespace MushDLR223.Utilities
                                 }
                                 lock (DebugStringLock)
                                 {
-                                    are.Set();
+                                    NoExceptions<bool>(are.Set);                                    
                                 }
                             }
                             catch
@@ -972,11 +1157,36 @@ namespace MushDLR223.Utilities
             return tr;
         }
 
+        private void NoExceptions(TASK func)
+        {
+            try
+            {
+                if (IsDisposing)
+                {
+                    WriteLine("IsDisposing");
+                    return;
+                }
+                
+                func.Invoke();
+                return;
+            }
+            catch (Exception e)
+            {
+                WriteLine("" + e);
+                return;
+            }
+        }
+
         private T NoExceptions<T>(Func<T> func)
         {
             try
             {
-                return func();
+                if (IsDisposing)
+                {
+                    WriteLine("IsDisposing");
+                    return default(T);
+                }
+                return func.Invoke();
             }
             catch (Exception e)
             {

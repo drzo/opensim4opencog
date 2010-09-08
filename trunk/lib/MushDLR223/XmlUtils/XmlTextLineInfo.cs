@@ -1,28 +1,13 @@
+using System.IO;
 using System.Xml;
+using System.Xml.XPath;
 
 namespace MushDLR223.Utilities
 {
     public class XmlTextLineInfo : XmlText, XmlSourceLineInfo
     {
         private XmlDocumentLineInfo _docLineInfo;
-        internal XmlDocumentLineInfo docLineInfo
-        {
-            get
-            {
-                return _docLineInfo ?? OwnerDocument as XmlDocumentLineInfo;
-            }
-            set
-            {
-                _docLineInfo = value;
-            }
-        }
-        public override XmlDocument OwnerDocument
-        {
-            get
-            {
-                return _docLineInfo ?? base.OwnerDocument;
-            }
-        }
+
         public long charPos;
 
         public int lineNumber;
@@ -33,6 +18,17 @@ namespace MushDLR223.Utilities
             : base(text, info)
         {
             _docLineInfo = info;
+        }
+
+        internal XmlDocumentLineInfo docLineInfo
+        {
+            get { return _docLineInfo ?? OwnerDocument as XmlDocumentLineInfo; }
+            set { _docLineInfo = value; }
+        }
+
+        public override XmlDocument OwnerDocument
+        {
+            get { return _docLineInfo ?? base.OwnerDocument; }
         }
 
         public override bool IsReadOnly
@@ -100,24 +96,6 @@ namespace MushDLR223.Utilities
             charPos = position;
         }
 
-        #endregion
-
-        public override XmlNode CloneNode(bool deep)
-        {
-            var v = new XmlTextLineInfo(base.Data, (XmlDocumentLineInfo) OwnerDocument);
-            v.SetLineInfo(LineNumber, LinePosition);
-            v.ReadOnly = ReadOnly;
-            v.CloneOf = CloneOf ?? this;
-            return v;
-        }
-
-        public override string ToString()
-        {
-            if (docLineInfo == null) return StaticXMLUtils.TextAndSourceInfo(this);
-            return docLineInfo.TextAndSourceInfo(this);
-        }
-
-
         public void SetParentFromNode(XmlNode xmlNode)
         {
             XmlNode pn = xmlNode.ParentNode;
@@ -131,11 +109,28 @@ namespace MushDLR223.Utilities
             }
             if (xmlNode is LineInfoElementImpl)
             {
-                var lie = (LineInfoElementImpl) xmlNode;
+                LineInfoElementImpl lie = (LineInfoElementImpl) xmlNode;
                 lineNumber = lie.LineNumber;
                 linePosition = lie.LinePosition;
                 charPos = lie.charPos;
             }
+        }
+
+        #endregion
+
+        public override XmlNode CloneNode(bool deep)
+        {
+            XmlTextLineInfo v = new XmlTextLineInfo(base.Data, (XmlDocumentLineInfo) OwnerDocument);
+            v.SetLineInfo(LineNumber, LinePosition);
+            v.ReadOnly = ReadOnly;
+            v.CloneOf = CloneOf ?? this;
+            return v;
+        }
+
+        public override string ToString()
+        {
+            if (docLineInfo == null) return StaticXMLUtils.TextAndSourceInfo(this);
+            return docLineInfo.TextAndSourceInfo(this);
         }
     }
 }
