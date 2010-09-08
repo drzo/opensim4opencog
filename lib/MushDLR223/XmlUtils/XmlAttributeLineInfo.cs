@@ -4,6 +4,7 @@ namespace MushDLR223.Utilities
 {
     public class XmlAttributeLineInfo : XmlAttribute, XmlSourceLineInfo
     {
+        private XmlDocumentLineInfo _docLineInfo;
         public long charPos;
         public int lineNumber;
         public int linePosition;
@@ -15,24 +16,15 @@ namespace MushDLR223.Utilities
             docLineInfo = doc;
         }
 
-        private XmlDocumentLineInfo _docLineInfo;
         internal XmlDocumentLineInfo docLineInfo
         {
-            get
-            {
-                return _docLineInfo ?? OwnerDocument as XmlDocumentLineInfo;
-            }
-            set
-            {
-                _docLineInfo = value;
-            }
+            get { return _docLineInfo ?? OwnerDocument as XmlDocumentLineInfo; }
+            set { _docLineInfo = value; }
         }
+
         public override XmlDocument OwnerDocument
         {
-            get
-            {
-                return _docLineInfo ?? base.OwnerDocument;
-            }
+            get { return _docLineInfo ?? base.OwnerDocument; }
         }
 
         public override bool IsReadOnly
@@ -119,25 +111,6 @@ namespace MushDLR223.Utilities
             charPos = position;
         }
 
-        #endregion
-
-        public override XmlNode CloneNode(bool deep)
-        {
-            var v = new XmlAttributeLineInfo(base.Prefix, base.LocalName, base.NamespaceURI,
-                                             (XmlDocumentLineInfo) OwnerDocument);
-            v.CloneOf = CloneOf ?? this;
-            v.SetLineInfo(LineNumber, LinePosition);
-            v.Value = Value;
-            v.ReadOnly = ReadOnly;
-            return v;
-        }
-
-        public override string ToString()
-        {
-            return docLineInfo.TextAndSourceInfo(this);
-        }
-
-
         public void SetParentFromNode(XmlNode xmlNode)
         {
             XmlNode pn = xmlNode.ParentNode;
@@ -151,11 +124,29 @@ namespace MushDLR223.Utilities
             }
             if (xmlNode is LineInfoElementImpl)
             {
-                var lie = (LineInfoElementImpl) xmlNode;
+                LineInfoElementImpl lie = (LineInfoElementImpl) xmlNode;
                 lineNumber = lie.LineNumber;
                 linePosition = lie.linePosition;
                 charPos = lie.charPos;
             }
+        }
+
+        #endregion
+
+        public override XmlNode CloneNode(bool deep)
+        {
+            XmlAttributeLineInfo v = new XmlAttributeLineInfo(base.Prefix, base.LocalName, base.NamespaceURI,
+                                                              (XmlDocumentLineInfo) OwnerDocument);
+            v.CloneOf = CloneOf ?? this;
+            v.SetLineInfo(LineNumber, LinePosition);
+            v.Value = Value;
+            v.ReadOnly = ReadOnly;
+            return v;
+        }
+
+        public override string ToString()
+        {
+            return docLineInfo.TextAndSourceInfo(this);
         }
     }
 }

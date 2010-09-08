@@ -14,6 +14,7 @@ namespace MushDLR223.Utilities
 
         private static readonly string[][] PredefinedNamespaces =
             {
+                new[] {"aiml", "http://alicebot.org/2001/AIML-1.0.1"},
                 new[] {"html", "http://www.w3.org/1999/xhtml"},
                 new[] {"xsl", "http://www.w3.org/1999/XSL/Transform"},
                 new[] {"xsi", "http://www.w3.org/2001/XMLSchema-instance"},
@@ -21,6 +22,16 @@ namespace MushDLR223.Utilities
                 new[] {"js", "JavaScript"}
             };
 
+        private static readonly List<String> RemoveNamepaceURIs = new List<string>()
+                                                             {
+                                                                 "http://alicebot.org/2001/AIML-1.0.1",
+                                                             };
+
+        private static readonly List<String> RemovePrefixes = new List<string>()
+                                                                  {
+                                                                      "html",
+                                                                      "aiml",
+                                                                  };
         public static OutputDelegate errorOutput;
 
         public static bool SkipXmlns = true;
@@ -28,6 +39,7 @@ namespace MushDLR223.Utilities
         public static Func<string, string> TextWhitespaceCleaner = StaticXMLUtils.CleanWhitepaces;
         public readonly XmlNamespaceManager Manager;
 
+        public bool RemoveXmlns = SkipXmlns;
         private string currentAttributeName;
         private string currentNodeType;
         private XmlReader CurrentReader;
@@ -93,7 +105,7 @@ namespace MushDLR223.Utilities
         {
             get
             {
-                var settings = new XmlReaderSettings();
+                XmlReaderSettings settings = new XmlReaderSettings();
                 settings.ConformanceLevel = ConformanceLevel.Fragment;
                 settings.ValidationType = ValidationType.None;
                 settings.IgnoreWhitespace = true;
@@ -107,7 +119,7 @@ namespace MushDLR223.Utilities
                 XmlNameTable settingsNameTable = settings.NameTable;
                 if (settingsNameTable != null)
                 {
-                    var manager = new XmlNamespaceManager(settingsNameTable);
+                    XmlNamespaceManager manager = new XmlNamespaceManager(settingsNameTable);
                     SetupNamespaces(manager, settings.Schemas);
                 }
                 return settings;
@@ -116,7 +128,7 @@ namespace MushDLR223.Utilities
 
         private static void SetupNamespaces(XmlNamespaceManager manager, XmlSchemaSet schemas)
         {
-            foreach (var ns in PredefinedNamespaces)
+            foreach (string[] ns in PredefinedNamespaces)
             {
                 string prefix = ns[0];
                 string url = ns[1];
@@ -127,7 +139,7 @@ namespace MushDLR223.Utilities
 
         private void SetupDoc()
         {
-            foreach (var ns in PredefinedNamespaces)
+            foreach (string[] ns in PredefinedNamespaces)
             {
                 AddNameSpace(ns[0], ns[1]);
             }
@@ -189,6 +201,11 @@ namespace MushDLR223.Utilities
             }
         }
 
+        public override void Load(string filename)
+        {
+            var s = XmlReader.Create(filename, DefaultSettings);
+            Load(s);
+        }
         public override void Load(Stream reader)
         {
             IXmlLineInfo prev = LineTracker;
@@ -219,19 +236,31 @@ namespace MushDLR223.Utilities
             }
         }
 
-        public static void CheckNode(XmlNode node)
+        public void CheckNode(XmlNode node)
         {
             return;
-            if (node.OuterXml.Contains("l:") || node.OuterXml.Contains("nls"))
+            if (node.NodeType == XmlNodeType.Text) return;
+            if (node.NodeType == XmlNodeType.Comment) return;
+            if (node.NodeType == XmlNodeType.Element) return;
+            if (node.NodeType == XmlNodeType.Attribute) return;
+            if (node.NodeType == XmlNodeType.XmlDeclaration) return;
+            string s = node.OuterXml;
+            writeToLog("checknode: " + s);
+            //if (node.NodeType == XmlNodeType.XmlDeclaration) return;
+            if (s.Contains("l:") || s.Contains("nls"))
             {
                 return;
             }
         }
 
         // ReSharper disable RedundantOverridenMember
-        public override XmlNode CreateNode(XmlNodeType type, string prefix, string name, string namespaceURI)
+        public override XmlNode CreateNode(XmlNodeType type, string prefix, string localName, string namespaceURI)
         {
-            XmlNode v = base.CreateNode(type, prefix, name, namespaceURI);
+            if (type == XmlNodeType.Element) return CreateElement(prefix, localName, namespaceURI);
+            string nodeTypeString = type.ToString();
+            string name = null;
+            TransformElement(ref nodeTypeString, ref prefix, ref localName, ref name, ref namespaceURI);
+            XmlNode v = base.CreateNode(type, prefix, localName, namespaceURI);
             CheckNode(v);
             return v;
         }
@@ -245,6 +274,9 @@ namespace MushDLR223.Utilities
 
         public override XmlNode CreateNode(string nodeTypeString, string name, string namespaceURI)
         {
+            string prefix = null;
+            string localName = null;
+            TransformElement(ref nodeTypeString, ref prefix, ref localName, ref name, ref namespaceURI);
             XmlNode v = base.CreateNode(nodeTypeString, name, namespaceURI);
             CheckNode(v);
             return v;
@@ -252,6 +284,10 @@ namespace MushDLR223.Utilities
 
         public override XmlNode CreateNode(XmlNodeType type, string name, string namespaceURI)
         {
+            string prefix = null;
+            string nodeTypeString = type.ToString();
+            string localName = null;
+            TransformElement(ref nodeTypeString, ref prefix, ref localName, ref name, ref namespaceURI);
             XmlNode v = base.CreateNode(type, name, namespaceURI);
             CheckNode(v);
             return v;
@@ -259,8 +295,12 @@ namespace MushDLR223.Utilities
 
         protected override XmlAttribute CreateDefaultAttribute(string prefix, string localName, string namespaceURI)
         {
+            string nodeTypeString = null;
+            string name = null;
+            TransformElement(ref nodeTypeString, ref prefix, ref localName, ref name, ref namespaceURI);
             XmlAttribute v = base.CreateDefaultAttribute(prefix, localName, namespaceURI);
             CheckNode(v);
+            StepTrace();
             return v;
         }
 
@@ -268,6 +308,7 @@ namespace MushDLR223.Utilities
         {
             XmlDocumentFragment v = base.CreateDocumentFragment();
             CheckNode(v);
+            StepTrace();
             return v;
         }
 
@@ -276,6 +317,7 @@ namespace MushDLR223.Utilities
         {
             XmlDocumentType v = base.CreateDocumentType(name, publicId, systemId, internalSubset);
             CheckNode(v);
+            StepTrace();
             return v;
         }
 
@@ -292,7 +334,6 @@ namespace MushDLR223.Utilities
             docStandalone = standalone;
             XmlDeclaration v = base.CreateXmlDeclaration(version, encoding, standalone);
             CheckNode(v);
-            StepTrace();
             return v;
         }
 
@@ -314,6 +355,72 @@ namespace MushDLR223.Utilities
         private static void StepTrace()
         {
         }
+        void TransformElement(ref string nodeTypeString, ref string prefix, ref string localName, ref string name,
+                              ref string namespaceURI)
+        {
+            bool prefixIsNullable = localName == null;
+            string nodeName = String.Format("{0}:{1}", (prefix ?? "_"), (prefixIsNullable ? name : localName));
+
+            if (prefix == null)
+            {
+                if (!prefixIsNullable)
+                {
+                    writeToLog("RemoveXmlns: null prefix in " + nodeName);
+                    prefix = "";
+                }
+            }
+            else if (prefix == "")
+            {
+                if (prefixIsNullable)
+                {
+                    writeToLog("RemoveXmlns: null prefix in " + nodeName);
+                    prefix = null;
+                }
+            }
+            else
+            {
+                if (RemovePrefixes.Contains(prefix))
+                {
+                    prefix = prefixIsNullable ? null : "";
+                }
+            }
+
+            if (namespaceURI == null)
+            {
+                writeToLog("RemoveXmlns: null namespaceURI in " + nodeName);
+                namespaceURI = "";
+            }
+            if (RemoveNamepaceURIs.Contains(namespaceURI))
+            {
+                namespaceURI = "";
+            }
+
+            if (RemoveXmlns)
+            {
+                if (!string.IsNullOrEmpty(prefix))
+                {
+                    writeToLog("RemoveXmlns: prefix=" + prefix + " in " + nodeName);
+                }
+                prefix = prefixIsNullable ? null : "";
+
+                if (!string.IsNullOrEmpty(namespaceURI))
+                {
+                    writeToLog("RemoveXmlns: namespaceURI=" + namespaceURI + " in " + nodeName);
+                }
+                namespaceURI = "";
+
+                if (localName == "xmlns")
+                {
+                    localName = "legacy_xmlns";
+                    writeToLog("RemoveXmlns: localName=xmlns in " + nodeName);
+                }
+                if (name == "xmlns")
+                {
+                    name = "legacy_xmlns";
+                    writeToLog("RemoveXmlns: name=xmlns in " + nodeName);
+                }
+            }
+        }
 
         public override void Load(XmlReader reader)
         {
@@ -334,6 +441,18 @@ namespace MushDLR223.Utilities
                     catch (Exception e)
                     {
                         writeToLog("ERROR " + e);
+                        throw e;
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        LoadFromReader(reader);
+                    }
+                    catch (Exception e)
+                    {
+                        writeToLog("EOF ERROR " + e);
                         throw e;
                     }
                 }
@@ -375,9 +494,9 @@ namespace MushDLR223.Utilities
             //  if (settings.ValidationFlags != DefaultSettings.ValidationFlags) writeToLog("ValidationFlags settings odd");
         }
 
-        private static void writeToLog(string s)
+        private void writeToLog(string s)
         {
-            DLRConsole.DebugWriteLine("{0}", s);
+            DLRConsole.DebugWriteLine("{0} ({1})", s, ToString());
         }
 
         public override void Load(TextReader reader)
@@ -475,7 +594,7 @@ namespace MushDLR223.Utilities
             CheckNode(node);
             if (LineTracker != null)
             {
-                var nodeL = node as XmlSourceLineInfo;
+                XmlSourceLineInfo nodeL = node as XmlSourceLineInfo;
                 if (!SuspendLineInfo && nodeL != null && LineTracker != null)
                     nodeL.SetLineInfo(LineTracker.LineNumber, LineTracker.LinePosition);
             }
@@ -495,6 +614,9 @@ namespace MushDLR223.Utilities
         public override XmlAttribute CreateAttribute(string prefix, string localName, string namespaceURI)
         {
             XmlAttributeLineInfo elem;
+            string nodeTypeString = null;
+            string name = null;
+            TransformElement(ref nodeTypeString, ref prefix, ref localName, ref name, ref namespaceURI);
             string prev = currentAttributeName;
             try
             {
@@ -531,12 +653,16 @@ namespace MushDLR223.Utilities
         public override XmlElement CreateElement(string prefix, string localName, string namespaceURI)
         {
             LineInfoElementImpl elem;
+            string nodeTypeString = "Element";
+            string name = null;
+            TransformElement(ref nodeTypeString, ref prefix, ref localName, ref name, ref namespaceURI);
+            bool prev = MustSpaceWildcards;
             try
             {
                 if (MustFormat.Contains(localName))
                     MustSpaceWildcards = true;
                 if (MustNotFormat.Contains(localName))
-                    MustSpaceWildcards = true;
+                    MustSpaceWildcards = false;
 
                 // prevNodeType = currentNodeType;
                 currentNodeType = localName;
@@ -552,16 +678,19 @@ namespace MushDLR223.Utilities
 
         public static XmlReader CreateXmlTextReader(XmlNodeReader nodeReader)
         {
-            var doc = new XmlDocumentLineInfo("CreateXmlTextReader for NODE", false);
+            XmlDocumentLineInfo doc = new XmlDocumentLineInfo("CreateXmlTextReader for NODE", false);
             doc.Load("books.xml");
 
             // Set the validation settings.
-            var settings = new XmlReaderSettings();
-            settings.ValidationType = ValidationType.Schema;
-            settings.Schemas.Add("urn:bookstore-schema", "books.xsd");
-            settings.ValidationEventHandler += ValidationCallBack;
+            XmlReaderSettings settings = DefaultSettings; //new XmlReaderSettings();
+            if (false)
+            {
+                settings.ValidationType = ValidationType.Auto;
+                settings.Schemas.Add("urn:bookstore-schema", "books.xsd");
+                settings.ValidationEventHandler += ValidationCallBack;
 
-            // Create a validating reader that wraps the XmlNodeReader object.
+                // Create a validating reader that wraps the XmlNodeReader object.
+            }
             XmlReader reader = XmlReader.Create(nodeReader, settings);
             // Parse the XML file.
             return reader;
@@ -582,7 +711,7 @@ namespace MushDLR223.Utilities
             return XmlReader.Create(xmlTextReader, DefaultSettings);
         }
 
-        internal static XmlReader CreateXmlTextReader(TextReader tr)
+        public static XmlReader CreateXmlTextReader(TextReader tr)
         {
             //XmlTextReader xmlTextReader = new XmlTextReader(tr);
             return XmlReader.Create(tr, DefaultSettings);
@@ -601,7 +730,7 @@ namespace MushDLR223.Utilities
          */
 
         public string TextAndSourceInfo(XmlNode node)
-        {        
+        {
             string s = StaticXMLUtils.TextInfo(node);
             return s + " " + StaticXMLUtils.LocationEscapedInfo(node);
         }

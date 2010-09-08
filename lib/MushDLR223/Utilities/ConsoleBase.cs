@@ -1249,6 +1249,7 @@ namespace MushDLR223.Utilities
             string sender;
             string getCallerFormat = GetCallerFormat(format, out sender);
             WriteNewLine(DeriveColor(sender), sender, ConsoleColor.Gray, "{0}", format);
+            return;
         }
         private static void SystemWriteLine0(string format, params object[] args)
         {
@@ -1558,7 +1559,12 @@ namespace MushDLR223.Utilities
         }
 
         public static string SafeFormat(string fmt, params object[] args)
-        {
+        {         
+            if (fmt == null)
+            {
+                return ExplainFormatError(fmt, args, Console.Error.WriteLine, new Exception());
+            }
+
             string str = fmt;
             if (args != null && args.Length > 0)
             {
@@ -1568,19 +1574,39 @@ namespace MushDLR223.Utilities
                 }
                 catch (Exception e)
                 {
-                    SystemConsole.Error.WriteLine("SafeFormat: " + e);
-                    SystemConsole.Error.WriteLine("f: " + fmt);
-                    int ii = 0;
-                    foreach (var o in args)
-                    {                        
-                        ii++;
-                        string arg = " " + ii + ": " + o;
-                        SystemConsole.Error.WriteLine(arg);
-                        str += arg;
-                    }
+                    str = ExplainFormatError(fmt, args, System.Console.Error.WriteLine, e);
                 }
             }
             return str;
+        }
+        private static string ExplainFormatError(string fmt, object[] args, OutputDelegate del, Exception exception)
+        {
+            del = del ?? TextFilter.DEVNULL;
+            var str = new StringBuilder();
+            str.AppendFormat(" SafeFormat: '{0}' ", exception);
+            str.AppendFormat("f: {0} ", fmt ?? "FRMT-NULL");
+            if (args == null)
+            {
+                str.AppendLine(" args = ARGS-NULL ");
+                string s = str.ToString();
+                del(s);
+                return s;
+            }
+            else
+            {
+                string s = str.ToString();
+                del(s);
+                int ii = 0;
+                foreach (var o in args)
+                {
+                    ii++;
+                    string arg = string.Format(" arg{0}='{1}'", ii, o ?? "NULL");
+
+                    del(arg);
+                    str.AppendLine(arg);
+                }                
+            }
+            return str.ToString();
         }
     }
 }
