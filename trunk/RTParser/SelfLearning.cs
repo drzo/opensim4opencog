@@ -25,6 +25,8 @@ namespace RTParser
 
         public void HeardSelfSayVerbal(string message, Result result)
         {
+            message = ToHeard(message);
+            if (string.IsNullOrEmpty(message)) return;
             currentEar.AddMore(message);
             if (!currentEar.IsReady())
             {
@@ -47,17 +49,21 @@ namespace RTParser
             bool prochp = ProcessHeardPreds;
             if (!lts && !prochp) return result;
             message = ToHeard(message);
-            if (message == null) return result;
+            if (string.IsNullOrEmpty(message)) return result;
             
             bool stopProcessing = false;
             if (control != null) control.AbortOrInteruptedRaised += (ctl, ex) => { stopProcessing = true; };
 
-            int index = message.IndexOfAny("!.?".ToCharArray());
+            message = message + " ";
+            int index = message.IndexOf("? ");
+            if (index == -1) message.IndexOf("! ");
             if (index > 0)
             {
-                string message1 = message.Substring(0, index);
+                string message1 = message.Substring(0, index + 1);
+                // first sentence
                 result = HeardSelfSay1Sentence(message1, result, control);
-                message = message.Substring(index);
+                message = message.Substring(index + 1);
+                // first sentence
                 if (stopProcessing) return AbortedResult(message, result, control);
                 return HeardSelfSayResponse(message, result, control);
             }
@@ -80,7 +86,7 @@ namespace RTParser
             if (!lts && !prochp) return LR;
 
             message = ToHeard(message);
-            if (message == null) return LR;
+            if (string.IsNullOrEmpty(message)) return LR;
             //message = swapPerson(message);
             //writeDebugLine("HEARDSELF SWAP: " + message);
 
@@ -109,6 +115,8 @@ namespace RTParser
 
         private Result RememberSpoken(string desc, string message, Result result, ThreadControl control)
         {
+            message = ToHeard(message);
+            if (string.IsNullOrEmpty(message)) return result;
             writeChatTrace(desc);
             if (control == null)
             {

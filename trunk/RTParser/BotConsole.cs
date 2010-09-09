@@ -37,20 +37,23 @@ namespace RTParser
             "clear -spam +user +bina +error +aimltrace +cyc -dictlog -tscore +loaded";
 
         //    "clear +*";
-        public static string[] RUNTIMESETTINGS = { "-GRAPH", "-USER" };
+        public static string[] RUNTIMESETTINGS = { "-GRAPH", "-USERTRACE" };
 
-        public static readonly TextFilter LoggedWords = new TextFilter
-                                                            {
-                                                                "CLEAR",
-                                                                "+*",
-                                                                "+STARTUP",
-                                                                "+ERROR",
-                                                                "+EXCEPTION",
-                                                                "+GRAPH",
-                                                                "+AIMLFILE",
-                                                                "-AIMLLOADER",
-                                                                "-DEBUG9",
-                                                                "-ASSET"
+        public static string[] RUNTIMESETTINGS_RADEGAST = {
+                                                              "CLEAR",
+                                                              "+*",
+                                                              "+STARTUP",
+                                                              "+ERROR",
+                                                              "+EXCEPTION",
+                                                              "+GRAPH",
+                                                              "+AIMLFILE",
+                                                            //  "-AIMLLOADER",
+                                                              "-DEBUG9",
+                                                            //  "-ASSET"
+                                                          };
+
+        public static readonly TextFilter LoggedWords = new TextFilter(RUNTIMESETTINGS_RADEGAST)
+                                                            {                                                                
                                                             }; //maybe should be ERROR", "STARTUP
 
 
@@ -245,13 +248,13 @@ namespace RTParser
             // myBot.AddAiml(evidenceCode);
             User myUser = myBot.LastUser;
             Request request = myUser.CreateRequest("current user toplevel");
-            myBot.BotDirective(request, "@log " + AIMLDEBUGSETTINGS, writeLine);
-            writeLine("-----------------------------------------------------------------");
             myBot.BotDirective(request, "@help", writeLine);
+            writeLine("-----------------------------------------------------------------");
+            AIMLDEBUGSETTINGS = "clear +*";
+            myBot.BotDirective(request, "@log " + AIMLDEBUGSETTINGS, writeLine);
             writeLine("-----------------------------------------------------------------");
             DLRConsole.SystemFlush();
 
-            string meneValue = null;
             string userJustSaid = String.Empty;
             myBot.LastUser = myUser;
             while (true)
@@ -468,7 +471,7 @@ namespace RTParser
             if (cmd == "say1")
             {
                 console("say1> " + args);
-                HeardSelfSayResponse(args, LastResult, control);
+                HeardSelfSay1Sentence(args, LastResult, control);
                 return true;
             }
 

@@ -203,7 +203,7 @@ namespace RTParser.Variables
                     {
                         XmlNode item = result.CreateNode(XmlNodeType.Element, "item", "");
                         XmlAttribute name = result.CreateAttribute("name");
-                        name.Value = n.ToLower();
+                        name.Value = n;;
                         XmlAttribute value = result.CreateAttribute("value");
                         value.Value = this.settingsHash[TransformKey(n)];
                         item.Attributes.Append(name);
@@ -855,7 +855,7 @@ namespace RTParser.Variables
             {
                 name = TransformName(name);
                 string normalizedName = TransformKey(name);
-                if (normalizedName == "ISSUBSTS")
+                if (normalizedName == "issubsts")
                 {
                     IsSubsts = Unifiable.IsTrue(value);
                 }
@@ -927,21 +927,8 @@ namespace RTParser.Variables
             return true;
         }
 
-        private string TransformName(string name)
+        internal string TransformName(string name)
         {
-            string nn = name;
-            int len = name.Length;
-            if (IsSubsts)
-            {
-                name = name.Replace("\\b", " ").Trim();
-                name = name.ToUpper();
-            }
-            else
-            {
-                name = name.ToUpper();
-                name = name.Replace("FAVORITE", "FAV");
-            }
-            if (name == nn) return nn;
             return name;
         }
 
@@ -972,26 +959,18 @@ namespace RTParser.Variables
         {
             if (TrimKeys) name = name.Trim();
 
-            name = name.ToUpper();
-            if (true) name = name.Replace("FAVORITE", "FAV");
+            name = name.ToLower();
+            name = name.Replace("favorite", "fav");
+            name = name.Replace("fav_", "fav");
+            name = name.Replace("fav.", "fav");
 
-            if (false) foreach (var k in new string[] { "FAVORITE", "FAV" })
+            if (false) foreach (var k in new [] { "favorite", "fav" })
+            {
+                if (name.StartsWith(k))
                 {
-
-                    if (name.StartsWith(k))
-                    {
-                        if (name.Length > k.Length) name = name.Substring(k.Length);
-                    }
+                    if (name.Length > k.Length) name = name.Substring(k.Length);
                 }
-            else
-                if (false) foreach (var k in new string[] { "FAVORITE", "FAV" })
-                    {
-
-                        if (name.StartsWith(k))
-                        {
-                            if (name.Length > k.Length) name = name.Substring(k.Length);
-                        }
-                    }
+            }
             return name;
             //return MakeCaseInsensitive.TransformInput(name);
         }

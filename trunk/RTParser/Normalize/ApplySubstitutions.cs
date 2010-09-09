@@ -56,50 +56,60 @@ namespace RTParser.Normalize
             string marker = ApplySubstitutions.getMarker(5);
             string markerSP = ApplySubstitutions.getMarker(3);
             string result = " " + Unifiable.ToVMString(target) + " ";
-            result = SubstituteResults(dictionary, marker, markerSP,result);
+            result = SubstituteResults(dictionary, marker, markerSP,result, false);
             return result.Replace(marker, "").Replace(markerSP, " ");
         }
 
-        private static string SubstituteResults(ISettingsDictionary dictionary, string marker, string markerSP, string result)
+        private static string SubstituteResults(ISettingsDictionary dictionary, string marker, string markerSP, string result, bool backwards)
         {
             System.Collections.Generic.IEnumerable<string> dictionarySettingNames = dictionary.SettingNames(0);
-            foreach (string pattern in dictionarySettingNames)
+            foreach (string settingName in dictionarySettingNames)
             {
-                if (string.IsNullOrEmpty(pattern)) continue;
-                var vvalue = dictionary.grabSetting(pattern);
-                var value = vvalue.AsString();
-                value = value.Replace("\\b", " ");
-                value = value.ToUpper();
-                string replacement;
-                if (value.Trim().Length == 0)
+                var grabSetting = dictionary.grabSetting(settingName);
+
+                string fromValue = settingName;
+                string toValue = grabSetting.AsString();
+
+                // reverse the to/from
+                if (backwards)
                 {
-                    value = " ";
+                    string swapValue = toValue;
+                    toValue = fromValue;
+                    fromValue = swapValue;
+                }
+
+                if (string.IsNullOrEmpty(fromValue.Trim())) continue;
+
+                toValue = GetToValue(toValue);
+
+                string replacement;
+                if (toValue.Trim().Length == 0)
+                {
                     replacement = " ";
                 }
                 else
                 {
-                    value = value.Trim();
-                    if (value == pattern)
+                    toValue = toValue.Trim();
+                    if (toValue == fromValue)
                     {
                         continue;
                     }
-                    replacement = marker + value.Replace(" ", markerSP) + marker;
+                    replacement = marker + toValue.Replace(" ", markerSP) + marker;
                 }
-                string p2 = ApplySubstitutions.makeRegexSafe(pattern);
-                //Unifiable match = "\\b"+@p2.Trim().Replace(" ","\\s*")+"\\b";
-                string match = "\\b" + p2.TrimEnd().TrimStart() + "\\b";
-                if (Regex.IsMatch(result, match, RegexOptions.IgnoreCase))
+
+
+                string finalPattern = GetFinalPattern(fromValue);
+                if (Regex.IsMatch(result, finalPattern, RegexOptions.IgnoreCase))
                 {
-                    string testResult = Regex.Replace(result, match, replacement, RegexOptions.IgnoreCase);
+                    string testResult = Regex.Replace(result, finalPattern, replacement, RegexOptions.IgnoreCase);
                     if (false)
                     {
                         OutputDelegate to = DLRConsole.DebugWriteLine;
                         to("\n  SUBST :");
                         to("   R: '{0}'", result);
-                        to("  PT: '{0}'", pattern);
-                        to("   V: '{0}'", value);
-                        to("  P2: '{0}'", p2);
-                        to("   M: '{0}'", match);
+                        to("  PT: '{0}'", fromValue);
+                        to("   V: '{0}'", toValue);
+                        to("   M: '{0}'", finalPattern);
                         to("  PR: '{0}'", replacement);
                         to("  RS: '{0}'", testResult);
                         to("  TS: '{0}'", testResult.Replace(marker, "").Replace(markerSP, " "));
@@ -109,6 +119,30 @@ namespace RTParser.Normalize
                 
             }
             return result;
+        }
+
+        private static string GetToValue(string toValue)
+        {
+            if (toValue.Contains("\\b"))
+            {
+                writeDebugLine("REGEX ERROR: to=" + toValue);
+                toValue = toValue.Replace("\\b", " ");
+            }
+            toValue = toValue.Replace("\t", " ");
+            toValue = toValue.Replace("\r", " ");
+            toValue = toValue.Replace("\n", " ");
+            return toValue;
+        }
+
+        private static string GetFinalPattern(string fromValue)
+        {
+            // good regex
+            if (fromValue.Contains("\\b")) return fromValue;
+            string fromValueTrim = fromValue.Trim();
+            // probably good regex
+            if (fromValueTrim.Contains("\\") && fromValueTrim.Length > 1) return fromValue;
+            //Unifiable match = "\\b"+@p2.Trim().Replace(" ","\\s*")+"\\b";
+            return "\\b" + makeRegexSafe(fromValueTrim) + "\\b";
         }
 
         public static string SubstituteRecurse(RTParser.RTPBot bot, SettingsDictionary dictionary, string target)
@@ -130,11 +164,20 @@ namespace RTParser.Normalize
         /// <returns>the safe version</returns>
         private static string makeRegexSafe(string input)
         {
-            //return Regex.Escape(input);
-            string result = input.Replace("\\","");
-            result = result.Replace(")", "\\)");
-            result = result.Replace("(", "\\(");
-            result = result.Replace(".", "\\.");
+            string result = input;
+            if (!input.Contains("\\"))
+            {
+                //.Replace("\\", "");
+                result = result.Replace(")", "\\)");
+                result = result.Replace("(", "\\(");
+                result = result.Replace(".", "\\.");
+                string regexEscape = Regex.Escape(input);
+                if (result != regexEscape)
+                {
+                    //writeDebugLine("'{0}!=Regex.Escape('{1}')", result, Regex.Escape(input));
+                    return regexEscape;
+                }
+            }
             return result;
         }
     }

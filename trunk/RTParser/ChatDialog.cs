@@ -1045,49 +1045,68 @@ namespace RTParser
             {
                 return null;
             }
-            sentenceIn = sentenceIn.Trim();
+            sentenceIn = ReTrimAndspace(sentenceIn);
             if (sentenceIn == "")
             {
                 return "";
             }
-            var sentence = "";
-            string xmlsentenceIn = VisibleRendering(
-                getNode("<template>" + sentenceIn + "</template>").ChildNodes, PatternSideRendering);
 
-            if (xmlsentenceIn == "")
+            string sentence = VisibleRendering(getNode("<template>" + sentenceIn + "</template>").ChildNodes,
+                                               PatternSideRendering);
+
+            sentence = ReTrimAndspace(sentence);
+            if (DifferentBesidesCase(sentenceIn, sentence))
+            {
+                writeToLog("VisibleRendering: " + sentenceIn + " -> " + sentence);
+                sentenceIn = sentence;
+            }
+
+            if (sentence == "")
             {
                 return "";
             }
-
-            sentence = ApplySubstitutions.Substitute(OutputSubstitutions, xmlsentenceIn);
-            sentence = sentence.Trim();
-            if (sentenceIn != sentence)
+            sentence = ApplySubstitutions.Substitute(InputSubstitutions, sentenceIn);
+            sentence = ReTrimAndspace(sentence);
+            if (DifferentBesidesCase(sentenceIn, sentence))
             {
-                writeToLog("ENGLISH: " + sentenceIn + " -> " + sentence);
-                sentenceIn = sentence.Trim();
+                writeToLog("InputSubst: " + sentenceIn + " -> " + sentence);
+                sentenceIn = sentence;
             }
 
             sentence = CleanupCyc(sentenceIn);
-            sentence = sentence.Trim();
-            if (sentenceIn != sentence)
+            sentence = ReTrimAndspace(sentence);
+            if (DifferentBesidesCase(sentenceIn, sentence))
             {
                 writeToLog("CleanupCyc: " + sentenceIn + " -> " + sentence);
-                sentenceIn = sentence.Trim(); 
+                sentenceIn = sentence;
             }
 
             sentence = ApplySubstitutions.Substitute(OutputSubstitutions, sentenceIn);
-            sentence = sentence.Trim();
-            if (sentenceIn != sentence)
+            sentence = ReTrimAndspace(sentence);
+            if (DifferentBesidesCase(sentenceIn, sentence))
             {
                 writeToLog("OutputSubst: " + sentenceIn + " -> " + sentence);
-                sentenceIn = sentence.Trim(); 
+                sentenceIn = sentence;
             }
+
             if (!checkEndsAsSentence(sentenceIn))
             {
                 sentenceIn += ".";
             }
 
-            return sentenceIn.Trim();
+            return sentenceIn;
+        }
+
+        static bool DifferentBesidesCase(string sentenceIn, string sentence)
+        {
+            return sentence.ToLower() != sentenceIn.ToLower();
+        }
+
+        static string ReTrimAndspace(string substitute)
+        {
+            if (substitute == null) return null;
+            var csubstitute = substitute.ToCharArray();
+            return substitute.Replace("  ", " ").Replace("  ", " ").Replace("  ", " ").Trim();
         }
 
         /// Checks that the provided sentence ends with a sentence splitter
