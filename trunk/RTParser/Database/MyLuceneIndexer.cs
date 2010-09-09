@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections;
 using System.Globalization;
 using System.Text;
 using System.IO;
@@ -42,6 +43,7 @@ namespace RTParser.Database
         public WordNetEngine wordNetEngine;
         public RTPBot TheBot;
 
+      
         /// <summary>
         ///   Assert Redundancy Checks (for loading multple factiods from files
         /// </summary>
@@ -55,6 +57,8 @@ namespace RTParser.Database
 
 
         private readonly HashSet<string> ExcludeVals = new HashSet<string>();
+
+        private Hashtable WNExpandCache = new Hashtable();
 
         private void AddDefaultExclusions()
                                                   {
@@ -852,30 +856,51 @@ namespace RTParser.Database
                     }
                 }
 
+                // Do we only want responses with the current user name in it ?
+                // As in "what is my favorite color?" 
+                string onlyUserStr = RTPBot.GetAttribValue(templateNode, "onlyUser", "false").ToLower();
+                string userFilter = "";
+                if (onlyUserStr.Equals("true"))
+                {
+                    userFilter = Entify(TheBot.UserID);
+                }
+
                 dbgLog("Searching for the term \"{0}\"...", searchTerm1);
                 Search0(searchTerm1, out ids, out results, out scores, wordNetExpander, expandOnNoHits);
                 numHits = ids.Length;
                 dbgLog("Number of hits == {0}.", numHits);
+
+                float topScore = 0;
+                int goodHits = 0;
                 for (int i = 0; i < numHits; ++i)
                 {
                     dbgLog("{0}) Doc-id: {1}; Content: \"{2}\" with score {3}.", i + 1, ids[i], results[i], scores[i]);
+                    if ( results[i].Contains(userFilter ))
+                    {
+                        if (scores[i]>=threshold ) { goodHits ++;}
+                        if (scores[i]>topScore ) { topScore = scores[i];}
+                    }
                 }
 
-                float topScore = 0;
-                if (numHits > 0) topScore = scores[0];
+                //if (numHits > 0) topScore = scores[0];
                 // Console.WriteLine();
 
 
 
 
-                if ((numHits > 0) && (topScore >= threshold))
+                if ((goodHits > 0) && (topScore >= threshold))
                 {
                     // should be weighted but lets just use the highest scoring
                     string reply = "";
-                    if (numHits < maxReply) maxReply = numHits;
-                    for (int i = 0; i < maxReply; i++)
+                    int numReturned = 0;
+                    if (goodHits < maxReply) maxReply = goodHits;
+                    for (int i = 0;(( i < numHits) &&( numReturned < maxReply)) ; i++)
                     {
-                        reply = reply + " " + results[i];
+                        if (results[i].Contains(userFilter) && (scores[i] >= topScore))
+                        {
+                            reply = reply + " " + results[i];
+                            numReturned++;
+                        }
                     }
                     Unifiable converseMemo = reply.Trim();
                     dbgLog(" reply = {0}", reply);
@@ -907,6 +932,7 @@ namespace RTParser.Database
             return result;
         }
 
+
         public string WordNetExpand0(string inputString, bool queryhook)
         {
             string [] words  = inputString.Split(' ');
@@ -936,55 +962,66 @@ namespace RTParser.Database
             for (int i = 0; i < numWords; i++)
             {
                 string focusWord = words[i];
-
-                Set<SynSet> synDestSet = null;
-                try { synDestSet = wordNetEngine.GetSynSets(focusWord, ourPOS); }
-                catch (Exception)
+                string focusWordResults = "";
+                if (WNExpandCache.Contains(focusWord))
                 {
-                    writeToLog("Invalid Dest SynSet ID");
-                    continue;
+                    focusWordResults = (string) WNExpandCache[focusWord];
                 }
-                int numlinks = 0;
-                if (synStartSet.Count > 0)
+                else
                 {
-                    //WordNetEngine.SynSetRelation[] vlist = new WordNetEngine.SynSetRelation[2];
-                    //vlist[0] = WordNetEngine.SynSetRelation.Hyponym;
-                    //vlist[1] = WordNetEngine.SynSetRelation.InstanceHyponym;
-                    foreach (SynSet synSrcSet in synStartSet)
+                    Set<SynSet> synDestSet = null;
+                    try { synDestSet = wordNetEngine.GetSynSets(focusWord, ourPOS); }
+                    catch (Exception)
                     {
-                        foreach (SynSet synDstSet in synDestSet)
+                        writeToLog("Invalid Dest SynSet ID");
+                        continue;
+                    }
+                    int numlinks = 0;
+                    if (synStartSet.Count > 0)
+                    {
+                        //WordNetEngine.SynSetRelation[] vlist = new WordNetEngine.SynSetRelation[2];
+                        //vlist[0] = WordNetEngine.SynSetRelation.Hyponym;
+                        //vlist[1] = WordNetEngine.SynSetRelation.InstanceHyponym;
+                        foreach (SynSet synSrcSet in synStartSet)
                         {
-                            //synSets.Items.Add(synSet);
-                            List<SynSet> linkageList = null;
-
-                            linkageList = synSrcSet.GetShortestPathTo(synDstSet, vlist);
-                            if ((linkageList != null) && (linkageList.Count > 0))
+                            foreach (SynSet synDstSet in synDestSet)
                             {
-                                foreach (SynSet s in linkageList)
+                                //synSets.Items.Add(synSet);
+                                List<SynSet> linkageList = null;
+
+                                linkageList = synSrcSet.GetShortestPathTo(synDstSet, vlist);
+                                if ((linkageList != null) && (linkageList.Count > 0))
                                 {
-                                    StringBuilder desc = new StringBuilder();
-                                    //desc.Append("{");
-                                    bool prependComma = false;
-                                    foreach (string word in s.Words)
+                                    foreach (SynSet s in linkageList)
                                     {
-                                        desc.Append((prependComma ? ", " : "") + word);
-                                        prependComma = true;
+                                        StringBuilder desc = new StringBuilder();
+                                        //desc.Append("{");
+                                        bool prependComma = false;
+                                        foreach (string word in s.Words)
+                                        {
+                                            desc.Append((prependComma ? ", " : "") + word);
+                                            prependComma = true;
+                                        }
+
+                                        //desc.Append("}");
+
+                                        //LinkBox.Items.Add(desc.ToString());
+                                        focusWordResults = focusWordResults + " " + desc.ToString() + " ";
                                     }
-
-                                    //desc.Append("}");
-
-                                    //LinkBox.Items.Add(desc.ToString());
-                                    returnText = returnText + " " + desc.ToString()+ " ";
+                                    //LinkBox.Text = "true";
+                                    numlinks++;
+                                    //return;
                                 }
-                                //LinkBox.Text = "true";
-                                numlinks++;
-                                //return;
                             }
                         }
-                    }
 
+                    }
+                    WNExpandCache.Add(focusWord, focusWordResults.Trim()); //Add to Cache
                 }
+                returnText = returnText + " " + focusWordResults;
             }
+            returnText = returnText.Trim();
+
             if (queryhook)
             {
                 if (returnText.Contains("person")) { returnText = returnText + " who"; }

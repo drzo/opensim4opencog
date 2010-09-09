@@ -88,7 +88,7 @@ namespace RTParser.Utils
             Request request = loadOpts.TheRequest;
             loadOpts = EnsureOptions(loadOpts, request, path);
 
-            writeToLog("Starting to process AIML files found in the directory " + path);
+            writeToLog("Starting to process AIML files found in the directory (" + path+")");
 
             var fileEntries = HostSystem.GetFiles(path, "*.aiml");
             if (fileEntries.Length > 0)
