@@ -24,6 +24,7 @@ namespace MushDLR223.Utilities
         private readonly LinkedList<TASK> EventQueue = new LinkedList<TASK>();
 
         private readonly object EventQueueLock = new object();
+        private readonly object PingNeverAbortLock = new object();
         private readonly object OneTaskAtATimeLock = new object();
         private readonly object TaskThreadChangeLock = new object();
         private readonly object PingWaitingLock = new object();
@@ -130,7 +131,7 @@ namespace MushDLR223.Utilities
                 // zero secs - ten minutes max
                 PauseBetweenOperations = TimeSpanBetween(msWaitBetween, TimeSpan.Zero, TOO_LONG_INTERVAL);
 
-                PingerThread = new Thread(LoopNoAbort(EventQueue_Ping, PingWaitingLock))
+                PingerThread = new Thread(LoopNoAbort(EventQueue_Ping, PingNeverAbortLock))
                                    {Name = str + " pinger", Priority = ThreadPriority.Lowest};
             }
             if (autoStart) Start();
