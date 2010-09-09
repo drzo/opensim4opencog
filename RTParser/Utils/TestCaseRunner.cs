@@ -109,7 +109,7 @@ namespace RTParser.Utils
         private XmlNode RunTest(Request request, XmlNode src, OutputDelegate outputdelegate, out bool m)
         {
             // request = request ?? Loader.LoaderRequest00;
-            User user = request.user;
+            User user = request.Requester;
             RTPBot robot = request.TargetBot ?? Loader.TargetBot;
 
             string tcname = FindNodeOrAttrib(src, "name", null);

@@ -65,7 +65,8 @@ namespace RTParser.AIMLTagHandlers
                 }
                 string s = f.ToString();
                 XmlNode node =
-                    new XmlDocumentLineInfo(s, false).ReadNode(new XmlTextReader(new System.IO.StringReader(s)));
+                    new XmlDocumentLineInfo(s, false).ReadNode(
+                        XmlDocumentLineInfo.CreateXmlTextReader(new System.IO.StringReader(s)));
                 bool templateSucceeded;
                 bool createdOutput;
                 templateInfo = GetTemplateInfo();

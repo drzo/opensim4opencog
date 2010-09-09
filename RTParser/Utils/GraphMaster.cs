@@ -19,6 +19,7 @@ namespace RTParser.Utils
     {
         private static string _STAR_PATH;
         public static bool DefaultSilentTagsInPutParent;
+        static public bool TrackTemplates { get { return StaticAIMLUtils.TrackTemplates; } }
 
         public static bool NoIndexing;
         private readonly List<GraphMaster> FallBacksGraphs = new List<GraphMaster>();
@@ -41,25 +42,25 @@ namespace RTParser.Utils
         /// <summary>
         /// All the &lt;templates&gt;s (if any) associated with this database
         /// </summary>
-        private readonly List<TemplateInfo> Templates = new List<TemplateInfo>();
+        internal List<TemplateInfo> Templates = TrackTemplates ? new List<TemplateInfo>() : null;
 
 
         /// <summary>
         /// All the &lt;that&gt;s (if any) associated with this database
         /// </summary>
-        private readonly Dictionary<String, ThatInfo> Thats = new Dictionary<string, ThatInfo>();
+        internal readonly Dictionary<String, ThatInfo> Thats = new Dictionary<string, ThatInfo>();
 
         /// <summary>
         /// All the &lt;topic&gt;s (if any) associated with this database
         /// </summary>
-        private readonly Dictionary<String, TopicInfo> Topics = new Dictionary<string, TopicInfo>();
+        internal readonly Dictionary<String, TopicInfo> Topics= new Dictionary<string, TopicInfo>();
 
         private GraphMaster _parent;
 
         /// <summary>
         /// All the &lt;category&gt;s (if any) associated with this database
         /// </summary>
-        private List<CategoryInfo> CategoryInfos = new List<CategoryInfo>();
+        private List<CategoryInfo> CategoryInfos = TrackTemplates ? new List<CategoryInfo>() : null;
 
         public bool DoParents = true;
         private bool FullDepth = true;
@@ -72,11 +73,14 @@ namespace RTParser.Utils
         public int Size;
         public String Srai;
         private bool UnTraced;
-// ReSharper disable FieldCanBeMadeReadOnly.Local
+        // ReSharper disable FieldCanBeMadeReadOnly.Local
         private List<TemplateInfo> UnusedTemplates;
+        public static readonly Dictionary<string, XmlNode> PatternNodes = new Dictionary<string, XmlNode>();
+
+        public bool RemoveDupicateTemplatesFromNodes = true; //slows it down but maybe important to do
 
         public GraphMaster(string gn)
-            //: base(bot)
+        //: base(bot)
         {
             graphName = gn;
             //theBot = bot;
@@ -84,11 +88,16 @@ namespace RTParser.Utils
             Srai = gn;
             RootNode.Graph = this;
             PostParentRootNode.Graph = this;
-            UnusedTemplates = null;
+            if (!TrackTemplates)
+            {
+                UnusedTemplates = null;
+                Templates = null;
+                CategoryInfos = null;
+            }
             //UnusedTemplates = new List<TemplateInfo>();
         }
 
-// ReSharper restore FieldCanBeMadeReadOnly.Local
+        // ReSharper restore FieldCanBeMadeReadOnly.Local
 
         public GraphMaster Parent
         {
@@ -173,7 +182,13 @@ namespace RTParser.Utils
                 if (skip > 0) pats = pats.Substring(0, skip - 1);
             }
             PatternInfo pi;
+            if (Patterns == null)
+            {
+                pi = new PatternInfo(StaticXMLUtils.ToLineInfoElement(pattern), pats);
+                return pi;
+            }
             lock (LockerObject)
+            {
                 lock (Patterns)
                 {
                     if (!Patterns.TryGetValue(pats, out pi))
@@ -186,12 +201,14 @@ namespace RTParser.Utils
                         return pi;
                     }
                 }
+            }
             return pi;
         }
 
         public ThatInfo FindThat(Unifiable topicName)
         {
             if (NoIndexing) return null;
+            if (Thats == null) return new ThatInfo(GetMatchableXMLNode("that", topicName), topicName);
             string pats = MakeMatchKey(topicName);
             ThatInfo pi;
             lock (LockerObject)
@@ -200,7 +217,7 @@ namespace RTParser.Utils
                     if (!Thats.TryGetValue(pats, out pi))
                     {
                         Thats[pats] =
-                            pi = new ThatInfo(StaticXMLUtils.getNode("<that>" + topicName + "</that>"), topicName);
+                            pi = new ThatInfo(GetMatchableXMLNode("that", topicName), topicName);
                     }
                     else
                     {
@@ -230,19 +247,51 @@ namespace RTParser.Utils
                 throw new Exception(s);
             }
         }
+        public XmlNode GetMatchableXMLNode(string nodeName, Unifiable topicName)
+        {
+            var node = GetMatchableXMLNode0(nodeName, topicName);
+            if (node != null) return node;
+            return GetMatchableXMLNode0(nodeName, topicName);
+        }
+        public XmlNode GetMatchableXMLNode0(string nodeName, string topicName)
+        {
+            if (NoIndexing) return null;
+            if (string.IsNullOrEmpty(topicName))
+            {
+                topicName = "*";
+            }
+            if (PatternNodes == null)
+            {
+                return StaticXMLUtils.getNode(String.Format("<{0}>{1}</{0}>", nodeName, topicName));
+            }
+            lock (PatternNodes)
+            {
+                string pats = MakeMatchKey(topicName + " " + nodeName);
+                XmlNode pi;
+                if (!PatternNodes.TryGetValue(pats, out pi))
+                {
+                }
+                if (pi != null) return pi;
+                pi = PatternNodes[pats] = StaticXMLUtils.getNode(String.Format("<{0}>{1}</{0}>", nodeName, topicName));
+                return pi;
+            }
+        }
 
         public TopicInfo FindTopic(Unifiable topicName)
         {
             if (NoIndexing) return null;
             string pats = MakeMatchKey(topicName);
             TopicInfo pi;
+            if (Topics == null)
+            {
+                return new TopicInfo(GetMatchableXMLNode("pattern", topicName), topicName);
+            }
             lock (LockerObject)
                 lock (Topics)
                 {
                     if (!Topics.TryGetValue(pats, out pi))
                     {
-                        Topics[pats] =
-                            pi = new TopicInfo(StaticXMLUtils.getNode("<pattern>" + topicName + "</pattern>"), topicName);
+                        Topics[pats] = pi = new TopicInfo(GetMatchableXMLNode("pattern", topicName), topicName);
                     }
                     else
                     {
@@ -297,12 +346,23 @@ namespace RTParser.Utils
         {
             Stream loadFile = HostSystem.OpenRead(path);
             BinaryFormatter bf = new BinaryFormatter();
-            this.RootNode = (Node) bf.Deserialize(loadFile);
-            this.PostParentRootNode = (Node) bf.Deserialize(loadFile);
+            this.RootNode = (Node)bf.Deserialize(loadFile);
+            this.PostParentRootNode = (Node)bf.Deserialize(loadFile);
             loadFile.Close();
         }
 
         public void addCategoryTag(Unifiable generatedPath, PatternInfo patternInfo, CategoryInfo category,
+                                   XmlNode outerNode, XmlNode templateNode, GuardInfo guard, ThatInfo thatInfo,
+                                   List<XmlNode> additionalRules)
+        {
+            lock (LockerObject)
+            {
+                addCategoryTag0(generatedPath, patternInfo, category, outerNode, templateNode, guard, thatInfo,
+                                additionalRules);
+            }
+        }
+
+        private void addCategoryTag0(Unifiable generatedPath, PatternInfo patternInfo, CategoryInfo category,
                                    XmlNode outerNode, XmlNode templateNode, GuardInfo guard, ThatInfo thatInfo,
                                    List<XmlNode> additionalRules)
         {
@@ -370,9 +430,9 @@ namespace RTParser.Utils
                 return ql;
             }
             lock (LockerObject)
-                lock (request.user.AllQueries)
+                lock (request.Requester.AllQueries)
                 {
-                    if (!request.user.AllQueries.Contains(ql)) request.user.AllQueries.Add(ql);
+                    if (!request.Requester.AllQueries.Contains(ql)) request.Requester.AllQueries.Add(ql);
                 }
             return ql;
         }
@@ -387,7 +447,7 @@ namespace RTParser.Utils
                 {
                     break;
                 }
-                if (!((QuerySettingsReadOnly) request).ProcessMultiplePatterns)
+                if (!((QuerySettingsReadOnly)request).ProcessMultiplePatterns)
                 {
                     break;
                 }
@@ -415,7 +475,7 @@ namespace RTParser.Utils
                     {
                         break;
                     }
-                    if (!((QuerySettingsReadOnly) request).ProcessMultiplePatterns)
+                    if (!((QuerySettingsReadOnly)request).ProcessMultiplePatterns)
                     {
                         break;
                     }
@@ -600,6 +660,7 @@ namespace RTParser.Utils
 
         public static IList<T> CopyOf<T>(List<T> list)
         {
+            if (list == null) return new List<T>();
             lock (list)
             {
                 return list.ToArray();
@@ -609,6 +670,7 @@ namespace RTParser.Utils
         public static IList<T> CopyOf<T>(IEnumerable<T> list)
         {
             var copy = new List<T>();
+            if (list == null) return copy;
             lock (list)
             {
                 copy.AddRange(list);
@@ -652,10 +714,10 @@ namespace RTParser.Utils
         {
             lock (LockerObject)
             {
-                lock (Templates)
-                    Templates.Add(templateInfo);
-                lock (CategoryInfos)
-                    CategoryInfos.Add(templateInfo.CategoryInfo);
+                if (Templates != null) lock (Templates)
+                        Templates.Add(templateInfo);
+                if (CategoryInfos != null) lock (CategoryInfos)
+                        CategoryInfos.Add(templateInfo.CategoryInfo);
                 if (UnusedTemplates != null) UnusedTemplates.Remove(templateInfo);
             }
         }
@@ -676,10 +738,10 @@ namespace RTParser.Utils
             //System.writeToLog("removing " + templateInfo.CategoryInfo.ToString());
             lock (LockerObject)
             {
-                lock (Templates)
-                    Templates.Remove(templateInfo);
-                lock (CategoryInfos)
-                    CategoryInfos.Remove(templateInfo.CategoryInfo);
+                if (Templates != null) lock (Templates)
+                        Templates.Remove(templateInfo);
+                if (CategoryInfos != null) lock (CategoryInfos)
+                        CategoryInfos.Remove(templateInfo.CategoryInfo);
                 if (UnusedTemplates != null) UnusedTemplates.Add(templateInfo);
             }
         }
@@ -688,10 +750,9 @@ namespace RTParser.Utils
         {
             lock (LockerObject)
             {
-                lock (Templates)
-                    Templates.Remove(templateInfo);
-                lock (CategoryInfos)
-                    CategoryInfos.Remove(templateInfo.CategoryInfo);
+                if (Templates != null) lock (Templates) Templates.Remove(templateInfo);
+                if (CategoryInfos != null) lock (CategoryInfos)
+                        CategoryInfos.Remove(templateInfo.CategoryInfo);
                 if (UnusedTemplates != null) UnusedTemplates.Add(templateInfo);
             }
         }

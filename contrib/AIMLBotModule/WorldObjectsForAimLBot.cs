@@ -120,7 +120,7 @@ namespace AIMLBotModule
             User prev = MyUser;
             try
             {
-                MyUser = request.user;
+                MyUser = request.Requester;
                 StringWriter sw = new StringWriter();
                 {
 
@@ -144,7 +144,7 @@ namespace AIMLBotModule
             User prev = MyUser;
             try
             {
-                MyUser = request.user;
+                MyUser = request.Requester;
                 StringWriter sw = new StringWriter();
                 {
                     CmdResult s;
@@ -172,7 +172,7 @@ namespace AIMLBotModule
             User prev = MyUser;
             try
             {
-                MyUser = request.user;
+                MyUser = request.Requester;
                 return client.evalLispString(cmd);
             }
             finally
@@ -671,7 +671,7 @@ namespace AIMLBotModule
         public void HeardMyselfSay(UUID uuid, string message)
         {
             if (MyBotNullWarning()) return;
-            Enqueue("HeardMyselfSay: " + message, () => MyBot.HeardSelfSay(message));
+            Enqueue("HeardMyselfSay: " + message, () => MyBot.HeardSelfSay1Sentence(message, null, null));
         }
 
         private void Enqueue(String name, ThreadStart action)

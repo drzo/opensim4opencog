@@ -8,6 +8,11 @@ namespace AIMLbot
 {
     public class Bot : RTParser.RTPBot
     {
+         
+        public Bot()
+            : base()
+        {
+        }
         public void loadAIMLFromFiles()
         {
             base.loadAIMLFromDefaults();

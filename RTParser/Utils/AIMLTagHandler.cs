@@ -146,7 +146,7 @@ namespace RTParser.Utils
             get
             {
                 if (query != null) return query.TargetBot;
-                if (result != null) return result.bot;
+                if (result != null) return result.TargetBot;
                 if (request != null) return request.TargetBot;
                 if (user != null) return user.bot;
                 return Proc;

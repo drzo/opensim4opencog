@@ -30,6 +30,17 @@ namespace RTParser.Utils
         /// </summary>
         public bool RawUserInput;
 
+        private static HashSet<string> GlobalFilteredWords = new HashSet<string>()
+                                                      {
+                                                          "pandorabots.com",
+                                                          "pandorabots.com",
+                                                          "dr wallice",
+                                                          "alicebots.com",
+                                                          "alice",
+                                                      };
+
+        public HashSet<string> FilteredWords = new HashSet<string>(GlobalFilteredWords);
+
         /// <summary>
         /// The RProcessor whose brain is being processed
         /// </summary>
@@ -818,7 +829,7 @@ namespace RTParser.Utils
             string errors = "";
             if (templates.Count == 0)
             {
-                XmlNode TemplateOverwrite = TheTemplateOverwrite;
+                XmlNode TemplateOverwrite = StaticAIMLUtils.TheTemplateOverwrite;
                 if (TemplateOverwrite != null)
                 {
                     templates = new List<XmlNode>();
@@ -846,7 +857,7 @@ namespace RTParser.Utils
                     {
                         CategoryInfo v = addCatNode(cateNode, pattern, loadOpts, template, topicName, outerNode,
                                                     additionalRules);
-                        if (v == null)
+                        if (v == null && errors != null && errors.Length>0)
                         {
                             AddErrorCategory(errors, cateNode);
                             writeToLog("WARN: MISSING CATE: " + cateNode);
@@ -885,6 +896,11 @@ namespace RTParser.Utils
 
         private void AddErrorCategory(string errors, XmlNode node)
         {
+            if (string.IsNullOrEmpty(errors))
+            {
+                return;
+                writeToLog("XMLERRORNODE: " + node);
+            }
             writeToLog("XMLERROR: " + errors + " \n in " + node);
             lock (ErrorList)
             {
@@ -913,7 +929,7 @@ namespace RTParser.Utils
             }
             GuardInfo guard = guardnode == null ? null : GuardInfo.GetGuardInfo(guardnode);
             string errors = "";
-            XmlNode TemplateOverwrite = TheTemplateOverwrite;
+            XmlNode TemplateOverwrite = StaticAIMLUtils.TheTemplateOverwrite;
             if (ReferenceEquals(null, templateNode))
             {
                 if (TemplateOverwrite != null)
@@ -925,6 +941,19 @@ namespace RTParser.Utils
                 {
                     errors += " Missing pattern tag ";
                 }
+            } else
+            {
+                string tempStringS = templateNode.OuterXml.ToLower();
+                lock (FilteredWords)
+                {
+                    foreach (string word in FilteredWords)
+                    {
+                        if (tempStringS.Contains(word))
+                        {
+                            return null;
+                        }
+                    }
+                }
             }
             if (ReferenceEquals(null, patternNode))
             {
@@ -935,19 +964,29 @@ namespace RTParser.Utils
             Unifiable patternText;
             Func<XmlNode, string> Render = nodeI => VisibleRendering(nodeI, PatternSideRendering);
             XmlNode extractThat1 = extractThat(patternNode, "that", cateNode, out patternText, out newPattern);
+            var newPatternOuterXml = newPattern.OuterXml;
+            bool isThat = extractThat1 != null && extractThat1.LocalName == "that";
+            if (newPatternOuterXml.Contains("<that"))
+            {
+                writeToLog("ERROR in extractThat: ", newPatternOuterXml);
+            }
+            var cateNodeOuterXml = cateNode.OuterXml;
             string that;
             string ssss = GetAttribValue(extractThat1, "index", null);
             XmlNode extra = extractThat1;
-            if (ssss == null || ssss == "1" || ssss == "1,1")
+            if (isThat&& ((ssss == null) || ssss == "1" || ssss == "1,1"))
             {
                 that = Render(extractThat1);
+                if (!(cateNodeOuterXml.Contains("<that ") || cateNodeOuterXml.Contains("<that>")))
+                {
+                    writeToLog("ERROR in extractThat: ", cateNodeOuterXml);
+                }
             }
             else
             {
                 that = "*";
-                additionalRules.Add(extractThat1);
+                if (isThat) additionalRules.Add(extractThat1);
             }
-
             patternNode = newPattern;
             Unifiable cond = Render(extractThat(patternNode, "flag", cateNode, out patternText, out newPattern));
             patternNode = newPattern;
@@ -1089,7 +1128,7 @@ namespace RTParser.Utils
             {
                 //thatText = that.InnerXml;
             }
-            return that ?? PatternStar; // hatText;//this.generatePath(patternText, thatText, topicName, isUserInput);
+            return that ?? StaticAIMLUtils.PatternStar; // hatText;//this.generatePath(patternText, thatText, topicName, isUserInput);
         }
 
         /// <summary>

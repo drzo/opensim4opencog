@@ -231,7 +231,7 @@ namespace MushDLR223.ScriptEngines
 
                 if (prep.Contains(splitter))
                 {
-                    string[] args2 = prep.Split(splitter.ToCharArray(), 0, StringSplitOptions.None);
+                    string[] args2 = prep.Split(splitter.ToCharArray(), StringSplitOptions.None);
                     if (args2.Length > 1)
                     {
                         currentPrep = args2[0];

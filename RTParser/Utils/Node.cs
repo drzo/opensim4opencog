@@ -20,6 +20,20 @@ namespace RTParser.Utils
             RTPBot.writeDebugLine("!NODE: " + message + " in " + ToString(), args);
         }
 
+        public void RotateTemplate(TemplateInfo templateInfo)
+        {
+            lock (SyncObject)
+            {
+                if (TemplateInfos != null && TemplateInfos.Count > 1)
+                {
+                    int moveLast = TemplateInfos.IndexOf(templateInfo);
+                    if (moveLast>0) return; 
+                    var last = TemplateInfos[moveLast];
+                    TemplateInfos.RemoveAt(moveLast);
+                    TemplateInfos.Add(last);
+                }
+            }
+        }
         private GraphMaster _graph;
 
         public GraphMaster Graph
@@ -123,107 +137,146 @@ namespace RTParser.Utils
         public TemplateInfo addTerminal(XmlNode templateNode, CategoryInfo category, GuardInfo guard, ThatInfo thatInfo,
                                         GraphMaster master, PatternInfo patternInfo, List<XmlNode> additionalRules)
         {
-            const bool RemoveDupes = true; //slows it down but maybe important to do
+            bool onlyNonSilent = true;
+            lock (SyncObject)
+            {
+                // first look in template node.. then afterwards the category node
+                var nodes = new[] { templateNode, category.Category };
+
+                // does the metaprops only operate on verbal tags
+                bool sentientTags;
+                if (TryParseBool(nodes, "verbal", out sentientTags))
+                {
+                    onlyNonSilent = sentientTags;
+                }
+
+                // this is a removall specfier!
+                if (templateNode == StaticAIMLUtils.TheTemplateOverwrite)
+                {
+                    return DeleteTemplates(onlyNonSilent);
+                }
+
+                // does the metaprops special normal aiml way of "replace"
+                bool removeAllFirst;
+                if (TryParseBool(nodes, "replace", out removeAllFirst))
+                {
+                    if (removeAllFirst)
+                    {
+                        DeleteTemplates(onlyNonSilent);
+                    }
+                }
+                if (TryParseBool(nodes, "ifMissing", out removeAllFirst))
+                {
+                    TemplateInfo first = FirstTemplate(onlyNonSilent);
+                    if (first != null) return first;
+                }
+                if (TryParseBool(nodes, "append", out removeAllFirst))
+                {
+                    TemplateInfo first = FirstTemplate(onlyNonSilent);
+                    if (first != null)
+                    {
+                        first.AppendTemplate(templateNode, category, additionalRules);
+                        return first;
+                    }
+                }
+                return addTerminal_0_Lock(templateNode, category, guard, thatInfo, master, patternInfo, additionalRules);
+            }
+        }
+
+        internal TemplateInfo FirstTemplate(bool onlyNonSilent)
+        {
+            lock (SyncObject)
+            {
+                if (TemplateInfos != null && TemplateInfos.Count > 0)
+                {
+                    TemplateInfo NonSilentDisabled = null;
+                    foreach (var info in TemplateInfos)
+                    {
+                        if (onlyNonSilent) if (info.IsSilent) continue;
+                        if (!info.IsDisabled) return info;
+                        NonSilentDisabled = NonSilentDisabled ?? info;
+                    }
+                    return NonSilentDisabled ?? TemplateInfos[0];
+                }
+                return null;
+            }
+        }
+
+        private TemplateInfo addTerminal_0_Lock(XmlNode templateNode, CategoryInfo category, GuardInfo guard, ThatInfo thatInfo,
+                                        GraphMaster master, PatternInfo patternInfo, List<XmlNode> additionalRules)
+        {
+            string templateKey = TemplateInfo.MakeKey(templateNode, (guard != null ? guard.Output : null),
+                                                      thatInfo != null ? thatInfo.PatternNode : StaticAIMLUtils.XmlStar);
+
             if (this.TemplateInfos == null)
             {
-                if (templateNode == StaticAIMLUtils.TheTemplateOverwrite)
-                {
-                    return DeleteTemplates();
-                }
                 this.TemplateInfos = new UList();
             }
-            else if (RemoveDupes)
+            else if (master.RemoveDupicateTemplatesFromNodes)
             {
-                if (templateNode == StaticAIMLUtils.TheTemplateOverwrite)
-                {
-                    return DeleteTemplates();
-                }
                 TemplateInfo returnIt = null;
-                bool returnTemp = false;
-                lock (this.TemplateInfos)
                 {
-                    // search for old
-                    string newStr = templateNode.OuterXml;
                     int count = TemplateInfos.Count;
-                    string newGuard = guard != null ? guard.OuterXml : null;
-                    string newThat = thatInfo != null ? thatInfo.OuterXml : null;
+                    // search for old
                     List<TemplateInfo> dupes = null;
                     int nodeNum = 0;
-                    this.TemplateInfos.ForEach(delegate(TemplateInfo temp)
-                                                   {
-                                                       //var categoryinfo1 = category;
-                                                       //var categoryinfo2 = temp.CategoryInfo;
-                                                       string oldGuard = temp.Guard != null ? temp.Guard.OuterXml : null;
-                                                       string oldThat = temp.That != null ? temp.That.OuterXml : null;
-                                                       if (StaticAIMLUtils.AimlSame(newStr, temp.Output.OuterXml))
-                                                           if (StaticAIMLUtils.AimlSame(newGuard, oldGuard))
-                                                               if (StaticAIMLUtils.AimlSame(newThat, oldThat))
-                                                               {
-                                                                   if (nodeNum == 0)
-                                                                   {
-                                                                       //TemplateInfo redundant = TemplateInfo.GetTemplateInfo(templateNode, guard, thatInfo, this, category);
-                                                                       master.AddRedundantCate(category, temp);
-                                                                       returnTemp = true;
-                                                                       returnIt = temp;
-                                                                       return;
-                                                                   }
-                                                                   nodeNum++;
-                                                                   dupes = dupes ?? new List<TemplateInfo>();
-                                                                   dupes.Add(temp);
-                                                               }
-                                                   });
+                    foreach (TemplateInfo temp in TemplateInfos)
+                    {
+                        if (temp.AimlSameKey(templateKey))
+                        {
+                            if (nodeNum == 0)
+                            {
+                                //TemplateInfo redundant = TemplateInfo.GetTemplateInfo(templateNode, guard, thatInfo, this, category);
+                                master.AddRedundantCate(category, temp);
+                                return temp;
+                            }
+                            nodeNum++;
+                            dupes = dupes ?? new List<TemplateInfo>();
+                            dupes.Add(temp);
+                        }
+                    }
                     if (dupes != null)
                     {
                         if (TemplateInfos.Count == 1)
                         {
-                            writeToLog("ERROR!! AIMLLOADER ONE DUPE REDUNDANT " + TemplateInfos[0]);
                             TemplateInfo temp = dupes[0];
+                            return temp;
                             if (true)
                             {
-                                returnTemp = true;
-                                returnIt = temp;
+                                writeToLog("ERROR!! AIMLLOADER ONE DUPE REDUNDANT " + TemplateInfos[0]);
+                                // no side effect!
+                                master.RemoveTemplate(temp);
+                                TemplateInfos = null;
                                 return temp;
                             }
-                            // no side effect!
-                            master.RemoveTemplate(temp);
-                            TemplateInfos = null;
                         }
                         else
                         {
-                            dupes.ForEach(delegate(TemplateInfo temp)
-                                              {
-                                                  if (temp == TemplateInfos[0])
-                                                  {
-                                                      returnTemp = true;
-                                                      returnIt = temp;
-                                                      return;
-                                                  }
-                                                  if (true)
-                                                  {
-                                                      writeToLog("AIMLLOADER REDUNDANT \n" + temp + "\n from: " +
-                                                                 category.Filename);
-                                                      master.RemoveTemplate(temp);
-                                                      this.TemplateInfos.Remove(temp);
-                                                      this.TemplateInfos.Insert(0, temp);
-                                                      returnTemp = true;
-                                                      returnIt = temp;
-                                                      return;
-                                                  }
-                                              });
+                            foreach (TemplateInfo temp in dupes)
+                            {
+                                if (temp == TemplateInfos[0])
+                                {
+                                    return temp;
+                                }
+                                if (true)
+                                {
+                                    writeToLog("AIMLLOADER MOVING FIRST \n" + temp + "\n from: " + category.Filename);
+                                    master.RemoveTemplate(temp);
+                                    this.TemplateInfos.Remove(temp);
+                                    this.TemplateInfos.Insert(0, temp);
+                                    return temp;
+                                }
+                            }
                         }
-                        dupes.Clear();
-                        dupes = null;
+                        //   dupes.Clear();
+                        //   dupes = null;
                     }
                 }
-                if (returnTemp) return returnIt;
-            }
-            if (templateNode == StaticAIMLUtils.TheTemplateOverwrite)
-            {
-                return DeleteTemplates();
             }
 
             // last in first out addition
             TemplateInfo newTemplateInfo = TemplateInfo.GetTemplateInfo(templateNode, guard, thatInfo, this, category);
+            newTemplateInfo.TemplateKey = templateKey;
             // this.That = thatInfo;
             PatternInfo pat = patternInfo;
             if (category != null)
@@ -271,7 +324,7 @@ namespace RTParser.Utils
             return newTemplateInfo;
         }
 
-        private TemplateInfo DeleteTemplates()
+        private TemplateInfo DeleteTemplates(bool onlyNonSilent)
         {
             lock (SyncObject)
             {
@@ -279,9 +332,9 @@ namespace RTParser.Utils
                 {
                     if (TemplateInfos.Count > 0)
                     {
-                        if (TemplateInfosDisabled == null) TemplateInfosDisabled = new UList();
                         foreach (TemplateInfo list in new UList(TemplateInfos))
                         {
+                            if (onlyNonSilent && list.IsSilent) continue;                           
                             DisableTemplate(list);
                         }
                     }
@@ -602,7 +655,7 @@ namespace RTParser.Utils
             if (DateTime.Now > request.TimesOutAt)
             {
                 request.writeToLog("TIMEOUT! User: " +
-                                   request.user.UserID + " raw input: \"" +
+                                   request.Requester.UserID + " raw input: \"" +
                                    request.rawInput + "\" in " + this);
                 request.IsTraced = true;
                 if (!request.hasTimedOut)

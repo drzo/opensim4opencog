@@ -46,7 +46,7 @@ namespace RTParser.Utils
 
         public User CurrentUser
         {
-            get { return Request.user; }
+            get { return Request.Requester; }
         }
 
         public RTPBot TargetBot

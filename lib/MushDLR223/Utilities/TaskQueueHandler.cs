@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using System.Threading;
 using MushDLR223.ScriptEngines;
 using TASK = System.Threading.ThreadStart;
@@ -9,7 +10,7 @@ namespace MushDLR223.Utilities
 {
     public class TaskQueueHandler : IDisposable
     {
-        public static readonly OutputDelegate errOutput = System.Console.Error.WriteLine;
+        public static readonly OutputDelegate errOutput = DLRConsole.SYSTEM_ERR_WRITELINE;
         protected ThreadControl LocalThreadControl = new ThreadControl(new ManualResetEvent(false));
         readonly List<ThreadStart> OnFinnaly = new List<ThreadStart>();
         // ping wiat time should be less than 4 seconds when going in
@@ -34,11 +35,11 @@ namespace MushDLR223.Utilities
         private Thread TaskThread;
         private Thread StackerThread;
 
-        private readonly List<Thread> InteruptionList = new List<Thread>();
+        public readonly List<Thread> InteruptableThreads = new List<Thread>();
 
         //public delegate ThreadStart NameThreadStart(string named, ThreadStart action);
 
-        private readonly string Name;
+        public string Name;
         private readonly TASK NOP;
         private readonly AutoResetEvent WaitingOn = new AutoResetEvent(false);
         private readonly AutoResetEvent IsCurrentTaskStarted = new AutoResetEvent(false);
@@ -55,10 +56,9 @@ namespace MushDLR223.Utilities
 
 
         private ulong CompletedSinceLastPing = 0;
-        public OutputDelegate debugOutput = System.Console.Error.WriteLine;
+        public OutputDelegate debugOutput = errOutput;
 
-
-        bool aborted = false;
+        bool AbortRequested = false;
         private bool debugRequested = false;
         private ulong GoodPings = 0;
         public bool IsDisposing = false;
@@ -130,7 +130,8 @@ namespace MushDLR223.Utilities
                 // zero secs - ten minutes max
                 PauseBetweenOperations = TimeSpanBetween(msWaitBetween, TimeSpan.Zero, TOO_LONG_INTERVAL);
 
-                PingerThread = new Thread(EventQueue_Ping) {Name = str + " debug", Priority = ThreadPriority.Lowest};
+                PingerThread = new Thread(LoopNoAbort(EventQueue_Ping, PingWaitingLock))
+                                   {Name = str + " pinger", Priority = ThreadPriority.Lowest};
             }
             if (autoStart) Start();
         }
@@ -231,7 +232,7 @@ namespace MushDLR223.Utilities
         }
         private void Start0()
         {
-            if (StackerThread == null) StackerThread = new Thread(EventQueue_Handler);
+            if (StackerThread == null) StackerThread = new Thread(LoopNoAbort(EventQueue_Handler, OneTaskAtATimeLock));
             if (!StackerThread.IsAlive)
             {
                 StackerThread.Name = Name + " worker task queue";
@@ -270,15 +271,20 @@ namespace MushDLR223.Utilities
                     WaitingS = "WaitingOn: " + WaitingString;
                 }
             }
-
             string extraMesage =
                 Name
                 + string.Format(" TODO = {0} ", ExpectedTodo)
-                + string.Format(" TOTALS = {0}/{1}/{2} ", TotalComplete, TotalStarted, GetTimeString(LastOperationTimespan))
+                +
+                string.Format(" TOTALS = {0}/{1}/{2} ", TotalComplete, TotalStarted,
+                              GetTimeString(LastOperationTimespan))
                 +
                 string.Format(" PINGED = {0}/{1}/{2} ", CompletedSinceLastPing, StartedSinceLastPing,
-                              GetTimeString(LastPingLagTime))
-                ;
+                              GetTimeString(LastPingLagTime));
+
+            if (detailed)
+            {
+                WaitingS += ToThreadInfos();
+            }
 
 
             if (IsDisposing) WaitingS += " IsDisposing";
@@ -289,34 +295,116 @@ namespace MushDLR223.Utilities
                 extraMesage,
                 TotalFailures > 0 ? TotalFailures + " failures " : "",
                 _noQueue ? "NoQueue" : "",
-                WaitingS = " BEFORE ");
+                WaitingS ?? " BEFORE ");
             return tdm;
         }
 
-        private void EventQueue_Handler()
+        private string ToThreadInfos()
+        {
+            var botCommandThreads = InteruptableThreads;
+            List<string> status = new List<string>();
+            StringBuilder stringBuilder = new StringBuilder("<begin>\nInteruptableThreads.Count=" + InteruptableThreads.Count,245);
+            lock (botCommandThreads)
+            {
+                int n = 0;
+                int dead = 0;
+                int suspended = 0;
+                int num = botCommandThreads.Count;
+                foreach (Thread t in botCommandThreads)
+                {
+                    n++;
+                    num--;
+                    //System.Threading.ThreadStateException: Thread is dead; state cannot be accessed.
+                    //  at System.Threading.Thread.IsBackgroundNative()
+                    if (!t.IsAlive)
+                    {
+                        status.Add(string.Format("{0}: {1} IsAlive={2} {3}", num, t.Name, t.IsAlive,t.ThreadState));
+                    }
+                    else
+                    {
+                        stringBuilder.AppendLine(string.Format("{0}: {1} IsAlive={2} {3}", num, t.Name, t.IsAlive, t.ThreadState));
+                    }
+                }
+            }
+            foreach (var c in status)
+            {
+                stringBuilder.AppendLine(c);                
+            }
+            stringBuilder.AppendLine(" ..\n..<begin>");
+            return stringBuilder.ToString();
+        }
+
+        public ThreadStart LoopNoAbort(Action innerloop, object oneTaskAtATimeLock)
+        {
+
+            return () =>
+                       {
+                           Thread starterThread = Thread.CurrentThread;
+                           lock (InteruptableThreads)
+                               if (!InteruptableThreads.Contains(starterThread))
+                                   InteruptableThreads.Add(starterThread);
+                           
+                           Action doIt = () => InnerLoopNoAbortHelper(starterThread, innerloop, oneTaskAtATimeLock);
+
+                           while (!(IsDisposing))
+                               try
+                               {
+                                   while (!(IsDisposing))
+                                       try
+                                       {
+                                           while (!(IsDisposing)) doIt();
+                                       }
+                                       catch (Exception)
+                                       {
+                                       }
+                               }
+                               catch (Exception)
+                               {
+                               }
+                       };
+        }
+
+        private void InnerLoopNoAbortHelper(Thread except, Action action, object oneTaskAtATimeLock)
         {
             bool needsExit = false;
             try
             {
-                needsExit = System.Threading.Monitor.TryEnter(OneTaskAtATimeLock);
+                needsExit = System.Threading.Monitor.TryEnter(oneTaskAtATimeLock);
                 if (!needsExit)
                 {
                     string str = "EventQueue_Handler is locked out!";
+                    errOutput(str);
                     WriteLine(str);
                     throw new InternalBufferOverflowException(str);
 
                 }
                 else
                 {
-                    EventQueue_Handler0();                    
+                    action();
                 }
+            }
+            catch (ThreadAbortException abortException)
+            {
+                bool resumeable = !IsDisposing && Thread.CurrentThread == except;
+                WriteLine("InnerLoopNoAbortHelper: " + abortException + "\n  reset=" + resumeable);
+                if (!resumeable) return;
+                NoExceptions(Thread.ResetAbort);
+            }
+            catch (ThreadInterruptedException abortException)
+            {
+                bool resumeable = !IsDisposing && Thread.CurrentThread == except;
+                WriteLine("ThreadInterruptedException: " + abortException + "\n  reset=" +
+                          resumeable);
+                if (!resumeable) return;
+                NoExceptions(except.Resume);
             }
             finally
             {
-                if (needsExit) System.Threading.Monitor.Exit(OneTaskAtATimeLock);
+                if (needsExit) System.Threading.Monitor.Exit(oneTaskAtATimeLock);
             }
         }
-        private void EventQueue_Handler0()
+
+        private void EventQueue_Handler()
         {
             while (!(IsDisposing))
             {
@@ -622,7 +710,7 @@ namespace MushDLR223.Utilities
             catch (ThreadAbortException e)
             {
                 abortable = false;
-                aborted = true;
+                AbortRequested = true;
                 Thread.ResetAbort();
                 WriteLine("ThreadAbortException 0");
             }
@@ -692,15 +780,15 @@ namespace MushDLR223.Utilities
                                               lock (TaskThreadChangeLock)
                                               {
                                                   abortable = false;
-                                                  if (aborted)
+                                                  if (AbortRequested)
                                                   {
                                                       WriteLine("ThreadAbortException 2");
-                                                      aborted = false;
+                                                      AbortRequested = false;
                                                   }
                                               }
                                           });
 
-                    aborted = false;
+                    AbortRequested = false;
                     abortable = true;
                     NoExceptions<bool>(IsCurrentTaskStarted.Set);
                 }
@@ -714,7 +802,7 @@ namespace MushDLR223.Utilities
                 lock (TaskThreadChangeLock)
                 {
                     abortable = false;
-                    aborted = true;
+                    AbortRequested = true;
                 }
                 Thread.ResetAbort();
             } finally
@@ -838,17 +926,17 @@ namespace MushDLR223.Utilities
                     catch (ThreadInterruptedException interupted)
                     {
                         WriteLine("INTERPUTED {0} was {1} in {2}", INFO, interupted, threadPlace);
-                        control.OnInterrupted(interupted);
+                        control.InvokeInterruptRaised(interupted);
                     }
-                    catch (ThreadAbortException aborted)
+                    catch (ThreadAbortException exception)
                     {
-                        WriteLine("ABORT {0} was {1} in {2}", INFO, aborted, threadPlace);
-                        control.OnAborted(aborted);
+                        WriteLine("ABORT {0} was {1} in {2}", INFO, exception, threadPlace);
+                        control.InvokeAbortRaised(exception);
                     }
                     catch (Exception ex)
                     {
                         WriteLine("ERROR {0} was {1} in {2}", INFO, ex, threadPlace);
-                        control.OnException(ex);
+                        control.InvokeExceptionRaised(ex);
                     }
                     finally
                     {
@@ -927,7 +1015,7 @@ namespace MushDLR223.Utilities
                     {
                         if (abortable)
                         {
-                            aborted = true;
+                            AbortRequested = true;
                             lock (OnFinnaly)
                             {
                                 TaskThread.Abort();
@@ -951,7 +1039,7 @@ namespace MushDLR223.Utilities
         {
             if (inWriteline)
             {
-                System.Console.Error.WriteLine("inWriteLine!!!!!!!!=" + new Exception().StackTrace);
+                DLRConsole.SYSTEM_ERR_WRITELINE("inWriteLine!!!!!!!!=" + new Exception().StackTrace);
                 return;
             }
             try
@@ -1111,7 +1199,7 @@ namespace MushDLR223.Utilities
                                                    // wait for maxTime .. then kill the thread
                                                    if (!IsComplete.WaitOne(maxTime))
                                                    {
-                                                       lock (InteruptionList) if (t.IsAlive) t.Interrupt();
+                                                       lock (InteruptableThreads) if (t.IsAlive) t.Interrupt();
                                                    }
                                                }
                                                catch (Exception e)
@@ -1121,24 +1209,24 @@ namespace MushDLR223.Utilities
                                            }
                                            finally
                                            {
-                                               lock (InteruptionList)
+                                               lock (InteruptableThreads)
                                                {
-                                                   InteruptionList.Remove(t);
-                                                   InteruptionList.Remove(threadKillThread);
+                                                   InteruptableThreads.Remove(t);
+                                                   InteruptableThreads.Remove(threadKillThread);
                                                }
                                            }
                                        }) { Name = "Killer of " + name };
             tr.Start();
         }
 
-        private Thread CreateTask(TASK action, string name, EventWaitHandle isComplete)
+        public Thread CreateTask(TASK action, string name, EventWaitHandle isComplete)
         {
             Thread tr = new Thread(() =>
                                        {
                                            Thread self = Thread.CurrentThread;
                                            try
                                            {
-                                               lock (InteruptionList) InteruptionList.Add(self);
+                                               lock (InteruptableThreads) InteruptableThreads.Add(self);
                                                try
                                                {
                                                    action();
@@ -1150,7 +1238,7 @@ namespace MushDLR223.Utilities
                                            }
                                            finally
                                            {
-                                               lock (InteruptionList) InteruptionList.Remove(self);
+                                               lock (InteruptableThreads) InteruptableThreads.Remove(self);
                                                NoExceptions<bool>(isComplete.Set);
                                            }
                                        }) { Name = name };
@@ -1195,33 +1283,86 @@ namespace MushDLR223.Utilities
             }
         }
 
+        public void RemoveThread(Thread thread)
+        {
+        }
     }
 
     public class ThreadControl
     {
+        public event Action<ThreadControl, ThreadAbortException> AbortRaised;
+        public event Action<ThreadControl, ThreadInterruptedException> InterruptRaised;
+        public event Action<ThreadControl, Exception> AbortOrInteruptedRaised;
+
+        private void InvokeAbortOrInteruptedRaised(Exception arg2)
+        {
+            Action<ThreadControl, Exception> raised = AbortOrInteruptedRaised;
+            if (raised != null) raised(this, arg2);
+        }
+
+        public event Action<ThreadControl, Exception> ExceptionRaised;
+
         public EventWaitHandle TaskStart;
         public EventWaitHandle TaskEnded;
         public EventWaitHandle TaskComplete;
         public Exception TaskException;
         public Thread ThreadForTask;
+
+        public bool CancelAbort = false;
+        public bool CancelInterp = false;
+        public bool CancelException = false;
+
         public ThreadControl(EventWaitHandle onComplete)
         {
             TaskComplete = onComplete;
         }
-        public bool OnInterrupted(ThreadInterruptedException exception)
+
+        public void InvokeExceptionRaised(Exception exception)
         {
+            InvokeAbortOrInteruptedRaised(exception);
+            Action<ThreadControl, Exception> raised = ExceptionRaised;
+            if (raised != null)
+            {
+                raised(this, exception);
+            }
             TaskException = exception;
             throw exception;
         }
-        public bool OnAborted(ThreadAbortException exception)
+
+        public bool InvokeInterruptRaised(ThreadInterruptedException exception)
         {
+            InvokeAbortOrInteruptedRaised(exception);
+            Action<ThreadControl, ThreadInterruptedException> raised = InterruptRaised;
+            if (raised != null)
+            {
+                raised(this, exception);
+            }
             TaskException = exception;
             throw exception;
         }
-        public bool OnException(Exception exception)
+        public bool InvokeAbortRaised(ThreadAbortException exception)
         {
+            Action<ThreadControl, ThreadAbortException> raised = AbortRaised;
+            if (raised != null)
+            {
+                raised(this, exception);
+            }
             TaskException = exception;
-            throw exception;
+            if (!CancelAbort)
+            {
+                throw exception;
+            }
+            return !CancelAbort;
+        }
+
+        public bool WaitUntilComplete()
+        {
+            if (TaskEnded!=null) return TaskEnded.WaitOne();
+            else
+            {
+                if (TaskComplete!=null) return TaskComplete.WaitOne();
+            }
+            return !ThreadForTask.IsAlive;
         }
     }
 }

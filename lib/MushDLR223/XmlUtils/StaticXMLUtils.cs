@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml;
 using LineInfoElement = MushDLR223.Utilities.LineInfoElementImpl;
 
@@ -21,9 +22,22 @@ namespace MushDLR223.Utilities
 
         public static bool NameMatches(XmlNode node, string s)
         {
-            return node.Name.ToLower() == s || node.LocalName.ToLower() == s;
+            return SearchStringMatches(s, node.Name) || SearchStringMatches(s, node.LocalName);
         }
-
+        public static bool SearchStringMatches(string pattern, string name)
+        {
+            if (name == pattern) return true;
+            if (pattern == null || name == null) return false;
+            name = name.Trim();
+            pattern = pattern.Trim();
+            if (pattern.Length == 0) return name.Length == 0;
+            //            char pc = pattern[0];
+            pattern = pattern.ToLower();
+            name = name.ToLower();
+            if (name == pattern) return true;
+            if (Regex.IsMatch(name, "^" + pattern + "$")) return true;
+            return false;
+        }
 
         public static bool ContainsXml(string unifiable)
         {
@@ -534,12 +548,12 @@ namespace MushDLR223.Utilities
             bool found = false;
             T u = default(T);
             if (node.Attributes == null) return defaultIfEmpty();
-            foreach (string nameS in attribName.Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries))
+            foreach (string nameS in NamesStrings(attribName))
             {
                 String attribnym = nameS.ToLower();
                 foreach (XmlAttribute attrib in node.Attributes)
                 {
-                    if (attrib.Name.ToLower() == attribnym)
+                    if (SearchStringMatches(attribnym, attrib.Name))
                     {
                         found = true;
                         realName = attribnym;
@@ -606,6 +620,26 @@ namespace MushDLR223.Utilities
         public static bool TryParseBool(XmlNode templateNode, string attribName, out bool tf)
         {
             return TryParseBool(GetAttribValue<string>(templateNode, attribName, null), out tf);
+        }
+        /// <summary>
+        /// Foreach XML Node in he collection search for the value 
+        /// </summary>
+        /// <param name="templateNodes"></param>
+        /// <param name="attribName"></param>
+        /// <param name="tf"></param>
+        /// <returns></returns>
+        public static bool TryParseBool(ICollection<XmlNode> templateNodes, string attribName, out bool tf)
+        {          
+            foreach (XmlNode templateNode in templateNodes)
+            {
+                //if (TryParseBool(GetAttribValue<string>(templateNode, attribName, null), out tf))
+                if (TryParseBool(templateNode, attribName, out tf))
+                {
+                    return true;
+                }
+            }
+            tf = default(bool);
+            return false;
         }
 
         public static bool TryParseBool(string parse, out bool tf)

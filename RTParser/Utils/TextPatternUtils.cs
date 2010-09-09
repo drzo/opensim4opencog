@@ -1,19 +1,19 @@
 using System;
-using System.Text;
-using System.Xml;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 
 namespace RTParser.Utils
 {
-    public class TextPatternUtils: StaticXMLUtils
+    public class TextPatternUtils : StaticXMLUtils
     {
+        public static OutputDelegate DEVNULL = TextFilter.DEVNULL;
+
         static TextPatternUtils()
         {
             XmlDocumentLineInfo.TextFormatter = CleanWildcards;
         }
 
-        static public bool IsTrue(Unifiable v)
+        public static bool IsTrue(Unifiable v)
         {
             if (!IsFalse(v))
             {
@@ -23,7 +23,7 @@ namespace RTParser.Utils
             return true;
         }
 
-        static public bool IsLogicTF(Unifiable v, SubQuery subquery)
+        public static bool IsLogicTF(Unifiable v, SubQuery subquery)
         {
             if (IsFalse(v)) return false;
             String value = v.ToValue(subquery).ToLower();
@@ -55,24 +55,25 @@ namespace RTParser.Utils
         {
             if (name is String)
             {
-                return ((String)name).Length == 0;
+                return ((String) name).Length == 0;
             }
             if (IsNull(name)) return true;
-            return (name is Unifiable && ((Unifiable)name).IsEmpty);
+            return (name is Unifiable && ((Unifiable) name).IsEmpty);
         }
+
         public static bool IsNull(Object name)
         {
             if (ReferenceEquals(name, null)) return true;
-            return (name is Unifiable && ((Unifiable)name).Raw == null);
+            return (name is Unifiable && ((Unifiable) name).Raw == null);
         }
 
         public static bool IsEMPTY(Object name)
         {
             if (name is String)
             {
-                return ((String)name).Trim().Length == 0;
+                return ((String) name).Trim().Length == 0;
             }
-            return (name is Unifiable && ((Unifiable)name).Raw == null);
+            return (name is Unifiable && ((Unifiable) name).Raw == null);
         }
 
         public static bool IsUnknown(object unifiable)
@@ -83,12 +84,12 @@ namespace RTParser.Utils
             bool b = s.Contains("unknown") || s.Contains("unrec") || s.Contains("unnam")
                      || s.Contains("unseen") || s.Contains("default")
                      || s.Contains(" some") || s.Contains("*") || s.Contains(" _ ")
-                     || s.Contains(" nothing ") || s.Contains("undefine") 
+                     || s.Contains(" nothing ") || s.Contains("undefine")
                      || s.Contains("$");
             if (b) return true;
             if (unifiable is Unifiable)
             {
-                if (!((Unifiable)unifiable).IsWildCard()) return false;
+                if (!((Unifiable) unifiable).IsWildCard()) return false;
                 return true;
             }
             return false;
@@ -110,8 +111,6 @@ namespace RTParser.Utils
             //        return false;
             //}
         }
-
-        public static OutputDelegate DEVNULL = TextFilter.DEVNULL;
 
         public static string MakeMatchable(string xml2)
         {
@@ -192,17 +191,17 @@ namespace RTParser.Utils
             string clean = text;
             clean = CleanWhitepaces(text, "*",
                                     (c0, c1) =>
-                                    {
-                                        if (char.IsLetterOrDigit(c1) || char.IsControl(c1)) return true;
-                                        if ("\"'".Contains("" + c1)) return false;
-                                        return false;
-                                    },
+                                        {
+                                            if (char.IsLetterOrDigit(c1) || char.IsControl(c1)) return true;
+                                            if ("\"'".Contains("" + c1)) return false;
+                                            return false;
+                                        },
                                     (c0, c1) =>
-                                    {
-                                        if (char.IsLetterOrDigit(c0) || char.IsControl(c0)) return true;
-                                        if ("\"'".Contains("" + c0)) return false;
-                                        return false;
-                                    });
+                                        {
+                                            if (char.IsLetterOrDigit(c0) || char.IsControl(c0)) return true;
+                                            if ("\"'".Contains("" + c0)) return false;
+                                            return false;
+                                        });
             return clean;
         }
     }

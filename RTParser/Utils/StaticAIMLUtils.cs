@@ -8,53 +8,25 @@ using System.Threading;
 using System.Xml;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
-using RTParser.AIMLTagHandlers;
 using RTParser.Database;
-using RTParser.Normalize;
 using RTParser.Variables;
 
 namespace RTParser.Utils
 {
     public class StaticAIMLUtils : TextPatternUtils
     {
-        public static readonly XmlNode TheTemplateOverwrite = getNode("<template></template>");
-        public static bool DebugSRAIs = true;
-        public static bool NoRuntimeErrors = false;
-        public static Func<Unifiable> EmptyFunct = (() => Unifiable.Empty);
-        public static Dictionary<XmlNode, StringBuilder> ErrorList = new Dictionary<XmlNode, StringBuilder>();
+        public static readonly Func<Unifiable> EmptyFunct = (() => Unifiable.Empty);
 
-        protected static List<string> TagsRecurseToFlatten = new List<string>
-                                                    {
-                                                        "template",
-                                                        "pattern",
-                                                        "sapi",        
-                                                        "node",
-                                                        "pre",
-                                                        "bold",
-                                                    };
+        public static readonly Func<string> NullStringFunct = (() => null);
 
-        protected static List<string> TagsWithNoOutput = new List<string>
-                                                 {
-                                                     "#comment",
-                                                     //    "debug",                                                                   
-                                                     
-                                                     "br",
-                                                     "br",
-                                                     "br",
-
-                                                 };
-
-        
-        public static Func<string> NullStringFunct = (() => null);
-
-        public static ICollection<string> PushableAttributes = new HashSet<string>
-                                                                   {
-                                                                   };
+        public static readonly ICollection<string> PushableAttributes = new HashSet<string>
+                                                                            {
+                                                                            };
 
         /// <summary>
         /// Attributes that we use from AIML not intended to be stacked into user dictionary
         /// </summary>
-        public static ICollection<string> ReservedAttributes =
+        public static readonly ICollection<string> ReservedAttributes =
             new HashSet<string>
                 {
                     "name",
@@ -89,9 +61,26 @@ namespace RTParser.Utils
                     "id",
                 };
 
-        public static bool ThatWideStar;
-        public static bool useInexactMatching;
-        public static OutputDelegate userTraceRedir;
+        public static readonly List<string> TagsRecurseToFlatten = new List<string>
+                                                                       {
+                                                                           "template",
+                                                                           "pattern",
+                                                                           "that",
+                                                                           "sapi",
+                                                                           "node",
+                                                                           "pre",
+                                                                           "bold",
+                                                                       };
+
+        public static readonly List<string> TagsWithNoOutput = new List<string>
+                                                                   {
+                                                                       "#comment",
+                                                                       //    "debug",                                                                   
+                                                     
+                                                                       "br",
+                                                                       "p",
+                                                                   };
+
 
         public static readonly RenderOptions TemplateSideRendering =
             new RenderOptions()
@@ -101,7 +90,6 @@ namespace RTParser.Utils
                             {
                                 "node",
                             },
-
                     skip = new List<string>(TagsWithNoOutput)
                                {
                                    "#comment",
@@ -111,15 +99,13 @@ namespace RTParser.Utils
                                    //    "debug",
                                }
                 };
-
         public static readonly RenderOptions PatternSideRendering =
-            new RenderOptions()
-                {
-                    flatten =
-                        new List<string>(TagsRecurseToFlatten),
-
-                    skip =
-                        new List<string>(TagsWithNoOutput)
+    new RenderOptions()
+    {
+        flatten =
+            new List<string>(TagsRecurseToFlatten) { "a", },
+        skip =
+            new List<string>(TagsWithNoOutput)
                             {
                                 "#comment",
                                 "silence",
@@ -128,21 +114,22 @@ namespace RTParser.Utils
                                 "think",
                                 //    "debug",
                             }
-                };
+    };
 
-        protected static XmlNode PatternStar
-        {
-            get
-            {
-                XmlNode ps = getNode("<pattern name=\"*\">*</pattern>");
-                LineInfoElementImpl.SetReadOnly(ps);
+        public static bool DebugSRAIs = true;
+        public static Dictionary<XmlNode, StringBuilder> ErrorList = new Dictionary<XmlNode, StringBuilder>();
+        public static bool NoRuntimeErrors = false;
+        public static readonly XmlNode PatternStar = StaticXMLUtils.getNode("<pattern>*</pattern>");
+        public static readonly XmlNode ThatStar = StaticXMLUtils.getNode("<that>*</that>");
+        public static readonly XmlNode TheTemplateOverwrite = StaticXMLUtils.getNode("<template></template>");
+        public static readonly XmlNode TopicStar = StaticXMLUtils.getNode("<topic name=\"*\"/>");
+        public static readonly XmlNode XmlStar = PatternStar.FirstChild;
+        public static bool ThatWideStar;
+        public static bool useInexactMatching;
+        public static OutputDelegate userTraceRedir;
+        public static bool TrackTemplates = false; // to save mememory
 
-                return ps;
-            }
-        }
-
-
-        protected static R FromLoaderOper<R>(Func<R> action, GraphMaster gm)
+        public static R FromLoaderOper<R>(Func<R> action, GraphMaster gm)
         {
             OutputDelegate prev = userTraceRedir;
             try
@@ -283,10 +270,11 @@ namespace RTParser.Utils
                                 // to set the id="tempid" teporarily while evalig tags
                                 if (!n.StartsWith("with_"))
                                 {
-                                   continue;
-                                } else
+                                    continue;
+                                }
+                                else
                                 {
-                                    n = n.Substring(5);                                    
+                                    n = n.Substring(5);
                                 }
 
                                 Unifiable v = ReduceStar<Unifiable>(node.Value, query, dict);
@@ -379,6 +367,12 @@ namespace RTParser.Utils
             }
             return false;
         }
+
+        internal static bool AimlSame(XmlNode info, XmlNode Output)
+        {
+            return info.Name == Output.Name && info.OuterXml == Output.OuterXml;
+        }
+
         public static bool AimlSame(string xml1, string xml2)
         {
             if (xml1 == xml2) return true;
@@ -394,13 +388,12 @@ namespace RTParser.Utils
         {
             if (xml1 == null) return xml1;
             string t =
-                CleanWhitepaces(MakeMatchable(xml1)
-                                    .Replace("index=\"1\"", " ").Replace("index=\"1,1\"", " ")).Replace("<star/>", " * ");
-            t = t.Replace("<star index=\"1\"/>", " * ");
-            t = t.Replace("<star/>", " * ");
-            t = t.Replace("<sr/>", " * ");
-            t = t.Replace("  ", " ").Trim();
-            return t;           
+                CleanWhitepaces(MakeMatchable(xml1).Replace(" index=\"1\"", " ").Replace(" index=\"1,1\"", " "));
+            // t = t.Replace("<star index=\"1\"/>", " * ");
+            // t = t.Replace("<star/>", " * ");
+            //t = t.Replace("<sr/>", " * ");
+            // t = t.Replace("  ", " ").Trim();
+            return t;
         }
 
         public static int FromInsideLoaderContext(XmlNode currentNode, Request request, SubQuery query, Func<int> doit)
@@ -418,7 +411,7 @@ namespace RTParser.Utils
                 // the <topic> nodes will contain more <category> nodes
                 string currentNodeName = currentNode.Name.ToLower();
 
-                ThreadStart ts = StaticAIMLUtils.EnterTag(request, currentNode, query);
+                ThreadStart ts = EnterTag(request, currentNode, query);
                 try
                 {
                     total += doit();
@@ -434,8 +427,9 @@ namespace RTParser.Utils
             }
             return total;
         }
-       /*
-        protected static int NonAlphaCount(string input)
+
+        /*
+        public static int NonAlphaCount(string input)
         {
             input = CleanWhitepaces(input);
             int na = 0;
@@ -466,19 +460,20 @@ namespace RTParser.Utils
         }
         */
 
-        public static T ReduceStar<T>(IConvertible name, SubQuery query, ISettingsDictionary dict) where T : IConvertible
+        public static T ReduceStar<T>(IConvertible name, SubQuery query, ISettingsDictionary dict)
+            where T : IConvertible
         {
             var nameSplit = name.ToString().Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries);
             foreach (string nameS in nameSplit)
             {
                 Unifiable r = AltStar(nameS, query, dict);
-                if (!Unifiable.IsNullOrEmpty(r))
+                if (!IsNullOrEmpty(r))
                 {
-                    StaticXMLUtils.PASSTHRU<T>(r);
+                    PASSTHRU<T>(r);
                 }
                 continue;
             }
-            return StaticXMLUtils.PASSTHRU<T>(name);
+            return PASSTHRU<T>(name);
         }
 
         public static Unifiable AltStar(string name, SubQuery query, ISettingsDictionary dict)
@@ -524,12 +519,12 @@ namespace RTParser.Utils
                 else if (name.StartsWith("@"))
                 {
                     Unifiable value = query.Request.TargetBot.SystemExecute(name, null, query.Request);
-                    if (!Unifiable.IsNullOrEmpty(value)) return value;
+                    if (!IsNullOrEmpty(value)) return value;
                 }
                 else if (name.StartsWith("%dictvar_"))
                 {
                     Unifiable value = value = GetValue(query, dict, name.Substring(8));
-                    if (!Unifiable.IsNullOrEmpty(value)) return value;
+                    if (!IsNullOrEmpty(value)) return value;
                 }
                 else if (name.StartsWith("%"))
                 {
@@ -540,19 +535,19 @@ namespace RTParser.Utils
                         SettingsDictionary dict2 = query.Request.TargetBot.GlobalSettings;
                         str = str.Substring(4);
                         value = GetValue(query, dict2, str);
-                        if (!Unifiable.IsNullOrEmpty(value)) return value;
+                        if (!IsNullOrEmpty(value)) return value;
                     }
                     else if (str.StartsWith("user."))
                     {
-                        ISettingsDictionary dict2 = query.Request.user;
+                        ISettingsDictionary dict2 = query.Request.Requester;
                         str = str.Substring(5);
                         value = GetValue(query, dict2, str);
-                        if (!Unifiable.IsNullOrEmpty(value)) return value;
+                        if (!IsNullOrEmpty(value)) return value;
                     }
                     if (dict != null)
                     {
                         value = GetValue(query, dict, str);
-                        if (!Unifiable.IsNullOrEmpty(value)) return value;
+                        if (!IsNullOrEmpty(value)) return value;
                     }
                 }
             }
@@ -570,7 +565,7 @@ namespace RTParser.Utils
             return value;
         }
 
-        private static Unifiable GetDictData<T>(IList<T> unifiables, string name, int startChars)where T : IConvertible
+        private static Unifiable GetDictData<T>(IList<T> unifiables, string name, int startChars) where T : IConvertible
         {
             T u = GetDictData0<T>(unifiables, name, startChars);
             string toup = u.ToString(FormatProvider).ToUpper();
@@ -626,31 +621,31 @@ namespace RTParser.Utils
 
         public static bool IsPredMatch(Unifiable required, Unifiable actualValue, SubQuery subquery)
         {
-            if (Unifiable.IsNull(required))
+            if (IsNull(required))
             {
-                return Unifiable.IsNullOrEmpty(actualValue);
+                return IsNullOrEmpty(actualValue);
             }
-            if (Unifiable.IsNull(actualValue))
+            if (IsNull(actualValue))
             {
-                return Unifiable.IsNullOrEmpty(required);
+                return IsNullOrEmpty(required);
             }
             required = required.Trim();
             if (required.IsAnySingleUnit())
             {
-                return !Unifiable.IsNullOrEmpty(actualValue);
+                return !IsNullOrEmpty(actualValue);
             }
 
             actualValue = actualValue.Trim();
 
             string requiredToUpper = required.ToUpper();
-            if (requiredToUpper=="*")
+            if (requiredToUpper == "*")
             {
                 return !IsUnknown(actualValue);
             }
 
-            if (Unifiable.IsNullOrEmpty(required) || requiredToUpper == "$MISSING")
+            if (IsNullOrEmpty(required) || requiredToUpper == "$MISSING")
             {
-                return Unifiable.IsNullOrEmpty(actualValue);
+                return IsNullOrEmpty(actualValue);
             }
 
             if (actualValue.WillUnify(required, subquery))
@@ -664,7 +659,7 @@ namespace RTParser.Utils
             {
                 return true;
             }
-            if (requiredToUpper == "UNKNOWN" && (Unifiable.IsUnknown(actualValue)))
+            if (requiredToUpper == "UNKNOWN" && (IsUnknown(actualValue)))
             {
                 return true;
             }
@@ -672,7 +667,7 @@ namespace RTParser.Utils
         }
 
 
-        protected static string PadStars(string pattern)
+        public static string PadStars(string pattern)
         {
             pattern = pattern.Trim();
             int pl = pattern.Length;
@@ -750,12 +745,14 @@ namespace RTParser.Utils
         {
             return VisibleRendering(getNode("<template>" + sentenceIn + "</template>").ChildNodes, TemplateSideRendering);
         }
+
         internal static string ForInputTemplate(string sentenceIn)
         {
             string patternSide =
                 VisibleRendering(getNode("<template>" + sentenceIn + "</template>").ChildNodes, PatternSideRendering);
             return ForOutputTemplate(patternSide);
         }
+
         /*
         public string ToEnglish(string sentenceIn, ISettingsDictionary OutputSubstitutions)
         {

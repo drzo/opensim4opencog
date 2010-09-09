@@ -92,12 +92,16 @@ namespace MushDLR223.Virtualization
         public static string ToRelativePath(string str, string prefix)
         {
             str = ToForwardSlashes(str);
-            prefix = ToForwardSlashes(prefix);
-            string strSaved = str;
+            string strFull = GetFullPath(str);
             bool existed = FileOrDirExists(str);
+            if (existed && prefix == null)
+            {
+                return str;
+            }
+            string strSaved = str;
+            prefix = ToForwardSlashes(prefix);
             bool dirExisted = DirExists(prefix);
             string prefixFull = GetFullPath(prefix);
-            string strFull = GetFullPath(str);
             int longer = strFull.Length - prefixFull.Length;
             string shared = "";
             if (ToForwardSlashes(strFull).StartsWith(ToForwardSlashes(prefixFull)))
@@ -593,10 +597,10 @@ namespace MushDLR223.Virtualization
             return FirstExisting(pathIn, combine, out p);
         }
 
-        public static string ResolveToURI(string pathIn, IEnumerable<String> combine, out string p)
+        public static string ResolveToURI(string pathIn, IEnumerable<String> combine, out string prefix)
         {
             pathIn = pathIn.Trim();
-            string existing = FirstExisting(pathIn, combine, out p);
+            string existing = FirstExisting(pathIn, combine, out prefix);
             if (existing != null) return existing;
             return pathIn;
         }
@@ -618,6 +622,10 @@ namespace MushDLR223.Virtualization
                 prefix = s;
             }
             p = prefix;
+            if (prefix == null)
+            {
+                return null;
+            }
             return fullPath;
         }
 

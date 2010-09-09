@@ -6,6 +6,7 @@ using System.IO;
 using System.Net.Mail;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Web;
 using System.Xml;
 using AIMLbot;
@@ -30,7 +31,126 @@ namespace RTParser
     /// </summary>
     public partial class RTPBot : QuerySettings
     {
-        private readonly Dictionary<string, SystemExecHandler> ConsoleCommands = new Dictionary<string, SystemExecHandler>();
+        private readonly Dictionary<string, SystemExecHandler> ConsoleCommands = new Dictionary<string, SystemExecHandler>();        
+
+        public static string AIMLDEBUGSETTINGS =
+            "clear -spam +user +bina +error +aimltrace +cyc -dictlog -tscore +loaded";
+
+        //    "clear +*";
+        public static string[] RUNTIMESETTINGS = { "-GRAPH", "-USER" };
+
+        public static readonly TextFilter LoggedWords = new TextFilter
+                                                            {
+                                                                "CLEAR",
+                                                                "+*",
+                                                                "+STARTUP",
+                                                                "+ERROR",
+                                                                "+EXCEPTION",
+                                                                "+GRAPH",
+                                                                "+AIMLFILE",
+                                                                "-AIMLLOADER",
+                                                                "-DEBUG9",
+                                                                "-ASSET"
+                                                            }; //maybe should be ERROR", "STARTUP
+
+
+        #region Logging methods
+
+        /// <summary>
+        /// The last message to be entered into the log (for testing purposes)
+        /// </summary>
+        public string LastLogMessage = String.Empty;
+
+        public OutputDelegate outputDelegate;
+
+        public void writeToLog(Exception e)
+        {
+            writeDebugLine(writeException(e));
+        }
+        public String writeException(Exception e)
+        {
+            if (e == null) return "-write no exception-";
+            string s = "ERROR: " + e.Message + " " + e.StackTrace;
+            Exception inner = e.InnerException;
+            if (inner != null && inner != e)
+                s = s + writeException(inner);
+            return s;
+        }
+
+        /// <summary>
+        /// Writes a (timestamped) message to the Processor's log.
+        /// 
+        /// Log files have the form of yyyyMMdd.log.
+        /// </summary>
+        /// <param name="message">The message to log</param>
+        //public OutputDelegate writeToLog;
+        public void writeToLog(string message, params object[] args)
+        {
+            message = DLRConsole.SafeFormat(message, args);
+            if (String.IsNullOrEmpty(message)) return;
+            bool writeToConsole = true; // outputDelegate == null;
+
+            //message = message.Trim() + Environment.NewLine;
+            if (outputDelegate != null)
+            {
+                try
+                {
+                    outputDelegate(message);
+                }
+                catch (Exception)
+                {
+                    writeToConsole = true;
+                }
+            }
+            if (outputDelegate != writeDebugLine)
+            {
+                if (writeToConsole) writeDebugLine(message);
+            }
+            message = string.Format("[{0}]: {1}", DateTime.Now, message.Trim());
+            writeToFileLog(message);
+        }
+
+        public Object LoggingLock = new object();
+        public void writeToFileLog(string message)
+        {
+            LastLogMessage = message;
+            if (!IsLogging) return;
+            lock (LoggingLock)
+            {
+                //  this.LogBuffer.Add(DateTime.Now.ToString() + ": " + message + Environment.NewLine);
+                LogBuffer.Add(message);
+                if (LogBuffer.Count > MaxLogBufferSize - 1)
+                {
+                    // Write out to log file
+                    HostSystem.CreateDirectory(PathToLogs);
+
+                    Unifiable logFileName = DateTime.Now.ToString("yyyyMMdd") + ".log";
+                    FileInfo logFile = new FileInfo(HostSystem.Combine(PathToLogs, logFileName));
+                    StreamWriter writer;
+                    if (!logFile.Exists)
+                    {
+                        writer = logFile.CreateText();
+                    }
+                    else
+                    {
+                        writer = logFile.AppendText();
+                    }
+
+                    foreach (string msg in LogBuffer)
+                    {
+                        writer.WriteLine(msg);
+                    }
+                    writer.Close();
+                    LogBuffer.Clear();
+                }
+            }
+            if (!Equals(null, WrittenToLog))
+            {
+                WrittenToLog();
+            }
+        }
+
+        #endregion
 
         private static void MainConsoleWriteLn(string fmt, params object[] ps)
         {
@@ -78,11 +198,13 @@ namespace RTParser
                 {
                     if (s == "--breakpoints")
                     {
-                        //UseBreakpointOnError = true;
+                        UseBreakpointOnError = true;
+                        continue;
                     }
                     if (s == "--nobreakpoints")
                     {
                         UseBreakpointOnError = false;
+                        continue;
                     }
                     if (s == "--aiml" || s == "--botname")
                     {
@@ -92,6 +214,7 @@ namespace RTParser
                     if (s.StartsWith("-"))
                     {
                         gettingUsername = false;
+                        writeLine("passing option '"+s+"' to another program");
                         continue;
                     }
                     if (gettingUsername)
@@ -128,7 +251,6 @@ namespace RTParser
             writeLine("-----------------------------------------------------------------");
             DLRConsole.SystemFlush();
 
-            String botJustSaid = null;
             string meneValue = null;
             string userJustSaid = String.Empty;
             myBot.LastUser = myUser;
@@ -153,7 +275,7 @@ namespace RTParser
                 writeLine("-----------------------------------------------------------------");
                 if (String.IsNullOrEmpty(input))
                 {
-                    writeLine(myName + "> " + botJustSaid);
+                    writeLine(myName + "> " + myBot.botJustSaid);
                     continue;
                 }
                 try
@@ -165,44 +287,17 @@ namespace RTParser
                     }
 
                     bool myBotBotDirective = false;
-                    if (input.StartsWith("@"))
-                    {
-                        request.TimesOutAt = DateTime.Now + new TimeSpan(0, 5, 0);
-                        myBotBotDirective = myBot.BotDirective(request, input, writeLine);
-                        //if (!myBotBotDirective) 
-                        continue;
-                    }
-                    if (!myBotBotDirective)
+                    if (!input.StartsWith("@"))
                     {
                         userJustSaid = input;
-                        //  myUser.TopicSetting = "collectevidencepatterns";
-                        myBot.pMSM.clearEvidence();
-                        myBot.pMSM.clearNextStateValues();
-                        Request r = new AIMLbot.Request(input, myUser, myBot, null);
-                        r.IsTraced = true;
-                        ///r.ProcessMultipleTemplates = false; stored in user settings
-                        writeLine("-----------------------------------------------------------------");
-                        Result res = myBot.Chat(r);
-                        if (!res.IsEmpty)
-                        {
-                            botJustSaid = res.Output;
-                            meneValue = "" + res.Score;
-                            if (myBot.ProcessHeardPreds)
-                            {
-                                writeLine("-----------------------------------------------------------------");
-                                myBot.HeardSelfSayNow(botJustSaid);
-                                writeLine("-----------------------------------------------------------------");
-                            }
-                        }
-                        else
-                        {
-                            botJustSaid = "NULL";
-                        }
+                        input = "@locally " + myUser.UserName + " - " + input;
                     }
+                    myBotBotDirective = myBot.BotDirective(request, input, writeLine);
+                    if (!myBotBotDirective) continue;
                     writeLine("-----------------------------------------------------------------");
                     writeLine("{0}: {1}", myUser.UserName, userJustSaid);
                     writeLine("---------------------");
-                    writeLine("{0}: {1}   mene value={2}", myName, botJustSaid, meneValue);
+                    writeLine("{0}: {1}", myName, myBot.botJustSaid);
                     writeLine("-----------------------------------------------------------------");
                 }
                 catch (Exception e)
@@ -236,6 +331,10 @@ namespace RTParser
 
         public bool BotDirective(Request request, string input, OutputDelegate console)
         {
+            return BotDirective(request, input, console, null);
+        }
+        public bool BotDirective(Request request, string input, OutputDelegate console, ThreadControl control)
+        {
             if (input == null) return false;
             input = input.Trim();
             if (input == "") return false;
@@ -243,7 +342,7 @@ namespace RTParser
             {
                 input = input.TrimStart(new[] {' ', '@'});
             }
-            User myUser = request.user ?? LastUser ?? FindOrCreateUser(UNKNOWN_PARTNER);
+            User myUser = request.Requester ?? LastUser ?? FindOrCreateUser(UNKNOWN_PARTNER);
             int firstWhite = input.IndexOf(' ');
             if (firstWhite == -1) firstWhite = input.Length - 1;
             string cmd = input.Substring(0, firstWhite + 1).Trim().ToLower();
@@ -257,39 +356,42 @@ namespace RTParser
                 console("@quit -- exits the aiml subsystem");
             }
 
+
             if (showHelp)
                 console(
-                    "@withuser <user> - <text>  -- (aka. simply @)  runs text/command not intentionally setting LastUser");
+                    "@withuser <user> - <text>  -- (aka. simply @)  runs text/command intentionally setting LastUser");
             if (cmd == "withuser" || cmd == "@")
             {
                 int lastIndex = args.IndexOf("-");
+                string user = myUser.UserName;
                 if (lastIndex > -1)
                 {
-                    string user = args.Substring(0, lastIndex).Trim();
-                    string value = args.Substring(lastIndex + 1).Trim();
-                    RequestImpl r = GetRequest(value, user);
-                    r.IsTraced = true;
-                    AIMLbot.Result res = Chat0(r, r.Graph);
-                    double scored = res.Score;
-                    Unifiable resOutput = res.Output;
-                    string useOut = "Interesting.";
-                    string oTest = resOutput.AsString();
-                    if (!string.IsNullOrEmpty(oTest))
-                    {
-                        useOut = MyBot.CleanupCyc(oTest).AsString();
-                    }
-                    if (string.IsNullOrEmpty(useOut))
-                    {
-                        useOut = "Interesting.";
-                        scored = 0.5;
-                    }
-                    else useOut = useOut.Replace(" _", " ");
-                    if (!useOut.Contains("mene value=")) useOut = useOut + " mene value=" + scored;
-                    console(useOut);
+                    user = args.Substring(0, lastIndex).Trim();
+                    input = args.Substring(lastIndex + 1).Trim();
                 }
+                Result res = GlobalChatWithUser(input, user, writeDebugLine, true);
+                OutputResult(res, console);
                 return true;
             }
 
+            if (showHelp)
+                console(
+                    "@locally <user> - <text>  -- runs text/command not intentionally not setting LastUser");
+            if (cmd == "locally" || cmd == "@")
+            {
+                int lastIndex = args.IndexOf("-");
+                string user = myUser.UserName;
+                if (lastIndex > -1)
+                {
+                    user = args.Substring(0, lastIndex).Trim();
+                    input = args.Substring(lastIndex).Trim();
+                }
+                Result res = GlobalChatWithUser(input, user, writeDebugLine, true);
+                botJustSaid = OutputResult(res, console);
+                if (ProcessHeardPreds)
+                    HeardSelfSayResponse(botJustSaid, res, control);
+                return true;
+            }
             if (showHelp)
                 console(
                     "@aimladd [graphname] <aiml/> -- inserts aiml content into graph (default LastUser.ListeningGraph )");
@@ -358,8 +460,15 @@ namespace RTParser
             if (cmd == "say")
             {
                 console("say> " + args);
-                HeardSelfSayNow(args);
-                myUser.SetOutputSentences(args);
+                HeardSelfSayResponse(args, LastResult, control);
+                return true;
+            }
+
+            if (showHelp) console("@say1 <sentence> -- fakes that the bot just said it");
+            if (cmd == "say1")
+            {
+                console("say1> " + args);
+                HeardSelfSayResponse(args, LastResult, control);
                 return true;
             }
 
@@ -574,7 +683,7 @@ namespace RTParser
             }
 
             SystemExecHandler seh;
-            if (ConsoleCommands.TryGetValue(cmd.ToLower(),out seh))
+            if (ConsoleCommands.TryGetValue(cmd.ToLower(), out seh))
             {
                 writeToLog("@" + cmd + " = " + seh(args, myUser.CurrentRequest));
             }
@@ -628,6 +737,155 @@ namespace RTParser
                 return true;
             }
 
+            if (cmd == "tasks")
+            {
+                int n = 0;
+                IList<Thread> botCommandThreads = ThreadList;
+                List<string> list = new List<string>();
+                if(false)lock (botCommandThreads)
+                {
+                    int num = botCommandThreads.Count;
+                    foreach (Thread t in botCommandThreads)
+                    {
+                        n++;
+                        num--;
+                        //System.Threading.ThreadStateException: Thread is dead; state cannot be accessed.
+                        //  at System.Threading.Thread.IsBackgroundNative()
+                        if (!t.IsAlive)
+                        {
+                            list.Add(string.Format("{0}: {1} IsAlive={2}", num, t.Name, t.IsAlive));
+                        }
+                        else
+                        {
+                            list.Insert(0, string.Format("{0}: {1} IsAlive={2}", num, t.Name, t.IsAlive));
+                        }
+                    }
+                }
+                int found = 0;
+                lock (TaskQueueHandler.TaskQueueHandlers)
+                {
+                    foreach (var queueHandler in TaskQueueHandler.TaskQueueHandlers)
+                    {
+                        found++;
+                        if (queueHandler.Busy)
+                            list.Insert(0, queueHandler.ToDebugString(true));
+                        else
+                        {
+                            list.Add(queueHandler.ToDebugString(true));
+                        }
+
+                    }
+                }
+                foreach (var s in list)
+                {
+                    console(s);
+                }
+                console("TaskQueueHandlers: " + found + ", threads: " + n);
+                return true;
+            }
+            if (cmd.StartsWith("thread"))
+            {
+                if (args == "list" || args == "")
+                {
+                    int n = 0;
+                    var botCommandThreads = ThreadList;
+                    List<string> list = new List<string>();
+                    lock (botCommandThreads)
+                    {
+                        int num = botCommandThreads.Count;
+                        foreach (Thread t in botCommandThreads)
+                        {
+                            n++;
+                            num--;
+                            //System.Threading.ThreadStateException: Thread is dead; state cannot be accessed.
+                            //  at System.Threading.Thread.IsBackgroundNative()
+                            if (!t.IsAlive)
+                            {
+                                list.Add(string.Format("{0}: {1} IsAlive={2}", num, t.Name, t.IsAlive));
+                            }
+                            else
+                            {
+                                list.Insert(0, string.Format("{0}: {1} IsAlive={2}", num, t.Name, t.IsAlive));
+                            }
+                        }
+                    }
+                    foreach (var s in list)
+                    {
+                        console(s);
+                    }
+                    console("Total threads: " + n);
+                    return true;
+                }
+                else
+                {
+                    cmd = args;
+                    ThreadStart thread = () =>
+                    {
+                        try
+                        {
+                            try
+                            {
+
+                                BotDirective(request, args, console);
+                            }
+                            catch (Exception e)
+                            {
+                                console("Problem with " + args + " " + e);
+                            }
+                        }
+                        finally
+                        {
+                            try
+                            {
+                                HeardSelfSayQueue.RemoveThread(Thread.CurrentThread);
+                            }
+                            catch (OutOfMemoryException) { }
+                            catch (StackOverflowException) { }
+                            catch (Exception) { }
+                            console("done with " + cmd);
+                        }
+                    };
+                    String threadName = "ThreadCommnand for " + cmd;
+                    HeardSelfSayQueue.MakeSyncronousTask(thread, threadName, TimeSpan.FromSeconds(20));
+                    console(threadName);
+                    return true;
+                }
+                if (args.StartsWith("kill"))
+                {
+                    int n = 0;
+                    var botCommandThreads = ThreadList;
+                    lock (botCommandThreads)
+                    {
+                        int num = botCommandThreads.Count;
+                        foreach (Thread t in botCommandThreads)
+                        {
+                            n++;
+                            num--;
+                            //System.Threading.ThreadStateException: Thread is dead; state cannot be accessed.
+                            //  at System.Threading.Thread.IsBackgroundNative()
+                            if (!t.IsAlive)
+                            {
+                                console("Removing {0}: {1} IsAlive={2}", num, t.Name, t.IsAlive);
+                            }
+                            else
+                            {
+                                console("Killing/Removing {0}: {1} IsAlive={2}", num, t.Name, t.IsAlive);
+                                try
+                                {
+                                    if (t.IsAlive)
+                                    {
+                                      //  aborted++;
+                                        t.Abort();
+                                    }
+                                    t.Join();
+                                }
+                                catch (Exception) { }
+                            }
+                            HeardSelfSayQueue.RemoveThread(t);
+                        }
+                    }
+                }
+            }
             console("unknown: @" + input);
             return false;
         }
@@ -641,6 +899,17 @@ namespace RTParser
                                                action();
                                                return cmd;
                                            });
+        }
+
+        private static void UnseenWriteline(string real)
+        {
+            string message = real.ToUpper();
+            if ((message.Contains("ERROR") && !message.Contains("TIMEOUTMESSAGE")) || message.Contains("EXCEPTION"))
+            {
+                DLRConsole.SYSTEM_ERR_WRITELINE("HIDDEN ERRORS: {0}", real);
+                return;
+            }
+            DLRConsole.SYSTEM_ERR_WRITELINE("SPAMMY: {0}", real);
         }
     }
 }
