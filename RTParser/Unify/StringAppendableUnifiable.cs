@@ -55,7 +55,7 @@ namespace RTParser
 
         public override void Append(Unifiable p)
         {
-            Append(p.AsString());
+            if (p != null) Append(p.AsString());
         }
 
         private bool NoSpaceAfter(string str)
