@@ -17,6 +17,17 @@ namespace MushDLR223.Utilities
         {
 
         }
+        public TextFilter(IEnumerable<string> filters)
+        {
+            if (filters!=null)
+            {
+                foreach (string s in filters)
+                {
+                    Add(s);
+                }
+            }
+        }
+
         private string lastOutput = "xoxoxoxoxoxoxoxoxoxoxoxoxdo";
         public bool writeDebugLine(OutputDelegate console, string message, params object[] args)
         {
