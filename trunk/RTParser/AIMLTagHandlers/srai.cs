@@ -149,7 +149,7 @@ namespace RTParser.AIMLTagHandlers
             {
                 writeToLog = writeToLog ?? DEVNULL;
                 RTPBot mybot = request.TargetBot;
-                User user = request.user;
+                User user = request.Requester;
                 int depth = user.depth;
                 var thisrequest = request;
                 Result thisresult = request.CurrentResult;

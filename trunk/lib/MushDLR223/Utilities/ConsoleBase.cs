@@ -395,17 +395,7 @@ namespace MushDLR223.Utilities
                                                               "clear",
                                                               "+*",
                                                           };
-                                 
-        static public string ShouldPrint(string str, params object[] args)
-        {
-            string printStr = TheConsole.SafeFormat(str, args);
-            if (!TheGlobalLogFilter.ShouldPrint(printStr))
-            {
-                return null;
-            }
-            return printStr;
-        }
-
+                                         
         static private readonly object m_syncRoot = new object();
 
         static private int y = -1;
@@ -432,6 +422,8 @@ namespace MushDLR223.Utilities
 
         public static bool PrintToSystemConsole = true;
         private static readonly TextWriter InitialConsoleOut = SystemConsole.Out;
+        private static readonly TextWriter InitialConsoleERR = SystemConsole.Error;
+        public static readonly OutputDelegate SYSTEM_ERR_WRITELINE = InitialConsoleERR.WriteLine;
         private static readonly TextWriter ConsoleOut = new OutputDelegateWriter(SystemWriteLine);
 
         static DLRConsole()
@@ -474,8 +466,8 @@ namespace MushDLR223.Utilities
         public static TextWriter Out
         {
             get
-            {
-                TextWriter ret = SystemConsole.Out ?? ConsoleOut ?? InitialConsoleOut;
+            {                
+                TextWriter ret = SystemConsole.Out ?? ConsoleOut ?? InitialConsoleOut ?? InitialConsoleERR;
                 return ret;
             }
         }
@@ -795,12 +787,20 @@ namespace MushDLR223.Utilities
                     y = SetCursorTop(y);
                     CursorLeft = 0;
                 }
-                WritePrefixLine(senderColor, sender);
-                omittedPrefix = sender.ToUpper() + ":";
-                WriteConsoleLine(color, format, args);
-                omittedPrefix = "";
-                if (y != -1)
-                    y = CursorTop;
+                // dont trim off spaces
+                char[] trim = "\n\r".ToCharArray();
+                string safeFormat = SafeFormat(format, args);
+                string[] safeFormatSplit = safeFormat.Split(new[] { "\r\n", "\n", "\r"},StringSplitOptions.None);
+                foreach (var argsFmt in safeFormatSplit)
+                {
+                    safeFormat = argsFmt;
+                    WritePrefixLine(senderColor, sender);
+                    omittedPrefix = sender.ToUpper() + ":";
+                    WriteConsoleLine(color, "{0}", safeFormat.Trim(trim));
+                    omittedPrefix = "";
+                    if (y != -1)
+                        y = CursorTop;
+                }
             }
         }
 
@@ -1244,11 +1244,15 @@ namespace MushDLR223.Utilities
 
         public static void DebugWriteLine(string format, params object[] args)
         {
-            format = ShouldPrint(format, args);
-            if (format == null) return;
+            string printStr = TheConsole.SafeFormat(format, args);
+            if (!TheGlobalLogFilter.ShouldPrint(printStr))
+            {
+                SYSTEM_ERR_WRITELINE(printStr);
+            }
+            if (printStr == null) return;
             string sender;
-            string getCallerFormat = GetCallerFormat(format, out sender);
-            WriteNewLine(DeriveColor(sender), sender, ConsoleColor.Gray, "{0}", format);
+            string getCallerFormat = GetCallerFormat(printStr, out sender);
+            WriteNewLine(DeriveColor(sender), sender, ConsoleColor.Gray, "{0}", printStr);
             return;
         }
         private static void SystemWriteLine0(string format, params object[] args)
@@ -1276,7 +1280,7 @@ namespace MushDLR223.Utilities
                 }
                 catch (Exception e)
                 {
-                    SystemConsole.Error.WriteLine("" + e);
+                    SYSTEM_ERR_WRITELINE("" + e);
                     o.WriteLine(SafeFormat(format, args));
                 }
             }
@@ -1292,13 +1296,17 @@ namespace MushDLR223.Utilities
                 }
                 catch (Exception e)
                 {
-                    SystemConsole.Error.WriteLine("\n" + e + "\n while writeline-ing '" + format + "'");
+                    SYSTEM_ERR_WRITELINE("\n" + e + "\n while writeline-ing '" + format + "'");
                 }
             }
         }
         public static void SystemWriteLine(string format, params object[] args)
         {
-            format = ShouldPrint(format, args);
+            format = SafeFormat(format, args);
+            if (!TheGlobalLogFilter.ShouldPrint(format))
+            {
+                SYSTEM_ERR_WRITELINE(format);
+            }
             if (String.IsNullOrEmpty(format)) return;
             SystemWriteLine00(format);
         }
@@ -1436,7 +1444,7 @@ namespace MushDLR223.Utilities
                 }
                 catch (Exception e)
                 {
-                    SystemConsole.Error.WriteLine("\n" + e + "\n while writing '" + format + "'");
+                    SYSTEM_ERR_WRITELINE("\n" + e + "\n while writing '" + format + "'");
                 }
             }
         }
@@ -1524,7 +1532,7 @@ namespace MushDLR223.Utilities
                 }
                 catch (Exception e)
                 {
-                    SystemConsole.Error.WriteLine("" + e + " in " + o);
+                    SYSTEM_ERR_WRITELINE("" + e + " in " + o);
                 }
             }
         }
@@ -1562,7 +1570,7 @@ namespace MushDLR223.Utilities
         {         
             if (fmt == null)
             {
-                return ExplainFormatError(fmt, args, Console.Error.WriteLine, new Exception());
+                return ExplainFormatError(fmt, args, SYSTEM_ERR_WRITELINE, new Exception());
             }
 
             string str = fmt;
@@ -1574,7 +1582,7 @@ namespace MushDLR223.Utilities
                 }
                 catch (Exception e)
                 {
-                    str = ExplainFormatError(fmt, args, System.Console.Error.WriteLine, e);
+                    str = ExplainFormatError(fmt, args, SYSTEM_ERR_WRITELINE, e);
                 }
             }
             return str;

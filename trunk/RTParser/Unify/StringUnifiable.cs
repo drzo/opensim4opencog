@@ -67,10 +67,12 @@ namespace RTParser
         public StringUnifiable(string v, bool tf)
         {
             str = v;
-            if (tf || true)
+            if (tf)
             {
                 int vLength = v.Length;
+#if ACTUALLY_USING_ClassifyFlagTypes
                 ClassifyFlagTypes(v, vLength);
+#endif
             }
             else
             {
@@ -78,6 +80,8 @@ namespace RTParser
             }
         }
 
+#if ACTUALLY_USING_ClassifyFlagTypes
+        static internal bool FastFlags = true;
         private UFlags ClassifyFlagTypes(string v, int vLength)
         {
 
@@ -110,6 +114,7 @@ namespace RTParser
                 if (v == "T")
                 {
                     Flags |= UFlags.IS_TRUE;
+                    if (FastFlags) return Flags;
                     v = v.Substring(1);
                     vLength -= 1;
                     continue;
@@ -117,6 +122,7 @@ namespace RTParser
                 if (v == "NIL")
                 {
                     Flags |= UFlags.IS_FALSE;
+                    if (FastFlags) return Flags;
                     v = v.Substring(3);
                     vLength -= 3;
                     continue;
@@ -124,6 +130,7 @@ namespace RTParser
                 if (v.StartsWith("TAG-"))
                 {
                     Flags |= UFlags.IS_TAG;
+                    if (FastFlags) return Flags | UFlags.IS_EXACT;
                     v = v.Substring(4);
                     vLength -= 4;
                     continue;
@@ -137,7 +144,6 @@ namespace RTParser
             UFlags Flags0 = FlagsForString(str);
             return Flags | Flags0;
         }
-
         private UFlags GuessLastVType(int vLength, string v)
         {
             int vLengthM1 = vLength - 1;
@@ -191,7 +197,7 @@ namespace RTParser
             }
             return Flags;
         }
-
+#endif
         static UFlags FlagsForString(string str)
         {
             if (str == null) return UFlags.IS_NULL;

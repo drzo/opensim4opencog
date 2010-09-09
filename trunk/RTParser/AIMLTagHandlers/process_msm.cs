@@ -42,7 +42,7 @@ namespace RTParser.AIMLTagHandlers
                 //this.user.bot.AddAiml("<set name='topic'>collectevidencepatters</set>");
                 //this.user.Predicates.updateSetting("topic", "collectevidencepatters");
                 this.user.TopicSetting = "CEP";
-                
+
                 // Clear the evidence and next state
                 this.user.bot.pMSM.clearEvidence();
                 this.user.bot.pMSM.clearNextStateValues();
@@ -53,7 +53,7 @@ namespace RTParser.AIMLTagHandlers
                 // process the input text
 
                 //string evidenceReply = this.user.bot.ChatString(line, this.user.UserID);
-                string evidenceReply = subChat(line, this.user.TopicSetting, request,true);
+                string evidenceReply = subChat(line, this.user.TopicSetting, request, true);
 
                 RTPBot.writeDebugLine("MSM: WithEvidence {0} ", this.user.bot.pMSM.ToString());
 
@@ -75,14 +75,14 @@ namespace RTParser.AIMLTagHandlers
                 double strongestVal = -9999;
                 foreach (string actingMachine in machinesTopState.Keys)
                 {
-                    string actionState = (string) machinesTopState[actingMachine];
-                    double actp = (double) this.user.bot.pMSM.cur_machineStateVal[actionState];
+                    string actionState = (string)machinesTopState[actingMachine];
+                    double actp = (double)this.user.bot.pMSM.cur_machineStateVal[actionState];
 
                     Hashtable topicHt = (Hashtable)this.user.bot.pMSM.machineStateResponses[actionState];
 
-                    if ((topicHt != null) && (topicHt.Count >0))
+                    if ((topicHt != null) && (topicHt.Count > 0))
                     {
-                        foreach (string responseTopic in topicHt.Keys )
+                        foreach (string responseTopic in topicHt.Keys)
                         {
                             //prob = topicHt[responseTopic] = prob;
                             string responseTopicUp = responseTopic.ToUpper();
@@ -94,13 +94,13 @@ namespace RTParser.AIMLTagHandlers
                             //actionReply = this.user.bot.ChatString(line, this.user.UserID);
 
 
-                            actionReply = subChat(line, responseTopicUp, request,false);
-                            
+                            actionReply = subChat(line, responseTopicUp, request, false);
+
                             // Append or use non-null response with the most certainty
                             //totalReply += " " + actionReply;
-                            RTPBot.writeDebugLine("MSM:[[ PossReply m:{0} s:{1} p:{2} RT: {3} REPLY:{4} ]]  <<< * * * * * *", actingMachine, actionState,actp,responseTopicUp, actionReply.Trim());
+                            RTPBot.writeDebugLine("MSM:[[ PossReply m:{0} s:{1} p:{2} RT: {3} REPLY:{4} ]]  <<< * * * * * *", actingMachine, actionState, actp, responseTopicUp, actionReply.Trim());
 
-                            if ((actp > strongestVal) && (actionReply.Trim().Length >0))
+                            if ((actp > strongestVal) && (actionReply.Trim().Length > 0))
                             {
                                 strongestVal = actp;
                                 totalReply = actionReply;
@@ -109,14 +109,14 @@ namespace RTParser.AIMLTagHandlers
                     }
                 }
                 Unifiable result = totalReply.Trim();
-                RTPBot.writeDebugLine("MSM: FinalReply :{0}",totalReply.Trim());
+                RTPBot.writeDebugLine("MSM: FinalReply :{0}", totalReply.Trim());
                 return result;
             }
             return Unifiable.Empty;
 
         }
 
-        public string subChat(string line, string topic, RTParser.Request request,bool allowMultiplesTemplates)
+        public string subChat(string line, string topic, RTParser.Request request, bool allowMultiplesTemplates)
         {
             //----------------------
             // snarf from "srai"
@@ -143,7 +143,7 @@ namespace RTParser.AIMLTagHandlers
                 subRequest.CurrentResult = newresult;
                 user.SuspendAdd = true;
                 subResult = this.Proc.Chat(subRequest, subRequest.Graph);
-               // subResult = this.Proc.Chat(subRequest, request.Graph);
+                // subResult = this.Proc.Chat(subRequest, request.Graph);
             }
             finally
             {

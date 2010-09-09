@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -48,8 +49,18 @@ namespace RTParser
         /// </summary>
         public RTParser.RTPBot bot;
 
-
+        public TaskQueueHandler OnTaskAtATimeHandler;
         public Timer SaveTimer;
+
+        public void Enqueue(ThreadStart evt)
+        {
+            if (OnTaskAtATimeHandler==null)
+            {
+                OnTaskAtATimeHandler = new TaskQueueHandler("TaskQueue For " + UserID, 10);
+                OnTaskAtATimeHandler.Start();
+            }
+            OnTaskAtATimeHandler.Enqueue(evt);
+        }
 
         readonly object SaveLock = new object();
         private void SaveOften(object state)
@@ -299,6 +310,7 @@ namespace RTParser
         protected User(string userID, RTParser.RTPBot bot, ParentProvider provider)
             : base(bot)
         {
+            WriteLine = WriteLine0;
             if (userID.Length > 0)
             {
                 WriterOptions = new PrintOptions();
@@ -344,6 +356,21 @@ namespace RTParser
                 catch (Exception)
                 {
 
+                }
+                lock (ShutdownHooks)
+                {
+                    foreach (var threadStart in ShutdownHooks)
+                    {
+                        try
+                        {
+                            threadStart.Invoke();
+                        }
+                        catch (Exception exception)
+                        {
+                            writeDebugLine("ERROR: shutdownhook " + threadStart + " " + exception);
+                        }
+                        ShutdownHooks.Clear();
+                    }
                 }
             }
             SaveOften(this);
@@ -656,7 +683,8 @@ namespace RTParser
         }
 
         internal OutputDelegate userTrace;
-        public void WriteLine(string s, params object[] objects)
+        internal OutputDelegate WriteLine;
+        internal void WriteLine0(string s, params object[] objects)
         {
             try
             {
@@ -664,7 +692,8 @@ namespace RTParser
                 if (s.ToUpper().Contains("ERROR"))
                 {
                     bot.writeToLog(s, objects);
-                } if (userTrace != null)
+                }
+                if (userTrace != null)
                 {
                     userTrace(s);
                     return;
@@ -777,6 +806,7 @@ namespace RTParser
         private bool noLoad = true;
         public bool NeverSave = NeverSaveUsers;
         private bool needAiml = false;
+        private readonly List<CrossAppDomainDelegate> ShutdownHooks = new List<CrossAppDomainDelegate>();
         private readonly List<CrossAppDomainDelegate> OnNeedAIML = new List<CrossAppDomainDelegate>();
         public int depth;
 
@@ -956,8 +986,22 @@ namespace RTParser
             {
                 if (needAiml) return;
                 needAiml = true;
-                List<CrossAppDomainDelegate> todo = new List<CrossAppDomainDelegate>(OnNeedAIML);
-                OnNeedAIML.Clear();
+                DoPendingUntilComplete(OnNeedAIML);
+            }
+        }
+
+        internal static void DoPendingUntilComplete(ICollection<CrossAppDomainDelegate> todoList)
+        {
+            if (todoList==null) return;
+            while (true)
+            {
+                var todo = new List<CrossAppDomainDelegate>();
+                lock (todoList)
+                {
+                    if (todoList.Count == 0) return;
+                    todo.AddRange(todoList);
+                    todoList.Clear();
+                }
                 foreach (var list in todo)
                 {
                     try
@@ -966,7 +1010,7 @@ namespace RTParser
                     }
                     catch (Exception e)
                     {
-                        WriteLine("DoNeedAIML: " + e);
+                        writeDebugLine("DoPendingUntilComplete: " + list + " - " + e);
                     }
                 }
             }

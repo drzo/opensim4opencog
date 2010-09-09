@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Threading;
 using System.Xml;
@@ -22,16 +23,75 @@ namespace RTParser
     public partial class RTPBot
     {
         public bool AlwaysUseImmediateAimlInImput = true;
-
+        public static bool RotateUsedTemplate = true;
         public readonly TaskQueueHandler HeardSelfSayQueue = new TaskQueueHandler("AIMLBot HeardSelf",
                                                                                    TimeSpan.FromMilliseconds(10),
                                                                                    TimeSpan.FromSeconds(10), true);
         private readonly Object chatTraceO = new object();
-        private readonly List<Thread> ThreadList = new List<Thread>();
+        public List<Thread> ThreadList { get { return HeardSelfSayQueue.InteruptableThreads; } }
         public bool chatTrace = true;
         private StreamWriter chatTraceW;
         private JoinedTextBuffer currentEar = new JoinedTextBuffer();
         private int streamDepth;
+        public Unifiable botJustSaid;
+
+        // last user talking to bot besides itself
+        private User _lastUser;
+        public User LastUser
+        {
+            get
+            {
+                if (IsInteractiveUser(_lastUser)) return _lastUser;
+                User LU = _lastResult != null ? _lastResult.user : null;
+                if (IsInteractiveUser(LU)) return LU;
+                return null;
+            }
+            set
+            {
+                User LU = LastUser;
+                if (!IsInteractiveUser(LU) || IsInteractiveUser(value))
+                {
+                    _lastUser = value;
+                }
+            }
+        }
+
+        // last result from the last talking to bot besides itself
+        private Result _lastResult;
+        public Result LastResult
+        {
+            get
+            {
+                if (_lastResult != null)
+                {
+                    if (IsInteractiveUser(_lastResult.user)) return _lastResult;
+                }
+                else
+                {
+                    User LU = LastUser;
+                    if (IsInteractiveUser(LU)) return LU.LastResult;
+                }
+                return _lastResult;
+            }
+            set
+            {
+                Result LR = LastResult;
+                if (value == null) return;
+                if (LR == null)
+                {
+                    _lastResult = value;
+                }
+                LastUser = value.user;
+
+                if (LR != null && LR.user != BotAsUser)
+                {
+                    if (value.user != LR.user)
+                    {
+                        _lastUser = value.user ?? _lastUser;
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// The directory to look in for the WordNet3 files
@@ -147,6 +207,50 @@ namespace RTParser
 
         #region Conversation methods
 
+        private Result GlobalChatWithUser(string input, string user, OutputDelegate traceConsole, bool saveResults)
+        {
+            traceConsole = traceConsole ?? writeDebugLine;
+            User CurrentUser = LastUser;
+            pMSM.clearEvidence();
+            pMSM.clearNextStateValues();
+            //  myUser.TopicSetting = "collectevidencepatterns";
+            RequestImpl r = GetRequest(input, user);
+            r.IsTraced = true;
+            r.writeToLog = traceConsole;
+            Result res = Chat0(r, r.Graph);
+            string useOut = null;
+            //string useOut = resOutput;
+            if (!res.IsEmpty)
+            {
+                useOut = res.Output;
+                CurrentUser = res.user;
+                string oTest = ToEnglish(useOut);
+                if (oTest != null && oTest.Length > 2)
+                {
+                    useOut = oTest;
+                }
+            }
+            if (string.IsNullOrEmpty(useOut))
+            {
+                useOut = "Interesting.";
+                res.TemplateRating = Math.Max(res.Score, 0.5d);
+            }
+            if (saveResults)
+            {
+                try
+                {
+                    LastResult = res;
+                    LastUser = CurrentUser;
+                }
+                catch (Exception exception)
+                {
+                    traceConsole("" + exception);
+                }
+            }
+            traceConsole(useOut);
+            return res;
+        }
+
         public RequestImpl GetRequest(string rawInput, string username)
         {
             User findOrCreateUser = FindOrCreateUser(username);
@@ -181,129 +285,6 @@ namespace RTParser
             request.IsTraced = true;
             return Chat(request);
         }
-
-        private static ThreadControl GetNewThreadControl()
-        {
-            ThreadControl newThreadControl = new ThreadControl(new EventWaitHandle(false, EventResetMode.ManualReset));
-            return newThreadControl;
-        }
-        public void HeardSelfSay(string message)
-        {
-            currentEar.AddMore(message);
-            if (!currentEar.IsReady())
-            {
-                return;
-            }
-            message = currentEar.GetMessage();
-            currentEar = new JoinedTextBuffer();
-            //return null;            
-            ThreadControl newThreadControl = GetNewThreadControl();
-            HeardSelfSayQueue.EnqueueWithTimeLimit(() => HeardSelfSayNow(message), "heardSelfSay: " + message, TimeSpan.FromSeconds(10),
-                                               newThreadControl);
-            return;
-        }
-
-        public void HeardSelfSayNow(string message)
-        {
-            HeardSelfSayQueue.EnqueueWithTimeLimit(() => HeardSelfSayNow0(message), "heardSelfSay: " + message,
-                                               TimeSpan.FromSeconds(10),
-                                               GetNewThreadControl());            
-        }
-
-
-        public void HeardSelfSayNow0(string message)
-        {
-            try
-            {
-                HeardSelfSayQueue.KillTasksOverTimeLimit = true;
-                HeardSelfSayNow1(message);
-            }
-            finally
-            {
-                HeardSelfSayQueue.KillTasksOverTimeLimit = false;
-            }
-        }
-        
-        public Result HeardSelfSayNow1(string message)
-        {
-            Result LR = null;
-            if (message == null) return LR;
-            bool lts = ListeningToSelf;
-            bool prochp = ProcessHeardPreds;
-            if (!lts && !prochp) return LR;
-            message = ToHeard(message);
-            //message = swapPerson(message);
-            //writeDebugLine("HEARDSELF SWAP: " + message);
-
-            if (prochp)
-            {
-                if (LastUser != null)
-                {
-                    lock (LastUser.QueryLock)
-                    {
-                        LR = LastUser.LastResult;
-                        if (LR != null)
-                        {
-                            LR.AddOutputSentences(null, message);
-                        }
-                    }
-                }
-                writeDebugLine("-----------------------------------------------------------------");
-                AddHeardPreds(message, HeardPredicates);
-                writeDebugLine("-----------------------------------------------------------------");
-            }
-            if (!lts)
-            {
-                writeDebugLine("SELF: " + message);
-                writeDebugLine("-----------------------------------------------------------------");
-                return null;
-            }            
-            writeDebugLine("HEARDSELF: " + message);
-            writeDebugLine("-----------------------------------------------------------------");
-            try
-            {
-                if (message == null || message.Length < 4) return null;                
-                try
-                {
-                    Request r = new AIMLbot.Request(message, BotAsUser, this, null);
-                    r.IsTraced = false;
-                    return Chat0(r, HeardSelfSayGraph);
-                }
-                catch (Exception e)
-                {
-                    writeToLog(e);
-                    return null;
-                }
-            }
-            finally
-            {
-                BotAsUser.Predicates.addSetting("lastsaid", message);
-            }
-        }
-
-        private void AddHeardPreds(string message, SettingsDictionary dictionary)
-        {
-            if (message == null) return;
-            writeDebugLine("-----------------------------------------------------------------");
-            foreach (string s in message.Trim().Split(new[] { '!', '?', '.' }, StringSplitOptions.RemoveEmptyEntries))
-            {
-                AddHeardPreds0(s, dictionary);
-            }
-            writeDebugLine("-----------------------------------------------------------------");
-            //RTPBot.writeDebugLine("" + dictionary.ToDebugString());
-        }
-
-        private void AddHeardPreds0(Unifiable unifiable, SettingsDictionary dictionary)
-        {
-            if (unifiable.IsEmpty) return;
-            Unifiable first = unifiable.First();
-            if (first.IsEmpty) return;
-            Unifiable rest = unifiable.Rest();
-            if (rest.IsEmpty) return;
-            dictionary.addSetting(first, rest);
-            AddHeardPreds0(rest, dictionary);
-        }
-
         /// <summary>
         /// Given a request containing user input, produces a result from the Proccessor
         /// </summary>
@@ -340,31 +321,50 @@ namespace RTParser
         public AIMLbot.Result Chat0(Request request, GraphMaster G)
         {
             bool isTraced = request.IsTraced || G == null;
-            User user = request.user ?? LastUser;
+            User user = request.Requester ?? LastUser;
             UndoStack undoStack = UndoStack.GetStackFor(request);
             AIMLbot.Result res;
             undoStack.pushValues(user.Predicates, "rawinput", request.rawInput);
             undoStack.pushValues(user.Predicates, "input", request.rawInput);
             lock (user.QueryLock)
             {
-                res = Chat0000(request, user, G, writeToLog);
+                res = ChatWithUser(request, user, G);
                 // ReSharper disable ConditionIsAlwaysTrueOrFalse
                 if (res.OutputSentenceCount == 0)
                 // ReSharper restore ConditionIsAlwaysTrueOrFalse
                 {
                     request.IncreaseLimits(1);
-                    res = Chat0000(request, user, G, writeToLog);
+                    res = ChatWithUser(request, user, G);
                 }
             }
             undoStack.UndoAll();
             return res;
         }
 
-        private AIMLbot.Result Chat0000(Request request, User user, GraphMaster G, OutputDelegate writeToLog)
+        public AIMLbot.Result ChatWithUser(Request request, User user, GraphMaster G)
         {
-            //LastUser = user;
+            var originalRequestor = request.Requester;
+            try
+            {
+                request.Requester = user;
+                Result result = ChatWithRequest(request, G);
+
+                // populate the Result object
+                PopulateUserWithResult(originalRequestor, request, result);
+                return (AIMLbot.Result) result;
+            }
+            finally
+            {
+                request.Requester = originalRequestor;
+            }
+        }
+
+        public AIMLbot.Result ChatWithRequest(Request request, GraphMaster G)
+        {
+            User originalRequestor = request.Requester;
+            //LastUser = user;            
             AIMLbot.Result result;
-            writeToLog = writeToLog ?? DEVNULL;
+            OutputDelegate writeToLog = request.writeToLog ?? DEVNULL;
 
             bool isTraced = request.IsTraced || G == null;
             //chatTrace = null;
@@ -532,20 +532,29 @@ namespace RTParser
                     this.writeToLog("ERROR {0} getting back {1}", request, nai);
                 result = request.CreateResult(request);
                 request.AddOutputSentences(null, nai, result);
-                return result;
+                //result.IsComplete = true;
+                //return result;
             }
-
-            // populate the Result object
+            User popu = originalRequestor ?? request.Requester ?? result.user;
             result.Duration = DateTime.Now - request.StartedOn;
-            User popu = request.user ?? result.user;
+            result.IsComplete = true;
+            popu.addResultTemplates(request);
+            streamDepth--;
+            return result;
+        }
+        internal void PopulateUserWithResult(User user, Request request, Result result)
+        {
+            User popu = user ?? request.Requester ?? result.user;
+            // only the toplevle query popuklates the user object
             if (result.ParentResult == null)
             {
                 // toplevel result
                 popu.addResult(result);
+                if (RotateUsedTemplate)
+                {
+                    result.RotateUsedTemplates();
+                }
             }
-            popu.addResultTemplates(request);
-            streamDepth--;
-            return result;
         }
 
         private void LoadInputPaths(Request request, AIMLLoader loader, Unifiable[] rawSentences, AIMLbot.Result result)
@@ -581,14 +590,14 @@ namespace RTParser
                             //thatNum + " " +
                                                              requestThat, request.Flags,
                             //topicNum + " " +
-                                                             request.user.TopicSetting, true);
+                                                             request.Requester.TopicSetting, true);
                         if (path.IsEmpty)
                         {
                             path = loader.generatePath(sentence,
                                 //thatNum + " " +
                                                        requestThat, request.Flags,
                                 //topicNum + " " +
-                                                       request.user.TopicSetting, false);
+                                                       request.Requester.TopicSetting, false);
                         }
                         if (path.IsEmpty) continue;
                         numInputs++;
@@ -785,7 +794,7 @@ namespace RTParser
 
             if (parentRequest != null)
             {
-                user = parentRequest.user;
+                user = parentRequest.Requester;
                 requestName = parentRequest.rawInput + " " + requestName;
             }
 
@@ -893,7 +902,7 @@ namespace RTParser
             bool protectChild = copyChild || childOriginal;
             AIMLTagHandler tagHandler;
             string outputSentence = processNode(templateNode, query,
-                                                request, result, request.user, handler,
+                                                request, result, request.Requester, handler,
                                                 protectChild, copyParent, out tagHandler);
 
             templateSucceeded = !IsFalse(outputSentence);
@@ -907,10 +916,10 @@ namespace RTParser
                     if (isTraced)
                     {
                         string aIMLLoaderParentTextAndSourceInfo = ParentTextAndSourceInfo(templateNode);
-                        if (aIMLLoaderParentTextAndSourceInfo.Length > 120)
+                        if (aIMLLoaderParentTextAndSourceInfo.Length > 300)
                         {
                             aIMLLoaderParentTextAndSourceInfo = TextFilter.ClipString(
-                                aIMLLoaderParentTextAndSourceInfo, 220);
+                                aIMLLoaderParentTextAndSourceInfo, 300);
                         }
                         writeToLog("AIMLTRACE '{0}' IsOutputSentence={1}", o, aIMLLoaderParentTextAndSourceInfo);
                     }
@@ -1051,7 +1060,7 @@ namespace RTParser
             }
 
             sentence = ApplySubstitutions.Substitute(OutputSubstitutions, xmlsentenceIn);
-            
+            sentence = sentence.Trim();
             if (sentenceIn != sentence)
             {
                 writeToLog("ENGLISH: " + sentenceIn + " -> " + sentence);
@@ -1059,6 +1068,7 @@ namespace RTParser
             }
 
             sentence = CleanupCyc(sentenceIn);
+            sentence = sentence.Trim();
             if (sentenceIn != sentence)
             {
                 writeToLog("CleanupCyc: " + sentenceIn + " -> " + sentence);
@@ -1066,15 +1076,37 @@ namespace RTParser
             }
 
             sentence = ApplySubstitutions.Substitute(OutputSubstitutions, sentenceIn);
+            sentence = sentence.Trim();
             if (sentenceIn != sentence)
             {
                 writeToLog("OutputSubst: " + sentenceIn + " -> " + sentence);
                 sentenceIn = sentence.Trim(); 
             }
+            if (!checkEndsAsSentence(sentenceIn))
+            {
+                sentenceIn += ".";
+            }
 
             return sentenceIn.Trim();
         }
 
+        /// Checks that the provided sentence ends with a sentence splitter
+        /// </summary>
+        /// <param name="sentence">the sentence to check</param>
+        /// <returns>True if ends with an appropriate sentence splitter</returns>
+        public bool checkEndsAsSentence(string sentence)
+        {
+            sentence = sentence.Trim();
+            if (sentence.EndsWith("?")) return true;
+            foreach (Unifiable splitter in Splitters)
+            {
+                if (sentence.EndsWith(splitter))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
 
         /// <summary>
         /// Recursively evaluates the template nodes returned from the Proccessor
@@ -1095,7 +1127,7 @@ namespace RTParser
             {
                 request.writeToLog(
                     "WARNING! Request timeout. User: {0} raw input: \"{1}\" processing template: \"{2}\"",
-                    request.user.UserID, request.rawInput,
+                    request.Requester.UserID, request.rawInput,
                     (query == null ? "-NOQUERY-" : query.Templates.Count.ToString()));
                 request.hasTimedOut = true;
                 tagHandler = null;
@@ -1215,31 +1247,32 @@ namespace RTParser
         {
             napNum++;
             DateTime start = DateTime.Now;
+            var errOutput = DLRConsole.SYSTEM_ERR_WRITELINE;
             string thisTime = " #" + napNum;
             try
             {
-                Console.Error.WriteLine("START Sleep" + secs + "Seconds " + thisTime + " \ntime=" + DateTime.Now.Subtract(start).TotalMilliseconds);
+                errOutput("START Sleep" + secs + "Seconds " + thisTime + " \ntime=" + DateTime.Now.Subtract(start).TotalMilliseconds);
                 Thread.Sleep(TimeSpan.FromSeconds(secs));
-                Console.Error.WriteLine("COMPLETE Sleep" + secs + "Seconds " + thisTime + " \ntime=" + DateTime.Now.Subtract(start).TotalSeconds);
+                errOutput("COMPLETE Sleep" + secs + "Seconds " + thisTime + " \ntime=" + DateTime.Now.Subtract(start).TotalSeconds);
                 Enqueue("ENQUE Sleep" + secs + "Seconds #" + thisTime, () => Sleep16Seconds(secs));
 
             }
             catch (ThreadAbortException e)
             {
-                Console.Error.WriteLine("ThreadAbortException Sleep" + secs + "Seconds " + e + " " + thisTime + " \ntime=" + DateTime.Now.Subtract(start).TotalSeconds);
+                errOutput("ThreadAbortException Sleep" + secs + "Seconds " + e + " " + thisTime + " \ntime=" + DateTime.Now.Subtract(start).TotalSeconds);
             }
             catch (ThreadInterruptedException e)
             {
-                Console.Error.WriteLine("ThreadInterruptedException Sleep" + secs + "Seconds " + e + " " + thisTime + " \ntime=" + DateTime.Now.Subtract(start).TotalSeconds);
+                errOutput("ThreadInterruptedException Sleep" + secs + "Seconds " + e + " " + thisTime + " \ntime=" + DateTime.Now.Subtract(start).TotalSeconds);
             }
             catch (Exception e)
             {
-                Console.Error.WriteLine("Exception Sleep" + secs + "Seconds " + e + " " + thisTime + " \ntime=" + DateTime.Now.Subtract(start).TotalSeconds);
+                errOutput("Exception Sleep" + secs + "Seconds " + e + " " + thisTime + " \ntime=" + DateTime.Now.Subtract(start).TotalSeconds);
                 throw;
             }
             finally
             {
-                Console.Error.WriteLine("Finanaly Sleep" + secs + "Seconds #" + thisTime + " \ntime=" + DateTime.Now.Subtract(start).TotalSeconds);
+                errOutput("Finanaly Sleep" + secs + "Seconds #" + thisTime + " \ntime=" + DateTime.Now.Subtract(start).TotalSeconds);
             }
         }
 

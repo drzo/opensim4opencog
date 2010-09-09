@@ -79,10 +79,12 @@ namespace RTParser
         public override string ToString()
         {
             string s = GetType().Name;
+            if (!string.IsNullOrEmpty(NameAsSet)) return s + " nameAsSet=" + NameAsSet;
             if (GlobalSettings != null)
             {
                 s += " name=" + GlobalSettings.grabSettingNoDebug("name") + " (" + NamePath + ")";
             }
+            if (!string.IsNullOrEmpty(NamePath)) return s + " NamePath=" + NamePath;
             return s;
         }
 
@@ -91,27 +93,6 @@ namespace RTParser
         /// </summary>
         public bool StaticLoader = true;
 
-        public static string AIMLDEBUGSETTINGS =
-            "clear -spam +user +bina +error +aimltrace +cyc -dictlog -tscore +loaded";
-
-        //    "clear +*";
-        public static string[] RUNTIMESETTINGS = {"-GRAPH", "-USER"};
-
-        public static readonly TextFilter LoggedWords = new TextFilter
-                                                            {
-                                                                "CLEAR",
-                                                                "+*",
-                                                                "+STARTUP",
-                                                                "+ERROR",
-                                                                "+EXCEPTION",
-                                                                "+GRAPH",
-                                                                "+AIMLFILE",
-                                                                "-AIMLLOADER",
-                                                                "-DEBUG9",
-                                                                "-ASSET"
-                                                            }; //maybe should be ERROR", "STARTUP
-
-        public User LastUser;
         public User BotAsUser;
         public User ExemplarUser;
         public string NamePath;
@@ -122,10 +103,12 @@ namespace RTParser
             s = s.Trim();
             if (!s.StartsWith("<")) s = "<!-- " + s.Replace("<!--", "<#").Replace("-->", "#>") + " -->";
             var r = new AIMLbot.Request(s, BotAsUser, this, null);
+            r.writeToLog = writeToLog;
             Result res = new AIMLbot.Result(BotAsUser, this, r, null);
+            res.writeToLog = writeToLog;
             res._CurrentQuery = new SubQuery(s, res, r);
-            OnBotCreated(() => { res.user = r.user = BotAsUser; });
-            r.IsTraced = true;
+            OnBotCreated(() => { res.user = r.Requester = BotAsUser; });
+            r.IsTraced = true;            
             r.StartedOn = DateTime.Now;
             // times out in 15 minutes
             r.TimesOutAt = DateTime.Now + new TimeSpan(0, 15, 0);
@@ -337,6 +320,7 @@ namespace RTParser
         {
             get
             {
+                // otherwse we use up too much ram
                 if (true) return false;
                 if (!GlobalSettings.containsSettingCalled("islogging")) return false;
                 Unifiable islogging = GlobalSettings.grabSettingNoDebug("islogging");
@@ -350,8 +334,6 @@ namespace RTParser
                 }
             }
         }
-
-        public Object LoggingLock = new object();
 
         /// <summary>
         /// Flag to denote if the Proccessor will email the botmaster using the AdminEmail setting should an error
@@ -1016,105 +998,6 @@ namespace RTParser
 
         #endregion
 
-        #region Logging methods
-
-        /// <summary>
-        /// The last message to be entered into the log (for testing purposes)
-        /// </summary>
-        public string LastLogMessage = String.Empty;
-
-        public OutputDelegate outputDelegate;
-
-        public void writeToLog(Exception e)
-        {
-            if (e == null) return;
-            string s = "ERROR: " + e.Message + " " + e.StackTrace;
-            Exception inner = e.InnerException;
-            if (inner != null && inner != e)
-                writeToLog(inner);
-            writeDebugLine(s);
-        }
-
-        /// <summary>
-        /// Writes a (timestamped) message to the Processor's log.
-        /// 
-        /// Log files have the form of yyyyMMdd.log.
-        /// </summary>
-        /// <param name="message">The message to log</param>
-        public void writeToLog(string message, params object[] args)
-        {
-            bool writeToConsole = true; // outputDelegate == null;
-            try
-            {
-                if (args != null && args.Length > 0) message = String.Format(message, args);
-            }
-            catch (Exception)
-            {
-                writeToConsole = true;
-            }
-            if (String.IsNullOrEmpty(message)) return;
-
-            //message = message.Trim() + Environment.NewLine;
-            if (outputDelegate != null)
-            {
-                try
-                {
-                    outputDelegate(message);
-                }
-                catch (Exception)
-                {
-                    writeToConsole = true;
-                }
-            }
-            if (outputDelegate != writeDebugLine)
-            {
-                if (writeToConsole) writeDebugLine(message);
-            }
-            message = string.Format("[{0}]: {1}", DateTime.Now, message.Trim());
-            writeToLog0(message);
-        }
-
-        public void writeToLog0(string message)
-        {
-            LastLogMessage = message;
-            if (!IsLogging) return;
-            lock (LoggingLock)
-            {
-                //  this.LogBuffer.Add(DateTime.Now.ToString() + ": " + message + Environment.NewLine);
-                LogBuffer.Add(message);
-                if (LogBuffer.Count > MaxLogBufferSize - 1)
-                {
-                    // Write out to log file
-                    HostSystem.CreateDirectory(PathToLogs);
-
-                    Unifiable logFileName = DateTime.Now.ToString("yyyyMMdd") + ".log";
-                    FileInfo logFile = new FileInfo(HostSystem.Combine(PathToLogs, logFileName));
-                    StreamWriter writer;
-                    if (!logFile.Exists)
-                    {
-                        writer = logFile.CreateText();
-                    }
-                    else
-                    {
-                        writer = logFile.AppendText();
-                    }
-
-                    foreach (string msg in LogBuffer)
-                    {
-                        writer.WriteLine(msg);
-                    }
-                    writer.Close();
-                    LogBuffer.Clear();
-                }
-            }
-            if (!Equals(null, WrittenToLog))
-            {
-                WrittenToLog();
-            }
-        }
-
-        #endregion
-
         // Persistent user tracking
         public readonly Dictionary<string, User> BotUsers = new Dictionary<string, User>();
 
@@ -1766,7 +1649,7 @@ The AIMLbot program.
             message = message.Replace("*TIME*", DateTime.Now.ToString());
             message = message.Replace("*MESSAGE*", errorMessage);
             message = message.Replace("*RAWINPUT*", request.rawInput);
-            message = message.Replace("*USER*", request.user.UserID);
+            message = message.Replace("*USER*", request.Requester.UserID);
             StringAppendableUnifiableImpl paths = Unifiable.CreateAppendable();
             foreach (Unifiable path in request.CurrentResult.NormalizedPaths)
             {
@@ -1816,16 +1699,16 @@ The AIMLbot program.
                 {
                     object o = cloj.GetSymbol("MyUser");
                     object r = cloj.Eval(o);
-                    if (user.user != null && r != user.user)
+                    if (user.Requester != null && r != user.Requester)
                     {
-                        cloj.Intern("MyUser", user.user);
+                        cloj.Intern("MyUser", user.Requester);
                     }
                 }
                 else
                 {
-                    if (user.user != null)
+                    if (user.Requester != null)
                     {
-                        cloj.Intern("MyUser", user.user);
+                        cloj.Intern("MyUser", user.Requester);
                     }
                 }
 
@@ -2198,6 +2081,10 @@ The AIMLbot program.
             BotAsUser.removeSetting("userdir");
             NamePath = ToScriptableName(NameAsSet);
             BotAsUser.UserID = NamePath;
+
+            var OnTaskAtATimeHandler = BotAsUser.OnTaskAtATimeHandler = HeardSelfSayQueue;
+            OnTaskAtATimeHandler.Name = "TaskQueue For " + myName;
+
             BotAsUser.SaveDirectory(BotAsUser.UserDirectory);
             string dgn = NamePath + "_default";
             string hgn = NamePath + "_heardselfsay";
@@ -2276,7 +2163,8 @@ The AIMLbot program.
             return loaded;
         }
 
-        internal static void writeDebugLine(string message, params object[] args)
+        readonly public static OutputDelegate writeDebugLine = writeDebugLine_0_;
+        internal static void writeDebugLine_0_(string message, params object[] args)
         {
             bool printIt = false;
             lock (LoggedWords)
@@ -2298,7 +2186,15 @@ The AIMLbot program.
                     {
                         wasStopped = Breakpoint(real);
                     }
-                    if (!wasStopped && !printIt) DLRConsole.DebugWriteLine(real);
+                    if (!printIt)
+                    {
+                        if (!wasStopped)
+                        {
+                            DLRConsole.DebugWriteLine(real);
+                            return;
+                        }
+                        UnseenWriteline(real);
+                    }
                 }
                 catch (Exception)
                 {
@@ -2566,7 +2462,7 @@ The AIMLbot program.
                 PushSearchPath(RuntimeDirectory);
                 PushSearchPath(PathToAIML);
                 PushSearchPath(_PathToBotPersonalFiles);
-                PushSearchPath(GetUserDir(request.user.UserID));
+                PushSearchPath(GetUserDir(request.Requester.UserID));
 
                 var searchAt = RuntimeDirectories;
                 _RuntimeDirectories = searchWas;

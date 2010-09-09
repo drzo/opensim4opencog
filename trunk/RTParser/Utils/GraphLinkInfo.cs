@@ -7,7 +7,7 @@ namespace RTParser.Utils
     public class GraphLinkInfo
     {
         public static bool NoInfo;
-        protected readonly XmlNode srcNode;
+        internal XmlNode srcNode;
 
         protected GraphLinkInfo(XmlNode template)
         {
@@ -26,7 +26,7 @@ namespace RTParser.Utils
         {
             get
             {
-                if (XmlDocumentLineInfo.SkipXmlns && this.srcNode.Attributes != null)
+                if (!XmlDocumentLineInfo.SkipXmlns && this.srcNode.Attributes != null)
                     this.srcNode.Attributes.RemoveNamedItem("xmlns");
                 return srcNode.InnerXml;
             }
@@ -36,7 +36,7 @@ namespace RTParser.Utils
         {
             get
             {
-                if (XmlDocumentLineInfo.SkipXmlns && this.srcNode.Attributes != null)
+                if (!XmlDocumentLineInfo.SkipXmlns && this.srcNode.Attributes != null)
                     this.srcNode.Attributes.RemoveNamedItem("xmlns");
                 return srcNode.OuterXml;
             }
@@ -44,7 +44,7 @@ namespace RTParser.Utils
 
         public override string ToString()
         {
-            if (XmlDocumentLineInfo.SkipXmlns && this.srcNode.Attributes != null)
+            if (!XmlDocumentLineInfo.SkipXmlns && this.srcNode.Attributes != null)
                 this.srcNode.Attributes.RemoveNamedItem("xmlns");
             return srcNode.OuterXml + " " + StaticXMLUtils.LocationEscapedInfo(srcNode);
         }

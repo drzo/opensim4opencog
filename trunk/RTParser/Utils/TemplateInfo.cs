@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Xml;
 using MushDLR223.Utilities;
+using RTParser.AIMLTagHandlers;
 
 namespace RTParser.Utils
 {
@@ -14,6 +15,7 @@ namespace RTParser.Utils
         public SubQuery Query;
         public double Rating = 1.0;
         public Unifiable TextSaved;
+        string _templateKey;
 
         public TemplateInfo(XmlNode template, GuardInfo guard, Node patternNode, CategoryInfo categoryInfo)
             : base(template)
@@ -116,31 +118,10 @@ namespace RTParser.Utils
 
         #endregion
 
-        public override bool Equals(object obj)
-        {
-            //       
-            // See the full list of guidelines at
-            //   http://go.microsoft.com/fwlink/?LinkID=85237  
-            // and also the guidance for operator== at
-            //   http://go.microsoft.com/fwlink/?LinkId=85238
-            //
-
-            if (obj == null || GetType() != obj.GetType())
-            {
-                return false;
-            }
-
-            // TODO: write your implementation of Equals() here
-            //throw new NotImplementedException();
-            return base.Equals(obj);
-        }
-
-// override object.GetHashCode
+        // override object.GetHashCode
         public override int GetHashCode()
         {
-            // TODO: write your implementation of GetHashCode() here
-            //throw new NotImplementedException();
-            return base.GetHashCode();
+            return TemplateKey.GetHashCode();
         }
 
         public override string ToString()
@@ -151,7 +132,7 @@ namespace RTParser.Utils
                 return "" + TextPatternUtils.CleanWhitepaces(tryit.OuterXml) +
                        StaticXMLUtils.LocationEscapedInfo(tryit);
             }
-            string s = base.ToString();
+            //string s = base.ToString();
             /*            if (Guard != null)
                         {
                             s = s + Guard.ToString();
@@ -160,7 +141,8 @@ namespace RTParser.Utils
                         {
                             s = s + That.OuterXml;
                         }*/
-            return s;
+            return "TemplateInfoKey:" + TemplateKey;
+            //            return s;
         }
 
         public static TemplateInfo GetTemplateInfo(XmlNode template, GuardInfo guard, ThatInfo thatInfo, Node node,
@@ -177,6 +159,83 @@ namespace RTParser.Utils
             {
                 NoInfo = prev;
             }
+        }
+
+        static public string MakeKey(XmlNode templateNode, XmlNode guard, XmlNode thatInfo)
+        {
+            return MakeKey(makeStar(templateNode), makeStar(guard), true ? null : makeStar(thatInfo));
+        }
+
+        private static string makeStar(XmlNode templateNode)
+        {
+            return IsStarLikeNode(templateNode) ? "*" : templateNode.InnerXml;
+        }
+
+        private static bool IsStarLikeNode(XmlNode thatInfo)
+        {
+            if (thatInfo == null ||  thatInfo.ChildNodes.Count == 0) return true;
+            XmlNode staticAIMLUtilsXmlStar = StaticAIMLUtils.XmlStar;
+            if (thatInfo == staticAIMLUtilsXmlStar) return true;
+            XmlNode thatInfoLastChild = thatInfo.LastChild;
+            return thatInfoLastChild == staticAIMLUtilsXmlStar && thatInfo.FirstChild == thatInfoLastChild;
+        }
+
+        static public string MakeKey(string newStr, string newGuard, string newThat)
+        {
+            var f = AsStar(newStr);
+            string gs = AsStar(newGuard);
+            if (gs == "*") return StaticAIMLUtils.MakeAimlMatchable(f);
+            return StaticAIMLUtils.MakeAimlMatchable(f + " guardbom " + gs);
+        }
+
+        internal static string AsStar(string that)
+        {
+            if (that == null) return "*";
+            string thatTrim = that.Trim();
+            return thatTrim.Length == 0 ? "*" : thatTrim;
+        }
+
+        public bool AimlSameKey(string newStr, string newGuard, string newThat)
+        {
+            if (_templateKey!=null) return _templateKey == MakeKey(newStr, newGuard, newThat);
+            if(!StaticAIMLUtils.AimlSame(makeStar(Guard.Output), AsStar(newGuard))) return false;
+            if(!StaticAIMLUtils.AimlSame(makeStar(Output), AsStar(newStr))) return false;
+            return true;
+            /*
+
+            return MakeKey(oldStr, oldGuard, oldThat);
+            return StaticAIMLUtils.AimlSame(newStr, Output.OuterXml)
+                   && StaticAIMLUtils.AimlSame(newGuard, oldGuard)
+                   && StaticAIMLUtils.AimlSame(newThat, oldThat);
+             */
+        }
+
+        public bool AimlSameKey(string s)
+        {
+            if (TemplateKey != s) return false;
+            return true;
+        }
+
+        public string TemplateKey
+        {
+            get
+            {
+                if (_templateKey == null)
+                {
+                    return MakeKey(Output, Guard != null ? Guard.Output : null, That.PatternNode);
+                  //  _templateKey = MakeKey(Output, Guard != null ? Guard.Output : null, That.PatternNode);
+                }
+                return _templateKey;
+            }
+            set
+            {
+                //_templateKey = value;
+            }
+        }
+
+        public void AppendTemplate(XmlNode node, CategoryInfo category, List<XmlNode> nodes)
+        {
+            throw new NotImplementedException();
         }
     }
 

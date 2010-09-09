@@ -132,7 +132,7 @@ namespace RTParser.AIMLTagHandlers
                 return Succeed();
             }
             string currentNodeOuterXml = templateNode.OuterXml;
-            if (currentNodeOuterXml.Length > 80) currentNodeOuterXml = TextFilter.ClipString(currentNodeOuterXml, 220);
+            if (currentNodeOuterXml.Length > 280) currentNodeOuterXml = TextFilter.ClipString(currentNodeOuterXml, 280);
             writeToLog("ImmediateAiml: " + currentNodeOuterXml);
             /*
                <TestCase name="connect">

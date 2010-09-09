@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using RTParser;
 using RTParser.AIMLTagHandlers;
@@ -20,7 +21,7 @@ namespace RTParser
         DateTime StartedOn { get; set; }
         GraphMaster Graph { get; set; }
         bool IsTraced { get; set; }
-        User user { get; set; }
+        User Requester { get; set; }
         IEnumerable<Unifiable> BotOutputs { get; }
         Result CurrentResult { get;  set; }
         Unifiable Flags { get; }
@@ -63,7 +64,7 @@ namespace RTParser
 
         AIMLbot.Request CreateSubRequest(Unifiable templateNodeInnerValue, User user, RTPBot rTPBot, AIMLbot.Request request);
         bool CanUseTemplate(TemplateInfo info, Result request);
-        void writeToLog(string message, params object[] args);
+        OutputDelegate writeToLog { get; set; }
         int DebugLevel { get; set; }
         Unifiable That { get; set; }
         PrintOptions WriterOptions { get; }
@@ -105,7 +106,7 @@ namespace RTParser
         /// <summary>
         /// The user who made this request
         /// </summary>
-        public User user { get; set; }
+        public User Requester { get; set; }
 
         /// <summary>
         /// The Proccessor to which the request is being made
@@ -139,8 +140,8 @@ namespace RTParser
         {
 
             string s;
-            if (user == null) s = "NULL";
-            else s = user.UserID;
+            if (Requester == null) s = "NULL";
+            else s = Requester.UserID;
             return s + ": " + Unifiable.ToVMString(rawInput);
         }
 
@@ -165,21 +166,27 @@ namespace RTParser
                 Proof = parent.Proof;
                 this.ParentRequest = parent;
                 this.lastOptions = parent.LoadOptions;
+                this.writeToLog = parent.writeToLog;
                 Graph = parent.Graph;
                 MaxInputs = 1;
             }
             else
             {
                 if (user != null)
+                {
+                    writeToLog = user.WriteLine;
                     MaxInputs = user.MaxInputs;
+                }
                 else MaxInputs = 1;
+                
                 Proof = new Proof();
             }
+            writeToLog = writeToLog ?? bot.writeToLog;
             this.rawInput = rawInput;
             if (user != null)
             {
                 pmaybe = user.CurrentRequest;
-                this.user = user;
+                this.Requester = user;
                 if (user.CurrentRequest == null) user.CurrentRequest = this;
                 TargetSettings = user.Predicates;
                 if (parent == null)
@@ -289,12 +296,12 @@ namespace RTParser
                     var pg = ParentRequest.Graph;
                     if (pg != null) return pg;
                 }
-                if (user == null)
+                if (Requester == null)
                 {
                     if (ovGraph == null) return null;
                     return TargetBot.GetGraph(ovGraph, null);
                 }
-                GraphMaster probably = user.ListeningGraph;
+                GraphMaster probably = Requester.ListeningGraph;
                 if (ovGraph != null)
                 {
                     if (probably != null)
@@ -311,7 +318,7 @@ namespace RTParser
                         var newprobably = TargetBot.GetGraph(ovGraph, probably);
                         if (newprobably != probably)
                         {
-                            user.WriteLine("Changing request graph " + probably + " -> " + newprobably + " for " + this);
+                            Requester.WriteLine("Changing request graph " + probably + " -> " + newprobably + " for " + this);
                             probably = newprobably;
                         }
                     }
@@ -319,7 +326,7 @@ namespace RTParser
                     {
                         probably = TargetBot.GetGraph(ovGraph, TargetBot.GraphMaster);
                         {
-                            user.WriteLine("Changing request graph " + probably + " -> " + null + " for " + this);
+                            Requester.WriteLine("Changing request graph " + probably + " -> " + null + " for " + this);
                         }
                     }
                 }
@@ -353,7 +360,7 @@ namespace RTParser
                     var pg = ((QuerySettingsReadOnly)ParentRequest).GraphName;
                     if (pg != null) return pg;
                 }
-                string ugn = user.GraphName;
+                string ugn = Requester.GraphName;
                 if (ugn != null) return ugn;
                 GraphMaster gm = Graph;
                 if (gm != null) ugn = gm.ScriptingName;
@@ -386,20 +393,20 @@ namespace RTParser
         {
             get
             {
-                return user.TopicSetting;
+                return Requester.TopicSetting;
                 if (_topic != null) return _topic;
                 if (ParentRequest != null) return ParentRequest.Topic;
-                return user.TopicSetting;
+                return Requester.TopicSetting;
             }
             set
             {
                 if(true)
                 {
-                    user.TopicSetting = value;
+                    Requester.TopicSetting = value;
                     return;
                 }
                 Unifiable prev = Topic;
-                user.TopicSetting = value;
+                Requester.TopicSetting = value;
                 if (value == TargetBot.NOTOPIC)
                 {
                     if (_topic != null)
@@ -430,7 +437,7 @@ namespace RTParser
         {
             get
             {
-                var tops = user.Topics;
+                var tops = Requester.Topics;
                 if (_topic!=null)
                 {
                     if (!tops.Contains(_topic)) tops.Insert(0, _topic);
@@ -442,7 +449,7 @@ namespace RTParser
 
         public IEnumerable<Unifiable> BotOutputs
         {
-            get { return user.BotOutputs; }
+            get { return Requester.BotOutputs; }
         }
 
         public ISettingsDictionary Predicates
@@ -485,7 +492,7 @@ namespace RTParser
             }
             else
             {
-                TargetBot.writeToLog(s, args);
+                writeToLog(s, args);
             }
         }
 
@@ -520,7 +527,7 @@ namespace RTParser
 
         public AIMLbot.Result CreateResult(Request parentReq)
         {
-            var r = new AIMLbot.Result(user, TargetBot, parentReq, parentReq.CurrentResult);
+            var r = new AIMLbot.Result(Requester, TargetBot, parentReq, parentReq.CurrentResult);
             CurrentResult = r;
             r.request = this;
             return (AIMLbot.Result)CurrentResult;
@@ -529,7 +536,7 @@ namespace RTParser
         public AIMLbot.Request CreateSubRequest(Unifiable templateNodeInnerValue, User user, RTPBot rTPBot, AIMLbot.Request request)
         {
             request = (AIMLbot.Request) (request ?? this);
-            user = user ?? this.user;
+            user = user ?? this.Requester;
             rTPBot = rTPBot ?? this.TargetBot;
             var subRequest = new AIMLbot.Request(templateNodeInnerValue, user, rTPBot, request);
             Result res = request.CurrentResult;
@@ -547,20 +554,29 @@ namespace RTParser
         {
             if (info == null) return true;
             if (info.IsDisabled) return false;
-            if (!user.CanUseTemplate(info, result)) return false;
+            if (!Requester.CanUseTemplate(info, result)) return false;
+            //if (!result.CanUseTemplate(info, result)) return false;
             while (result != null)
             {
-                if (result.UsedTemplates != null && result.UsedTemplates.Contains(info))
+                var resultUsedTemplates = result.UsedTemplates;
+                if (resultUsedTemplates != null)
                 {
-                    //user.WriteLine("!CanUseTemplate ", info);
-                    return false;
+                    lock (resultUsedTemplates)
+                    {
+                        if (resultUsedTemplates.Contains(info))
+                        {
+                            //user.WriteLine("!CanUseTemplate ", info);
+                            return false;
+                        }
+                    }
                 }
                 result = result.ParentResult;
             }
             return true;
         }
 
-        public void writeToLog(string message, params object[] args)
+        public OutputDelegate writeToLog { get; set; }
+        internal void writeToLog0(string message, params object[] args)
         {
             if (!message.Contains(":")) message = "REQUEST: " + message;
             string prefix = ToString();
@@ -572,6 +588,10 @@ namespace RTParser
                 DLRConsole.DebugWriteLine(prefix);
             }
             DLRConsole.SystemFlush();
+            if (writeToLog!=writeToLog0)
+            {
+             //   writeToLog(prefix);
+            }
             TargetBot.writeToLog(prefix);
         }
 
@@ -584,8 +604,8 @@ namespace RTParser
                 if (baseDebugLevel > 0) return baseDebugLevel;
                 if (ParentRequest == null)
                 {
-                    if (user == null) return baseDebugLevel;
-                    return user.DebugLevel;
+                    if (Requester == null) return baseDebugLevel;
+                    return Requester.DebugLevel;
                 }
                 return ParentRequest.DebugLevel;
             }
@@ -602,7 +622,7 @@ namespace RTParser
                 {
                     return ParentRequest.That;
                 }
-                return user.That;
+                return Requester.That;
             }
             set { ithat = value; }
         }
@@ -617,7 +637,7 @@ namespace RTParser
                 {
                     return ParentRequest.WriterOptions;
                 }
-                return user.WriterOptions;
+                return Requester.WriterOptions;
             }
             set { iopts = value; }
         }
@@ -637,10 +657,10 @@ namespace RTParser
             {
                 if (dictionary != null) return dictionary;
                 if (CurrentQuery != null) return CurrentQuery;
-                if (user != null) return user;
+                if (Requester != null) return Requester;
                 return TargetSettings;
             }
-            if (named == "user") return CheckedValue(named, user);
+            if (named == "user") return CheckedValue(named, Requester);
             if (named == "query") return CheckedValue(named, CurrentQuery);
             if (named == "request") return CheckedValue(named, TargetSettings);
             if (named == "bot") return CheckedValue(named, TargetBot.GlobalSettings);

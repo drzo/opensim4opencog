@@ -74,14 +74,14 @@ namespace MushDLR223.Utilities
             }
             catch (Exception e)
             {
-                System.Console.Error.WriteLine("" + e);
+                DLRConsole.SYSTEM_ERR_WRITELINE("" + e);
                 try
                 {
                     output(toWrite);
                 }
                 catch (Exception)
                 {
-                    System.Console.Error.WriteLine("" + toWrite);
+                    DLRConsole.SYSTEM_ERR_WRITELINE("" + toWrite);
                 }
             }
         }

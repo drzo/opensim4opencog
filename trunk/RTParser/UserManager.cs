@@ -864,5 +864,71 @@ namespace RTParser
             }
             return defaultVal;
         }
+
+        public string OutputResult(Result res, OutputDelegate console)
+        {
+            User CurrentUser = res.user;
+            string user = CurrentUser.UserName;
+            string useOut = res.EnglishSentences;
+            double vscored;
+
+            double scored = res.Score;
+
+            bool useNameInOutput = false;
+            if (!string.IsNullOrEmpty(useOut))
+            {
+                string oTest = ToEnglish(useOut);
+                if (oTest != null && oTest.Length > 2)
+                {
+                    useOut = oTest;
+                }
+
+                string tUser = CurrentUser.UserName;
+                if (tUser.Length > 2)
+                {
+                    var orCreateUser = FindOrCreateUser(tUser);
+                    if (orCreateUser != CurrentUser)
+                    {
+                        CurrentUser = orCreateUser;
+                        user = orCreateUser.UserName;
+                        useNameInOutput = true;
+                    }
+                }
+            }
+            if (CurrentUser.NameUsedOrGivenTime.Subtract(DateTime.Now).Minutes > 1)
+            {
+                useNameInOutput = true;
+            }
+            if (string.IsNullOrEmpty(useOut))
+            {
+                useOut = "Interesting.";
+                res.TemplateRating = Math.Max(res.Score, 0.5d);
+            }
+            else useOut = useOut.Replace("_", " ").Replace("  ", " ").Trim();
+
+            if (useNameInOutput)
+            {
+                CurrentUser.NameUsedOrGivenTime = DateTime.Now;
+                if (!useOut.ToLower().Contains(user.ToLower()))
+                {
+                    useOut = user + ", " + useOut;
+                }
+            }
+            var stringPlit = useOut.Split(new[] {"mene value="}, StringSplitOptions.RemoveEmptyEntries);
+            string vstring = stringPlit.Length < 2
+                                 ? null
+                                 : stringPlit[2].Split(new char[] {' ', '\n'}, StringSplitOptions.RemoveEmptyEntries)[0];
+            if (vstring == null || double.TryParse(vstring, out vscored))
+            {
+                useOut = useOut + " mene value=" + res.Score * 1.4;
+            }
+            console(useOut);
+            return useOut;
+        }
+
+        public bool IsInteractiveUser(User value)
+        {
+            return value != null && value != BotAsUser;
+        }
     }
 }

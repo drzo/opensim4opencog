@@ -50,7 +50,7 @@ namespace RTParser.Utils
             }
             string p = StaticAIMLUtils.MakeAimlMatchable(FullPath.AsString().Replace("_", "*"));
             p = "<srai>" + p + "</srai>";
-            string t =  StaticAIMLUtils.MakeAimlMatchable( newTemplateInfo.InnerXml);
+            string t = StaticAIMLUtils.MakeAimlMatchable(newTemplateInfo.InnerXml);
 
             int firstTP = FirstMismatch(t, p);
             int lastTP = LastMismatch(t, p);

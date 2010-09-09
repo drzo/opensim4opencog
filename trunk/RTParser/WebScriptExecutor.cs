@@ -23,7 +23,10 @@ namespace RTParser.Web
 
         public void WriteLine(string s, params object[] args)
         {
-            TheBot.writeToLog("HTTPD: " + s, args);
+            s = DLRConsole.SafeFormat(s, args);
+            if (s.StartsWith("Trace")) return;
+            if (s.StartsWith("Debug")) return;
+            TheBot.writeToLog("HTTPD: " + s);
         }
 
         #endregion

@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Threading;
+using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
-using RTParser;
 using RTParser.Utils;
 using RTParser.Variables;
 using UPath = RTParser.Unifiable;
@@ -14,8 +13,91 @@ namespace RTParser
     /// <summary>
     /// Encapsulates information about the result of a request to the bot
     /// </summary>
-    abstract public class Result
+    public abstract class Result
     {
+        public static int MaxPrintResults = 1;
+        public SubQuery _CurrentQuery;
+        private string AlreadyUsed = "xtxtxtxtxtxtxtxtxxt";
+
+        /// <summary>
+        /// The bot that is providing the answer
+        /// </summary>
+        public RTPBot TargetBot;
+
+        /// <summary>
+        /// The amount of time the request took to process
+        /// </summary>
+        public TimeSpan Duration;
+
+        public DateTime EndedOn = DateTime.MaxValue;
+
+        /// <summary>
+        /// The individual sentences that constitute the raw input from the user
+        /// </summary>
+        public List<Unifiable> InputSentences = new List<Unifiable>();
+
+        public int LinesToUse = 1;
+
+        /// <summary>
+        /// The normalized sentence(s) (paths) fed into the graphmaster
+        /// </summary>
+        public List<Unifiable> NormalizedPaths = new List<Unifiable>();
+
+        /// <summary>
+        /// The individual sentences produced by the bot that form the complete response
+        /// </summary>
+        public List<string> OutputSentences = new List<string>();
+
+        public Result ParentResult;
+
+        /// <summary>
+        /// The request from the user
+        /// </summary>
+        public Request request;
+
+        private bool Started = false;
+
+        /// <summary>
+        /// The subQueries processed by the bot's graphmaster that contain the templates that 
+        /// are to be converted into the collection of Sentences
+        /// </summary>
+        public List<SubQuery> SubQueries = new List<SubQuery>();
+
+        public TemplateInfo TemplateOfRating;
+        public double TemplateRating = 0.0d;
+        private List<TemplateInfo> UsedTemplates1 = new List<TemplateInfo>();
+
+        /// <summary>
+        /// The user for whom this is a result
+        /// </summary>
+        public User user;
+
+        public OutputDelegate writeToLog = RTPBot.writeDebugLine;
+
+        /// <summary>
+        /// Ctor
+        /// </summary>
+        /// <param name="user">The user for whom this is a result</param>
+        /// <param name="bot">The bot providing the result</param>
+        /// <param name="request">The request that originated this result</param>
+        public Result(User user, RTPBot bot, Request request, Result parent)
+        {
+            this.user = user;
+            this.TargetBot = bot;
+            this.request = request;
+            ParentResult = parent;
+            if (ParentResult != null)
+            {
+                writeToLog = ParentResult.writeToLog;
+            }
+            else if (bot != null)
+            {
+                writeToLog = bot.writeToLog;
+            }
+            writeToLog = writeToLog ?? user.WriteLine;
+            writeToLog = writeToLog ?? request.WriteLine;
+            // this.request.CurrentResult = this;
+        }
 
         public GraphMaster Graph
         {
@@ -26,35 +108,150 @@ namespace RTParser
         public QueryList TopLevel
         {
             get
-           {
-               if (request != null) return request.TopLevel;
-               return request.TopLevel;               
-           }
+            {
+                if (request != null) return request.TopLevel;
+                return request.TopLevel;
+            }
             set { throw new NotImplementedException(); }
         }
-
-        public static int MaxPrintResults = 1;
-        private List<TemplateInfo> UsedTemplates1 = new List<TemplateInfo>();
-
-        /// <summary>
-        /// The subQueries processed by the bot's graphmaster that contain the templates that 
-        /// are to be converted into the collection of Sentences
-        /// </summary>
-        public List<Utils.SubQuery> SubQueries = new List<Utils.SubQuery>();
 
 
         public double Score
         {
-            get
+            get { return TemplateRating; }
+        }
+
+        /// <summary>
+        /// If the query is being traced
+        /// </summary>
+        public virtual bool IsTraced { get; set; }
+
+        public string SetOutput
+        {
+            set
             {
-                return TemplateRating;
+                lock (OutputSentences)
+                {
+                    AlreadyUsed = value;
+                    OutputSentences.Clear();
+                    OutputSentences.Add(value);
+                    IsComplete = true;
+                }
             }
         }
 
-        public double TemplateRating = 0.0d;
-        public TemplateInfo TemplateOfRating;
+        /// <summary>
+        /// The raw input from the user
+        /// </summary>
+        public Unifiable RawInput
+        {
+            get { return request.rawInput; }
+        }
 
-        private bool Started = false;
+        /// <summary>
+        /// The result from the bot with logging and checking
+        /// </summary>
+        public Unifiable Output
+        {
+            get
+            {
+                lock (OutputSentences)
+                    if (OutputSentences.Count > 0)
+                    {
+                        return RawOutput;
+                    }
+                    else
+                    {
+                        if (request.hasTimedOut)
+                        {
+                            writeToLog("ERROR: TIMEOUT on " + RawInput + " from the user with an id: " + user.UserID);
+                            return Unifiable.Empty;
+                            return TargetBot.TimeOutMessage;
+                        }
+                        else
+                        {
+                            var paths = Unifiable.CreateAppendable();
+                            foreach (Unifiable pattern in NormalizedPaths)
+                            {
+                                //return pattern;
+                                paths.Append(pattern.LegacyPath + Environment.NewLine);
+                            }
+                            writeToLog("The bot could not find any response for the input: " + RawInput +
+                                       " with the path(s): " +
+                                       Environment.NewLine + paths.ToString() + " from the user with an id: " +
+                                       user.UserID.AsString());
+                            return Unifiable.Empty;
+                        }
+                    }
+            }
+        }
+
+        public string EnglishSentences
+        {
+            get { return CollectString(MaxPrintResults, OutputSentences, TargetBot.ToEnglish, " "); }
+        }
+
+
+        /// <summary>
+        /// Returns the raw sentences without any logging 
+        /// </summary>
+        public string RawOutput
+        {
+            get { return CollectString(MaxPrintResults, OutputSentences, TargetBot.ToEnglish, " "); }
+        }
+
+        public bool IsEmpty
+        {
+            get { return OutputSentenceCount == 0; }
+        }
+
+        public int OutputSentenceCount
+        {
+            get { lock (OutputSentences) return OutputSentences.Count; }
+        }
+
+        public ISettingsDictionary Predicates
+        {
+            get { return user.Predicates; }
+        }
+
+        public SubQuery CurrentQuery
+        {
+            get
+            {
+                if (_CurrentQuery != null) return _CurrentQuery;
+                Result r = ParentResult;
+                while (r != null)
+                {
+                    SubQuery r_CurrentQuery = r._CurrentQuery;
+                    if (r_CurrentQuery != null) return r_CurrentQuery;
+                    r = r.ParentResult;
+                }
+                return null;
+            }
+        }
+
+        public bool IsComplete
+        {
+            get { return EndedOn < DateTime.Now; }
+            set { EndedOn = value ? DateTime.Now : DateTime.MaxValue; }
+        }
+
+        public bool IsSailent
+        {
+            get
+            {
+                if (OutputSentenceCount == 0) return false;
+                if (RawOutput.Trim().Length == 0) return false;
+                return true;
+            }
+        }
+
+        public IList<TemplateInfo> UsedTemplates
+        {
+            get { return UsedTemplates1; }
+        }
+
         public void AddSubqueries(QueryList queries)
         {
             if (queries.PatternCount == 0)
@@ -66,7 +263,7 @@ namespace RTParser
             {
                 if (IsTraced)
                 {
-                    bot.writeChatTrace("AIMLTRACE SQ: " + query);
+                    writeToLog("AIMLTRACE SQ: " + query);
                 }
                 SubQueries.Add(query);
             }
@@ -74,43 +271,23 @@ namespace RTParser
             Started = true;
         }
 
-        /// <summary>
-        /// If the query is being traced
-        /// </summary>
-        public virtual bool IsTraced { get; set; }
-
-        private string AlreadyUsed = "xtxtxtxtxtxtxtxtxxt";
-        public int LinesToUse = 1;
-
-        public string SetOutput
-        {
-            set
-            {
-                lock (OutputSentences)
-                {
-                    AlreadyUsed = value;
-                    OutputSentences.Clear();
-                    OutputSentences.Add(value);                    
-                }
-            }
-        }
         public void AddOutputSentences(TemplateInfo ti, string unifiable)
         {
             AddOutputSentences0(ti, unifiable);
         }
+
         public void AddOutputSentences0(TemplateInfo ti, string unifiable)
         {
-            
             if (null == unifiable)
             {
-                bot.writeToLog("ERROR assing null output " + ti);
+                writeToLog("ERROR assing null output " + ti);
                 if (ti == null) return;
                 return;
             }
             unifiable = unifiable.Trim();
-            if (unifiable=="")
+            if (unifiable == "")
             {
-                bot.writeToLog("ERROR assing '' output " + ti);
+                writeToLog("ERROR assing '' output " + ti);
                 return;
             }
             unifiable = unifiable + " ";
@@ -143,8 +320,7 @@ namespace RTParser
                     {
                         TemplateOfRating = ti;
                         TemplateRating = ThisRating;
-                        bot.writeChatTrace("AIMLTRACE OUTPUT RATING={0} TI: {1} U: {2}", ThisRating, ti, unifiable);
-
+                        writeToLog("AIMLTRACE OUTPUT RATING={0} TI: {1} U: {2}", ThisRating, ti, unifiable);
                     }
                     if (!Unifiable.IsNullOrEmpty(unifiable))
                     {
@@ -190,12 +366,13 @@ namespace RTParser
 #endif
                 if (unifiable.ToString().Contains("&"))
                 {
-                    OutputSentences.Remove(unifiable);                    
+                    OutputSentences.Remove(unifiable);
                 }
                 if (StaticXMLUtils.ContainsXml(unifiable))
                 {
-                    bot.writeToLog("ERROR:  AddRssult: " + user.UserID + " " + unifiable);
+                    writeToLog("ERROR:  AddRssult: " + user.UserID + " " + unifiable);
                 }
+                EndedOn = DateTime.Now;
                 OutputSentences.Add(unifiable);
             }
         }
@@ -204,174 +381,21 @@ namespace RTParser
         {
             lock (OutputSentences) OutputSentences.Add(string.Format(format, args));
         }
-/*
-        public Result()
+
+        private static string CollectString(int resultsLeft, IEnumerable<string> sentences, Func<string, string> english,
+                                            string split)
         {
-
-        }*/
-        /// <summary>
-        /// The bot that is providing the answer
-        /// </summary>
-        public RTPBot bot;
-
-        /// <summary>
-        /// The user for whom this is a result
-        /// </summary>
-        public User user;
-
-        /// <summary>
-        /// The request from the user
-        /// </summary>
-        public Request request;
-
-        /// <summary>
-        /// The raw input from the user
-        /// </summary>
-        public Unifiable RawInput
-        {
-            get
-            {
-                return this.request.rawInput;
-            }
-        }
-
-        /// <summary>
-        /// The normalized sentence(s) (paths) fed into the graphmaster
-        /// </summary>
-        public List<UPath> NormalizedPaths = new List<UPath>();
-
-        /// <summary>
-        /// The amount of time the request took to process
-        /// </summary>
-        public TimeSpan Duration;
-
-        /// <summary>
-        /// The result from the bot with logging and checking
-        /// </summary>
-        public Unifiable Output
-        {
-            get
-            {
-                lock (OutputSentences) if (OutputSentences.Count > 0)
-                    {
-                        return this.RawOutput.Trim().Replace("  ", " ");
-                    }
-                    else
-                    {
-                        if (this.request.hasTimedOut)
-                        {
-
-                            this.bot.writeToLog("ERROR: TIMEOUT on " + this.RawInput + " from the user with an id: " + this.user.UserID);
-                            return Unifiable.Empty;
-                            return this.bot.TimeOutMessage;
-                        }
-                        else
-                        {
-                            var paths = Unifiable.CreateAppendable();
-                            foreach (UPath pattern in this.NormalizedPaths)
-                            {
-                                //return pattern;
-                                paths.Append(pattern.LegacyPath + Environment.NewLine);
-                            }
-                            this.bot.writeToLog("The bot could not find any response for the input: " + this.RawInput + " with the path(s): " +
-                                Environment.NewLine + paths.ToString() + " from the user with an id: " + this.user.UserID.AsString());
-                            return Unifiable.Empty;
-                        }
-                    }
-            }
-        }
-
-        /// <summary>
-        /// Returns the raw sentences without any logging 
-        /// </summary>
-        public string RawOutput
-        {
-            get
-            {
-                if (IsEmpty)
+            var result = new StringBuilder();
+            lock (sentences)
+                foreach (string sentence in sentences)
                 {
-
+                    String sentenceForOutput = english(sentence);
+                    if (string.IsNullOrEmpty(sentenceForOutput)) continue;
+                    result.Append(sentenceForOutput + split);
+                    resultsLeft--;
+                    if (resultsLeft < 1) return result.ToString();
                 }
-                int resultsLeft = MaxPrintResults;
-                var result = new StringBuilder();
-                lock (OutputSentences) foreach (string sentence in OutputSentences)
-                    {
-                        String sentenceForOutput = sentence.Replace("  ", " ").Trim();
-
-                        if (!this.checkEndsAsSentence(sentenceForOutput))
-                        {
-                            sentenceForOutput += ".";
-                        }
-                        result.Append(sentenceForOutput + " ");
-                        resultsLeft--;
-                        if (resultsLeft < 1) return result.ToString();
-                    }
-                return result.ToString();//.Trim();
-            }
-        }
-
-        public bool IsEmpty { get { return OutputSentenceCount == 0; } }
-
-        public int OutputSentenceCount
-        {
-            get { lock (OutputSentences) return OutputSentences.Count; }
-        }
-
-        public ISettingsDictionary Predicates
-        {
-            get { return user.Predicates; }
-        }
-
-        /// <summary>
-        /// The individual sentences produced by the bot that form the complete response
-        /// </summary>
-        public List<string> OutputSentences = new List<string>();
-
-        /// <summary>
-        /// The individual sentences that constitute the raw input from the user
-        /// </summary>
-        public List<Unifiable> InputSentences = new List<Unifiable>();
-
-        public SubQuery _CurrentQuery;
-        public SubQuery CurrentQuery
-        {
-            get
-            {
-                if (_CurrentQuery != null) return _CurrentQuery;
-                Result r = ParentResult;
-                while (r != null)
-                {
-                    SubQuery r_CurrentQuery = r._CurrentQuery;
-                    if (r_CurrentQuery != null) return r_CurrentQuery;
-                    r = r.ParentResult;
-                }
-                return null;
-            }
-        }
-        public Result ParentResult;
-        public bool IsSailent
-        {
-            get
-            {
-                if (OutputSentenceCount == 0) return false;
-                if (RawOutput.Trim().Length == 0) return false;
-                return true;
-            }
-        }
-
-        /// <summary>
-        /// Ctor
-        /// </summary>
-        /// <param name="user">The user for whom this is a result</param>
-        /// <param name="bot">The bot providing the result</param>
-        /// <param name="request">The request that originated this result</param>
-        public Result(User user, RTPBot bot, Request request, Result parent)
-        {
-            this.user = user;
-            this.bot = bot;
-            this.request = request;
-            this.ParentResult = parent;
-            // this.request.CurrentResult = this;
+            return result.ToString();
         }
 
         /// <summary>
@@ -385,38 +409,27 @@ namespace RTParser
                 return "-no-started-subqueries=" + SubQueries.Count;
                 if (IsEmpty) return "";
             }
-            if (IsEmpty) return "";
-            return this.Output;
-        }
-
-        /// <summary>
-        /// Checks that the provided sentence ends with a sentence splitter
-        /// </summary>
-        /// <param name="sentence">the sentence to check</param>
-        /// <returns>True if ends with an appropriate sentence splitter</returns>
-        private bool checkEndsAsSentence(string sentence)
-        {
-            sentence = sentence.Trim();
-            if (sentence.EndsWith("?")) return true;
-            foreach (Unifiable splitter in this.bot.Splitters)
+            if (IsComplete)
             {
-                if (sentence.EndsWith(splitter))
-                {
-                    return true;
-                }
             }
-            return false;
+            if (IsEmpty) return "";
+            return Output;
         }
 
         public Unifiable GetOutputSentence(int sentence)
         {
             lock (OutputSentences) return OutputSentences[sentence];
         }
-        public IList<TemplateInfo> UsedTemplates
+
+        public void RotateUsedTemplates()
         {
-            get
             {
-                return UsedTemplates1;
+                var temps = UsedTemplates;
+                if (temps != null)
+                    foreach (TemplateInfo info in temps)
+                    {
+                        info.GraphmasterNode.RotateTemplate(info);
+                    }
             }
         }
     }
