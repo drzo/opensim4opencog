@@ -30,13 +30,17 @@ namespace AIMLbot
         }
     }
     public class Request : RTParser.RequestImpl
-    {
+    {/*
         public Request(String rawInput, RTParser.User user, RTPBot bot)
             : this(rawInput, user, bot, null)
         {
-        }
+        }*/
         public Request(String rawInput, RTParser.User user, RTPBot bot, RTParser.Request r)
-            : base(rawInput, user, bot, r)
+            : base(rawInput, user, bot, r, null)
+        {
+        }
+        public Request(String rawInput, RTParser.User user, RTPBot bot, RTParser.Request r, RTParser.User targetUser)
+            : base(rawInput, user, bot, r, targetUser)
         {
         }
     }

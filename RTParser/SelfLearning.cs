@@ -161,7 +161,7 @@ namespace RTParser
                     r.writeToLog = writeDebugLine;
                     r.IsTraced = false;
                     r.TimesOutAt = DateTime.Now + TimeSpan.FromSeconds(20);
-                    return ChatWithUser(r, BotAsUser, HeardSelfSayGraph);
+                    return ChatWithUser(r, BotAsUser, LastUser,  HeardSelfSayGraph);
                 }
                 catch (Exception e)
                 {

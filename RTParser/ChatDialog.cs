@@ -209,17 +209,19 @@ namespace RTParser
 
         #region Conversation methods
 
-        private Result GlobalChatWithUser(string input, string user, OutputDelegate traceConsole, bool saveResults)
+        private Result GlobalChatWithUser(string input, string user, string otherName, OutputDelegate traceConsole, bool saveResults)
         {
             traceConsole = traceConsole ?? writeDebugLine;
             User CurrentUser = LastUser;
+            User targetUser = FindOrCreateUser(otherName);
             pMSM.clearEvidence();
             pMSM.clearNextStateValues();
             //  myUser.TopicSetting = "collectevidencepatterns";
             RequestImpl r = GetRequest(input, user);
             r.IsTraced = true;
             r.writeToLog = traceConsole;
-            Result res = Chat0(r, r.Graph);
+            r.TargetUser = targetUser;
+            Result res = ChatWithUser(r, r.Requester, BotAsUser, r.Graph);
             string useOut = null;
             //string useOut = resOutput;
             if (!res.IsEmpty)
@@ -311,7 +313,7 @@ namespace RTParser
             request.Graph = G;
             try
             {
-                AIMLbot.Result v = Chat0(request, G);
+                AIMLbot.Result v = ChatWithUser(request, request.Requester, BotAsUser, G);
                 return v;
             }
             finally
@@ -320,30 +322,43 @@ namespace RTParser
             }
         }
 
-        public AIMLbot.Result Chat0(Request request, GraphMaster G)
+        public AIMLbot.Result ChatWithUser(Request request, User user, User target, GraphMaster G)
         {
+            var originalRequestor = request.Requester;
             bool isTraced = request.IsTraced || G == null;
-            User user = request.Requester ?? LastUser;
+            user = user ?? request.Requester ?? LastUser;
             UndoStack undoStack = UndoStack.GetStackFor(request);
-            AIMLbot.Result res;
             undoStack.pushValues(user.Predicates, "rawinput", request.rawInput);
             undoStack.pushValues(user.Predicates, "input", request.rawInput);
+            AIMLbot.Result res = null;
             lock (user.QueryLock)
             {
-                res = ChatWithUser(request, user, G);
-                // ReSharper disable ConditionIsAlwaysTrueOrFalse
-                if (res.OutputSentenceCount == 0)
-                // ReSharper restore ConditionIsAlwaysTrueOrFalse
+                try
                 {
-                    request.IncreaseLimits(1);
-                    res = ChatWithUser(request, user, G);
+                    res = ChatWithRequest4(request, user, target, G);
+                    // ReSharper disable ConditionIsAlwaysTrueOrFalse
+                    if (res.OutputSentenceCount == 0)
+                    // ReSharper restore ConditionIsAlwaysTrueOrFalse
+                    {
+                        request.UndoAll();
+                        request.IncreaseLimits(1);
+                        res = ChatWithRequest4(request, user, target, G);
+                    }
+                }
+                finally
+                {
+                    PopulateUserWithResult(originalRequestor, request, res);
+                    request.Commit();
+                    request.UndoAll();
+                    undoStack.UndoAll();
+                    request.Requester = originalRequestor;
                 }
             }
-            undoStack.UndoAll();
+
             return res;
         }
 
-        public AIMLbot.Result ChatWithUser(Request request, User user, GraphMaster G)
+        public AIMLbot.Result ChatWithRequest4(Request request, User user, User target, GraphMaster G)
         {
             var originalRequestor = request.Requester;
             try
@@ -483,10 +498,12 @@ namespace RTParser
                             DLRConsole.SystemFlush();
                         }
                     }
+                    request.UndoAll();
                     request.IncreaseLimits(1);
                     ProccessTemplates(request, result, out solutions, out hasMoreSolutions);
                     if (result.OutputSentenceCount == 0)
                     {
+                        request.UndoAll();
                         request.IncreaseLimits(1);
                         writeToLog("AIMLTRACE: bumping up limits 2 times " + request);
                         ProccessTemplates(request, result, out solutions, out hasMoreSolutions);
@@ -934,7 +951,16 @@ namespace RTParser
                     createdOutput = false;
                 }
                 if (!createdOutput && isTraced && request.GraphsAcceptingUserInput)
+                {
                     writeToLog("UNUSED '{0}' TEMPLATE={1}", o, ParentTextAndSourceInfo(templateNode));
+                    if (templateInfo != null)
+                    {
+                        templateInfo.IsDisabled = true;
+                        request.AddUndo(() => { 
+                            templateInfo.IsDisabled = false; });
+                    }
+                }
+
                 return tagHandler;
             }
 
@@ -1158,7 +1184,7 @@ namespace RTParser
             Unifiable cp = tagHandler.CompleteAimlProcess();
             if (tagHandler.QueryHasFailed)
             {
-                return Unifiable.FAIL_NIL;
+                return Unifiable.Empty;
             }
             return cp;
         }

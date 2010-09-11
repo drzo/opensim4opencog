@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using System.Threading;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using RTParser;
@@ -70,11 +71,17 @@ namespace RTParser
         Unifiable That { get; set; }
         PrintOptions WriterOptions { get; }
         ISettingsDictionary TargetListenerSettings { get; set; }
+        User TargetUser { get; set; }
         // inherited from base  string GraphName { get; set; }
         ISettingsDictionary GetSubstitutions(string name, bool b);
         GraphMaster GetGraph(string srai);
         void AddOutputSentences(TemplateInfo ti, string nai, Result result);
         ISettingsDictionary GetDictionary(string named);
+
+        void AddUndo(Action action);
+        void Commit();
+        void UndoAll();
+        void AddSideEffect(string effect, ThreadStart start);
     }
 
     /// <summary>
@@ -163,11 +170,21 @@ namespace RTParser
         /// <param name="rawInput">The raw input from the user</param>
         /// <param name="user">The user who made the request</param>
         /// <param name="bot">The bot to which this is a request</param>
-        public RequestImpl(Unifiable rawInput, User user, RTPBot bot, Request parent)
+        public RequestImpl(Unifiable rawInput, User user, RTPBot bot, Request parent, User targetUser)
             : base(user) // Get query settings intially from user
         {
             Request pmaybe = null;
             DebugLevel = -1;
+            if (targetUser == null)
+            {
+                if (parent != null) targetUser = parent.TargetUser;
+                if (targetUser == null)
+                {
+                    if (user == bot.BotAsUser) targetUser = bot.LastUser;
+                    else targetUser = bot.BotAsUser;
+                }
+            }
+            _targetUser = targetUser;
             UsedResults = new List<Result>();
             Flags = "Nothing";
             ApplySettings(user, this);
@@ -656,6 +673,8 @@ namespace RTParser
         }
 
         private ISettingsDictionary _targetYOUFromSpeaker;
+        private User _targetUser;
+
         public ISettingsDictionary TargetListenerSettings
         {
             get
@@ -670,6 +689,16 @@ namespace RTParser
             set { _targetYOUFromSpeaker = value; }
         }
 
+        public User TargetUser
+        {
+            get
+            {
+                if (_targetUser != null) return _targetUser;
+                return ParentRequest.TargetUser;
+            }
+            set { _targetUser = value; }
+        }
+
         public ISettingsDictionary GetSubstitutions(string named, bool createIfMissing)
         {
             return TargetBot.GetDictionary(named, "substitutions", createIfMissing);
@@ -679,6 +708,70 @@ namespace RTParser
         {
             return GetDictionary(named, CurrentQuery);
         }
+
+        public void AddUndo(Action undo)
+        {
+            lock (this)
+            {
+                UndoStack.GetStackFor(this).AddUndo(() => undo());
+            }
+        }
+        public void UndoAll()
+        {
+            lock (this)
+            {
+                UndoStack.GetStackFor(this).UndoAll();
+            }
+        }
+        private readonly List<KeyValuePair<string, ThreadStart>> commitHooks = new List<KeyValuePair<string, ThreadStart>>();
+        public static void DoAll(IEnumerable<KeyValuePair<string, ThreadStart>> todo)
+        {
+            lock (todo)
+            {
+                {
+                    foreach (KeyValuePair<string, ThreadStart> start in todo)
+                    {
+                        DoTask(start);
+                    }
+                }
+            }
+        }
+
+        private static void DoTask(KeyValuePair<string, ThreadStart> start)
+        {
+            try
+            {
+                start.Value();
+            }
+            catch (Exception exception)
+            {
+                RTPBot.writeDebugLine("ERROR in " + start.Key + " " + exception);
+            }
+        }
+
+        public void Commit()
+        {
+            if (commitHooks == null)
+            {
+                DoAll(commitHooks);
+            }
+            CommitNow = true;
+        }
+
+        public bool CommitNow = true;
+        public void AddSideEffect(string name, ThreadStart action)
+        {
+            KeyValuePair<string, ThreadStart> newKeyValuePair = new KeyValuePair<string, ThreadStart>(name, action);
+            if (CommitNow)
+            {
+                DoTask(newKeyValuePair);
+            }
+            else
+            {
+                commitHooks.Add(newKeyValuePair);
+            }
+        }
+
         public ISettingsDictionary GetDictionary(string named,  ISettingsDictionary dictionary)
         {
             if (named == null)

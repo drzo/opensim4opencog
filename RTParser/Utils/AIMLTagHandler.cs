@@ -769,16 +769,21 @@ namespace RTParser.Utils
             return v;
         }
 
-        protected virtual void AddSideEffect(ThreadStart func)
+        protected virtual void AddSideEffect(string namedEffect, ThreadStart func)
         {
-            if (Parent == null)
+            if (QueryHasFailed)
             {
-                query.AddSideEffect(func);
+                writeToLog("SKIPPING " + namedEffect);
+                return;
+            }
+            AIMLTagHandler tagHandler = FirstTagHandlerOrOuterMost("template");
+            if (Parent == null || tagHandler == this || tagHandler == null)
+            {
+                query.AddSideEffect(namedEffect, func);
             }
             else
             {
-                AIMLTagHandler tagHandler = FirstTagHandlerOrOuterMost("template");
-                tagHandler.AddSideEffect(func);
+                tagHandler.AddSideEffect(namedEffect, func);
             }
         }
 

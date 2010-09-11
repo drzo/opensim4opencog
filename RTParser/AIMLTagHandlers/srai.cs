@@ -65,7 +65,8 @@ namespace RTParser.AIMLTagHandlers
             {
                 if (this.templateNode.InnerText.Length > 0)
                 {
-                    Request subRequest = new AIMLbot.Request(this.templateNode.InnerText, (AIMLbot.User)this.user, (AIMLbot.Bot)this.Proc);
+                    Request subRequest = new AIMLbot.Request(this.templateNode.InnerText, (AIMLbot.User) this.user,
+                                                             (AIMLbot.Bot) this.Proc, null);
                     subRequest.StartedOn = this.request.StartedOn; // make sure we don't keep adding time to the request
                     Result subQuery = this.Proc.Chat(subRequest);
                     this.request.hasTimedOut = subRequest.hasTimedOut;
@@ -93,12 +94,16 @@ namespace RTParser.AIMLTagHandlers
                         writeToLog("WARNING Depth pretty deep " + templateNode + " returning empty");
                         return Unifiable.Empty;
                     }
-                    RecurseResult = UseOriginalProcess ? (Unifiable) OriginalProcessChange() : ProcessChange0();
-                }
-                catch (Exception)
-                {
-                    user.Exit(this);
+                    RecurseResult = UseOriginalProcess ? (Unifiable)OriginalProcessChange() : ProcessChange0();
                     templateNode.InnerXml = "+" + RecurseResult;
+                }
+                catch (Exception e)
+                {
+                    writeToLogWarn("" + e);
+                }
+                finally
+                {
+                    user.Exit(this); 
                 }
             }
             return RecurseResult;
@@ -216,7 +221,7 @@ namespace RTParser.AIMLTagHandlers
                             //subRequest.result = newresult;
                             user.SuspendAdd = true;
                             if (request.IsTraced) subRequest.IsTraced = !showDebug;
-                            subResult = mybot.Chat0(subRequest, subRequest.Graph);
+                            subResult = mybot.ChatWithRequest4(subRequest, user, request.TargetUser, subRequest.Graph);
                         }
                         finally
                         {

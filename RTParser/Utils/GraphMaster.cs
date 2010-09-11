@@ -696,7 +696,7 @@ namespace RTParser.Utils
                             request.IsTraced = false;
                         request.Graph = p;
                         request.CurrentResult = null;
-                        AIMLbot.Result r = proc.Chat0(request, p);
+                        AIMLbot.Result r = proc.ChatWithUser(request, request.Requester, request.TargetUser, p);
                         if (!r.IsEmpty) pl.Add(r);
                     }
                     finally
