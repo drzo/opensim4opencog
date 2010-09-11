@@ -412,9 +412,11 @@ namespace MushDLR223.Utilities
                 Busy = false;
 
                 TASK evt;
+                int evtCount;
                 lock (EventQueueLock)
                 {
-                    if (EventQueue.Count > 0)
+                    evtCount = EventQueue.Count;
+                    if (evtCount > 0)
                     {
                         evt = EventQueue.First.Value;
                         EventQueue.RemoveFirst();
@@ -429,9 +431,13 @@ namespace MushDLR223.Utilities
                 {
                     DoNow(evt);
                     if (PauseBetweenOperations > TimeSpan.Zero) Thread.Sleep(PauseBetweenOperations);
+                    // avoid reset/set semantics ?
+                    if (evtCount > 1) continue;
+
                 }
                 else
                 {
+                    // avoid reset/set semantics ?
                     lock (EventQueueLock)
                         if (EventQueue.Count > 0)
                         {
@@ -447,7 +453,8 @@ namespace MushDLR223.Utilities
                         Thread.Sleep(TOO_SHORT_INTERVAL);
                         continue;
                     }
-                     WaitOne();
+                    if (evtCount > 1) continue;
+                    WaitOne();
                 }
                 Busy = false;
             }
@@ -479,7 +486,7 @@ namespace MushDLR223.Utilities
                                      return r;
                                  }                                
                                  // ReSharper disable ConditionIsAlwaysTrueOrFalse
-                                 return true;
+                                 return r;
                                  // ReSharper restore ConditionIsAlwaysTrueOrFalse
                              });
         }
