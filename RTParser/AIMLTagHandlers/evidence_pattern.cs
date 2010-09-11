@@ -31,13 +31,15 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "evidencepattern")
+            if (CheckNode("evidencepattern"))
             {
                 try
                 {
+                    var varMSM = this.botActionMSM;
+
                     string payload = templateNodeInnerText.ToValue(query);
 
-                    string evidence = GetAttribValue("evidence", this.user.bot.pMSM.lastDefEvidence );
+                    string evidence = GetAttribValue("evidence", varMSM.lastDefEvidence );
                     string prob_str = GetAttribValue("prob", "1.0");
                     double prob = double.Parse(prob_str);
                     //string quote = "" + '\u0022' + "";
@@ -51,13 +53,14 @@ namespace RTParser.AIMLTagHandlers
                                          //@"</aiml>";
                     //this.user.bot.AddAiml(evidenceCode);
                     GraphMaster myGraph = Proc.GetGraph("msm", request.Graph);
-                    this.user.bot.AddAiml(myGraph, evidenceCode);
+                    AddSideEffect("ADD AIML " + evidenceCode, () => this.user.bot.AddAiml(myGraph, evidenceCode));
 
                     RTPBot.writeDebugLine("MSM: evidence_pattern evidenceCode = {0}", evidenceCode);
 
                 }
-                catch
+                catch (Exception e)
                 {
+                    writeToLogWarn("MSMWARN: " + e);
                 }
 
             }

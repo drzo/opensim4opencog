@@ -27,8 +27,6 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-
-
         protected override Unifiable ProcessChange()
         {
             if (this.templateNode.Name.ToLower() == "processmsm")
@@ -36,39 +34,55 @@ namespace RTParser.AIMLTagHandlers
                 string machine = GetAttribValue("name", null);
                 string line = templateNodeInnerText.ToValue(query);
                 RTPBot.writeDebugLine("\n\n >>>>>>>>>>>>>>>>>>>>>> PROCESSMSM : |{0}|<<<<<<<<<<<<<<<<<<<<", line);
-                //this.user.bot.pMSM.lastDefMachine = machine;
-                this.user.bot.pMSM.addMachine(machine);
+                Unifiable results = null;
+                MachineSideEffect(() => { results = ProcessChangeMSM(); });
+                return results;
+            }
+            return Unifiable.Empty;
+        }
+
+        protected Unifiable ProcessChangeMSM()
+        {
+            //if (this.templateNode.Name.ToLower() == "processmsm")
+            {
+                string machine = GetAttribValue("name", null);
+                string line = templateNodeInnerText.ToValue(query);
+                RTPBot.writeDebugLine("\n\n >>>>>>>>>>>>>>>>>>>>>> PROCESSMSM : |{0}|<<<<<<<<<<<<<<<<<<<<", line);
+                //varMSM.lastDefMachine = machine;
+                var varMSM = this.botActionMSM;
+
+                varMSM.addMachine(machine);
                 // set topic to "collectevidencepatterns"
                 //this.user.bot.AddAiml("<set name='topic'>collectevidencepatters</set>");
                 //this.user.Predicates.updateSetting("topic", "collectevidencepatters");
                 this.user.TopicSetting = "CEP";
 
                 // Clear the evidence and next state
-                this.user.bot.pMSM.clearEvidence();
-                this.user.bot.pMSM.clearNextStateValues();
+                varMSM.clearEvidence();
+                varMSM.clearNextStateValues();
 
                 // estimate what evidence can be gleaned from the current state
-                this.user.bot.pMSM.inspectEvidenceStates();
+                varMSM.inspectEvidenceStates();
 
                 // process the input text
 
                 //string evidenceReply = this.user.bot.ChatString(line, this.user.UserID);
                 string evidenceReply = subChat(line, this.user.TopicSetting, request, true);
 
-                RTPBot.writeDebugLine("MSM: WithEvidence {0} ", this.user.bot.pMSM.ToString());
+                RTPBot.writeDebugLine("MSM: WithEvidence {0} ", varMSM.ToString());
 
                 // TODO: we should also get evidence across machine boundries
 
                 // compute the "TRUE" topics from the state machines,advance all machines using evidence
                 Hashtable machinesTopState = new Hashtable();
-                foreach (string mac in this.user.bot.pMSM.machines.Keys)
+                foreach (string mac in varMSM.machines.Keys)
                 {
-                    string top_State = this.user.bot.pMSM.advanceMachine(mac);
+                    string top_State = varMSM.advanceMachine(mac);
                     machinesTopState[mac] = top_State;
                 }
                 // make the next_state values the new current state values
-                this.user.bot.pMSM.advanceStateValues();
-                RTPBot.writeDebugLine("MSM: AfterAdvance {0} ", this.user.bot.pMSM.ToString());
+                varMSM.advanceStateValues();
+                RTPBot.writeDebugLine("MSM: AfterAdvance {0} ", varMSM.ToString());
 
                 // For each machine set the appropriate topic, and process the input text
                 string totalReply = "";
@@ -76,9 +90,9 @@ namespace RTParser.AIMLTagHandlers
                 foreach (string actingMachine in machinesTopState.Keys)
                 {
                     string actionState = (string)machinesTopState[actingMachine];
-                    double actp = (double)this.user.bot.pMSM.cur_machineStateVal[actionState];
+                    double actp = (double)varMSM.cur_machineStateVal[actionState];
 
-                    Hashtable topicHt = (Hashtable)this.user.bot.pMSM.machineStateResponses[actionState];
+                    Hashtable topicHt = (Hashtable)varMSM.machineStateResponses[actionState];
 
                     if ((topicHt != null) && (topicHt.Count > 0))
                     {
@@ -672,5 +686,16 @@ namespace RTParser.AIMLTagHandlers
             }
         }
 
+
+        // TODO A method to save the state
+        public void PushSave()
+        {
+        }
+        // TODO A method to restore the state
+        public void PopLoad()
+        {
+            
+
+        }
     }
 }

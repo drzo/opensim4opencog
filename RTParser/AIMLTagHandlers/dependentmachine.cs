@@ -31,7 +31,7 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "dependentmachine")
+            if (CheckNode("dependentmachine"))
             {
                 try
                 {
@@ -39,17 +39,19 @@ namespace RTParser.AIMLTagHandlers
                 //<dependentmachine dependentmachine=""  initialstate="" 
                 //                        controlmachine="" controlstate="" controlprob=""/>
 
-                    string depMachine = GetAttribValue("dependentmachine", this.user.bot.pMSM.lastDefMachine);
-                    string depState = GetAttribValue("initialstate", this.user.bot.pMSM.lastDefState);
+                    var varMSM = this.botActionMSM;
+                    string depMachine = GetAttribValue("dependentmachine", varMSM.lastDefMachine);
+                    string depState = GetAttribValue("initialstate", varMSM.lastDefState);
                     string ctrlMachine = GetAttribValue("controlmachine", "m1");
                     string ctrlState = GetAttribValue("controlstate", "s1");
                     string ctrlProb = GetAttribValue("controlprob", "0.1");
                     double prob = double.Parse(ctrlProb);
-                    this.user.bot.pMSM.machineDependency(depMachine, depState, ctrlMachine, ctrlState,prob);
+                    MachineSideEffect(() => varMSM.machineDependency(depMachine, depState, ctrlMachine, ctrlState, prob));
 
                 }
-                catch
+                catch (Exception e)
                 {
+                    writeToLogWarn("MSMWARN: " + e);
                 }
             }
             return Unifiable.Empty;

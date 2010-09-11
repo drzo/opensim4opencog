@@ -355,9 +355,21 @@ namespace RTParser.Utils
             return StaticAIMLUtils.ReduceStar<T>(value, this, this);
         }
 
-        public void AddSideEffect(string effect, ThreadStart start)
+        /// <summary>
+        /// This a really a Request/Response AddSideEffect.. 
+        ///  however putting it here on SubQuery is lasss ambiguous
+        /// </summary>
+        /// <param name="effectName"></param>
+        /// <param name="action"></param>
+        public void AddSideEffect(string effectName, ThreadStart action)
         {
-            Request.AddSideEffect(effect, start);
+            Request.AddSideEffect(effectName, action);
+        }
+
+        public void LocalSideEffect(string effectName, ThreadStart enter, ThreadStart exit)
+        {
+            enter();
+            AddUndo(exit);
         }
     }
 

@@ -32,17 +32,16 @@ namespace RTParser.AIMLTagHandlers
         protected override Unifiable ProcessChange()
         {
 
-            if (this.templateNode.Name.ToLower() == "responsetopic")
+            if (CheckNode("responsetopic"))
             {
                 try
                 {
+                    var varMSM = this.botActionMSM;
                     string payload = templateNodeInnerText.ToValue(query);
                     string payload2 = Recurse();
                     string payload3 = templateNode.InnerXml;
-                    
-
-                    string machine = GetAttribValue("machine", this.user.bot.pMSM.lastDefMachine);
-                    string myState = GetAttribValue("state", this.user.bot.pMSM.lastDefState);
+                    string machine = GetAttribValue("machine",  varMSM.lastDefMachine);
+                    string myState = GetAttribValue("state", varMSM.lastDefState);
                     string myTopic = GetAttribValue("topic", null);
                     string prob_str = GetAttribValue("prob", "0.1");
                     double prob = double.Parse(prob_str);
@@ -50,13 +49,14 @@ namespace RTParser.AIMLTagHandlers
                     payload= payload.Replace("rpattern", "pattern");
                     string responseCode = "<aiml graph=\"msm\"> <topic name=\"" + myTopic + "\"> " + payload + " </topic> </aiml>";
                     RTPBot.writeDebugLine("MSM: response_topic ResponseCode = {0}", responseCode);
-                    this.user.bot.AddAiml(responseCode);
+                    MachineSideEffect(() => varMSM.addResponse(machine, myState, myTopic, prob));
                     // TODO: define machine-state -> topic
-                    this.user.bot.pMSM.addResponse(machine, myState, myTopic, prob);
+                    AddSideEffect("Add AIML " + responseCode, () => TargetBot.AddAiml(responseCode));
 
                 }
-                catch
+                catch (Exception e)
                 {
+                    writeToLogWarn("MSMWARN: " + e);
                 }
 
             }

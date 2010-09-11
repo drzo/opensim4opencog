@@ -31,20 +31,22 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "transition")
+            if (CheckNode("transition"))
             {
+                var varMSM = this.botActionMSM;
                 try
                 {
-                    string fromState = GetAttribValue("from", this.user.bot.pMSM.lastDefState);
+                    string fromState = GetAttribValue("from", varMSM.lastDefState);
                     string toState = GetAttribValue("to", null);
-                    string machine = GetAttribValue("machine", this.user.bot.pMSM.lastDefMachine);
+                    string machine = GetAttribValue("machine", varMSM.lastDefMachine);
                     string prob_str = GetAttribValue("prob", "0.1");
                     double prob = double.Parse(prob_str);
 
-                    this.user.bot.pMSM.addTransition(machine, fromState ,toState ,prob );
+                    MachineSideEffect(() => varMSM.addTransition(machine, fromState, toState, prob));
                 }
-                catch
+                catch (Exception e)
                 {
+                    writeToLogWarn("MSMWARN: " + e);
                 }
             }
             return Unifiable.Empty;
