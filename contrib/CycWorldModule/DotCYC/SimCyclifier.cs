@@ -861,10 +861,28 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
          public object FindOrCreateCycFort(TaskQueueHandler simObj)
          {
              //Trace();
-             return simObj.ToString();
+             return FindOrCreateCycFort(simObj.GetType(), simObj.Name);
          }
 
-         public object FindOrCreateCycFort(SimAssetStore simObj)
+         public object FindOrCreateCycFort(Type type, string named)
+         {
+             CycTypeInfo ti = VisitType(type);
+             string typeToString = TypeToString(type);
+             return InstanceNamedFn(named, C(typeToString));
+         }
+
+        private string TypeToString(MemberInfo info)
+         {
+             string regionTypeName = info.Name;
+             if (regionTypeName.Contains(".") || regionTypeName.Contains("<"))
+             {
+                 Trace();
+             }
+             return regionTypeName;
+         }
+
+
+        public object FindOrCreateCycFort(SimAssetStore simObj)
          {
              //Trace();
              return LockToFort(simObj);
@@ -1758,20 +1776,27 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
 
         private CycFort LockToFort(object parameter)
         {
+            Type type = parameter.GetType();
+            string parameterName = "" + parameter.GetHashCode();
+            return InstanceNamedFn(parameterName, ToFort(type));
+        }
+
+        private CycFort InstanceNamedFn(string parameterName, object cycTypeFort)
+        {
             CycFort indv;
-            if (parameter == null)
+            if (parameterName == null || cycTypeFort == null)
             {
                 Trace();
                 return null;
             }
+            string parameter = cycTypeFort + "-" + parameterName;
             if (!simFort.TryGetValue(parameter, out indv))
             {
                 lock (simFort)
                 {
                     if (!simFort.TryGetValue(parameter, out indv))
                     {
-                        return simFort[parameter] = new CycNart(C("InstanceNamedFn"),
-                                                                "" + parameter.GetHashCode(), C("ProgramObject"));
+                        return simFort[parameter] = new CycNart(C("InstanceNamedFn"), "" + parameterName, cycTypeFort);
                     }
                 }
             }
@@ -1900,11 +1925,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
 
         public CycObject FindOrCreateCycFort(NullType region)
         {
-            string regionTypeName = region.Type.Name;
-            if (regionTypeName.Contains(".") || regionTypeName.Contains("<"))
-            {
-                Trace();
-            }
+            string regionTypeName = TypeToString(region.Type);
             return new CycVariable("NULL-" + regionTypeName + "-" + (nullCount++));
         }
 
@@ -2125,6 +2146,19 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
             if (!(o is UUID)) return ToFort(o);
             return "" + region;
             //return createIndividualFn("SimRegion", region.RegionName, vocabMt.ToString(), "SimRegion " + region, "GeographicalPlace-3D");
+        }
+
+
+        public CycObject FindOrCreateCycFort(Type sim)
+        {
+            CycFort fort;
+            if (simFort.TryGetValue(sim, out fort)) return fort;
+            while (sim.Name.Contains("<"))
+            {
+                sim = sim.GetGenericTypeDefinition();
+            }
+            
+            return C(sim.Name);
         }
 
         CycFort DeclareGeneric(string name)
