@@ -21,9 +21,11 @@ using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
 namespace RTParser
 {
     public partial class RTPBot
-    {
+    {        
         public bool AlwaysUseImmediateAimlInImput = true;
         public static bool RotateUsedTemplate = true;
+        public bool DontUseSplitters = true;
+
         public readonly TaskQueueHandler HeardSelfSayQueue = new TaskQueueHandler("AIMLBot HeardSelf",
                                                                                    TimeSpan.FromMilliseconds(10),
                                                                                    TimeSpan.FromSeconds(10), true);
@@ -256,7 +258,7 @@ namespace RTParser
             User findOrCreateUser = FindOrCreateUser(username);
             AIMLbot.Request r = new AIMLbot.Request(rawInput, findOrCreateUser, this, null);
             findOrCreateUser.CurrentRequest = r;
-            r.IsTraced = true;
+            r.IsTraced = findOrCreateUser.IsTraced;
             return r;
         }
 
@@ -269,7 +271,7 @@ namespace RTParser
         public string ChatString(string rawInput, string username)
         {
             RequestImpl r = GetRequest(rawInput, username);
-            r.IsTraced = true;
+            r.IsTraced = this.IsTraced;
             return Chat(r).Output;
         }
 
@@ -282,7 +284,7 @@ namespace RTParser
         public Result Chat(string rawInput, string UserGUID)
         {
             Request request = GetRequest(rawInput, UserGUID);
-            request.IsTraced = true;
+            request.IsTraced = this.IsTraced;
             return Chat(request);
         }
         /// <summary>
@@ -1097,36 +1099,6 @@ namespace RTParser
             return sentenceIn;
         }
 
-        static bool DifferentBesidesCase(string sentenceIn, string sentence)
-        {
-            return sentence.ToLower() != sentenceIn.ToLower();
-        }
-
-        static string ReTrimAndspace(string substitute)
-        {
-            if (substitute == null) return null;
-            var csubstitute = substitute.ToCharArray();
-            return substitute.Replace("  ", " ").Replace("  ", " ").Replace("  ", " ").Trim();
-        }
-
-        /// Checks that the provided sentence ends with a sentence splitter
-        /// </summary>
-        /// <param name="sentence">the sentence to check</param>
-        /// <returns>True if ends with an appropriate sentence splitter</returns>
-        public bool checkEndsAsSentence(string sentence)
-        {
-            sentence = sentence.Trim();
-            if (sentence.EndsWith("?")) return true;
-            foreach (Unifiable splitter in Splitters)
-            {
-                if (sentence.EndsWith(splitter))
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
         /// <summary>
         /// Recursively evaluates the template nodes returned from the Proccessor
         /// </summary>
@@ -1184,6 +1156,10 @@ namespace RTParser
 
             tagHandler.SetParent(parent);
             Unifiable cp = tagHandler.CompleteAimlProcess();
+            if (tagHandler.QueryHasFailed)
+            {
+                return Unifiable.FAIL_NIL;
+            }
             return cp;
         }
         #endregion
@@ -1260,7 +1236,7 @@ namespace RTParser
             Console.WriteLine("*** DONE Lucene ***");
         }
 
-        private int napNum = 0;
+        private int napNum = 0;        
 
         private void Sleep16Seconds(int secs)
         {

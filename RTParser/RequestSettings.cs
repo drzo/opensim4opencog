@@ -183,9 +183,9 @@ namespace RTParser
         /// </summary>
         public virtual SettingMinMaxCurrent<int> SraiDepth { get; set; }
 
-        public virtual SettingMinMaxCurrent<bool> CanSrai { get; set; }
+        //public virtual SettingMinMaxCurrent<bool> CanSrai { get; set; }
 
-        public virtual SettingMinMaxCurrent<TimeSpan> Time { get; set; }
+        //public abstract SettingMinMaxCurrent<TimeSpan> Time { get; set; }
 
 
         public virtual int DebugLevel { get; set; }

@@ -189,6 +189,12 @@ namespace RTParser.Utils
             }
         }
 
+        public virtual bool QueryHasFailed
+        {
+            get { return query.HasFailed; }
+            set { query.HasFailed = true; }
+        }
+
         protected bool ResultReady(out string result0)
         {
             result0 = RecurseResult;
@@ -640,13 +646,13 @@ namespace RTParser.Utils
 
         public override Unifiable CompleteProcess()
         {
-//#if false
+            //#if false
             return RecurseProcess();
         }
 
         public virtual Unifiable RecurseProcess()
         {
-//#endif
+            //#endif
             if (!Unifiable.IsNullOrEmpty(RecurseResult))
             {
                 return RecurseResult;
@@ -745,7 +751,7 @@ namespace RTParser.Utils
         static protected Unifiable GetActualValue(XmlNode templateNode, string name, bool preferBotOverUser, out bool succeed, SubQuery query)
         {
             ISettingsDictionary dict = query;
-            Unifiable defaultVal = GetAttribValue(templateNode,"default,defaultValue", Unifiable.Empty);
+            Unifiable defaultVal = GetAttribValue(templateNode, "default,defaultValue", Unifiable.Empty);
             string dictName = GetDictName(templateNode, "type,dict");
             if (dictName == null)
             {
@@ -753,7 +759,7 @@ namespace RTParser.Utils
             }
             if (preferBotOverUser)
             {
-                dict = query.TargetBot.GlobalSettings;
+                dict = query.TargetListenerSettings;
             }
             Unifiable gName = GetAttribValue(templateNode, "global_name", name);
             string realName;
@@ -761,6 +767,46 @@ namespace RTParser.Utils
                 dictName, query, dict, name, out realName,
                 gName, defaultVal, out succeed, templateNode);
             return v;
+        }
+
+        protected virtual void AddSideEffect(ThreadStart func)
+        {
+            if (Parent == null)
+            {
+                query.AddSideEffect(func);
+            }
+            else
+            {
+                AIMLTagHandler tagHandler = FirstTagHandlerOrOuterMost("template");
+                tagHandler.AddSideEffect(func);
+            }
+        }
+
+        protected AIMLTagHandler FirstTagHandlerOrOuterMost(string type)
+        {
+            var current = this;
+            while (current != null)
+            {
+                if (current.IsNode(type))
+                {
+                    return current;
+                }
+                if (current.Parent != null)
+                    current = current.Parent;
+            }
+            return current;
+        }
+
+        private bool IsNode(string type)
+        {
+            foreach (var c in StaticXMLUtils.NamesStrings(type))
+            {
+                if (SearchStringMatches(c, templateNode.Name))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }

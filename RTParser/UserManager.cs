@@ -865,7 +865,7 @@ namespace RTParser
             return defaultVal;
         }
 
-        public string OutputResult(Result res, OutputDelegate console)
+        public string OutputResult(Result res, OutputDelegate console, bool includeWeigth)
         {
             User CurrentUser = res.user;
             string user = CurrentUser.UserName;
@@ -915,15 +915,21 @@ namespace RTParser
                 }
             }
             var stringPlit = useOut.Split(new[] {"mene value="}, StringSplitOptions.RemoveEmptyEntries);
+            string said = useOut;
+            if (stringPlit.Length > 0)
+            {
+                said = stringPlit[0];
+            }
             string vstring = stringPlit.Length < 2
                                  ? null
                                  : stringPlit[2].Split(new char[] {' ', '\n'}, StringSplitOptions.RemoveEmptyEntries)[0];
             if (vstring == null || double.TryParse(vstring, out vscored))
             {
-                useOut = useOut + " mene value=" + res.Score * 1.4;
+                useOut = said + " mene value=" + res.Score*1.4;
             }
             console(useOut);
-            return useOut;
+            if (includeWeigth) return useOut;
+            return said;
         }
 
         public bool IsInteractiveUser(User value)

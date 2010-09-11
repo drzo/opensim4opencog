@@ -108,10 +108,10 @@ namespace RTParser
             res.writeToLog = writeToLog;
             res._CurrentQuery = new SubQuery(s, res, r);
             OnBotCreated(() => { res.user = r.Requester = BotAsUser; });
-            r.IsTraced = true;            
+            r.IsTraced = this.IsTraced;            
             r.StartedOn = DateTime.Now;
             // times out in 15 minutes
-            r.TimesOutAt = DateTime.Now + new TimeSpan(0, 15, 0);
+            r.TimeOut = TimeSpan.FromMinutes(15);
             return r;
         }
 
@@ -183,7 +183,7 @@ namespace RTParser
         /// An List<> containing the tokens used to split the input into sentences during the 
         /// normalization process
         /// </summary>
-        public List<string> Splitters = new List<string>();
+        static public List<string> Splitters = new List<string>();
 
         /// <summary>
         /// Flag to show if the Proccessor is willing to accept user input
@@ -934,7 +934,7 @@ namespace RTParser
             SaneLocalSettings(settings, "stripperregex", "[^0-9a-zA-Z]");
         }
 
-        private Unifiable SaneLocalSettings(ISettingsDictionary settings, string name, object value)
+        internal static Unifiable SaneLocalSettings(ISettingsDictionary settings, string name, object value)
         {
             if (!settings.containsLocalCalled(name))
             {
@@ -952,6 +952,7 @@ namespace RTParser
         /// <param name="pathToSplitters">Path to the config file</param>
         private void loadSplitters(string pathToSplitters)
         {
+            if (DontUseSplitters) return;
             if (HostSystem.FileExists(pathToSplitters))
             {
                 XmlDocumentLineInfo splittersXmlDoc = new XmlDocumentLineInfo(pathToSplitters, true);

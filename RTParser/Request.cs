@@ -18,7 +18,6 @@ namespace RTParser
         int depth { get; set; }
         Unifiable Topic { get; set; }
         Request ParentRequest { get; set; }
-        DateTime StartedOn { get; set; }
         GraphMaster Graph { get; set; }
         bool IsTraced { get; set; }
         User Requester { get; set; }
@@ -37,15 +36,17 @@ namespace RTParser
         //void IncreaseLimits(int i);
         QueryList TopLevel { get; set; }
         SubQuery CurrentQuery { get; }
-        bool hasTimedOut { get; set; }
         RTPBot TargetBot { get; set; }
         Unifiable rawInput { get; set; }
         IList<Result> UsedResults { get; set; }
         IList<TemplateInfo> UsedTemplates { get; }
-        DateTime TimesOutAt { get; set; }
         ISettingsDictionary TargetSettings { get; set; }
         int MaxInputs { get; set; }
 
+        DateTime StartedOn { get; set; }
+        DateTime TimesOutAt { get; set; }
+        TimeSpan TimeOut { get; set; }
+        bool hasTimedOut { get; set; }
 
         bool GraphsAcceptingUserInput { get; set; }
         LoaderOptions LoadOptions { get; set; }
@@ -68,6 +69,7 @@ namespace RTParser
         int DebugLevel { get; set; }
         Unifiable That { get; set; }
         PrintOptions WriterOptions { get; }
+        ISettingsDictionary TargetListenerSettings { get; set; }
         // inherited from base  string GraphName { get; set; }
         ISettingsDictionary GetSubstitutions(string name, bool b);
         GraphMaster GetGraph(string srai);
@@ -125,6 +127,16 @@ namespace RTParser
         private Result _result;
 
         public ISettingsDictionary TargetSettings { get; set; }
+
+        public TimeSpan TimeOut
+        {
+            get
+            {
+                if (TimesOutAt > StartedOn) return TimesOutAt - StartedOn;
+                return TimeSpan.FromMilliseconds(TargetBot.TimeOut);
+            }
+            set { TimesOutAt = StartedOn + value; }
+        }
 
         /// <summary>
         /// Flag to show that the request has timed out
@@ -482,7 +494,7 @@ namespace RTParser
             get { return CurrentResult.UsedTemplates; }
         }
 
-        public DateTime TimesOutAt { get; set;}
+        public DateTime TimesOutAt { get; set; }
 
         public void WriteLine(string s, params object[] args)
         {
@@ -628,6 +640,7 @@ namespace RTParser
         }
 
         internal PrintOptions iopts;
+
         public PrintOptions WriterOptions
         {
             get
@@ -640,6 +653,21 @@ namespace RTParser
                 return Requester.WriterOptions;
             }
             set { iopts = value; }
+        }
+
+        private ISettingsDictionary _targetYOUFromSpeaker;
+        public ISettingsDictionary TargetListenerSettings
+        {
+            get
+            {
+                if (iopts != null) return _targetYOUFromSpeaker;
+                if (ParentRequest != null)
+                {
+                    return ParentRequest.TargetListenerSettings;
+                }
+                return TargetBot.GlobalSettings;
+            }
+            set { _targetYOUFromSpeaker = value; }
         }
 
         public ISettingsDictionary GetSubstitutions(string named, bool createIfMissing)
@@ -663,7 +691,12 @@ namespace RTParser
             if (named == "user") return CheckedValue(named, Requester);
             if (named == "query") return CheckedValue(named, CurrentQuery);
             if (named == "request") return CheckedValue(named, TargetSettings);
-            if (named == "bot") return CheckedValue(named, TargetBot.GlobalSettings);
+            if (named == "bot")
+            {
+                if (CurrentQuery != null)
+                    return CheckedValue(named, CurrentQuery.TargetListenerSettings ?? TargetBot.GlobalSettings);
+                return CheckedValue(named, TargetBot.GlobalSettings);
+            }
 
             string[] path = named.Split(new[] { '.' });
             if (path.Length > 1)

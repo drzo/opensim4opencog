@@ -31,6 +31,10 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessChange()
         {
+            if (!IsStarted && QueryHasFailed)
+            {
+                QueryHasFailed = false;
+            }
             Unifiable templateResult = Unifiable.CreateAppendable();
             if (templateNode.HasChildNodes)
             {

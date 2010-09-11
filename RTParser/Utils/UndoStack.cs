@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using RTParser.Variables;
@@ -10,6 +11,7 @@ namespace RTParser.Utils
         private static readonly Dictionary<object, UndoStack> ObjectUndoStacks = new Dictionary<object, UndoStack>();
         private object objext;
         private Stack<ThreadStart> todo;
+        private Stack<ThreadStart> commits;
 
         private UndoStack(object o)
         {
@@ -71,11 +73,27 @@ namespace RTParser.Utils
             }
         }
 
+        public void AddCommit(ThreadStart start)
+        {
+            lock (this)
+            {
+                if (commits == null) commits = new Stack<ThreadStart>();
+                this.commits.Push(start);
+            }
+        }
+
         public void UndoAll()
         {
             lock (this)
             {
-                if (todo == null) return;
+                if (todo == null) return; 
+                DoAll(todo);
+            }
+        }
+        public static void DoAll(Stack<ThreadStart> todo)
+        {
+            lock (todo)
+            {
                 while (todo.Count > 0)
                 {
                     ThreadStart undo = todo.Pop();
@@ -87,10 +105,20 @@ namespace RTParser.Utils
                         }
                         catch (Exception exception)
                         {
-                            RTPBot.writeDebugLine("ERROR in UNDO " + exception);
+                            RTPBot.writeDebugLine("ERROR in DoAll " + exception);
                         }
                     }
                 }
+            }
+        }
+
+
+        public void CommitAll()
+        {
+            lock (this)
+            {
+                if (commits == null) return;
+                DoAll(commits);
             }
         }
 
