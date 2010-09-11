@@ -214,8 +214,9 @@ namespace RTParser
             traceConsole = traceConsole ?? writeDebugLine;
             User CurrentUser = LastUser;
             User targetUser = FindOrCreateUser(otherName);
-            pMSM.clearEvidence();
-            pMSM.clearNextStateValues();
+            var varMSM = this.pMSM;
+            varMSM.clearEvidence();
+            varMSM.clearNextStateValues();
             //  myUser.TopicSetting = "collectevidencepatterns";
             RequestImpl r = GetRequest(input, user);
             r.IsTraced = true;

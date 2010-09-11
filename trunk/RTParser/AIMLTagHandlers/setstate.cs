@@ -31,20 +31,21 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "setstate")
+            if (CheckNode("setstate"))
             {
                 try
                 {
-                    string machine = GetAttribValue("machine", this.user.bot.pMSM.lastDefMachine);
-                    string name = GetAttribValue("name", this.user.bot.pMSM.lastDefState);
+                    var varMSM = this.botActionMSM;
+                    string machine = GetAttribValue("machine", varMSM.lastDefMachine);
+                    string name = GetAttribValue("name", varMSM.lastDefState);
                     string cur_prob_str = GetAttribValue("prob", "0.1");
                     double cur_prob = double.Parse(cur_prob_str);
 
-                    this.user.bot.pMSM.setState(machine, name, cur_prob);
+                    MachineSideEffect(() => varMSM.setState(machine, name, cur_prob));
                 }
-                catch
+                catch (Exception e)
                 {
-
+                    writeToLogWarn("MSMWARN: " + e);
                 }
 
             }

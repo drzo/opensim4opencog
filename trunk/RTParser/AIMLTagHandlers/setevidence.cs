@@ -34,16 +34,18 @@ namespace RTParser.AIMLTagHandlers
             if (this.templateNode.Name.ToLower() == "setevidence")
             {
                 try
+
                 {
+                    var varMSM = this.botActionMSM;
                     string name = GetAttribValue("evidence", null);
                     string cur_prob_str = GetAttribValue("prob", "0.1");
                     double cur_prob = double.Parse(cur_prob_str);
 
-                    this.user.bot.pMSM.setEvidence(name, cur_prob);
+                    MachineSideEffect(() => varMSM.setEvidence(name, cur_prob));
                 }
-                catch
+                catch (Exception e)
                 {
-
+                    writeToLogWarn("MSMWARN: " + e);
                 }
             }
             return Unifiable.Empty;

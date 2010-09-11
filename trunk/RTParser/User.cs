@@ -1095,6 +1095,11 @@ namespace RTParser
 
         public PrintOptions WriterOptions { get; set; }
 
+        public actMSM botActionMSM
+        {
+            get { return bot.pMSM; }
+        }
+
         public IEnumerable<string> SettingNames(int depth)
         {
             //get 

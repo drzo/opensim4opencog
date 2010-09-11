@@ -787,6 +787,42 @@ namespace RTParser.Utils
             }
         }
 
+        protected actMSM botActionMSM
+        {
+            get { return user.botActionMSM; }
+        }
+        /// <summary>
+        /// Machine SideEffect - this denoates that he state of machine will change when processing the taghandler
+        /// </summary>
+        /// <param name="func"></param>
+        protected virtual void MachineSideEffect(ThreadStart func)
+        {
+            LocalSideEffect(LineNumberTextInfo(), () =>
+            {
+                botActionMSM.PushSave();
+                func();
+            },
+                            () => botActionMSM.PopLoad());
+        }
+
+        protected virtual void LocalSideEffect(string namedEffect, ThreadStart enter, ThreadStart exit)
+        {
+            if (QueryHasFailed)
+            {
+                writeToLog("SKIPPING LocalSideEffect " + namedEffect);
+                return;
+            }
+            AIMLTagHandler tagHandler = FirstTagHandlerOrOuterMost("template");
+            if (Parent == null || tagHandler == this || tagHandler == null)
+            {
+                query.LocalSideEffect(namedEffect, enter, exit);
+            }
+            else
+            {
+                tagHandler.LocalSideEffect(namedEffect, enter, exit);
+            }
+        }
+
         protected AIMLTagHandler FirstTagHandlerOrOuterMost(string type)
         {
             var current = this;

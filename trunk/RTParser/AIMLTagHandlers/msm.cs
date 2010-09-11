@@ -31,15 +31,17 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "msm")
+            if (CheckNode("msm"))
             {
+                var varMSM = this.botActionMSM;
                 try
                 {
                     string machine = GetAttribValue("machine", null);
-                    this.user.bot.pMSM.addMachine(machine);
+                    MachineSideEffect(() => varMSM.addMachine(machine));
                 }
-                catch
+                catch (Exception e)
                 {
+                    writeToLogWarn("MSMWARN: " + e);
                 }
  
             }
