@@ -49,10 +49,10 @@ namespace cogbot.Actions.System
                 {
                     found++;
                     if (queueHandler.Busy)
-                        list.Insert(0, queueHandler.ToString());
+                        list.Insert(0, queueHandler.ToDebugString(true));
                     else
                     {
-                        list.Add(queueHandler.ToString());
+                        list.Add(queueHandler.ToDebugString(true));
                     }
 
                 }
