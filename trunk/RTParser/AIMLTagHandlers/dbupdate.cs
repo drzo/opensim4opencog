@@ -46,8 +46,7 @@ namespace RTParser.AIMLTagHandlers
                     // Find and Replace
                     Unifiable templateNodeInnerValue = Recurse();
                     string myText = (string)templateNodeInnerValue;
-                    TargetBot.LuceneIndexer.Update(myText, myText, templateNode);
-
+                    AddSideEffect("DBUPDATE " + myText, () => TargetBot.LuceneIndexer.Update(myText, myText, templateNode));                     
                 }
                 catch(Exception e)
                 {

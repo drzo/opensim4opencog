@@ -247,7 +247,7 @@ namespace RTParser
             //Added from AIML content now
             // myBot.AddAiml(evidenceCode);
             User myUser = myBot.LastUser;
-            Request request = myUser.CreateRequest("current user toplevel");
+            Request request = myUser.CreateRequest("current user toplevel", myBot.BotAsUser);
             myBot.BotDirective(request, "@help", writeLine);
             writeLine("-----------------------------------------------------------------");
             AIMLDEBUGSETTINGS = "clear +*";
@@ -328,7 +328,7 @@ namespace RTParser
 
         public bool BotDirective(User user, string input, OutputDelegate console)
         {
-            Request request = (user ?? LastUser ?? BotAsUser).CreateRequest(input);
+            Request request = (user ?? LastUser ?? BotAsUser).CreateRequest(input, BotAsUser);
             return BotDirective(request, input, console);
         }
 
@@ -372,7 +372,7 @@ namespace RTParser
                     user = args.Substring(0, lastIndex).Trim();
                     input = args.Substring(lastIndex + 1).Trim();
                 }
-                Result res = GlobalChatWithUser(input, user, writeDebugLine, true);
+                Result res = GlobalChatWithUser(input, user, BotAsUser.UserID, writeDebugLine, true);
                 OutputResult(res, console, false);
                 return true;
             }
@@ -389,7 +389,7 @@ namespace RTParser
                     user = args.Substring(0, lastIndex).Trim();
                     input = args.Substring(lastIndex).Trim();
                 }
-                Result res = GlobalChatWithUser(input, user, writeDebugLine, true);
+                Result res = GlobalChatWithUser(input, user, BotAsUser.UserID, writeDebugLine, true);
                 botJustSaid = OutputResult(res, console, false);
                 if (ProcessHeardPreds)
                     HeardSelfSayResponse(botJustSaid, res, control);
@@ -591,7 +591,7 @@ namespace RTParser
                 }
                 ur.IsTraced = myUser.IsTraced;
                 console("-----------------------------------------------------------------");
-                AIMLbot.Result result = Chat0(ur, myUser.ListeningGraph);
+                AIMLbot.Result result = ChatWithUser(ur, myUser, BotAsUser, myUser.ListeningGraph);
                 console("-----------------------------------------------------------------");
                 PrintResult(result, console, printOptions);
                 console("-----------------------------------------------------------------");

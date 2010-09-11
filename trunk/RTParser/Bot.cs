@@ -102,7 +102,7 @@ namespace RTParser
         {
             s = s.Trim();
             if (!s.StartsWith("<")) s = "<!-- " + s.Replace("<!--", "<#").Replace("-->", "#>") + " -->";
-            var r = new AIMLbot.Request(s, BotAsUser, this, null);
+            var r = new AIMLbot.Request(s, BotAsUser, this, null, BotAsUser);
             r.writeToLog = writeToLog;
             Result res = new AIMLbot.Result(BotAsUser, this, r, null);
             res.writeToLog = writeToLog;
@@ -2376,7 +2376,7 @@ The AIMLbot program.
                         dict = AllDictionaries[key] = AllDictionaries[named] = new SettingsDictionary(named, this, null);
                         User user = LastUser ?? ExemplarUser ?? BotAsUser;
                         Request r = user.CurrentRequest ??
-                                    user.CreateRequest(" loadDictionary" + named + " from " + type);
+                                    user.CreateRequest(" loadDictionary" + named + " from " + type, BotAsUser);
                         loadDictionary(dict, named, type, r);
                     }
                 }
@@ -2388,7 +2388,8 @@ The AIMLbot program.
         {
             User user = LastUser ?? ExemplarUser ?? BotAsUser;
             Request r = r0 ??
-                        user.CurrentRequest ?? user.CreateRequest(" loadDictionary" + dictionary + " from " + type);
+                        user.CurrentRequest ??
+                        user.CreateRequest(" loadDictionary" + dictionary + " from " + type, BotAsUser);
             int loaded = 0;
             foreach (string p in GetSearchRoots(r))
             {

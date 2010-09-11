@@ -355,9 +355,9 @@ namespace RTParser.Utils
             return StaticAIMLUtils.ReduceStar<T>(value, this, this);
         }
 
-        public void AddSideEffect(ThreadStart action)
+        public void AddSideEffect(string effect, ThreadStart start)
         {
-            UndoStack.GetStackFor(this).AddCommit(action);
+            Request.AddSideEffect(effect, start);
         }
     }
 

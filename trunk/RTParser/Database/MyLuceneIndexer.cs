@@ -780,7 +780,12 @@ namespace RTParser.Database
 
         public bool MayPush(string text)
         {
-            foreach (var words in text.ToLower().Split(' '))
+            string[] textToLowerSplit = text.ToLower().Split(' ');
+            if (textToLowerSplit.Length < 2)
+            {
+                writeToLog("ExcludedShort! '{0}' Len='{1}' ", text, textToLowerSplit.Length);
+            }
+            foreach (var words in textToLowerSplit)
             {
                 if (IsExcludedSubject(words))
                 {

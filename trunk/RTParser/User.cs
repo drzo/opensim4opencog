@@ -1103,10 +1103,11 @@ namespace RTParser
 
         #endregion
 
-        public Request CreateRequest(string s)
+        public Request CreateRequest(string s, User target)
         {
             DoPendingTodoList();
-            return new AIMLbot.Request(s, this, bot, CurrentRequest);
+            depth = 0;
+            return new AIMLbot.Request(s, this, bot, CurrentRequest, target);
         }
 
         public void StampResponseGiven()

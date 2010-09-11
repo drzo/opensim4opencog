@@ -53,10 +53,14 @@ namespace RTParser.AIMLTagHandlers
                     string[] files = HostSystem.GetFiles(path);
                     if (files != null && files.Length > 0)
                     {
-                        foreach (string file in files)
-                        {
-                            TargetBot.LuceneIndexer.LoadFileByLines(file, templateNode);                            
-                        }
+                        AddSideEffect("DBLOAD " + path, () =>
+                                                            {
+                                                                foreach (string file in files)
+                                                                {
+                                                                    TargetBot.LuceneIndexer.LoadFileByLines(file,
+                                                                                                            templateNode);
+                                                                }
+                                                            });
                     }
                     else
                     {

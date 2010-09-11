@@ -32,11 +32,13 @@ namespace RTParser.Utils
 
         private static HashSet<string> GlobalFilteredWords = new HashSet<string>()
                                                       {
-                                                          "pandorabots.com",
-                                                          "pandorabots.com",
+                                                          "pandorabots",
+                                                          "com",
                                                           "dr wallice",
                                                           "alicebots.com",
                                                           "alice",
+                                                          "england",
+                                                          "kent"
                                                       };
 
         public HashSet<string> FilteredWords = new HashSet<string>(GlobalFilteredWords);
@@ -943,13 +945,18 @@ namespace RTParser.Utils
                 }
             } else
             {
-                string tempStringS = templateNode.OuterXml.ToLower();
+                string tempStringS = templateNode.OuterXml.ToLower()
+                    .Replace("<", " ").Replace(">", " ").Replace(".", " ").
+                    Replace("\"", " ").Replace("'", " ").Replace(",", " ");
                 lock (FilteredWords)
                 {
                     foreach (string word in FilteredWords)
                     {
-                        if (tempStringS.Contains(word))
+                        if (tempStringS.Contains(" " + word + " "))
                         {
+                            var skip = templateNode.ParentNode ?? templateNode;
+                            string skiping = "skipping: " + skip.OuterXml;
+                            //writeDebugLine("DEBUG9: PROPRIETARY " + skiping);
                             return null;
                         }
                     }
