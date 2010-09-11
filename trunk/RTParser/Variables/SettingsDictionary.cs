@@ -1680,7 +1680,13 @@ namespace RTParser.Variables
                     if (name.StartsWith(chop))
                     {
                         string newName = name.Substring(chop.Length);
-                        return grabSettingDefaultDict(dictionary, newName, out newName);
+                        string realName0;
+                        Unifiable withChop = grabSettingDefaultDict(dictionary, newName, out realName0);
+                        if (withChop!=null)
+                        {
+                            realName = realName0;
+                            return withChop;
+                        }
                     }
                 }
                 foreach (var chop in chops)

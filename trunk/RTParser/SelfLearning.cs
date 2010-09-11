@@ -23,7 +23,7 @@ namespace RTParser
     public partial class RTPBot
     {
 
-        public void HeardSelfSayVerbal(string message, Result result)
+        public void HeardSelfSayVerbal(string message, Result result, ThreadControl control)
         {
             message = ToHeard(message);
             if (string.IsNullOrEmpty(message)) return;
@@ -36,8 +36,11 @@ namespace RTParser
             message = currentEar.GetMessage();
             currentEar = new JoinedTextBuffer();
             result = result ?? (LastUser == null ? null : LastUser.LastResult);
-            ManualResetEvent newManualResetEvent = new ManualResetEvent(false);
-            ThreadControl control = new ThreadControl(newManualResetEvent);
+            if (control == null)
+            {
+                ManualResetEvent newManualResetEvent = new ManualResetEvent(false);
+                control = new ThreadControl(newManualResetEvent);
+            }
             HeardSelfSay1Sentence(message, result, control);
         }
 
@@ -50,26 +53,25 @@ namespace RTParser
             if (!lts && !prochp) return result;
             message = ToHeard(message);
             if (string.IsNullOrEmpty(message)) return result;
-            
+
+            var v = new SplitIntoSentences(this, message);
+
             bool stopProcessing = false;
             if (control != null) control.AbortOrInteruptedRaised += (ctl, ex) => { stopProcessing = true; };
-
-            message = message + " ";
-            int index = message.IndexOf("? ");
-            if (index == -1) message.IndexOf("! ");
-            if (index > 0)
+            Unifiable[] sentences = v.Transform();
+            for (int i = 0; i < sentences.Length; i++)
             {
-                string message1 = message.Substring(0, index + 1);
-                // first sentence
-                result = HeardSelfSay1Sentence(message1, result, control);
-                message = message.Substring(index + 1);
-                // first sentence
-                if (stopProcessing) return AbortedResult(message, result, control);
-                return HeardSelfSayResponse(message, result, control);
+                Unifiable sentence = sentences[i];
+                if (stopProcessing)
+                {
+                    Unifiable unifiableJoin = Unifiable.Join(" <br> ", sentences, i, sentences.Length - 1);
+                    return AbortedResult(unifiableJoin, result, control);
+                }
+                result = HeardSelfSay1Sentence(sentence, result, control);
             }
-            if (stopProcessing) return AbortedResult(message, result, control);
-            return HeardSelfSay1Sentence(message, result, control);
+            return result;
         }
+
 
         internal Result AbortedResult(string message, Result result, ThreadControl control)
         {
@@ -158,6 +160,7 @@ namespace RTParser
                     Request r = new AIMLbot.Request(message, BotAsUser, this, null);
                     r.writeToLog = writeDebugLine;
                     r.IsTraced = false;
+                    r.TimesOutAt = DateTime.Now + TimeSpan.FromSeconds(20);
                     return ChatWithUser(r, BotAsUser, HeardSelfSayGraph);
                 }
                 catch (Exception e)

@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using System.Collections.Generic;
+using RTParser.Utils;
 
 namespace RTParser.Normalize
 {
@@ -58,14 +59,57 @@ namespace RTParser.Normalize
         /// </summary>
         /// <returns>An array of strings representing the constituent "sentences"</returns>
         public Unifiable[] Transform()
-        {
-            string[] tokens = (string[])this.bot.Splitters.ToArray();
+        {            
+            string[] tokens = (string[])RTPBot.Splitters.ToArray();
+            string inputStringString = this.inputString.AsString() + " ";
+            if (bot.DontUseSplitters)
+            {
+                List<Unifiable> tidyString = new List<Unifiable>();
+                tokens = new [] { "!", "?", ". ", "<br>", "<p>" };
+                foreach (string token in tokens)
+                {
+                    inputStringString = inputStringString.Replace(token, token + " <split/> ");
+                }
+                string[] sss = inputStringString.Split(new [] {"<split/>"},
+                                                       System.StringSplitOptions.RemoveEmptyEntries);
+                foreach (string rawSentence in sss)
+                {
+                    string tidySentence = rawSentence.Replace("<br>", " ").Replace("<p>", " ").Trim().Replace("  ", " ").Replace("  ", " ");
+
+                    tidySentence = StaticAIMLUtils.ForInputTemplate(tidySentence);
+                    if (tidySentence.Length > 0)
+                    {
+                        tidyString.Add(tidySentence);
+                    }
+                    if (tidySentence == "." || tidySentence == "?")
+                    {
+                        continue;
+                    }
+                }
+                if (tidyString.Count > 0)
+                {
+                    return tidyString.ToArray();
+                }
+                while (inputStringString.Length > 0)
+                {
+                    int index = inputStringString.IndexOfAny(".!?".ToCharArray());
+                    if (index > 1)
+                    {
+                        string ss = inputStringString.Substring(0, index + 1);
+                        tidyString.Add(ss);
+                        inputStringString = inputStringString.Substring(index + 1);
+                        continue;
+                    }
+                    tidyString.Add(inputStringString);
+                }
+                return tidyString.ToArray();
+            }
             string[] rawResult = this.inputString.AsString().Split(tokens, System.StringSplitOptions.RemoveEmptyEntries);
             List<Unifiable> tidyResult = new List<Unifiable>();
             foreach (string rawSentence in rawResult)
             {
                 string tidySentence = rawSentence.Trim();
-                if (tidySentence.Length>0)
+                if (tidySentence.Length > 0)
                 {
                     tidyResult.Add(tidySentence);
                 }

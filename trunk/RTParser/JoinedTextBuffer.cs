@@ -14,13 +14,18 @@ namespace RTParser
         public void AddMore(string m)
         {
             if (Noise(m)) return;
+            if (m.ToLower().StartsWith(message.ToLower()))
+            {
+                message = RTPBot.ReTrimAndspace(m);
+                return;
+            }
             message += " " + m;
-            message = message.Trim().Replace("  ", " ");
+            message = RTPBot.ReTrimAndspace(message);
         }
 
         private bool Noise(string s)
         {
-            s = s.ToLower();
+            s = RTPBot.ReTrimAndspace(s.ToLower());
             if (s == "um,") return true;
             if (s == "you know,") return true;
             if (message.ToLower().EndsWith(s)) return true;

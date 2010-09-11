@@ -66,6 +66,10 @@ namespace RTParser.AIMLTagHandlers
                 bool succeed;
                 Unifiable v = base.GetActualValue(name, false, out succeed);
                 if (succeed) Succeed();
+                if (!succeed && Unifiable.IsNullOrEmpty(v))
+                {
+                    QueryHasFailed = true;
+                }
                 return v;
             }
             return Unifiable.Empty;

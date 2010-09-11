@@ -373,7 +373,7 @@ namespace RTParser
                     input = args.Substring(lastIndex + 1).Trim();
                 }
                 Result res = GlobalChatWithUser(input, user, writeDebugLine, true);
-                OutputResult(res, console);
+                OutputResult(res, console, false);
                 return true;
             }
 
@@ -390,7 +390,7 @@ namespace RTParser
                     input = args.Substring(lastIndex).Trim();
                 }
                 Result res = GlobalChatWithUser(input, user, writeDebugLine, true);
-                botJustSaid = OutputResult(res, console);
+                botJustSaid = OutputResult(res, console, false);
                 if (ProcessHeardPreds)
                     HeardSelfSayResponse(botJustSaid, res, control);
                 return true;
@@ -463,7 +463,7 @@ namespace RTParser
             if (cmd == "say")
             {
                 console("say> " + args);
-                HeardSelfSayResponse(args, LastResult, control);
+                HeardSelfSayVerbal(args, LastResult, control);
                 return true;
             }
 
@@ -589,7 +589,7 @@ namespace RTParser
                     ur.MaxTemplates = 99;
                     ur.ProcessMultiplePatterns = true;
                 }
-                ur.IsTraced = true;
+                ur.IsTraced = myUser.IsTraced;
                 console("-----------------------------------------------------------------");
                 AIMLbot.Result result = Chat0(ur, myUser.ListeningGraph);
                 console("-----------------------------------------------------------------");

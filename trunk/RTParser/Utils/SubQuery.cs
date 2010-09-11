@@ -19,7 +19,7 @@ namespace RTParser.Utils
     {
         public static object TagHandlerLock = new object();
         public static Dictionary<string, AIMLTagHandler> TagHandlers;
-        private RTPBot _TargetBot;
+        private RTPBot ov_TargetBot;
         public TemplateInfo CurrentTemplate;
         public Node Pattern;
         public string prefix;
@@ -51,8 +51,8 @@ namespace RTParser.Utils
 
         public RTPBot TargetBot
         {
-            get { return _TargetBot ?? Request.TargetBot; }
-            set { _TargetBot = value; }
+            get { return ov_TargetBot ?? Request.TargetBot; }
+            set { ov_TargetBot = value; }
         }
 
         #region Attributes
@@ -97,6 +97,8 @@ namespace RTParser.Utils
         /// will contain the block of text that the user has inputted that is matched by the wildcard.
         /// </summary>
         public List<Unifiable> TopicStar = new List<Unifiable>();
+
+        public bool HasFailed = false;
 
         #endregion
 
@@ -152,6 +154,11 @@ namespace RTParser.Utils
         public string NameSpace
         {
             get { return Request.Predicates.NameSpace; }
+        }
+
+        public ISettingsDictionary TargetListenerSettings
+        {
+            get { return Request.TargetListenerSettings; }
         }
 
         public Unifiable grabSetting(string name)
@@ -346,6 +353,11 @@ namespace RTParser.Utils
         public T ReduceStarAttribute<T>(IConvertible value) where T : IConvertible
         {
             return StaticAIMLUtils.ReduceStar<T>(value, this, this);
+        }
+
+        public void AddSideEffect(ThreadStart action)
+        {
+            UndoStack.GetStackFor(this).AddCommit(action);
         }
     }
 

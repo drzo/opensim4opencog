@@ -6,6 +6,37 @@ namespace RTParser.Utils
 {
     public class TextPatternUtils : StaticXMLUtils
     {
+        internal static bool DifferentBesidesCase(string sentenceIn, string sentence)
+        {
+            return sentence.ToLower() != sentenceIn.ToLower();
+        }
+
+        internal static string ReTrimAndspace(string substitute)
+        {
+            if (substitute == null) return null;
+            var csubstitute = substitute.ToCharArray();
+            return substitute.Replace("  ", " ").Replace("  ", " ").Replace("  ", " ").Trim();
+        }
+
+        /// Checks that the provided sentence ends with a sentence splitter
+        /// </summary>
+        /// <param name="sentence">the sentence to check</param>
+        /// <returns>True if ends with an appropriate sentence splitter</returns>
+        static public bool checkEndsAsSentence(string sentence)
+        {
+            sentence = sentence.Trim();
+
+            if ("!?.".Contains(sentence.Substring(sentence.Length - 1))) return true;
+            foreach (Unifiable splitter in RTPBot.Splitters)
+            {
+                if (sentence.EndsWith(splitter))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         public static OutputDelegate DEVNULL = TextFilter.DEVNULL;
 
         static TextPatternUtils()

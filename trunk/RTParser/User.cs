@@ -25,6 +25,16 @@ namespace RTParser
 
         #region Attributes
 
+        /// <summary>
+        /// If the user is being traced/debugged
+        /// </summary>
+        private bool wasTraced = false;
+        public override bool IsTraced
+        {
+            get { return base.IsTraced || bot.IsTraced; }
+            //set { base.IsTraced = value; }
+        }
+
         public ListAsSet<TemplateInfo> UsedTemplates = new ListAsSet<TemplateInfo>();
         public ListAsSet<TemplateInfo> DisabledTemplates = new ListAsSet<TemplateInfo>();
         public ListAsSet<QueryList> AllQueries = new ListAsSet<QueryList>();
@@ -316,6 +326,7 @@ namespace RTParser
                 WriterOptions = new PrintOptions();
                 this.id = userID;
                 this.bot = bot;
+                this.wasTraced = bot.IsTraced;
                 // we dont inherit the BotAsUser we inherit the bot's setings
                 // ApplySettings(bot.BotAsUser, this);
                 this.Predicates = new SettingsDictionary(userID + ".predicates", this.bot, provider);
