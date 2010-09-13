@@ -357,14 +357,17 @@ namespace RTParser.Variables
                 if (bot.RelationMetaProps != null) this.InsertMetaProvider(bot.GetRelationMetaProps);
             }
             IsTraced = true;
+            bot.RegisterDictionary(name, this);
             if (parent != null) _fallbacks.Add(parent);
             prefixProvideer = new PrefixProvider();
-            prefixProvideer.NameSpace = name + ".evalprefix";
+            string prefixName = name + ".evalprefix";
+            prefixProvideer.NameSpace = prefixName;
             ParentProvider pp = () => prefixProvideer;
+            bot.RegisterDictionary(prefixName, prefixProvideer);
+            var dict = FindDictionary(prefixName, () => this);
+            IsTraced = false;
             _fallbacks.Add(pp);
             _listeners.Add(pp);
-            bot.RegisterDictionary(prefixProvideer);
-            bot.RegisterDictionary(name, this);
         }
 
         #region Methods
