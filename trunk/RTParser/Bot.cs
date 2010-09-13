@@ -107,7 +107,7 @@ namespace RTParser
             Result res = new AIMLbot.Result(BotAsUser, this, r, null);
             res.writeToLog = writeToLog;
             res._CurrentQuery = new SubQuery(s, res, r);
-            OnBotCreated(() => { res.user = r.Requester = BotAsUser; });
+            OnBotCreated(() => { res.Requestor = r.Requester = BotAsUser; });
             r.IsTraced = this.IsTraced;            
             r.StartedOn = DateTime.Now;
             // times out in 15 minutes
@@ -710,6 +710,8 @@ namespace RTParser
                 isAcceptingUserInput = false;
 
                 RelationMetaProps = new SettingsDictionary("chat.relationprops", this, null);
+                RegisterDictionary("meta", RelationMetaProps);
+                RegisterDictionary("metaprops", RelationMetaProps);
 
                 GlobalSettings = new SettingsDictionary("bot.globalsettings", this, null);
                 GlobalSettings.InsertMetaProvider(GetRelationMetaProps);
@@ -728,9 +730,13 @@ namespace RTParser
 
                 //ParentProvider provider = new ParentProvider(() => GlobalSettings);
                 DefaultPredicates = new SettingsDictionary("bot.defaultpredicates", this, null);
+                DefaultPredicates = new SettingsDictionary("defaults", this, null);                
                 DefaultPredicates.InsertMetaProvider(GetRelationMetaProps);
                 HeardPredicates = new SettingsDictionary("chat.heardpredicates", this, null);
+                RegisterDictionary("heard", HeardPredicates);
                 AllUserPreds = new SettingsDictionary("bot.alluserpred", this, null);
+                RegisterDictionary("predicates", AllUserPreds);
+
                 AllUserPreds.InsertMetaProvider(GetRelationMetaProps);
 
 
@@ -845,7 +851,7 @@ namespace RTParser
             HostSystemCombine(pathToSettings, "log4j.xml");
 
             thiz.DefaultPredicates.loadSettings(HostSystemCombine(pathToSettings, "predicates.xml"), request);
-            thiz.DefaultPredicates.loadSettings(HostSystemCombine(pathToSettings, "properties.xml"), request);
+            thiz.DefaultPredicates.loadSettings(HostSystemCombine(pathToSettings, "properties.xml"), request);            
 
 
             thiz.Person2Substitutions.loadSettings(
@@ -1088,7 +1094,11 @@ namespace RTParser
         internal AIMLTagHandler GetTagHandler(User user, SubQuery query, Request request, Result result, XmlNode node,
                                               AIMLTagHandler handler)
         {
-            AIMLTagHandler tag = GetTagHandler00(user, query, request, result, node);
+            AIMLTagHandler tag = GetTagHandler00(user, query, request, result, node, true);
+            if (tag == null)
+            {
+                writeToLog("NULL TAG " + node.OuterXml);
+            }
             if (tag != null)
             {
                 tag.SetParent(handler);
@@ -1105,15 +1115,18 @@ namespace RTParser
                 {
                     tag.templateInfo = ti;
                 }
+                else
+                {
+                //    writeToLog("DEBUG9 Missing templateInfo " + node.OuterXml);
+                }
             }
             return tag;
         }
-
-        internal AIMLTagHandler GetTagHandler00(User user, SubQuery query, Request request, Result result, XmlNode node)
+       
+        internal AIMLTagHandler GetTagHandler00(User user, SubQuery query, Request request, Result result, XmlNode node, bool liText)
         {
             AIMLTagHandler tagHandler = getBespokeTags(user, query, request, result, node);
             string nodeNameLower = node.LocalName.ToLower();
-            bool liText = false;
             if (Equals(null, tagHandler))
             {
                 switch (nodeNameLower)
@@ -1451,7 +1464,7 @@ namespace RTParser
                         if (node.Name.ToLower() != newnode.Name.ToLower())
                         {
                             writeToLog("AIMLLOADER: converted " + node.OuterXml + " -> " + newnode.OuterXml);
-                            return GetTagHandler00(user, query, request, result, newnode);
+                            return GetTagHandler00(user, query, request, result, newnode, liText);
                         }
                         writeToLog("AIMLLOADER: ! convert " + node.OuterXml + " -> " + newnode.OuterXml);
                     }
@@ -1840,6 +1853,13 @@ The AIMLbot program.
                 }
                 return current;
             }
+
+            if (graphPath.ToLower().EndsWith(".parent"))
+            {
+                int graphPathLength = graphPath.Length - 7;
+                return GetGraph(graphPath.Substring(0, graphPathLength), current).Parent;
+            }
+
             graphPath = ToScriptableName(graphPath.Trim());
             lock (GraphsByName)
             {
@@ -1861,6 +1881,14 @@ The AIMLbot program.
             {
                 return current;
             }
+
+            if (graphPath.ToLower().EndsWith(".parent"))
+            {
+                int graphPathLength = graphPath.Length - 7;
+                var G = FindGraph(graphPath.Substring(0, graphPathLength), current);
+                if (G != null) return G.Parent;
+            }
+
             graphPath = ToScriptableName(graphPath.Trim());
 
             if (graphPath == "current" || graphPath == "")
@@ -1880,7 +1908,6 @@ The AIMLbot program.
                     return _h;
                 }
             }
-
             if (graphPath == "parent")
             {
                 if (current == null) return null;
@@ -2311,11 +2338,6 @@ The AIMLbot program.
             if (named == null) return null;
             string key = named.ToLower().Trim();
             if (key == "") return null;
-            if (key == "bot" || key == "predicates") return SDCAST(GlobalSettings);
-            // try to use a global blackboard predicate
-            User gUser = ExemplarUser;
-            if (key == "globalpreds") return SDCAST(gUser);
-            if (key == "allusers") return SDCAST(AllUserPreds);
             lock (AllDictionaries)
             {
                 ISettingsDictionary dict;
@@ -2324,6 +2346,14 @@ The AIMLbot program.
                     return SDCAST(dict);
                 }
             }
+            if (key == "predicates")
+            {
+                return SDCAST(this.AllUserPreds);
+            }
+            // try to use a global blackboard predicate
+            User gUser = ExemplarUser;
+            if (key == "globalpreds") return SDCAST(gUser);
+            if (key == "allusers") return SDCAST(AllUserPreds);
             var path = named.Split(new[] {'.'});
             if (path.Length == 1)
             {
@@ -2423,14 +2453,18 @@ The AIMLbot program.
             }
         }
 
-        public void RegisterDictionary(string named, SettingsDictionary dict)
+        public void RegisterDictionary(ISettingsDictionary dict)
+        {
+            RegisterDictionary(dict.NameSpace,dict);
+        }
+        public void RegisterDictionary(string named, ISettingsDictionary dict)
         {
             named = named.ToLower().Trim().Replace("  ", " ");
             string key = named.Replace(" ", "_");
             RegisterDictionary(named, dict, true);
         }
 
-        public void RegisterDictionary(string key, SettingsDictionary dict, bool always)
+        public void RegisterDictionary(string key, ISettingsDictionary dict, bool always)
         {
             lock (AllDictionaries)
             {
@@ -2447,7 +2481,7 @@ The AIMLbot program.
             }
         }
 
-        private void RegisterSubstitutions(string named, SettingsDictionary dict)
+        private void RegisterSubstitutions(string named, ISettingsDictionary dict)
         {
             dict.IsTraced = false;
             RegisterDictionary("substitutions" + "." + named, dict);

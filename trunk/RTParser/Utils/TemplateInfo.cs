@@ -16,6 +16,7 @@ namespace RTParser.Utils
         public double Rating = 1.0;
         public Unifiable TextSaved;
         string _templateKey;
+        private List<XmlNode> AdditionalRules;
 
         public TemplateInfo(XmlNode template, GuardInfo guard, Node patternNode, CategoryInfo categoryInfo)
             : base(template)
@@ -236,6 +237,13 @@ namespace RTParser.Utils
         public void AppendTemplate(XmlNode node, CategoryInfo category, List<XmlNode> nodes)
         {
             throw new NotImplementedException();
+        }
+
+        public void AddRules(List<XmlNode> rules)
+        {
+            if (rules==null || rules.Count==0) return   ;
+            if (this.AdditionalRules == null) this.AdditionalRules = new List<XmlNode>();
+            AdditionalRules.AddRange(rules);
         }
     }
 

@@ -98,7 +98,8 @@ namespace RTParser.Utils
         /// </summary>
         public List<Unifiable> TopicStar = new List<Unifiable>();
 
-        public bool HasFailed = false;
+        public int HasFailed = 0;
+        public int HasSuceeded = 0;
 
         #endregion
 
@@ -121,7 +122,7 @@ namespace RTParser.Utils
         /// <param name="name">The name of the setting to remove</param>
         public bool removeSetting(string name)
         {
-            return Request.Predicates.removeSetting(name);
+            return RequesterPredicates.removeSetting(name);
         }
 
         /// <summary>
@@ -132,7 +133,7 @@ namespace RTParser.Utils
         /// <param name="value">the new value</param>
         public bool updateSetting(string name, Unifiable value)
         {
-            return Request.Predicates.updateSetting(name, value);
+            return RequesterPredicates.updateSetting(name, value);
         }
 
         /// <summary>
@@ -148,17 +149,21 @@ namespace RTParser.Utils
 
         public bool containsLocalCalled(string name)
         {
-            return Request.Predicates.containsLocalCalled(name);
+            return RequesterPredicates.containsLocalCalled(name);
         }
 
         public string NameSpace
         {
-            get { return Request.Predicates.NameSpace; }
+            get { return RequesterPredicates.NameSpace; }
         }
 
-        public ISettingsDictionary TargetListenerSettings
+        public ISettingsDictionary RequesterPredicates
         {
-            get { return Request.TargetListenerSettings; }
+            get { return Request.RequesterPredicates; }
+        }
+        public ISettingsDictionary ResponderPredicates
+        {
+            get { return Request.ResponderPredicates; }
         }
 
         public Unifiable grabSetting(string name)
@@ -305,7 +310,7 @@ namespace RTParser.Utils
                     result = result ?? subquery.Result;
                     request = request ?? subquery.Request ?? result.request;
                     result = result ?? request.CurrentResult;
-                    user = user ?? result.user;
+                    user = user ?? result.Requestor;
                     bot = request.TargetBot;
                 }
                 handler = bot.GetTagHandler(user, subquery, request, result, node, null);

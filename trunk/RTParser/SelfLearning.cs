@@ -22,8 +22,8 @@ namespace RTParser
 {
     public partial class RTPBot
     {
-
-        public void HeardSelfSayVerbal(string message, Result result, ThreadControl control)
+        public static bool UnderstandSentenceOutsideQueue = true;
+        public void HeardSelfSayVerbal(User theFactSpeaker, User toWhom, string message, Result result, ThreadControl control)
         {
             message = ToHeard(message);
             if (string.IsNullOrEmpty(message)) return;
@@ -32,19 +32,19 @@ namespace RTParser
             {
                 return;
             }
-            botJustSaid = message;
+            responderJustSaid = message;
             message = currentEar.GetMessage();
             currentEar = new JoinedTextBuffer();
-            result = result ?? (LastUser == null ? null : LastUser.LastResult);
-            if (control == null)
+            result = result ?? (toWhom == null ? null : toWhom.LastResult);
+            if (control == null && !UnderstandSentenceOutsideQueue)
             {
                 ManualResetEvent newManualResetEvent = new ManualResetEvent(false);
                 control = new ThreadControl(newManualResetEvent);
             }
-            HeardSelfSay1Sentence(message, result, control);
+            HeardSelfSay1Sentence(theFactSpeaker, toWhom, message, result, control);
         }
 
-        public Result HeardSelfSayResponse(string message, Result result, ThreadControl control)
+        public Result HeardSelfSayResponse(User theFactSpeaker, User toWhom, string message, Result result, ThreadControl control)
         {
             Result LR = null;
             if (message == null) return result;
@@ -67,7 +67,7 @@ namespace RTParser
                     Unifiable unifiableJoin = Unifiable.Join(" <br> ", sentences, i, sentences.Length - 1);
                     return AbortedResult(unifiableJoin, result, control);
                 }
-                result = HeardSelfSay1Sentence(sentence, result, control);
+                result = HeardSelfSay1Sentence(theFactSpeaker, toWhom, sentence, result, control);
             }
             return result;
         }
@@ -78,7 +78,7 @@ namespace RTParser
             return result;
         }
 
-        public Result HeardSelfSay1Sentence(string message, Result result, ThreadControl control)
+        public Result HeardSelfSay1Sentence(User theFactSpeaker, User toWhom, string message, Result result, ThreadControl control)
         {
             Result LR = result;
             if (message == null) return LR;
@@ -107,7 +107,7 @@ namespace RTParser
             }
             bool wasQuestion = WasQuestion(message);
             string desc = string.Format("ROBOT {1} USER: {0}", message, wasQuestion ? "ASKS" : "TELLS");
-            return RememberSpoken(desc, message, result, control);
+            return RememberSpoken(theFactSpeaker, toWhom, desc, message, result, control);
         }
 
         private static bool WasQuestion(string message)
@@ -115,53 +115,59 @@ namespace RTParser
             return message.Contains("?");
         }
 
-        private Result RememberSpoken(string desc, string message, Result result, ThreadControl control)
+        private Result RememberSpoken(User theFactSpeaker, User toWhom, string desc, string message, Result result, ThreadControl control)
         {
             message = ToHeard(message);
             if (string.IsNullOrEmpty(message)) return result;
             writeChatTrace(desc);
-            if (control == null)
+            if (control == null || UnderstandSentenceOutsideQueue)
             {
-                return UnderstandSentence(desc, message, result, control);
+                return UnderstandSentence(theFactSpeaker, toWhom, desc, message, result, control);
             }
 
             control.AbortRaised += (ctl, abrtedE) => writeToLog("Aborted " + desc);
             HeardSelfSayQueue.EnqueueWithTimeLimit(()
-                                                   => result = UnderstandSentence(desc, message, result, control), desc,
+                                                   => result = UnderstandSentence(theFactSpeaker, toWhom, desc, message, result, control), desc,
                                                    TimeSpan.FromSeconds(10), control);
             control.WaitUntilComplete();
             return result;
         }
 
-
-        private Result UnderstandSentence(string desc, string message, Result res, ThreadControl control)
+        private bool UnderstandingSentences = false;
+        private Result UnderstandSentence(User theFactSpeaker, User toWhom, string desc, string message, Result res, ThreadControl control)
         {
             Result LR = res;
-            if (LR != null && LastUser != null)
+            if (LR != null && toWhom != null)
             {
-                lock (LastUser.QueryLock)
+                //lock (toWhom.QueryLock)
                 {
-                    LR = LastUser.LastResult;
+                    LR = toWhom.LastResult;
                     if (LR != null)
                     {
                         LR.AddOutputSentences(null, message);
                     }
                 }
             }
+            if (UnderstandingSentences)
+            {
+                return res;
+            }
+            UnderstandingSentences = true;
             writeDebugLine("-----------------------------------------------------------------");
             writeDebugLine("HEARDSELF: " + message);
             writeDebugLine("-----------------------------------------------------------------");
-            return LR;
+            //return LR;
             try
             {
                 if (message == null || message.Length < 4) return null;
                 try
                 {
-                    Request r = new AIMLbot.Request(message, BotAsUser, this, null);
+                    Request r = new AIMLbot.Request(message, theFactSpeaker, this, null, toWhom);
                     r.writeToLog = writeDebugLine;
                     r.IsTraced = false;
-                    r.TimesOutAt = DateTime.Now + TimeSpan.FromSeconds(20);
-                    return ChatWithUser(r, BotAsUser, LastUser,  HeardSelfSayGraph);
+                    r.TimesOutAt = DateTime.Now + TimeSpan.FromSeconds(5);
+                    var G = _g ?? HeardSelfSayGraph;
+                    return ChatWithUser(r, theFactSpeaker, toWhom, G);
                 }
                 catch (Exception e)
                 {
@@ -171,7 +177,8 @@ namespace RTParser
             }
             finally
             {
-                BotAsUser.Predicates.addSetting("lastsaid", message);
+                UnderstandingSentences = false;                    
+                theFactSpeaker.Predicates.addSetting("lastsaid", message);
             }
         }
 

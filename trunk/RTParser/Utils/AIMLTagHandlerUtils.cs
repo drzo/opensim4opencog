@@ -1,5 +1,6 @@
 using System;
 using System.Xml;
+using RTParser.Variables;
 using LineInfoElement = MushDLR223.Utilities.LineInfoElementImpl;
 using StringAppendableUnifiable = RTParser.StringAppendableUnifiableImpl;
 
@@ -159,5 +160,31 @@ namespace RTParser.Utils
         }
 
         #endregion
+
+        internal static string GetNameOfDict(SubQuery query, string dictName, XmlNode templateNode, out ISettingsDictionary dict)
+        {
+            //ISettingsDictionary udict = query.GetDictionary(type, templateNode, dict);
+
+            string type = GetAttribValue(templateNode, "type,dict", dictName);
+            if (type == null)
+            {
+                string uname = GetAttribValue(templateNode, "user", null);
+                if (uname != null) dictName = GetNamedType("user", uname);
+                string bname = GetAttribValue(templateNode, "bot", null);
+                if (bname != null) dictName = GetNamedType("bot", bname);
+            }
+            bool preferBotOverUser = (type == "bot");
+
+            if (preferBotOverUser)
+            {
+                dict = query.ResponderPredicates;
+            }
+            else
+            {
+                dict = query.GetDictionary(type);
+            }
+            if (dict == null) dict = query;
+            return dictName;
+        }
     }
 }

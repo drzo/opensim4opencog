@@ -39,7 +39,6 @@ namespace RTParser.Utils
         /// </summary>
         public SubQuery query;
 
-        protected Unifiable RecurseResult = Unifiable.NULL;
         internal TemplateInfo templateInfo;
 
         /// <summary>
@@ -158,17 +157,12 @@ namespace RTParser.Utils
             get
             {
                 string s2;
-                if (!Unifiable.IsNull(RecurseResult))
-                {
-                    return RecurseResult;
-                }
+                if (RecurseResultValid) return RecurseResult;                
                 else
                 {
+                    // s2 build it if needbee
                     s2 = Recurse();
-                    if (!Unifiable.IsNull(RecurseResult))
-                    {
-                        return RecurseResult;
-                    }
+                    if (RecurseResultValid) return RecurseResult;                
                 }
                 string sr = Unifiable.InnerXmlText(templateNode);
                 return CheckValue(sr);
@@ -191,13 +185,104 @@ namespace RTParser.Utils
 
         public virtual bool QueryHasFailed
         {
-            get { return query.HasFailed; }
-            set { query.HasFailed = true; }
+            get { return query.HasFailed > 0; }
+            set
+            {
+                if (InUnify)
+                {
+                    writeToLog("InUnify QueryHasFailed=" + value);
+                    return;
+                } 
+                query.HasFailed += (value ? 1 : 0);
+            }
+        }
+        public virtual bool QueryHasSuceeded
+        {
+            get { return query.HasSuceeded > 0; }
+            set
+            {
+                if (InUnify)
+                {
+                    writeToLog("InUnify QueryHasFailed=" + value);
+                    return;
+                } 
+                query.HasSuceeded += (value ? 1 : 0);
+            }
         }
 
+        public virtual int QueryHasFailedN
+        {
+            get { return query.HasFailed; }
+            set { query.HasFailed += value; }
+        }
+        public virtual int QueryHasSuceededN        
+        {
+            get { return query.HasSuceeded; }
+            set { query.HasSuceeded += value; }
+        }
+        private Unifiable _RecurseResult;
+        private bool _RecurseResultValid;
+        protected bool InUnify;
+
+        public bool RecurseResultValid
+        {
+            get
+            {
+                if (!_RecurseResultValid) return false;
+                if (!IsNullOrEmpty(_RecurseResult)) return true;
+                return true;
+            }
+            set
+            {
+
+                if (value == _RecurseResultValid) return;
+                if (value)
+                {
+                    if (IsNull(_RecurseResult))
+                    {
+                        writeToLogWarn("Set _RecurseResult to String.Empty at least!");
+                    }
+
+                }
+                _RecurseResultValid = value;
+
+            }
+        }
+
+        protected Unifiable RecurseResult
+        {
+            get
+            {
+                if (!_RecurseResultValid) return Unifiable.NULL;
+                if (!IsNullOrEmpty(_RecurseResult)) return _RecurseResult;
+                return _RecurseResult;
+            }
+            set
+            {
+                _RecurseResult = value;
+                RecurseResultValid = true;        
+            }
+        }
+        protected bool ResultReady(out Unifiable result0)
+        {
+            result0 = RecurseResult;
+            if (_RecurseResultValid) return true;
+
+            if (templateNode.InnerXml.StartsWith("+"))
+            {
+                string s = templateNode.InnerXml.Substring(1);
+                s = s.TrimStart("+ ".ToCharArray());
+                result0 = s;
+                return true;
+            }
+            // if (!Unifiable.IsNullOrEmpty(result0)) return true;
+            return false;
+        }
         protected bool ResultReady(out string result0)
         {
             result0 = RecurseResult;
+            if (_RecurseResultValid) return true;
+
             if (templateNode.InnerXml.StartsWith("+"))
             {
                 string s = templateNode.InnerXml.Substring(1);
@@ -210,7 +295,7 @@ namespace RTParser.Utils
         }
 
         public void SetParent(AIMLTagHandler handler)
-        {
+        {            
             if (handler == this)
             {
                 throw new InvalidOperationException("same");
@@ -220,6 +305,15 @@ namespace RTParser.Utils
                 //throw new InvalidOperationException("no parent handler");                
             }
             Parent = handler;
+            ResetValues(true);
+        }
+
+        public void ResetValues(bool childsTo)
+        {
+            QueryHasFailed = false;
+            IsStarted = false;
+            _RecurseResultValid = false;
+            _RecurseResult = null; // Unifiable.NULL;
         }
 
         // This was from the original source of the AIML Tag
@@ -252,10 +346,7 @@ namespace RTParser.Utils
             ThreadStart OnExit = EnterTag(request, templateNode, query);
             try
             {
-                if (!Unifiable.IsNull(RecurseResult))
-                {
-                    return RecurseResult;
-                }
+                if (RecurseResultValid) return RecurseResult;
                 IsStarted = true;
                 RecurseResult = ProcessChange();
                 return RecurseResult;
@@ -272,6 +363,7 @@ namespace RTParser.Utils
         /// </summary>
         public Unifiable CompleteAimlProcess()
         {
+
             ThreadStart OnExit = EnterTag(request, templateNode, query);
             try
             {
@@ -310,17 +402,30 @@ namespace RTParser.Utils
             return (score1 < score2) ? score1 : score2;
         }
 
-        public override sealed float CallCanUnify(Unifiable with)
+
+        public ThreadStart EnterUnify()
         {
             bool prev = NamedValuesFromSettings.UseLuceneForGet;
+            bool prevUnify = InUnify;
+            NamedValuesFromSettings.UseLuceneForGet = false;
+            InUnify = true;
+            return () =>
+                       {
+                           InUnify = prevUnify;
+                           NamedValuesFromSettings.UseLuceneForGet = prev;
+                       };
+        }
+
+        public override sealed float CallCanUnify(Unifiable with)
+        {
+            var exitUnify = EnterUnify();
             try
             {
-                NamedValuesFromSettings.UseLuceneForGet = false;
                 return CanUnify(with);
             }
             finally
             {
-                NamedValuesFromSettings.UseLuceneForGet = prev;
+                exitUnify();
             }
         }
 
@@ -328,10 +433,12 @@ namespace RTParser.Utils
         {
             writeToLog("<!-- FAILURE: " + p.Replace("<!--", "<#-").Replace("-->", "-#>") + "-->");
             return Unifiable.Empty;
+            this.QueryHasFailedN++;
         }
 
         protected Unifiable Succeed(string p)
         {
+            this.QueryHasSuceededN++;
             return "<!-- SUCCEED: " + p.Replace("<!--", "<#-").Replace("-->", "-#>") + "-->";
         }
 
@@ -350,8 +457,7 @@ namespace RTParser.Utils
             string s = Unifiable.InnerXmlText(templateNode);
             if (string.IsNullOrEmpty(s))
             {
-                if (!Unifiable.IsNullOrEmpty(RecurseResult))
-                    return RecurseResult;
+                if (RecurseResultValid) return RecurseResult;
                 return Succeed(templateNode.OuterXml);
             }
             return s;
@@ -381,24 +487,6 @@ namespace RTParser.Utils
             return false;
         }
 
-        internal string GetDictName(string tryFirst)
-        {
-            return GetDictName(templateNode, tryFirst);
-        }
-
-        static internal string GetDictName(XmlNode templateNode, string tryFirst)
-        {
-            string type = GetAttribValue(templateNode, tryFirst, null);
-            if (type == null)
-            {
-                string uname = GetAttribValue(templateNode, "user", null);
-                if (uname != null) type = GetNamedType("user", uname);
-                string bname = GetAttribValue(templateNode, "bot", null);
-                if (bname != null) type = GetNamedType("bot", bname);
-            }
-            return type;
-        }
-
         public Unifiable GetStarContent()
         {
             XmlNode starNode = getNode("<star/>", templateNode);
@@ -423,16 +511,21 @@ namespace RTParser.Utils
                                                     afterEachOrNull, bool saveResultsOnChildren)
         {
             afterEachOrNull = afterEachOrNull ?? ((passthru) => passthru);
-
+            bool templateNodeHasChildNodes = templateNode.HasChildNodes;
             // pre textualized ?
-            if (!templateNodeInnerText.IsEmpty)
+            var innerText = this.templateNodeInnerText;
+            if (!innerText.IsEmpty)
             {
+                if (!templateNodeHasChildNodes)
+                {
+                    writeToLog("!templateNodeHasChildNodes ?!");
+                }
                 // non atomic version of the node
-                return afterEachOrNull(templateNodeInnerText);
+                return afterEachOrNull(innerText);
             }
             else
             {
-                if (!templateNode.HasChildNodes)
+                if (!templateNodeHasChildNodes)
                 {
                     // atomic version of the node
                     Unifiable templateResult = GetStarContent();
@@ -517,8 +610,18 @@ namespace RTParser.Utils
             AIMLTagHandler part = Proc.GetTagHandler(user, query, request, result, childNode, this);
             return part;
         }
-
         protected Unifiable ProcessChildNode(XmlNode childNode, bool protectChildren, bool saveOnInnerXML)
+        {
+            bool success;
+            var vv = ProcessChildNode(childNode, protectChildren, saveOnInnerXML, out success);
+            if (!success)
+            {
+                QueryHasFailedN++;
+            }
+            return vv;
+        }
+
+        protected Unifiable ProcessChildNode(XmlNode childNode, bool protectChildren, bool saveOnInnerXML, out bool success)
         {
             try
             {
@@ -526,6 +629,7 @@ namespace RTParser.Utils
                 {
                     string s = childNode.InnerXml.Substring(1);
                     s = s.TrimStart("+ ".ToCharArray());
+                    success = true;
                     return s;
                 }
                 if (childNode.NodeType == XmlNodeType.Text)
@@ -533,16 +637,19 @@ namespace RTParser.Utils
                     string value = childNode.InnerText.Trim();
                     if (value.StartsWith("+"))
                     {
+                        success = true;
                         return value.Substring(1);
                     }
                     if (saveOnInnerXML)
                     {
                         childNode.InnerText = "+" + value;
                     }
+                    success = true;
                     return value;
                 }
                 else if (childNode.NodeType == XmlNodeType.Comment)
                 {
+                    success = true;
                     if (saveOnInnerXML) childNode.InnerXml = "";
                     return String.Empty;
                 }
@@ -556,9 +663,31 @@ namespace RTParser.Utils
                                                     request, result, user,
                                                     this, copyChild, copyParent,
                                                     out tagHandlerChild);
-                    if (Unifiable.IsNull(value))
+                    success = true;
+                    if (IsNull(value))
                     {
+                        if (tagHandlerChild!=null && tagHandlerChild.QueryHasSuceeded)
+                            success = true;
                         writeToLogWarn("ERROR NULL AIMLTRACE " + value + " -> " + childNode.OuterXml + "!");
+                        success = false;
+                    }
+                    else
+                    {
+                        if (tagHandlerChild == null)
+                        {
+                            writeToLogWarn("ERROR tagHandlerChild AIMLTRACE " + value + " -> " + childNode.OuterXml + "!");
+                            request.TimesOutAt = DateTime.Now + TimeSpan.FromMinutes(2); // for debugging
+                            value = Proc.processNode(childNode, query,
+                                                    request, result, user,
+                                                    this, copyChild, copyParent,
+                                                    out tagHandlerChild);
+                        }
+                        else
+                        {
+                            if (tagHandlerChild.QueryHasFailed) success = false;
+                            if (tagHandlerChild.QueryHasSuceeded)
+                                success = true;
+                        }
                     }
                     if (saveOnInnerXML)
                     {
@@ -572,33 +701,64 @@ namespace RTParser.Utils
             {
                 string value = "ERROR: " + e;
                 writeToLog(value);
+                success = false;
                 return value;
             }
         }
 
         protected Unifiable Recurse()
         {
-            if (!Unifiable.IsNull(RecurseResult))
+            bool _wasRecurseResultValid = _RecurseResultValid;
+            try
             {
-                writeToLog("USING CACHED RECURSE " + RecurseResult);
-                // use cached recurse value
-                return RecurseResult;
+                if (RecurseResultValid)
+                {
+                    writeToLog("USING CACHED RECURSE " + RecurseResult);
+                    // use cached recurse value
+                    return RecurseResult;
+                }
+                return RecurseReal();
             }
+            finally
+            {
+                if (_RecurseResultValid != _wasRecurseResultValid)
+                {
+                    writeToLogWarn("_RecurseResultValid chged to " + _RecurseResultValid);
+                }
+                _RecurseResultValid = _wasRecurseResultValid;
+            }
+        }
+        protected Unifiable RecurseReal()
+        {
             //Unifiable templateNodeInnerText;//= this.templateNodeInnerText;
             Unifiable templateResult = Unifiable.CreateAppendable();
             if (this.templateNode.HasChildNodes)
             {
+                int goods = 0;
                 // recursively check
                 foreach (XmlNode childNode in this.templateNode.ChildNodes)
                 {
-                    Unifiable found = ProcessChildNode(childNode, ReadOnly, false);
-                    templateResult.Append(found);
+                    if (childNode.NodeType == XmlNodeType.Comment) continue;           
+                    bool success;
+                    Unifiable found = ProcessChildNode(childNode, ReadOnly, false, out success);
+                    templateResult.Append(found);                                         
+                    if (found == "" && StaticAIMLUtils.IsSilentTag(childNode))
+                    {
+                        goods++;
+                        continue;
+                    }
+                    if (success)
+                    {
+                        QueryHasSuceeded = true;
+                        continue;
+                    }
+                    if (goods == 0) QueryHasFailed = true;
                 }
                 //templateNodeInnerText = templateResult;//.ToString();
                 if (!templateResult.IsEmpty)
                 {
                     templateResult = CheckValue(templateResult);
-                    RecurseResult = templateResult;
+                    _RecurseResult = templateResult;
                 }
                 return templateResult;
             }
@@ -631,7 +791,7 @@ namespace RTParser.Utils
         {
             if (!this.inputString.IsEmpty)
             {
-                if (!Unifiable.IsNull(RecurseResult))
+                if (RecurseResultValid)
                 {
                     return RecurseResult;
                 }
@@ -653,7 +813,7 @@ namespace RTParser.Utils
         public virtual Unifiable RecurseProcess()
         {
             //#endif
-            if (!Unifiable.IsNullOrEmpty(RecurseResult))
+            if (RecurseResultValid)
             {
                 return RecurseResult;
             }
@@ -714,6 +874,10 @@ namespace RTParser.Utils
 
         public virtual void SaveResultOnChild(XmlNode node, string value)
         {
+            if (InUnify)
+            {
+                return;
+            }
             //if (value == null) return;
             //if (value == "") return;
             value = CheckValue(value);
@@ -742,25 +906,17 @@ namespace RTParser.Utils
             return true;
         }
 
-        protected Unifiable GetActualValue(string name, bool preferBotOverUser, out bool succeed)
+        protected Unifiable GetActualValue(string name, string dictName, out bool succeed)
         {
-            ISettingsDictionary dict = query;
-            return GetActualValue(templateNode, name, preferBotOverUser, out succeed, query);
+            //ISettingsDictionary dict = query;
+            return GetActualValue(templateNode, name, dictName, out succeed, query);
         }
 
-        static protected Unifiable GetActualValue(XmlNode templateNode, string name, bool preferBotOverUser, out bool succeed, SubQuery query)
+        static protected Unifiable GetActualValue(XmlNode templateNode, string name, string dictNameIn, out bool succeed, SubQuery query)
         {
-            ISettingsDictionary dict = query;
+            ISettingsDictionary dict;// = query;
             Unifiable defaultVal = GetAttribValue(templateNode, "default,defaultValue", Unifiable.Empty);
-            string dictName = GetDictName(templateNode, "type,dict");
-            if (dictName == null)
-            {
-                dictName = preferBotOverUser ? "bot" : "user";
-            }
-            if (preferBotOverUser)
-            {
-                dict = query.TargetListenerSettings;
-            }
+            string dictName = GetNameOfDict(query, dictNameIn, templateNode, out dict);
             Unifiable gName = GetAttribValue(templateNode, "global_name", name);
             string realName;
             Unifiable v = NamedValuesFromSettings.GetSettingForType(
@@ -771,6 +927,11 @@ namespace RTParser.Utils
 
         protected virtual void AddSideEffect(string namedEffect, ThreadStart func)
         {
+            if (InUnify)
+            {
+                writeToLog("InUnify " + namedEffect);
+                return;
+            } 
             if (QueryHasFailed)
             {
                 writeToLog("SKIPPING " + namedEffect);

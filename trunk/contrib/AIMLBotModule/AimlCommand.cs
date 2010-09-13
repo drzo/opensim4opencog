@@ -120,7 +120,7 @@ namespace AIMLBotModule
             double ratng;
             var MyBot = WorldSystemModule.MyBot;
             var myUser = MyBot.FindOrCreateUser(lastKnownUser);
-            lock (myUser.QueryLock)
+            //lock (myUser.QueryLock)
             {
                 myUser.CurrentRequest = null;
                 String useOut = WorldSystemModule.AIMLInterpScored(joined, myUser, out ratng);

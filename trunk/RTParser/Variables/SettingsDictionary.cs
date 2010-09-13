@@ -239,6 +239,7 @@ namespace RTParser.Variables
             ParentProvider pp = () => prefixProvideer;
             _fallbacks.Add(pp);
             _listeners.Add(pp);
+            bot.RegisterDictionary(prefixProvideer);
             bot.RegisterDictionary(name, this);
         }
 
@@ -632,7 +633,7 @@ namespace RTParser.Variables
                 if (!string.IsNullOrEmpty(name))
                 {
                     ParentProvider pp = settingsDict.FindDictionary(name, null);
-                    if (pp == null || pp() == null)
+                    if (pp == null /* || pp() == null*/)
                     {
                         settingsDict.writeToLog("DEBUG9 Cannot ResolveToObject settings line {0} in {1}", name, settingsDict);
                         return;
@@ -755,14 +756,32 @@ namespace RTParser.Variables
             lower == "substitution" || lower == "param" || lower == "parameter" || lower == "substitute";
         }
 
+
         public ParentProvider FindDictionary(string name, ParentProvider fallback)
+        {
+            ParentProvider pp = FindDictionary0(name, fallback);
+            if (pp != null) return pp.Invoke;
+           
+            return () => new ProvidedSettingsDictionary(name, () => FindDictionary0(name, fallback)());
+        }
+
+        public ParentProvider FindDictionary0(string name, ParentProvider fallback)
         {
             var rtpbotobjCol = MushDLR223.ScriptEngines.ScriptManager.ResolveToObject(this, name);
             if (rtpbotobjCol == null || rtpbotobjCol.Count == 0)
             {
+                string clipIt;
+                var prep = prefixProvideer.GetChildPrefixed(name, out clipIt);
+                if (prep != null)
+                {
+                    if (clipIt == ".") return prep;
+                    var pp0 = prep();
+                    return prep;
+                }
                 var botGetDictionary = bot.GetDictionary(name);
-                if (botGetDictionary != null) return ToParentProvider(botGetDictionary);
+                if (botGetDictionary != null) return ToParentProvider(botGetDictionary);               
                 writeToLog("DEBUG9 Cannot ResolveToObject settings line {0} in {1}", name, this);
+                //return () => new ProvidedSettingsDictionary(NameSpace + "." + name, () => FindDictionary(name, null).Invoke());
                 return fallback;
             }
             //if (tr)
@@ -1709,6 +1728,11 @@ namespace RTParser.Variables
                 }
             }
             return un;
+        }
+
+        public void AddPrefix(string prefix, ParentProvider dict)
+        {
+            prefixProvideer.AddChild(prefix, dict);
         }
     }
 }

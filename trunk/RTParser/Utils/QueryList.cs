@@ -2,6 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Xml;
+using MushDLR223.ScriptEngines;
+using MushDLR223.Utilities;
 
 namespace RTParser.Utils
 {
@@ -11,12 +13,18 @@ namespace RTParser.Utils
         public bool NoMoreResults;
         public List<Node> PatternsUsed;
         private List<TemplateInfo> Templates;
-        public Request TheRequest;
+        public RequestImpl TheRequest;
 
+        public ICollection<GraphMaster> DisallowedGraphs
+        {
+            get { return TheRequest.ParentMostRequest.DisallowedGraphs; }
+        }
+
+         
         public QueryList(Request request)
             : base(request)
         {
-            TheRequest = request;
+            TheRequest = (RequestImpl) request;
         }
 
         #region Overrides of RequestSettingsImpl
@@ -178,6 +186,25 @@ namespace RTParser.Utils
         public bool CanUseNode(Node node)
         {
             return true;
+        }
+        public List<SubQuery> PreprocessSubQueries(Request request, ICollection<SubQuery> resultSubQueries, bool isTraced, ref bool printedSQs, OutputDelegate writeToLog)
+        {
+            // var usingResultSubQueries = new List<SubQuery>();
+            //todo pick and chose the queries
+            // if (result.SubQueries.Count != 1)
+            if (isTraced)
+            {
+                string s = "AIMLTRACE: SubQueries.Count = " + resultSubQueries.Count;
+                foreach (SubQuery path in resultSubQueries)
+                {
+                    s += Environment.NewLine;
+                    s += "  " + Unifiable.ToVMString(path.FullPath);
+                }
+                printedSQs = true;
+                writeToLog(s);
+                DLRConsole.SystemFlush();
+            }
+            return (List<SubQuery>) resultSubQueries;
         }
     }
 }

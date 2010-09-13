@@ -278,7 +278,7 @@ namespace RTParser
                 writeLine("-----------------------------------------------------------------");
                 if (String.IsNullOrEmpty(input))
                 {
-                    writeLine(myName + "> " + myBot.botJustSaid);
+                    writeLine(myName + "> " + myBot.responderJustSaid);
                     continue;
                 }
                 try
@@ -287,6 +287,10 @@ namespace RTParser
                     if (!input.Contains("@") && !IsNullOrEmpty(cmdprefix))
                     {
                         input = cmdprefix.AsString() + " " + input;
+                    }
+                    if (input == "@")
+                    {
+                        input = myBot.responderJustSaid;
                     }
 
                     bool myBotBotDirective = false;
@@ -300,7 +304,7 @@ namespace RTParser
                     writeLine("-----------------------------------------------------------------");
                     writeLine("{0}: {1}", myUser.UserName, userJustSaid);
                     writeLine("---------------------");
-                    writeLine("{0}: {1}", myName, myBot.botJustSaid);
+                    writeLine("{0}: {1}", myName, myBot.responderJustSaid);
                     writeLine("-----------------------------------------------------------------");
                 }
                 catch (Exception e)
@@ -338,6 +342,10 @@ namespace RTParser
         }
         public bool BotDirective(Request request, string input, OutputDelegate console, ThreadControl control)
         {
+            if (request != null && request.CurrentResult != null)
+            {
+                writeChatTrace("CurrentResult: " + request.CurrentResult);
+            }
             if (input == null) return false;
             input = input.Trim();
             if (input == "") return false;
@@ -372,7 +380,7 @@ namespace RTParser
                     user = args.Substring(0, lastIndex).Trim();
                     input = args.Substring(lastIndex + 1).Trim();
                 }
-                Result res = GlobalChatWithUser(input, user, BotAsUser.UserID, writeDebugLine, true);
+                Result res = GlobalChatWithUser(input, user, null, writeDebugLine, true);
                 OutputResult(res, console, false);
                 return true;
             }
@@ -387,12 +395,18 @@ namespace RTParser
                 if (lastIndex > -1)
                 {
                     user = args.Substring(0, lastIndex).Trim();
-                    input = args.Substring(lastIndex).Trim();
+                    input = args.Substring(lastIndex + 1).Trim();
                 }
-                Result res = GlobalChatWithUser(input, user, BotAsUser.UserID, writeDebugLine, true);
-                botJustSaid = OutputResult(res, console, false);
+                Result res = GlobalChatWithUser(input, user, null, writeDebugLine, true);
+                User theResponder = res.Responder ?? res.request.Responder;
+                if (theResponder==null)
+                {
+                    theResponder = (myUser == BotAsUser) ? request.Requester : BotAsUser;
+                    writeToLog("Making the responder " + theResponder);
+                }
+                responderJustSaid = OutputResult(res, console, false);
                 if (ProcessHeardPreds)
-                    HeardSelfSayResponse(botJustSaid, res, control);
+                    HeardSelfSayResponse(theResponder, myUser, responderJustSaid, res, control);
                 return true;
             }
             if (showHelp)
@@ -463,7 +477,7 @@ namespace RTParser
             if (cmd == "say")
             {
                 console("say> " + args);
-                HeardSelfSayVerbal(args, LastResult, control);
+                HeardSelfSayVerbal(BotAsUser, myUser, args, LastResult, control);
                 return true;
             }
 
@@ -471,7 +485,7 @@ namespace RTParser
             if (cmd == "say1")
             {
                 console("say1> " + args);
-                HeardSelfSay1Sentence(args, LastResult, control);
+                HeardSelfSay1Sentence(BotAsUser, myUser, args, LastResult, control);
                 return true;
             }
 
@@ -501,7 +515,7 @@ namespace RTParser
             if (cmd == "proof")
             {
                 console("-----------------------------------------------------------------");
-                RequestImpl ur = GetRequest(args, myUser.UserID);
+                RequestImpl ur = GetRequest(args, myUser);
                 int i;
                 Result r = myUser.LastResult;
                 if (args.StartsWith("save"))
@@ -575,7 +589,7 @@ namespace RTParser
                     return true;
                 }
 
-                RequestImpl ur = GetRequest(args, myUser.UserID);
+                RequestImpl ur = GetRequest(args, myUser);
                 // Adds findall to request
                 if (true)
                 {
@@ -619,8 +633,30 @@ namespace RTParser
                     graphname = args.Substring(0, lastIndex).Trim();
                     match = args.Substring(lastIndex + 1).Trim();
                 }
+                if (graphname == "*")
+                {
+                    foreach (KeyValuePair<string, GraphMaster> ggg in GraphMaster.CopyOf(GraphsByName))
+                    {
+                        console("-----------------------------------------------------------------");
+                        string n = ggg.Key;
+                        GraphMaster gm = ggg.Value;
+                        console("value=" + gm + " key='" + n + "'");
+                        gm.Listing(console, match, printOptions);
+                        console("-----------------------------------------------------------------");
+                    } 
+                    foreach (KeyValuePair<string, GraphMaster> ggg in GraphMaster.CopyOf(LocalGraphsByName))
+                    {
+                        console("-----------------------------------------------------------------");
+                        string n = ggg.Key;
+                        GraphMaster gm = ggg.Value;
+                        console("local=" + gm + " key='" + n + "'");
+                        gm.Listing(console, match, printOptions);
+                        console("-----------------------------------------------------------------");
+                    }
+                    return true;
+                }
                 GraphMaster G = GetGraph(graphname, myUser.ListeningGraph);
-                G.Listing(console, args, printOptions);
+                G.Listing(console, match, printOptions);
                 return true;
             }
 
@@ -629,9 +665,17 @@ namespace RTParser
             {
                 GraphMaster current = myUser.ListeningGraph;
                 GraphMaster graph = FindGraph(args, current);
-                if (graph != null && graph != current)
+                if (args == "" && graph != null && graph != current)
                 {
                     console("Changing to graph " + graph);
+                    myUser.ListeningGraph = graph;
+                    console("-----------------------------------------------------------------");
+                    return true;
+                }
+                if (args == "~")
+                {
+                    graph = FindGraph(myUser.UserID, null);
+                    console("Changing to user graph " + graph);
                     myUser.ListeningGraph = graph;
                     console("-----------------------------------------------------------------");
                     return true;
@@ -644,7 +688,7 @@ namespace RTParser
                         console("-----------------------------------------------------------------");
                         string n = ggg.Key;
                         GraphMaster gm = ggg.Value;
-                        console("" + gm + " key='" + n + "'");
+                        console("local=" + gm + " key='" + n + "'");
                         gm.WriteMetaHeaders(console, printOptions);
                         console("-----------------------------------------------------------------");
                     }
@@ -654,7 +698,7 @@ namespace RTParser
                         console("-----------------------------------------------------------------");
                         string n = ggg.Key;
                         GraphMaster gm = ggg.Value;
-                        console("" + gm + " key='" + n + "'");
+                        console("value=" + gm + " key='" + n + "'");
                         gm.WriteMetaHeaders(console, printOptions);
                         console("-----------------------------------------------------------------");
                     }
@@ -716,7 +760,7 @@ namespace RTParser
                     source = args;
                     slang = null;
                 }
-                RequestImpl ur = GetRequest(args, myUser.UserID);
+                RequestImpl ur = GetRequest(args, myUser);
                 if (source != null)
                 {
                     try

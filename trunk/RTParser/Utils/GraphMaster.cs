@@ -24,6 +24,18 @@ namespace RTParser.Utils
         public static bool NoIndexing;
         private readonly List<GraphMaster> FallBacksGraphs = new List<GraphMaster>();
         private readonly String graphName;
+        QuerySettingsImpl _forcedSettings;
+        public QuerySettings ForcedSettings
+        {
+            get
+            {
+                if (_forcedSettings==null)
+                {
+                    _forcedSettings = new QuerySettingsImpl(QuerySettings.CogbotDefaults);
+                }
+                return _forcedSettings;
+            }
+        }
 
         /// <summary>
         /// All the &lt;guard&gt;s (if any) associated with this database
@@ -383,8 +395,10 @@ namespace RTParser.Utils
                 rootNode = this.PostParentRootNode;
             }
             Node thiz = rootNode.addPathNodeChilds(generatedPath);
+            
             int countBefore = thiz.TemplateInfoCount;
-            TemplateInfo info = thiz.addTerminal(templateNode, category, guard, thatInfo, this, patternInfo,
+
+            TemplateInfo info0 = thiz.addTerminal(templateNode, category, guard, thatInfo, this, patternInfo,
                                                  additionalRules);
             int countAfter = thiz.TemplateInfoCount;
             /*
@@ -395,7 +409,7 @@ namespace RTParser.Utils
             {
                 return;
             }
-            if (changed < 0 || info == null)
+            if (changed < 0 || info0 == null)
             {
                 return;
             }
@@ -421,7 +435,7 @@ namespace RTParser.Utils
             QueryList ql = new QueryList(request);
             QuerySettings.ApplySettings(request, ql);
             request.TopLevel = ql;
-            evaluateQL(path, request, state, ql);
+            evaluateQL(path, request, state, ql, DoParents);
             if (ql.TemplateCount == 0)
             {
                 bool trace = request.IsTraced && !UnTraced;
@@ -437,11 +451,11 @@ namespace RTParser.Utils
             return ql;
         }
 
-        private void evaluateQL(Unifiable unifiable, Request request, MatchState matchState, QueryList ql)
+        private void evaluateQL(Unifiable path, Request request, MatchState matchState, QueryList ql, bool locallyDoParents)
         {
-            if (DoParents) DoParentEval(Parents, request, unifiable);
+            if (locallyDoParents) DoParentEval(Parents, request, path);
             bool trace = request.IsTraced && !UnTraced;
-            while (getQueries(RootNode, unifiable, request, matchState, 0, Unifiable.CreateAppendable(), ql))
+            while (getQueries(RootNode, path, request, matchState, 0, Unifiable.CreateAppendable(), ql))
             {
                 if (ql.IsMaxedOut)
                 {
@@ -457,7 +471,7 @@ namespace RTParser.Utils
                 if (FallBacksGraphs == null) return;
                 foreach (GraphMaster graphMaster in CopyOf(FallBacksGraphs))
                 {
-                    graphMaster.evaluateQL(unifiable, request, matchState, ql);
+                    graphMaster.evaluateQL(path, request, matchState, ql, locallyDoParents);
                     if (ql.IsMaxedOut)
                     {
                         if (trace)
@@ -468,7 +482,7 @@ namespace RTParser.Utils
             }
             if (!ql.IsMaxedOut)
             {
-                while (getQueries(PostParentRootNode, unifiable, request, matchState, 0, Unifiable.CreateAppendable(),
+                while (getQueries(PostParentRootNode, path, request, matchState, 0, Unifiable.CreateAppendable(),
                                   ql))
                 {
                     if (ql.IsMaxedOut)
@@ -507,7 +521,8 @@ namespace RTParser.Utils
         private bool getQueries(Node rootNode, Unifiable upath, Request request, MatchState matchstate, int index,
                                 StringAppendableUnifiableImpl wildcard, QueryList toplevel)
         {
-            lock (LockerObject)
+            if (toplevel.DisallowedGraphs.Contains(this)) return false;
+            //  lock (LockerObject)
             {
                 return getQueries000(rootNode, upath, request, matchstate, index, wildcard, toplevel);
             }
@@ -696,7 +711,7 @@ namespace RTParser.Utils
                             request.IsTraced = false;
                         request.Graph = p;
                         request.CurrentResult = null;
-                        AIMLbot.Result r = proc.ChatWithUser(request, request.Requester, request.TargetUser, p);
+                        AIMLbot.Result r = proc.ChatWithUser(request, request.Requester, request.Responder, p);
                         if (!r.IsEmpty) pl.Add(r);
                     }
                     finally

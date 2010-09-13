@@ -671,7 +671,8 @@ namespace AIMLBotModule
         public void HeardMyselfSay(UUID uuid, string message)
         {
             if (MyBotNullWarning()) return;
-            Enqueue("HeardMyselfSay: " + message, () => MyBot.HeardSelfSay1Sentence(message, null, null));
+            Enqueue("HeardMyselfSay: " + message,
+                    () => MyBot.HeardSelfSay1Sentence(MyBot.BotAsUser, MyUser, message, null, null));
         }
 
         private void Enqueue(String name, ThreadStart action)

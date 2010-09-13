@@ -867,7 +867,7 @@ namespace RTParser
 
         public string OutputResult(Result res, OutputDelegate console, bool includeWeigth)
         {
-            User CurrentUser = res.user;
+            User CurrentUser = res.Requestor;
             string user = CurrentUser.UserName;
             string useOut = res.EnglishSentences;
             double vscored;
@@ -886,16 +886,18 @@ namespace RTParser
                 string tUser = CurrentUser.UserName;
                 if (tUser.Length > 2)
                 {
-                    var orCreateUser = FindOrCreateUser(tUser);
+                    bool newlyCreated;
+                    var orCreateUser = FindOrCreateUser(tUser,out newlyCreated);
                     if (orCreateUser != CurrentUser)
                     {
                         CurrentUser = orCreateUser;
                         user = orCreateUser.UserName;
-                        useNameInOutput = true;
+                        
                     }
+                    if (newlyCreated) useNameInOutput = true;
                 }
             }
-            if (CurrentUser.NameUsedOrGivenTime.Subtract(DateTime.Now).Minutes > 1)
+            if (CurrentUser.NameUsedOrGivenTime.Subtract(DateTime.Now).Minutes > 3)
             {
                 useNameInOutput = true;
             }

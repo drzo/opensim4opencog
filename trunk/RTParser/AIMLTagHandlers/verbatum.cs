@@ -43,8 +43,8 @@ namespace RTParser.AIMLTagHandlers
 
         public override Unifiable CompleteProcess()
         {
-            //#if false
             RecurseResult = data;
+            if (RecurseResultValid) return RecurseResult;
             return data;
         }
         public override string Transform()

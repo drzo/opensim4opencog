@@ -43,25 +43,25 @@ namespace RTParser.AIMLTagHandlers
         {
             try
             {
-            RecurseResult = null;
-            isRecursive = true;
-            Unifiable f = Recurse();           
+                ResetValues(true);
+                isRecursive = true;
+                Unifiable f = Recurse();
                 depth++;
                 int d = request.GetCurrentDepth();
                 if (d > 30)
                 {
-                    RTPBot.writeDebugLine("WARNING Depth pretty deep " + f + " returning empty");
+                    writeToLogWarn("WARNING Depth pretty deep " + f + " returning empty");
                     return Unifiable.Empty;
                 }
                 if (depth > 30)
                 {
-                    RTPBot.writeDebugLine("WARNING Depth pretty deep " + f + " returning empty");
+                    writeToLogWarn("WARNING Depth pretty deep " + f + " returning empty");
                     return Unifiable.Empty;
                 }
                 var tn = templateNode;
-                foreach(var cn in tn.ChildNodes)
+                foreach (var cn in tn.ChildNodes)
                 {
-                    
+
                 }
                 string s = f.ToString();
                 XmlNode node =
@@ -70,13 +70,13 @@ namespace RTParser.AIMLTagHandlers
                 bool templateSucceeded;
                 bool createdOutput;
                 templateInfo = GetTemplateInfo();
-                Proc.proccessResponse(query, request, result, (XmlNode) node, templateInfo.Guard, out createdOutput,
+                request.LastHandler = Proc.proccessResponse(query, request, result, (XmlNode)node, templateInfo.Guard, out createdOutput,
                                       out templateSucceeded, this, templateInfo, ReadOnly, true);
                 return Unifiable.Empty;
             }
             finally
             {
-                depth--;    
+                depth--;
             }
         }
 

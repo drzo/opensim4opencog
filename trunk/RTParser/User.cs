@@ -37,6 +37,7 @@ namespace RTParser
 
         public ListAsSet<TemplateInfo> UsedTemplates = new ListAsSet<TemplateInfo>();
         public ListAsSet<TemplateInfo> DisabledTemplates = new ListAsSet<TemplateInfo>();
+        public ICollection<GraphMaster> DisallowedGraphs = new HashSet<GraphMaster>();
         public ListAsSet<QueryList> AllQueries = new ListAsSet<QueryList>();
 
         public DateTime LastResponseGivenTime = DateTime.Now;
@@ -64,7 +65,7 @@ namespace RTParser
 
         public void Enqueue(ThreadStart evt)
         {
-            if (OnTaskAtATimeHandler==null)
+            if (OnTaskAtATimeHandler == null)
             {
                 OnTaskAtATimeHandler = new TaskQueueHandler("TaskQueue For " + UserID, 10);
                 OnTaskAtATimeHandler.Start();
@@ -276,16 +277,16 @@ namespace RTParser
                 string lastOutput = "";
                 if (this.SailentResultCount > 0)
                 {
-                    foreach (var result in Results)
-                    {
-                        string thisOutput = result.RawOutput;
-                        if (thisOutput == "*") continue;
-                        if (thisOutput == lastOutput) continue;
-                        lastOutput = thisOutput;
-                        raws.Add(result.RawOutput);
-                        added++;
-                        if (added > 2) break;
-                    }
+                    lock (Results) foreach (var result in Results)
+                        {
+                            string thisOutput = result.RawOutput;
+                            if (thisOutput == "*") continue;
+                            if (thisOutput == lastOutput) continue;
+                            lastOutput = thisOutput;
+                            raws.Add(result.RawOutput);
+                            added++;
+                            if (added > 2) break;
+                        }
                 }
                 if (raws.Count == 0) raws.Add("HELLO"); //since nothing is known yet!
                 if (raws.Count == 0) raws.Add(Unifiable.STAR);
@@ -330,6 +331,7 @@ namespace RTParser
                 // we dont inherit the BotAsUser we inherit the bot's setings
                 // ApplySettings(bot.BotAsUser, this);
                 this.Predicates = new SettingsDictionary(userID + ".predicates", this.bot, provider);
+                this.Predicates.AddPrefix("user.", () => this);
                 this.bot.DefaultPredicates.Clone(this.Predicates);
                 //this.Predicates.AddGetSetProperty("topic", new CollectionProperty(_topics, () => bot.NOTOPIC));
                 this.Predicates.addSetting("topic", bot.NOTOPIC);
@@ -553,7 +555,13 @@ namespace RTParser
             }
             lock (Results)
             {
+                if (Results.Contains(latestResult))
+                {
+                    writeDebugLine("DEBUG9 Trying to resave results ! " + latestResult);
+                    return;
+                }
                 this.Results.Insert(0, latestResult);
+                latestResult.CollectRequest();
                 int rc = this.SailentResultCount;
                 if (rc > MaxResultsSaved)
                 {
@@ -604,7 +612,7 @@ namespace RTParser
                     String sentence = this.bot.ToEnglish(sentenceIn);
                     sentence = MainSentence(sentence);
                     sentence = sentence.Trim(new char[] { '.', ' ', '!', '?' });
-                    if (sentence.Length == 0) continue;                    
+                    if (sentence.Length == 0) continue;
                     String ssentence = bot.Loader.Normalize(sentence, true);
                     if (sentence.Length == 0) continue;
                     return sentence;
@@ -745,7 +753,10 @@ namespace RTParser
             if (i == -1) return CurrentRequest.CurrentResult;
             lock (Results)
             {
-                if (i >= Results.Count) return null;
+                if (i >= Results.Count)
+                {
+                    return null;
+                }
                 if (mustBeSalient)
                 {
                     foreach (var r in Results)
@@ -1003,7 +1014,7 @@ namespace RTParser
 
         internal static void DoPendingUntilComplete(ICollection<CrossAppDomainDelegate> todoList)
         {
-            if (todoList==null) return;
+            if (todoList == null) return;
             while (true)
             {
                 var todo = new List<CrossAppDomainDelegate>();
@@ -1126,9 +1137,9 @@ namespace RTParser
             // could be
             DateTime thisResponseTime = DateTime.Now;
             TimeSpan TSP = thisResponseTime.Subtract(LastResponseGivenTime);
-            double  timedelay = Math.Abs(TSP.TotalSeconds);
-            double secPerChat = (double) ((double) 60 / (double)MaxRespondToChatPerMinute);
-            return ( timedelay >
+            double timedelay = Math.Abs(TSP.TotalSeconds);
+            double secPerChat = (double)((double)60 / (double)MaxRespondToChatPerMinute);
+            return (timedelay >
                 // ReSharper disable PossibleLossOfFraction
                      secPerChat
              );
@@ -1143,7 +1154,7 @@ namespace RTParser
         public void Exit(AIMLTagHandler srai)
         {
             depth--;
-            if (depth==0)
+            if (depth == 0)
             {
                 SubQuery.PurgeTagHandlers();
             }

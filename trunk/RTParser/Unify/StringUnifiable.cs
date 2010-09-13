@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Xml;
 using MushDLR223.Utilities;
 using RTParser.AIMLTagHandlers;
@@ -72,6 +73,8 @@ namespace RTParser
                 int vLength = v.Length;
 #if ACTUALLY_USING_ClassifyFlagTypes
                 ClassifyFlagTypes(v, vLength);
+#else  
+                Flags = FlagsForString(str);
 #endif
             }
             else
@@ -894,21 +897,20 @@ namespace RTParser
                     writeToLog("UnifyLazy: CACHED" + ov + " in " + query);
                     return true;
                 }
-                if (ReferenceEquals(ov, valueCache))
-                {
-                    writeToLog("UnifyLazy: SUCCEED" + ov + " in " + query);
-                    return true;
-                }
                 if (valueCache is String)
                 {
                     String sv = (String)valueCache;
                     if (IsStringMatch(sv, ov.ToValue(query)))
                     {
-                        writeToLog("UnifyLazy: SUCCEED" + ov + " in " + query);
+                        writeToLog("UnifyLazy: SUCCEED T2 " + ov + " in " + query);
                         return true;
                     }
                 }
-                valueCache = ToValue(query);
+                if (valueCache is StringUnifiable) if (ReferenceEquals(ov, valueCache))
+                {
+                    writeToLog("UnifyLazy: SUCCEED T1 " + ov + " in " + query);
+                    return true;
+                }
                 var tagHandler = GetTagHandler(query);
                 if (tagHandler.CallCanUnify(ov) == UNIFY_TRUE)
                 {
@@ -919,8 +921,13 @@ namespace RTParser
                 string value = outputSentence.AsString();
                 if (ov.ToUpper() == value.ToUpper())
                 {
+                    valueCache = value;// ToValue(query);
                     writeToLog("UnifyLazy: SUCCEED" + ov + " in " + query);
                     return true;
+                }
+                else
+                {
+                    valueCache = value; // ToValue(query);
                 }
                 return false;
             }
@@ -941,14 +948,24 @@ namespace RTParser
         //public XmlNode node;
         public AIMLTagHandler GetTagHandler(SubQuery subquery)
         {
-            if (valueCache is AIMLTagHandler) return (AIMLTagHandler)valueCache;
-            return subquery.GetTagHandler(GetNode());
+            if (valueCache is AIMLTagHandler)
+            {
+                var tagHandler = (AIMLTagHandler)valueCache;
+                tagHandler.ResetValues(false);
+                return tagHandler;
+            }
+            XmlNode getNode1 = GetNode();
+            return subquery.GetTagHandler(getNode1);
         }
         public virtual XmlNode GetNode()
         {
             if (valueCache is XmlNode) return (XmlNode)valueCache;
             try
             {
+                if (str.Contains("><"))
+                {
+                    return GetNode2();
+                }
                 var node = AIMLTagHandler.getNode(str);
                 LineInfoElementImpl.unsetReadonly(node);
                 return node;
@@ -957,6 +974,24 @@ namespace RTParser
             catch (Exception e)
             {
                 return AIMLTagHandler.getNode("<template>" + str + "</template>");
+            }
+        }
+
+        private XmlNode GetNode2()
+        {
+            if (valueCache is XmlNode) return (XmlNode) valueCache;
+            try
+            {
+                string s = "<template>" + str + "</template>";
+                var node = getNode(s);
+                LineInfoElementImpl.unsetReadonly(node);
+                return node;
+
+            }
+            catch (Exception e)
+            {
+                writeToLog("" + e);
+                throw;
             }
         }
 
@@ -984,9 +1019,17 @@ namespace RTParser
                 //todo 
                 if (query == null) return AsString();
                 AIMLTagHandler tagHandler = GetTagHandler(query);
-                Unifiable outputSentence = tagHandler.CompleteAimlProcess();
-                if (!outputSentence.IsEmpty) return outputSentence.AsString();
-                writeToLog("Failed Eval " + str);
+                ThreadStart undo =  tagHandler.EnterUnify();
+                try
+                {
+                    Unifiable outputSentence = tagHandler.CompleteAimlProcess();
+                    if (!outputSentence.IsEmpty) return outputSentence.AsString();
+                    writeToLog("Failed Eval " + str);
+                }
+                finally
+                {
+                    if (undo != null) undo();
+                }
                 ///bot.GetTagHandler(templateNode, subquery, request, result, request.user);
             }
             if (IsWildCard())

@@ -48,7 +48,8 @@ namespace RTParser.AIMLTagHandlers
                 // recursively check
                 foreach (XmlNode childNode in templateNode.ChildNodes)
                 {
-                    attach.AppendChild(EvalChild(childNode));
+                    XmlNode evalChild = EvalChild(childNode);
+                    attach.AppendChild(evalChild);
                 }
                 templateNode = attach;
             }
@@ -64,11 +65,35 @@ namespace RTParser.AIMLTagHandlers
                 // recursively check
                 foreach (XmlNode childNode in templateNode.ChildNodes)
                 {
-                    if (childNode.LocalName=="eval")
+                    if (childNode.LocalName == "eval")
                     {
-                        var tchiuld = getNode("<template>" + childNode.InnerXml + "</template>", childNode);
+                        AppendEvalation(attach, childNode);
+                    }
+                    else
+                    {
+                        attach.AppendChild(EvalChild(childNode));
+                    }
+                }
+            }
+            return attach;
+        }
+
+        private void AppendEvalation(XmlNode attach, XmlNode childNode)
+        {
+            {
+                {
+                    {
+                        string ts = "<template>" + childNode.InnerXml + "</template>";
+                        var tchiuld = getNode(ts, childNode);
+                        string ost = tchiuld.OuterXml;
                         LineInfoElementImpl.unsetReadonly(tchiuld);
-                        Unifiable processChildNode = ProcessChildNode(tchiuld, ReadOnly, false);
+                        bool success;
+                        Unifiable processChildNode = ProcessChildNode(tchiuld, ReadOnly, false, out success);
+                        if (!success)
+                        {
+                            writeToLogWarn("EVALING CHILD " + tchiuld + " " + processChildNode);
+                            processChildNode = ProcessChildNode(tchiuld, ReadOnly, false, out success);
+                        }
                         SaveResultOnChild(childNode, processChildNode);
                         var readNode = getNode("<node>" + Unifiable.InnerXmlText(childNode) + "</node>", childNode);
                         LineInfoElementImpl.unsetReadonly(readNode);
@@ -77,19 +102,16 @@ namespace RTParser.AIMLTagHandlers
                             XmlNode chilz = readNode.ChildNodes[0];
                             LineInfoElementImpl.chopParent(chilz);
                             attach.AppendChild(chilz);
-                            continue;
+                            return;
                         }
                         foreach (XmlNode child in readNode.ChildNodes)
                         {
                             LineInfoElementImpl.unsetReadonly(child);
                             attach.AppendChild(child.CloneNode(true));
                         }
-                        continue;
                     }
-                    attach.AppendChild(EvalChild(childNode));
                 }
             }
-            return attach;
         }
 
         protected override Unifiable ProcessLoad(LoaderOptions loaderOptions)
@@ -108,41 +130,51 @@ namespace RTParser.AIMLTagHandlers
                     g = Proc.GetGraph(graphName, g0);
                     if (g != null) request.Graph = g;
                 }
-
+                Unifiable path = GetAttribValue("filename,uri,file,url,dir,path,pathname,directory", null);
                 try
                 {
-                    string s = templateNode.InnerXml.TrimStart("+ ".ToCharArray());
-                    Unifiable templateNodeInnerText = s;
-                    if (s.Length > 0)
+                    string documentInfo =  DocumentInfo();;
                     {
-                      //  templateNodeInnerText = Recurse();
-                    } else
-                    {
-                       // templateNodeInnerText = s;
-                    }
-                    //if (!templateNodeInnerText.IsEmpty)
-                    {
-                        Unifiable path = GetAttribValue("filename,uri,file,url,dir,path,pathname,directory",templateNodeInnerText);
                         try
                         {
-                            request.LoadingFrom = DocumentInfo();
                             loaderOptions = request.LoadOptions;
-                            if (s.Contains("<"))
+                            request.LoadingFrom = documentInfo;
+                            string innerXML = templateNode.InnerXml.TrimStart("+ ".ToCharArray());
+                            //Unifiable templateNodeInnerText = innerXML;
+                            if (innerXML.Length > 0)
                             {
-                                request.Loader.loadAIMLNode(templateNode, loaderOptions, request);
-                                return s;
-                            }
-                            else if (path == "")
-                            {
-                                writeToLogWarn("ERROR! Attempted (but failed) to <learn> some new AIML from the following URI: '{0}' - '{1}'", path, s);
+                                //  templateNodeInnerText = Recurse();
                             }
                             else
                             {
+                                // templateNodeInnerText = s;
+                            }
+
+                            if (innerXML.Contains("<"))
+                            {
+                                try
+                                {
+                                    int successes = request.Loader.loadAIMLNode(templateNode, loaderOptions, request);
+                                    return "" + successes;
+                                }
+                                finally
+                                {
+                                    
+                                }
+                            }
+                            else if (path == "")
+                            {
+                                writeToLogWarn("ERROR! Attempted (but failed) to <learn> some new AIML from the following URI: '{0}' - '{1}'", path, innerXML);
+                            }
+                            else
+                            {
+                                path = path ?? innerXML;
                                 loaderOptions.LoadingFrom0 = DocumentInfo();
                                 loaderOptions.Loading0 = path;
                                 loaderOptions.CtxGraph = request.Graph;
-                                request.Loader.loadAIMLURI(path, loaderOptions);
-                                return path; // Succeed();
+                                int forms = request.Loader.loadAIMLURI(path, loaderOptions);
+                                QueryHasSuceededN++;
+                                return "" + forms; // Succeed();
                             }
                         }
                         catch (Exception e2)

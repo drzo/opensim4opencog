@@ -64,7 +64,7 @@ namespace RTParser.AIMLTagHandlers
             {
                 string name = GetAttribValue(templateNode, "name,var", () => templateNodeInnerText, ReduceStarAttribute);
                 bool succeed;
-                Unifiable v = base.GetActualValue(name, false, out succeed);
+                Unifiable v = base.GetActualValue(name, "get", out succeed);
                 if (succeed) Succeed();
                 if (!succeed && Unifiable.IsNullOrEmpty(v))
                 {

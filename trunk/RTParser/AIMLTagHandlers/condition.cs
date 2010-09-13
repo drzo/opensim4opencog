@@ -114,6 +114,18 @@ namespace RTParser.AIMLTagHandlers
             this.isRecursive = false;
         }
 
+        public override bool QueryHasFailed
+        {
+            get
+            {                
+                return false;
+            }
+            set
+            {
+                writeToLog("QueryHasFailed ?= " + value);
+            }
+        }
+
         protected override Unifiable ProcessChange()
         {
             if (CheckNode("condition"))
@@ -153,7 +165,11 @@ namespace RTParser.AIMLTagHandlers
                                     if (AttributesCount(childLINode, "value") == 1)
                                     {
                                         bool succeed;
-                                        Unifiable actualValue = base.GetActualValue(name, false, out succeed);
+                                        Unifiable actualValue = base.GetActualValue(name, childLINode.Name, out succeed);
+                                        if (!succeed)
+                                        {
+                                            actualValue = null;
+                                        }
                                         Unifiable value = GetAttribValue<Unifiable>(childLINode, "value", EmptyFunct, ReduceStarAttribute);
                                         if (IsPredMatch(value, actualValue, query))
                                         {
@@ -188,7 +204,7 @@ namespace RTParser.AIMLTagHandlers
                                 if ((name.Length > 0) & (!value.IsEmpty))
                                 {
                                     bool succeed;
-                                    Unifiable actualValue = base.GetActualValue(name, false, out succeed);
+                                    Unifiable actualValue = GetActualValue(childLINode, name, childLINode.Name, out succeed, query);
                                     if (IsPredMatch(value, actualValue, query))
                                     {
                                         Succeed();

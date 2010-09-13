@@ -15,44 +15,8 @@ namespace RTParser.Utils
     [Serializable]
     public class Node : StaticAIMLUtils
     {
-        private void writeToLog(string message, params object[] args)
-        {
-            RTPBot.writeDebugLine("!NODE: " + message + " in " + ToString(), args);
-        }
-
-        public void RotateTemplate(TemplateInfo templateInfo)
-        {
-            lock (SyncObject)
-            {
-                if (TemplateInfos != null && TemplateInfos.Count > 1)
-                {
-                    int moveLast = TemplateInfos.IndexOf(templateInfo);
-                    if (moveLast>0) return; 
-                    var last = TemplateInfos[moveLast];
-                    TemplateInfos.RemoveAt(moveLast);
-                    TemplateInfos.Add(last);
-                }
-            }
-        }
-        private GraphMaster _graph;
-
-        public GraphMaster Graph
-        {
-            get
-            {
-                if (_graph != null) return _graph;
-                return SyncObject.Graph;
-            }
-            set { _graph = value; }
-        }
-
-        private readonly Node Parent;
-
-        public Node(Node P)
-        {
-            Parent = P;
-            SyncObject = P ?? this;
-        }
+        public static bool UseZeroArgs;
+        public static StringAppendableUnifiableImpl EmptyStringAppendable = new StringAppendableUnifiableImpl();
 
         #region Attributes
 
@@ -71,18 +35,50 @@ namespace RTParser.Utils
         /// </summary>
         internal UList TemplateInfosDisabled; //Unifiable.Empty;
 
+        private readonly Node Parent;
+        public bool disabled;
+
+        /// <summary>
+        /// The word that identifies this node to it's ParentResult node
+        /// </summary>
+        private Unifiable word = Unifiable.Empty;
+
+        private GraphMaster _graph;
+
+        public GraphMaster Graph
+        {
+            get
+            {
+                if (_graph != null) return _graph;
+                return Parent.Graph;
+            }
+            set { _graph = value; }
+        }
+
+        public Node(Node P)
+        {
+            if (P != null)
+            {
+                Parent = P;
+                _graph = P.Graph;
+            }
+            //SyncObject = this;// P ?? this;
+        }
+
+
         public UList TemplateInfoCopy
         {
             get
             {
-                if (TemplateInfos == null) return null;
-                lock (TemplateInfos)
+                lock (SyncObject)
                 {
+                    if (TemplateInfos == null) return null;
                     if (TemplateInfos.Count == 0) return null;
                     var copy = new UList();
                     copy.AddRange(TemplateInfos);
                     return copy;
                 }
+
             }
         }
 
@@ -90,9 +86,9 @@ namespace RTParser.Utils
         {
             get
             {
-                if (TemplateInfos == null) return 0;
-                lock (TemplateInfos)
+                lock (SyncObject)
                 {
+                    if (TemplateInfos == null) return 0;
                     if (TemplateInfos.Count == 0) return 0;
                     return TemplateInfos.Count;
                 }
@@ -103,8 +99,11 @@ namespace RTParser.Utils
         {
             get
             {
-                if (children == null) return -1;
-                return children.Count;
+                lock (SyncObject)
+                {
+                    if (children == null) return -1;
+                    return children.Count;
+                }
             }
         }
 
@@ -114,17 +113,43 @@ namespace RTParser.Utils
     /// </summary>
         private string filename = Unifiable.Empty;
 #endif
-
-        /// <summary>
-        /// The word that identifies this node to it's ParentResult node
-        /// </summary>
-        private Unifiable word = Unifiable.Empty;
-
         //private XmlNode GuardText;
+
+        public override string ToString()
+        {
+            if (Parent != null) return String.Format("{0} {1}", Parent, Unifiable.ToVMString(word));
+            return word;
+        }
+
+        //private readonly Node SyncObject;
+        private Node SyncObject
+        {
+            get { return this; }
+        }
 
         #endregion
 
         #region Methods
+
+        private void writeToLog(string message, params object[] args)
+        {
+            RTPBot.writeDebugLine("!NODE: " + message + " in " + ToString(), args);
+        }
+
+        public void RotateTemplate(TemplateInfo templateInfo)
+        {
+            lock (SyncObject)
+            {
+                if (TemplateInfos != null && TemplateInfos.Count > 1)
+                {
+                    int moveLast = TemplateInfos.IndexOf(templateInfo);
+                    if (moveLast > 0) return;
+                    TemplateInfo last = TemplateInfos[moveLast];
+                    TemplateInfos.RemoveAt(moveLast);
+                    TemplateInfos.Add(last);
+                }
+            }
+        }
 
         #region Add category
 
@@ -141,7 +166,7 @@ namespace RTParser.Utils
             lock (SyncObject)
             {
                 // first look in template node.. then afterwards the category node
-                var nodes = new[] { templateNode, category.Category };
+                var nodes = new[] {templateNode, category.Category};
 
                 // does the metaprops only operate on verbal tags
                 bool sentientTags;
@@ -150,9 +175,23 @@ namespace RTParser.Utils
                     onlyNonSilent = sentientTags;
                 }
 
-                // this is a removall specfier!
-                if (templateNode == StaticAIMLUtils.TheTemplateOverwrite)
+                XmlNode cateNode = category.Category;
+                if (templateNode == null)
                 {
+                    writeToLog("TheTemplateOverwrite0: onlyNonSilent=" + onlyNonSilent + " " + LocationInfo(cateNode));
+                    return DeleteTemplates(onlyNonSilent);
+                }
+                // this is a removall specfier!
+                if (templateNode.ChildNodes.Count == 0)
+                {
+                    if (templateNode != TheTemplateOverwrite)
+                    {
+                        writeToLog("TheTemplateOverwrite1: onlyNonSilent=" + onlyNonSilent + " " + templateNode.OuterXml + " " + LocationInfo(cateNode));
+                    }
+                    else
+                    {
+                      //  writeToLog("TheTemplateOverwrite2: onlyNonSilent=" + onlyNonSilent + " " + templateNode.OuterXml);
+                    }
                     return DeleteTemplates(onlyNonSilent);
                 }
 
@@ -179,18 +218,20 @@ namespace RTParser.Utils
                         return first;
                     }
                 }
-                return addTerminal_0_Lock(templateNode, category, guard, thatInfo, master, patternInfo, additionalRules);
+                var t = addTerminal_0_Lock(templateNode, category, guard, thatInfo, master, patternInfo, additionalRules);
+                if (t != null) t.AddRules(additionalRules);
+                return t;
             }
         }
 
-        internal TemplateInfo FirstTemplate(bool onlyNonSilent)
+        private TemplateInfo FirstTemplate(bool onlyNonSilent)
         {
-            lock (SyncObject)
+           // lock (SyncObject)
             {
                 if (TemplateInfos != null && TemplateInfos.Count > 0)
                 {
                     TemplateInfo NonSilentDisabled = null;
-                    foreach (var info in TemplateInfos)
+                    foreach (TemplateInfo info in TemplateInfos)
                     {
                         if (onlyNonSilent) if (info.IsSilent) continue;
                         if (!info.IsDisabled) return info;
@@ -202,15 +243,17 @@ namespace RTParser.Utils
             }
         }
 
-        private TemplateInfo addTerminal_0_Lock(XmlNode templateNode, CategoryInfo category, GuardInfo guard, ThatInfo thatInfo,
-                                        GraphMaster master, PatternInfo patternInfo, List<XmlNode> additionalRules)
+        private TemplateInfo addTerminal_0_Lock(XmlNode templateNode, CategoryInfo category, GuardInfo guard,
+                                                ThatInfo thatInfo,
+                                                GraphMaster master, PatternInfo patternInfo,
+                                                List<XmlNode> additionalRules)
         {
             string templateKey = TemplateInfo.MakeKey(templateNode, (guard != null ? guard.Output : null),
-                                                      thatInfo != null ? thatInfo.PatternNode : StaticAIMLUtils.XmlStar);
+                                                      thatInfo != null ? thatInfo.PatternNode : XmlStar);
 
-            if (this.TemplateInfos == null)
+            if (TemplateInfos == null)
             {
-                this.TemplateInfos = new UList();
+                TemplateInfos = new UList();
             }
             else if (master.RemoveDupicateTemplatesFromNodes)
             {
@@ -262,8 +305,8 @@ namespace RTParser.Utils
                                 {
                                     writeToLog("AIMLLOADER MOVING FIRST \n" + temp + "\n from: " + category.Filename);
                                     master.RemoveTemplate(temp);
-                                    this.TemplateInfos.Remove(temp);
-                                    this.TemplateInfos.Insert(0, temp);
+                                    TemplateInfos.Remove(temp);
+                                    TemplateInfos.Insert(0, temp);
                                     return temp;
                                 }
                             }
@@ -292,9 +335,9 @@ namespace RTParser.Utils
                     if (patternInfo.LoopsFrom(newTemplateInfo.InnerXml))
                     {
                         writeToLog("ERROR because LoopsFrom so SKIPPING! " + pat + "==" + newTemplateInfo + "");
-                        if (this.TemplateInfos.Count == 0)
+                        if (TemplateInfos.Count == 0)
                         {
-                            this.TemplateInfos = null;
+                            TemplateInfos = null;
                         }
                         return null;
                     }
@@ -303,9 +346,9 @@ namespace RTParser.Utils
                     if (false && patternInfo.DivergesFrom(newTemplateInfo, out from, out to))
                     {
                         writeToLog("SKIPPING! " + pat + "==" + newTemplateInfo + "");
-                        if (this.TemplateInfos.Count == 0)
+                        if (TemplateInfos.Count == 0)
                         {
-                            this.TemplateInfos = null;
+                            TemplateInfos = null;
                         }
                         return null;
                     }
@@ -320,13 +363,13 @@ namespace RTParser.Utils
                 writeToLog("Wierd! " + pat);
                 throw new InvalidCastException("weird");
             }
-            this.TemplateInfos.Insert(0, newTemplateInfo);
+            TemplateInfos.Insert(0, newTemplateInfo);
             return newTemplateInfo;
         }
 
         private TemplateInfo DeleteTemplates(bool onlyNonSilent)
         {
-            lock (SyncObject)
+            //lock (SyncObject)
             {
                 if (TemplateInfos != null)
                 {
@@ -334,12 +377,12 @@ namespace RTParser.Utils
                     {
                         foreach (TemplateInfo list in new UList(TemplateInfos))
                         {
-                            if (onlyNonSilent && list.IsSilent) continue;                           
+                            if (onlyNonSilent && list.IsSilent) continue;
                             DisableTemplate(list);
                         }
                     }
-                    this.TemplateInfos.Clear();
-                    this.TemplateInfos = null;
+                    TemplateInfos.Clear();
+                    TemplateInfos = null;
                 }
                 return null;
             }
@@ -347,7 +390,7 @@ namespace RTParser.Utils
 
         private void DisableTemplate(TemplateInfo info)
         {
-            lock (SyncObject)
+           // lock (SyncObject)
             {
                 if (TemplateInfos != null) TemplateInfos.Remove(info);
                 if (TemplateInfosDisabled == null) TemplateInfosDisabled = new UList();
@@ -412,7 +455,7 @@ namespace RTParser.Utils
             Node childNode;
             lock (SyncObject)
             {
-                if (this.children != null && this.children.TryGetValue(fs, out childNode))
+                if (children != null && children.TryGetValue(fs, out childNode))
                 {
                     initial = childNode.addPathNodeChilds(from + 1, path);
                     found = true;
@@ -421,7 +464,7 @@ namespace RTParser.Utils
 
                 if (false) // see if we need ot check new indexing system!
                     if (!found)
-                        foreach (KeyValuePair<string, Node> c in this.children)
+                        foreach (var c in children)
                         {
                             string ks = c.Key.ToUpper();
                             if (ks == fs)
@@ -451,7 +494,7 @@ namespace RTParser.Utils
                     childNode.word = firstWord;
                     initial = childNode.addPathNodeChilds(from + 1, path);
                     children = children ?? new Dictionary<string, Node>();
-                    this.children.Add(fs, childNode);
+                    children.Add(fs, childNode);
                 }
             }
             if (initial == null) throw new NullReferenceException("no child node: " + this);
@@ -573,12 +616,12 @@ namespace RTParser.Utils
 
         #region Evaluate Node
 
-        internal Node GetNextNode()
+        private Node GetNextNode()
         {
             if (Parent == null) return null;
             bool useNext = false;
             lock (SyncObject)
-                foreach (KeyValuePair<string, Node> v in Parent.children)
+                foreach (var v in Parent.children)
                 {
                     if (useNext) return v.Value;
                     if (v.Value == this)
@@ -594,18 +637,8 @@ namespace RTParser.Utils
             return null;
         }
 
-        public override string ToString()
-        {
-            if (Parent != null) return String.Format("{0} {1}", Parent, Unifiable.ToVMString(word));
-            return word;
-        }
-
-        private readonly Node SyncObject;
-
-        public bool disabled;
-        public static bool UseZeroArgs;
-        public static StringAppendableUnifiableImpl EmptyStringAppendable = new StringAppendableUnifiableImpl();
-
+        private static char[] OtherwiseSplitInputInto =  " \r\n\t".ToCharArray();
+        
         /// <summary>
         /// Navigates this node (and recusively into child nodes) for a match to the path passed as an argument
         /// whilst processing the referenced request
@@ -619,20 +652,23 @@ namespace RTParser.Utils
         public Node evaluate(string path, SubQuery query, Request request, MatchState matchstate,
                              StringAppendableUnifiableImpl wildcard)
         {
-            // if we've matched all the words in the input sentence and this is the end
-            // of the line then return the cCategory for this node
-            if (path.Length == 0)
+            lock (SyncObject)
             {
-                if (TemplateInfos == null || TemplateInfos.Count == 0)
+                // if we've matched all the words in the input sentence and this is the end
+                // of the line then return the cCategory for this node
+                if (path.Length == 0)
                 {
+                    if (TemplateInfos == null || TemplateInfos.Count == 0)
+                    {
+                    }
+                    return this;
                 }
-                return this;
-            }
 
-            // otherwise split the input into it's component words
-            var splitPath = path.Split(" \r\n\t".ToCharArray());
-            Node location = evaluateFirst(0, splitPath, query, request, matchstate, wildcard);
-            return location;
+                // otherwise split the input into it's component words
+                string[] splitPath = path.Split(OtherwiseSplitInputInto, StringSplitOptions.RemoveEmptyEntries);
+                Node location = evaluateFirst(0, splitPath, query, request, matchstate, wildcard);
+                return location;
+            }
         }
 
         private Node evaluateNext(int at, string[] splitPath, SubQuery query, Request request, MatchState matchstate,
@@ -647,11 +683,11 @@ namespace RTParser.Utils
             return vv;
         }
 
-        public Node evaluateFirst(int at, string[] splitPath, SubQuery query, Request request, MatchState matchstate,
+        private Node evaluateFirst(int at, string[] splitPath, SubQuery query, Request request, MatchState matchstate,
                                   StringAppendableUnifiableImpl wildcard)
         {
             // check for timeout
-            // check for timeout
+            if (request.hasTimedOut) return null;
             if (DateTime.Now > request.TimesOutAt)
             {
                 request.writeToLog("TIMEOUT! User: " +
@@ -660,13 +696,13 @@ namespace RTParser.Utils
                 request.IsTraced = true;
                 if (!request.hasTimedOut)
                 {
-                    request.TimesOutAt = DateTime.Now + TimeSpan.FromSeconds(5);
+                    //request.TimesOutAt = DateTime.Now + TimeSpan.FromSeconds(5);
                     request.hasTimedOut = true;
                 }
                 else
                 {
-                    return null; // Unifiable.Empty;                    
                 }
+                return null; // Unifiable.Empty;                    
             }
 
             int pathLength = splitPath.Length - at;
@@ -676,7 +712,7 @@ namespace RTParser.Utils
 
             // check if this is the end of a branch in the GraphMaster 
             // return the cCategory for this node
-            if (this.children == null || this.children.Count == 0)
+            if (children == null || children.Count == 0)
             {
                 if (pathLength > 0 && UseWildcard(EmptyStringAppendable))
                 {
@@ -702,14 +738,85 @@ namespace RTParser.Utils
 
             // get the first word of the sentence
             string firstWord = splitPath[at];
-
+            //Unifiable firstWordU = splitPath[at];
+            string firstWordU = firstWord.ToUpper();
             // and concatenate the rest of the input into a new path for child nodes
             //string newPath = path.Substring(firstWord.Length, path.Length - firstWord.Length);
 
-            // first option is to see if this node has a child denoted by the "_" 
+            const bool firstFirst = false;
+            // first first option is to see if this node has a child denoted by the "<" 
             // wildcard. "_" comes first in precedence in the AIML alphabet
-            lock (SyncObject)
-                foreach (KeyValuePair<string, Node> childNodeKV in this.children)
+// ReSharper disable ConditionIsAlwaysTrueOrFalse
+            if (firstFirst)
+               // lock (SyncObject)
+// ReSharper restore ConditionIsAlwaysTrueOrFalse
+                    foreach (var childNodeKV in children)
+                    {
+                        string key = childNodeKV.Key;
+                        if (!key.StartsWith("<")) continue;
+
+                        Node childNode = childNodeKV.Value;
+                        Unifiable childNodeWord = childNode.word;
+                        string wval = childNodeWord.ToValue(query);
+                        if (wval == null) continue;
+                        wval = wval.ToUpper() + " ";
+                        if (!wval.StartsWith(firstWordU + " "))
+                        {
+                            continue;
+                        }
+                        string firstWord2 = firstWord;
+                        int useUp = 1;
+                        int wvalContains = wval.IndexOf(" ");
+                        if (wvalContains > 1)
+                        {
+                            useUp = 2;
+                            string splitPath2 = splitPath[at + 1];
+                            if (!Unifiable.IsStringMatch(wval.Substring(wvalContains + 1), splitPath2))
+                            {
+                                if (splitPath2.StartsWith("TAG-")) continue;
+                                continue;
+                            }
+                            firstWord2 = firstWord + " " + splitPath2;
+                        }
+
+                        // add the next word to the wildcard match 
+                        StringAppendableUnifiableImpl newWildcard = Unifiable.CreateAppendable();
+                        storeWildCard(firstWord2, newWildcard);
+
+                        // move down into the identified branch of the GraphMaster structure
+                        Node result = childNode.evaluateNext(at + useUp, splitPath, query, request, matchstate,
+                                                             newWildcard);
+
+                        // and if we get a result from the branch process the wildcard matches and return 
+                        // the result
+                        if (result != null)
+                        {
+                            if (UseWildcard(newWildcard))
+                            {
+                                // capture and push the star content appropriate to the current matchstate
+                                switch (matchstate)
+                                {
+                                    case MatchState.UserInput:
+                                        if (childNodeWord.StoreWildCard())
+                                            Insert(query.InputStar, newWildcard.ToString());
+                                        // added due to this match being the end of the line
+                                        newWildcard.Length = 0; // Remove(0, newWildcard.Length);
+                                        break;
+                                    default:
+                                        List<Unifiable> stars = query.GetMatchList(matchstate);
+                                        if (childNodeWord.StoreWildCard()) Insert(stars, newWildcard.ToString());
+                                        newWildcard.Length = 0;
+                                        break;
+                                }
+                            }
+                            return result;
+                        }
+                    }
+
+            // second first option is to see if this node has a child denoted by the "_" 
+            // wildcard. "_" comes first in precedence in the AIML alphabet
+            //lock (SyncObject)
+                foreach (var childNodeKV in children)
                 {
                     Node childNode = childNodeKV.Value;
                     Unifiable childNodeWord = childNode.word;
@@ -737,7 +844,7 @@ namespace RTParser.Utils
                                     newWildcard.Length = 0; // Remove(0, newWildcard.Length);
                                     break;
                                 default:
-                                    var stars = query.GetMatchList(matchstate);
+                                    List<Unifiable> stars = query.GetMatchList(matchstate);
                                     if (childNodeWord.StoreWildCard()) Insert(stars, newWildcard.ToString());
                                     newWildcard.Length = 0;
                                     break;
@@ -808,7 +915,7 @@ namespace RTParser.Utils
                             if (childNodeWord.StoreWildCard())
                             {
                                 writeToLog("should store WC for " + childNodeWord + " from " + firstWord);
-                                var stars = query.GetMatchList(matchstate);
+                                List<Unifiable> stars = query.GetMatchList(matchstate);
                                 Insert(stars, firstWord);
                             }
                         }
@@ -817,7 +924,7 @@ namespace RTParser.Utils
                             if (childNodeWord.StoreWildCard())
                             {
                                 writeToLog("should store WC for " + childNodeWord + " from " + firstWord);
-                                var stars = query.GetMatchList(matchstate);
+                                List<Unifiable> stars = query.GetMatchList(matchstate);
                                 Insert(stars, firstWord);
                             }
                         }
@@ -826,7 +933,7 @@ namespace RTParser.Utils
                     {
                         // capture and push the star content appropriate to the matchstate if it exists
                         // and then clear it for subsequent wildcards
-                        var stars = query.GetMatchList(matchstate);
+                        List<Unifiable> stars = query.GetMatchList(matchstate);
                         if (childNodeWord.StoreWildCard()) Insert(stars, newWildcard.ToString());
                         newWildcard.Length = 0;
                     }
@@ -840,8 +947,8 @@ namespace RTParser.Utils
             // precedence in the AIML alphabet.
             bool wisTag = firstWord.StartsWith("TAG-");
             if (!wisTag)
-                lock (SyncObject)
-                    foreach (KeyValuePair<string, Node> childNodeKV in this.children)
+             //   lock (SyncObject)
+                    foreach (var childNodeKV in children)
                     {
                         Node childNode = childNodeKV.Value;
                         Unifiable childNodeWord = childNode.word; //.Key;
@@ -872,7 +979,7 @@ namespace RTParser.Utils
                                         }
                                         break;
                                     default:
-                                        var stars = query.GetMatchList(matchstate);
+                                        List<Unifiable> stars = query.GetMatchList(matchstate);
                                         if (childNodeWord.StoreWildCard()) Insert(stars, newWildcard.ToString());
                                         break;
                                 }
@@ -890,7 +997,7 @@ namespace RTParser.Utils
                 if (word.IsAnySingleUnit() || word.IsLongWildCard())
                 {
                     storeWildCard(firstWord, wildcard);
-                    Node result = this.evaluateNext(at + 1, splitPath, query, request, matchstate, wildcard);
+                    Node result = evaluateNext(at + 1, splitPath, query, request, matchstate, wildcard);
                     return result;
                 }
 
@@ -902,7 +1009,7 @@ namespace RTParser.Utils
             return null; /// string.Empty;
         }
 
-        protected bool NoEnabledTemplates
+        private bool NoEnabledTemplates
         {
             get
             {
@@ -937,7 +1044,7 @@ namespace RTParser.Utils
                     return childNode;
                 }
             }
-            foreach (KeyValuePair<string, Node> childNodeKV in children)
+            foreach (var childNodeKV in children)
             {
                 Unifiable childNodeWord = childNodeKV.Value.word;
                 if (childNodeWord.IsAnySingleUnit()) continue;

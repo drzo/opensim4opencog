@@ -32,10 +32,7 @@ namespace RTParser.Utils
         /// <returns>The resulting processed text</returns>
         protected override Unifiable ProcessChange()
         {
-            if (!Unifiable.IsNull(RecurseResult))
-            {
-                return RecurseResult;
-            }
+            if (RecurseResultValid) return RecurseResult;
             if (isRecursive && !ReadOnly)
             {
                 return RecurseResult = Format(TransformAtomically(FormatEach, true));
@@ -50,6 +47,7 @@ namespace RTParser.Utils
 
         public override Unifiable CompleteProcess()
         {
+            if (RecurseResultValid) return RecurseResult;
             return RecurseResult = ProcessChange();
         }
 
