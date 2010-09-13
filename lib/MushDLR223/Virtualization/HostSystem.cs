@@ -66,7 +66,7 @@ namespace MushDLR223.Virtualization
 
         private static string[] ExpandEnvVars(string arg)
         {
-            if (arg.StartsWith("%") && arg.EndsWith("%"))
+            if (arg!=null && arg.StartsWith("%") && arg.EndsWith("%"))
             {
                 string s = Environment.GetEnvironmentVariable(arg.Substring(1, arg.Length - 2));
                 if (!IsNullOrEmpty(s)) return new[] {s};
@@ -88,9 +88,31 @@ namespace MushDLR223.Virtualization
             }
         }
 
+        public static bool IsWildPath(string str)
+        {
+            if (str == null) return false;
+            if (str.Contains("*"))
+            {
+                return true;
+            }
+            return false;
+        }
 
         public static string ToRelativePath(string str, string prefix)
         {
+            if (IsWildPath(str))
+            {
+                string dirName;
+                string mask;
+                SplitDirAndFile(str,out dirName, out mask);
+                try
+                {
+                    return Combine(ToRelativePath(dirName, prefix), mask);
+                }
+                catch (Exception e)
+                {
+                }
+            }
             str = ToForwardSlashes(str);
             string strFull = GetFullPath(str);
             bool existed = FileOrDirExists(str);
@@ -101,6 +123,10 @@ namespace MushDLR223.Virtualization
             string strSaved = str;
             prefix = ToForwardSlashes(prefix);
             bool dirExisted = DirExists(prefix);
+            if (prefix == null)
+            {
+                return str;
+            }
             string prefixFull = GetFullPath(prefix);
             int longer = strFull.Length - prefixFull.Length;
             string shared = "";
@@ -187,6 +213,7 @@ namespace MushDLR223.Virtualization
 
         private static string ToForwardSlashes(string str)
         {
+            if (str == null) return str;
             return str.Replace("\\", "/").ToLower();
             if (Directory.Exists(str))
             {
@@ -197,6 +224,13 @@ namespace MushDLR223.Virtualization
 
         private static string GetFullPath(string str)
         {
+            if (IsWildPath(str))
+            {
+                string dirname;
+                string mask;
+                if (SplitDirAndFile(str, out dirname, out mask))
+                    return Combine(GetFullPath(dirname), mask);
+            }
             String fp = Path.GetFullPath(str);
             if (Directory.Exists(fp)) fp = ToCanonicalDirectory(fp);
             return ToForwardSlashes(fp);
@@ -205,7 +239,14 @@ namespace MushDLR223.Virtualization
         public static bool FileOrDirExists(string str)
         {
             if (str == null) return false;
-            return FileExists(str) || DirExists(str);
+            try
+            {
+                return FileExists(str) || DirExists(str);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         public static bool DirExists(string pathname)
@@ -351,8 +392,21 @@ namespace MushDLR223.Virtualization
             }
         }
 
+        public static bool SplitDirAndFile(string pathname, out string dirname, out string filemask)
+        {            
+            filemask = Path.GetFileName(pathname);
+            dirname = GetBaseDir(pathname);
+            return true;
+        }
         public static String[] GetWildFiles(string pathname, out string dirname, out string filemask)
         {
+            if (IsWildPath(pathname))
+            {
+                if (SplitDirAndFile(pathname, out dirname, out filemask))
+                {
+                    return GetFiles(dirname, filemask);
+                }
+            }
             string exists = ResolveToExistingPath(pathname);
             string[] file;
             if (exists != null) pathname = exists;
@@ -454,6 +508,20 @@ namespace MushDLR223.Virtualization
         }
 
         public static string ResolveToExistingPath(string path)
+        {
+            string ret = path;
+            try
+            {
+                ret = ResolveToExistingPath00(path);
+                return ret;
+            }
+            catch (Exception)
+            {
+            }
+            return ret;
+        }
+
+        public static string ResolveToExistingPath00(string path)
         {
             string physicalPath = ResolveToExistingPath(path, true);
             if (!IsNullOrEmpty(physicalPath)) return physicalPath;
@@ -617,7 +685,10 @@ namespace MushDLR223.Virtualization
                 if (path == null) continue;
                 if (!FileOrDirExists(path)) continue;
                 string ss = ToPathname(path);
-                if (ss == null) continue;
+                if (ss == null)
+                {
+                    continue;
+                }
                 fullPath = path;
                 prefix = s;
             }
@@ -665,7 +736,13 @@ namespace MushDLR223.Virtualization
 
         public static string GetBaseDir0(string pathname)
         {
-            string exists = ResolveToExistingPath(pathname);
+            string exists = Path.GetDirectoryName(pathname);
+            string file = Path.GetFileName(pathname);
+            if (IsWildPath(file))
+            {
+                return exists + "\\";
+            }
+            exists = ResolveToExistingPath(pathname);
             if (exists != null)
             {
                 if (exists != pathname)
@@ -674,7 +751,7 @@ namespace MushDLR223.Virtualization
                 }
             }
             exists = Path.GetFullPath(pathname);
-            string file = Path.GetFileName(pathname);
+            
 
             if (!InvalidPathname(exists))
             {
@@ -728,7 +805,7 @@ namespace MushDLR223.Virtualization
                 return fi.FullName ?? pathname;
             }
 
-            string s = Path.GetFullPath(pathname);
+            string s = GetFullPath(pathname);
             if (s != pathname)
             {
                 writeToLog("Absolute path does not exist " + s + " from " + pathname);

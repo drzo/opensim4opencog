@@ -431,7 +431,7 @@ namespace MushDLR223.Utilities
 #if OUTXML_CACHE
                 outerXMLCache = null;
 #endif
-                if (ReadOnly)
+                if (ReadOnly)   
                 {
                     writeToLog("ERROR RemoveChild on ReadOnly ");
                 }
@@ -440,7 +440,7 @@ namespace MushDLR223.Utilities
             }
             catch (Exception e)
             {
-                writeToLog("ERROR: newnode.AppendChild " + e);
+                writeToLog("ERROR: newnode.RemoveChild " + e);
                 return null;
             }
             finally
