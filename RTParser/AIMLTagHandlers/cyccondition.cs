@@ -153,7 +153,7 @@ namespace RTParser.AIMLTagHandlers
                                     if (childLINode.Attributes[0].Name.ToLower() == "value")
                                     {
                                         bool succeed;
-                                        Unifiable actualValue = base.GetActualValue(name, false, out succeed);
+                                        Unifiable actualValue = GetActualValue(childLINode, name, childLINode.Name, out succeed, query); ;
                                         Unifiable value = GetAttribValue(childLINode, "value", EmptyFunct, ReduceStarAttribute<Unifiable>);
                                         if (IsPredMatch(value, actualValue, query))
                                         {
@@ -186,7 +186,7 @@ namespace RTParser.AIMLTagHandlers
                                 if ((name.Length > 0) & (!value.IsEmpty))
                                 {
                                     bool succeed;
-                                    Unifiable actualValue = base.GetActualValue(name, false, out succeed);
+                                    Unifiable actualValue = base.GetActualValue(name, childLINode.Name, out succeed);
                                     if (IsPredMatch(value, actualValue, query))
                                     {
                                         Succeed();

@@ -21,12 +21,32 @@ namespace RTParser
         Request ParentRequest { get; set; }
         GraphMaster Graph { get; set; }
         bool IsTraced { get; set; }
+
+        /// <summary>
+        /// The user that made this request
+        /// </summary>
         User Requester { get; set; }
-        IEnumerable<Unifiable> BotOutputs { get; }
+        /// <summary>
+        /// The user respoinding to the request
+        /// </summary>
+        User Responder { get; set; }
+        /// <summary>
+        /// The get/set user dictionary
+        /// </summary>
+        ISettingsDictionary RequesterPredicates { get; }
+        /// <summary>
+        /// The get/set bot dictionary (or user)
+        /// </summary>
+        ISettingsDictionary ResponderPredicates { get; set; }
+        /// <summary>
+        /// If loading/saing settings from this request this may be eitehr the requestor/responders Dictipoanry
+        /// </summary>
+        ISettingsDictionary TargetSettings { get; set; }
+
+        IEnumerable<Unifiable> ResponderOutputs { get; }
         Result CurrentResult { get;  set; }
         Unifiable Flags { get; }
         IList<Unifiable> Topics { get; }
-        ISettingsDictionary Predicates { get; }
         Proof Proof { get; set; }
 
         //int MaxTemplates { get; set; }
@@ -41,7 +61,6 @@ namespace RTParser
         Unifiable rawInput { get; set; }
         IList<Result> UsedResults { get; set; }
         IList<TemplateInfo> UsedTemplates { get; }
-        ISettingsDictionary TargetSettings { get; set; }
         int MaxInputs { get; set; }
 
         DateTime StartedOn { get; set; }
@@ -70,11 +89,12 @@ namespace RTParser
         int DebugLevel { get; set; }
         Unifiable That { get; set; }
         PrintOptions WriterOptions { get; }
-        ISettingsDictionary TargetListenerSettings { get; set; }
-        User TargetUser { get; set; }
+        RequestImpl ParentMostRequest { get; }
+        AIMLTagHandler LastHandler { get; set; }
         // inherited from base  string GraphName { get; set; }
         ISettingsDictionary GetSubstitutions(string name, bool b);
         GraphMaster GetGraph(string srai);
+        void ExcludeGraph(string srai);
         void AddOutputSentences(TemplateInfo ti, string nai, Result result);
         ISettingsDictionary GetDictionary(string named);
 
@@ -118,6 +138,19 @@ namespace RTParser
         public User Requester { get; set; }
 
         /// <summary>
+        /// The user who is the target of this request
+        /// </summary>
+        public User Responder
+        {
+            get
+            {
+                if (_responderUser != null) return _responderUser;
+                return ParentRequest.Responder;
+            }
+            set { _responderUser = value; }
+        }
+
+        /// <summary>
         /// The Proccessor to which the request is being made
         /// </summary>
         public RTPBot TargetBot { get; set; }
@@ -153,15 +186,32 @@ namespace RTParser
         public readonly int framesAtStart;
 
 
+        private ISettingsDictionary _responderYouPreds;
+        private User _responderUser;
+
+        public ISettingsDictionary ResponderPredicates
+        {
+            get
+            {
+                if (_responderYouPreds != null) return _responderYouPreds;
+                var resp = Responder;
+                if (resp != null) return resp.Predicates;
+                if (ParentRequest != null)
+                {
+                    return ParentRequest.ResponderPredicates;
+                } 
+                writeDebugLine("ERROR Cant find responder Dictionary !!!");
+                return null; // TargetSettings;
+            }
+            set { _responderYouPreds = value; }
+        }
         #endregion
 
         public override string ToString()
         {
-
-            string s;
-            if (Requester == null) s = "NULL";
-            else s = Requester.UserID;
-            return s + ": " + Unifiable.ToVMString(rawInput);
+            return string.Format("{0}: {1}, {2}", Requester == null ? "NULL" : (string) Requester.UserID,
+                                 Responder == null ? "Anyone" : (string) Responder.UserID,
+                                 Unifiable.ToVMString(rawInput));
         }
 
         /// <summary>
@@ -175,16 +225,19 @@ namespace RTParser
         {
             Request pmaybe = null;
             DebugLevel = -1;
+            Requester = user;
+            Responder = targetUser;
             if (targetUser == null)
             {
-                if (parent != null) targetUser = parent.TargetUser;
+                if (parent != null) targetUser = parent.Responder;
                 if (targetUser == null)
                 {
                     if (user == bot.BotAsUser) targetUser = bot.LastUser;
                     else targetUser = bot.BotAsUser;
                 }
             }
-            _targetUser = targetUser;
+            if (targetUser != null) Responder = targetUser;
+            _responderUser = targetUser;
             UsedResults = new List<Result>();
             Flags = "Nothing";
             ApplySettings(user, this);
@@ -198,6 +251,12 @@ namespace RTParser
                 this.writeToLog = parent.writeToLog;
                 Graph = parent.Graph;
                 MaxInputs = 1;
+                const int m = 2;
+                const int M = 3;
+                MinPatterns = Math.Max(1, ((QuerySettingsReadOnly)parent).MinPatterns - m);
+                MaxPatterns = Math.Max(1, ((QuerySettingsReadOnly)parent).MaxPatterns - M);
+                MinTemplates = Math.Max(1, ((QuerySettingsReadOnly)parent).MinTemplates - m);
+                MaxTemplates = Math.Max(1, ((QuerySettingsReadOnly)parent).MaxTemplates - M);
             }
             else
             {
@@ -207,7 +266,7 @@ namespace RTParser
                     MaxInputs = user.MaxInputs;
                 }
                 else MaxInputs = 1;
-                
+
                 Proof = new Proof();
             }
             writeToLog = writeToLog ?? bot.writeToLog;
@@ -408,6 +467,27 @@ namespace RTParser
            return TargetBot.GetGraph(value, sGraph);
         }
 
+        public void ExcludeGraph(string srai)
+        {
+            ExcludeGraph(GetGraph(srai));
+        }
+        public void ExcludeGraph(GraphMaster getGraph)
+        {
+            ICollection<GraphMaster> disallowedGraphs = DisallowedGraphs;
+            lock (disallowedGraphs)
+            {
+                if (disallowedGraphs.Contains(getGraph)) return;
+                disallowedGraphs.Add(getGraph);
+            }
+            AddSideEffect("restore graph access " + getGraph,
+                          () => { lock (disallowedGraphs) disallowedGraphs.Remove(getGraph); });
+        }
+
+        internal ICollection<GraphMaster> DisallowedGraphs
+        {
+            get { return Requester.DisallowedGraphs; }
+        }
+
         public void AddOutputSentences(TemplateInfo ti, string nai, Result result)
         {
             result = result ?? CurrentResult;
@@ -476,12 +556,12 @@ namespace RTParser
             }
         }
 
-        public IEnumerable<Unifiable> BotOutputs
+        public IEnumerable<Unifiable> ResponderOutputs
         {
             get { return Requester.BotOutputs; }
         }
 
-        public ISettingsDictionary Predicates
+        public ISettingsDictionary RequesterPredicates
         {
             get
             {
@@ -498,12 +578,12 @@ namespace RTParser
 
         public Unifiable grabSetting(string name)
         {
-            return Predicates.grabSetting(name);
+            return RequesterPredicates.grabSetting(name);
         }
 
         public bool addSetting(string name, Unifiable value)
         {
-            return Predicates.addSetting(name, value);
+            return RequesterPredicates.addSetting(name, value);
         }
 
         public IList<TemplateInfo> UsedTemplates
@@ -517,7 +597,7 @@ namespace RTParser
         {
             if (CurrentResult != null)
             {
-                CurrentResult.WriteLine(s, args);
+                CurrentResult.writeToLog(s, args);
             }
             else
             {
@@ -576,6 +656,7 @@ namespace RTParser
             subRequest.StartedOn = request.StartedOn;
             subRequest.TimesOutAt = request.TimesOutAt;
             subRequest.TargetSettings = request.TargetSettings;
+            subRequest.Responder = request.Responder;
             return subRequest;
         }
 
@@ -672,31 +753,21 @@ namespace RTParser
             set { iopts = value; }
         }
 
-        private ISettingsDictionary _targetYOUFromSpeaker;
-        private User _targetUser;
-
-        public ISettingsDictionary TargetListenerSettings
+        public RequestImpl ParentMostRequest
         {
             get
             {
-                if (iopts != null) return _targetYOUFromSpeaker;
-                if (ParentRequest != null)
-                {
-                    return ParentRequest.TargetListenerSettings;
-                }
-                return TargetBot.GlobalSettings;
+                if (ParentRequest == null) return this;
+                return ParentRequest.ParentMostRequest;
             }
-            set { _targetYOUFromSpeaker = value; }
         }
 
-        public User TargetUser
+        private AIMLTagHandler _lastHandler;
+
+        public AIMLTagHandler LastHandler
         {
-            get
-            {
-                if (_targetUser != null) return _targetUser;
-                return ParentRequest.TargetUser;
-            }
-            set { _targetUser = value; }
+            get { return _lastHandler; }
+            set { if (value != null) _lastHandler = value; }
         }
 
         public ISettingsDictionary GetSubstitutions(string named, bool createIfMissing)
@@ -724,17 +795,19 @@ namespace RTParser
             }
         }
         private readonly List<KeyValuePair<string, ThreadStart>> commitHooks = new List<KeyValuePair<string, ThreadStart>>();
-        public static void DoAll(IEnumerable<KeyValuePair<string, ThreadStart>> todo)
+        public static void DoAll(List<KeyValuePair<string, ThreadStart>> todo)
         {
+            List<KeyValuePair<string, ThreadStart>> newList = new List<KeyValuePair<string, ThreadStart>>();
             lock (todo)
             {
-                {
-                    foreach (KeyValuePair<string, ThreadStart> start in todo)
-                    {
-                        DoTask(start);
-                    }
-                }
+                newList.AddRange(todo);
+                todo.Clear();
             }
+            foreach (KeyValuePair<string, ThreadStart> start in newList)
+            {
+                DoTask(start);
+            }
+            todo.Clear();
         }
 
         private static void DoTask(KeyValuePair<string, ThreadStart> start)
@@ -749,30 +822,70 @@ namespace RTParser
             }
         }
 
+        readonly object RequestSideEffect = new object();
         public void Commit()
         {
-            if (commitHooks == null)
+            lock (RequestSideEffect)
             {
-                DoAll(commitHooks);
+                if (commitHooks == null || commitHooks.Count == 0)
+                {
+                    return;
+                }
+                bool prevCommitNow = CommitNow;
+                try
+                {
+                    while (true)
+                    {
+                        lock (commitHooks)
+                        {
+                            if (commitHooks.Count == 0)
+                            {
+                                return;
+                            }
+                        }
+                        CommitNow = false;
+                        DoAll(commitHooks);
+                        CommitNow = true;
+                    }
+
+                }
+                finally
+                {
+                    CommitNow = prevCommitNow;
+                }
             }
-            CommitNow = true;
         }
 
-        public bool CommitNow = true;
+        public bool CommitNow = false;
         public void AddSideEffect(string name, ThreadStart action)
         {
             KeyValuePair<string, ThreadStart> newKeyValuePair = new KeyValuePair<string, ThreadStart>(name, action);
-            if (CommitNow)
+            lock (RequestSideEffect)
             {
-                DoTask(newKeyValuePair);
-            }
-            else
-            {
-                commitHooks.Add(newKeyValuePair);
+                if (CommitNow)
+                {
+                    DoTask(newKeyValuePair);
+                }
+                else
+                {
+                    commitHooks.Add(newKeyValuePair);
+                }
             }
         }
 
-        public ISettingsDictionary GetDictionary(string named,  ISettingsDictionary dictionary)
+        public ISettingsDictionary GetDictionary(string named, ISettingsDictionary dictionary)
+        {
+            ISettingsDictionary dict =  GetDictionary0(named, dictionary);
+            if (dict == TargetBot.GlobalSettings)
+            {
+                writeToLog("BETTER MEAN BOT " + named + " for " + dictionary);
+            }
+            if (dict != null) return dict;
+            writeToLog("ERROR MISSING DICTIONARY " + named + " for " + dictionary);
+            return null;
+        }
+
+        public ISettingsDictionary GetDictionary0(string named, ISettingsDictionary dictionary)
         {
             if (named == null)
             {
@@ -782,12 +895,16 @@ namespace RTParser
                 return TargetSettings;
             }
             if (named == "user") return CheckedValue(named, Requester);
+            if (named == "set") return CheckedValue(Requester.UserID, Requester);
+            if (named == "get") return CheckedValue(Requester.UserID, Requester);
             if (named == "query") return CheckedValue(named, CurrentQuery);
-            if (named == "request") return CheckedValue(named, TargetSettings);
+            if (named == "request") return CheckedValue(named, TargetSettings);            
             if (named == "bot")
             {
+                if (ResponderPredicates != null) return ResponderPredicates;
+                if (Responder != null) return Responder.Predicates;
                 if (CurrentQuery != null)
-                    return CheckedValue(named, CurrentQuery.TargetListenerSettings ?? TargetBot.GlobalSettings);
+                    return CheckedValue(named, CurrentQuery.ResponderPredicates ?? TargetBot.GlobalSettings);
                 return CheckedValue(named, TargetBot.GlobalSettings);
             }
 

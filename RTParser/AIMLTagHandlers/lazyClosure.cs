@@ -147,6 +147,7 @@ namespace RTParser.AIMLTagHandlers
             var sd = request.GetSubstitutions(currentNodeName, false);
             if (sd != null)
             {
+                if (RecurseResultValid) return RecurseResult;
                 if (!Unifiable.IsNull(RecurseResult))
                 {
                     return RecurseResult;
@@ -164,7 +165,7 @@ namespace RTParser.AIMLTagHandlers
                 var v = Proc.GlobalSettings.grabSetting(currentNodeName);
                 if (!Unifiable.IsNull(v)) return v;
             }
-            var vs = Proc.EvalAiml(templateNode, request, request.WriteLine);
+            var vs = Proc.EvalAiml(templateNode, request, request.writeToLog);
             StringBuilder sb = new StringBuilder();
             int writeThrus = 0;
             int total = 0;

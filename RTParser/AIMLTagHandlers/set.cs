@@ -1,5 +1,6 @@
 using System.Xml;
 using RTParser.Database;
+using RTParser.Variables;
 
 namespace RTParser.AIMLTagHandlers
 {
@@ -50,7 +51,8 @@ namespace RTParser.AIMLTagHandlers
                 Unifiable name = GetAttribValue("name,var", null);
                 Unifiable value = GetAttribValue("value", null);
                 string gName = GetAttribValue("global_name", null);
-                string dictName = GetDictName("type");
+                ISettingsDictionary dict;
+                string dictName = GetNameOfDict(query, "set", templateNode, out dict);
 
                 if (name == null)
                 {
@@ -67,7 +69,7 @@ namespace RTParser.AIMLTagHandlers
                     value = templateNodeInnerText;
                 }
                 if (value.IsEmpty) value = defaultVal;
-                return NamedValuesFromSettings.SetSettingForType(dictName, query, query, name, gName, value, setReturn, templateNode);
+                return NamedValuesFromSettings.SetSettingForType(dictName, query, dict, name, gName, value, setReturn, templateNode);
             }
             return defaultVal;
         }

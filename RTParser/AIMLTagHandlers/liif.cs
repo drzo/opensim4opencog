@@ -133,8 +133,8 @@ namespace RTParser.AIMLTagHandlers
             lock (templateNode)
             {
               //  ISettingsDictionary dict = query;
-                if (GetAttribValue(templateNode, "type", "") == "bot" || GetAttribValue(templateNode,"bot", "").ToLower() == "true")
-                    dict = query0.TargetBot.GlobalSettings;
+                //if (GetAttribValue(templateNode, "type", "") == "bot" || GetAttribValue(templateNode,"bot", "").ToLower() == "true")
+                 //   dict = query0.TargetBot.GlobalSettings;
 
                 bool yesInherit = true;
                 bool noLocal = false;
@@ -158,7 +158,9 @@ namespace RTParser.AIMLTagHandlers
                 string contains = GetAttribValue(templateNode, "contains", NullStringFunct, query);
                 Unifiable value = GetAttribValue(templateNode, "value", NullStringFunct, query);
                 string scope = GetAttribValue(templateNode, "local,scope", NullStringFunct, query);
-                string type = GetAttribValue(templateNode, "type,user,bot", NullStringFunct, query);
+                string realName0;
+                string type = GetAttribValue(templateNode, "type,user,bot", out realName0, NullStringFunct, query);
+                if (type == null) type = realName0;
 
                 string varname = name ?? exists;
                 bool mustNotExist = false;
@@ -223,7 +225,7 @@ namespace RTParser.AIMLTagHandlers
                     string realName;
                     bool succeed;
                     //ReduceStar0 query = query0.ReduceStarAttribute;
-                    Unifiable actualValue = GetActualValue(templateNode, name, false, out succeed, query0); 
+                    Unifiable actualValue = GetActualValue(templateNode, name, type ?? dict.NameSpace, out succeed, query0);
                     if (IsPredMatch(value, actualValue, query0))
                     {
                         return Succeed();

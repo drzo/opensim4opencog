@@ -24,6 +24,17 @@ namespace RTParser
         /// </summary>
         public RTPBot TargetBot;
 
+        /// The user that is providing the <that/> answer
+        public User Responder;
+
+        public void CollectRequest()
+        {
+            Request req = request;
+            Responder = req.Responder;
+            Requestor = req.Requester;
+            request = null;
+        }
+
         /// <summary>
         /// The amount of time the request took to process
         /// </summary>
@@ -70,9 +81,11 @@ namespace RTParser
         /// <summary>
         /// The user for whom this is a result
         /// </summary>
-        public User user;
+        public User Requestor;
 
         public OutputDelegate writeToLog = RTPBot.writeDebugLine;
+        public int TemplatesSucceeded;
+        public int OutputsCreated;
 
         /// <summary>
         /// Ctor
@@ -82,7 +95,7 @@ namespace RTParser
         /// <param name="request">The request that originated this result</param>
         public Result(User user, RTPBot bot, Request request, Result parent)
         {
-            this.user = user;
+            this.Requestor = user;
             this.TargetBot = bot;
             this.request = request;
             ParentResult = parent;
@@ -164,7 +177,7 @@ namespace RTParser
                     {
                         if (request.hasTimedOut)
                         {
-                            writeToLog("ERROR: TIMEOUT on " + RawInput + " from the user with an id: " + user.UserID);
+                            writeToLog("ERROR: TIMEOUT on " + RawInput + " from the user with an id: " + Requestor.UserID);
                             return Unifiable.Empty;
                             return TargetBot.TimeOutMessage;
                         }
@@ -179,7 +192,7 @@ namespace RTParser
                             writeToLog("The bot could not find any response for the input: " + RawInput +
                                        " with the path(s): " +
                                        Environment.NewLine + paths.ToString() + " from the user with an id: " +
-                                       user.UserID.AsString());
+                                       Requestor.UserID.AsString());
                             return Unifiable.Empty;
                         }
                     }
@@ -212,7 +225,7 @@ namespace RTParser
 
         public ISettingsDictionary Predicates
         {
-            get { return user.Predicates; }
+            get { return Requestor.Predicates; }
         }
 
         public SubQuery CurrentQuery
@@ -370,7 +383,7 @@ namespace RTParser
                 }
                 if (StaticXMLUtils.ContainsXml(unifiable))
                 {
-                    writeToLog("ERROR:  AddRssult: " + user.UserID + " " + unifiable);
+                    writeToLog("ERROR:  AddRssult: " + Requestor.UserID + " " + unifiable);
                 }
                 EndedOn = DateTime.Now;
                 OutputSentences.Add(unifiable);

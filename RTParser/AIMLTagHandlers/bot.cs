@@ -44,13 +44,13 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessChange()
         {
-            if (RecurseResult != null) return RecurseResult;
+            if (RecurseResultValid) return RecurseResult;
             Unifiable defaultVal = GetAttribValue("default", Unifiable.Empty);
             if (CheckNode("bot"))
             {
                 string name = GetAttribValue(templateNode, "name,var", () => templateNodeInnerText, ReduceStarAttribute);
                 bool succeed;
-                var value = GetActualValue(name, true, out succeed); // true == "bot";
+                var value = GetActualValue(name, templateNode.Name, out succeed); // true == "bot";
                 if (succeed && name != "name") Succeed();
                 if (!Unifiable.IsNullOrEmpty(value))
                 {

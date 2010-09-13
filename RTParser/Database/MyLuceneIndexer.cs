@@ -570,23 +570,23 @@ namespace RTParser.Database
             get
             {
                 lock (dbLock)
-            {
+                {
                     IsDbPresent = _IsDbPresent || IndexReader.IndexExists(_directory);
                     return _IsDbPresent;
-            }
+                }
             }
             set
-        {
+            {
                 lock (dbLock)
-        {
+                {
                     if (!_IsDbPresent && value)
-        {
+                    {
                         writeToLog("Noticing IsDbPresent");
-            }
+                    }
                     _IsDbPresent = value;
-        }
-            }
                 }
+            }
+        }
 
         public int assertTriple(string subject, string relation, string value)
         {
@@ -669,7 +669,6 @@ namespace RTParser.Database
 
             string subj = Entify(subject);
             string pred = Entify(relation);
-            string botName = Entify(TheBot.UserID);
 
             var dictionary = TheBot.GetDictionary(subj) as SettingsDictionary;
 
@@ -687,16 +686,18 @@ namespace RTParser.Database
                     formatter = GetDictValue(dictionary, relation, "format-assert");
                 }
             }
+
             if (Unifiable.IsNullOrEmpty(formatter) || Unifiable.IsTrueOrYes(formatter) || formatter == "default")
             {
                 formatter = " {0} {1} is {2} ";
             }
+            string botName = !IsBotRobot(subject) ? Entify(TheBot.UserID) : Entify(TheBot.LastUser.UserID);
             {
 
                 var whword = GetDictValue(dictionary, relation, "format-whword");
 
                 if (!Unifiable.IsNullOrEmpty(whword) && noValue) value = whword;
- 
+
                 if (Unifiable.IsFalseOrNo(formatter.Trim().ToUpper()))
                 {
                     return "false";
@@ -712,8 +713,10 @@ namespace RTParser.Database
 
                 formatter = SafeReplace(formatter, "$predicate", pred);
 
-                formatter = SafeReplace(formatter, "$set-return", TheBot.RelationMetaProps.grabSettingNoDebug(relation));
+                formatter = SafeReplace(formatter, "$set-return",
+                                        TheBot.RelationMetaProps.grabSettingNoDebug(relation + "." + "set-return"));
                 formatter = SafeReplace(formatter, "$default", TheBot.DefaultPredicates.grabSettingNoDebug(relation));
+
                 formatter = SafeReplace(formatter, "$botname", botName);
                 formatter = SafeReplace(formatter, "$bot", botName);
             }
@@ -723,6 +726,15 @@ namespace RTParser.Database
             english = english.Replace(" you ", botName);
             english = english.Trim();
             return english;
+        }
+
+        public bool IsBotRobot(string subject)
+        {
+            User user = TheBot.FindUser(subject);
+            if (user == null) return false;
+            if (user == TheBot.BotAsUser) return true;
+            if (!user.IsRoleAcct) return false;
+            return false;
         }
 
         static string SafeReplace(string formatter,string find, string replace)

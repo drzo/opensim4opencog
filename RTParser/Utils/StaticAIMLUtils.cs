@@ -61,11 +61,21 @@ namespace RTParser.Utils
                     "id",
                 };
 
+        public static readonly List<String> SilentTags = new List<string>()
+                                          {
+                                "#comment",
+                                "silence",
+                                "bookmark",
+                                "src",
+                                "think",
+                                "that",
+                                //    "debug",
+                                          };
+
         public static readonly List<string> TagsRecurseToFlatten = new List<string>
                                                                        {
                                                                            "template",
-                                                                           "pattern",
-                                                                           "that",
+                                                                           "pattern",                                                                         
                                                                            "sapi",
                                                                            "node",
                                                                            "pre",
@@ -75,10 +85,11 @@ namespace RTParser.Utils
         public static readonly List<string> TagsWithNoOutput = new List<string>
                                                                    {
                                                                        "#comment",
-                                                                       //    "debug",                                                                   
-                                                     
+                                                                       //    "debug",                                                                                                                        
+                                                                       "that",
                                                                        "br",
                                                                        "p",
+                                                                       "that",
                                                                    };
 
 
@@ -96,6 +107,7 @@ namespace RTParser.Utils
                                    "silence",
                                    "bookmark",
                                    "src",
+                                   "that",
                                    //    "debug",
                                }
                 };
@@ -127,7 +139,7 @@ namespace RTParser.Utils
         public static bool ThatWideStar;
         public static bool useInexactMatching;
         public static OutputDelegate userTraceRedir;
-        public static bool TrackTemplates = false; // to save mememory
+        public static bool TrackTemplates = true; // to save mememory
 
         public static R FromLoaderOper<R>(Func<R> action, GraphMaster gm)
         {
@@ -388,7 +400,9 @@ namespace RTParser.Utils
         {
             if (xml1 == null) return xml1;
             string t =
-                CleanWhitepaces(MakeMatchable(xml1).Replace(" index=\"1\"", " ").Replace(" index=\"1,1\"", " "));
+                CleanWhitepaces(
+                    MakeMatchable(xml1).Replace(" index=\"1\"", " ").Replace(" index=\"1,1\"", " ").Replace(" var=",
+                                                                                                            " name="));
             // t = t.Replace("<star index=\"1\"/>", " * ");
             // t = t.Replace("<star/>", " * ");
             //t = t.Replace("<sr/>", " * ");
@@ -625,17 +639,11 @@ namespace RTParser.Utils
             {
                 return IsNullOrEmpty(actualValue);
             }
-            if (IsNull(actualValue))
-            {
-                return IsNullOrEmpty(required);
-            }
             required = required.Trim();
             if (required.IsAnySingleUnit())
             {
                 return !IsNullOrEmpty(actualValue);
             }
-
-            actualValue = actualValue.Trim();
 
             string requiredToUpper = required.ToUpper();
             if (requiredToUpper == "*")
@@ -643,11 +651,15 @@ namespace RTParser.Utils
                 return !IsUnknown(actualValue);
             }
 
-            if (IsNullOrEmpty(required) || requiredToUpper == "$MISSING")
+            if (requiredToUpper == "OM" || IsNullOrEmpty(required) || requiredToUpper == "$MISSING")
             {
-                return IsNullOrEmpty(actualValue);
+                return IsNullOrEmpty(actualValue) || actualValue == "OM";
+            }            
+            if (IsNull(actualValue))
+            {
+                return IsNullOrEmpty(required);
             }
-
+            actualValue = actualValue.Trim();
             if (actualValue.WillUnify(required, subquery))
             {
                 return true;
@@ -713,10 +725,35 @@ namespace RTParser.Utils
             GraphMaster.PrintToWriter(CI, printOptions, new OutputDelegateWriter(console), null);
         }
 
+        public static bool IsEmptyPattern(XmlNode node)
+        {
+            if (node.NodeType == XmlNodeType.Comment || IsEmptyText(node)) return true;
+            string patternSide = VisibleRendering(node.ChildNodes, PatternSideRendering);
+            return patternSide.Trim().Length == 0;
+        }
         public static bool IsSilentTag(XmlNode node)
         {
             // if (true) return false;
-            if (node.Name == "think") return true;
+            if (SilentTags.Contains(node.Name.ToLower())) return true;
+            if (IsEmptyText(node)) return true;
+            if (TemplateSideRendering.flatten.Contains(node.Name))
+            {
+                foreach (XmlNode xmlNode in node.ChildNodes)
+                {
+                    if (xmlNode.NodeType == XmlNodeType.Comment) continue;
+                    if (!IsSilentTag(xmlNode))
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            return false;
+        }
+
+        private static bool IsEmptyText(XmlNode node)
+        {
+            if (node.NodeType == XmlNodeType.Comment) return true;
             if (node.NodeType == XmlNodeType.Text)
             {
                 string innerText = node.InnerText;
@@ -725,18 +762,6 @@ namespace RTParser.Utils
                     return true;
                 }
                 return false;
-            }
-            if (node.Name == "template")
-            {
-                foreach (XmlNode xmlNode in node.ChildNodes)
-                {
-                    if (!IsSilentTag(xmlNode)) return false;
-                }
-                if (node.ChildNodes.Count != 1)
-                {
-                    return true;
-                }
-                return true;
             }
             return false;
         }
@@ -749,7 +774,7 @@ namespace RTParser.Utils
         internal static string ForInputTemplate(string sentenceIn)
         {
             string patternSide =
-                VisibleRendering(getNode("<template>" + sentenceIn + "</template>").ChildNodes, PatternSideRendering);
+                VisibleRendering(getNode("<pattern>" + sentenceIn + "</pattern>").ChildNodes, PatternSideRendering);
             return ForOutputTemplate(patternSide);
         }
 

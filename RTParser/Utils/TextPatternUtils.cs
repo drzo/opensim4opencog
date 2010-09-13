@@ -14,7 +14,7 @@ namespace RTParser.Utils
         internal static string ReTrimAndspace(string substitute)
         {
             if (substitute == null) return null;
-            var csubstitute = substitute.ToCharArray();
+            //var csubstitute = substitute.ToCharArray();
             return substitute.Replace("  ", " ").Replace("  ", " ").Replace("  ", " ").Trim();
         }
 

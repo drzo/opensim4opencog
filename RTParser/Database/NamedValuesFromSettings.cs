@@ -13,36 +13,41 @@ namespace RTParser.Database
 {
     public class NamedValuesFromSettings: StaticAIMLUtils
     {
-        static public bool UseLuceneForGet = true;
-        static public bool UseLuceneForSet = true;
-        static public Unifiable GetSettingForType(string type, SubQuery query, ISettingsDictionary dict, string name, out string realName, string gName, Unifiable defaultVal, out bool succeed, XmlNode node)
+        static public bool UseLuceneForGet = false;
+        static public bool UseLuceneForSet = false;
+        static public Unifiable GetSettingForType(string subject, SubQuery query, ISettingsDictionary dict, string name, out string realName, string gName, Unifiable defaultVal, out bool succeed, XmlNode node)
         {
             Request request = query.Request;
-            OutputDelegate writeToLog = query.Result.WriteLine;
+            OutputDelegate writeToLog = query.Result.writeToLog;
             RTPBot TargetBot = request.TargetBot;
-            ISettingsDictionary udict = FindDict(type, query) ?? dict;
+            ISettingsDictionary udict;
+            string dictName = AIMLTagHandler.GetNameOfDict(query, subject ?? dict.NameSpace, node, out udict);
             // try to use a global blackboard predicate
             RTParser.User gUser = TargetBot.ExemplarUser;
 
             defaultVal = RTPBot.GetAttribValue(node, "default,defaultValue", defaultVal);
             gName = RTPBot.GetAttribValue(node, "global_name", gName);
 
-            succeed = false;
-            Unifiable resultGet = SettingsDictionary.grabSettingDefaultDict(udict, name, out realName);
+            string realName0;
+            Unifiable resultGet = SettingsDictionary.grabSettingDefaultDict(udict, name, out realName0);
 
             if (ReferenceEquals(resultGet, null))
             {
+                realName = null;
                 resultGet = Unifiable.NULL;
             }
             // if ((!String.IsNullOrEmpty(result)) && (!result.IsWildCard())) return result; // we have a local one
 
+            String realNameG;
             // try to use a global blackboard predicate
-            Unifiable gResult = SettingsDictionary.grabSettingDefaultDict(gUser.Predicates, gName, out realName);
+            Unifiable gResult = SettingsDictionary.grabSettingDefaultDict(gUser.Predicates, gName, out realNameG);
 
             if ((Unifiable.IsUnknown(resultGet)) && (!Unifiable.IsUnknown(gResult)))
             {
                 // result=nothing, gResult=something => return gResult
                 writeToLog("SETTINGS OVERRIDE " + gResult);
+                succeed = true;
+                realName = realNameG;
                 return gResult;
             }
             string sresultGet = resultGet.ToValue(query);
@@ -58,6 +63,8 @@ namespace RTParser.Database
                 string resultLucene = query.Request.TargetBot.LuceneIndexer.queryTriple(userName, name, node);
                 if (!string.IsNullOrEmpty(resultLucene))
                 {
+                    succeed = true;
+                    realName = name;
                     return resultLucene;
                 }
             }
@@ -65,47 +72,50 @@ namespace RTParser.Database
 
             if (sresultGet != null && sresultGet.ToUpper() == "UNKNOWN")
             {
+                succeed = false;
+                realName = null;
                 return sresultGet + " " + name;
             }
             if (!String.IsNullOrEmpty(sresultGet))
             {
+                realName = realName0;
                 if (!Unifiable.IsNullOrEmpty(gResult))
                 {
                     // result=*, gResult=something => return gResult
-                    if (resultGet.IsWildCard()) return gResult;
                     succeed = true;
+                    realName = realNameG;
+                    if (resultGet.IsWildCard()) return gResult;
                     // result=something, gResult=something => return result
+                    realName = realName;
                     return resultGet;
                 }
                 else
                 {
+                    succeed = true;
+                    realName = realName0;
                     // result=something, gResult=nothing => return result
                     return resultGet;
                 }
             }
             // default => return defaultVal
+            succeed = true;
+            realName = realName0;
             return ReturnSetSetting(udict, name, defaultVal);
             //return defaultVal;
         }
 
-        public static ISettingsDictionary FindDict(string named, SubQuery query)
-        {
-            return query.GetDictionary(named);
-        }
-
-        static public Unifiable SetSettingForType(string type, SubQuery query, ISettingsDictionary dict, string name, string gName, Unifiable value, string setReturn, XmlNode templateNode)
+        static public Unifiable SetSettingForType(string subject, SubQuery query, ISettingsDictionary dict, string name, string gName, Unifiable value, string setReturn, XmlNode templateNode)
         {
             string _sreturn = setReturn;
             setReturn = StaticXMLUtils.GetAttribValue<string>(templateNode, "set-return", () => _sreturn, query.ReduceStarAttribute<string>);
 
             Request request = query.Request;
             RTPBot TargetBot = request.TargetBot;
-            ISettingsDictionary udict = FindDict(type, query) ?? dict;
             // try to use a global blackboard predicate
             RTParser.User gUser = TargetBot.ExemplarUser;
 
             string realName;
-            Unifiable resultGet = SettingsDictionary.grabSettingDefaultDict(udict, name, out realName);
+            Unifiable resultGet = SettingsDictionary.grabSettingDefaultDict(dict, name, out realName);
 
             bool shouldSet = ShouldSet(templateNode, dict, realName, value, resultGet);
 
@@ -116,22 +126,22 @@ namespace RTParser.Database
             {
                 writeToLog("!shouldSet ERROR " + dict + " name=" + realName + " value=" + value + " old=" + resultGet);
                 bool shouldSet2 = ShouldSet(templateNode, dict, realName, value, resultGet);
-                return ReturnSetSetting(udict, name, setReturn);
+                return ReturnSetSetting(dict, name, setReturn);
             }
             if (value.IsEmpty)
             {
                 if (UseLuceneForSet && userbotLuceneIndexer != null) userbotLuceneIndexer.retractAllTriple(userName, name);
                 if (!String.IsNullOrEmpty(gName)) gUser.Predicates.removeSetting(gName);
-                udict.removeSetting(name);
+                dict.removeSetting(name);
             }
             else
             {
                 if (UseLuceneForSet && userbotLuceneIndexer != null) userbotLuceneIndexer.updateTriple(userName, name, value);
                 if (!String.IsNullOrEmpty(gName)) gUser.Predicates.addSetting(gName, value);
-                udict.addSetting(name, value);
+                dict.addSetting(name, value);
 
             }
-            return ReturnSetSetting(udict, name, setReturn);
+            return ReturnSetSetting(dict, name, setReturn);
         }
 
         public static void writeToLog(string message, params object[] args)

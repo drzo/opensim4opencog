@@ -29,6 +29,20 @@ namespace RTParser.Variables
             return null;
         }
 
+        public ParentProvider GetChildPrefixed(string fullname, out string childsSettingName)
+        {
+            foreach (var prefix in _prefixes)
+            {
+                if (fullname.StartsWith(prefix.Key))
+                {
+                    childsSettingName = fullname.Substring(prefix.Key.Length);
+                    return prefix.Value;
+                }
+            }
+            childsSettingName = fullname;
+            return null;
+        }
+
         public IEnumerable<ISettingsDictionary> GetChildren(string fullname)
         {
             List<ISettingsDictionary> dicts = null;

@@ -84,6 +84,11 @@ namespace RTParser
         {
             ProcessMultipleTemplates = true, // needed to find verbal outputs
             ProcessMultiplePatterns = true, // needed to find verbal outputs
+            MinOutputs = 1,
+            MaxOutputs = 1,
+            MinPatterns = 2,
+            MaxPatterns = 5,
+            MinTemplates = 5,
             MaxTemplates = UNLIMITED,
             SraiDepth = new SettingMinMaxCurrent<int>()
                             {

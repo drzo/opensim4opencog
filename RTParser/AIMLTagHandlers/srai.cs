@@ -81,6 +81,10 @@ namespace RTParser.AIMLTagHandlers
             string s;
             if (ResultReady(out s)) return s;
             IsStarted = true;
+            if (RecurseResultValid)
+            {
+                return RecurseResult;
+            }
             if (Unifiable.IsNullOrEmpty(RecurseResult))
             {
                 try
@@ -110,8 +114,15 @@ namespace RTParser.AIMLTagHandlers
         }
         public override Unifiable CompleteProcess()
         {
-            return ProcessChange();
-            return base.CompleteProcess();
+            var sraiResult = ProcessChange();
+            if (IsNull(sraiResult))
+            {
+                ResetValues(true);
+                writeToLogWarn("srai.CompleteProcess() == NULL!");
+                return ProcessChange();
+            }
+            return sraiResult;
+           // return base.CompleteProcess();
         }
         public override string Transform()
         {
@@ -132,7 +143,8 @@ namespace RTParser.AIMLTagHandlers
                 try
                 {
                     var templateNodeInnerValue = Recurse();
-                    return ProcessChangeSrai(request, query, templateNodeInnerValue, templateNode, initialString, writeToLog);
+                    var vv = ProcessChangeSrai(request, query, templateNodeInnerValue, templateNode, initialString, writeToLog);
+                    return vv;
                 }
                 catch (Exception e)
                 {
@@ -221,7 +233,7 @@ namespace RTParser.AIMLTagHandlers
                             //subRequest.result = newresult;
                             user.SuspendAdd = true;
                             if (request.IsTraced) subRequest.IsTraced = !showDebug;
-                            subResult = mybot.ChatWithRequest4(subRequest, user, request.TargetUser, subRequest.Graph);
+                            subResult = mybot.ChatWithRequest4(subRequest, user, request.Responder, subRequest.Graph);
                         }
                         finally
                         {

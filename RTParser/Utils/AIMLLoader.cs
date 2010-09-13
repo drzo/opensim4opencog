@@ -9,6 +9,7 @@ using System.Xml;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
+using RTParser.AIMLTagHandlers;
 using RTParser.Normalize;
 using UPath = RTParser.Unifiable;
 using LineInfoElement = MushDLR223.Utilities.LineInfoElementImpl;
@@ -238,7 +239,7 @@ namespace RTParser.Utils
             RTPBot RProcessor = loadOpts.RProcessor;
             string path = path0;
             loadOpts.Loading0 = path;
-            string pathIn = path;            
+            string pathIn = path;
             RProcessor.ReloadHooks.Add(() => loadAIMLURI0(pathIn, loadOpts));
             path = ResolveToURI(pathIn, loadOpts);
             string fullPath = HostSystem.GetAbsolutePath(pathIn);
@@ -253,9 +254,9 @@ namespace RTParser.Utils
                     LoaderOptions savedOpt = request.LoadOptions;
                     try
                     {
-                        request.LoadOptions = loadOpts;
-                        request.Filename = path;
-                        loadOpts = request.LoadOptions;
+                       // request.LoadOptions = loadOpts;
+                       // request.Filename = path;
+                        //loadOpts = request.LoadOptions;
                         //RTPBot.loadConfigs(RProcessor, path, request);
                         total += loadAIMLDir0(path, loadOpts);
                     }
@@ -287,7 +288,7 @@ namespace RTParser.Utils
                     }
                     return total;
                 }
-                else if (Uri.IsWellFormedUriString(path, UriKind.RelativeOrAbsolute))
+                else if (!HostSystem.IsWildPath(path) && Uri.IsWellFormedUriString(path, UriKind.RelativeOrAbsolute))
                 {
                     writeToLog("Processing AIML URI: " + path);
                     Uri uri = new Uri(path);
@@ -470,6 +471,12 @@ namespace RTParser.Utils
             int total = 0;
             RTPBot RProcessor = loadOpts.RProcessor;
             Request request = loadOpts.TheRequest;
+            DateTime oneMinuteFromNow = DateTime.Now + TimeSpan.FromMinutes(1);
+            if (request.TimesOutAt < oneMinuteFromNow)
+            {
+                request.TimesOutAt = oneMinuteFromNow + TimeSpan.FromMinutes(1);
+                writeToLog("Bumping up timelimit for " + loadOpts);
+            }
             string path = request.Filename;
             loadOpts = EnsureOptions(loadOpts, request, path);
 
@@ -677,8 +684,9 @@ namespace RTParser.Utils
                 }
                 else if (currentNodeName == "topic")
                 {
-                    additionalRules = additionalRules ?? new List<XmlNode>();
-                    additionalRules.Add(currentNode);
+                    additionalRules = PushAddtionalRuleContext(additionalRules);
+                    Unifiable topicName = GetAttribValue(currentNode, "name,topic", Unifiable.STAR);
+                    additionalRules.Add(getNode("<pretest name=\"topic\">" + topicName + "</pretest>", currentNode));
                     var vv = this.processTopic(currentNode, currentNode.ParentNode, loadOpts, additionalRules);
                     additionalRules.Remove(currentNode);
                     total += vv.Count;
@@ -690,7 +698,10 @@ namespace RTParser.Utils
                 }
                 else if (currentNodeName == "that")
                 {
-                    additionalRules.Add(currentNode);
+                    additionalRules = PushAddtionalRuleContext(additionalRules);
+                    string valueThat = GetAttribValue(currentNode, "value,that", currentNode.InnerXml);
+                    additionalRules.Add(getNode("<pretest name=\"that\">" + valueThat + "</pretest>",
+                                                currentNode));
                     total +=
                         InsideLoaderContext(currentNode, request, request.CurrentQuery,
                                             () =>
@@ -718,6 +729,13 @@ namespace RTParser.Utils
             return total;
         }
 
+        private List<XmlNode> PushAddtionalRuleContext(List<XmlNode> nodes)
+        {
+            List<XmlNode> newList =  new List<XmlNode>();;
+            if (nodes!=null) newList.AddRange(nodes);
+            return newList;           
+        }
+
         public override IEnumerable<XmlNodeEval> GetEvaluators(XmlNode node)
         {
             return base.GetEvaluatorsFromReflection(node);
@@ -743,13 +761,6 @@ namespace RTParser.Utils
                                                List<XmlNode> additionalRules)
         {
             // find the name of the topic or set to default "*"
-            var prev = additionalRules;
-            if (prev != null)
-            {
-                additionalRules = new List<XmlNode>();
-                additionalRules.AddRange(prev);
-            }
-
             Unifiable topicName = GetAttribValue(topicNode, "name,topic", Unifiable.STAR);
             if (IsNullOrEmpty(topicName))
             {
@@ -862,7 +873,7 @@ namespace RTParser.Utils
                         if (v == null && errors != null && errors.Length>0)
                         {
                             AddErrorCategory(errors, cateNode);
-                            writeToLog("WARN: MISSING CATE: " + cateNode);
+                            writeToLog("WARN: MISSING CATE: " + cateNode + " " + LocationInfo(cateNode));
                             continue;
                         }
                         CIs.Add(v);
@@ -870,7 +881,7 @@ namespace RTParser.Utils
                     catch (Exception e2)
                     {
                         String s = "ERROR: processCategoryWithTopic '" + e2 + "' " + loadOpts;
-                        writeToLog(s);
+                        writeToLog(s + " " + LocationInfo(cateNode));
                     }
                 }
             }
@@ -901,9 +912,9 @@ namespace RTParser.Utils
             if (string.IsNullOrEmpty(errors))
             {
                 return;
-                writeToLog("XMLERRORNODE: " + node);
+                writeToLog("XMLERRORNODE: " + node + " " + LocationInfo(node));
             }
-            writeToLog("XMLERROR: " + errors + " \n in " + node);
+            writeToLog("XMLERROR: " + errors + " \n in " + node + " " + LocationInfo(node));
             lock (ErrorList)
             {
                 StringBuilder stingBuilder;
@@ -975,7 +986,7 @@ namespace RTParser.Utils
             bool isThat = extractThat1 != null && extractThat1.LocalName == "that";
             if (newPatternOuterXml.Contains("<that"))
             {
-                writeToLog("ERROR in extractThat: ", newPatternOuterXml);
+                writeToLog("ERROR in extractThat: " + newPatternOuterXml + " " + LocationInfo(patternNode));
             }
             var cateNodeOuterXml = cateNode.OuterXml;
             string that;
@@ -986,13 +997,16 @@ namespace RTParser.Utils
                 that = Render(extractThat1);
                 if (!(cateNodeOuterXml.Contains("<that ") || cateNodeOuterXml.Contains("<that>")))
                 {
-                    writeToLog("ERROR in extractThat: ", cateNodeOuterXml);
+                    writeToLog("ERROR in extractThat: " + cateNodeOuterXml + " " + LocationInfo(cateNode));
                 }
             }
             else
             {
                 that = "*";
-                if (isThat) additionalRules.Add(extractThat1);
+                if (isThat)
+                {
+                    additionalRules.Add(extractThat1);
+                }
             }
             patternNode = newPattern;
             Unifiable cond = Render(extractThat(patternNode, "flag", cateNode, out patternText, out newPattern));

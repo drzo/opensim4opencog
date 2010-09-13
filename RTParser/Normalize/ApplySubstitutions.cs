@@ -40,6 +40,7 @@ namespace RTParser.Normalize
 
         protected override Unifiable ProcessChange()
         {
+            if (inputString != null) return inputString;
             return ApplySubstitutions.Substitute(this.Proc.InputSubstitutions, this.inputString);
         }
 
@@ -63,8 +64,11 @@ namespace RTParser.Normalize
         private static string SubstituteResults(ISettingsDictionary dictionary, string marker, string markerSP, string result, bool backwards)
         {
             System.Collections.Generic.IEnumerable<string> dictionarySettingNames = dictionary.SettingNames(0);
+
+            int did = 0;
             foreach (string settingName in dictionarySettingNames)
             {
+                if (did++ > 200) break;
                 var grabSetting = dictionary.grabSetting(settingName);
 
                 string fromValue = settingName;
@@ -90,7 +94,7 @@ namespace RTParser.Normalize
                 else
                 {
                     toValue = toValue.Trim();
-                    if (toValue == fromValue)
+                    if (toValue.ToLower().Replace("\\b", " ").Trim() == fromValue.ToLower().Replace("\\b", " ").Trim())
                     {
                         continue;
                     }
@@ -99,20 +103,23 @@ namespace RTParser.Normalize
 
 
                 string finalPattern = GetFinalPattern(fromValue);
-                if (Regex.IsMatch(result, finalPattern, RegexOptions.IgnoreCase))
+                //if (Regex.IsMatch(result, finalPattern, RegexOptions.IgnoreCase))
                 {
                     string testResult = Regex.Replace(result, finalPattern, replacement, RegexOptions.IgnoreCase);
-                    if (false)
+                    if (testResult != result)
                     {
-                        OutputDelegate to = DLRConsole.DebugWriteLine;
-                        to("\n  SUBST :");
-                        to("   R: '{0}'", result);
-                        to("  PT: '{0}'", fromValue);
-                        to("   V: '{0}'", toValue);
-                        to("   M: '{0}'", finalPattern);
-                        to("  PR: '{0}'", replacement);
-                        to("  RS: '{0}'", testResult);
-                        to("  TS: '{0}'", testResult.Replace(marker, "").Replace(markerSP, " "));
+                        if (!Regex.IsMatch(result, finalPattern, RegexOptions.IgnoreCase))
+                        {
+                            OutputDelegate to = DLRConsole.DebugWriteLine;
+                            to("\n  SUBST :");
+                            to("   R: '{0}'", result);
+                            to("  PT: '{0}'", fromValue);
+                            to("   V: '{0}'", toValue);
+                            to("   M: '{0}'", finalPattern);
+                            to("  PR: '{0}'", replacement);
+                            to("  RS: '{0}'", testResult);
+                            to("  TS: '{0}'", testResult.Replace(marker, "").Replace(markerSP, " "));
+                        }
                     }
                     result = testResult;
                 }
