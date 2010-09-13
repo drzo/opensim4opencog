@@ -64,7 +64,7 @@ namespace RTParser.Variables
     /// A bespoke Dictionary<,> for loading, adding, checking, removing and extracting
     /// settings.
     /// </summary>
-    public class SettingsDictionary : ISettingsDictionary
+    public class SettingsDictionary : ISettingsDictionary, IDictionary<string,Unifiable>
     {
         #region Attributes
 
@@ -98,6 +98,94 @@ namespace RTParser.Variables
         private string fromFile;
 
         /// <summary>
+        /// Adds an item to the <see cref="T:System.Collections.Generic.ICollection`1"/>.
+        /// </summary>
+        /// <param name="item">The object to add to the <see cref="T:System.Collections.Generic.ICollection`1"/>.
+        ///                 </param><exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.ICollection`1"/> is read-only.
+        ///                 </exception>
+        public void Add(KeyValuePair<string, Unifiable> item)
+        {
+            Add(item.Key, item.Value);
+        }
+
+        /// <summary>
+        /// Removes all items from the <see cref="T:System.Collections.Generic.ICollection`1"/>.
+        /// </summary>
+        /// <exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.ICollection`1"/> is read-only. 
+        ///                 </exception>
+        public void Clear()
+        {
+            clearSettings();
+        }
+
+        /// <summary>
+        /// Determines whether the <see cref="T:System.Collections.Generic.ICollection`1"/> contains a specific value.
+        /// </summary>
+        /// <returns>
+        /// true if <paramref name="item"/> is found in the <see cref="T:System.Collections.Generic.ICollection`1"/>; otherwise, false.
+        /// </returns>
+        /// <param name="item">The object to locate in the <see cref="T:System.Collections.Generic.ICollection`1"/>.
+        ///                 </param>
+        public bool Contains(KeyValuePair<string, Unifiable> item)
+        {
+            return Unifiable.IsStringMatch(grabSetting(item.Key), item.Value);
+        }
+
+        /// <summary>
+        /// Copies the elements of the <see cref="T:System.Collections.Generic.ICollection`1"/> to an <see cref="T:System.Array"/>, starting at a particular <see cref="T:System.Array"/> index.
+        /// </summary>
+        /// <param name="array">The one-dimensional <see cref="T:System.Array"/> that is the destination of the elements copied from <see cref="T:System.Collections.Generic.ICollection`1"/>. The <see cref="T:System.Array"/> must have zero-based indexing.
+        ///                 </param><param name="arrayIndex">The zero-based index in <paramref name="array"/> at which copying begins.
+        ///                 </param><exception cref="T:System.ArgumentNullException"><paramref name="array"/> is null.
+        ///                 </exception><exception cref="T:System.ArgumentOutOfRangeException"><paramref name="arrayIndex"/> is less than 0.
+        ///                 </exception><exception cref="T:System.ArgumentException"><paramref name="array"/> is multidimensional.
+        ///                     -or-
+        ///                 <paramref name="arrayIndex"/> is equal to or greater than the length of <paramref name="array"/>.
+        ///                     -or-
+        ///                     The number of elements in the source <see cref="T:System.Collections.Generic.ICollection`1"/> is greater than the available space from <paramref name="arrayIndex"/> to the end of the destination <paramref name="array"/>.
+        ///                     -or-
+        ///                     Type <paramref name="T"/> cannot be cast automatically to the type of the destination <paramref name="array"/>.
+        ///                 </exception>
+        public void CopyTo(KeyValuePair<string, Unifiable>[] array, int arrayIndex)
+        {
+            foreach (string key in Keys)
+            {
+                array[arrayIndex++] = new KeyValuePair<string, Unifiable>(key, grabSetting(key));
+            }
+        }
+
+        /// <summary>
+        /// Removes the first occurrence of a specific object from the <see cref="T:System.Collections.Generic.ICollection`1"/>.
+        /// </summary>
+        /// <returns>
+        /// true if <paramref name="item"/> was successfully removed from the <see cref="T:System.Collections.Generic.ICollection`1"/>; otherwise, false. This method also returns false if <paramref name="item"/> is not found in the original <see cref="T:System.Collections.Generic.ICollection`1"/>.
+        /// </returns>
+        /// <param name="item">The object to remove from the <see cref="T:System.Collections.Generic.ICollection`1"/>.
+        ///                 </param><exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.ICollection`1"/> is read-only.
+        ///                 </exception>
+        public bool Remove(KeyValuePair<string, Unifiable> item)
+        {
+            foreach (var hash in SettingNames(1))
+            {               
+                if (IsKeyMatch(item.Key,hash))
+                {
+                    var v = grabSetting(hash);
+                    if (Unifiable.IsStringMatch(v,item.Value))
+                    {
+                        return removeSetting(hash);
+                    }
+                }
+            }
+            return false;
+        }
+
+        private static bool IsKeyMatch(string key, string hash)
+        {
+            if (key == null) return true;
+            return Unifiable.IsStringMatch(key, hash);
+        }
+
+        /// <summary>
         /// The number of items in the dictionary
         /// </summary>
         public int Count
@@ -108,6 +196,17 @@ namespace RTParser.Variables
             }
         }
 
+        /// <summary>
+        /// Gets a value indicating whether the <see cref="T:System.Collections.Generic.ICollection`1"/> is read-only.
+        /// </summary>
+        /// <returns>
+        /// true if the <see cref="T:System.Collections.Generic.ICollection`1"/> is read-only; otherwise, false.
+        /// </returns>
+        public bool IsReadOnly
+        {
+            get { return Unifiable.IsTrue(grabSetting("isReadOnly")); }
+        }
+
         public string NameSpace
         {
             get { return theNameSpace; }
@@ -116,10 +215,35 @@ namespace RTParser.Variables
 
         public bool IsTraced { get; set; }
 
+        /// <summary>
+        /// Returns an enumerator that iterates through the collection.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="T:System.Collections.Generic.IEnumerator`1"/> that can be used to iterate through the collection.
+        /// </returns>
+        /// <filterpriority>1</filterpriority>
+        public IEnumerator<KeyValuePair<string, Unifiable>> GetEnumerator()
+        {
+            return new SettingsDictionaryEnumerator(Keys, this);        
+        }
+
         public override string ToString()
         {
             return theNameSpace + "(" + Count + ") ";
         }
+
+        /// <summary>
+        /// Returns an enumerator that iterates through a collection.
+        /// </summary>
+        /// <returns>
+        /// An <see cref="T:System.Collections.IEnumerator"/> object that can be used to iterate through the collection.
+        /// </returns>
+        /// <filterpriority>2</filterpriority>
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
         public string ToDebugString()
         {
             return theNameSpace + "(" + Count + ") " + DictionaryAsXML.DocumentElement.InnerXml.Replace("<item name=", "\n<item name =");
@@ -1366,11 +1490,91 @@ namespace RTParser.Variables
         }
 
 
+        /// <summary>
+        /// Determines whether the <see cref="T:System.Collections.Generic.IDictionary`2"/> contains an element with the specified key.
+        /// </summary>
+        /// <returns>
+        /// true if the <see cref="T:System.Collections.Generic.IDictionary`2"/> contains an element with the key; otherwise, false.
+        /// </returns>
+        /// <param name="key">The key to locate in the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        ///                 </param><exception cref="T:System.ArgumentNullException"><paramref name="key"/> is null.
+        ///                 </exception>
+        public bool ContainsKey(string key)
+        {
+            return containsSettingCalled(key);
+        }
+
+        /// <summary>
+        /// Adds an element with the provided key and value to the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// </summary>
+        /// <param name="key">The object to use as the key of the element to add.
+        ///                 </param><param name="value">The object to use as the value of the element to add.
+        ///                 </param><exception cref="T:System.ArgumentNullException"><paramref name="key"/> is null.
+        ///                 </exception><exception cref="T:System.ArgumentException">An element with the same key already exists in the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        ///                 </exception><exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.IDictionary`2"/> is read-only.
+        ///                 </exception>
+        public void Add(string key, Unifiable value)
+        {
+            addSetting(key, value);
+        }
+
+        /// <summary>
+        /// Removes the element with the specified key from the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// </summary>
+        /// <returns>
+        /// true if the element is successfully removed; otherwise, false.  This method also returns false if <paramref name="key"/> was not found in the original <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// </returns>
+        /// <param name="key">The key of the element to remove.
+        ///                 </param><exception cref="T:System.ArgumentNullException"><paramref name="key"/> is null.
+        ///                 </exception><exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.IDictionary`2"/> is read-only.
+        ///                 </exception>
+        public bool Remove(string key)
+        {
+            return removeSetting(key);
+        }
+
+        /// <summary>
+        /// Gets the value associated with the specified key.
+        /// </summary>
+        /// <returns>
+        /// true if the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/> contains an element with the specified key; otherwise, false.
+        /// </returns>
+        /// <param name="key">The key whose value to get.
+        ///                 </param><param name="value">When this method returns, the value associated with the specified key, if the key is found; otherwise, the default value for the type of the <paramref name="value"/> parameter. This parameter is passed uninitialized.
+        ///                 </param><exception cref="T:System.ArgumentNullException"><paramref name="key"/> is null.
+        ///                 </exception>
+        public bool TryGetValue(string key, out Unifiable value)
+        {
+            value = grabSetting(key);
+            return !Unifiable.IsNull(value);
+        }
 
         public Unifiable this[string name]
         {
             get { return SettingsDictionary.IndexGet(this, name); }
             set { SettingsDictionary.IndexSet(this, name, value); }
+        }
+
+        /// <summary>
+        /// Gets an <see cref="T:System.Collections.Generic.ICollection`1"/> containing the keys of the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// </summary>
+        /// <returns>
+        /// An <see cref="T:System.Collections.Generic.ICollection`1"/> containing the keys of the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// </returns>
+        public ICollection<string> Keys
+        {
+            get { return orderedKeys; }
+        }
+
+        /// <summary>
+        /// Gets an <see cref="T:System.Collections.Generic.ICollection`1"/> containing the values in the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// </summary>
+        /// <returns>
+        /// An <see cref="T:System.Collections.Generic.ICollection`1"/> containing the values in the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// </returns>
+        public ICollection<Unifiable> Values
+        {
+            get { return settingsHash.Values; }
         }
 
         public static void IndexSet(ISettingsDictionary dictionary, string name, Unifiable value)
@@ -1401,7 +1605,6 @@ namespace RTParser.Variables
         {
             AddSettingToCollection(dictionary, null, cols);
         }
-
 
         public void AddSettingToCollection(ISettingsDictionary dictionary, ParentProvider pp, List<ParentProvider> cols)
         {
@@ -1734,5 +1937,83 @@ namespace RTParser.Variables
         {
             prefixProvideer.AddChild(prefix, dict);
         }
+    }
+
+    public class SettingsDictionaryEnumerator : IEnumerator<KeyValuePair<string, Unifiable>>
+    {
+        private readonly ISettingsDictionary Root;
+        private readonly IEnumerator<string> keysE;
+        public SettingsDictionaryEnumerator(IEnumerable<string> keys, ISettingsDictionary dict)
+        {
+            Root = dict;
+            keysE = keys.GetEnumerator();
+        }
+
+        #region Implementation of IDisposable
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        /// <filterpriority>2</filterpriority>
+        public void Dispose()
+        {
+            keysE.Dispose();
+        }
+
+        #endregion
+
+        #region Implementation of IEnumerator
+
+        /// <summary>
+        /// Advances the enumerator to the next element of the collection.
+        /// </summary>
+        /// <returns>
+        /// true if the enumerator was successfully advanced to the next element; false if the enumerator has passed the end of the collection.
+        /// </returns>
+        /// <exception cref="T:System.InvalidOperationException">The collection was modified after the enumerator was created. 
+        ///                 </exception><filterpriority>2</filterpriority>
+        public bool MoveNext()
+        {
+            return keysE.MoveNext();
+        }
+
+        /// <summary>
+        /// Sets the enumerator to its initial position, which is before the first element in the collection.
+        /// </summary>
+        /// <exception cref="T:System.InvalidOperationException">The collection was modified after the enumerator was created. 
+        ///                 </exception><filterpriority>2</filterpriority>
+        public void Reset()
+        {
+            keysE.Reset();
+        }
+
+        /// <summary>
+        /// Gets the element in the collection at the current position of the enumerator.
+        /// </summary>
+        /// <returns>
+        /// The element in the collection at the current position of the enumerator.
+        /// </returns>
+        public KeyValuePair<string, Unifiable> Current
+        {
+            get {
+                string key = keysE.Current;
+                return new KeyValuePair<string, Unifiable>(key, Root.grabSetting(key));
+            }
+        }
+
+        /// <summary>
+        /// Gets the current element in the collection.
+        /// </summary>
+        /// <returns>
+        /// The current element in the collection.
+        /// </returns>
+        /// <exception cref="T:System.InvalidOperationException">The enumerator is positioned before the first element of the collection or after the last element.
+        ///                 </exception><filterpriority>2</filterpriority>
+        object IEnumerator.Current
+        {
+            get { return Current; }
+        }
+
+        #endregion
     }
 }

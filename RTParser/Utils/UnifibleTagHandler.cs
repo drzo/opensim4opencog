@@ -50,8 +50,23 @@ namespace RTParser.Utils
             }
             if (mc.Count != matchVars.Count)
             {
-                RTPBot.writeDebugLine("ERROR: UnifyStars '" + me + "'!='" + source + "'");
-                return null;
+                if (mc.Count == 1)
+                {
+                    Match mc1 = mc[0];
+                    if (mc1.Success)
+                    {
+                        int mcLength = mc1.Length;
+                        if (mcLength > 0)
+                        {
+                            if (mcLength == source.Length)
+                            {
+                                return new List<Unifiable>() {source};
+                            }
+                        }
+                    }
+                    RTPBot.writeDebugLine("ERROR: UnifyStars '" + me + "'!='" + source + "'");
+                    return null;
+                }
             }
             int mi = 0;
             var results = new List<Unifiable>(mc.Count);
@@ -108,11 +123,11 @@ namespace RTParser.Utils
             {
                 case '*':
                     matchVars.Add("*");
-                    return left + "(.*)" + RegExFrom(target.Substring(fi), matchVars);
+                    return left + "\b([A-Za-z 0-9]+)\b" + RegExFrom(target.Substring(fi), matchVars);
                 case '_':
 
                     matchVars.Add("_");
-                    return left + "(.*)" + RegExFrom(target.Substring(fi), matchVars);
+                    return left + "\b([A-Za-z0-9]+)\b" + RegExFrom(target.Substring(fi), matchVars);
                 case '<':
                     string targetSubstring = target.Substring(fi - 1);
                     XmlNode node = getNode("<node>" + targetSubstring + "</node>");

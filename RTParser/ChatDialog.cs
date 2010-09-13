@@ -1242,14 +1242,22 @@ namespace RTParser
             // check for timeout (to avoid infinite loops)
             if (request != null && DateTime.Now > request.TimesOutAt)
             {
-                request.writeToLog(
-                    "WARNING! Request timeout. User: {0} raw input: \"{1}\" processing template: \"{2}\"",
-                    request.Requester.UserID, request.rawInput,
-                    (query == null ? "-NOQUERY-" : query.Templates.Count.ToString()));
                 request.hasTimedOut = true;
-                tagHandler = null;
-                return Unifiable.Empty;
             }
+            else if (request.hasTimedOut)
+            {
+                var gn = request.Graph;
+                if (query != null) gn = query.Graph;
+                request.writeToLog(
+                    "WARNING! Request timeout. User: {0} raw input: {3} \"{1}\" processing template: \"{2}\"",
+                    request.Requester.UserID, request.rawInput,
+                    (query == null ? "-NOQUERY-" : query.Templates.Count.ToString()), gn);
+                request.hasTimedOut = true;
+                // tagHandler = null;
+                //   return Unifiable.Empty;
+            }
+
+
 
 
             XmlNode oldNode = node;

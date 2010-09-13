@@ -551,7 +551,7 @@ namespace RTParser.Utils
                 SubQuery query = new SubQuery(upath, request.CurrentResult, request);
                 query.TopLevel = toplevel;
                 Node pattern = rootNode.evaluate(upath.ToString(), query, request, matchstate, wildcard);
-                if (pattern != null)
+                if (pattern != null && pattern.IsSatisfied(query))
                 {
                     var tmplateInfos = pattern.TemplateInfoCopy;
                     if (toplevel.ContainsPattern(pattern))
@@ -571,6 +571,10 @@ namespace RTParser.Utils
                             toplevel.AddBindingSet(query);
                             foreach (TemplateInfo sol in tmplateInfos)
                             {
+                                if (!sol.IsSatisfied(query))
+                                {
+                                    continue;
+                                }
                                 sol.Query = query;
                                 query.CurrentTemplate = sol;
                                 query.Templates.Add(sol);

@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using System.Xml;
+using MushDLR223.ScriptEngines;
 
 namespace RTParser.AIMLTagHandlers
 {
@@ -58,10 +59,6 @@ namespace RTParser.AIMLTagHandlers
         {
             if (CheckNode("that,justbeforethat,response"))
             {
-                if (AttributesCount(templateNode, "index") == 0)
-                {
-                    return this.user.getThat(offetFrom - 1, 0);
-                }
                 //else if (this.templateNode.Attributes.Count == 1)
                 {
                     var at1 = GetAttribValue("index", null);//.Trim();
@@ -69,8 +66,35 @@ namespace RTParser.AIMLTagHandlers
                     {
                         if (at1.Length > 0)
                         {
+                            return GetIndexes(at1, this.user.getThat, (str, args) => localError(at1, str));
+                        }
+                    }
+                }
+            }
+            return Unifiable.Empty;
+        }
+
+        private void localError(string s, string at1)
+        {
+            writeToLogWarn("ERROR! An input tag with a bady formed index (" + at1 + ") was encountered processing the input: " +
+                this.request.rawInput + s);
+        }
+
+        public static Unifiable GetIndexes(string at1, Func<int, int, Unifiable> getThat, OutputDelegate debug)
+        {
+            {
+                {
+
+                    {
+
+                        {
+
                             try
                             {
+                                if (string.IsNullOrEmpty(at1) || at1 == "1" || at1 == "1,1")
+                                {
+                                    return getThat(0, 0);
+                                }
                                 // see if there is a split
                                 string[] dimensions = at1.Split(",".ToCharArray());
                                 if (dimensions.Length == 2)
@@ -79,11 +103,12 @@ namespace RTParser.AIMLTagHandlers
                                     int sentence = Convert.ToInt32(dimensions[1].Trim());
                                     if ((result > 0) & (sentence > 0))
                                     {
-                                        return this.user.getThat(result - 1, sentence - 1);
+                                        return getThat(result - 1, sentence - 1);
                                     }
                                     else
                                     {
-                                        writeToLogWarn("ERROR! An input tag with a bady formed index (" + at1 + ") was encountered processing the input: " + this.request.rawInput);
+                                        debug("");
+                                        return Unifiable.Empty;
                                     }
                                 }
                                 else
@@ -91,24 +116,25 @@ namespace RTParser.AIMLTagHandlers
                                     int result = Convert.ToInt32(at1.Trim());
                                     if (result > 0)
                                     {
-                                        return this.user.getThat(result - 1);
+                                        return getThat(result - 1, 0);
                                     }
                                     else
                                     {
-                                        writeToLogWarn("ERROR! An input tag with a bady formed index (" + at1 + ") was encountered processing the input: " + this.request.rawInput);
+                                        debug("");
+                                        return Unifiable.Empty;
                                     }
                                 }
                             }
                             catch (Exception exception)
                             {
-                                writeToLogWarn("ERROR! An input tag with a bady formed index (" 
-                                    + at1 + ") was encountered processing the input: " + this.request.rawInput + " " + exception);
+
+                                debug(" " + exception);
+                                return Unifiable.Empty;
                             }
                         }
                     }
                 }
             }
-            return Unifiable.Empty;
         }
     }
 }

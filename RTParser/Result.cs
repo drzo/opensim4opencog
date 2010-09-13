@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Text;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
+using RTParser.AIMLTagHandlers;
+using RTParser.Normalize;
 using RTParser.Utils;
 using RTParser.Variables;
 using UPath = RTParser.Unifiable;
@@ -201,7 +203,7 @@ namespace RTParser
 
         public string EnglishSentences
         {
-            get { return CollectString(MaxPrintResults, OutputSentences, TargetBot.ToEnglish, " "); }
+            get { return CollectString(MaxPrintResults, OutputSentences, OutputSentencesToEnglish, " "); }
         }
 
 
@@ -210,7 +212,29 @@ namespace RTParser
         /// </summary>
         public string RawOutput
         {
-            get { return CollectString(MaxPrintResults, OutputSentences, TargetBot.ToEnglish, " "); }
+            get { return CollectString(MaxPrintResults, OutputSentences, OutputSentencesToEnglish, " "); }
+        }
+
+        private string OutputSentencesToEnglish(string arg)
+        {
+// ReSharper disable ConvertToConstant.Local
+            bool DoOutputSubst = false;
+// ReSharper restore ConvertToConstant.Local
+// ReSharper disable ConditionIsAlwaysTrueOrFalse
+            if (DoOutputSubst)
+// ReSharper restore ConditionIsAlwaysTrueOrFalse
+            {
+                string sentence = ApplySubstitutions.Substitute(TargetBot.OutputSubstitutions, arg);
+                sentence = TextPatternUtils.ReTrimAndspace(sentence);
+                if (TextPatternUtils.DifferentBesidesCase(arg, sentence))
+                {
+                    writeToLog("OutputSubst: " + arg + " -> " + sentence);
+                    arg = sentence;
+                }
+            }
+            return arg;
+
+            return TargetBot.ToEnglish(arg);            
         }
 
         public bool IsEmpty

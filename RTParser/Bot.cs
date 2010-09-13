@@ -62,7 +62,7 @@ namespace RTParser
         {
             get
             {
-                return true;
+                //return true;
                 if (GlobalSettings != null)
                 {
                     Unifiable lts = GlobalSettings.grabSettingNoDebug("ProcessHeardPreds");
