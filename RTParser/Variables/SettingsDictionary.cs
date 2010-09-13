@@ -634,9 +634,20 @@ namespace RTParser.Variables
         {
             lock (dict)
             {
-                loadSettingNode0(dict, myNode, overwriteExisting, onlyIfUnknown, request);
+                SettingsDictionary settingsDict = ToSettingsDictionary(dict);
+                bool isTraced = settingsDict.IsTraced;
+                try
+                {
+                    settingsDict.IsTraced = false;
+                    loadSettingNode0(settingsDict, myNode, overwriteExisting, onlyIfUnknown, request);
+                }
+                finally
+                {
+                    settingsDict.IsTraced = isTraced;
+                }
             }
         }
+
         static public void loadSettingNode0(ISettingsDictionary dict, XmlNode myNode, bool overwriteExisting, bool onlyIfUnknown, Request request)
         {
 
@@ -885,8 +896,9 @@ namespace RTParser.Variables
         {
             ParentProvider pp = FindDictionary0(name, fallback);
             if (pp != null) return pp.Invoke;
-           
-            return () => new ProvidedSettingsDictionary(name, () => FindDictionary0(name, fallback)());
+
+            Func<ParentProvider> provider0 = () => FindDictionary0(name, fallback);      
+            return () => new ProvidedSettingsDictionary(name, provider0);
         }
 
         public ParentProvider FindDictionary0(string name, ParentProvider fallback)
@@ -1861,7 +1873,7 @@ namespace RTParser.Variables
             lock (orderedKeys)
             {
                 if (!IsTraced) return grabSetting(name);
-                IsTraced = true;
+                IsTraced = false;
                 try
                 {
                     var v = grabSetting(name);
@@ -1869,7 +1881,7 @@ namespace RTParser.Variables
                 }
                 finally
                 {
-                    IsTraced = false;
+                    IsTraced = true;
                 }
             }
         }

@@ -300,7 +300,7 @@ namespace RTParser
             {
                 if (IsTraced)
                 {
-                    writeToLog("AIMLTRACE SQ: " + query.ToString().TrimStart());
+                    writeToLog("AIMLTRACE SQ: " + this + " \n" + query.ToString().TrimStart());
                 }
                 SubQueries.Add(query);
             }

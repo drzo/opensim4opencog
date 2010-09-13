@@ -705,9 +705,13 @@ namespace RTParser.Utils
                 console("\n" + s);
             }
             console("-");
-            foreach (string s in result.OutputSentences)
+            var OutputSentences = result.OutputSentences;
+            lock (OutputSentences)
             {
-                console("outputsentence: " + s);
+                foreach (string s in OutputSentences)
+                {
+                    console("outputsentence: " + s);
+                }
             }
             console("-----------------------------------------------------------------");
         }
