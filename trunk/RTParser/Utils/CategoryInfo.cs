@@ -11,7 +11,7 @@ namespace RTParser.Utils
     {
         public string Filename;
         public PatternInfo Pattern;
-        public List<XmlNode> Preconds;
+        public List<ConversationCondition> Preconds;
         public TemplateInfo Template;
         public ThatInfo That;
         public TopicInfo Topic;
@@ -155,15 +155,15 @@ namespace RTParser.Utils
             return Regex.Matches(s, pattern).Count > 0;
         }
 
-        public void AddPrecondition(XmlNode info)
+        public void AddPrecondition(ConversationCondition info)
         {
-            if (Preconds == null) Preconds = new List<XmlNode>();
+            if (Preconds == null) Preconds = new List<ConversationCondition>();
             Preconds.Add(info);
         }
 
         public void AddPrecondition(ThatInfo info)
         {
-            AddPrecondition(info.PatternNode);
+            AddPrecondition(new ConversationCondition(info.PatternNode));
         }
 
         public void SetCategoryTag(Unifiable generatedPath, PatternInfo patternInfo, CategoryInfo category,
