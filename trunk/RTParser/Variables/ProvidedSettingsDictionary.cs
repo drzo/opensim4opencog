@@ -41,7 +41,11 @@ namespace RTParser.Variables
 
                         if (provider != null)
                         {
-                            cache = provider()();
+                            var pp = provider();
+                            if (pp != null)
+                            {
+                                cache = pp();
+                            }
                         }
                     }
                     catch
