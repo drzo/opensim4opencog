@@ -1547,7 +1547,7 @@ namespace MushDLR223.Utilities
         }
 
         public static string ReadLine()
-        {
+        {                
             return SystemConsole.ReadLine();
         }
 
