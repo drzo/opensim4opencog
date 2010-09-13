@@ -209,7 +209,7 @@ namespace RTParser.Utils
 
         public override string ToString()
         {
-            string s = string.Format("\nPATTERN='{0}' I={1} TH={2} TP={3} G={4} TC={5}\nINPUT = '{6}'",
+            string s = string.Format("\nINPUT='{6}'\nPATTERN='{0}' InThToGu={1}:{2}:{3}:{4} Ts={5}\n",
                                      Pattern, InputStar.Count, ThatStar.Count, TopicStar.Count,
                                      GuardStar.Count, Templates == null ? 0 : Templates.Count,
                                      FullPath);
@@ -259,6 +259,34 @@ namespace RTParser.Utils
             sq.Flags.AddRange(Flags);
             sq.Graph = Graph;
             return sq;
+        }
+
+        public Func<int, int, Unifiable> GetMatcher(string listName)
+        {
+            switch (listName)
+            {
+                case "input":
+                case "request":
+                    return CurrentUser.getInputSentence;
+                    break;
+                case "that":
+                case "response":
+                    return CurrentUser.getThat;
+                    break;
+                case "topic":
+                    return (a, b) => CurrentUser.Topic;
+                    break;
+                case "flag":
+                    return (a, b) => this.Flags[a];
+                    break;
+                case "guard":
+                    {
+                        return (a, b) => null;
+                    }
+                default:
+                    throw new ArgumentOutOfRangeException("listName");
+            }
+            return (a, b) => "*";
         }
 
         public List<Unifiable> GetMatchList(MatchState matchstate)

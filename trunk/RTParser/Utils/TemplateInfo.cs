@@ -245,6 +245,22 @@ namespace RTParser.Utils
             if (this.AdditionalRules == null) this.AdditionalRules = new List<ConversationCondition>();
             AdditionalRules.AddRange(rules);
         }
+
+
+        public bool IsSatisfied(SubQuery subQuery)
+        {
+            if (AdditionalRules != null && AdditionalRules.Count > 0)
+            {
+                foreach (var s in AdditionalRules)
+                {
+                    if (!s.IsConditionTrue(subQuery))
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
     }
 
     public interface IAIMLInfo

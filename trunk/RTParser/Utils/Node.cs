@@ -1099,6 +1099,11 @@ namespace RTParser.Utils
         #endregion
 
         #endregion
+
+        public bool IsSatisfied(SubQuery query)
+        {
+            return true;
+        }
     }
 
 #if false
