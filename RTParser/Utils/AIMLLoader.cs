@@ -642,7 +642,7 @@ namespace RTParser.Utils
 
 
         private int loadAIMLNodes(IEnumerable nodes, LoaderOptions loadOpts, Request request,
-                                  List<XmlNode> additionalRules)
+                                  List<ConversationCondition> additionalRules)
         {
             int total = 0;
             if (nodes != null)
@@ -663,7 +663,7 @@ namespace RTParser.Utils
         }
 
         public int loadAIMLNode0(XmlNode currentNode, LoaderOptions loadOpts, Request request,
-                                 List<XmlNode> additionalRules)
+                                 List<ConversationCondition> additionalRules)
         {
             int total = 0;
             RTPBot RProcessor = loadOpts.RProcessor;
@@ -686,9 +686,11 @@ namespace RTParser.Utils
                 {
                     additionalRules = PushAddtionalRuleContext(additionalRules);
                     Unifiable topicName = GetAttribValue(currentNode, "name,topic", Unifiable.STAR);
-                    additionalRules.Add(getNode("<pretest name=\"topic\">" + topicName + "</pretest>", currentNode));
+                    ConversationCondition newConversationCondition = new ConversationCondition("topic", topicName, currentNode);
+                    additionalRules.Add(newConversationCondition);
+                    // "getNode("<pretest name=\"topic\">" + topicName + "</pretest>", currentNode))
                     var vv = this.processTopic(currentNode, currentNode.ParentNode, loadOpts, additionalRules);
-                    additionalRules.Remove(currentNode);
+                    additionalRules.Remove(newConversationCondition);
                     total += vv.Count;
                 }
                 else if (currentNodeName == "category")
@@ -698,10 +700,11 @@ namespace RTParser.Utils
                 }
                 else if (currentNodeName == "that")
                 {
+
                     additionalRules = PushAddtionalRuleContext(additionalRules);
                     string valueThat = GetAttribValue(currentNode, "value,that", currentNode.InnerXml);
-                    additionalRules.Add(getNode("<pretest name=\"that\">" + valueThat + "</pretest>",
-                                                currentNode));
+                    ConversationCondition thatRule = new ConversationCondition("that", valueThat, currentNode);
+                    additionalRules.Add(thatRule);
                     total +=
                         InsideLoaderContext(currentNode, request, request.CurrentQuery,
                                             () =>
@@ -710,7 +713,7 @@ namespace RTParser.Utils
                                                 loadOpts,
                                                 request,
                                                 additionalRules));
-                    additionalRules.Remove(currentNode);
+                    additionalRules.Remove(thatRule);
                 }
                 else if (currentNodeName == "meta" || currentNodeName == "#comment")
                 {
@@ -729,9 +732,9 @@ namespace RTParser.Utils
             return total;
         }
 
-        private List<XmlNode> PushAddtionalRuleContext(List<XmlNode> nodes)
+        private List<ConversationCondition> PushAddtionalRuleContext(List<ConversationCondition> nodes)
         {
-            List<XmlNode> newList =  new List<XmlNode>();;
+            List<ConversationCondition> newList = new List<ConversationCondition>(); ;
             if (nodes!=null) newList.AddRange(nodes);
             return newList;           
         }
@@ -758,7 +761,7 @@ namespace RTParser.Utils
         /// <param name="topicNode">the "topic" node</param>
         /// <param name="path">the file from which this topicNode is taken</param>
         public List<CategoryInfo> processTopic(XmlNode topicNode, XmlNode outerNode, LoaderOptions path,
-                                               List<XmlNode> additionalRules)
+                                               List<ConversationCondition> additionalRules)
         {
             // find the name of the topic or set to default "*"
             Unifiable topicName = GetAttribValue(topicNode, "name,topic", Unifiable.STAR);
@@ -776,7 +779,7 @@ namespace RTParser.Utils
                 }
                 else if (cateNode.Name == "guard")
                 {
-                    additionalRules.Add(cateNode);
+                    additionalRules.Add(new ConversationCondition(cateNode));
                     continue;
                 }
                 AddErrorCategory("UNKNOWN NODETYPE ", cateNode);
@@ -793,7 +796,7 @@ namespace RTParser.Utils
         /// <param name="topicNode">the "topic" node</param>
         /// <param name="path">the file from which this topicNode is taken</param>
         public List<CategoryInfo> processOuterThat(XmlNode thatNode, XmlNode outerNode, LoaderOptions path,
-                                                   List<XmlNode> additionalRules)
+                                                   List<ConversationCondition> additionalRules)
         {
             var CIS = path.CategoryInfos;
             var newCats = path.CategoryInfos = new List<CategoryInfo>();
@@ -821,7 +824,7 @@ namespace RTParser.Utils
         /// <param name="cateNode">the XML node containing the category</param>
         /// <param name="path">the file from which this category was taken</param>
         public List<CategoryInfo> processCategory(XmlNode cateNode, XmlNode outerNode, LoaderOptions path,
-                                                  List<XmlNode> additionalRules)
+                                                  List<ConversationCondition> additionalRules)
         {
             return processCategoryWithTopic(cateNode, Unifiable.STAR, outerNode, path, additionalRules);
         }
@@ -833,12 +836,15 @@ namespace RTParser.Utils
         /// <param name="topicName">the topic to be used</param>
         /// <param name="loadOpts">the file from which this category was taken</param>
         private List<CategoryInfo> processCategoryWithTopic(XmlNode cateNode, Unifiable topicName, XmlNode outerNode,
-                                                            LoaderOptions loadOpts, List<XmlNode> additionalRules)
+                                                            LoaderOptions loadOpts, List<ConversationCondition> additionalRules)
         {
             var CIs = loadOpts.CategoryInfos;
             // reference and check the required nodes
             var patterns = FindNodes("pattern", cateNode);
             var templates = FindNodes("template", cateNode);
+            var rulesNodes = FindNodes("rule", cateNode);
+            var thatNodes = new List<XmlNode>();
+            FindNodes("that", cateNode, thatNodes, 2);
             string errors = "";
             if (templates.Count == 0)
             {
@@ -862,15 +868,41 @@ namespace RTParser.Utils
                 AddErrorCategory(errors, cateNode);
                 return CIs;
             }
+            XmlNode that0 = null;
+            /*
+            if (thatNodes.Count > 0)
+            {
+                foreach (var that in new List<XmlNode>(thatNodes))
+                {
+                    string getAttribValue = GetAttribValue(that,"index",null);
+                    if (getAttribValue == null || getAttribValue == "1" || getAttribValue == "1,1")
+                    {
+                        if (that0 != null) AddErrorCategory("more than one <that>", cateNode);
+                        that0 = that;
+                        thatNodes.Remove(that);
+                    }
+                }
+            }
+            foreach (var xmlNode in thatNodes)
+            {
+                additionalRules = additionalRules ?? PushAddtionalRuleContext(additionalRules);
+                additionalRules.Add(new PatternMatchRule(xmlNode));
+            } */
+            foreach (var xmlNode in rulesNodes)
+            {
+                additionalRules = additionalRules ?? PushAddtionalRuleContext(additionalRules);
+                additionalRules.Add(new ConversationCondition(xmlNode));
+            }
             foreach (XmlNode pattern in patterns)
             {
                 foreach (XmlNode template in templates)
                 {
                     try
                     {
-                        CategoryInfo v = addCatNode(cateNode, pattern, loadOpts, template, topicName, outerNode,
+                        CategoryInfo v = addCatNode(cateNode, pattern, that0, loadOpts, template, topicName,
+                                                    outerNode,
                                                     additionalRules);
-                        if (v == null && errors != null && errors.Length>0)
+                        if (v == null && errors != null && errors.Length > 0)
                         {
                             AddErrorCategory(errors, cateNode);
                             writeToLog("WARN: MISSING CATE: " + cateNode + " " + LocationInfo(cateNode));
@@ -927,13 +959,13 @@ namespace RTParser.Utils
             }
         }
 
-        private CategoryInfo addCatNode(XmlNode cateNode, XmlNode patternNode, LoaderOptions loaderOpts,
+        private CategoryInfo addCatNode(XmlNode cateNode, XmlNode patternNode, XmlNode thatNode, LoaderOptions loaderOpts,
                                         XmlNode templateNode,
-                                        Unifiable topicName, XmlNode outerNode, List<XmlNode> additionalRules)
+                                        Unifiable topicName, XmlNode outerNode, List<ConversationCondition> additionalRules)
         {
-            var prev = additionalRules ?? loaderOpts.AdditionalPreconditions;
-            additionalRules = new List<XmlNode>();
-            if (prev != null) additionalRules.AddRange(prev);
+            additionalRules = additionalRules ?? PushAddtionalRuleContext(loaderOpts.AdditionalPreconditions);
+            // additionalRules = new List<XmlNode>();
+            //if (prev != null) additionalRules.AddRange(prev);
 
             XmlNode guardnode = FindNode("guard", cateNode, null);
             if (guardnode == null && outerNode != null && outerNode.Name != "aiml")
@@ -954,7 +986,8 @@ namespace RTParser.Utils
                 {
                     errors += " Missing pattern tag ";
                 }
-            } else
+            }
+            else
             {
                 string tempStringS = templateNode.OuterXml.ToLower()
                     .Replace("<", " ").Replace(">", " ").Replace(".", " ").
@@ -981,37 +1014,13 @@ namespace RTParser.Utils
             XmlNode newPattern;
             Unifiable patternText;
             Func<XmlNode, string> Render = nodeI => VisibleRendering(nodeI, PatternSideRendering);
-            XmlNode extractThat1 = extractThat(patternNode, "that", cateNode, out patternText, out newPattern);
-            var newPatternOuterXml = newPattern.OuterXml;
-            bool isThat = extractThat1 != null && extractThat1.LocalName == "that";
-            if (newPatternOuterXml.Contains("<that"))
-            {
-                writeToLog("ERROR in extractThat: " + newPatternOuterXml + " " + LocationInfo(patternNode));
-            }
-            var cateNodeOuterXml = cateNode.OuterXml;
-            string that;
-            string ssss = GetAttribValue(extractThat1, "index", null);
-            XmlNode extra = extractThat1;
-            if (isThat&& ((ssss == null) || ssss == "1" || ssss == "1,1"))
-            {
-                that = Render(extractThat1);
-                if (!(cateNodeOuterXml.Contains("<that ") || cateNodeOuterXml.Contains("<that>")))
-                {
-                    writeToLog("ERROR in extractThat: " + cateNodeOuterXml + " " + LocationInfo(cateNode));
-                }
-            }
-            else
-            {
-                that = "*";
-                if (isThat)
-                {
-                    additionalRules.Add(extractThat1);
-                }
-            }
+
+            patternNode = GetPatternNode("that", cateNode, patternNode, ref thatNode);
+            string that = GeneratePatternNodeRules(additionalRules, thatNode);
+
+            Unifiable cond = Render(extractPrecondNode(patternNode, "flag", cateNode, out patternText, out newPattern));
             patternNode = newPattern;
-            Unifiable cond = Render(extractThat(patternNode, "flag", cateNode, out patternText, out newPattern));
-            patternNode = newPattern;
-            XmlNode topicTagText = extractThat(patternNode, "topic", cateNode, out patternText, out newPattern);
+            XmlNode topicTagText = extractPrecondNode(patternNode, "topic", cateNode, out patternText, out newPattern);
             patternNode = newPattern;
 
             if (!string.IsNullOrEmpty(errors))
@@ -1050,7 +1059,7 @@ namespace RTParser.Utils
 
                         pathCtxGraph.addCategoryTag(categoryPath, patternInfo, categoryInfo,
                                                     outerNode, templateNode, guard, thatInfo, additionalRules);
-                        foreach (XmlNode node in additionalRules)
+                        foreach (var node in additionalRules)
                         {
                             categoryInfo.AddPrecondition(node);
                         }
@@ -1073,6 +1082,110 @@ namespace RTParser.Utils
                     " produced by a category in the file: " + loaderOpts, cateNode);
                 return null;
             }
+        }
+
+        private XmlNode GetPatternNode(String tagName, XmlNode cateNode, XmlNode patternNode, ref XmlNode foundNode)
+        {
+            XmlNode newPattern = null;
+            if (foundNode == null)
+            {
+                Unifiable patternText;
+                foundNode = extractPrecondNode(patternNode, tagName, cateNode, out patternText, out newPattern);
+                var newPatternOuterXml = newPattern.OuterXml;
+                patternNode = newPattern;
+                if (newPatternOuterXml.Contains("<" + tagName))
+                {
+                    writeToLog("ERROR in extractThat: " + newPatternOuterXml + " " + LocationInfo(patternNode));
+                }
+                if (newPattern != patternNode)
+                {
+                    patternNode = newPattern;
+                }
+            }
+            return patternNode;
+        }
+
+        private string GeneratePatternNodeRules(ICollection<ConversationCondition> additionalRules, XmlNode xmlNode)
+        {
+            if (xmlNode == null) return "*";
+            bool isPatternSide;
+            string indexValue;
+            bool indexPosition1;
+            string tagName = xmlNode.LocalName;
+            string pattern = TryGetPrecondionThat(tagName, xmlNode, out isPatternSide, out indexValue, out indexPosition1);
+            if (isPatternSide)
+            {
+                if (!indexPosition1)
+                {
+                    // ReSharper disable ConditionIsAlwaysTrueOrFalse
+                    ConversationCondition newConversationCondition
+                        = new ConversationCondition(isPatternSide, tagName, pattern, indexValue, indexPosition1, xmlNode);
+                    // ReSharper restore ConditionIsAlwaysTrueOrFalse
+                    additionalRules.Add(newConversationCondition);
+                }
+            }
+
+            if (isPatternSide || pattern != "*")
+            {
+                if (pattern == null || pattern.Trim().Length == 0)
+                {
+                    pattern = TryGetPrecondionThat(tagName, xmlNode, out isPatternSide, out indexValue, out indexPosition1);
+                }
+                if (xmlNode != null && isPatternSide)
+                {
+                    if (!indexPosition1)
+                    {
+                        ConversationCondition newPatternMatchRule1 =
+                            new ConversationCondition(isPatternSide, tagName, pattern, indexValue, indexPosition1, xmlNode);
+                        additionalRules.Add(newPatternMatchRule1);
+                    }
+                    if (!string.IsNullOrEmpty(pattern)) return pattern;
+                    writeToLog("extract" + tagName + ": " + xmlNode.OuterXml + " " + LocationInfo(xmlNode));
+                }
+                else
+                {
+                    pattern = "*";
+                }
+            }
+            if (!string.IsNullOrEmpty(pattern)) return pattern;
+            return "*";
+        }
+
+        public static string TryGetPrecondionThat(string tagName, XmlNode extractedXML, out bool isRequired, out string indexVal, out bool indexPosition1)
+        {
+            isRequired = extractedXML != null && extractedXML.LocalName == tagName;
+            indexVal = GetAttribValue(extractedXML, "index", "1,1");
+            indexPosition1 = indexVal == "1" || indexVal == "1,1" || indexVal == "1,*";
+            if (!isRequired)
+            {
+                return null;
+            }
+            string patternTxt = VisibleRendering(extractedXML.ChildNodes, PatternSideRendering);
+            if (patternTxt == "")
+            {
+                patternTxt = GetAttribValue(extractedXML, "value," + tagName + ",match,name", null);
+            }
+            isRequired = false;
+            foreach (XmlNode childs in extractedXML.ChildNodes)
+            {
+                if (childs.NodeType != XmlNodeType.Comment)
+                {
+                    isRequired = true;
+                    break;
+                }
+            }
+            if (!isRequired)
+            {
+                if (patternTxt == null)
+                {
+                    //writeToLog("extractThat1: '" + patternTxt + "' from " + extractedXML.OuterXml);
+                }
+                else
+                {
+                    isRequired = true;
+                }
+            }
+            return patternTxt;
         }
 
         public override string ToString()
@@ -1104,38 +1217,38 @@ namespace RTParser.Utils
         /// <param name="isUserInput">marks the path to be created as originating from user input - so
         /// normalize out the * and _ wildcards used by AIML</param>
         /// <returns>The appropriately processed path</returns>
-        private static XmlNode extractThat(XmlNode patternNode, String tagname, XmlNode cateNode,
+        private static XmlNode extractPrecondNode(XmlNode patternNode, String tagname, XmlNode cateNode,
                                            out Unifiable patternText, out XmlNode newPattern)
         {
+            string thatString = null;
             // get the nodes that we need
-            XmlNode that = FindNodeOrHigher(tagname, cateNode, null);
-
+            XmlNode that = FindNodeOrHigher(tagname, patternNode, null) ?? FindNode(tagname, cateNode, null, 2);
+            if (that != null)
+            {
+                thatString = that.OuterXml;
+            }
             //Unifiable thatText = Unifiable.STAR;
 
             if (Equals(null, patternNode))
             {
-                patternText = Unifiable.Empty;
+                patternNode = PatternStar;
             }
-            else
             {
-                patternText = Unifiable.Create(Unifiable.InnerXmlText(patternNode));
-            }
-
-            string patternString = patternNode.InnerXml;
-            int f = patternString.IndexOf("<" + tagname);
-            if (f >= 0)
-            {
-                that = FindNode(tagname, patternNode, null);
-                if (that == null)
+                RenderOptions patternSideRendering = new RenderOptions(PatternSideRendering);
+                patternSideRendering.skip.Add(tagname);
+                string patternString =
+                    VisibleRendering(patternNode.ChildNodes, patternSideRendering);
+                int f = cateNode.OuterXml.IndexOf("<" + tagname);
+                if (f == -1)
                 {
-                    throw new NotImplementedException("generatePathExtractWhat: " + patternString);
+                    patternText = InnerXmlText(patternNode);
+                    newPattern = patternNode;
+                    return null;
                 }
-                string thatString = that.OuterXml;
-                if (!patternString.Contains(thatString))
+                if (thatString != null)
                 {
-                    throw new NotImplementedException("generatePathExtractWhat: " + patternString);
+                    patternString = MatchKeyClean(patternString.Replace(thatString, ""));
                 }
-                patternString = MatchKeyClean(patternString.Replace(thatString, ""));
                 XmlNode newLineInfoPattern = getNode("<pattern>" + patternString + "</pattern>", patternNode);
                 //TODO BEFORE COMMIT DMILES
                 LineInfoElementImpl.SetParentFromNode(newLineInfoPattern, patternNode);
@@ -1147,9 +1260,9 @@ namespace RTParser.Utils
             newPattern = patternNode;
             if (!Equals(null, that))
             {
-                //thatText = that.InnerXml;
+                return that;
             }
-            return that ?? StaticAIMLUtils.PatternStar; // hatText;//this.generatePath(patternText, thatText, topicName, isUserInput);
+            return that;
         }
 
         /// <summary>

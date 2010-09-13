@@ -16,7 +16,7 @@ namespace RTParser.Utils
         public double Rating = 1.0;
         public Unifiable TextSaved;
         string _templateKey;
-        private List<XmlNode> AdditionalRules;
+        private List<ConversationCondition> AdditionalRules;
 
         public TemplateInfo(XmlNode template, GuardInfo guard, Node patternNode, CategoryInfo categoryInfo)
             : base(template)
@@ -47,7 +47,7 @@ namespace RTParser.Utils
             get { return CategoryInfo.That; }
         }
 
-        public List<XmlNode> Preconds
+        public List<ConversationCondition> Preconds
         {
             get { return CategoryInfo.Preconds; }
         }
@@ -234,15 +234,15 @@ namespace RTParser.Utils
             }
         }
 
-        public void AppendTemplate(XmlNode node, CategoryInfo category, List<XmlNode> nodes)
+        public void AppendTemplate(XmlNode node, CategoryInfo category, List<ConversationCondition> nodes)
         {
             throw new NotImplementedException();
         }
 
-        public void AddRules(List<XmlNode> rules)
+        public void AddRules(List<ConversationCondition> rules)
         {
             if (rules==null || rules.Count==0) return   ;
-            if (this.AdditionalRules == null) this.AdditionalRules = new List<XmlNode>();
+            if (this.AdditionalRules == null) this.AdditionalRules = new List<ConversationCondition>();
             AdditionalRules.AddRange(rules);
         }
     }

@@ -365,7 +365,7 @@ namespace RTParser.Utils
 
         public void addCategoryTag(Unifiable generatedPath, PatternInfo patternInfo, CategoryInfo category,
                                    XmlNode outerNode, XmlNode templateNode, GuardInfo guard, ThatInfo thatInfo,
-                                   List<XmlNode> additionalRules)
+                                   List<ConversationCondition> additionalRules)
         {
             lock (LockerObject)
             {
@@ -376,7 +376,7 @@ namespace RTParser.Utils
 
         private void addCategoryTag0(Unifiable generatedPath, PatternInfo patternInfo, CategoryInfo category,
                                    XmlNode outerNode, XmlNode templateNode, GuardInfo guard, ThatInfo thatInfo,
-                                   List<XmlNode> additionalRules)
+                                   List<ConversationCondition> additionalRules)
         {
             if (SilentTagsInPutParent && StaticAIMLUtils.IsSilentTag(templateNode))
             {

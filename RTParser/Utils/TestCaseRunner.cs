@@ -245,24 +245,6 @@ namespace RTParser.Utils
         }
 
 
-        private static string FindNodeOrAttrib(XmlNode myNode, string names, Func<string> defaultNotFound)
-        {
-            const string attribNotFOund = "ATTRIB_NOT_FOUND";
-            string value = GetAttribValue(myNode, names, attribNotFOund);
-            if (value == attribNotFOund)
-            {
-                XmlNode holder = FindNode(names, myNode, null);
-                if (holder != null)
-                {
-                    value = Unifiable.InnerXmlText(holder);
-                    return value;
-                }
-                return defaultNotFound == null ? null : defaultNotFound();
-            }
-            return value;
-        }
-
-
         public override string ToString()
         {
             return GetType().Name;

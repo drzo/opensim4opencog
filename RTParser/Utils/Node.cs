@@ -160,7 +160,7 @@ namespace RTParser.Utils
         /// <param name="template">the template to find at the end of the path</param>
         /// <param name="filename">the file that was the source of this category</param>
         public TemplateInfo addTerminal(XmlNode templateNode, CategoryInfo category, GuardInfo guard, ThatInfo thatInfo,
-                                        GraphMaster master, PatternInfo patternInfo, List<XmlNode> additionalRules)
+                                        GraphMaster master, PatternInfo patternInfo, List<ConversationCondition> additionalRules)
         {
             bool onlyNonSilent = true;
             lock (SyncObject)
@@ -246,7 +246,7 @@ namespace RTParser.Utils
         private TemplateInfo addTerminal_0_Lock(XmlNode templateNode, CategoryInfo category, GuardInfo guard,
                                                 ThatInfo thatInfo,
                                                 GraphMaster master, PatternInfo patternInfo,
-                                                List<XmlNode> additionalRules)
+                                                List<ConversationCondition> additionalRules)
         {
             string templateKey = TemplateInfo.MakeKey(templateNode, (guard != null ? guard.Output : null),
                                                       thatInfo != null ? thatInfo.PatternNode : XmlStar);

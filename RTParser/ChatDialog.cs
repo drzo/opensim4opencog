@@ -510,9 +510,17 @@ namespace RTParser
                         request.TopLevel = ql;
                         result.AddSubqueries(ql);
                     }
+                    else if (ql.PatternCount > 0)
+                    {
+                        request.TopLevel = ql;
+                        result.AddSubqueries(ql);
+                    }
                     ICollection<SubQuery> resultSubQueries = (ICollection<SubQuery>) ql.GetBindings();
                     resultSubQueries = resultSubQueries ?? result.SubQueries;
                     List<SubQuery> kept = ql.PreprocessSubQueries(request, resultSubQueries, isTraced, ref printedSQs, writeToLog);
+                    if (kept.Count == 0)
+                    {
+                    }
                 }
                 ProcessSubQueriesAndIncreasLimits(request, result, ref isTraced, printedSQs, writeToLog);
             }
@@ -526,7 +534,7 @@ namespace RTParser
             bool hasMoreSolutions;
             CheckResult(request, result, out solutions, out hasMoreSolutions);
 
-            if (result.OutputSentenceCount == 0 && sqc > 0)
+            if (result.OutputSentenceCount == 0 || sqc == 0)
             {
                 isTraced = true;
                 //todo pick and chose the queries

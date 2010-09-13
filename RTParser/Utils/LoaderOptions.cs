@@ -11,7 +11,7 @@ namespace RTParser.Utils
         private string _curently_loading;
         public string _currently_loadingfrom;
         private GraphMaster _specified_Graph;
-        public List<XmlNode> AdditionalPreconditions;
+        public List<ConversationCondition> AdditionalPreconditions;
         public List<CategoryInfo> CategoryInfos;
         public bool DebugFiles;
         public bool recurse;

@@ -276,7 +276,7 @@ namespace RTParser
             {
                 if (IsTraced)
                 {
-                    writeToLog("AIMLTRACE SQ: " + query);
+                    writeToLog("AIMLTRACE SQ: " + query.ToString().TrimStart());
                 }
                 SubQueries.Add(query);
             }
@@ -333,7 +333,7 @@ namespace RTParser
                     {
                         TemplateOfRating = ti;
                         TemplateRating = ThisRating;
-                        writeToLog("AIMLTRACE OUTPUT RATING={0} TI: {1} U: {2}", ThisRating, ti, unifiable);
+                        writeToLog("AIMLTRACE: OUTPUT RATING={0} {2} TI: {1} \n U: {3}", ThisRating, ti, ti.Graph, unifiable);
                     }
                     if (!Unifiable.IsNullOrEmpty(unifiable))
                     {
