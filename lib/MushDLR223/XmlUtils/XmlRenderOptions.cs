@@ -8,7 +8,14 @@ namespace MushDLR223.Utilities
     {
         public List<string> flatten;
         public List<string> skip;
-
+        public RenderOptions()
+        {            
+        }
+        public RenderOptions(RenderOptions initial)
+        {
+            flatten = new List<string>(initial.flatten);
+            skip = new List<string>(initial.skip);
+        }
         public bool FlattenChildren(string nodeName)
         {
             return flatten.Contains(nodeName);

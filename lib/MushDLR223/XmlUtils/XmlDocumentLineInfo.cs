@@ -405,7 +405,7 @@ namespace MushDLR223.Utilities
 
                 if (!string.IsNullOrEmpty(namespaceURI))
                 {
-                    writeToLog("RemoveXmlns: namespaceURI=" + namespaceURI + " in " + nodeName);
+                   // writeToLog("RemoveXmlns: namespaceURI=" + namespaceURI + " in " + nodeName);
                 }
                 namespaceURI = "";
 

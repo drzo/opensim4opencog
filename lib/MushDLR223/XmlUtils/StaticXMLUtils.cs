@@ -109,7 +109,7 @@ namespace MushDLR223.Utilities
         public static string VisibleRendering(XmlNode nodeO, RenderOptions options)
         {
             //            if (nodeO.NodeType == XmlNodeType.Comment) return true;
-
+            if (nodeO == null) return null;
             string nodeName = nodeO.Name.ToLower();
             if (options.SkipNode(nodeName))
             {
@@ -284,18 +284,51 @@ namespace MushDLR223.Utilities
         /// <returns>The node (or null)</returns>
         public static XmlNode FindNode(string name, XmlNode node, XmlNode ifMissing)
         {
-            name = name.ToLower();
+            return FindNode(name, node, ifMissing, 1);
+        }
+        /// <summary>
+        /// Given a name will try to find a node named "name" in the childnodes or return null
+        /// </summary>
+        /// <param name="name">The name of the node</param>
+        /// <param name="node">The node whose children need searching</param>
+        /// <returns>The node (or null)</returns>
+        public static XmlNode FindNode(string name, XmlNode node, XmlNode ifMissing, int searchDepth)
+        {
             foreach (string n in NamesStrings(name))
             {
+                bool searchChildren = searchDepth > 0;
+                if (!searchChildren) return ifMissing;
+                int nsearchDepth = searchDepth - 1;
                 foreach (XmlNode child in node.ChildNodes)
                 {
                     if (NameMatches(child, n))
                     {
                         return child;
                     }
+                    if (searchDepth > 0)
+                    {
+                        var cnode = FindNode(name, child, null, nsearchDepth);
+                        if (cnode != null) return cnode;
+                    }
                 }
             }
             return ifMissing;
+        }
+        public static string FindNodeOrAttrib(XmlNode myNode, string names, Func<string> defaultNotFound)
+        {
+            const string attribNotFOund = "ATTRIB_NOT_FOUND";
+            string value = GetAttribValue(myNode, names, attribNotFOund);
+            if (value == attribNotFOund)
+            {
+                XmlNode holder = FindNode(names, myNode, null);
+                if (holder != null)
+                {
+                    value = InnerXmlText(holder);
+                    return value;
+                }
+                return defaultNotFound == null ? null : defaultNotFound();
+            }
+            return value;
         }
 
         public static XmlNode FindNodeOrHigher(string name, XmlNode node, XmlNode ifMissing)
@@ -329,18 +362,30 @@ namespace MushDLR223.Utilities
 
         public static List<XmlNode> FindNodes(string name, XmlNode node)
         {
-            name = name.ToLower();
-            if (name.Contains(","))
-                throw new NotImplementedException("Commans in FindNodes " + name + " in " + node.OuterXml);
             var nodes = new List<XmlNode>();
-            foreach (XmlNode child in node.ChildNodes)
+            FindNodes(name, node, nodes, 1);
+            return nodes;
+        }
+        public static bool FindNodes(string name, XmlNode node,List<XmlNode> nodes, int searchDepth)
+        {
+            foreach (string n in NamesStrings(name))
             {
-                if (NameMatches(child, name))
+                bool searchChildren = searchDepth > 0;
+                if (!searchChildren) return false;
+                int nsearchDepth = searchDepth - 1;
+                foreach (XmlNode child in node.ChildNodes)
                 {
-                    nodes.Add(child);
+                    if (NameMatches(child, n))
+                    {
+                        nodes.Add(child);
+                    }
+                    else
+                    {
+                        FindNodes(name, child, nodes, nsearchDepth);
+                    }
                 }
             }
-            return nodes;
+            return nodes.Count > 0;
         }
 
         public static int NonAlphaCount(string input)
