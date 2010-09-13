@@ -381,6 +381,15 @@ namespace RTParser
                     input = args.Substring(lastIndex + 1).Trim();
                 }
                 Result res = GlobalChatWithUser(input, user, null, writeDebugLine, true);
+                // detect a uer "rename"
+                string uname = myUser.UserName;
+                if (user.ToLower() != uname.ToLower())
+                {
+                    var LU = LastUser;
+                    LastUser = ChangeUser(user, uname);
+                    DLRConsole.SYSTEM_ERR_WRITELINE("ChangeUser: {0}->{1}   {2}->{3}", LU, LastUser, user, uname);
+                    //BotDirective(request, "@chuser " + uname, DEVNULL);
+                }
                 OutputResult(res, console, false);
                 return true;
             }
@@ -499,7 +508,7 @@ namespace RTParser
                 return true;
             }
 
-            if (showHelp) console("@bot [var [value]] -- lists or changes the bot GlobalPredicates.");
+            if (showHelp) console("@bot [var [value]] -- lists or changes the bot GlobalPredicates.\n  example: @bot ProcessHeardPreds True or @bot ProcessHeardPreds False");
             if (cmd == "bot")
             {
                 console(HeardPredicates.ToDebugString());

@@ -327,10 +327,11 @@ namespace RTParser
                 WriterOptions = new PrintOptions();
                 this.id = userID;
                 this.bot = bot;
-                this.wasTraced = bot.IsTraced;
+                wasTraced = IsTraced = bot.IsTraced;
                 // we dont inherit the BotAsUser we inherit the bot's setings
                 // ApplySettings(bot.BotAsUser, this);
                 this.Predicates = new SettingsDictionary(userID + ".predicates", this.bot, provider);
+                this.Predicates.IsTraced = wasTraced;
                 this.Predicates.AddPrefix("user.", () => this);
                 this.bot.DefaultPredicates.Clone(this.Predicates);
                 //this.Predicates.AddGetSetProperty("topic", new CollectionProperty(_topics, () => bot.NOTOPIC));

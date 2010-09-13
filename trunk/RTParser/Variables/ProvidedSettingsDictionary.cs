@@ -8,26 +8,48 @@ namespace RTParser.Variables
 {
     public class ProvidedSettingsDictionary : ISettingsDictionary
     {
-        internal Func<ISettingsDictionary> provider;
+        internal Func<ParentProvider> provider;
 
         public SettingsDictionary AsSettingDictionary() {
             return Inner as SettingsDictionary;
         }
 
-        public ProvidedSettingsDictionary(Func<ISettingsDictionary> parent)
+        public ProvidedSettingsDictionary(Func<ParentProvider> parent)
         {
-            provider = (Func<ISettingsDictionary>)parent;
+            provider = parent;
         }
 
-        public ProvidedSettingsDictionary(string parent, Func<ISettingsDictionary> func)
+        public ProvidedSettingsDictionary(string parent, Func<ParentProvider> func)
         {
             provider = func;
-
+            NameSpace = parent;
         }
 
+        private ISettingsDictionary cache;
+        public bool IsAvailable
+        {
+            get { return Inner != null; }
+        }
         public ISettingsDictionary Inner
         {
-            get { return provider(); }
+            get
+            {
+                if (cache == null)
+                {
+                    try
+                    {
+
+                        if (provider != null)
+                        {
+                            cache = provider()();
+                        }
+                    }
+                    catch
+                    {
+                    }
+                }
+                return cache;
+            }
         }
         #region Implementation of ISettingsDictionary
 
@@ -39,6 +61,7 @@ namespace RTParser.Variables
         /// <param name="value">The value associated with this setting</param>
         public bool addSetting(string name, Unifiable value)
         {
+            if (!IsAvailable) return false;
             return Inner.addSetting(name, value);
         }
 
@@ -48,6 +71,7 @@ namespace RTParser.Variables
         /// <param name="name">The name of the setting to remove</param>
         public bool removeSetting(string name)
         {
+            if (!IsAvailable) return false;
             return Inner.removeSetting(name);
         }
 
@@ -59,6 +83,7 @@ namespace RTParser.Variables
         /// <param name="value">the new value</param>
         public bool updateSetting(string name, Unifiable value)
         {
+            if (!IsAvailable) return false;
             return Inner.addSetting(name, value);
         }
 
@@ -69,6 +94,7 @@ namespace RTParser.Variables
         /// <returns>the value of the setting</returns>
         public Unifiable grabSetting(string name)
         {
+            if (!IsAvailable) return null;
             return Inner.grabSetting(name);
         }
 
@@ -79,11 +105,13 @@ namespace RTParser.Variables
         /// <returns>Existential truth value</returns>
         public bool containsLocalCalled(string name)
         {
+            if (!IsAvailable) return false;
             return Inner.containsLocalCalled(name);
         }
 
         public bool containsSettingCalled(string name)
         {
+            if (!IsAvailable) return false;
             return Inner.containsSettingCalled(name);
         }
 
@@ -101,6 +129,7 @@ namespace RTParser.Variables
 
         public IEnumerable<string> SettingNames(int depth)
         {
+            if (!IsAvailable) return new string[0];
             return Inner.SettingNames(depth);
         }
 

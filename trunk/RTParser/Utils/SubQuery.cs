@@ -210,7 +210,8 @@ namespace RTParser.Utils
         public override string ToString()
         {
             string s = string.Format("\nINPUT='{6}'\nPATTERN='{0}' InThToGu={1}:{2}:{3}:{4} Ts={5}\n",
-                                     Pattern, InputStar.Count, ThatStar.Count, TopicStar.Count,
+                                     ((object) Pattern ?? "-no-pattern-").ToString().Trim(),
+                                     InputStar.Count, ThatStar.Count, TopicStar.Count,
                                      GuardStar.Count, Templates == null ? 0 : Templates.Count,
                                      FullPath);
             if (Templates != null)

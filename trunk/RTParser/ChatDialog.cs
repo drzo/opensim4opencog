@@ -480,8 +480,8 @@ namespace RTParser
                     loader = new AIMLLoader(this, request);
                 }
                 Loader = loader;
-                //RTParser.Normalize.SplitIntoSentences splitter = new RTParser.Normalize.SplitIntoSentences(this);
-                var rawSentences = new[] { request.rawInput }; //splitter.Transform(request.rawInput);
+                RTParser.Normalize.SplitIntoSentences splitter = new RTParser.Normalize.SplitIntoSentences(this);
+                var rawSentences = splitter.Transform(request.rawInput);
                 result = request.CreateResult(request);
                 if (chatTrace) result.IsTraced = isTraced;
 
@@ -630,18 +630,16 @@ namespace RTParser
             int thatNum = 0;
             string lastInput = "";
             {
-                foreach (Unifiable sentence0 in rawSentences)
+                foreach (Unifiable sentenceURaw in rawSentences)
                 {
-                    string sentence = sentence0;
+                    string sentenceRaw = sentenceURaw;
+                    string sentence = sentenceRaw.Trim(" .,!:".ToCharArray());
+                    sentence = ToInputSubsts(sentence);                    
                     result.InputSentences.Add(sentence);
-                    sentence = sentence.Trim();
-                    while (sentence.EndsWith(".") || sentence.EndsWith(","))
-                    {
-                        sentence = sentence.Substring(0, sentence.Length - 1).Trim();
-                    }
+                    sentence = sentence.Trim(" .,!:".ToCharArray());
                     if (sentence.Length == 0)
                     {
-                        writeToLog("skipping input sentence " + sentence0);
+                        writeToLog("skipping input sentence " + sentenceRaw);
                         continue;
                     }
                     sentenceNum++;
@@ -1140,6 +1138,11 @@ namespace RTParser
         public string ToHeard(string message)
         {
             if (message == null) return null;
+            if (message.Trim().Length == 0) return "";
+            if (message.StartsWith("  "))
+            {
+                return message;
+            }
             message = message.Trim();
             if (message == "") return "";
             if (false && message.Contains("<"))
@@ -1162,7 +1165,7 @@ namespace RTParser
                 writeDebugLine("heardSelfSay - ERROR: heard ='" + message + "'");
                 return message;
             }
-            return message;
+            return "  " + message;
         }
 
         static char[] toCharArray = "@#$%^&*()_+<>,/{}[]\\\";'~~".ToCharArray();
@@ -1192,13 +1195,13 @@ namespace RTParser
             {
                 return "";
             }
-            sentence = ApplySubstitutions.Substitute(InputSubstitutions, sentenceIn);
-            //sentence = string.Join(" ", sentence.Split(toCharArray, StringSplitOptions.RemoveEmptyEntries));
-            sentence = ReTrimAndspace(sentence);
-            if (DifferentBesidesCase(sentenceIn, sentence))
+
+            const bool DoInputSubsts = false;
+            // ReSharper disable ConditionIsAlwaysTrueOrFalse
+            if (DoInputSubsts)
+            // ReSharper restore ConditionIsAlwaysTrueOrFalse
             {
-                writeToLog("InputSubst: " + sentenceIn + " -> " + sentence);
-                sentenceIn = sentence;
+                sentenceIn = ToInputSubsts(sentenceIn);
             }
 
             sentence = CleanupCyc(sentenceIn);
@@ -1222,6 +1225,20 @@ namespace RTParser
                 sentenceIn += ".";
             }
 
+            return sentenceIn;
+        }
+
+        private string ToInputSubsts(string sentenceIn)
+        {
+            string sentence;
+            sentence = ApplySubstitutions.Substitute(InputSubstitutions, sentenceIn);
+            //sentence = string.Join(" ", sentence.Split(toCharArray, StringSplitOptions.RemoveEmptyEntries));
+            sentence = ReTrimAndspace(sentence);
+            if (DifferentBesidesCase(sentenceIn, sentence))
+            {
+                writeToLog("InputSubst: " + sentenceIn + " -> " + sentence);
+                sentenceIn = sentence;
+            }
             return sentenceIn;
         }
 
