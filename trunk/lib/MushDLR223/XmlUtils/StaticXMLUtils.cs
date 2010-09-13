@@ -30,13 +30,13 @@ namespace MushDLR223.Utilities
             if (pattern == null || name == null) return false;
             name = name.Trim();
             pattern = pattern.Trim();
-            if (pattern.Length == 0) return name.Length == 0;
+            int patternLength = pattern.Length;
+            if (patternLength == 0) return name.Length == 0;
             //            char pc = pattern[0];
             pattern = pattern.ToLower();
             name = name.ToLower();
             if (name == pattern) return true;
-            if (Regex.IsMatch(name, "^" + pattern + "$")) return true;
-            return false;
+            return !char.IsLetterOrDigit(pattern[patternLength-1]) && Regex.IsMatch(name, "^" + pattern + "$");           
         }
 
         public static bool ContainsXml(string unifiable)
@@ -577,15 +577,14 @@ namespace MushDLR223.Utilities
 
         public static T PASSTHRU<T>(IConvertible arg) where T : IConvertible
         {
-            T output = default(T);
-            if (ReferenceEquals(arg, null))
-            {
-                return output;
-            }
-            Type solid = typeof (T);
+            Type solid = typeof(T);
             if (solid.IsInstanceOfType(arg))
             {
-                return (T) arg;
+                return (T)arg;
+            }
+            if (ReferenceEquals(arg, null))
+            {
+                return default(T);
             }
             return (T) FormatProviderConvertor(arg, solid);
         }
@@ -735,7 +734,12 @@ namespace MushDLR223.Utilities
             catch (XmlException exception)
             {
                 writeDebugLine("ERROR NODE-IFYING " + outerXML);
-                return ParseNode(doc, new StringReader("<node>" + outerXML + "</node>"), outerXML);
+                var node = ParseNode(doc, new StringReader("<node>" + outerXML + "</node>"), outerXML);
+                if (node.ChildNodes.Count==1)
+                {
+                    return node.FirstChild;
+                }
+                return node;
             }
             catch (Exception exception)
             {

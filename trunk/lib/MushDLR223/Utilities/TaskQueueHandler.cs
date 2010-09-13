@@ -302,6 +302,7 @@ namespace MushDLR223.Utilities
 
         private string ToThreadInfos()
         {
+            return "";
             var botCommandThreads = InteruptableThreads;
             List<string> status = new List<string>();
             StringBuilder stringBuilder = new StringBuilder("<begin>\nInteruptableThreads.Count=" + InteruptableThreads.Count,245);
@@ -331,7 +332,7 @@ namespace MushDLR223.Utilities
             {
                 stringBuilder.AppendLine(c);                
             }
-            stringBuilder.AppendLine(" ..\n..<begin>");
+            stringBuilder.AppendLine("\n</begin>");
             return stringBuilder.ToString();
         }
 
@@ -460,8 +461,13 @@ namespace MushDLR223.Utilities
             }
         }
 
+        private bool WaitOneIsBroken = true;
         private bool WaitOne()
         {
+            if (WaitOneIsBroken)
+            {
+                return WaitOneAlt();
+            }
             return NoExceptions(() =>
                              {
                                  bool r = false;
@@ -489,6 +495,13 @@ namespace MushDLR223.Utilities
                                  return r;
                                  // ReSharper restore ConditionIsAlwaysTrueOrFalse
                              });
+        }
+
+        private bool WaitOneAlt()
+        {
+            System.Windows.Forms.Application.DoEvents();
+            Thread.Sleep(100);
+            return true;
         }
 
         private void WaitOneMaybe()
@@ -632,8 +645,6 @@ namespace MushDLR223.Utilities
                 if (!WaitingOnPing) return;
             }
             LastPingLagTime = DateTime.Now - PingStart;
-            TotalStarted--;
-            StartedSinceLastPing--;
             if (LastPingLagTime <= MAX_PING_WAIT)
             {
                 GoodPings++;
@@ -1043,6 +1054,7 @@ namespace MushDLR223.Utilities
         }
 
         private bool inWriteline = false;
+
         public void WriteLine(string s, params object[] parms)
         {
             if (inWriteline)
