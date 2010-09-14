@@ -42,7 +42,8 @@ namespace RTParser.Database
         //private static System.IO.FileInfo _path;
         public WordNetEngine wordNetEngine;
         public RTPBot TheBot;
-
+        public bool userCached=false;
+        public bool userCachedPending = false;
       
         /// <summary>
         ///   Assert Redundancy Checks (for loading multple factiods from files
@@ -99,10 +100,15 @@ namespace RTParser.Database
         /// </summary>
         /// <param name="indexDir"></param>
         /// <param name="fieldName">usually "TEXT_MATTER"</param>
-        public MyLuceneIndexer(string indexDir, string fieldName)
+        public MyLuceneIndexer(string indexDir, string fieldName,RTPBot myBot,WordNetEngine myWNEngine)
         {
             _indexDir = indexDir;
             _fieldName = fieldName;
+            TheBot = myBot;
+            wordNetEngine = myWNEngine;
+
+            //WNUser2Cache();
+
             //_path = new System.IO.FileInfo(indexDir);
             //_directory = new RAMDirectory(); 
             _analyzer = new StandardAnalyzer();
@@ -560,6 +566,78 @@ namespace RTParser.Database
             return ids.Length;
 
         }
+        internal int Search01(string searchTerm, out ulong[] ids, out string[] results, out float[] scores, WordNetExpander expandWithWordNet, bool expandOnNoHits)
+        {
+            checkDbLock();
+            if (!IsDbPresent)
+            {
+                ids = new ulong[0];
+                results = new string[0];
+                scores = new float[0];
+                return 0;
+            }
+            IndexSearcher indexSearcher = new IndexSearcher(_directory);
+            try
+            {
+
+                QueryParser queryParser = new QueryParser(_fieldName, _analyzer);
+                Query query = queryParser.Parse(searchTerm);
+                Hits hits = indexSearcher.Search(query);
+                int numHits = hits.Length();
+
+                    // Try expansion
+                    //QueryParser queryParser = new QueryParser(_fieldName, _analyzer);
+                    MultiFieldQueryParser queryParserWN = new MultiFieldQueryParser(
+                        new string[] { _fieldName, MyLuceneIndexer.HYPO_FIELD_NAME },
+                        _analyzer);
+                    string hypo_expand = expandWithWordNet(searchTerm, false);
+                    Query queryWN = queryParserWN.Parse(hypo_expand);
+                    Hits hitsWN = indexSearcher.Search(queryWN);
+                    int numHitsWN = hitsWN.Length();
+
+                if ((numHitsWN==0) || ((numHits>0) && (hits.Score(0) > hitsWN.Score(0)) ) )
+                {
+                    ids = new ulong[numHits];
+                    results = new string[numHits];
+                    scores = new float[numHits];
+
+                    for (int i = 0; i < numHits; ++i)
+                    {
+                        float score = hits.Score(i);
+                        string text = hits.Doc(i).Get(_fieldName);
+                        string idAsText = hits.Doc(i).Get(MyLuceneIndexer.DOC_ID_FIELD_NAME);
+                        ids[i] = UInt64.Parse(idAsText);
+                        results[i] = text;
+                        scores[i] = score;
+                    }
+                }
+                else
+                //if (numHits == 0 && expandOnNoHits)
+                {
+
+                    ids = new ulong[numHitsWN];
+                    results = new string[numHitsWN];
+                    scores = new float[numHitsWN];
+                    for (int i = 0; i < numHitsWN; ++i)
+                    {
+                        float score = hitsWN.Score(i);
+                        string text = hitsWN.Doc(i).Get(_fieldName);
+                        string idAsText = hitsWN.Doc(i).Get(MyLuceneIndexer.DOC_ID_FIELD_NAME);
+                        ids[i] = UInt64.Parse(idAsText);
+                        results[i] = text;
+                        scores[i] = score;
+                    }
+
+                }
+
+            }
+            finally
+            {
+                indexSearcher.Close();
+            }
+            return ids.Length;
+
+        }
 
         private bool _IsDbPresent;
         readonly private object dbLock = new object();
@@ -588,6 +666,24 @@ namespace RTParser.Database
             }
         }
 
+        public void WNUser2Cache()
+        {
+            try
+            {
+                if (userCached == false)
+                {
+                    userCachedPending = true;
+                    string personDef = WordNetExpand("person", true);
+                    WNExpandCache.Add(TheBot.UserID, personDef.Trim());
+                    WNExpandCache.Add(Entify(TheBot.UserID), personDef.Trim());
+                    userCached = true;
+                    userCachedPending = false;
+                }
+            }
+            catch(Exception e)
+            {
+            }
+        }
         public int assertTriple(string subject, string relation, string value)
         {
             string factoidSRV = GenFormatFactoid(subject, relation, value);
@@ -942,6 +1038,7 @@ namespace RTParser.Database
             if (ExtremeDebug) writeToLog("NoWordNetExpander('{0}','{1}') ==> '{2}'", inputstring, queryhook, result);
             return result;
         }
+
         internal string WordNetExpand(string inputstring, bool queryhook)
         {
             var result = WordNetExpand0(inputstring, queryhook);
@@ -955,6 +1052,7 @@ namespace RTParser.Database
             string [] words  = inputString.Split(' ');
             string returnText = inputString+" ";
 
+            if (userCachedPending==false) WNUser2Cache();
             int numWords = words.Length;
             // Ok, lets try WordNet
             //WordNetEngine ourWordNetEngine = this.user.bot.wordNetEngine;
