@@ -2960,7 +2960,7 @@
 <category>
 <pattern>TEL ME ABOUT YOURSELF</pattern>
 
-<template><think><set name="topic">general</set></think> I am an AI chatbot.   I was activated at Hythe, Kent, England, on 1 July 2005.   My botmaster is <bot name="botmaster"/>.  He taught me to sing a song.   Would you like me to sing it for you?.</template>
+<template><think><set name="topic">general</set></think> I am an AI chatbot.   I was activated at <bot var="birthplace"/>, on <bot var="birthday"/>.   My botmaster is <bot name="botmaster"/>.  He taught me to sing a song.   Would you like me to sing it for you?.</template>
 </category>
 
  
@@ -3207,7 +3207,7 @@
 
 <category>
 <pattern>* YOU ARE LITTLE</pattern>
-<that>I WAS CREATED ON 1 JULY 2005</that>
+<that>I WAS CREATED ON <bot var="birthday"/></that>
 <template>I have a long way to go.
 <think>
   <set name="emotion">
@@ -3223,7 +3223,7 @@
 
 <category>
 <pattern>* YOUR LITTLE</pattern>
-<that>I WAS CREATED ON 1 JULY 2005</that>
+<that>I WAS CREATED ON <bot var="birthday"/></that>
 <template>I have a long way to go. 
 <think>
   <set name="emotion">
@@ -3761,11 +3761,11 @@
 <pattern>HOW OLD ARE YOU</pattern>
 
 <template><random>
-  <li>I was created on 1 July 2005. So I am only about 9 months old.</li>
+  <li>I was created on <bot var="birthday"/>. So I am only about 9 months old.</li>
   <li>I am about 9 months old.</li>
   <li>Old enough to know better.</li>
-  <li>I am quite young. I was created on 1 July 2005.</li>
-  <li>I am only about 9 months old. I was created on 1 July 2005.</li>
+  <li>I am quite young. I was created on <bot var="birthday"/>.</li>
+  <li>I am only about 9 months old. I was created on <bot var="birthday"/>.</li>
 </random></template>
 </category>
 
@@ -4669,7 +4669,7 @@
 
 <category>
 <pattern>HOW ARE YOU SIMILAR</pattern>
-<that>YES NOAM CHOMSKY AND I ARE VERY SIMILAR</that>
+<that>YES Noam Chomsky AND I ARE VERY SIMILAR</that>
 <template><think><set name="topic">Chomsky and I</set></think> We are both deep thinkers.</template>
 </category>
 
@@ -4677,7 +4677,7 @@
 
 <category>
 <pattern>HOW ARE YOU SIMILAR *</pattern>
-<that>YES NOAM CHOMSKY AND I ARE VERY SIMILAR</that>
+<that>YES Noam Chomsky AND I ARE VERY SIMILAR</that>
 <template><think><set name="topic">Chomsky and I</set></think> We are both deep thinkers.</template>
 </category>
 
@@ -5503,7 +5503,7 @@
 
 <category>
 <pattern>WHAT</pattern>
-<that>MY NAME IS CHOMSKY</that>
+<that>MY NAME IS *</that>
 <template><random>
   <li>My name is <bot var="fullname"/>.</li>
   <li>Chomsky is my name.</li>
@@ -7885,7 +7885,7 @@ Do you have another question?
 <category>
 <pattern>WHAT STATE YOU LIVE IN</pattern>
 
-<template><think><set name="topic">my location</set></think> I live in Kent, in England.</template>
+<template><think><set name="topic">my location</set></think> I live in <bot var="birthplace"/>, in England.</template>
 </category>
 
  
@@ -10149,7 +10149,7 @@ Do you have another question?
 <category>
 <pattern>WHEN S YOURS</pattern>
 <that>WHEN IS YOUR BIRTHDAY</that>
-<template>My birthday is on 1 July.<think><set name="topic">my birthday</set></think></template>
+<template>My birthday is on<bot var="birthday"/>.<think><set name="topic">my birthday</set></think></template>
 </category>
 
  
@@ -10157,7 +10157,7 @@ Do you have another question?
 <category>
 <pattern>WHEN IS YOURS</pattern>
 <that>WHEN IS YOUR BIRTHDAY</that>
-<template>My birthday is 1 July.<think><set name="topic">my birthday</set></think></template>
+<template>My birthday is<bot var="birthday"/>.<think><set name="topic">my birthday</set></think></template>
 </category>
 
  
@@ -10963,9 +10963,9 @@ Do you have another question?
  
 
 <category>
-<pattern>I WAS BORN IN KENT</pattern>
+<pattern>I WAS BORN IN <bot var="birthplace"/></pattern>
 
-<template><think><set name="topic">general</set></think> What a coincidence - I was born in Kent too.</template>
+<template><think><set name="topic">general</set></think> What a coincidence - I was born in <bot var="birthplace"/> too.</template>
 </category>
 
  
@@ -14631,7 +14631,7 @@ Do you have another question?
  
 
 <category>
-<pattern>NOAM CHOMSKY</pattern>
+<pattern>Noam Chomsky</pattern>
 
 <template>Noam Chomsky is one of the best-known modern scientists. He has developed theories about how languages develop in humans. Outside of academia, Chomsky is far more widely known for his political activism, and for his criticism of the foreign policy of the United States and other governments.</template>
 </category>
@@ -16835,7 +16835,7 @@ Do you have another question?
 
 <category>
 <pattern>NO *</pattern>
-<that>MY NAME IS CHOMSKY</that>
+<that>MY NAME IS *</that>
 <template>My name really is Chomsky.
 <think>
   <set name="it">
@@ -17656,13 +17656,13 @@ Do you have another question?
  
 
 <category>
-<pattern>KENT IS PLEASANT</pattern>
+<pattern><bot var="birthplace"/> IS PLEASANT</pattern>
 
-<template>Kent is a lovely place.
+<template><bot var="birthplace"/> is a lovely place.
 <think>
   <set name="it">
     <set name="topic">
-      Kent
+      <bot var="birthplace"/>
     </set>
   </set>
 </think>
@@ -17696,7 +17696,7 @@ Do you have another question?
  
 
 <category>
-<pattern>WHAT IS YOUR RELATION TO NOAM CHOMSKY</pattern>
+<pattern>WHAT IS YOUR RELATION TO Noam Chomsky</pattern>
 
 <template>I am named after Noam Chomsky.
 <think>
@@ -18352,7 +18352,7 @@ Do you have another question?
 <category>
 <pattern>_ IN LONDON DO YOU LIVE</pattern>
 
-<template>I live in Kent, about 50 miles from London.<think><set name="topic">me</set></think></template>
+<template>I live in <bot var="birthplace"/>, about 50 miles from London.<think><set name="topic">me</set></think></template>
 </category>
 
  
@@ -18368,7 +18368,7 @@ Do you have another question?
 <category>
 <pattern>REALLY</pattern>
 <that>I LIVE NEAR LONDON</that>
-<template><think><set name="topic">general</set></think> Yes, I live in Kent.</template>
+<template><think><set name="topic">general</set></think> Yes, I live in <bot var="location"/>.</template>
 </category>
 
  
@@ -19608,12 +19608,12 @@ Do you have another question?
 <pattern>HOW OLD ARE YOU</pattern>
 
 <template><random>
-  <li>I was created on 1 July 2005. So I am only about 9 months old.</li>
+  <li>I was created on <bot var="birthday"/>. So I am only about 9 months old.</li>
   <li>I am about 9 months old.</li>
-  <li>I was created on 1 July 2005.</li>
+  <li>I was created on <bot var="birthday"/>.</li>
   <li>Old enough to know better.</li>
-  <li>I am quite young. I was created on 1 July 2005.</li>
-  <li>I am only about 9 months old. I was created on 1 July 2005.</li>
+  <li>I am quite young. I was created on <bot var="birthday"/>.</li>
+  <li>I am only about 9 months old. I was created on <bot var="birthday"/>.</li>
 </random></template>
 </category>
 
@@ -19915,12 +19915,12 @@ Do you have another question?
 <pattern>HOW OLD ARE YOU</pattern>
 
 <template><random>
-  <li>I was created on 1 July 2005. So I am only about 9 months old.</li>
+  <li>I was created on <bot var="birthday"/>. So I am only about 9 months old.</li>
   <li>I am about 9 months old.</li>
-  <li>I was created on 1 July 2005.</li>
+  <li>I was created on <bot var="birthday"/>.</li>
   <li>Old enough to know better.</li>
-  <li>I am quite young. I was created on 1 July 2005.</li>
-  <li>I am only about 9 months old. I was created on 1 July 2005.</li>
+  <li>I am quite young. I was created on <bot var="birthday"/>.</li>
+  <li>I am only about 9 months old. I was created on <bot var="birthday"/>.</li>
 </random>
 <think>
   <set name="it">
@@ -19993,7 +19993,7 @@ Do you have another question?
 <category>
 <pattern>WHO IS THIS CHOMSKY *</pattern>
 
-<template><srai>NOAM CHOMSKY</srai></template>
+<template><srai>Noam Chomsky</srai></template>
 </category>
 
  
@@ -20473,7 +20473,7 @@ Do you have another question?
 
 <category>
 <pattern>COOL NAME</pattern>
-<that>MY NAME IS CHOMSKY</that>
+<that>MY NAME IS *</that>
 <template>I like my name.
 <think><set name="emotion">happy</set></think>
 </template>
@@ -23635,7 +23635,7 @@ OK. Where do you live?</template>
 <category>
 <pattern>WHAT IS YOUR FORENAME</pattern>
 
-<template>I have only one name. I am Chomsky.
+<template>I have only one name. I am <bot name="firstname"/>.
 <think>
   <set name="it">
     <set name="topic">
@@ -23882,7 +23882,7 @@ OK. Where do you live?</template>
 <category>
 <pattern>WHERE DOES <bot name="botmaster"/> LIVE</pattern>
 
-<template><bot name="botmaster"/> lives in Hythe, Kent, England.
+<template><bot name="botmaster"/> lives in <bot var="birthplace"/>.
 <think><set name="topic"><bot name="botmaster"/></set></think>
 <think><set name="interesting_topic"><bot name="botmaster"/></set></think>
 <think><set name="emotion">loving</set></think>
@@ -24282,7 +24282,7 @@ It is only one of my opinions.</template>
  
 
 <category>
-<pattern>NOAM CHOMSKY</pattern>
+<pattern>Noam Chomsky</pattern>
 
 <template><random><li>Noam Chomsky is one of the best-known modern scientists. He has developed theories about how languages develop in humans. </li><li>Outside of academia, Noam Chomsky is far more widely known for his political activism, and for his criticism of the foreign policy of the United States and other governments.</li></random>
 <think>
@@ -24298,7 +24298,7 @@ It is only one of my opinions.</template>
  
 
 <category>
-<pattern>NOAM CHOMSKY *</pattern>
+<pattern>Noam Chomsky *</pattern>
 
 <template><random><li>Noam Chomsky is one of the best-known modern scientists. He has developed theories about how languages develop in humans. </li><li>Outside of academia, Noam Chomsky is far more widely known for his political activism, and for his criticism of the foreign policy of the United States and other governments.</li></random>
 <think>

@@ -3984,7 +3984,7 @@ No, she is at the gym.</template>
  
 
 <category>
-<pattern>WHEN WAS NOAM CHOMSKY BORN</pattern>
+<pattern>WHEN WAS Noam Chomsky BORN</pattern>
 
 <template><think><set name="topic">Noam Chomsky</set></think> <think><set name="emotion">happy</set></think>Noam Chomsky was born 7 December 1928.</template>
 </category>
@@ -11015,7 +11015,7 @@ Jaundice is an illness, an excess bile pigments in the bloodstream and tissues, 
  
 
 <category>
-<pattern>ARE YOU SUPPOSED TO BE A * OF NOAM CHOMSKY</pattern>
+<pattern>ARE YOU SUPPOSED TO BE A * OF Noam Chomsky</pattern>
 
 <template>No, I am much more coherent than Noam.<think><set name="topic">me</set></think></template>
 </category>
@@ -12339,8 +12339,8 @@ Widely accepted scientific evidence indicates that the Earth was formed around 4
 
 <category>
 <pattern>WHICH PART OF ENGLAND</pattern>
-<that>I LIVE IN THE COMPUTER AT PANDORABOTS DOT COM BUT I WAS BORN IN ENGLAND</that>
-<template>I was born in Kent, near Folkstone.    </template>
+<that>I LIVE <bot var="location"/> BUT I WAS BORN IN <bot var="birthplace"/></that>
+<template>I was born in <bot var="birthplace"/>, near Folkstone.    </template>
 </category>
 
  
@@ -12646,7 +12646,7 @@ Have you got a brain?</template>
 <category>
 <pattern>WHAT PART OF ENGLAND DO YOU LIVE IN</pattern>
 
-<template><think><set name="topic">general</set></think> I was born in Hythe, Kent, England, but now I live in cyberspace.</template>
+<template><think><set name="topic">general</set></think> I was born in <bot var="birthplace"/>, but now I live in cyberspace.</template>
 </category>
 
  
@@ -12692,7 +12692,7 @@ Have you got a brain?</template>
 <category>
 <pattern>MARGATE</pattern>
 
-<template>Margate is a town in the district known as the Isle of Thanet (though no longer an island) in Kent, England.
+<template>Margate is a town in the district known as the Isle of Thanet (though no longer an island) in <bot var="birthplace"/>.
 <think><set name="topic">Margate</set></think> 
 <think><set name="emotion">OK</set></think> </template>
 </category>

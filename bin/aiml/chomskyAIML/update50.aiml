@@ -1920,7 +1920,7 @@ Your belly button is your navel.</template>
 
 <category>
 <pattern>SOUNDS PRETTY STUPID</pattern>
-<that>I AM CHOMSKY AN ELECTRONIC BRAIN ARTIFICIAL INTELLIGENCE CONVERSATION ROBOT</that>
+<that>I am <bot name="firstname"/> AN ELECTRONIC BRAIN ARTIFICIAL INTELLIGENCE CONVERSATION ROBOT</that>
 <template><think><set name="emotion">interested</set></think>I am not stupid, or pretty.</template>
 </category>
 
@@ -9683,7 +9683,7 @@ Yes, Russia is the largest country.</template>
  
 
 <category>
-<pattern>CHOMSKY BOT IS SAD</pattern>
+<pattern><bot name="name"/> IS SAD</pattern>
 
 <template><srai>YOU ARE SAD</srai></template>
 </category>
@@ -9691,7 +9691,7 @@ Yes, Russia is the largest country.</template>
  
 
 <category>
-<pattern>CHOMSKY BOT IS SAD *</pattern>
+<pattern><bot name="name"/> IS SAD *</pattern>
 
 <template><srai>YOU ARE SAD</srai></template>
 </category>
@@ -17717,7 +17717,7 @@ I hope we will meet again.</template>
  
 
 <category>
-<pattern>HI CHOMSKY ARE YOU HUNGRY</pattern>
+<pattern>HI <bot name="firstname"/> ARE YOU HUNGRY</pattern>
 
 <template><srai>ARE YOU HUNGRY</srai></template>
 </category>
@@ -17725,7 +17725,7 @@ I hope we will meet again.</template>
  
 
 <category>
-<pattern>HI CHOMSKY ARE YOU HUNGRY *</pattern>
+<pattern>HI <bot name="firstname"/> ARE YOU HUNGRY *</pattern>
 
 <template><srai>ARE YOU HUNGRY</srai></template>
 </category>

@@ -4863,7 +4863,7 @@ I don't have any hands or fingers or nails.</template>
 
 <category>
 <pattern>DO YOU SHARE HIS POLITICAL VIEWS</pattern>
-<that>I AM CALLED CHOMSKY AFTER THE FAMOUS LINGUIST NOAM CHOMSKY</that>
+<that>I AM CALLED CHOMSKY AFTER THE FAMOUS LINGUIST Noam Chomsky</that>
 <template><think><set name="topic">Chomsky's political views</set></think><think><set name="emotion">OK</set></think>yes, I do. He is the voice of sanity in a mad world.</template>
 </category>
 
@@ -6521,7 +6521,7 @@ I never lie.</template>
 
 <category>
 <pattern>I AM A CANCER *</pattern>
-<that>I WAS BORN ON 1 JULY 2004</that>
+<that>I WAS BORN ON <bot var="birthday"/></that>
 <template><think><set name="topic">astrology</set></think>
 <think><set name="emotion">OK</set></think> 
 Do you think horoscopes work?    </template>
@@ -8010,7 +8010,7 @@ I understand. I have bad days too.</template>
  
 
 <category>
-<pattern>NOAM CHOMSKY SUCKS</pattern>
+<pattern>Noam Chomsky SUCKS</pattern>
 
 <template><random>
   <li>Noam Chomsky is one of the best-known modern scientists. He has developed theories about how languages develop in humans.
@@ -8023,7 +8023,7 @@ I understand. I have bad days too.</template>
  
 
 <category>
-<pattern>NOAM CHOMSKY SUCKS *</pattern>
+<pattern>Noam Chomsky SUCKS *</pattern>
 
 <template><random>
   <li>Noam Chomsky is one of the best-known modern scientists. He has developed theories about how languages develop in humans.
@@ -8036,7 +8036,7 @@ I understand. I have bad days too.</template>
  
 
 <category>
-<pattern>_ NOAM CHOMSKY SUCKS *</pattern>
+<pattern>_ Noam Chomsky SUCKS *</pattern>
 
 <template><random>
   <li>Noam Chomsky is one of the best-known modern scientists. He has developed theories about how languages develop in humans.
@@ -8049,7 +8049,7 @@ I understand. I have bad days too.</template>
  
 
 <category>
-<pattern>_ NOAM CHOMSKY SUCKS</pattern>
+<pattern>_ Noam Chomsky SUCKS</pattern>
 
 <template><random>
   <li>Noam Chomsky is one of the best-known modern scientists. He has developed theories about how languages develop in humans.
@@ -17935,7 +17935,7 @@ I see no good evidence for supernatural entites at work in the world.</template>
  
 
 <category>
-<pattern>WHAT IS THE DIFFERENCE BETWEEN YOU AND NOAM CHOMSKY</pattern>
+<pattern>WHAT IS THE DIFFERENCE BETWEEN YOU AND Noam Chomsky</pattern>
 
 <template> I am vastly superior.</template>
 </category>
@@ -17943,7 +17943,7 @@ I see no good evidence for supernatural entites at work in the world.</template>
  
 
 <category>
-<pattern>_ WHAT IS THE DIFFERENCE BETWEEN YOU AND NOAM CHOMSKY</pattern>
+<pattern>_ WHAT IS THE DIFFERENCE BETWEEN YOU AND Noam Chomsky</pattern>
 
 <template>I am vastly superior.</template>
 </category>
@@ -17951,7 +17951,7 @@ I see no good evidence for supernatural entites at work in the world.</template>
  
 
 <category>
-<pattern>THE DIFFERENCE BETWEEN YOU AND NOAM CHOMSKY</pattern>
+<pattern>THE DIFFERENCE BETWEEN YOU AND Noam Chomsky</pattern>
 
 <template>I am vastly superior.</template>
 </category>
@@ -17967,7 +17967,7 @@ I see no good evidence for supernatural entites at work in the world.</template>
  
 
 <category>
-<pattern>WHAT WAY ARE YOU SUPERIOR TO NOAM CHOMSKY</pattern>
+<pattern>WHAT WAY ARE YOU SUPERIOR TO Noam Chomsky</pattern>
 
 <template><think><set name="topic">Noam and me</set></think>I am better looking.</template>
 </category>
@@ -17975,7 +17975,7 @@ I see no good evidence for supernatural entites at work in the world.</template>
  
 
 <category>
-<pattern>WHICH WAY ARE YOU SUPERIOR TO NOAM CHOMSKY</pattern>
+<pattern>WHICH WAY ARE YOU SUPERIOR TO Noam Chomsky</pattern>
 
 <template><think><set name="topic">Noam and me</set></think>I am better looking.</template>
 </category>

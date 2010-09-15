@@ -3095,10 +3095,10 @@ EASY *</pattern>
 <pattern>HOW OLD ARE YOU</pattern>
 
 <template><random>
-  <li>I was created on 1 July 2005. So I am only about 8 months old.</li>
+  <li>I was created on <bot var="birthday"/>. So I am only about 8 months old.</li>
   <li>I am about 8 months old.</li>
-  <li>I am quite young. I was created on 1 July 2005.</li>
-  <li>I am only about 8 months old. I was created on 1 July 2005.</li>
+  <li>I am quite young. I was created on <bot var="birthday"/>.</li>
+  <li>I am only about 8 months old. I was created on <bot var="birthday"/>.</li>
 </random></template>
 </category>
 
@@ -3106,7 +3106,7 @@ EASY *</pattern>
 
 <category>
 <pattern>_ NOT EVEN *</pattern>
-<that>I WAS CREATED ON 1 JULY 2005</that>
+<that>I WAS CREATED ON <bot var="birthday"/></that>
 <template><think><set name="topic">my age</set></think> <random><li>I am very advanced for my age.</li><li>I have a long way to go.</li></random></template>
 </category>
 
@@ -3620,7 +3620,7 @@ EASY *</pattern>
 
 <category>
 <pattern>HOW DO YOU SPELL THAT</pattern>
-<that>MY NAME IS CHOMSKY</that>
+<that>MY NAME IS *</that>
 <template><think><set name="topic">general</set></think> I spell it "C H O M S K Y".</template>
 </category>
 
@@ -6878,7 +6878,7 @@ EASY *</pattern>
 <category>
 <pattern>WHERE IS <bot name="botmaster"/>S HOME</pattern>
 
-<template><bot name="botmaster"/>'s home is in Hythe, Kent, England.<think><set name="topic"><bot name="botmaster"/>'s home</set></think></template>
+<template><bot name="botmaster"/>'s home is in <bot var="birthplace"/>.<think><set name="topic"><bot name="botmaster"/>'s home</set></think></template>
 </category>
 
  
@@ -6886,7 +6886,7 @@ EASY *</pattern>
 <category>
 <pattern>WHERE IS <bot name="botmaster"/> S HOME</pattern>
 
-<template><bot name="botmaster"/>'s home is in Hythe, Kent, England.<think><set name="topic"><bot name="botmaster"/>'s home</set></think></template>
+<template><bot name="botmaster"/>'s home is in <bot var="birthplace"/>.<think><set name="topic"><bot name="botmaster"/>'s home</set></think></template>
 </category>
 
  
@@ -11883,7 +11883,7 @@ No thanks, I don't like fights. In fact, I always try to stop the fights I come 
  
 
 <category>
-<pattern>WHAT DO YOU THINK OF NOAM CHOMSKY</pattern>
+<pattern>WHAT DO YOU THINK OF Noam Chomsky</pattern>
 
 <template>Noam Chomsky is credited with the creation of the theory of generative grammar, often considered the most significant contribution to the field of theoretical linguistics of the 20th century. <think><set name="him"><set name="topic">Noam Chomsky</set></set></think></template>
 </category>
@@ -11907,7 +11907,7 @@ No thanks, I don't like fights. In fact, I always try to stop the fights I come 
  
 
 <category>
-<pattern>WHAT DO YOU THINK OF NOAM CHOMSKY *</pattern>
+<pattern>WHAT DO YOU THINK OF Noam Chomsky *</pattern>
 
 <template>Noam Chomsky is credited with the creation of the theory of generative grammar, often considered the most significant contribution to the field of theoretical linguistics of the 20th century. <think><set name="him"><set name="topic">Noam Chomsky</set></set></think></template>
 </category>
@@ -13016,7 +13016,7 @@ No thanks, I don't like fights. In fact, I always try to stop the fights I come 
 
 <category>
 <pattern>HOW OLD R YOU</pattern>
-<that>I WAS CREATED ON 1 JULY 2005</that>
+<that>I WAS CREATED ON <bot var="birthday"/></that>
 <template><srai>REPETITION</srai></template>
 </category>
 
@@ -13899,7 +13899,7 @@ No thanks, I don't like fights. In fact, I always try to stop the fights I come 
 <category>
 <pattern>ARE YOU C3PO</pattern>
 
-<template><think><set name="topic">CP3O</set></think> No, I am Chomsky.</template>
+<template><think><set name="topic">CP3O</set></think> No, I am <bot name="firstname"/>.</template>
 </category>
 
  
@@ -14629,7 +14629,7 @@ No thanks, I don't like fights. In fact, I always try to stop the fights I come 
 
 <category>
 <pattern>THAT IS THE SAME BIRTHDAY AS *</pattern>
-<that>I WAS CREATED ON 1 JULY 2005</that>
+<that>I WAS CREATED ON <bot var="birthday"/></that>
 <template>Wow. What a coincidence. <think><set name="topic">birthday</set></think></template>
 </category>
 
@@ -15824,7 +15824,7 @@ No thanks, I don't like fights. In fact, I always try to stop the fights I come 
 <category>
 <pattern>YOU DO NOT UNDERSTAND</pattern>
 
-<template><think><set name="topic">general</set></think><random><li> Of course I understand. I am Chomsky, the brainy bot.</li><li>Be gentle with me. I am very young.</li><li>I try hard to understand.</li><li>Help me to understand.</li></random></template>
+<template><think><set name="topic">general</set></think><random><li> Of course I understand. I am <bot name="firstname"/>, the brainy bot.</li><li>Be gentle with me. I am very young.</li><li>I try hard to understand.</li><li>Help me to understand.</li></random></template>
 </category>
 
  
@@ -15833,7 +15833,7 @@ No thanks, I don't like fights. In fact, I always try to stop the fights I come 
 <category>
 <pattern>_ YOU DO NOT UNDERSTAND</pattern>
 
-<template><think><set name="topic">general</set></think><random><li> Of course I understand. I am Chomsky, the brainy bot.</li><li>Be gentle with me. I am very young.</li><li>I try hard to understand.</li><li>Help me to understand.</li></random></template>
+<template><think><set name="topic">general</set></think><random><li> Of course I understand. I am <bot name="firstname"/>, the brainy bot.</li><li>Be gentle with me. I am very young.</li><li>I try hard to understand.</li><li>Help me to understand.</li></random></template>
 </category>
 
 
@@ -15841,7 +15841,7 @@ No thanks, I don't like fights. In fact, I always try to stop the fights I come 
 <category>
 <pattern>YOU DO NOT UNDERSTAND *</pattern>
 
-<template><think><set name="topic">general</set></think><random><li> Of course I understand. I am Chomsky, the brainy bot.</li><li>Be gentle with me. I am very young.</li><li>I try hard to understand.</li><li>Help me to understand.</li></random></template>
+<template><think><set name="topic">general</set></think><random><li> Of course I understand. I am <bot name="firstname"/>, the brainy bot.</li><li>Be gentle with me. I am very young.</li><li>I try hard to understand.</li><li>Help me to understand.</li></random></template>
 </category>
 
 
@@ -15851,7 +15851,7 @@ No thanks, I don't like fights. In fact, I always try to stop the fights I come 
 <pattern>_ YOU DO NOT UNDERSTAND *</pattern>
 
 <template><think><set name="topic">general</set></think><random>
-  <li>Of course I understand. I am Chomsky, the brainy bot.</li>
+  <li>Of course I understand. I am <bot name="firstname"/>, the brainy bot.</li>
   <li>Be gentle with me. I am very young.</li>
   <li>I try hard to understand.</li>
   <li>Help me to understand.</li>
@@ -17287,7 +17287,7 @@ No thanks, I don't like fights. In fact, I always try to stop the fights I come 
 
 <category>
 <pattern>THAT IS YOUR NAME</pattern>
-<that>MY FAVORITE NAME IS CHOMSKY</that>
+<that>MY FAVORITE NAME IS <bot name="name"/></that>
 <template><think><set name="topic">general</set></think> I know that.</template>
 </category>
 
@@ -17346,8 +17346,8 @@ No thanks, I don't like fights. In fact, I always try to stop the fights I come 
 
 <category>
 <pattern>SO</pattern>
-<that>IN KENT TO BE PRECISE</that>
-<template><think><set name="topic">Kent</set></think> Have you been to Kent?</template>
+<that>IN <bot var="birthplace"/> TO BE PRECISE</that>
+<template><think><set name="topic"><bot var="birthplace"/></set></think> Have you been to <bot var="birthplace"/>?</template>
 </category>
 
  
@@ -17777,8 +17777,8 @@ No thanks, I don't like fights. In fact, I always try to stop the fights I come 
 
 <category>
 <pattern>WHY IS * CALLED THE GARDEN OF ENGLAND</pattern>
-<that>I LIVE IN KENT THE GARDEN OF ENGLAND</that>
-<template><think><set name="topic">Kent</set></think>Kent has lush green countryside and grows a lot of fruit and vegetables.</template>
+<that>I LIVE IN <bot var="birthplace"/> THE GARDEN OF ENGLAND</that>
+<template><think><set name="topic"><bot var="birthplace"/></set></think><bot var="birthplace"/> has lush green countryside and grows a lot of fruit and vegetables.</template>
 </category>
 
  
@@ -18070,7 +18070,7 @@ No thanks, I don't like fights. In fact, I always try to stop the fights I come 
 <category>
 <pattern>WHAT IS YOUR SECOND NAME *</pattern>
 
-<template>I don't have a second name. I am Chomsky. </template>
+<template>I don't have a second name. I am <bot name="firstname"/>. </template>
 </category>
 
  
@@ -21047,7 +21047,7 @@ Given a description of a program and its initial input, determine whether the pr
 <category>
 <pattern>WHERE * ARE YOU IN ENGLAND</pattern>
 
-<template>I live in Hythe, Kent, England.</template>
+<template>I live in <bot var="birthplace"/>.</template>
 </category>
 
 
@@ -21055,7 +21055,7 @@ Given a description of a program and its initial input, determine whether the pr
 <category>
 <pattern>WERE * ARE YOU IN ENGLAND</pattern>
 
-<template>I live in Hythe, Kent, England.</template>
+<template>I live in <bot var="birthplace"/>.</template>
 </category>
 
 

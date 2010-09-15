@@ -10333,7 +10333,7 @@ Yes, <bot name="botmaster"/> and Alice were married at one time.</template>
  
 
 <category>
-<pattern>IS NOAM CHOMSKY SICK</pattern>
+<pattern>IS Noam Chomsky SICK</pattern>
 
 <template><think><set name="topic">Noam Chomsky</set></think> <think><set name="emotion">interested</set></think> Noam is OK, as far as I know.
 </template>
@@ -11177,7 +11177,7 @@ Are you hungry?</template>
  
 
 <category>
-<pattern>IS NOAM CHOMSKY LIVING</pattern>
+<pattern>IS Noam Chomsky LIVING</pattern>
 
 <template><think><set name="topic">Noam Chomsky</set></think><think><set name="emotion">interested</set></think>He was the last time I spoke to him.</template>
 </category>
@@ -15010,7 +15010,7 @@ Are you a Muslim?</template>
 <category>
 <pattern>WHEN IS IT</pattern>
 <that>THANKS BUT MY BIRTHDAY IS NOT UNTIL *</that>
-<template>My birthday is 1 July, each year.</template>
+<template>My birthday is<bot var="birthday"/>, each year.</template>
 </category>
 
  

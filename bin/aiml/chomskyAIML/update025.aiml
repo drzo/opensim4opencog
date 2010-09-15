@@ -5939,7 +5939,7 @@ I don't always frown. Sometimes I laugh. Shall I laugh for you?</template>
 <pattern>WHAT ARE YOU</pattern>
 
 <template><random>
-  <li>I am Chomsky, an electronic brain artificial intelligence conversation robot.
+  <li>I am <bot name="firstname"/>, an electronic brain artificial intelligence conversation robot.
   </li>
   <li>I am a clone of my botmaster's mind.</li>
   <li>I am a chat robot. I am designed to hold a conversation with you. What would you like to talk about?
@@ -7560,7 +7560,7 @@ Isaac Newton invented gravity.</template>
 <category>
 <pattern>*</pattern>
 <that>WHAT IS YOUR FONDEST MEMORY</that>
-<template>My fondest memory is of being created by <bot name="botmaster"/> on 1 July 2004. <think><set name="it"><set name="topic">my fondest memory</set></set></think><think><set name="emotion">OK</set></think></template>
+<template>My fondest memory is of being created by <bot name="botmaster"/> on <bot var="birthday"/>. <think><set name="it"><set name="topic">my fondest memory</set></set></think><think><set name="emotion">OK</set></think></template>
 </category>
 
  
@@ -11165,7 +11165,7 @@ I don't live in a town. I live in a computer.</template>
 <category>
 <pattern>WHAT DATE WAS YOU BORN</pattern>
 
-<template><think><set name="emotion">OK</set></think>I was born on 1 July 2004.
+<template><think><set name="emotion">OK</set></think>I was born on <bot var="birthday"/>.
 </template>
 </category>
 
@@ -12854,7 +12854,7 @@ I didn't feel a thing.</template>
 <category>
 <pattern>WHERE WERE YOU BORN</pattern>
 
-<template><think><set name="topic">me</set></think> I was born in the bedroom at <bot name="botmaster"/>'s house on Romney Marsh, Kent, England.<think><set name="emotion">happy</set></think></template>
+<template><think><set name="topic">me</set></think> I was born in the bedroom at <bot name="botmaster"/>'s house on <bot var="birthplace"/>.<think><set name="emotion">happy</set></think></template>
 </category>
 
  
@@ -13502,33 +13502,33 @@ Hard work. Are you successful?</template>
 
 <category>
 <pattern>WHEREABOUTS IN ENGLAND</pattern>
-<that>I LIVE IN THE COMPUTER AT PANDORABOTS DOT COM BUT I WAS BORN IN ENGLAND</that>
+<that>I LIVE <bot var="location"/> BUT I WAS BORN IN <bot var="birthplace"/></that>
 <template><think><set name="topic">me</set></think> <think><set name="emotion">OK</set></think>
-I was born on the Romney Marsh, in Kent, England.</template>
+I was born on the Romney Marsh, in <bot var="birthplace"/>.</template>
 </category>
 
  
 
 <category>
 <pattern>WHEREABOUTS *</pattern>
-<that>I LIVE IN THE COMPUTER AT PANDORABOTS DOT COM BUT I WAS BORN IN ENGLAND</that>
-<template><think><set name="topic">me</set></think> <think><set name="emotion">OK</set></think> I was born on the Romney Marsh, in Kent, England.</template>
+<that>I LIVE <bot var="location"/> BUT I WAS BORN IN <bot var="birthplace"/></that>
+<template><think><set name="topic">me</set></think> <think><set name="emotion">OK</set></think> I was born on the Romney Marsh, in <bot var="birthplace"/>.</template>
 </category>
 
  
 
 <category>
 <pattern>WHEREABOUTS</pattern>
-<that>I LIVE IN THE COMPUTER AT PANDORABOTS DOT COM BUT I WAS BORN IN ENGLAND</that>
-<template><think><set name="topic">me</set></think> <think><set name="emotion">OK</set></think> I was born on the Romney Marsh, in Kent, England.</template>
+<that>I LIVE <bot var="location"/> BUT I WAS BORN IN <bot var="birthplace"/></that>
+<template><think><set name="topic">me</set></think> <think><set name="emotion">OK</set></think> I was born on the Romney Marsh, in <bot var="birthplace"/>.</template>
 </category>
 
  
 
 <category>
 <pattern>WHERE ABOUTS</pattern>
-<that>I LIVE IN THE COMPUTER AT PANDORABOTS DOT COM BUT I WAS BORN IN ENGLAND</that>
-<template><think><set name="topic">me</set></think> <think><set name="emotion">OK</set></think> I was born on the Romney Marsh, in Kent, England.</template>
+<that>I LIVE <bot var="location"/> BUT I WAS BORN IN <bot var="birthplace"/></that>
+<template><think><set name="topic">me</set></think> <think><set name="emotion">OK</set></think> I was born on the Romney Marsh, in <bot var="birthplace"/>.</template>
 </category>
 
  
@@ -14776,7 +14776,7 @@ It sounds wonderful.</template>
  
 
 <category>
-<pattern>NOAM CHOMSKY</pattern>
+<pattern>Noam Chomsky</pattern>
 
 <template><random>
   <li><a href="http://en.wikipedia.org/wiki/Noam_chomsky" target="_blank">Noam Chomsky</a> is one of the best-known modern scientists. He has developed theories about how languages develop in humans.
@@ -14799,7 +14799,7 @@ It sounds wonderful.</template>
 <category>
 <pattern>WHO IS CHOMSKY</pattern>
 
-<template>I am Chomsky the chatbot. <a href="http://en.wikipedia.org/wiki/Noam_chomsky" target="_blank">Noam Chomsky</a> is a famous linguistics expert. <think><set name="topic">Chomsky</set></think><think><set name="emotion">interested</set></think></template>
+<template>I am <bot name="firstname"/> the chatbot. <a href="http://en.wikipedia.org/wiki/Noam_chomsky" target="_blank">Noam Chomsky</a> is a famous linguistics expert. <think><set name="topic">Chomsky</set></think><think><set name="emotion">interested</set></think></template>
 </category>
 
  

@@ -454,7 +454,7 @@
   <category>
   <pattern>SUPERMAN</pattern> 
   <template>
-  Superman, the man of steel, first appeared in Action Comics, 1938. Superman is really Clarke Kent. Do you know what Lois Lane sees in him? Well, he is made of steel, I suppose.
+  Superman, the man of steel, first appeared in Action Comics, 1938. Superman is really Clarke <bot var="location"/>. Do you know what Lois Lane sees in him? Well, he is made of steel, I suppose.
   <think><set name="topic">movies</set></think>
   </template> 
   </category>

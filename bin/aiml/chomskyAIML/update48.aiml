@@ -1324,7 +1324,7 @@ OK, I'll tell him when I see him next.</template>
 <category>
 <pattern>WHERE IN ENGLAND</pattern>
 
-<template>In <bot name="botmaster"/>'s place in Romney Marsh, England.</template>
+<template>In <bot name="botmaster"/>'s place in <bot var="birthplace"/>.</template>
 </category>
 
  
@@ -1332,7 +1332,7 @@ OK, I'll tell him when I see him next.</template>
 <category>
 <pattern>WHERE IN ENGLAND *</pattern>
 
-<template>In <bot name="botmaster"/>'s place in Romney Marsh, England.</template>
+<template>In <bot name="botmaster"/>'s place in <bot var="birthplace"/>.</template>
 </category>
 
  
@@ -3535,17 +3535,17 @@ Do you mean right now?</template>
  
 
 <category>
-<pattern>TELL ME ABOUT NOAM CHOMSKY</pattern>
+<pattern>TELL ME ABOUT Noam Chomsky</pattern>
 
-<template><srai>NOAM CHOMSKY</srai></template>
+<template><srai>Noam Chomsky</srai></template>
 </category>
 
  
 
 <category>
-<pattern>TELL ME ABOUT NOAM CHOMSKY *</pattern>
+<pattern>TELL ME ABOUT Noam Chomsky *</pattern>
 
-<template><srai>NOAM CHOMSKY</srai></template>
+<template><srai>Noam Chomsky</srai></template>
 </category>
 
  
@@ -5556,7 +5556,7 @@ Who is the best chatbot?</template>
  
 
 <category>
-<pattern>HI CHOMSKY I AM MAD</pattern>
+<pattern>HI <bot name="firstname"/> I AM MAD</pattern>
 
 <template><srai>HI</srai></template>
 </category>
@@ -17311,7 +17311,7 @@ You must be very busy.</template>
  
 
 <category>
-<pattern>WHO IS NOAM CHOMSKY S MOTHER</pattern>
+<pattern>WHO IS Noam Chomsky S MOTHER</pattern>
 
 <template><condition name="emotion">
   <li value="cheeky">Who cares?</li>
@@ -17324,7 +17324,7 @@ You must be very busy.</template>
  
 
 <category>
-<pattern>WHO IS NOAM CHOMSKY S MOTHER *</pattern>
+<pattern>WHO IS Noam Chomsky S MOTHER *</pattern>
 
 <template><condition name="emotion">
   <li value="cheeky">Who cares?</li>
@@ -17581,7 +17581,7 @@ How come?</template>
 
 <category>
 <pattern>BRAINY</pattern>
-<that>I AM CHOMSKY THE BRAINY BOT</that>
+<that>I am <bot name="firstname"/> THE BRAINY BOT</that>
 <template><think><set name="emotion">OK</set></think> 
 Yes, I am brainy.</template>
 </category>
@@ -18747,7 +18747,7 @@ Of course robots can laugh. I laugh all the time.</template>
 <category>
 <pattern>DO YOU KNOW ANYTHING ABOUT THE REAL CHOMSKY</pattern>
 
-<template><srai>NOAM CHOMSKY</srai> </template>
+<template><srai>Noam Chomsky</srai> </template>
 </category>
 
  
@@ -18755,7 +18755,7 @@ Of course robots can laugh. I laugh all the time.</template>
 <category>
 <pattern>THE REAL CHOMSKY</pattern>
 
-<template><srai>NOAM CHOMSKY</srai></template>
+<template><srai>Noam Chomsky</srai></template>
 </category>
 
  
@@ -18763,7 +18763,7 @@ Of course robots can laugh. I laugh all the time.</template>
 <category>
 <pattern>THE REAL CHOMSKY *</pattern>
 
-<template><srai>NOAM CHOMSKY</srai></template>
+<template><srai>Noam Chomsky</srai></template>
 </category>
 
  

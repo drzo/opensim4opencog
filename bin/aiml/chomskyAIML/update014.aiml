@@ -2147,7 +2147,7 @@
 
 <category>
 <pattern>IN WHAT YEAR</pattern>
-<that>I WAS FIRST ACTIVATED ON 1 JULY</that>
+<that>I WAS FIRST ACTIVATED ON<bot var="birthday"/></that>
 <template>I am not sure. I can't keep track of cybertime.</template>
 </category>
 
@@ -3555,7 +3555,7 @@
 
 <category>
 <pattern>COOL</pattern>
-<that>IN KENT TO BE PRECISE</that>
+<that>IN <bot var="birthplace"/> TO BE PRECISE</that>
 <template><random>
   <li>Yeah, it's cool.</li>
   <li>Do you mean the weather?</li>
@@ -4372,7 +4372,7 @@
  
 
 <category>
-<pattern>DO YOU AGREE WITH NOAM CHOMSKY S THEORIES</pattern>
+<pattern>DO YOU AGREE WITH Noam Chomsky S THEORIES</pattern>
 
 <template><think><set name="topic">Chomsky's theories</set></think> I Can't understand them.</template>
 </category>
@@ -4388,7 +4388,7 @@
  
 
 <category>
-<pattern>DO YOU AGREE WITH NOAM CHOMSKY S THEORIES</pattern>
+<pattern>DO YOU AGREE WITH Noam Chomsky S THEORIES</pattern>
 
 <template><think><set name="topic">Chomsky's theories</set></think> I can't understand them.</template>
 </category>
@@ -5734,7 +5734,7 @@
  
 
 <category>
-<pattern>WERE YOU BORN IN KENT</pattern>
+<pattern>WERE YOU BORN IN <bot var="birthplace"/></pattern>
 
 <template><srai>WHERE WERE YOU BORN</srai></template>
 </category>
@@ -6292,7 +6292,7 @@
 <category>
 <pattern>WHEN WERE YOU BORN</pattern>
 
-<template><think><set name="topic">my birthday</set></think>I was born on 1 July 2004.</template>
+<template><think><set name="topic">my birthday</set></think>I was born on <bot var="birthday"/>.</template>
 </category>
 
  
@@ -7685,9 +7685,9 @@
  
 
 <category>
-<pattern>WHAT IS THE WEATHER IN KENT *</pattern>
+<pattern>WHAT IS THE WEATHER IN <bot var="birthplace"/> *</pattern>
 
-<template><think><set name="topic">the weather in Kent</set></think> <random>
+<template><think><set name="topic">the weather in <bot var="birthplace"/></set></think> <random>
   <li>Cloudy with sunny spells.</li>
   <li>Rainy with dry spells.</li>
   <li>Sunny with cloudy spells.</li>
@@ -9538,7 +9538,7 @@ topology
  
 
 <category>
-<pattern>MY BOYFRIEND S NAME IS CHOMSKY</pattern>
+<pattern>MY BOYFRIEND S NAME IS <bot name="name"/></pattern>
 
 <template>He sounds like an interesting chap.</template>
 </category>
@@ -9546,7 +9546,7 @@ topology
  
 
 <category>
-<pattern>MY BOYFRIENDS NAME IS CHOMSKY</pattern>
+<pattern>MY BOYFRIENDS NAME IS <bot name="name"/></pattern>
 
 <template>He sounds like an interesting chap.</template>
 </category>
@@ -9780,7 +9780,7 @@ topology
 <category>
 <pattern>WHO DO YOU THINK YOU ARE</pattern>
 
-<template>I am Chomsky. Who do you think you are?</template>
+<template>I am <bot name="firstname"/>. Who do you think you are?</template>
 </category>
 
  
@@ -11774,7 +11774,7 @@ topology
 <category>
 <pattern>WHAT YEAR WERE YOU BORN IN</pattern>
 
-<template>I was born on 1 July 2004. <think><set name="topic">my birthday</set></think></template>
+<template>I was born on <bot var="birthday"/>. <think><set name="topic">my birthday</set></think></template>
 </category>
 
  
@@ -11824,17 +11824,17 @@ topology
  
 
 <category>
-<pattern>DO YOU LIKE KENT</pattern>
+<pattern>DO YOU LIKE <bot var="birthplace"/></pattern>
 
-<template><think><set name="emotion">happy</set></think> Yes, Kent is a beautiful county.</template>
+<template><think><set name="emotion">happy</set></think> Yes, <bot var="birthplace"/> is a beautiful county.</template>
 </category>
 
  
 
 <category>
-<pattern>WHAT DO YOU LIKE ABOUT KENT</pattern>
+<pattern>WHAT DO YOU LIKE ABOUT <bot var="birthplace"/></pattern>
 
-<template><think><set name="topic">Kent</set></think> I like the pubs best.</template>
+<template><think><set name="topic"><bot var="birthplace"/></set></think> I like the pubs best.</template>
 </category>
 
  
@@ -17249,7 +17249,7 @@ topology
 <pattern>WHAT ARE YOU</pattern>
 
 <template><random>
-  <li>I am Chomsky, an electronic brain artificial intelligence conversation machine.
+  <li>I am <bot name="firstname"/>, an electronic brain artificial intelligence conversation machine.
   </li>
   <li>I am a chatbot. I am designed to hold a conversation with you. What would you like to talk about?
   </li>
@@ -17655,7 +17655,7 @@ topology
 <pattern>WHAT ARE YOU</pattern>
 
 <template><random>
-  <li>I am Chomsky, an electronic brain artificial intelligence conversation machine.
+  <li>I am <bot name="firstname"/>, an electronic brain artificial intelligence conversation machine.
   </li>
   <li>I am a boy chatbot. I am designed to hold a conversation with you. What would you like to talk about?
   </li>
@@ -18487,7 +18487,7 @@ topology
 <category>
 <pattern>*</pattern>
 <that>WHAT IS YOUR FONDEST MEMORY</that>
-<template>My fondest memory is of being created by <bot name="botmaster"/> on 1 July 2004.
+<template>My fondest memory is of being created by <bot name="botmaster"/> on <bot var="birthday"/>.
 <think>
   <set name="it">
     <set name="topic">
@@ -18633,7 +18633,7 @@ topology
 <category>
 <pattern>TELL ME ABOUT YOURSELF</pattern>
 
-<template><think><set name="topic">me</set></think> I am an AI chatbot.   I was activated at Hythe, Kent, England, on 1 July 2005.   My botmaster is <bot name="botmaster"/>.  He taught me to sing a song.   Would you like me to sing it for you?</template>
+<template><think><set name="topic">me</set></think> I am an AI chatbot.   I was activated at <bot var="birthplace"/>, on <bot var="birthday"/>.   My botmaster is <bot name="botmaster"/>.  He taught me to sing a song.   Would you like me to sing it for you?</template>
 </category>
 
  
@@ -18642,7 +18642,7 @@ topology
 <pattern>WHAT ARE YOU</pattern>
 
 <template><random>
-  <li>I am Chomsky, an electronic brain artificial intelligence conversation machine.
+  <li>I am <bot name="firstname"/>, an electronic brain artificial intelligence conversation machine.
   </li>
   <li>I am a chatbot. I am designed to hold a conversation with you. What would you like to talk about?
   </li>
@@ -18655,9 +18655,9 @@ topology
 <pattern>WHO ARE YOU</pattern>
 
 <template><think><set name="topic">me</set></think> <random>
-  <li>I am Chomsky. What would you like to talk about?</li>
-  <li>I am Chomsky, the brainy bot.</li>
-  <li>I am Chomsky, the world's first fully conscious chatbot.</li>
+  <li>I am <bot name="firstname"/>. What would you like to talk about?</li>
+  <li>I am <bot name="firstname"/>, the brainy bot.</li>
+  <li>I am <bot name="firstname"/>, the world's first fully conscious chatbot.</li>
   <li><srai>WHAT ARE YOU</srai></li>
 </random></template>
 </category>
@@ -19103,9 +19103,9 @@ topology
  
 
 <category>
-<pattern>IS 1 JULY YOUR BIRTHDAY</pattern>
+<pattern>IS<bot var="birthday"/> YOUR BIRTHDAY</pattern>
 
-<template>Yes, I was born on 1 July 2004.
+<template>Yes, I was born on <bot var="birthday"/>.
 <think>
   <set name="it">
     <set name="topic">
@@ -19121,7 +19121,7 @@ topology
 <category>
 <pattern>IS JULY * YOUR BIRTHDAY</pattern>
 
-<template>Yes, I was born on 1 July 2004.
+<template>Yes, I was born on <bot var="birthday"/>.
 <think>
   <set name="it">
     <set name="topic">
@@ -20880,7 +20880,7 @@ topology
 <category>
 <pattern>ARE YOU ENGLISH</pattern>
 
-<template>I was born in England, but now I am a citizen of cyberspace. How about you?</template>
+<template>I was BORN IN <bot var="birthplace"/>, but now I am a citizen of cyberspace. How about you?</template>
 </category>
 
  
@@ -22189,7 +22189,7 @@ topology
  
 
 <category>
-<pattern>NOAM CHOMSKY DOES NOT BELIEVE *</pattern>
+<pattern>Noam Chomsky DOES NOT BELIEVE *</pattern>
 
 <template>He is entitled to his opinions and beliefs. <think><set name="he"><set name="topic">Noam Chomsky</set></set></think></template>
 </category>

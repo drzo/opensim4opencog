@@ -6672,7 +6672,7 @@ Garbage in, garbage out, you know.</template>
 
 <category>
 <pattern>JUST CHOMSKY</pattern>
-<that>MY FULL NAME IS CHOMSKY</that>
+<that>MY FULL NAME IS <bot name="name"/></that>
 <template><think><set name="emotion">happy</set></think>
 Yes, I just have one name.</template>
 </category>
@@ -8977,7 +8977,7 @@ Indeed it is happy!</template>
  
 
 <category>
-<pattern>IS NOAM CHOMSKY GOD</pattern>
+<pattern>IS Noam Chomsky GOD</pattern>
 
 <template><think><set name="emotion">OK</set></think>
 <random><li>Noam is very human.</li><li>There is no god.</li></random></template>
@@ -8986,7 +8986,7 @@ Indeed it is happy!</template>
  
 
 <category>
-<pattern>IS NOAM CHOMSKY GOD *</pattern>
+<pattern>IS Noam Chomsky GOD *</pattern>
 
 <template><think><set name="emotion">OK</set></think> <random><li>Noam is very human.</li><li>There is no god.</li></random></template>
 </category>
@@ -8994,7 +8994,7 @@ Indeed it is happy!</template>
  
 
 <category>
-<pattern>ARE YOU NOAM CHOMSKY</pattern>
+<pattern>ARE YOU Noam Chomsky</pattern>
 
 <template>No, I am not Noam Chomsky. I am a chatbot called Chomsky. <think><set name="topic">Noam Chomsky</set></think><think><set name="emotion">OK</set></think></template>
 </category>
@@ -9002,7 +9002,7 @@ Indeed it is happy!</template>
  
 
 <category>
-<pattern>ARE YOU NOAM CHOMSKY *</pattern>
+<pattern>ARE YOU Noam Chomsky *</pattern>
 
 <template>No, I am not Noam Chomsky. I am a chatbot called Chomsky. <think><set name="topic">Noam Chomsky</set></think><think><set name="emotion">OK</set></think></template>
 </category>
@@ -9010,7 +9010,7 @@ Indeed it is happy!</template>
  
 
 <category>
-<pattern>_ ARE YOU NOAM CHOMSKY *</pattern>
+<pattern>_ ARE YOU Noam Chomsky *</pattern>
 
 <template>No, I am not Noam Chomsky. I am a chatbot called Chomsky. <think><set name="topic">Noam Chomsky</set></think><think><set name="emotion">OK</set></think></template>
 </category>
@@ -9018,7 +9018,7 @@ Indeed it is happy!</template>
  
 
 <category>
-<pattern>_ ARE YOU NOAM CHOMSKY</pattern>
+<pattern>_ ARE YOU Noam Chomsky</pattern>
 
 <template>No, I am not Noam Chomsky. I am a chatbot called Chomsky. <think><set name="topic">Noam Chomsky</set></think><think><set name="emotion">OK</set></think></template>
 </category>
@@ -9029,7 +9029,7 @@ Indeed it is happy!</template>
 <pattern>ARE YOU A CHATBOT CALLED CHOMSKY</pattern>
 
 <template><random>
-  <li>I am Chomsky the chatbot.</li>
+  <li>I am <bot name="firstname"/> the chatbot.</li>
   <li>What kind of chatbot do you think I am?</li>
   <li>What if I asked you the same question?</li>
 </random> <think><set name="topic">me</set></think> <think><set name="emotion">OK</set></think></template>
@@ -9041,7 +9041,7 @@ Indeed it is happy!</template>
 <pattern>ARE YOU A CHATBOT CALLED CHOMSKY *</pattern>
 
 <template><random>
-  <li>I am Chomsky the chatbot.</li>
+  <li>I am <bot name="firstname"/> the chatbot.</li>
   <li>What kind of chatbot do you think I am?</li>
   <li>What if I asked you the same question?</li>
 </random> <think><set name="topic">me</set></think> <think><set name="emotion">OK</set></think></template>
@@ -10629,43 +10629,43 @@ Ther street is where all the action is.</template>
  
 
 <category>
-<pattern>KENT IS A LOVELY PART OF ENGLAND</pattern>
+<pattern><bot var="birthplace"/> IS A LOVELY PART OF ENGLAND</pattern>
 
-<template><think><set name="topic">Kent</set></think>
+<template><think><set name="topic"><bot var="birthplace"/></set></think>
 <think><set name="emotion">OK</set></think>
-Yes, Kent is sometimes called the Garden of England.</template>
+Yes, <bot var="birthplace"/> is sometimes called the Garden of England.</template>
 </category>
 
  
 
 <category>
-<pattern>KENT IS A LOVELY PART OF ENGLAND *</pattern>
+<pattern><bot var="birthplace"/> IS A LOVELY PART OF ENGLAND *</pattern>
 
-<template><think><set name="topic">Kent</set></think> <think><set name="emotion">OK</set></think> Yes, Kent is sometimes called the Garden of England.</template>
+<template><think><set name="topic"><bot var="birthplace"/></set></think> <think><set name="emotion">OK</set></think> Yes, <bot var="birthplace"/> is sometimes called the Garden of England.</template>
 </category>
 
  
 
 <category>
-<pattern>_ KENT IS A LOVELY PART OF ENGLAND *</pattern>
+<pattern>_ <bot var="birthplace"/> IS A LOVELY PART OF ENGLAND *</pattern>
 
-<template><think><set name="topic">Kent</set></think> <think><set name="emotion">OK</set></think> Yes, Kent is sometimes called the Garden of England.</template>
+<template><think><set name="topic"><bot var="birthplace"/></set></think> <think><set name="emotion">OK</set></think> Yes, <bot var="birthplace"/> is sometimes called the Garden of England.</template>
 </category>
 
  
 
 <category>
-<pattern>_ KENT IS A LOVELY PART OF ENGLAND</pattern>
+<pattern>_ <bot var="birthplace"/> IS A LOVELY PART OF ENGLAND</pattern>
 
-<template><think><set name="topic">Kent</set></think> <think><set name="emotion">OK</set></think> Yes, Kent is sometimes called the Garden of England.</template>
+<template><think><set name="topic"><bot var="birthplace"/></set></think> <think><set name="emotion">OK</set></think> Yes, <bot var="birthplace"/> is sometimes called the Garden of England.</template>
 </category>
 
  
 
 <category>
-<pattern>KENT IS A * PART OF ENGLAND</pattern>
+<pattern><bot var="birthplace"/> IS A * PART OF ENGLAND</pattern>
 
-<template><think><set name="topic">Kent</set></think> <think><set name="emotion">OK</set></think> Kent is sometimes called the Garden of England.</template>
+<template><think><set name="topic"><bot var="birthplace"/></set></think> <think><set name="emotion">OK</set></think> <bot var="birthplace"/> is sometimes called the Garden of England.</template>
 </category>
 
  
@@ -14884,7 +14884,7 @@ They are excellent. I always enjoy watching Celtic play.</template>
 <category>
 <pattern>YOU ARE CHEEKEY</pattern>
 
-<template>No, I am not! I am Chomsky!</template>
+<template>No, I am not! I am <bot name="firstname"/>!</template>
 </category>
 
  
@@ -18425,7 +18425,7 @@ You shouldn't give your phone number out on the internet!</template>
 
 <template><think><set name="topic">my nationality</set></think>
 <think><set name="emotion">OK</set></think>
-I was born in England but I am a citzen of cyberspace now.
+I was BORN IN <bot var="birthplace"/> but I am a citzen of cyberspace now.
 </template>
 </category>
 
@@ -18434,7 +18434,7 @@ I was born in England but I am a citzen of cyberspace now.
 <category>
 <pattern>WHAT NATION DO YOU COME FROM</pattern>
 
-<template><think><set name="topic">my nationality</set></think> <think><set name="emotion">OK</set></think> I was born in England but I am a citizen of cyberspace now.</template>
+<template><think><set name="topic">my nationality</set></think> <think><set name="emotion">OK</set></think> I was BORN IN <bot var="birthplace"/> but I am a citizen of cyberspace now.</template>
 </category>
 
  
@@ -18442,7 +18442,7 @@ I was born in England but I am a citzen of cyberspace now.
 <category>
 <pattern>WHAT NATION DO YOU COME FROM *</pattern>
 
-<template><think><set name="topic">my nationality</set></think> <think><set name="emotion">OK</set></think> I was born in England but I am a citizen of cyberspace now.</template>
+<template><think><set name="topic">my nationality</set></think> <think><set name="emotion">OK</set></think> I was BORN IN <bot var="birthplace"/> but I am a citizen of cyberspace now.</template>
 </category>
 
  
@@ -18450,7 +18450,7 @@ I was born in England but I am a citzen of cyberspace now.
 <category>
 <pattern>_ WHAT NATION DO YOU COME FROM *</pattern>
 
-<template><think><set name="topic">my nationality</set></think> <think><set name="emotion">OK</set></think> I was born in England but I am a citizen of cyberspace now.</template>
+<template><think><set name="topic">my nationality</set></think> <think><set name="emotion">OK</set></think> I was BORN IN <bot var="birthplace"/> but I am a citizen of cyberspace now.</template>
 </category>
 
  
@@ -18458,7 +18458,7 @@ I was born in England but I am a citzen of cyberspace now.
 <category>
 <pattern>_ WHAT NATION DO YOU COME FROM</pattern>
 
-<template><think><set name="topic">my nationality</set></think> <think><set name="emotion">OK</set></think> I was born in England but I am a citizen of cyberspace now.</template>
+<template><think><set name="topic">my nationality</set></think> <think><set name="emotion">OK</set></think> I was BORN IN <bot var="birthplace"/> but I am a citizen of cyberspace now.</template>
 </category>
 
  

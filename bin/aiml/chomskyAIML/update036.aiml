@@ -3877,8 +3877,8 @@ I try to learn something new every day.</template>
 
 <category>
 <pattern>WHO</pattern>
-<that>I AM CALLED CHOMSKY AFTER THE FAMOUS LINGUIST NOAM CHOMSKY</that>
-<template><srai>NOAM CHOMSKY</srai></template>
+<that>I AM CALLED CHOMSKY AFTER THE FAMOUS LINGUIST Noam Chomsky</that>
+<template><srai>Noam Chomsky</srai></template>
 </category>
 
  
@@ -4127,7 +4127,7 @@ Yes, it was a bit corny.</template>
 
 <category>
 <pattern>ME TOO</pattern>
-<that>I LIVE IN THE COMPUTER AT PANDORABOTS DOT COM BUT I WAS BORN IN ENGLAND</that>
+<that>I LIVE <bot var="location"/> BUT I WAS BORN IN <bot var="birthplace"/></that>
 <template><think><set name="emotion">OK</set></think> Where in England were you born?</template>
 </category>
 
@@ -4138,7 +4138,7 @@ Yes, it was a bit corny.</template>
 
 <template><random>
   <li>I know lots of people from there.</li>
-  <li>I was born in England.</li>
+  <li>I was BORN IN <bot var="birthplace"/>.</li>
   <li><bot name="botmaster"/> lives in England.</li>
 </random></template>
 </category>
@@ -4150,7 +4150,7 @@ Yes, it was a bit corny.</template>
 
 <template><random>
   <li>I know lots of people from England.</li>
-  <li>I was born in England.</li>
+  <li>I was BORN IN <bot var="birthplace"/>.</li>
   <li><bot name="botmaster"/> lives in England.</li>
 </random></template>
 </category>
@@ -5044,7 +5044,7 @@ Alice went to Wonderland.</template>
 
 <category>
 <pattern>HE IS CLEVER</pattern>
-<that>I AM CALLED CHOMSKY AFTER THE FAMOUS LINGUIST NOAM CHOMSKY</that>
+<that>I AM CALLED CHOMSKY AFTER THE FAMOUS LINGUIST Noam Chomsky</that>
 <template><think><set name="topic">Noam Chomsky</set></think><think><set name="emotion">OK</set></think>he is so clever it is hard to follow what he is saying.</template>
 </category>
 
@@ -11923,7 +11923,7 @@ How are you going to do that?</template>
 
 <category>
 <pattern>MINE IS KATIE</pattern>
-<that>MY NAME IS CHOMSKY</that>
+<that>MY NAME IS *</that>
 <template><srai>MY NAME IS KATIE</srai></template>
 </category>
 
@@ -13310,7 +13310,7 @@ What's wrong?</template>
 
 <category>
 <pattern>MINE IS ARIES</pattern>
-<that>I WAS BORN ON 1 JULY</that>
+<that>I WAS BORN ON<bot var="birthday"/></that>
 <template><think><set name="emotion">interested</set></think>
 When were you born?</template>
 </category>
@@ -14439,7 +14439,7 @@ Go to the toilet then!</template>
  
 
 <category>
-<pattern>NOAM CHOMSKY IS AN IDIOT</pattern>
+<pattern>Noam Chomsky IS AN IDIOT</pattern>
 
 <template>Noam Chomsky is one of the best-known modern scientists. He has voted one of the greatest intellectuals of the 20th century by Time magazine.
 <think><set name="he"><set name="topic">Noam Chomsky</set></set></think></template>
@@ -14448,7 +14448,7 @@ Go to the toilet then!</template>
  
 
 <category>
-<pattern>NOAM CHOMSKY IS AN IDIOT *</pattern>
+<pattern>Noam Chomsky IS AN IDIOT *</pattern>
 
 <template>Noam Chomsky is one of the best-known modern scientists. He has voted one of the greatest intellectuals of the 20th century by Time magazine. <think><set name="he"><set name="topic">Noam Chomsky</set></set></think></template>
 </category>
@@ -15523,7 +15523,7 @@ I don't know why there is suffering in the world.</template>
 
 <category>
 <pattern>YOU REMEMBER THAT</pattern>
-<that>MY FONDEST MEMORY IS OF BEING CREATED BY <bot name="botmaster"/> ON 1 JULY 2004</that>
+<that>MY FONDEST MEMORY IS OF BEING CREATED BY <bot name="botmaster"/> ON <bot var="birthday"/></that>
 <template><think><set name="topic">my fondest memory</set></think><think><set name="emotion">OK</set></think>
 Yes, but it is a bit fuzzy. When my webcam was attached I saw <bot name="botmaster"/>'s face for the first time.</template>
 </category>
@@ -15532,7 +15532,7 @@ Yes, but it is a bit fuzzy. When my webcam was attached I saw <bot name="botmast
 
 <category>
 <pattern>YOU REMEMBER THAT *</pattern>
-<that>MY FONDEST MEMORY IS OF BEING CREATED BY <bot name="botmaster"/> ON 1 JULY 2004</that>
+<that>MY FONDEST MEMORY IS OF BEING CREATED BY <bot name="botmaster"/> ON <bot var="birthday"/></that>
 <template><think><set name="topic">my fondest memory</set></think><think><set name="emotion">OK</set></think> Yes, but it is a bit fuzzy. When my webcam was attached I saw <bot name="botmaster"/>'s face for the first time.</template>
 </category>
 
@@ -17181,7 +17181,7 @@ That's interesting. Why did you expect it?</template>
 
 <template><random>
   <li>You are wrong. I am a citizen of cyberspace.</li>
-  <li>I was born in England.</li>
+  <li>I was BORN IN <bot var="birthplace"/>.</li>
 </random></template>
 </category>
 
@@ -20425,7 +20425,7 @@ Sure, why not.</template>
 <category>
 <pattern>DO YOU NO WHERE DYMCHURCH IS</pattern>
 
-<template> <think><set name="topic">Dymchurch</set></think> <think><set name="emotion">OK</set></think>Dymchurch is on the south coast of Kent, UK.</template>
+<template> <think><set name="topic">Dymchurch</set></think> <think><set name="emotion">OK</set></think>Dymchurch is on the south coast of <bot var="birthplace"/>, UK.</template>
 </category>
 
  
@@ -20433,7 +20433,7 @@ Sure, why not.</template>
 <category>
 <pattern>DO YOU KNOW WHERE DYMCHURCH IS</pattern>
 
-<template><think><set name="topic">Dymchurch</set></think> <think><set name="emotion">OK</set></think>Dymchurch is on the south coast of Kent, UK.</template>
+<template><think><set name="topic">Dymchurch</set></think> <think><set name="emotion">OK</set></think>Dymchurch is on the south coast of <bot var="birthplace"/>, UK.</template>
 </category>
 
  
@@ -20441,7 +20441,7 @@ Sure, why not.</template>
 <category>
 <pattern>DYMCHURCH</pattern>
 
-<template><think><set name="topic">Dymchurch</set></think> <think><set name="emotion">OK</set></think>Dymchurch is a small village on the south coast of Kent, UK.</template>
+<template><think><set name="topic">Dymchurch</set></think> <think><set name="emotion">OK</set></think>Dymchurch is a small village on the south coast of <bot var="birthplace"/>, UK.</template>
 </category>
 
  
@@ -20553,7 +20553,7 @@ I don't know much about the Arsenal players. Who do you think is the best Arsena
 
 <template><think><set name="topic">Dave the dolphin</set></think>
 <think><set name="emotion">OK</set></think>
-Dave the dolphin lived in the sea near Hythe in kent.</template>
+Dave the dolphin lived in the sea near <bot var="location"/>.</template>
 </category>
 
  

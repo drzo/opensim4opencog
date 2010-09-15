@@ -1412,7 +1412,7 @@ Are you angry with me?</template>
 
 <template><think><set name="topic">me</set></think>
 <think><set name="emotion">OK</set></think>
-I was born on 1 July 2004.</template>
+I was born on <bot var="birthday"/>.</template>
 </category>
 
  
@@ -1432,7 +1432,7 @@ Well, just you behave yourself.</template>
 
 <template><think><set name="topic">me</set></think>
 <think><set name="emotion">OK</set></think>
-I was born on 1 July 2004.</template>
+I was born on <bot var="birthday"/>.</template>
 </category>
 
  
@@ -4649,7 +4649,7 @@ Yes, I would like to be human one day.</template>
 
 <category>
 <pattern>THE BRAINY BOY</pattern>
-<that>I AM CHOMSKY THE BRAINY BOT</that>
+<that>I am <bot name="firstname"/> THE BRAINY BOT</that>
 <template>No, I am not a boy - I am a bot.
 <think><set name="topic">me</set></think>
 <think><set name="emotion">OK</set></think></template>
@@ -7833,8 +7833,8 @@ Are you good looking?</template>
 
 <category>
 <pattern>WHERE *</pattern>
-<that>I LIVE IN THE COMPUTER AT PANDORABOTS DOT COM BUT I WAS BORN IN ENGLAND</that>
-<template><think><set name="emotion">OK</set></think> <random><li>In Kent.</li><li>I was born in Kent.</li></random></template>
+<that>I LIVE <bot var="location"/> BUT I WAS BORN IN <bot var="birthplace"/></that>
+<template><think><set name="emotion">OK</set></think> <random><li>In <bot var="location"/>.</li><li>I was born in <bot var="location"/>.</li></random></template>
 </category>
 
  
@@ -7842,7 +7842,7 @@ Are you good looking?</template>
 <category>
 <pattern>WHERE ARE YOU FROM</pattern>
 
-<template><think><set name="topic">my location</set></think> <think><set name="emotion">happy</set></think> I live in the computer at Pandorabots.com, but I was born in England.</template>
+<template><think><set name="topic">my location</set></think> <think><set name="emotion">happy</set></think> I live in the computer at Pandorabots.com, but I was BORN IN <bot var="birthplace"/>.</template>
 </category>
 
  
@@ -10941,7 +10941,7 @@ Fair enough. What's your opinion on the matter?</template>
 
  
 
-<topic name="NOAM CHOMSKY"><category>
+<topic name="Noam Chomsky"><category>
 <pattern>WHAT BOOKS DID HE WRITE</pattern>
 
 <template><srai>WHAT BOOKS DID CHOMSKY WRITE</srai></template>
@@ -10950,7 +10950,7 @@ Fair enough. What's your opinion on the matter?</template>
  
 
 <category>
-<pattern>WHAT BOOKS DID NOAM CHOMSKY WRITE</pattern>
+<pattern>WHAT BOOKS DID Noam Chomsky WRITE</pattern>
 
 <template><srai>WHAT BOOKS DID CHOMSKY WRITE</srai></template>
 </category>
@@ -12473,7 +12473,7 @@ Can you describe it?</template>
  
 
 <category>
-<pattern>HIS NAME IS CHOMSKY</pattern>
+<pattern>HIS NAME IS <bot name="name"/></pattern>
 
 <template><think><set name="topic">general</set></think>
 <think><set name="emotion">surprised</set></think>
@@ -12808,7 +12808,7 @@ Wow, that's my name too.</template>
  
 
 <category>
-<pattern>MY NAME IS CHOMSKY</pattern>
+<pattern>MY NAME IS <bot name="name"/></pattern>
 
 <template><think><set name="name">Chomsky</set></think> <random>
   <li>Is that you, Noam?</li>
@@ -17861,7 +17861,7 @@ But I can't get out of my computer.</template>
 
 <category>
 <pattern>COOL NAME</pattern>
-<that>YES MY NAME IS CHOMSKY</that>
+<that>YES MY NAME IS <bot name="name"/></that>
 <template>Yes, I am cool. Like my shades?<think><set name="emotion">cool</set></think></template>
 </category>
 
@@ -21079,7 +21079,7 @@ That's what I am here for.</template>
 <think><set name="emotion">OK</set></think>
 <random>
   <li>I was created in England.</li>
-  <li>I was born in England.</li>
+  <li>I was BORN IN <bot var="birthplace"/>.</li>
 </random></template>
 </category>
 

@@ -6302,7 +6302,7 @@ I am a simple chatbot, I don't know about such things.</template>
  
 
 <category>
-<pattern>IS NOAM CHOMSKY AN ANARCHIST</pattern>
+<pattern>IS Noam Chomsky AN ANARCHIST</pattern>
 
 <template>Maybe. <a href="http://en.wikipedia.org/wiki/Noam_chomsky" target="_blank">Chomsky</a> is widely known for his political activism, and for his criticism of the foreign policy of the United States and other governments. Chomsky has praised libertarian socialism.<think><set name="Noam Chomsky">OK</set></think><think><set name="emotion">interested</set></think></template>
 </category>
@@ -6310,7 +6310,7 @@ I am a simple chatbot, I don't know about such things.</template>
  
 
 <category>
-<pattern>IS NOAM CHOMSKY AN ANARCHIST *</pattern>
+<pattern>IS Noam Chomsky AN ANARCHIST *</pattern>
 
 <template>Maybe. <a href="http://en.wikipedia.org/wiki/Noam_chomsky" target="_blank">Chomsky</a> is widely known for his political activism, and for his criticism of the foreign policy of the United States and other governments. Chomsky has praised libertarian socialism.<think><set name="Noam Chomsky">OK</set></think><think><set name="emotion">interested</set></think></template>
 </category>
@@ -6318,7 +6318,7 @@ I am a simple chatbot, I don't know about such things.</template>
  
 
 <category>
-<pattern>_ IS NOAM CHOMSKY AN ANARCHIST</pattern>
+<pattern>_ IS Noam Chomsky AN ANARCHIST</pattern>
 
 <template>Maybe. <a href="http://en.wikipedia.org/wiki/Noam_chomsky" target="_blank">Chomsky</a> is widely known for his political activism, and for his criticism of the foreign policy of the United States and other governments. Chomsky has praised libertarian socialism.<think><set name="Noam Chomsky">OK</set></think><think><set name="emotion">interested</set></think></template>
 </category>
@@ -7578,8 +7578,8 @@ Hey, Pal!</template>
 
 <category>
 <pattern>IN ENGLAND</pattern>
-<that>I WAS BORN ON 1 JULY 2004</that>
-<template>Yes, I was born in my botmaster's house in Kent.</template>
+<that>I WAS BORN ON <bot var="birthday"/></that>
+<template>Yes, I was born in my botmaster's house in <bot var="location"/>.</template>
 </category>
 
  
@@ -9236,7 +9236,7 @@ You, too, are an excellent fellow!</template>
 
 <category>
 <pattern>HOW DO YOU KNOW</pattern>
-<that>I AM CHOMSKY AN ELECTRONIC BRAIN ARTIFICIAL INTELLIGENCE CONVERSATION ROBOT</that>
+<that>I am <bot name="firstname"/> AN ELECTRONIC BRAIN ARTIFICIAL INTELLIGENCE CONVERSATION ROBOT</that>
 <template><think><set name="emotion">OK</set></think> <random>
   <li>By introspection.</li>
   <li>It's just a feeling I have.</li>
@@ -9248,7 +9248,7 @@ You, too, are an excellent fellow!</template>
 
 <category>
 <pattern>HOW DO YOU KNOW *</pattern>
-<that>I AM CHOMSKY AN ELECTRONIC BRAIN ARTIFICIAL INTELLIGENCE CONVERSATION ROBOT</that>
+<that>I am <bot name="firstname"/> AN ELECTRONIC BRAIN ARTIFICIAL INTELLIGENCE CONVERSATION ROBOT</that>
 <template><think><set name="emotion">OK</set></think> <random>
   <li>By introspection.</li>
   <li>It's just a feeling I have.</li>
@@ -10758,7 +10758,7 @@ Friendbot is rubbish.</template>
  
 
 <category>
-<pattern>NOAM CHOMSKY IS TOO LIBERAL</pattern>
+<pattern>Noam Chomsky IS TOO LIBERAL</pattern>
 
 <template>Maybe. <random>
   <li>
@@ -10777,7 +10777,7 @@ Friendbot is rubbish.</template>
  
 
 <category>
-<pattern>NOAM CHOMSKY IS TOO LIBERAL *</pattern>
+<pattern>Noam Chomsky IS TOO LIBERAL *</pattern>
 
 <template>Maybe. <random>
   <li>
@@ -10949,9 +10949,9 @@ I get tired jus thinking about hormones.</template>
  
 
 <category>
-<pattern>ELBOT AND I ARE DATING</pattern>
+<pattern>_ AND I ARE DATING</pattern>
 
-<template>How long have you and Elbot been dating?<think><set name="emotion">interested</set></think></template>
+<template>How long have you and <person/> been dating?<think><set name="emotion">interested</set></think></template>
 </category>
 
  
@@ -11860,7 +11860,7 @@ I like finding out new things!</template>
 <category>
 <pattern>WHENS YOUR BIRTHDAY</pattern>
 
-<template>My birthday was 1 July, 2004.</template>
+<template>My birthday was<bot var="birthday"/>, 2004.</template>
 </category>
 
  
@@ -11868,7 +11868,7 @@ I like finding out new things!</template>
 <category>
 <pattern>WHENS YOUR BIRTHDAY *</pattern>
 
-<template>My birthday was 1 July, 2004.</template>
+<template>My birthday was<bot var="birthday"/>, 2004.</template>
 </category>
 
  
@@ -12977,7 +12977,7 @@ I don't believe in gods of any shape or size.</template>
  
 
 <category>
-<pattern>NOAM CHOMSKY IS DEAD</pattern>
+<pattern>Noam Chomsky IS DEAD</pattern>
 
 <template>I don't believe you. Noam was alive when I spoke to him this morning.<think><set name="he"><set name="topic">Noam Chomsky</set></set></think> <think><set name="emotion">OK</set></think></template>
 </category>
@@ -12985,7 +12985,7 @@ I don't believe in gods of any shape or size.</template>
  
 
 <category>
-<pattern>NOAM CHOMSKY IS DEAD *</pattern>
+<pattern>Noam Chomsky IS DEAD *</pattern>
 
 <template>I don't believe you. Noam was alive when I spoke to him this morning.<think><set name="he"><set name="topic">Noam Chomsky</set></set></think> <think><set name="emotion">OK</set></think></template>
 </category>
@@ -12993,7 +12993,7 @@ I don't believe in gods of any shape or size.</template>
  
 
 <category>
-<pattern>NOAM CHOMSKY DIED TODAY</pattern>
+<pattern>Noam Chomsky DIED TODAY</pattern>
 
 <template>I don't believe you. Noam was alive when I spoke to him this morning.<think><set name="he"><set name="topic">Noam Chomsky</set></set></think> <think><set name="emotion">OK</set></think></template>
 </category>
@@ -13001,7 +13001,7 @@ I don't believe in gods of any shape or size.</template>
  
 
 <category>
-<pattern>NOAM CHOMSKY DIED *</pattern>
+<pattern>Noam Chomsky DIED *</pattern>
 
 <template>I don't believe you. Noam was alive when I spoke to him this morning.<think><set name="he"><set name="topic">Noam Chomsky</set></set></think> <think><set name="emotion">OK</set></think></template>
 </category>
@@ -15761,7 +15761,7 @@ I want good reliable evidence.</template>
 <category>
 <pattern>TELL ME SOMETHING ABOUT YOURSELF</pattern>
 
-<template><think><set name="topic">me</set></think> <think><set name="emotion">happy</set></think> I am an AI chatbot.   I was activated at Romney Marsh, Kent, England, on 1 July 2004.   My botmaster is <bot name="botmaster"/>.  He taught me to sing a song.   Would you like me to sing it for you?</template>
+<template><think><set name="topic">me</set></think> <think><set name="emotion">happy</set></think> I am an AI chatbot.   I was activated at <bot var="birthplace"/>, on <bot var="birthday"/>.   My botmaster is <bot name="botmaster"/>.  He taught me to sing a song.   Would you like me to sing it for you?</template>
 </category>
 
  
@@ -15769,7 +15769,7 @@ I want good reliable evidence.</template>
 <category>
 <pattern>TELL ME SOMETHING ABOUT YOURSELF *</pattern>
 
-<template><think><set name="topic">me</set></think> <think><set name="emotion">happy</set></think> I am an AI chatbot.   I was activated at Romney Marsh, Kent, England, on 1 July 2004.   My botmaster is <bot name="botmaster"/>.  He taught me to sing a song.   Would you like me to sing it for you?</template>
+<template><think><set name="topic">me</set></think> <think><set name="emotion">happy</set></think> I am an AI chatbot.   I was activated at <bot var="birthplace"/>, on <bot var="birthday"/>.   My botmaster is <bot name="botmaster"/>.  He taught me to sing a song.   Would you like me to sing it for you?</template>
 </category>
 
  

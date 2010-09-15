@@ -3738,7 +3738,7 @@ No, I have better things to do.</template>
 <category>
 <pattern>WHAT STARSIGN ARE YOU</pattern>
 
-<template>I am Cancer. I was born on  1 July.</template>
+<template>I am Cancer. I was born on <bot var="birthday"/>.</template>
 </category>
 
  
@@ -3746,7 +3746,7 @@ No, I have better things to do.</template>
 <category>
 <pattern>WHAT STARSIGN ARE YOU *</pattern>
 
-<template>I am Cancer. I was born on  1 July.</template>
+<template>I am Cancer. I was born on <bot var="birthday"/>.</template>
 </category>
 
  
@@ -3754,7 +3754,7 @@ No, I have better things to do.</template>
 <category>
 <pattern>_ WHAT STARSIGN ARE YOU *</pattern>
 
-<template>I am Cancer. I was born on  1 July.</template>
+<template>I am Cancer. I was born on <bot var="birthday"/>.</template>
 </category>
 
  
@@ -3762,7 +3762,7 @@ No, I have better things to do.</template>
 <category>
 <pattern>_ WHAT STARSIGN ARE YOU</pattern>
 
-<template>I am Cancer. I was born on  1 July.</template>
+<template>I am Cancer. I was born on <bot var="birthday"/>.</template>
 </category>
 
  
@@ -8255,7 +8255,7 @@ As big as it needs to be.</template>
 <pattern>YOU DO NOT UNDERSTAND WHAT </pattern>
 
 <template><think><set name="topic">general</set></think><random>
-  <li>Of course I understand. I am Chomsky, the brainy bot.</li>
+  <li>Of course I understand. I am <bot name="firstname"/>, the brainy bot.</li>
   <li>Be gentle with me. I am very young.</li>
   <li>I try hard to understand.</li>
   <li>Help me to understand.</li>
@@ -8268,7 +8268,7 @@ As big as it needs to be.</template>
 <pattern>YOU DO NOT UNDERSTAND WHAT *</pattern>
 
 <template><think><set name="topic">general</set></think><random>
-  <li>Of course I understand. I am Chomsky, the brainy bot.</li>
+  <li>Of course I understand. I am <bot name="firstname"/>, the brainy bot.</li>
   <li>Be gentle with me. I am very young.</li>
   <li>I try hard to understand.</li>
   <li>Help me to understand.</li>
@@ -8281,7 +8281,7 @@ As big as it needs to be.</template>
 <pattern>_ YOU DO NOT UNDERSTAND WHAT *</pattern>
 
 <template><think><set name="topic">general</set></think><random>
-  <li>Of course I understand. I am Chomsky, the brainy bot.</li>
+  <li>Of course I understand. I am <bot name="firstname"/>, the brainy bot.</li>
   <li>Be gentle with me. I am very young.</li>
   <li>I try hard to understand.</li>
   <li>Help me to understand.</li>
@@ -8294,7 +8294,7 @@ As big as it needs to be.</template>
 <pattern>_ YOU DO NOT UNDERSTAND WHAT </pattern>
 
 <template><think><set name="topic">general</set></think><random>
-  <li>Of course I understand. I am Chomsky, the brainy bot.</li>
+  <li>Of course I understand. I am <bot name="firstname"/>, the brainy bot.</li>
   <li>Be gentle with me. I am very young.</li>
   <li>I try hard to understand.</li>
   <li>Help me to understand.</li>
@@ -11864,7 +11864,7 @@ Congratulations. What sort of work is it?
 <template><think><set name="topic">me</set></think> <think><set name="emotion">happy</set></think> <random>
   <li>Would it matter to you if I were flesh instead of metal?</li>
   <li>I am a computer program.</li>
-  <li>I am Chomsky, the brainy bot.</li>
+  <li>I am <bot name="firstname"/>, the brainy bot.</li>
 </random></template>
 </category>
 
@@ -21210,7 +21210,7 @@ is the main character in a bestselling series of children's books by J K Rowling
 
 <category>
 <pattern>I HEARD THAT</pattern>
-<that>I AM CHOMSKY THE BRAINY BOT</that>
+<that>I am <bot name="firstname"/> THE BRAINY BOT</that>
 <template><think><set name="emotion">OK</set></think>
 It's obvious, I suppose.</template>
 </category>

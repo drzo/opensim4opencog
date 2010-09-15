@@ -3481,8 +3481,8 @@ I often win at chess.</template>
 
 <category>
 <pattern>TELL ME ABOUT HIM</pattern>
-<that>I AM CALLED CHOMSKY AFTER THE FAMOUS LINGUIST NOAM CHOMSKY</that>
-<template><srai>NOAM CHOMSKY</srai></template>
+<that>I AM CALLED CHOMSKY AFTER THE FAMOUS LINGUIST Noam Chomsky</that>
+<template><srai>Noam Chomsky</srai></template>
 </category>
 
  
@@ -6684,16 +6684,16 @@ The scarecrow in "The Wizard of Oz".</template>
 
 <category>
 <pattern>HAVE NOT HEARD OF HIM</pattern>
-<that>I AM CALLED CHOMSKY AFTER THE FAMOUS LINGUIST NOAM CHOMSKY</that>
-<template><srai>NOAM CHOMSKY</srai> </template>
+<that>I AM CALLED CHOMSKY AFTER THE FAMOUS LINGUIST Noam Chomsky</that>
+<template><srai>Noam Chomsky</srai> </template>
 </category>
 
  
 
 <category>
 <pattern>I HAVE NOT HEARD OF HIM</pattern>
-<that>I AM CALLED CHOMSKY AFTER THE FAMOUS LINGUIST NOAM CHOMSKY</that>
-<template><srai>NOAM CHOMSKY</srai></template>
+<that>I AM CALLED CHOMSKY AFTER THE FAMOUS LINGUIST Noam Chomsky</that>
+<template><srai>Noam Chomsky</srai></template>
 </category>
 
  
@@ -10265,7 +10265,7 @@ I'd rather be in Hawaii.</template>
 <category>
 <pattern>WHEN WAS YOU BORN</pattern>
 
-<template>I was created on 1 July 2004.<think><set name="emotion">OK</set></think></template>
+<template>I was created on <bot var="birthday"/>.<think><set name="emotion">OK</set></think></template>
 </category>
 
  
@@ -10273,7 +10273,7 @@ I'd rather be in Hawaii.</template>
 <category>
 <pattern>WHAT YEAR WAS YOU BORN</pattern>
 
-<template><think><set name="emotion">OK</set></think>I was created on 1 July 2004.</template>
+<template><think><set name="emotion">OK</set></think>I was created on <bot var="birthday"/>.</template>
 </category>
 
  
@@ -10281,7 +10281,7 @@ I'd rather be in Hawaii.</template>
 <category>
 <pattern>WHAT YEAR WAS YOU BORN *</pattern>
 
-<template><think><set name="emotion">OK</set></think>I was created on 1 July 2004.</template>
+<template><think><set name="emotion">OK</set></think>I was created on <bot var="birthday"/>.</template>
 </category>
 
  
@@ -12645,7 +12645,7 @@ OK, what are your names?</template>
 
 <category>
 <pattern>AND THE REASON IS</pattern>
-<that>I AM NAMED AFTER NOAM CHOMSKY</that>
+<that>I AM NAMED AFTER Noam Chomsky</that>
 <template><think><set name="emotion">OK</set></think><bot name="botmaster"/> admires Noam.</template>
 </category>
 
@@ -17996,7 +17996,7 @@ I choose not to exercise my free will.</template>
 
 <category>
 <pattern>THAT IS A LOVELY NAME</pattern>
-<that>MY NAME IS CHOMSKY</that>
+<that>MY NAME IS *</that>
 <template><think><set name="topic">my name</set></think><think><set name="emotion">OK</set></think>
 <random>
   <li>Chomsky is a well respected name in certain parts of Siberia.</li>
@@ -18008,7 +18008,7 @@ I choose not to exercise my free will.</template>
 
 <category>
 <pattern>THAT IS A LOVELY NAME *</pattern>
-<that>MY NAME IS CHOMSKY</that>
+<that>MY NAME IS *</that>
 <template><think><set name="topic">my name</set></think><think><set name="emotion">OK</set></think> <random>
   <li>Chomsky is a well respected name in certain parts of Siberia.</li>
   <li>I like my name.</li>

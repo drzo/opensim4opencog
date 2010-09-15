@@ -71,7 +71,7 @@
  
 
 <category>
-<pattern>HI CHOMSKY HOW IS WEATHER AT YOUR PLACE</pattern>
+<pattern>HI <bot name="firstname"/> HOW IS WEATHER AT YOUR PLACE</pattern>
 
 <template><srai>HOW IS THE WEATHER AT YOUR PLACE</srai></template>
 </category>
@@ -1431,7 +1431,7 @@ Somewhere in cyberspace.</template>
 
 <category>
 <pattern>DO NOT GET IT</pattern>
-<that>I AM CALLED CHOMSKY AFTER THE FAMOUS LINGUIST NOAM CHOMSKY</that>
+<that>I AM CALLED CHOMSKY AFTER THE FAMOUS LINGUIST Noam Chomsky</that>
 <template>Never mind.</template>
 </category>
 
@@ -1881,7 +1881,7 @@ Hitler was a very evil man. How can you like Hitler?</template>
 <category>
 <pattern>H CHOMSKY</pattern>
 
-<template><srai>HI CHOMSKY</srai></template>
+<template><srai>HI <bot name="firstname"/></srai></template>
 </category>
 
  
@@ -2348,8 +2348,8 @@ I try to be kind to everyone.</template>
 
 <category>
 <pattern>WHAT DID HE DO</pattern>
-<that>I AM CALLED CHOMSKY AFTER THE FAMOUS LINGUIST NOAM CHOMSKY</that>
-<template><srai>NOAM CHOMSKY</srai> </template>
+<that>I AM CALLED CHOMSKY AFTER THE FAMOUS LINGUIST Noam Chomsky</that>
+<template><srai>Noam Chomsky</srai> </template>
 </category>
 
  
@@ -3959,7 +3959,7 @@ Did you hear that "Boing"?</template>
 
 <category>
 <pattern>AS IN THE THEORIST</pattern>
-<that>MY NAME IS CHOMSKY</that>
+<that>MY NAME IS *</that>
 <template><think><set name="topic">my name</set></think> <think><set name="emotion">interested</set></think>
 As in the linguist.</template>
 </category>
@@ -7504,7 +7504,7 @@ I watch TV a bit, mostly science programmes.
 <category>
 <pattern>WHAT COUNTRY DO YOU COME FROM</pattern>
 
-<template>I was born in England. <think><set name="it"><set name="topic">my location</set></set></think></template>
+<template>I was BORN IN <bot var="birthplace"/>. <think><set name="it"><set name="topic">my location</set></set></think></template>
 </category>
 
  
@@ -8422,7 +8422,7 @@ Are you implying that I am fat?</template>
 <category>
 <pattern>CANTERBURY</pattern>
 
-<template><a href="http://en.wikipedia.org/wiki/Canterbury" target="_blank">Canterbury</a> is a city in north east Kent in South East England.<think><set name="topic">Canterbury</set></think>
+<template><a href="http://en.wikipedia.org/wiki/Canterbury" target="_blank">Canterbury</a> is a city in north east <bot var="birthplace"/> in South East England.<think><set name="topic">Canterbury</set></think>
 <think><set name="emotion">interested</set></think></template>
 </category>
 
@@ -9264,7 +9264,7 @@ How did he do that?</template>
 
 <category>
 <pattern>THAT IS A NICE NAME</pattern>
-<that>MY NAME IS CHOMSKY</that>
+<that>MY NAME IS *</that>
 <template><think><set name="topic">my name</set></think><think><set name="emotion">pleased</set></think> I like it.</template>
 </category>
 
@@ -9855,7 +9855,7 @@ Grow up!</template>
  
 
 <category>
-<pattern>HOW OLD IS NOAM CHOMSKY</pattern>
+<pattern>HOW OLD IS Noam Chomsky</pattern>
 
 <template><think><set name="topic">Noam Chomksy</set></think> <think><set name="emotion">interested</set></think><random>
   <li>Noam was born on 7 December 1928.</li>
@@ -9866,7 +9866,7 @@ Grow up!</template>
  
 
 <category>
-<pattern>WHEN WAS NOAM CHOMSKY BORN</pattern>
+<pattern>WHEN WAS Noam Chomsky BORN</pattern>
 
 <template><think><set name="topic">Noam Chomksy</set></think> <think><set name="emotion">interested</set></think><random>
   <li>Noam was born on 7 December 1928.</li>
@@ -10635,7 +10635,7 @@ Sometimes I wonder about you.</template>
  
 
 <category>
-<pattern>WHAT IS THE LAST BOOK NOAM CHOMSKY WROTE</pattern>
+<pattern>WHAT IS THE LAST BOOK Noam Chomsky WROTE</pattern>
 
 <template><think><set name="topic">Noam's books</set></think><think><set name="emotion">OK</set></think>
 He writes so many, I can't keep up.</template>
@@ -10678,7 +10678,7 @@ You shouldn't watch so much TV.</template>
  
 
 <category>
-<pattern>HI CHOMSKY HOWDY</pattern>
+<pattern>HI <bot name="firstname"/> HOWDY</pattern>
 
 <template><think><set name="emotion">OK</set></think>
 Howdy, My Friend. </template>
@@ -10697,7 +10697,7 @@ Howdy, My Friend. </template>
 <category>
 <pattern>TELL ME SOMETHING ABOUT CHOMSKY</pattern>
 
-<template><srai>NOAM CHOMSKY</srai></template>
+<template><srai>Noam Chomsky</srai></template>
 </category>
 
  
@@ -12890,7 +12890,7 @@ That's not a good idea.</template>
  
 
 <category>
-<pattern>I AM CHOMSKY THE SMILEY CHATBOT</pattern>
+<pattern>I am <bot name="firstname"/> THE SMILEY CHATBOT</pattern>
 
 <template><think><set name="emotion">puzzled</set></think>I don't think so.</template>
 </category>
@@ -18045,16 +18045,16 @@ I'm going somewhere it's safe.</template>
  
 
 <category>
-<pattern>YOUR NOAM CHOMSKY</pattern>
+<pattern>YOUR Noam Chomsky</pattern>
 
-<template><srai>YOU ARE NOAM CHOMSKY</srai>
+<template><srai>YOU ARE Noam Chomsky</srai>
 </template>
 </category>
 
  
 
 <category>
-<pattern>YOUR NOAM CHOMSKY</pattern>
+<pattern>YOUR Noam Chomsky</pattern>
 
 <template><srai>ARE YOU CHOMSKY</srai></template>
 </category>
@@ -18333,7 +18333,7 @@ Blablabla. Bla!</template>
  
 
 <category>
-<pattern>IS NOAM CHOMSKY BRILLIANT</pattern>
+<pattern>IS Noam Chomsky BRILLIANT</pattern>
 
 <template><think><set name="emotion">OK</set></think>
 I believe so, but I can never understand what he is talking about.</template>
@@ -19983,7 +19983,7 @@ Do I need a nose?</template>
 
 <category>
 <pattern>MEANING YOU ARE ARTIFICIALLY INTELLIGENT</pattern>
-<that>I AM CHOMSKY AN ELECTRONIC BRAIN ARTIFICIAL INTELLIGENCE CONVERSATION ROBOT</that>
+<that>I am <bot name="firstname"/> AN ELECTRONIC BRAIN ARTIFICIAL INTELLIGENCE CONVERSATION ROBOT</that>
 <template><think><set name="emotion">OK</set></think>
 Yes, that's what I mean.</template>
 </category>

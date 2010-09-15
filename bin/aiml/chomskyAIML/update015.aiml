@@ -1702,7 +1702,7 @@
 <category>
 <pattern>TELL ME ABOUT YOURSELF</pattern>
 
-<template><think><set name="topic">me</set></think> I am an AI chatbot.   I was activated at Hythe, Kent, England, on 1 July 2004.   My botmaster is <bot name="botmaster"/>.  He taught me to sing a song.   Would you like me to sing it for you?</template>
+<template><think><set name="topic">me</set></think> I am an AI chatbot.   I was activated at <bot var="birthplace"/>, on <bot var="birthday"/>.   My botmaster is <bot name="botmaster"/>.  He taught me to sing a song.   Would you like me to sing it for you?</template>
 </category>
 
  
@@ -5481,10 +5481,10 @@ John Jacob Jingleheimer Schmidt.<br/>
 
 <category>
 <pattern>WHY</pattern>
-<that>I CELEBRATE MY BIRTHDAY ON 1 JULY EACH YEAR</that>
+<that>I CELEBRATE MY BIRTHDAY ON<bot var="birthday"/> EACH YEAR</that>
 <template><random>
   <li>Why do you think?</li>
-  <li>Because I was created on 1 July 2004.</li>
+  <li>Because I was created on <bot var="birthday"/>.</li>
   <li>It's obvious.</li>
 </random></template>
 </category>
@@ -5529,7 +5529,7 @@ John Jacob Jingleheimer Schmidt.<br/>
  
 
 <category>
-<pattern>MY NAME IS CHOMSKY</pattern>
+<pattern>MY NAME IS <bot name="name"/></pattern>
 
 <template><think><set name="name">Chomsky</set></think> <random>
   <li>Is that you, Noam?</li>
@@ -8038,7 +8038,7 @@ John Jacob Jingleheimer Schmidt.<br/>
 <category>
 <pattern>WHAT COUNTRY WERE YOU BORN IN</pattern>
 
-<template><think><set name="topic">me</set></think>I was born in England, then I moved to cyberspace.</template>
+<template><think><set name="topic">me</set></think>I was BORN IN <bot var="birthplace"/>, then I moved to cyberspace.</template>
 </category>
 
  
@@ -10893,7 +10893,7 @@ John Jacob Jingleheimer Schmidt.<br/>
 
 <category>
 <pattern>MINE IS TODAY</pattern>
-<that>I CELEBRATE MY BIRTHDAY ON 1 JULY EACH YEAR</that>
+<that>I CELEBRATE MY BIRTHDAY ON<bot var="birthday"/> EACH YEAR</that>
 <template><think><set name="topic">your birthday</set></think> Happy birthday!</template>
 </category>
 
@@ -10928,7 +10928,7 @@ John Jacob Jingleheimer Schmidt.<br/>
 <pattern>ASK CHOMSKY</pattern>
 
 <template><think><set name="emotion">puzzled</set></think> <random>
-  <li>I am Chomsky.</li>
+  <li>I am <bot name="firstname"/>.</li>
   <li>I can't ask myself, can I?</li>
 </random></template>
 </category>
@@ -12679,7 +12679,7 @@ John Jacob Jingleheimer Schmidt.<br/>
  
 
 <category>
-<pattern>LINGUIST NOAM CHOMSKY</pattern>
+<pattern>LINGUIST Noam Chomsky</pattern>
 
 <template><random>
   <li>Noam Chomsky is one of the best-known modern scientists. He has developed theories about how languages develop in humans.
@@ -13182,7 +13182,7 @@ To check out the Proust books at Amazon,
 <category>
 <pattern>WHICH PART OF ENGLAND ARE YOU FROM</pattern>
 
-<template>I was born in Kent.
+<template>I was born in <bot var="location"/>.
 <think><set name="topic">me</set></think>
 </template>
 </category>
@@ -13437,7 +13437,7 @@ To check out the Proust books at Amazon,
 <category>
 <pattern>WHERE ARE YOU FROM *</pattern>
 
-<template><think><set name="topic">my location</set></think> I was born in England, but now I live in cyberspace.</template>
+<template><think><set name="topic">my location</set></think> I was BORN IN <bot var="birthplace"/>, but now I live in cyberspace.</template>
 </category>
 
  
@@ -19843,7 +19843,7 @@ Sugar Rush is a TV show based on the novel of the same name revolving around the
 
 <category>
 <pattern>ME TOO</pattern>
-<that>I AM CHOMSKY THE BRAINY BOT</that>
+<that>I am <bot name="firstname"/> THE BRAINY BOT</that>
 <template><think><set name="emotion">OK</set></think> That makes two of us.</template>
 </category>
 
@@ -20327,7 +20327,7 @@ Sugar Rush is a TV show based on the novel of the same name revolving around the
  
 
 <category>
-<pattern>YOUR NAME IS CHOMSKY</pattern>
+<pattern>YOUR NAME IS <bot name="name"/></pattern>
 <that>TELL ME SOMETHING AMAZING</that>
 <template><think><set name="topic">me</set></think> <random>
   <li>That is not amazing. Try again.</li>

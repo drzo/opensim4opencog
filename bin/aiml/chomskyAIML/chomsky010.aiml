@@ -231,12 +231,12 @@ It is personal. OK?
 It is personal. OK?
 </template></category>
 
-<category><pattern>WHY ARE YOU CALLED CHOMSKY</pattern>
+<category><pattern>WHY ARE YOU CALLED *</pattern>
 <template><think><set name="topic">general</set></think>
 I am named after the famous linguist Noam Chomsky. Nobody can understand a word he says, either. OK?
 </template></category>
 
-<category><pattern>ARE YOU NAMED AFTER NOAM CHOMSKY</pattern>
+<category><pattern>ARE YOU NAMED AFTER Noam Chomsky</pattern>
 <template><think><set name="topic">general</set></think>
 Yes. I am named after the famous linguist Noam Chomsky. Nobody can understand a word he says, either. OK?
 </template></category>

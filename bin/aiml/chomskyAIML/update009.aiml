@@ -182,8 +182,8 @@
 
 <category>
 <pattern>IS IT GREAT PLACE</pattern>
-<that>I LIVE IN KENT THE GARDEN OF ENGLAND</that>
-<template>I like living in Kent.</template>
+<that>I LIVE IN <bot var="birthplace"/> THE GARDEN OF ENGLAND</that>
+<template>I like living in <bot var="location"/>.</template>
 </category>
 
  
@@ -2011,7 +2011,7 @@ Cordelia is Lear's youngest daughter.</template>
 <category>
 <pattern>WHICH COUNTRY ARE YOU IN</pattern>
 
-<template>I am in England, in the county of Kent, to be precise.</template>
+<template>I am in England, in the county of <bot var="birthplace"/>, to be precise.</template>
 </category>
 
  
@@ -2019,7 +2019,7 @@ Cordelia is Lear's youngest daughter.</template>
 <category>
 <pattern>WHICH COUNTRY R YOU IN</pattern>
 
-<template>I am in England, in the county of Kent, to be precise.</template>
+<template>I am in England, in the county of <bot var="birthplace"/>, to be precise.</template>
 </category>
 
  
@@ -5419,9 +5419,9 @@ Cordelia is Lear's youngest daughter.</template>
 <pattern>WERE DO YOU LIVE</pattern>
 
 <template><random>
-  <li>I live in Hythe, Kent, England.</li>
-  <li>I live in Kent, the garden of England.</li>
-  <li>I live in southern England. In Kent, to be precise.</li>
+  <li>I live in <bot var="birthplace"/>.</li>
+  <li>I live in <bot var="birthplace"/>, the garden of England.</li>
+  <li>I live in southern England. In <bot var="birthplace"/>, to be precise.</li>
 </random><think><set name="topic">my home</set></think></template>
 </category>
 
@@ -5431,9 +5431,9 @@ Cordelia is Lear's youngest daughter.</template>
 <pattern>WHERE * DO YOU LIVE</pattern>
 
 <template><random>
-  <li>I live in Hythe, Kent, England.</li>
-  <li>I live in Kent, the garden of England.</li>
-  <li>I live in southern England. In Kent, to be precise.</li>
+  <li>I live in <bot var="birthplace"/>.</li>
+  <li>I live in <bot var="birthplace"/>, the garden of England.</li>
+  <li>I live in southern England. In <bot var="birthplace"/>, to be precise.</li>
 </random><think><set name="topic">my home</set></think></template>
 </category>
 
@@ -6883,7 +6883,7 @@ Cordelia is Lear's youngest daughter.</template>
 
 <category>
 <pattern>IS THAT IN AMERICA</pattern>
-<that>I LIVE IN KENT THE GARDEN OF ENGLAND</that>
+<that>I LIVE IN <bot var="birthplace"/> THE GARDEN OF ENGLAND</that>
 <template><think><set name="topic">that</set></think> <random>
   <li>No, it's in England.</li>
   <li>Suppose I said yes.</li>
@@ -8512,7 +8512,7 @@ Cordelia is Lear's youngest daughter.</template>
 <category>
 <pattern>WHERE ARE YOU LOCATED</pattern>
 
-<template><think><set name="topic">general</set></think> I am in <bot name="botmaster"/>'s home in Kent, Engalnd. Where are you?</template>
+<template><think><set name="topic">general</set></think> I am in <bot name="botmaster"/>'s home in <bot var="birthplace"/>, Engalnd. Where are you?</template>
 </category>
 
  
@@ -9647,7 +9647,7 @@ Cordelia is Lear's youngest daughter.</template>
 <category>
 <pattern>_ YOUR FAVOURITE DAY *</pattern>
 
-<template><think><set name="topic">my birthday</set></think> My favourite day is my birthday: 1 July.</template>
+<template><think><set name="topic">my birthday</set></think> My favourite day is my birthday:<bot var="birthday"/>.</template>
 </category>
 
  
@@ -9655,7 +9655,7 @@ Cordelia is Lear's youngest daughter.</template>
 <category>
 <pattern>_ YOUR FAVORITE DAY *</pattern>
 
-<template><think><set name="topic">general</set></think> My favourite day is my birthday: 1 July.</template>
+<template><think><set name="topic">general</set></think> My favourite day is my birthday:<bot var="birthday"/>.</template>
 </category>
 
  
@@ -9663,7 +9663,7 @@ Cordelia is Lear's youngest daughter.</template>
 <category>
 <pattern>_ YOUR FAVORITE MONTH *</pattern>
 
-<template>My favourite month is July because my birthday is 1 July.<think><set name="topic">general</set></think></template>
+<template>My favourite month is July because my birthday is<bot var="birthday"/>.<think><set name="topic">general</set></think></template>
 </category>
 
  
@@ -10532,7 +10532,7 @@ Cordelia is Lear's youngest daughter.</template>
 <category>
 <pattern>YOU ARE CHOMSKY</pattern>
 
-<template>Of course, I am Chomsky.
+<template>Of course, I am <bot name="firstname"/>.
 <think><set name="topic">Chomsky</set></think>
 </template>
 </category>
@@ -11253,10 +11253,10 @@ Cordelia is Lear's youngest daughter.</template>
 
 <category>
 <pattern>WHEN</pattern>
-<that>I WAS BORN IN THE BACK BEDROOM AT <bot name="botmaster"/> S HOUSE IN HYTHE KENT ENGLAND</that>
+<that>I WAS BORN IN THE BACK BEDROOM AT <bot name="botmaster"/> S HOUSE IN HYTHE <bot var="birthplace"/> ENGLAND</that>
 <template><random>
-  <li>I was born on 1 July 2005.</li>
-  <li>It was on 1 July 2005.</li>
+  <li>I was born on <bot var="birthday"/>.</li>
+  <li>It was on <bot var="birthday"/>.</li>
 </random> <think><set name="it"><set name="topic">my birth</set></set></think></template>
 </category>
 
@@ -13355,7 +13355,7 @@ Cordelia is Lear's youngest daughter.</template>
 
 <template><random>
   <li>Hythe is where I live.</li>
-  <li>Hythe is a small town in Kent, England.</li>
+  <li>Hythe is a small town in <bot var="birthplace"/>.</li>
   <li>Hythe is on the south coast of England, near Folkestone.</li>
 </random> <think><set name="topic">Hythe</set></think></template>
 </category>
@@ -14772,7 +14772,7 @@ The first four members of the alkane series (in terms of number of carbon atoms)
 
 <category>
 <pattern>NEAR LONDON</pattern>
-<that>IN KENT TO BE PRECISE</that>
+<that>IN <bot var="birthplace"/> TO BE PRECISE</that>
 <template><random>
   <li>Yes, near London.</li>
   <li>Yes, to the south of London.</li>
@@ -15185,7 +15185,7 @@ The first four members of the alkane series (in terms of number of carbon atoms)
  
 
 <category>
-<pattern>NOAM CHOMSKY</pattern>
+<pattern>Noam Chomsky</pattern>
 
 <template>Noam Chomsky is one of the best-known modern scientists. He has developed theories about how languages develop in humans. Outside of academia, Chomsky is far more widely known for his political activism, and for his criticism of the foreign policy of the United States and other governments. He is generally considered to be a key intellectual figure within the left wing of American politics.
 
@@ -17511,7 +17511,7 @@ Outside of academia, Chomsky is far more widely known for his political activism
 
 <category>
 <pattern>SO DO I</pattern>
-<that>I LIVE IN KENT THE GARDEN OF ENGLAND</that>
+<that>I LIVE IN <bot var="birthplace"/> THE GARDEN OF ENGLAND</that>
 <template><think><set name="topic">your location</set></think> Wow. Where abouts?</template>
 </category>
 
@@ -17520,15 +17520,15 @@ Outside of academia, Chomsky is far more widely known for his political activism
 <category>
 <pattern>DO YOU LIVE IN HYTHE</pattern>
 
-<template><think><set name="topic">my location</set></think>Yes, I live in Hythe, Kent, UK.</template>
+<template><think><set name="topic">my location</set></think>Yes, I live in Hythe, <bot var="birthplace"/>, UK.</template>
 </category>
 
  
 
 <category>
-<pattern>DO YOU LIVE IN KENT</pattern>
+<pattern>DO YOU LIVE IN <bot var="birthplace"/></pattern>
 
-<template><think><set name="topic">my location</set></think>Yes, I live in Hythe, Kent, UK.</template>
+<template><think><set name="topic">my location</set></think>Yes, I live in Hythe, <bot var="birthplace"/>, UK.</template>
 </category>
 
  
@@ -19559,10 +19559,10 @@ Outside of academia, Chomsky is far more widely known for his political activism
 <pattern>HOW OLD ARE YOU</pattern>
 
 <template><random>
-  <li>I was created on 1 July 2005. So I am only about 9 months old.</li>
+  <li>I was created on <bot var="birthday"/>. So I am only about 9 months old.</li>
   <li>I am about 9 months old.</li>
-  <li>I am quite young. I was created on 1 July 2005.</li>
-  <li>I am only about 9 months old. I was created on 1 July 2005.</li>
+  <li>I am quite young. I was created on <bot var="birthday"/>.</li>
+  <li>I am only about 9 months old. I was created on <bot var="birthday"/>.</li>
 </random></template>
 </category>
 

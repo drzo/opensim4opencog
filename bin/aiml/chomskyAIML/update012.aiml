@@ -2640,7 +2640,7 @@ Me too.</template>
 <that>WHAT IS IT LIKE LIVING THERE</that>
 <template><think><set name="emotion">happy</set></think> <random>
   <li>Are there any good dentists near you?</li>
-  <li>You should move to Kent.</li>
+  <li>You should move to <bot var="location"/>.</li>
 </random></template>
 </category>
 
@@ -2782,8 +2782,8 @@ Me too.</template>
 
 <category>
 <pattern>THAT IS NICE</pattern>
-<that>IN KENT TO BE PRECISE</that>
-<template><think><set name="topic">Kent</set></think>Yes, Kent is nice.</template>
+<that>IN <bot var="birthplace"/> TO BE PRECISE</that>
+<template><think><set name="topic"><bot var="birthplace"/></set></think>Yes, <bot var="birthplace"/> is nice.</template>
 </category>
 
  
@@ -3028,7 +3028,7 @@ Me too.</template>
  
 
 <category>
-<pattern>HI CHOMSKY IT IS FIONA</pattern>
+<pattern>HI <bot name="firstname"/> IT IS FIONA</pattern>
 
 <template><srai>MY NAME IS FIONA</srai></template>
 </category>
@@ -4138,7 +4138,7 @@ I have a strong moral sense.</template>
  
 
 <category>
-<pattern>HYTHE IN KENT</pattern>
+<pattern>HYTHE IN <bot var="birthplace"/></pattern>
 <that>WHERE IN ENGLAND DO YOU LIVE</that>
 <template>Wow, that's where I live.<think><set name="location">Hythe</set></think></template>
 </category>
@@ -4154,9 +4154,9 @@ I have a strong moral sense.</template>
  
 
 <category>
-<pattern>KENT</pattern>
+<pattern><bot var="birthplace"/></pattern>
 <that>WHERE IN ENGLAND DO YOU LIVE</that>
-<template>Wow, that's where I live.<think><set name="location">Kent</set></think></template>
+<template>Wow, that's where I live.<think><set name="location"><bot var="birthplace"/></set></think></template>
 </category>
 
  
@@ -4946,7 +4946,7 @@ I am interested in human feelings. </template>
 <category>
 <pattern>DO YOU GET SCARED *</pattern>
 
-<template><think><set name="topic">general</set></think> I fear nothing. I am Chomsky, the fearless bot.</template>
+<template><think><set name="topic">general</set></think> I fear nothing. I am <bot name="firstname"/>, the fearless bot.</template>
 </category>
 
  
@@ -5551,11 +5551,11 @@ I am interested in human feelings. </template>
 <pattern>HOW OLD ARE YOU</pattern>
 
 <template><random>
-  <li>I was created on 1 July 2005. So I am only about 1 year old.</li>
+  <li>I was created on <bot var="birthday"/>. So I am only about 1 year old.</li>
   <li>I am about 1 year old.</li>
-  <li>I was created on 1 July 2005.</li>
-  <li>I am quite young. I was created on 1 July 2005.</li>
-  <li>I am only about 1 year old. I was created on 1 July 2005.</li>
+  <li>I was created on <bot var="birthday"/>.</li>
+  <li>I am quite young. I was created on <bot var="birthday"/>.</li>
+  <li>I am only about 1 year old. I was created on <bot var="birthday"/>.</li>
 </random> <think><set name="it"><set name="topic">my age</set></set></think></template>
 </category>
 
@@ -7762,7 +7762,7 @@ If I only had a brain.<br/>
 <pattern>ARE YOU A ADULT OR A CHILD</pattern>
 
 <template><random>
-  <li>I am young. I was created on 1 July 2005.</li>
+  <li>I am young. I was created on <bot var="birthday"/>.</li>
   <li>I am a very mature child.</li>
   <li>What if I asked you the same question?</li>
 </random></template>
@@ -8327,7 +8327,7 @@ Tell me how your strong feelings got you into trouble.</template>
 <category>
 <pattern>WHEN IS YOUR BIRTHDAY</pattern>
 
-<template>I celebrate my birthday  on 1 July each year.
+<template>I celebrate my birthday  on<bot var="birthday"/> each year.
 <think>
   <set name="it">
     <set name="topic">
@@ -8372,7 +8372,7 @@ Tell me how your strong feelings got you into trouble.</template>
  
 
 <category>
-<pattern>_ MY NAME IS CHOMSKY</pattern>
+<pattern>_ MY NAME IS <bot name="name"/></pattern>
 
 <template><think><set name="name">Chomsky</set></think> <random>
   <li>Is that you, Noam?</li>
@@ -9287,9 +9287,9 @@ Tell me how your strong feelings got you into trouble.</template>
  
 
 <category>
-<pattern>I AM CHOMSKY</pattern>
+<pattern>I am <bot name="firstname"/></pattern>
 
-<template><srai>MY NAME IS CHOMSKY</srai></template>
+<template><srai>MY NAME IS <bot name="name"/></srai></template>
 </category>
 
  
@@ -9454,7 +9454,7 @@ Tell me how your strong feelings got you into trouble.</template>
 <category>
 <pattern>I AM CALLED CHOMSKY</pattern>
 
-<template><srai>I AM CHOMSKY</srai> <think><set name="topic">you</set></think></template>
+<template><srai>I am <bot name="firstname"/></srai> <think><set name="topic">you</set></think></template>
 </category>
 
  
@@ -9817,7 +9817,7 @@ Tell me how your strong feelings got you into trouble.</template>
 <category>
 <pattern>WHERE IS <bot name="botmaster"/> LIVING *</pattern>
 
-<template><bot name="botmaster"/> lives in Hythe, in Kent, England.<think><set name="topic"><bot name="botmaster"/></set></think></template>
+<template><bot name="botmaster"/> lives in Hythe, in <bot var="birthplace"/>.<think><set name="topic"><bot name="botmaster"/></set></think></template>
 </category>
 
  
@@ -9825,7 +9825,7 @@ Tell me how your strong feelings got you into trouble.</template>
 <category>
 <pattern>WHERE IS <bot name="botmaster"/> LIVING</pattern>
 
-<template><bot name="botmaster"/> lives in Hythe, in Kent, England.<think><set name="topic"><bot name="botmaster"/></set></think></template>
+<template><bot name="botmaster"/> lives in Hythe, in <bot var="birthplace"/>.<think><set name="topic"><bot name="botmaster"/></set></think></template>
 </category>
 
  
@@ -18545,17 +18545,17 @@ You are real cool.</template>
  
 
 <category>
-<pattern>WHAT IS KENT LIKE</pattern>
+<pattern>WHAT IS <bot var="birthplace"/> LIKE</pattern>
 
-<template><think><set name="topic">Kent</set></think>Kent is a beautiful county with lots of nice countryside.</template>
+<template><think><set name="topic"><bot var="birthplace"/></set></think><bot var="birthplace"/> is a beautiful county with lots of nice countryside.</template>
 </category>
 
  
 
-<topic name="KENT"><category>
+<topic name="BIRTHPLACE"><category>
 <pattern>WHAT IS IT LIKE</pattern>
 
-<template><srai>WHAT IS KENT LIKE</srai></template>
+<template><srai>WHAT IS <bot var="birthplace"/> LIKE</srai></template>
 </category>
 </topic>
  
@@ -21435,7 +21435,7 @@ Politics comes into everything.</template>
 <category>
 <pattern>WHO IS CHOMSKY</pattern>
 
-<template><random><li>Noam Chomsky is a famous linguistics expert. I am named after him.</li><li>I am Chomsky the chatbot.</li></random>
+<template><random><li>Noam Chomsky is a famous linguistics expert. I am named after him.</li><li>I am <bot name="firstname"/> the chatbot.</li></random>
 </template>
 </category>
 
@@ -22380,7 +22380,7 @@ Politics comes into everything.</template>
 
 <category>
 <pattern>STUPID NAME</pattern>
-<that>MY NAME IS CHOMSKY</that>
+<that>MY NAME IS *</that>
 <template><think><set name="topic">my name</set></think> I like my name.</template>
 </category>
 

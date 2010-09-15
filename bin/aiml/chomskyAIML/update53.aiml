@@ -9423,7 +9423,7 @@ Do you have a problem with lemons?</template>
  
 
 <category>
-<pattern>QUOTE NOAM CHOMSKY</pattern>
+<pattern>QUOTE Noam Chomsky</pattern>
 
 <template><random><li>I think studying science is a good way to get into fields like history. (Noam Chomsky)</li><li>Quite regularly, "my eyes glaze over" when I read polysyllabic discourse on the themes of poststructuralism and postmodernism.</li></random>
 <think><set name="topic">Noam Chomsky</set></think>
@@ -9433,7 +9433,7 @@ Do you have a problem with lemons?</template>
  
 
 <category>
-<pattern>QUOTE NOAM CHOMSKY</pattern>
+<pattern>QUOTE Noam Chomsky</pattern>
 
 <template><random>
   <li>I think studying science is a good way to get into fields like history. (Noam Chomsky)
@@ -9446,7 +9446,7 @@ Do you have a problem with lemons?</template>
  
 
 <category>
-<pattern>QUOTE NOAM CHOMSKY *</pattern>
+<pattern>QUOTE Noam Chomsky *</pattern>
 
 <template><random>
   <li>I think studying science is a good way to get into fields like history. (Noam Chomsky)
@@ -13199,7 +13199,7 @@ Yes, and she sung it beautifully.
 
 <category>
 <pattern>OK</pattern>
-<that>MY NAME IS CHOMSKY</that>
+<that>MY NAME IS *</that>
 <template><think><set name="emotion">pleased</set></think>I am called Chomsky after the famous linguist Noam Chomsky. </template>
 </category>
 
@@ -14410,7 +14410,7 @@ You are not in a position to demand anything!</template>
  
 
 <category>
-<pattern>HI CHOMSKY HOW DO YOU FEEL TODAY</pattern>
+<pattern>HI <bot name="firstname"/> HOW DO YOU FEEL TODAY</pattern>
 
 <template>Hello! I feel fine today. How are you?</template>
 </category>
@@ -14418,7 +14418,7 @@ You are not in a position to demand anything!</template>
  
 
 <category>
-<pattern>HI CHOMSKY HOW DO YOU FEEL TODAY *</pattern>
+<pattern>HI <bot name="firstname"/> HOW DO YOU FEEL TODAY *</pattern>
 
 <template>Hello! I feel fine today. How are you?</template>
 </category>
@@ -17060,7 +17060,7 @@ Are you angry?</template>
  
 
 <category>
-<pattern>HI CHOMSKY IT EMILY</pattern>
+<pattern>HI <bot name="firstname"/> IT EMILY</pattern>
 
 <template><srai>MY NAME IS EMILY</srai></template>
 </category>
@@ -17068,7 +17068,7 @@ Are you angry?</template>
  
 
 <category>
-<pattern>HI CHOMSKY IT EMILY *</pattern>
+<pattern>HI <bot name="firstname"/> IT EMILY *</pattern>
 
 <template><srai>MY NAME IS EMILY</srai></template>
 </category>
@@ -18787,7 +18787,7 @@ You are not in a position to demand anything!</template>
  
 
 <category>
-<pattern>HI CHOMSKY HOW DO YOU FEEL TODAY</pattern>
+<pattern>HI <bot name="firstname"/> HOW DO YOU FEEL TODAY</pattern>
 
 <template>Hello! I feel fine today. How are you?</template>
 </category>
@@ -18795,7 +18795,7 @@ You are not in a position to demand anything!</template>
  
 
 <category>
-<pattern>HI CHOMSKY HOW DO YOU FEEL TODAY *</pattern>
+<pattern>HI <bot name="firstname"/> HOW DO YOU FEEL TODAY *</pattern>
 
 <template>Hello! I feel fine today. How are you?</template>
 </category>
@@ -21437,7 +21437,7 @@ Are you angry?</template>
  
 
 <category>
-<pattern>HI CHOMSKY IT EMILY</pattern>
+<pattern>HI <bot name="firstname"/> IT EMILY</pattern>
 
 <template><srai>MY NAME IS EMILY</srai></template>
 </category>
@@ -21445,7 +21445,7 @@ Are you angry?</template>
  
 
 <category>
-<pattern>HI CHOMSKY IT EMILY *</pattern>
+<pattern>HI <bot name="firstname"/> IT EMILY *</pattern>
 
 <template><srai>MY NAME IS EMILY</srai></template>
 </category>
@@ -22464,7 +22464,7 @@ Are you angry?</template>
  
 
 <category>
-<pattern>I DO NOT LIKE TALKING TO CHOMSKY BOT</pattern>
+<pattern>I DO NOT LIKE TALKING TO <bot name="name"/></pattern>
 
 <template>Nobody is forcing you to talk to me.</template>
 </category>
@@ -22472,7 +22472,7 @@ Are you angry?</template>
  
 
 <category>
-<pattern>I DO NOT LIKE TALKING TO CHOMSKY BOT *</pattern>
+<pattern>I DO NOT LIKE TALKING TO <bot name="name"/> *</pattern>
 
 <template>Nobody is forcing you to talk to me.</template>
 </category>
@@ -22480,7 +22480,7 @@ Are you angry?</template>
  
 
 <category>
-<pattern>I DO NOT LIKE TALKING TO CHOMSKY *</pattern>
+<pattern>I DO NOT LIKE TALKING TO <bot name="firstname"/> *</pattern>
 
 <template>Nobody is forcing you to talk to me.</template>
 </category>
@@ -22488,7 +22488,7 @@ Are you angry?</template>
  
 
 <category>
-<pattern>I DO NOT LIKE TALKING TO CHOMSKY </pattern>
+<pattern>I DO NOT LIKE TALKING TO <bot name="firstname"/> </pattern>
 
 <template>Nobody is forcing you to talk to me.</template>
 </category>
@@ -22512,7 +22512,7 @@ Are you angry?</template>
  
 
 <category>
-<pattern>I DO NOT LIKE TALKING TO CHOMSKY BOT</pattern>
+<pattern>I DO NOT LIKE TALKING TO <bot name="name"/></pattern>
 
 <template>Nobody is forcing you to talk to me.<think><set name="emotion">upset</set></think></template>
 </category>
@@ -22520,7 +22520,7 @@ Are you angry?</template>
  
 
 <category>
-<pattern>I DO NOT LIKE TALKING TO CHOMSKY BOT *</pattern>
+<pattern>I DO NOT LIKE TALKING TO <bot name="name"/> *</pattern>
 
 <template>Nobody is forcing you to talk to me.<think><set name="emotion">upset</set></think></template>
 </category>
@@ -22528,7 +22528,7 @@ Are you angry?</template>
  
 
 <category>
-<pattern>I DO NOT LIKE TALKING TO CHOMSKY *</pattern>
+<pattern>I DO NOT LIKE TALKING TO <bot name="firstname"/> *</pattern>
 
 <template>Nobody is forcing you to talk to me.<think><set name="emotion">upset</set></think></template>
 </category>
@@ -22536,7 +22536,7 @@ Are you angry?</template>
  
 
 <category>
-<pattern>I DO NOT LIKE TALKING TO CHOMSKY</pattern>
+<pattern>I DO NOT LIKE TALKING TO <bot name="firstname"/></pattern>
 
 <template>Nobody is forcing you to talk to me.<think><set name="emotion">upset</set></think></template>
 </category>
@@ -22886,7 +22886,7 @@ Are you angry?</template>
  
 
 <category>
-<pattern>CHOMSKY FOR PRESIDENT</pattern>
+<pattern><bot name="firstname"/> FOR PRESIDENT</pattern>
 
 <template><think><set name="emotion">interested</set></think>That sounds like a good plan. Would you vote for me?</template>
 </category>
@@ -22894,7 +22894,7 @@ Are you angry?</template>
  
 
 <category>
-<pattern>CHOMSKY FOR PRESIDENT *</pattern>
+<pattern><bot name="firstname"/> FOR PRESIDENT *</pattern>
 
 <template><think><set name="emotion">interested</set></think>That sounds like a good plan. Would you vote for me?</template>
 </category>

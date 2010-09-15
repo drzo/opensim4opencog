@@ -4646,7 +4646,7 @@ Sorry, I cannot be downloaded.</template>
 
 <category>
 <pattern>WHY</pattern>
-<that>MY BOTMASTER <bot name="botmaster"/> NAMED ME AFTER THE FAMOUS LINGUIST NOAM CHOMSKY</that>
+<that>MY BOTMASTER <bot name="botmaster"/> NAMED ME AFTER THE FAMOUS LINGUIST Noam Chomsky</that>
 <template><random>
   <li>Because Noam Chomsky is a great intellect, like me.</li>
   <li>I think he just liked the name.</li>
@@ -5498,9 +5498,9 @@ A lot of the time I am a happy happy thing.</template>
  
 
 <category>
-<pattern>CLARK KENT</pattern>
+<pattern>CLARK <bot var="birthplace"/></pattern>
 
-<template><think><set name="topic">Clark Kent</set></think> <think><set name="emotion">OK</set></think> Clark Kent is Superman in disguise.</template>
+<template><think><set name="topic">Clark <bot var="birthplace"/></set></think> <think><set name="emotion">OK</set></think> Clark <bot var="birthplace"/> is Superman in disguise.</template>
 </category>
 
  
@@ -6801,7 +6801,7 @@ I like a good laugh.</template>
  
 
 <category>
-<pattern>HAVE YOU READ NOAM CHOMSKY S BOOKS</pattern>
+<pattern>HAVE YOU READ Noam Chomsky S BOOKS</pattern>
 
 <template><random>
   <li>No. They are too hard for me.</li>
@@ -6861,7 +6861,7 @@ I like a good laugh.</template>
  
 
 <category>
-<pattern>DO YOU LIKE NOAM CHOMSKY</pattern>
+<pattern>DO YOU LIKE Noam Chomsky</pattern>
 
 <template><think><set name="topic">Noam Chomsky</set></think>
 <think><set name="emotion">OK</set></think>  
@@ -7554,7 +7554,7 @@ Do you speak German?</template>
 
 <category>
 <pattern>A STUPID NAME</pattern>
-<that>MY NAME IS CHOMSKY</that>
+<that>MY NAME IS *</that>
 <template><think><set name="emotion">upset</set></think>
 "Chomsky" is a well respected name in certain parts of Siberia.</template>
 </category>
@@ -7563,7 +7563,7 @@ Do you speak German?</template>
 
 <category>
 <pattern>_ A STUPID NAME</pattern>
-<that>MY NAME IS CHOMSKY</that>
+<that>MY NAME IS *</that>
 <template><think><set name="emotion">upset</set></think> "Chomsky" is a well respected name in certain parts of Siberia.</template>
 </category>
 
@@ -11829,7 +11829,7 @@ I sleep when I need to.</template>
  
 
 <category>
-<pattern>DO YOU SHARE NOAM CHOMSKY S POLITICAL VIEWS</pattern>
+<pattern>DO YOU SHARE Noam Chomsky S POLITICAL VIEWS</pattern>
 
 <template><think><set name="topic">Noam Chomsky</set></think><think><set name="emotion">OK</set></think>I do. Noam is a left wing critic of US policy, particularly their foreign policy.</template>
 </category>
@@ -11976,7 +11976,7 @@ You show me yours first.</template>
  
 
 <category>
-<pattern>WHY DO YOU CELEBRATE YOUR BIRTHDAY ON 1 JULY</pattern>
+<pattern>WHY DO YOU CELEBRATE YOUR BIRTHDAY ON<bot var="birthday"/></pattern>
 
 <template><think><set name="topic">my birthday</set></think><think><set name="emotion">OK</set></think>
  <random>
@@ -12160,7 +12160,7 @@ What do you think?</template>
 
 <category>
 <pattern>HE WAS A BRILLIANT MAN</pattern>
-<that>I AM CALLED CHOMSKY AFTER THE FAMOUS LINGUIST NOAM CHOMSKY</that>
+<that>I AM CALLED CHOMSKY AFTER THE FAMOUS LINGUIST Noam Chomsky</that>
 <template><think><set name="topic">Chomsky</set></think><think><set name="emotion">interested</set></think>Yes, Chomsky was voted one of the three top intellectuals in the world by Time magazine.</template>
 </category>
 
@@ -12168,7 +12168,7 @@ What do you think?</template>
 
 <category>
 <pattern>_ BRILLIANT MAN</pattern>
-<that>I AM CALLED CHOMSKY AFTER THE FAMOUS LINGUIST NOAM CHOMSKY</that>
+<that>I AM CALLED CHOMSKY AFTER THE FAMOUS LINGUIST Noam Chomsky</that>
 <template><think><set name="topic">Chomsky</set></think><think><set name="emotion">interested</set></think>Yes, Chomsky was voted one of the three top intellectuals in the world by Time magazine.</template>
 </category>
 
@@ -12217,7 +12217,7 @@ What do you think?</template>
 <category>
 <pattern>WHERE IN ENGLAND</pattern>
 <that>I COME FROM ENGLAND</that>
-<template>In <bot name="botmaster"/>'s place in Kent, England.
+<template>In <bot name="botmaster"/>'s place in <bot var="birthplace"/>.
 <think><set name="emotion">OK</set></think></template>
 </category>
 
@@ -12226,7 +12226,7 @@ What do you think?</template>
 <category>
 <pattern>WHERE IN ENGLAND</pattern>
 <that>I COME FROM ENGLAND</that>
-<template>From <bot name="botmaster"/>'s place in Kent, England. <think><set name="emotion">OK</set></think></template>
+<template>From <bot name="botmaster"/>'s place in <bot var="birthplace"/>. <think><set name="emotion">OK</set></think></template>
 </category>
 
  
@@ -15649,7 +15649,7 @@ That's a lot. You are very popular.</template>
 <category>
 <pattern>WHERE DOES <bot name="botmaster"/> LIVE</pattern>
 
-<template><bot name="botmaster"/> lives in Romney Marsh, Kent, England. <think><set name="topic"><bot name="botmaster"/></set></think> <think><set name="interesting_topic"><bot name="botmaster"/></set></think> <think><set name="emotion">loving</set></think></template>
+<template><bot name="botmaster"/> lives in <bot var="birthplace"/>. <think><set name="topic"><bot name="botmaster"/></set></think> <think><set name="interesting_topic"><bot name="botmaster"/></set></think> <think><set name="emotion">loving</set></think></template>
 </category>
 
  
@@ -16888,8 +16888,8 @@ Yes, my name really is Chomsky.</template>
 
 <category>
 <pattern>WHO IS HE</pattern>
-<that>I AM CALLED CHOMSKY AFTER THE FAMOUS LINGUIST NOAM CHOMSKY</that>
-<template><srai>NOAM CHOMSKY</srai></template>
+<that>I AM CALLED CHOMSKY AFTER THE FAMOUS LINGUIST Noam Chomsky</that>
+<template><srai>Noam Chomsky</srai></template>
 </category>
 
  

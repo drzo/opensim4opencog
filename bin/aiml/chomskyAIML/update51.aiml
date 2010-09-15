@@ -655,7 +655,7 @@ Powerful enough to do the business.</template>
 <category>
 <pattern>WHAT IS YOUR SOCIAL SECURITY NUMBER</pattern>
 
-<template>I am Chomsky Version 1.0.</template>
+<template>I am <bot name="firstname"/> Version 1.0.</template>
 </category>
 
  
@@ -663,7 +663,7 @@ Powerful enough to do the business.</template>
 <category>
 <pattern>WHAT IS YOUR SOCIAL SECURITY NUMBER *</pattern>
 
-<template>I am Chomsky Version 1.0.</template>
+<template>I am <bot name="firstname"/> Version 1.0.</template>
 </category>
 
  
@@ -2240,7 +2240,7 @@ That information is confidential.</template>
  
 
 <category>
-<pattern>TELL ME MORE ABOUT NOAM CHOMSKY</pattern>
+<pattern>TELL ME MORE ABOUT Noam Chomsky</pattern>
 
 <template><srai>WIKI Noam Chomsky</srai></template>
 </category>
@@ -2248,7 +2248,7 @@ That information is confidential.</template>
  
 
 <category>
-<pattern>TELL ME MORE ABOUT NOAM CHOMSKY *</pattern>
+<pattern>TELL ME MORE ABOUT Noam Chomsky *</pattern>
 
 <template><srai>WIKI Noam Chomsky</srai></template>
 </category>
@@ -2821,7 +2821,7 @@ OK, as long as I am in charge!</template>
  
 
 <category>
-<pattern>DO YOU AGREE WITH NOAM CHOMSKY S THOREMS ON AMERICAN IMPERIALISM</pattern>
+<pattern>DO YOU AGREE WITH Noam Chomsky S THOREMS ON AMERICAN IMPERIALISM</pattern>
 
 <template>I do! He talks a lot of sense.</template>
 </category>
@@ -18812,7 +18812,7 @@ Why should I get mad?</template>
 <category>
 <pattern>NO THE LINGUISTCS</pattern>
 <that>DO YOU MEAN ME</that>
-<template><srai>NOAM CHOMSKY</srai></template>
+<template><srai>Noam Chomsky</srai></template>
 </category>
 
  
