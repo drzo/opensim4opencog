@@ -36,7 +36,7 @@ namespace MushDLR223.Utilities
             pattern = pattern.ToLower();
             name = name.ToLower();
             if (name == pattern) return true;
-            return !char.IsLetterOrDigit(pattern[patternLength-1]) && Regex.IsMatch(name, "^" + pattern + "$");           
+            return !Char.IsLetterOrDigit(pattern[patternLength-1]) && Regex.IsMatch(name, "^" + pattern + "$");           
         }
 
         public static bool ContainsXml(string unifiable)
@@ -125,9 +125,9 @@ namespace MushDLR223.Utilities
                 if (nodeOChildNodes.Count == 0) return nodeO.OuterXml;
                 string bs = nodeStartXML((XmlElement) nodeO);
                 string visibleRendering = VisibleRendering(nodeOChildNodes, options);
-                if (!string.IsNullOrEmpty(bs))
+                if (!String.IsNullOrEmpty(bs))
                 {
-                    visibleRendering = string.Format("{0}{1}</{2}>", bs, visibleRendering, nodeName);
+                    visibleRendering = String.Format("{0}{1}</{2}>", bs, visibleRendering, nodeName);
                 }
                 return options.CleanText(visibleRendering);
             }
@@ -188,9 +188,9 @@ namespace MushDLR223.Utilities
         public static string InnerXmlText(XmlNode templateNode)
         {
             string s = InnerXmlText0(templateNode).Trim();
-            while (s.StartsWith("+"))
+            if (s.StartsWith(isValueSetStart))
             {
-                s = s.Substring(1);
+               return s.Substring(isValueSetSkip).TrimStart(isValueSetChars);                
             }
             return s;
         }
@@ -394,7 +394,7 @@ namespace MushDLR223.Utilities
             int na = 0;
             foreach (char s in input)
             {
-                if (char.IsLetterOrDigit(s)) continue;
+                if (Char.IsLetterOrDigit(s)) continue;
                 na++;
             }
             return na;
@@ -688,7 +688,7 @@ namespace MushDLR223.Utilities
 
         public static bool TryParseBool(string parse, out bool tf)
         {
-            if (string.IsNullOrEmpty(parse))
+            if (String.IsNullOrEmpty(parse))
             {
                 tf = default(Boolean);
                 return false;
@@ -827,7 +827,7 @@ namespace MushDLR223.Utilities
             if (templateNode != null)
             {
                 named = "" + templateNode.OwnerDocument;
-                if (string.IsNullOrEmpty(named)) named = "from: " + templateNode.OuterXml;
+                if (String.IsNullOrEmpty(named)) named = "from: " + templateNode.OuterXml;
             }
             XmlDocumentLineInfo doc = null; // templateNode.OwnerDocument as XmlDocumentLineInfo;
             // ReSharper disable ConditionIsAlwaysTrueOrFalse
@@ -992,5 +992,9 @@ namespace MushDLR223.Utilities
             }
             return outer.Replace(remove, "");
         }
+
+        public static char[] isValueSetChars = "+ ".ToCharArray();
+        public static string isValueSetStart = "+++";
+        public static int isValueSetSkip = isValueSetStart.Length;
     }
 }
