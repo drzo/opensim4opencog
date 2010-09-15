@@ -44,6 +44,11 @@ namespace RTParser.Utils
 
         public override void SaveResultOnChild(XmlNode node, string value)
         {
+
+            if (value.StartsWith(isValueSetStart))
+            {
+                value = value.Substring(isValueSetSkip).TrimStart(isValueSetChars);
+            }
             //if (value == null) return;
             //if (value == "") return;
             value = CheckValue(value);
@@ -53,9 +58,14 @@ namespace RTParser.Utils
             }
             if (node.NodeType == XmlNodeType.Comment) return;
 
-            if (node is XmlText) node.InnerText = value;
+            if (node is XmlText)
+            {
+                node.InnerText = value;
+            }
             else
-                node.InnerXml = "+" + value;
+            {
+                node.InnerXml = isValueSetStart + value;
+            }
         }
 
         public override Unifiable CompleteProcess()
@@ -110,6 +120,11 @@ namespace RTParser.Utils
                     return Unifiable.Empty;
                 }
                 string v = value.AsString();
+                if (v.StartsWith(isValueSetStart))
+                {
+                    v = v.Substring(isValueSetSkip).TrimStart(isValueSetChars);
+                    value = v;
+                }
                 if (!value.AsString().Contains("a href"))
                 {
                     if (v.Contains("<"))

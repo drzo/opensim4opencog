@@ -186,7 +186,7 @@ namespace RTParser.Utils
                 {
                     if (templateNode != TheTemplateOverwrite)
                     {
-                        writeToLog("TheTemplateOverwrite1: onlyNonSilent=" + onlyNonSilent + " " + templateNode.OuterXml + " " + LocationInfo(cateNode));
+                      //  writeToLog("TheTemplateOverwrite1: onlyNonSilent=" + onlyNonSilent + " " + templateNode.OuterXml + " " + LocationInfo(cateNode));
                     }
                     else
                     {

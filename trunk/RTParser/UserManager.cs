@@ -251,6 +251,10 @@ namespace RTParser
 
         internal User FindUser0(string fromname)
         {
+            if (fromname!=null && fromname.Contains("????"))
+            {
+                writeToLog("BAd????");
+            } 
             if (IsLastKnownUser(fromname)) return LastUser;
             string key = fromname.ToLower().Trim();
             //lock (BotUsers)
@@ -897,7 +901,8 @@ namespace RTParser
                     if (newlyCreated) useNameInOutput = true;
                 }
             }
-            if (CurrentUser.NameUsedOrGivenTime.Subtract(DateTime.Now).Minutes > 3)
+            double dateTimeNowSubtractMinutes = DateTime.Now.Subtract(CurrentUser.NameUsedOrGivenTime).Minutes;
+            if (dateTimeNowSubtractMinutes >= 3)
             {
                 useNameInOutput = true;
             }
@@ -908,14 +913,6 @@ namespace RTParser
             }
             else useOut = useOut.Replace("_", " ").Replace("  ", " ").Trim();
 
-            if (useNameInOutput)
-            {
-                CurrentUser.NameUsedOrGivenTime = DateTime.Now;
-                if (!useOut.ToLower().Contains(user.ToLower()))
-                {
-                    useOut = user + ", " + useOut;
-                }
-            }
             var stringPlit = useOut.Split(new[] {"mene value="}, StringSplitOptions.RemoveEmptyEntries);
             string said = useOut;
             if (stringPlit.Length > 0)
@@ -928,6 +925,13 @@ namespace RTParser
             if (vstring == null || double.TryParse(vstring, out vscored))
             {
                 useOut = said + " mene value=" + res.Score*1.4;
+            }
+            if (useNameInOutput)
+            {
+                if (!useOut.ToLower().Contains(user.ToLower()))
+                {
+                    useOut = user + ", " + useOut;
+                }
             }
             console(useOut);
             if (includeWeigth) return useOut;

@@ -268,10 +268,10 @@ namespace RTParser.Utils
             result0 = RecurseResult;
             if (_RecurseResultValid) return true;
 
-            if (templateNode.InnerXml.StartsWith("+"))
+            if (templateNode.InnerXml.StartsWith(isValueSetStart))
             {
-                string s = templateNode.InnerXml.Substring(1);
-                s = s.TrimStart("+ ".ToCharArray());
+                string s = templateNode.InnerXml.Substring(isValueSetSkip);
+                s = s.TrimStart(isValueSetChars);
                 result0 = s;
                 return true;
             }
@@ -283,10 +283,10 @@ namespace RTParser.Utils
             result0 = RecurseResult;
             if (_RecurseResultValid) return true;
 
-            if (templateNode.InnerXml.StartsWith("+"))
+            if (templateNode.InnerXml.StartsWith(isValueSetStart))
             {
-                string s = templateNode.InnerXml.Substring(1);
-                s = s.TrimStart("+ ".ToCharArray());
+                string s = templateNode.InnerXml.Substring(isValueSetSkip);
+                s = s.TrimStart(isValueSetChars);
                 result0 = s;
                 return true;
             }
@@ -625,24 +625,24 @@ namespace RTParser.Utils
         {
             try
             {
-                if (childNode.InnerXml.StartsWith("+"))
+                if (childNode.InnerXml.StartsWith(isValueSetStart))
                 {
-                    string s = childNode.InnerXml.Substring(1);
-                    s = s.TrimStart("+ ".ToCharArray());
+                    string s = childNode.InnerXml.Substring(isValueSetSkip);
+                    s = s.TrimStart(isValueSetChars);
                     success = true;
                     return s;
                 }
                 if (childNode.NodeType == XmlNodeType.Text)
                 {
                     string value = childNode.InnerText.Trim();
-                    if (value.StartsWith("+"))
+                    if (value.StartsWith(isValueSetStart))
                     {
                         success = true;
-                        return value.Substring(1);
+                        return value.Substring(isValueSetSkip);
                     }
                     if (saveOnInnerXML)
                     {
-                        childNode.InnerText = "+" + value;
+                        childNode.InnerText = isValueSetStart + value;
                     }
                     success = true;
                     return value;
@@ -650,7 +650,7 @@ namespace RTParser.Utils
                 else if (childNode.NodeType == XmlNodeType.Comment)
                 {
                     success = true;
-                    if (saveOnInnerXML) childNode.InnerXml = "";
+                    if (saveOnInnerXML) childNode.InnerXml = isValueSetStart;
                     return String.Empty;
                 }
                 else
@@ -889,7 +889,7 @@ namespace RTParser.Utils
 
             if (node is XmlText) node.InnerText = value;
             else
-                node.InnerXml = "+" + value;
+                node.InnerXml = isValueSetStart + value;
         }
 
         protected bool CheckNode(string name)
