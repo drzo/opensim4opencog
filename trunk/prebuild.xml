@@ -498,6 +498,8 @@
       <Reference name="OpenCyc.dll" localCopy="false"/>
       <Reference name="IKVM.Runtime.dll" localCopy="false"/>
       <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
+      <Reference name="Microsoft.JScript"  localCopy="false"/>
+      <Reference name="Microsoft.Vsa"  localCopy="false"/>
       <Files>
         <Match pattern="*.cs" recurse="true"/>
       </Files>
