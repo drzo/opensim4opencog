@@ -112,6 +112,7 @@ namespace RTParser
                 if (Predicates.containsSettingCalled("graphname"))
                 {
                     GraphMaster _Graph = null;
+                    Predicates.IsTraced = false;
                     var v = Predicates.grabSettingNoDebug("graphname");
                     _Graph = bot.GetUserGraph(v);
                     if (_Graph != null)

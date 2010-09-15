@@ -1053,19 +1053,35 @@ namespace RTParser.Variables
             }
         }
 
-        private Unifiable TransformValue(Unifiable value)
+        public Unifiable TransformValue(Unifiable value)
         {
             if (value == null)
             {
-                writeToLog("ERROR " + value + " NULL");
-                return " NULL ";
-
+             //   writeToLog("ERROR " + value + " NULL");
+                return null;
+            }
+            if (value == Unifiable.NULL)
+            {
+               // writeToLog("ERROR " + value + " NULL");
+                return null;
+                //return Unifiable.NULL;
             }
             string v = value.AsString();
             if (v.Contains("<") || v.Contains("&"))
             {
                 writeToLog("!@ERROR BAD INPUT? " + value);
             }
+            if (v.StartsWith(StaticXMLUtils.isValueSetStart))
+            {
+                v = v.Substring(StaticXMLUtils.isValueSetSkip);
+                value = v;
+
+            }
+            if (v.Contains("???"))
+            {
+                writeToLog("!?????@ERROR BAD INPUT? " + value);                
+            }
+
             return value;
         }
 
@@ -1074,6 +1090,7 @@ namespace RTParser.Variables
             lock (orderedKeys)
             {
                 name = TransformName(name);
+                value = TransformValue(value);
                 string normalizedName = TransformKey(name);
                 if (normalizedName.Length > 0)
                 {
@@ -1172,6 +1189,7 @@ namespace RTParser.Variables
             lock (orderedKeys)
             {
                 name = TransformName(name);
+                value = TransformValue(value);
                 string normalizedName = TransformKey(name);
                 if (this.settingsHash.ContainsKey(normalizedName))
                 {
@@ -1207,9 +1225,10 @@ namespace RTParser.Variables
             return false;
         }
 
-        static string str(Unifiable unifiable)
+        public string str(Unifiable value)
         {
-            return "'" + Unifiable.ToVMString(unifiable) + "'";
+            value = TransformValue(value);
+            return "'" + Unifiable.ToVMString(value) + "'";
         }
 
         /// <summary>
@@ -1268,6 +1287,7 @@ namespace RTParser.Variables
             {
                 name = TransformName(name);
                 var setting = grabSetting0(name);
+                setting = TransformValue(setting);
                 if (Unifiable.IsNull(setting)) return null;
                 if (Unifiable.IsEMPTY(setting))
                 {
@@ -1286,9 +1306,11 @@ namespace RTParser.Variables
 
         public string grabSettingOrDefault(string name, string fallback)
         {
+            HashSet<ISettingsDictionary> noGo = new HashSet<ISettingsDictionary>() { this };
             foreach (ParentProvider overide in _overides)
             {
                 ISettingsDictionary dict = overide();
+                if (!noGo.Add(dict)) continue;
                 if (dict.containsLocalCalled(name))
                 {
                     string v = grabSettingOrDefault(dict, name, fallback);
@@ -1313,8 +1335,12 @@ namespace RTParser.Variables
                 }
                 else if (Fallbacks.Count > 0)
                 {
+                    ISettingsDictionary firstFallBack = null;                   
                     foreach (ISettingsDictionary list in Fallbacks)
                     {
+                        if (!noGo.Add(list)) continue;
+                        firstFallBack = firstFallBack ?? list;
+                        bool prev = list.IsTraced;
                         list.IsTraced = false;
                         string v = grabSettingOrDefault(list, name, null);
                         ;
@@ -1323,16 +1349,21 @@ namespace RTParser.Variables
                         if (makedvars.Contains(normalizedName))
                         {
                             SettingsLog("MASKED PARENT '" + name + "=NULL instead of" + str(v));
+                            list.IsTraced = prev;
                             return null;
                         }
                         SettingsLog("RETURN FALLBACK '" + name + "'=" + str(v));
+                        list.IsTraced = prev;
                         if (!Unifiable.IsFalse(v)) return v;
                     }
-                    string v0 = Fallbacks[0].grabSetting(name);
-                    if (!Unifiable.IsNull(v0))
+                    if (firstFallBack != null)
                     {
-                        SettingsLog("RETURN FALLBACK0 '" + name + "'=" + str(v0));
-                        return v0;
+                        string v0 = firstFallBack.grabSetting(name);
+                        if (!Unifiable.IsNull(v0))
+                        {
+                            SettingsLog("RETURN FALLBACK0 '" + name + "'=" + str(v0));
+                            return v0;
+                        }
                     }
                 }
                 SettingsLog("MISSING '" + name + "'");
@@ -1351,9 +1382,11 @@ namespace RTParser.Variables
 
         public Unifiable grabSetting0(string name)
         {
+            HashSet<ISettingsDictionary> noGo = new HashSet<ISettingsDictionary>() { this };
             foreach (ParentProvider overide in _overides)
             {
                 ISettingsDictionary dict = overide();
+                if (!noGo.Add(dict)) continue;
                 if (dict.containsSettingCalled(name))
                 {
                     Unifiable v = dict.grabSetting(name);
@@ -1368,18 +1401,29 @@ namespace RTParser.Variables
                 if (this.settingsHash.ContainsKey(normalizedName))
                 {
                     Unifiable v = this.settingsHash[normalizedName];
+                    v = TransformValue(v);
                     if (makedvars.Contains(normalizedName))
                     {
                         SettingsLog("MASKED RETURNLOCAL '" + name + "=NULL instead of" + str(v));
                         return null;
                     }
+                    this.IsTraced = false;
                     SettingsLog("LOCALRETURN '" + name + "'=" + str(v));
                     return v;
                 }
                 else if (Fallbacks.Count > 0)
                 {
+                    ISettingsDictionary firstFallBack = null;
                     foreach (var list in Fallbacks)
                     {
+                        if (!noGo.Add(list)) continue;
+                        if (list is User)
+                        {
+                            User use = (User) list;
+                            if (!noGo.Add(use.Predicates)) continue;
+                        }
+                        firstFallBack = firstFallBack ?? list;
+                        bool prev = list.IsTraced;
                         list.IsTraced = false;
                         if (list.containsSettingCalled(name))
                         {
@@ -1387,22 +1431,30 @@ namespace RTParser.Variables
                             if (makedvars.Contains(normalizedName))
                             {
                                 SettingsLog("MASKED PARENT '" + name + "=NULL instead of" + str(v));
+                                list.IsTraced = prev;
                                 return null;
                             }
                             SettingsLog("RETURN FALLBACK '" + name + "'=" + str(v));
-                            if (v != null && !Unifiable.IsFalse(v)) return v;
+                            if (v != null && !Unifiable.IsFalse(v))
+                            {
+                                list.IsTraced = prev;
+                                return v;
+                            }
                         }
+                        list.IsTraced = prev;
                     }
-                    var v0 = Fallbacks[0].grabSetting(name);
-                    if (!Unifiable.IsNull(v0))
+                    if (firstFallBack != null)
                     {
-                        SettingsLog("RETURN FALLBACK0 '" + name + "'=" + str(v0));
-                        return v0;
+                        var v0 = firstFallBack.grabSetting(name);
+                        if (!Unifiable.IsNull(v0))
+                        {
+                            SettingsLog("RETURN FALLBACK0 '" + name + "'=" + str(v0));
+                            return v0;
+                        }
                     }
                 }
                 SettingsLog("MISSING '" + name + "'");
                 return Unifiable.NULL;
-
             }
         }
 
@@ -1411,6 +1463,11 @@ namespace RTParser.Variables
             if (message.Contains("ERROR") && !message.Contains("ERROR: The requ"))
             {
                 IsTraced = true;
+            }
+            string fmt = DLRConsole.SafeFormat(message, args);
+            if (fmt.Contains("???") /*|| fmt.Contains(" 'name'='")*/)
+            {
+                writeToLog("ERROR DICTLOG ???????: " + NameSpace + " (" + fmt + ")   " + message, args);                
             }
             if (!IsTraced) return;
             var fc = new StackTrace().FrameCount;

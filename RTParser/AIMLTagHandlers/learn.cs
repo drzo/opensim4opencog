@@ -139,7 +139,7 @@ namespace RTParser.AIMLTagHandlers
                         {
                             loaderOptions = request.LoadOptions;
                             request.LoadingFrom = documentInfo;
-                            string innerXML = templateNode.InnerXml.TrimStart("+ ".ToCharArray());
+                            string innerXML = templateNode.InnerXml.TrimStart(isValueSetChars);
                             //Unifiable templateNodeInnerText = innerXML;
                             if (innerXML.Length > 0)
                             {

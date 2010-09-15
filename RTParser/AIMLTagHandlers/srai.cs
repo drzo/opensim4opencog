@@ -99,7 +99,7 @@ namespace RTParser.AIMLTagHandlers
                         return Unifiable.Empty;
                     }
                     RecurseResult = UseOriginalProcess ? (Unifiable)OriginalProcessChange() : ProcessChange0();
-                    templateNode.InnerXml = "+" + RecurseResult;
+                    templateNode.InnerXml = isValueSetStart + RecurseResult;
                 }
                 catch (Exception e)
                 {

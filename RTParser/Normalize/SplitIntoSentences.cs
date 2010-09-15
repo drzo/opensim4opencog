@@ -90,6 +90,7 @@ namespace RTParser.Normalize
                 {
                     return tidyString.ToArray();
                 }
+                inputStringString = inputStringString.TrimStart(".!? ,".ToCharArray());
                 while (inputStringString.Length > 0)
                 {
                     int index = inputStringString.IndexOfAny(".!?".ToCharArray());

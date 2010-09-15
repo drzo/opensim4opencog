@@ -237,6 +237,7 @@ namespace RTParser
             r.IsTraced = true;
             r.writeToLog = traceConsole;
             r.Responder = targetUser;
+            Predicates.IsTraced = false;
             Result res = ChatWithUser(r, r.Requester, targetUser, r.Graph);
             string useOut = null;
             //string useOut = resOutput;

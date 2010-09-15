@@ -91,6 +91,22 @@ namespace RTParser
             if (string.IsNullOrEmpty(message)) return LR;
             //message = swapPerson(message);
             //writeDebugLine("HEARDSELF SWAP: " + message);
+            User JLU = LastUser;
+            if (JLU != null)
+            {
+                string uname = JLU.UserName;
+                if (uname == null || uname.Length < 2)
+                {
+                }
+                else
+                {
+                    if (message.Replace(" ", "_").ToLower().Contains(uname.Replace(" ", "_").ToLower()))
+                    {
+                        JLU.NameUsedOrGivenTime = DateTime.Now;
+                    }
+                }
+            }
+
 
             if (prochp)
             {
