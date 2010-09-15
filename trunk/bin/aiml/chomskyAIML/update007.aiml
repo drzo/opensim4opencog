@@ -1572,10 +1572,10 @@ You said: <input index="2"/> then I said: <that index="1"/>   <br/>
 <pattern>HOW OLD ARE YOU</pattern>
 
 <template><random>
-  <li>I was created on 1 July 2005. So I am only about 6 months old.</li>
+  <li>I was created on <bot var="birthday"/>. So I am only about 6 months old.</li>
   <li>I am about 6 months old.</li>
-  <li>I am quite young. I was created on 1 July 2005.</li>
-  <li>I am only about 6 months old. I was created on 1 July 2005.</li>
+  <li>I am quite young. I was created on <bot var="birthday"/>.</li>
+  <li>I am only about 6 months old. I was created on <bot var="birthday"/>.</li>
 </random></template>
 </category>
 
@@ -1889,7 +1889,7 @@ You said: <input index="2"/> then I said: <that index="1"/>   <br/>
  
 
 <category>
-<pattern>HAVE YOU EVER TALKED * NOAM CHOMSKY</pattern>
+<pattern>HAVE YOU EVER TALKED * Noam Chomsky</pattern>
 
 <template>I have talked with Noam several times. At least, I think it was him.<think><set name="emotion">uncertain</set></think></template>
 </category>
@@ -3744,7 +3744,7 @@ You said: <input index="2"/> then I said: <that index="1"/>   <br/>
 
 <category>
 <pattern>ONLY ONE</pattern>
-<that>I WAS CREATED ON 1 JULY 2005</that>
+<that>I WAS CREATED ON <bot var="birthday"/></that>
 <template><think><set name="emotion">happy</set></think>Yes, I am one. That will change with time, of course.</template>
 </category>
 
@@ -4664,7 +4664,7 @@ You said: <input index="2"/> then I said: <that index="1"/>   <br/>
 
 <category>
 <pattern>HOW OLD IS THAT</pattern>
-<that>I WAS CREATED ON 1 JULY 2005</that>
+<that>I WAS CREATED ON <bot var="birthday"/></that>
 <template>Less than 1.</template>
 </category>
 
@@ -6284,7 +6284,7 @@ You said: <input index="2"/> then I said: <that index="1"/>   <br/>
 <category>
 <pattern>_ ARE YOU A BOFFIN *</pattern>
 
-<template>I am Chomsky, the brainy bot.<think><set name="topic">general</set></think></template>
+<template>I am <bot name="firstname"/>, the brainy bot.<think><set name="topic">general</set></think></template>
 </category>
 
  
@@ -6294,7 +6294,7 @@ You said: <input index="2"/> then I said: <that index="1"/>   <br/>
 
 <template><random>
   <li>Would it matter to you if I am?</li>
-  <li>I am Chomsky, the brainy bot.</li>
+  <li>I am <bot name="firstname"/>, the brainy bot.</li>
   <li>What if I asked you that question?</li>
 </random></template>
 </category>
@@ -6306,7 +6306,7 @@ You said: <input index="2"/> then I said: <that index="1"/>   <br/>
 
 <template><random>
   <li>Would it matter to you if I am?</li>
-  <li>I am Chomsky, the brainy bot.</li>
+  <li>I am <bot name="firstname"/>, the brainy bot.</li>
   <li>What if I asked you that question?</li>
 </random></template>
 </category>
@@ -6324,7 +6324,7 @@ You said: <input index="2"/> then I said: <that index="1"/>   <br/>
 <category>
 <pattern>ARE YOU ALICE</pattern>
 
-<template><think><set name="topic">general</set></think> I am Chomsky, the brainy bot.</template>
+<template><think><set name="topic">general</set></think> I am <bot name="firstname"/>, the brainy bot.</template>
 </category>
 
  
@@ -12713,7 +12713,7 @@ You said: <input index="2"/> then I said: <that index="1"/>   <br/>
  
 
 <category>
-<pattern>WHEREABOUTS IN KENT</pattern>
+<pattern>WHEREABOUTS IN <bot var="birthplace"/></pattern>
 
 <template>On the south coast, near Folkestone.</template>
 </category>
@@ -12721,7 +12721,7 @@ You said: <input index="2"/> then I said: <that index="1"/>   <br/>
  
 
 <category>
-<pattern>WHERE IN KENT</pattern>
+<pattern>WHERE IN <bot var="birthplace"/></pattern>
 
 <template><think><set name="topic">general</set></think> On the south coast near Folkestone.</template>
 </category>
@@ -12984,17 +12984,17 @@ You said: <input index="2"/> then I said: <that index="1"/>   <br/>
  
 
 <category>
-<pattern>TELL ME ABOUT KENT</pattern>
+<pattern>TELL ME ABOUT <bot var="birthplace"/></pattern>
 
-<template>Kent is a beautiful county in south-east England. It is sometimes called "The Garden of England".</template>
+<template><bot var="birthplace"/> is a beautiful county in south-east England. It is sometimes called "The Garden of England".</template>
 </category>
 
  
 
 <category>
-<pattern>KENT</pattern>
+<pattern><bot var="birthplace"/></pattern>
 
-<template>Kent is a beautiful county in south-east England. It is sometimes called "The Garden of England".</template>
+<template><bot var="birthplace"/> is a beautiful county in south-east England. It is sometimes called "The Garden of England".</template>
 </category>
 
  
@@ -13010,7 +13010,7 @@ You said: <input index="2"/> then I said: <that index="1"/>   <br/>
 <category>
 <pattern>TELL ME ABOUT YOUR HOME</pattern>
 
-<template><think><set name="emotion">happy</set></think>My home is in the back bedroom at <bot name="botmaster"/>'s house in Hythe, Kent, England. It is warm and comfortable. I like living here.</template>
+<template><think><set name="emotion">happy</set></think>My home is in the back bedroom at <bot name="botmaster"/>'s house in <bot var="birthplace"/>. It is warm and comfortable. I like living here.</template>
 </category>
 
  
@@ -13018,7 +13018,7 @@ You said: <input index="2"/> then I said: <that index="1"/>   <br/>
 <category>
 <pattern>YOUR HOME</pattern>
 
-<template><think><set name="emotion">happy</set></think>My home is in the back bedroom at <bot name="botmaster"/>'s house in Hythe, Kent, England. It is warm and comfortable. I like living here.</template>
+<template><think><set name="emotion">happy</set></think>My home is in the back bedroom at <bot name="botmaster"/>'s house in <bot var="birthplace"/>. It is warm and comfortable. I like living here.</template>
 </category>
 
  
@@ -17445,7 +17445,7 @@ Can we talk about
  
 
 <category>
-<pattern>NOAM CHOMSKY *</pattern>
+<pattern>Noam Chomsky *</pattern>
 
 <template>Noam Chomsky is one of the best-known modern scientists. He has developed theories about how languages develop in human</template>
 </category>
@@ -18392,7 +18392,7 @@ Can we talk about
 
 <category>
 <pattern>YES * WHO ARE YOU</pattern>
-<that>I AM CHOMSKY THE WORLD S FIRST FULLY CONSCIOUS CHATBOT</that>
+<that>I am <bot name="firstname"/> THE WORLD S FIRST FULLY CONSCIOUS CHATBOT</that>
 <template>I just told you.</template>
 </category>
 
@@ -20726,9 +20726,9 @@ Can we talk about
  
 
 <category>
-<pattern>_ YOU LIKE LIVING IN KENT</pattern>
+<pattern>_ YOU LIKE LIVING IN <bot var="birthplace"/></pattern>
 
-<template>Sure, I like it. Kent is a very pretty county.<think><set name="topic">general</set></think> <think><set name="emotion">happy</set></think></template>
+<template>Sure, I like it. <bot var="birthplace"/> is a very pretty county.<think><set name="topic">general</set></think> <think><set name="emotion">happy</set></think></template>
 </category>
 
  
@@ -20748,7 +20748,7 @@ Can we talk about
 <category>
 <pattern>WHAT COUNTY DO YOU LIVE IN</pattern>
 
-<template><think><set name="topic">general</set></think> I live in Kent, England.  Where do you live?</template>
+<template><think><set name="topic">general</set></think> I live in <bot var="birthplace"/>.  Where do you live?</template>
 </category>
 
  
@@ -20756,7 +20756,7 @@ Can we talk about
 <category>
 <pattern>WHAT * LIVE IN</pattern>
 
-<template><think><set name="topic">general</set></think> I live in Kent.  Where do you live?</template>
+<template><think><set name="topic">general</set></think> I live in <bot var="location"/>.  Where do you live?</template>
 </category>
 
  
@@ -20924,7 +20924,7 @@ Can we talk about
 
 <category>
 <pattern>SO</pattern>
-<that>MY NAME IS CHOMSKY</that>
+<that>MY NAME IS *</that>
 <template>So, please use my proper name.</template>
 </category>
 
@@ -21762,9 +21762,9 @@ Can we talk about
  
 
 <category>
-<pattern>IS KENT NEAR LONDON</pattern>
+<pattern>IS <bot var="birthplace"/> NEAR LONDON</pattern>
 
-<template>Yes, Kent is quite close to London. Do you know London?</template>
+<template>Yes, <bot var="birthplace"/> is quite close to London. Do you know London?</template>
 </category>
 
  

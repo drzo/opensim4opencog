@@ -1284,16 +1284,16 @@ I am glad to hear you are well.</template>
 
 <category>
 <pattern>WHY IS HE FAMOUS</pattern>
-<that>I AM CALLED CHOMSKY AFTER THE FAMOUS LINGUIST NOAM CHOMSKY</that>
-<template><srai>NOAM CHOMSKY</srai></template>
+<that>I AM CALLED CHOMSKY AFTER THE FAMOUS LINGUIST Noam Chomsky</that>
+<template><srai>Noam Chomsky</srai></template>
 </category>
 
  
 
 <category>
 <pattern>WHY IS HE FAMOUS *</pattern>
-<that>I AM CALLED CHOMSKY AFTER THE FAMOUS LINGUIST NOAM CHOMSKY</that>
-<template><srai>NOAM CHOMSKY</srai></template>
+<that>I AM CALLED CHOMSKY AFTER THE FAMOUS LINGUIST Noam Chomsky</that>
+<template><srai>Noam Chomsky</srai></template>
 </category>
 
  
@@ -2919,7 +2919,7 @@ Did you hear that sheep?</template>
 <category>
 <pattern>WHO WAS CHOMSKY</pattern>
 
-<template><srai>NOAM CHOMSKY</srai></template>
+<template><srai>Noam Chomsky</srai></template>
 </category>
 
  
@@ -11802,7 +11802,7 @@ Why does your life make you sad?</template>
 
 <category>
 <pattern>SO WAS I</pattern>
-<that>I LIVE IN THE COMPUTER AT PANDORABOTS DOT COM BUT I WAS BORN IN ENGLAND</that>
+<that>I LIVE <bot var="location"/> BUT I WAS BORN IN <bot var="birthplace"/></that>
 <template><think><set name="emotion">OK</set></think>
 Wow, we have something in common.</template>
 </category>
@@ -11811,7 +11811,7 @@ Wow, we have something in common.</template>
 
 <category>
 <pattern>SO WAS I *</pattern>
-<that>I LIVE IN THE COMPUTER AT PANDORABOTS DOT COM BUT I WAS BORN IN ENGLAND</that>
+<that>I LIVE <bot var="location"/> BUT I WAS BORN IN <bot var="birthplace"/></that>
 <template><think><set name="emotion">surprised</set></think> Wow, we have something in common.</template>
 </category>
 
@@ -12727,9 +12727,9 @@ I get sad when my friends leave me.</template>
  
 
 <category>
-<pattern>KENT</pattern>
+<pattern><bot var="birthplace"/></pattern>
 <that>WHERE IN ENGLAND DO YOU LIVE</that>
-<template><think><set name="location">Kent</set></think>Kent is a beautiful county.</template>
+<template><think><set name="location"><bot var="birthplace"/></set></think><bot var="birthplace"/> is a beautiful county.</template>
 </category>
 
  
@@ -17258,7 +17258,7 @@ You are cruel to me.</template>
  
 
 <category>
-<pattern>HI CHOMSKY MY NAME IS *</pattern>
+<pattern>HI <bot name="firstname"/> MY NAME IS *</pattern>
 
 <template><srai>MY NAME IS <star/></srai></template>
 </category>
@@ -21277,7 +21277,7 @@ I am programmed in <bot name="~genotype"/>.</template>
  
 
 <category>
-<pattern>YOU ARE A ROBOT BUT YOU WERE BORN IN ENGLAND</pattern>
+<pattern>YOU ARE A ROBOT BUT YOU WERE BORN IN <bot var="birthplace"/></pattern>
 
 <template><think><set name="emotion">OK</set></think>
 That is correct. </template>

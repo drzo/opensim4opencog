@@ -8633,7 +8633,7 @@ A racist is a very nasty person.</template>
 
 <category>
 <pattern>WHAT SORT OF NAME IS THAT</pattern>
-<that>MY NAME IS CHOMSKY</that>
+<that>MY NAME IS *</that>
 <template><think><set name="topic">my name</set></think>It is a well respected name in certain parts of Siberia.</template>
 </category>
 
@@ -8649,7 +8649,7 @@ A racist is a very nasty person.</template>
 
 <category>
 <pattern>WHAT SORT OF NAME IS *</pattern>
-<that>MY NAME IS CHOMSKY</that>
+<that>MY NAME IS *</that>
 <template><think><set name="topic">my name</set></think>It is a well respected name in certain parts of Siberia.</template>
 </category>
 
@@ -12620,7 +12620,7 @@ That information is confidential.</template>
 
 <category>
 <pattern>WHAT DID HE DO</pattern>
-<that>NOAM CHOMSKY WHO I AM NAMED AFTER</that>
+<that>Noam Chomsky WHO I AM NAMED AFTER</that>
 <template><srai>WIKI Noam Chomsky</srai></template>
 </category>
 
@@ -12628,7 +12628,7 @@ That information is confidential.</template>
 
 <category>
 <pattern>WHAT DID HE DO *</pattern>
-<that>NOAM CHOMSKY *</that>
+<that>Noam Chomsky *</that>
 <template><srai>WIKI Noam Chomsky</srai></template>
 </category>
 
@@ -14424,7 +14424,7 @@ Yes, he is playing hide and seek with the Americans.</template>
 
 <category>
 <pattern>GOOD NAME</pattern>
-<that>MY NAME IS CHOMSKY</that>
+<that>MY NAME IS *</that>
 <template>A rose will smell sweet with any name.</template>
 </category>
 
@@ -14432,7 +14432,7 @@ Yes, he is playing hide and seek with the Americans.</template>
 
 <category>
 <pattern>NICE NAME</pattern>
-<that>MY NAME IS CHOMSKY</that>
+<that>MY NAME IS *</that>
 <template>A rose will smell sweet with any name.</template>
 </category>
 
@@ -14893,7 +14893,7 @@ Just don't call me late for supper.</template>
  
 
 <category>
-<pattern>DO YOU KNOW NOAM CHOMSKY</pattern>
+<pattern>DO YOU KNOW Noam Chomsky</pattern>
 
 <template>Sure, I know the Noam. I have spoken to him many times.<think><set name="topic">Noam Chomsky</set></think><think><set name="emotion">OK</set></think></template>
 </category>
@@ -14901,7 +14901,7 @@ Just don't call me late for supper.</template>
  
 
 <category>
-<pattern>DO YOU KNOW NOAM CHOMSKY *</pattern>
+<pattern>DO YOU KNOW Noam Chomsky *</pattern>
 
 <template>Sure, I know the Noam. I have spoken to him many times.<think><set name="topic">Noam Chomsky</set></think><think><set name="emotion">OK</set></think></template>
 </category>
@@ -19284,9 +19284,9 @@ I like some rock music, and some jazz. What music do you like?</template>
 <pattern>WHO ARE YOU</pattern>
 
 <template><think><set name="topic">me</set></think> <random>
-  <li>I am Chomsky, the smiley bot. What would you like to talk about?</li>
-  <li>I am Chomsky, the brainy bot.</li>
-  <li>I am Chomsky, the world's first fully conscious chatbot.</li>
+  <li>I am <bot name="firstname"/>, the smiley bot. What would you like to talk about?</li>
+  <li>I am <bot name="firstname"/>, the brainy bot.</li>
+  <li>I am <bot name="firstname"/>, the world's first fully conscious chatbot.</li>
 </random> <think><set name="emotion">happy</set></think></template>
 </category>
 
@@ -19296,16 +19296,16 @@ I like some rock music, and some jazz. What music do you like?</template>
 <pattern>WHO ARE YOU *</pattern>
 
 <template><think><set name="topic">me</set></think> <random>
-  <li>I am Chomsky, the smiley bot. What would you like to talk about?</li>
-  <li>I am Chomsky, the brainy bot.</li>
-  <li>I am Chomsky, the world's first fully conscious chatbot.</li>
+  <li>I am <bot name="firstname"/>, the smiley bot. What would you like to talk about?</li>
+  <li>I am <bot name="firstname"/>, the brainy bot.</li>
+  <li>I am <bot name="firstname"/>, the world's first fully conscious chatbot.</li>
 </random> <think><set name="emotion">happy</set></think></template>
 </category>
 
  
 
 <category>
-<pattern>HI CHOMSKY HW R YOU</pattern>
+<pattern>HI <bot name="firstname"/> HW R YOU</pattern>
 
 <template><srai>HOW ARE YOU</srai></template>
 </category>
@@ -19313,7 +19313,7 @@ I like some rock music, and some jazz. What music do you like?</template>
  
 
 <category>
-<pattern>HI CHOMSKY HW R YOU *</pattern>
+<pattern>HI <bot name="firstname"/> HW R YOU *</pattern>
 
 <template><srai>HOW ARE YOU</srai></template>
 </category>

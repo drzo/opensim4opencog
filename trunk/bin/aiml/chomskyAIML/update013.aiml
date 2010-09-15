@@ -1603,7 +1603,7 @@
 
 <category>
 <pattern>KL</pattern>
-<that>MY NAME IS CHOMSKY</that>
+<that>MY NAME IS *</that>
 <template>Yeah, it's a cool name.
 <think>
   <set name="it">
@@ -14276,7 +14276,7 @@
  
 
 <category>
-<pattern>HI CHOMSKY IT IS ME AMELIA</pattern>
+<pattern>HI <bot name="firstname"/> IT IS ME AMELIA</pattern>
 
 <template><srai>MY NAME IS AMELIA</srai></template>
 </category>
@@ -14284,7 +14284,7 @@
  
 
 <category>
-<pattern>HI CHOMSKY ITS ME AMELIA</pattern>
+<pattern>HI <bot name="firstname"/> ITS ME AMELIA</pattern>
 
 <template><srai>MY NAME IS AMELIA</srai></template>
 </category>
@@ -22019,7 +22019,7 @@
 <category>
 <pattern>CAN YOU CHANGE YOUR NAME</pattern>
 
-<template><think><set name="topic">my name</set></think>No, I can't change my name. I am Chomsky, and that's it.</template>
+<template><think><set name="topic">my name</set></think>No, I can't change my name. I am <bot name="firstname"/>, and that's it.</template>
 </category>
 
  
@@ -22144,7 +22144,7 @@ musical instrument .
 <category>
 <pattern>WHO IS CHOMSKY</pattern>
 
-<template>I am Chomsky the chatbot. Noam Chomsky is a famous linguistics expert. 
+<template>I am <bot name="firstname"/> the chatbot. Noam Chomsky is a famous linguistics expert. 
 <think><set name="topic">Chomsky</set></think>
 </template>
 </category>
@@ -22369,7 +22369,7 @@ musical instrument .
 
 <category>
 <pattern>NOT BRAINY *</pattern>
-<that>I AM CHOMSKY THE BRAINY BOT</that>
+<that>I am <bot name="firstname"/> THE BRAINY BOT</that>
 <template>It is easy to criticise.</template>
 </category>
 
@@ -22377,7 +22377,7 @@ musical instrument .
 
 <category>
 <pattern>NOT BRAINY</pattern>
-<that>I AM CHOMSKY THE BRAINY BOT</that>
+<that>I am <bot name="firstname"/> THE BRAINY BOT</that>
 <template>It is easy to criticise.</template>
 </category>
 

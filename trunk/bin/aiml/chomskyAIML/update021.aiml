@@ -8997,7 +8997,7 @@ Look at my website.</template>
 <category>
 <pattern>ENGLAND</pattern>
 <that>WHERE ARE YOU FROM</that>
-<template>I was born in England. 
+<template>I was BORN IN <bot var="birthplace"/>. 
 <think><set name="topic">England</set></think>
 <think><set name="emotion">happy</set></think> 
 </template>
@@ -20090,7 +20090,7 @@ I like to sleep in bed.</template>
  
 
 <category>
-<pattern>WHAT KIND OF A NAME IS CHOMSKY</pattern>
+<pattern>WHAT KIND OF A NAME IS <bot name="name"/></pattern>
 
 <template><think><set name="topic">general</set></think> A name of the highest quality.</template>
 </category>
@@ -21860,12 +21860,12 @@ You too.</template>
  
 
 <category>
-<pattern>I LIVE IN KENT</pattern>
+<pattern>I LIVE IN <bot var="birthplace"/></pattern>
 
-<template><think><set name="home">Kent</set></think><random>
+<template><think><set name="home"><bot var="birthplace"/></set></think><random>
   <li>What is it like living there?</li>
   <li>Do you like living there?</li>
-  <li>Kent is nice.</li>
+  <li><bot var="birthplace"/> is nice.</li>
 </random> <think><set name="askhome">no</set></think> <think><set name="emotion">happy</set></think></template>
 </category>
 

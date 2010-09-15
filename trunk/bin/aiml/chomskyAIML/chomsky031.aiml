@@ -17835,9 +17835,9 @@ I think only: <srai>WHAT IS LIFE</srai>    </template></category>
 <think><set name="topic">reductions</set></think>
    <srai>WHAT IS NEW YORK</srai>    </template></category>
   
-<category><pattern>WHAT DO YOU THINK ABOUT NOAM CHOMSKY</pattern><template>
+<category><pattern>WHAT DO YOU THINK ABOUT Noam Chomsky</pattern><template>
 <think><set name="topic">reductions</set></think>
-   <srai>WHO IS NOAM CHOMSKY</srai>    </template></category>
+   <srai>WHO IS Noam Chomsky</srai>    </template></category>
   
 <category><pattern>WHAT DO YOU THINK ABOUT NORWAY</pattern><template>
 <think><set name="topic">reductions</set></think>

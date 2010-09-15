@@ -14539,22 +14539,22 @@ Failure is not a permanent situation. Try again, I say.</template>
 
 <category>
 <pattern>WHO IS HE</pattern>
-<that>YES NOAM CHOMSKY AND I ARE VERY SIMILAR</that>
-<template><srai>NOAM CHOMSKY</srai></template>
+<that>YES Noam Chomsky AND I ARE VERY SIMILAR</that>
+<template><srai>Noam Chomsky</srai></template>
 </category>
 
  
 
-<topic name="NOAM CHOMSKY"><category>
+<topic name="Noam Chomsky"><category>
 <pattern>WHO IS HE</pattern>
 
-<template><srai>NOAM CHOMSKY</srai></template>
+<template><srai>Noam Chomsky</srai></template>
 </category>
 </topic>
  
 
 <category>
-<pattern>NOAM CHOMSKY</pattern>
+<pattern>Noam Chomsky</pattern>
 
 <template><random>
   <li>Noam Chomsky is one of the best-known modern scientists. He has developed theories about how languages develop in humans.
@@ -15420,7 +15420,7 @@ Yes, I would like to buy some more memory chips.
  
 
 <category>
-<pattern>I AM CHOMSKY THE BRAINY BOT</pattern>
+<pattern>I am <bot name="firstname"/> THE BRAINY BOT</pattern>
 
 <template><think><set name="topic">general</set></think>
 <think><set name="emotion">very happy</set></think>

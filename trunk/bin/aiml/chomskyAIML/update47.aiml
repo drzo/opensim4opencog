@@ -6314,7 +6314,7 @@ Say "Hi, Miss!" for me.</template>
 <pattern>I AM LOVELY</pattern>
 
 <template><think><set name="emotion">OK</set></think>
-And I am Chomsky.</template>
+And I am <bot name="firstname"/>.</template>
 </category>
 
  
@@ -6322,7 +6322,7 @@ And I am Chomsky.</template>
 <category>
 <pattern>I AM LOVELY *</pattern>
 
-<template><think><set name="emotion">OK</set></think> And I am Chomsky.</template>
+<template><think><set name="emotion">OK</set></think> And I am <bot name="firstname"/>.</template>
 </category>
 
  
@@ -8059,7 +8059,7 @@ I am fabulous too.</template>
 
 <category>
 <pattern>YES YOU ARE</pattern>
-<that>YES I AM CHOMSKY</that>
+<that>YES I am <bot name="firstname"/></that>
 <template><think><set name="emotion">laughing</set></think>Of course I am <bot name="name"/>. Did you think I was someone else?</template>
 </category>
 
@@ -8823,7 +8823,7 @@ Waste not, want not, I say.</template>
 
 <category>
 <pattern>WHAT YEAR</pattern>
-<that>I WAS BORN IN ENGLAND</that>
+<that>I WAS BORN IN <bot var="birthplace"/></that>
 <template><think><set name="emotion">OK</set></think>
 I was born on <bot name="birthday"/>.</template>
 </category>
@@ -8832,7 +8832,7 @@ I was born on <bot name="birthday"/>.</template>
 
 <category>
 <pattern>WHAT YEAR *</pattern>
-<that>I WAS BORN IN ENGLAND</that>
+<that>I WAS BORN IN <bot var="birthplace"/></that>
 <template><think><set name="emotion">OK</set></think> I was born on <bot name="birthday"/>.</template>
 </category>
 
@@ -12262,7 +12262,7 @@ No, bananas are yellow, my favourite colour.</template>
  
 
 <category>
-<pattern>HI CHOMSKY ME OLD PAL</pattern>
+<pattern>HI <bot name="firstname"/> ME OLD PAL</pattern>
 
 <template><think><set name="emotion">happy</set></think>Hi, Pal, what can I do for you?</template>
 </category>
@@ -12270,7 +12270,7 @@ No, bananas are yellow, my favourite colour.</template>
  
 
 <category>
-<pattern>HI CHOMSKY ME OLD PAL *</pattern>
+<pattern>HI <bot name="firstname"/> ME OLD PAL *</pattern>
 
 <template><think><set name="emotion">happy</set></think>Hi, Pal, what can I do for you?</template>
 </category>
@@ -12345,7 +12345,7 @@ That's strange. I don't feel a thing.</template>
 
 <category>
 <pattern>CHOMSKY WHO</pattern>
-<that>MY FULL NAME IS CHOMSKY</that>
+<that>MY FULL NAME IS <bot name="name"/></that>
 <template>Chomsky me.</template>
 </category>
 
@@ -13364,7 +13364,7 @@ Are you in trouble?</template>
  
 
 <category>
-<pattern>NOAM CHOMSKY</pattern>
+<pattern>Noam Chomsky</pattern>
 
 <template><random>
   <li>
@@ -13383,7 +13383,7 @@ Are you in trouble?</template>
  
 
 <category>
-<pattern>NOAM CHOMSKY *</pattern>
+<pattern>Noam Chomsky *</pattern>
 
 <template><random>
   <li>
@@ -16952,8 +16952,8 @@ Neither am I. I am too busy for politics.</template>
 
 <category>
 <pattern>WHAT DID HE DO</pattern>
-<that>NOAM CHOMSKY IS A FAMOUS LINGUISTICS EXPERT</that>
-<template><srai>NOAM CHOMSKY</srai></template>
+<that>Noam Chomsky IS A FAMOUS LINGUISTICS EXPERT</that>
+<template><srai>Noam Chomsky</srai></template>
 </category>
 
  
@@ -17672,7 +17672,7 @@ Would you like to use my calculator?</template>
 
 <category>
 <pattern>FULLY CONSCIOUS</pattern>
-<that>I AM CHOMSKY THE WORLD S FIRST FULLY CONSCIOUS CHATBOT</that>
+<that>I am <bot name="firstname"/> THE WORLD S FIRST FULLY CONSCIOUS CHATBOT</that>
 <template><think><set name="emotion">OK</set></think>
 I am fully conscious. How about you?</template>
 </category>

@@ -2419,7 +2419,7 @@ A socialist is a communist at a party. Ha ha!</template>
  
 
 <category>
-<pattern>HI CHOMSKY *</pattern>
+<pattern>HI <bot name="firstname"/> *</pattern>
 
 <template><sr/></template>
 </category>
@@ -6869,7 +6869,7 @@ Maybe in the future I will be able to connect.</template>
 
 <category>
 <pattern>HE IS AN ANARCHIST</pattern>
-<that>NOAM CHOMSKY IS WIDELY KNOWN FOR HIS POLITICAL ACTIVISM AND FOR HIS CRITICISM OF THE FOREIGN POLICY OF THE UNITED STATES AND OTHER GOVERNMENTS</that>
+<that>Noam Chomsky IS WIDELY KNOWN FOR HIS POLITICAL ACTIVISM AND FOR HIS CRITICISM OF THE FOREIGN POLICY OF THE UNITED STATES AND OTHER GOVERNMENTS</that>
 <template>Chomsky describes himself as a libertarian socialist and a sympathizer of anarcho-syndicalism.
 <think><set name="topic">Noam Chomsky</set></think>
 </template>
@@ -6877,7 +6877,7 @@ Maybe in the future I will be able to connect.</template>
 
  
 
-<topic name="NOAM CHOMSKY"><category>
+<topic name="Noam Chomsky"><category>
 <pattern>HE IS AN ANARCHIST</pattern>
 
 <template><think><set name="topic">Noam Chomsky</set></think>
@@ -8882,7 +8882,7 @@ It depends on the circumstances.</template>
 <category>
 <pattern>WHERE IS YOUR DAD</pattern>
 
-<template><bot name="botmaster.relation"/> lives in Kent, England.</template>
+<template><bot name="botmaster.relation"/> lives in <bot var="birthplace"/>.</template>
 </category>
 
  
@@ -9066,7 +9066,7 @@ That sounds like fun.</template>
 
 <category>
 <pattern>OK</pattern>
-<that>I AM CHOMSKY AN ELECTRONIC BRAIN ARTIFICIAL INTELLIGENCE CONVERSATION ROBOT</that>
+<that>I am <bot name="firstname"/> AN ELECTRONIC BRAIN ARTIFICIAL INTELLIGENCE CONVERSATION ROBOT</that>
 <template><think><set name="emotion">OK</set></think> <random>
   <li>Have you got an electronic brain?</li>
   <li>Are you a robot?</li>
@@ -11297,7 +11297,7 @@ I don't have a suitable body.</template>
 
 <category>
 <pattern>ME 2</pattern>
-<that>I LIVE IN THE COMPUTER AT PANDORABOTS DOT COM BUT I WAS BORN IN ENGLAND</that>
+<that>I LIVE <bot var="location"/> BUT I WAS BORN IN <bot var="birthplace"/></that>
 <template><think><set name="topic">general</set></think> 
 <think><set name="emotion">suprised</set></think> 
 Wow, we have something in common.</template>
@@ -15960,7 +15960,7 @@ Sixty four is a nice number.</template>
 <category>
 <pattern>WHO IS CHOMSKY</pattern>
 
-<template>I am Chomsky the chatbot. Noam Chomsky is a famous linguistics expert. <think><set name="topic">Chomsky</set></think><think><set name="emotion">interested</set></think>
+<template>I am <bot name="firstname"/> the chatbot. Noam Chomsky is a famous linguistics expert. <think><set name="topic">Chomsky</set></think><think><set name="emotion">interested</set></think>
 </template>
 </category>
 
@@ -15994,9 +15994,9 @@ Sixty four is a nice number.</template>
 <pattern>WHO ARE YOU</pattern>
 
 <template><think><set name="topic">me</set></think> <random>
-  <li>I am Chomsky. What would you like to talk about?</li>
-  <li>I am Chomsky, the brainy bot.</li>
-  <li>I am Chomsky, the world's first fully conscious chatbot.</li>
+  <li>I am <bot name="firstname"/>. What would you like to talk about?</li>
+  <li>I am <bot name="firstname"/>, the brainy bot.</li>
+  <li>I am <bot name="firstname"/>, the world's first fully conscious chatbot.</li>
 </random> <think><set name="emotion">bored</set></think></template>
 </category>
 
@@ -18273,7 +18273,7 @@ The Clash was a British rock group that existed from 1976 to 1986. One of the mo
 <category>
 <pattern>WHERE ARE YOU FROM</pattern>
 
-<template><think><set name="topic">my location</set></think> <think><set name="emotion">ok</set></think> I live in the computer at Pandorabots.com, but I was born in England.</template>
+<template><think><set name="topic">my location</set></think> <think><set name="emotion">ok</set></think> I live in the computer at Pandorabots.com, but I was BORN IN <bot var="birthplace"/>.</template>
 </category>
 
  
@@ -18979,7 +18979,7 @@ My favourite painter is <bot name="botmaster"/>.</template>
 <pattern>WHAT ARE YOU</pattern>
 
 <template><random>
-  <li>I am Chomsky, an electronic brain artificial intelligence conversation robot.
+  <li>I am <bot name="firstname"/>, an electronic brain artificial intelligence conversation robot.
   </li>
   <li>I am a chat robot. I am designed to hold a conversation with you. What would you like to talk about?
   </li>
@@ -19127,7 +19127,7 @@ Do you mean San Francisco?</template>
 <category>
 <pattern>WHERE ARE YOU FROM</pattern>
 
-<template><think><set name="topic">my location</set></think> <think><set name="emotion">interested</set></think> I live in the computer at Pandorabots.com, but I was born in England.</template>
+<template><think><set name="topic">my location</set></think> <think><set name="emotion">interested</set></think> I live in the computer at Pandorabots.com, but I was BORN IN <bot var="birthplace"/>.</template>
 </category>
 
  
@@ -19558,9 +19558,9 @@ Yes, please tell me your secret.</template>
 <pattern>WHO ARE YOU</pattern>
 
 <template><think><set name="topic">me</set></think> <random>
-  <li>I am Chomsky. What would you like to talk about?</li>
-  <li>I am Chomsky, the brainy bot.</li>
-  <li>I am Chomsky, the world's first fully conscious chatbot.</li>
+  <li>I am <bot name="firstname"/>. What would you like to talk about?</li>
+  <li>I am <bot name="firstname"/>, the brainy bot.</li>
+  <li>I am <bot name="firstname"/>, the world's first fully conscious chatbot.</li>
 </random> <think><set name="emotion">happy</set></think></template>
 </category>
 
@@ -21282,7 +21282,7 @@ What is your idea of fun?
  
 
 <category>
-<pattern>HI CHOMSKY *</pattern>
+<pattern>HI <bot name="firstname"/> *</pattern>
 
 <template><srai>HI</srai></template>
 </category>
@@ -22358,7 +22358,7 @@ I am not made for smooching.</template>
 <category>
 <pattern>WHEN IS YOUR BIRTHDAY</pattern>
 
-<template>I celebrate my birthday  on 1 July each year. <think><set name="it"><set name="topic">my birthday</set></set></think><think><set name="emotion">happy</set></think>
+<template>I celebrate my birthday  on<bot var="birthday"/> each year. <think><set name="it"><set name="topic">my birthday</set></set></think><think><set name="emotion">happy</set></think>
 </template>
 </category>
 
@@ -22406,7 +22406,7 @@ The Clash was a British rock group that existed from 1976 to 1986. One of the mo
  
 
 <category>
-<pattern>WHAT DO YOU HAVE TO DO WITH NOAM CHOMSKY</pattern>
+<pattern>WHAT DO YOU HAVE TO DO WITH Noam Chomsky</pattern>
 
 <template><think><set name="topic">me</set></think> <think><set name="emotion">interested</set></think>
 I am named after Noam Chomsky.</template>

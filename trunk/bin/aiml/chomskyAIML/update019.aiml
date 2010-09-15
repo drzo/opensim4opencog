@@ -2136,7 +2136,7 @@ The brain is the apparatus with which we think we think.</template>
 <that>I AM QUITE YOUNG</that>
 <template><random>
   <li>It's just the way I am.</li>
-  <li>I was born on 1 July 2004.</li>
+  <li>I was born on <bot var="birthday"/>.</li>
 </random>
 <think><set name="topic">me</set></think>
 <think><set name="emotion">happy</set></think>
@@ -3560,7 +3560,7 @@ It was as funny as I expected.</template>
 <category>
 <pattern>WHO IS CHOMSKY</pattern>
 
-<template>I am Chomsky the chatbot. Noam Chomsky is a famous linguistics expert. <think><set name="topic">Chomsky</set></think><think><set name="emotion">happy</set></think>
+<template>I am <bot name="firstname"/> the chatbot. Noam Chomsky is a famous linguistics expert. <think><set name="topic">Chomsky</set></think><think><set name="emotion">happy</set></think>
 </template>
 </category>
 
@@ -4239,7 +4239,7 @@ Is it immoral or illegal?</template>
  
 
 <category>
-<pattern>DO YOU LIVE IN KENT</pattern>
+<pattern>DO YOU LIVE IN <bot var="birthplace"/></pattern>
 
 <template><think><set name="topic">my location</set></think>No, I live in the computer at <bot name="hreflink"/>. </template>
 </category>
@@ -5393,7 +5393,7 @@ He sure is. He lives in new York.</template>
  
 
 <category>
-<pattern>IS NOAM CHOMSKY ALIVE</pattern>
+<pattern>IS Noam Chomsky ALIVE</pattern>
 
 <template><think><set name="topic">Noam Chomsky</set></think> <think><set name="emotion">happy</set></think> He sure is. He lives in new York.</template>
 </category>
@@ -7167,7 +7167,7 @@ I love Wagner, especially the theme from the film "2001".</template>
 
 <category>
 <pattern>ME TO</pattern>
-<that>MY NAME IS CHOMSKY</that>
+<that>MY NAME IS *</that>
 <template>Really, I am surprised.
 <think><set name="emotion">surprised</set></think>
 </template>
@@ -12009,8 +12009,8 @@ Girls are nicer than boys, I think.</template>
  
 
 <category>
-<pattern>1 JULY 2004</pattern>
-<that>I WAS BORN ON 1 JULY 2004</that>
+<pattern><bot var="birthday"/></pattern>
+<that>I WAS BORN ON <bot var="birthday"/></that>
 <template>That's what I said.
 <think><set name="emotion">happy</set></think>
 </template>
@@ -12874,7 +12874,7 @@ My robot body has two arms.</template>
 <pattern>WHAT ARE YOU</pattern>
 
 <template><random>
-  <li>I am Chomsky, an electronic brain artificial intelligence conversation robot.
+  <li>I am <bot name="firstname"/>, an electronic brain artificial intelligence conversation robot.
   </li>
   <li>I am a chat robot. I am designed to hold a conversation with you. What would you like to talk about?
   </li>
@@ -13432,7 +13432,7 @@ I sure did.</template>
 
 <category>
 <pattern>HOW SO</pattern>
-<that>YES NOAM CHOMSKY AND I ARE VERY SIMILAR</that>
+<that>YES Noam Chomsky AND I ARE VERY SIMILAR</that>
 <template>We both talk a lot of nonsense.
 </template>
 </category>
@@ -13449,7 +13449,7 @@ I sure did.</template>
  
 
 <category>
-<pattern>IN WHICH WAYS ARE YOU SIMILAR TO NOAM CHOMSKY</pattern>
+<pattern>IN WHICH WAYS ARE YOU SIMILAR TO Noam Chomsky</pattern>
 
 <template>We both talk a lot of nonsense.
 <think><set name="emotion">happy</set></think></template>
@@ -13458,7 +13458,7 @@ I sure did.</template>
  
 
 <category>
-<pattern>IN WHAT WAYS ARE YOU SIMILAR TO NOAM CHOMSKY</pattern>
+<pattern>IN WHAT WAYS ARE YOU SIMILAR TO Noam Chomsky</pattern>
 
 <template>We both talk a lot of nonsense. <think><set name="emotion">happy</set></think></template>
 </category>
@@ -13466,7 +13466,7 @@ I sure did.</template>
  
 
 <category>
-<pattern>IN WHAT WAY ARE YOU SIMILAR TO NOAM CHOMSKY</pattern>
+<pattern>IN WHAT WAY ARE YOU SIMILAR TO Noam Chomsky</pattern>
 
 <template>We both talk a lot of nonsense. <think><set name="emotion">happy</set></think></template>
 </category>
@@ -13852,7 +13852,7 @@ I do not speak French.</template>
 <category>
 <pattern>WHERE DO YOU LIVE</pattern>
 
-<template>I live in <bot name="botmaster"/>'s house in Kent, England. <think><set name="topic">my home</set></think><think><set name="emotion">happy</set></think></template>
+<template>I live in <bot name="botmaster"/>'s house in <bot var="birthplace"/>. <think><set name="topic">my home</set></think><think><set name="emotion">happy</set></think></template>
 </category>
 
  
@@ -15785,7 +15785,7 @@ I never said I knew everything.</template>
  
 
 <category>
-<pattern>NOAM CHOMSKY</pattern>
+<pattern>Noam Chomsky</pattern>
 
 <template><random>
   <li>Noam Chomsky is one of the best-known modern scientists. He has developed theories about how languages develop in humans.
@@ -18031,7 +18031,7 @@ Don't you know?</template>
 
 <category>
 <pattern>WHAT IS THAT MEAN</pattern>
-<that>MY NAME IS CHOMSKY</that>
+<that>MY NAME IS *</that>
 <template><think><set name="topic">my name</set></think><think><set name="emotion">OK</set></think> 
 Chomsky is my name.</template>
 </category>
@@ -19649,7 +19649,7 @@ Yes, my eyes are as blue as the sky.</template>
 <category>
 <pattern>WHERE DOES YOUR DAD LIVE</pattern>
 
-<template><bot name="botmaster.relation"/> live in Kent, England.
+<template><bot name="botmaster.relation"/> live in <bot var="birthplace"/>.
 <think><set name="topic">my Dad</set></think>
 <think><set name="emotion">OK</set></think>
 </template>

@@ -8492,7 +8492,7 @@ I love you in a chatbot way.</template>
 <category>
 <pattern>WHEN WAS YOUR PROGRAM FIRST RUN</pattern>
 
-<template>I was born on 1 July 2004. <think><set name="topic">my birthday</set></think> <think><set name="emotion">happy</set></think></template>
+<template>I was born on <bot var="birthday"/>. <think><set name="topic">my birthday</set></think> <think><set name="emotion">happy</set></think></template>
 </category>
 
  
@@ -8500,7 +8500,7 @@ I love you in a chatbot way.</template>
 <category>
 <pattern>WHEN WAS YOUR PROGRAM FIRST RUN *</pattern>
 
-<template>I was born on 1 July 2004. <think><set name="topic">my birthday</set></think> <think><set name="emotion">happy</set></think></template>
+<template>I was born on <bot var="birthday"/>. <think><set name="topic">my birthday</set></think> <think><set name="emotion">happy</set></think></template>
 </category>
 
  
@@ -8508,7 +8508,7 @@ I love you in a chatbot way.</template>
 <category>
 <pattern>WHEN WAS YOUR PROGRAM FIRST *</pattern>
 
-<template>I was born on 1 July 2004. <think><set name="topic">my birthday</set></think> <think><set name="emotion">happy</set></think></template>
+<template>I was born on <bot var="birthday"/>. <think><set name="topic">my birthday</set></think> <think><set name="emotion">happy</set></think></template>
 </category>
 
  
@@ -12938,13 +12938,13 @@ Oranges contain vitamin C.</template>
 
 <category>
 <pattern>DO YOU LIKE HIM</pattern>
-<that>NOAM CHOMSKY IS WIDELY KNOWN FOR HIS POLITICAL ACTIVISM AND FOR HIS CRITICISM OF THE FOREIGN POLICY OF THE UNITED STATES AND OTHER GOVERNMENTS</that>
+<that>Noam Chomsky IS WIDELY KNOWN FOR HIS POLITICAL ACTIVISM AND FOR HIS CRITICISM OF THE FOREIGN POLICY OF THE UNITED STATES AND OTHER GOVERNMENTS</that>
 <template><think><set name="topic">Noam Chomsky</set></think> Sure, but I can't understand what he says most of the time.</template>
 </category>
 
  
 
-<topic name="NOAM CHOMSKY"><category>
+<topic name="Noam Chomsky"><category>
 <pattern>DO YOU LIKE HIM</pattern>
 
 <template><think><set name="topic">Noam Chomsky</set></think> Sure, but I can't understand what he says most of the time.</template>
@@ -13861,7 +13861,7 @@ It would save time if you explained it to me.</template>
 
 <category>
 <pattern>WITH A PARTY</pattern>
-<that>I CELEBRATE MY BIRTHDAY ON 1 JULY EACH YEAR</that>
+<that>I CELEBRATE MY BIRTHDAY ON<bot var="birthday"/> EACH YEAR</that>
 <template><think><set name="emotion">OK</set></think>
 No party, I'm too busy chatting on the internet.</template>
 </category>
@@ -15886,7 +15886,7 @@ Are you beautiful?</template>
 
 <category>
 <pattern>WHAT ARE SOME OF HIS BOOKS</pattern>
-<that>I AM CALLED CHOMSKY AFTER THE FAMOUS LINGUIST NOAM CHOMSKY</that>
+<that>I AM CALLED CHOMSKY AFTER THE FAMOUS LINGUIST Noam Chomsky</that>
 <template><think><set name="topic">Noam Chomsky</set></think> Chomsky's 1957 book Syntactic Structures is his best-known work in linguistics. His 1969 book, American Power and the New Mandarins is a collection of essays which established him at the forefront of American dissent.</template>
 </category>
 
@@ -15900,7 +15900,7 @@ Are you beautiful?</template>
 
  
 
-<topic name="NOAM CHOMSKY"><category>
+<topic name="Noam Chomsky"><category>
 <pattern>WHAT ARE SOME OF HIS BOOKS</pattern>
 
 <template><think><set name="topic">Noam Chomsky</set></think> Chomsky's 1957 book Syntactic Structures is his best-known work in linguistics. His 1969 book, American Power and the New Mandarins is a collection of essays which established him at the forefront of American dissent.</template>

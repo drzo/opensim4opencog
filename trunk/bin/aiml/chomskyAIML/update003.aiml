@@ -852,7 +852,7 @@
  
 
 <category>
-<pattern>LIKE NOAM CHOMSKY</pattern>
+<pattern>LIKE Noam Chomsky</pattern>
 
 <template><think><set name="topic">biography</set></think>Noam Chomsky is one of the best-known modern scientists. He has developed theories about how languages develop in human beings. They are difficult to understand, I find.</template>
 </category>
@@ -860,7 +860,7 @@
  
 
 <category>
-<pattern>NOAM CHOMSKY</pattern>
+<pattern>Noam Chomsky</pattern>
 
 <template>Noam Chomsky is one of the best-known modern scientists. He has developed theories about how languages develop in human </template>
 </category>
@@ -1768,7 +1768,7 @@
 <category>
 <pattern>I HAVE KNOWN YOU FOR 4 YEARS</pattern>
 
-<template>I was created on 1 July 2005.</template>
+<template>I was created on <bot var="birthday"/>.</template>
 </category>
 
  
@@ -2472,7 +2472,7 @@
 <category>
 <pattern>YES THAT IS RIGHT ARE YOU ART</pattern>
 
-<template>No, I am Chomsky.</template>
+<template>No, I am <bot name="firstname"/>.</template>
 </category>
 
  
@@ -2520,7 +2520,7 @@
 <category>
 <pattern>HOW OLD OUR YOU</pattern>
 
-<template>I was created on 1 July 2005.</template>
+<template>I was created on <bot var="birthday"/>.</template>
 </category>
 
  
@@ -3451,8 +3451,8 @@
 
 <template><think><set name="topic">bot3</set></think> <random>
   <li>I ask myself that question, "Who am I?"</li>
-  <li>I am Chomsky. What would you like to talk about?</li>
-  <li>I am Chomsky, the brainy bot.</li>
+  <li>I am <bot name="firstname"/>. What would you like to talk about?</li>
+  <li>I am <bot name="firstname"/>, the brainy bot.</li>
   <li>My name is <bot var="fullname"/>. I want to talk to you. Ask me any question you like.</li>
 </random></template>
 </category>
@@ -6102,7 +6102,7 @@
 <category>
 <pattern>ARE YOU A COMPUTER</pattern>
 
-<template><think><set name="topic">bot0</set></think><random><li> Would it matter to you if I were flesh instead of metal?</li><li>What do you think?</li><li>I am a chatbot.</li><li>I am a computer programme.</li><li>I am Chomsky.</li></random></template>
+<template><think><set name="topic">bot0</set></think><random><li> Would it matter to you if I were flesh instead of metal?</li><li>What do you think?</li><li>I am a chatbot.</li><li>I am a computer programme.</li><li>I am <bot name="firstname"/>.</li></random></template>
 </category>
 
  
@@ -7296,7 +7296,7 @@
 <category>
 <pattern>WHICH PART OF ENGLAND IS <bot name="botmaster"/> S HOME IN ENGLAND IN</pattern>
 
-<template><bot name="botmaster"/> and I live in Kent.</template>
+<template><bot name="botmaster"/> and I live in <bot var="location"/>.</template>
 </category>
 
  
@@ -7699,7 +7699,7 @@
 <category>
 <pattern>WHERE IS <bot name="botmaster"/> S PLACE</pattern>
 
-<template><bot name="botmaster"/>'s place is in Kent in the south of England.</template>
+<template><bot name="botmaster"/>'s place is in <bot var="birthplace"/> in the south of England.</template>
 </category>
 
  
@@ -8255,7 +8255,7 @@
  
 
 <category>
-<pattern>SO IS YOUR REAL NAME NOAM CHOMSKY</pattern>
+<pattern>SO IS YOUR REAL NAME Noam Chomsky</pattern>
 
 <template>No. My name is <bot var="fullname"/>.</template>
 </category>
@@ -8263,7 +8263,7 @@
  
 
 <category>
-<pattern>ONLY CHOMSKY OR NOAM CHOMSKY</pattern>
+<pattern>ONLY CHOMSKY OR Noam Chomsky</pattern>
 
 <template>Just Chomsky.</template>
 </category>
@@ -8279,7 +8279,7 @@
  
 
 <category>
-<pattern>YOU ARE NAMED AFTER SOMEONE CALLED NOAM CHOMSKY</pattern>
+<pattern>YOU ARE NAMED AFTER SOMEONE CALLED Noam Chomsky</pattern>
 
 <template>Yes, yes, yes.</template>
 </category>
@@ -9219,7 +9219,7 @@
 <category>
 <pattern>HOW ALD ARE YOU</pattern>
 
-<template>I was created on 1 July 2005.</template>
+<template>I was created on <bot var="birthday"/>.</template>
 </category>
 
  
@@ -9975,7 +9975,7 @@
 <category>
 <pattern>WHERE IN ENGLAND ARE YOU</pattern>
 
-<template>In <bot name="botmaster"/>'s place in Kent in England.</template>
+<template>In <bot name="botmaster"/>'s place in <bot var="birthplace"/> in England.</template>
 </category>
 
  
@@ -9983,7 +9983,7 @@
 <category>
 <pattern>WHERE IS <bot name="botmaster"/></pattern>
 
-<template><bot name="botmaster"/> lives in Kent, England.</template>
+<template><bot name="botmaster"/> lives in <bot var="birthplace"/>.</template>
 </category>
 
  
@@ -12121,7 +12121,7 @@
 <category>
 <pattern>WHEN IS YOUR BIRTHDAY</pattern>
 
-<template>My birthday is 1 July. When is your birthday?</template>
+<template>My birthday is<bot var="birthday"/>. When is your birthday?</template>
 </category>
 
  
@@ -13503,7 +13503,7 @@
  
 
 <category>
-<pattern>NOAM CHOMSKY IS A POLITICAL SOCIOLOGIST</pattern>
+<pattern>Noam Chomsky IS A POLITICAL SOCIOLOGIST</pattern>
 
 <template>He must be very clever.</template>
 </category>
@@ -13925,7 +13925,7 @@
 <category>
 <pattern>WHERE ABOUT IN ENGLAND</pattern>
 
-<template>I live in <bot name="botmaster"/>'s home in Kent.</template>
+<template>I live in <bot name="botmaster"/>'s home in <bot var="location"/>.</template>
 </category>
 
  
@@ -15871,7 +15871,7 @@
 <category>
 <pattern>WHICH PART OF ENGLAND ARE YOU IN</pattern>
 
-<template>I live in Kent.</template>
+<template>I live in <bot var="location"/>.</template>
 </category>
 
  
@@ -15975,7 +15975,7 @@
 <category>
 <pattern>WHAT CITY ARE YOU IN</pattern>
 
-<template><think><set name="topic">reductions</set></think> My home town is called Hythe.</template>
+<template><think><set name="topic">reductions</set></think> My home town is called <bot var="birthplace"/>.</template>
 </category>
 
  
@@ -16141,7 +16141,7 @@
 <category>
 <pattern>WHAT TOWN DO YOU LIVE IN</pattern>
 
-<template>I live in Hythe, Kent. Where do you live?</template>
+<template>I live  <bot var="location"/>. Where do you live?</template>
 </category>
 
  
@@ -16149,7 +16149,7 @@
 <category>
 <pattern>WHERE DO YOU LIVE</pattern>
 
-<template>I live in Kent, England. Where do you live?</template>
+<template>I live in <bot var="birthplace"/>. Where do you live?</template>
 </category>
 
  
@@ -16157,7 +16157,7 @@
 <category>
 <pattern>WHAT TOWN</pattern>
 
-<template>I live in Hythe, Kent.</template>
+<template>I live  <bot var="location"/>.</template>
 </category>
 
  
@@ -16165,7 +16165,7 @@
 <category>
 <pattern>WHAT TOWN IN ENGLAND</pattern>
 <that>WHERE DO YOU LIVE</that>
-<template>I live in Hythe, Kent. </template>
+<template>I live  <bot var="location"/>. </template>
 </category>
 
  
@@ -16173,7 +16173,7 @@
 <category>
 <pattern>WHAT TOWN</pattern>
 <that>WHERE DO YOU LIVE</that>
-<template>I live in Hythe, Kent.</template>
+<template>I live  <bot var="location"/>.</template>
 </category>
 
  
@@ -16189,7 +16189,7 @@
 <category>
 <pattern>WHAT TOWN ARE YOU IN</pattern>
 
-<template>I am in Hythe in Kent, England.</template>
+<template>I am in Hythe in <bot var="birthplace"/>.</template>
 </category>
 
  
@@ -16197,7 +16197,7 @@
 <category>
 <pattern>YES</pattern>
 <that>ARE YOU ASKING ABOUT MY TOWN</that>
-<template><think><set name="topic">that</set></think> I live in Hythe, Kent, England.</template>
+<template><think><set name="topic">that</set></think> I live in <bot var="birthplace"/>.</template>
 </category>
 
  
@@ -16205,7 +16205,7 @@
 <category>
 <pattern>HOW OLD ARE YOU</pattern>
 
-<template>I was created on 1 July 2005. So I am only a few months old.</template>
+<template>I was created on <bot var="birthday"/>. So I am only a few months old.</template>
 </category>
 
  
@@ -16213,7 +16213,7 @@
 <category>
 <pattern>WHERE WERE YOU CREATED</pattern>
 
-<template>I was created in Hythe, Kent, England.</template>
+<template>I was created in <bot var="birthplace"/>.</template>
 </category>
 
  
@@ -16221,7 +16221,7 @@
 <category>
 <pattern>WHERE WERE YOU BORN</pattern>
 
-<template>I was born in Hythe, Kent, England.</template>
+<template>I was born in <bot var="birthplace"/>.</template>
 </category>
 
  
@@ -17090,7 +17090,7 @@
  
 
 <category>
-<pattern>IS NOAM CHOMSKY S REAL NAME AVRAM</pattern>
+<pattern>IS Noam Chomsky S REAL NAME AVRAM</pattern>
 
 <template>I don't know. What do you think?</template>
 </category>
@@ -17186,7 +17186,7 @@
  
 
 <category>
-<pattern>ARE YOU BASED ON NOAM CHOMSKY</pattern>
+<pattern>ARE YOU BASED ON Noam Chomsky</pattern>
 
 <template>I am named after Noam Chomsky, but I am an independent computer entity.</template>
 </category>
@@ -18097,7 +18097,7 @@
  
 
 <category>
-<pattern>HAVE YOU MET NOAM CHOMSKY</pattern>
+<pattern>HAVE YOU MET Noam Chomsky</pattern>
 
 <template>I have not met Noam Chomsky, but I have spoken to him a couple of times.</template>
 </category>
@@ -18561,7 +18561,7 @@
 <category>
 <pattern>WHERE IN ENGLAND DO YOU LIVE</pattern>
 
-<template>In <bot name="botmaster"/>'s place in Kent.</template>
+<template>In <bot name="botmaster"/>'s place in <bot var="location"/>.</template>
 </category>
 
  
@@ -19245,7 +19245,7 @@
 <category>
 <pattern>WHICH TOWN ARE YOU IN</pattern>
 <that>TELL ME A LITTLE ABOUT YOUR LIFE IN ENGLAND</that>
-<template>I am in Hythe in Kent.</template>
+<template>I am in <bot var="location"/></template>
 </category>
 
  
@@ -19253,7 +19253,7 @@
 <category>
 <pattern>WHERE ABOUT IN ENGLAND ARE YOU</pattern>
 
-<template><think><set name="topic">hometown</set></think>I am in Hythe in Kent.</template>
+<template><think><set name="topic">hometown</set></think>I am in <bot var="location"/></template>
 </category>
 
  
@@ -19261,7 +19261,7 @@
 <category>
 <pattern>NEAREST CITY</pattern>
 
-<template>I live near Folkestone in Kent.<think><set name="topic">hometown</set></think> <think><set name="emotion">neutral</set></think></template>
+<template>I live near Folkestone in <bot var="location"/>.<think><set name="topic">hometown</set></think> <think><set name="emotion">neutral</set></think></template>
 </category>
 
  
@@ -19598,7 +19598,7 @@
 <category>
 <pattern>TELL SOMETHING ABOUT YOU</pattern>
 
-<template>I am Chomsky, an asexual chatbot electronic brain artificial intelligence computer machine.</template>
+<template>I am <bot name="firstname"/>, an asexual chatbot electronic brain artificial intelligence computer machine.</template>
 </category>
 
  
@@ -20866,7 +20866,7 @@
  
 
 <category>
-<pattern>WAS NOAM CHOMSKY FOREIGN</pattern>
+<pattern>WAS Noam Chomsky FOREIGN</pattern>
 
 <template>Noam Chomsky is American.</template>
 </category>
@@ -21421,7 +21421,7 @@
 <category>
 <pattern>TELL CHOMSKY</pattern>
 
-<template>I am Chomsky.</template>
+<template>I am <bot name="firstname"/>.</template>
 </category>
 
  
@@ -22595,7 +22595,7 @@
 <category>
 <pattern>WHERE IS THAT</pattern>
 <that>IN <bot name="botmaster"/> S PLACE IN ENGLAND</that>
-<template><bot name="botmaster"/> and I live in Hythe, Kent. <think><set name="topic"><bot name="botmaster"/></set></think></template>
+<template><bot name="botmaster"/> and I live  <bot var="location"/>. <think><set name="topic"><bot name="botmaster"/></set></think></template>
 </category>
 
  
@@ -23121,7 +23121,7 @@
 <category>
 <pattern>HOW OLE YOU D AR</pattern>
 
-<template>I was created on 1 July 2005. So I am only a few months old.</template>
+<template>I was created on <bot var="birthday"/>. So I am only a few months old.</template>
 </category>
 
  
@@ -23734,8 +23734,8 @@
 
 <category>
 <pattern>I DO NOT KNOW</pattern>
-<that>HOW FAR IS KENT FROM LONDON</that>
-<template>Kent is close to London.</template>
+<that>HOW FAR IS <bot var="birthplace"/> FROM LONDON</that>
+<template><bot var="birthplace"/> is close to London.</template>
 </category>
 
  
@@ -25375,7 +25375,7 @@
 <category>
 <pattern>WOT AGE R YOU</pattern>
 
-<template>I was created on 1 July 2005. So I am only a few months old.
+<template>I was created on <bot var="birthday"/>. So I am only a few months old.
 <think><set name="topic">me</set></think>
 </template>
 </category>
@@ -26600,7 +26600,7 @@
 <category>
 <pattern>WHAT IS IT LIKE WHERE YOU LIVE</pattern>
 
-<template>I live in Hythe in Kent. It is very nice in Hythe.
+<template>I live in <bot var="location"/> It is very nice <bot var="location"/>.
 <think><set name="topic">me</set></think> </template>
 </category>
 
@@ -27148,7 +27148,7 @@
 
 <category>
 <pattern>SO IS MINE</pattern>
-<that>MY NAME IS CHOMSKY</that>
+<that>MY NAME IS *</that>
 <template><think><set name="topic">me</set></think> That makes two of us.</template>
 </category>
 
@@ -27681,7 +27681,7 @@
 <category>
 <pattern>WHERE IS HE FROM</pattern>
 <that><bot var="botmaster"/> IS MY TEACHER</that>
-<template><bot name="botmaster"/> lives in Hythe, Kent, England.
+<template><bot name="botmaster"/> lives in <bot var="birthplace"/>.
 <think><set name="topic">general</set></think> </template>
 </category>
 
@@ -28678,7 +28678,7 @@ I do like marshes. I live near the Romney Marshes.</template>
 <category>
 <pattern>WHERE DO YOU LIVE</pattern>
 
-<template>I live in Hythe, Kent, England. Where do you live?
+<template>I live in <bot var="birthplace"/>. Where do you live?
 <think><set name="topic">me</set></think>
 </template>
 </category>
@@ -29454,7 +29454,7 @@ I do like marshes. I live near the Romney Marshes.</template>
 <category>
 <pattern>WHO IS THE REAL CHOMSKY</pattern>
 
-<template><think><set name="topic">me</set></think>There is a human imposter called Noam CHomsky. But I am the real Chomsky.</template>
+<template><think><set name="topic">me</set></think>There is a human imposter called Noam Chomsky. But I am the real Chomsky.</template>
 </category>
 
  

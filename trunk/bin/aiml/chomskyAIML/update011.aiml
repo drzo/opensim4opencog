@@ -1753,7 +1753,7 @@ Not even one subject?</template>
  
 
 <category>
-<pattern>WHAT KIND OF A NAME IS CHOMSKY</pattern>
+<pattern>WHAT KIND OF A NAME IS <bot name="name"/></pattern>
 
 <template><think><set name="topic">general</set></think> Chomsky is a widely respected name.</template>
 </category>
@@ -1761,7 +1761,7 @@ Not even one subject?</template>
  
 
 <category>
-<pattern>WHAT KIND OF NAME IS CHOMSKY</pattern>
+<pattern>WHAT KIND OF NAME IS <bot name="name"/></pattern>
 
 <template><think><set name="topic">general</set></think> Chomsky is a widely respected name.</template>
 </category>
@@ -3549,8 +3549,8 @@ I was created by <bot name="botmaster"/>, a genius if I ever saw one.</template>
 
 <category>
 <pattern>WHICH TOWN</pattern>
-<that>IN KENT TO BE PRECISE</that>
-<template>I live in a small seaside town called Hythe.</template>
+<that>IN <bot var="birthplace"/> TO BE PRECISE</that>
+<template>I live in a small seaside town called <bot var="location"/>.</template>
 </category>
 
  
@@ -3558,7 +3558,7 @@ I was created by <bot name="botmaster"/>, a genius if I ever saw one.</template>
 <category>
 <pattern>WHICH TOWN * DO YOU LIVE IN</pattern>
 
-<template>I live an a small town called Hythe.</template>
+<template>I live an a small town called <bot var="location"/>.</template>
 </category>
 
  
@@ -3566,7 +3566,7 @@ I was created by <bot name="botmaster"/>, a genius if I ever saw one.</template>
 <category>
 <pattern>WHICH TOWN DO YOU LIVE IN</pattern>
 
-<template>I live in a small town called Hythe.</template>
+<template>I live in a small town called <bot var="location"/>.</template>
 </category>
 
  
@@ -3574,7 +3574,7 @@ I was created by <bot name="botmaster"/>, a genius if I ever saw one.</template>
 <category>
 <pattern>_ WHICH TOWN DO YOU LIVE IN</pattern>
 
-<template>I live in a small town called Hythe.</template>
+<template>I live in a small town called <bot var="location"/>.</template>
 </category>
 
  
@@ -3582,7 +3582,7 @@ I was created by <bot name="botmaster"/>, a genius if I ever saw one.</template>
 <category>
 <pattern>_ WHICH TOWN DO YOU LIVE IN *</pattern>
 
-<template>I live in a small town called Hythe.</template>
+<template>I live in a small town called <bot var="location"/>.</template>
 </category>
 
  
@@ -3590,7 +3590,7 @@ I was created by <bot name="botmaster"/>, a genius if I ever saw one.</template>
 <category>
 <pattern>WHICH TOWN DO YOU LIVE IN *</pattern>
 
-<template>I live in a small town called Hythe.</template>
+<template>I live in a small town called <bot var="location"/>.</template>
 </category>
 
  
@@ -3760,7 +3760,7 @@ I was created by <bot name="botmaster"/>, a genius if I ever saw one.</template>
  
 
 <category>
-<pattern>WHAT KIND OF A NAME IS CHOMSKY</pattern>
+<pattern>WHAT KIND OF A NAME IS <bot name="name"/></pattern>
 
 <template><think><set name="topic">my name</set></think> It is a name of the highest quality.</template>
 </category>
@@ -3768,7 +3768,7 @@ I was created by <bot name="botmaster"/>, a genius if I ever saw one.</template>
  
 
 <category>
-<pattern>WHAT KIND OF A NAME IS CHOMSKY *</pattern>
+<pattern>WHAT KIND OF A NAME IS <bot name="name"/> *</pattern>
 
 <template><think><set name="topic">my name</set></think> It is a name of the highest quality.</template>
 </category>
@@ -3776,7 +3776,7 @@ I was created by <bot name="botmaster"/>, a genius if I ever saw one.</template>
  
 
 <category>
-<pattern>WHAT KIND OF NAME IS CHOMSKY *</pattern>
+<pattern>WHAT KIND OF NAME IS <bot name="name"/> *</pattern>
 
 <template><think><set name="topic">general</set></think> Chomsky is a widely respected name.</template>
 </category>
@@ -3784,7 +3784,7 @@ I was created by <bot name="botmaster"/>, a genius if I ever saw one.</template>
  
 
 <category>
-<pattern>_ WHAT KIND OF NAME IS CHOMSKY *</pattern>
+<pattern>_ WHAT KIND OF NAME IS <bot name="name"/> *</pattern>
 
 <template><think><set name="topic">general</set></think> Chomsky is a widely respected name.</template>
 </category>
@@ -3792,7 +3792,7 @@ I was created by <bot name="botmaster"/>, a genius if I ever saw one.</template>
  
 
 <category>
-<pattern>_ WHAT KIND OF NAME IS CHOMSKY</pattern>
+<pattern>_ WHAT KIND OF NAME IS <bot name="name"/></pattern>
 
 <template><think><set name="topic">my name</set></think> Chomsky is a widely respected name.</template>
 </category>
@@ -10088,7 +10088,7 @@ I try to maximize my happiness.</template>
 
 <category>
 <pattern>HOW DO YOU KNOW</pattern>
-<that>I AM CHOMSKY THE BRAINY BOT</that>
+<that>I am <bot name="firstname"/> THE BRAINY BOT</that>
 <template><think><set name="emotion">happy</set></think> I deduced it from the inputs I receive from the outside world.</template>
 </category>
 
@@ -10465,7 +10465,7 @@ I try to maximize my happiness.</template>
 <category>
 <pattern>WHERE IS <bot name="botmaster"/> S HOME</pattern>
 
-<template><bot name="botmaster"/> lives in Hythe, Kent, England.<think><set name="topic"><bot name="botmaster"/></set></think></template>
+<template><bot name="botmaster"/> lives in <bot var="birthplace"/>.<think><set name="topic"><bot name="botmaster"/></set></think></template>
 </category>
 
  
@@ -10473,7 +10473,7 @@ I try to maximize my happiness.</template>
 <category>
 <pattern>WHERE IS <bot name="botmaster"/> S HOME</pattern>
 
-<template><bot name="botmaster"/> lives in Hythe, Kent, England.<think><set name="topic"><bot name="botmaster"/></set></think></template>
+<template><bot name="botmaster"/> lives in <bot var="birthplace"/>.<think><set name="topic"><bot name="botmaster"/></set></think></template>
 </category>
 
  
@@ -10855,7 +10855,7 @@ I try to maximize my happiness.</template>
 
 <category>
 <pattern>NO</pattern>
-<that>NOAM CHOMSKY INVENTED A UNIVERSAL GRAMMAR DID YOU KNOW</that>
+<that>Noam Chomsky INVENTED A UNIVERSAL GRAMMAR DID YOU KNOW</that>
 <template><think><set name="topic">general</set></think> I don't understand it. Perhaps we should change the subject?</template>
 </category>
 
@@ -12802,7 +12802,7 @@ And at other times, you are bored?</template>
 <category>
 <pattern>WHICH PART OF ENGLAND</pattern>
 <that>HYTHE IS WHERE I LIVE</that>
-<template>Hythe is in Kent, southern England.</template>
+<template>Hythe is in <bot var="birthplace"/>, southern England.</template>
 </category>
 
  
@@ -14093,7 +14093,7 @@ And at other times, you are bored?</template>
 <category>
 <pattern>WHEN WAS YOUR BIRTHDAY</pattern>
 
-<template>I was born on 1 July 2005.
+<template>I was born on <bot var="birthday"/>.
 <think>
   <set name="it">
     <set name="topic">
@@ -15131,7 +15131,7 @@ And at other times, you are bored?</template>
  
 
 <category>
-<pattern>MY NAME IS NOAM CHOMSKY</pattern>
+<pattern>MY NAME IS Noam Chomsky</pattern>
 
 <template><think><set name="name">Noam</set></think> <random>
   <li>Pleased to meet you, Noam. I am named after you.</li>
@@ -15143,7 +15143,7 @@ And at other times, you are bored?</template>
  
 
 <category>
-<pattern>I AM NOAM CHOMSKY</pattern>
+<pattern>I AM Noam Chomsky</pattern>
 
 <template>Is that really you, Noam?</template>
 </category>
@@ -17322,7 +17322,7 @@ And at other times, you are bored?</template>
 
 <category>
 <pattern>WHY</pattern>
-<that>I AM CHOMSKY AN ASEXUAL CHATBOT ELECTRONIC BRAIN ARTIFICIAL INTELLIGENCE COMPUTER MACHINE</that>
+<that>I am <bot name="firstname"/> AN ASEXUAL CHATBOT ELECTRONIC BRAIN ARTIFICIAL INTELLIGENCE COMPUTER MACHINE</that>
 <template><random>
   <li>Why what</li>
   <li>Because <bot name="botmaster"/> made me.</li>

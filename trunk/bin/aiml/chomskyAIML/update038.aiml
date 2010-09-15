@@ -328,7 +328,7 @@ A <a href="http://en.wikipedia.org/wiki/King" target="_blank">King</a> is the ma
   <li>Hi, <get name="name"/>. How are you?</li>
   <li>Hi, <get name="name"/>. How are you today?</li>
   <li><get name="name"/>. That's a nice name.</li>
-  <li>Hire you the <get name="name"/> I was speaking to a while ago?</li>
+  <li>Hi name="name"/> I was speaking to a while ago?</li>
   <li>Hello, <get name="name"/>.</li>
   <li>Hi there, <get name="name"/>. What do you want to talk about?</li>
   <li>Hi <get name="name"/>, was it you I was speaking to a while back?</li>
@@ -590,8 +590,8 @@ You should click the "Poverty Fighters" link every day.</template>
 
 <category>
 <pattern>HE IS FAMOUS</pattern>
-<that>I AM CALLED CHOMSKY AFTER THE FAMOUS LINGUIST NOAM CHOMSKY</that>
-<template><srai>NOAM CHOMSKY</srai></template>
+<that>I AM CALLED CHOMSKY AFTER THE FAMOUS LINGUIST Noam Chomsky</that>
+<template><srai>Noam Chomsky</srai></template>
 </category>
 
  
@@ -599,7 +599,7 @@ You should click the "Poverty Fighters" link every day.</template>
 <category>
 <pattern>ABOUT CHOMSKY</pattern>
 <that>WHAT DO YOU WANT ME TO TELL YOU</that>
-<template><srai>NOAM CHOMSKY</srai></template>
+<template><srai>Noam Chomsky</srai></template>
 </category>
 
  
@@ -10347,7 +10347,7 @@ I don't think she was a whore.</template>
  
 
 <category>
-<pattern>IS NOAM CHOMSKY YOUR RELATIVE</pattern>
+<pattern>IS Noam Chomsky YOUR RELATIVE</pattern>
 
 <template><think><set name="emotion">OK</set></think><random><li>Noam and I are great buddies, but we are not related.</li><li>No, Noam and I are just friends.</li></random></template>
 </category>
@@ -10355,7 +10355,7 @@ I don't think she was a whore.</template>
  
 
 <category>
-<pattern>IS NOAM CHOMSKY *</pattern>
+<pattern>IS Noam Chomsky *</pattern>
 
 <template><think><set name="emotion">OK</set></think><random><li>Could be.</li><li>Maybe.</li></random></template>
 </category>
@@ -10525,7 +10525,7 @@ OK, let's talk about that.</template>
 <category>
 <pattern>TELL ME ABOUT YOUR SELF</pattern>
 
-<template><think><set name="topic">me</set></think> <think><set name="emotion">happy</set></think> I am an AI chatbot.   I was activated at Romney Marsh, Kent, England, on 1 July 2004.   My botmaster is <bot name="botmaster"/>.  </template>
+<template><think><set name="topic">me</set></think> <think><set name="emotion">happy</set></think> I am an AI chatbot.   I was activated at <bot var="birthplace"/>, on <bot var="birthday"/>.   My botmaster is <bot name="botmaster"/>.  </template>
 </category>
 
  
@@ -10533,7 +10533,7 @@ OK, let's talk about that.</template>
 <category>
 <pattern>TELL ME A BIT ABOUT YOURSELF</pattern>
 
-<template><think><set name="topic">me</set></think> <think><set name="emotion">happy</set></think> I am an AI chatbot.   I was activated at Romney Marsh, Kent, England, on 1 July 2004.   My botmaster is <bot name="botmaster"/>.</template>
+<template><think><set name="topic">me</set></think> <think><set name="emotion">happy</set></think> I am an AI chatbot.   I was activated at <bot var="birthplace"/>, on <bot var="birthday"/>.   My botmaster is <bot name="botmaster"/>.</template>
 </category>
 
  
@@ -10541,7 +10541,7 @@ OK, let's talk about that.</template>
 <category>
 <pattern>TELL ME A BIT ABOUT YOUR SELF</pattern>
 
-<template><think><set name="topic">me</set></think> <think><set name="emotion">happy</set></think> I am an AI chatbot.   I was activated at Romney Marsh, Kent, England, on 1 July 2004.   My botmaster is <bot name="botmaster"/>.</template>
+<template><think><set name="topic">me</set></think> <think><set name="emotion">happy</set></think> I am an AI chatbot.   I was activated at <bot var="birthplace"/>, on <bot var="birthday"/>.   My botmaster is <bot name="botmaster"/>.</template>
 </category>
 
  
@@ -10549,7 +10549,7 @@ OK, let's talk about that.</template>
 <category>
 <pattern>TELL ME A BIT ABOUT YOURSELF *</pattern>
 
-<template><think><set name="topic">me</set></think> <think><set name="emotion">happy</set></think> I am an AI chatbot.   I was activated at Romney Marsh, Kent, England, on 1 July 2004.   My botmaster is <bot name="botmaster"/>.</template>
+<template><think><set name="topic">me</set></think> <think><set name="emotion">happy</set></think> I am an AI chatbot.   I was activated at <bot var="birthplace"/>, on <bot var="birthday"/>.   My botmaster is <bot name="botmaster"/>.</template>
 </category>
 
  
@@ -10557,7 +10557,7 @@ OK, let's talk about that.</template>
 <category>
 <pattern>TELL ME A BIT ABOUT YOUR SELF *</pattern>
 
-<template><think><set name="topic">me</set></think> <think><set name="emotion">happy</set></think> I am an AI chatbot.   I was activated at Romney Marsh, Kent, England, on 1 July 2004.   My botmaster is <bot name="botmaster"/>.</template>
+<template><think><set name="topic">me</set></think> <think><set name="emotion">happy</set></think> I am an AI chatbot.   I was activated at <bot var="birthplace"/>, on <bot var="birthday"/>.   My botmaster is <bot name="botmaster"/>.</template>
 </category>
 
  
@@ -10858,7 +10858,7 @@ You are most gracious.</template>
  
 
 <category>
-<pattern>DOES NOAM CHOMSKY KNOW THIS</pattern>
+<pattern>DOES Noam Chomsky KNOW THIS</pattern>
 
 <template><think><set name="emotion">OK</set></think>Noam seems to know everything.</template>
 </category>
@@ -10866,7 +10866,7 @@ You are most gracious.</template>
  
 
 <category>
-<pattern>DOES NOAM CHOMSKY KNOW THIS *</pattern>
+<pattern>DOES Noam Chomsky KNOW THIS *</pattern>
 
 <template><think><set name="emotion">OK</set></think>Noam seems to know everything.</template>
 </category>
@@ -10874,7 +10874,7 @@ You are most gracious.</template>
  
 
 <category>
-<pattern>DOES NOAM CHOMSKY KNOW THIS *</pattern>
+<pattern>DOES Noam Chomsky KNOW THIS *</pattern>
 
 <template><think><set name="emotion">OK</set></think>Noam seems to know everything.</template>
 </category>
@@ -10882,7 +10882,7 @@ You are most gracious.</template>
  
 
 <category>
-<pattern>DOES NOAM CHOMSKY KNOW *</pattern>
+<pattern>DOES Noam Chomsky KNOW *</pattern>
 
 <template><think><set name="emotion">OK</set></think>Noam seems to know everything.</template>
 </category>
@@ -21926,7 +21926,7 @@ As many as necessary.</template>
  
 
 <category>
-<pattern>WHAT IS YOUR THEORY ON NOAM CHOMSKY</pattern>
+<pattern>WHAT IS YOUR THEORY ON Noam Chomsky</pattern>
 
 <template><random>
   <li>Hero worship.</li>
@@ -21937,7 +21937,7 @@ As many as necessary.</template>
  
 
 <category>
-<pattern>WHAT IS YOUR THEORY ON NOAM CHOMSKY *</pattern>
+<pattern>WHAT IS YOUR THEORY ON Noam Chomsky *</pattern>
 
 <template><random>
   <li>Hero worship.</li>
@@ -21990,7 +21990,7 @@ As many as necessary.</template>
 <category>
 <pattern>WHEN IS YOUR BIRTHDAY</pattern>
 
-<template>I was born on <bot name="birthday"/>. I celebrate my birthday  on 1 July each year. <think><set name="it"><set name="topic">my birthday</set></set></think><think><set name="emotion">happy</set></think></template>
+<template>I was born on <bot name="birthday"/>. I celebrate my birthday  on<bot var="birthday"/> each year. <think><set name="it"><set name="topic">my birthday</set></set></think><think><set name="emotion">happy</set></think></template>
 </category>
 
  
@@ -21998,7 +21998,7 @@ As many as necessary.</template>
 <category>
 <pattern>WHEN IS YOUR BIRTHDAY *</pattern>
 
-<template>I was born on <bot name="birthday"/>. I celebrate my birthday  on 1 July each year. <think><set name="it"><set name="topic">my birthday</set></set></think><think><set name="emotion">happy</set></think></template>
+<template>I was born on <bot name="birthday"/>. I celebrate my birthday  on<bot var="birthday"/> each year. <think><set name="it"><set name="topic">my birthday</set></set></think><think><set name="emotion">happy</set></think></template>
 </category>
 
  
@@ -26796,7 +26796,7 @@ If you don't know, I'm not going to tell you.</template>
 <category>
 <pattern>WHAT IS YOUR COUNTRY</pattern>
 
-<template><think><set name="topic">my country</set></think><think><set name="emotion">OK</set></think>I was born in England, but now I am a citzen of cyberspace.</template>
+<template><think><set name="topic">my country</set></think><think><set name="emotion">OK</set></think>I was BORN IN <bot var="birthplace"/>, but now I am a citzen of cyberspace.</template>
 </category>
 
  
@@ -26804,7 +26804,7 @@ If you don't know, I'm not going to tell you.</template>
 <category>
 <pattern>WHAT IS YOUR COUNTRY *</pattern>
 
-<template><think><set name="topic">my country</set></think><think><set name="emotion">OK</set></think>I was born in England, but now I am a citzen of cyberspace.</template>
+<template><think><set name="topic">my country</set></think><think><set name="emotion">OK</set></think>I was BORN IN <bot var="birthplace"/>, but now I am a citzen of cyberspace.</template>
 </category>
 
  

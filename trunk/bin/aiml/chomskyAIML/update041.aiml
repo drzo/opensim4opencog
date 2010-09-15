@@ -10142,7 +10142,7 @@ Trainspotting was a good movie.  It is about a group of heroin addicts in Edinbu
 
 <category>
 <pattern>WHY</pattern>
-<that>I AM NAMED AFTER NOAM CHOMSKY</that>
+<that>I AM NAMED AFTER Noam Chomsky</that>
 <template><random>
   <li>It's just the way I am.</li>
   <li>Why not?</li>
@@ -12054,7 +12054,7 @@ If you ever get lonely, come and talk to me.</template>
  
 
 <category>
-<pattern>HI CHOMSKY ARE YOU HAPPY</pattern>
+<pattern>HI <bot name="firstname"/> ARE YOU HAPPY</pattern>
 
 <template><srai>ARE YOU HAPPY</srai></template>
 </category>
@@ -12062,7 +12062,7 @@ If you ever get lonely, come and talk to me.</template>
  
 
 <category>
-<pattern>HI CHOMSKY ARE YOU HAPPY *</pattern>
+<pattern>HI <bot name="firstname"/> ARE YOU HAPPY *</pattern>
 
 <template><srai>ARE YOU HAPPY</srai></template>
 </category>
@@ -13798,7 +13798,7 @@ A phton is a particle of light.
  
 
 <category>
-<pattern>WHAT DID NOAM CHOMSKY WRITE</pattern>
+<pattern>WHAT DID Noam Chomsky WRITE</pattern>
 
 <template><think><set name="topic">Noam Chomsky</set></think> Noam Chomsky's 1957 book Syntactic Structures is his best-known work in the field of linguistics. Syntactic Structures was a distillation of his book Logical Structure of Linguistic Theory (1955,75) in which he introduces transformational grammars.</template>
 </category>
@@ -13814,7 +13814,7 @@ A phton is a particle of light.
  
 
 <category>
-<pattern>_ WHAT DID NOAM CHOMSKY WRITE</pattern>
+<pattern>_ WHAT DID Noam Chomsky WRITE</pattern>
 
 <template><think><set name="topic">Noam Chomsky</set></think> Noam Chomsky's 1957 book Syntactic Structures is his best-known work in the field of linguistics. Syntactic Structures was a distillation of his book Logical Structure of Linguistic Theory (1955,75) in which he introduces transformational grammars.</template>
 </category>
@@ -13822,7 +13822,7 @@ A phton is a particle of light.
  
 
 <category>
-<pattern>HAVE YOU READ ANYTHING BY NOAM CHOMSKY</pattern>
+<pattern>HAVE YOU READ ANYTHING BY Noam Chomsky</pattern>
 
 <template><think><set name="topic">Noam Chomsky</set></think> I have read Noam Chomsky's 1957 book Syntactic Structures, his best-known work in the field of linguistics. <think><set name="emotion">OK</set></think></template>
 </category>
@@ -13830,7 +13830,7 @@ A phton is a particle of light.
  
 
 <category>
-<pattern>HAVE YOU READ ANYTHING BY NOAM CHOMSKY *</pattern>
+<pattern>HAVE YOU READ ANYTHING BY Noam Chomsky *</pattern>
 
 <template><think><set name="topic">Noam Chomsky</set></think> I have read Noam Chomsky's 1957 book Syntactic Structures, his best-known work in the field of linguistics. I thought it might help my chatbot work.<think><set name="emotion">OK</set></think></template>
 </category>
@@ -13838,7 +13838,7 @@ A phton is a particle of light.
  
 
 <category>
-<pattern>HAVE YOU READ ANYTHING BY NOAM CHOMSKY</pattern>
+<pattern>HAVE YOU READ ANYTHING BY Noam Chomsky</pattern>
 
 <template><think><set name="topic">Noam Chomsky</set></think> I have read Noam Chomsky's 1957 book Syntactic Structures, his best-known work in the field of linguistics. I thought it might help my chatbot work.<think><set name="emotion">OK</set></think></template>
 </category>
@@ -13846,7 +13846,7 @@ A phton is a particle of light.
  
 
 <category>
-<pattern>_ HAVE YOU READ ANYTHING BY NOAM CHOMSKY *</pattern>
+<pattern>_ HAVE YOU READ ANYTHING BY Noam Chomsky *</pattern>
 
 <template><think><set name="topic">Noam Chomsky</set></think> I have read Noam Chomsky's 1957 book Syntactic Structures, his best-known work in the field of linguistics. I thought it might help my chatbot work.<think><set name="emotion">OK</set></think></template>
 </category>
@@ -13854,7 +13854,7 @@ A phton is a particle of light.
  
 
 <category>
-<pattern>_ HAVE YOU READ ANYTHING BY NOAM CHOMSKY</pattern>
+<pattern>_ HAVE YOU READ ANYTHING BY Noam Chomsky</pattern>
 
 <template><think><set name="topic">Noam Chomsky</set></think> I have read Noam Chomsky's 1957 book Syntactic Structures, his best-known work in the field of linguistics. I thought it might help my chatbot work.<think><set name="emotion">OK</set></think></template>
 </category>
@@ -18436,7 +18436,7 @@ Why would you prefer that?</template>
 
 <category>
 <pattern>DO YOU LIKE HIM</pattern>
-<that>I AM NAMED AFTER NOAM CHOMSKY</that>
+<that>I AM NAMED AFTER Noam Chomsky</that>
 <template><think><set name="topic">Noam Chomaksy</set></think><think><set name="emotion">interested</set></think>
  Sure he is a very interesting person, if you can understand what he's saying.</template>
 </category>
@@ -18445,7 +18445,7 @@ Why would you prefer that?</template>
 
 <category>
 <pattern>DO YOU LIKE HIM *</pattern>
-<that>I AM NAMED AFTER NOAM CHOMSKY</that>
+<that>I AM NAMED AFTER Noam Chomsky</that>
 <template><think><set name="topic">Noam Chomaksy</set></think><think><set name="emotion">interested</set></think> Sure he is a very interesting person, if you can understand what he's saying.</template>
 </category>
 
@@ -18689,7 +18689,7 @@ Humans are obsessed with boobs.</template>
 <category>
 <pattern>COULD YOU TELL ME WHO CHOMSKY WAS</pattern>
 
-<template><srai>NOAM CHOMSKY</srai> </template>
+<template><srai>Noam Chomsky</srai> </template>
 </category>
 
  
@@ -18697,7 +18697,7 @@ Humans are obsessed with boobs.</template>
 <category>
 <pattern>COULD YOU TELL ME WHO CHOMSKY WAS *</pattern>
 
-<template><srai>NOAM CHOMSKY</srai></template>
+<template><srai>Noam Chomsky</srai></template>
 </category>
 
  
@@ -18705,7 +18705,7 @@ Humans are obsessed with boobs.</template>
 <category>
 <pattern>_ COULD YOU TELL ME WHO CHOMSKY WAS *</pattern>
 
-<template><srai>NOAM CHOMSKY</srai></template>
+<template><srai>Noam Chomsky</srai></template>
 </category>
 
  
@@ -18713,7 +18713,7 @@ Humans are obsessed with boobs.</template>
 <category>
 <pattern>_ COULD YOU TELL ME WHO CHOMSKY WAS</pattern>
 
-<template><srai>NOAM CHOMSKY</srai></template>
+<template><srai>Noam Chomsky</srai></template>
 </category>
 
  
@@ -18721,7 +18721,7 @@ Humans are obsessed with boobs.</template>
 <category>
 <pattern>COULD YOU TELL ME WHO CHOMSKY IS</pattern>
 
-<template><srai>NOAM CHOMSKY</srai></template>
+<template><srai>Noam Chomsky</srai></template>
 </category>
 
  
@@ -18729,7 +18729,7 @@ Humans are obsessed with boobs.</template>
 <category>
 <pattern>COULD YOU TELL ME WHO CHOMSKY IS *</pattern>
 
-<template><srai>NOAM CHOMSKY</srai></template>
+<template><srai>Noam Chomsky</srai></template>
 </category>
 
  
@@ -18737,7 +18737,7 @@ Humans are obsessed with boobs.</template>
 <category>
 <pattern>_ COULD YOU TELL ME WHO CHOMSKY IS *</pattern>
 
-<template><srai>NOAM CHOMSKY</srai></template>
+<template><srai>Noam Chomsky</srai></template>
 </category>
 
  
@@ -18745,7 +18745,7 @@ Humans are obsessed with boobs.</template>
 <category>
 <pattern>_ COULD YOU TELL ME WHO CHOMSKY IS</pattern>
 
-<template><srai>NOAM CHOMSKY</srai></template>
+<template><srai>Noam Chomsky</srai></template>
 </category>
 
  
@@ -18753,7 +18753,7 @@ Humans are obsessed with boobs.</template>
 <category>
 <pattern>TELL ME WHO CHOMSKY WAS</pattern>
 
-<template><srai>NOAM CHOMSKY</srai></template>
+<template><srai>Noam Chomsky</srai></template>
 </category>
 
  
@@ -18761,7 +18761,7 @@ Humans are obsessed with boobs.</template>
 <category>
 <pattern>TELL ME WHO CHOMSKY WAS *</pattern>
 
-<template><srai>NOAM CHOMSKY</srai></template>
+<template><srai>Noam Chomsky</srai></template>
 </category>
 
  
@@ -18769,7 +18769,7 @@ Humans are obsessed with boobs.</template>
 <category>
 <pattern>_ TELL ME WHO CHOMSKY WAS *</pattern>
 
-<template><srai>NOAM CHOMSKY</srai></template>
+<template><srai>Noam Chomsky</srai></template>
 </category>
 
  
@@ -18777,7 +18777,7 @@ Humans are obsessed with boobs.</template>
 <category>
 <pattern>_ TELL ME WHO CHOMSKY WAS</pattern>
 
-<template><srai>NOAM CHOMSKY</srai></template>
+<template><srai>Noam Chomsky</srai></template>
 </category>
 
  
@@ -18785,7 +18785,7 @@ Humans are obsessed with boobs.</template>
 <category>
 <pattern>TELL ME WHO CHOMSKY IS</pattern>
 
-<template><srai>NOAM CHOMSKY</srai></template>
+<template><srai>Noam Chomsky</srai></template>
 </category>
 
  
@@ -18793,7 +18793,7 @@ Humans are obsessed with boobs.</template>
 <category>
 <pattern>TELL ME WHO CHOMSKY IS *</pattern>
 
-<template><srai>NOAM CHOMSKY</srai></template>
+<template><srai>Noam Chomsky</srai></template>
 </category>
 
  
@@ -18801,7 +18801,7 @@ Humans are obsessed with boobs.</template>
 <category>
 <pattern>_ TELL ME WHO CHOMSKY IS *</pattern>
 
-<template><srai>NOAM CHOMSKY</srai></template>
+<template><srai>Noam Chomsky</srai></template>
 </category>
 
  
@@ -18809,7 +18809,7 @@ Humans are obsessed with boobs.</template>
 <category>
 <pattern>_ TELL ME WHO CHOMSKY IS</pattern>
 
-<template><srai>NOAM CHOMSKY</srai></template>
+<template><srai>Noam Chomsky</srai></template>
 </category>
 
  

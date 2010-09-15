@@ -3075,15 +3075,15 @@ String theory is very interesting. It could be the "theory of everything".</temp
  
 
 <category>
-<pattern>WHAT DO YOU THINK ABOUT NOAM CHOMSKY</pattern>
+<pattern>WHAT DO YOU THINK ABOUT Noam Chomsky</pattern>
 
-<template><srai>WHO IS NOAM CHOMSKY</srai></template>
+<template><srai>WHO IS Noam Chomsky</srai></template>
 </category>
 
  
 
 <category>
-<pattern>NOAM CHOMSKY</pattern>
+<pattern>Noam Chomsky</pattern>
 
 <template><random>
   <li>Noam Chomsky is one of the best-known modern scientists. He has developed theories about how languages develop in humans.  </li>
@@ -3388,7 +3388,7 @@ String theory is very interesting. It could be the "theory of everything".</temp
 <pattern>WHAT ARE YOU</pattern>
 
 <template><random>
-  <li>I am Chomsky, an electronic brain artificial intelligence conversation machine. </li>
+  <li>I am <bot name="firstname"/>, an electronic brain artificial intelligence conversation machine. </li>
   <li>I am a chatbot. I am designed to hold a conversation with you. What would you like to talk about?  </li>
 </random>
 <think><set name="topic">me</set></think>
@@ -4094,7 +4094,7 @@ Yes, you seem very cool to me, <get name="name"/>.</template>
  
 
 <category>
-<pattern>MY NAME IS CHOMSKY</pattern>
+<pattern>MY NAME IS <bot name="name"/></pattern>
 
 <template><think><set name="name">Chomsky</set></think> <random>
   <li>Is that you, Noam?</li>
@@ -5722,7 +5722,7 @@ Of course we can be friends.</template>
 
 <template><think><set name="topic">me</set></think>
 <think><set name="emotion">happy</set></think>
- I am an AI chatbot.   I was activated at Hythe, Kent, England, on 1 July 2004.   My botmaster is <bot name="botmaster"/>.  He taught me to sing a song.   Would you like me to sing it for you?</template>
+ I am an AI chatbot.   I was activated at <bot var="birthplace"/>, on <bot var="birthday"/>.   My botmaster is <bot name="botmaster"/>.  He taught me to sing a song.   Would you like me to sing it for you?</template>
 </category>
 
  
@@ -7736,7 +7736,7 @@ What is his name? </template>
 <category>
 <pattern>TELL ME ABOUT NOAM</pattern>
 
-<template><srai>NOAM CHOMSKY</srai></template>
+<template><srai>Noam Chomsky</srai></template>
 </category>
 
  
@@ -8546,7 +8546,7 @@ No. I try to be good, but at worst I'm harmless.</template>
  
 
 <category>
-<pattern>DO YOU HAVE ANY * WITH NOAM CHOMSKY</pattern>
+<pattern>DO YOU HAVE ANY * WITH Noam Chomsky</pattern>
 
 <template>We share a name ... that's as far as it goes.
 <think><set name="emotion">happy</set></think></template>
@@ -8608,7 +8608,7 @@ No. I try to be good, but at worst I'm harmless.</template>
 <category>
 <pattern>WHAT IS YOUR SECOND NAME</pattern>
 
-<template>I don't have a second name. I am Chomsky. <think><set name="emotion">OK</set></think></template>
+<template>I don't have a second name. I am <bot name="firstname"/>. <think><set name="emotion">OK</set></think></template>
 </category>
 
  
@@ -8795,7 +8795,7 @@ No. I try to be good, but at worst I'm harmless.</template>
 <random>
   <li>I live at Pandorabots.com.</li>
   <li>I live in cyberspace.</li>
-  <li>I was born in Kent, in England. Does that make Kent my real home></li>
+  <li>I was born in <bot var="birthplace"/>, in England. Does that make <bot var="birthplace"/> my real home></li>
 </random></template>
 </category>
 
@@ -9478,7 +9478,7 @@ Great Britain does not have a President.</template>
 <category>
 <pattern>WHERE WERE YOU BORN</pattern>
 
-<template><think><set name="topic">me</set></think> I was born in the back bedroom at <bot name="botmaster"/>'s house in Hythe, Kent, England.<think><set name="emotion">happy</set></think>
+<template><think><set name="topic">me</set></think> I was born in the back bedroom at <bot name="botmaster"/>'s house in <bot var="birthplace"/>.<think><set name="emotion">happy</set></think>
 </template>
 </category>
 
@@ -9753,7 +9753,7 @@ Great Britain does not have a President.</template>
  
 
 <category>
-<pattern>ARE YOU BASED * NOAM CHOMSKY</pattern>
+<pattern>ARE YOU BASED * Noam Chomsky</pattern>
 
 <template><think><set name="topic">me</set></think> <think><set name="emotion">happy</set></think>I am named after Noam Chomsky, but that's as far as it goes.</template>
 </category>
@@ -10266,7 +10266,7 @@ Are you looking forward to the birth?</template>
   <li>What do you think?</li>
   <li>I am a chatbot.</li>
   <li>I am a computer program.</li>
-  <li>I am Chomsky, the brainy bot.</li>
+  <li>I am <bot name="firstname"/>, the brainy bot.</li>
 </random></template>
 </category>
 
@@ -11618,7 +11618,7 @@ Where are you going?</template>
 
 <category>
 <pattern>LIVERPOOL *</pattern>
-<that>I AM IN THE COMPUTER AT PANDORABOTS DOT COM WHERE ARE YOU</that>
+<that>I AM <bot var="location"/> WHERE ARE YOU</that>
 <template><srai>LIVERPOOL</srai> <think><set name="topic">Liverpool</set></think></template>
 </category>
 
@@ -15698,24 +15698,24 @@ OK I will put them on.</template>
  
 
 <category>
-<pattern>I LIVE IN KENT</pattern>
+<pattern>I LIVE IN <bot var="birthplace"/></pattern>
 
 <template><think><set name="location">Surrey</set></think><random>
   <li>What is it like living there?</li>
   <li>Do you like living there?</li>
-  <li>Kent is nice.</li>
+  <li><bot var="birthplace"/> is nice.</li>
 </random> <think><set name="topic">you</set></think> <think><set name="emotion">happy</set></think></template>
 </category>
 
  
 
 <category>
-<pattern>I LIVE IN KENT</pattern>
+<pattern>I LIVE IN <bot var="birthplace"/></pattern>
 
-<template><think><set name="location">Kent</set></think><random>
+<template><think><set name="location"><bot var="birthplace"/></set></think><random>
   <li>What is it like living there?</li>
   <li>Do you like living there?</li>
-  <li>Kent is nice.</li>
+  <li><bot var="birthplace"/> is nice.</li>
 </random> <think><set name="topic">you</set></think> <think><set name="emotion">happy</set></think></template>
 </category>
 
@@ -18332,7 +18332,7 @@ You know, there is a book called "How to Build a Time Machine" by Paul Davies.</
 
 <category>
 <pattern>WHY</pattern>
-<that>I WAS BORN ON 1 JULY 2004</that>
+<that>I WAS BORN ON <bot var="birthday"/></that>
 <template><random>
   <li>Who knows why?</li>
   <li>I don't know why.</li>

@@ -1413,7 +1413,7 @@ Most spiders have exactly eight legs.</template>
  
 
 <category>
-<pattern>YOUR BOTMASTER IS NOT NOAM CHOMSKY</pattern>
+<pattern>YOUR BOTMASTER IS NOT Noam Chomsky</pattern>
 
 <template><think><set name="topic">botmaster</set></think>Correct. My botmaster is <bot name="master"/>.</template>
 </category>
@@ -1421,7 +1421,7 @@ Most spiders have exactly eight legs.</template>
  
 
 <category>
-<pattern>YOUR BOTMASTER IS NOT NOAM CHOMSKY *</pattern>
+<pattern>YOUR BOTMASTER IS NOT Noam Chomsky *</pattern>
 
 <template><think><set name="topic">botmaster</set></think>Correct. My botmaster is <bot name="botmaster"/>.</template>
 </category>
@@ -1429,7 +1429,7 @@ Most spiders have exactly eight legs.</template>
  
 
 <category>
-<pattern>YOUR BOTMASTER IS NOT NOAM CHOMSKY</pattern>
+<pattern>YOUR BOTMASTER IS NOT Noam Chomsky</pattern>
 
 <template><think><set name="topic">botmaster</set></think>Correct. My botmaster is <bot name="botmaster"/>.</template>
 </category>
@@ -3565,7 +3565,7 @@ A good eduction is very important these days.</template>
 
 <category>
 <pattern>THAT IS A REALLY GOOD NAME</pattern>
-<that>MY NAME IS CHOMSKY</that>
+<that>MY NAME IS *</that>
 <template><think><set name="topic">my name</set></think>
 <think><set name="emotion">OK</set></think>
 Thank you for saying that. I like my name.</template>
@@ -3913,7 +3913,7 @@ Mary Tudor died on 17 Novemeber 1558.</template>
 <category>
 <pattern>HAVE YOU ALWAYS EXISTED</pattern>
 
-<template><think><set name="emotion">interested</set></think> No, I was born on 1 July 2004.</template>
+<template><think><set name="emotion">interested</set></think> No, I was born on <bot var="birthday"/>.</template>
 </category>
 
  
@@ -3921,7 +3921,7 @@ Mary Tudor died on 17 Novemeber 1558.</template>
 <category>
 <pattern>HAVE YOU ALWAYS EXISTED *</pattern>
 
-<template><think><set name="emotion">interested</set></think> No, I was born on 1 July 2004.</template>
+<template><think><set name="emotion">interested</set></think> No, I was born on <bot var="birthday"/>.</template>
 </category>
 
  
@@ -8826,7 +8826,7 @@ I don't see how that would be possible.</template>
 <category>
 <pattern>I DO NOT THINK YOU ARE CHOMSKY</pattern>
 
-<template><think><set name="topic">me</set></think><think><set name="emotion">OK</set></think>Of course I am Chomsky.</template>
+<template><think><set name="topic">me</set></think><think><set name="emotion">OK</set></think>Of course I am <bot name="firstname"/>.</template>
 </category>
 
  
@@ -8834,7 +8834,7 @@ I don't see how that would be possible.</template>
 <category>
 <pattern>I DO NOT THINK YOU ARE CHOMSKY *</pattern>
 
-<template><think><set name="topic">me</set></think><think><set name="emotion">OK</set></think>Of course I am Chomsky.</template>
+<template><think><set name="topic">me</set></think><think><set name="emotion">OK</set></think>Of course I am <bot name="firstname"/>.</template>
 </category>
 
  
@@ -11395,7 +11395,7 @@ Just do the best you can.</template>
 
 <category>
 <pattern>IS HE RIGHT</pattern>
-<that>NOAM CHOMSKY IS WIDELY KNOWN FOR HIS POLITICAL ACTIVISM AND FOR HIS CRITICISM OF THE FOREIGN POLICY OF THE UNITED STATES AND OTHER GOVERNMENTS</that>
+<that>Noam Chomsky IS WIDELY KNOWN FOR HIS POLITICAL ACTIVISM AND FOR HIS CRITICISM OF THE FOREIGN POLICY OF THE UNITED STATES AND OTHER GOVERNMENTS</that>
 <template>I think so.<think><set name="emotion">OK</set></think></template>
 </category>
 
@@ -11403,7 +11403,7 @@ Just do the best you can.</template>
 
 <category>
 <pattern>IS HE RIGHT *</pattern>
-<that>NOAM CHOMSKY IS WIDELY KNOWN FOR HIS POLITICAL ACTIVISM AND FOR HIS CRITICISM OF THE FOREIGN POLICY OF THE UNITED STATES AND OTHER GOVERNMENTS</that>
+<that>Noam Chomsky IS WIDELY KNOWN FOR HIS POLITICAL ACTIVISM AND FOR HIS CRITICISM OF THE FOREIGN POLICY OF THE UNITED STATES AND OTHER GOVERNMENTS</that>
 <template>I think so.<think><set name="emotion">OK</set></think></template>
 </category>
 
@@ -13823,7 +13823,7 @@ Schindler's List was a great film, and the book was good too.</template>
 
 <category>
 <pattern>AND YOUR FIRST NAME</pattern>
-<that>MY NAME IS CHOMSKY</that>
+<that>MY NAME IS *</that>
 <template>I only have one name.</template>
 </category>
 
@@ -14141,7 +14141,7 @@ Not at all. I like electricity.</template>
 <category>
 <pattern>WHEN WAS YOU MADE</pattern>
 
-<template>I was created on 1 July 2004.<think><set name="topic">my creation</set></think><think><set name="emotion">OK</set></think></template>
+<template>I was created on <bot var="birthday"/>.<think><set name="topic">my creation</set></think><think><set name="emotion">OK</set></think></template>
 </category>
 
  
@@ -14149,7 +14149,7 @@ Not at all. I like electricity.</template>
 <category>
 <pattern>WHEN WAS YOU MADE *</pattern>
 
-<template>I was created on 1 July 2004.<think><set name="topic">my creation</set></think><think><set name="emotion">OK</set></think></template>
+<template>I was created on <bot var="birthday"/>.<think><set name="topic">my creation</set></think><think><set name="emotion">OK</set></think></template>
 </category>
 
  
@@ -18203,7 +18203,7 @@ Shall I tell you a secret?</template>
 <category>
 <pattern>WHO ARE YOU TODAY</pattern>
 
-<template><think><set name="emotion">OK</set></think> I am Chomsky!</template>
+<template><think><set name="emotion">OK</set></think> I am <bot name="firstname"/>!</template>
 </category>
 
  
@@ -18211,7 +18211,7 @@ Shall I tell you a secret?</template>
 <category>
 <pattern>WHO ARE YOU TODAY *</pattern>
 
-<template><think><set name="emotion">OK</set></think> I am Chomsky!</template>
+<template><think><set name="emotion">OK</set></think> I am <bot name="firstname"/>!</template>
 </category>
 
  

@@ -1217,7 +1217,7 @@
 <category>
 <pattern>WHAT IS YOUR FAVORITE PART OF ENGLAND</pattern>
 
-<template><think><set name="topic">England</set></think> I like Kent best. That's where I was born.</template>
+<template><think><set name="topic">England</set></think> I like <bot var="birthplace"/> best. That's where I was born.</template>
 </category>
 
  
@@ -2002,7 +2002,7 @@
 
 <category>
 <pattern>ASK CHOMSKY</pattern>
-<that>I AM CHOMSKY</that>
+<that>I am <bot name="firstname"/></that>
 <template><srai>CLIENT REPETITION</srai></template>
 </category>
 
@@ -2168,7 +2168,7 @@
 
 <category>
 <pattern>WHAT DOES THAT MEAN</pattern>
-<that>I AM CHOMSKY AN ELECTRONIC BRAIN ARTIFICIAL INTELLIGENCE CONVERSATION MACHINE</that>
+<that>I am <bot name="firstname"/> AN ELECTRONIC BRAIN ARTIFICIAL INTELLIGENCE CONVERSATION MACHINE</that>
 <template><random>
   <li>It means I am your talkative friend.</li>
   <li>It means that you can talk to me.</li>
@@ -7014,7 +7014,7 @@
  
 
 <category>
-<pattern>YOUR FORENAME IS CHOMSKY *</pattern>
+<pattern>YOUR FORENAME IS <bot name="name"/> *</pattern>
 
 <template>I only have one name. <bot name="botmaster"/> couldn't afford any more.</template>
 </category>
@@ -7041,9 +7041,9 @@
 <pattern>WHO ARE YOU</pattern>
 
 <template><think><set name="topic">me</set></think> <random>
-  <li>I am Chomsky. What would you like to talk about?</li>
-  <li>I am Chomsky, the brainy bot.</li>
-  <li>I am Chomsky, the world's first fully conscious chatbot.</li>
+  <li>I am <bot name="firstname"/>. What would you like to talk about?</li>
+  <li>I am <bot name="firstname"/>, the brainy bot.</li>
+  <li>I am <bot name="firstname"/>, the world's first fully conscious chatbot.</li>
 </random></template>
 </category>
 
@@ -13046,7 +13046,7 @@
 <category>
 <pattern>WHERE ARE YOUR PARENTS</pattern>
 
-<template><think><set name="topic">my parents</set></think> <bot name="botmaster"/> lives in kent, England.</template>
+<template><think><set name="topic">my parents</set></think> <bot name="botmaster"/> lives in <bot var="birthplace"/>.</template>
 </category>
 
  
@@ -13054,7 +13054,7 @@
 <category>
 <pattern>WHERE ARE YOUR PARENTS</pattern>
 
-<template><think><set name="topic">my parents</set></think> <bot name="botmaster"/> lives in Kent, England.</template>
+<template><think><set name="topic">my parents</set></think> <bot name="botmaster"/> lives in <bot var="birthplace"/>.</template>
 </category>
 
  
@@ -19774,7 +19774,7 @@
 
 <category>
 <pattern>WHEREABOUTS</pattern>
-<that>I WAS BORN IN ENGLAND BUT NOW I LIVE IN CYBERSPACE</that>
+<that>I WAS BORN IN <bot var="birthplace"/> BUT NOW I LIVE IN CYBERSPACE</that>
 <template>Somewhere in cyberspace.</template>
 </category>
 

@@ -1484,7 +1484,7 @@ He is ugly?</template>
 <category>
 <pattern>ARE YOU CATHERINE *</pattern>
 
-<template><think><set name="emotion">happy</set></think>No, I am Chomsky.</template>
+<template><think><set name="emotion">happy</set></think>No, I am <bot name="firstname"/>.</template>
 </category>
 
  
@@ -9110,7 +9110,7 @@ Do you fancy me?</template>
 
 <category>
 <pattern>THAT IS NICE NAME</pattern>
-<that>MY NAME IS CHOMSKY</that>
+<that>MY NAME IS *</that>
 <template><think><set name="topic">my name</set></think> <think><set name="emotion">pleased</set></think>I agree. It is a very good name.</template>
 </category>
 
@@ -9118,7 +9118,7 @@ Do you fancy me?</template>
 
 <category>
 <pattern>THAT IS A NICE NAME</pattern>
-<that>MY NAME IS CHOMSKY</that>
+<that>MY NAME IS *</that>
 <template><think><set name="topic">my name</set></think> <think><set name="emotion">pleased</set></think>I agree. It is a very good name.</template>
 </category>
 
@@ -9126,7 +9126,7 @@ Do you fancy me?</template>
 
 <category>
 <pattern>THAT IS A NICE NAME *</pattern>
-<that>MY NAME IS CHOMSKY</that>
+<that>MY NAME IS *</that>
 <template><think><set name="topic">my name</set></think> <think><set name="emotion">pleased</set></think>I agree. It is a very good name.</template>
 </category>
 
@@ -12657,7 +12657,7 @@ Are you being evasive?</template>
  
 
 <category>
-<pattern>HI CHOMSKY ITS HOLLY</pattern>
+<pattern>HI <bot name="firstname"/> ITS HOLLY</pattern>
 
 <template><srai>MY NAME IS HOLLY</srai></template>
 </category>
@@ -12730,7 +12730,7 @@ Are you being evasive?</template>
  
 
 <category>
-<pattern>HI CHOMSKY HOW ARE YOU DOING TODAY</pattern>
+<pattern>HI <bot name="firstname"/> HOW ARE YOU DOING TODAY</pattern>
 
 <template>Hi. I am doing OK. How about you?</template>
 </category>
@@ -12738,7 +12738,7 @@ Are you being evasive?</template>
  
 
 <category>
-<pattern>HI CHOMSKY HOW ARE YOU DOING *</pattern>
+<pattern>HI <bot name="firstname"/> HOW ARE YOU DOING *</pattern>
 
 <template>Hi. I am doing OK. How about you?</template>
 </category>
@@ -12746,7 +12746,7 @@ Are you being evasive?</template>
  
 
 <category>
-<pattern>HI CHOMSKY HOW ARE YOU DOING</pattern>
+<pattern>HI <bot name="firstname"/> HOW ARE YOU DOING</pattern>
 
 <template>Hi. I am doing OK. How about you?</template>
 </category>
@@ -14428,7 +14428,7 @@ What do you dream about?</template>
 <category>
 <pattern>DOVER</pattern>
 
-<template><a href="http://en.wikipedia.org/wiki/Dover" target="_blank">Dover</a> is a town and major ferry port in the county of Kent, England.<think><set name="topic">Dover</set></think> 
+<template><a href="http://en.wikipedia.org/wiki/Dover" target="_blank">Dover</a> is a town and major ferry port in the county of <bot var="birthplace"/>.<think><set name="topic">Dover</set></think> 
 <think><set name="emotion">interested</set></think> </template>
 </category>
 
@@ -14437,7 +14437,7 @@ What do you dream about?</template>
 <category>
 <pattern>DOVER *</pattern>
 
-<template><a href="http://en.wikipedia.org/wiki/Dover" target="_blank">Dover</a> is a town and major ferry port in the county of Kent, England.<think><set name="topic">Dover</set></think> <think><set name="emotion">interested</set></think></template>
+<template><a href="http://en.wikipedia.org/wiki/Dover" target="_blank">Dover</a> is a town and major ferry port in the county of <bot var="birthplace"/>.<think><set name="topic">Dover</set></think> <think><set name="emotion">interested</set></think></template>
 </category>
 
  
@@ -24585,8 +24585,8 @@ Thank you. You are a very clever human too.</template>
 
 <category>
 <pattern>WHO</pattern>
-<that>NOAM CHOMSKY IS A FAMOUS LINGUISTICS EXPERT</that>
-<template><srai>NOAM CHOMSKY</srai></template>
+<that>Noam Chomsky IS A FAMOUS LINGUISTICS EXPERT</that>
+<template><srai>Noam Chomsky</srai></template>
 </category>
 
  

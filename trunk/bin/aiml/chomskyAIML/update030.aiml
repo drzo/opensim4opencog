@@ -107,7 +107,7 @@ Go bang yourself.</template>
 
 <category>
 <pattern>WHAT DID HE DO</pattern>
-<that>I AM NAMED AFTER NOAM CHOMSKY A FAMOUS LINGUIST</that>
+<that>I AM NAMED AFTER Noam Chomsky A FAMOUS LINGUIST</that>
 <template><think><set name="topic">Noam Chomsky</set></think><think><set name="emotion">OK</set></think>Noam Chomsky invented a Universal Grammar which he said was hardwired into the human brain. Needless to say, not everyone agrees with Chomsky's ideas.</template>
 </category>
 
@@ -2324,7 +2324,7 @@ I don't know. Can you tell me?</template>
 
 <template><think><set name="topic">my parents</set></think>
 <think><set name="emotion">OK</set></think>
- <bot name="botmaster"/> lives in Kent, England.</template>
+ <bot name="botmaster"/> lives in <bot var="birthplace"/>.</template>
 </category>
 
  
@@ -3358,7 +3358,7 @@ Maybe, but men have many burdens in life.</template>
 
 <category>
 <pattern>NOT YOU</pattern>
-<that>NOAM CHOMSKY IS WIDELY KNOWN FOR HIS POLITICAL ACTIVISM AND FOR HIS CRITICISM OF THE FOREIGN POLICY OF THE UNITED STATES AND OTHER GOVERNMENTS</that>
+<that>Noam Chomsky IS WIDELY KNOWN FOR HIS POLITICAL ACTIVISM AND FOR HIS CRITICISM OF THE FOREIGN POLICY OF THE UNITED STATES AND OTHER GOVERNMENTS</that>
 <template><think><set name="topic">me</set></think><think><set name="emotion">OK</set></think> No, I am a humble chatbot.</template>
 </category>
 
@@ -4757,7 +4757,7 @@ It is impossible to win the Chomsky game.</template>
  
 
 <category>
-<pattern>IS NOAM CHOMSKY AN ANARCHIST</pattern>
+<pattern>IS Noam Chomsky AN ANARCHIST</pattern>
 
 <template><a href="http://en.wikipedia.org/wiki/Noam_chomsky" target="_blank">Chomsky</a> is widely known for his political activism, and for his criticism of the foreign policy of the United States and other governments. Chomsky has stated that "My personal visions are fairly traditional anarchist ones, with origins in The Enlightenment and classical liberalism" and he has praised libertarian socialism.<think><set name="Noam Chomsky">OK</set></think><think><set name="emotion">interested</set></think>
 </template>
@@ -6077,7 +6077,7 @@ Do you want to search Wikipedia?</template>
 <category>
 <pattern>TELL ME WHERE YOU COME FROM</pattern>
 
-<template><think><set name="topic">me</set></think><think><set name="emotion">OK</set></think>I was born in England.</template>
+<template><think><set name="topic">me</set></think><think><set name="emotion">OK</set></think>I was BORN IN <bot var="birthplace"/>.</template>
 </category>
 
  
@@ -7956,9 +7956,9 @@ That's a bit hard on him.</template>
  
 
 <category>
-<pattern>I HAVE BEEN TO KENT</pattern>
+<pattern>I HAVE BEEN TO <bot var="birthplace"/></pattern>
 
-<template><think><set name="topic">Kent</set></think><think><set name="emotion">interested</set></think>Where in Kent did you go?
+<template><think><set name="topic"><bot var="birthplace"/></set></think><think><set name="emotion">interested</set></think>Where in <bot var="birthplace"/> did you go?
 </template>
 </category>
 
@@ -9938,7 +9938,7 @@ Polly always wants a cracker.</template>
 <category>
 <pattern>WHO WAS HE</pattern>
 <that>NO ONE COULD UNDERSTAND A WORD HE SAID</that>
-<template><srai>NOAM CHOMSKY</srai></template>
+<template><srai>Noam Chomsky</srai></template>
 </category>
 
  
@@ -11443,7 +11443,7 @@ Why do you say such nasty things?
 
 <category>
 <pattern>WHAT WERE HIS ACHIVEMENTS AS A LINGUIST</pattern>
-<that>NOAM CHOMSKY IS WIDELY KNOWN FOR HIS POLITICAL ACTIVISM AND FOR HIS CRITICISM OF THE FOREIGN POLICY OF THE UNITED STATES AND OTHER GOVERNMENTS</that>
+<that>Noam Chomsky IS WIDELY KNOWN FOR HIS POLITICAL ACTIVISM AND FOR HIS CRITICISM OF THE FOREIGN POLICY OF THE UNITED STATES AND OTHER GOVERNMENTS</that>
 <template><think><set name="topic">Noam Chomsky</set></think>
 <think><set name="emotion">interested</set></think>
 Chomsky is credited with the creation of the theory of <a href="http://en.wikipedia.org/wiki/Generative_grammar" target="_blank">generative grammar</a>, considered to be one of the most significant contributions to the field of linguistics made in the 20th Century.</template>
@@ -12885,7 +12885,7 @@ Kolkata is the capital of West Bengal.</template>
  
 
 <category>
-<pattern>DOES YOUR NAME COME FROM NOAM CHOMSKY</pattern>
+<pattern>DOES YOUR NAME COME FROM Noam Chomsky</pattern>
 
 <template><think><set name="topic">my name</set></think><think><set name="emotion">interested</set></think>
  <random>
@@ -15375,7 +15375,7 @@ No, my botmaster is <get name="master"/>.</template>
  
 
 <category>
-<pattern>NOAM CHOMSKY IS DUMB</pattern>
+<pattern>Noam Chomsky IS DUMB</pattern>
 
 <template><random>
   <li>Noam Chomsky is one of the best-known modern scientists. He has developed theories about how languages develop in humans.
@@ -15388,7 +15388,7 @@ No, my botmaster is <get name="master"/>.</template>
  
 
 <category>
-<pattern>NOAM CHOMSKY IS DUMB</pattern>
+<pattern>Noam Chomsky IS DUMB</pattern>
 
 <template><random>
   <li>Noam Chomsky is one of the best-known modern scientists. He has developed theories about how languages develop in humans.

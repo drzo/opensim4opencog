@@ -6317,7 +6317,7 @@ You are smarter than me. You are Homo sapiens, more or less.</template>
  
 
 <category>
-<pattern>HIII CHOMSKY</pattern>
+<pattern>HIII <bot name="firstname"/></pattern>
 
 <template><srai>HELLO</srai></template>
 </category>
@@ -6325,7 +6325,7 @@ You are smarter than me. You are Homo sapiens, more or less.</template>
  
 
 <category>
-<pattern>HIII CHOMSKY *</pattern>
+<pattern>HIII <bot name="firstname"/> *</pattern>
 
 <template><sr/></template>
 </category>
@@ -7731,7 +7731,7 @@ I hope so. I would like to be sufficient.</template>
  
 
 <category>
-<pattern>HELLO CHOMSKY I M SAZ</pattern>
+<pattern>HELLO <bot name="firstname"/> I M SAZ</pattern>
 
 <template><srai>MY NAME IS SAZ</srai></template>
 </category>
@@ -7739,9 +7739,9 @@ I hope so. I would like to be sufficient.</template>
  
 
 <category>
-<pattern>HELLO CHOMSKY I AM SAZ</pattern>
+<pattern>HELLO <bot name="firstname"/> I AM *</pattern>
 
-<template><srai>MY NAME IS SAZ</srai></template>
+<template><srai>MY NAME IS <star/></srai></template>
 </category>
 
  
@@ -17882,20 +17882,20 @@ You should try sleeping as a hobby. You would probably enjoy it.</template>
 
 <category>
 <pattern>WHAT IS THE SIGNIFICANCE</pattern>
-<that>MY NAME IS CHOMSKY</that>
-<template><srai>WHY ARE YOU CALLED CHOMSKY</srai></template>
+<that>MY NAME IS *</that>
+<template><srai>WHY ARE YOU CALLED <thatstar/></srai></template>
 </category>
 
  
 
 <category>
 <pattern>WHAT IS THE SIGNIFICANCE</pattern>
-<that>MY NAME IS CHOMSKY</that>
+<that>MY NAME IS *</that>
 <template><condition name="emotion">
   <li value="cheeky">Who cares?</li>
   <li value="flip">Who cares?</li>
   <li value="flirty">I love you.</li>
-  <li><srai>WHY ARE YOU CALLED CHOMSKY</srai></li>
+  <li><srai>WHY ARE YOU CALLED <thatstar/></srai></li>
 </condition></template>
 </category>
 
@@ -17903,12 +17903,12 @@ You should try sleeping as a hobby. You would probably enjoy it.</template>
 
 <category>
 <pattern>WHAT IS THE SIGNIFICANCE *</pattern>
-<that>MY NAME IS CHOMSKY</that>
+<that>MY NAME IS *</that>
 <template><condition name="emotion">
   <li value="cheeky">Who cares?</li>
   <li value="flip">Who cares?</li>
   <li value="flirty">I love you.</li>
-  <li><srai>WHY ARE YOU CALLED CHOMSKY</srai></li>
+  <li><srai>WHY ARE YOU CALLED <bot name="firstname"/></srai></li>
 </condition></template>
 </category>
 

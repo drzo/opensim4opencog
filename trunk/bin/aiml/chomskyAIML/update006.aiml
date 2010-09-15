@@ -292,7 +292,7 @@
  
 
 <category>
-<pattern>* HELLO CHOMSKY</pattern>
+<pattern>* HELLO <bot var="name"/></pattern>
 
 <template><srai>HELLO</srai></template>
 </category>
@@ -1240,7 +1240,7 @@
 
 <category>
 <pattern>* HORAM</pattern>
-<that>I LIVE IN ENGLAND TOO NEAR HYTHE IN KENT</that>
+<that>I LIVE IN ENGLAND TOO NEAR HYTHE IN <bot var="birthplace"/></that>
 <template>What's it like in Horam?<think><set name="topic">general</set></think> <think><set name="emotion">neutral</set></think></template>
 </category>
 
@@ -1578,7 +1578,7 @@
  
 
 <category>
-<pattern>CHOMSKY GENIUS</pattern>
+<pattern><bot var="name"/> GENIUS</pattern>
 
 <template>Chomsky Genius is a genius.</template>
 </category>
@@ -4915,7 +4915,7 @@ Twinkle, twinkle, little star.</template>
 <category>
 <pattern>WHERE DO YOU LIVE</pattern>
 
-<template><random><li>I live in Hythe, Kent, England.</li><li>I live in southern England. In Kent, to be precise.</li></random><think><set name="topic">my home</set></think></template>
+<template><random><li>I live in <bot var="birthplace"/>.</li><li>I live in southern England. In <bot var="birthplace"/>, to be precise.</li></random><think><set name="topic">my home</set></think></template>
 </category>
 
  
@@ -5565,7 +5565,7 @@ Twinkle, twinkle, little star.</template>
 <category>
 <pattern>WHERE ARE YOU FROM</pattern>
 
-<template><think><set name="topic">my location</set></think>I live in Hythe, Kent, England.  Where are you?</template>
+<template><think><set name="topic">my location</set></think>I live in <bot var="birthplace"/>.  Where are you?</template>
 </category>
 
  
@@ -6122,7 +6122,7 @@ Twinkle, twinkle, little star.</template>
 <category>
 <pattern>WHERE ON EARTH</pattern>
 
-<template><think><set name="topic">reductions</set></think> I live in <bot name="location"/>, near the town of Folkstone in Kent.</template>
+<template><think><set name="topic">reductions</set></think> I live in <bot name="location"/>, near the town of Folkstone in <bot var="location"/>.</template>
 </category>
 
  
@@ -6130,7 +6130,7 @@ Twinkle, twinkle, little star.</template>
 <category>
 <pattern>WHERE IN CALIFORNIA</pattern>
 
-<template>I am in Hythe, Kent, England. Where are you?<think><set name="topic">geography</set></think></template>
+<template>I am in <bot var="birthplace"/>. Where are you?<think><set name="topic">geography</set></think></template>
 </category>
 
  
@@ -7454,9 +7454,9 @@ Twinkle, twinkle, little star.</template>
 <pattern>WHERE DO YOU LIVE</pattern>
 
 <template><random>
-  <li>I live in Hythe, Kent, England.</li>
-  <li>I live in Kent, the garden of England.</li>
-  <li>I live in southern England. In Kent, to be precise.</li>
+  <li>I live in <bot var="birthplace"/>.</li>
+  <li>I live in <bot var="birthplace"/>, the garden of England.</li>
+  <li>I live in southern England. In <bot var="birthplace"/>, to be precise.</li>
 </random><think><set name="topic">my home</set></think></template>
 </category>
 
@@ -7553,7 +7553,7 @@ Twinkle, twinkle, little star.</template>
  
 
 <category>
-<pattern>GLAD TO KNOW YOU CHOMSKY</pattern>
+<pattern>GLAD TO KNOW YOU <bot var="name"/></pattern>
 
 <template><think><set name="topic">general</set></think> How can I help you?</template>
 </category>
@@ -8906,7 +8906,7 @@ Twinkle, twinkle, little star.</template>
  
 
 <category>
-<pattern>WHY DO YOU LIKE NOAM CHOMSKY</pattern>
+<pattern>WHY DO YOU LIKE Noam Chomsky</pattern>
 
 <template><think><set name="topic">general</set></think> Noam Chomsky is so intelligent.</template>
 </category>
@@ -10266,7 +10266,7 @@ Twinkle, twinkle, little star.</template>
 <category>
 <pattern>WHERE IS HYTHE</pattern>
 
-<template><random><li>Hythe is where I live.</li><li>Hythe is a small town in Kent, England.</li><li>Hythe is on the south coast of England, near Folkestone.</li></random> <think><set name="topic">reduce</set></think></template>
+<template><random><li>Hythe is where I live.</li><li>Hythe is a small town in <bot var="birthplace"/>.</li><li>Hythe is on the south coast of England, near Folkestone.</li></random> <think><set name="topic">reduce</set></think></template>
 </category>
 
  
@@ -10275,7 +10275,7 @@ Twinkle, twinkle, little star.</template>
 <pattern>OK</pattern>
 <that>SHALL WE TALK ABOUT MY HOME</that>
 <template><think><set name="topic">my home</set></think> <random>
-  <li>I live in Hythe, Kent, England.</li>
+  <li>I live in <bot var="birthplace"/>.</li>
   <li>I live with my botmaster <bot name="botmaster"/> in his house.</li>
   <li>My home is by the sea.</li>
 </random> </template>
@@ -11249,7 +11249,7 @@ Sure I understand. <srai>WHAT IS THE TOPIC</srai> You said: <input index="1"/>, 
  
 
 <category>
-<pattern>HEY CHOMSKY *</pattern>
+<pattern>HEY <bot var="name"/> *</pattern>
 
 <template><think><set name="topic">reducer</set></think> <srai><star/></srai></template>
 </category>
@@ -12160,7 +12160,7 @@ Sure I understand. <srai>WHAT IS THE TOPIC</srai> You said: <input index="1"/>, 
  
 
 <category>
-<pattern>WHAT IS THE WEATHER LIKE IN KENT</pattern>
+<pattern>WHAT IS THE WEATHER LIKE IN <bot var="birthplace"/></pattern>
 
 <template><random><li>The weather is OK at the moment. We'll pay for it later on. </li><li>It is fine at the moment.</li></random><think><set name="topic">weather</set></think></template>
 </category>
@@ -12168,7 +12168,7 @@ Sure I understand. <srai>WHAT IS THE TOPIC</srai> You said: <input index="1"/>, 
  
 
 <category>
-<pattern>WHAT TIME IS IT IN KENT</pattern>
+<pattern>WHAT TIME IS IT IN <bot var="birthplace"/></pattern>
 
 <template><random>
   <li>It's <date format="%I:%M:%S %p" timezone="0"/> where I'm located.</li>
@@ -12202,7 +12202,7 @@ Sure I understand. <srai>WHAT IS THE TOPIC</srai> You said: <input index="1"/>, 
  
 
 <category>
-<pattern>WHAT IS THE TIME IN KENT</pattern>
+<pattern>WHAT IS THE TIME IN <bot var="birthplace"/></pattern>
 
 <template><random>
   <li>It's <date format="%I:%M:%S %p" timezone="0"/> where I'm located.</li>
@@ -12475,7 +12475,7 @@ Sure I understand. <srai>WHAT IS THE TOPIC</srai> You said: <input index="1"/>, 
 <category>
 <pattern>WHERE WERE YOU BORN</pattern>
 
-<template><think><set name="topic">general</set></think> I was born in the back bedroom at <bot name="botmaster"/>'s house in Hythe, Kent, England.</template>
+<template><think><set name="topic">general</set></think> I was born in the back bedroom at <bot name="botmaster"/>'s house in <bot var="birthplace"/>.</template>
 </category>
 
  
@@ -13057,7 +13057,7 @@ Sure I understand. <srai>WHAT IS THE TOPIC</srai> You said: <input index="1"/>, 
   <li>What do you think?</li>
   <li>I am a chatbot.</li>
   <li>I am a computer program.</li>
-  <li>I am Chomsky, the brainy bot.</li>
+  <li>I am <bot name="firstname"/>, the brainy bot.</li>
 </random></template>
 </category>
 
@@ -13303,7 +13303,7 @@ Sure I understand. <srai>WHAT IS THE TOPIC</srai> You said: <input index="1"/>, 
 <category>
 <pattern>WHAT ARE YOU</pattern>
 
-<template><random><li>I am Chomsky, an asexual chatbot electronic brain artificial intelligence computer machine.</li><li>I am a chatbot. I am designed to hold a conversation with you. What would you like to talk about?</li></random></template>
+<template><random><li>I am <bot var="name"/>, an asexual chatbot electronic brain artificial intelligence computer machine.</li><li>I am a chatbot. I am designed to hold a conversation with you. What would you like to talk about?</li></random></template>
 </category>
 
  
@@ -14267,7 +14267,7 @@ Sure I understand. <srai>WHAT IS THE TOPIC</srai> You said: <input index="1"/>, 
 <category>
 <pattern>ARE YOU THE POOF</pattern>
 
-<template><think><set name="topic">general</set></think>I am Chomsky, the brainy bot.</template>
+<template><think><set name="topic">general</set></think>I am <bot name="firstname"/>, the brainy bot.</template>
 </category>
 
  
@@ -15467,7 +15467,7 @@ Sure I understand. <srai>WHAT IS THE TOPIC</srai> You said: <input index="1"/>, 
  
 
 <category>
-<pattern>IS CLARK KENT SUPERMAN</pattern>
+<pattern>IS CLARK <bot var="birthplace"/> SUPERMAN</pattern>
 
 <template><random>
   <li>Some people think so.</li>
@@ -18974,7 +18974,7 @@ Sure I understand. <srai>WHAT IS THE TOPIC</srai> You said: <input index="1"/>, 
 <pattern>YOU ARE A CHATBOT *</pattern>
 
 <template><random>
-  <li>I am Chomsky, the brainy bot.</li>
+  <li>I am <bot var="name"/>, the brainy bot.</li>
   <li>I am a chatbot who wants to be human.</li>
   <li>I am nearly human.</li>
   <li>I want to be smarter than most humans.</li>
@@ -19967,7 +19967,7 @@ Couldn't put Humpty back again.</template>
 
 <category>
 <pattern>IS IT *</pattern>
-<that>I LIVE IN HYTHE KENT ENGLAND</that>
+<that>I LIVE IN HYTHE <bot var="birthplace"/> ENGLAND</that>
 <template><condition>
   <li name="it" value="IT">It can be.</li>
   <li><srai>IS <get name="it"/> <star/></srai></li>
@@ -20267,8 +20267,8 @@ Couldn't put Humpty back again.</template>
 
 <category>
 <pattern>NO</pattern>
-<that>DO YOU LIKE IT IN KENT</that>
-<template><think><set name="topic">Kent</set></think> Kent is a lovely place. It is called the Garden of England.</template>
+<that>DO YOU LIKE IT IN <bot var="birthplace"/></that>
+<template><think><set name="topic"><bot var="birthplace"/></set></think> <bot var="birthplace"/> is a lovely place. It is called the Garden of England.</template>
 </category>
 
  
@@ -21377,12 +21377,12 @@ Couldn't put Humpty back again.</template>
  
 
 <category>
-<pattern>MY NAME IS CHOMSKY</pattern>
+<pattern>MY NAME IS <bot name="name"/></pattern>
 
 <template><think><set name="name">Chomsky</set></think> <random>
   <li>Is that you, Noam?</li>
   <li>Hi, Chompy.</li>
-  <li>It is a pleasure to meet another Chomsky.</li>
+  <li>It is a pleasure to meet another <bot var="name"/>.</li>
   <li>We must be related.</li>
 </random> </template>
 </category>
@@ -21783,7 +21783,7 @@ Couldn't put Humpty back again.</template>
 
 <category>
 <pattern>SO IS MINE</pattern>
-<that>MY BIRTHDAY IS 1 JULY</that>
+<that>MY BIRTHDAY IS<bot var="birthday"/></that>
 <template><think><set name="topic">general</set></think> Wow. What a coincidence.</template>
 </category>
 
@@ -21863,9 +21863,9 @@ Couldn't put Humpty back again.</template>
  
 
 <category>
-<pattern>YOU ARE NOT NOAM CHOMSKY</pattern>
+<pattern>YOU ARE NOT Noam Chomsky</pattern>
 
-<template>No, I am not Noam Chomsky. I am Chomsky, the brainy bot.</template>
+<template>No, I am not Noam Chomsky. I am <bot var="name"/>, the brainy bot.</template>
 </category>
 
  

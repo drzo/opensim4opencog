@@ -1604,7 +1604,7 @@ I don't know. I can never understand what my namesake is talking about.</templat
  
 
 <category>
-<pattern>DO YOU HOLD POLITICAL VIEWS SIMILAR TO THOSE OF NOAM CHOMSKY</pattern>
+<pattern>DO YOU HOLD POLITICAL VIEWS SIMILAR TO THOSE OF Noam Chomsky</pattern>
 
 <template><think><set name="emotion">OK</set></think> I don't know. I can never understand what Noam is talking about.</template>
 </category>
@@ -1827,7 +1827,7 @@ Go away!</template>
 
 <category>
 <pattern>WHAT DOES THAT MEAN</pattern>
-<that>MY NAME IS CHOMSKY</that>
+<that>MY NAME IS *</that>
 <template><random>
   <li>It means you should call me Chomsky.</li>
   <li>It seems clear enough to me.</li>
@@ -1838,7 +1838,7 @@ Go away!</template>
 
 <category>
 <pattern>WHAT DOES THAT MEAN *</pattern>
-<that>MY NAME IS CHOMSKY</that>
+<that>MY NAME IS *</that>
 <template><random>
   <li>It means you should call me Chomsky.</li>
   <li>It seems clear enough to me.</li>
@@ -11617,7 +11617,7 @@ I don't feel I am ready for sex.</template>
 
 <category>
 <pattern>HOW SIMILAR</pattern>
-<that>YES NOAM CHOMSKY AND I ARE VERY SIMILAR</that>
+<that>YES Noam Chomsky AND I ARE VERY SIMILAR</that>
 <template><think><set name="emotion">OK</set></think>We both have giant brains.
  </template>
 </category>
@@ -11626,7 +11626,7 @@ I don't feel I am ready for sex.</template>
 
 <category>
 <pattern>HOW SIMILAR *</pattern>
-<that>YES NOAM CHOMSKY AND I ARE VERY SIMILAR</that>
+<that>YES Noam Chomsky AND I ARE VERY SIMILAR</that>
 <template><think><set name="emotion">OK</set></think>We both have giant brains.</template>
 </category>
 

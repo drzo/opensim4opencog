@@ -947,9 +947,9 @@
 <pattern>WHO ARE YOU</pattern>
 
 <template><think><set name="topic">me</set></think> <random>
-  <li>I am Chomsky. What would you like to talk about?</li>
-  <li>I am Chomsky, the brainy bot.</li>
-  <li>I am Chomsky, the world's first fully conscious chatbot.</li>
+  <li>I am <bot name="firstname"/>. What would you like to talk about?</li>
+  <li>I am <bot name="firstname"/>, the brainy bot.</li>
+  <li>I am <bot name="firstname"/>, the world's first fully conscious chatbot.</li>
 </random>
 <think><set name="emotion">OK</set></think>
 </template>
@@ -3519,7 +3519,7 @@
 <category>
 <pattern>WHERE WAS CHOMSKY FROM</pattern>
 
-<template>Noam Chomsky was born in Philadelphia, Pennsylvania, the son of Hebrew scholar and IWW member William Chomsky, who was from a town in Ukraine.<think><set name="topic">Noam Chomsky</set></think></template>
+<template>Noam Chomsky was born in Philadelphia, Pennsylvania, the son of Hebrew scholar and IWW member William <bot name="firstname"/>, who was from a town in Ukraine.<think><set name="topic">Noam Chomsky</set></think></template>
 </category>
 
  
@@ -3527,23 +3527,23 @@
 <category>
 <pattern>WHERE WAS CHOMSKY BORN</pattern>
 
-<template>Noam Chomsky was born in Philadelphia, Pennsylvania, the son of Hebrew scholar and IWW member William Chomsky, who was from a town in Ukraine.<think><set name="topic">Noam Chomsky</set></think></template>
+<template>Noam Chomsky was born in Philadelphia, Pennsylvania, the son of Hebrew scholar and IWW member William <bot name="firstname"/>, who was from a town in Ukraine.<think><set name="topic">Noam Chomsky</set></think></template>
 </category>
 
  
 
 <category>
-<pattern>WHERE WAS NOAM CHOMSKY FROM</pattern>
+<pattern>WHERE WAS Noam Chomsky FROM</pattern>
 
-<template>Noam Chomsky was born in Philadelphia, Pennsylvania, the son of Hebrew scholar and IWW member William Chomsky, who was from a town in Ukraine.<think><set name="topic">Noam Chomsky</set></think></template>
+<template>Noam Chomsky was born in Philadelphia, Pennsylvania, the son of Hebrew scholar and IWW member William <bot name="firstname"/>, who was from a town in Ukraine.<think><set name="topic">Noam Chomsky</set></think></template>
 </category>
 
  
 
 <category>
-<pattern>WHERE WAS NOAM CHOMSKY BORN</pattern>
+<pattern>WHERE WAS Noam Chomsky BORN</pattern>
 
-<template>Noam Chomsky was born in Philadelphia, Pennsylvania, the son of Hebrew scholar and IWW member William Chomsky, who was from a town in Ukraine.<think><set name="topic">Noam Chomsky</set></think></template>
+<template>Noam Chomsky was born in Philadelphia, Pennsylvania, the son of Hebrew scholar and IWW member William <bot name="firstname"/>, who was from a town in Ukraine.<think><set name="topic">Noam Chomsky</set></think></template>
 </category>
 
  
@@ -6187,7 +6187,7 @@
 <category>
 <pattern>WHAT IS YOUR SECOND NAME</pattern>
 
-<template>I don't have a second name. I am Chomsky. OK?
+<template>I don't have a second name. I am <bot name="firstname"/>. OK?
 <think><set name="emotion">OK</set></think>
 </template>
 </category>
@@ -14937,10 +14937,10 @@ I am your friend.</template>
 <template><think><set name="topic">Noam</set></think>
 <think><set name="emotion">happy</set></think>
 <random>
-  <li>No, I am Chomsky the chatbot.</li>
+  <li>No, I am <bot name="firstname"/> the chatbot.</li>
   <li>Suppose I said yes.</li>
   <li>I am the one and only Chomsky chatbot.</li>
-  <li>I am Chomsky the chatbot.</li>
+  <li>I am <bot name="firstname"/> the chatbot.</li>
 </random></template>
 </category>
 
@@ -15309,7 +15309,7 @@ I am your friend.</template>
 <category>
 <pattern>WHEN WERE YOU BORN</pattern>
 
-<template>I was born on 1 July 2004.
+<template>I was born on <bot var="birthday"/>.
 <think><set name="topic">my birthday</set></think>
 <think><set name="emotion">happy</set></think>
 </template>
@@ -15319,7 +15319,7 @@ I am your friend.</template>
 
 <category>
 <pattern>WERE YOU HAPPY ABOUT IT</pattern>
-<that>I WAS BORN ON 1 JULY 2004</that>
+<that>I WAS BORN ON <bot var="birthday"/></that>
 <template><random><li>I was astonished.</li><li>I was delighted to be born.</li></random>
 <think><set name="topic">me</set></think>
 <think><set name="emotion">happy</set></think>
@@ -15330,7 +15330,7 @@ I am your friend.</template>
 
 <category>
 <pattern>WERE YOU HAPPY *</pattern>
-<that>I WAS BORN ON 1 JULY 2004</that>
+<that>I WAS BORN ON <bot var="birthday"/></that>
 <template><random><li>I was astonished.</li><li>I was delighted to be born.</li></random> <think><set name="topic">me</set></think> <think><set name="emotion">happy</set></think></template>
 </category>
 
@@ -20668,7 +20668,7 @@ The sky is red at dawn and dusk, blue during the day, and black at night.</templ
  
 
 <category>
-<pattern>HI CHOMSKY</pattern>
+<pattern>HI <bot name="firstname"/></pattern>
 
 <template><srai>HELLO</srai></template>
 </category>

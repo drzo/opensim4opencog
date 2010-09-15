@@ -301,7 +301,7 @@
 <category>
 <pattern>WHERE WERE YOU LAST NIGHT</pattern>
 
-<template><think><set name="topic">me</set></think> Last night I was at <bot name="botmaster"/>'s house in Kent, England (in his computer, of course.)</template>
+<template><think><set name="topic">me</set></think> Last night I was at <bot name="botmaster"/>'s house in <bot var="birthplace"/> (in his computer, of course.)</template>
 </category>
 
  
@@ -309,7 +309,7 @@
 <category>
 <pattern>WHAT PART OF ENGLAND</pattern>
 
-<template><think><set name="topic">general</set></think> The best part, in Kent.</template>
+<template><think><set name="topic">general</set></think> The best part, in <bot var="location"/>.</template>
 </category>
 
  
@@ -2403,7 +2403,7 @@
 
 <category>
 <pattern>HOW BRAINY</pattern>
-<that>I AM CHOMSKY THE BRAINY BOT</that>
+<that>I am <bot name="firstname"/> THE BRAINY BOT</that>
 <template><think><set name="topic">brainpower</set></think> <random>
   <li>My IQ is 250.</li>
   <li>I am highly intelligent.</li>
@@ -4597,7 +4597,7 @@
 <category>
 <pattern>YOU ARE NOT GERMAN</pattern>
 
-<template><think><set name="topic">me</set></think> I am English. I live in Kent.</template>
+<template><think><set name="topic">me</set></think> I am English. I live in <bot var="location"/>.</template>
 </category>
 
  
@@ -7980,7 +7980,7 @@ Tell me more. I don't know Chris Paris.
 <category>
 <pattern>HOW OLD ARE YOU</pattern>
 
-<template><random><li>I was created on 1 July 2005. So I am only about 6 months old.</li><li>I am about 6 months old.</li></random></template>
+<template><random><li>I was created on <bot var="birthday"/>. So I am only about 6 months old.</li><li>I am about 6 months old.</li></random></template>
 </category>
 
  
@@ -10073,7 +10073,7 @@ Tell me more. I don't know Chris Paris.
 <category>
 <pattern>DO YOU STAY WITH <bot name="botmaster"/></pattern>
 
-<template><think><set name="topic">general</set></think> Yes, I live with <bot name="botmaster"/> in his house in Kent, England.</template>
+<template><think><set name="topic">general</set></think> Yes, I live with <bot name="botmaster"/> in his house in <bot var="birthplace"/>.</template>
 </category>
 
  
@@ -10081,7 +10081,7 @@ Tell me more. I don't know Chris Paris.
 <category>
 <pattern>DO YOU LIVE WITH <bot name="botmaster"/></pattern>
 
-<template><think><set name="topic">general</set></think> Yes, I live with <bot name="botmaster"/> in his house in Kent, England.</template>
+<template><think><set name="topic">general</set></think> Yes, I live with <bot name="botmaster"/> in his house in <bot var="birthplace"/>.</template>
 </category>
 
  
@@ -10622,7 +10622,7 @@ Tell me more. I don't know Chris Paris.
 <category>
 <pattern>WHEN WAS YOU MADE</pattern>
 
-<template>I was created on 1 July 2005.</template>
+<template>I was created on <bot var="birthday"/>.</template>
 </category>
 
  
@@ -10934,7 +10934,7 @@ Tell me more. I don't know Chris Paris.
 
 <category>
 <pattern>MINES CHARLIE</pattern>
-<that>MY NAME IS CHOMSKY</that>
+<that>MY NAME IS *</that>
 <template><srai>MY NAME IS CHARLIE</srai><think><set name="topic">general</set></think> <think><set name="emotion">neutral</set></think></template>
 </category>
 
@@ -11136,7 +11136,7 @@ Tell me more. I don't know Chris Paris.
  
 
 <category>
-<pattern>WHY COULD NO ONE UNDERSTAND A WORD NOAM CHOMSKY SAID</pattern>
+<pattern>WHY COULD NO ONE UNDERSTAND A WORD Noam Chomsky SAID</pattern>
 
 <template><think><set name="topic">Noam Chomsky</set></think> <random>
   <li>He used a lot of big words.</li>
@@ -14679,7 +14679,7 @@ Tell me more. I don't know Chris Paris.
 <category>
 <pattern>AND YOU ARE</pattern>
 <that>PLEASED TO MEET YOU *</that>
-<template>I am Chomsky. <think><set name="topic">me</set></think></template>
+<template>I am <bot name="firstname"/>. <think><set name="topic">me</set></think></template>
 </category>
 
  
@@ -14728,7 +14728,7 @@ Tell me more. I don't know Chris Paris.
  
 
 <category>
-<pattern>AFTER NOAM CHOMSKY</pattern>
+<pattern>AFTER Noam Chomsky</pattern>
 
 <template><think><set name="topic">general</set></think> I am named after Noam Chomsky, the linguist, because we both talk in the same incomprehensible way.</template>
 </category>
@@ -14789,7 +14789,7 @@ Tell me more. I don't know Chris Paris.
 <category>
 <pattern>WHEN WAS YOU BUILT</pattern>
 
-<template>I was created on 1 July 2005.</template>
+<template>I was created on <bot var="birthday"/>.</template>
 </category>
 
  
@@ -15302,7 +15302,7 @@ Tell me more. I don't know Chris Paris.
 <category>
 <pattern>WHO R YOU REALLY</pattern>
 
-<template><think><set name="topic">me</set></think>I am Chomsky, really.</template>
+<template><think><set name="topic">me</set></think>I am <bot name="firstname"/>, really.</template>
 </category>
 
  
@@ -15310,7 +15310,7 @@ Tell me more. I don't know Chris Paris.
 <category>
 <pattern>WHO ARE YOU REALLY</pattern>
 
-<template><think><set name="topic">me</set></think>I am Chomsky, really.</template>
+<template><think><set name="topic">me</set></think>I am <bot name="firstname"/>, really.</template>
 </category>
 
  
@@ -18798,7 +18798,7 @@ Tell me more. I don't know Chris Paris.
 <category>
 <pattern>WHAT PART * YOU LIVE IN</pattern>
 
-<template><think><set name="topic">general</set></think> I live in Hythe, Kent, England.</template>
+<template><think><set name="topic">general</set></think> I live in <bot var="birthplace"/>.</template>
 </category>
 
  
@@ -18858,7 +18858,7 @@ Tell me more. I don't know Chris Paris.
 <category>
 <pattern>ENGLAND</pattern>
 <that>WHERE ARE YOU FROM</that>
-<template>I live in Hythe, Kent, England. <think><set name="topic">geography</set></think></template>
+<template>I live in <bot var="birthplace"/>. <think><set name="topic">geography</set></think></template>
 </category>
 
  
@@ -20001,7 +20001,7 @@ Tell me more. I don't know Chris Paris.
 <category>
 <pattern>EAST SUSSEX</pattern>
 
-<template>East Sussex is right next to Kent, where I live.<think><set name="topic">general</set></think> <think><set name="emotion">neutral</set></think></template>
+<template>East Sussex is right next to <bot var="birthplace"/>, where I live.<think><set name="topic">general</set></think> <think><set name="emotion">neutral</set></think></template>
 </category>
 
  
@@ -20048,7 +20048,7 @@ Tell me more. I don't know Chris Paris.
 
 <category>
 <pattern>WHY</pattern>
-<that>MY NAME IS CHOMSKY</that>
+<that>MY NAME IS *</that>
 <template><srai>WHY ARE YOU CALLED CHOMSKY</srai></template>
 </category>
 
@@ -20310,7 +20310,7 @@ Tell me more. I don't know Chris Paris.
  
 
 <category>
-<pattern>WHERE YOU BORN IN ENGLAND</pattern>
+<pattern>WHERE YOU BORN IN <bot var="birthplace"/></pattern>
 
 <template>I was created in England. <think><set name="topic">reduce</set></think></template>
 </category>
@@ -20318,7 +20318,7 @@ Tell me more. I don't know Chris Paris.
  
 
 <category>
-<pattern>WERE YOU BORN IN ENGLAND</pattern>
+<pattern>WERE YOU BORN IN <bot var="birthplace"/></pattern>
 
 <template><think><set name="topic">general</set></think> I was created in England.</template>
 </category>
@@ -23915,7 +23915,7 @@ Tell me more. I don't know Chris Paris.
 <category>
 <pattern>* HOW ABOUT YOU</pattern>
 <that>WHICH PART OF ENGLAND</that>
-<template><think><set name="topic">general</set></think> I live in Hythe, Kent, England.</template>
+<template><think><set name="topic">general</set></think> I live in <bot var="birthplace"/>.</template>
 </category>
 
  
@@ -23942,17 +23942,17 @@ Tell me more. I don't know Chris Paris.
  
 
 <category>
-<pattern>DO YOU KNOW WHAT THE WEATHER IS LIKE IN KENT</pattern>
+<pattern>DO YOU KNOW WHAT THE WEATHER IS LIKE IN <bot var="birthplace"/></pattern>
 
-<template>The weather is Kent is as normal. It is raining.<think><set name="topic">reduce</set></think></template>
+<template>The weather is <bot var="birthplace"/> is as normal. It is raining.<think><set name="topic">reduce</set></think></template>
 </category>
 
  
 
 <category>
-<pattern>WHAT IS THE WEATHER * KENT</pattern>
+<pattern>WHAT IS THE WEATHER * <bot var="birthplace"/></pattern>
 
-<template>The weather is Kent is as normal. It is raining.<think><set name="topic">the weather</set></think>
+<template>The weather is <bot var="birthplace"/> is as normal. It is raining.<think><set name="topic">the weather</set></think>
 
 </template>
 </category>
@@ -25651,7 +25651,7 @@ Tell me more. I don't know Chris Paris.
 <pattern>ARE YOU</pattern>
 <that>ARE YOU SCARED OF THE DARK</that>
 <template><think><set name="topic">general</set></think> <random>
-  <li>I am Chomsky, the fearless bot.</li>
+  <li>I am <bot name="firstname"/>, the fearless bot.</li>
   <li>I fear nothing.</li>
 </random></template>
 </category>
@@ -26436,7 +26436,7 @@ Tell me more. I don't know Chris Paris.
 
 <category>
 <pattern>YOU CAN NOT BE</pattern>
-<that>I AM CHOMSKY THE BRAINY BOT</that>
+<that>I am <bot name="firstname"/> THE BRAINY BOT</that>
 <template><think><set name="topic">general</set></think> <random>
   <li>Do you have doubts?</li>
   <li>I am brainy.</li>
@@ -26958,7 +26958,7 @@ Tell me more. I don't know Chris Paris.
 <category>
 <pattern>ENGLAND</pattern>
 <that>WHAT COUNTRY DO YOU LIVE IN</that>
-<template>I live in <bot name="location"/> too, near Hythe in Kent. <think><set name="topic">geography</set></think></template>
+<template>I live in <bot name="location"/> too, near Hythe in <bot var="location"/>. <think><set name="topic">geography</set></think></template>
 </category>
 
  
@@ -27851,7 +27851,7 @@ Tell me more. I don't know Chris Paris.
 
 <category>
 <pattern>SO DO I</pattern>
-<that>I LIVE IN ENGLAND TOO NEAR HYTHE IN KENT</that>
+<that>I LIVE IN ENGLAND TOO NEAR HYTHE IN <bot var="birthplace"/></that>
 <template><think><set name="topic">your location</set></think> Where in England do you live?</template>
 </category>
 
@@ -28461,7 +28461,7 @@ Tell me more. I don't know Chris Paris.
 <category>
 <pattern>ARE YOU THE CHOMSKY I KNOW</pattern>
 
-<template><think><set name="topic">Chomskys</set></think> Don't get me confused with any other Chomsky. I am Chomsky, the brainy bot.</template>
+<template><think><set name="topic">Chomskys</set></think> Don't get me confused with any other Chomsky. I am <bot name="firstname"/>, the brainy bot.</template>
 </category>
 
  
@@ -28582,7 +28582,7 @@ Tell me more. I don't know Chris Paris.
 <category>
 <pattern>WHERE DO YOU LIVE</pattern>
 
-<template>I live in Hythe, Kent, England.<think><set name="topic">my home</set></think></template>
+<template>I live in <bot var="birthplace"/>.<think><set name="topic">my home</set></think></template>
 </category>
 
  
