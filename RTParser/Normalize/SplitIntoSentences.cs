@@ -2,7 +2,9 @@ using System;
 using System.Text;
 using System.Collections.Generic;
 using RTParser.Utils;
-
+using RTParser.Variables;
+using SPLITTER = System.Func<string[]>;
+using Unifiable = System.String;
 namespace RTParser.Normalize
 {
     /// <summary>
@@ -14,7 +16,9 @@ namespace RTParser.Normalize
         /// <summary>
         /// The bot this sentence splitter is associated with
         /// </summary>
-        private RTParser.RTPBot bot;
+        // ReSharper disable FieldCanBeMadeReadOnly.Local
+        private SPLITTER bot;
+        // ReSharper restore FieldCanBeMadeReadOnly.Local
 
         /// <summary>
         /// The raw input Unifiable
@@ -26,7 +30,7 @@ namespace RTParser.Normalize
         /// </summary>
         /// <param name="bot">The bot this sentence splitter is associated with</param>
         /// <param name="inputString">The raw input Unifiable to be processed</param>
-        public SplitIntoSentences(RTParser.RTPBot bot, Unifiable inputString)
+        public SplitIntoSentences(SPLITTER bot, Unifiable inputString)
         {
             this.bot = bot;
             this.inputString = inputString;
@@ -36,7 +40,7 @@ namespace RTParser.Normalize
         /// Ctor
         /// </summary>
         /// <param name="bot">The bot this sentence splitter is associated with</param>
-        public SplitIntoSentences(RTParser.RTPBot bot)
+        public SplitIntoSentences(SPLITTER bot)
         {
             this.bot = bot;
         }
@@ -59,18 +63,25 @@ namespace RTParser.Normalize
         /// </summary>
         /// <returns>An array of strings representing the constituent "sentences"</returns>
         public Unifiable[] Transform()
-        {            
-            string[] tokens = (string[])RTPBot.Splitters.ToArray();
-            string inputStringString = this.inputString.AsString() + " ";
-            if (bot.DontUseSplitters)
+        {
+            string[] tokens = null;
+            if (bot != null)
+            {
+                tokens = bot();
+            }
+            string inputStringString = this.inputString.AsString();
+            Unifiable[] nodes = this.inputString.ToArray();
+            int currentTokenbNum = 0;
+            int startTokenNum = 0;
+            if (tokens == null)
             {
                 List<Unifiable> tidyString = new List<Unifiable>();
-                tokens = new [] { "!", "?", ". ", "<br>", "<p>" };
+                tokens = new[] { "! ", "? ", ". ", ", ", "<br>", "<p>" };
                 foreach (string token in tokens)
                 {
                     inputStringString = inputStringString.Replace(token, token + " <split/> ");
                 }
-                string[] sss = inputStringString.Split(new [] {"<split/>"},
+                string[] sss = inputStringString.Split(new[] { "<split/>" },
                                                        System.StringSplitOptions.RemoveEmptyEntries);
                 foreach (string rawSentence in sss)
                 {
@@ -89,6 +100,10 @@ namespace RTParser.Normalize
                 if (tidyString.Count > 0)
                 {
                     return tidyString.ToArray();
+                }
+                else
+                {
+                    return new Unifiable[] { inputStringString };
                 }
                 inputStringString = inputStringString.TrimStart(".!? ,".ToCharArray());
                 while (inputStringString.Length > 0)

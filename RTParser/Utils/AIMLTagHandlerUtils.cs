@@ -12,6 +12,7 @@ namespace RTParser.Utils
     {
         protected void DebugCheck(int i)
         {
+            QuerySettingsReadOnly request = (QuerySettingsReadOnly)this.request;
             if (!request.IsTraced) return;
             if (request.DebugLevel < i)
             {

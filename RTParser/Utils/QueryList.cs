@@ -9,11 +9,31 @@ namespace RTParser.Utils
 {
     public class QueryList : QuerySettings
     {
+        public bool IsComplete(Request request)
+        {
+            var toplevel = this;
+            return toplevel.IsMaxedOut ||
+                   request.IsComplete(toplevel.CurrentResult);
+        }
+
         private List<SubQuery> Bindings;
         public bool NoMoreResults;
         public List<Node> PatternsUsed;
         private List<TemplateInfo> Templates;
         public RequestImpl TheRequest;
+        public Unifiable InputPath;
+        public string WhyComplete
+        {
+            get
+            {
+                return TheRequest.WhyNoSearch(CurrentResult) + (IsMaxedOut ? " TopLevel.IsMaxedOut" : "");
+            }
+        }
+
+        public Result CurrentResult
+        {
+            get { return TheRequest.CurrentResult; }
+        }
 
         public ICollection<GraphMaster> DisallowedGraphs
         {
@@ -21,9 +41,10 @@ namespace RTParser.Utils
         }
 
          
-        public QueryList(Request request)
+        public QueryList(Unifiable inputPath, Request request)
             : base(request)
         {
+            InputPath = inputPath;
             TheRequest = (RequestImpl) request;
         }
 
@@ -67,12 +88,13 @@ namespace RTParser.Utils
         {
             lock (this)
             {
+                string whyComplete = WhyComplete;
                 String s = TheRequest + " " + Environment.NewLine;
                 var noddes = new List<Node>();
                 s += ToString("  Q: ", Bindings);
                 s += ToString("  P: ", PatternsUsed);
                 s += ToString("  T: ", Templates);
-                return s + Environment.NewLine;
+                return s + Environment.NewLine + (whyComplete != null ? " WhyComplete=" + whyComplete : "");
             }
         }
 

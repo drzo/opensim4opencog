@@ -29,7 +29,7 @@ namespace RTParser
 {
     /// <summary>
     /// </summary>
-    public partial class RTPBot : QuerySettings
+    public partial class RTPBot
     {
         private readonly Dictionary<string, SystemExecHandler> ConsoleCommands = new Dictionary<string, SystemExecHandler>();        
 
@@ -584,34 +584,25 @@ namespace RTParser
                 console("-----------------------------------------------------------------");
                 if (args == "")
                 {
-                    User ur0 = myUser;
-                    if (ur0.MinOutputs != UNLIMITED)
+                    QuerySettings ur0 = myUser.GetQuerySettings();
+                    if (ur0.MinOutputs != QuerySettings.UNLIMITED)
                     {
                         console("- query mode on -");
-                        ApplySettings(FindAll, myUser);
+                        QuerySettings.ApplySettings(QuerySettings.FindAll, ur0);
                     }
                     else
                     {
                         console("- query mode off -");
-                        ApplySettings(CogbotDefaults, myUser);
+                        QuerySettings.ApplySettings(QuerySettings.CogbotDefaults, ur0);
                     }
                     return true;
                 }
 
                 RequestImpl ur = GetRequest(args, myUser);
+                
                 // Adds findall to request
-                if (true)
-                {
-                    ApplySettings(FindAll, ur);
-                }
-                else
-                {
-                    ur.ProcessMultipleTemplates = true;
-                    ur.MaxOutputs = 99;
-                    ur.MaxPatterns = 99;
-                    ur.MaxTemplates = 99;
-                    ur.ProcessMultiplePatterns = true;
-                }
+                QuerySettings.ApplySettings(QuerySettings.FindAll, ur);
+
                 ur.IsTraced = myUser.IsTraced;
                 console("-----------------------------------------------------------------");
                 AIMLbot.Result result = ChatWithUser(ur, myUser, BotAsUser, myUser.ListeningGraph);

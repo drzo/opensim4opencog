@@ -86,7 +86,7 @@ namespace RTParser.Variables
         // fallbacks (therefore inherits)
         private List<ParentProvider> _listeners = new List<ParentProvider>();
         // fallbacks (therefore inherits)
-        private PrefixProvider prefixProvideer;
+        private readonly PrefixProvider prefixProvideer;
 
         /// <summary>
         /// The bot this dictionary is associated with (only for writting log)
@@ -360,7 +360,7 @@ namespace RTParser.Variables
             bot.RegisterDictionary(name, this);
             if (parent != null) _fallbacks.Add(parent);
             prefixProvideer = new PrefixProvider();
-            string prefixName = name + ".evalprefix";
+            string prefixName = name + ".prefixProvideer";
             prefixProvideer.NameSpace = prefixName;
             ParentProvider pp = () => prefixProvideer;
             bot.RegisterDictionary(prefixName, prefixProvideer);
@@ -900,6 +900,18 @@ namespace RTParser.Variables
             ParentProvider pp = FindDictionary0(name, fallback);
             if (pp != null) return pp.Invoke;
 
+            if (name.EndsWith(".prefixProvideer"))
+            {
+                int keylen = name.Length - ".prefixProvideer".Length;
+
+                ParentProvider dict = FindDictionary(name.Substring(0, keylen), fallback);
+                if (dict != null)
+                {
+                    var sd = ToSettingsDictionary(dict());
+                    if (sd != null)
+                        return ToParentProvider(sd.prefixProvideer);
+                }
+            }
             Func<ParentProvider> provider0 = () => FindDictionary0(name, fallback);      
             return () => new ProvidedSettingsDictionary(name, provider0);
         }
@@ -919,7 +931,7 @@ namespace RTParser.Variables
                 }
                 var botGetDictionary = bot.GetDictionary(name);
                 if (botGetDictionary != null) return ToParentProvider(botGetDictionary);               
-                writeToLog("DEBUG9 Cannot ResolveToObject settings line {0} in {1}", name, this);
+                //writeToLog("DEBUG9 Cannot ResolveToObject0 settings line {0} in {1}", name, this);
                 //return () => new ProvidedSettingsDictionary(NameSpace + "." + name, () => FindDictionary(name, null).Invoke());
                 return fallback;
             }
@@ -1008,6 +1020,27 @@ namespace RTParser.Variables
         /// <param name="value">The value associated with this setting</param>
         public bool addSetting(string name, Unifiable value)
         {
+            value = TransformValue(value);
+            foreach (var setname in GetSettingsAliases(name))
+            {
+                addSetting0(setname, value);
+            }
+            return addSetting0(name, value);
+        }
+
+        private IEnumerable<string >GetSettingsAliases(string name)
+        {
+            string key = TransformKey(TransformName(name));
+            string[] aliases;
+            if (!RTPBot.SettingsAliases.TryGetValue(key, out aliases))
+            {
+                return NO_SETTINGS;
+            }
+            return aliases;
+        }
+
+        public bool addSetting0(string name, Unifiable value)
+        {
             bool found = true;
             lock (orderedKeys)
             {
@@ -1022,7 +1055,6 @@ namespace RTParser.Variables
                     SettingsLog("ERROR MASKED ADD SETTING '" + name + "'=" + str(value) + " ");
                     return false;
                 }
-                value = TransformValue(value);
                 if (normalizedName.Length > 0)
                 {
                     SettingsLog("ADD LOCAL '" + name + "'=" + str(value) + " ");
@@ -1172,6 +1204,15 @@ namespace RTParser.Variables
         /// <param name="value">the new value</param>
         public bool updateSetting(string name, Unifiable value)
         {
+            value = TransformValue(value);
+            foreach (var setname in GetSettingsAliases(name))
+            {
+                updateSetting0(setname, value);
+            }
+            return updateSetting0(name, value);
+        }
+        public bool updateSetting0(string name, Unifiable value)
+        {
             bool overriden = false;
             foreach (var parent in _overides)
             {
@@ -1189,7 +1230,6 @@ namespace RTParser.Variables
             lock (orderedKeys)
             {
                 name = TransformName(name);
-                value = TransformValue(value);
                 string normalizedName = TransformKey(name);
                 if (this.settingsHash.ContainsKey(normalizedName))
                 {
@@ -1288,7 +1328,16 @@ namespace RTParser.Variables
                 name = TransformName(name);
                 var setting = grabSetting0(name);
                 setting = TransformValue(setting);
-                if (Unifiable.IsNull(setting)) return null;
+                if (Unifiable.IsNull(setting))
+                {
+                    foreach (var setname in GetSettingsAliases(name))
+                    {
+                        var tsetting = grabSetting0(setname);
+                        if (!Unifiable.IsNull(tsetting))
+                            setting = tsetting;
+                    }
+                    return setting;
+                }
                 if (Unifiable.IsEMPTY(setting))
                 {
                     return "";
@@ -1486,6 +1535,15 @@ namespace RTParser.Variables
         /// <param name="name">The setting name to check</param>
         /// <returns>Existential truth value</returns>
         public bool containsLocalCalled(string name)
+        {
+            if (containsLocalCalled0(name)) return true;
+            foreach (var setname in GetSettingsAliases(name))
+            {
+                if (containsLocalCalled0(setname)) return true;
+            }
+            return false;
+        }
+        public bool containsLocalCalled0(string name)
         {
             lock (orderedKeys)
             {

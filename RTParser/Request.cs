@@ -20,7 +20,9 @@ namespace RTParser
         Unifiable Topic { get; set; }
         Request ParentRequest { get; set; }
         GraphMaster Graph { get; set; }
-        bool IsTraced { get; set; }
+
+        //int DebugLevel { get; set; }
+        //bool IsTraced { get; set; }
 
         /// <summary>
         /// The user that made this request
@@ -58,7 +60,8 @@ namespace RTParser
         QueryList TopLevel { get; set; }
         SubQuery CurrentQuery { get; }
         RTPBot TargetBot { get; set; }
-        Unifiable rawInput { get; set; }
+        Unifiable rawInput { get; }
+        ParsedSentences ChatInput { get; set; }
         IList<Result> UsedResults { get; set; }
         IList<TemplateInfo> UsedTemplates { get; }
         int MaxInputs { get; set; }
@@ -66,7 +69,6 @@ namespace RTParser
         DateTime StartedOn { get; set; }
         DateTime TimesOutAt { get; set; }
         TimeSpan TimeOut { get; set; }
-        bool hasTimedOut { get; set; }
 
         bool GraphsAcceptingUserInput { get; set; }
         LoaderOptions LoadOptions { get; set; }
@@ -75,7 +77,11 @@ namespace RTParser
         string LoadingFrom { get; set; }
 
         void WriteLine(string s, params object[] args);
+
         bool IsComplete(Result o);
+        bool IsTimedOutOrOverBudget { get; }
+        string WhyComplete { get; set; }
+
         bool addSetting(string name, Unifiable unifiable);
         void AddSubResult(Result result);
         int GetCurrentDepth();
@@ -86,7 +92,7 @@ namespace RTParser
         AIMLbot.Request CreateSubRequest(Unifiable templateNodeInnerValue, User user, RTPBot rTPBot, AIMLbot.Request request);
         bool CanUseTemplate(TemplateInfo info, Result request);
         OutputDelegate writeToLog { get; set; }
-        int DebugLevel { get; set; }
+        
         Unifiable That { get; set; }
         PrintOptions WriterOptions { get; }
         RequestImpl ParentMostRequest { get; }
@@ -120,7 +126,16 @@ namespace RTParser
         /// <summary>
         /// The raw input from the user
         /// </summary>
-        public Unifiable rawInput { get; set; }
+        public Unifiable rawInput
+        {
+            get
+            {
+                if (ChatInput == null) return "@echo -no ChatInput yet-";
+                return ChatInput.RawText;
+            }
+        }
+
+        public ParsedSentences ChatInput { get; set; }
 
         /// <summary>
         /// The raw input from the user
@@ -175,13 +190,37 @@ namespace RTParser
                 if (TimesOutAt > StartedOn) return TimesOutAt - StartedOn;
                 return TimeSpan.FromMilliseconds(TargetBot.TimeOut);
             }
-            set { TimesOutAt = StartedOn + value; }
+            set
+            {
+                TimesOutAt = StartedOn + value;
+                WhyComplete = null;
+            }
         }
 
         /// <summary>
         /// Flag to show that the request has timed out
         /// </summary>
-        public bool hasTimedOut { get; set; }
+        public string WhyComplete { get; set; }
+
+        public bool IsTimedOutOrOverBudget
+        {
+            get
+            {
+                if (WhyComplete != null) return true;
+                if (DateTime.Now > TimesOutAt)
+                {
+                    WhyComplete = "TIMEOUT";
+                    return true;
+                }
+                string whyNoSearch = WhyNoSearch(CurrentResult);
+                if (whyNoSearch!=null) 
+                {
+                    WhyComplete = whyNoSearch;
+                    return true;
+                }
+                return false;
+            }
+        }
 
         public readonly int framesAtStart;
 
@@ -200,7 +239,7 @@ namespace RTParser
                 {
                     return ParentRequest.ResponderPredicates;
                 } 
-                writeDebugLine("ERROR Cant find responder Dictionary !!!");
+                RTPBot.writeDebugLine("ERROR Cant find responder Dictionary !!!");
                 return null; // TargetSettings;
             }
             set { _responderYouPreds = value; }
@@ -209,9 +248,11 @@ namespace RTParser
 
         public override string ToString()
         {
+            string whyComplete = WhyComplete;
             return string.Format("{0}: {1}, {2}", Requester == null ? "NULL" : (string) Requester.UserID,
                                  Responder == null ? "Anyone" : (string) Responder.UserID,
-                                 Unifiable.ToVMString(rawInput));
+                                 Unifiable.ToVMString(rawInput)) +
+                   (whyComplete != null ? " WhyComplete=" + whyComplete : "");
         }
 
         /// <summary>
@@ -220,16 +261,26 @@ namespace RTParser
         /// <param name="rawInput">The raw input from the user</param>
         /// <param name="user">The user who made the request</param>
         /// <param name="bot">The bot to which this is a request</param>
-        public RequestImpl(Unifiable rawInput, User user, RTPBot bot, Request parent, User targetUser)
-            : base(user) // Get query settings intially from user
+        public RequestImpl(string rawInput, User user, RTPBot bot, Request parent, User targetUser)
+            :  base(bot.GetQuerySettings()) // Get query settings intially from user
         {
+            qsbase = this;
+            if (parent != null)
+            {
+                ChatInput = parent.ChatInput;
+                Requester = parent.Requester;
+            }
+            else
+            {
+                ChatInput = bot.GetParsedUserInputSentences(this, rawInput);
+            }
             Request pmaybe = null;
             DebugLevel = -1;
-            Requester = user;
-            Responder = targetUser;
-            if (targetUser == null)
+            if (parent != null) targetUser = parent.Responder;
+            Requester = Requester ?? user;
+            if (Requester != null)
             {
-                if (parent != null) targetUser = parent.Responder;
+                ApplySettings(Requester.GetQuerySettings(), this);
                 if (targetUser == null)
                 {
                     if (user == bot.BotAsUser) targetUser = bot.LastUser;
@@ -240,23 +291,20 @@ namespace RTParser
             _responderUser = targetUser;
             UsedResults = new List<Result>();
             Flags = "Nothing";
-            ApplySettings(user, this);
+            QuerySettingsSettable querySettings = GetQuerySettings();
+
+            QuerySettings.ApplySettings(qsbase, querySettings);
 
             if (parent != null)
             {
-                ApplySettings(parent, this);
+                QuerySettings.ApplySettings(parent.GetQuerySettings(), querySettings);
                 Proof = parent.Proof;
                 this.ParentRequest = parent;
                 this.lastOptions = parent.LoadOptions;
                 this.writeToLog = parent.writeToLog;
                 Graph = parent.Graph;
                 MaxInputs = 1;
-                const int m = 2;
-                const int M = 3;
-                MinPatterns = Math.Max(1, ((QuerySettingsReadOnly)parent).MinPatterns - m);
-                MaxPatterns = Math.Max(1, ((QuerySettingsReadOnly)parent).MaxPatterns - M);
-                MinTemplates = Math.Max(1, ((QuerySettingsReadOnly)parent).MinTemplates - m);
-                MaxTemplates = Math.Max(1, ((QuerySettingsReadOnly)parent).MaxTemplates - M);
+                ReduceMinMaxesForSubRequest(user.GetQuerySettingsSRAI());
             }
             else
             {
@@ -270,7 +318,6 @@ namespace RTParser
                 Proof = new Proof();
             }
             writeToLog = writeToLog ?? bot.writeToLog;
-            this.rawInput = rawInput;
             if (user != null)
             {
                 pmaybe = user.CurrentRequest;
@@ -294,6 +341,17 @@ namespace RTParser
             {
                 TargetSettings = parent.TargetSettings;
             }
+        }
+
+        private void ReduceMinMaxesForSubRequest(QuerySettingsReadOnly parent)
+        {
+            var thisQuerySettings = GetQuerySettings();
+            const int m = 2;
+            const int M = 3;
+            thisQuerySettings.MinPatterns = Math.Max(1, ((QuerySettingsReadOnly)parent).MinPatterns - m);
+            thisQuerySettings.MaxPatterns = Math.Max(1, ((QuerySettingsReadOnly)parent).MaxPatterns - M);
+            thisQuerySettings.MinTemplates = Math.Max(1, ((QuerySettingsReadOnly)parent).MinTemplates - m);
+            thisQuerySettings.MaxTemplates = Math.Max(1, ((QuerySettingsReadOnly)parent).MaxTemplates - M);
         }
 
         public bool GraphsAcceptingUserInput
@@ -424,6 +482,7 @@ namespace RTParser
             {
                 if (value != null)
                 {
+                    if (ovGraph == value.ScriptingName) return;
                     ovGraph = value.ScriptingName;
                 }
                 LoaderOptions lo = LoadOptions;
@@ -607,31 +666,51 @@ namespace RTParser
 
         public bool IsComplete(RTParser.Result result1)
         {
+            string s = WhyNoSearch(result1);
+            if (s == null) return false;
+            return true;
+        }
+
+        public string WhyNoSearch(RTParser.Result result1)
+        {
             if (result1 == null)
             {
-                return false;
+                return null;
             }
+            if (WhyComplete != null) return WhyComplete;
             QuerySettingsReadOnly qs = GetQuerySettings();
+            string w = null;
             if (result1.OutputSentenceCount >= qs.MaxOutputs)
             {
-                return true;
+                w = w ?? "";
+                w += "MaxOutputs ";
             }
 
             if (result1.SubQueries.Count >= qs.MaxPatterns)
             {
-                if (result1.OutputSentenceCount>0) return true;
-                //return true;
+                if (result1.OutputSentenceCount > 0)
+                {
+                    w = w ?? "";
+                    w += "MaxPatterns ";
+                }
+                // return null;
             }
             if (result1.UsedTemplates.Count >= qs.MaxTemplates)
             {
-                //return false;
+                if (result1.OutputSentenceCount > 0)
+                {
+                    w = w ?? "";
+                    w+= "MaxTemplates ";
+                }
+                // return null;
             }
-            return false;
+            if (w != null) WhyComplete = w;
+            return WhyComplete;
         }
 
         public QuerySettingsSettable GetQuerySettings()
         {
-            return this;
+            return qsbase;
         }
 
         public AIMLbot.Result CreateResult(Request parentReq)
@@ -712,10 +791,11 @@ namespace RTParser
         
                 int baseDebugLevel = base.DebugLevel;
                 if (baseDebugLevel > 0) return baseDebugLevel;
+                QuerySettingsReadOnly ParentRequest = (QuerySettingsReadOnly)this.ParentRequest;
                 if (ParentRequest == null)
                 {
                     if (Requester == null) return baseDebugLevel;
-                    return Requester.DebugLevel;
+                    return Requester.GetQuerySettings().DebugLevel;
                 }
                 return ParentRequest.DebugLevel;
             }
@@ -857,6 +937,8 @@ namespace RTParser
         }
 
         public bool CommitNow = false;
+        private readonly QuerySettings qsbase;
+
         public void AddSideEffect(string name, ThreadStart action)
         {
             KeyValuePair<string, ThreadStart> newKeyValuePair = new KeyValuePair<string, ThreadStart>(name, action);
@@ -895,6 +977,7 @@ namespace RTParser
                 return TargetSettings;
             }
             if (named == "user") return CheckedValue(named, Requester);
+            if (named == "li") return CheckedValue(named, dictionary);
             if (named == "set") return CheckedValue(Requester.UserID, Requester);
             if (named == "get") return CheckedValue(Requester.UserID, Requester);
             if (named == "query") return CheckedValue(named, CurrentQuery);

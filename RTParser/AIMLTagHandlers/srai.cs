@@ -69,7 +69,7 @@ namespace RTParser.AIMLTagHandlers
                                                              (AIMLbot.Bot) this.Proc, null);
                     subRequest.StartedOn = this.request.StartedOn; // make sure we don't keep adding time to the request
                     Result subQuery = this.Proc.Chat(subRequest);
-                    this.request.hasTimedOut = subRequest.hasTimedOut;
+                    this.request.WhyComplete = subRequest.WhyComplete;
                     return subQuery.Output;
                 }
             }
@@ -242,7 +242,7 @@ namespace RTParser.AIMLTagHandlers
                         }
 
 
-                        thisrequest.hasTimedOut = subRequest.hasTimedOut;
+                        thisrequest.WhyComplete = subRequest.WhyComplete;
                         var subQueryRawOutput = subResult.RawOutput.Trim();
                         if (Unifiable.IsNullOrEmpty(subQueryRawOutput))
                         {

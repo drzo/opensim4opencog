@@ -66,7 +66,8 @@ namespace RTParser.AIMLTagHandlers
                     {
                         if (at1.Length > 0)
                         {
-                            return GetIndexes(at1, this.user.getThat, (str, args) => localError(at1, str));
+                            return GetIndexes(at1, request.Responder, this.user.getThat,
+                                              (str, args) => localError(at1, str));
                         }
                     }
                 }
@@ -80,7 +81,7 @@ namespace RTParser.AIMLTagHandlers
                 this.request.rawInput + s);
         }
 
-        public static Unifiable GetIndexes(string at1, Func<int, int, Unifiable> getThat, OutputDelegate debug)
+        public static Unifiable GetIndexes(string at1, User responder, Func<int, int, User, Unifiable> getThat, OutputDelegate debug)
         {
             {
                 {
@@ -93,7 +94,7 @@ namespace RTParser.AIMLTagHandlers
                             {
                                 if (string.IsNullOrEmpty(at1) || at1 == "1" || at1 == "1,1")
                                 {
-                                    return getThat(0, 0);
+                                    return getThat(0, 0, responder);
                                 }
                                 // see if there is a split
                                 string[] dimensions = at1.Split(",".ToCharArray());
@@ -103,7 +104,7 @@ namespace RTParser.AIMLTagHandlers
                                     int sentence = Convert.ToInt32(dimensions[1].Trim());
                                     if ((result > 0) & (sentence > 0))
                                     {
-                                        return getThat(result - 1, sentence - 1);
+                                        return getThat(result - 1, sentence - 1, responder);
                                     }
                                     else
                                     {
@@ -116,7 +117,7 @@ namespace RTParser.AIMLTagHandlers
                                     int result = Convert.ToInt32(at1.Trim());
                                     if (result > 0)
                                     {
-                                        return getThat(result - 1, 0);
+                                        return getThat(result - 1, 0, responder);
                                     }
                                     else
                                     {

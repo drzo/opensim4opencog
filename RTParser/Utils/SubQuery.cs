@@ -101,6 +101,30 @@ namespace RTParser.Utils
         public int HasFailed = 0;
         public int HasSuceeded = 0;
 
+
+        /// <summary>
+        /// All conditions must be right
+        /// </summary>
+        public bool UseLuceneForSet
+        {
+            get
+            {
+                return (NamedValuesFromSettings.UseLuceneForSet && Request != null &&
+                       Request.depth < Request.UseLuceneForSetMaxDepth);
+            }
+        }
+        /// <summary>
+        /// All conditions must be right
+        /// </summary>
+        public bool UseLuceneForGet
+        {
+            get
+            {
+                return (NamedValuesFromSettings.UseLuceneForGet && Request != null &&
+                       Request.depth < Request.UseLuceneForGetMaxDepth);
+            }
+        }
+
         #endregion
 
         #region ISettingsDictionary Members
@@ -172,7 +196,7 @@ namespace RTParser.Utils
             ISettingsDictionary dict = Request.TargetSettings;
             bool succeed;
             Unifiable v;
-            if (!NamedValuesFromSettings.UseLuceneForGet)
+            if (!UseLuceneForGet)
                 v = SettingsDictionary.grabSettingDefaultDict(dict, name, out realName);
             else
             {
@@ -191,7 +215,7 @@ namespace RTParser.Utils
         /// <param name="value">The value associated with this setting</param>
         public bool addSetting(string name, Unifiable value)
         {
-            if (!NamedValuesFromSettings.UseLuceneForSet)
+            if (!UseLuceneForSet)
             {
                 return Request.addSetting(name, value);
             }
@@ -200,7 +224,18 @@ namespace RTParser.Utils
                 string realName;
                 ISettingsDictionary dict = Request.TargetSettings;
                 bool succeed;
-                NamedValuesFromSettings.SetSettingForType(dict.NameSpace, this, dict, name, null, value, null, null);
+
+                var prev = NamedValuesFromSettings.UseLuceneForGet;
+                NamedValuesFromSettings.UseLuceneForGet = true;
+                try
+                {
+
+                    NamedValuesFromSettings.SetSettingForType(dict.NameSpace, this, dict, name, null, value, null, null);
+                }
+                finally
+                {
+                    NamedValuesFromSettings.UseLuceneForGet = prev;
+                }
                 return true;
             }
         }
@@ -262,32 +297,35 @@ namespace RTParser.Utils
             return sq;
         }
 
-        public Func<int, int, Unifiable> GetMatcher(string listName)
+        public Func<int, int, User, Unifiable> GetMatcher(string listName)
         {
             switch (listName)
             {
                 case "input":
-                case "request":
                     return CurrentUser.getInputSentence;
                     break;
+                case "request":
+                    return CurrentUser.getRequestSentence;
+                    break;
                 case "that":
-                case "response":
                     return CurrentUser.getThat;
+                case "response":
+                    return CurrentUser.getResultSentence;
                     break;
                 case "topic":
-                    return (a, b) => CurrentUser.Topic;
+                    return (a, b, c) => CurrentUser.Topic;
                     break;
                 case "flag":
-                    return (a, b) => this.Flags[a];
+                    return (a, b, c) => this.Flags[a];
                     break;
                 case "guard":
                     {
-                        return (a, b) => null;
+                        return (a, b, c) => null;
                     }
                 default:
                     throw new ArgumentOutOfRangeException("listName");
             }
-            return (a, b) => "*";
+            return (a, b, c) => "*";
         }
 
         public List<Unifiable> GetMatchList(MatchState matchstate)

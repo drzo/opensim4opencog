@@ -32,7 +32,7 @@ namespace RTParser
     /// Encapsulates a Proccessor. If no settings.xml file is found or referenced the Proccessor will try to
     /// default to safe settings.
     /// </summary>
-    public partial class RTPBot : QuerySettings
+    public partial class RTPBot : StaticAIMLUtils
     {
         private readonly List<XmlNodeEvaluator> XmlNodeEvaluators = new List<XmlNodeEvaluator>();
         private TestCaseRunner testCaseRunner;
@@ -110,6 +110,7 @@ namespace RTParser
             OnBotCreated(() => { res.Requestor = r.Requester = BotAsUser; });
             r.IsTraced = this.IsTraced;            
             r.StartedOn = DateTime.Now;
+            r.depth = 0;
             // times out in 15 minutes
             r.TimeOut = TimeSpan.FromMinutes(15);
             return r;
@@ -498,12 +499,28 @@ namespace RTParser
 
         public static int BotNumberCreated;
 
+                
+        public static readonly Dictionary<string, string[]> SettingsAliases = new Dictionary<string, string[]>();
+
+        public bool IsTraced
+        {
+            get { return qsbase.IsTraced; }
+            set { qsbase.IsTraced = value; }
+        }
+
+        private readonly QuerySettings qsbase;
+        public QuerySettings GetQuerySettings()
+        {
+            return qsbase;
+        }
+
         /// <summary>
         /// Ctor
         /// </summary>
         public RTPBot()
-            : base(CogbotDefaults)
+            : base()
         {
+            qsbase = QuerySettings.CogbotDefaults;
             _RuntimeDirectories = new List<string>();
             PushSearchPath(HostSystem.GetAbsolutePath(AppDomain.CurrentDomain.RelativeSearchPath));
             PushSearchPath(HostSystem.GetAbsolutePath(AppDomain.CurrentDomain.DynamicDirectory));
@@ -670,6 +687,19 @@ namespace RTParser
             }
         }
 
+
+        internal AIMLLoader GetLoader(Request request)
+        {
+            RTPBot bot = this;
+            AIMLLoader loader = bot.Loader;
+            if (!bot.StaticLoader || loader == null)
+            {
+                loader = new AIMLLoader(bot, request);
+            }
+            bot.Loader = loader;
+            return loader;
+        }
+
         /// <summary>
         /// Allows the Proccessor to load a new XML version of some AIML
         /// </summary>
@@ -681,11 +711,7 @@ namespace RTParser
             try
             {
                 request.GraphsAcceptingUserInput = false;
-                AIMLLoader loader = Loader;
-                if (!StaticLoader || loader == null)
-                {
-                    loader = new AIMLLoader(this, request);
-                }
+                AIMLLoader loader = GetLoader(request);
                 loader.loadAIMLNode(newAIML.DocumentElement, filename, request);
             }
             finally
@@ -2128,6 +2154,7 @@ The AIMLbot program.
                     _h = new GraphMaster(hgn);
                     _g.AddGenlMT(GraphsByName["default"], writeToLog);
                     _h.AddGenlMT(GraphsByName["heardselfsay"], writeToLog);
+                    _h.AddGenlMT(GraphsByName["listener"], writeToLog);
                     GraphsByName.Add(dgn, _g);
                     GraphsByName.Add(hgn, _h);
                 }
@@ -2166,9 +2193,20 @@ The AIMLbot program.
                 }
                 if (StaticInitStarted) return;
                 StaticInitStarted = true;
+                GraphsByName["listener"] = TheUserListernerGraph = new GraphMaster("listener");
                 GraphsByName["default"] = new GraphMaster("default");
                 GraphsByName["heardselfsay"] = new GraphMaster("heardselfsay");
+                AddSettingsAliases("lastuserid", "you");
+                AddSettingsAliases("lastusername", "you");
+                AddSettingsAliases("you", "lastusername");
+                AddSettingsAliases("he", "him");
+                AddSettingsAliases("she", "her");
             }
+        }
+
+        private static void AddSettingsAliases(string real, string aliases)
+        {
+            SettingsAliases.Add(real, aliases.Split(",".ToCharArray(), StringSplitOptions.RemoveEmptyEntries));
         }
 
         public string LoadPersonalDirectories(string myName)
@@ -2266,6 +2304,7 @@ The AIMLbot program.
 
         #region Overrides of QuerySettings
 
+        /*
         /// <summary>
         /// The Graph to start the query on
         /// </summary>
@@ -2274,7 +2313,7 @@ The AIMLbot program.
             get { return GraphMaster.ScriptingName; }
             set { throw new NotImplementedException(); }
         }
-
+        */
         public string UserID
         {
             get

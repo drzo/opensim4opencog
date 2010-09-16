@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text.RegularExpressions;
@@ -18,8 +19,18 @@ namespace RTParser.Utils
     public class GraphMaster // : QuerySettings
     {
         private static string _STAR_PATH;
-        public static bool DefaultSilentTagsInPutParent;
-        static public bool TrackTemplates { get { return StaticAIMLUtils.TrackTemplates; } }
+
+        /// <summary>
+        /// Should tags that make no output be placed in parent Graphmaster
+        /// </summary>
+        [ApplicationScopedSetting]
+        static public bool DefaultSilentTagsInPutParent { get; set; }
+
+        /// <summary>
+        /// Should template Objects be stored in graphmasters
+        /// </summary>
+        [UserScopedSettingAttribute]
+        public bool TrackTemplates { get { return StaticAIMLUtils.TrackTemplates; } }
 
         public static bool NoIndexing;
         private readonly List<GraphMaster> FallBacksGraphs = new List<GraphMaster>();
@@ -54,7 +65,7 @@ namespace RTParser.Utils
         /// <summary>
         /// All the &lt;templates&gt;s (if any) associated with this database
         /// </summary>
-        internal List<TemplateInfo> Templates = TrackTemplates ? new List<TemplateInfo>() : null;
+        internal List<TemplateInfo> Templates;
 
 
         /// <summary>
@@ -72,7 +83,7 @@ namespace RTParser.Utils
         /// <summary>
         /// All the &lt;category&gt;s (if any) associated with this database
         /// </summary>
-        private List<CategoryInfo> CategoryInfos = TrackTemplates ? new List<CategoryInfo>() : null;
+        private List<CategoryInfo> CategoryInfos;
 
         public bool DoParents = true;
         private bool FullDepth = true;
@@ -81,10 +92,11 @@ namespace RTParser.Utils
         private int parent0;
         private Node PostParentRootNode = new Node(null);
         private Node RootNode = new Node(null);
-        public bool SilentTagsInPutParent = DefaultSilentTagsInPutParent;
+        [UserScopedSetting]
+        public bool SilentTagsInPutParent { get; set; }
         public int Size;
         public String Srai;
-        private bool UnTraced;
+        public  bool UnTraced;
         // ReSharper disable FieldCanBeMadeReadOnly.Local
         private List<TemplateInfo> UnusedTemplates;
         public static readonly Dictionary<string, XmlNode> PatternNodes = new Dictionary<string, XmlNode>();
@@ -94,6 +106,9 @@ namespace RTParser.Utils
         public GraphMaster(string gn)
         //: base(bot)
         {
+            SilentTagsInPutParent = DefaultSilentTagsInPutParent;
+            CategoryInfos = TrackTemplates ? new List<CategoryInfo>() : null;
+            Templates = TrackTemplates ? new List<TemplateInfo>() : null;
             graphName = gn;
             //theBot = bot;
             // most graphs try to recuse on themselves until otehrwise stated (like in make-parent)
@@ -432,7 +447,7 @@ namespace RTParser.Utils
                 writeToLog(s);
                 throw new Exception(s);
             }
-            QueryList ql = new QueryList(request);
+            QueryList ql = new QueryList(path, request);
             QuerySettings.ApplySettings(request, ql);
             request.TopLevel = ql;
             evaluateQL(path, request, state, ql, DoParents);
@@ -471,7 +486,7 @@ namespace RTParser.Utils
                 if (FallBacksGraphs == null) return;
                 foreach (GraphMaster graphMaster in CopyOf(FallBacksGraphs))
                 {
-                    graphMaster.evaluateQL(path, request, matchState, ql, locallyDoParents);
+                    graphMaster.evaluateQL(path, request, matchState, ql, !locallyDoParents);
                     if (ql.IsMaxedOut)
                     {
                         if (trace)
@@ -521,10 +536,19 @@ namespace RTParser.Utils
         private bool getQueries(Node rootNode, Unifiable upath, Request request, MatchState matchstate, int index,
                                 StringAppendableUnifiableImpl wildcard, QueryList toplevel)
         {
-            if (toplevel.DisallowedGraphs.Contains(this)) return false;
+            if (toplevel.DisallowedGraphs.Contains(this))
+            {
+                return false;
+            }
             //  lock (LockerObject)
             {
-                return getQueries000(rootNode, upath, request, matchstate, index, wildcard, toplevel);
+                bool b = getQueries000(rootNode, upath, request, matchstate, index, wildcard, toplevel);
+                if (toplevel.IsMaxedOut && toplevel.TemplateCount==0) 
+                {
+                    return false;
+                }
+                if (b) return true;
+                return false;
             }
         }
 
@@ -534,7 +558,7 @@ namespace RTParser.Utils
             int resin = toplevel.TemplateCount;
             int patternCountChanged = 0;
             int tried = 0;
-            bool doIt = !request.IsComplete(request.CurrentResult);
+            bool doIt = !toplevel.IsComplete(request);
             if (!doIt)
             {
                 writeToLog("AIMLTRACE DOIT: " + tried + " pc=" + patternCountChanged + ": " + false + "  " + request);
@@ -601,8 +625,7 @@ namespace RTParser.Utils
                 {
                     tried++;
                 }
-                if (toplevel.PatternCount >= toplevel.MaxPatterns || toplevel.IsMaxedOut || tried > 100 ||
-                    request.hasTimedOut)
+                if (tried > 100 || toplevel.IsComplete(request))
                 {
                     break;
                 }
@@ -710,7 +733,7 @@ namespace RTParser.Utils
                     bool wasUntraced = p.UnTraced;
                     try
                     {
-                        p.UnTraced = true;
+                        p.UnTraced = Size > 0;
                         if (wasUntraced)
                             request.IsTraced = false;
                         request.Graph = p;

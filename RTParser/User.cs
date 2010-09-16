@@ -19,21 +19,11 @@ namespace RTParser
     /// <summary>
     /// Encapsulates information and history of a user who has interacted with the bot
     /// </summary>
-    abstract public class User : QuerySettings, IDisposable, ISettingsDictionary
+    abstract public class User : StaticAIMLUtils, IDisposable, ISettingsDictionary
     {
         public readonly object QueryLock = new object();
 
         #region Attributes
-
-        /// <summary>
-        /// If the user is being traced/debugged
-        /// </summary>
-        private bool wasTraced = false;
-        public override bool IsTraced
-        {
-            get { return base.IsTraced || bot.IsTraced; }
-            //set { base.IsTraced = value; }
-        }
 
         public ListAsSet<TemplateInfo> UsedTemplates = new ListAsSet<TemplateInfo>();
         public ListAsSet<TemplateInfo> DisabledTemplates = new ListAsSet<TemplateInfo>();
@@ -104,6 +94,7 @@ namespace RTParser
 
         /// <summary>
         /// The grahmaster this user is using
+        /// // this stil is not "listener"
         /// </summary>
         public GraphMaster ListeningGraph
         {
@@ -136,10 +127,22 @@ namespace RTParser
                 }
             }
         }
-        public override string GraphName
+        public string GraphName
         {
-            get { return ListeningGraph.ScriptingName; }
-            set { ListeningGraph = bot.GetGraph(value, ListeningGraph); }
+            get
+            {
+                string qsbaseGraphName = qsbase.GraphName;
+                if (qsbaseGraphName!=null)
+                {
+                    return qsbaseGraphName;
+                }
+                return ListeningGraph.ScriptingName;
+            }
+            set
+            {
+                ListeningGraph = bot.GetGraph(value, ListeningGraph);
+                qsbase.GraphName = value;
+            }
         }
 
         public int MaxInputs
@@ -264,7 +267,7 @@ namespace RTParser
         {
             get
             {
-                return GetResult(0);
+                return GetResult(0, true);
             }
         }
 
@@ -280,6 +283,7 @@ namespace RTParser
                 {
                     lock (Results) foreach (var result in Results)
                         {
+                            if (result.Responder == this) continue;
                             string thisOutput = result.RawOutput;
                             if (thisOutput == "*") continue;
                             if (thisOutput == lastOutput) continue;
@@ -320,19 +324,20 @@ namespace RTParser
         /// <param name="userID">The GUID of the user</param>
         /// <param name="bot">the bot the user is connected to</param>
         protected User(string userID, RTParser.RTPBot bot, ParentProvider provider)
-            : base(bot)
+           // : base(bot)
         {
             WriteLine = WriteLine0;
+            qsbase = new QuerySettingsImpl(bot.GetQuerySettings());
             if (userID.Length > 0)
             {
                 WriterOptions = new PrintOptions();
                 this.id = userID;
                 this.bot = bot;
-                wasTraced = IsTraced = bot.IsTraced;
+                qsbase.IsTraced = IsTraced = bot.IsTraced;
                 // we dont inherit the BotAsUser we inherit the bot's setings
                 // ApplySettings(bot.BotAsUser, this);
                 this.Predicates = new SettingsDictionary(userID + ".predicates", this.bot, provider);
-                this.Predicates.IsTraced = wasTraced;
+                this.Predicates.IsTraced = qsbase.IsTraced;
                 this.Predicates.AddPrefix("user.", () => this);
                 this.bot.DefaultPredicates.Clone(this.Predicates);
                 //this.Predicates.AddGetSetProperty("topic", new CollectionProperty(_topics, () => bot.NOTOPIC));
@@ -349,6 +354,30 @@ namespace RTParser
             {
                 throw new Exception("The UserID cannot be empty");
             }
+        }
+
+        /// <summary>
+        /// If the user is being traced/debugged
+        /// </summary>
+        public bool IsTraced
+        {
+            get { return qsbase.IsTraced; }
+            set { qsbase.IsTraced = value; }
+        }
+
+        private readonly QuerySettings qsbase;
+        public QuerySettings GetQuerySettings()
+        {
+            //if (CurrentRequest != null)
+            //{
+             //   return CurrentRequest;
+            //}
+            return qsbase;
+        }
+
+        public QuerySettings GetQuerySettingsSRAI()
+        {
+            return QuerySettings.SRAIDefaults;
         }
 
         public override string ToString()
@@ -395,12 +424,12 @@ namespace RTParser
         /// Returns the Unifiable to use for the next that part of a subsequent path
         /// </summary>
         /// <returns>the Unifiable to use for that</returns>
-        private Unifiable getLastBotOutput()
+        private Unifiable getLastBotOutput(User responder)
         {
             if (this.SailentResultCount > 0)
             {
-                var v = GetResult(0).RawOutput;
-                return v;
+                Result v = GetResult(0, true, responder);
+                return v.RawOutput;
             }
             else
             {
@@ -412,9 +441,9 @@ namespace RTParser
         /// Returns the first sentence of the last output from the bot
         /// </summary>
         /// <returns>the first sentence of the last output from the bot</returns>
-        public Unifiable getThat()
+        public Unifiable getThat(User responder)
         {
-            return this.getThat(0, 0);
+            return this.getThat(0, 0, responder);
         }
 
         /// <summary>
@@ -422,9 +451,9 @@ namespace RTParser
         /// </summary>
         /// <param name="n">the number of steps back to go</param>
         /// <returns>the first sentence of the output "n" steps ago from the bot</returns>
-        public Unifiable getThat(int n)
+        public Unifiable getThat(int n, User responder)
         {
-            return this.getThat(n, 0);
+            return this.getThat(n, 0, responder);           
         }
 
         /// <summary>
@@ -433,11 +462,11 @@ namespace RTParser
         /// <param name="n">the number of steps back to go</param>
         /// <param name="sentence">the sentence number to get</param>
         /// <returns>the sentence numbered by "sentence" of the output "n" steps ago from the bot</returns>
-        public Unifiable getThat(int n, int sentence)
+        public Unifiable getThat(int n, int sentence, User responder)
         {
             if ((n >= 0) & (n < this.SailentResultCount))
             {
-                Result historicResult = GetResult(n);
+                Result historicResult = GetResult(n, true, responder);
                 if ((sentence >= 0) & (sentence < historicResult.OutputSentenceCount))
                 {
                     return (Unifiable)historicResult.GetOutputSentence(sentence);
@@ -450,9 +479,9 @@ namespace RTParser
         /// Returns the first sentence of the last output from the bot
         /// </summary>
         /// <returns>the first sentence of the last output from the bot</returns>
-        public Unifiable getInputSentence()
+        public Unifiable getInputSentence(User responder)
         {
-            return this.getInputSentence(0, 0);
+            return this.getInputSentence(0, 0, responder);
         }
 
         /// <summary>
@@ -460,10 +489,11 @@ namespace RTParser
         /// </summary>
         /// <param name="n">the number of steps back to go</param>
         /// <returns>the first sentence from the output from the bot "n" steps ago</returns>
-        public Unifiable getInputSentence(int n)
+        public Unifiable getInputSentence(int n, User responder)
         {
-            return this.getInputSentence(n, 0);
+            return this.getInputSentence(n, 0, responder);
         }
+
 
         /// <summary>
         /// Returns the identified sentence number from the input from the bot "n" steps ago
@@ -471,7 +501,7 @@ namespace RTParser
         /// <param name="n">the number of steps back to go</param>
         /// <param name="sentence">the sentence number to return</param>
         /// <returns>the identified sentence number from the input from the bot "n" steps ago</returns>
-        public Unifiable getInputSentence(int n, int sentence)
+        public Unifiable getInputSentence(int n, int sentence, User responder)
         {
             if (n == 0)
             {
@@ -480,7 +510,31 @@ namespace RTParser
             n = n - 1;
             if ((n >= 0) & (n < this.SailentResultCount))
             {
-                Result historicInput = GetResult(n);
+                Result historicInput = GetResult(n, false, responder);
+                if ((sentence >= 0) & (sentence < historicInput.InputSentences.Count))
+                {
+                    return (Unifiable) historicInput.InputSentences[sentence];
+                }
+            }
+            return Unifiable.Empty;
+        }
+
+        /// <summary>
+        /// Returns the identified sentence number from the input from the bot "n" steps ago
+        /// </summary>
+        /// <param name="n">the number of steps back to go</param>
+        /// <param name="sentence">the sentence number to return</param>
+        /// <returns>the identified sentence number from the input from the bot "n" steps ago</returns>
+        public Unifiable getRequestSentence(int n, int sentence, User responder)
+        {
+            if (n == 0)
+            {
+                return CurrentRequest.rawInput;
+            }
+            n = n - 1;
+            if ((n >= 0) & (n < this.SailentResultCount))
+            {
+                Result historicInput = GetResult(n, false, responder);
                 if ((sentence >= 0) & (sentence < historicInput.InputSentences.Count))
                 {
                     return (Unifiable)historicInput.InputSentences[sentence];
@@ -493,9 +547,9 @@ namespace RTParser
         /// Returns the first sentence of the last output from the bot
         /// </summary>
         /// <returns>the first sentence of the last output from the bot</returns>
-        public Unifiable getResultSentence()
+        public Unifiable getResultSentence(User responder)
         {
-            return this.getResultSentence(0, 0);
+            return this.getResultSentence(0, 0, responder);
         }
 
         /// <summary>
@@ -503,9 +557,9 @@ namespace RTParser
         /// </summary>
         /// <param name="n">the number of steps back to go</param>
         /// <returns>the first sentence from the output from the bot "n" steps ago</returns>
-        public Unifiable getResultSentence(int n)
+        public Unifiable getResultSentence(int n, User responder)
         {
-            return this.getResultSentence(n, 0);
+            return this.getResultSentence(n, 0, responder);
         }
 
         /// <summary>
@@ -514,14 +568,14 @@ namespace RTParser
         /// <param name="n">the number of steps back to go</param>
         /// <param name="sentence">the sentence number to return</param>
         /// <returns>the identified sentence number from the output from the bot "n" steps ago</returns>
-        public Unifiable getResultSentence(int n, int sentence)
+        public Unifiable getResultSentence(int n, int sentence, User responder)
         {
             if ((n >= 0) & (n < this.SailentResultCount))
             {
-                Result historicResult = GetResult(n);
+                Result historicResult = GetResult(n, false, responder);
                 if ((sentence >= 0) & (sentence < historicResult.InputSentences.Count))
                 {
-                    return (Unifiable)historicResult.InputSentences[sentence];
+                    return (Unifiable) historicResult.InputSentences[sentence];
                 }
             }
             return Unifiable.Empty;
@@ -578,12 +632,16 @@ namespace RTParser
         {
             get
             {
-                if (CurrentRequest != null)
+                RequestImpl fr = CurrentRequest;
+                while
+                    (fr != null)
                 {
-                    if (CurrentRequest.ithat != null)
+                    var frithat = fr.ithat;
+                    if (frithat != null)
                     {
-                        return CurrentRequest.ithat;
+                        return frithat;
                     }
+                    fr = fr.ParentRequest as RequestImpl;
                 }
                 return getLastBotOutputForThat();
             }
@@ -601,68 +659,18 @@ namespace RTParser
             }
 
         }
+
         private string getLastBotOutputForThat()
         {
-            lock (Results)
-            {
-                int resltUsed = 0;
-                foreach (Result r in Results)
-                {
-                    resltUsed++;
-                    if (!r.IsSailent) continue;
-                    String sentenceIn = r.RawOutput;
-                    String sentence = this.bot.ToEnglish(sentenceIn);
-                    sentence = MainSentence(sentence);
-                    sentence = sentence.Trim(new char[] { '.', ' ', '!', '?' });
-                    if (sentence.Length == 0) continue;
-                    String ssentence = bot.Loader.Normalize(sentence, true);
-                    if (sentence.Length == 0) continue;
-                    return sentence;
-                }
-
-            }
-            return "Nothing";// Unifiable.STAR;
+            Result r = GetResult(0, true) ?? GetResult(0, false, LastReponder);
+            if (r == null) return "Nothing";
+            string s = r.NormalizedOutput;
+            return s ?? "Nothing"; // Unifiable.STAR;
         }
 
-        static string MainSentence(string sentence)
+        protected User LastReponder
         {
-            string prev = "";
-            while (sentence != prev)
-            {
-                prev = sentence;
-                sentence = sentence.Trim();
-                int sl = sentence.Length - 1;
-
-                if (sl < 0) return sentence;
-
-                char c = sentence[sl];
-                if (char.IsPunctuation(c))
-                {
-                    sentence = sentence.Substring(0, sl);
-                }
-                sentence = sentence.TrimEnd();
-            }
-            int sf = sentence.LastIndexOfAny(new[] { '?' });
-
-            if (sf > 0)
-            {
-                String newClip = sentence.Substring(0, sf - 1);
-                // RTPBot.writeDebugLine("AIMLTRACE !REWRITE THAT QUESTION " + sentence + " => " + newClip);
-                if (newClip.Length > 4) sentence = newClip;
-            }
-            sentence = sentence.Trim(new char[] { '.', ' ', '!', '?' });
-            sf = sentence.LastIndexOfAny(new[] { '.', '!' });
-            if (sf > 0)
-            {
-                String newClip = sentence.Substring(sf).Trim();
-                while (char.IsPunctuation(newClip[0]))
-                {
-                    newClip = newClip.Substring(1).TrimStart();
-                }
-                //   RTPBot.writeDebugLine("AIMLTRACE !REWRITE THAT SENT " + sentence + " => " + newClip);
-                if (newClip.Length > 4) sentence = newClip;
-            }
-            return sentence;
+            get { return bot.FindUser(Predicates.grabSettingNoDebug("lastuserid")); }
         }
 
         public bool DoUserCommand(string input, OutputDelegate console)
@@ -751,7 +759,13 @@ namespace RTParser
         }
 
         public Result GetResult(int i, bool mustBeSalient)
+        {            
+            return GetResult(i, mustBeSalient, null);
+        }
+
+        public Result GetResult(int i, bool mustBeSalient, User responder)
         {
+            bool mustBeResponder = responder != null;
             if (i == -1) return CurrentRequest.CurrentResult;
             lock (Results)
             {
@@ -759,11 +773,12 @@ namespace RTParser
                 {
                     return null;
                 }
-                if (mustBeSalient)
                 {
                     foreach (var r in Results)
                     {
-                        if (r.IsSailent)
+                        if (r.Responder == this) continue;
+                        if (mustBeResponder) if (r.Responder != responder) continue;
+                        if (mustBeSalient && !r.IsSailent)
                         {
                             if (i == 0) return r;
                             i--;
@@ -771,7 +786,6 @@ namespace RTParser
                     }
                     return null;
                 }
-                return Results[i];
             }
         }
 
@@ -782,10 +796,10 @@ namespace RTParser
             return GetResult(i, false);
         }
 
-        public void SetOutputSentences(string args)
+        public void SetOutputSentences(string args, User responder)
         {
             args = ForOutputTemplate(args);
-            Result result = LastResult;
+            Result result = GetResult(0, false, responder);
             if (result != null)
                 result.SetOutput = args;
             else

@@ -63,7 +63,7 @@ namespace RTParser.AIMLTagHandlers
                 {
                     string ixml = templateNode.InnerXml;
 
-                    return this.user.getInputSentence(offetFrom - 1);
+                    return this.user.getInputSentence(offetFrom - 1, request.Responder);
                 }
                 string at = GetAttribValue("index", null);
                 if (at != null)
@@ -82,7 +82,7 @@ namespace RTParser.AIMLTagHandlers
                                     int sentence = Convert.ToInt32(dimensions[1].Trim());
                                     if ((result >= 0) & (sentence > 0))
                                     {
-                                        return this.user.getInputSentence(result - 1, sentence - 1);
+                                        return this.user.getInputSentence(result - 1, sentence - 1, request.Responder);
                                     }
                                     else
                                     {
@@ -95,7 +95,7 @@ namespace RTParser.AIMLTagHandlers
                                     int result = Convert.ToInt32(at1.Trim());
                                     if (result > 0)
                                     {
-                                        return this.user.getInputSentence(result - 1);
+                                        return this.user.getInputSentence(result - 1, request.Responder);
                                     }
                                     else
                                     {
