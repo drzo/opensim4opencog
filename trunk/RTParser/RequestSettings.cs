@@ -39,6 +39,12 @@ namespace RTParser
         sealed public override string GraphName { get; set; }
 
         #endregion
+
+        public static void ApplyImplSettings(QuerySettingsImpl ws, QuerySettingsImpl rs)
+        {
+            ws.UseLuceneForSetMaxDepth = Math.Min(rs.UseLuceneForSetMaxDepth, ws.UseLuceneForSetMaxDepth);
+            ws.UseLuceneForGetMaxDepth = Math.Min(rs.UseLuceneForGetMaxDepth, ws.UseLuceneForGetMaxDepth);
+        }
     }
 
     abstract public class QuerySettings : StaticAIMLUtils, QuerySettingsSettable
@@ -59,17 +65,52 @@ namespace RTParser
             request.ProcessMultiplePatterns = true;
         }
 
-        public static int UNLIMITED = 999;
-        public static QuerySettings AIMLDefaults = new QuerySettingsImpl(null)
+        public static QuerySettings SRAIDefaults = new QuerySettingsImpl(null)
         {
             ProcessMultipleTemplates = true, // needed to find verbal outputs
             ProcessMultiplePatterns = false,
+            MinGetVars = 0,
+            MaxGetVars = UNLIMITED,
+            MinSetVars = 0,
+            MaxSetVars = UNLIMITED,
             MinOutputs = 1,
             MaxOutputs = 1,
             MinPatterns = 1,
             MaxPatterns = 1,
             MinTemplates = 1,
             MaxTemplates = 1,
+            GraphName = null,
+            IsTraced = false,
+            /***
+             * undecided!
+            UseLuceneForGetMaxDepth = false,
+            UseLuceneForGetMaxDepth = false,
+            ****/
+            SraiDepth = new SettingMinMaxCurrent<int>()
+            {
+                Current = 0,
+                Min = 0,
+                Max = UNLIMITED,
+            },
+        };
+
+        public static int UNLIMITED = 999;
+        public static QuerySettings AIMLDefaults = new QuerySettingsImpl(null)
+        {
+            ProcessMultipleTemplates = true, // needed to find verbal outputs
+            ProcessMultiplePatterns = false,
+            MinGetVars = 0,
+            MaxGetVars = UNLIMITED,
+            MinSetVars = 0,
+            MaxSetVars = UNLIMITED,
+            MinOutputs = 1,
+            MaxOutputs = 1,
+            MinPatterns = 1,
+            MaxPatterns = 1,
+            MinTemplates = 1,
+            MaxTemplates = 1,
+            UseLuceneForGetMaxDepth = 2,
+            UseLuceneForSetMaxDepth = 2,
             GraphName = "default",
             IsTraced = false,
             SraiDepth = new SettingMinMaxCurrent<int>()
@@ -86,9 +127,9 @@ namespace RTParser
             ProcessMultiplePatterns = true, // needed to find verbal outputs
             MinOutputs = 1,
             MaxOutputs = 1,
-            MinPatterns = 2,
+            MinPatterns = 1,
             MaxPatterns = 5,
-            MinTemplates = 5,
+            MinTemplates = 1,
             MaxTemplates = UNLIMITED,
             SraiDepth = new SettingMinMaxCurrent<int>()
                             {
@@ -130,6 +171,15 @@ namespace RTParser
             w.ProcessMultipleTemplates = r.ProcessMultipleTemplates;
             w.ProcessMultiplePatterns = r.ProcessMultiplePatterns;
             w.SraiDepth = r.SraiDepth;
+            var rs = r as QuerySettingsImpl;
+            if (rs != null)
+            {
+                var ws = w as QuerySettingsImpl;
+                if (ws != null)
+                {
+                    QuerySettingsImpl.ApplyImplSettings(ws, rs);
+                }
+            }
 
             //  GraphMaster gm = r.Graph;
             //  if (gm != null) w.Graph = gm;
@@ -171,6 +221,18 @@ namespace RTParser
         public int MaxOutputs { get; set; }
 
         /// <summary>
+        /// The number of sets before the query is stopped
+        /// </summary>
+        public int MinSetVars { get; set; }
+        public int MaxSetVars { get; set; }
+
+        /// <summary>
+        /// The number of gets before the query is stopped
+        /// </summary>
+        public int MinGetVars { get; set; }
+        public int MaxGetVars { get; set; }
+
+        /// <summary>
         /// The number of templates to harvest in query stage (should be at least one)
         /// </summary>
         public int MinTemplates { get; set; }
@@ -192,6 +254,8 @@ namespace RTParser
 
         //public abstract SettingMinMaxCurrent<TimeSpan> Time { get; set; }
 
+        public int UseLuceneForGetMaxDepth { get; set; }
+        public int UseLuceneForSetMaxDepth { get; set; }
 
         public virtual int DebugLevel { get; set; }
     }
@@ -238,6 +302,10 @@ namespace RTParser
         SettingMinMaxCurrent<int> SraiDepth { get; set; }
 
         int DebugLevel { get; }
+
+
+        int UseLuceneForSetMaxDepth { get; }
+        int UseLuceneForGetMaxDepth { get; }
     }
 
     public interface QuerySettingsSettable : QuerySettingsReadOnly
@@ -278,7 +346,7 @@ namespace RTParser
         /// <summary>
         /// If the query is being traced
         /// </summary>
-        bool IsTraced { set; }
+        bool IsTraced { set; get; }
 
         int DebugLevel { set; }
     }

@@ -40,26 +40,38 @@ namespace RTParser
         /// <summary>
         /// The amount of time the request took to process
         /// </summary>
-        public TimeSpan Duration;
-
+        public TimeSpan Duration = TimeSpan.MinValue;
+        public string WhyComplete
+        {
+            get { if (request != null) return request.WhyComplete;
+                return TopLevel.WhyComplete;
+            }
+        }
         public DateTime EndedOn = DateTime.MaxValue;
+
+        private readonly ParsedSentences ChatInput;
+        private readonly ParsedSentences ChatOutput;
 
         /// <summary>
         /// The individual sentences that constitute the raw input from the user
         /// </summary>
-        public List<Unifiable> InputSentences = new List<Unifiable>();
-
-        public int LinesToUse = 1;
+        public List<Unifiable> InputSentences
+        {
+            get { return ChatInput.InputSentences; }
+        }
 
         /// <summary>
         /// The normalized sentence(s) (paths) fed into the graphmaster
         /// </summary>
-        public List<Unifiable> NormalizedPaths = new List<Unifiable>();
+        public List<Unifiable> NormalizedPaths
+        {
+            get { return ChatInput.NormalizedPaths; }
+        }
 
         /// <summary>
         /// The individual sentences produced by the bot that form the complete response
         /// </summary>
-        public List<string> OutputSentences = new List<string>();
+        readonly public List<Unifiable> OutputSentences;
 
         public Result ParentResult;
 
@@ -97,10 +109,13 @@ namespace RTParser
         /// <param name="request">The request that originated this result</param>
         public Result(User user, RTPBot bot, Request request, Result parent)
         {
+            ChatInput = request.ChatInput;
             this.Requestor = user;
             this.TargetBot = bot;
             this.request = request;
             ParentResult = parent;
+            ChatOutput = new ParsedSentences(bot.EnsureEnglish, MaxPrintResults);
+            OutputSentences = ChatOutput.TemplateOutputs;
             if (ParentResult != null)
             {
                 writeToLog = ParentResult.writeToLog;
@@ -160,7 +175,7 @@ namespace RTParser
         /// </summary>
         public Unifiable RawInput
         {
-            get { return request.rawInput; }
+            get { return ChatInput.RawText; ; }
         }
 
         /// <summary>
@@ -177,9 +192,10 @@ namespace RTParser
                     }
                     else
                     {
-                        if (request.hasTimedOut)
+                        if (request.IsComplete(this))
                         {
-                            writeToLog("ERROR: TIMEOUT on " + RawInput + " from the user with an id: " + Requestor.UserID);
+                            writeToLog("ERROR: " + request.WhyComplete + " on " + RawInput +
+                                       " from the user with an id: " + Requestor.UserID);
                             return Unifiable.Empty;
                             return TargetBot.TimeOutMessage;
                         }
@@ -203,38 +219,15 @@ namespace RTParser
 
         public string EnglishSentences
         {
-            get { return CollectString(MaxPrintResults, OutputSentences, OutputSentencesToEnglish, " "); }
+            get { return ChatOutput.RawText; }
         }
-
 
         /// <summary>
         /// Returns the raw sentences without any logging 
         /// </summary>
         public string RawOutput
         {
-            get { return CollectString(MaxPrintResults, OutputSentences, OutputSentencesToEnglish, " "); }
-        }
-
-        private string OutputSentencesToEnglish(string arg)
-        {
-// ReSharper disable ConvertToConstant.Local
-            bool DoOutputSubst = false;
-// ReSharper restore ConvertToConstant.Local
-// ReSharper disable ConditionIsAlwaysTrueOrFalse
-            if (DoOutputSubst)
-// ReSharper restore ConditionIsAlwaysTrueOrFalse
-            {
-                string sentence = ApplySubstitutions.Substitute(TargetBot.OutputSubstitutions, arg);
-                sentence = TextPatternUtils.ReTrimAndspace(sentence);
-                if (TextPatternUtils.DifferentBesidesCase(arg, sentence))
-                {
-                    writeToLog("OutputSubst: " + arg + " -> " + sentence);
-                    arg = sentence;
-                }
-            }
-            return arg;
-
-            return TargetBot.ToEnglish(arg);            
+            get { return ChatOutput.RawText; }
         }
 
         public bool IsEmpty
@@ -287,6 +280,15 @@ namespace RTParser
         public IList<TemplateInfo> UsedTemplates
         {
             get { return UsedTemplates1; }
+        }
+
+        public string _normalizedOutput;
+        public string NormalizedOutput
+        {
+            get
+            {
+                return ChatOutput.TheMainSentence;
+            }
         }
 
         public void AddSubqueries(QueryList queries)
@@ -419,42 +421,35 @@ namespace RTParser
             lock (OutputSentences) OutputSentences.Add(string.Format(format, args));
         }
 
-        private static string CollectString(int resultsLeft, IEnumerable<string> sentences, Func<string, string> english,
-                                            string split)
-        {
-            var result = new StringBuilder();
-            lock (sentences)
-                foreach (string sentence in sentences)
-                {
-                    String sentenceForOutput = english(sentence);
-                    if (string.IsNullOrEmpty(sentenceForOutput)) continue;
-                    result.Append(sentenceForOutput + split);
-                    resultsLeft--;
-                    if (resultsLeft < 1) return result.ToString();
-                }
-            return result.ToString();
-        }
-
         /// <summary>
         /// Returns the raw output from the bot
         /// </summary>
         /// <returns>The raw output from the bot</returns>
         public override string ToString()
         {
+            string whyComplete = WhyComplete;
+            return ToString0() + (whyComplete != null ? " WhyComplete=" + whyComplete : "");
+        }
+
+        public string ToString0()
+        {
+            string msg = "";
             if (!Started)
             {
-                return "-no-started-subqueries=" + SubQueries.Count;
-                if (IsEmpty) return "";
-            }
-            if (IsComplete)
+                msg = "!Started ";
+            }            
+            if (!IsComplete)
             {
+                msg = "Incomplete ";
+
             }
-            if (IsEmpty) return "";
-            return Output;
+            if (IsEmpty) return msg += "querycount=" + SubQueries.Count + " ";
+            return msg + " \"" + Output + "\"";
         }
 
         public Unifiable GetOutputSentence(int sentence)
         {
+            if (sentence == -1) return NormalizedOutput;
             lock (OutputSentences) return OutputSentences[sentence];
         }
 

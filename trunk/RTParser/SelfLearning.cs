@@ -22,6 +22,8 @@ namespace RTParser
 {
     public partial class RTPBot
     {
+        private bool AllreadyUnderstandingSentences = false;
+        readonly private object AllreadyUnderstandingSentencesLock = new object();
         public static bool UnderstandSentenceOutsideQueue = true;
         public void HeardSelfSayVerbal(User theFactSpeaker, User toWhom, string message, Result result, ThreadControl control)
         {
@@ -54,7 +56,7 @@ namespace RTParser
             message = ToHeard(message);
             if (string.IsNullOrEmpty(message)) return result;
 
-            var v = new SplitIntoSentences(this, message);
+            var v = new SplitIntoSentences(null, message);
 
             bool stopProcessing = false;
             if (control != null) control.AbortOrInteruptedRaised += (ctl, ex) => { stopProcessing = true; };
@@ -149,7 +151,6 @@ namespace RTParser
             return result;
         }
 
-        private bool UnderstandingSentences = false;
         private Result UnderstandSentence(User theFactSpeaker, User toWhom, string desc, string message, Result res, ThreadControl control)
         {
             Result LR = res;
@@ -157,18 +158,27 @@ namespace RTParser
             {
                 //lock (toWhom.QueryLock)
                 {
-                    LR = toWhom.LastResult;
+                    LR = toWhom.GetResult(0, true, theFactSpeaker);
                     if (LR != null)
                     {
                         LR.AddOutputSentences(null, message);
                     }
                 }
             }
-            if (UnderstandingSentences)
+            if (AllreadyUnderstandingSentences)
             {
+                writeDebugLine("HEARDSELF: TO FAST - " + message);
                 return res;
             }
-            UnderstandingSentences = true;
+            lock (AllreadyUnderstandingSentencesLock)
+            {
+                if (AllreadyUnderstandingSentences)
+                {
+                    writeDebugLine("HEARDSELF: TO FAST - " + message);
+                    return res;
+                }
+                AllreadyUnderstandingSentences = true;
+            }
             writeDebugLine("-----------------------------------------------------------------");
             writeDebugLine("HEARDSELF: " + message);
             writeDebugLine("-----------------------------------------------------------------");
@@ -182,6 +192,11 @@ namespace RTParser
                     r.writeToLog = writeDebugLine;
                     r.IsTraced = false;
                     r.TimesOutAt = DateTime.Now + TimeSpan.FromSeconds(5);
+                    r.WhyComplete = null;
+                    if (control != null) control.AbortRaised += (ctl, abrtedE) =>
+                                                                    {
+                                                                        r.WhyComplete = "ABORTED";
+                                                                    };
                     var G = _g ?? HeardSelfSayGraph;
                     return ChatWithUser(r, theFactSpeaker, toWhom, G);
                 }
@@ -193,7 +208,7 @@ namespace RTParser
             }
             finally
             {
-                UnderstandingSentences = false;                    
+                AllreadyUnderstandingSentences = false;                    
                 theFactSpeaker.Predicates.addSetting("lastsaid", message);
             }
         }
@@ -219,6 +234,22 @@ namespace RTParser
             if (rest.IsEmpty) return;
             dictionary.addSetting(first, rest);
             AddHeardPreds0(rest, dictionary);
+        }
+
+        private GraphMaster SetupUserWithGraph(string newname, string newkey, User newuser)
+        {
+            GraphMaster graph = GetUserGraph(newkey);
+            graph.AddGenlMT(RTPBot.TheUserListernerGraph, newuser.WriteLine);
+            newuser.ListeningGraph = graph;
+            newuser.UserID = newkey;
+            newuser.UserName = newname;
+            OnBotCreated(() => graph.AddGenlMT(GraphMaster, newuser.WriteLine));
+            newuser.Predicates.addSetting("name", newname);
+            newuser.Predicates.addSetting("id", newkey);
+            newuser.Predicates.InsertFallback(() => AllUserPreds);
+            newuser.SyncDirectory(GetUserDir(newkey));
+            if (graph.Size == 0) graph.UnTraced = true;
+            return graph;
         }
     }
 }

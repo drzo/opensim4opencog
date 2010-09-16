@@ -94,7 +94,7 @@ namespace RTParser.Utils
             }
             int newSize = GM.Size;
             int change = newSize - size;
-            string ch = "Loaded " + GM + " was " + size;
+            string ch = "@echo Loaded " + GM + " was " + size;
             if (RecurseResult == (string) null)
             {
                 return ch;

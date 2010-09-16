@@ -686,22 +686,13 @@ namespace RTParser.Utils
         private Node evaluateFirst(int at, string[] splitPath, SubQuery query, Request request, MatchState matchstate,
                                   StringAppendableUnifiableImpl wildcard)
         {
-            // check for timeout
-            if (request.hasTimedOut) return null;
-            if (DateTime.Now > request.TimesOutAt)
+            // check for timeout           
+            if (request.IsTimedOutOrOverBudget)
             {
-                request.writeToLog("TIMEOUT! User: " +
+                request.writeToLog("FINISHED " + request.WhyComplete + " User: " +
                                    request.Requester.UserID + " raw input: \"" +
                                    request.rawInput + "\" in " + this);
                 request.IsTraced = true;
-                if (!request.hasTimedOut)
-                {
-                    //request.TimesOutAt = DateTime.Now + TimeSpan.FromSeconds(5);
-                    request.hasTimedOut = true;
-                }
-                else
-                {
-                }
                 return null; // Unifiable.Empty;                    
             }
 

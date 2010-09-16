@@ -54,6 +54,8 @@ namespace RTParser
                 if (!IsInteractiveUser(LU) || IsInteractiveUser(value))
                 {
                     _lastUser = value;
+                    GlobalSettings["lastuserid"] = value.UserID;
+                    GlobalSettings["lastusername"] = value.UserName;
                 }
             }
         }
@@ -121,7 +123,7 @@ namespace RTParser
 
         private GraphMaster _g;
         private GraphMaster _h;
-
+        private static GraphMaster TheUserListernerGraph;
 
         /// <summary>
         /// The "brain" of the Proccessor
@@ -280,6 +282,7 @@ namespace RTParser
         {
             AIMLbot.Request r = new AIMLbot.Request(rawInput, findOrCreateUser, this, null, null);
             findOrCreateUser.CurrentRequest = r;
+            r.depth = 0;
             r.IsTraced = findOrCreateUser.IsTraced;
             return r;
         }        
@@ -408,6 +411,11 @@ namespace RTParser
             OutputDelegate writeToLog = this.writeToLog;
             result = ChatWithNonGraphmaster(request, G, out isTraced, writeToLog);
             if (result != null) return result;
+            string rr = request.rawInput;
+            if (rr.Contains("@") || rr.Contains("raph"))
+            {
+                return result;
+            }
             if (request.GraphsAcceptingUserInput)
             {
                 result = ChatUsingGraphMaster(request, G, isTraced, writeToLog);
@@ -454,8 +462,8 @@ namespace RTParser
             {
                 try
                 {
-                    result = ImmediateAiml(getNode(rawInputString), request, Loader, null);
-                    request.rawInput = result.Output;
+                    result = ImmediateAiml(getNode("<template>" + rawInputString + "</template>"), request, Loader, null);
+                    //request.rawInput = result.Output;
                     return result;
                 }
                 catch (Exception e)
@@ -474,38 +482,32 @@ namespace RTParser
             //writeToLog = writeToLog ?? DEVNULL;
             AIMLbot.Result result;
             {
-                // Normalize the input
-                AIMLLoader loader = Loader;
-                if (!StaticLoader || loader == null)
-                {
-                    loader = new AIMLLoader(this, request);
-                }
-                Loader = loader;
-                RTParser.Normalize.SplitIntoSentences splitter = new RTParser.Normalize.SplitIntoSentences(this);
-                var rawSentences = splitter.Transform(request.rawInput);
-                result = request.CreateResult(request);
-                if (chatTrace) result.IsTraced = isTraced;
-
                 // Gathers the Pattern SubQueries!
-                LoadInputPaths(request, loader, rawSentences, result);
-                bool printedSQs = false;
+                ParsedSentences parsedSentences = request.ChatInput;
 
-                int NormalizedPathsCount = result.NormalizedPaths.Count;
+                int NormalizedPathsCount = parsedSentences.NormalizedPaths.Count;
 
                 if (isTraced && NormalizedPathsCount != 1)
                 {
-                    foreach (Unifiable path in result.NormalizedPaths)
+                    foreach (Unifiable path in parsedSentences.NormalizedPaths)
                     {
                         writeToLog("  i: " + path.LegacyPath);
                     }
                     writeToLog("NormalizedPaths.Count = " + NormalizedPathsCount);
                 }
 
+
+                bool printedSQs = false;
                 G = G ?? GraphMaster;
+
                 // grab the templates for the various sentences from the graphmaster
-                foreach (Unifiable path in result.NormalizedPaths)
+                request.IsTraced = isTraced;
+                result = request.CreateResult(request);
+                foreach (Unifiable userSentence in parsedSentences.NormalizedPaths)
                 {
-                    QueryList ql = G.gatherQueriesFromGraph(path, request, MatchState.UserInput);
+                    QueryList ql = G.gatherQueriesFromGraph(userSentence, request, MatchState.UserInput);
+
+                    if (chatTrace) result.IsTraced = isTraced;
                     if (ql.TemplateCount > 0)
                     {
                         request.TopLevel = ql;
@@ -516,7 +518,7 @@ namespace RTParser
                         request.TopLevel = ql;
                         result.AddSubqueries(ql);
                     }
-                    ICollection<SubQuery> resultSubQueries = (ICollection<SubQuery>) ql.GetBindings();
+                    ICollection<SubQuery> resultSubQueries = (ICollection<SubQuery>)ql.GetBindings();
                     resultSubQueries = resultSubQueries ?? result.SubQueries;
                     List<SubQuery> kept = ql.PreprocessSubQueries(request, resultSubQueries, isTraced, ref printedSQs, writeToLog);
                     if (kept.Count == 0)
@@ -572,9 +574,9 @@ namespace RTParser
         {
             writeToLog = writeToLog ?? DEVNULL;
             {
-                if (isTraced || result.OutputSentenceCount != 1)
+                if (isTraced)
                 {
-                    if (isTraced)
+                    if (result.OutputSentenceCount != 1 && !request.Graph.UnTraced)
                     {
                         DLRConsole.SystemFlush();
                         string s = "AIMLTRACE: result.OutputSentenceCount = " + result.OutputSentenceCount;
@@ -622,25 +624,90 @@ namespace RTParser
             }
         }
 
-        private void LoadInputPaths(Request request, AIMLLoader loader, Unifiable[] rawSentences, AIMLbot.Result result)
+        private string EnsureEnglishPassThru(string arg)
         {
+            return (string)arg;
+        }
+
+        public string EnsureEnglish(string arg)
+        {
+            // ReSharper disable ConvertToConstant.Local
+            bool DoOutputSubst = false;
+            // ReSharper restore ConvertToConstant.Local
+            // ReSharper disable ConditionIsAlwaysTrueOrFalse
+            if (DoOutputSubst)
+            // ReSharper restore ConditionIsAlwaysTrueOrFalse
+            {
+                string sentence = ApplySubstitutions.Substitute(OutputSubstitutions, arg);
+                sentence = TextPatternUtils.ReTrimAndspace(sentence);
+                if (TextPatternUtils.DifferentBesidesCase(arg, sentence))
+                {
+                    writeToLog("OutputSubst: " + arg + " -> " + sentence);
+                    arg = sentence;
+                }
+            }
+            return arg;
+
+            return ToEnglish(arg);
+        }
+
+        public delegate void InputParser(Request request, IEnumerable<Unifiable> rawSentences);
+        public ParsedSentences GetParsedUserInputSentences(Request request, Unifiable fromUInput)
+        {
+            Func<string, string> GenEnglish = EnsureEnglish;
+            string fromInput = EnsureEnglishPassThru(fromUInput);
+            // Normalize the input
+            RTParser.Normalize.SplitIntoSentences splitter = new RTParser.Normalize.SplitIntoSentences(null);
+            var rawSentences = splitter.Transform(fromInput);
+            var parsedSentences = new ParsedSentences(GenEnglish, -1);
+            var userInputSentences = parsedSentences.InputSentences;
+            userInputSentences.AddRange(rawSentences);
+            Func<string, string> englishToNormaizedInput = (startout) =>
+                                                          {
+                                                              var Normalized = new List<Unifiable>();
+                                                              ParsedSentences.NormalizedInputPaths(request, 
+                                                                                   new Unifiable[] {startout},
+                                                                                   Normalized,
+                                                                                   ToInputSubsts);
+                                                              if (Normalized.Count == 0)
+                                                              {
+                                                                  return null;
+                                                              }
+                                                              if (Normalized.Count == 1) return Normalized[0];
+                                                              return Normalized[0];
+                                                          };
+            parsedSentences.OnGetParsed = () =>
+                                              {
+                                                  ParsedSentences.Convert(
+                                                      parsedSentences.InputSentences,
+                                                      parsedSentences.TemplateOutputs, englishToNormaizedInput);
+                                              };
+            return parsedSentences;
+        }
+
+        public static void NormalizedInputPaths(Request request, IEnumerable<Unifiable> rawSentences, ICollection<Unifiable> result, Func<string, string> ToInputSubsts)
+        {
+            //ParsedSentences result = request.UserInput;
+            RTPBot thiz = request.TargetBot;
             int maxInputs = request.MaxInputs;
             int numInputs = 0;
             int sentenceNum = 0;
             int topicNum = 0;
             int thatNum = 0;
+            AIMLLoader loader = thiz.GetLoader(request);
+            Func<Unifiable, bool, Unifiable> normalizerT = (inputText, isUserInput) => loader.Normalize(inputText, isUserInput).Trim();
             string lastInput = "";
             {
                 foreach (Unifiable sentenceURaw in rawSentences)
                 {
                     string sentenceRaw = sentenceURaw;
                     string sentence = sentenceRaw.Trim(" .,!:".ToCharArray());
-                    sentence = ToInputSubsts(sentence);                    
-                    result.InputSentences.Add(sentence);
+                    sentence = ToInputSubsts(sentence);
+                    //result.InputSentences.Add(sentence);
                     sentence = sentence.Trim(" .,!:".ToCharArray());
                     if (sentence.Length == 0)
                     {
-                        writeToLog("skipping input sentence " + sentenceRaw);
+                        writeDebugLine("skipping input sentence " + sentenceRaw);
                         continue;
                     }
                     sentenceNum++;
@@ -653,18 +720,18 @@ namespace RTParser
                             //thatNum + " " +
                                                              requestThat, request.Flags,
                             //topicNum + " " +
-                                                             request.Requester.TopicSetting, true);
+                                                             request.Requester.TopicSetting, true, normalizerT);
                         if (path.IsEmpty)
                         {
                             path = loader.generatePath(sentence,
                                 //thatNum + " " +
                                                        requestThat, request.Flags,
                                 //topicNum + " " +
-                                                       request.Requester.TopicSetting, false);
+                                                       request.Requester.TopicSetting, false, normalizerT);
                         }
                         if (path.IsEmpty) continue;
                         numInputs++;
-                        result.NormalizedPaths.Add(path);
+                        result.Add(path);
                         if (numInputs >= maxInputs) return;
                         continue;
                     }
@@ -674,7 +741,7 @@ namespace RTParser
                         topicNum++;
                         if (topic.IsLongWildCard())
                         {
-                            topic = NOTOPIC;
+                            topic = thiz.NOTOPIC;
                         }
                         thatNum = 0;
                         foreach (Unifiable that in request.ResponderOutputs)
@@ -684,7 +751,7 @@ namespace RTParser
                             Unifiable path = loader.generatePath(sentence, //thatNum + " " +
                                                                  thats, request.Flags,
                                 //topicNum + " " +
-                                                                 topic, true);
+                                                                 topic, true, normalizerT);
                             if (that.IsLongWildCard())
                             {
                                 if (thatNum > 1)
@@ -701,7 +768,7 @@ namespace RTParser
 
                             lastInput = thisInput;
                             numInputs++;
-                            result.NormalizedPaths.Add(path);
+                            result.Add(path);
                             if (numInputs >= maxInputs) return;
                         }
                     }
@@ -1258,11 +1325,7 @@ namespace RTParser
                                   out AIMLTagHandler tagHandler)
         {
             // check for timeout (to avoid infinite loops)
-            if (request != null && DateTime.Now > request.TimesOutAt)
-            {
-                request.hasTimedOut = true;
-            }
-            else if (request.hasTimedOut)
+            if (request.IsComplete(result))
             {
                 var gn = request.Graph;
                 if (query != null) gn = query.Graph;
@@ -1270,7 +1333,6 @@ namespace RTParser
                     "WARNING! Request timeout. User: {0} raw input: {3} \"{1}\" processing template: \"{2}\"",
                     request.Requester.UserID, request.rawInput,
                     (query == null ? "-NOQUERY-" : query.Templates.Count.ToString()), gn);
-                request.hasTimedOut = true;
                 // tagHandler = null;
                 //   return Unifiable.Empty;
             }

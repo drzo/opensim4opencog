@@ -316,12 +316,7 @@ namespace RTParser
                 BotUsers[key] = myUser;
                 bool roleAcct = IsRoleAcctName(fullname);
                 myUser.IsRoleAcct = roleAcct;
-                GraphMaster g = GetUserGraph(key);
-                OnBotCreated(() => { g.AddGenlMT(GraphMaster, myUser.WriteLine); });
-
-                myUser.ListeningGraph = g;
-                myUser.Predicates.addSetting("name", username);
-                myUser.Predicates.InsertFallback(() => AllUserPreds);
+                SetupUserWithGraph(fullname, key, myUser); 
                 GlobalSettings.AddChild("user." + key + ".", () => myUser.Predicates);
 
                 OnBotCreated(() => { myUser.Predicates.AddChild("bot.", () => BotAsUser.Predicates); });
@@ -557,12 +552,7 @@ namespace RTParser
                         LastUser = newuser = olduser;
                         BotUsers[newkey] = newuser;
                         newuser.IsRoleAcct = false;
-                        GraphMaster g = GetUserGraph(newkey);
-                        g.AddGenlMT(GraphMaster, writeToLog);
-                        newuser.ListeningGraph = g;
-                        newuser.UserID = newkey;
-                        newuser.UserName = newname;
-                        newuser.SyncDirectory(GetUserDir(newkey));
+                        SetupUserWithGraph(newname, newkey, newuser);
                         // rebuild an old one
                         CreateNewUser(oldname, oldkey);
                         return newuser;
@@ -628,10 +618,7 @@ namespace RTParser
                     newuser = olduser;
                     BotUsers[newkey] = newuser;
                     newuser.IsRoleAcct = false;
-                    newuser.ListeningGraph = GetUserGraph(newkey);
-                    newuser.UserID = newkey;
-                    newuser.UserName = newname;
-                    newuser.SyncDirectory(GetUserDir(newkey));
+                    SetupUserWithGraph(newname, newkey, newuser);
                     // rebuild an old one
                     CreateNewUser(oldname, oldkey);
                     newuser = FindOrCreateUser(newname);
@@ -645,11 +632,7 @@ namespace RTParser
                 newuser = olduser;
                 BotUsers[newkey] = newuser;
                 newuser.IsRoleAcct = false;
-                GraphMaster graph = GetUserGraph(newkey);
-                newuser.ListeningGraph = graph;
-                newuser.UserID = newkey;
-                newuser.UserName = newname;
-                newuser.SyncDirectory(GetUserDir(newkey));
+                SetupUserWithGraph(newname, newkey, newuser);
                 // rebuild an old one
                 CreateNewUser(oldname, oldkey);
                 return newuser;
@@ -723,11 +706,7 @@ namespace RTParser
                         newuser = olduser;
                         BotUsers[newkey] = newuser;
                         newuser.IsRoleAcct = false;
-                        graph = GetUserGraph(newkey);
-                        newuser.ListeningGraph = graph;
-                        newuser.UserID = newkey;
-                        newuser.UserName = newname;
-                        newuser.SyncDirectory(GetUserDir(newkey));
+                        SetupUserWithGraph(newname, newkey, newuser);
                         // rebuild an old one
                         CreateNewUser(oldname, oldkey);
                         return newuser;

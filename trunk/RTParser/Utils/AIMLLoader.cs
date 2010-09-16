@@ -599,7 +599,7 @@ namespace RTParser.Utils
             path = path.Replace("\\", "/").ToLower();
             if (!fn.Contains(path) && !path.Contains(fn))
             {
-                writeToLog("WARNING! Ensuring loadOpts.Filename='{0}' but path='{1}'", fn, path);
+                // writeToLog("WARNING! Ensuring loadOpts.Filename='{0}' but path='{1}'", fn, path);
             }
             if (!request1.LoadOptions.Equals(loadOpts))
             {
@@ -1040,7 +1040,8 @@ namespace RTParser.Utils
                 }
             }
 
-            Unifiable categoryPath = generateCPath(patternText, that, cond, topicName, false);
+            Func<Unifiable, bool, Unifiable> normalizerT = (inputText, isUserInput) => Normalize(inputText, isUserInput).Trim();
+            Unifiable categoryPath = generateCPath(patternText, that, cond, topicName, false, normalizerT );
             PatternInfo patternInfo = PatternInfo.GetPattern(loaderOpts, patternNode, categoryPath);
             TopicInfo topicInfo = TopicInfo.FindTopic(loaderOpts, topicName);
             ThatInfo thatInfo = ThatInfo.GetPattern(loaderOpts, that);
@@ -1275,9 +1276,9 @@ namespace RTParser.Utils
         /// normalize out the * and _ wildcards used by AIML</param>
         /// <returns>The appropriately processed path</returns>
         public Unifiable generatePath(Unifiable pattern, Unifiable that, Unifiable flag, Unifiable topicName,
-                                      bool isUserInput)
+                                      bool isUserInput, Func<Unifiable, bool, Unifiable> innerFormater)
         {
-            return Unifiable.MakePath(generateCPath(pattern, that, flag, topicName, isUserInput));
+            return Unifiable.MakePath(generateCPath(pattern, that, flag, topicName, isUserInput, innerFormater));
         }
 
         /// <summary>
@@ -1290,7 +1291,7 @@ namespace RTParser.Utils
         /// normalize out the * and _ wildcards used by AIML</param>
         /// <returns>The appropriately processed path</returns>
         private Unifiable generateCPath(Unifiable pattern, Unifiable that, Unifiable flag, Unifiable topicName,
-                                        bool isUserInput)
+                                        bool isUserInput, Func<Unifiable, bool, Unifiable> innerFormater)
         {
             RTPBot RProcessor = LoaderRequest00.TargetBot;
 
@@ -1329,9 +1330,10 @@ namespace RTParser.Utils
             }
             else
             {
-                normalizedPattern = this.Normalize(pattern, isUserInput).Trim();
-                normalizedThat = this.Normalize(that, isUserInput).Trim();
-                normalizedTopic = this.Normalize(topicName, isUserInput).Trim();
+
+                normalizedPattern = innerFormater(pattern, isUserInput);
+                normalizedThat = innerFormater(that, isUserInput);
+                normalizedTopic = innerFormater(topicName, isUserInput);
             }
 
 

@@ -13,9 +13,10 @@ namespace RTParser.Utils
         public bool IsConditionTrue(SubQuery subQuery)
         {
             string tagName = this.TagName;
-            Func<int, int, Unifiable> getThat = subQuery.GetMatcher(tagName);
+            Func<int, int,User, Unifiable> getThat = subQuery.GetMatcher(tagName);
             int[] idx2 = GetIndex2(IndexVal);
-            var val = getThat(idx2[0], idx2[1]);
+            User responder = null;
+            var val = getThat(idx2[0], idx2[1], responder);
             try
             {
                 var res = UnifibleTagHandler.UnifyStars((string)Pattern, (string)val);

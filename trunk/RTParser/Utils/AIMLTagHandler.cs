@@ -919,10 +919,20 @@ namespace RTParser.Utils
             string dictName = GetNameOfDict(query, dictNameIn, templateNode, out dict);
             Unifiable gName = GetAttribValue(templateNode, "global_name", name);
             string realName;
-            Unifiable v = NamedValuesFromSettings.GetSettingForType(
-                dictName, query, dict, name, out realName,
-                gName, defaultVal, out succeed, templateNode);
-            return v;
+
+            var prev = NamedValuesFromSettings.UseLuceneForSet;
+            NamedValuesFromSettings.UseLuceneForSet = query.UseLuceneForSet;
+            try
+            {
+                Unifiable v = NamedValuesFromSettings.GetSettingForType(
+                    dictName, query, dict, name, out realName,
+                    gName, defaultVal, out succeed, templateNode);
+                return v;
+            }
+            finally
+            {
+                NamedValuesFromSettings.UseLuceneForSet = prev;
+            }
         }
 
         protected virtual void AddSideEffect(string namedEffect, ThreadStart func)

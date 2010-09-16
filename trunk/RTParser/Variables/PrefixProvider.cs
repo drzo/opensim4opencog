@@ -5,7 +5,7 @@ namespace RTParser.Variables
 {
     internal class PrefixProvider : ISettingsDictionary
     {
-        static IEnumerable<ISettingsDictionary> NONE = new ISettingsDictionary[0];
+        static readonly IEnumerable<ISettingsDictionary> NONE = new ISettingsDictionary[0];
         public Dictionary<string, ParentProvider> _prefixes = new Dictionary<string, ParentProvider>();
         private string theNameSpace;
 
