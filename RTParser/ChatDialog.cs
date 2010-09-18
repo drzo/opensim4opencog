@@ -43,6 +43,11 @@ namespace RTParser
         {
             get
             {
+                if (BotAsUser != null)
+                {
+                    var LR =  BotAsUser.LastReponder;
+                    if (LR != null) return LR;
+                }
                 if (IsInteractiveUser(_lastUser)) return _lastUser;
                 User LU = _lastResult != null ? _lastResult.Requestor : null;
                 if (IsInteractiveUser(LU)) return LU;
@@ -50,12 +55,15 @@ namespace RTParser
             }
             set
             {
+                if (BotAsUser != null)
+                {
+                    if (value == BotAsUser) return;
+                    BotAsUser.LastReponder = value;
+                }
                 User LU = LastUser;
                 if (!IsInteractiveUser(LU) || IsInteractiveUser(value))
                 {
                     _lastUser = value;
-                    GlobalSettings["lastuserid"] = value.UserID;
-                    GlobalSettings["lastusername"] = value.UserName;
                 }
             }
         }
@@ -222,13 +230,14 @@ namespace RTParser
                 youser = input.Substring(0, lastIndex);
                 targ = FindUser(youser);
                 if (targ != null) targetUser = targ;
-            }            
-            if (otherName != null) if (targ == null)
-            {
-                targ = FindUser(otherName);
-                if (targ != null) targetUser = targ;
             }
-            
+            if (otherName != null)
+                if (targ == null)
+                {
+                    targ = FindUser(otherName);
+                    if (targ != null) targetUser = targ;
+                }
+
             traceConsole = traceConsole ?? writeDebugLine;
             User CurrentUser = FindOrCreateUser(user) ?? LastUser;
             var varMSM = this.pMSM;
@@ -240,7 +249,25 @@ namespace RTParser
             r.writeToLog = traceConsole;
             r.Responder = targetUser;
             Predicates.IsTraced = false;
-            Result res = ChatWithUser(r, r.Requester, targetUser, r.Graph);
+            Result res = r.CreateResult(r);
+            ChatLabel label = r.PushScope;
+            try
+            {
+                ChatWithUser(r, r.Requester, targetUser, r.Graph);
+            }
+            catch (ChatSignal e)
+            {
+                if (label.IsSignal(e)) return (AIMLbot.Result)r.CurrentResult;
+                throw;
+            }
+            catch (Exception exception)
+            {
+                traceConsole("" + exception);
+            }
+            finally
+            {
+                label.PopScope();
+            }
             string useOut = null;
             //string useOut = resOutput;
             if (!res.IsEmpty)
@@ -260,16 +287,10 @@ namespace RTParser
             }
             if (saveResults)
             {
-                try
-                {
-                    LastResult = res;
-                    LastUser = CurrentUser;
-                }
-                catch (Exception exception)
-                {
-                    traceConsole("" + exception);
-                }
+                LastResult = res;
+                LastUser = CurrentUser;
             }
+
             traceConsole(useOut);
             return res;
         }
@@ -353,20 +374,23 @@ namespace RTParser
             UndoStack undoStack = UndoStack.GetStackFor(request);
             undoStack.pushValues(user.Predicates, "rawinput", request.rawInput);
             undoStack.pushValues(user.Predicates, "input", request.rawInput);
-            AIMLbot.Result res = null;
+            AIMLbot.Result res = request.CreateResult(request);
             //lock (user.QueryLock)
             {
+                ChatLabel label = request.PushScope;
                 try
                 {
                     res = ChatWithRequest4(request, user, target, G);
+                    /*
                     // ReSharper disable ConditionIsAlwaysTrueOrFalse
-                    if (res.OutputSentenceCount == 0)
+                    if (res.OutputSentenceCount == 0 && false)
                     // ReSharper restore ConditionIsAlwaysTrueOrFalse
                     {
                         request.UndoAll();
                         request.IncreaseLimits(1);
-                        res = ChatWithRequest4(request, user, target, G);
+                         res = ChatWithRequest4(request, user, target, G);
                     }
+                     */
                     if (request.ParentRequest == null)
                     {
                         request.AddSideEffect("Populate the Result object",
@@ -374,8 +398,20 @@ namespace RTParser
                     }
                     return res;
                 }
+                catch (ChatSignalOverBudget e)
+                {
+                    request.UndoAll();
+                    writeToLog("ChatWithUser ChatSignalOverBudget: ( request.UndoAll() )" + request + " " + e);
+                    return (AIMLbot.Result)e.request;
+                }
+                catch (ChatSignal e)
+                {
+                    if (label.IsSignal(e)) return (AIMLbot.Result) request.CurrentResult;
+                    throw;
+                }
                 finally
                 {
+                    label.PopScope();
                     undoStack.UndoAll();
                     request.UndoAll();
                     request.Commit();
@@ -388,15 +424,28 @@ namespace RTParser
         {
             var originalRequestor = request.Requester;
             var originalTargetUser = request.Responder;
+            ChatLabel label = request.PushScope;
             try
             {
-                if (request.ParentMostRequest.DisallowedGraphs.Contains(G)) return (AIMLbot.Result)request.CurrentResult;
+                if (request.ParentMostRequest.DisallowedGraphs.Contains(G) || request.depth > 4)
+                    return (AIMLbot.Result) request.CurrentResult;
                 request.Requester = user;
                 Result result = ChatWithRequest44(request, user, target, G);
                 return (AIMLbot.Result) result;
             }
+            catch (ChatSignalOverBudget e)
+            {
+                writeToLog("ChatWithRequest4 ChatSignalOverBudget: " + request + " " + e);
+                return (AIMLbot.Result)request.CurrentResult;
+            }            
+            catch (ChatSignal e)
+            {
+                if (label.IsSignal(e)) return (AIMLbot.Result) request.CurrentResult;
+                throw;
+            }
             finally
             {
+                label.PopScope();
                 request.Requester = originalRequestor;
             }
         }
@@ -412,10 +461,12 @@ namespace RTParser
             result = ChatWithNonGraphmaster(request, G, out isTraced, writeToLog);
             if (result != null) return result;
             string rr = request.rawInput;
-            if (rr.Contains("@") || rr.Contains("raph"))
+            if (rr.Contains("@"))
             {
                 return result;
             }
+
+            result = request.CreateResult(request);
             if (request.GraphsAcceptingUserInput)
             {
                 result = ChatUsingGraphMaster(request, G, isTraced, writeToLog);
@@ -424,7 +475,6 @@ namespace RTParser
             {
                 string nai = NotAcceptingUserInputMessage;
                 if (isTraced) this.writeToLog("ERROR {0} getting back {1}", request, nai);
-                result = request.CreateResult(request);
                 request.AddOutputSentences(null, nai, result);
             }
             User popu = originalRequestor ?? request.Requester ?? result.Requestor;
@@ -456,7 +506,7 @@ namespace RTParser
                 }
                 return null;
             }
-
+            ChatLabel label = request.PushScope;
             var orig = request.ResponderOutputs;
             if (AlwaysUseImmediateAimlInImput && ContainsAiml(rawInputString))
             {
@@ -466,11 +516,17 @@ namespace RTParser
                     //request.rawInput = result.Output;
                     return result;
                 }
+                catch (ChatSignal e)
+                {
+                    if (label.IsSignal(e)) return e.result;
+                    throw;
+                }
                 catch (Exception e)
                 {
                     isTraced = true;
                     this.writeToLog(e);
                     writeToLog("ImmediateAiml: ERROR: " + e);
+                    label.PopScope();
                     return null;
                 }
             }
@@ -503,32 +559,49 @@ namespace RTParser
                 // grab the templates for the various sentences from the graphmaster
                 request.IsTraced = isTraced;
                 result = request.CreateResult(request);
+
+                // load the queries
+                List<GraphQuery> AllQueries = new List<GraphQuery>();
+
                 foreach (Unifiable userSentence in parsedSentences.NormalizedPaths)
                 {
-                    QueryList ql = G.gatherQueriesFromGraph(userSentence, request, MatchState.UserInput);
-
-                    if (chatTrace) result.IsTraced = isTraced;
-                    if (ql.TemplateCount > 0)
+                    AllQueries.Add(G.gatherQueriesFromGraph(userSentence, request, MatchState.UserInput));
+                }
+                try
+                {
+                    // gather the templates and patterns
+                    foreach (var ql in AllQueries)
+                    {
+                        G.RunGraphQuery(ql);
+                        //if (request.IsComplete(result)) return result;
+                    }
+                    foreach (var ql in AllQueries)
                     {
                         request.TopLevel = ql;
-                        result.AddSubqueries(ql);
-                    }
-                    else if (ql.PatternCount > 0)
-                    {
-                        request.TopLevel = ql;
-                        result.AddSubqueries(ql);
-                    }
-                    ICollection<SubQuery> resultSubQueries = (ICollection<SubQuery>)ql.GetBindings();
-                    resultSubQueries = resultSubQueries ?? result.SubQueries;
-                    List<SubQuery> kept = ql.PreprocessSubQueries(request, resultSubQueries, isTraced, ref printedSQs, writeToLog);
-                    if (kept.Count == 0)
-                    {
+                        if (chatTrace) result.IsTraced = isTraced;
+                        if (ql.PatternCount > 0)
+                        {
+                            request.TopLevel = ql;
+                            // if (ql.TemplateCount > 0)
+                            {
+                                request.TopLevel = ql;
+                                result.AddSubqueries(ql);
+                            }
+                            List<SubQuery> kept = ql.PreprocessSubQueries(request, result.SubQueries, isTraced,
+                                                                          ref printedSQs,
+                                                                          writeToLog);
+                        }
+                        ProcessSubQueriesAndIncreasLimits(request, result, ref isTraced, printedSQs, writeToLog);
                     }
                 }
-                ProcessSubQueriesAndIncreasLimits(request, result, ref isTraced, printedSQs, writeToLog);
+                catch (ChatSignal exception)
+                {
+                    writeToLog("ChatSignalOverBudget: " + exception.Message);
+                }
             }
             return result;
         }
+
         private void ProcessSubQueriesAndIncreasLimits(Request request, Result result, ref bool isTraced, bool printedSQs, OutputDelegate writeToLog)
         {
             writeToLog = writeToLog ?? DEVNULL;
@@ -536,35 +609,21 @@ namespace RTParser
             int solutions;
             bool hasMoreSolutions;
             CheckResult(request, result, out solutions, out hasMoreSolutions);
-
             if (result.OutputSentenceCount == 0 || sqc == 0)
             {
+              //  string oldSets = QuerySettings.ToSettingsString(request.GetQuerySettings());
                 isTraced = true;
                 //todo pick and chose the queries
-                // if (result.SubQueries.Count != 1)
+                int n = 0;
+                while (result.OutputSentenceCount == 0 && n < 3 && request.depth < 3)
                 {
-                    if (!printedSQs)
-                    {
-                        string s = "AIMLTRACE! : OutputSenteceCount == 0 while sqc=" +
-                                   result.SubQueries.Count;
-                        foreach (SubQuery path in result.SubQueries)
-                        {
-                            s += Environment.NewLine;
-                            s += "  " + Unifiable.ToVMString(path.FullPath);
-                        }
-                        writeToLog(s);
-                        DLRConsole.SystemFlush();
-                    }
-                }
-                request.UndoAll();
-                request.IncreaseLimits(1);
-                CheckResult(request, result, out solutions, out hasMoreSolutions);
-                if (result.OutputSentenceCount == 0)
-                {
+                    n++;
                     request.UndoAll();
                     request.IncreaseLimits(1);
-                    writeToLog("AIMLTRACE: bumping up limits 2 times " + request);
                     CheckResult(request, result, out solutions, out hasMoreSolutions);
+                   // string newSets = QuerySettings.ToSettingsString(request.GetQuerySettings());
+                    //writeToLog("AIMLTRACE: bumped up limits " + n + " times for " + request + "\n --from\n" + oldSets + "\n --to \n" +
+                      //         newSets);
                 }
             }
             // process the templates into appropriate output
@@ -657,8 +716,7 @@ namespace RTParser
             Func<string, string> GenEnglish = EnsureEnglish;
             string fromInput = EnsureEnglishPassThru(fromUInput);
             // Normalize the input
-            RTParser.Normalize.SplitIntoSentences splitter = new RTParser.Normalize.SplitIntoSentences(null);
-            var rawSentences = splitter.Transform(fromInput);
+            var rawSentences = SplitIntoSentences.Split(fromInput);
             var parsedSentences = new ParsedSentences(GenEnglish, -1);
             var userInputSentences = parsedSentences.InputSentences;
             userInputSentences.AddRange(rawSentences);
@@ -715,7 +773,6 @@ namespace RTParser
                     if (maxInputs == 1)
                     {
                         Unifiable requestThat = request.That;
-                        requestThat.AsString();
                         Unifiable path = loader.generatePath(sentence,
                             //thatNum + " " +
                                                              requestThat, request.Flags,
@@ -813,7 +870,12 @@ namespace RTParser
         {
             hasMoreSolutions = true;
             solutions = 0;
-            foreach (SubQuery query in result.SubQueries)
+            List<SubQuery> resultSubQueries = result.SubQueries;
+            lock (resultSubQueries) 
+            {
+                resultSubQueries = new List<SubQuery>(resultSubQueries);
+            }
+            lock (resultSubQueries) foreach (SubQuery query in resultSubQueries)
             {
                 result._CurrentQuery = query;
                 solutions = ProcessQueries(result, query, request, out hasMoreSolutions);
@@ -829,12 +891,14 @@ namespace RTParser
         {
             AIMLTagHandler lastHandler = request.LastHandler;
             int solutions = 0;
+            var queryTemplates = query.Templates;
+            hasMoreSolutions = false;
+            if (queryTemplates != null && queryTemplates.Count > 0)
             {
-                var queryTemplates = query.Templates;
-                hasMoreSolutions = false;
-                if (queryTemplates != null && queryTemplates.Count > 0)
+               lock (queryTemplates)
+                    queryTemplates = new List<TemplateInfo>(query.Templates);
+                hasMoreSolutions = true;
                 {
-                    hasMoreSolutions = true;
                     foreach (TemplateInfo s in queryTemplates)
                     {
                         // Start each the same
@@ -847,7 +911,7 @@ namespace RTParser
                             bool templateSucceeded;
                             XmlNode sOutput = s.ClonedOutput;
                             lastHandler = proccessResponse(query, request, result, sOutput, s.Guard, out createdOutput,
-                                                     out templateSucceeded, lastHandler, s, false, false);
+                                                           out templateSucceeded, lastHandler, s, false, false);
                             request.LastHandler = lastHandler;
                             if (templateSucceeded) result.TemplatesSucceeded++;
                             if (createdOutput)
@@ -867,6 +931,9 @@ namespace RTParser
                                 break;
                             }
                         }
+                        catch (ChatSignal e)
+                        {
+                        }
                         catch (Exception e)
                         {
                             writeToLog(e);
@@ -880,6 +947,7 @@ namespace RTParser
                         }
                     }
                 }
+
             }
             return solutions;
         }
@@ -1036,25 +1104,35 @@ namespace RTParser
                                                 AIMLTagHandler handler, TemplateInfo templateInfo,
                                                 bool copyChild, bool copyParent)
         {
+            ChatLabel label = request.PushScope;
             try
             {
                 return proccessResponse000(query, request, result, templateNode, sGuard,
-                                               out createdOutput, out templateSucceeded,
-                                               handler, templateInfo, copyChild, copyParent);
+                                           out createdOutput, out templateSucceeded,
+                                           handler, templateInfo, copyChild, copyParent);
             }
-            catch (TemplateResult ex)
+            catch (ChatSignal ex)
             {
-                templateSucceeded = ex.TemplateSucceeded;
-                createdOutput = ex.CreatedOutput;
-                if (createdOutput)
+                if (label.IsSignal(ex))
                 {
-                    request.AddOutputSentences(templateInfo, ex.TemplateOutput, result);
+                    // if (ex.SubQuery != query) throw;
+                    if (ex.NeedsAdding)
+                    {
+                        request.AddOutputSentences(templateInfo, ex.TemplateOutput, result);
+                    }
+                    templateSucceeded = ex.TemplateSucceeded;
+                    createdOutput = ex.CreatedOutput;
+                    return ex.TagHandler;
                 }
-                return ex.TagHandler;
+                throw;
             }
             catch (Exception ex)
             {
                 throw;
+            }
+            finally
+            {
+                label.PopScope();
             }
         }
 
@@ -1064,6 +1142,7 @@ namespace RTParser
                                                 AIMLTagHandler handler, TemplateInfo templateInfo,
                                                 bool copyChild, bool copyParent)
         {
+            query.LastTagHandler = handler;
             bool isTraced = request.IsTraced || result.IsTraced || !request.GraphsAcceptingUserInput;
             //XmlNode guardNode = AIMLTagHandler.getNode(s.Guard.InnerXml);
             bool usedGuard = sGuard != null && sGuard.Output != null;
@@ -1116,18 +1195,25 @@ namespace RTParser
                 }
                 if (!createdOutput && isTraced && request.GraphsAcceptingUserInput)
                 {
-                    writeToLog("UNUSED '{0}' TEMPLATE={1}", o, ParentTextAndSourceInfo(templateNode));
                     if (templateInfo != null)
                     {
+                        string fromStr = " from " + templateInfo.Graph;
+                        writeToLog("SILENT '{0}' TEMPLATE={1}", o, ParentTextAndSourceInfo(templateNode) + fromStr);
                         templateInfo.IsDisabled = true;
-                        request.AddUndo(() => { 
-                            templateInfo.IsDisabled = false; });
+                        request.AddUndo(() =>
+                        {
+                            templateInfo.IsDisabled = false;
+                        });
                     }
+                    else
+                    {
+                        writeToLog("UNUSED '{0}' TEMPLATE={1}", o, ParentTextAndSourceInfo(templateNode));
+                    }
+
                 }
 
                 return tagHandler;
             }
-
             try
             {
                 string left = outputSentence.Substring(0, f).Trim();
@@ -1155,6 +1241,10 @@ namespace RTParser
                     {
                         templateSucceeded = true;
                     }
+                }
+                catch (ChatSignal e)
+                {
+                    throw;
                 }
                 catch (Exception e)
                 {
@@ -1185,6 +1275,10 @@ namespace RTParser
                 templateSucceeded = false;
                 createdOutput = false;
                 return tagHandler;
+            }
+            catch (ChatSignal e)
+            {
+                throw;
             }
             catch (Exception ex)
             {
@@ -1330,7 +1424,7 @@ namespace RTParser
                 var gn = request.Graph;
                 if (query != null) gn = query.Graph;
                 request.writeToLog(
-                    "WARNING! Request timeout. User: {0} raw input: {3} \"{1}\" processing template: \"{2}\"",
+                    "WARNING! Request " + request.WhyComplete + ". User: {0} raw input: {3} \"{1}\" processing template: \"{2}\"",
                     request.Requester.UserID, request.rawInput,
                     (query == null ? "-NOQUERY-" : query.Templates.Count.ToString()), gn);
                 // tagHandler = null;
@@ -1448,7 +1542,7 @@ namespace RTParser
             Console.WriteLine("*** DONE WN-Load ***");
 
             Console.WriteLine("*** Start Lucene ***");
-            LuceneIndexer = new MyLuceneIndexer(PathToLucene, fieldName);
+            LuceneIndexer = new MyLuceneIndexer(PathToLucene, fieldName, this, wordNetEngine);
             LuceneIndexer.TheBot = this;
             LuceneIndexer.wordNetEngine = wordNetEngine;
             Console.WriteLine("*** DONE Lucene ***");

@@ -177,6 +177,10 @@ namespace RTParser.AIMLTagHandlers
                                 return "" + forms; // Succeed();
                             }
                         }
+                        catch (ChatSignal e)
+                        {
+                            throw;
+                        }
                         catch (Exception e2)
                         {
                             Proc.writeToLog(e2);

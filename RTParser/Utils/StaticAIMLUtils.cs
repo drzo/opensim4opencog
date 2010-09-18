@@ -735,6 +735,12 @@ namespace RTParser.Utils
             string patternSide = VisibleRendering(node.ChildNodes, PatternSideRendering);
             return patternSide.Trim().Length == 0;
         }
+        public static bool IsEmptyTemplate(XmlNode node)
+        {
+            if (node == null) return true;
+            if (node.NodeType == XmlNodeType.Comment) return true;
+            return (!node.HasChildNodes && node.LocalName == "template");
+        }
         public static bool IsSilentTag(XmlNode node)
         {
             // if (true) return false;

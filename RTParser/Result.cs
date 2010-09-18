@@ -34,7 +34,7 @@ namespace RTParser
             Request req = request;
             Responder = req.Responder;
             Requestor = req.Requester;
-            request = null;
+            //request = null;
         }
 
         /// <summary>
@@ -43,8 +43,18 @@ namespace RTParser
         public TimeSpan Duration = TimeSpan.MinValue;
         public string WhyComplete
         {
-            get { if (request != null) return request.WhyComplete;
-                return TopLevel.WhyComplete;
+            get
+            {
+                lock (this)
+                {
+                    string s = null, t = null;
+                    var graphQuery = this.TopLevel;
+                    if (graphQuery != null) s = graphQuery.WhyComplete;
+                    if (string.IsNullOrEmpty(s)) s = null;
+                    var request1 = this.request;
+                    if (request1 != null) t = request1.WhyComplete;
+                    return s == null ? t : (s + " " + t);
+                }
             }
         }
         public DateTime EndedOn = DateTime.MaxValue;
@@ -90,7 +100,7 @@ namespace RTParser
 
         public TemplateInfo TemplateOfRating;
         public double TemplateRating = 0.0d;
-        private List<TemplateInfo> UsedTemplates1 = new List<TemplateInfo>();
+        private readonly List<TemplateInfo> UsedTemplates1 = new List<TemplateInfo>();
 
         /// <summary>
         /// The user for whom this is a result
@@ -135,12 +145,15 @@ namespace RTParser
             set { request.Graph = value; }
         }
 
-        public QueryList TopLevel
+        public GraphQuery TopLevel
         {
             get
             {
-                if (request != null) return request.TopLevel;
-                return request.TopLevel;
+                Request request1 = request;
+                if (request1 != null) return request1.TopLevel;
+                SubQuery cc = CurrentQuery;
+                if (cc != null) return cc.TopLevel;
+                return null;
             }
             set { throw new NotImplementedException(); }
         }
@@ -283,6 +296,8 @@ namespace RTParser
         }
 
         public string _normalizedOutput;
+        public ChatLabel CatchLabel;
+
         public string NormalizedOutput
         {
             get
@@ -291,7 +306,7 @@ namespace RTParser
             }
         }
 
-        public void AddSubqueries(QueryList queries)
+        public void AddSubqueries(GraphQuery queries)
         {
             if (queries.PatternCount == 0)
             {
@@ -332,7 +347,7 @@ namespace RTParser
             unifiable = unifiable + " ";
             if (false && unifiable.Length > 2 && (unifiable.Contains("<br/>") || unifiable.Contains("&p;")))
             {
-                string[] sents = unifiable.Split(new string[] { "<br/>", "&p;" }, StringSplitOptions.RemoveEmptyEntries);
+                string[] sents = unifiable.Split(new string[] {"<br/>", "&p;"}, StringSplitOptions.RemoveEmptyEntries);
                 foreach (var s in sents)
                 {
                     AddOutputSentences0(ti, s);
@@ -341,7 +356,7 @@ namespace RTParser
             }
             if (false && unifiable.Length > 2 && (unifiable.Contains(". ") || unifiable.Contains("? ")))
             {
-                string[] sents = unifiable.Split(new string[] { ". ", "? " }, StringSplitOptions.RemoveEmptyEntries);
+                string[] sents = unifiable.Split(new string[] {". ", "? "}, StringSplitOptions.RemoveEmptyEntries);
                 foreach (var s in sents)
                 {
                     AddOutputSentences0(ti, s);
@@ -359,7 +374,8 @@ namespace RTParser
                     {
                         TemplateOfRating = ti;
                         TemplateRating = ThisRating;
-                        writeToLog("AIMLTRACE: OUTPUT RATING={0} {2} TI: {1} \n U: {3}", ThisRating, ti, ti.Graph, unifiable);
+                        writeToLog("AIMLTRACE: OUTPUT RATING={0} {2} TI: {1} \n U: {3}", ThisRating, ti, ti.Graph,
+                                   unifiable);
                     }
                     if (!Unifiable.IsNullOrEmpty(unifiable))
                     {
@@ -413,6 +429,30 @@ namespace RTParser
                 }
                 EndedOn = DateTime.Now;
                 OutputSentences.Add(unifiable);
+                return;
+                bool isComplete = OutputSentences.Count >=
+                                  ((QuerySettingsReadOnly) request.GetQuerySettings()).MinOutputs ||
+                                  request.IsComplete(this);
+
+                if (!isComplete) return;
+
+                lock (ChatLabel.Labels)
+                {
+                    ChatLabel rd = this.CatchLabel;
+                    if (rd == null) return;
+                    if (!ChatLabel.IsFirst(rd)) return;
+                    if (ti != null)
+                    {
+                        rd.TemplateInfo = ti;
+                        rd.CreatedOutput = true;
+                        rd.SubQuery = ti.Query;
+                        rd.request = request;
+                        // rd.KeepThrowing = true;
+                        rd.TagHandler = ti.Query.LastTagHandler;
+                        rd.result = (AIMLbot.Result) this;
+                    }
+                    throw rd;
+                }
             }
         }
 

@@ -905,6 +905,7 @@ namespace RTParser
                         writeToLog("UnifyLazy: SUCCEED T2 " + ov + " in " + query);
                         return true;
                     }
+                    return false;
                 }
                 if (valueCache is StringUnifiable) if (ReferenceEquals(ov, valueCache))
                 {

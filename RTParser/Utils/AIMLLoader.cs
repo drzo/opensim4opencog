@@ -119,6 +119,10 @@ namespace RTParser.Utils
                             request.LoadOptions = savedOpt;
                         }
                     }
+                    catch (ChatSignal e)
+                    {
+                        throw;
+                    }
                     catch (Exception ee)
                     {
                         loadOpts.CtxGraph.RemoveFileLoaded(path);
@@ -164,7 +168,7 @@ namespace RTParser.Utils
             string pathFull = HostSystem.ResolveToURI(pathIn, combine, out prefix);
             string relPath = HostSystem.ToRelativePath(pathFull, prefix);
             string rpath = HostSystem.Combine(prefix, relPath);
-            if (HostSystem.FileOrDirExists(rpath))
+            if (HostSystem.FileOrDirExists(rpath) && !HostSystem.IsWildPath(rpath))
             {
                 return rpath;
             }
@@ -204,6 +208,10 @@ namespace RTParser.Utils
                             return action();
                         }
                     }
+                }
+                catch (ChatSignal e)
+                {
+                    throw;
                 }
                 catch (Exception e)
                 {
@@ -352,6 +360,10 @@ namespace RTParser.Utils
                 writeToLog(nf);
                 throw nfe;
             }
+            catch (ChatSignal e)
+            {
+                throw;
+            }
             catch (Exception e)
             {
                 RProcessor.writeToLog(e);
@@ -423,6 +435,10 @@ namespace RTParser.Utils
                 writeToLog("Loaded AIMLFile: '{0}'", path + " from " + master);
                 return total;
             }
+            catch (ChatSignal e)
+            {
+                throw;
+            }
             catch (Exception e)
             {
                 master.RemoveFileLoaded(path);
@@ -449,6 +465,10 @@ namespace RTParser.Utils
                 var byteArray = Encoding.ASCII.GetBytes(docString);
                 MemoryStream stream = new MemoryStream(byteArray);
                 loadAIMLStream(stream, loadOpts);
+            }
+            catch (ChatSignal e)
+            {
+                throw;
             }
             catch (Exception e2)
             {
@@ -495,6 +515,10 @@ namespace RTParser.Utils
                         //        continue;
                     }
                     total += this.loadAIMLNode(doc.DocumentElement, loadOpts, request);
+                }
+                catch (ChatSignal e)
+                {
+                    throw;
                 }
                 catch (Exception e2)
                 {
@@ -561,6 +585,10 @@ namespace RTParser.Utils
                         //        continue;
                     }
                     this.loadAIMLNode(doc.DocumentElement, loadOpts, request);
+                }
+                catch (ChatSignal e)
+                {
+                    throw;
                 }
                 catch (Exception e2)
                 {
@@ -910,6 +938,10 @@ namespace RTParser.Utils
                         }
                         CIs.Add(v);
                     }
+                    catch (ChatSignal e)
+                    {
+                        throw;
+                    }
                     catch (Exception e2)
                     {
                         String s = "ERROR: processCategoryWithTopic '" + e2 + "' " + loadOpts;
@@ -1066,6 +1098,10 @@ namespace RTParser.Utils
                         }
                         return categoryInfo;
                     }
+                    catch (ChatSignal e)
+                    {
+                        throw;
+                    }
                     catch (Exception e)
                     {
                         AddErrorCategory("ERROR! Failed to load a new category into the graphmaster where the path = " +
@@ -1203,6 +1239,10 @@ namespace RTParser.Utils
             try
             {
                 this.LoaderRequest00.writeToLog(prefix);
+            }
+            catch (ChatSignal e)
+            {
+                throw;
             }
             catch
             {

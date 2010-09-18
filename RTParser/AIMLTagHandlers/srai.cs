@@ -101,6 +101,10 @@ namespace RTParser.AIMLTagHandlers
                     RecurseResult = UseOriginalProcess ? (Unifiable)OriginalProcessChange() : ProcessChange0();
                     templateNode.InnerXml = isValueSetStart + RecurseResult;
                 }
+                catch (ChatSignal ex)
+                {
+                    throw;
+                }
                 catch (Exception e)
                 {
                     writeToLogWarn("" + e);
@@ -145,6 +149,10 @@ namespace RTParser.AIMLTagHandlers
                     var templateNodeInnerValue = Recurse();
                     var vv = ProcessChangeSrai(request, query, templateNodeInnerValue, templateNode, initialString, writeToLog);
                     return vv;
+                }
+                catch (ChatSignal ex)
+                {
+                    throw;
                 }
                 catch (Exception e)
                 {

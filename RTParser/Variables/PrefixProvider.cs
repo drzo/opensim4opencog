@@ -80,6 +80,7 @@ namespace RTParser.Variables
         /// <param name="value">The value associated with this setting</param>
         public bool addSetting(string name, Unifiable value)
         {
+            if (!HasChildren) return false;
             string nextName;
             ISettingsDictionary dict = GetChild(name, out nextName);
             if (dict == null) return false;
@@ -92,6 +93,7 @@ namespace RTParser.Variables
         /// <param name="name">The name of the setting to remove</param>
         public bool removeSetting(string name)
         {
+            if (!HasChildren) return false;
             string nextName;
             ISettingsDictionary dict = GetChild(name, out nextName);
             if (dict == null) return false;
@@ -106,6 +108,7 @@ namespace RTParser.Variables
         /// <param name="value">the new value</param>
         public bool updateSetting(string name, Unifiable value)
         {
+            if (!HasChildren) return false;
             string nextName;
             ISettingsDictionary dict = GetChild(name, out nextName);
             if (dict == null) return false;
@@ -132,14 +135,25 @@ namespace RTParser.Variables
         /// <returns>Existential truth value</returns>
         public bool containsLocalCalled(string name)
         {
+            if (!HasChildren) return false;
             string nextName;
             ISettingsDictionary dict = GetChild(name, out nextName);
             if (dict == null) return false;
             return dict.containsLocalCalled(nextName);
         }
 
+        public bool HasChildren
+        {
+            get
+            {
+                return _prefixes.Count > 0;
+            }
+        }
+
         public bool containsSettingCalled(string name)
         {
+
+            if (!HasChildren) return false;
             string nextName;
             ISettingsDictionary dict = GetChild(name, out nextName);
             if (dict == null) return false;

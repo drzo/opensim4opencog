@@ -9,6 +9,7 @@ using System.Xml;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
+using RTParser.AIMLTagHandlers;
 using UPath = RTParser.Unifiable;
 using StringAppendableUnifiable = RTParser.StringAppendableUnifiableImpl;
 
@@ -102,7 +103,10 @@ namespace RTParser.Utils
         public static readonly Dictionary<string, XmlNode> PatternNodes = new Dictionary<string, XmlNode>();
 
         public bool RemoveDupicateTemplatesFromNodes = true; //slows it down but maybe important to do
-
+        static GraphMaster()
+        {
+            DefaultSilentTagsInPutParent = true;
+        }
         public GraphMaster(string gn)
         //: base(bot)
         {
@@ -393,7 +397,7 @@ namespace RTParser.Utils
                                    XmlNode outerNode, XmlNode templateNode, GuardInfo guard, ThatInfo thatInfo,
                                    List<ConversationCondition> additionalRules)
         {
-            if (SilentTagsInPutParent && StaticAIMLUtils.IsSilentTag(templateNode))
+            if (SilentTagsInPutParent && !StaticAIMLUtils.IsEmptyTemplate(templateNode) && StaticAIMLUtils.IsSilentTag(templateNode))
             {
                 GraphMaster parent1 = makeParent();
                 this.Parents.Add(parent1);
@@ -439,7 +443,7 @@ namespace RTParser.Utils
 
         //query.Templates = 
 
-        public QueryList gatherQueriesFromGraph(Unifiable path, Request request, MatchState state)
+        public GraphQuery gatherQueriesFromGraph(Unifiable path, Request request, MatchState state)
         {
             if (path.IsEmpty)
             {
@@ -447,17 +451,10 @@ namespace RTParser.Utils
                 writeToLog(s);
                 throw new Exception(s);
             }
-            QueryList ql = new QueryList(path, request);
+            GraphQuery ql = new GraphQuery(path, request, this, state);
+            ql.matchState = state;
             QuerySettings.ApplySettings(request, ql);
             request.TopLevel = ql;
-            evaluateQL(path, request, state, ql, DoParents);
-            if (ql.TemplateCount == 0)
-            {
-                bool trace = request.IsTraced && !UnTraced;
-                if (trace)
-                    writeToLog(this + " returned no results for " + path);
-                return ql;
-            }
             lock (LockerObject)
                 lock (request.Requester.AllQueries)
                 {
@@ -466,7 +463,22 @@ namespace RTParser.Utils
             return ql;
         }
 
-        private void evaluateQL(Unifiable path, Request request, MatchState matchState, QueryList ql, bool locallyDoParents)
+        public void RunGraphQuery(GraphQuery ql)
+        {
+            MatchState state = ql.matchState;
+            Unifiable path = ql.InputPath;
+            var request = ql.TheRequest;
+            evaluateQL(path, request, state, ql, DoParents);
+            if (ql.TemplateCount == 0)
+            {
+                bool trace = request.IsTraced && !UnTraced;
+                if (trace)
+                    writeToLog(this + " returned no results for " + path);
+                return;
+            }
+        }
+
+        private void evaluateQL(Unifiable path, Request request, MatchState matchState, GraphQuery ql, bool locallyDoParents)
         {
             if (locallyDoParents) DoParentEval(Parents, request, path);
             bool trace = request.IsTraced && !UnTraced;
@@ -534,7 +546,7 @@ namespace RTParser.Utils
         /// <param name="query"></param>
         /// <returns></returns>
         private bool getQueries(Node rootNode, Unifiable upath, Request request, MatchState matchstate, int index,
-                                StringAppendableUnifiableImpl wildcard, QueryList toplevel)
+                                StringAppendableUnifiableImpl wildcard, GraphQuery toplevel)
         {
             if (toplevel.DisallowedGraphs.Contains(this))
             {
@@ -553,7 +565,7 @@ namespace RTParser.Utils
         }
 
         private bool getQueries000(Node rootNode, Unifiable upath, Request request, MatchState matchstate, int index,
-                                   StringAppendableUnifiableImpl wildcard, QueryList toplevel)
+                                   StringAppendableUnifiableImpl wildcard, GraphQuery toplevel)
         {
             int resin = toplevel.TemplateCount;
             int patternCountChanged = 0;
@@ -700,6 +712,29 @@ namespace RTParser.Utils
             }
         }
 
+        public void AddParallelMT(GraphMaster doall, OutputDelegate writeToLog)
+        {
+            lock (LockerObject)
+            {
+                var parents = Parents;
+                if (doall == this)
+                {
+                    writeToLog("Trying to PARALLEL reversed to " + this);
+                    return;
+                }
+                lock (parents)
+                {
+                    if (!parents.Contains(doall))
+                    {
+                        parents.Add(doall);
+                        writeToLog("PARALLEL ADDING " + doall + " TO " + this);
+                    }
+                    doall.RemoveGenlMT(this, writeToLog);
+                }
+            }
+        }
+
+
         public static IList<T> CopyOf<T>(List<T> list)
         {
             if (list == null) return new List<T>();
@@ -728,6 +763,8 @@ namespace RTParser.Utils
             bool userTracing = request.IsTraced;
             foreach (GraphMaster p in CopyOf(totry))
             {
+                if (request.IsTimedOutOrOverBudget) return pl;
+                if (request.TopLevel.DisallowedGraphs.Contains(p)) continue;
                 if (p != null)
                 {
                     bool wasUntraced = p.UnTraced;

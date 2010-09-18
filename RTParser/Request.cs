@@ -57,7 +57,7 @@ namespace RTParser
         //bool ProcessMultiplePatterns { get; set; }
         //bool ProcessMultipleTemplates { get; set; }
         //void IncreaseLimits(int i);
-        QueryList TopLevel { get; set; }
+        GraphQuery TopLevel { get; set; }
         SubQuery CurrentQuery { get; }
         RTPBot TargetBot { get; set; }
         Unifiable rawInput { get; }
@@ -97,6 +97,8 @@ namespace RTParser
         PrintOptions WriterOptions { get; }
         RequestImpl ParentMostRequest { get; }
         AIMLTagHandler LastHandler { get; set; }
+        ChatLabel PushScope { get; }
+        ChatLabel CatchLabel { get; }
         // inherited from base  string GraphName { get; set; }
         ISettingsDictionary GetSubstitutions(string name, bool b);
         GraphMaster GetGraph(string srai);
@@ -555,7 +557,7 @@ namespace RTParser
 
         private Unifiable _topic;
         public Unifiable Flags { get; set; }
-        public QueryList TopLevel { get; set; }
+        public GraphQuery TopLevel { get; set; }
 
         public Unifiable Topic
         {
@@ -715,10 +717,13 @@ namespace RTParser
 
         public AIMLbot.Result CreateResult(Request parentReq)
         {
-            var r = new AIMLbot.Result(Requester, TargetBot, parentReq, parentReq.CurrentResult);
-            CurrentResult = r;
-            r.request = this;
-            return (AIMLbot.Result)CurrentResult;
+            if (CurrentResult == null)
+            {
+                var r = new AIMLbot.Result(Requester, TargetBot, parentReq, parentReq.CurrentResult);
+                CurrentResult = r;
+                r.request = this;
+            }
+            return (AIMLbot.Result) CurrentResult;
         }
 
         public AIMLbot.Request CreateSubRequest(Unifiable templateNodeInnerValue, User user, RTPBot rTPBot, AIMLbot.Request request)
@@ -848,6 +853,24 @@ namespace RTParser
         {
             get { return _lastHandler; }
             set { if (value != null) _lastHandler = value; }
+        }
+
+        private ChatLabel _label = null;
+        public ChatLabel PushScope
+        {
+            get
+            {
+                {
+                    _label = new ChatLabel();
+                }
+                CurrentResult.CatchLabel = _label;
+                return _label;
+            }
+        }
+
+        public ChatLabel CatchLabel
+        {
+            get { return _label; }
         }
 
         public ISettingsDictionary GetSubstitutions(string named, bool createIfMissing)

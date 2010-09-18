@@ -32,6 +32,10 @@ namespace RTParser
                     //lock (OnBotCreatedHooks) 
                     lock (BotUsers) return action();
                 }
+                catch (ChatSignal ex)
+                {
+                    throw;
+                }
                 catch (Exception e)
                 {
                     writeToLog(e);
@@ -251,10 +255,10 @@ namespace RTParser
 
         internal User FindUser0(string fromname)
         {
-            if (fromname!=null && fromname.Contains("????"))
+            if (fromname != null && fromname.Contains("????"))
             {
                 writeToLog("BAd????");
-            } 
+            }
             if (IsLastKnownUser(fromname)) return LastUser;
             string key = fromname.ToLower().Trim();
             //lock (BotUsers)
@@ -316,7 +320,7 @@ namespace RTParser
                 BotUsers[key] = myUser;
                 bool roleAcct = IsRoleAcctName(fullname);
                 myUser.IsRoleAcct = roleAcct;
-                SetupUserWithGraph(fullname, key, myUser); 
+                SetupUserWithGraph(fullname, key, myUser);
                 GlobalSettings.AddChild("user." + key + ".", () => myUser.Predicates);
 
                 OnBotCreated(() => { myUser.Predicates.AddChild("bot.", () => BotAsUser.Predicates); });
@@ -870,12 +874,12 @@ namespace RTParser
                 if (tUser.Length > 2)
                 {
                     bool newlyCreated;
-                    var orCreateUser = FindOrCreateUser(tUser,out newlyCreated);
+                    var orCreateUser = FindOrCreateUser(tUser, out newlyCreated);
                     if (orCreateUser != CurrentUser)
                     {
                         CurrentUser = orCreateUser;
                         user = orCreateUser.UserName;
-                        
+
                     }
                     if (newlyCreated) useNameInOutput = true;
                 }
@@ -892,7 +896,7 @@ namespace RTParser
             }
             else useOut = useOut.Replace("_", " ").Replace("  ", " ").Trim();
 
-            var stringPlit = useOut.Split(new[] {"mene value="}, StringSplitOptions.RemoveEmptyEntries);
+            var stringPlit = useOut.Split(new[] { "mene value=" }, StringSplitOptions.RemoveEmptyEntries);
             string said = useOut;
             if (stringPlit.Length > 0)
             {
@@ -900,10 +904,10 @@ namespace RTParser
             }
             string vstring = stringPlit.Length < 2
                                  ? null
-                                 : stringPlit[2].Split(new char[] {' ', '\n'}, StringSplitOptions.RemoveEmptyEntries)[0];
+                                 : stringPlit[2].Split(new char[] { ' ', '\n' }, StringSplitOptions.RemoveEmptyEntries)[0];
             if (vstring == null || double.TryParse(vstring, out vscored))
             {
-                useOut = said + " mene value=" + res.Score*1.4;
+                useOut = said + " mene value=" + res.Score * 1.4;
             }
             if (useNameInOutput)
             {
@@ -919,7 +923,7 @@ namespace RTParser
 
         public bool IsInteractiveUser(User value)
         {
-            return value != null && value != BotAsUser;
+            return value != null && value != BotAsUser && value != ExemplarUser;
         }
     }
 }

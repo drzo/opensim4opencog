@@ -821,6 +821,22 @@ namespace RTParser.Database
             english = english.Replace(" I ", subj);
             english = english.Replace(" you ", botName);
             english = english.Trim();
+
+            var subjDict = TheBot.GetDictionary(subj) as SettingsDictionary;
+
+            if (subjDict != null)
+            {
+                foreach (var dict in new string[] { "him", "he", "she", "her", "them", "they", "it", "this" })
+                {
+                    var v = subjDict.grabSettingNoDebug(dict);
+                    if (english.Contains(dict))
+                    {
+                        english = english.Replace(" " + dict + " ", " " + v + " ");
+                    }
+                }
+
+            }
+
             return english;
         }
 

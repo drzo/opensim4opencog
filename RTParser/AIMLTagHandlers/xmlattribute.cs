@@ -38,7 +38,7 @@ namespace RTParser.AIMLTagHandlers
             if (CheckNode("xmlattribute"))
             {
                 string name = GetAttribValue(templateNode, "name,var", null);
-                string value = GetAttribValue(templateNode, "value", () => templateNodeInnerText, null);
+                string value = GetAttribValue<string>(templateNode, "value", GetTemplateNodeInnerText, null);
                 var ats = Parent.templateNode.Attributes.Append(templateNode.OwnerDocument.CreateAttribute(name, value));
             }
             return Unifiable.Empty;

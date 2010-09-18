@@ -1030,6 +1030,7 @@ namespace RTParser.Variables
 
         private IEnumerable<string >GetSettingsAliases(string name)
         {
+            if (NoSettingsAliaes) return NO_SETTINGS;
             string key = TransformKey(TransformName(name));
             string[] aliases;
             if (!RTPBot.SettingsAliases.TryGetValue(key, out aliases))
@@ -1328,16 +1329,6 @@ namespace RTParser.Variables
                 name = TransformName(name);
                 var setting = grabSetting0(name);
                 setting = TransformValue(setting);
-                if (Unifiable.IsNull(setting))
-                {
-                    foreach (var setname in GetSettingsAliases(name))
-                    {
-                        var tsetting = grabSetting0(setname);
-                        if (!Unifiable.IsNull(tsetting))
-                            setting = tsetting;
-                    }
-                    return setting;
-                }
                 if (Unifiable.IsEMPTY(setting))
                 {
                     return "";
@@ -1446,21 +1437,25 @@ namespace RTParser.Variables
             lock (orderedKeys)
             {
                 string normalizedName = TransformKey(name);
-
-                if (this.settingsHash.ContainsKey(normalizedName))
+                if (containsLocalCalled0(name))
                 {
-                    Unifiable v = this.settingsHash[normalizedName];
-                    v = TransformValue(v);
-                    if (makedvars.Contains(normalizedName))
+                    Unifiable v = localValue(name, normalizedName);
+                    if (Unifiable.IsNull(v))
                     {
-                        SettingsLog("MASKED RETURNLOCAL '" + name + "=NULL instead of" + str(v));
+                        foreach (var setname in GetSettingsAliases(name))
+                        {
+                            if (containsLocalCalled0(name))
+                            {
+                                var tsetting = localValue(setname, setname);
+                                if (!Unifiable.IsNull(tsetting))
+                                    return v;
+                            }
+                        }
                         return null;
                     }
-                    this.IsTraced = false;
-                    SettingsLog("LOCALRETURN '" + name + "'=" + str(v));
                     return v;
                 }
-                else if (Fallbacks.Count > 0)
+                if (Fallbacks.Count > 0)
                 {
                     ISettingsDictionary firstFallBack = null;
                     foreach (var list in Fallbacks)
@@ -1507,14 +1502,34 @@ namespace RTParser.Variables
             }
         }
 
+        private Unifiable localValue(string name, string normalizedName)
+        {
+            if (this.settingsHash.ContainsKey(normalizedName))
+            {
+                Unifiable v = this.settingsHash[normalizedName];
+                v = TransformValue(v);
+                if (makedvars.Contains(normalizedName))
+                {
+                    SettingsLog("MASKED RETURNLOCAL '" + name + "=NULL instead of" + str(v));
+                    return null;
+                }
+                this.IsTraced = false;
+                SettingsLog("LOCALRETURN '" + name + "'=" + str(v));
+                return v;
+            }
+            return null;
+        }
+
         public void SettingsLog(string message, params object[] args)
         {
             if (message.Contains("ERROR") && !message.Contains("ERROR: The requ"))
             {
-                IsTraced = true;
+                //IsTraced = true;
+                writeToLog("DICTLOG: " + NameSpace + "  " + message, args);
+                return;
             }
             string fmt = DLRConsole.SafeFormat(message, args);
-            if (fmt.Contains("???") /*|| fmt.Contains(" 'name'='")*/)
+            if (false && fmt.Contains("???") /*|| fmt.Contains(" 'name'='")*/)
             {
                 writeToLog("ERROR DICTLOG ???????: " + NameSpace + " (" + fmt + ")   " + message, args);                
             }
@@ -1829,6 +1844,8 @@ namespace RTParser.Variables
 
         public string Preposition = "";
         public List<ParentProvider> MetaProviders = new List<ParentProvider>();
+        public static bool NoSettingsAliaes = true;
+
         public Unifiable GetSetReturn(string name, out string realName)
         {
             const string prop = "set-return";
@@ -2044,18 +2061,19 @@ namespace RTParser.Variables
                 foreach (var chop in chops)
                 {
 
-                    realName = chop + name;
+                    string realName0 = chop + name;
                     if (dictionary is SettingsDictionary)
                     {
                         SettingsDictionary sd = (SettingsDictionary)dictionary;
-                        un = sd.grabSettingNoDebug(realName);
+                        un = sd.grabSettingNoDebug(realName0);
                     }
                     else
                     {
-                        un = dictionary.grabSetting(realName);
+                        un = dictionary.grabSetting(realName0);
                     }
                     if (!Unifiable.IsNull(un))
                     {
+                        realName = realName0;
                         return un;
                     }
                 }

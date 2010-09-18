@@ -21,11 +21,12 @@ namespace RTParser.Utils
         public static Dictionary<string, AIMLTagHandler> TagHandlers;
         private RTPBot ov_TargetBot;
         public TemplateInfo CurrentTemplate;
+        public AIMLTagHandler LastTagHandler;
         public Node Pattern;
         public string prefix;
         public Request Request;
         public Result Result;
-        public QueryList TopLevel;
+        public GraphQuery TopLevel;
 
         /// <summary>
         /// Ctor
@@ -100,6 +101,8 @@ namespace RTParser.Utils
 
         public int HasFailed = 0;
         public int HasSuceeded = 0;
+        public int GetDictValue;
+        public int SetDictValue;
 
 
         /// <summary>
