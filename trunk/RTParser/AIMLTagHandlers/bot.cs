@@ -19,7 +19,7 @@ namespace RTParser.AIMLTagHandlers
     /// 
     /// The bot element does not have any content. 
     /// </summary>
-    public class bot : RTParser.Utils.AIMLTagHandler
+    public class bot : get
     {
         /// <summary>
         /// Ctor
@@ -39,7 +39,7 @@ namespace RTParser.AIMLTagHandlers
             : base(bot, user, query, request, result, templateNode)
         {
         }
-        
+        /*
         //public StreamWriter chatTrace;
 
         protected override Unifiable ProcessChange()
@@ -59,6 +59,6 @@ namespace RTParser.AIMLTagHandlers
                 return value;
             }
             return defaultVal;
-        }
+        }*/
     }
 }

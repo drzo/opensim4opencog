@@ -78,24 +78,31 @@ namespace RTParser.Database
             }
             if (!String.IsNullOrEmpty(sresultGet))
             {
+                succeed = true;
                 realName = realName0;
-                if (!Unifiable.IsNullOrEmpty(gResult))
+                query.GetDictValue++;
+                if (!IsNullOrEmpty(gResult))
                 {
-                    // result=*, gResult=something => return gResult
-                    succeed = true;
-                    realName = realNameG;
-                    if (resultGet.IsWildCard()) return gResult;
+                    if (resultGet.IsWildCard())
+                    {
+                        realName = realNameG;
+                        // result=*, gResult=something => return gResult
+                        return gResult;
+                    }
                     // result=something, gResult=something => return result
-                    realName = realName;
                     return resultGet;
                 }
                 else
                 {
-                    succeed = true;
-                    realName = realName0;
                     // result=something, gResult=nothing => return result
                     return resultGet;
                 }
+            }
+            if (defaultVal==null)
+            {
+                succeed = false;
+                realName = null;
+                return defaultVal;
             }
             // default => return defaultVal
             succeed = true;
@@ -128,7 +135,7 @@ namespace RTParser.Database
                 bool shouldSet2 = ShouldSet(templateNode, dict, realName, value, resultGet);
                 return ReturnSetSetting(dict, name, setReturn);
             }
-            if (value.IsEmpty)
+            if (IsNull(value))
             {
                 if (UseLuceneForSet && userbotLuceneIndexer != null) userbotLuceneIndexer.retractAllTriple(userName, name);
                 if (!String.IsNullOrEmpty(gName)) gUser.Predicates.removeSetting(gName);
@@ -138,10 +145,17 @@ namespace RTParser.Database
             {
                 if (UseLuceneForSet && userbotLuceneIndexer != null) userbotLuceneIndexer.updateTriple(userName, name, value);
                 if (!String.IsNullOrEmpty(gName)) gUser.Predicates.addSetting(gName, value);
+                query.SetDictValue++;
                 dict.addSetting(name, value);
 
             }
-            return ReturnSetSetting(dict, name, setReturn);
+            var retVal = ReturnSetSetting(dict, name, setReturn);
+            if (!IsNullOrEmpty(retVal)) return retVal;
+            if (!IsNull(retVal))
+            {
+                return retVal;                
+            }
+            return retVal;
         }
 
         public static void writeToLog(string message, params object[] args)
@@ -206,7 +220,7 @@ namespace RTParser.Database
             {
                 setReturn = SettingsDictionary.ToSettingsDictionary(dict).GetSetReturn(name, out realName);
             }
-            if (setReturn == null)
+            if (string.IsNullOrEmpty(setReturn))
             {
                 defRet = "value";
             }

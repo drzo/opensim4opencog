@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using RTParser.Utils;
 
 namespace RTParser
@@ -65,6 +66,15 @@ namespace RTParser
             request.ProcessMultiplePatterns = true;
         }
 
+        static public String ToSettingsString(QuerySettingsReadOnly qs)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendFormat("Patterns={0}-{1} PM={2}\n", qs.MinPatterns, qs.MaxPatterns, qs.ProcessMultiplePatterns);
+            sb.AppendFormat("Templates={0}-{1} PM={2}\n", qs.MinTemplates, qs.MaxTemplates, qs.ProcessMultipleTemplates);
+            sb.AppendFormat("Outputs={0}-{1}\n", qs.MinOutputs, qs.MaxOutputs);
+            return sb.ToString();
+        }
+
         public static QuerySettings SRAIDefaults = new QuerySettingsImpl(null)
         {
             ProcessMultipleTemplates = true, // needed to find verbal outputs
@@ -73,12 +83,14 @@ namespace RTParser
             MaxGetVars = UNLIMITED,
             MinSetVars = 0,
             MaxSetVars = UNLIMITED,
+            /*
             MinOutputs = 1,
             MaxOutputs = 1,
             MinPatterns = 1,
             MaxPatterns = 1,
             MinTemplates = 1,
             MaxTemplates = 1,
+             */
             GraphName = null,
             IsTraced = false,
             /***
@@ -126,10 +138,10 @@ namespace RTParser
             ProcessMultipleTemplates = true, // needed to find verbal outputs
             ProcessMultiplePatterns = true, // needed to find verbal outputs
             MinOutputs = 1,
-            MaxOutputs = 1,
-            MinPatterns = 1,
-            MaxPatterns = 5,
-            MinTemplates = 1,
+            MaxOutputs = UNLIMITED,
+            MinPatterns = 8,
+            MaxPatterns = 12,
+            MinTemplates = 8,
             MaxTemplates = UNLIMITED,
             SraiDepth = new SettingMinMaxCurrent<int>()
                             {

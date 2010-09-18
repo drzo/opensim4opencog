@@ -44,7 +44,7 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessChange()
         {
-            Unifiable defaultVal = GetAttribValue("default", Unifiable.Empty);
+            Unifiable defaultVal = GetAttribValue("default,defaultValue", null);
             if (CheckNode("set"))
             {
                 var templateNodeInnerText = Recurse();
@@ -58,18 +58,46 @@ namespace RTParser.AIMLTagHandlers
                 {
                     //recursive form like <set>name value Unifiable</set>
                     name = templateNodeInnerText.First();
-                    templateNodeInnerText = templateNodeInnerText.Rest();
+                    var strV = templateNodeInnerText.Rest();
+                    if (!IsNull(strV))
+                    {
+                        if (IsNull(value))
+                        {
+                            value = strV;
+                        }
+                        else
+                        {
+                            writeToLogWarn("ERROR extra stuff in ", strV);
+                        }
+                    }
+
+                }
+                else
+                {
+                    if (value == null)
+                    {
+                        var strV = templateNodeInnerText;
+                        if (IsNull(strV))
+                        {
+                            writeToLogWarn("ERROR null stuff in SET ", strV);
+                        }
+                        value = strV;
+                    }
                 }
                 string setReturn = GetAttribValue(templateNode, "set-return",
-                                                  () =>
-                                                  ((string) Proc.GetRelationMetaProps().GetMeta(name, "set-return")),
+                                                  () =>((string) Proc.GetRelationMetaProps().GetMeta(name, "set-return")),
                                                   ReduceStarAttribute<string>);
                 if (value == null)
                 {
                     value = templateNodeInnerText;
                 }
-                if (value.IsEmpty) value = defaultVal;
-                return NamedValuesFromSettings.SetSettingForType(dictName, query, dict, name, gName, value, setReturn, templateNode);
+                if (IsNull(value)) value = defaultVal;
+                var retVal = NamedValuesFromSettings.SetSettingForType(dictName, query, dict, name, gName, value, setReturn, templateNode);
+                if (IsNull(retVal))
+                {
+                    writeToLogWarn("ERROR null stuff in SET ", retVal);                    
+                }
+                return retVal;
             }
             return defaultVal;
         }

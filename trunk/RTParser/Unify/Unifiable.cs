@@ -277,6 +277,7 @@ namespace RTParser
         }
         public static Unifiable operator +(Unifiable u, Unifiable more)
         {
+            if (IsNullOrEmpty(more)) return u;
             string moreAsString = more.AsString();
             if (moreAsString.Length == 0) return u;
             return MakeStringUnfiable(u.AsString() + " " + moreAsString);

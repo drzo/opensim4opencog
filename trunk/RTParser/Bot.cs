@@ -242,9 +242,10 @@ namespace RTParser
         {
             get
             {
+                return 7000;
                 if (GlobalSettings == null || !GlobalSettings.containsSettingCalled("timeout"))
                 {
-                    return 20000;
+                    return 2000000;
                 }
                 String s = GlobalSettings.grabSettingNoDebug("timeout").ToValue(null);
                 return Convert.ToDouble(s);
@@ -1128,6 +1129,7 @@ namespace RTParser
             if (tag != null)
             {
                 tag.SetParent(handler);
+                if (query != null) query.LastTagHandler = handler ?? tag;
                 TemplateInfo ti = tag.templateInfo;
                 if (ti == null && query != null)
                 {
@@ -2194,6 +2196,7 @@ The AIMLbot program.
                 if (StaticInitStarted) return;
                 StaticInitStarted = true;
                 GraphsByName["listener"] = TheUserListernerGraph = new GraphMaster("listener");
+                TheUserListernerGraph.SilentTagsInPutParent = false;
                 GraphsByName["default"] = new GraphMaster("default");
                 GraphsByName["heardselfsay"] = new GraphMaster("heardselfsay");
                 AddSettingsAliases("lastuserid", "you");

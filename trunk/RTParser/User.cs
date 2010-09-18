@@ -28,7 +28,7 @@ namespace RTParser
         public ListAsSet<TemplateInfo> UsedTemplates = new ListAsSet<TemplateInfo>();
         public ListAsSet<TemplateInfo> DisabledTemplates = new ListAsSet<TemplateInfo>();
         public ICollection<GraphMaster> DisallowedGraphs = new HashSet<GraphMaster>();
-        public ListAsSet<QueryList> AllQueries = new ListAsSet<QueryList>();
+        public ListAsSet<GraphQuery> AllQueries = new ListAsSet<GraphQuery>();
 
         public DateTime LastResponseGivenTime = DateTime.Now;
         public bool RespondToChat = true;
@@ -467,9 +467,10 @@ namespace RTParser
             if ((n >= 0) & (n < this.SailentResultCount))
             {
                 Result historicResult = GetResult(n, true, responder);
+                if (historicResult == null) return "";
                 if ((sentence >= 0) & (sentence < historicResult.OutputSentenceCount))
                 {
-                    return (Unifiable)historicResult.GetOutputSentence(sentence);
+                    return (Unifiable) historicResult.GetOutputSentence(sentence);
                 }
             }
             return Unifiable.Empty;
@@ -668,9 +669,21 @@ namespace RTParser
             return s ?? "Nothing"; // Unifiable.STAR;
         }
 
-        protected User LastReponder
+        public User LastReponder
         {
-            get { return bot.FindUser(Predicates.grabSettingNoDebug("lastuserid")); }
+            get
+            {
+                string lname = Predicates.grabSettingNoDebug("lastuserid");
+                if (string.IsNullOrEmpty(lname)) return null;
+                return bot.FindUser(lname);
+            }
+            set
+            {
+                if (value == null || value == this) return;
+                Predicates["lastuserid"] = value.UserID;
+                Predicates["lastusername"] = value.UserName;
+                Predicates["you"] = value.UserName;
+            }
         }
 
         public bool DoUserCommand(string input, OutputDelegate console)
@@ -778,11 +791,9 @@ namespace RTParser
                     {
                         if (r.Responder == this) continue;
                         if (mustBeResponder) if (r.Responder != responder) continue;
-                        if (mustBeSalient && !r.IsSailent)
-                        {
-                            if (i == 0) return r;
-                            i--;
-                        }
+                        if (mustBeSalient && !r.IsSailent) continue;
+                        if (i == 0) return r;
+                        i--;
                     }
                     return null;
                 }

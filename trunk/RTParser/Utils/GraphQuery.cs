@@ -7,7 +7,7 @@ using MushDLR223.Utilities;
 
 namespace RTParser.Utils
 {
-    public class QueryList : QuerySettings
+    public class GraphQuery : QuerySettings
     {
         public bool IsComplete(Request request)
         {
@@ -16,17 +16,22 @@ namespace RTParser.Utils
                    request.IsComplete(toplevel.CurrentResult);
         }
 
+        public RequestImpl TheRequest;
+        private List<TemplateInfo> Templates;
         private List<SubQuery> Bindings;
         public bool NoMoreResults;
         public List<Node> PatternsUsed;
-        private List<TemplateInfo> Templates;
-        public RequestImpl TheRequest;
         public Unifiable InputPath;
+        public MatchState matchState;
+        public GraphMaster graphMaster;
+
         public string WhyComplete
         {
             get
             {
-                return TheRequest.WhyNoSearch(CurrentResult) + (IsMaxedOut ? " TopLevel.IsMaxedOut" : "");
+                string ss = TheRequest.WhyNoSearch(CurrentResult);
+                if (!string.IsNullOrEmpty(ss)) return ss + (IsMaxedOut ? " TopLevel.IsMaxedOut" : "");
+                return (IsMaxedOut ? " TopLevel.IsMaxedOut" : null);
             }
         }
 
@@ -40,13 +45,16 @@ namespace RTParser.Utils
             get { return TheRequest.ParentMostRequest.DisallowedGraphs; }
         }
 
-         
-        public QueryList(Unifiable inputPath, Request request)
+
+        public GraphQuery(Unifiable inputPath, Request request, GraphMaster gMaster, MatchState mstate)
             : base(request)
         {
             InputPath = inputPath;
             TheRequest = (RequestImpl) request;
+            graphMaster = gMaster;
+            matchState = mstate;
         }
+
 
         #region Overrides of RequestSettingsImpl
 

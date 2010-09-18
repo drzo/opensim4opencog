@@ -19,6 +19,7 @@ namespace RTParser.Database
                 StringCachePOSWORD["hi"] = " # Interjection-SpeechPart # Hi-TheWord # Hello-TheWord ";
         }
 
+        public static readonly string BeAUX = " IS WAS BE AM ARE WERE ";
         private static readonly string Interjections = " hi hello yeah ";
         readonly static string StopWords =
           " a been get least our them whether about before getting left ourselves then which after being go" +

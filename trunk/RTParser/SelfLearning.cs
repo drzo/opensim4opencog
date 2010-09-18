@@ -60,7 +60,7 @@ namespace RTParser
 
             bool stopProcessing = false;
             if (control != null) control.AbortOrInteruptedRaised += (ctl, ex) => { stopProcessing = true; };
-            Unifiable[] sentences = v.Transform();
+            var sentences = v.Transform();
             for (int i = 0; i < sentences.Length; i++)
             {
                 Unifiable sentence = sentences[i];
@@ -239,7 +239,7 @@ namespace RTParser
         private GraphMaster SetupUserWithGraph(string newname, string newkey, User newuser)
         {
             GraphMaster graph = GetUserGraph(newkey);
-            graph.AddGenlMT(RTPBot.TheUserListernerGraph, newuser.WriteLine);
+            graph.AddParallelMT(RTPBot.TheUserListernerGraph, newuser.WriteLine);
             newuser.ListeningGraph = graph;
             newuser.UserID = newkey;
             newuser.UserName = newname;

@@ -45,8 +45,14 @@ namespace RTParser.AIMLTagHandlers
         }
         protected override Unifiable ProcessChange()
         {
+            if (RecurseResultValid) return RecurseResult;
             Unifiable u = ProcessChange0();
-            if (u.IsEmpty) return u;
+            if (IsNull(u))
+            {
+                Unifiable defaultVal = GetAttribValue("default", null);
+                if (defaultVal == null) QueryHasFailed = true;
+                return defaultVal;
+            }
             string s = u.ToValue(query);
             if (s.Contains(" ")) return s;
             if (s.ToLower().StartsWith("unknown"))
@@ -60,16 +66,24 @@ namespace RTParser.AIMLTagHandlers
 
         protected Unifiable ProcessChange0()
         {
-            if (CheckNode("get"))
+            if (CheckNode("get,bot"))
             {
                 string name = GetAttribValue(templateNode, "name,var", () => templateNodeInnerText, ReduceStarAttribute);
                 bool succeed;
-                Unifiable v = base.GetActualValue(name, "get", out succeed);
-                if (succeed) Succeed();
-                if (!succeed && Unifiable.IsNullOrEmpty(v))
+                Unifiable v = GetActualValue(name, typeof(bot) == GetType() ? "bot" : "get", out succeed);
+                if (IsNullOrEmpty(v))
                 {
-                    QueryHasFailed = true;
+                    if (!succeed)
+                    {
+                        QueryHasFailed = true;
+                        return Unifiable.Empty;
+                    }
+                    writeToLogWarn("NULL from success?!");
+                    // trace the next line to see why
+                    GetActualValue(name, typeof(bot) == GetType() ? "bot" : "get", out succeed);
+                    return Unifiable.Empty;
                 }
+                if (succeed) Succeed();
                 return v;
             }
             return Unifiable.Empty;

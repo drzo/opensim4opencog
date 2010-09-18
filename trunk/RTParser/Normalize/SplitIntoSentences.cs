@@ -132,5 +132,10 @@ namespace RTParser.Normalize
             }
             return (Unifiable[])tidyResult.ToArray();
         }
+
+        public static IEnumerable<Unifiable> Split(string input)
+        {
+            return (new SplitIntoSentences(null)).Transform(input);
+        }
     }
 }

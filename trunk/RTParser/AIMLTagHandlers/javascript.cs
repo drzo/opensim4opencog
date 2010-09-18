@@ -59,6 +59,10 @@ namespace RTParser.AIMLTagHandlers
             {
                 innerText = "" + EvalJScript(innerText);
             }
+            catch (ChatSignal ex)
+            {
+                throw;
+            }
             catch (Exception e)
             {
                 writeToLogWarn("ERROR: " + e + "\nCaused by \"" + innerText + "\"");
@@ -132,6 +136,10 @@ namespace RTParser.AIMLTagHandlers
                     {
                         codeBase = assembly.Location;
                     }
+                }
+                catch (ChatSignal ex)
+                {
+                    throw;
                 }
                 catch (Exception)
                 {

@@ -152,6 +152,11 @@ namespace RTParser.Utils
             }
         }
 
+        public string GetTemplateNodeInnerText()
+        {
+            return templateNodeInnerText;
+        }
+
         protected Unifiable templateNodeInnerText
         {
             get
@@ -164,7 +169,7 @@ namespace RTParser.Utils
                     s2 = Recurse();
                     if (RecurseResultValid) return RecurseResult;                
                 }
-                string sr = Unifiable.InnerXmlText(templateNode);
+                string sr = InnerXmlText(templateNode);
                 return CheckValue(sr);
             }
 
@@ -397,6 +402,7 @@ namespace RTParser.Utils
             float score1 = t1.Unify(with, query);
             if (score1 == 0) return score1;
             Unifiable t2 = CompleteAimlProcess();
+            if (ReferenceEquals(t1, t2)) return score1;            
             float score2 = t2.Unify(with, query);
             if (score2 == 0) return score2;
             return (score1 < score2) ? score1 : score2;
@@ -557,6 +563,10 @@ namespace RTParser.Utils
                             }
                             templateResult.Append(part);
                         }
+                        catch (ChatSignal ex)
+                        {
+                            throw;
+                        }
                         catch (Exception e)
                         {
                             RTPBot.writeDebugLine("ERROR: {0}", e);
@@ -666,7 +676,7 @@ namespace RTParser.Utils
                     success = true;
                     if (IsNull(value))
                     {
-                        if (tagHandlerChild!=null && tagHandlerChild.QueryHasSuceeded)
+                        if (tagHandlerChild != null && tagHandlerChild.QueryHasSuceeded)
                             success = true;
                         writeToLogWarn("ERROR NULL AIMLTRACE " + value + " -> " + childNode.OuterXml + "!");
                         success = false;
@@ -696,7 +706,10 @@ namespace RTParser.Utils
                     return value;
                 }
             }
-
+            catch (ChatSignal ex)
+            {
+                throw;
+            }
             catch (Exception e)
             {
                 string value = "ERROR: " + e;
@@ -772,6 +785,10 @@ namespace RTParser.Utils
                         Unifiable starContent = GetStarContent();
                         if (!Unifiable.IsNullOrEmpty(starContent))
                             return starContent;
+                    }
+                    catch (ChatSignal ex)
+                    {
+                        throw;
                     }
                     catch (Exception e)
                     {
@@ -915,7 +932,7 @@ namespace RTParser.Utils
         static protected Unifiable GetActualValue(XmlNode templateNode, string name, string dictNameIn, out bool succeed, SubQuery query)
         {
             ISettingsDictionary dict;// = query;
-            Unifiable defaultVal = GetAttribValue(templateNode, "default,defaultValue", Unifiable.Empty);
+            Unifiable defaultVal = GetAttribValue(templateNode, "default,defaultValue", null);
             string dictName = GetNameOfDict(query, dictNameIn, templateNode, out dict);
             Unifiable gName = GetAttribValue(templateNode, "global_name", name);
             string realName;
