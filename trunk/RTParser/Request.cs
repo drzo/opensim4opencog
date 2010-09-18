@@ -110,6 +110,7 @@ namespace RTParser
         void Commit();
         void UndoAll();
         void AddSideEffect(string effect, ThreadStart start);
+        Dictionary<string, GraphMaster> GetMatchingGraphs(string graphname, GraphMaster master);
     }
 
     /// <summary>
@@ -976,6 +977,30 @@ namespace RTParser
                     commitHooks.Add(newKeyValuePair);
                 }
             }
+        }
+
+        public Dictionary<string, GraphMaster> GetMatchingGraphs(string graphname, GraphMaster master)
+        {
+            RTPBot t = TargetBot;
+            Dictionary<string, GraphMaster> graphs = new Dictionary<string, GraphMaster>();
+            if (graphname == "*")
+            {
+                foreach (KeyValuePair<String, GraphMaster> ggg in GraphMaster.CopyOf(RTPBot.GraphsByName))
+                {
+                    var G = ggg.Value;
+                    if (G != null && !graphs.ContainsValue(G)) graphs[ggg.Key] = G;
+                }
+                foreach (KeyValuePair<string, GraphMaster> ggg in GraphMaster.CopyOf(t.LocalGraphsByName))
+                {
+                    var G = ggg.Value;
+                    if (G != null && !graphs.ContainsValue(G)) graphs[ggg.Key] = G;
+                }
+            } else
+            {
+                var G = t.GetGraph(graphname, master);
+                if (G != null && !graphs.ContainsValue(G)) graphs[graphname] = G;
+            }
+            return graphs;        
         }
 
         public ISettingsDictionary GetDictionary(string named, ISettingsDictionary dictionary)

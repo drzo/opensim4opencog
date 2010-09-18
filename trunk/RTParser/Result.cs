@@ -223,7 +223,7 @@ namespace RTParser
                             writeToLog("The bot could not find any response for the input: " + RawInput +
                                        " with the path(s): " +
                                        Environment.NewLine + paths.ToString() + " from the user with an id: " +
-                                       Requestor.UserID.AsString());
+                                       Requestor.UserID);
                             return Unifiable.Empty;
                         }
                     }

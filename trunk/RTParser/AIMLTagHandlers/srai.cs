@@ -233,19 +233,19 @@ namespace RTParser.AIMLTagHandlers
                         }
                         AIMLbot.Result subResult;
                         var prev = subRequest.GraphsAcceptingUserInput;
-                        var prevSO = user.SuspendAdd;
+                        var prevSO = user.SuspendAddResultToUser;
                         try
                         {
                             subRequest.GraphsAcceptingUserInput = true;
                             //var newresult = new AIMLbot.Result(request.user, Proc, request);
                             //subRequest.result = newresult;
-                            user.SuspendAdd = true;
+                            user.SuspendAddResultToUser = true;
                             if (request.IsTraced) subRequest.IsTraced = !showDebug;
                             subResult = mybot.ChatWithRequest4(subRequest, user, request.Responder, subRequest.Graph);
                         }
                         finally
                         {
-                            user.SuspendAdd = prevSO;
+                            user.SuspendAddResultToUser = prevSO;
                             subRequest.GraphsAcceptingUserInput = prev;
                         }
 

@@ -21,7 +21,7 @@ using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
 namespace RTParser
 {
     public partial class RTPBot
-    {        
+    {
         public bool AlwaysUseImmediateAimlInImput = true;
         public static bool RotateUsedTemplate = true;
         public bool DontUseSplitters = true;
@@ -45,7 +45,7 @@ namespace RTParser
             {
                 if (BotAsUser != null)
                 {
-                    var LR =  BotAsUser.LastReponder;
+                    var LR = BotAsUser.LastReponder;
                     if (LR != null) return LR;
                 }
                 if (IsInteractiveUser(_lastUser)) return _lastUser;
@@ -306,8 +306,8 @@ namespace RTParser
             r.depth = 0;
             r.IsTraced = findOrCreateUser.IsTraced;
             return r;
-        }        
-        
+        }
+
         /// <summary> 
         /// Given some raw input string username/unique ID creates a response for the user
         /// </summary>
@@ -316,7 +316,7 @@ namespace RTParser
         /// <returns>the result to be output to the user</returns>        
         public string ChatString(string rawInput, string username)
         {
-            RequestImpl r = GetRequest(rawInput,  username);
+            RequestImpl r = GetRequest(rawInput, username);
             r.IsTraced = this.IsTraced;
             return Chat(r).Output;
         }
@@ -406,7 +406,7 @@ namespace RTParser
                 }
                 catch (ChatSignal e)
                 {
-                    if (label.IsSignal(e)) return (AIMLbot.Result) request.CurrentResult;
+                    if (label.IsSignal(e)) return (AIMLbot.Result)request.CurrentResult;
                     throw;
                 }
                 finally
@@ -428,19 +428,19 @@ namespace RTParser
             try
             {
                 if (request.ParentMostRequest.DisallowedGraphs.Contains(G) || request.depth > 4)
-                    return (AIMLbot.Result) request.CurrentResult;
+                    return (AIMLbot.Result)request.CurrentResult;
                 request.Requester = user;
                 Result result = ChatWithRequest44(request, user, target, G);
-                return (AIMLbot.Result) result;
+                return (AIMLbot.Result)result;
             }
             catch (ChatSignalOverBudget e)
             {
                 writeToLog("ChatWithRequest4 ChatSignalOverBudget: " + request + " " + e);
                 return (AIMLbot.Result)request.CurrentResult;
-            }            
+            }
             catch (ChatSignal e)
             {
-                if (label.IsSignal(e)) return (AIMLbot.Result) request.CurrentResult;
+                if (label.IsSignal(e)) return (AIMLbot.Result)request.CurrentResult;
                 throw;
             }
             finally
@@ -611,7 +611,7 @@ namespace RTParser
             CheckResult(request, result, out solutions, out hasMoreSolutions);
             if (result.OutputSentenceCount == 0 || sqc == 0)
             {
-              //  string oldSets = QuerySettings.ToSettingsString(request.GetQuerySettings());
+                //  string oldSets = QuerySettings.ToSettingsString(request.GetQuerySettings());
                 isTraced = true;
                 //todo pick and chose the queries
                 int n = 0;
@@ -621,9 +621,9 @@ namespace RTParser
                     request.UndoAll();
                     request.IncreaseLimits(1);
                     CheckResult(request, result, out solutions, out hasMoreSolutions);
-                   // string newSets = QuerySettings.ToSettingsString(request.GetQuerySettings());
+                    // string newSets = QuerySettings.ToSettingsString(request.GetQuerySettings());
                     //writeToLog("AIMLTRACE: bumped up limits " + n + " times for " + request + "\n --from\n" + oldSets + "\n --to \n" +
-                      //         newSets);
+                    //         newSets);
                 }
             }
             // process the templates into appropriate output
@@ -723,8 +723,8 @@ namespace RTParser
             Func<string, string> englishToNormaizedInput = (startout) =>
                                                           {
                                                               var Normalized = new List<Unifiable>();
-                                                              ParsedSentences.NormalizedInputPaths(request, 
-                                                                                   new Unifiable[] {startout},
+                                                              ParsedSentences.NormalizedInputPaths(request,
+                                                                                   new Unifiable[] { startout },
                                                                                    Normalized,
                                                                                    ToInputSubsts);
                                                               if (Normalized.Count == 0)
@@ -871,21 +871,21 @@ namespace RTParser
             hasMoreSolutions = true;
             solutions = 0;
             List<SubQuery> resultSubQueries = result.SubQueries;
-            lock (resultSubQueries) 
+            lock (resultSubQueries)
             {
                 resultSubQueries = new List<SubQuery>(resultSubQueries);
             }
             lock (resultSubQueries) foreach (SubQuery query in resultSubQueries)
-            {
-                result._CurrentQuery = query;
-                solutions = ProcessQueries(result, query, request, out hasMoreSolutions);
-                if (request.IsComplete(result))
                 {
-                    //hasMoreSolutions = false;
-                    return;
+                    result._CurrentQuery = query;
+                    solutions = ProcessQueries(result, query, request, out hasMoreSolutions);
+                    if (request.IsComplete(result))
+                    {
+                        //hasMoreSolutions = false;
+                        return;
+                    }
                 }
-            }
-            result._CurrentQuery = null;            
+            result._CurrentQuery = null;
         }
         private int ProcessQueries(Result result, SubQuery query, Request request, out bool hasMoreSolutions)
         {
@@ -895,7 +895,7 @@ namespace RTParser
             hasMoreSolutions = false;
             if (queryTemplates != null && queryTemplates.Count > 0)
             {
-               lock (queryTemplates)
+                lock (queryTemplates)
                     queryTemplates = new List<TemplateInfo>(query.Templates);
                 hasMoreSolutions = true;
                 {
@@ -925,7 +925,7 @@ namespace RTParser
                                 return solutions;
                             }
                             //break; // KHC: single vs. Multiple
-                            if ((createdOutput) && (((QuerySettingsReadOnly) request).ProcessMultipleTemplates == false))
+                            if ((createdOutput) && (((QuerySettingsReadOnly)request).ProcessMultipleTemplates == false))
                             {
                                 hasMoreSolutions = false;
                                 break;
@@ -1024,7 +1024,7 @@ namespace RTParser
 
             if (parentRequest != null)
             {
-                if (parentRequest != request)request.Graph = parentRequest.Graph;
+                if (parentRequest != request) request.Graph = parentRequest.Graph;
                 request.depth = parentRequest.depth + 1;
             }
 
@@ -1163,7 +1163,7 @@ namespace RTParser
             string outputSentence = processNode(templateNode, query,
                                                 request, result, request.Requester, handler,
                                                 protectChild, copyParent, out tagHandler);
-            if (tagHandler==null)
+            if (tagHandler == null)
             {
                 writeToLog("tagHandler = null " + output);
             }
@@ -1548,7 +1548,7 @@ namespace RTParser
             Console.WriteLine("*** DONE Lucene ***");
         }
 
-        private int napNum = 0;        
+        private int napNum = 0;
 
         private void Sleep16Seconds(int secs)
         {

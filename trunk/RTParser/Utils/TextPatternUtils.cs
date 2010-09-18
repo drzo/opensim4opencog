@@ -6,6 +6,21 @@ namespace RTParser.Utils
 {
     public class TextPatternUtils : StaticXMLUtils
     {
+
+        public static bool SplitOff(string args, string split, out string left, out string right)
+        {
+            int lastIndex = args.IndexOf(split);
+            if (lastIndex == -1)
+            {
+                left = args;
+                right = "";
+                return false;
+            }
+            left = args.Substring(0, lastIndex).Trim();
+            right = args.Substring(lastIndex + split.Length).Trim();
+            return true;
+        }
+
         internal static bool DifferentBesidesCase(string sentenceIn, string sentence)
         {
             return sentence.ToLower() != sentenceIn.ToLower();
@@ -86,25 +101,25 @@ namespace RTParser.Utils
         {
             if (name is String)
             {
-                return ((String) name).Length == 0;
+                return ((String)name).Length == 0;
             }
             if (IsNull(name)) return true;
-            return (name is Unifiable && ((Unifiable) name).IsEmpty);
+            return (name is Unifiable && ((Unifiable)name).IsEmpty);
         }
 
         public static bool IsNull(Object name)
         {
             if (ReferenceEquals(name, null)) return true;
-            return (name is Unifiable && ((Unifiable) name).Raw == null);
+            return (name is Unifiable && ((Unifiable)name).Raw == null);
         }
 
         public static bool IsEMPTY(Object name)
         {
             if (name is String)
             {
-                return ((String) name).Trim().Length == 0;
+                return ((String)name).Trim().Length == 0;
             }
-            return (name is Unifiable && ((Unifiable) name).Raw == null);
+            return (name is Unifiable && ((Unifiable)name).Raw == null);
         }
 
         public static bool IsUnknown(object unifiable)
@@ -120,7 +135,7 @@ namespace RTParser.Utils
             if (b) return true;
             if (unifiable is Unifiable)
             {
-                if (!((Unifiable) unifiable).IsWildCard()) return false;
+                if (!((Unifiable)unifiable).IsWildCard()) return false;
                 return true;
             }
             return false;
@@ -222,17 +237,17 @@ namespace RTParser.Utils
             string clean = text;
             clean = CleanWhitepaces(text, "*",
                                     (c0, c1) =>
-                                        {
-                                            if (char.IsLetterOrDigit(c1) || char.IsControl(c1)) return true;
-                                            if ("\"'".Contains("" + c1)) return false;
-                                            return false;
-                                        },
+                                    {
+                                        if (char.IsLetterOrDigit(c1) || char.IsControl(c1)) return true;
+                                        if ("\"'".Contains("" + c1)) return false;
+                                        return false;
+                                    },
                                     (c0, c1) =>
-                                        {
-                                            if (char.IsLetterOrDigit(c0) || char.IsControl(c0)) return true;
-                                            if ("\"'".Contains("" + c0)) return false;
-                                            return false;
-                                        });
+                                    {
+                                        if (char.IsLetterOrDigit(c0) || char.IsControl(c0)) return true;
+                                        if ("\"'".Contains("" + c0)) return false;
+                                        return false;
+                                    });
             return clean;
         }
     }

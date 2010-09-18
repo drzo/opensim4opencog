@@ -108,7 +108,7 @@ namespace RTParser
             res.writeToLog = writeToLog;
             res._CurrentQuery = new SubQuery(s, res, r);
             OnBotCreated(() => { res.Requestor = r.Requester = BotAsUser; });
-            r.IsTraced = this.IsTraced;            
+            r.IsTraced = this.IsTraced;
             r.StartedOn = DateTime.Now;
             r.depth = 0;
             // times out in 15 minutes
@@ -397,7 +397,7 @@ namespace RTParser
                     _PathToUserFiles = dir;
                     return HostSystem.ToRelativePath(dir, RuntimeDirectory);
                 }
-                foreach (string s in new[] {PersonalAiml, PathToAIML, PathToConfigFiles, RuntimeDirectory})
+                foreach (string s in new[] { PersonalAiml, PathToAIML, PathToConfigFiles, RuntimeDirectory })
                 {
                     if (s == null) continue;
                     string exists = HostSystem.Combine(s, "users");
@@ -500,7 +500,7 @@ namespace RTParser
 
         public static int BotNumberCreated;
 
-                
+
         public static readonly Dictionary<string, string[]> SettingsAliases = new Dictionary<string, string[]>();
 
         public bool IsTraced
@@ -573,9 +573,9 @@ namespace RTParser
             {
                 bool found = false; // _RuntimeDirectories.Remove(directory);
                 _RuntimeDirectories.Insert(0, directory);
-// ReSharper disable ConditionIsAlwaysTrueOrFalse
+                // ReSharper disable ConditionIsAlwaysTrueOrFalse
                 return found ? directory : null;
-// ReSharper restore ConditionIsAlwaysTrueOrFalse
+                // ReSharper restore ConditionIsAlwaysTrueOrFalse
             }
         }
 
@@ -757,7 +757,7 @@ namespace RTParser
 
                 //ParentProvider provider = new ParentProvider(() => GlobalSettings);
                 DefaultPredicates = new SettingsDictionary("bot.defaultpredicates", this, null);
-                DefaultPredicates = new SettingsDictionary("defaults", this, null);                
+                DefaultPredicates = new SettingsDictionary("defaults", this, null);
                 DefaultPredicates.InsertMetaProvider(GetRelationMetaProps);
                 HeardPredicates = new SettingsDictionary("chat.heardpredicates", this, null);
                 RegisterDictionary("heard", HeardPredicates);
@@ -785,6 +785,7 @@ namespace RTParser
 
                 // try a safe default setting for the settings xml file
                 // Checks for some important default settings
+                GlobalSettings.IsIdentityReadOnly = false;
                 SetSaneGlobals(GlobalSettings);
                 string pathToSettings = HostSystem.Combine(RuntimeDirectory,
                                                            HostSystem.Combine("config", "Settings.xml"));
@@ -793,6 +794,7 @@ namespace RTParser
                 // RE-Checks for some important default settings
                 SetSaneGlobals(GlobalSettings);
                 SetupConveration();
+                GlobalSettings.IsIdentityReadOnly = true;
             }
             finally
             {
@@ -878,7 +880,7 @@ namespace RTParser
             HostSystemCombine(pathToSettings, "log4j.xml");
 
             thiz.DefaultPredicates.loadSettings(HostSystemCombine(pathToSettings, "predicates.xml"), request);
-            thiz.DefaultPredicates.loadSettings(HostSystemCombine(pathToSettings, "properties.xml"), request);            
+            thiz.DefaultPredicates.loadSettings(HostSystemCombine(pathToSettings, "properties.xml"), request);
 
 
             thiz.Person2Substitutions.loadSettings(
@@ -1041,7 +1043,7 @@ namespace RTParser
             {
                 foreach (User u in BotUsers.Values)
                 {
-                    if (u.UserID.AsString().Contains(username) || username.Contains(u.UserID))
+                    if (u.UserID.Contains(username) || username.Contains(u.UserID))
                         u.RespondToChat = value;
                 }
             }
@@ -1145,12 +1147,12 @@ namespace RTParser
                 }
                 else
                 {
-                //    writeToLog("DEBUG9 Missing templateInfo " + node.OuterXml);
+                    //    writeToLog("DEBUG9 Missing templateInfo " + node.OuterXml);
                 }
             }
             return tag;
         }
-       
+
         internal AIMLTagHandler GetTagHandler00(User user, SubQuery query, Request request, Result result, XmlNode node, bool liText)
         {
             AIMLTagHandler tagHandler = getBespokeTags(user, query, request, result, node);
@@ -1360,7 +1362,7 @@ namespace RTParser
                         tagHandler = new soundcode(this, user, query, request, result, node);
                         break;
 
-                        // MSM
+                    // MSM
                     case "msm":
                         tagHandler = new msm(this, user, query, request, result, node);
                         break;
@@ -1485,7 +1487,7 @@ namespace RTParser
                         string name = node.Name.Substring(prefix.Key.Length);
                         XmlNode pn = node.ParentNode;
                         LineInfoElementImpl newnode = CopyNode(prefix.Value, node, false);
-                        XmlAttributeLineInfo atr = (XmlAttributeLineInfo) newnode.OwnerDocument.CreateAttribute("name");
+                        XmlAttributeLineInfo atr = (XmlAttributeLineInfo)newnode.OwnerDocument.CreateAttribute("name");
                         atr.ReadOnly = false;
                         atr.Value = name;
                         newnode.Attributes.Append(atr);
@@ -1558,7 +1560,7 @@ namespace RTParser
                     Type t = Type.GetType(typeName);
                     if (t == null) return null;
                     ConstructorInfo c = t.GetConstructor(TagHandler.CONSTRUCTOR_TYPES);
-                    return (AIMLTagHandler) c.Invoke(new object[] {this, user, query, request, result, node});
+                    return (AIMLTagHandler)c.Invoke(new object[] { this, user, query, request, result, node });
                 }
                 catch (Exception e)
                 {
@@ -1606,7 +1608,7 @@ namespace RTParser
             {
                 Type type = tagDLLTypes[i];
                 var typeCustomAttributes = type.GetCustomAttributes(false);
-                if (typeCustomAttributes.Length == 0 && typeof (AIMLTagHandler).IsAssignableFrom(type) &&
+                if (typeCustomAttributes.Length == 0 && typeof(AIMLTagHandler).IsAssignableFrom(type) &&
                     !type.IsAbstract && !type.IsInterface)
                 {
                     AddTagHandler(type);
@@ -2133,7 +2135,6 @@ The AIMLbot program.
             //BotAsUser.UserName = "heardselfsay";
             //BotUsers["heardselfsay"] = BotAsUser;            
             BotAsUser.UserName = myName;
-            BotAsUser.addSetting("name", myName);
             BotAsUser.removeSetting("userdir");
             NamePath = ToScriptableName(NameAsSet);
             BotAsUser.UserID = NamePath;
@@ -2188,10 +2189,10 @@ The AIMLbot program.
                 var tc = DLRConsole.TransparentCallers;
                 lock (tc)
                 {
-                    tc.Add(typeof (RTPBot));
-                    tc.Add(typeof (AIMLbot.Request));
-                    tc.Add(typeof (RequestImpl));
-                    tc.Add(typeof (Request));
+                    tc.Add(typeof(RTPBot));
+                    tc.Add(typeof(AIMLbot.Request));
+                    tc.Add(typeof(RequestImpl));
+                    tc.Add(typeof(Request));
                 }
                 if (StaticInitStarted) return;
                 StaticInitStarted = true;
@@ -2321,6 +2322,7 @@ The AIMLbot program.
         {
             get
             {
+                if (BotAsUser != null) return BotAsUser.UserID;
                 SettingsDictionary dict = GlobalSettings;
                 if (dict != null)
                 {
@@ -2333,7 +2335,10 @@ The AIMLbot program.
 
         public string BotID
         {
-            get { return UserID ?? "-BOT-ID-NULL-"; }
+            get {
+                if (BotAsUser != null) return BotAsUser.UserID;
+                return UserID ?? "-BOT-ID-NULL-";
+            }
             set { throw new NotImplementedException(); }
         }
 
@@ -2385,7 +2390,7 @@ The AIMLbot program.
                 ISettingsDictionary dict;
                 if (AllDictionaries.TryGetValue(key, out dict))
                 {
-                    return SDCAST(dict);
+                    return dict;
                 }
             }
             if (key == "predicates")
@@ -2396,7 +2401,7 @@ The AIMLbot program.
             User gUser = ExemplarUser;
             if (key == "globalpreds") return SDCAST(gUser);
             if (key == "allusers") return SDCAST(AllUserPreds);
-            var path = named.Split(new[] {'.'});
+            var path = named.Split(new[] { '.' });
             if (path.Length == 1)
             {
                 User user = FindUser(key);
@@ -2465,9 +2470,9 @@ The AIMLbot program.
             int loaded = 0;
             foreach (string p in GetSearchRoots(r))
             {
-                foreach (string s0 in new[] {"", type, type + "s",})
+                foreach (string s0 in new[] { "", type, type + "s", })
                 {
-                    foreach (string s1 in new[] {"", "." + type, ".xml", ".subst", ".properties",})
+                    foreach (string s1 in new[] { "", "." + type, ".xml", ".subst", ".properties", })
                     {
                         string named = HostSystem.Combine(p, path + s0 + s1);
                         if (HostSystem.FileExists(named))
@@ -2497,7 +2502,7 @@ The AIMLbot program.
 
         public void RegisterDictionary(ISettingsDictionary dict)
         {
-            RegisterDictionary(dict.NameSpace,dict);
+            RegisterDictionary(dict.NameSpace, dict);
         }
         public void RegisterDictionary(string named, ISettingsDictionary dict)
         {
@@ -2510,7 +2515,7 @@ The AIMLbot program.
         {
             lock (AllDictionaries)
             {
-                var path = key.Split(new[] {'.'});
+                var path = key.Split(new[] { '.' });
                 if (always || !AllDictionaries.ContainsKey(key)) AllDictionaries[key] = dict;
                 if (path.Length > 1)
                 {

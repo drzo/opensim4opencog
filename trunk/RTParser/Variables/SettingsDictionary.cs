@@ -86,7 +86,9 @@ namespace RTParser.Variables
         // fallbacks (therefore inherits)
         private List<ParentProvider> _listeners = new List<ParentProvider>();
         // fallbacks (therefore inherits)
-        private readonly PrefixProvider prefixProvideer;
+        private readonly PrefixProvider prefixProvider;
+        internal bool IsIdentityReadOnly = true;
+        internal bool SuspendUpdates = false;
 
         /// <summary>
         /// The bot this dictionary is associated with (only for writting log)
@@ -204,7 +206,7 @@ namespace RTParser.Variables
         /// </returns>
         public bool IsReadOnly
         {
-            get { return Unifiable.IsTrue(grabSetting("isReadOnly")); }
+            get { return SuspendUpdates || Unifiable.IsTrue(grabSetting("isReadOnly")); }
         }
 
         public string NameSpace
@@ -296,7 +298,7 @@ namespace RTParser.Variables
                         item.Attributes.Append(name);
                         root.AppendChild(item);
                     }
-                    foreach (var normalizedName in this.prefixProvideer._prefixes)
+                    foreach (var normalizedName in this.prefixProvider._prefixes)
                     {
                         XmlNode item = result.CreateNode(XmlNodeType.Element, "prefixes", "");
                         XmlAttribute name = result.CreateAttribute("name");
@@ -359,11 +361,11 @@ namespace RTParser.Variables
             IsTraced = true;
             bot.RegisterDictionary(name, this);
             if (parent != null) _fallbacks.Add(parent);
-            prefixProvideer = new PrefixProvider();
-            string prefixName = name + ".prefixProvideer";
-            prefixProvideer.NameSpace = prefixName;
-            ParentProvider pp = () => prefixProvideer;
-            bot.RegisterDictionary(prefixName, prefixProvideer);
+            prefixProvider = new PrefixProvider();
+            string prefixName = name + ".prefixProvider";
+            prefixProvider.NameSpace = prefixName;
+            ParentProvider pp = () => prefixProvider;
+            bot.RegisterDictionary(prefixName, prefixProvider);
             var dict = FindDictionary(prefixName, () => this);
             IsTraced = false;
             _fallbacks.Add(pp);
@@ -394,16 +396,26 @@ namespace RTParser.Variables
                     if (HostSystem.FileExists(pathToSettings))
                     {
                         XmlDocumentLineInfo xmlDoc = new XmlDocumentLineInfo(pathToSettings, true);
+                        bool prev = IsIdentityReadOnly;
                         try
                         {
                             var stream = HostSystem.GetStream(pathToSettings);
                             xmlDoc.Load(stream);
                             HostSystem.Close(stream);
+                            IsIdentityReadOnly = false;
                             this.loadSettings(xmlDoc, request);
+                        }
+                        catch (ChatSignal e)
+                        {
+                            throw;
                         }
                         catch (Exception e)
                         {
                             writeToLog("ERROR loadSettings '{1}'\n {0} ", e, pathToSettings);
+                        }
+                        finally
+                        {                            
+                            IsIdentityReadOnly = prev;
                         }
                     }
                     else
@@ -764,7 +776,7 @@ namespace RTParser.Variables
             }
             SettingsDictionary settingsDict = ToSettingsDictionary(dict);
             if ((lower == "parent" || lower == "override" || lower == "fallback" || lower == "listener"
-                || lower == "provider" || lower == "syncon" || lower == "synchon" || lower == "prefixes"
+                || lower == "provider" || lower == "synchon" || lower == "prefixes"
                 || lower == "metaproviders" || lower == "formatter"))
             {
                 string name = RTPBot.GetAttribValue(myNode, "value,dict,name", null);
@@ -784,7 +796,7 @@ namespace RTParser.Variables
                         case "parent":
                             settingsDict.InsertFallback(pp);
                             return;
-                        case "syncon":
+                        case "synchon":
                         case "listener":
                             settingsDict.InsertListener(pp);
                             return;
@@ -897,21 +909,24 @@ namespace RTParser.Variables
 
         public ParentProvider FindDictionary(string name, ParentProvider fallback)
         {
-            ParentProvider pp = FindDictionary0(name, fallback);
-            if (pp != null) return pp.Invoke;
-
-            if (name.EndsWith(".prefixProvideer"))
+            if (name == null)
             {
-                int keylen = name.Length - ".prefixProvideer".Length;
+                return fallback;
+            }
+            if (name.EndsWith(".prefixProvider"))
+            {
+                int keylen = name.Length - ".prefixProvider".Length;
 
                 ParentProvider dict = FindDictionary(name.Substring(0, keylen), fallback);
                 if (dict != null)
                 {
                     var sd = ToSettingsDictionary(dict());
                     if (sd != null)
-                        return ToParentProvider(sd.prefixProvideer);
+                        return ToParentProvider(sd.prefixProvider);
                 }
             }
+            ParentProvider pp = FindDictionary0(name, fallback);
+            if (pp != null) return pp.Invoke;
             Func<ParentProvider> provider0 = () => FindDictionary0(name, fallback);      
             return () => new ProvidedSettingsDictionary(name, provider0);
         }
@@ -922,7 +937,7 @@ namespace RTParser.Variables
             if (rtpbotobjCol == null || rtpbotobjCol.Count == 0)
             {
                 string clipIt;
-                var prep = prefixProvideer.GetChildPrefixed(name, out clipIt);
+                var prep = prefixProvider.GetChildPrefixed(name, out clipIt);
                 if (prep != null)
                 {
                     if (clipIt == ".") return prep;
@@ -1058,6 +1073,11 @@ namespace RTParser.Variables
                 }
                 if (normalizedName.Length > 0)
                 {
+                    if (!AllowedNameValue(name, value))
+                    {
+                        SettingsLog("!NameValueCheck ADD Setting Local '" + name + "'=" + str(value) + " ");
+                        return true;
+                    }
                     SettingsLog("ADD LOCAL '" + name + "'=" + str(value) + " ");
                     found = this.removeSetting(name);
                     if (value != null)
@@ -1075,8 +1095,19 @@ namespace RTParser.Variables
             return !found;
         }
 
+        protected bool AllowedNameValue(string name, Unifiable value)
+        {            
+            if (IsIdentityReadOnly && (name.ToLower() == "name" || name.ToLower() == "id"))
+            {
+                writeToLog("NameValueCheck " + name + " = " + value);
+                return false;
+            }
+            return !SuspendUpdates;
+        }
+
         private void updateListeners(string name, Unifiable value, bool locally, bool addedNew)
         {
+            if (SuspendUpdates) return;
             foreach (var list in _listeners)
             {
                 var l = list();
@@ -1148,6 +1179,7 @@ namespace RTParser.Variables
         {
             lock (orderedKeys)
             {
+                if (SuspendUpdates) return true;
                 name = TransformName(name);
                 string normalizedName = TransformKey(name);
                 bool ret = orderedKeys.Contains(name);
@@ -1205,6 +1237,7 @@ namespace RTParser.Variables
         /// <param name="value">the new value</param>
         public bool updateSetting(string name, Unifiable value)
         {
+            if (SuspendUpdates) return true;
             value = TransformValue(value);
             foreach (var setname in GetSettingsAliases(name))
             {
@@ -1239,15 +1272,23 @@ namespace RTParser.Variables
                     if (makedvars.Contains(normalizedName))
                     {
                         SettingsLog("MASKED Not Update Local '" + name + "'=" + str(value) + " keeped " + str(old));
-                        return false;
                     }
-                    updateListeners(name, value, true, false);
-                    this.removeFromHash(name);
-                    SettingsLog("UPDATE Setting Local '" + name + "'=" + str(value));
-                    this.settingsHash.Add(normalizedName, value);
-                    return true;
+                    else
+                    {
+                        updateListeners(name, value, true, false);
+                        if (AllowedNameValue(name, value))
+                        {
+                            this.removeFromHash(name);
+                            SettingsLog("UPDATE Setting Local '" + name + "'=" + str(value));
+                            this.settingsHash.Add(normalizedName, value);
+                            return true;
+                        }
+                        else
+                        {
+                            SettingsLog("NOT_UPDATE Setting Local '" + name + "'=" + str(value));
+                        }
+                    }
                 }
-
                 // before fallbacks
                 if (makedvars.Contains(normalizedName))
                 {
@@ -1289,7 +1330,7 @@ namespace RTParser.Variables
             {
                 _overides.Clear();
                 _fallbacks.Clear();
-                _fallbacks.Add(() => prefixProvideer);
+                _fallbacks.Add(() => prefixProvider);
                 makedvars.Clear();
             }
         }
@@ -1297,7 +1338,7 @@ namespace RTParser.Variables
         public void clearSyncs()
         {
             _listeners.Clear();
-            _listeners.Add(() => prefixProvideer);
+            _listeners.Add(() => prefixProvider);
         }
 
         private HashSet<string> makedvars = new HashSet<string>();
@@ -1607,12 +1648,12 @@ namespace RTParser.Variables
             {
                 lock (orderedKeys)
                 {
-                    IEnumerable<string> prefixProvideerSettingNames = prefixProvideer.SettingNames(depth);
-                    var list = prefixProvideerSettingNames as List<String>;
+                    IEnumerable<string> prefixProviderSettingNames = prefixProvider.SettingNames(depth);
+                    var list = prefixProviderSettingNames as List<String>;
                     if (list==null)
                     {
                         list = new List<string>();
-                        list.AddRange(prefixProvideerSettingNames);
+                        list.AddRange(prefixProviderSettingNames);
                     }
                     if (list.Count > 0)
                     {
@@ -1988,7 +2029,7 @@ namespace RTParser.Variables
         public void AddChild(string prefix, ParentProvider dict)
         {
             ISettingsDictionary sdict = dict();
-            prefixProvideer.AddChild(prefix, dict);
+            prefixProvider.AddChild(prefix, dict);
         }
 
         public void AddGetSetProperty(string topic, GetUnifiable getter, Action<Unifiable> setter)
@@ -2083,7 +2124,7 @@ namespace RTParser.Variables
 
         public void AddPrefix(string prefix, ParentProvider dict)
         {
-            prefixProvideer.AddChild(prefix, dict);
+            prefixProvider.AddChild(prefix, dict);
         }
     }
 
