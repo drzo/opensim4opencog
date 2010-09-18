@@ -41,7 +41,7 @@ namespace RTParser.Utils
         {
             get
             {
-                if (_forcedSettings==null)
+                if (_forcedSettings == null)
                 {
                     _forcedSettings = new QuerySettingsImpl(QuerySettings.CogbotDefaults);
                 }
@@ -77,7 +77,7 @@ namespace RTParser.Utils
         /// <summary>
         /// All the &lt;topic&gt;s (if any) associated with this database
         /// </summary>
-        internal readonly Dictionary<String, TopicInfo> Topics= new Dictionary<string, TopicInfo>();
+        internal readonly Dictionary<String, TopicInfo> Topics = new Dictionary<string, TopicInfo>();
 
         private GraphMaster _parent;
 
@@ -97,7 +97,7 @@ namespace RTParser.Utils
         public bool SilentTagsInPutParent { get; set; }
         public int Size;
         public String Srai;
-        public  bool UnTraced;
+        public bool UnTraced;
         // ReSharper disable FieldCanBeMadeReadOnly.Local
         private List<TemplateInfo> UnusedTemplates;
         public static readonly Dictionary<string, XmlNode> PatternNodes = new Dictionary<string, XmlNode>();
@@ -414,7 +414,7 @@ namespace RTParser.Utils
                 rootNode = this.PostParentRootNode;
             }
             Node thiz = rootNode.addPathNodeChilds(generatedPath);
-            
+
             int countBefore = thiz.TemplateInfoCount;
 
             TemplateInfo info0 = thiz.addTerminal(templateNode, category, guard, thatInfo, this, patternInfo,
@@ -555,7 +555,7 @@ namespace RTParser.Utils
             //  lock (LockerObject)
             {
                 bool b = getQueries000(rootNode, upath, request, matchstate, index, wildcard, toplevel);
-                if (toplevel.IsMaxedOut && toplevel.TemplateCount==0) 
+                if (toplevel.IsMaxedOut && toplevel.TemplateCount == 0)
                 {
                     return false;
                 }
@@ -1109,5 +1109,77 @@ namespace RTParser.Utils
         //}
 
         #endregion
+
+        public bool DoGraphCommand(string cmd, OutputDelegate console, bool showHelp, string args, Request request)
+        {
+            PrintOptions printOptions = request.WriterOptions ?? PrintOptions.CONSOLE_LISTING;
+            printOptions.ClearHistory();
+
+            string match;
+            string graphname;
+            if (!TextPatternUtils.SplitOff(args, "-", out graphname, out match))
+            {
+                graphname = "current";
+                match = ".*";
+            }
+
+            if (showHelp)
+            {
+                console("\n Example of <tmatch>s: ");
+                console("\n  " + @"matches only default patterns:  ^\<category\>\<pattern\>\*\</pattern\>\<te");
+                console("\n  matches all: .*");
+            }
+
+            if (showHelp) console("@ls <graph> - <tmatch>   --  lists all graph elements matching some elements");
+            if (cmd == "ls")
+            {
+                var matchingGraphs = request.GetMatchingGraphs(graphname, this);
+                foreach (KeyValuePair<string, GraphMaster> ggg in matchingGraphs)
+                {
+                    string n = ggg.Key;
+                    GraphMaster G = ggg.Value;
+                    var cis = G.GetCategoriesMatching(match);
+                    console("-----------------------------------------------------------------");
+                    console("LISTING: count=" + cis.Count + " local=" + G + " key='" + n + "'");
+                    G.Listing(console, match, printOptions);
+                    console("-----------------------------------------------------------------");
+                }
+                return true;
+            }
+
+            if (showHelp) console("@disable <graph> - <tmatch>   --  disables all graph elements matching <tmatch>");
+            if (cmd == "disable")
+            {
+                var matchingGraphs = request.GetMatchingGraphs(graphname, this);
+                foreach (var ggg in matchingGraphs)
+                {
+                    string n = ggg.Key;
+                    GraphMaster G = ggg.Value;
+                    var cis = G.GetCategoriesMatching(match);
+                    console("-----------------------------------------------------------------");
+                    console("DISABLE: count=" + cis.Count + " local=" + G + " key='" + n + "'");
+                    foreach (var ci in cis) G.DisableTemplate(ci.Template);
+                }
+                return true;
+            }
+
+            if (showHelp) console("@clear <graph> - <tmatch>   --  clears all graph elements matching <tmatch>");
+            if (cmd == "clear")
+            {
+                var matchingGraphs = request.GetMatchingGraphs(graphname, this);
+                foreach (var ggg in matchingGraphs)
+                {
+                    string n = ggg.Key;
+                    GraphMaster G = ggg.Value;
+                    var cis = G.GetCategoriesMatching(match);
+                    console("-----------------------------------------------------------------");
+                    console("CLEAR: count=" + cis.Count + " local=" + G + " key='" + n + "'");
+                    foreach (var ci in cis) G.RemoveTemplate(ci.Template);
+                }
+                return true;
+            }
+            return false;
+        }
+
     }
 }

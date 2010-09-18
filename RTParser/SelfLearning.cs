@@ -244,11 +244,13 @@ namespace RTParser
             newuser.UserID = newkey;
             newuser.UserName = newname;
             OnBotCreated(() => graph.AddGenlMT(GraphMaster, newuser.WriteLine));
+            newuser.Predicates.IsIdentityReadOnly = false;
             newuser.Predicates.addSetting("name", newname);
             newuser.Predicates.addSetting("id", newkey);
             newuser.Predicates.InsertFallback(() => AllUserPreds);
             newuser.SyncDirectory(GetUserDir(newkey));
             if (graph.Size == 0) graph.UnTraced = true;
+            newuser.Predicates.IsIdentityReadOnly = true;
             return graph;
         }
     }

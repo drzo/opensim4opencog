@@ -167,33 +167,86 @@ namespace RTParser
         /// <summary>
         /// The GUID that identifies this user to the bot
         /// </summary>
-        public Unifiable UserID
+        public string UserID
         {
-            get { return this.id ?? Predicates.grabSetting("id"); }
+            get
+            {
+                string uid = this.id;
+                if (string.IsNullOrEmpty(uid))
+                {
+                    uid = Predicates.grabSettingNoDebug("id");
+                }
+                return uid;
+            }
             set
             {
+                if (value == null) return;
+                string puser = UserID;
+                if (puser != null && puser.ToLower() == value.ToLower())
+                {
+                    return;
+                }
+                if (!LegalNameCheck(value)) return;
                 this.id = value;
-                if (Predicates != null) Predicates.addSetting("id", value);
+                if (Predicates == null) return;
+                var prev = Predicates.IsIdentityReadOnly;
+                try
+                {
+                    Predicates.IsIdentityReadOnly = false;
+                    Predicates.addSetting("id", value);
+                }
+                finally
+                {
+                    Predicates.IsIdentityReadOnly = prev;
+                }
             }
+        }
+
+        private bool LegalNameCheck(string value)
+        {
+            if (value.ToLower() == "friend")
+            {
+                WriteLine("Friend: " + value);
+                return false;
+            }
+            return true;
         }
 
         public string UserName
         {
             get
             {
-                return GetValueORElse(this.Predicates, "name", () => UserID.AsString().Replace("_", " "));
+                return GetValueORElse(this.Predicates, "name", () => UserID.Replace("_", " "));
             }
 
             set
             {
                 if (value == null) return;
-                if (bot.IsLastKnownUser(value)) return;
+                string puser = UserName;
+                if (puser != null && puser.ToLower() == value.ToLower())
+                {
+                    return;
+                }
+                if (!LegalNameCheck(value))
+                {
+                    return;
+                }
+                if (bot.IsLastKnownUser(value))
+                {
+                    return;
+                }
                 string saved = value.Replace("_", " ").Trim();
                 if (saved.Length == 0) return;
-                if (this.Predicates != null)
+                if (Predicates == null) return;
+                var prev = Predicates.IsIdentityReadOnly;
+                try
                 {
-                    //Predicates.addSetting("id", bot.KeyFromUsername(value));
-                    Predicates.addSetting("name", saved);
+                    Predicates.IsIdentityReadOnly = false;
+                    Predicates.addSetting("name", value);
+                }
+                finally
+                {
+                    Predicates.IsIdentityReadOnly = prev;
                 }
             }
         }
@@ -343,8 +396,8 @@ namespace RTParser
                 //this.Predicates.AddGetSetProperty("topic", new CollectionProperty(_topics, () => bot.NOTOPIC));
                 this.Predicates.addSetting("topic", bot.NOTOPIC);
                 //this.Predicates.InsertFallback(() => bot.DefaultPredicates);
-                Predicates.addSetting("id", userID);
-                Predicates.addSetting("name", userID);
+                UserID = userID; 
+                UserName = userID;
                 //this.Predicates.addSetting("topic", "NOTOPIC");
                 SaveTimer = new Timer(SaveOften, this, new TimeSpan(0, 5, 0), new TimeSpan(0, 5, 0));
                 needsSave = true;
@@ -582,7 +635,7 @@ namespace RTParser
             return Unifiable.Empty;
         }
 
-        public bool SuspendAdd;
+        public bool SuspendAddResultToUser;
         private int SailentResultCount
         {
             get
@@ -600,13 +653,13 @@ namespace RTParser
         /// <param name="latestResult">the latest result from the bot</param>
         public void addResult(Result latestResult)
         {
-            if (SuspendAdd)
+            if (SuspendAddResultToUser)
             {
                 Request r = latestResult.request;
                 if (r != null)
                 {
                     if (r.IsTraced)
-                        RTPBot.writeDebugLine("AIMLTRACE: skipping result " + latestResult);
+                        RTPBot.writeDebugLine("AIMLTRACE: SuspendAddResultToUser, " + latestResult);
                 }
                 return;
             }

@@ -31,11 +31,11 @@ namespace RTParser.AIMLTagHandlers
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
-            
+
         }
 
         protected override Unifiable ProcessChange()
-        {         
+        {
             IsStarted = true;
             isRecursive = true;
             var recursiveResult = Unifiable.CreateAppendable();
@@ -116,12 +116,17 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessLoad(LoaderOptions loaderOptions)
         {
-            if (CheckNode("learn,load"))
+            if (CheckNode("learn,load,graph"))
             {
                // LoaderOptions loaderOptions = loaderOptions0;// ?? LoaderOptions.GetDefault(request);
+                
+                //recurse here? 
+                bool outRecurse;                
+                if (TryParseBool(templateNode, "recurse", out outRecurse))
+                {
+                    loaderOptions.recurse = outRecurse;
+                }
 
-                loaderOptions.recurse = Unifiable.IsLogicTF(GetAttribValue("recurse", loaderOptions.recurse ? "True" : "False"), query);
-                //recurse here?
                 GraphMaster g = request.Graph;
                 var g0 = g;
                 String graphName = GetAttribValue("graph", null);
@@ -131,26 +136,32 @@ namespace RTParser.AIMLTagHandlers
                     if (g != null) request.Graph = g;
                 }
                 Unifiable path = GetAttribValue("filename,uri,file,url,dir,path,pathname,directory", null);
+                string command = GetAttribValue("command,cmd", null);
                 try
                 {
+                    //templateNode.LocalName
                     string documentInfo =  DocumentInfo();;
+                    loaderOptions = request.LoadOptions;
+                    request.LoadingFrom = documentInfo;
+                    loaderOptions.CtxGraph = request.Graph;
+                    string innerXML = templateNode.InnerXml.TrimStart(isValueSetChars).Trim(" \n\r\t".ToCharArray());
+
+
+                    if (!string.IsNullOrEmpty(command))
+                    {
+                        string more = "";
+                        if (!string.IsNullOrEmpty(innerXML))
+                        {
+                            more = " - " + innerXML;
+                        }
+                        TargetBot.BotDirective(request, "@" + command + " " + request.Graph.ScriptingName + more,
+                                               writeToLog);
+                        //QueryHasSuceededN++;
+                    }
                     {
                         try
                         {
-                            loaderOptions = request.LoadOptions;
-                            request.LoadingFrom = documentInfo;
-                            string innerXML = templateNode.InnerXml.TrimStart(isValueSetChars);
-                            //Unifiable templateNodeInnerText = innerXML;
-                            if (innerXML.Length > 0)
-                            {
-                                //  templateNodeInnerText = Recurse();
-                            }
-                            else
-                            {
-                                // templateNodeInnerText = s;
-                            }
-
-                            if (innerXML.Contains("<"))
+                            if (!string.IsNullOrEmpty(innerXML) && innerXML.Contains("<"))
                             {
                                 try
                                 {
@@ -169,9 +180,7 @@ namespace RTParser.AIMLTagHandlers
                             else
                             {
                                 path = path ?? innerXML;
-                                loaderOptions.LoadingFrom0 = DocumentInfo();
                                 loaderOptions.Loading0 = path;
-                                loaderOptions.CtxGraph = request.Graph;
                                 int forms = request.Loader.loadAIMLURI(path, loaderOptions);
                                 QueryHasSuceededN++;
                                 return "" + forms; // Succeed();

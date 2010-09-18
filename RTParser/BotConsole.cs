@@ -31,7 +31,7 @@ namespace RTParser
     /// </summary>
     public partial class RTPBot
     {
-        private readonly Dictionary<string, SystemExecHandler> ConsoleCommands = new Dictionary<string, SystemExecHandler>();        
+        private readonly Dictionary<string, SystemExecHandler> ConsoleCommands = new Dictionary<string, SystemExecHandler>();
 
         public static string AIMLDEBUGSETTINGS =
             "clear -spam +user +bina +error +aimltrace +cyc -dictlog -tscore +loaded";
@@ -53,7 +53,7 @@ namespace RTParser
                                                           };
 
         public static readonly TextFilter LoggedWords = new TextFilter(RUNTIMESETTINGS_RADEGAST)
-                                                            {                                                                
+                                                            {
                                                             }; //maybe should be ERROR", "STARTUP
 
 
@@ -217,7 +217,7 @@ namespace RTParser
                     if (s.StartsWith("-"))
                     {
                         gettingUsername = false;
-                        writeLine("passing option '"+s+"' to another program");
+                        writeLine("passing option '" + s + "' to another program");
                         continue;
                     }
                     if (gettingUsername)
@@ -351,7 +351,7 @@ namespace RTParser
             if (input == "") return false;
             if (input.StartsWith("@"))
             {
-                input = input.TrimStart(new[] {' ', '@'});
+                input = input.TrimStart(new[] { ' ', '@' });
             }
             User myUser = request.Requester ?? LastUser ?? FindOrCreateUser(UNKNOWN_PARTNER);
             int firstWhite = input.IndexOf(' ');
@@ -373,23 +373,16 @@ namespace RTParser
                     "@withuser <user> - <text>  -- (aka. simply @)  runs text/command intentionally setting LastUser");
             if (cmd == "withuser" || cmd == "@")
             {
-                int lastIndex = args.IndexOf("-");
-                string user = myUser.UserName;
-                if (lastIndex > -1)
+                string said;
+                string user;
+                if (!SplitOff(args, "-", out user, out said))
                 {
-                    user = args.Substring(0, lastIndex).Trim();
-                    input = args.Substring(lastIndex + 1).Trim();
+                    user = myUser.UserName;
+                    said = args;
                 }
-                Result res = GlobalChatWithUser(input, user, null, writeDebugLine, true);
-                // detect a uer "rename"
-                string uname = myUser.UserName;
-                if (user.ToLower() != uname.ToLower())
-                {
-                    var LU = LastUser;
-                    LastUser = ChangeUser(user, uname);
-                    DLRConsole.SYSTEM_ERR_WRITELINE("ChangeUser: {0}->{1}   {2}->{3}", LU, LastUser, user, uname);
-                    //BotDirective(request, "@chuser " + uname, DEVNULL);
-                }
+                Result res = GlobalChatWithUser(said, user, null, writeDebugLine, true);
+                // detect a user "rename"
+                DetectUserChange(myUser, user);
                 OutputResult(res, console, false);
                 return true;
             }
@@ -399,16 +392,18 @@ namespace RTParser
                     "@locally <user> - <text>  -- runs text/command not intentionally not setting LastUser");
             if (cmd == "locally" || cmd == "@")
             {
-                int lastIndex = args.IndexOf("-");
-                string user = myUser.UserName;
-                if (lastIndex > -1)
+                string said;
+                string user;
+                if (!SplitOff(args, "-", out user, out said))
                 {
-                    user = args.Substring(0, lastIndex).Trim();
-                    input = args.Substring(lastIndex + 1).Trim();
+                    user = myUser.UserName;
+                    said = args;
                 }
-                Result res = GlobalChatWithUser(input, user, null, writeDebugLine, true);
+                Result res = GlobalChatWithUser(said, user, null, writeDebugLine, true);
+                // detect a user "rename"
+                DetectUserChange(myUser, user);
                 User theResponder = res.Responder ?? res.request.Responder;
-                if (theResponder==null)
+                if (theResponder == null)
                 {
                     theResponder = (myUser == BotAsUser) ? request.Requester : BotAsUser;
                     writeToLog("Making the responder " + theResponder);
@@ -452,7 +447,7 @@ namespace RTParser
                                                                         .Split(" \r\n\t".ToCharArray(),
                                                                                StringSplitOptions.RemoveEmptyEntries)) +
                                 "'],Out),writeq('----------------------------------------------'),writeq(Out),nl,halt.";
-                CSPrologMain.Main(new[] {callme});
+                CSPrologMain.Main(new[] { callme });
                 return true;
             }
 
@@ -469,17 +464,31 @@ namespace RTParser
                 console(args);
                 return true;
             }
-            if (showHelp) console("@load <uri>");
+            if (showHelp) console("@load <graph> - <uri>");
             if (cmd == "load")
             {
-                if (Loader == null)
+                string graphname;
+                string files;
+                if (!SplitOff(args, "-", out graphname, out files))
                 {
-                    Loader = new AIMLLoader(this, request);
+                    graphname = "current";
+                    files = args;
                 }
+                GraphMaster G = GetGraph(graphname, request.Graph);
+                AIMLLoader loader = GetLoader(request);
                 LoaderOptions reqLoadOptionsValue = request.LoadOptions.Value;
-                Loader.loadAIMLURI(args, reqLoadOptionsValue);
-                // maybe request.TargetBot.ReloadHooks.Add(() => request.Loader.loadAIMLURI(args, reqLoadOptionsValue));
-                console("Done with " + args);
+                var prev = request.Graph;
+                try
+                {
+                    request.Graph = G;
+                    loader.loadAIMLURI(files, reqLoadOptionsValue);
+                    // maybe request.TargetBot.ReloadHooks.Add(() => request.Loader.loadAIMLURI(args, reqLoadOptionsValue));
+                    console("Done with " + files);
+                }
+                finally
+                {
+                    request.Graph = prev;
+                }
                 return true;
             }
             if (showHelp) console("@say <text> -- fakes that the bot just said it");
@@ -599,7 +608,7 @@ namespace RTParser
                 }
 
                 RequestImpl ur = GetRequest(args, myUser);
-                
+
                 // Adds findall to request
                 QuerySettings.ApplySettings(QuerySettings.FindAll, ur);
 
@@ -618,47 +627,7 @@ namespace RTParser
                 return myUser.DoUserCommand(args, console);
             }
 
-            if (showHelp)
-                console(
-                    "@ls <graph> - * --  lists all graph elements matching some elements \n Example that lists only efualt patterns: " +
-                    @"@ls ^\<category\>\<pattern\>\*\</pattern\>\<te");
-
-            if (cmd == "ls")
-            {
-                int lastIndex = args.IndexOf("-");
-                string graphname = "current";
-                string match = ".*";
-                if (lastIndex > -1)
-                {
-                    graphname = args.Substring(0, lastIndex).Trim();
-                    match = args.Substring(lastIndex + 1).Trim();
-                }
-                if (graphname == "*")
-                {
-                    foreach (KeyValuePair<string, GraphMaster> ggg in GraphMaster.CopyOf(GraphsByName))
-                    {
-                        console("-----------------------------------------------------------------");
-                        string n = ggg.Key;
-                        GraphMaster gm = ggg.Value;
-                        console("value=" + gm + " key='" + n + "'");
-                        gm.Listing(console, match, printOptions);
-                        console("-----------------------------------------------------------------");
-                    } 
-                    foreach (KeyValuePair<string, GraphMaster> ggg in GraphMaster.CopyOf(LocalGraphsByName))
-                    {
-                        console("-----------------------------------------------------------------");
-                        string n = ggg.Key;
-                        GraphMaster gm = ggg.Value;
-                        console("local=" + gm + " key='" + n + "'");
-                        gm.Listing(console, match, printOptions);
-                        console("-----------------------------------------------------------------");
-                    }
-                    return true;
-                }
-                GraphMaster G = GetGraph(graphname, myUser.ListeningGraph);
-                G.Listing(console, match, printOptions);
-                return true;
-            }
+            if (request.Graph.DoGraphCommand(cmd, console, showHelp, args, request)) return true;
 
             if (showHelp) console("@chgraph <graph> - changes the users graph");
             if (cmd == "graph" || cmd == "chgraph" || cmd == "cd")
@@ -789,25 +758,25 @@ namespace RTParser
                 int n = 0;
                 IList<Thread> botCommandThreads = ThreadList;
                 List<string> list = new List<string>();
-                if(false)lock (botCommandThreads)
-                {
-                    int num = botCommandThreads.Count;
-                    foreach (Thread t in botCommandThreads)
+                if (false) lock (botCommandThreads)
                     {
-                        n++;
-                        num--;
-                        //System.Threading.ThreadStateException: Thread is dead; state cannot be accessed.
-                        //  at System.Threading.Thread.IsBackgroundNative()
-                        if (!t.IsAlive)
+                        int num = botCommandThreads.Count;
+                        foreach (Thread t in botCommandThreads)
                         {
-                            list.Add(string.Format("{0}: {1} IsAlive={2}", num, t.Name, t.IsAlive));
-                        }
-                        else
-                        {
-                            list.Insert(0, string.Format("{0}: {1} IsAlive={2}", num, t.Name, t.IsAlive));
+                            n++;
+                            num--;
+                            //System.Threading.ThreadStateException: Thread is dead; state cannot be accessed.
+                            //  at System.Threading.Thread.IsBackgroundNative()
+                            if (!t.IsAlive)
+                            {
+                                list.Add(string.Format("{0}: {1} IsAlive={2}", num, t.Name, t.IsAlive));
+                            }
+                            else
+                            {
+                                list.Insert(0, string.Format("{0}: {1} IsAlive={2}", num, t.Name, t.IsAlive));
+                            }
                         }
                     }
-                }
                 int found = 0;
                 lock (TaskQueueHandler.TaskQueueHandlers)
                 {
@@ -921,7 +890,7 @@ namespace RTParser
                                 {
                                     if (t.IsAlive)
                                     {
-                                      //  aborted++;
+                                        //  aborted++;
                                         t.Abort();
                                     }
                                     t.Join();

@@ -83,7 +83,7 @@ namespace RTParser.Utils
             {
                 request.LoadingFrom = loaderOptions.LoadingFrom0 = DocumentInfo();
                 vv = ProcessLoad(loaderOptions);
-                if (!Unifiable.IsNullOrEmpty(vv))
+                if (!IsNullOrEmpty(vv))
                 {
                     RecurseResult = vv;
                 }

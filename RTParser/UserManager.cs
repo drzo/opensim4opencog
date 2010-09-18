@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using MushDLR223.ScriptEngines;
+using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
 using RTParser.Utils;
 using RTParser.Variables;
@@ -774,6 +775,17 @@ namespace RTParser
             }
         }
 
+        public void DetectUserChange(User myUser, string wasNamed)
+        {
+            string uname = myUser.UserName;
+            if (wasNamed.ToLower() != uname.ToLower())
+            {
+                var LU = LastUser;
+                LastUser = ChangeUser(wasNamed, uname);
+                DLRConsole.SYSTEM_ERR_WRITELINE("ChangeUser: {0}->{1}   {2}->{3}", LU, LastUser, wasNamed, uname);
+                //BotDirective(request, "@chuser " + uname, DEVNULL);
+            }
+        }
 
         public string CleanupFromname(string fromname)
         {
