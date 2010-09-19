@@ -1096,11 +1096,16 @@ namespace RTParser.Variables
         }
 
         protected bool AllowedNameValue(string name, Unifiable value)
-        {            
+        {
             if (IsIdentityReadOnly && (name.ToLower() == "name" || name.ToLower() == "id"))
             {
-                writeToLog("NameValueCheck " + name + " = " + value);
-                return false;
+                string s = (string)value;
+                if (s == null || TextPatternUtils.IsUnknown(value) || s.Length < 3 || s.ToLower() == "friend")
+                {
+                    writeToLog("NameValueCheck " + name + " = " + value);
+                    return false;
+                }
+                return true;
             }
             return !SuspendUpdates;
         }

@@ -80,6 +80,7 @@ namespace RTParser.Utils
         {
             get
             {
+                if (TheRequest.SuspendSearchLimits) return false;
                 if (TemplateCount >= MaxTemplates)
                 {
                     return true;

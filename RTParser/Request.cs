@@ -99,6 +99,7 @@ namespace RTParser
         AIMLTagHandler LastHandler { get; set; }
         ChatLabel PushScope { get; }
         ChatLabel CatchLabel { get; }
+        SideEffectStage Stage { get; set; }
         // inherited from base  string GraphName { get; set; }
         ISettingsDictionary GetSubstitutions(string name, bool b);
         GraphMaster GetGraph(string srai);
@@ -267,6 +268,7 @@ namespace RTParser
         public RequestImpl(string rawInput, User user, RTPBot bot, Request parent, User targetUser)
             :  base(bot.GetQuerySettings()) // Get query settings intially from user
         {
+            this.Stage = SideEffectStage.UNSTARTED;
             qsbase = this;
             if (parent != null)
             {
@@ -275,7 +277,7 @@ namespace RTParser
             }
             else
             {
-                ChatInput = bot.GetParsedUserInputSentences(this, rawInput);
+                ChatInput = ParsedSentences.GetParsedUserInputSentences(this, rawInput);
             }
             Request pmaybe = null;
             DebugLevel = -1;
@@ -689,6 +691,7 @@ namespace RTParser
                 w += "MaxOutputs ";
             }
 
+            if (SuspendSearchLimits) return WhyComplete;
             if (result1.SubQueries.Count >= qs.MaxPatterns)
             {
                 if (result1.OutputSentenceCount > 0)
@@ -874,6 +877,8 @@ namespace RTParser
             get { return _label; }
         }
 
+        public SideEffectStage Stage{ get; set;}
+
         public ISettingsDictionary GetSubstitutions(string named, bool createIfMissing)
         {
             return TargetBot.GetDictionary(named, "substitutions", createIfMissing);
@@ -962,6 +967,7 @@ namespace RTParser
 
         public bool CommitNow = false;
         private readonly QuerySettings qsbase;
+        public bool SuspendSearchLimits = true;
 
         public void AddSideEffect(string name, ThreadStart action)
         {

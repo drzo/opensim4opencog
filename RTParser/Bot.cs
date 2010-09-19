@@ -152,7 +152,7 @@ namespace RTParser
         /// <summary>
         /// Output substitutions that take place before the bot speaks
         /// </summary>
-        public SettingsDictionary OutputSubstitutions;
+        static public SettingsDictionary OutputSubstitutions;
 
         /// <summary>
         /// The default predicates to set up for a user
@@ -591,7 +591,7 @@ namespace RTParser
             testCaseRunner = new TestCaseRunner(null);
             XmlNodeEvaluators.Add(testCaseRunner);
 
-            TheCyc = new CycDatabase(this);
+            if (TheCyc == null) TheCyc = new CycDatabase(this);
             CycAccess v = TheCyc.GetCycAccess;
 
 

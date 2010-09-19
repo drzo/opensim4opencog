@@ -538,20 +538,7 @@ namespace RTParser
             //writeToLog = writeToLog ?? DEVNULL;
             AIMLbot.Result result;
             {
-                // Gathers the Pattern SubQueries!
-                ParsedSentences parsedSentences = request.ChatInput;
-
-                int NormalizedPathsCount = parsedSentences.NormalizedPaths.Count;
-
-                if (isTraced && NormalizedPathsCount != 1)
-                {
-                    foreach (Unifiable path in parsedSentences.NormalizedPaths)
-                    {
-                        writeToLog("  i: " + path.LegacyPath);
-                    }
-                    writeToLog("NormalizedPaths.Count = " + NormalizedPathsCount);
-                }
-
+                ParsedSentences parsedSentences = ParsedSentences.GetParsedSentences(request, isTraced, writeToLog);
 
                 bool printedSQs = false;
                 G = G ?? GraphMaster;
@@ -563,6 +550,7 @@ namespace RTParser
                 // load the queries
                 List<GraphQuery> AllQueries = new List<GraphQuery>();
 
+                // Gathers the Pattern SubQueries!
                 foreach (Unifiable userSentence in parsedSentences.NormalizedPaths)
                 {
                     AllQueries.Add(G.gatherQueriesFromGraph(userSentence, request, MatchState.UserInput));
@@ -683,11 +671,6 @@ namespace RTParser
             }
         }
 
-        private string EnsureEnglishPassThru(string arg)
-        {
-            return (string)arg;
-        }
-
         public string EnsureEnglish(string arg)
         {
             // ReSharper disable ConvertToConstant.Local
@@ -701,7 +684,7 @@ namespace RTParser
                 sentence = TextPatternUtils.ReTrimAndspace(sentence);
                 if (TextPatternUtils.DifferentBesidesCase(arg, sentence))
                 {
-                    writeToLog("OutputSubst: " + arg + " -> " + sentence);
+                    writeDebugLine("OutputSubst: " + arg + " -> " + sentence);
                     arg = sentence;
                 }
             }
@@ -711,128 +694,7 @@ namespace RTParser
         }
 
         public delegate void InputParser(Request request, IEnumerable<Unifiable> rawSentences);
-        public ParsedSentences GetParsedUserInputSentences(Request request, Unifiable fromUInput)
-        {
-            Func<string, string> GenEnglish = EnsureEnglish;
-            string fromInput = EnsureEnglishPassThru(fromUInput);
-            // Normalize the input
-            var rawSentences = SplitIntoSentences.Split(fromInput);
-            var parsedSentences = new ParsedSentences(GenEnglish, -1);
-            var userInputSentences = parsedSentences.InputSentences;
-            userInputSentences.AddRange(rawSentences);
-            Func<string, string> englishToNormaizedInput = (startout) =>
-                                                          {
-                                                              var Normalized = new List<Unifiable>();
-                                                              ParsedSentences.NormalizedInputPaths(request,
-                                                                                   new Unifiable[] { startout },
-                                                                                   Normalized,
-                                                                                   ToInputSubsts);
-                                                              if (Normalized.Count == 0)
-                                                              {
-                                                                  return null;
-                                                              }
-                                                              if (Normalized.Count == 1) return Normalized[0];
-                                                              return Normalized[0];
-                                                          };
-            parsedSentences.OnGetParsed = () =>
-                                              {
-                                                  ParsedSentences.Convert(
-                                                      parsedSentences.InputSentences,
-                                                      parsedSentences.TemplateOutputs, englishToNormaizedInput);
-                                              };
-            return parsedSentences;
-        }
-
-        public static void NormalizedInputPaths(Request request, IEnumerable<Unifiable> rawSentences, ICollection<Unifiable> result, Func<string, string> ToInputSubsts)
-        {
-            //ParsedSentences result = request.UserInput;
-            RTPBot thiz = request.TargetBot;
-            int maxInputs = request.MaxInputs;
-            int numInputs = 0;
-            int sentenceNum = 0;
-            int topicNum = 0;
-            int thatNum = 0;
-            AIMLLoader loader = thiz.GetLoader(request);
-            Func<Unifiable, bool, Unifiable> normalizerT = (inputText, isUserInput) => loader.Normalize(inputText, isUserInput).Trim();
-            string lastInput = "";
-            {
-                foreach (Unifiable sentenceURaw in rawSentences)
-                {
-                    string sentenceRaw = sentenceURaw;
-                    string sentence = sentenceRaw.Trim(" .,!:".ToCharArray());
-                    sentence = ToInputSubsts(sentence);
-                    //result.InputSentences.Add(sentence);
-                    sentence = sentence.Trim(" .,!:".ToCharArray());
-                    if (sentence.Length == 0)
-                    {
-                        writeDebugLine("skipping input sentence " + sentenceRaw);
-                        continue;
-                    }
-                    sentenceNum++;
-                    topicNum = 0;
-                    if (maxInputs == 1)
-                    {
-                        Unifiable requestThat = request.That;
-                        Unifiable path = loader.generatePath(sentence,
-                            //thatNum + " " +
-                                                             requestThat, request.Flags,
-                            //topicNum + " " +
-                                                             request.Requester.TopicSetting, true, normalizerT);
-                        if (path.IsEmpty)
-                        {
-                            path = loader.generatePath(sentence,
-                                //thatNum + " " +
-                                                       requestThat, request.Flags,
-                                //topicNum + " " +
-                                                       request.Requester.TopicSetting, false, normalizerT);
-                        }
-                        if (path.IsEmpty) continue;
-                        numInputs++;
-                        result.Add(path);
-                        if (numInputs >= maxInputs) return;
-                        continue;
-                    }
-                    foreach (Unifiable topic0 in request.Topics)
-                    {
-                        Unifiable topic = topic0;
-                        topicNum++;
-                        if (topic.IsLongWildCard())
-                        {
-                            topic = thiz.NOTOPIC;
-                        }
-                        thatNum = 0;
-                        foreach (Unifiable that in request.ResponderOutputs)
-                        {
-                            thatNum++;
-                            string thats = that.AsString();
-                            Unifiable path = loader.generatePath(sentence, //thatNum + " " +
-                                                                 thats, request.Flags,
-                                //topicNum + " " +
-                                                                 topic, true, normalizerT);
-                            if (that.IsLongWildCard())
-                            {
-                                if (thatNum > 1)
-                                {
-                                    continue;
-                                }
-                                if (topic.IsLongWildCard())
-                                {
-                                    topic = "NOTHAT";
-                                }
-                            }
-                            string thisInput = path.LegacyPath.AsString().Trim().ToUpper();
-                            if (thisInput == lastInput) continue;
-
-                            lastInput = thisInput;
-                            numInputs++;
-                            result.Add(path);
-                            if (numInputs >= maxInputs) return;
-                        }
-                    }
-                }
-            }
-        }
-
+   
         private string swapPerson(string inputString)
         {
             if (Loader == null)
@@ -1390,7 +1252,7 @@ namespace RTParser
             return sentenceIn;
         }
 
-        private string ToInputSubsts(string sentenceIn)
+        public string ToInputSubsts(string sentenceIn)
         {
             string sentence;
             sentence = ApplySubstitutions.Substitute(InputSubstitutions, sentenceIn);

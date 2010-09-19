@@ -10,6 +10,8 @@ using System.Collections;
 using System.Text.RegularExpressions;
 using MushDLR223.Virtualization;
 using RTParser;
+using RTParser.AIMLTagHandlers;
+
 //using NLPlib = RTParser.Database.NatLangDb;
 ///uses System.Runtime.Serialization.Formatters.Soap.dll
 /// 
@@ -99,15 +101,16 @@ namespace RTParser.Database
 
         private static string GetWordInfo(string s)
         {
+            CycDatabase TheCyc = CycDatabase.TheStaticCyc;
             s = ToLowerAnsii(s);
             Unifiable rs;
             if (IsStopWord(s))
                 rs =
-                    bot.TheCyc.EvalSubL("(cconcatenate (pos-of-string \"" + s + "\")(words-of-string \"" + s + "\"))",
+                    TheCyc.EvalSubL("(cconcatenate (pos-of-string \"" + s + "\")(words-of-string \"" + s + "\"))",
                                         null);
             else
                 rs =
-                    bot.TheCyc.EvalSubL(
+                    TheCyc.EvalSubL(
                         "(cconcatenate (pos-of-string \"" + s + "\")(words-of-string \"" + s +
                         "\")(all-parsing-denots-of-string \"" + s + "\"))", null);
 
@@ -177,7 +180,19 @@ namespace RTParser.Database
         static public ArrayList Tokenize(string s)
         {
             initNatLangDb();
+
             ArrayList v = new ArrayList();
+            foreach (var tok in MBrain.Tokenize(s, true))
+            {
+                if (tok == null)
+                {
+                    string vtok = tok ?? "";
+                    continue;
+                }
+                v.Add(tok);
+            }
+            return v;
+
             Regex reg = new Regex(@"(\S+)\s");
             MatchCollection m = reg.Matches(s);
             foreach (Match m2 in m)
@@ -317,6 +332,15 @@ namespace RTParser.Database
             {
                 DLRConsole.DebugWriteLine("Error: " + e2);
             }
+        }
+
+        public static bool WasQuestion(string message)
+        {
+            if (message.Contains("?")) return true;
+            if (message.ToLower().StartsWith("w")) return true;
+            ArrayList tokenize = NatLangDb.Tokenize(message);
+            var brillPOS = NatLangDb.POSTag(tokenize);
+            return false;
         }
     }
 }
