@@ -2,6 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using AIMLbot.Utils;
+using MushDLR223.ScriptEngines;
+using RTParser.Database;
+using RTParser.Normalize;
+using RTParser.Utils;
+using AIMLLoader=RTParser.Utils.AIMLLoader;
 
 namespace RTParser
 {
@@ -119,7 +124,7 @@ namespace RTParser
                 if (sl < 0) return sentence;
 
                 char c = sentence[sl];
-                if (char.IsPunctuation(c))
+                if (Char.IsPunctuation(c))
                 {
                     sentence = sentence.Substring(0, sl);
                 }
@@ -138,7 +143,7 @@ namespace RTParser
             if (sf > 0)
             {
                 String newClip = sentence.Substring(sf).Trim();
-                while (char.IsPunctuation(newClip[0]))
+                while (Char.IsPunctuation(newClip[0]))
                 {
                     newClip = newClip.Substring(1).TrimStart();
                 }
@@ -154,14 +159,172 @@ namespace RTParser
                 foreach (string sentence in fromList)
                 {
                     String sentenceForOutput = OutputSentencesToEnglish(sentence);
-                    if (string.IsNullOrEmpty(sentenceForOutput)) continue;
+                    if (String.IsNullOrEmpty(sentenceForOutput)) continue;
                     toList.Add(sentenceForOutput);
                 }
         }
 
         public static void NormalizedInputPaths(Request request, IEnumerable<Unifiable> rawSentences, ICollection<Unifiable> result, Func<string, string> ToInputSubsts)
         {
-            RTPBot.NormalizedInputPaths(request, rawSentences, result, ToInputSubsts);
+            if (request.Stage > SideEffectStage.PARSING_INPUT) return;
+
+            //ParsedSentences result = request.UserInput;
+            RTPBot thiz = request.TargetBot;
+            int maxInputs = request.MaxInputs;
+            int numInputs = 0;
+            int sentenceNum = 0;
+            int topicNum = 0;
+            int thatNum = 0;
+            AIMLLoader loader = thiz.GetLoader(request);
+            Func<Unifiable, bool, Unifiable> normalizerT =
+                (inputText, isUserInput) => loader.Normalize(inputText, isUserInput).Trim();
+            string lastInput = "";
+            {
+                foreach (Unifiable sentenceURaw in rawSentences)
+                {
+                    string sentenceRaw = sentenceURaw;
+                    if (NatLangDb.WasQuestion(sentenceRaw))
+                    {
+                        RTPBot.writeDebugLine("Question: " + sentenceRaw);
+                    }
+                    string sentence = sentenceRaw.Trim(" .,!:".ToCharArray());
+                    sentence = ToInputSubsts(sentence);
+                    //result.InputSentences.Add(sentence);
+                    sentence = sentence.Trim(" .,!:".ToCharArray());
+                    if (sentence.Length == 0)
+                    {
+                        RTPBot.writeDebugLine("skipping input sentence " + sentenceRaw);
+                        continue;
+                    }
+                    sentenceNum++;
+                    topicNum = 0;
+                    if (maxInputs == 1)
+                    {
+                        Unifiable requestThat = request.That;
+                        if (TextPatternUtils.IsNullOrEmpty(requestThat))
+                        {
+                            requestThat = request.That;
+                            //throw new NullReferenceException("set_That: " + request);
+                        }
+
+                        Unifiable path = loader.generatePath(sentence,
+                                                             //thatNum + " " +
+                                                             requestThat, request.Flags,
+                                                             //topicNum + " " +
+                                                             request.Requester.TopicSetting, true, normalizerT);
+                        if (path.IsEmpty)
+                        {
+                            path = loader.generatePath(sentence,
+                                                       //thatNum + " " +
+                                                       requestThat, request.Flags,
+                                                       //topicNum + " " +
+                                                       request.Requester.TopicSetting, false, normalizerT);
+                        }
+                        if (path.IsEmpty) continue;
+                        numInputs++;
+                        result.Add(path);
+                        if (numInputs >= maxInputs) return;
+                        continue;
+                    }
+                    foreach (Unifiable topic0 in request.Topics)
+                    {
+                        Unifiable topic = topic0;
+                        topicNum++;
+                        if (topic.IsLongWildCard())
+                        {
+                            topic = thiz.NOTOPIC;
+                        }
+                        thatNum = 0;
+                        foreach (Unifiable that in request.ResponderOutputs)
+                        {
+                            thatNum++;
+                            string thats = that.AsString();
+                            Unifiable path = loader.generatePath(sentence, //thatNum + " " +
+                                                                 thats, request.Flags,
+                                                                 //topicNum + " " +
+                                                                 topic, true, normalizerT);
+                            if (that.IsLongWildCard())
+                            {
+                                if (thatNum > 1)
+                                {
+                                    continue;
+                                }
+                                if (topic.IsLongWildCard())
+                                {
+                                    topic = "NOTHAT";
+                                }
+                            }
+                            string thisInput = path.LegacyPath.AsString().Trim().ToUpper();
+                            if (thisInput == lastInput) continue;
+
+                            lastInput = thisInput;
+                            numInputs++;
+                            result.Add(path);
+                            if (numInputs >= maxInputs) return;
+                        }
+                    }
+                }
+            }
+        }
+
+        public static ParsedSentences GetParsedSentences(Request request, bool isTraced, OutputDelegate writeToLog)
+        {
+            ParsedSentences parsedSentences = request.ChatInput;
+
+            int NormalizedPathsCount = parsedSentences.NormalizedPaths.Count;
+
+            if (isTraced && NormalizedPathsCount != 1)
+            {
+                foreach (Unifiable path in parsedSentences.NormalizedPaths)
+                {
+                    writeToLog("  i: " + path.LegacyPath);
+                }
+                writeToLog("NormalizedPaths.Count = " + NormalizedPathsCount);
+            }
+            request.Stage = SideEffectStage.PARSE_INPUT_COMPLETE;
+            return parsedSentences;
+        }
+
+        static public ParsedSentences GetParsedUserInputSentences(Request request, Unifiable fromUInput)
+        {
+
+            Func<string, string> GenEnglish = (str) => request.TargetBot.EnsureEnglish(str);
+            string fromInput = EnsureEnglishPassThru(fromUInput);
+            // Normalize the input
+            var rawSentences = SplitIntoSentences.Split(fromInput);
+            var parsedSentences = new ParsedSentences(GenEnglish, -1);
+            var userInputSentences = parsedSentences.InputSentences;
+            userInputSentences.AddRange(rawSentences);
+            Func<string, string> englishToNormaizedInput = arg => EngishToNormalizedInput(request, arg);
+            parsedSentences.OnGetParsed = () =>
+            {
+                if (request.Stage < SideEffectStage.PARSING_INPUT)
+                    request.Stage = SideEffectStage.PARSING_INPUT;
+                ParsedSentences.Convert(
+                    parsedSentences.InputSentences,
+                    parsedSentences.TemplateOutputs, englishToNormaizedInput);
+            };
+            return parsedSentences;
+        }
+
+        static private string EngishToNormalizedInput(Request request, string startout)
+        {
+            var Normalized = new List<Unifiable>();
+            Func<string, string> ToInputSubsts = request.TargetBot.ToInputSubsts;
+                       
+            NormalizedInputPaths(request, new Unifiable[] { startout }, Normalized, ToInputSubsts);
+            if (Normalized.Count == 0)
+            {
+                return null;
+            }
+            if (Normalized.Count == 1) return Normalized[0];
+            return Normalized[0];
+        }
+
+        private static char[] toCharArray = "@#$%^&*()_+<>,/{}[]\\\";'~~".ToCharArray();
+        static public string EnsureEnglishPassThru(string arg)
+        {
+            return arg;
         }
     }
 }

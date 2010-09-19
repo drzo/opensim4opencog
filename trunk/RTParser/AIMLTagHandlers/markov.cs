@@ -1073,7 +1073,7 @@ public class MBrain
       for (int i = 1; i < length; i++) n = n.AddChild(chain[index + i],occurances);
   }
 
-  static string[] Tokenize(string text, bool includeNull)
+  public static string[] Tokenize(string text, bool includeNull)
   { MatchCollection ms = wordre.Matches(text.Trim().ToLower());
     string[] ret = new string[ms.Count + (includeNull ? 1 : 0)];
     for(int i=0; i<ms.Count; i++)

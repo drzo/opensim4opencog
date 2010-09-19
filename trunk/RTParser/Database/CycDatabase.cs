@@ -41,9 +41,12 @@ namespace RTParser.Database
     }
     public class CycDatabase
     {
+        static public CycDatabase TheStaticCyc;
+
         private RTPBot TheBot;
         public CycDatabase(RTPBot bot)
         {
+            TheStaticCyc = this;
             TheBot = bot;   
         }
         #region CYC Interaction
@@ -92,6 +95,7 @@ namespace RTParser.Database
                             }
                             TestConnection();
                             populateFromCyc();
+                            TheStaticCyc = this;
                         }
                         catch (Exception e)
                         {
