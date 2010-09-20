@@ -16,7 +16,6 @@ namespace RTParser.Utils
         public double Rating = 1.0;
         public Unifiable TextSaved;
         string _templateKey;
-        private List<ConversationCondition> AdditionalRules;
 
         public TemplateInfo(XmlNode template, GuardInfo guard, Node patternNode, CategoryInfo categoryInfo)
             : base(template)
@@ -53,6 +52,11 @@ namespace RTParser.Utils
         }
 
         // override object.Equals
+        public bool IsTraced
+        {
+            get { return CategoryInfo.IsTraced; }
+            set { CategoryInfo.IsTraced = value; }
+        }
 
         public bool IsDisabled
         {
@@ -117,6 +121,11 @@ namespace RTParser.Utils
             return StaticXMLUtils.LocationInfo(srcNode);
         }
 
+        public TemplateInfo Template
+        {
+            get { return this; }
+        }
+
         #endregion
 
         // override object.GetHashCode
@@ -130,8 +139,13 @@ namespace RTParser.Utils
             XmlNode tryit = base.Output.ParentNode;
             if (tryit != null)
             {
+                string rules = GetRuleStrings();
+                if (rules != "")
+                {
+                    rules = "\n" + rules;
+                }
                 return "" + TextPatternUtils.CleanWhitepaces(tryit.OuterXml) +
-                       StaticXMLUtils.LocationEscapedInfo(tryit);
+                       StaticXMLUtils.LocationEscapedInfo(tryit) + rules;
             }
             //string s = base.ToString();
             /*            if (Guard != null)
@@ -241,17 +255,16 @@ namespace RTParser.Utils
 
         public void AddRules(List<ConversationCondition> rules)
         {
-            if (rules==null || rules.Count==0) return   ;
-            if (this.AdditionalRules == null) this.AdditionalRules = new List<ConversationCondition>();
-            AdditionalRules.AddRange(rules);
+            foreach (var r in rules) CategoryInfo.AddPrecondition(r);
         }
 
 
         public bool IsSatisfied(SubQuery subQuery)
         {
-            if (AdditionalRules != null && AdditionalRules.Count > 0)
+            var rules = this.Preconds;
+            if (rules != null && rules.Count > 0)
             {
-                foreach (var s in AdditionalRules)
+                foreach (var s in rules)
                 {
                     if (!s.IsConditionTrue(subQuery))
                     {
@@ -261,6 +274,24 @@ namespace RTParser.Utils
             }
             return true;
         }
+
+        internal string GetRuleStrings()
+        {
+            string s = "";
+            var templateInfo = this.Template;
+            var addRules = templateInfo.Preconds;
+            if (addRules != null)
+            {
+                int c = 1;
+                foreach (ConversationCondition rule in addRules)
+                {
+                    s += "<!-- Rule:  " + c + " " + rule.ToString().
+                                                        Replace("<!--", "<#--").Replace("-->", "--#>") + " -->\n";
+                    c++;
+                }
+            }
+            return s;
+        }
     }
 
     public interface IAIMLInfo
@@ -268,5 +299,6 @@ namespace RTParser.Utils
         GraphMaster Graph { get; }
         string ToFileString(PrintOptions printOptions);
         string SourceInfo();
+        TemplateInfo Template { get; }
     }
 }

@@ -12,9 +12,10 @@ namespace RTParser.Utils
         public string Filename;
         public PatternInfo Pattern;
         public List<ConversationCondition> Preconds;
-        public TemplateInfo Template;
+        public TemplateInfo Template { get; set;}
         public ThatInfo That;
         public TopicInfo Topic;
+        public bool IsTraced { get; set; }
 
         public CategoryInfo(PatternInfo pattern, XmlNode cateNode, LoaderOptions options)
             : base(cateNode)
@@ -109,6 +110,7 @@ namespace RTParser.Utils
             {
                 s += "<!-- IsDisabled  " + s.Replace("<!--", "<#--").Replace("-->", "--#>") + " -->";
             }
+            s += Template.GetRuleStrings();
             return s;
         }
 

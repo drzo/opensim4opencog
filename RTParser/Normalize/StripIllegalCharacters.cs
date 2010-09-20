@@ -19,6 +19,11 @@ namespace RTParser.Normalize
 
         protected override Unifiable ProcessChange()
         {
+            string newVariable = ((string)inputString);
+            if (newVariable != null)
+            {
+                if (newVariable.StartsWith("TAG-")) return inputString;
+            }
             return this.Proc.Strippers.Replace(this.inputString, " ");
         }
     }

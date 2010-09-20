@@ -21,6 +21,7 @@ namespace RTParser
     /// </summary>
     abstract public class User : StaticAIMLUtils, IDisposable, ISettingsDictionary
     {
+        public static bool ThatIsStoredBetweenUsers = true;
         public readonly object QueryLock = new object();
 
         #region Attributes
@@ -686,29 +687,35 @@ namespace RTParser
         {
             get
             {
+                string something;
+                Result r = GetResult(0, true) ?? GetResult(0, false, LastReponder);
+                if (r != null && IsSomething(r.NormalizedOutput, out something)) return something;
+                if (LastReponder != null && IsSomething(LastReponder.JustSaid, out something)) return something;
+                if (User.ThatIsStoredBetweenUsers)
+                {                  
+                    return "Nothing";
+                }
                 RequestImpl fr = CurrentRequest;
                 while
                     (fr != null)
                 {
                     var frithat = fr.ithat;
-                    if (frithat != null)
-                    {
-                        return frithat;
-                    }
+                    if (IsSomething(frithat, out something)) return something;
                     fr = fr.ParentRequest as RequestImpl;
                 }
-                return getLastBotOutputForThat();
+                if (IsSomething(getLastBotOutputForThat(), out something)) return something;
+                return "Nothing";
             }
             set
             {
+                if (IsNullOrEmpty(value)) throw new NullReferenceException("set_That: " + this);
                 if (CurrentRequest != null)
                 {
-                    if (CurrentRequest.ithat == null)
-                    {
-                        CurrentRequest.ithat = value;
-                    }
                     CurrentRequest.ithat = value;
-                    return;
+                }
+                if (LastReponder != null)
+                {
+                    LastReponder.JustSaid = value;
                 }
             }
 
@@ -716,10 +723,65 @@ namespace RTParser
 
         private string getLastBotOutputForThat()
         {
+            string something;
             Result r = GetResult(0, true) ?? GetResult(0, false, LastReponder);
-            if (r == null) return "Nothing";
-            string s = r.NormalizedOutput;
-            return s ?? "Nothing"; // Unifiable.STAR;
+            if (r != null && IsSomething(r.NormalizedOutput, out something)) return something;
+            if (LastReponder != null && IsSomething(LastReponder.JustSaid, out something)) return something; 
+            return "Nothing";
+        }
+
+        private string _JustSaid;
+        public string JustSaid
+        {
+            get
+            {
+                string something;
+                if (IsSomething(_JustSaid, out something)) return something;
+                if (LastReponder != null)
+                {
+                    return LastReponder.ResponderJustSaid;
+                }
+                return "Nothing";
+            }
+            set
+            {
+                if (IsNullOrEmpty(value)) throw new NullReferenceException("set_That: " + this);
+                if (value.Contains("TAG-"))
+                {
+                    if (IsNullOrEmpty(value))
+                        throw new NullReferenceException("set_That: TAG: " + value + " for " + this);
+                }
+                if (_JustSaid != value)
+                {
+                    Predicates.addSetting("lastsaid", value);
+                    _JustSaid = value;
+                    if (LastReponder != null)
+                    {
+                        LastReponder.ResponderJustSaid = value;
+                    }
+                }
+            }
+        }
+
+        public string ResponderJustSaid
+        {
+            get
+            {
+                {
+                    if (LastReponder != null) return LastReponder.JustSaid;
+                    return That;
+                }
+            }
+            set
+            {
+                if (IsNullOrEmpty(value)) throw new NullReferenceException("set_That: " + this);
+                if (LastReponder != null)
+                {
+                    LastReponder.JustSaid = value;
+                }
+                Predicates["lastheard"] = value;
+                That = value;
+            }
         }
 
         public User LastReponder
@@ -1203,7 +1265,11 @@ namespace RTParser
         {
             DoPendingTodoList();
             depth = 0;
-            return new AIMLbot.Request(s, this, bot, CurrentRequest, target);
+
+            var newRequest = new AIMLbot.Request(s, this, bot, null, target);
+            newRequest.IsToplevelRequest = true;
+            //newRequest.ParentRequest = CurrentRequest;
+            return newRequest;
         }
 
         public void StampResponseGiven()

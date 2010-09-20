@@ -23,7 +23,7 @@ namespace RTParser
 
         //int DebugLevel { get; set; }
         //bool IsTraced { get; set; }
-
+        HashSet<SubQuery> AllSubQueries { get; set; }
         /// <summary>
         /// The user that made this request
         /// </summary>
@@ -68,7 +68,8 @@ namespace RTParser
 
         DateTime StartedOn { get; set; }
         DateTime TimesOutAt { get; set; }
-        TimeSpan TimeOut { get; set; }
+        TimeSpan TimeOut { get; }
+        TimeSpan TimeOutFromNow { set; }
 
         bool GraphsAcceptingUserInput { get; set; }
         LoaderOptions LoadOptions { get; set; }
@@ -88,6 +89,7 @@ namespace RTParser
         Unifiable grabSetting(string name);
         QuerySettingsSettable GetQuerySettings();
         AIMLbot.Result CreateResult(Request res);
+        bool IsToplevelRequest { get; set; }
 
         AIMLbot.Request CreateSubRequest(Unifiable templateNodeInnerValue, User user, RTPBot rTPBot, AIMLbot.Request request);
         bool CanUseTemplate(TemplateInfo info, Result request);
@@ -106,6 +108,7 @@ namespace RTParser
         void ExcludeGraph(string srai);
         void AddOutputSentences(TemplateInfo ti, string nai, Result result);
         ISettingsDictionary GetDictionary(string named);
+        ISettingsDictionary GetDictionary(string named, ISettingsDictionary dictionary);
 
         void AddUndo(Action action);
         void Commit();
@@ -120,6 +123,8 @@ namespace RTParser
     abstract public class RequestImpl : QuerySettings, Request
     {
         #region Attributes
+
+        public HashSet<SubQuery> AllSubQueries { get; set; }
 
         public Proof Proof { get; set; }
 
@@ -139,11 +144,11 @@ namespace RTParser
             }
         }
 
-        public ParsedSentences ChatInput { get; set; }
-
         /// <summary>
         /// The raw input from the user
         /// </summary>
+        public ParsedSentences ChatInput { get; set; }
+
         public Request ParentRequest { get; set; }
 
         /// <summary>
@@ -268,6 +273,8 @@ namespace RTParser
         public RequestImpl(string rawInput, User user, RTPBot bot, Request parent, User targetUser)
             :  base(bot.GetQuerySettings()) // Get query settings intially from user
         {
+            AllSubQueries = new HashSet<SubQuery>();
+            IsToplevelRequest = parent == null;
             this.Stage = SideEffectStage.UNSTARTED;
             qsbase = this;
             if (parent != null)
@@ -339,8 +346,7 @@ namespace RTParser
                 }
             }
             this.TargetBot = bot;
-            this.StartedOn = DateTime.Now;
-            this.TimesOutAt = StartedOn.AddMilliseconds(TargetBot.TimeOut);
+            this.TimeOutFromNow = TimeSpan.FromMilliseconds(TargetBot.TimeOut);
             this.framesAtStart = new StackTrace().FrameCount;
             if (parent != null)
             {
@@ -793,37 +799,98 @@ namespace RTParser
             TargetBot.writeToLog(prefix);
         }
 
-        public override int DebugLevel
+        public override sealed int DebugLevel
         {
             get
             {
         
                 int baseDebugLevel = base.DebugLevel;
                 if (baseDebugLevel > 0) return baseDebugLevel;
-                QuerySettingsReadOnly ParentRequest = (QuerySettingsReadOnly)this.ParentRequest;
-                if (ParentRequest == null)
+                var parentRequest = (QuerySettingsReadOnly)this.ParentRequest;
+                if (IsToplevelRequest || parentRequest == null)
                 {
                     if (Requester == null) return baseDebugLevel;
                     return Requester.GetQuerySettings().DebugLevel;
                 }
-                return ParentRequest.DebugLevel;
+                return parentRequest.DebugLevel;
             }
             set { base.DebugLevel = value; }
         }
+
+        public bool IsToplevelRequest { get; set; }
 
         internal Unifiable ithat = null;
         public Unifiable That
         {
             get
             {
-                if (ithat != null) return ithat;
-                if (ParentRequest != null)
+                string something;
+                if (User.ThatIsStoredBetweenUsers)
                 {
-                    return ParentRequest.That;
+                    if (Requester != null && IsSomething(Requester.That, out something)) return something;
+                    if (Responder != null && IsSomething(Responder.JustSaid, out something)) return something;
+                    return "Nothing";
                 }
-                return Requester.That;
+                if (IsSomething(ithat, out something)) return something;
+                string u1 = null;
+                string u2 = null;
+                string r1 = RequestThat();
+
+                if (Requester != null)
+                {
+                    if (IsSomething(Requester.That, out something)) u1 = something;
+                }
+                if (Responder != null && Responder != Requester)
+                {
+                    if (IsSomething(Responder.JustSaid, out something))
+                    {
+                        u2 = something;
+                        if (u1 != null)
+                        {
+                            char[] cs = " .?".ToCharArray();
+                            if (u1.Trim(cs).ToLower() != u2.Trim(cs).ToLower())
+                            {
+                                writeToLog("Responder.JustSaid=" + u2 + " Requester.That=" + u1);
+                                if (u2.Contains(u1))
+                                {
+                                    u2 = u1;
+                                }
+                            }
+                        }
+                    }
+                }
+                string u = u2 ?? u1;
+                if (IsSomething(r1, out something))
+                {
+                    if (r1 != u)
+                    {
+                        writeToLog("ERROR That Requester !" + r1);
+                    }
+                }
+                return u ?? "Nothing";
             }
-            set { ithat = value; }
+            set
+            {
+                if (User.ThatIsStoredBetweenUsers) throw new InvalidOperationException("must User.set_That()");
+                if (IsNullOrEmpty(value)) throw new NullReferenceException("set_That: " + this);
+                ithat = value;
+            }
+        }
+
+        public string RequestThat()
+        {
+            if (User.ThatIsStoredBetweenUsers) throw new InvalidOperationException("must User.get_That()");
+            var req = this;
+            while (req != null)
+            {
+                string something;
+                if (IsSomething(req.ithat, out something))
+
+                    return something;
+
+                req = req.ParentRequest as RequestImpl;
+            }
+            return null;
         }
 
         internal PrintOptions iopts;
@@ -846,6 +913,7 @@ namespace RTParser
         {
             get
             {
+                if (IsToplevelRequest) return this;
                 if (ParentRequest == null) return this;
                 return ParentRequest.ParentMostRequest;
             }
@@ -886,6 +954,10 @@ namespace RTParser
 
         public ISettingsDictionary GetDictionary(string named)
         {
+            if (CurrentQuery == null)
+            {
+                writeToLog("ERROR: Cannot get CurrentQuery!?");
+            }
             return GetDictionary(named, CurrentQuery);
         }
 
@@ -1009,6 +1081,16 @@ namespace RTParser
             return graphs;        
         }
 
+        public TimeSpan TimeOutFromNow 
+        {
+            set
+            {
+                WhyComplete = null;
+                StartedOn = DateTime.Now;
+                TimeOut = value;
+            }
+        }
+
         public ISettingsDictionary GetDictionary(string named, ISettingsDictionary dictionary)
         {
             ISettingsDictionary dict =  GetDictionary0(named, dictionary);
@@ -1032,6 +1114,7 @@ namespace RTParser
             }
             if (named == "user") return CheckedValue(named, Requester);
             if (named == "li") return CheckedValue(named, dictionary);
+            if (named == "condition") return CheckedValue(named, dictionary);
             if (named == "set") return CheckedValue(Requester.UserID, Requester);
             if (named == "get") return CheckedValue(Requester.UserID, Requester);
             if (named == "query") return CheckedValue(named, CurrentQuery);

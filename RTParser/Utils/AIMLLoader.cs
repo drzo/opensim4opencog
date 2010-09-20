@@ -31,6 +31,10 @@ namespace RTParser.Utils
         /// </summary>
         public bool RawUserInput;
 
+        /// <summary>
+        /// Deletes any content that contains these words in it
+        /// TODO make this done in a  text file
+        /// </summary>
         private static HashSet<string> GlobalFilteredWords = new HashSet<string>()
                                                       {
                                                           "pandorabots",
@@ -39,7 +43,8 @@ namespace RTParser.Utils
                                                           "alicebots.com",
                                                           "alice",
                                                           "england",
-                                                          "kent"
+                                                          "kent",
+                                                          "a spelling",                                                          
                                                       };
 
         public HashSet<string> FilteredWords = new HashSet<string>(GlobalFilteredWords);
@@ -502,12 +507,12 @@ namespace RTParser.Utils
 
             XmlReader xtr = XmlDocumentLineInfo.CreateXmlTextReader(input0);
             string namefile = "" + path;
+            XmlDocumentLineInfo doc = new XmlDocumentLineInfo("" + namefile, false);
             while (!xtr.EOF)
             {
                 //  IXmlLineInfo text = (IXmlLineInfo)xtr;
                 try
                 {
-                    XmlDocumentLineInfo doc = new XmlDocumentLineInfo("" + namefile, false);
                     doc.Load(xtr);
                     if (doc.DocumentElement == null)
                     {
@@ -522,8 +527,7 @@ namespace RTParser.Utils
                 }
                 catch (Exception e2)
                 {
-                    String s = "ERROR: LoadAIMLStream '" + e2 + "' in " + loadOpts; //" charpos=" + xtr1.LineNumber;
-                    //s = s + "\n" + e2.Message + "\n" + e2.StackTrace + "\n"; //+ s;
+                    String s = "ERROR: LoadAIMLStream in '" + loadOpts + "' " + doc.GetErrorMsg(xtr, e2);
                     writeToLog(s);
                     //System.Console.Flush();
                     // if (!xtr.Read())
@@ -575,9 +579,9 @@ namespace RTParser.Utils
             //while (!xtr.EOF)
             {
                 //  IXmlLineInfo text = (IXmlLineInfo)xtr;
+                XmlDocumentLineInfo doc = new XmlDocumentLineInfo("" + namefile, false);
                 try
                 {
-                    XmlDocumentLineInfo doc = new XmlDocumentLineInfo("" + namefile, false);
                     doc.LoadXml(ssss);
                     if (doc.DocumentElement == null)
                     {
@@ -592,8 +596,7 @@ namespace RTParser.Utils
                 }
                 catch (Exception e2)
                 {
-                    String s = "which causes loadAIMLStream '" + e2 + "' " + loadOpts; //" charpos=" + xtr1.LineNumber;
-                    //s = s + "\n" + e2.Message + "\n" + e2.StackTrace + "\n"; //+ s;
+                    String s = "ERROR: LoadAIMLStream in '" + loadOpts + "' " + doc.GetErrorMsg(input0, e2); 
                     writeToLog(s);
                     //System.Console.Flush();
                     // if (!xtr.Read())
@@ -1073,7 +1076,7 @@ namespace RTParser.Utils
             }
 
             Func<Unifiable, bool, Unifiable> normalizerT = (inputText, isUserInput) => Normalize(inputText, isUserInput).Trim();
-            Unifiable categoryPath = generateCPath(patternText, that, cond, topicName, false, normalizerT );
+            Unifiable categoryPath = generatePath(patternText, that, cond, topicName, false, normalizerT );
             PatternInfo patternInfo = PatternInfo.GetPattern(loaderOpts, patternNode, categoryPath);
             TopicInfo topicInfo = TopicInfo.FindTopic(loaderOpts, topicName);
             ThatInfo thatInfo = ThatInfo.GetPattern(loaderOpts, that);
@@ -1318,7 +1321,22 @@ namespace RTParser.Utils
         public Unifiable generatePath(Unifiable pattern, Unifiable that, Unifiable flag, Unifiable topicName,
                                       bool isUserInput, Func<Unifiable, bool, Unifiable> innerFormater)
         {
-            return Unifiable.MakePath(generateCPath(pattern, that, flag, topicName, isUserInput, innerFormater));
+            if (isUserInput)
+            {
+                
+            }
+            Unifiable res = Unifiable.MakePath(generateCPath(pattern, that, flag, topicName, isUserInput, innerFormater));
+            if (isUserInput)
+            {
+                string ress = (string) res;
+                if (ress.Contains("*"))
+                {
+                    string problem = "generatePath failed: " + ress;
+                    writeToLog("ERROR: " + problem);
+                    throw new Exception(problem);
+                }
+            }
+            return res;
         }
 
         /// <summary>
@@ -1491,7 +1509,7 @@ namespace RTParser.Utils
                 return Unifiable.Empty;
             }
             Unifiable result = Unifiable.CreateAppendable();
-
+            input = input.Replace("*", " * ").Replace("  ", " ").Trim();
             // objects for normalization of the input
             RTPBot RProcessor = LoaderRequest00.TargetBot;
             ApplySubstitutions substitutor = new ApplySubstitutions(RProcessor);
@@ -1525,8 +1543,8 @@ namespace RTParser.Utils
                     normalizedWord = stripper.Transform(word);
                     if (normalizedWord != wwword)
                     {
-                        if (!wwword.Contains("'"))
-                            writeToLog("Normalize stripper " + word + "->" + normalizedWord);
+                      //  if (!wwword.Contains("'"))
+                        //    writeToLog("Normalize stripper " + word + "->" + normalizedWord);
                     }
                 }
                 else

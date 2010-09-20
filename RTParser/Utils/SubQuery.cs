@@ -247,15 +247,16 @@ namespace RTParser.Utils
 
         public override string ToString()
         {
-            string s = string.Format("\nINPUT='{6}'\nPATTERN='{0}' InThToGu={1}:{2}:{3}:{4} Ts={5}\n",
-                                     ((object) Pattern ?? "-no-pattern-").ToString().Trim(),
+            string nodePattern =((object)Pattern ?? "-no-pattern-").ToString().Trim();
+            string s = string.Format("\nINPUT='{6}'\nPATTERN='{0}' InThToGu={1}:{2}:{3}:{4} Tc={5} Graph={7}\n",
+                         nodePattern,
                                      InputStar.Count, ThatStar.Count, TopicStar.Count,
                                      GuardStar.Count, Templates == null ? 0 : Templates.Count,
-                                     FullPath);
+                         FullPath, Graph);
             if (Templates != null)
                 foreach (TemplateInfo path in Templates)
                 {
-                    s += "\r\n t: " + path;
+                    s += "\r\n t: " + path.ToString();
                 }
             s += " \r\n";
             Result r = Result;
@@ -422,7 +423,7 @@ namespace RTParser.Utils
             if (named == null) return query;
             string lnamed = named.ToLower();
             if (lnamed == "query") return query;
-            return Request.GetDictionary(named);
+            return Request.GetDictionary(named,(ISettingsDictionary)this);
         }
 
         public T ReduceStarAttribute<T>(IConvertible value) where T : IConvertible

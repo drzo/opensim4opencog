@@ -1100,9 +1100,9 @@ namespace RTParser.Variables
             if (IsIdentityReadOnly && (name.ToLower() == "name" || name.ToLower() == "id"))
             {
                 string s = (string)value;
-                if (s == null || TextPatternUtils.IsUnknown(value) || s.Length < 3 || s.ToLower() == "friend")
+                if (s == null || TextPatternUtils.IsUnknown(value) || s.Length < 3 || s.ToLower() == "friend" || s.ToLower() == "that really")
                 {
-                    writeToLog("NameValueCheck " + name + " = " + value);
+                    writeToLog("! NameValueCheck " + name + " = " + value);
                     return false;
                 }
                 return true;

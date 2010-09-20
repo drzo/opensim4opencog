@@ -35,7 +35,7 @@ namespace RTParser
         private StreamWriter chatTraceW;
         private JoinedTextBuffer currentEar = new JoinedTextBuffer();
         private int streamDepth;
-        public Unifiable responderJustSaid;
+        //public Unifiable responderJustSaid;
 
         // last user talking to bot besides itself
         private User _lastUser;
@@ -372,8 +372,14 @@ namespace RTParser
             bool isTraced = request.IsTraced || G == null;
             user = user ?? request.Requester ?? LastUser;
             UndoStack undoStack = UndoStack.GetStackFor(request);
-            undoStack.pushValues(user.Predicates, "rawinput", request.rawInput);
-            undoStack.pushValues(user.Predicates, "input", request.rawInput);
+            Unifiable requestrawInput = request.rawInput;
+            undoStack.pushValues(user.Predicates, "i", user.UserName);
+            undoStack.pushValues(user.Predicates, "rawinput", requestrawInput);
+            undoStack.pushValues(user.Predicates, "input", requestrawInput);
+            if (target != null && target.UserName != null)
+            {
+                undoStack.pushValues(user.Predicates, "you", target.UserName);
+            }
             AIMLbot.Result res = request.CreateResult(request);
             //lock (user.QueryLock)
             {
@@ -391,10 +397,14 @@ namespace RTParser
                          res = ChatWithRequest4(request, user, target, G);
                     }
                      */
-                    if (request.ParentRequest == null)
+                    if (request.IsToplevelRequest)
                     {
-                        request.AddSideEffect("Populate the Result object",
-                                              () => PopulateUserWithResult(originalRequestor, request, res));
+                        AddSideEffectHook(request, originalRequestor, res);
+                        user.JustSaid = requestrawInput;
+                        if (target != null)
+                        {
+                            target.JustSaid = user.ResponderJustSaid; //.Output;
+                        }
                     }
                     return res;
                 }
@@ -420,6 +430,15 @@ namespace RTParser
             }
         }
 
+        private void AddSideEffectHook(Request request, User originalRequestor, AIMLbot.Result res)
+        {
+            request.AddSideEffect("Populate the Result object",
+                                  () =>
+                                      {
+                                          PopulateUserWithResult(originalRequestor, request, res);
+                                      });
+        }
+
         public AIMLbot.Result ChatWithRequest4(Request request, User user, User target, GraphMaster G)
         {
             var originalRequestor = request.Requester;
@@ -431,6 +450,10 @@ namespace RTParser
                     return (AIMLbot.Result)request.CurrentResult;
                 request.Requester = user;
                 Result result = ChatWithRequest44(request, user, target, G);
+                if (result.OutputSentences.Count != 0)
+                {
+                    result.RotateUsedTemplates();
+                }
                 return (AIMLbot.Result)result;
             }
             catch (ChatSignalOverBudget e)
@@ -550,6 +573,13 @@ namespace RTParser
                 // load the queries
                 List<GraphQuery> AllQueries = new List<GraphQuery>();
 
+                bool topleveRequest = request.IsToplevelRequest;
+
+                int UNLIMITED = 10000;
+                request.MaxOutputs = UNLIMITED;
+                request.MaxPatterns = UNLIMITED;
+                request.MaxTemplates = UNLIMITED;
+
                 // Gathers the Pattern SubQueries!
                 foreach (Unifiable userSentence in parsedSentences.NormalizedPaths)
                 {
@@ -560,6 +590,14 @@ namespace RTParser
                     // gather the templates and patterns
                     foreach (var ql in AllQueries)
                     {
+                        if (topleveRequest)
+                        {
+                            ql.TheRequest.SuspendSearchLimits = true;
+                            ql.NoMoreResults = false;
+                            ql.MaxTemplates = UNLIMITED;
+                            ql.MaxPatterns = UNLIMITED;
+                            ql.MaxOutputs = UNLIMITED;
+                        }
                         G.RunGraphQuery(ql);
                         //if (request.IsComplete(result)) return result;
                     }
@@ -575,12 +613,19 @@ namespace RTParser
                                 request.TopLevel = ql;
                                 result.AddSubqueries(ql);
                             }
-                            List<SubQuery> kept = ql.PreprocessSubQueries(request, result.SubQueries, isTraced,
-                                                                          ref printedSQs,
-                                                                          writeToLog);
+                            var kept = ql.PreprocessSubQueries(request, result.SubQueries, isTraced, ref printedSQs,
+                                                               writeToLog);
                         }
-                        ProcessSubQueriesAndIncreasLimits(request, result, ref isTraced, printedSQs, writeToLog);
+                        // give a 20 second blessing
+                        if (result.SubQueries.Count > 0)
+                        {
+                            request.TimeOutFromNow = TimeSpan.FromSeconds(20);
+                        }
+                        //ProcessSubQueriesAndIncreasLimits(request, result, ref isTraced, printedSQs, writeToLog);
                     }
+                    int solutions;
+                    bool hasMoreSolutions;
+                    CheckResult(request, result, out solutions, out hasMoreSolutions);
                 }
                 catch (ChatSignal exception)
                 {
@@ -597,8 +642,10 @@ namespace RTParser
             int solutions;
             bool hasMoreSolutions;
             CheckResult(request, result, out solutions, out hasMoreSolutions);
+            return;
             if (result.OutputSentenceCount == 0 || sqc == 0)
             {
+                return;
                 //  string oldSets = QuerySettings.ToSettingsString(request.GetQuerySettings());
                 isTraced = true;
                 //todo pick and chose the queries
@@ -609,6 +656,9 @@ namespace RTParser
                     request.UndoAll();
                     request.IncreaseLimits(1);
                     CheckResult(request, result, out solutions, out hasMoreSolutions);
+                    if (result.OutputSentenceCount != 0 || sqc != 0)
+                    {
+                    }
                     // string newSets = QuerySettings.ToSettingsString(request.GetQuerySettings());
                     //writeToLog("AIMLTRACE: bumped up limits " + n + " times for " + request + "\n --from\n" + oldSets + "\n --to \n" +
                     //         newSets);
@@ -730,88 +780,112 @@ namespace RTParser
 
         private void CheckResult(Request request, Result result, out int solutions, out bool hasMoreSolutions)
         {
-            hasMoreSolutions = true;
+            hasMoreSolutions = false;
             solutions = 0;
-            List<SubQuery> resultSubQueries = result.SubQueries;
+            // checks that we have nothing to do
+            if (result==null|| result.SubQueries==null) return;
+
+
+            HashSet<SubQuery> resultSubQueries = result.SubQueries;
+
+            HashSet<SubQuery> AllQueries = new HashSet<SubQuery>();
+            List<TemplateInfo> AllTemplates = new UList();
+
             lock (resultSubQueries)
             {
-                resultSubQueries = new List<SubQuery>(resultSubQueries);
-            }
-            lock (resultSubQueries) foreach (SubQuery query in resultSubQueries)
+                foreach (SubQuery query in resultSubQueries)
                 {
-                    result._CurrentQuery = query;
-                    solutions = ProcessQueries(result, query, request, out hasMoreSolutions);
-                    if (request.IsComplete(result))
+                    var queryTemplates = query.Templates;
+                    if (queryTemplates == null || queryTemplates.Count <= 0) continue;
+                    AllQueries.Add(query);
+                    lock (queryTemplates)
+                        AllTemplates.AddRange(query.Templates);
+                }
+            }
+
+            if (AllTemplates.Count==0)
+            {
+                solutions = 0;
+                hasMoreSolutions = false;
+                result.TemplatesSucceeded = 0;
+                result.OutputsCreated = 0;
+                return;
+            }
+
+            hasMoreSolutions = true;
+            foreach (SubQuery query in AllQueries)
+            {
+                foreach (TemplateInfo s in query.Templates)
+                {
+                    try
                     {
-                        //hasMoreSolutions = false;
-                        return;
+                        result._CurrentQuery = query;
+                        // Start each the same
+                        var lastHandler = ProcessQueryTemplate(request, s.Query, s, result, request.LastHandler,
+                                                               ref solutions,
+                                                               out hasMoreSolutions);
+                    }
+                    catch (ChatSignal)
+                    {
+                        throw;
                     }
                 }
+            }
+            hasMoreSolutions = false;
             result._CurrentQuery = null;
         }
-        private int ProcessQueries(Result result, SubQuery query, Request request, out bool hasMoreSolutions)
+
+        private AIMLTagHandler ProcessQueryTemplate(Request request, SubQuery query, TemplateInfo s, Result result, AIMLTagHandler lastHandler, ref int solutions, out bool hasMoreSolutions)
         {
-            AIMLTagHandler lastHandler = request.LastHandler;
-            int solutions = 0;
-            var queryTemplates = query.Templates;
+            s.Rating = 1.0;
             hasMoreSolutions = false;
-            if (queryTemplates != null && queryTemplates.Count > 0)
+            try
             {
-                lock (queryTemplates)
-                    queryTemplates = new List<TemplateInfo>(query.Templates);
-                hasMoreSolutions = true;
+                s.Query = query;
+                query.CurrentTemplate = s;
+                bool createdOutput;
+                bool templateSucceeded;
+                XmlNode sOutput = s.ClonedOutput;
+                lastHandler = proccessResponse(query, request, result, sOutput, s.Guard, out createdOutput,
+                                               out templateSucceeded, lastHandler, s, false, false);
+                solutions++;
+                request.LastHandler = lastHandler;
+                if (templateSucceeded)
                 {
-                    foreach (TemplateInfo s in queryTemplates)
+                    result.TemplatesSucceeded++;
+                }
+                if (createdOutput)
+                {
+                    result.OutputsCreated++;
+                    hasMoreSolutions = true;
+                    //break; // KHC: single vs. Multiple
+                    if (((QuerySettingsReadOnly)request).ProcessMultipleTemplates == false)
                     {
-                        // Start each the same
-                        s.Rating = 1.0;
-                        try
+                        if (request.IsComplete(result))
                         {
-                            s.Query = query;
-                            query.CurrentTemplate = s;
-                            bool createdOutput;
-                            bool templateSucceeded;
-                            XmlNode sOutput = s.ClonedOutput;
-                            lastHandler = proccessResponse(query, request, result, sOutput, s.Guard, out createdOutput,
-                                                           out templateSucceeded, lastHandler, s, false, false);
-                            request.LastHandler = lastHandler;
-                            if (templateSucceeded) result.TemplatesSucceeded++;
-                            if (createdOutput)
-                            {
-                                result.OutputsCreated++;
-                                solutions++;
-                            }
-                            if (request.IsComplete(result))
-                            {
-                                hasMoreSolutions = false;
-                                return solutions;
-                            }
-                            //break; // KHC: single vs. Multiple
-                            if ((createdOutput) && (((QuerySettingsReadOnly)request).ProcessMultipleTemplates == false))
-                            {
-                                hasMoreSolutions = false;
-                                break;
-                            }
-                        }
-                        catch (ChatSignal e)
-                        {
-                        }
-                        catch (Exception e)
-                        {
-                            writeToLog(e);
-                            if (WillCallHome)
-                            {
-                                phoneHome(e.Message, request);
-                            }
-                            writeToLog("WARNING! A problem was encountered when trying to process the input: " +
-                                       request.rawInput + " with the template: \"" + s + "\"");
                             hasMoreSolutions = false;
+                            return lastHandler;
                         }
                     }
                 }
-
+                return lastHandler;
             }
-            return solutions;
+            catch (ChatSignal e)
+            {
+                throw;
+            }
+            catch (Exception e)
+            {
+                writeToLog(e);
+                if (WillCallHome)
+                {
+                    phoneHome(e.Message, request);
+                }
+                writeToLog("WARNING! A problem was encountered when trying to process the input: " +
+                           request.rawInput + " with the template: \"" + s + "\"");
+                hasMoreSolutions = false;
+            }
+            return lastHandler;
         }
 
         public void writeChatTrace(string message, params object[] args)
@@ -967,11 +1041,26 @@ namespace RTParser
                                                 bool copyChild, bool copyParent)
         {
             ChatLabel label = request.PushScope;
+            var prevTraced = request.IsTraced;
+            var untraced = request.Graph.UnTraced;
+            var superTrace = templateInfo != null && templateInfo.IsTraced;
             try
             {
-                return proccessResponse000(query, request, result, templateNode, sGuard,
+                if (superTrace)
+                {
+                    request.IsTraced = true;
+                    request.Graph.UnTraced = false;
+                }
+
+                var th = proccessResponse000(query, request, result, templateNode, sGuard,
                                            out createdOutput, out templateSucceeded,
                                            handler, templateInfo, copyChild, copyParent);
+
+                if (superTrace)
+                {
+                    writeDebugLine("SuperTrace=" + templateSucceeded + ": " + templateInfo);
+                }
+                return th;
             }
             catch (ChatSignal ex)
             {
@@ -994,6 +1083,8 @@ namespace RTParser
             }
             finally
             {
+                request.IsTraced = prevTraced;
+                request.Graph.UnTraced = untraced;
                 label.PopScope();
             }
         }
@@ -1005,7 +1096,8 @@ namespace RTParser
                                                 bool copyChild, bool copyParent)
         {
             query.LastTagHandler = handler;
-            bool isTraced = request.IsTraced || result.IsTraced || !request.GraphsAcceptingUserInput;
+            bool isTraced = request.IsTraced || result.IsTraced || !request.GraphsAcceptingUserInput ||
+                            (templateInfo != null && templateInfo.IsTraced);
             //XmlNode guardNode = AIMLTagHandler.getNode(s.Guard.InnerXml);
             bool usedGuard = sGuard != null && sGuard.Output != null;
             sOutput = sOutput ?? templateInfo.ClonedOutput;

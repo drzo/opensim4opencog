@@ -76,7 +76,7 @@ namespace MushDLR223.Utilities
 
         public static bool IsHtmlTag(string name)
         {
-            return " html head body font pre p div br dd td th tr table frame frameset &ltl &gt; input option select &qt; "
+            return " em b underline bold src html head body font pre p div br dd td th tr table frame frameset &ltl &gt; input option select &qt; "
                 .Contains(" " + name.ToLower() + " ");
         }
 

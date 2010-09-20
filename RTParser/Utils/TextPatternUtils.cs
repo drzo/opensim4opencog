@@ -238,17 +238,27 @@ namespace RTParser.Utils
             clean = CleanWhitepaces(text, "*",
                                     (c0, c1) =>
                                     {
-                                        if (char.IsLetterOrDigit(c1) || char.IsControl(c1)) return true;
+                                        if (Char.IsLetterOrDigit(c1) || Char.IsControl(c1)) return true;
                                         if ("\"'".Contains("" + c1)) return false;
                                         return false;
                                     },
                                     (c0, c1) =>
                                     {
-                                        if (char.IsLetterOrDigit(c0) || char.IsControl(c0)) return true;
+                                        if (Char.IsLetterOrDigit(c0) || Char.IsControl(c0)) return true;
                                         if ("\"'".Contains("" + c0)) return false;
                                         return false;
                                     });
             return clean;
+        }
+
+        public static bool IsSomething(string s, out string something)
+        {
+            something = s;
+            if (String.IsNullOrEmpty(s))
+            {
+                return false;
+            }
+            return (s.ToLower() != "nothing");
         }
     }
 }

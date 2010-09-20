@@ -100,19 +100,19 @@ namespace RTParser
         //public Request BotAsRequestUsed = null;
         public Request GetBotRequest(string s)
         {
+            var botAsUser1 = BotAsUser;
             s = s.Trim();
             if (!s.StartsWith("<")) s = "<!-- " + s.Replace("<!--", "<#").Replace("-->", "#>") + " -->";
-            var r = new AIMLbot.Request(s, BotAsUser, this, null, BotAsUser);
+            var r = new AIMLbot.Request(s, botAsUser1, this, null, botAsUser1);
             r.writeToLog = writeToLog;
-            Result res = new AIMLbot.Result(BotAsUser, this, r, null);
+            Result res = new AIMLbot.Result(botAsUser1, this, r, null);
             res.writeToLog = writeToLog;
             res._CurrentQuery = new SubQuery(s, res, r);
-            OnBotCreated(() => { res.Requestor = r.Requester = BotAsUser; });
+            OnBotCreated(() => { res.Requestor = r.Requester = botAsUser1; });
             r.IsTraced = this.IsTraced;
-            r.StartedOn = DateTime.Now;
             r.depth = 0;
             // times out in 15 minutes
-            r.TimeOut = TimeSpan.FromMinutes(15);
+            r.TimeOutFromNow = TimeSpan.FromMinutes(15);
             return r;
         }
 
@@ -2116,7 +2116,7 @@ The AIMLbot program.
 
         public string SetName(string myName)
         {
-            return UserOper(() => SetName0(myName), writeDebugLine);
+            lock (OnBotCreatedHooks) return UserOper(() => SetName0(myName), writeDebugLine);
         }
 
         private string SetName0(string myName)
@@ -2125,24 +2125,25 @@ The AIMLbot program.
 
             NameAsSet = myName;
             //new AIMLbot.User("heardselfsay", this)
-            BotAsUser = FindOrCreateUser(myName);
-            clojureInterpreter.Intern("BotAsUser", BotAsUser);
-            BotAsUser.IsRoleAcct = true;
-            BotAsUser.Predicates = GlobalSettings;
+            var thisBotAsUser = FindOrCreateUser(myName);
+            this.BotAsUser = thisBotAsUser;
+            clojureInterpreter.Intern("BotAsUser", thisBotAsUser);
+            thisBotAsUser.IsRoleAcct = true;
+            thisBotAsUser.Predicates = GlobalSettings;
             GlobalSettings.IsTraced = true;
             //BotAsUser.UserDirectory = "aiml/users/heardselfsay";
             //BotAsUser.UserID = "heardselfsay";
             //BotAsUser.UserName = "heardselfsay";
             //BotUsers["heardselfsay"] = BotAsUser;            
-            BotAsUser.UserName = myName;
-            BotAsUser.removeSetting("userdir");
+            thisBotAsUser.UserName = myName;
+            thisBotAsUser.removeSetting("userdir");
             NamePath = ToScriptableName(NameAsSet);
-            BotAsUser.UserID = NamePath;
+            thisBotAsUser.UserID = NamePath;
 
-            var OnTaskAtATimeHandler = BotAsUser.OnTaskAtATimeHandler = HeardSelfSayQueue;
+            var OnTaskAtATimeHandler = thisBotAsUser.OnTaskAtATimeHandler = HeardSelfSayQueue;
             OnTaskAtATimeHandler.Name = "TaskQueue For " + myName;
 
-            BotAsUser.SaveDirectory(BotAsUser.UserDirectory);
+            thisBotAsUser.SaveDirectory(thisBotAsUser.UserDirectory);
             string dgn = NamePath + "_default";
             string hgn = NamePath + "_heardselfsay";
             lock (GraphsByName)
@@ -2154,7 +2155,7 @@ The AIMLbot program.
                 if (_g == null)
                 {
                     _g = new GraphMaster(dgn);
-                    _h = new GraphMaster(hgn);
+                    _h = TheUserListernerGraph;// = new GraphMaster(hgn);
                     _g.AddGenlMT(GraphsByName["default"], writeToLog);
                     _h.AddGenlMT(GraphsByName["heardselfsay"], writeToLog);
                     _h.AddGenlMT(GraphsByName["listener"], writeToLog);
@@ -2175,8 +2176,8 @@ The AIMLbot program.
             loadAIMLFromDefaults0();
             EnsureDefaultUsers();
             string official = LoadPersonalDirectories(myName);
-            BotAsUser.SaveDirectory(BotAsUser.UserDirectory);
-            return official ?? BotAsUser.UserDirectory;
+            thisBotAsUser.SaveDirectory(thisBotAsUser.UserDirectory);
+            return official ?? thisBotAsUser.UserDirectory;
         }
 
         public static bool StaticInitStarted;
@@ -2198,8 +2199,9 @@ The AIMLbot program.
                 StaticInitStarted = true;
                 GraphsByName["listener"] = TheUserListernerGraph = new GraphMaster("listener");
                 TheUserListernerGraph.SilentTagsInPutParent = false;
-                GraphsByName["default"] = new GraphMaster("default");
-                GraphsByName["heardselfsay"] = new GraphMaster("heardselfsay");
+                var defaultGraph = GraphsByName["default"] = new GraphMaster("default");
+                defaultGraph.RemovePreviousTemplatesFromNodes = false;
+                GraphsByName["heardselfsay"] = TheUserListernerGraph;////new GraphMaster("heardselfsay");
                 AddSettingsAliases("lastuserid", "you");
                 AddSettingsAliases("lastusername", "you");
                 AddSettingsAliases("you", "lastusername");

@@ -225,9 +225,11 @@ namespace MushDLR223.Utilities
                     base.Load(reader);
                     Normalize();
                 }
-                catch (Exception e)
+                catch (SystemException e)
                 {
-                    writeToLog("ERROR " + e);
+                    string errmsg = GetErrorMsg(reader, e);
+                    writeToLog("Load(Stream) " + errmsg);
+                    throw;
                 }
             }
             finally
@@ -438,10 +440,11 @@ namespace MushDLR223.Utilities
                     {
                         LoadFromReader(reader);
                     }
-                    catch (Exception e)
+                    catch (SystemException e)
                     {
-                        writeToLog("ERROR " + e);
-                        throw e;
+                        string errmsg = GetErrorMsg(reader, e);
+                        writeToLog(errmsg);
+                        throw;
                     }
                 }
                 else
@@ -450,10 +453,11 @@ namespace MushDLR223.Utilities
                     {
                         LoadFromReader(reader);
                     }
-                    catch (Exception e)
+                    catch (SystemException e)
                     {
-                        writeToLog("EOF ERROR " + e);
-                        throw e;
+                        string errmsg = GetErrorMsg(reader, e);
+                        writeToLog("EOF " + errmsg);
+                        throw;
                     }
                 }
             }
@@ -462,6 +466,21 @@ namespace MushDLR223.Utilities
                 CurrentReader = prereader;
                 LineTracker = prev;
             }
+        }
+
+        public string GetErrorMsg(Object aka, Exception e)
+        {
+            var reader = (aka as XmlReader) ?? (LineTracker as XmlReader);
+            var li = (aka as IXmlLineInfo) ?? LineTracker ?? (reader as IXmlLineInfo);
+            bool notEOF = reader != null && !reader.EOF;
+            return "ERROR " + e.Message + " " + LineInfoStr(li) + " notEOF="
+                   + notEOF + " on " + (reader ?? aka) + " " + e + " @ " + this;
+        }
+
+        public static string LineInfoStr(IXmlLineInfo li)
+        {
+            if (li == null) return "";
+            return li+ ":(" + li.LineNumber + "," + li.LinePosition + ")";
         }
 
         private void LoadFromReader(XmlReader reader)
@@ -545,10 +564,11 @@ namespace MushDLR223.Utilities
                     CheckReader(reader);
                     return base.ReadNode(reader);
                 }
-                catch (Exception e)
+                catch (SystemException e)
                 {
-                    writeToLog("ERROR: " + e);
-                    throw e;
+                    string errmsg = GetErrorMsg(reader, e);
+                    writeToLog("ReadNode " + errmsg);
+                    throw;
                 }
             }
             finally

@@ -255,10 +255,11 @@ namespace RTParser
             writeLine("-----------------------------------------------------------------");
             DLRConsole.SystemFlush();
 
-            string userJustSaid = String.Empty;
+            //string userJustSaid = String.Empty;
             myBot.LastUser = myUser;
             while (true)
             {
+                User BotAsAUser = myBot.BotAsUser;
                 myUser = myBot.LastUser;
                 writeLine("-----------------------------------------------------------------");
                 string input = TextFilter.ReadLineFromInput(DLRConsole.SystemWrite, myUser.UserName + "> ");
@@ -278,33 +279,34 @@ namespace RTParser
                 writeLine("-----------------------------------------------------------------");
                 if (String.IsNullOrEmpty(input))
                 {
-                    writeLine(myName + "> " + myBot.responderJustSaid);
+                    writeLine(myName + "> " + BotAsAUser.JustSaid);
                     continue;
                 }
                 try
                 {
-                    Unifiable cmdprefix = myBot.GlobalSettings.grabSettingNoDebug("cmdprefix");
+                    Unifiable cmdprefix = myUser.Predicates.grabSettingNoDebug("cmdprefix");
+                    if (cmdprefix == null) cmdprefix = myBot.GlobalSettings.grabSettingNoDebug("cmdprefix");
                     if (!input.Contains("@") && !IsNullOrEmpty(cmdprefix))
                     {
                         input = cmdprefix.AsString() + " " + input;
                     }
                     if (input == "@")
                     {
-                        input = myBot.responderJustSaid;
+                        input = myUser.JustSaid;
                     }
 
                     bool myBotBotDirective = false;
                     if (!input.StartsWith("@"))
                     {
-                        userJustSaid = input;
+                  //      string userJustSaid = input;
                         input = "@locally " + myUser.UserName + " - " + input;
                     }
-                    myBotBotDirective = myBot.BotDirective(request, input, writeLine);
+                    myBotBotDirective = myBot.BotDirective(myUser, input, writeLine);
                     if (!myBotBotDirective) continue;
                     writeLine("-----------------------------------------------------------------");
-                    writeLine("{0}: {1}", myUser.UserName, userJustSaid);
+                    writeLine("{0}: {1}", myUser.UserName, myUser.JustSaid);
                     writeLine("---------------------");
-                    writeLine("{0}: {1}", myName, myBot.responderJustSaid);
+                    writeLine("{0}: {1}", myName, BotAsAUser.JustSaid);
                     writeLine("-----------------------------------------------------------------");
                 }
                 catch (Exception e)
@@ -342,6 +344,7 @@ namespace RTParser
         }
         public bool BotDirective(Request request, string input, OutputDelegate console, ThreadControl control)
         {
+            User targetBotUser = this.BotAsUser;
             if (request != null && request.CurrentResult != null)
             {
                 writeChatTrace("CurrentResult: " + request.CurrentResult);
@@ -401,16 +404,25 @@ namespace RTParser
                 }
                 Result res = GlobalChatWithUser(said, user, null, writeDebugLine, true);
                 // detect a user "rename"
-                DetectUserChange(myUser, user);
+                bool userChanged = DetectUserChange(myUser, user);
+                var justsaid = OutputResult(res, console, false);
                 User theResponder = res.Responder ?? res.request.Responder;
                 if (theResponder == null)
                 {
-                    theResponder = (myUser == BotAsUser) ? request.Requester : BotAsUser;
+                    theResponder = (myUser == targetBotUser) ? request.Requester : targetBotUser;
                     writeToLog("Making the responder " + theResponder);
                 }
-                responderJustSaid = OutputResult(res, console, false);
-                if (ProcessHeardPreds)
-                    HeardSelfSayResponse(theResponder, myUser, responderJustSaid, res, control);
+                if (theResponder == null)
+                {
+                    return true;
+                }
+                myUser.LastReponder = theResponder;
+                theResponder.JustSaid = justsaid;
+// ReSharper disable ConditionIsAlwaysTrueOrFalse
+                if (false && ProcessHeardPreds) 
+// ReSharper restore ConditionIsAlwaysTrueOrFalse
+                    HeardSelfSayResponse(theResponder, myUser, justsaid, res, control);
+                
                 return true;
             }
             if (showHelp)
@@ -495,7 +507,7 @@ namespace RTParser
             if (cmd == "say")
             {
                 console("say> " + args);
-                HeardSelfSayVerbal(BotAsUser, myUser, args, LastResult, control);
+                HeardSelfSayVerbal(targetBotUser, myUser, args, LastResult, control);
                 return true;
             }
 
@@ -503,7 +515,7 @@ namespace RTParser
             if (cmd == "say1")
             {
                 console("say1> " + args);
-                HeardSelfSay1Sentence(BotAsUser, myUser, args, LastResult, control);
+                HeardSelfSay1Sentence(targetBotUser, myUser, args, LastResult, control);
                 return true;
             }
 
@@ -522,7 +534,7 @@ namespace RTParser
             {
                 console(HeardPredicates.ToDebugString());
                 console(RelationMetaProps.ToDebugString());
-                return BotAsUser.DoUserCommand(args, console);
+                return targetBotUser.DoUserCommand(args, console);
             }
 
             PrintOptions printOptions = request.WriterOptions ?? PrintOptions.CONSOLE_LISTING;
@@ -614,7 +626,7 @@ namespace RTParser
 
                 ur.IsTraced = myUser.IsTraced;
                 console("-----------------------------------------------------------------");
-                AIMLbot.Result result = ChatWithUser(ur, myUser, BotAsUser, myUser.ListeningGraph);
+                AIMLbot.Result result = ChatWithUser(ur, myUser, targetBotUser, myUser.ListeningGraph);
                 console("-----------------------------------------------------------------");
                 PrintResult(result, console, printOptions);
                 console("-----------------------------------------------------------------");
