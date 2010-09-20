@@ -788,9 +788,26 @@ namespace RTParser
         {
             get
             {
-                string lname = Predicates.grabSettingNoDebug("lastuserid");
-                if (string.IsNullOrEmpty(lname)) return null;
-                return bot.FindUser(lname);
+                foreach (var name in NamesStrings("you,lastusername,lastuserid"))
+                {
+                    string realName;
+                    string lname = SettingsDictionary.grabSettingDefaultDict(Predicates, name,
+                                                                             out realName);
+                    if (!string.IsNullOrEmpty(lname))
+                    {
+                        User user = bot.FindUser(lname);
+                        if (user != null) return user;
+                    }
+                }
+                if (LastResult != null)
+                {
+                    User lastResultResponder = LastResult.Responder;
+                    if (lastResultResponder != this && lastResultResponder != null) return lastResultResponder;
+                    lastResultResponder = LastResult.Requestor;
+                    if (lastResultResponder != this && lastResultResponder != null) return lastResultResponder;
+                }
+
+                return null;
             }
             set
             {
