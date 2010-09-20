@@ -70,6 +70,7 @@ namespace RTParser.Normalize
                 tokens = bot();
             }
             string inputStringString = this.inputString.AsString();
+            inputStringString = StaticAIMLUtils.ForInputTemplate(inputStringString);
             Unifiable[] nodes = this.inputString.ToArray();
             int currentTokenbNum = 0;
             int startTokenNum = 0;

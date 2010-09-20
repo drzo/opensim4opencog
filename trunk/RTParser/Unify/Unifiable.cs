@@ -789,6 +789,29 @@ namespace RTParser
         }
 
         #endregion
+
+        public static string GuessWildCardIndex(char c0, char cN, string specialIndex)
+        {
+            if (c0 == '*' && '*' == cN) return NoteSpecialIndexer(specialIndex, "*");
+            if (c0 == '_' && '_' == cN) return NoteSpecialIndexer(specialIndex, "_");
+
+            return null;
+
+            if (c0 == '<' && cN == '>') return NoteSpecialIndexer(specialIndex, "<>");
+            if (c0 == '~' || cN == '~') return NoteSpecialIndexer(specialIndex, "<>");
+            if (c0 == '#') return NoteSpecialIndexer(specialIndex, "<>");
+
+            if (c0 == '*' || cN == '*') return NoteSpecialIndexer(specialIndex, "*");
+            if (c0 == '_' || cN == '_') return NoteSpecialIndexer(specialIndex, "_");
+
+            return null;
+        }
+
+        private static string NoteSpecialIndexer(string index, string idx)
+        {
+            //DLRConsole.DebugWriteLine("NoteSpecialIndexer " + index);
+            return idx;
+        }
     }
 }
 

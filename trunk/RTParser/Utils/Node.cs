@@ -16,6 +16,7 @@ namespace RTParser.Utils
     [Serializable]
     public class Node : StaticAIMLUtils
     {
+        const bool needsKeySanityCheck = false;
         public static bool UseZeroArgs;
         public static StringAppendableUnifiableImpl EmptyStringAppendable = new StringAppendableUnifiableImpl();
 
@@ -144,7 +145,17 @@ namespace RTParser.Utils
                 if (TemplateInfos != null && TemplateInfos.Count > 1)
                 {
                     int moveLast = TemplateInfos.IndexOf(templateInfo);
-                    if (moveLast > 0) return;
+                    if (moveLast < 0)
+                    {
+                        writeToLog("WARN: Cant find template " + templateInfo);
+                        return;
+                    }
+                    if (moveLast == TemplateInfos.Count - 1)
+                    {
+                        writeToLog("WARN: template already last " + templateInfo);
+                        // already last
+                        return;
+                    }
                     TemplateInfo last = TemplateInfos[moveLast];
                     TemplateInfos.RemoveAt(moveLast);
                     TemplateInfos.Add(last);
@@ -163,7 +174,7 @@ namespace RTParser.Utils
         public TemplateInfo addTerminal(XmlNode templateNode, CategoryInfo category, GuardInfo guard, ThatInfo thatInfo,
                                         GraphMaster master, PatternInfo patternInfo, List<ConversationCondition> additionalRules)
         {
-            bool onlyNonSilent = true;
+            bool onlyNonSilent = master.DistinguishSilenetTags;
             lock (SyncObject)
             {
                 // first look in template node.. then afterwards the category node
@@ -197,20 +208,21 @@ namespace RTParser.Utils
                 }
 
                 // does the metaprops special normal aiml way of "replace"
-                bool removeAllFirst;
-                if (TryParseBool(nodes, "replace", out removeAllFirst))
+                bool removeAllFirst = master.RemovePreviousTemplatesFromNodes;
+                bool tf;
+                if (TryParseBool(nodes, "replace", out tf))
                 {
-                    if (removeAllFirst)
+                    if (tf)
                     {
-                        DeleteTemplates(onlyNonSilent);
+                        removeAllFirst = true;
                     }
                 }
-                if (TryParseBool(nodes, "ifMissing", out removeAllFirst))
+                if (TryParseBool(nodes, "ifMissing", out tf))
                 {
                     TemplateInfo first = FirstTemplate(onlyNonSilent);
                     if (first != null) return first;
                 }
-                if (TryParseBool(nodes, "append", out removeAllFirst))
+                if (TryParseBool(nodes, "append", out tf))
                 {
                     TemplateInfo first = FirstTemplate(onlyNonSilent);
                     if (first != null)
@@ -219,7 +231,19 @@ namespace RTParser.Utils
                         return first;
                     }
                 }
+                if (removeAllFirst) DeleteTemplates(onlyNonSilent);
+
                 var t = addTerminal_0_Lock(templateNode, category, guard, thatInfo, master, patternInfo, additionalRules);
+                if (t==null)
+                {
+                    return null;
+                }
+                t.IsDisabled = false;
+                bool isTraced;
+                if (TryParseBool(nodes, "isTraced", out isTraced))
+                {
+                    t.IsTraced = isTraced;                   
+                }
                 if (t != null) t.AddRules(additionalRules);
                 return t;
             }
@@ -463,7 +487,9 @@ namespace RTParser.Utils
                 }
 
 
-                if (false) // see if we need ot check new indexing system!
+// ReSharper disable ConditionIsAlwaysTrueOrFalse
+                if (needsKeySanityCheck) // see if we need ot check new indexing system!
+// ReSharper restore ConditionIsAlwaysTrueOrFalse
                     if (!found)
                         foreach (var c in children)
                         {
@@ -1043,6 +1069,12 @@ namespace RTParser.Utils
                 {
                     //newPath = string.Join(" ", splitPath, rw, splitPath.Length - rw);
                     newAt = at + 1;
+// ReSharper disable ConditionIsAlwaysTrueOrFalse
+                    if (needsKeySanityCheck && !childNode.word.CanUnify(firstWord, query))
+// ReSharper restore ConditionIsAlwaysTrueOrFalse
+                    {
+                        throw new Exception("failed sanity check trying to unify " + firstWord + " " + childNode.word);
+                    }
                     return childNode;
                 }
             }

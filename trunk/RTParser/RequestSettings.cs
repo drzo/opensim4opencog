@@ -137,7 +137,7 @@ namespace RTParser
         {
             ProcessMultipleTemplates = true, // needed to find verbal outputs
             ProcessMultiplePatterns = true, // needed to find verbal outputs
-            MinOutputs = 1,
+            MinOutputs = 20,
             MaxOutputs = UNLIMITED,
             MinPatterns = 8,
             MaxPatterns = 12,

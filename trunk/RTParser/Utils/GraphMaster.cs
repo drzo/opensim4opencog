@@ -89,6 +89,7 @@ namespace RTParser.Utils
         public bool DoParents = true;
         private bool FullDepth = true;
         public bool IsBusy;
+        public bool CannotHaveParents = false;    
 
         private int parent0;
         private Node PostParentRootNode = new Node(null);
@@ -102,15 +103,36 @@ namespace RTParser.Utils
         private List<TemplateInfo> UnusedTemplates;
         public static readonly Dictionary<string, XmlNode> PatternNodes = new Dictionary<string, XmlNode>();
 
-        public bool RemoveDupicateTemplatesFromNodes = true; //slows it down but maybe important to do
+        /// <summary>
+        /// Search and try to elimentate duplicate Templates
+        /// slows it down but maybe important to do
+        /// </summary>
+        public bool RemoveDupicateTemplatesFromNodes = true; 
+        /// <summary>
+        /// This is nomal AIML default (false = we we might rotate templates fopr a more interesting robot (false = cogbot normally))
+        /// </summary>
+        public bool RemovePreviousTemplatesFromNodes = false;  
+        /// <summary>
+        /// True = Normal Cogbot defualt (false would mean AIML templates vetted to make the robot respond)
+        /// </summary>        
+        public bool DistinguishSilenetTags = true;
+
+        public bool IsParent = false;
+
         static GraphMaster()
         {
-            DefaultSilentTagsInPutParent = true;
+            DefaultSilentTagsInPutParent = false;
         }
         public GraphMaster(string gn)
+            : this(gn, null, false)
+        {
+        }
+        public GraphMaster(string gn, GraphMaster child, bool isParent)
         //: base(bot)
         {
+            IsParent = isParent;
             SilentTagsInPutParent = DefaultSilentTagsInPutParent;
+            SilentTagsInPutParent = false;
             CategoryInfos = TrackTemplates ? new List<CategoryInfo>() : null;
             Templates = TrackTemplates ? new List<TemplateInfo>() : null;
             graphName = gn;
@@ -126,6 +148,26 @@ namespace RTParser.Utils
                 CategoryInfos = null;
             }
             //UnusedTemplates = new List<TemplateInfo>();
+            if (isParent)
+            {
+                IsParent = true;
+                // useless for parent to have parents
+                CannotHaveParents = true;
+                // parents are already silent
+                SilentTagsInPutParent = false;
+                // parents are "mutli-templated"
+                RemovePreviousTemplatesFromNodes = false;
+                // parents only max out in "timeout"
+                // = false;
+            }
+            else
+            {
+               // CanMaxOutStage1 = false;
+                if (gn.Contains("parent"))
+                {
+                    throw new Exception("Parent should use other constructor! " + gn);
+                }
+            }
         }
 
         // ReSharper restore FieldCanBeMadeReadOnly.Local
@@ -136,6 +178,11 @@ namespace RTParser.Utils
             {
                 if (ScriptingName.Contains("parent"))
                 {
+                    return this;
+                }
+                if (CannotHaveParents)
+                {
+                    writeToLog("CantHaveParents!");
                     return this;
                 }
                 if (_parent == null)
@@ -301,9 +348,9 @@ namespace RTParser.Utils
                 XmlNode pi;
                 if (!PatternNodes.TryGetValue(pats, out pi))
                 {
-                }
                 if (pi != null) return pi;
                 pi = PatternNodes[pats] = StaticXMLUtils.getNode(String.Format("<{0}>{1}</{0}>", nodeName, topicName));
+                }
                 return pi;
             }
         }
@@ -340,7 +387,12 @@ namespace RTParser.Utils
 
         private GraphMaster makeParent()
         {
-            GraphMaster p = new GraphMaster("" + graphName + ".parent" + (parent0 == 0 ? "" : "" + parent0));
+            if (CannotHaveParents)
+            {
+                writeToLog("CantHaveParents!");
+                return this;
+            }
+            GraphMaster p = new GraphMaster("" + graphName + ".parent" + (parent0 == 0 ? "" : "" + parent0), this, true);
             p.Srai = graphName;
             parent0++;
             p.UnTraced = true;
@@ -409,7 +461,7 @@ namespace RTParser.Utils
             }
 
             Node rootNode = this.RootNode;
-            if (IsStartStarStar(generatedPath))
+            if (IsStarStarStar(generatedPath))
             {
                 rootNode = this.PostParentRootNode;
             }
@@ -448,6 +500,13 @@ namespace RTParser.Utils
             if (path.IsEmpty)
             {
                 string s = "ERROR! path.IsEmpty  returned no results for " + state + " in " + this;
+                writeToLog(s);
+                throw new Exception(s);
+            }
+            string ss = (string)path;
+            if (ss.Contains("*"))
+            {
+                string s = "ERROR! path.HasWildCard!  returned no results for " + state + " in " + this;
                 writeToLog(s);
                 throw new Exception(s);
             }
@@ -526,7 +585,7 @@ namespace RTParser.Utils
         }
 
 
-        public static bool IsStartStarStar(String bubble)
+        public static bool IsStarStarStar(String bubble)
         {
             if (bubble == null) return false;
             string s = bubble;
@@ -534,6 +593,16 @@ namespace RTParser.Utils
             bool b = s.Trim().StartsWith(STAR_PATH);
             if (!b) return false;
             return b;
+        }
+
+        public static int IsAnyStar(String bubble)
+        {
+            int wideStar = 0;
+            if (bubble == null) return wideStar;
+            if (bubble.Contains("TAG-THAT * TAG")) wideStar++;
+            if (bubble.Contains("TAG-INPUT * TAG")) wideStar++;
+            if (bubble.Contains("TAG-TOPIC * TAG")) wideStar++;
+            return wideStar;
         }
 
         /// <summary>
@@ -637,11 +706,16 @@ namespace RTParser.Utils
                 {
                     tried++;
                 }
-                if (tried > 100 || toplevel.IsComplete(request))
+                if (tried > 100)
                 {
                     break;
                 }
-                if (toplevelBubble != null && IsStartStarStar(toplevelBubble.ToString()))
+                bool toplevelIsComplete = toplevel.IsComplete(request);
+                if (toplevelIsComplete)
+                {
+                    break;
+                }
+                if (toplevelBubble != null && IsStarStarStar(toplevelBubble.ToString()))
                 {
                     toplevel.NoMoreResults = true;
                     break;
@@ -759,30 +833,41 @@ namespace RTParser.Utils
         {
             var pl = new List<Result>();
             RTPBot proc = request.TargetBot;
-            GraphMaster g = request.Graph;
-            bool userTracing = request.IsTraced;
             foreach (GraphMaster p in CopyOf(totry))
             {
                 if (request.IsTimedOutOrOverBudget) return pl;
                 if (request.TopLevel.DisallowedGraphs.Contains(p)) continue;
                 if (p != null)
                 {
+                    GraphMaster g = request.Graph;
+                    Result resBack = request.CurrentResult;
+                    bool wasTopLevel = request.IsToplevelRequest;
                     bool wasUntraced = p.UnTraced;
+                    bool userTracing = request.IsTraced;
                     try
                     {
+                        if (wasUntraced) request.IsTraced = false;
+                        if (wasTopLevel) request.IsToplevelRequest = false;
+
                         p.UnTraced = Size > 0;
-                        if (wasUntraced)
-                            request.IsTraced = false;
-                        request.Graph = p;
-                        request.CurrentResult = null;
-                        AIMLbot.Result r = proc.ChatWithUser(request, request.Requester, request.Responder, p);
+                        
+                        Request req = new AIMLbot.Request(request.rawInput, request.Requester, request.TargetBot, null,
+                                                          request.Responder);
+                        req.Graph = p;
+                        req.IsToplevelRequest = false;
+                        req.CurrentResult = null;
+
+                        AIMLbot.Result r = proc.ChatWithUser(req, request.Requester, request.Responder, p);
+                        
                         if (!r.IsEmpty) pl.Add(r);
                     }
                     finally
                     {
+                        request.IsToplevelRequest = wasTopLevel;
                         p.UnTraced = wasUntraced;
                         request.Graph = g;
                         request.IsTraced = userTracing;
+                        request.CurrentResult = resBack;
                     }
                 }
             }
@@ -814,9 +899,12 @@ namespace RTParser.Utils
 
         public void RemoveTemplate(TemplateInfo templateInfo)
         {
+            if (templateInfo == null) return;
             //System.writeToLog("removing " + templateInfo.CategoryInfo.ToString());
             lock (LockerObject)
             {
+                templateInfo.IsTraced = true;
+                templateInfo.CategoryInfo.IsDisabled = true;
                 if (Templates != null) lock (Templates)
                         Templates.Remove(templateInfo);
                 if (CategoryInfos != null) lock (CategoryInfos)
@@ -827,8 +915,11 @@ namespace RTParser.Utils
 
         public void DisableTemplate(TemplateInfo templateInfo)
         {
+            if (templateInfo == null) return;
             lock (LockerObject)
             {
+                templateInfo.IsTraced = true;
+                templateInfo.CategoryInfo.IsDisabled = true;
                 if (Templates != null) lock (Templates) Templates.Remove(templateInfo);
                 if (CategoryInfos != null) lock (CategoryInfos)
                         CategoryInfos.Remove(templateInfo.CategoryInfo);
@@ -1131,6 +1222,7 @@ namespace RTParser.Utils
             }
 
             if (showHelp) console("@ls <graph> - <tmatch>   --  lists all graph elements matching some elements");
+            int foundResults = 0;
             if (cmd == "ls")
             {
                 var matchingGraphs = request.GetMatchingGraphs(graphname, this);
@@ -1139,11 +1231,14 @@ namespace RTParser.Utils
                     string n = ggg.Key;
                     GraphMaster G = ggg.Value;
                     var cis = G.GetCategoriesMatching(match);
+                    if (cis.Count == 0) continue;
+                    foundResults += cis.Count;
                     console("-----------------------------------------------------------------");
                     console("LISTING: count=" + cis.Count + " local=" + G + " key='" + n + "'");
                     G.Listing(console, match, printOptions);
                     console("-----------------------------------------------------------------");
                 }
+                console(cmd + ": foundResults=" + foundResults);
                 return true;
             }
 
@@ -1156,10 +1251,13 @@ namespace RTParser.Utils
                     string n = ggg.Key;
                     GraphMaster G = ggg.Value;
                     var cis = G.GetCategoriesMatching(match);
+                    if (cis.Count == 0) continue;
+                    foundResults += cis.Count;
                     console("-----------------------------------------------------------------");
                     console("DISABLE: count=" + cis.Count + " local=" + G + " key='" + n + "'");
                     foreach (var ci in cis) G.DisableTemplate(ci.Template);
                 }
+                console(cmd + ": foundResults=" + foundResults);
                 return true;
             }
 
@@ -1172,10 +1270,42 @@ namespace RTParser.Utils
                     string n = ggg.Key;
                     GraphMaster G = ggg.Value;
                     var cis = G.GetCategoriesMatching(match);
+                    if (cis.Count == 0) continue;
+                    foundResults += cis.Count;
                     console("-----------------------------------------------------------------");
                     console("CLEAR: count=" + cis.Count + " local=" + G + " key='" + n + "'");
                     foreach (var ci in cis) G.RemoveTemplate(ci.Template);
                 }
+                console(cmd + ": foundResults=" + foundResults);
+                return true;
+            }
+
+            if (showHelp) console("@tmatch <graph> - <tmatch> @eval <code>  --  runs code on all graph elements matching <tmatch>");
+            if (cmd == "tmatch")
+            {
+                var matchingGraphs = request.GetMatchingGraphs(graphname, this);
+                string newMatch;
+                string newCmd;
+                if (!TextPatternUtils.SplitOff(match, "@", out newMatch, out newCmd))
+                {
+                    newMatch = match;
+                    newCmd = "@eval System.Out.WriteLine ";
+                }
+                foreach (var ggg in matchingGraphs)
+                {
+                    string n = ggg.Key;
+                    GraphMaster G = ggg.Value;
+                    var cis = G.GetCategoriesMatching(newMatch);
+                    if (cis.Count == 0) continue;
+                    foundResults += cis.Count;
+                    console("-----------------------------------------------------------------");
+                    console("TMATCH: count=" + cis.Count + " local=" + G + " key='" + n + "' cmd=" + newCmd);
+                    foreach (var ci in cis)
+                    {
+                        ci.IsTraced = true;
+                    }
+                }
+                console(cmd + ": foundResults=" + foundResults);
                 return true;
             }
             return false;

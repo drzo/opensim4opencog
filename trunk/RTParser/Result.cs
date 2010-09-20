@@ -20,6 +20,7 @@ namespace RTParser
         public static int MaxPrintResults = 1;
         public SubQuery _CurrentQuery;
         private string AlreadyUsed = "xtxtxtxtxtxtxtxtxxt";
+        private int RotatedTemplate = 0;
 
         /// <summary>
         /// The bot that is providing the answer
@@ -96,7 +97,10 @@ namespace RTParser
         /// The subQueries processed by the bot's graphmaster that contain the templates that 
         /// are to be converted into the collection of Sentences
         /// </summary>
-        public List<SubQuery> SubQueries = new List<SubQuery>();
+        public HashSet<SubQuery> SubQueries
+        {
+            get { return request.AllSubQueries; }
+        }
 
         public TemplateInfo TemplateOfRating;
         public double TemplateRating = 0.0d;
@@ -144,6 +148,7 @@ namespace RTParser
             get { return request.Graph; }
             set { request.Graph = value; }
         }
+
 
         public GraphQuery TopLevel
         {
@@ -302,7 +307,9 @@ namespace RTParser
         {
             get
             {
-                return ChatOutput.TheMainSentence;
+                string something;
+                if (TextPatternUtils.IsSomething(ChatOutput.TheMainSentence, out something)) return something;
+                return "Nothing";
             }
         }
 
@@ -330,6 +337,39 @@ namespace RTParser
             AddOutputSentences0(ti, unifiable);
         }
 
+        public bool IsTemplateNew(TemplateInfo ti)
+        {
+            if (ti == null) return false;
+            if (UsedTemplates1.Contains(ti)) return false;
+            UsedTemplates1.Add(ti);
+            string output = ti.TextSaved;
+            lock (UsedTemplates1)
+            {
+                double ThisRating = ti.Rating;
+                if (TemplateOfRating == null || TemplateRating < ThisRating)
+                {
+                    TemplateOfRating = ti;
+                    TemplateRating = ThisRating;
+                    writeToLog("AIMLTRACE: OUTPUT RATING={0} {2} TI: {1} \n U: {3}", ThisRating, ti, ti.Graph, output);
+                }
+                if (!Unifiable.IsNullOrEmpty(output))
+                {
+                    ti.TextSaved = output;
+                }
+                else
+                {
+                    ti.TextSaved = Unifiable.Empty;
+                    return false;
+                }
+
+                if (Unifiable.IsNullOrEmpty(output))
+                {
+                    throw new Exception("EmptyUnmif for " + ti);
+                }
+            }
+            return true;
+        }
+
         public void AddOutputSentences0(TemplateInfo ti, string unifiable)
         {
             if (null == unifiable)
@@ -347,7 +387,7 @@ namespace RTParser
             unifiable = unifiable + " ";
             if (false && unifiable.Length > 2 && (unifiable.Contains("<br/>") || unifiable.Contains("&p;")))
             {
-                string[] sents = unifiable.Split(new string[] {"<br/>", "&p;"}, StringSplitOptions.RemoveEmptyEntries);
+                string[] sents = unifiable.Split(new string[] { "<br/>", "&p;" }, StringSplitOptions.RemoveEmptyEntries);
                 foreach (var s in sents)
                 {
                     AddOutputSentences0(ti, s);
@@ -356,7 +396,7 @@ namespace RTParser
             }
             if (false && unifiable.Length > 2 && (unifiable.Contains(". ") || unifiable.Contains("? ")))
             {
-                string[] sents = unifiable.Split(new string[] {". ", "? "}, StringSplitOptions.RemoveEmptyEntries);
+                string[] sents = unifiable.Split(new string[] { ". ", "? " }, StringSplitOptions.RemoveEmptyEntries);
                 foreach (var s in sents)
                 {
                     AddOutputSentences0(ti, s);
@@ -364,35 +404,9 @@ namespace RTParser
                 return;
             }
             if (AlreadyUsed.Contains(unifiable)) return;
-
-            if (ti != null)
+            if (!IsTemplateNew(ti))
             {
-                lock (UsedTemplates1)
-                {
-                    double ThisRating = ti.Rating;
-                    if (TemplateOfRating == null || TemplateRating < ThisRating)
-                    {
-                        TemplateOfRating = ti;
-                        TemplateRating = ThisRating;
-                        writeToLog("AIMLTRACE: OUTPUT RATING={0} {2} TI: {1} \n U: {3}", ThisRating, ti, ti.Graph,
-                                   unifiable);
-                    }
-                    if (!Unifiable.IsNullOrEmpty(unifiable))
-                    {
-                        ti.TextSaved = unifiable;
-                    }
-                    else
-                    {
-                        ti.TextSaved = Unifiable.Empty;
-                        return;
-                    }
-
-                    if (Unifiable.IsNullOrEmpty(unifiable))
-                    {
-                        throw new Exception("EmptyUnmif for " + ti);
-                    }
-                    if (!UsedTemplates1.Contains(ti)) UsedTemplates1.Add(ti);
-                }
+                //return;
             }
             if (Unifiable.IsNullOrEmpty(unifiable))
             {
@@ -431,7 +445,7 @@ namespace RTParser
                 OutputSentences.Add(unifiable);
                 return;
                 bool isComplete = OutputSentences.Count >=
-                                  ((QuerySettingsReadOnly) request.GetQuerySettings()).MinOutputs ||
+                                  ((QuerySettingsReadOnly)request.GetQuerySettings()).MinOutputs ||
                                   request.IsComplete(this);
 
                 if (!isComplete) return;
@@ -449,14 +463,14 @@ namespace RTParser
                         rd.request = request;
                         // rd.KeepThrowing = true;
                         rd.TagHandler = ti.Query.LastTagHandler;
-                        rd.result = (AIMLbot.Result) this;
+                        rd.result = (AIMLbot.Result)this;
                     }
                     throw rd;
                 }
             }
         }
 
-        public void WriteLine(string format, params object[] args)
+        public void AddResultFormat(string format, params object[] args)
         {
             lock (OutputSentences) OutputSentences.Add(string.Format(format, args));
         }
@@ -477,7 +491,7 @@ namespace RTParser
             if (!Started)
             {
                 msg = "!Started ";
-            }            
+            }
             if (!IsComplete)
             {
                 msg = "Incomplete ";
@@ -498,10 +512,14 @@ namespace RTParser
             {
                 var temps = UsedTemplates;
                 if (temps != null)
+                {
+                    if (RotatedTemplate == UsedTemplates.Count) return;
+                    RotatedTemplate = UsedTemplates.Count;
                     foreach (TemplateInfo info in temps)
                     {
                         info.GraphmasterNode.RotateTemplate(info);
                     }
+                }
             }
         }
     }

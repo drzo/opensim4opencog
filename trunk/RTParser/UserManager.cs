@@ -775,16 +775,18 @@ namespace RTParser
             }
         }
 
-        public void DetectUserChange(User myUser, string wasNamed)
+        public bool DetectUserChange(User myUser, string wasNamed)
         {
             string uname = myUser.UserName;
-            if (wasNamed.ToLower() != uname.ToLower())
+            if (wasNamed.ToLower().Replace(" ", "_") != uname.ToLower().Replace(" ", "_"))
             {
                 var LU = LastUser;
                 LastUser = ChangeUser(wasNamed, uname);
                 DLRConsole.SYSTEM_ERR_WRITELINE("ChangeUser: {0}->{1}   {2}->{3}", LU, LastUser, wasNamed, uname);
+                return true;
                 //BotDirective(request, "@chuser " + uname, DEVNULL);
             }
+            return false;
         }
 
         public string CleanupFromname(string fromname)

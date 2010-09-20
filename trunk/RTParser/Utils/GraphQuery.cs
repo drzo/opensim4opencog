@@ -18,13 +18,25 @@ namespace RTParser.Utils
 
         public RequestImpl TheRequest;
         private List<TemplateInfo> Templates;
-        private List<SubQuery> Bindings;
-        public bool NoMoreResults;
+        private List<SubQuery> Bindings;        
         public List<Node> PatternsUsed;
         public Unifiable InputPath;
         public MatchState matchState;
         public GraphMaster graphMaster;
 
+        private bool _NoMoreResults_;
+        public bool NoMoreResults
+        {
+            get
+            {
+                return _NoMoreResults_;
+            }
+            set
+            {
+                TheRequest.SuspendSearchLimits = false;
+                _NoMoreResults_ = value;
+            }
+        }
         public string WhyComplete
         {
             get
@@ -180,6 +192,7 @@ namespace RTParser.Utils
 
         public IEnumerable<SubQuery> GetBindings()
         {
+            if (Bindings == null) return new List<SubQuery>();
             return Bindings;
         }
 
@@ -218,7 +231,7 @@ namespace RTParser.Utils
         {
             return true;
         }
-        public List<SubQuery> PreprocessSubQueries(Request request, ICollection<SubQuery> resultSubQueries, bool isTraced, ref bool printedSQs, OutputDelegate writeToLog)
+        public ICollection<SubQuery> PreprocessSubQueries(Request request, ICollection<SubQuery> resultSubQueries, bool isTraced, ref bool printedSQs, OutputDelegate writeToLog)
         {
             // var usingResultSubQueries = new List<SubQuery>();
             //todo pick and chose the queries
@@ -235,7 +248,7 @@ namespace RTParser.Utils
                 writeToLog(s);
                 DLRConsole.SystemFlush();
             }
-            return (List<SubQuery>) resultSubQueries;
+            return resultSubQueries;
         }
     }
 }

@@ -164,16 +164,46 @@ namespace RTParser.Utils
 
         internal static string GetNameOfDict(SubQuery query, string dictName, XmlNode templateNode, out ISettingsDictionary dict)
         {
+            string type = dictName;
             //ISettingsDictionary udict = query.GetDictionary(type, templateNode, dict);
-
-            string type = GetAttribValue(templateNode, "type,dict", dictName);
-            if (type == null)
+            while (templateNode != null)
             {
+                string type0 = GetAttribValue(templateNode, "type,dict", null);
+                if (type0 != null)
+                {
+                    type = type0;
+                    break;
+                }
                 string uname = GetAttribValue(templateNode, "user", null);
-                if (uname != null) dictName = GetNamedType("user", uname);
+                if (uname != null)
+                {
+                    type0 = GetNamedType("user", uname);
+
+                    if (type0 != null)
+            {
+                        type = type0;
+                        break;
+                    }
+                }
                 string bname = GetAttribValue(templateNode, "bot", null);
-                if (bname != null) dictName = GetNamedType("bot", bname);
+                if (bname != null)
+                {
+                    type0 = GetNamedType("bot", bname);
+                    if (type0 != null)
+                    {
+                        type = type0;
+                        break;
+                    }
+                }
+                dict = query.GetDictionary(templateNode.LocalName);
+                if (dict != null)
+                {
+                    type = dict.NameSpace;
+                    break;
+                }
+                templateNode = templateNode.ParentNode;
             }
+            if (type == null) type = dictName;
             bool preferBotOverUser = (type == "bot");
 
             if (preferBotOverUser)
@@ -185,7 +215,7 @@ namespace RTParser.Utils
                 dict = query.GetDictionary(type);
             }
             if (dict == null) dict = query;
-            return dictName;
+            return type ?? dict.NameSpace;
         }
     }
 }

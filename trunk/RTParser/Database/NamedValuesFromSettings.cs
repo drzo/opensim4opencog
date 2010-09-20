@@ -18,7 +18,7 @@ namespace RTParser.Database
         static public Unifiable GetSettingForType(string subject, SubQuery query, ISettingsDictionary dict, string name, out string realName, string gName, Unifiable defaultVal, out bool succeed, XmlNode node)
         {
             Request request = query.Request;
-            OutputDelegate writeToLog = query.Result.writeToLog;
+            OutputDelegate writeToLog = request.writeToLog ?? DEVNULL;
             RTPBot TargetBot = request.TargetBot;
             ISettingsDictionary udict;
             string dictName = AIMLTagHandler.GetNameOfDict(query, subject ?? dict.NameSpace, node, out udict);
