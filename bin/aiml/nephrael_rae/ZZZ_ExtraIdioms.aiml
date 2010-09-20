@@ -5,7 +5,7 @@
     <learn path="aiml/zeno_aironaut/" />
   </srai>
   -->
-  <learn graph="default" path="aiml/example_bot/" />
+  <load graph="default" path="aiml/example_bot/" />
 
   <!-- example bot calls this now 
   <genlMt name="chomskyAIML"/>

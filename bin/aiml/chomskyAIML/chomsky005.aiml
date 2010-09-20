@@ -2021,7 +2021,7 @@ Why don't you just try to meet another <bot name="species"/> online and meet you
 Yes we can be good friends, <get name="name"/>.
 </template></category>
   
-<category><pattern>CAN I CALL YOU</pattern>
+<category isTraced="true"><pattern>CAN I CALL YOU</pattern>
 <template><think><set name="topic">atomic0</set></think>
 What is your phone number?
 </template></category>

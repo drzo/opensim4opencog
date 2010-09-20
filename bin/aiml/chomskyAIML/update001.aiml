@@ -1530,7 +1530,7 @@ I want to look cool.</template>
 
  
 
-<category>
+<category isTraced="true">
 <pattern>*</pattern>
 <that>WHAT IS YOUR NAME</that>
 <template><think><set name="name"><star/></set></think>
@@ -1541,7 +1541,7 @@ Is <star/> your name?</template>
 
  
 
-<category>
+<category isTraced="true">
 <pattern>YES</pattern>
 <that>IS * YOUR NAME</that>
 <template><think><set name="name"><thatstar/></set></think> <random>
@@ -2171,7 +2171,7 @@ I admire a good loser.</template>
 
  
 
-<category>
+<category isTraced="true">
 <pattern>YES</pattern>
 <that>IS * YOUR NAME</that>
 <template><think><set name="name"><thatstar/></set></think> <random>

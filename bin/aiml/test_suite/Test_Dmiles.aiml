@@ -2,9 +2,11 @@
 <aiml graph="default">
 
 
-  <learn graph="chomskyAIML" path="aiml/chomskyAIML/" />
    
   <!--
+
+ <learn graph="chomskyAIML" path="aiml/chomskyAIML/" />
+
   <learn path="aiml/example_bot/" />
   <genlMt name="chomskyAIML"/>
 

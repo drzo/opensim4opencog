@@ -1,23 +1,33 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
 <aiml graph="default">
-  <srai>
-    <learn>aiml/programsharp/</learn>
+
+  <load filename="aiml/special/lucene-assertz.aiml" />
+  <javascript>
+    request.GetGraph("default").ForcedSettings.MinSetVars=1;
+  </javascript>
+
+  <load filename="aiml/programsharp/*.aiml" />
+  <load filename="aiml/stdset/*.aiml" />
+  <load filename="aiml/chomskyAIML/*.aiml" />
+  
+  <!--
+ <srai>
+  <learn path="../bina_v1/" /> 
   </srai>
-  <srai>
-    <learn>aiml/stdset/</learn>
-  </srai>
-  <srai>
-    <learn>aiml/chomskyAIML/</learn>
-  </srai>
-  <srai>
-    <learn path="aiml/special/Lucene.aiml" />
-    <learn path="aiml/special/lucene-qa.aiml" />
-  </srai>  
+  -->
+
+  <load filename="aiml/special/Lucene.aiml" />
+  <load filename="aiml/special/lucene-qa.aiml" />
+  <load filename="aiml/special/lucene-assertz.aiml" />
+  <aiml graph="HeardSelfSay"><genlMt to="listener" /></aiml>
+  
   <category>
     <pattern>*</pattern>
     <template>
-      <srai>STDCATCHALL <star/></srai>
+      <srai>
+        STDCATCHALL <star/>
+      </srai>
     </template>
   </category>
 </aiml>

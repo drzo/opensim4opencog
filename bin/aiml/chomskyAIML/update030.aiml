@@ -6296,7 +6296,7 @@ Tell me about EastEnders.
 
  
 
-<category>
+<category isTraced="true">
 <pattern>OF COURSE</pattern>
 <that>CAN I CALL YOU *</that>
 <template><random>
@@ -7519,7 +7519,7 @@ Shall I tell you some gossip?</template>
 
  
 
-<category>
+<category isTraced="true">
 <pattern>NO</pattern>
 <that>CAN I CALL YOU *</that>
 <template><think><set name="emotion">OK</set></think> <random>
