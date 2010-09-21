@@ -15,7 +15,7 @@ namespace RTParser.Utils
     /// interrogation of the graphmaster.
     /// </summary>
     [Serializable]
-    public class SubQuery : ISettingsDictionary
+    public class SubQuery : StaticAIMLUtils, ISettingsDictionary, IComparable<SubQuery>
     {
         public static object TagHandlerLock = new object();
         public static Dictionary<string, AIMLTagHandler> TagHandlers;
@@ -28,6 +28,13 @@ namespace RTParser.Utils
         public Result Result;
         public GraphQuery TopLevel;
 
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != typeof(SubQuery)) return false;
+            return Equals((SubQuery)obj);
+        }
         /// <summary>
         /// Ctor
         /// </summary>
@@ -446,6 +453,117 @@ namespace RTParser.Utils
         {
             enter();
             AddUndo(exit);
+        }
+
+
+        public int CompareTo(SubQuery other)
+        {
+            if (Pattern == null)
+            {
+                return ReferenceCompare(this, other);
+            }
+            int compare = Pattern.CompareTo(other.Pattern);
+            if (compare != 0) return compare;
+            compare = CollectionCompare(Templates, other.Templates, TemplateInfo.CompareTemplates);
+            if (compare != 0) return compare;
+            return ReferenceCompare(this, other);
+        }
+
+        public bool Equals(SubQuery other)
+        {
+            if (ReferenceEquals(this, other)) return true;
+            if (ReferenceEquals(null, other)) return false;
+            if (!EqualsMeaning(other)) return false;
+            bool same = //Equals(other.ov_TargetBot, ov_TargetBot)
+                //  && Equals(other.CurrentTemplate, CurrentTemplate)
+                //  && Equals(other.LastTagHandler, LastTagHandler)
+                //Equals(other.Pattern, Pattern)
+                //  && Equals(other.prefix, prefix)
+                Equals(other.Request, Request)
+                && Equals(other.Result, Result)
+                //  && Equals(other.TopLevel, TopLevel)                        
+                && CollectionEquals(other.GuardStar, GuardStar)
+                && CollectionEquals(other.InputStar, InputStar)
+                && CollectionEquals(other.ThatStar, ThatStar)
+                && CollectionEquals(other.TopicStar, TopicStar)
+                && SetsEquals(other.Flags, Flags)
+                //  && other.HasFailed == HasFailed
+                //  && other.HasSuceeded == HasSuceeded
+                //  && other.GetDictValue == GetDictValue
+                //  && other.SetDictValue == SetDictValue                
+                //  && other.IsTraced.Equals(IsTraced)
+                //  && SetsEquals(other.Templates, Templates)
+                //  && Equals(other.Graph, Graph)
+                ;
+            if (!same)
+            {
+                return true;
+                return false;
+            }
+            // ReSharper disable ConditionIsAlwaysTrueOrFalse
+            return same;
+            // ReSharper restore ConditionIsAlwaysTrueOrFalse
+        }
+
+        public bool EqualsMeaning(SubQuery other)
+        {
+            if (ReferenceEquals(this, other)) return true;
+            if (Pattern==null) return false;
+            //if (!Equals(other.FullPath.ToLower(), FullPath.ToLower())) return false;
+            bool same = //Equals(other.ov_TargetBot, ov_TargetBot)
+                //  && Equals(other.CurrentTemplate, CurrentTemplate)
+                //  && Equals(other.LastTagHandler, LastTagHandler)
+                Equals(other.Pattern, Pattern)
+                //  && Equals(other.prefix, prefix)
+                //  && Equals(other.Request, Request)
+                //  && Equals(other.Result, Result)
+                //  && Equals(other.TopLevel, TopLevel)                        
+                //  && CollectionEquals(other.GuardStar, GuardStar)
+                //  && CollectionEquals(other.InputStar, InputStar)
+                //  && CollectionEquals(other.ThatStar, ThatStar)
+                //  && CollectionEquals(other.TopicStar, TopicStar)
+                //  && SetsEquals(other.Flags, Flags)
+                //  && other.HasFailed == HasFailed
+                //  && other.HasSuceeded == HasSuceeded
+                //  && other.GetDictValue == GetDictValue
+                //  && other.SetDictValue == SetDictValue                
+                //  && other.IsTraced.Equals(IsTraced)
+                && SetsEquals(other.Templates, Templates)
+                && Equals(other.Graph, Graph)
+                ;
+            if (!same) return false;
+            // ReSharper disable ConditionIsAlwaysTrueOrFalse
+            return same;
+            // ReSharper restore ConditionIsAlwaysTrueOrFalse
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int result = 0;// (ov_TargetBot != null ? ov_TargetBot.GetHashCode() : 0);
+                ////result = (result * 397) ^ (CurrentTemplate != null ? CurrentTemplate.GetHashCode() : 0);
+                ////result = (result * 397) ^ (LastTagHandler != null ? LastTagHandler.GetHashCode() : 0);
+                result = (result * 397) ^ (Pattern != null ? Pattern.GetHashCode() : 0);
+                ////result = (result * 397) ^ (prefix != null ? prefix.GetHashCode() : 0);
+                ////result = (result * 397) ^ (Request != null ? Request.GetHashCode() : 0);
+                ////result = (result * 397) ^ (Result != null ? Result.GetHashCode() : 0);
+                ////result = (result * 397) ^ (TopLevel != null ? TopLevel.GetHashCode() : 0);
+                ////result = (result * 397) ^ (Flags != null ? Flags.GetHashCode() : 0);
+              //  result = (result * 397) ^ (FullPath != null ? FullPath.GetHashCode() : 0);
+                ////result = (result * 397) ^ (GuardStar != null ? GuardStar.GetHashCode() : 0);
+                ////result = (result * 397) ^ (InputStar != null ? InputStar.GetHashCode() : 0);
+                ////result = (result * 397) ^ (Templates != null ? Templates.GetHashCode() : 0);
+                ////result = (result * 397) ^ (ThatStar != null ? ThatStar.GetHashCode() : 0);
+                ////result = (result * 397) ^ (TopicStar != null ? TopicStar.GetHashCode() : 0);
+                //result = (result*397) ^ HasFailed;
+                //result = (result*397) ^ HasSuceeded;
+                //result = (result*397) ^ GetDictValue;
+                //result = (result*397) ^ SetDictValue;
+               // result = (result * 397) ^ (Graph != null ? Graph.GetHashCode() : 0);
+                //result = (result*397) ^ IsTraced.GetHashCode();
+                return result;
+            }
         }
     }
 

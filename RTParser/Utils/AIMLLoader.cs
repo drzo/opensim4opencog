@@ -1104,8 +1104,9 @@ namespace RTParser.Utils
                         categoryInfo.SetCategoryTag(categoryPath, patternInfo, categoryInfo,
                                                     outerNode, templateNode, guard, thatInfo);
 
+                        bool wouldBeRemoval;
                         pathCtxGraph.addCategoryTag(categoryPath, patternInfo, categoryInfo,
-                                                    outerNode, templateNode, guard, thatInfo, additionalRules);
+                                                    outerNode, templateNode, guard, thatInfo, additionalRules, out wouldBeRemoval);
                         foreach (var node in additionalRules)
                         {
                             categoryInfo.AddPrecondition(node);

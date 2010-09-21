@@ -436,18 +436,18 @@ namespace RTParser.Utils
 
         public void addCategoryTag(Unifiable generatedPath, PatternInfo patternInfo, CategoryInfo category,
                                    XmlNode outerNode, XmlNode templateNode, GuardInfo guard, ThatInfo thatInfo,
-                                   List<ConversationCondition> additionalRules)
+                                   List<ConversationCondition> additionalRules, out bool wouldBeRemoval)
         {
             lock (LockerObject)
             {
                 addCategoryTag0(generatedPath, patternInfo, category, outerNode, templateNode, guard, thatInfo,
-                                additionalRules);
+                                additionalRules, out wouldBeRemoval);
             }
         }
 
         private void addCategoryTag0(Unifiable generatedPath, PatternInfo patternInfo, CategoryInfo category,
                                    XmlNode outerNode, XmlNode templateNode, GuardInfo guard, ThatInfo thatInfo,
-                                   List<ConversationCondition> additionalRules)
+                                   List<ConversationCondition> additionalRules, out bool wouldBeRemoval)
         {
             if (SilentTagsInPutParent && !StaticAIMLUtils.IsEmptyTemplate(templateNode) && StaticAIMLUtils.IsSilentTag(templateNode))
             {
@@ -456,7 +456,7 @@ namespace RTParser.Utils
                 parent1.SilentTagsInPutParent = false;
                 writeToLog("Adding to Parent " + category);
                 parent1.addCategoryTag(generatedPath, patternInfo, category, outerNode, templateNode, guard, thatInfo,
-                                       additionalRules);
+                                       additionalRules, out wouldBeRemoval);
                 return;
             }
 
@@ -465,12 +465,25 @@ namespace RTParser.Utils
             {
                 rootNode = this.PostParentRootNode;
             }
+            else if (IsAnyStar(generatedPath) > 1)
+            {
+                rootNode = this.PostParentRootNode;
+                //writeToLog("Putting at end of queue " + generatedPath);
+            }
             Node thiz = rootNode.addPathNodeChilds(generatedPath);
 
             int countBefore = thiz.TemplateInfoCount;
 
             TemplateInfo info0 = thiz.addTerminal(templateNode, category, guard, thatInfo, this, patternInfo,
-                                                 additionalRules);
+                                                 additionalRules, out wouldBeRemoval);
+            if (wouldBeRemoval)
+            {
+                Node other = rootNode == this.RootNode ? this.PostParentRootNode : this.RootNode;
+                Node thatz = other.addPathNodeChilds(generatedPath);
+                //writeToLog("Doing other removal: " + generatedPath);
+                info0 = thatz.addTerminal(templateNode, category, guard, thatInfo, this, patternInfo,
+                                          additionalRules, out wouldBeRemoval);
+            }
             int countAfter = thiz.TemplateInfoCount;
             /*
              * Node created = Node.addCategoryTag(node, generatedPath, patternInfo,
@@ -527,6 +540,7 @@ namespace RTParser.Utils
             MatchState state = ql.matchState;
             Unifiable path = ql.InputPath;
             var request = ql.TheRequest;
+            if (DoParents) DoParentEval(Parents, request, request.rawInput);
             evaluateQL(path, request, state, ql, DoParents);
             if (ql.TemplateCount == 0)
             {
@@ -539,7 +553,6 @@ namespace RTParser.Utils
 
         private void evaluateQL(Unifiable path, Request request, MatchState matchState, GraphQuery ql, bool locallyDoParents)
         {
-            if (locallyDoParents) DoParentEval(Parents, request, path);
             bool trace = request.IsTraced && !UnTraced;
             while (getQueries(RootNode, path, request, matchState, 0, Unifiable.CreateAppendable(), ql))
             {

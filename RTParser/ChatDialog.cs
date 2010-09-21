@@ -623,9 +623,9 @@ namespace RTParser
                                                                writeToLog);
                         }
                         // give a 20 second blessing
-                        if (result.SubQueries.Count > 0 && !request.SraiDepth.IsOverMax)
+                        if (false && result.SubQueries.Count > 0 && !request.SraiDepth.IsOverMax)
                         {
-                            writeToLog("Extendinh time");
+                            writeToLog("Extending time");
                             request.TimeOutFromNow = TimeSpan.FromSeconds(2);
                         }
                         //ProcessSubQueriesAndIncreasLimits(request, result, ref isTraced, printedSQs, writeToLog);
@@ -832,19 +832,22 @@ namespace RTParser
             }
 
             hasMoreSolutions = true;
+            List<SubQuery> sortMe = new List<SubQuery>(AllQueries);
+
+            sortMe.Sort();
 
             if (isTraced)
             {
                 int sqNum = 0;
-                writeToLog("AllQueries.Count = " + AllQueries.Count);
-                foreach (SubQuery query in AllQueries)
+                writeToLog("AllQueries.Count = " + sortMe.Count + " was " + AllQueries );
+                foreach (SubQuery query in sortMe)
                 {
                     writeToLog("QUERY " + sqNum + ": " + query.Pattern + " " + query.Pattern.Graph);
                     sqNum++;
                 }
             }
 
-            foreach (SubQuery query in AllQueries)
+            foreach (SubQuery query in sortMe)
             {
                 foreach (TemplateInfo s in query.Templates)
                 {
@@ -1153,7 +1156,7 @@ namespace RTParser
             }
 
             bool protectChild = copyChild || childOriginal;
-            AIMLTagHandler tagHandler;
+            AIMLTagHandler tagHandler;  
             string outputSentence = processNode(templateNode, query,
                                                 request, result, request.Requester, handler,
                                                 protectChild, copyParent, out tagHandler);
@@ -1192,7 +1195,10 @@ namespace RTParser
                     if (templateInfo != null)
                     {
                         string fromStr = " from " + templateInfo.Graph;
-                        writeToLog("SILENT '{0}' TEMPLATE={1}", o, ParentTextAndSourceInfo(templateNode) + fromStr);
+                        if (!StaticAIMLUtils.IsSilentTag(templateNode))
+                        {
+                            writeToLog("SILENT '{0}' TEMPLATE={1}", o, ParentTextAndSourceInfo(templateNode) + fromStr);
+                        }
                         templateInfo.IsDisabled = true;
                         request.AddUndo(() =>
                         {
@@ -1412,21 +1418,35 @@ namespace RTParser
                                   AIMLTagHandler parent, bool protectChild, bool copyParent,
                                   out AIMLTagHandler tagHandler)
         {
+            if (node != null && node.NodeType == XmlNodeType.Text)
+            {
+                tagHandler = null;
+                string s = node.InnerText.Trim();
+                if (String.IsNullOrEmpty(s))
+                {
+                    return Unifiable.Empty;
+                }
+                return s;
+            }
+            bool isTraced = request.IsTraced || result.IsTraced || !request.GraphsAcceptingUserInput ||
+                (query != null && query.IsTraced);
             // check for timeout (to avoid infinite loops)
+            bool overBudget = false;
             if (request.IsComplete(result))
             {
                 var gn = request.Graph;
                 if (query != null) gn = query.Graph;
-                request.writeToLog(
-                    "WARNING! Request " + request.WhyComplete + ". User: {0} raw input: {3} \"{1}\" processing template: \"{2}\"",
-                    request.Requester.UserID, request.rawInput,
-                    (query == null ? "-NOQUERY-" : query.Templates.Count.ToString()), gn);
-                // tagHandler = null;
-                //   return Unifiable.Empty;
+                if (isTraced)
+                    request.writeToLog(
+                        "WARNING! Request " + request.WhyComplete +
+                        ". User: {0} raw input: {3} \"{1}\" processing {2} templates: \"{4}\"",
+                        request.Requester.UserID, request.rawInput,
+                        (query == null ? "-NOQUERY-" : query.Templates.Count.ToString()), gn, node);
+                if (true || !request.IsToplevelRequest)
+                {
+                    overBudget = true;
+                }
             }
-
-
-
 
             XmlNode oldNode = node;
             // copy the node!?!
@@ -1456,11 +1476,22 @@ namespace RTParser
                     return s;
                 }
                 OutputDelegate del = (request != null) ? request.writeToLog : writeToLog;
+                if (overBudget)
+                {
+                    tagHandler = null;
+                    return Unifiable.Empty;
+                }
                 EvalAiml(node, request, del ?? DEVNULL);
                 return node.InnerXml;
             }
 
             tagHandler.SetParent(parent);
+            if (overBudget)
+            {
+                tagHandler = null;
+                return Unifiable.Empty;
+            }
+
             Unifiable cp = tagHandler.CompleteAimlProcess();
             if (Unifiable.IsNullOrEmpty(cp))
             {

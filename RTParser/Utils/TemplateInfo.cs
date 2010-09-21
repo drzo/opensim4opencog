@@ -7,7 +7,7 @@ using RTParser.AIMLTagHandlers;
 namespace RTParser.Utils
 {
     [Serializable]
-    public class TemplateInfo : OutputInfo, IAIMLInfo
+    public class TemplateInfo : OutputInfo, IAIMLInfo, IComparable<TemplateInfo>
     {
         public CategoryInfo CategoryInfo;
         public Node GraphmasterNode;
@@ -16,6 +16,16 @@ namespace RTParser.Utils
         public double Rating = 1.0;
         public Unifiable TextSaved;
         string _templateKey;
+
+        public int CompareTo(TemplateInfo other)
+        {
+            return CompareTemplates(this, other);
+        }
+        public static int CompareTemplates(TemplateInfo thiz, TemplateInfo other)
+        {
+            return StaticAIMLUtils.CollectionCompare<XmlNode>(thiz.Output.ChildNodes, other.Output.ChildNodes, StaticAIMLUtils.CompareXmlNodes);
+        }
+
 
         public TemplateInfo(XmlNode template, GuardInfo guard, Node patternNode, CategoryInfo categoryInfo)
             : base(template)

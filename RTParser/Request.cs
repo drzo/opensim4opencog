@@ -295,6 +295,7 @@ namespace RTParser
         public RequestImpl(string rawInput, User user, RTPBot bot, Request parent, User targetUser)
             :  base(bot.GetQuerySettings()) // Get query settings intially from user
         {
+            SraiDepth.Max = 5;
             SubQueries = new HashSet<SubQuery>();
             IsToplevelRequest = parent == null;
             this.Stage = SideEffectStage.UNSTARTED;
@@ -983,7 +984,7 @@ namespace RTParser
         {
             if (CurrentQuery == null)
             {
-                writeToLog("ERROR: Cannot get CurrentQuery!?");
+             //   writeToLog("ERROR: Cannot get CurrentQuery!?");
             }
             return GetDictionary(named, CurrentQuery);
         }
@@ -1153,7 +1154,8 @@ namespace RTParser
             if (named == "set") return CheckedValue(Requester.UserID, Requester);
             if (named == "get") return CheckedValue(Requester.UserID, Requester);
             if (named == "query") return CheckedValue(named, CurrentQuery);
-            if (named == "request") return CheckedValue(named, TargetSettings);            
+            if (named == "request") return CheckedValue(named, TargetSettings);
+            if (named == "bot.globalsettings") return CheckedValue(named, TargetBot.GlobalSettings);     
             if (named == "bot")
             {
                 if (ResponderPredicates != null) return ResponderPredicates;
