@@ -141,6 +141,17 @@ namespace RTParser.Utils
         public static OutputDelegate userTraceRedir;
         public static bool TrackTemplates = true; // to save mememory
 
+        public static string ToTemplateXML(XmlNode templateNode)
+        {
+            string requestName = templateNode.OuterXml;//
+            if (templateNode.NodeType != XmlNodeType.Element)
+            {
+                string sentence = VisibleRendering(getNode("<template>" + requestName + "</template>").ChildNodes,
+                                                   PatternSideRendering);
+                requestName = "<template>" + sentence + "</template>";
+            }
+            return requestName;
+        }
         public static R FromLoaderOper<R>(Func<R> action, GraphMaster gm)
         {
             OutputDelegate prev = userTraceRedir;

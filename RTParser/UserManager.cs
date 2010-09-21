@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using AIMLbot;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
@@ -314,7 +315,7 @@ namespace RTParser
                 string username = fullname;
                 fullname = CleanupFromname(fullname);
                 key = key.ToLower();
-                User myUser = new AIMLbot.User(key, this);
+                User myUser = new MasterUser(key, this);
                 myUser.userTrace = writeToUserLog;
                 myUser.UserName = fullname;
                 writeToUserLog("New User " + fullname + " -DEBUG9");
@@ -868,7 +869,7 @@ namespace RTParser
 
         public string OutputResult(Result res, OutputDelegate console, bool includeWeigth)
         {
-            User CurrentUser = res.Requestor;
+            User CurrentUser = res.Requester;
             string user = CurrentUser.UserName;
             string useOut = res.EnglishSentences;
             double vscored;

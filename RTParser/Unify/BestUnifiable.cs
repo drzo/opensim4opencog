@@ -121,6 +121,32 @@ namespace RTParser
             throw new NotImplementedException();
         }
 
+        public override double Strictness()
+        {
+            if (best != null) return best.Strictness();
+            double leastStrict = 0;
+            foreach (var list in List)
+            {
+                double cand = list.Strictness();
+                if (cand < leastStrict)
+                {
+                    leastStrict = cand;
+                }
+            }
+            return leastStrict;
+        }
+
+        public override int CompareTo(Unifiable other)
+        {
+            double strictness = this.Strictness();
+            double otherStrictness = other.Strictness();
+            if (strictness == otherStrictness)
+            {
+                return AsString().CompareTo(other.AsString());
+            }
+            return strictness.CompareTo(otherStrictness);
+        }
+
         public override bool IsLazy()
         {
             foreach (var list in List)

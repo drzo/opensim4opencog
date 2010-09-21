@@ -22,6 +22,7 @@ namespace RTParser
             valueCache = null;
             restCache = null;
             upperCache = null;
+            _strictness = -11;
         }
 
         protected string str;
@@ -30,6 +31,51 @@ namespace RTParser
         protected Unifiable restCache = null;
         protected string upperCache;
         private object valueCache;
+        private double _strictness = -11;
+
+        public override double Strictness()
+        {
+            if (_strictness == -11)
+            {
+                _strictness = Strictness0();
+            }
+            return _strictness;
+        }
+
+        public double Strictness0()
+        {
+            if (str == null) return 2.1;
+            if (str == "") return 2.1;
+            if (str == "*") return 0.0;
+            if (str == "_") return 0.2;
+            char c0 = str[0];
+            char cN = str[str.Length - 1];
+            if (c0 == '*' && '*' == cN) return 0.0;
+            if (c0 == '_' && '_' == cN) return 0.1;
+            if (c0 == '<' && cN == '>') return 2.2;
+            if (c0 == '~' || cN == '~') return 3.2;
+            if (c0 == '#') return 0.3;
+            if (c0 == '*' || cN == '*') return 1.4;
+            if (c0 == '_' || cN == '_') return 1.5;
+            return 5.0;
+        }
+
+        public override int CompareTo(Unifiable other0)
+        {
+            StringUnifiable other = other0 as StringUnifiable;
+            if (other == null) return -1;
+            string otherstr = other.str;
+            if (otherstr == str) return 0;
+            char c0 = str[0];
+            char cN = str[str.Length - 1];
+            double strictness = this.Strictness();
+            double otherStrictness = other.Strictness();
+            if (strictness == otherStrictness)
+            {
+                return ToUpper().CompareTo(other.ToUpper());
+            }
+            return strictness.CompareTo(otherStrictness);
+        }
 
         private string _str
         {

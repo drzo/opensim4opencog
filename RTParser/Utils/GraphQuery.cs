@@ -18,7 +18,7 @@ namespace RTParser.Utils
 
         public RequestImpl TheRequest;
         private List<TemplateInfo> Templates;
-        private List<SubQuery> Bindings;        
+        private List<SubQuery> Bindings;
         public List<Node> PatternsUsed;
         public Unifiable InputPath;
         public MatchState matchState;
@@ -37,13 +37,38 @@ namespace RTParser.Utils
                 _NoMoreResults_ = value;
             }
         }
+
+        public string WhyToplevelComplete
+        {
+            get
+            {
+                if (TheRequest.SuspendSearchLimits) return null;
+                string s = null;
+                if (TemplateCount >= MaxTemplates)
+                {
+                    s = "TLMaxTemplatesT";
+                }
+                if (PatternCount >= MaxPatterns)
+                {
+                    s = (s ?? "") + " TLMaxPatternsT";
+                }
+                return s;
+            }
+        }
+
         public string WhyComplete
         {
             get
             {
                 string ss = TheRequest.WhyNoSearch(CurrentResult);
-                if (!string.IsNullOrEmpty(ss)) return ss + (IsMaxedOut ? " TopLevel.IsMaxedOut" : "");
-                return (IsMaxedOut ? " TopLevel.IsMaxedOut" : null);
+                if (ss == null)
+                {
+                    if (!IsMaxedOut) return null;
+                    return " TopLevel.IsMaxedOut";
+                }
+                string localMax = WhyToplevelComplete;
+                if (!string.IsNullOrEmpty(ss)) return ss + " " + localMax;
+                return null;
             }
         }
 
@@ -62,7 +87,7 @@ namespace RTParser.Utils
             : base(request)
         {
             InputPath = inputPath;
-            TheRequest = (RequestImpl) request;
+            TheRequest = (RequestImpl)request;
             graphMaster = gMaster;
             matchState = mstate;
         }
@@ -72,7 +97,7 @@ namespace RTParser.Utils
 
         public override string GraphName
         {
-            get { return ((QuerySettingsReadOnly) TheRequest).GraphName; }
+            get { return ((QuerySettingsReadOnly)TheRequest).GraphName; }
             set { TheRequest.GraphName = value; }
         }
 

@@ -9,6 +9,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics;
+using AIMLbot;
 using RTParser;
 using RTParser.Utils;
 
@@ -135,7 +136,7 @@ namespace RTParser.AIMLTagHandlers
             //----------------------
             // snarf from "srai"
             Unifiable tempTopic = topic;
-            Request subRequest = new AIMLbot.Request(line, this.user, this.Proc, (AIMLbot.Request)request);
+            MasterRequest subRequest = request.CreateSubRequest(line, this.user, this.Proc, null);
             //String gn = GetAttribValue("graph", null);
             string gn = "msm";
             if (gn != null) subRequest.Graph = Proc.GetGraph(gn, request.Graph);
@@ -147,16 +148,16 @@ namespace RTParser.AIMLTagHandlers
             subRequest.TimesOutAt = this.request.TimesOutAt;
             subRequest.ProcessMultipleTemplates = allowMultiplesTemplates;
 
-            AIMLbot.Result subResult = null;
+            MasterRequest subResult = subRequest;
             var prev = subRequest.GraphsAcceptingUserInput;
             var prevSO = user.SuspendAddResultToUser;
             try
             {
                 subRequest.GraphsAcceptingUserInput = true;
                 var newresult = request.CreateResult(subRequest);
-                subRequest.CurrentResult = newresult;
+                //subRequest.CurrentResult = newresult;
                 user.SuspendAddResultToUser = true;
-                subResult = this.Proc.Chat(subRequest, subRequest.Graph);
+                subResult = (MasterRequest) this.Proc.Chat(subRequest, subRequest.Graph);
                 // subResult = this.Proc.Chat(subRequest, request.Graph);
             }
             finally

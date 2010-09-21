@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace AIMLBot.Properties
+namespace AIMLbot.Properties
 {
 
 

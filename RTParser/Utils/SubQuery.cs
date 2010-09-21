@@ -381,7 +381,7 @@ namespace RTParser.Utils
                     result = result ?? subquery.Result;
                     request = request ?? subquery.Request ?? result.request;
                     result = result ?? request.CurrentResult;
-                    user = user ?? result.Requestor;
+                    user = user ?? result.Requester;
                     bot = request.TargetBot;
                 }
                 handler = bot.GetTagHandler(user, subquery, request, result, node, null);

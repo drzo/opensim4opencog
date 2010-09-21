@@ -717,7 +717,8 @@ namespace RTParser.Utils
                 {
                     additionalRules = PushAddtionalRuleContext(additionalRules);
                     Unifiable topicName = GetAttribValue(currentNode, "name,topic", Unifiable.STAR);
-                    ConversationCondition newConversationCondition = new ConversationCondition("topic", topicName, currentNode);
+                    ConversationCondition newConversationCondition = new ConversationCondition("topic", topicName,
+                                                                                               currentNode);
                     additionalRules.Add(newConversationCondition);
                     // "getNode("<pretest name=\"topic\">" + topicName + "</pretest>", currentNode))
                     var vv = this.processTopic(currentNode, currentNode.ParentNode, loadOpts, additionalRules);
@@ -752,8 +753,18 @@ namespace RTParser.Utils
                 }
                 else
                 {
-                    loadOpts.RProcessor.ImmediateAiml(currentNode, request, this, null);
-                    total += 1;
+                    if (false && !request.IsToplevelRequest && !request.SraiDepth.IsOverMax)
+                    {
+                        var res = request.CreateSubRequest(StaticAIMLUtils.ToTemplateXML(currentNode), null, null, null);
+                        res.IsToplevelRequest = true;
+                        loadOpts.RProcessor.ImmediateAiml(currentNode, res, this, null);
+                        total += 1;
+                    }
+                    else
+                    {
+                        loadOpts.RProcessor.ImmediateAiml(currentNode, request, this, null);
+                        total += 1;
+                    }
                 }
             }
             finally

@@ -626,7 +626,7 @@ namespace RTParser
 
                 ur.IsTraced = myUser.IsTraced;
                 console("-----------------------------------------------------------------");
-                AIMLbot.Result result = ChatWithUser(ur, myUser, targetBotUser, myUser.ListeningGraph);
+                AIMLbot.MasterResult result = ChatWithUser(ur, myUser, targetBotUser, myUser.ListeningGraph);
                 console("-----------------------------------------------------------------");
                 PrintResult(result, console, printOptions);
                 console("-----------------------------------------------------------------");

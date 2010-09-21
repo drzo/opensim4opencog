@@ -12,7 +12,7 @@ namespace RTParser
         public T Previous { get; set; }
     }
 
-    public struct SettingMinMaxCurrent<T> where T : IComparable
+    public class SettingMinMaxCurrent<T> where T : IComparable
     {
         private KeyValuePair<string, T> pair;
         public T Min { get; set; }

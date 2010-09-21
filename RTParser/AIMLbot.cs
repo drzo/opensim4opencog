@@ -18,37 +18,39 @@ namespace AIMLbot
             base.loadAIMLFromDefaults();
         }
     }
-    public class User : RTParser.User
+    public class MasterUser : RTParser.User
     {
-        public User(string UserID, Bot bot)
+        public MasterUser(string UserID, Bot bot)
             : base(UserID, bot)
         {
         }
-        public User(string UserID, RTPBot bot)
+        public MasterUser(string UserID, RTPBot bot)
             : base(UserID, bot)
         {
         }
     }
-    public class Request : RTParser.RequestImpl
+    public class MasterRequest : MasterResult
     {/*
         public Request(String rawInput, RTParser.User user, RTPBot bot)
             : this(rawInput, user, bot, null)
         {
-        }*/
-        public Request(String rawInput, RTParser.User user, RTPBot bot, RTParser.Request r)
+        }
+      
+              public MasterRequest(String rawInput, RTParser.User user, RTPBot bot, RTParser.Request r)
             : base(rawInput, user, bot, r, null)
         {
         }
-        public Request(String rawInput, RTParser.User user, RTPBot bot, RTParser.Request r, RTParser.User targetUser)
-            : base(rawInput, user, bot, r, targetUser)
+*/
+        public MasterRequest(string rawInput, User user, RTPBot bot, Request parent, User targetUser)
+            : base(rawInput, user, bot, parent, targetUser)
         {
         }
     }
 
-    public class Result : RTParser.Result
+    abstract public class MasterResult : RTParser.ResultImpl
     {
-        public Result(RTParser.User user, RTPBot bot, RTParser.Request request, RTParser.Result parent)
-            : base(user, bot, request, parent)
+        public MasterResult(string rawInput, User user, RTPBot bot, Request parent, User targetUser)
+            : base(rawInput, user, bot, parent, targetUser)
         {
 
         }

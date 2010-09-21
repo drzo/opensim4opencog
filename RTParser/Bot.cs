@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
@@ -103,12 +103,13 @@ namespace RTParser
             var botAsUser1 = BotAsUser;
             s = s.Trim();
             if (!s.StartsWith("<")) s = "<!-- " + s.Replace("<!--", "<#").Replace("-->", "#>") + " -->";
-            var r = new AIMLbot.Request(s, botAsUser1, this, null, botAsUser1);
+            var r = new AIMLbot.MasterRequest(s, botAsUser1, this, null, botAsUser1);
+            //r.ChatOutput.RawText = s;
             r.writeToLog = writeToLog;
-            Result res = new AIMLbot.Result(botAsUser1, this, r, null);
+            Result res = r;// new AIMLbot.MasterRequest(s, botAsUser1, this, r, null, null);
             res.writeToLog = writeToLog;
-            res._CurrentQuery = new SubQuery(s, res, r);
-            OnBotCreated(() => { res.Requestor = r.Requester = botAsUser1; });
+            res.CurrentQuery = new SubQuery(s, res, r);
+            OnBotCreated(() => { res.Requester = r.Requester = this.BotAsUser; });
             r.IsTraced = this.IsTraced;
             r.depth = 0;
             // times out in 15 minutes
@@ -767,7 +768,7 @@ namespace RTParser
                 AllUserPreds.InsertMetaProvider(GetRelationMetaProps);
 
 
-                User guser = ExemplarUser = LastUser = new AIMLbot.User("globalPreds", this);
+                User guser = ExemplarUser = LastUser = new MasterUser("globalPreds", this);
                 BotUsers["globalpreds"] = guser;
                 guser.IsRoleAcct = true;
                 guser.Predicates.clearSettings();
@@ -1727,7 +1728,7 @@ The AIMLbot program.
             {
                 Loader = new AIMLLoader(this, GetBotRequest("EvalAIMLHandler " + cmd));
             }
-            AIMLbot.Result res = ImmediateAiml(node, user, Loader, null);
+            AIMLbot.MasterResult res = ImmediateAiml(node, user, Loader, null);
             return res;
         }
 
@@ -2191,7 +2192,7 @@ The AIMLbot program.
                 lock (tc)
                 {
                     tc.Add(typeof(RTPBot));
-                    tc.Add(typeof(AIMLbot.Request));
+                    tc.Add(typeof(AIMLbot.MasterRequest));
                     tc.Add(typeof(RequestImpl));
                     tc.Add(typeof(Request));
                 }
