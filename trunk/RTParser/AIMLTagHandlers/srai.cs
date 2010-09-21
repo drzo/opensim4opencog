@@ -65,8 +65,8 @@ namespace RTParser.AIMLTagHandlers
             {
                 if (this.templateNode.InnerText.Length > 0)
                 {
-                    Request subRequest = new AIMLbot.Request(this.templateNode.InnerText, (AIMLbot.User) this.user,
-                                                             (AIMLbot.Bot) this.Proc, null);
+                    Request subRequest = new AIMLbot.MasterRequest(this.templateNode.InnerText, this.user,
+                                                                   (AIMLbot.Bot) this.Proc, null, null);
                     subRequest.StartedOn = this.request.StartedOn; // make sure we don't keep adding time to the request
                     Result subQuery = this.Proc.Chat(subRequest);
                     this.request.WhyComplete = subRequest.WhyComplete;
@@ -92,7 +92,7 @@ namespace RTParser.AIMLTagHandlers
                     user.Enter(this);
                     int userDepth = user.depth;
                     int sraiDepth = request.GetCurrentDepth();
-                    if (userDepth > 30 || sraiDepth > request.SraiDepth.Max)
+                    if (userDepth > 30 || request.SraiDepth.IsOverMax)
                     {
                         query.prefix = string.Format("{0}: SRAIDEPTH(user:{1}/request:{2})", request.Graph, userDepth, sraiDepth);
                         writeToLog("WARNING Depth pretty deep " + templateNode + " returning empty");
@@ -177,7 +177,7 @@ namespace RTParser.AIMLTagHandlers
                 User user = request.Requester;
                 int depth = user.depth;
                 var thisrequest = request;
-                Result thisresult = request.CurrentResult;
+                var thisresult = request.CurrentResult;
                 string prefix = query.prefix;
                 //string s;
                 //if (ResultReady(out s)) return s;
@@ -194,8 +194,7 @@ namespace RTParser.AIMLTagHandlers
                     //Unifiable templateNodeInnerValue = Recurse();
                     if (!templateNodeInnerValue.IsEmpty)
                     {
-                        AIMLbot.Request subRequest = request.CreateSubRequest(templateNodeInnerValue, user,
-                                                                              mybot, (AIMLbot.Request) request);
+                        var subRequest = request.CreateSubRequest(templateNodeInnerValue, user, mybot, null);
 
 
                         string requestGraphSrai = request.Graph.Srai;
@@ -231,7 +230,7 @@ namespace RTParser.AIMLTagHandlers
                             writeToLog(prefix + " FAILING TOOOO DEEEEP '" + subRequestrawInput + "'");
                             return Unifiable.Empty;
                         }
-                        AIMLbot.Result subResult;
+                        AIMLbot.MasterResult subResult;
                         var prev = subRequest.GraphsAcceptingUserInput;
                         var prevSO = user.SuspendAddResultToUser;
                         try
@@ -250,12 +249,15 @@ namespace RTParser.AIMLTagHandlers
                         }
 
 
-                        thisrequest.WhyComplete = subRequest.WhyComplete;
+                        string whyComplete = thisrequest.WhyComplete = subRequest.WhyComplete;
                         var subQueryRawOutput = subResult.RawOutput.Trim();
                         if (Unifiable.IsNullOrEmpty(subQueryRawOutput))
                         {
                             if (showDebug)
-                                writeToLog(prefix + " MISSING RETURN ");
+                            {
+                                writeToLog(prefix + "MISSING RETURN " + whyComplete);
+                            }
+                           subResult = mybot.ChatWithRequest44(subRequest, user, request.Responder, subRequest.Graph);
                             if (mybot.chatTrace)
                             {
                                 mybot.writeChatTrace("\"L{0}\" -> \"S{1}\" ;\n", depth, depth);

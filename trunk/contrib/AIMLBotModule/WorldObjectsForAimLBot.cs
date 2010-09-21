@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading;
+using AIMLbot;
 using cogbot.Actions;
 using cogbot.Listeners;
 using cogbot.ScriptEngines;
@@ -139,7 +140,7 @@ namespace AIMLBotModule
             }
         }
 
-        object BotExecHandlerNew(string cmd, Request request)
+        object BotExecHandlerNew(string cmd, Result request)
         {
             User prev = MyUser;
             try
@@ -242,7 +243,7 @@ namespace AIMLBotModule
                 MyBot.outputDelegate = WriteLine;
                 MyBot.isAcceptingUserInput = false;
                 MyBot.AddExcuteHandler("bot", BotExecHandler);
-                MyBot.AddExcuteHandler("lisp", LispExecHandler);
+                MyBot.AddExcuteHandler("lisp",(SystemExecHandler) LispExecHandler);
                 MyBot.loadGlobalBotSettings();
                 //MyBot.GlobalSettings.addSetting("name", client.BotLoginParams.FirstName+ " " + client.BotLoginParams.LastName);
                 MyBot.loadAIMLFromDefaults();
@@ -1037,7 +1038,7 @@ namespace AIMLBotModule
                 DLRConsole.DebugWriteLine(GetModuleName() + ": not Bot is instenaced yet!!");
                 return "";
             }
-            Request r = new AIMLbot.Request(input, myUser, MyBot, null);
+            Result r = new AIMLbot.MasterRequest(input, myUser, MyBot, null, null);
             r.IsTraced = true;
             Result res = MyBot.Chat(r);
             string useOut = MyBot.CleanupCyc(res.Output);
@@ -1081,7 +1082,7 @@ namespace AIMLBotModule
                 DLRConsole.DebugWriteLine(GetModuleName() + ": not Bot is instenaced yet!!");
                 return "";
             }
-            Request r = new AIMLbot.Request(input, myUser, MyBot, null);
+            Result r = new AIMLbot.MasterRequest(input, myUser, MyBot, null, null);
             if (!r.GraphsAcceptingUserInput)
             {
                 return "";

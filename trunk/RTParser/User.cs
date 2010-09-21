@@ -790,20 +790,29 @@ namespace RTParser
             {
                 foreach (var name in NamesStrings("you,lastusername,lastuserid"))
                 {
+                    string name1 = name;
+                    string lname =
+                        WithoutTrace(Predicates,
+                                     () =>
+                                     {
                     string realName;
-                    string lname = SettingsDictionary.grabSettingDefaultDict(Predicates, name,
+                                         return SettingsDictionary.grabSettingDefaultDict(Predicates, name1,
                                                                              out realName);
+                                     });
                     if (!string.IsNullOrEmpty(lname))
                     {
                         User user = bot.FindUser(lname);
-                        if (user != null) return user;
+                        if (user != null && user != this)
+                        {
+                            return user;
+                        }
                     }
                 }
                 if (LastResult != null)
                 {
                     User lastResultResponder = LastResult.Responder;
                     if (lastResultResponder != this && lastResultResponder != null) return lastResultResponder;
-                    lastResultResponder = LastResult.Requestor;
+                    lastResultResponder = LastResult.Requester;
                     if (lastResultResponder != this && lastResultResponder != null) return lastResultResponder;
                 }
 
@@ -1117,7 +1126,7 @@ namespace RTParser
                                 string[] hostSystemGetFiles = HostSystem.GetFiles(userdir, "*.aiml");
                                 if (hostSystemGetFiles != null && hostSystemGetFiles.Length > 0)
                                 {
-                                    var request1 = new AIMLbot.Request("load user aiml ", this, bot, null);
+                                    var request1 = new AIMLbot.MasterRequest("load user aiml ", this, bot, null,null);
                                     request1.TimesOutAt = DateTime.Now + new TimeSpan(0, 15, 0);
                                     request1.Graph = ListeningGraph;
                                     request1.LoadingFrom = userdir;
@@ -1140,7 +1149,7 @@ namespace RTParser
             // process previous todo list
             DoPendingTodoList();
             if (!HostSystem.FileExists(userdir) || !userdir.EndsWith(".aiml")) return;
-            var request = new AIMLbot.Request("load user aiml ", this, bot, null);
+            var request = new AIMLbot.MasterRequest("load user aiml ", this, bot, null, null);
             request.TimesOutAt = DateTime.Now + new TimeSpan(0, 15, 0);
             request.Graph = ListeningGraph;
             request.LoadingFrom = userdir;
@@ -1283,7 +1292,7 @@ namespace RTParser
             DoPendingTodoList();
             depth = 0;
 
-            var newRequest = new AIMLbot.Request(s, this, bot, null, target);
+            var newRequest = new AIMLbot.MasterRequest(s, this, bot, null, target);
             newRequest.IsToplevelRequest = true;
             //newRequest.ParentRequest = CurrentRequest;
             return newRequest;

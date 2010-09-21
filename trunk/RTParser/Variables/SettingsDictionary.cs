@@ -19,7 +19,7 @@ using RTParser.Utils;
 namespace RTParser.Variables
 {
     public delegate ISettingsDictionary ParentProvider();
-    public interface ISettingsDictionary
+    public interface ISettingsDictionary : ITraceable
     {
         /// <summary>
         /// Adds a bespoke setting to the Settings class (accessed via the grabSettings(string name)
@@ -55,7 +55,6 @@ namespace RTParser.Variables
         bool containsSettingCalled(string name);
 
         string NameSpace { get; }
-        bool IsTraced { get; set; }
 
         IEnumerable<string> SettingNames(int depth);
     }
@@ -616,9 +615,7 @@ namespace RTParser.Variables
                         return;
                     }
                 }
-                bool wasTracing = dict.IsTraced;
-                dict.addSetting(name, new StringUnifiable(value));
-                dict.IsTraced = wasTracing;
+                WithoutTrace(dict, () => dict.addSetting(name, new StringUnifiable(value)));
             }
             else
             {
@@ -639,27 +636,27 @@ namespace RTParser.Variables
                         return;
                     }
                 }
-                bool wasTracing = dict.IsTraced;
-                dict.updateSetting(name, new StringUnifiable(value));
-                dict.IsTraced = wasTracing;
+                WithoutTrace(dict, () => dict.updateSetting(name, new StringUnifiable(value)));
             }
+        }
+
+        static R WithoutTrace<R>(ISettingsDictionary dict, Func<R> func)
+        {
+            return StaticXMLUtils.WithoutTrace<R>(dict, func);
         }
 
         static public void loadSettingNode(ISettingsDictionary dict, XmlNode myNode, bool overwriteExisting, bool onlyIfUnknown, Request request)
         {
             lock (dict)
             {
+
                 SettingsDictionary settingsDict = ToSettingsDictionary(dict);
-                bool isTraced = settingsDict.IsTraced;
-                try
+                WithoutTrace(dict, () =>
                 {
-                    settingsDict.IsTraced = false;
-                    loadSettingNode0(settingsDict, myNode, overwriteExisting, onlyIfUnknown, request);
-                }
-                finally
-                {
-                    settingsDict.IsTraced = isTraced;
-                }
+                                                        loadSettingNode0(settingsDict, myNode, overwriteExisting,
+                                                                         onlyIfUnknown, request);
+                                                        return true;
+                                                    });
             }
         }
 
@@ -1494,7 +1491,7 @@ namespace RTParser.Variables
                             {
                                 var tsetting = localValue(setname, setname);
                                 if (!Unifiable.IsNull(tsetting))
-                                    return v;
+                                    return tsetting;
                             }
                         }
                         return null;
@@ -1871,7 +1868,7 @@ namespace RTParser.Variables
             }
             if (name.Contains(","))
             {
-                foreach (string name0 in name.Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries))
+                foreach (string name0 in StaticXMLUtils.NamesStrings(name))
                 {
                     var un = WithProviders(dictionary, name0, props, out realName, providers, Else);
                     if (!Unifiable.IsNull(un))
@@ -2051,20 +2048,7 @@ namespace RTParser.Variables
 
         public Unifiable grabSettingNoDebug(string name)
         {
-            lock (orderedKeys)
-            {
-                if (!IsTraced) return grabSetting(name);
-                IsTraced = false;
-                try
-                {
-                    var v = grabSetting(name);
-                    return v;
-                }
-                finally
-                {
-                    IsTraced = true;
-                }
-            }
+            return WithoutTrace(this, () => grabSetting(name));
         }
 
         public static Unifiable grabSettingDefault(ISettingsDictionary dictionary, string name, out string realName, SubQuery query)
@@ -2080,7 +2064,8 @@ namespace RTParser.Variables
             if (Unifiable.IsNull(un))
             {
                 if (name.Contains(","))
-                    foreach (string name0 in name.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    foreach (string name0 in StaticXMLUtils.NamesStrings(name))
                     {
                         un = grabSettingDefaultDict(dictionary, name0, out realName);
                         if (!Unifiable.IsNull(un))
@@ -2088,13 +2073,17 @@ namespace RTParser.Variables
                             return un;
                         }
                     }
-
+                    return un;
+                }                
+                int intLen = name.Length;
                 string[] chops = new string[] { "favorite.", "favorite", "fav" };
                 foreach (var chop in chops)
                 {
+                    int chopLength = chop.Length;
+                    if (chopLength >= intLen) continue;
                     if (name.StartsWith(chop))
                     {
-                        string newName = name.Substring(chop.Length);
+                        string newName = name.Substring(chopLength);
                         string realName0;
                         Unifiable withChop = grabSettingDefaultDict(dictionary, newName, out realName0);
                         if (withChop!=null)

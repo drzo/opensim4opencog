@@ -174,7 +174,7 @@ namespace RTParser
                     LR = toWhom.GetResult(0, true, theFactSpeaker);
                     if (LR != null)
                     {
-                        LR.AddOutputSentences(null, message);
+                        LR.AddOutputSentences(null, message, res);
                     }
                 }
             }
@@ -208,7 +208,7 @@ namespace RTParser
                         resrequest.ParentMostRequest.DisallowedGraphs.Clear();
                     }
                     
-                    Request r = new AIMLbot.Request(message, theFactSpeaker, this, resrequest, toWhom);
+                    Request r = new AIMLbot.MasterRequest(message, theFactSpeaker, this, resrequest, toWhom);
                     r.writeToLog = writeDebugLine;
                     r.IsTraced = false;
                     r.TimesOutAt = DateTime.Now + TimeSpan.FromSeconds(5);

@@ -24,7 +24,7 @@ namespace RTParser
         public AIMLTagHandler TagHandler;
         public SubQuery SubQuery;
         public TemplateInfo TemplateInfo;
-        public AIMLbot.Result result;
+        public AIMLbot.MasterResult result;
         public Request request;
 
         public virtual bool NeedsAdding { get { return true; } }

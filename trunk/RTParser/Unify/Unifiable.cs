@@ -13,7 +13,7 @@ using StringAppendableUnifiable = RTParser.StringAppendableUnifiableImpl;
 
 namespace RTParser
 {
-    abstract public class Unifiable : StaticAIMLUtils, IConvertible
+    abstract public class Unifiable : StaticAIMLUtils, IConvertible, IComparable<Unifiable>
     {
         static Unifiable()
         {
@@ -812,6 +812,10 @@ namespace RTParser
             //DLRConsole.DebugWriteLine("NoteSpecialIndexer " + index);
             return idx;
         }
+
+        public abstract double Strictness();
+        public abstract int CompareTo(Unifiable other);
+
     }
 }
 

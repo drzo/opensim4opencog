@@ -23,7 +23,7 @@ namespace RTParser
 
         //int DebugLevel { get; set; }
         //bool IsTraced { get; set; }
-        HashSet<SubQuery> AllSubQueries { get; set; }
+        HashSet<SubQuery> SubQueries { get; set; }
         /// <summary>
         /// The user that made this request
         /// </summary>
@@ -46,7 +46,7 @@ namespace RTParser
         ISettingsDictionary TargetSettings { get; set; }
 
         IEnumerable<Unifiable> ResponderOutputs { get; }
-        Result CurrentResult { get;  set; }
+        Result CurrentResult { get; /*  set;*/ }
         Unifiable Flags { get; }
         IList<Unifiable> Topics { get; }
         Proof Proof { get; set; }
@@ -58,10 +58,10 @@ namespace RTParser
         //bool ProcessMultipleTemplates { get; set; }
         //void IncreaseLimits(int i);
         GraphQuery TopLevel { get; set; }
-        SubQuery CurrentQuery { get; }
+        SubQuery CurrentQuery { get; set; }
         RTPBot TargetBot { get; set; }
         Unifiable rawInput { get; }
-        ParsedSentences ChatInput { get; set; }
+        ParsedSentences ChatInput { get; }
         IList<Result> UsedResults { get; set; }
         IList<TemplateInfo> UsedTemplates { get; }
         int MaxInputs { get; set; }
@@ -88,10 +88,10 @@ namespace RTParser
         int GetCurrentDepth();
         Unifiable grabSetting(string name);
         QuerySettingsSettable GetQuerySettings();
-        AIMLbot.Result CreateResult(Request res);
+        AIMLbot.MasterResult CreateResult(Request res);
         bool IsToplevelRequest { get; set; }
 
-        AIMLbot.Request CreateSubRequest(Unifiable templateNodeInnerValue, User user, RTPBot rTPBot, AIMLbot.Request request);
+        AIMLbot.MasterRequest CreateSubRequest(Unifiable templateNodeInnerValue, User user, RTPBot rTPBot, User requestee);
         bool CanUseTemplate(TemplateInfo info, Result request);
         OutputDelegate writeToLog { get; set; }
         
@@ -100,7 +100,7 @@ namespace RTParser
         RequestImpl ParentMostRequest { get; }
         AIMLTagHandler LastHandler { get; set; }
         ChatLabel PushScope { get; }
-        ChatLabel CatchLabel { get; }
+        ChatLabel CatchLabel { get; set; }
         SideEffectStage Stage { get; set; }
         // inherited from base  string GraphName { get; set; }
         ISettingsDictionary GetSubstitutions(string name, bool b);
@@ -124,14 +124,22 @@ namespace RTParser
     {
         #region Attributes
 
-        public HashSet<SubQuery> AllSubQueries { get; set; }
+        /// <summary>
+        /// The subQueries processed by the bot's graphmaster that contain the templates that 
+        /// are to be converted into the collection of Sentences
+        /// </summary>
+        public HashSet<SubQuery> SubQueries { get; set; }
 
         public Proof Proof { get; set; }
 
         // How many subqueries are going to be submitted with combos ot "that"/"topic" tags 
         public int MaxInputs { get; set; }
-        
-        public int depth { get; set; }
+
+        public int depth
+        {
+            get { return SraiDepth.Current; }
+            set { SraiDepth.Current = value; }
+        }
         /// <summary>
         /// The raw input from the user
         /// </summary>
@@ -184,11 +192,11 @@ namespace RTParser
         /// </summary>
         public Result CurrentResult
         {
-            get { return _result; }
-            set { _result = value; }
+            get { return (Result) this; }
+           // set { if (this != value) throw new InvalidCastException(this + "!=" + value); }
         }
 
-        private Result _result;
+        //private Result _result;
 
         public ISettingsDictionary TargetSettings { get; set; }
 
@@ -209,7 +217,7 @@ namespace RTParser
         /// <summary>
         /// Flag to show that the request has timed out
         /// </summary>
-        public string WhyComplete { get; set; }
+        virtual public string WhyComplete { get; set; }
 
         public bool IsTimedOutOrOverBudget
         {
@@ -258,9 +266,23 @@ namespace RTParser
         public override string ToString()
         {
             string whyComplete = WhyComplete;
-            return string.Format("{0}: {1}, {2}", Requester == null ? "NULL" : (string) Requester.UserID,
-                                 Responder == null ? "Anyone" : (string) Responder.UserID,
-                                 Unifiable.ToVMString(rawInput)) +
+            string unifiableToVMString = Unifiable.ToVMString(rawInput);
+            var cq = CurrentQuery;
+
+            if (IsNullOrEmpty(unifiableToVMString))
+            {
+                if (cq != null)
+                {
+                    unifiableToVMString = cq.FullPath;
+                    if (IsNullOrEmpty(unifiableToVMString))
+                    {
+                        unifiableToVMString = cq.ToString();
+                    }
+                }
+            }
+            return string.Format("{0}: {1}, \"{2}\"", Requester == null ? "NULL" : (string)Requester.UserID,
+                                 Responder == null ? "Anyone" : (string)Responder.UserID,
+                                 unifiableToVMString) +
                    (whyComplete != null ? " WhyComplete=" + whyComplete : "");
         }
 
@@ -273,13 +295,14 @@ namespace RTParser
         public RequestImpl(string rawInput, User user, RTPBot bot, Request parent, User targetUser)
             :  base(bot.GetQuerySettings()) // Get query settings intially from user
         {
-            AllSubQueries = new HashSet<SubQuery>();
+            SubQueries = new HashSet<SubQuery>();
             IsToplevelRequest = parent == null;
             this.Stage = SideEffectStage.UNSTARTED;
             qsbase = this;
             if (parent != null)
             {
-                ChatInput = parent.ChatInput;
+                //ChatInput = parent.ChatInput;
+                ChatInput = ParsedSentences.GetParsedUserInputSentences(this, rawInput);
                 Requester = parent.Requester;
             }
             else
@@ -289,7 +312,7 @@ namespace RTParser
             Request pmaybe = null;
             DebugLevel = -1;
             if (parent != null) targetUser = parent.Responder;
-            Requester = Requester ?? user;
+            Requester = Requester ?? user;            
             if (Requester != null)
             {
                 ApplySettings(Requester.GetQuerySettings(), this);
@@ -354,7 +377,7 @@ namespace RTParser
             }
         }
 
-        private void ReduceMinMaxesForSubRequest(QuerySettingsReadOnly parent)
+        public void ReduceMinMaxesForSubRequest(QuerySettingsReadOnly parent)
         {
             var thisQuerySettings = GetQuerySettings();
             const int m = 2;
@@ -553,7 +576,7 @@ namespace RTParser
                           () => { lock (disallowedGraphs) disallowedGraphs.Remove(getGraph); });
         }
 
-        internal ICollection<GraphMaster> DisallowedGraphs
+        public ICollection<GraphMaster> DisallowedGraphs
         {
             get { return Requester.DisallowedGraphs; }
         }
@@ -561,12 +584,12 @@ namespace RTParser
         public void AddOutputSentences(TemplateInfo ti, string nai, Result result)
         {
             result = result ?? CurrentResult;
-            result.AddOutputSentences0(ti, nai);   
+            result.AddOutputSentences(ti, nai);   
         }
 
         private Unifiable _topic;
         public Unifiable Flags { get; set; }
-        public GraphQuery TopLevel { get; set; }
+        virtual public GraphQuery TopLevel { get; set; }
 
         public Unifiable Topic
         {
@@ -656,7 +679,7 @@ namespace RTParser
             return RequesterPredicates.addSetting(name, value);
         }
 
-        public IList<TemplateInfo> UsedTemplates
+        virtual public IList<TemplateInfo> UsedTemplates
         {
             get { return CurrentResult.UsedTemplates; }
         }
@@ -725,32 +748,34 @@ namespace RTParser
             return qsbase;
         }
 
-        public AIMLbot.Result CreateResult(Request parentReq)
+        public AIMLbot.MasterResult CreateResult(Request parentReq)
         {
-            if (CurrentResult == null)
+            /*if (CurrentResult == null)
             {
-                var r = new AIMLbot.Result(Requester, TargetBot, parentReq, parentReq.CurrentResult);
+                var r = new AIMLbot.MasterResult(Requester, TargetBot, parentReq, parentReq.CurrentResult);
                 CurrentResult = r;
                 r.request = this;
-            }
-            return (AIMLbot.Result) CurrentResult;
+            }*/
+            //TimeOutFromNow = parentReq.TimeOutFromNow;
+            return (AIMLbot.MasterResult) this;// CurrentResult;
         }
 
-        public AIMLbot.Request CreateSubRequest(Unifiable templateNodeInnerValue, User user, RTPBot rTPBot, AIMLbot.Request request)
+        public AIMLbot.MasterRequest CreateSubRequest(Unifiable templateNodeInnerValue, User user, RTPBot rTPBot, User requestee)
         {
-            request = (AIMLbot.Request) (request ?? this);
+            var request = (AIMLbot.MasterRequest) this;
             user = user ?? this.Requester;
             rTPBot = rTPBot ?? this.TargetBot;
-            var subRequest = new AIMLbot.Request(templateNodeInnerValue, user, rTPBot, request);
+            var subRequest = new AIMLbot.MasterRequest(templateNodeInnerValue, user ?? Requester,
+                                                       rTPBot ?? this.TargetBot, this, requestee ?? Responder);
             Result res = request.CurrentResult;
-            subRequest.CurrentResult = res;
+            //subRequest.CurrentResult = res;
             subRequest.Graph = request.Graph;
-            depth = subRequest.depth = request.depth + 1;
+            //depth = subRequest.depth = request.depth + 1;
             subRequest.ParentRequest = request;
             subRequest.StartedOn = request.StartedOn;
             subRequest.TimesOutAt = request.TimesOutAt;
             subRequest.TargetSettings = request.TargetSettings;
-            subRequest.Responder = request.Responder;
+            //subRequest.Responder = request.Responder;
             return subRequest;
         }
 
@@ -780,7 +805,8 @@ namespace RTParser
         }
 
         public OutputDelegate writeToLog { get; set; }
-        internal void writeToLog0(string message, params object[] args)
+
+        public void writeToLog0(string message, params object[] args)
         {
             if (!message.Contains(":")) message = "REQUEST: " + message;
             string prefix = ToString();
@@ -792,9 +818,9 @@ namespace RTParser
                 DLRConsole.DebugWriteLine(prefix);
             }
             DLRConsole.SystemFlush();
-            if (writeToLog!=writeToLog0)
+            if (writeToLog != writeToLog0)
             {
-             //   writeToLog(prefix);
+                //   writeToLog(prefix);
             }
             TargetBot.writeToLog(prefix);
         }
@@ -943,6 +969,7 @@ namespace RTParser
         public ChatLabel CatchLabel
         {
             get { return _label; }
+            set { _label = value; }
         }
 
         public SideEffectStage Stage{ get; set;}
@@ -1040,6 +1067,7 @@ namespace RTParser
         public bool CommitNow = false;
         private readonly QuerySettings qsbase;
         public bool SuspendSearchLimits = true;
+        protected Result _CurrentResult;
 
         public void AddSideEffect(string name, ThreadStart action)
         {
@@ -1087,7 +1115,14 @@ namespace RTParser
             {
                 WhyComplete = null;
                 StartedOn = DateTime.Now;
-                TimeOut = value;
+                if (TimeOut < value)
+                {
+                    TimeOut = value;
+                }
+                else
+                {
+                    TimeOut = value;                    
+                }
             }
         }
 
@@ -1150,7 +1185,7 @@ namespace RTParser
             return null;
         }
 
-        private ISettingsDictionary CheckedValue(string named, ISettingsDictionary d)
+        public ISettingsDictionary CheckedValue(string named, ISettingsDictionary d)
         {
             return d;
         }
@@ -1158,12 +1193,12 @@ namespace RTParser
 
         public IList<Result> UsedResults { get; set; }
 
-        public SubQuery CurrentQuery
+        virtual public SubQuery CurrentQuery
         {
             get
             {
-                Result r = CurrentResult;
-                if (r != null)
+                Result r = _CurrentResult;
+                if (r != null && r != this)
                 {
                     SubQuery sq = r.CurrentQuery;
                     if (sq != null) return sq;
@@ -1174,7 +1209,10 @@ namespace RTParser
                 }
                 return null;
             }
+            set { _CurrentQuery = value; }
         }
+        protected SubQuery _CurrentQuery;
+
 
         public void AddSubResult(Result subResult)
         {

@@ -851,13 +851,13 @@ namespace RTParser.Utils
 
                         p.UnTraced = Size > 0;
                         
-                        Request req = new AIMLbot.Request(request.rawInput, request.Requester, request.TargetBot, null,
+                        Request req = new AIMLbot.MasterRequest(request.rawInput, request.Requester, request.TargetBot, null,
                                                           request.Responder);
                         req.Graph = p;
                         req.IsToplevelRequest = false;
-                        req.CurrentResult = null;
+                        //req.CurrentResult = null;
 
-                        AIMLbot.Result r = proc.ChatWithUser(req, request.Requester, request.Responder, p);
+                        AIMLbot.MasterResult r = proc.ChatWithUser(req, request.Requester, request.Responder, p);
                         
                         if (!r.IsEmpty) pl.Add(r);
                     }
@@ -867,7 +867,7 @@ namespace RTParser.Utils
                         p.UnTraced = wasUntraced;
                         request.Graph = g;
                         request.IsTraced = userTracing;
-                        request.CurrentResult = resBack;
+                        //request.CurrentResult = resBack;
                     }
                 }
             }

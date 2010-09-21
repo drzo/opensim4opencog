@@ -9,9 +9,29 @@ using LineInfoElement = MushDLR223.Utilities.LineInfoElementImpl;
 namespace MushDLR223.Utilities
 {
     //public delegate string ReduceStar0(string value);
+    public interface ITraceable
+    {
+        bool IsTraced { get; set; }
+    }
 
     public class StaticXMLUtils
     {
+        public static R WithoutTrace<R>(ITraceable itrac, Func<R> func)
+        {
+            bool prev = itrac.IsTraced;
+            if (!prev) return func();
+            try
+            {
+                itrac.IsTraced = false;
+                return func();
+
+            }
+            finally
+            {
+                itrac.IsTraced = prev;
+            }
+        }
+
         public static IFormatProvider FormatProvider;
         public static Func<IConvertible, Type, IConvertible> FormatProviderConvertor;
 
@@ -110,7 +130,7 @@ namespace MushDLR223.Utilities
         {
             //            if (nodeO.NodeType == XmlNodeType.Comment) return true;
             if (nodeO == null) return null;
-            string nodeName = nodeO.Name.ToLower();
+            string nodeName = nodeO.Name;//.ToLower();
             if (options.SkipNode(nodeName))
             {
                 return " ";
