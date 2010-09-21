@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -141,6 +142,11 @@ namespace RTParser.Utils
         public static OutputDelegate userTraceRedir;
         public static bool TrackTemplates = true; // to save mememory
 
+        public static int CompareXmlNodes(XmlNode node1, XmlNode node2)
+        {
+            return ReferenceCompare(node1, node2);
+        }
+
         public static string ToTemplateXML(XmlNode templateNode)
         {
             string requestName = templateNode.OuterXml;//
@@ -152,6 +158,7 @@ namespace RTParser.Utils
             }
             return requestName;
         }
+
         public static R FromLoaderOper<R>(Func<R> action, GraphMaster gm)
         {
             OutputDelegate prev = userTraceRedir;
@@ -835,5 +842,88 @@ namespace RTParser.Utils
                 VisibleRendering(getNode("<template>" + sentenceIn + "</template>").ChildNodes, PatternSideRendering);
             return ForOutputTemplate(patternSide);
         }*/
+
+        public static int ReferenceCompare(Object thiz, Object other)
+        {
+            if (ReferenceEquals(thiz, other)) return 0;
+            int cmpthis = RuntimeHelpers.GetHashCode(thiz);
+            int cmpthat = RuntimeHelpers.GetHashCode(other);
+            if (cmpthis == cmpthat) throw new InvalidCastException(thiz + " == " + other);
+            return cmpthis.CompareTo(cmpthat);
+        }
+
+        public static int CollectionCompare<T>(IEnumerable thispath, IEnumerable thatpath, Func<T, T, int> comparer)
+        {
+            if (ReferenceEquals(thispath, thatpath)) return 0;
+            if (ReferenceEquals(thispath, null))
+            {
+                if (ReferenceEquals(null, thatpath)) return 0;
+                return -1;
+            }
+            if (ReferenceEquals(null, thatpath)) return 1;
+            var thisE = thatpath.GetEnumerator();
+            var thatE = thatpath.GetEnumerator();
+            while (true)
+            {
+                bool nz = thisE.MoveNext();
+                bool nt = thatE.MoveNext();
+                if (!nz) return nt ? 0 : -1;
+                if (!nt) return 1;
+                T thispath1 = (T) thisE.Current;
+                T thatpath1 = (T) thatE.Current;
+                int diff = comparer(thispath1, thatpath1);
+                if (diff != 0) return diff;
+            }
+        }
+
+        public static int CollectionCompare<T>(IList<T> thispath, IList<T> thatpath, Func<T, T, int> comparer) //where T : IComparable<T>
+        {
+            if (ReferenceEquals(thispath, thatpath)) return 0;
+            if (ReferenceEquals(thispath, null))
+            {
+                if (ReferenceEquals(null, thatpath)) return 0;
+                return -1;
+            }
+            if (ReferenceEquals(null, thatpath)) return 1;
+            int cmpthis = thispath.Count;
+            int cmpthat = thatpath.Count;
+
+            if (cmpthis == cmpthat)
+            {
+                double detailThis = 0;
+                double detailThat = 0;
+                for (int i = 0; i < cmpthis; i++)
+                {
+                    T thatpath1 = thatpath[i];
+                    T thispath1 = thispath[i];
+                    int diff = comparer(thispath1,thatpath1);
+                    if (diff != 0) return diff;
+                    detailThat += thatpath1.GetHashCode();
+                    detailThis += thispath1.GetHashCode();
+                }
+                if (detailThat == detailThis)
+                {
+                    return ReferenceCompare(thispath, thispath);
+                }
+                return detailThat.CompareTo(detailThat);
+            }
+            return cmpthis.CompareTo(cmpthat);
+        }
+
+        public static bool CollectionEquals<T>(List<T> left, List<T> right)
+        {
+            int rightCount = right.Count;
+            if (left.Count != rightCount) return false;
+            for (int index = 0; index < rightCount; index++)
+            {
+                if (!Equals(left[index], right[index])) return false;
+            }
+            return true;
+        }
+
+        public static bool SetsEquals<T>(List<T> left, List<T> right)
+        {
+            return left.Count == right.Count && right.TrueForAll(left.Contains);
+        }
     }
 }

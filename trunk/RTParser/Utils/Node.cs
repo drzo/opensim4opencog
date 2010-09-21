@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Text;
 using System.Xml;
 using RTParser.Database;
 using UPath = RTParser.Unifiable;
@@ -14,7 +16,7 @@ namespace RTParser.Utils
     /// Encapsulates a node in the graphmaster tree structure
     /// </summary>
     [Serializable]
-    public class Node : StaticAIMLUtils
+    public class Node : StaticAIMLUtils, IComparable<Node>
     {
         const bool needsKeySanityCheck = false;
         public static bool UseZeroArgs;
@@ -119,8 +121,109 @@ namespace RTParser.Utils
 
         public override string ToString()
         {
-            if (Parent != null) return String.Format("{0} {1}", Parent, Unifiable.ToVMString(word));
+            var p = Parent;
+            if (p == null)
+            {
             return word;
+        }
+            StringBuilder sb = new StringBuilder(Unifiable.ToVMString(word));
+            sb.Insert(0, " ");
+            sb.Insert(0, Unifiable.ToVMString(p.word));
+            p = p.Parent;
+            while (p != null)
+            {
+                sb.Insert(0, " ");
+                sb.Insert(0, Unifiable.ToVMString(p.word));
+                p = p.Parent;
+            }
+            return sb.ToString();
+        }
+
+
+        public bool Equals(Node other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            if (!Equals(other.word, word)) return false;
+            if (!Equals(other._graph, _graph)) return false;
+            return Equals(other.Parent, Parent);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return ((Parent != null ? Parent.GetHashCode() : 0) * 397) ^ (word != null ? word.GetHashCode() : 0);
+            }
+        }
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != typeof (Node)) return false;
+            return Equals((Node) obj);
+        }
+        #region IComparable<Node> Members
+
+        public int CompareTo(Node that)
+        {
+            return CompareNodes(this, that);
+        }
+        public static int CompareNodes(Node thiz, Node that)
+        {
+            var thispath = thiz.ToPath();
+            var thatpath = that.ToPath();
+            int cmp = ComparePaths(thiz, that, thispath, thatpath);
+            if (cmp == 0) return 0;
+            return cmp;
+        }
+
+        static int ComparePaths(object thiz, object that, IList<Unifiable> thispath, IList<Unifiable> thatpath)
+        {
+            int cmpthis = thispath.Count;
+            int cmpthat = thatpath.Count;
+
+            //smaller of the two
+            if (cmpthis < cmpthat) cmpthis = cmpthat;
+            //if (cmpthis == cmpthat)
+            //{
+            double strictnessThis = 0;
+            double detailThat = 0;
+            for (int i = 0; i < cmpthis; i++)
+            {
+                Unifiable thatpath1 = thatpath[i];
+                Unifiable thispath1 = thispath[i];
+                int diff = thispath1.CompareTo(thatpath1);
+                if (diff != 0) return diff;
+                detailThat += thatpath1.Strictness();
+                strictnessThis += thispath1.Strictness();
+            }
+            if (detailThat == strictnessThis)
+            {
+                return ReferenceCompare(thiz, that);
+            }
+            return detailThat.CompareTo(detailThat);
+            //}
+            //   return cmpthis.CompareTo(cmpthat);
+        }
+
+        #endregion
+
+        public IList<Unifiable> _ToPath;
+        public IList<Unifiable> ToPath()
+        {
+            if (_ToPath != null) return _ToPath;
+            var p = Parent;
+            if (p == null) return (_ToPath = new[] { word });
+            var sb = new List<Unifiable> { word };
+            sb.Add(p.word);
+            p = p.Parent;
+            while (p != null)
+            {
+                sb.Add( p.word);
+                p = p.Parent;
+            }
+            return (_ToPath = sb.ToArray());
         }
 
         //private readonly Node SyncObject;
@@ -172,8 +275,9 @@ namespace RTParser.Utils
         /// <param name="template">the template to find at the end of the path</param>
         /// <param name="filename">the file that was the source of this category</param>
         public TemplateInfo addTerminal(XmlNode templateNode, CategoryInfo category, GuardInfo guard, ThatInfo thatInfo,
-                                        GraphMaster master, PatternInfo patternInfo, List<ConversationCondition> additionalRules)
+                                        GraphMaster master, PatternInfo patternInfo, List<ConversationCondition> additionalRules, out bool wouldBeRemoval)
         {
+            wouldBeRemoval = false;
             bool onlyNonSilent = master.DistinguishSilenetTags;
             lock (SyncObject)
             {
@@ -191,6 +295,7 @@ namespace RTParser.Utils
                 if (templateNode == null)
                 {
                     writeToLog("TheTemplateOverwrite0: onlyNonSilent=" + onlyNonSilent + " " + LocationInfo(cateNode));
+                    wouldBeRemoval = true;
                     return DeleteTemplates(onlyNonSilent);
                 }
                 // this is a removall specfier!
@@ -204,6 +309,7 @@ namespace RTParser.Utils
                     {
                         //  writeToLog("TheTemplateOverwrite2: onlyNonSilent=" + onlyNonSilent + " " + templateNode.OuterXml);
                     }
+                    wouldBeRemoval = true;
                     return DeleteTemplates(onlyNonSilent);
                 }
 
@@ -231,7 +337,11 @@ namespace RTParser.Utils
                         return first;
                     }
                 }
-                if (removeAllFirst) DeleteTemplates(onlyNonSilent);
+                if (removeAllFirst)
+                {
+                    wouldBeRemoval = true;
+                    DeleteTemplates(onlyNonSilent);
+                }
 
                 var t = addTerminal_0_Lock(templateNode, category, guard, thatInfo, master, patternInfo, additionalRules);
                 if (t==null)

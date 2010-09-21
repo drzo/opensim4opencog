@@ -37,27 +37,27 @@ namespace RTParser
         {
             if (_strictness == -11)
             {
-                _strictness = Strictness0();
+                _strictness = -Looseness();
             }
             return _strictness;
         }
 
-        public double Strictness0()
+        public double Looseness()
         {
-            if (str == null) return 2.1;
-            if (str == "") return 2.1;
-            if (str == "*") return 0.0;
-            if (str == "_") return 0.2;
+            if (str == null) return 0;// 2.1;
+            if (str == "") return 0;// 2.1;
+            if (str == "*") return 6.0;
+            if (str == "_") return 4.2;
             char c0 = str[0];
             char cN = str[str.Length - 1];
-            if (c0 == '*' && '*' == cN) return 0.0;
-            if (c0 == '_' && '_' == cN) return 0.1;
-            if (c0 == '<' && cN == '>') return 2.2;
+            if (c0 == '*' && '*' == cN) return 4;// 0.0;
+            if (c0 == '_' && '_' == cN) return 3;
+            if (c0 == '<' && cN == '>') return 3;
             if (c0 == '~' || cN == '~') return 3.2;
             if (c0 == '#') return 0.3;
-            if (c0 == '*' || cN == '*') return 1.4;
-            if (c0 == '_' || cN == '_') return 1.5;
-            return 5.0;
+            if (c0 == '*' || cN == '*') return 4;
+            if (c0 == '_' || cN == '_') return 4;
+            return 0;
         }
 
         public override int CompareTo(Unifiable other0)
