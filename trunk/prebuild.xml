@@ -50,7 +50,7 @@
         </Options>
       </Configuration>
 
-      <ReferencePath>../../bin/</ReferencePath>
+      <ReferencePath>../../bin</ReferencePath>
       <Reference name="System"/>
       <Files>
         <Match pattern="*.cs" recurse="true"/>
@@ -69,7 +69,7 @@
           </Options>
         </Configuration>
 
-        <ReferencePath>../../bin/</ReferencePath>
+        <ReferencePath>../../bin</ReferencePath>
         <Reference name="System"/>
         <Reference name="System.Web"/>
         <Files>
@@ -89,7 +89,7 @@
           <OutputPath>../../../../bin/</OutputPath>
         </Options>
       </Configuration>
-      <ReferencePath>../../../../bin/</ReferencePath>
+      <ReferencePath>../../../../bin</ReferencePath>
       <Reference name="System" localCopy="false"/>
       <Reference name="System.Core" localCopy="false"/>
       <Reference name="System.Configuration" localCopy="false"/>
@@ -99,6 +99,7 @@
       <Reference name="System.Deployment" localCopy="false"/>
       <Reference name="System.Xml" localCopy="false"/>
       <Reference name="System.Xml.Linq" localCopy="false"/>
+
       <Files>
         <Match pattern="*.cs" recurse="true"/>
       </Files>
@@ -118,7 +119,7 @@
              </Options>
            </Configuration>
 
-           <ReferencePath>../../../bin/</ReferencePath>
+           <ReferencePath>../../../../bin</ReferencePath>
            <Reference name="System"/>
            <Reference name="System.Core"/>
            <Reference name="System.Xml"/>
@@ -126,14 +127,16 @@
            <Reference name="System.Data.DataSetExtensions"/>
            <Reference name="log4net.dll" localCopy="false"/>
            <Reference name="MySql.Data.dll" localCopy="false"/>
-           <Reference name="LAIR.Collections.dll" localCopy="false"/>
-           <Reference name="LAIR.Extensions.dll" localCopy="false"/>
-           <Reference name="LAIR.ResourceAPIs.NomBank" localCopy="false"/>
-           <Reference name="LAIR.GraphViz.dll" localCopy="false"/>
-           <Reference name="LAIR.IO.dll" localCopy="false"/>
-           <Reference name="LAIR.MachineLearning.dll" localCopy="false"/>
-           <Reference name="LAIR.XML.dll" localCopy="false"/>
-           <Reference name="LAIR.Misc.dll" localCopy="false"/>
+           <Reference name="LAIR.ResourceAPIs.NomBank.dll" localCopy="false"/>
+
+           <Reference name="LAIR.Collections" localCopy="false"/>
+           <Reference name="LAIR.Extensions" localCopy="false"/>
+           <Reference name="LAIR.GraphViz" localCopy="false"/>
+           <Reference name="LAIR.IO" localCopy="false"/>
+           <Reference name="LAIR.MachineLearning" localCopy="false"/>
+           <Reference name="LAIR.XML" localCopy="false"/>
+           
+
            <Files>
              <Match pattern="*.cs" recurse="true"/>
            </Files>
@@ -153,7 +156,7 @@
           </Options>
         </Configuration>
 
-        <ReferencePath>../../../bin/</ReferencePath>
+        <ReferencePath>../../../../bin</ReferencePath>
         <Reference name="System"/>
         <Reference name="System.Core"/>
         <Reference name="System.Xml"/>
@@ -161,35 +164,74 @@
         <Reference name="System.Data.DataSetExtensions"/>
         <Reference name="log4net.dll" localCopy="false"/>
         <Reference name="MySql.Data.dll" localCopy="false"/>
-        <Reference name="LAIR.Collections.dll" localCopy="false"/>
-        <Reference name="LAIR.Extensions.dll" localCopy="false"/>
-        <Reference name="LAIR.GraphViz.dll" localCopy="false"/>
-        <Reference name="LAIR.IO.dll" localCopy="false"/>
-        <Reference name="LAIR.MachineLearning.dll" localCopy="false"/>
-        <Reference name="LAIR.XML.dll" localCopy="false"/>
-        <Reference name="LAIR.Misc.dll" localCopy="false"/>
-        <Reference name="LAIR.ResourceAPIs.PennBank" localCopy="false"/> 
+        <Reference name="LAIR.ResourceAPIs.PennBank"/> 
+
+        <Reference name="LAIR.Collections" localCopy="false"/>
+        <Reference name="LAIR.Extensions" localCopy="false"/>
+        <Reference name="LAIR.GraphViz" localCopy="false"/>
+        <Reference name="LAIR.IO" localCopy="false"/>
+        <Reference name="LAIR.MachineLearning" localCopy="false"/>
+        <Reference name="LAIR.XML" localCopy="false"/>
+        
+
         <Files>
           <Match pattern="*.cs" recurse="true"/>
         </Files>
       </Project>
 
 
-      <Project name="LAIR.ResourceAPIs.WordNet" path="lib/LAIR.ResourceAPIs/WordNet.net/WordNet" type="Library" rootNamespace="LAIR.ResourceAPIs.WordNet" frameworkVersion="v3_5">
+          <Project name="LAIR.ResourceAPIs.WordNet" path="lib/LAIR.ResourceAPIs/WordNet.net/WordNet" type="Library" rootNamespace="LAIR.ResourceAPIs.WordNet" frameworkVersion="v3_5">
+            <Configuration name="Debug">
+              <Options>
+                <OutputPath>../../../../bin/</OutputPath>
+                <XmlDocFile>LAIR.ResourceAPIs.WordNet.XML</XmlDocFile>
+               </Options>
+            </Configuration>
+            <Configuration name="Release">
+              <Options>
+                <OutputPath>../../../../bin/</OutputPath>
+                <XmlDocFile>LAIR.ResourceAPIs.WordNet.XML</XmlDocFile>
+              </Options>
+            </Configuration>
+
+            <ReferencePath>../../../../bin</ReferencePath>
+            <Reference name="System"/>
+            <Reference name="System.Core"/>
+            <Reference name="System.Xml"/>
+            <Reference name="System.Data"/>
+            <Reference name="System.Data.DataSetExtensions"/>
+            <Reference name="log4net.dll" localCopy="false"/>
+            <Reference name="MySql.Data.dll" localCopy="false"/>
+
+        <Reference name="LAIR.Collections" localCopy="false"/>
+        <Reference name="LAIR.Extensions" localCopy="false"/>
+        <Reference name="LAIR.GraphViz" localCopy="false"/>
+        <Reference name="LAIR.IO" localCopy="false"/>
+        <Reference name="LAIR.MachineLearning" localCopy="false"/>
+        <Reference name="LAIR.XML" localCopy="false"/>
+        
+
+
+            <Files>
+              <Match pattern="*.cs" recurse="true"/>
+            </Files>
+          </Project>
+
+          <Project name="LAIR.ResourceAPIs.FrameNet" path="lib/LAIR.ResourceAPIs/FrameNet.net/FrameNet" type="Library" rootNamespace="LAIR.ResourceAPIs.NomBank" frameworkVersion="v3_5">
         <Configuration name="Debug">
           <Options>
             <OutputPath>../../../../bin/</OutputPath>
-            <XmlDocFile>LAIR.ResourceAPIs.WordNet.XML</XmlDocFile>
+            <XmlDocFile>LAIR.ResourceAPIs.FrameNet.XML</XmlDocFile>
            </Options>
         </Configuration>
         <Configuration name="Release">
           <Options>
             <OutputPath>../../../../bin/</OutputPath>
-            <XmlDocFile>LAIR.ResourceAPIs.WordNet.XML</XmlDocFile>
+            <XmlDocFile>LAIR.ResourceAPIs.FrameNet.XML</XmlDocFile>
           </Options>
         </Configuration>
 
-        <ReferencePath>../../../bin/</ReferencePath>
+        <ReferencePath>../../../../bin</ReferencePath>
         <Reference name="System"/>
         <Reference name="System.Core"/>
         <Reference name="System.Xml"/>
@@ -197,12 +239,16 @@
         <Reference name="System.Data.DataSetExtensions"/>
         <Reference name="log4net.dll" localCopy="false"/>
         <Reference name="MySql.Data.dll" localCopy="false"/>
+        <Reference name="LAIR.ResourceAPIs.PennBank" localCopy="false"/> 
+
         <Reference name="LAIR.Collections.dll" localCopy="false"/>
-        <Reference name="LAIR.Extensions.dll" localCopy="false"/>
-        <Reference name="LAIR.GraphViz.dll" localCopy="false"/>
-        <Reference name="LAIR.IO.dll" localCopy="false"/>
-        <Reference name="LAIR.MachineLearning.dll" localCopy="false"/>
-        <Reference name="LAIR.XML.dll" localCopy="false"/>
+        <Reference name="LAIR.Extensions" localCopy="false"/>
+        <Reference name="LAIR.GraphViz" localCopy="false"/>
+        <Reference name="LAIR.IO" localCopy="false"/>
+        <Reference name="LAIR.MachineLearning" localCopy="false"/>
+        <Reference name="LAIR.XML" localCopy="false"/>
+        
+
         <Files>
           <Match pattern="*.cs" recurse="true"/>
         </Files>
@@ -220,7 +266,7 @@
         </Options>
       </Configuration>
 
-      <ReferencePath>../../bin/</ReferencePath>
+      <ReferencePath>../../bin</ReferencePath>
       <Reference name="SWIJPL.dll" localCopy="false"/>
       <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
       <Reference name="IKVM.Runtime.dll" localCopy="false"/>
@@ -233,7 +279,6 @@
       <Reference name="System.Drawing" localCopy="false"/>
       <Reference name="System.Windows.Forms" localCopy="false"/>
       <Reference name="System.Xml" localCopy="false"/>
-      <Reference name="System.Xml.Linq" localCopy="false"/>
       <Files>
         <Match path="." pattern="*.cs"  recurse="true"  subType="Form">
           <Exclude name="Plugins/"/>
@@ -259,7 +304,7 @@
           </Options>
         </Configuration>
 
-        <ReferencePath>../../../bin/</ReferencePath>
+        <ReferencePath>../../../bin</ReferencePath>
         <Reference name="System"/>
         <Reference name="System.Core"/>
         <Reference name="System.Xml"/>
@@ -283,7 +328,7 @@
           </Options>
         </Configuration>
 
-        <ReferencePath>../../../bin/</ReferencePath>
+        <ReferencePath>../../../bin</ReferencePath>
         <Reference name="System"/>
         <Reference name="System.Xml"/>
         <Reference name="OpenMetaverseTypes"/>
@@ -306,7 +351,7 @@
           </Options>
         </Configuration>
 
-        <ReferencePath>../../bin/</ReferencePath>
+        <ReferencePath>../../bin</ReferencePath>
         <Reference name="System"/>
         <Reference name="System.Xml"/>
         <Reference name="OpenMetaverseTypes"/>
@@ -333,7 +378,7 @@
           </Options>
         </Configuration>
 
-        <ReferencePath>../../../bin/</ReferencePath>
+        <ReferencePath>../../../bin</ReferencePath>
         <Reference name="System"/>
         <Reference name="System.Core"/>
         <Reference name="System.Xml"/>
@@ -364,7 +409,7 @@
           </Options>
         </Configuration>
 
-        <ReferencePath>../../../bin/</ReferencePath>
+        <ReferencePath>../../../bin</ReferencePath>
         <Reference name="System"/>
         <Reference name="System.Xml"/>
         <Reference name="System.Data"/>
@@ -389,7 +434,7 @@
           </Options>
         </Configuration>
 
-        <ReferencePath>../../../bin/</ReferencePath>
+        <ReferencePath>../../../bin</ReferencePath>
         <Reference name="System"/>
         <Reference name="System.Drawing"/>        
         <Reference name="OpenMetaverse"/>
@@ -413,7 +458,7 @@
           </Options>
         </Configuration>
 
-        <ReferencePath>../../bin/</ReferencePath>
+        <ReferencePath>../../bin</ReferencePath>
         <Reference name="System"/>
         <Reference name="System.Xml"/>
         <Reference name="log4net"/>
@@ -437,7 +482,7 @@
           </Options>
         </Configuration>
 
-        <ReferencePath>../bin/</ReferencePath>
+        <ReferencePath>../bin</ReferencePath>
         <Reference name="System"/>
         <Reference name="OpenMetaverse"/>
         <Reference name="OpenMetaverseTypes"/>
@@ -459,7 +504,7 @@
         </Options>
       </Configuration>
 
-      <ReferencePath>../../bin/</ReferencePath>
+      <ReferencePath>../../bin</ReferencePath>
       <Reference name="System" localCopy="false"/>
       <Reference name="System.Data" localCopy="false"/>
       <Reference name="System.Xml" localCopy="false"/>
@@ -480,7 +525,7 @@
         </Options>
       </Configuration>
 
-      <ReferencePath>../../bin/</ReferencePath>
+      <ReferencePath>../../bin</ReferencePath>
       <Reference name="System" localCopy="false"/>
       <Reference name="System.Core" localCopy="false" />
       <Reference name="System.Data" localCopy="false"/>
@@ -498,7 +543,7 @@
       <Reference name="OpenCyc.dll" localCopy="false"/>
       <Reference name="IKVM.Runtime.dll" localCopy="false"/>
       <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
-      <Refere nce name="Microsoft.JScript"  localCopy="false"/>
+      <Reference name="Microsoft.JScript"  localCopy="false"/>
       <Reference name="Microsoft.Vsa"  localCopy="false"/>
       <Files>
         <Match pattern="*.cs" recurse="true"/>
@@ -518,7 +563,7 @@
         </Options>
       </Configuration>
 
-      <ReferencePath>../bin/</ReferencePath>
+      <ReferencePath>../bin</ReferencePath>
       <Reference name="System" localCopy="false"/>
       <Reference name="System.Data" localCopy="false"/>
       <Reference name="System.Xml" localCopy="false"/>
@@ -553,7 +598,7 @@
         </Options>
       </Configuration>
 
-      <ReferencePath>../../bin/</ReferencePath>
+      <ReferencePath>../../bin</ReferencePath>
       <Reference name="OpenMetaverseTypes" localCopy="false"/>
       <Reference name="OpenMetaverse" localCopy="false"/>
       <Reference name="System" localCopy="false"/>
@@ -584,7 +629,7 @@
         </Options>
       </Configuration>
 
-      <ReferencePath>../bin/</ReferencePath>
+      <ReferencePath>../bin</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Core"/>
       <Reference name="System.Drawing"/>
@@ -619,7 +664,7 @@
             </Options>
         </Configuration>
 
-        <ReferencePath>../../bin/</ReferencePath>
+        <ReferencePath>../../bin</ReferencePath>
 
         <Reference name="System" localCopy="false" />
         <Reference name="System.Core" localCopy="false" />
@@ -676,7 +721,7 @@
          </Options>
        </Configuration>
 
-       <ReferencePath>../bin/</ReferencePath>
+       <ReferencePath>../bin</ReferencePath>
        <Reference name="log4net.dll" localCopy="false"/>
        <Reference name="PathSystem3D" localCopy="false"/>
        <Reference name="Mono.Security.dll" localCopy="false"/>
@@ -740,7 +785,7 @@
         </Options>
       </Configuration>
 
-      <ReferencePath>../../bin/</ReferencePath>
+      <ReferencePath>../../bin</ReferencePath>
       <Reference name="Cogbot.exe" localCopy="false"/>
       <Reference name="MushDLR223"  localCopy="false"/>
       <Reference name="PathSystem3D" localCopy="false"/>
@@ -771,7 +816,7 @@
        </Options>
      </Configuration>
 
-     <ReferencePath>../../bin/</ReferencePath>
+     <ReferencePath>../../bin</ReferencePath>
      <Reference name="System" localCopy="false"/>
      <Reference name="System.Core" localCopy="false"/>
      <Reference name="System.Data" localCopy="false"/>
@@ -800,7 +845,7 @@
        </Options>
      </Configuration>
 
-     <ReferencePath>../../bin/</ReferencePath>
+     <ReferencePath>../../bin</ReferencePath>
      <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
      <Reference name="IKVM.Runtime.dll" localCopy="false"/>
      <Reference name="System" localCopy="false"/>
@@ -830,7 +875,7 @@
        </Options>
      </Configuration>
 
-     <ReferencePath>../../bin/</ReferencePath>
+     <ReferencePath>../../bin</ReferencePath>
      <Reference name="System" localCopy="false"/>
      <Reference name="System.Core" localCopy="false"/>
      <Reference name="System.Data" localCopy="false"/>
@@ -839,7 +884,6 @@
      <Reference name="System.Drawing" localCopy="false"/>
      <Reference name="System.Windows.Forms" localCopy="false"/>
      <Reference name="System.Xml" localCopy="false"/>
-     <Reference name="System.Xml.Linq" localCopy="false"/>
       <Reference name="Cogbot.exe" localCopy="false"/>
       <Reference name="MushDLR223"  localCopy="false"/>
       <Reference name="PathSystem3D" localCopy="false"/>
@@ -872,7 +916,7 @@
        </Options>
      </Configuration>
 
-     <ReferencePath>../../bin/</ReferencePath>
+     <ReferencePath>../../bin</ReferencePath>
      <Reference name="System" localCopy="false"/>
      <Reference name="System.Core" localCopy="false"/>
      <Reference name="System.Data" localCopy="false"/>
@@ -920,7 +964,7 @@
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin/</ReferencePath>
+      <ReferencePath>../../../../bin</ReferencePath>
       <Reference name="Cogbot.exe" localCopy="false"/>
       <Reference name="PathSystem3D" localCopy="false"/>
       <Reference name="OpenMetaverse" localCopy="false"/>
@@ -953,7 +997,7 @@
        </Options>
      </Configuration>
 
-     <ReferencePath>../../bin/</ReferencePath>
+     <ReferencePath>../../bin</ReferencePath>
      <Reference name="Cogbot.exe" localCopy="false"/>
      <Reference name="MushDLR223"  localCopy="false"/>
      <Reference name="System.Drawing" localCopy="false"/>
@@ -986,7 +1030,7 @@
        </Options>
      </Configuration>
 
-     <ReferencePath>../../bin/</ReferencePath>
+     <ReferencePath>../../bin</ReferencePath>
      <Reference name="Cogbot.exe" localCopy="false"/>
      <Reference name="PathSystem3D" localCopy="false"/>
      <Reference name="System.Core" localCopy="false"/>
@@ -1027,7 +1071,7 @@
        </Options>
      </Configuration>
 
-     <ReferencePath>../../bin/</ReferencePath>
+     <ReferencePath>../../bin</ReferencePath>
      <Reference name="Cogbot.exe" localCopy="false"/>
      <Reference name="MushDLR223"  localCopy="false"/>
      <Reference name="PathSystem3D" localCopy="false"/>
@@ -1061,7 +1105,7 @@
        </Options>
      </Configuration>
 
-     <ReferencePath>../../bin/</ReferencePath>
+     <ReferencePath>../../bin</ReferencePath>
      <Reference name="Cogbot.exe" localCopy="false"/>
      <Reference name="PathSystem3D" localCopy="false"/>
      <Reference name="System.Drawing" localCopy="false"/>
@@ -1095,7 +1139,7 @@
         </Options>
       </Configuration>
 
-      <ReferencePath>../../bin/</ReferencePath>
+      <ReferencePath>../../bin</ReferencePath>
       <Reference name="Cogbot.exe" localCopy="false"/>
       <Reference name="MushDLR223"  localCopy="false"/>
       <Reference name="System.Data" localCopy="false"/>
@@ -1121,7 +1165,7 @@
        </Options>
      </Configuration>
 
-     <ReferencePath>../../bin/</ReferencePath>
+     <ReferencePath>../../bin</ReferencePath>
      <Reference name="Cogbot.exe" localCopy="false"/>
      <Reference name="PathSystem3D" localCopy="false"/>
      <Reference name="MushDLR223"  localCopy="false"/>
@@ -1155,7 +1199,7 @@
            </Options>
          </Configuration>
 
-         <ReferencePath>../../../bin/</ReferencePath>
+         <ReferencePath>../../../bin</ReferencePath>
          <Reference name="OpenMetaverse" localCopy="false"/>
          <Reference name="OpenMetaverseTypes" localCopy="false"/>
          <Reference name="OpenMetaverse.StructuredData"/>
@@ -1189,7 +1233,7 @@
            </Options>
          </Configuration>
 
-         <ReferencePath>../../../bin/</ReferencePath>
+         <ReferencePath>../../../bin</ReferencePath>
          <Reference name="OpenMetaverse" localCopy="false"/>
          <Reference name="OpenMetaverseTypes" localCopy="false"/>\
          <Reference name="OpenMetaverse.StructuredData"/>
@@ -1220,7 +1264,7 @@
            </Options>
          </Configuration>
 
-         <ReferencePath>../../../bin/</ReferencePath>
+         <ReferencePath>../../../bin</ReferencePath>
          <Reference name="OpenMetaverse" localCopy="false"/>
          <Reference name="OpenMetaverseTypes" localCopy="false"/>
          <Reference name="OpenMetaverse.StructuredData"/>
@@ -1253,7 +1297,7 @@
            </Options>
          </Configuration>
 
-         <ReferencePath>../../../bin/</ReferencePath>
+         <ReferencePath>../../../bin</ReferencePath>
          <Reference name="OpenMetaverse" localCopy="false"/>
          <Reference name="OpenMetaverseTypes" localCopy="false"/>
          <Reference name="OpenMetaverse.StructuredData"/>
@@ -1291,7 +1335,7 @@
       </Options>
     </Configuration>
 
-    <ReferencePath>../bin/</ReferencePath>
+    <ReferencePath>../bin</ReferencePath>
     <Reference name="System" localCopy="false"/>
     <Reference name="System.Drawing" localCopy="false"/>
     <Reference name="System.Xml"/>
@@ -1335,7 +1379,7 @@ app -->
      </Options>
    </Configuration>
 
-   <ReferencePath>../../bin/</ReferencePath>
+   <ReferencePath>../../bin</ReferencePath>
    <Reference name="OpenMetaverse" localCopy="false"/>
    <Reference name="OpenMetaverseTypes" localCopy="false"/>
    
@@ -1377,7 +1421,7 @@ app -->
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin/</ReferencePath>
+      <ReferencePath>../../../../bin</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Data"/>
       <Reference name="System.Windows.Forms"/>
@@ -1408,7 +1452,7 @@ app -->
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin/</ReferencePath>
+      <ReferencePath>../../../../bin</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Data"/>
       <Reference name="System.Drawing"/>
@@ -1436,7 +1480,7 @@ app -->
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin/</ReferencePath>
+      <ReferencePath>../../../../bin</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Data"/>
       <Reference name="System.Web"/>
@@ -1466,7 +1510,7 @@ app -->
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin/</ReferencePath>
+      <ReferencePath>../../../../bin</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Drawing"/>
       <Reference name="LookingGlass.Comm"/>
@@ -1493,7 +1537,7 @@ app -->
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin/</ReferencePath>
+      <ReferencePath>../../../../bin</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Data"/>
       <Reference name="System.Drawing"/>
@@ -1521,7 +1565,7 @@ app -->
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin/</ReferencePath>
+      <ReferencePath>../../../../bin</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Data"/>
       <Reference name="System.XML"/>
@@ -1548,7 +1592,7 @@ app -->
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin/</ReferencePath>
+      <ReferencePath>../../../../bin</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Data"/>
       <Reference name="LookingGlass.Comm"/>
@@ -1576,7 +1620,7 @@ app -->
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin/</ReferencePath>
+      <ReferencePath>../../../../bin</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Data"/>
       <Reference name="System.Drawing"/>
@@ -1605,7 +1649,7 @@ app -->
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin/</ReferencePath>
+      <ReferencePath>../../../../bin</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Data"/>
       <Reference name="System.Drawing"/>
@@ -1636,7 +1680,7 @@ app -->
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin/</ReferencePath>
+      <ReferencePath>../../../../bin</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Core"/>
       <Reference name="LookingGlass.Framework"/>
@@ -1663,7 +1707,7 @@ app -->
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin/</ReferencePath>
+      <ReferencePath>../../../../bin</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Data"/>
       <Reference name="System.Drawing"/>
@@ -1697,7 +1741,7 @@ app -->
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin/</ReferencePath>
+      <ReferencePath>../../../../bin</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Xml"/>
       <Reference name="System.Data"/>
@@ -1729,7 +1773,7 @@ app -->
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin/</ReferencePath>
+      <ReferencePath>../../../../bin</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Data"/>
       <Reference name="System.Drawing"/>
@@ -1763,7 +1807,7 @@ app -->
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin/</ReferencePath>
+      <ReferencePath>../../../../bin</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Data"/>
       <Reference name="System.Drawing"/>
@@ -1781,6 +1825,53 @@ app -->
       </Files>
     </Project>
 
+<!--
+    <Project name="Cogbot.LAIR" path="lib/LAIR.ResourceAPIs/Cogbot.LAIR" type="Exe" rootNamespace="Cogbot.LAIR" frameworkVersion="v3_5">
+      <Configuration name="Debug">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+          <PlatformTarget>x86</PlatformTarget>
+          <XmlDocFile>Cogbot.LAIR.XML</XmlDocFile>
+         </Options>
+      </Configuration>
+      <Configuration name="Release">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+          <PlatformTarget>x86</PlatformTarget>
+          <XmlDocFile>Cogbot.LAIR.XML</XmlDocFile>
+        </Options>
+      </Configuration>
+
+      <ReferencePath>../../../bin</ReferencePath>
+      <Reference name="System"/>
+      <Reference name="System.Core"/>
+      <Reference name="System.Xml" localCopy="false"/>
+      <Reference name="System.Data"/>
+      <Reference name="System.Drawing" localCopy="false"/>
+      <Reference name="System.Windows.Forms" localCopy="false"/>
+      <Reference name="System.Data.DataSetExtensions"/>
+      <Reference name="log4net.dll" localCopy="false"/>
+      <Reference name="MySql.Data.dll" localCopy="false"/>
+      <Reference name="LAIR.ResourceAPIs.PennBank.dll" localCopy="false"/> 
+      <Reference name="LAIR.ResourceAPIs.FrameNet.dll" localCopy="false"/> 
+      <Reference name="LAIR.ResourceAPIs.WordNet.dll" localCopy="false"/> 
+      <Reference name="LAIR.ResourceAPIs.NomBank.dll" localCopy="false"/>
+
+      <Reference name="LAIR.Collections" localCopy="false"/>
+      <Reference name="LAIR.Extensions" localCopy="false"/>
+      <Reference name="LAIR.GraphViz" localCopy="false"/>
+      <Reference name="LAIR.IO" localCopy="false"/>
+      <Reference name="LAIR.MachineLearning" localCopy="false"/>
+      <Reference name="LAIR.XML" localCopy="false"/>
+      
+
+
+      <Files>
+        <Match pattern="*.cs" recurse="true"/>
+      </Files>
+    </Project>
+
+-->
 
     <!-- DebugApp app -->
   <Project name="ABuildStartup" path="contrib/DebugStartup" type="Exe" frameworkVersion="v3_5">
@@ -1801,12 +1892,6 @@ app -->
       <Reference name="AIMLBotModule" />
       <Reference name="Cogbot.exe" />
         <Reference name="MySql.Data.dll" localCopy="false"/>
-        <Reference name="LAIR.Collections.dll" localCopy="false"/>
-        <Reference name="LAIR.Extensions.dll" localCopy="false"/>
-        <Reference name="LAIR.GraphViz.dll" localCopy="false"/>
-        <Reference name="LAIR.IO.dll" localCopy="false"/>
-        <Reference name="LAIR.MachineLearning.dll" localCopy="false"/>
-        <Reference name="LAIR.XML.dll" localCopy="false"/>
       <Reference name="LAIR.ResourceAPIs.WordNet"/>
       <Reference name="MushDLR223"  localCopy="false"/>
       <Reference name="CogbotRadegastPluginModule" />
@@ -1851,6 +1936,16 @@ app -->
       <Reference name="SWIJPL.dll" localCopy="false"/>
       <Reference name="TheSimiansModule" />
       <Reference name="XMLRPC.dll" localCopy="false"/>
+
+      <Reference name="LAIR.Collections" localCopy="false"/>
+      <Reference name="LAIR.Extensions" localCopy="false"/>
+      <Reference name="LAIR.GraphViz" localCopy="false"/>
+      <Reference name="LAIR.IO" localCopy="false"/>
+      <Reference name="LAIR.MachineLearning" localCopy="false"/>
+      <Reference name="LAIR.XML" localCopy="false"/>
+      
+
+
       
 
 <!--      <Reference name="LookingGlass.Comm"/>
@@ -1869,6 +1964,7 @@ app -->
   </Files>
   </Project>
 
+
     <Project name="ABuildStartup32" path="contrib/DebugStartup32" type="Exe" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
@@ -1882,7 +1978,7 @@ app -->
           <PlatformTarget>x86</PlatformTarget>
         </Options>
       </Configuration>
-      <ReferencePath>../../bin/</ReferencePath>
+      <ReferencePath>../../bin</ReferencePath>
       <Reference name="System" localCopy="false"/>
       <Reference name="ABuildStartup.exe" localCopy="false"/>
       <Files>
