@@ -540,20 +540,20 @@
       </Files>
   </Project>
 
-    <Project name="PathSystem3D" path="PathSystem3D" type="Library" frameworkVersion="v3_5">
+    <Project name="PathSystem3D" path="contrib/PathSystem3D" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>../bin/</OutputPath>
+          <OutputPath>../../bin/</OutputPath>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
             
-          <OutputPath>../bin/</OutputPath>
+          <OutputPath>../../bin/</OutputPath>
         </Options>
       </Configuration>
 
-      <ReferencePath>../bin/</ReferencePath>
+      <ReferencePath>../../bin/</ReferencePath>
       <Reference name="OpenMetaverseTypes" localCopy="false"/>
       <Reference name="OpenMetaverse" localCopy="false"/>
       <Reference name="System" localCopy="false"/>
