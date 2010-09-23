@@ -90,11 +90,11 @@ namespace RTParser.AIMLTagHandlers
                 try
                 {
                     user.Enter(this);
-                    int userDepth = user.depth;
-                    int sraiDepth = request.GetCurrentDepth();
-                    if (userDepth > 30 || request.SraiDepth.IsOverMax)
+                   int userDepth = user.depth;
+                   // int sraiDepth = request.GetCurrentDepth();
+                    if (request.SraiDepth.IsOverMax)
                     {
-                        query.prefix = string.Format("{0}: SRAIDEPTH(user:{1}/request:{2})", request.Graph, userDepth, sraiDepth);
+                        query.prefix = string.Format("{0}: SRAIDEPTH(user:{1}/request:{2})", request.Graph, userDepth, userDepth);
                         writeToLog("WARNING Depth pretty deep " + templateNode + " returning empty");
                         return Unifiable.Empty;
                     }
@@ -191,6 +191,21 @@ namespace RTParser.AIMLTagHandlers
                  */
                 //if (CheckNode("srai"))
                 {
+                    if (request.SraiDepth.IsOverMax)
+                    {
+                        string sss = prefix + " request.SraiDepth.IsOverMax '" + request.SraiDepth.Current + "'";
+                        writeToLog(sss);
+                        throw new ChatSignalOverBudget(sss);
+                        return Unifiable.Empty;
+                    }
+                    string why = request.WhyComplete;
+                    if (why!=null)
+                    {
+                        string sss = prefix + " " + why;
+                        writeToLog(sss);
+                        throw new ChatSignalOverBudget(sss);
+                        return Unifiable.Empty;
+                    }
                     //Unifiable templateNodeInnerValue = Recurse();
                     if (!templateNodeInnerValue.IsEmpty)
                     {

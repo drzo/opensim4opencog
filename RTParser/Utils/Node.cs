@@ -171,6 +171,7 @@ namespace RTParser.Utils
         }
         public static int CompareNodes(Node thiz, Node that)
         {
+            if (thiz.Equals(that)) return 0;
             var thispath = thiz.ToPath();
             var thatpath = that.ToPath();
             int cmp = ComparePaths(thiz, that, thispath, thatpath);
@@ -178,8 +179,15 @@ namespace RTParser.Utils
             return cmp;
         }
 
-        static int ComparePaths(object thiz, object that, IList<Unifiable> thispath, IList<Unifiable> thatpath)
+        static int ComparePaths(Node thiz, Node that, IList<Unifiable> thispath, IList<Unifiable> thatpath)
         {
+            double a1 = thiz._variance;
+            double b1 = that._variance;
+            int diff0 = a1.CompareTo(b1);
+            if (diff0 != 0)
+            {
+                return -diff0;
+            }
             int cmpthis = thispath.Count;
             int cmpthat = thatpath.Count;
 
@@ -187,22 +195,22 @@ namespace RTParser.Utils
             if (cmpthis < cmpthat) cmpthis = cmpthat;
             //if (cmpthis == cmpthat)
             //{
-            double strictnessThis = 0;
-            double detailThat = 0;
+           // double strictnessThis = 0;
+          //  double detailThat = 0;
             for (int i = 0; i < cmpthis; i++)
             {
                 Unifiable thatpath1 = thatpath[i];
                 Unifiable thispath1 = thispath[i];
                 int diff = thispath1.CompareTo(thatpath1);
                 if (diff != 0) return diff;
-                detailThat += thatpath1.Strictness();
-                strictnessThis += thispath1.Strictness();
+                a1 -= thatpath1.Strictness();
+                b1 -= thispath1.Strictness();
             }
-            if (detailThat == strictnessThis)
+            if (a1 == b1)
             {
                 return ReferenceCompare(thiz, that);
             }
-            return detailThat.CompareTo(detailThat);
+            return a1.CompareTo(b1);
             //}
             //   return cmpthis.CompareTo(cmpthat);
         }
@@ -210,17 +218,27 @@ namespace RTParser.Utils
         #endregion
 
         public IList<Unifiable> _ToPath;
+        public double _variance;
         public IList<Unifiable> ToPath()
         {
+            _ToPath = null;
             if (_ToPath != null) return _ToPath;
+            _variance = word.Strictness();
             var p = Parent;
-            if (p == null) return (_ToPath = new[] { word });
-            var sb = new List<Unifiable> { word };
-            sb.Add(p.word);
+            if (p == null)
+            {
+                return (_ToPath = new[] {word});
+            }
+            var sb = new List<Unifiable> {word};
+            var pword = p.word;
+            sb.Add(pword);
+            _variance += pword.Strictness();
             p = p.Parent;
             while (p != null)
             {
-                sb.Add( p.word);
+                pword = p.word;
+                sb.Add(pword);
+                _variance += pword.Strictness();
                 p = p.Parent;
             }
             return (_ToPath = sb.ToArray());
@@ -643,7 +661,7 @@ namespace RTParser.Utils
             const bool doEs = true;
             const bool doSEs = true;
             fs0 = fs0.ToUpper().Trim();
-            if (NatLangDb.BeAUX.Contains(" " + fs0 + " ")) return "BeAux";
+            if (false && NatLangDb.BeAUX.Contains(" " + fs0 + " ")) return "BeAux";
 
             if (fs0.StartsWith("FAV")) return "FAV";
 

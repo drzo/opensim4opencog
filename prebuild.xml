@@ -104,21 +104,21 @@
       </Files>
     </Project>
 
-          <Project name="LAIR.ResourceAPIs.PennBank" path="lib/PennBank.net/PennBank" type="Library" rootNamespace="LAIR.ResourceAPIs.PennBank" frameworkVersion="v3_5">
+          <Project name="LAIR.ResourceAPIs.PennBank" path="lib/LAIR.ResourceAPIs/PennBank.net/PennBank" type="Library" rootNamespace="LAIR.ResourceAPIs.PennBank" frameworkVersion="v3_5">
            <Configuration name="Debug">
              <Options>
-               <OutputPath>../../../bin/</OutputPath>
+               <OutputPath>../../../../bin/</OutputPath>
                <XmlDocFile>LAIR.ResourceAPIs.PennBank.XML</XmlDocFile>
               </Options>
            </Configuration>
            <Configuration name="Release">
              <Options>
-               <OutputPath>../../../bin/</OutputPath>
+               <OutputPath>../../../../bin/</OutputPath>
                <XmlDocFile>LAIR.ResourceAPIs.PennBank.XML</XmlDocFile>
              </Options>
            </Configuration>
 
-           <ReferencePath>../../bin/</ReferencePath>
+           <ReferencePath>../../../bin/</ReferencePath>
            <Reference name="System"/>
            <Reference name="System.Core"/>
            <Reference name="System.Xml"/>
@@ -139,21 +139,21 @@
            </Files>
          </Project>
 
-          <Project name="LAIR.ResourceAPIs.NomBank" path="lib/NomBank.net/NomBank" type="Library" rootNamespace="LAIR.ResourceAPIs.NomBank" frameworkVersion="v3_5">
+          <Project name="LAIR.ResourceAPIs.NomBank" path="lib/LAIR.ResourceAPIs/NomBank.net/NomBank" type="Library" rootNamespace="LAIR.ResourceAPIs.NomBank" frameworkVersion="v3_5">
         <Configuration name="Debug">
           <Options>
-            <OutputPath>../../../bin/</OutputPath>
+            <OutputPath>../../../../bin/</OutputPath>
             <XmlDocFile>LAIR.ResourceAPIs.NomBank.XML</XmlDocFile>
            </Options>
         </Configuration>
         <Configuration name="Release">
           <Options>
-            <OutputPath>../../../bin/</OutputPath>
+            <OutputPath>../../../../bin/</OutputPath>
             <XmlDocFile>LAIR.ResourceAPIs.NomBank.XML</XmlDocFile>
           </Options>
         </Configuration>
 
-        <ReferencePath>../../bin/</ReferencePath>
+        <ReferencePath>../../../bin/</ReferencePath>
         <Reference name="System"/>
         <Reference name="System.Core"/>
         <Reference name="System.Xml"/>
@@ -175,21 +175,21 @@
       </Project>
 
 
-      <Project name="LAIR.ResourceAPIs.WordNet" path="lib/WordNet.net/WordNet" type="Library" rootNamespace="LAIR.ResourceAPIs.WordNet" frameworkVersion="v3_5">
+      <Project name="LAIR.ResourceAPIs.WordNet" path="lib/LAIR.ResourceAPIs/WordNet.net/WordNet" type="Library" rootNamespace="LAIR.ResourceAPIs.WordNet" frameworkVersion="v3_5">
         <Configuration name="Debug">
           <Options>
-            <OutputPath>../../../bin/</OutputPath>
+            <OutputPath>../../../../bin/</OutputPath>
             <XmlDocFile>LAIR.ResourceAPIs.WordNet.XML</XmlDocFile>
            </Options>
         </Configuration>
         <Configuration name="Release">
           <Options>
-            <OutputPath>../../../bin/</OutputPath>
+            <OutputPath>../../../../bin/</OutputPath>
             <XmlDocFile>LAIR.ResourceAPIs.WordNet.XML</XmlDocFile>
           </Options>
         </Configuration>
 
-        <ReferencePath>../../bin/</ReferencePath>
+        <ReferencePath>../../../bin/</ReferencePath>
         <Reference name="System"/>
         <Reference name="System.Core"/>
         <Reference name="System.Xml"/>
@@ -245,21 +245,21 @@
       </Files>
     </Project>
 
-      <Project name="OpenMetaverseTypes" path="lib/OpenMetaverseTypes" type="Library" rootNamespace="OpenMetaverse" frameworkVersion="v3_5">
+      <Project name="OpenMetaverseTypes" path="lib/LibOpenMetaverse/OpenMetaverseTypes" type="Library" rootNamespace="OpenMetaverse" frameworkVersion="v3_5">
         <Configuration name="Debug">
           <Options>
-            <OutputPath>../../bin/</OutputPath>
+            <OutputPath>../../../bin/</OutputPath>
             <XmlDocFile>OpenMetaverseTypes.XML</XmlDocFile>
           </Options>
         </Configuration>
         <Configuration name="Release">
           <Options>
-            <OutputPath>../../bin/</OutputPath>
+            <OutputPath>../../../bin/</OutputPath>
             <XmlDocFile>OpenMetaverseTypes.XML</XmlDocFile>
           </Options>
         </Configuration>
 
-        <ReferencePath>../../bin/</ReferencePath>
+        <ReferencePath>../../../bin/</ReferencePath>
         <Reference name="System"/>
         <Reference name="System.Core"/>
         <Reference name="System.Xml"/>
@@ -269,21 +269,21 @@
         </Files>
       </Project>
 
-      <Project name="OpenMetaverse.StructuredData" path="lib/OpenMetaverse.StructuredData" type="Library" rootNamespace="OpenMetaverse.StructuredData" frameworkVersion="v3_5">
+      <Project name="OpenMetaverse.StructuredData" path="lib/LibOpenMetaverse/OpenMetaverse.StructuredData" type="Library" rootNamespace="OpenMetaverse.StructuredData" frameworkVersion="v3_5">
         <Configuration name="Debug">
           <Options>
-            <OutputPath>../../bin/</OutputPath>
+            <OutputPath>../../../bin/</OutputPath>
             <XmlDocFile>OpenMetaverse.StructuredData.XML</XmlDocFile>
           </Options>
         </Configuration>
         <Configuration name="Release">
           <Options>
-            <OutputPath>../../bin/</OutputPath>
+            <OutputPath>../../../bin/</OutputPath>
             <XmlDocFile>OpenMetaverse.StructuredData.XML</XmlDocFile>
           </Options>
         </Configuration>
 
-        <ReferencePath>../../bin/</ReferencePath>
+        <ReferencePath>../../../bin/</ReferencePath>
         <Reference name="System"/>
         <Reference name="System.Xml"/>
         <Reference name="OpenMetaverseTypes"/>
@@ -293,7 +293,7 @@
       </Project>
 
       <!--
-      <Project name="OpenMetaverse.Http" path="lib/OpenMetaverse.Http" type="Library" rootNamespace="OpenMetaverse.Http" frameworkVersion="v3_5">
+      <Project name="OpenMetaverse.Http" path="lib/LibOpenMetaverse/OpenMetaverse.Http" type="Library" rootNamespace="OpenMetaverse.Http" frameworkVersion="v3_5">
         <Configuration name="Debug">
           <Options>
             <OutputPath>../../bin/</OutputPath>
@@ -319,21 +319,21 @@
         </Files>
       </Project>
 -->
-      <Project name="OpenMetaverse" path="lib/OpenMetaverse" type="Library" rootNamespace="OpenMetaverse" frameworkVersion="v3_5">
+      <Project name="OpenMetaverse" path="lib/LibOpenMetaverse/OpenMetaverse" type="Library" rootNamespace="OpenMetaverse" frameworkVersion="v3_5">
         <Configuration name="Debug">
           <Options>
-            <OutputPath>../../bin/</OutputPath>
+            <OutputPath>../../../bin/</OutputPath>
             <XmlDocFile>OpenMetaverse.XML</XmlDocFile>
           </Options>
         </Configuration>
         <Configuration name="Release">
           <Options>
-            <OutputPath>../../bin/</OutputPath>
+            <OutputPath>../../../bin/</OutputPath>
             <XmlDocFile>OpenMetaverse.XML</XmlDocFile>
           </Options>
         </Configuration>
 
-        <ReferencePath>../../bin/</ReferencePath>
+        <ReferencePath>../../../bin/</ReferencePath>
         <Reference name="System"/>
         <Reference name="System.Core"/>
         <Reference name="System.Xml"/>
@@ -350,21 +350,21 @@
         </Files>
       </Project>
 
-      <Project name="OpenMetaverse.Utilities" path="lib/OpenMetaverse.Utilities" type="Library" frameworkVersion="v3_5">
+      <Project name="OpenMetaverse.Utilities" path="lib/LibOpenMetaverse/OpenMetaverse.Utilities" type="Library" frameworkVersion="v3_5">
         <Configuration name="Debug">
           <Options>
-            <OutputPath>../bin/</OutputPath>
+            <OutputPath>../../../bin/</OutputPath>
             <XmlDocFile>OpenMetaverse.Utilities.XML</XmlDocFile>
           </Options>
         </Configuration>
         <Configuration name="Release">
           <Options>
-            <OutputPath>../../bin/</OutputPath>
+            <OutputPath>../../../bin/</OutputPath>
             <XmlDocFile>OpenMetaverse.Utilities.XML</XmlDocFile>
           </Options>
         </Configuration>
 
-        <ReferencePath>../../bin/</ReferencePath>
+        <ReferencePath>../../../bin/</ReferencePath>
         <Reference name="System"/>
         <Reference name="System.Xml"/>
         <Reference name="System.Data"/>
@@ -377,19 +377,19 @@
         </Files>
       </Project>
 
-      <Project name="OpenMetaverse.Rendering.Meshmerizer" path="lib/OpenMetaverse.Rendering.Meshmerizer" type="Library" frameworkVersion="v3_5">
+      <Project name="OpenMetaverse.Rendering.Meshmerizer" path="lib/LibOpenMetaverse/OpenMetaverse.Rendering.Meshmerizer" type="Library" frameworkVersion="v3_5">
         <Configuration name="Debug">
           <Options>
-            <OutputPath>../../bin/</OutputPath>
+            <OutputPath>../../../bin/</OutputPath>
           </Options>
         </Configuration>
         <Configuration name="Release">
           <Options>
-            <OutputPath>../../bin/</OutputPath>
+            <OutputPath>../../../bin/</OutputPath>
           </Options>
         </Configuration>
 
-        <ReferencePath>../../bin/</ReferencePath>
+        <ReferencePath>../../../bin/</ReferencePath>
         <Reference name="System"/>
         <Reference name="System.Drawing"/>        
         <Reference name="OpenMetaverse"/>
@@ -447,19 +447,19 @@
       </Project>
       -->
     
-    <Project name="DotLisp" path="dotlisp" type="Library" frameworkVersion="v3_5">
+    <Project name="DotLisp" path="lib/DotLisp" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>../bin/</OutputPath>
+          <OutputPath>../../bin/</OutputPath>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-          <OutputPath>../bin/</OutputPath>
+          <OutputPath>../../bin/</OutputPath>
         </Options>
       </Configuration>
 
-      <ReferencePath>../bin/</ReferencePath>
+      <ReferencePath>../../bin/</ReferencePath>
       <Reference name="System" localCopy="false"/>
       <Reference name="System.Data" localCopy="false"/>
       <Reference name="System.Xml" localCopy="false"/>
@@ -498,7 +498,7 @@
       <Reference name="OpenCyc.dll" localCopy="false"/>
       <Reference name="IKVM.Runtime.dll" localCopy="false"/>
       <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
-      <Reference name="Microsoft.JScript"  localCopy="false"/>
+      <Refere nce name="Microsoft.JScript"  localCopy="false"/>
       <Reference name="Microsoft.Vsa"  localCopy="false"/>
       <Files>
         <Match pattern="*.cs" recurse="true"/>

@@ -680,6 +680,14 @@ namespace RTParser.Utils
                     }
                     else if (!pattern.disabled)
                     {
+                        if (IsStarStarStar(ToString()))
+                        {
+                            toplevelBubble = pattern;
+                            writeToLog("p=" + pattern);
+                            toplevel.NoMoreResults = true;
+                            //pattern.disabled = true;
+                            break;
+                        }
                         toplevelBubble = pattern;
                         pattern.disabled = true;
                         if (tmplateInfos != null && tmplateInfos.Count != 0)
