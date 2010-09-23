@@ -23,7 +23,7 @@ namespace RTParser
 
         //int DebugLevel { get; set; }
         //bool IsTraced { get; set; }
-        HashSet<SubQuery> SubQueries { get; set; }
+        List<SubQuery> SubQueries { get; set; }
         /// <summary>
         /// The user that made this request
         /// </summary>
@@ -85,7 +85,7 @@ namespace RTParser
 
         bool addSetting(string name, Unifiable unifiable);
         void AddSubResult(Result result);
-        int GetCurrentDepth();
+        //int GetCurrentDepth();
         Unifiable grabSetting(string name);
         QuerySettingsSettable GetQuerySettings();
         AIMLbot.MasterResult CreateResult(Request res);
@@ -128,7 +128,7 @@ namespace RTParser
         /// The subQueries processed by the bot's graphmaster that contain the templates that 
         /// are to be converted into the collection of Sentences
         /// </summary>
-        public HashSet<SubQuery> SubQueries { get; set; }
+        public List<SubQuery> SubQueries { get; set; }
 
         public Proof Proof { get; set; }
 
@@ -224,22 +224,26 @@ namespace RTParser
             get
             {
                 if (WhyComplete != null) return true;
+                if (SraiDepth.IsOverMax)
+                {
+                    WhyComplete = (WhyComplete ?? "") + "SraiDepth ";
+                }
                 if (DateTime.Now > TimesOutAt)
                 {
-                    WhyComplete = "TIMEOUT";
-                    return true;
+                    WhyComplete = (WhyComplete ?? "") + "TimesOutAt ";
                 }
                 string whyNoSearch = WhyNoSearch(CurrentResult);
-                if (whyNoSearch!=null) 
+                if (whyNoSearch!=null)
                 {
-                    WhyComplete = whyNoSearch;
-                    return true;
+                    WhyComplete = (WhyComplete ?? "") + whyNoSearch;
                 }
-                return false;
+                return (WhyComplete != null);
             }
         }
 
+#if LESS_LEAN
         public readonly int framesAtStart;
+#endif
 
 
         private ISettingsDictionary _responderYouPreds;
@@ -296,7 +300,7 @@ namespace RTParser
             :  base(bot.GetQuerySettings()) // Get query settings intially from user
         {
             SraiDepth.Max = 5;
-            SubQueries = new HashSet<SubQuery>();
+            SubQueries = new List<SubQuery>();
             IsToplevelRequest = parent == null;
             this.Stage = SideEffectStage.UNSTARTED;
             qsbase = this;
@@ -371,7 +375,7 @@ namespace RTParser
             }
             this.TargetBot = bot;
             this.TimeOutFromNow = TimeSpan.FromMilliseconds(TargetBot.TimeOut);
-            this.framesAtStart = new StackTrace().FrameCount;
+            //this.framesAtStart = new StackTrace().FrameCount;
             if (parent != null)
             {
                 TargetSettings = parent.TargetSettings;
@@ -663,13 +667,13 @@ namespace RTParser
                 return CurrentResult.Predicates;
             }
         }
-
+        #if LESS_LEAN
         public int GetCurrentDepth()
         {
-            int here = new StackTrace().FrameCount - framesAtStart;
+           // int here = new StackTrace().FrameCount - framesAtStart;
             return here / 6;
         }
-
+#endif
         public Unifiable grabSetting(string name)
         {
             return RequesterPredicates.grabSetting(name);

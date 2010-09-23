@@ -45,7 +45,7 @@ namespace RTParser
         /// The subQueries processed by the bot's graphmaster that contain the templates that 
         /// are to be converted into the collection of Sentences
         /// </summary>
-        HashSet<SubQuery> SubQueries { get; }
+        List<SubQuery> SubQueries { get; }
 
         ParsedSentences ChatOutput { get; }
         /// <summary>
@@ -615,7 +615,7 @@ namespace RTParser
                 {
                     writeToLog("AIMLTRACE SQ: " + this + " \n" + query.ToString().TrimStart());
                 }
-                SubQueries.Add(query);
+                if (!SubQueries.Contains(query)) SubQueries.Add(query);
             }
             DLRConsole.SystemFlush();
             Started = true;
@@ -785,7 +785,8 @@ namespace RTParser
             {
                 msg = "Incomplete ";
             }
-            if (IsEmpty) return msg += "querycount=" + SubQueries.Count + " ";
+            if (IsEmpty)
+                return msg + "querycount=" + SubQueries.Count + " ";
             return msg + " \"" + Output + "\"";
         }
 

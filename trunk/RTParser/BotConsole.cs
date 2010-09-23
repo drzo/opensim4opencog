@@ -334,13 +334,29 @@ namespace RTParser
 
         public bool BotDirective(User user, string input, OutputDelegate console)
         {
-            Request request = (user ?? LastUser ?? BotAsUser).CreateRequest(input, BotAsUser);
-            return BotDirective(request, input, console);
+            try
+            {
+                Request request = (user ?? LastUser ?? BotAsUser).CreateRequest(input, BotAsUser);
+                return BotDirective(request, input, console);
+            }
+            catch (Exception e)
+            {
+                DLRConsole.DebugWriteLine("ERROR in BotDirective: " + e);
+                return false;
+            }
         }
 
         public bool BotDirective(Request request, string input, OutputDelegate console)
         {
-            return BotDirective(request, input, console, null);
+            try
+            {
+                return BotDirective(request, input, console, null);
+            }
+            catch (Exception e)
+            {
+                DLRConsole.DebugWriteLine("ERROR in BotDirective: " + e);
+                return false;
+            }
         }
         public bool BotDirective(Request request, string input, OutputDelegate console, ThreadControl control)
         {

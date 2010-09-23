@@ -38,7 +38,7 @@ namespace RTParser.AIMLTagHandlers
             isRecursive = false;
         }
 
-        private static int depth = 0;
+        //private static int depth = 0;
         public override Unifiable CompleteProcess()
         {
             try
@@ -46,8 +46,8 @@ namespace RTParser.AIMLTagHandlers
                 ResetValues(true);
                 isRecursive = true;
                 Unifiable f = Recurse();
-                depth++;
-                int d = request.GetCurrentDepth();
+                //depth++;
+               /* int d = request.GetCurrentDepth();
                 if (d > 30)
                 {
                     writeToLogWarn("WARNING Depth pretty deep " + f + " returning empty");
@@ -57,7 +57,7 @@ namespace RTParser.AIMLTagHandlers
                 {
                     writeToLogWarn("WARNING Depth pretty deep " + f + " returning empty");
                     return Unifiable.Empty;
-                }
+                }*/
                 var tn = templateNode;
                 foreach (var cn in tn.ChildNodes)
                 {
@@ -76,7 +76,7 @@ namespace RTParser.AIMLTagHandlers
             }
             finally
             {
-                depth--;
+             //   depth--;
             }
         }
 

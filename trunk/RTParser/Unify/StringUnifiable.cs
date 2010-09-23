@@ -44,20 +44,20 @@ namespace RTParser
 
         public double Looseness()
         {
-            if (str == null) return 0;// 2.1;
-            if (str == "") return 0;// 2.1;
+            if (str == null) return 0; // 2.1;
+            if (str == "") return 0; // 2.1;
             if (str == "*") return 6.0;
             if (str == "_") return 4.2;
             char c0 = str[0];
             char cN = str[str.Length - 1];
-            if (c0 == '*' && '*' == cN) return 4;// 0.0;
-            if (c0 == '_' && '_' == cN) return 3;
+            if (c0 == '*' && '*' == cN) return 5; // 0.0;
+            if (c0 == '_' && '_' == cN) return 4;
             if (c0 == '<' && cN == '>') return 3;
             if (c0 == '~' || cN == '~') return 3.2;
             if (c0 == '#') return 0.3;
             if (c0 == '*' || cN == '*') return 4;
             if (c0 == '_' || cN == '_') return 4;
-            return 0;
+            return -0.5;
         }
 
         public override int CompareTo(Unifiable other0)

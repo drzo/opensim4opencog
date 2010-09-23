@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Threading;
 using System.Xml;
+using AIMLbot;
 using LAIR.ResourceAPIs.WordNet;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
@@ -801,24 +802,25 @@ namespace RTParser
             }
 
 
-            HashSet<SubQuery> resultSubQueries = result.SubQueries;
+            List<SubQuery> resultSubQueries = result.SubQueries;
 
-            HashSet<SubQuery> AllQueries = new HashSet<SubQuery>();
+            List<SubQuery> AllQueries = new List<SubQuery>();
             List<TemplateInfo> AllTemplates = new UList();
-
+            bool found1 = false;
             lock (resultSubQueries)
             {
                 foreach (SubQuery query in resultSubQueries)
                 {
                     var queryTemplates = query.Templates;
-                    if (queryTemplates == null || queryTemplates.Count <= 0) continue;
+                    if (queryTemplates == null || queryTemplates.Count == 0) continue;
                     AllQueries.Add(query);
+                    if (!found1) found1 = true;
                     lock (queryTemplates)
                         AllTemplates.AddRange(query.Templates);
                 }
             }
 
-            if (AllTemplates.Count==0)
+            if (!found1)
             {
                 solutions = 0;
                 hasMoreSolutions = false;
@@ -836,21 +838,50 @@ namespace RTParser
 
             sortMe.Sort();
 
-            if (isTraced)
+            bool countChanged = sortMe.Count != AllQueries.Count;
+            for (int index = 0; index < sortMe.Count; index++)
             {
-                int sqNum = 0;
-                writeToLog("AllQueries.Count = " + sortMe.Count + " was " + AllQueries );
-                foreach (SubQuery query in sortMe)
+                var subQuery = sortMe[index];
+                var allQ = AllQueries[index];
+                if (subQuery.EqualsMeaning(allQ))
                 {
-                    writeToLog("QUERY " + sqNum + ": " + query.Pattern + " " + query.Pattern.Graph);
-                    sqNum++;
+                    continue;
                 }
+                countChanged = true;
+            }
+            if (isTraced || countChanged)
+            {
+                string cc = countChanged ? "QUERY SAME " : "QUERY SORT ";
+                writeToLog("--------------------------------------------");
+                if (countChanged)
+                {
+
+                    int sqNum = 0;
+                    writeToLog("AllQueries.Count = " + sortMe.Count + " was " + AllQueries);
+                    if (false)
+                        foreach (SubQuery query in AllQueries)
+                        {
+                            writeToLog("---BEFORE QUERY " + sqNum + ": " + query.Pattern + " " + query.Pattern.Graph);
+                            sqNum++;
+                        }
+                }
+                if (isTraced)
+                {
+                    int sqNum = 0;
+                    foreach (SubQuery query in sortMe)
+                    {
+                        writeToLog("--- " + cc + sqNum + ": " + query.Pattern + " " + query.Pattern.Graph);
+                        sqNum++;
+                    }
+                }
+                writeToLog("--------------------------------------------");
             }
 
             foreach (SubQuery query in sortMe)
             {
                 foreach (TemplateInfo s in query.Templates)
                 {
+                    hasMoreSolutions = true;
                     try
                     {
                         result.CurrentQuery = query;
@@ -861,7 +892,7 @@ namespace RTParser
                     }
                     catch (ChatSignal)
                     {
-                        throw;
+                        if (!result.IsToplevelRequest) throw;
                     }
                 }
             }
@@ -961,13 +992,23 @@ namespace RTParser
         public AIMLbot.MasterResult ImmediateAiml(XmlNode templateNode, Request request0,
                                             AIMLLoader loader, AIMLTagHandler handler)
         {
-            bool fastCall = handler == null; 
+            bool fastCall = handler == null;
+            MasterResult masterResult = request0.CreateResult(request0);
             bool prev = request0.GraphsAcceptingUserInput;
             try
             {
                 request0.GraphsAcceptingUserInput = true;
-                
                 return ImmediateAIML0(request0, templateNode, handler, fastCall);
+            }
+            catch (ChatSignal ex)
+            {
+                writeToLog(ex);
+                return masterResult;
+            }
+            catch (Exception ex)
+            {
+                writeToLog(ex);
+                return masterResult;
             }
             finally
             {
@@ -1103,6 +1144,10 @@ namespace RTParser
                     writeDebugLine("SuperTrace=" + templateSucceeded + ": " + templateInfo);
                 }
                 return th;
+            }
+            catch (ChatSignalOverBudget ex)
+            {
+                throw;
             }
             catch (ChatSignal ex)
             {
@@ -1434,17 +1479,19 @@ namespace RTParser
             bool overBudget = false;
             if (request.IsComplete(result))
             {
-                var gn = request.Graph;
+                object gn = request.Graph;
+                string s = string.Format("WARNING! Request " + request.WhyComplete +
+                                         ". User: {0} raw input: {3} \"{1}\" processing {2} templates: \"{4}\"",
+                                         request.Requester.UserID, request.rawInput,
+                                         (query == null ? "-NOQUERY-" : query.Templates.Count.ToString()), gn, node);
+                
                 if (query != null) gn = query.Graph;
                 if (isTraced)
-                    request.writeToLog(
-                        "WARNING! Request " + request.WhyComplete +
-                        ". User: {0} raw input: {3} \"{1}\" processing {2} templates: \"{4}\"",
-                        request.Requester.UserID, request.rawInput,
-                        (query == null ? "-NOQUERY-" : query.Templates.Count.ToString()), gn, node);
+                    request.writeToLog(s);
                 if (true || !request.IsToplevelRequest)
                 {
                     overBudget = true;
+                    throw new ChatSignalOverBudget(s);
                 }
             }
 
