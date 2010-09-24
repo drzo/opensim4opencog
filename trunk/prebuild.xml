@@ -135,7 +135,7 @@
            <Reference name="LAIR.IO" localCopy="false"/>
            <Reference name="LAIR.MachineLearning" localCopy="false"/>
            <Reference name="LAIR.XML" localCopy="false"/>
-           
+           <Reference name="LAIR.CommonPort" localCopy="false"/>
 
            <Files>
              <Match pattern="*.cs" recurse="true"/>
@@ -172,6 +172,7 @@
         <Reference name="LAIR.IO" localCopy="false"/>
         <Reference name="LAIR.MachineLearning" localCopy="false"/>
         <Reference name="LAIR.XML" localCopy="false"/>
+        <Reference name="LAIR.CommonPort" localCopy="false"/>
         
 
         <Files>
@@ -209,7 +210,7 @@
         <Reference name="LAIR.IO" localCopy="false"/>
         <Reference name="LAIR.MachineLearning" localCopy="false"/>
         <Reference name="LAIR.XML" localCopy="false"/>
-        
+        <Reference name="LAIR.CommonPort" localCopy="false"/>
 
 
             <Files>
@@ -247,6 +248,7 @@
         <Reference name="LAIR.IO" localCopy="false"/>
         <Reference name="LAIR.MachineLearning" localCopy="false"/>
         <Reference name="LAIR.XML" localCopy="false"/>
+        <Reference name="LAIR.CommonPort" localCopy="false"/>
         
 
         <Files>
@@ -1825,7 +1827,7 @@ app -->
       </Files>
     </Project>
 
-<!--
+
     <Project name="Cogbot.LAIR" path="lib/LAIR.ResourceAPIs/Cogbot.LAIR" type="Exe" rootNamespace="Cogbot.LAIR" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
@@ -1852,10 +1854,10 @@ app -->
       <Reference name="System.Data.DataSetExtensions"/>
       <Reference name="log4net.dll" localCopy="false"/>
       <Reference name="MySql.Data.dll" localCopy="false"/>
-      <Reference name="LAIR.ResourceAPIs.PennBank.dll" localCopy="false"/> 
-      <Reference name="LAIR.ResourceAPIs.FrameNet.dll" localCopy="false"/> 
-      <Reference name="LAIR.ResourceAPIs.WordNet.dll" localCopy="false"/> 
-      <Reference name="LAIR.ResourceAPIs.NomBank.dll" localCopy="false"/>
+      <Reference name="LAIR.ResourceAPIs.PennBank" localCopy="false"/> 
+      <Reference name="LAIR.ResourceAPIs.FrameNet" localCopy="false"/> 
+      <Reference name="LAIR.ResourceAPIs.WordNet" localCopy="false"/> 
+      <Reference name="LAIR.ResourceAPIs.NomBank" localCopy="false"/>
 
       <Reference name="LAIR.Collections" localCopy="false"/>
       <Reference name="LAIR.Extensions" localCopy="false"/>
@@ -1863,7 +1865,8 @@ app -->
       <Reference name="LAIR.IO" localCopy="false"/>
       <Reference name="LAIR.MachineLearning" localCopy="false"/>
       <Reference name="LAIR.XML" localCopy="false"/>
-      
+      <Reference name="LAIR.CommonPort" localCopy="false"/>
+
 
 
       <Files>
@@ -1871,7 +1874,46 @@ app -->
       </Files>
     </Project>
 
--->
+
+    <Project name="LAIR.CommonPort" path="lib/LAIR.ResourceAPIs/LAIR.CommonPort" type="Library" rootNamespace="LAIR.CommonPort" frameworkVersion="v3_5">
+      <Configuration name="Debug">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+          <PlatformTarget>x86</PlatformTarget>
+          <XmlDocFile>LAIR.CommonPort.XML</XmlDocFile>
+         </Options>
+      </Configuration>
+      <Configuration name="Release">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+          <PlatformTarget>x86</PlatformTarget>
+          <XmlDocFile>LAIR.CommonPort.XML</XmlDocFile>
+        </Options>
+      </Configuration>
+
+      <ReferencePath>../../../bin</ReferencePath>
+      <Reference name="System"/>
+      <Reference name="System.Core"/>
+      <Reference name="System.Xml" localCopy="false"/>
+      <Reference name="System.Data"/>
+      <Reference name="System.Drawing" localCopy="false"/>
+      <Reference name="System.Windows.Forms" localCopy="false"/>
+      <Reference name="System.Data.DataSetExtensions"/>
+      <Reference name="log4net.dll" localCopy="false"/>
+      <Reference name="MySql.Data.dll" localCopy="false"/>
+      <Reference name="LAIR.Collections" localCopy="false"/>
+      <Reference name="LAIR.Extensions" localCopy="false"/>
+      <Reference name="LAIR.GraphViz" localCopy="false"/>
+      <Reference name="LAIR.IO" localCopy="false"/>
+      <Reference name="LAIR.MachineLearning" localCopy="false"/>
+      <Reference name="LAIR.XML" localCopy="false"/>
+
+      <Files>
+        <Match pattern="*.cs" recurse="true"/>
+      </Files>
+    </Project>
+
+
 
     <!-- DebugApp app -->
   <Project name="ABuildStartup" path="contrib/DebugStartup" type="Exe" frameworkVersion="v3_5">
@@ -1943,7 +1985,7 @@ app -->
       <Reference name="LAIR.IO" localCopy="false"/>
       <Reference name="LAIR.MachineLearning" localCopy="false"/>
       <Reference name="LAIR.XML" localCopy="false"/>
-      
+      <Reference name="LAIR.CommonPort" localCopy="false"/>
 
 
       
