@@ -86,7 +86,7 @@
       <template>
         <think>
           <set name="subject" matches="*">
-            <star index="2"/>
+            <thatstar index="2"/>
           </set>
           <set name="yours_question">
             WHAT IS YOUR FAVORITE <get name="subject"/>
