@@ -25,7 +25,7 @@ namespace RTParser.AIMLTagHandlers
     /// that most AIML has been written in English. However, the decision about whether to transform 
     /// the person aspect of other words is left up to the implementation.
     /// </summary>
-    public class person2 : RTParser.Utils.AIMLFormatingTagHandler
+    public class person2 : RTParser.Utils.AIMLDictSubstFormatingTagHandler
     {
         /// <summary>
         /// Ctor

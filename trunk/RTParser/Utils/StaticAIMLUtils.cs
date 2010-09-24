@@ -141,6 +141,7 @@ namespace RTParser.Utils
         public static bool useInexactMatching;
         public static OutputDelegate userTraceRedir;
         public static bool TrackTemplates = true; // to save mememory
+        public TimeSpan _Durration = TimeSpan.Zero;
 
         public static int CompareXmlNodes(XmlNode node1, XmlNode node2)
         {
@@ -766,17 +767,23 @@ namespace RTParser.Utils
             if (IsEmptyText(node)) return true;
             if (TemplateSideRendering.flatten.Contains(node.Name))
             {
-                foreach (XmlNode xmlNode in node.ChildNodes)
-                {
-                    if (xmlNode.NodeType == XmlNodeType.Comment) continue;
-                    if (!IsSilentTag(xmlNode))
-                    {
-                        return false;
-                    }
-                }
+                if (IsSilentTag(node.ChildNodes)) return false;
                 return true;
             }
             return false;
+        }
+
+        public static bool IsSilentTag(XmlNodeList childNodes)
+        {
+            foreach (XmlNode xmlNode in childNodes)
+            {
+                if (xmlNode.NodeType == XmlNodeType.Comment) continue;
+                if (!IsSilentTag(xmlNode))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         private static bool IsEmptyText(XmlNode node)

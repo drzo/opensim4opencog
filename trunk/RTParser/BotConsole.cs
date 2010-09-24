@@ -955,5 +955,11 @@ namespace RTParser
             }
             DLRConsole.SYSTEM_ERR_WRITELINE("SPAMMY: {0}", real);
         }
+
+        public void TraceTest(String s, Action action)
+        {
+            writeChatTrace(s);  
+            action();
+        }
     }
 }

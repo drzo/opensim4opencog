@@ -22,7 +22,7 @@ namespace RTParser.AIMLTagHandlers
     /// 
     /// The input element does not have any content. 
     /// </summary>
-    public class input : RTParser.Utils.AIMLTagHandler
+    public class input : RTParser.Utils.AIMLConstraintTagHandler
     {
         /// <summary>
         /// Ctor
@@ -43,14 +43,13 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        readonly int offetFrom = 0;
         public input(RTParser.RTPBot bot,
                         RTParser.User user,
                         RTParser.Utils.SubQuery query,
                         RTParser.Request request,
                         RTParser.Result result,
                 XmlNode templateNode, int offset)
-            : base(bot, user, query, request, result, templateNode)
+            : base(bot, user, query, request, result, templateNode, offset)
         {
             offetFrom = offset;
         }
@@ -59,56 +58,15 @@ namespace RTParser.AIMLTagHandlers
         {
             if (CheckNode("input,justthat,beforethat,request"))
             {
-                if (AttributesCount(templateNode, "index") == 0)
+                //else if (this.templateNode.Attributes.Count == 1)
                 {
-                    string ixml = templateNode.InnerXml;
-
-                    return this.user.getInputSentence(offetFrom - 1, request.Responder);
-                }
-                string at = GetAttribValue("index", null);
-                if (at != null)
-                {
-                    var at1 = at;//.Trim();////.AsString();
+                    var at1 = GetAttribValue("index", null);//.Trim();
+                    if (at1 != null)
                     {
                         if (at1.Length > 0)
                         {
-                            try
-                            {
-                                // see if there is a split
-                                string[] dimensions = at1.Split(",".ToCharArray());
-                                if (dimensions.Length == 2)
-                                {
-                                    int result = Convert.ToInt32(dimensions[0].Trim());
-                                    int sentence = Convert.ToInt32(dimensions[1].Trim());
-                                    if ((result >= 0) & (sentence > 0))
-                                    {
-                                        return this.user.getInputSentence(result - 1, sentence - 1, request.Responder);
-                                    }
-                                    else
-                                    {
-                                        writeToLogWarn("ERROR! An input tag with a bady formed index (" 
-                                            + at + ") " + at1 + " was encountered processing the input: " + this.request.rawInput);
-                                    }
-                                }
-                                else
-                                {
-                                    int result = Convert.ToInt32(at1.Trim());
-                                    if (result > 0)
-                                    {
-                                        return this.user.getInputSentence(result - 1, request.Responder);
-                                    }
-                                    else
-                                    {
-                                        writeToLogWarn("ERROR! An input tag with a bady formed index ("
-                                                       + at + ") was encountered processing the input: " +
-                                                       this.request.rawInput);
-                                    }
-                                }
-                            }
-                            catch
-                            {
-                                writeToLogWarn("ERROR! An input tag with a bady formed index (" + at + ") was encountered processing the input: " + this.request.rawInput);
-                            }
+                            return GetIndexes(at1, request.Responder, this.user.getInputSentence,
+                                              (str, args) => localError(at1, str));
                         }
                     }
                 }

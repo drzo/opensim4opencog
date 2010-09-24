@@ -36,7 +36,7 @@ namespace RTParser.AIMLTagHandlers
 
         readonly Unifiable data;
         protected override Unifiable ProcessChange()
-        {              
+        {
             RecurseResult = data;
             return data;
         }

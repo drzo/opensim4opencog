@@ -1137,12 +1137,7 @@ namespace RTParser.Variables
             {
                 writeToLog("!@ERROR BAD INPUT? " + value);
             }
-            if (v.StartsWith(StaticXMLUtils.isValueSetStart))
-            {
-                v = v.Substring(StaticXMLUtils.isValueSetSkip);
-                value = v;
-
-            }
+            value = StaticXMLUtils.ValueText(v);
             if (v.Contains("???"))
             {
                 writeToLog("!?????@ERROR BAD INPUT? " + value);                

@@ -24,6 +24,7 @@ namespace MushDLR223.Utilities
         private XmlDocumentLineInfo _docLineInfo;
         public long charPos;
         public int lineNumber;
+        public string innerValueReplaced = null;
         public int linePosition;
         public XmlSourceLineInfo lParent;
         public bool protect = true;
@@ -100,6 +101,7 @@ namespace MushDLR223.Utilities
             set
             {
                 if (InnerXml == value) return;
+                innerValueReplaced = value;
                 if (protect)
                 {
                     writeToLog("WARNING: InnerXml Should not be changed to \"" + value + "\"");
@@ -114,7 +116,7 @@ namespace MushDLR223.Utilities
         {
             get
             {
-                
+                if (innerValueReplaced != null) return innerValueReplaced;
 #if OUTXML_CACHE
                 if (outerXMLCache != null)
                 {
@@ -143,14 +145,19 @@ namespace MushDLR223.Utilities
 
         public override string InnerText
         {
-            get { return base.InnerText; }
+            get
+            {
+                return InnerXml;
+                //return base.InnerText;
+            }
             set
             {
                 if (protect)
                 {
                     writeToLog("WARNING: InnerText Should not be changed to \"" + value + "\"");
                 }
-                base.InnerText = value;
+                innerValueReplaced = value;
+                base.InnerXml = value;
             }
         }
 
@@ -321,7 +328,8 @@ namespace MushDLR223.Utilities
 
         public override string ToString()
         {
-            return docLineInfo.TextAndSourceInfo(this);
+            string s = innerValueReplaced ?? StaticXMLUtils.TextInfo(this);
+            return s + " " + StaticXMLUtils.LocationEscapedInfo(this);
         }
 
 

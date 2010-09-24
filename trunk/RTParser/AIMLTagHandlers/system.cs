@@ -43,7 +43,7 @@ namespace RTParser.AIMLTagHandlers
                 else if (Unifiable.IsTrue(r))
                 {
                     finalResult = r;
-                    templateNodeInnerText = v;
+                    //templateNodeInnerText = isValueSetStart + v;
                 }
                 return r;
             }

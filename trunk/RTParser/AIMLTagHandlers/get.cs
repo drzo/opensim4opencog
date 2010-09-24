@@ -78,9 +78,8 @@ namespace RTParser.AIMLTagHandlers
                         QueryHasFailed = true;
                         return Unifiable.Empty;
                     }
-                    writeToLogWarn("NULL from success?!");
                     // trace the next line to see why
-                    GetActualValue(name, typeof(bot) == GetType() ? "bot" : "get", out succeed);
+                    Proc.TraceTest("NULL from success?!", () => GetActualValue(name, typeof (bot) == GetType() ? "bot" : "get", out succeed));
                     return Unifiable.Empty;
                 }
                 if (succeed) Succeed();

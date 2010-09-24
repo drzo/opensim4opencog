@@ -754,6 +754,7 @@ namespace RTParser
                 if (_JustSaid != value)
                 {
                     Predicates.addSetting("lastsaid", value);
+                    Predicates.addSetting("thatstar", value);
                     _JustSaid = value;
                     if (LastReponder != null)
                     {

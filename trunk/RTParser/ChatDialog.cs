@@ -499,7 +499,7 @@ namespace RTParser
                 request.AddOutputSentences(null, nai, result);
             }
             User popu = originalRequestor ?? request.Requester ?? result.Requester;
-            result.Duration = DateTime.Now - request.StartedOn;
+            result.Durration = DateTime.Now - request.StartedOn;
             result.IsComplete = true;
             popu.addResultTemplates(request);
             if (streamDepth > 0) streamDepth--;
@@ -1044,7 +1044,7 @@ namespace RTParser
             if (parentRequest != null)
             {
                 if (parentRequest != request) request.Graph = parentRequest.Graph;
-                request.depth = parentRequest.depth + 1;
+                //request.depth = parentRequest.depth + 1;
             }
 
             AIMLbot.MasterResult result = request.CreateResult(request);
@@ -1449,6 +1449,36 @@ namespace RTParser
             return sentenceIn;
         }
 
+        
+        /// <summary>
+        /// Recursively evaluates the template nodes returned from the Proccessor
+        /// </summary>
+        /// <param name="node">the node to evaluate</param>
+        /// <param name="query">the query that produced this node</param>
+        /// <param name="request">the request from the user</param>
+        /// <param name="result">the result to be sent to the user</param>
+        /// <param name="user">the user who originated the request</param>
+        /// <returns>the output Unifiable</returns>
+        public string processNodeDebug(XmlNode childNode, SubQuery query,
+                                  Request request, Result result, User user,
+                                  AIMLTagHandler parent, bool copyChild, bool copyParent,
+                                  out AIMLTagHandler tagHandlerChild)
+        {
+            var wasSuspendRestrati = result.SuspendSearchLimits;
+            try
+            {
+                result.SuspendSearchLimits = true;
+                return processNode(childNode, query,
+                             request, result, user,
+                             parent, copyChild, copyParent,
+                             out tagHandlerChild);
+            }
+            finally
+            {
+                result.SuspendSearchLimits = wasSuspendRestrati;
+            }
+        }
+
         /// <summary>
         /// Recursively evaluates the template nodes returned from the Proccessor
         /// </summary>
@@ -1467,11 +1497,11 @@ namespace RTParser
             {
                 tagHandler = null;
                 string s = node.InnerText.Trim();
-                if (String.IsNullOrEmpty(s))
+                if (!String.IsNullOrEmpty(s))
                 {
-                    return Unifiable.Empty;
+                    return ValueText(s);
                 }
-                return s;
+                //return s;
             }
             bool isTraced = request.IsTraced || result.IsTraced || !request.GraphsAcceptingUserInput ||
                 (query != null && query.IsTraced);
@@ -1480,17 +1510,17 @@ namespace RTParser
             if (request.IsComplete(result))
             {
                 object gn = request.Graph;
+                if (query != null) gn = query.Graph;
                 string s = string.Format("WARNING! Request " + request.WhyComplete +
                                          ". User: {0} raw input: {3} \"{1}\" processing {2} templates: \"{4}\"",
                                          request.Requester.UserID, request.rawInput,
                                          (query == null ? "-NOQUERY-" : query.Templates.Count.ToString()), gn, node);
-                
-                if (query != null) gn = query.Graph;
+
                 if (isTraced)
                     request.writeToLog(s);
-                if (true || !request.IsToplevelRequest)
+                overBudget = true;
+                if (!request.IsToplevelRequest)
                 {
-                    overBudget = true;
                     throw new ChatSignalOverBudget(s);
                 }
             }
@@ -1540,9 +1570,30 @@ namespace RTParser
             }
 
             Unifiable cp = tagHandler.CompleteAimlProcess();
-            if (Unifiable.IsNullOrEmpty(cp))
+            if (Unifiable.IsNullOrEmpty(cp) && (!tagHandler.QueryHasSuceeded || tagHandler.QueryHasFailed))
             {
-                cp = tagHandler.CompleteAimlProcess();
+                if (isTraced || request.SuspendSearchLimits || request.IsToplevelRequest)
+                {
+                    //writeDebugLine("ERROR: Try Again since NULL " + tagHandler);
+                    bool wsl = request.SuspendSearchLimits;
+                    try
+                    {
+                        request.SuspendSearchLimits = true;
+                        cp = tagHandler.CompleteAimlProcess();
+                        if (Unifiable.IsNullOrEmpty(cp))
+                        {
+                            // trace the next line to see why
+                            AIMLTagHandler handler = tagHandler;
+                            TraceTest("ERROR: Try Again since NULL " + handler, 
+                                () => { cp = handler.CompleteAimlProcess(); });
+                        }
+                    }
+                    finally
+                    {
+                        request.SuspendSearchLimits = wsl;
+
+                    }
+                }
             }
             if (tagHandler.QueryHasFailed)
             {

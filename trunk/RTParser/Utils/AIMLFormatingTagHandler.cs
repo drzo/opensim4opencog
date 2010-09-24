@@ -22,6 +22,7 @@ namespace RTParser.Utils
             : base(bot, user, query, request, result, templateNode)
         {
             isRecursive = true;
+            IsStarAtomically = true;
         }
 
         #region Overrides of AIMLTagHandler

@@ -21,6 +21,7 @@ namespace RTParser
         Request ParentRequest { get; set; }
         GraphMaster Graph { get; set; }
 
+        TimeSpan Durration { get; set; }
         //int DebugLevel { get; set; }
         //bool IsTraced { get; set; }
         List<SubQuery> SubQueries { get; set; }
@@ -102,6 +103,7 @@ namespace RTParser
         ChatLabel PushScope { get; }
         ChatLabel CatchLabel { get; set; }
         SideEffectStage Stage { get; set; }
+        bool SuspendSearchLimits { get; set; }
         // inherited from base  string GraphName { get; set; }
         ISettingsDictionary GetSubstitutions(string name, bool b);
         GraphMaster GetGraph(string srai);
@@ -123,6 +125,20 @@ namespace RTParser
     abstract public class RequestImpl : QuerySettings, Request
     {
         #region Attributes
+
+
+        /// <summary>
+        /// The amount of time the request took to process
+        /// </summary>
+        public TimeSpan Durration
+        {
+            get
+            {
+                if (_Durration == TimeSpan.Zero) return DateTime.Now - StartedOn;
+                return _Durration;
+            }
+            set { _Durration = value; }
+        }
 
         /// <summary>
         /// The subQueries processed by the bot's graphmaster that contain the templates that 
@@ -217,13 +233,24 @@ namespace RTParser
         /// <summary>
         /// Flag to show that the request has timed out
         /// </summary>
-        virtual public string WhyComplete { get; set; }
+        public virtual string WhyComplete
+        {
+            get
+            {
+                if (SuspendSearchLimits) return null;
+                return _WhyComplete;
+            }
+            set { if (!SuspendSearchLimits) _WhyComplete = value; }
+        }
+
+        public string _WhyComplete;
 
         public bool IsTimedOutOrOverBudget
         {
             get
             {
-                if (WhyComplete != null) return true;
+                if (SuspendSearchLimits) return false;
+                if (WhyComplete != null) return true;                
                 if (SraiDepth.IsOverMax)
                 {
                     WhyComplete = (WhyComplete ?? "") + "SraiDepth ";
@@ -269,6 +296,10 @@ namespace RTParser
 
         public override string ToString()
         {
+            return ToRequestString();
+        }
+        public string ToRequestString()
+        {
             string whyComplete = WhyComplete;
             string unifiableToVMString = Unifiable.ToVMString(rawInput);
             var cq = CurrentQuery;
@@ -284,10 +315,9 @@ namespace RTParser
                     }
                 }
             }
-            return string.Format("{0}: {1}, \"{2}\"", Requester == null ? "NULL" : (string)Requester.UserID,
-                                 Responder == null ? "Anyone" : (string)Responder.UserID,
-                                 unifiableToVMString) +
-                   (whyComplete != null ? " WhyComplete=" + whyComplete : "");
+            return string.Format("{0}: {1}, \"{2}\"", Requester == null ? "NULL" : (string) Requester.UserID,
+                                 Responder == null ? "Anyone" : (string) Responder.UserID,
+                                 unifiableToVMString);
         }
 
         /// <summary>
@@ -304,11 +334,13 @@ namespace RTParser
             IsToplevelRequest = parent == null;
             this.Stage = SideEffectStage.UNSTARTED;
             qsbase = this;
+            SuspendSearchLimits = true;
             if (parent != null)
             {
                 //ChatInput = parent.ChatInput;
                 ChatInput = ParsedSentences.GetParsedUserInputSentences(this, rawInput);
                 Requester = parent.Requester;
+                depth = parent.depth + 1;
             }
             else
             {
@@ -705,6 +737,7 @@ namespace RTParser
 
         public bool IsComplete(RTParser.Result result1)
         {
+            if (SuspendSearchLimits) return false;
             string s = WhyNoSearch(result1);
             if (s == null) return false;
             return true;
@@ -775,7 +808,7 @@ namespace RTParser
             Result res = request.CurrentResult;
             //subRequest.CurrentResult = res;
             subRequest.Graph = request.Graph;
-            //depth = subRequest.depth = request.depth + 1;
+            depth = subRequest.depth = request.depth + 1;
             subRequest.ParentRequest = request;
             subRequest.StartedOn = request.StartedOn;
             subRequest.TimesOutAt = request.TimesOutAt;
@@ -1071,7 +1104,7 @@ namespace RTParser
 
         public bool CommitNow = false;
         private readonly QuerySettings qsbase;
-        public bool SuspendSearchLimits = true;
+        public bool SuspendSearchLimits { get; set; }
         protected Result _CurrentResult;
 
         public void AddSideEffect(string name, ThreadStart action)
