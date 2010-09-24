@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.Collections.ObjectModel;
-
+using LAIR.CommonPort;
 using LAIR.XML;
 using LAIR.Collections.Generic;
 using LAIR.Extensions;
@@ -64,11 +64,23 @@ namespace LAIR.ResourceAPIs.FrameNet
             string framesXmlPath = Path.Combine(frameXmlDirectory, "frames.xml");
             string frameRelationsPath = Path.Combine(frameXmlDirectory, "frRelation.xml");
 
+            bool gatherFramesFromDir = false;
+
             if (!File.Exists(framesXmlPath))
-                throw new FileNotFoundException("Invalid frame XML path:  " + framesXmlPath);
+                gatherFramesFromDir = true;
+            
+            string framesInDir = Path.GetDirectoryName(framesXmlPath) + "\\frames";
 
             if (!File.Exists(frameRelationsPath))
                 throw new FileNotFoundException("Invalid frame relation XML path:  " + frameRelationsPath);
+
+            if (gatherFramesFromDir)
+            {
+                if (!Directory.Exists(framesInDir))
+                {
+                    throw new FileNotFoundException("Invalid frame relation XML path:  " + frameRelationsPath);
+                }
+            }
 
             _frameNameFrame = new Dictionary<string, Frame>();
             _frameElementIdFrameElement = new Dictionary<int, FrameElement>();
@@ -78,17 +90,51 @@ namespace LAIR.ResourceAPIs.FrameNet
             _lexicalUnitIdLexicalUnit = new Dictionary<int, LexicalUnit>();
 
             #region get frames
-            StreamReader frameXmlFile = new StreamReader(framesXmlPath);
-            string framesXML = frameXmlFile.ReadToEnd();
-            frameXmlFile.Close();
 
             Set<int> uniqueFrameIDCheck = new Set<int>();
-            XmlParser framesP = new XmlParser(framesXML);
+            CommonXmlParser framesP;
+
+            string framesXML = "";
+            if (gatherFramesFromDir)
+            {
+                foreach (string file1Frame in Directory.GetFiles(framesInDir, "*.xml"))
+                {
+                    StreamReader frameXmlFile = new StreamReader(file1Frame);
+                    framesXML += frameXmlFile.ReadToEnd();
+                    frameXmlFile.Close();
+                    ParseFramesFile(new LAIR.CommonPort.CommonXmlParser(framesXML), uniqueFrameIDCheck);
+                }
+            }
+            else
+            {
+                StreamReader frameXmlFile = new StreamReader(framesXmlPath);
+                framesXML = frameXmlFile.ReadToEnd();
+                frameXmlFile.Close();
+                ParseFramesFile(new LAIR.CommonPort.CommonXmlParser(framesXML), uniqueFrameIDCheck);
+            }
+
+
+
+            #endregion
+
+            #region get frame relations
+            var frameReleationXmlFile = new StreamReader(frameRelationsPath);
+            string allRelationsXML = frameReleationXmlFile.ReadToEnd();
+            frameReleationXmlFile.Close();
+            framesP = new LAIR.CommonPort.CommonXmlParser(allRelationsXML);
+
+            ParseFramesRelationFiles(framesP);
+
+            #endregion
+        }
+
+        private void ParseFramesFile(CommonXmlParser framesP, Set<int> uniqueFrameIDCheck)
+        {
             while (framesP.SkipToElement("frame"))
             {
                 // create frame
                 string frameXML = framesP.OuterXML("frame");
-                XmlParser frameP = new XmlParser(frameXML);
+                var frameP = new LAIR.CommonPort.CommonXmlParser(frameXML);
                 int frameID = int.Parse(frameP.AttributeValue("frame", "ID"));
                 string frameName = frameP.AttributeValue("frame", "name").ToLower().Trim();  // use lowercase for all frame names
                 string frameDefinition = frameP.ElementText("definition");
@@ -100,12 +146,12 @@ namespace LAIR.ResourceAPIs.FrameNet
 
                 // get frame elements
                 string fesXML = frameP.OuterXML("fes");
-                XmlParser fesP = new XmlParser(fesXML);
+                var fesP = new LAIR.CommonPort.CommonXmlParser(fesXML);
                 string feXML;
                 while ((feXML = fesP.OuterXML("fe")) != null)
                 {
                     // get frame element
-                    XmlParser feParser = new XmlParser(feXML);
+                    var feParser = new LAIR.CommonPort.CommonXmlParser(feXML);
                     int feID = int.Parse(feParser.AttributeValue("fe", "ID"));
                     string feName = feParser.AttributeValue("fe", "name").Trim().ToLower();
                     string feDef = feParser.ElementText("definition");
@@ -118,11 +164,11 @@ namespace LAIR.ResourceAPIs.FrameNet
 
                 // get lexical units
                 string lusXML = frameP.OuterXML("lexunits");
-                XmlParser lusParser = new XmlParser(lusXML);
+                var lusParser = new LAIR.CommonPort.CommonXmlParser(lusXML);
                 string luXML;
                 while ((luXML = lusParser.OuterXML("lexunit")) != null)
                 {
-                    XmlParser luParser = new XmlParser(luXML);
+                    var luParser = new LAIR.CommonPort.CommonXmlParser(luXML);
                     int luID = int.Parse(luParser.AttributeValue("lexunit", "ID"));
                     string luName = luParser.AttributeValue("lexunit", "name");
                     luName = luName.Substring(0, luName.IndexOf('.'));
@@ -132,11 +178,11 @@ namespace LAIR.ResourceAPIs.FrameNet
                     // get lexemes for this lexunit...we may get duplicates...don't worry about them
                     Set<Lexeme> lexemes = new Set<Lexeme>(false);
                     string lexemesXML = luParser.OuterXML("lexemes");
-                    XmlParser lexemesP = new XmlParser(lexemesXML);
+                    var lexemesP = new LAIR.CommonPort.CommonXmlParser(lexemesXML);
                     string lexemeXML;
                     while ((lexemeXML = lexemesP.OuterXML("lexeme")) != null)
                     {
-                        XmlParser lexemeP = new XmlParser(lexemeXML);
+                        var lexemeP = new LAIR.CommonPort.CommonXmlParser(lexemeXML);
                         string pos = lexemeP.AttributeValue("lexeme", "pos");
                         bool breakBefore = bool.Parse(lexemeP.AttributeValue("lexeme", "breakBefore"));
                         bool head = bool.Parse(lexemeP.AttributeValue("lexeme", "headword"));
@@ -166,26 +212,22 @@ namespace LAIR.ResourceAPIs.FrameNet
                     _lexicalUnitIdLexicalUnit.Add(lexicalUnit.ID, lexicalUnit);
                 }
             }
-            #endregion
+        }
 
-            #region get frame relations
-            frameXmlFile = new StreamReader(frameRelationsPath);
-            string allRelationsXML = frameXmlFile.ReadToEnd();
-            frameXmlFile.Close();
-            framesP = new XmlParser(allRelationsXML);
-
+        private void ParseFramesRelationFiles(CommonXmlParser framesP)
+        {
             // read relations
             string relationsXML;
             while ((relationsXML = framesP.OuterXML("frame-relation-type")) != null)
             {
                 // get relation type
-                XmlParser relationsP = new XmlParser(relationsXML);
+                var relationsP = new LAIR.CommonPort.CommonXmlParser(relationsXML);
                 Frame.FrameRelation relation = Frame.GetFrameRelation(relationsP.AttributeValue("frame-relation-type", "name"));
 
                 string relationXML;
                 while ((relationXML = relationsP.OuterXML("frame-relation")) != null)
                 {
-                    XmlParser relationP = new XmlParser(relationXML);
+                    var relationP = new LAIR.CommonPort.CommonXmlParser(relationXML);
                     string superFrameName = relationP.AttributeValue("frame-relation", "superFrameName").ToLower();
                     string subFrameName = relationP.AttributeValue("frame-relation", "subFrameName").ToLower();
 
@@ -209,7 +251,6 @@ namespace LAIR.ResourceAPIs.FrameNet
                     }
                 }
             }
-            #endregion
         }
 
         /// <summary>
@@ -343,4 +384,8 @@ namespace LAIR.ResourceAPIs.FrameNet
             return _lexicalUnitLexicalUnitIDs.ContainsKey(lexicalUnit);
         }
     }
+}
+
+namespace LAIR
+{
 }

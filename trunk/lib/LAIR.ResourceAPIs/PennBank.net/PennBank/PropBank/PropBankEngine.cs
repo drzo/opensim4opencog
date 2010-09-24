@@ -4,7 +4,7 @@ using System.Collections.ObjectModel;
 using System.Text;
 using System.IO;
 using System.Text.RegularExpressions;
-
+using LAIR.CommonPort;
 using LAIR.ResourceAPIs.PennBank.TreeBank;
 using LAIR.XML;
 using LAIR.Collections.Generic;
@@ -78,13 +78,13 @@ namespace LAIR.ResourceAPIs.PennBank.PropBank
                 StreamReader frameFile = new StreamReader(frameFilePath);
                 string frameXML = frameFile.ReadToEnd();
                 frameFile.Close();
-                XmlParser frameP = new XmlParser(frameXML);
+                var frameP = new LAIR.CommonPort.CommonXmlParser(frameXML);
 
                 // get role sets
                 string roleSetXML;
                 while ((roleSetXML = frameP.OuterXML("roleset")) != null)
                 {
-                    XmlParser roleSetP = new XmlParser(roleSetXML);
+                    var roleSetP = new LAIR.CommonPort.CommonXmlParser(roleSetXML);
 
                     // get role set ID string in verb.id format
                     string roleSetIdStr = roleSetP.AttributeValue("roleset", "id").Trim();
@@ -109,7 +109,7 @@ namespace LAIR.ResourceAPIs.PennBank.PropBank
                     string roleXML;
                     while ((roleXML = roleSetP.OuterXML("role")) != null)
                     {
-                        XmlParser roleP = new XmlParser(roleXML);
+                        var roleP = new LAIR.CommonPort.CommonXmlParser(roleXML);
 
                         string description = roleP.AttributeValue("role", "descr");
                         string roleNumber = roleP.AttributeValue("role", "n").ToLower();
@@ -855,4 +855,8 @@ namespace LAIR.ResourceAPIs.PennBank.PropBank
             return _verbFrame.TryGetValue(verb, out frame);
         }
     }
+}
+
+namespace LAIR.CommonPort
+{
 }
