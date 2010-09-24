@@ -45,8 +45,15 @@ namespace RTParser.AIMLTagHandlers
                 {
                     // what to remember
                     Unifiable templateNodeInnerValue = Recurse();
-                    string myText = (string)templateNodeInnerValue;
+                    string myText = (string) templateNodeInnerValue;
+                    if (!TargetBot.LuceneIndexer.MayPush(myText))
+                    {
+                        writeToLogWarn("WARNING: NO DBPUSH " + myText);
+                        QueryHasFailed = true;
+                        return Unifiable.Empty;
+                    }
                     AddSideEffect("DBPUSH " + myText, () => TargetBot.LuceneIndexer.callDbPush(myText, templateNode));
+                    return myText;
                 }
                 catch (Exception e)
                 {
