@@ -38,13 +38,7 @@ namespace RTParser.AIMLTagHandlers
             Unifiable templateResult = Unifiable.CreateAppendable();
             if (templateNode.HasChildNodes)
             {
-                // recursively check
-                foreach (XmlNode childNode in templateNode.ChildNodes)
-                {
-                    bool success;
-                    Unifiable part = ProcessChildNode(childNode, false, false, out success);
-                    templateResult.Append(part);
-                }
+                templateResult = RecurseReal(templateNode, false);
             }
             return RecurseResult = templateResult;//.ToString();
         }
@@ -59,12 +53,7 @@ namespace RTParser.AIMLTagHandlers
             }
             if (templateNode.HasChildNodes)
             {
-                // recursively check
-                foreach (XmlNode childNode in templateNode.ChildNodes)
-                {
-                    Unifiable part = ProcessChildNode(childNode, true, false);
-                        templateResult.Append(part);
-                }
+                templateResult = RecurseReal(templateNode, false);
             }
             return templateResult;//.ToString();
         }

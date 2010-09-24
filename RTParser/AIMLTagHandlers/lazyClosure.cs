@@ -155,7 +155,8 @@ namespace RTParser.AIMLTagHandlers
                 Func<Unifiable, Unifiable> Format = (v) => RTParser.Normalize.ApplySubstitutions.Substitute(sd, templateNodeInnerText);
                 if (isRecursive && !ReadOnly)
                 {
-                    return RecurseResult = Format(TransformAtomically(null, true));
+                    RecurseResult = Format(TransformAtomically(null, true));
+                    return finalResult.Value;
                 }
                 return RecurseResult = TransformAtomically(Format, false);
             }
@@ -173,7 +174,7 @@ namespace RTParser.AIMLTagHandlers
             foreach (var node in vs)
             {
                 total++;
-                string nodeOuterXml = node.InnerXml;
+                string nodeOuterXml = InnerXml(node);
                 WriteLine(nodeOuterXml);
                 string p = RTPBot.GetAttribValue(node,"PASSED","FALSE");
                 if (p=="False")

@@ -83,7 +83,7 @@ namespace RTParser.AIMLTagHandlers
             {
                 {
                     {
-                        string ts = "<template>" + childNode.InnerXml + "</template>";
+                        string ts = "<template>" + InnerXml(childNode) + "</template>";
                         var tchiuld = getNode(ts, childNode);
                         string ost = tchiuld.OuterXml;
                         LineInfoElementImpl.unsetReadonly(tchiuld);
@@ -144,7 +144,7 @@ namespace RTParser.AIMLTagHandlers
                     loaderOptions = request.LoadOptions;
                     request.LoadingFrom = documentInfo;
                     loaderOptions.CtxGraph = request.Graph;
-                    string innerXML = templateNode.InnerXml.TrimStart(isValueSetChars).Trim(" \n\r\t".ToCharArray());
+                    string innerXML = InnerXml(templateNode);
 
 
                     if (!string.IsNullOrEmpty(command))

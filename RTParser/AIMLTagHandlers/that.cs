@@ -23,9 +23,9 @@ namespace RTParser.AIMLTagHandlers
     /// 
     /// The template-side that element does not have any content. 
     /// </summary>
-    public class that : RTParser.Utils.AIMLTagHandler
+    public class that : RTParser.Utils.AIMLConstraintTagHandler
     {
-        readonly int offetFrom = 0;
+        
         /// <summary>
         /// Ctor
         /// </summary>
@@ -50,9 +50,8 @@ namespace RTParser.AIMLTagHandlers
                 RTParser.Request request,
                 RTParser.Result result,
                 XmlNode templateNode, int offset)
-            : base(bot, user, query, request, result, templateNode)
+            : base(bot, user, query, request, result, templateNode, offset)
         {
-            offetFrom = offset;
         }
 
         protected override Unifiable ProcessChange()
@@ -74,26 +73,63 @@ namespace RTParser.AIMLTagHandlers
             }
             return Unifiable.Empty;
         }
+    }
+}
 
-        private void localError(string s, string at1)
+namespace RTParser.Utils
+{
+    abstract public class AIMLConstraintTagHandler : RTParser.Utils.AIMLTagHandler
+    {
+        protected int offetFrom;
+        public AIMLConstraintTagHandler(RTParser.RTPBot bot,
+                RTParser.User user,
+                RTParser.Utils.SubQuery query,
+                RTParser.Request request,
+                RTParser.Result result,
+                XmlNode templateNode, int offset)
+            : base(bot, user, query, request, result, templateNode)
+        {
+            offetFrom = offset;
+            IsStarAtomically = false;
+        }
+
+        public AIMLConstraintTagHandler(RTParser.RTPBot bot,
+                        RTParser.User user,
+                        RTParser.Utils.SubQuery query,
+                        RTParser.Request request,
+                        RTParser.Result result,
+                        XmlNode templateNode)
+            : this(bot, user, query, request, result, templateNode, 1)
+        {
+        }
+        protected void localError(string s, string at1)
         {
             writeToLogWarn("ERROR! An input tag with a bady formed index (" + at1 + ") was encountered processing the input: " +
                 this.request.rawInput + s);
         }
 
-        public static Unifiable GetIndexes(string at1, User responder, Func<int, int, User, Unifiable> getThat, OutputDelegate debug)
+        public Unifiable GetIndexes(string at1, User responder, Func<int, int, User, Unifiable> getThat, OutputDelegate debug)
         {
             {
                 {
 
                     {
-
                         {
 
                             try
                             {
-                                if (string.IsNullOrEmpty(at1) || at1 == "1" || at1 == "1,1")
+                                if (string.IsNullOrEmpty(at1))
                                 {
+                                    return getThat(offetFrom - 1, 0, responder);
+                                }
+                                else if (at1 == "1")
+                                {
+
+                                    return getThat(0, 0, responder);
+                                }
+                                else if (at1 == "1,1")
+                                {
+
                                     return getThat(0, 0, responder);
                                 }
                                 // see if there is a split
@@ -104,7 +140,7 @@ namespace RTParser.AIMLTagHandlers
                                     int sentence = Convert.ToInt32(dimensions[1].Trim());
                                     if ((result > 0) & (sentence > 0))
                                     {
-                                        return getThat(result - 1, sentence - 1, responder);
+                                        return getThat(result - 1 + offetFrom - 1, sentence - 1, responder);
                                     }
                                     else
                                     {
@@ -117,7 +153,7 @@ namespace RTParser.AIMLTagHandlers
                                     int result = Convert.ToInt32(at1.Trim());
                                     if (result > 0)
                                     {
-                                        return getThat(result - 1, 0, responder);
+                                        return getThat(result - 1 + offetFrom - 1, 0, responder);
                                     }
                                     else
                                     {

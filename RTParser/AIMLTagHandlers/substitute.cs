@@ -108,6 +108,7 @@ namespace RTParser.Utils
                                                 XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
+            IsStarAtomically = true;
         }
 
         #region Overrides of AIMLFormatingTagHandler

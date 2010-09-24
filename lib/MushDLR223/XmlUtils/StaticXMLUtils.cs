@@ -208,11 +208,20 @@ namespace MushDLR223.Utilities
         public static string InnerXmlText(XmlNode templateNode)
         {
             string s = InnerXmlText0(templateNode).Trim();
+            return ValueText(s);
+        }
+
+        public static string ValueText(string s)
+        {
             if (s.StartsWith(isValueSetStart))
             {
-               return s.Substring(isValueSetSkip).TrimStart(isValueSetChars);                
+                s = s.Substring(isValueSetSkip);
             }
-            return s;
+            return s.TrimStart(isValueSetChars).Trim(" \n\r\t".ToCharArray());
+        }
+        public static string XmlValueSettable(string stringValue)
+        {
+            return isValueSetStart + stringValue;
         }
 
         private static string InnerXmlText0(XmlNode templateNode)

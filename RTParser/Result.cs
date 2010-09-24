@@ -217,6 +217,7 @@ namespace RTParser
 
         double TemplateRating { get; set; }
         bool Started { get; set; }
+        TimeSpan Durration { get; }
 
         /// <summary>
         /// The number of templates to harvest in query stage (should be at least one)
@@ -242,7 +243,7 @@ namespace RTParser
         //      int UseLuceneForSetMaxDepth { get; set; }
 
         void CollectRequest();
-        string WhyIsWhyComplete();
+        string WhyIsResultComplete();
         void AddSubqueries(GraphQuery queries);
         void AddOutputSentences(TemplateInfo ti, string unifiable);
         //bool IsTemplateNew(TemplateInfo ti);
@@ -316,18 +317,20 @@ namespace RTParser
             //request = null;
         }
 
-        /// <summary>
-        /// The amount of time the request took to process
-        /// </summary>
-        public TimeSpan Duration = TimeSpan.MinValue;
-
         public override string WhyComplete
         {
-            get { return WhyIsWhyComplete() ?? base.WhyComplete; }
+            get
+            {
+                if (Started)
+                {
+                    return WhyIsResultComplete() ?? base.WhyComplete;                    
+                }
+                return base.WhyComplete;
+            }
             set { base.WhyComplete = value; }
         }
 
-        public string WhyIsWhyComplete()
+        public string WhyIsResultComplete()
         {
             lock (this)
             {
@@ -566,7 +569,11 @@ namespace RTParser
         public bool IsComplete
         {
             get { return EndedOn < DateTime.Now; }
-            set { EndedOn = value ? DateTime.Now : DateTime.MaxValue; }
+            set
+            {
+                EndedOn = value ? DateTime.Now : DateTime.MaxValue;
+                _Durration = value ? Durration : TimeSpan.Zero;
+            }
         }
 
         public bool IsSailent
@@ -771,10 +778,10 @@ namespace RTParser
         public override string ToString()
         {
             string whyComplete = WhyComplete;
-            return ToString0() + base.ToString() + " " + (whyComplete != null ? " WhyComplete=" + whyComplete : "");
+            return ToResultString() + " " + ToRequestString() + " " + (whyComplete != null ? " WhyComplete=" + whyComplete : "");
         }
 
-        public string ToString0()
+        public string ToResultString()
         {
             string msg = "";
             if (!Started)

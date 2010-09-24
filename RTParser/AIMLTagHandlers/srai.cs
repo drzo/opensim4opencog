@@ -78,14 +78,8 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessChange()
         {
-            string s;
-            if (ResultReady(out s)) return s;
             IsStarted = true;
-            if (RecurseResultValid)
-            {
-                return RecurseResult;
-            }
-            if (Unifiable.IsNullOrEmpty(RecurseResult))
+            if (!RecurseResultValid)
             {
                 try
                 {
@@ -96,10 +90,10 @@ namespace RTParser.AIMLTagHandlers
                     {
                         query.prefix = string.Format("{0}: SRAIDEPTH(user:{1}/request:{2})", request.Graph, userDepth, userDepth);
                         writeToLog("WARNING Depth pretty deep " + templateNode + " returning empty");
-                        return Unifiable.Empty;
+                        if (!request.SuspendSearchLimits) return RecurseResult;
                     }
                     RecurseResult = UseOriginalProcess ? (Unifiable)OriginalProcessChange() : ProcessChange0();
-                    templateNode.InnerXml = isValueSetStart + RecurseResult;
+                    templateNode.InnerXml = MushDLR223.Utilities.StaticXMLUtils.XmlValueSettable(RecurseResult);
                 }
                 catch (ChatSignal ex)
                 {
@@ -136,10 +130,11 @@ namespace RTParser.AIMLTagHandlers
         {
             return ProcessChange();
         }
+
         protected Unifiable ProcessChange0()
         {
             string s;
-            if (ResultReady(out s)) return s;
+            if (RecurseResultValid) return RecurseResult;
             if (CheckNode("srai"))
             {
                 bool chatTraced = Proc.chatTrace;
@@ -147,6 +142,10 @@ namespace RTParser.AIMLTagHandlers
                 try
                 {
                     var templateNodeInnerValue = Recurse();
+                    if (IsSilentTag(templateNode.ChildNodes))
+                    {
+                        return Unifiable.Empty;
+                    }
                     var vv = ProcessChangeSrai(request, query, templateNodeInnerValue, templateNode, initialString, writeToLog);
                     return vv;
                 }
@@ -195,16 +194,22 @@ namespace RTParser.AIMLTagHandlers
                     {
                         string sss = prefix + " request.SraiDepth.IsOverMax '" + request.SraiDepth.Current + "'";
                         writeToLog(sss);
-                        throw new ChatSignalOverBudget(sss);
-                        return Unifiable.Empty;
+                        if (!request.SuspendSearchLimits)
+                        {
+                            throw new ChatSignalOverBudget(sss);
+                            return Unifiable.Empty;
+                        }
                     }
                     string why = request.WhyComplete;
                     if (why!=null)
                     {
                         string sss = prefix + " " + why;
                         writeToLog(sss);
-                        throw new ChatSignalOverBudget(sss);
-                        return Unifiable.Empty;
+                        if (!request.SuspendSearchLimits)
+                        {
+                            throw new ChatSignalOverBudget(sss);
+                            return Unifiable.Empty;
+                        }
                     }
                     //Unifiable templateNodeInnerValue = Recurse();
                     if (!templateNodeInnerValue.IsEmpty)
@@ -248,13 +253,14 @@ namespace RTParser.AIMLTagHandlers
                         AIMLbot.MasterResult subResult;
                         var prev = subRequest.GraphsAcceptingUserInput;
                         var prevSO = user.SuspendAddResultToUser;
+                        subResult = subRequest.CreateResult(subRequest);
                         try
                         {
                             subRequest.GraphsAcceptingUserInput = true;
                             //var newresult = new AIMLbot.Result(request.user, Proc, request);
                             //subRequest.result = newresult;
                             user.SuspendAddResultToUser = true;
-                            if (request.IsTraced) subRequest.IsTraced = !showDebug;
+                            if (request.IsTraced) subRequest.IsTraced = !showDebug;                            
                             subResult = mybot.ChatWithRequest4(subRequest, user, request.Responder, subRequest.Graph);
                         }
                         finally
