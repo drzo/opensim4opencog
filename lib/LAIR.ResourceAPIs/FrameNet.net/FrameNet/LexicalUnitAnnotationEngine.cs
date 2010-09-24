@@ -50,7 +50,7 @@ namespace LAIR.ResourceAPIs.FrameNet
             StreamReader attestationFile = new StreamReader(attestationFilePath);
             string attestationXML = attestationFile.ReadToEnd();
             attestationFile.Close();
-            XmlParser attestationP = new XmlParser(attestationXML);
+            var attestationP = new LAIR.CommonPort.CommonXmlParser(attestationXML);
 
             // get all attestations
             List<Attestation> attestations = new List<Attestation>();
@@ -60,29 +60,29 @@ namespace LAIR.ResourceAPIs.FrameNet
                 Attestation a = new Attestation();
 
                 // parser for entire annotation set
-                XmlParser annotationSetP = new XmlParser(annotationSetXML);
+                var annotationSetP = new LAIR.CommonPort.CommonXmlParser(annotationSetXML);
 
                 // first get sentence...it is below the annotation layers
                 string setenceXML = annotationSetP.OuterXML("sentence");
-                XmlParser sentenceP = new XmlParser(setenceXML);
+                var sentenceP = new LAIR.CommonPort.CommonXmlParser(setenceXML);
                 a.Sentence = sentenceP.ElementText("text");
 
                 #region fe bindings
                 // parser is forward-only, so create another from the top
-                annotationSetP = new XmlParser(annotationSetXML);
+                annotationSetP = new LAIR.CommonPort.CommonXmlParser(annotationSetXML);
 
                 // get FE bindings
                 if (!annotationSetP.SkipToElement("layer", feBindingXMLConstraints))
                     throw new Exception("Failed to find FE layer in annotation set");
 
                 string feBindingXML = annotationSetP.OuterXML("layer");
-                XmlParser feBindingP = new XmlParser(feBindingXML);
+                var feBindingP = new LAIR.CommonPort.CommonXmlParser(feBindingXML);
 
                 // read off FE binding labels
                 string labelXML;
                 while ((labelXML = feBindingP.OuterXML("label")) != null)
                 {
-                    XmlParser labelP = new XmlParser(labelXML);
+                    var labelP = new LAIR.CommonPort.CommonXmlParser(labelXML);
                     string feName = labelP.AttributeValue("label", "name");
 
                     // ignore non-expression FEs (INI, DNI, CNI)
@@ -111,7 +111,7 @@ namespace LAIR.ResourceAPIs.FrameNet
 
                 #region targets
                 // get target annotation...reset parser...sometimes the target comes before the FE layer
-                annotationSetP = new XmlParser(annotationSetXML);
+                annotationSetP = new LAIR.CommonPort.CommonXmlParser(annotationSetXML);
 
                 if (!annotationSetP.SkipToElement("layer", targetXMLConstraints))
                     throw new Exception("Failed to find target layer in annotation set");
@@ -120,7 +120,7 @@ namespace LAIR.ResourceAPIs.FrameNet
                 XmlParser targetP = new XmlParser(targetXML);
                 while ((labelXML = targetP.OuterXML("label")) != null)
                 {
-                    XmlParser labelP = new XmlParser(labelXML);
+                    var labelP = new LAIR.CommonPort.CommonXmlParser(labelXML);
                     int targetStart = int.Parse(labelP.AttributeValue("label", "start"));
                     int targetEnd = int.Parse(labelP.AttributeValue("label", "end"));
                     string targetVal = a.Sentence.Substring(targetStart, targetEnd - targetStart + 1);

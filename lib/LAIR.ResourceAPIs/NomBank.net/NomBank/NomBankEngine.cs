@@ -5,7 +5,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Collections.ObjectModel;
 using System.Linq;
-
+using LAIR.CommonPort;
 using LAIR.ResourceAPIs.PennBank.TreeBank;
 using LAIR.ResourceAPIs.NomBank.NomLex;
 using LAIR.ResourceAPIs.PennBank.PropBank;
@@ -149,13 +149,13 @@ namespace LAIR.ResourceAPIs.NomBank
                 StreamReader frameFile = new StreamReader(framePath);
                 string frameXML = frameFile.ReadToEnd();
                 frameFile.Close();
-                XmlParser frameP = new XmlParser(frameXML);
+                var frameP = new LAIR.CommonPort.CommonXmlParser(frameXML);
 
                 // get role sets
                 string roleSetXML;
                 while ((roleSetXML = frameP.OuterXML("roleset")) != null)
                 {
-                    XmlParser roleSetP = new XmlParser(roleSetXML);
+                    var roleSetP = new LAIR.CommonPort.CommonXmlParser(roleSetXML);
 
                     // get role set ID string in noun.id format
                     string roleSetIdStr = roleSetP.AttributeValue("roleset", "id");
@@ -198,7 +198,7 @@ namespace LAIR.ResourceAPIs.NomBank
                     string roleXML;
                     while ((roleXML = roleSetP.OuterXML("role")) != null)
                     {
-                        XmlParser roleP = new XmlParser(roleXML);
+                        var roleP = new LAIR.CommonPort.CommonXmlParser(roleXML);
 
                         string description = roleP.AttributeValue("role", "descr");
                         string roleNumber = roleP.AttributeValue("role", "n").ToLower();
