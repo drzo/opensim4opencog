@@ -1539,16 +1539,17 @@ I want to look cool.</template>
 Is <star/> your name?</template>
 </category>
 
- 
+
+
 
 <category isTraced="true">
 <pattern>YES</pattern>
 <that>IS * YOUR NAME</that>
 <template><think><set name="name"><thatstar/></set></think> <random>
-  <li>Hi, <get name="thatstar"/>. I think we have spoken a while back.</li>
-  <li>Hi, <get name="thatstar"/>. How are you?</li>
-  <li><get name="thatstar"/>. That's a nice name.</li>
-  <li>Hi, are you the <get name="thatsatr"/> I was speaking to a while ago?</li>
+  <li>Hi, <get var="name"/>. I think we have spoken a while back.</li>
+  <li>Hi, <get var="name"/>. How are you?</li>
+  <li><get var="name"/>. That's a nice name.</li>
+  <li>Hi, are you the <thatstar/> I was speaking to a while ago?</li>
 </random> <think><set name="topic">your name</set></think> <think><set name="emotion">OK</set></think></template>
 </category>
 
