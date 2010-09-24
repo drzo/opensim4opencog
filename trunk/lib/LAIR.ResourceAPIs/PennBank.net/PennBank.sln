@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestApplication", "TestApplication\TestApplication.csproj", "{6C1A79E1-9671-423B-A98E-B391F5081094}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TreeBankGrapher", "TreeBankGrapher\TreeBankGrapher.csproj", "{A7AF7709-52E6-468F-9C25-3B7E43E5F752}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PennBank", "PennBank\PennBank.csproj", "{7DED81B8-6BCD-49A8-95E0-9C1408BEAA77}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6C1A79E1-9671-423B-A98E-B391F5081094}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6C1A79E1-9671-423B-A98E-B391F5081094}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6C1A79E1-9671-423B-A98E-B391F5081094}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6C1A79E1-9671-423B-A98E-B391F5081094}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A7AF7709-52E6-468F-9C25-3B7E43E5F752}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A7AF7709-52E6-468F-9C25-3B7E43E5F752}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A7AF7709-52E6-468F-9C25-3B7E43E5F752}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A7AF7709-52E6-468F-9C25-3B7E43E5F752}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7DED81B8-6BCD-49A8-95E0-9C1408BEAA77}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7DED81B8-6BCD-49A8-95E0-9C1408BEAA77}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7DED81B8-6BCD-49A8-95E0-9C1408BEAA77}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7DED81B8-6BCD-49A8-95E0-9C1408BEAA77}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

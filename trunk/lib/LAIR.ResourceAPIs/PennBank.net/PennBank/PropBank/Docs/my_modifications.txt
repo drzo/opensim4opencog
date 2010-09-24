@@ -1,0 +1,11 @@
+== prop.txt ==
+
+ Remove initial "wsj/" from file locations
+
+
+== frames ==
+
+ There is a frame named "con.xml", which is an invalid file name in Windows. Create an identical file in 
+ the frames directory, but name it "con_frame.xml".
+
+ proscribe.xml:  change role number of "proscribed from" argument to "2".
