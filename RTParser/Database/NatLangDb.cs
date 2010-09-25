@@ -19,11 +19,13 @@ namespace RTParser.Database
 {
     public class NatLangDb
     {
+        private GoogleTranslator googleTranslator = null;
         public static NatLangDb NatLangProc;
         static RTPBot bot;
         public NatLangDb(RTParser.RTPBot p)
         {
             bot = p;
+            googleTranslator = new GoogleTranslator(p);
             NatLangProc = this;
             initNatLangDb();
         }
