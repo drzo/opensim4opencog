@@ -241,6 +241,7 @@ namespace cogbot.Listeners
             MetaDataQueue.Start();
             OnConnectedQueue.Start();
             SimAssetStore.TaskQueueStart();
+            SlowConnectedQueue.Enqueue(() => SlowConnectedQueue.DebugQueue = false);
             SlowConnectedQueue.Start();
         }
 

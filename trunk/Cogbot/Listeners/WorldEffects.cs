@@ -112,7 +112,7 @@ namespace cogbot.Listeners
             var sittingOn = e.SittingOn;
             var oldSeat = e.OldSeat;
             if (!MaintainActions) return;
-                EventQueue.Enqueue(() =>
+            EventQueue.Enqueue("Objects_OnAvatarSitChanged", () =>
                 {
                     SimObject user = GetSimObject(avatar, simulator);
                     SimObject newSit = GetSimObject(sittingOn, simulator);

@@ -1369,49 +1369,67 @@ namespace MushDLR223.Utilities
         }
         static public string CurrentCaller
         {
-            get
-            {
-                var st = new System.Diagnostics.StackTrace(true).GetFrames();
-                if (st == null) return "NULL";
-                {
-                    for (int i = 0; i < st.Length; i++)
-                    {
-                        StackFrame s = st[i];
-                        var m = s.GetMethod();                        
-                        if (m != null)
-                        {
-                            MemberInfo caller = m.ReflectedType ?? m.DeclaringType;
-                            if (caller == null) continue;
-                            caller = ResolveType(m);
-
-                            lock (TransparentCallers) if (TransparentCallers.Contains(caller)) continue;
-                            lock (OpacheCallers) if (OpacheCallers.Contains(caller)) return CallerName(s);
-                        }
-                        return CallerName(s);
-                    }
-                }
-                return CallerName(st[st.Length - 1]);
-            }
+            get { return FindCallerInStack(TransparentCallers, OpacheCallers, false); }
         }
 
-        private static string CallerName(StackFrame frame)
+        public static string FindCallerInStack(HashSet<MemberInfo> transparentCallers, HashSet<MemberInfo> opacheCallers, bool useMethodName)
+        {
+            var st = new System.Diagnostics.StackTrace(true).GetFrames();
+            if (st == null) return "NULL";
+            {
+                for (int i = 0; i < st.Length; i++)
+                {
+                    StackFrame s = st[i];
+                    var m = s.GetMethod();
+                    if (m != null)
+                    {
+                        MemberInfo caller = m.ReflectedType ?? m.DeclaringType;
+                        if (caller == null) continue;
+                        caller = ResolveType(m);
+
+                        if (transparentCallers == null)
+                            transparentCallers = TransparentCallers;
+                        lock (transparentCallers) if (transparentCallers.Contains(caller)) continue;
+                        if (opacheCallers != null)
+                            lock (opacheCallers) if (opacheCallers.Contains(caller))
+                                return CallerName(s, useMethodName);
+                    }
+                    return CallerName(s, useMethodName);
+                }
+            }
+            return CallerName(st[st.Length - 1], useMethodName);
+        }
+
+        private static string CallerName(StackFrame frame, bool useMethodName)
         {
             string str = null;
-            if (frame == null) return str;            
-            var m = frame.GetMethod();
+            if (frame == null) return str;
+            var m = frame.GetMethod();            
+            string suffix = "";
             if (m != null)
             {
-                //str =frame.GetMethod().Name;
-                //if (str.StartsWith("get_")) str = str.Substring(4);
-                //else if (str.StartsWith("set_")) str = str.Substring(4);
-
-                MemberInfo type = frame.GetMethod();// +"_" + str;                   
+                MemberInfo type = m; // +"_" + str;                   
                 type = ResolveType(type);
                 str = type.Name;
-                if (!string.IsNullOrEmpty(str)) return str.ToUpper();
+                if (type is Type)
+                {
+                    if (TransparentCallers.Contains(type))
+                    {
+                        //todo decide below to comment
+                        useMethodName = true;
+                        str = "";
+                    }
+                }
+                if (useMethodName)
+                {
+                    suffix = m.Name;
+                    if (suffix.StartsWith("get_") || suffix.StartsWith("set_")) suffix = suffix.Substring(4);
+                    suffix = "." + suffix;
+                }
+                if (!string.IsNullOrEmpty(str)) return str.ToUpper() + suffix;
             }
-            var mo = frame.GetFileName() +"_"+ frame.GetFileLineNumber();
-            return str;
+            var mo = frame.GetFileName() + "_" + frame.GetFileLineNumber() + suffix;
+            return str + suffix;
         }
 
         private static MemberInfo ResolveType(MemberInfo type)
@@ -1480,6 +1498,7 @@ namespace MushDLR223.Utilities
                                                                           typeof (SystemConsole),
                                                                           typeof (OutputDelegateWriter),
                                                                           typeof (TextFilter),
+                                                                          typeof (TaskQueueHandler),
                                                                       };
 
         public static readonly HashSet<MemberInfo> OpacheCallers = new HashSet<MemberInfo>()

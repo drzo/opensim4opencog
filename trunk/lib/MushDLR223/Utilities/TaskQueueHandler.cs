@@ -72,7 +72,8 @@ namespace MushDLR223.Utilities
         private ulong TotalFailures = 0;
         private ulong TotalStarted = 0;
         private bool WaitingOnPing = false;
-        public string WaitingString = "NO_WAITING";
+        public string WaitingString = "";
+        private string LastOpString = "";
         public string LastDebugMessage = "NO_MESG";        
         const string INFO = "$INFO$";
 
@@ -198,22 +199,27 @@ namespace MushDLR223.Utilities
 
         public void Dispose()
         {
-            if (IsDisposing) return;
-            IsDisposing = true;
-            lock (TaskQueueHandlers)
-                TaskQueueHandlers.Remove(this);
-            if (PingerThread != null)
-            {
-                PingerThread.Abort();
-                PingerThread = null;
-            }
-            if (StackerThread != null && StackerThread.IsAlive)
-            {
-                StackerThread.Abort();
-                StackerThread = null;
-            }
             try
             {
+                if (IsDisposing) return;
+                IsDisposing = true;
+                lock (TaskQueueHandlers)
+                    TaskQueueHandlers.Remove(this);
+                if (PingerThread != null && PingerThread.IsAlive)
+                {
+                    NoExceptions(PingerThread.Abort);
+                }
+                if (StackerThread != null && StackerThread.IsAlive)
+                {
+                    NoExceptions(StackerThread.Abort);
+                    StackerThread = null;
+                }
+                if (TaskThread != null && TaskThread.IsAlive)
+                {
+                    NoExceptions(TaskThread.Abort);
+                    TaskThread = null;
+                }
+
                 NoExceptions<bool>(WaitingOn.Set);
                 NoExceptions(WaitingOn.Close);
             }
@@ -252,24 +258,41 @@ namespace MushDLR223.Utilities
 
         public TASK NamedTask(string named, TASK action)
         {
+            if (named == null) return action;
             return () =>
                        {
-                           lock (DebugStringLock)
+                           string s = named + "\n";
+                           try
                            {
-                               WaitingString += "\n" + named;
+                               lock (DebugStringLock)
+                               {
+                                   WaitingString = s + WaitingString;
+                                   if (!String.IsNullOrEmpty(named)) LastOpString = named;
+                               }
+                               action();
                            }
-                           action();
+                           finally
+                           {
+                               lock (DebugStringLock)
+                               {
+                                   WaitingString = WaitingString.Replace(s, "");
+                               }
+                           }
                        };
         }
 
         public string ToDebugString(bool detailed)
         {
-            string WaitingS = "Not waiting";
+            string WaitingS = "NO_WAITING";
             lock (DebugStringLock)
             {
                 if (WaitingString.Length >= 0)
                 {
-                    WaitingS = "WaitingOn: " + WaitingString;
+                    WaitingS = "WaitingOn: " + WaitingString.Replace("\n"," ").Trim();
+                }
+                if (LastOpString.Length >= 0)
+                {
+                    WaitingS += " op: " + LastOpString;
                 }
             }
             string extraMesage =
@@ -606,8 +629,16 @@ namespace MushDLR223.Utilities
                                 if (ExpectedTodo > 0)
                                 {
                                     problems = true;
-                                    TimeSpan t = DateTime.Now - BusyEnd;
-                                    WriteLine("NOTHING DONE IN time = {0} " + INFO, GetTimeString(t));
+                                    var fromNow = BusyEnd;
+                                    if (BusyStart > BusyEnd) fromNow = BusyStart;
+                                    TimeSpan t = DateTime.Now - fromNow;
+                                    if (t>TOO_LONG_INTERVAL)
+                                    {
+                                        WriteLine("ERROR: NOTHING DONE IN time = {0} " + INFO, GetTimeString(t));
+                                        DebugQueue = true;
+                                        AbortCurrentOperation();
+                                    }
+                                    WriteLine("WARN: NOTHING DONE IN time = {0} " + INFO, GetTimeString(t));
                                 }
                             }
                         }
@@ -631,7 +662,7 @@ namespace MushDLR223.Utilities
                     if (WaitingOnPing) continue;
                     PingStart = DateTime.Now;
                     WaitingOnPing = true;
-                    Enqueue(EventQueue_Pong);
+                    Enqueue0(EventQueue_Pong);
                 }
             }
             // ReSharper disable FunctionNeverReturns
@@ -674,15 +705,15 @@ namespace MushDLR223.Utilities
             string lagString;
             if (lag.TotalSeconds < 2)
             {
-                lagString = string.Format("{0}ms", lag.Milliseconds);
+                lagString = string.Format("{0:0}ms", lag.Milliseconds);
             }
             else if (lag.TotalMinutes < 2)
             {
-                lagString = string.Format("{0}secs", lag.TotalSeconds);
+                lagString = string.Format("{0:0}secs", lag.TotalSeconds);
             }
             else if (lag.TotalHours < 2)
             {
-                lagString = string.Format("{0}mins", lag.TotalMinutes);
+                lagString = string.Format("{0:#.##}mins", lag.TotalMinutes);
             }
             else
             {
@@ -699,7 +730,7 @@ namespace MushDLR223.Utilities
                 abortable = false;
             if (InternalEvent(evt))
             {
-                NoExceptions(evt);
+                NonAbortedly(() => NoExceptions(evt));
                 return;
             }
             //var IsCurrentTaskComplete = new ManualResetEvent(false);
@@ -753,7 +784,11 @@ namespace MushDLR223.Utilities
                         if (proposal.TotalMilliseconds > 500)
                         {
                             ThisMaxOperationTimespan = proposal;
-                            WriteLine00("changeing " + ThisMaxOperationTimespan + " to ");
+                            if (proposal.TotalMilliseconds > 1500)
+                            {
+                                if (problems)
+                                    WriteLine00("changeing " + ThisMaxOperationTimespan + " to ");
+                            }
                         }
                     }
                     //TotalStarted++;
@@ -810,8 +845,8 @@ namespace MushDLR223.Utilities
                     AbortRequested = false;
                     abortable = true;
                     NoExceptions<bool>(IsCurrentTaskStarted.Set);
+                    TaskThread = Thread.CurrentThread;
                 }
-
                 evt();
                 abortable = false;
             }
@@ -882,6 +917,7 @@ namespace MushDLR223.Utilities
                 {
                     before = WaitingString;
                     WaitingString = name + "\n" + before;
+                    if (!String.IsNullOrEmpty(name)) LastOpString = name;
                 }
                 DoInteruptably(ref this.TaskThread, evt, maxTime, control);
             }
@@ -1018,18 +1054,65 @@ namespace MushDLR223.Utilities
             lock (TaskThreadChangeLock) if (taskEvent != null) NoExceptions<bool>(taskEvent.Set);
         }
 
+        public void AbortCurrentOperation()
+        {
+            bool exitMonitor = true;
+            if (!System.Threading.Monitor.TryEnter(TaskThreadChangeLock, TimeSpan.FromSeconds(10)))
+            {
+                exitMonitor = false;
+                WriteLine("AbortCurrentOperation: cannot getTaskThreadChangeLock! " + INFO);
+            }
+            try
+            {
+                if (Thread.CurrentThread == TaskThread)
+                {
+                    WriteLine("AbortCurrentOperation: NoSuicide! " + INFO);
+                    return;
+                }
+                if (!abortable)
+                {
+                    WriteLine("AbortCurrentOperation: not abortable?! " + INFO);
+                    abortable = true;
+                }
+                KillCurrentTask();
+            }
+            finally
+            {
+                if (exitMonitor) System.Threading.Monitor.Exit(TaskThreadChangeLock);
+            }
+        }
         public void KillCurrentTask()
         {
-            if (Thread.CurrentThread == StackerThread)
+            if (Thread.CurrentThread == TaskThread)
             {
-                WriteLine("NoSuicide! " + INFO);
+                WriteLine("KillCurrentTask: NoSuicide! " + INFO);
                 return;
             }
-            if (StackerThread != null)
-                if (StackerThread.IsAlive)
+            if (null == TaskThread)
+            {
+                WriteLine("KillCurrentTask: No actual TaskThread! " + INFO);
+                return;
+            }
+            bool exitMonitor = true;
+            if (!System.Threading.Monitor.TryEnter(TaskThreadChangeLock, TimeSpan.FromSeconds(10)))
+            {
+                exitMonitor = false;
+                WriteLine("KillCurrentTask: cannot getTaskThreadChangeLock! " + INFO);
+            }
+            try
+            {
+                if (!TaskThread.IsAlive)
                 {
+                    WriteLine("KillCurrentTask: TaskThread Not Alive ! " + INFO);
+                    return;
+                }
+                try
+                {
+                    if (!IsCurrentTaskStarted.WaitOne(TimeSpan.FromSeconds(5)))
+                    {
+                        WriteLine("!IsCurrentTaskStarted");
+                    }
                     WriteLine("KillCurrentTask! " + INFO);
-                    IsCurrentTaskStarted.WaitOne(TimeSpan.FromSeconds(5));
                     lock (TaskThreadChangeLock)
                     {
                         if (abortable)
@@ -1044,6 +1127,16 @@ namespace MushDLR223.Utilities
                     //TaskThread.Suspend();
                     problems = true;
                 }
+                catch (Exception e)
+                {
+
+                    WriteLine("ERROR: " + e);
+                }
+            }
+            finally
+            {
+                if (exitMonitor) System.Threading.Monitor.Exit(TaskThreadChangeLock);
+            }
         }
 
 
@@ -1106,6 +1199,10 @@ namespace MushDLR223.Utilities
 
         public void Enqueue(TASK evt)
         {
+            Enqueue(DLRConsole.FindCallerInStack(null, null, true), evt);
+        }
+        public void Enqueue0(TASK evt)
+        {
             lock (BusyTrackingLock)
             {
                 if (IsDisposing) return;
@@ -1123,7 +1220,21 @@ namespace MushDLR223.Utilities
             Set();
         }
 
+        public void Enqueue(String named, TASK evt)
+        {
+            Enqueue0(NamedTask(named, evt));
+        }
+
+        public void AddFirst(String named, TASK evt)
+        {
+            AddFirst0(NamedTask(named, evt));
+        }
+
         public void AddFirst(TASK evt)
+        {
+            AddFirst(DLRConsole.FindCallerInStack(null, null, true), evt);
+        }
+        public void AddFirst0(TASK evt)
         {
             if (IsDisposing) return;
             lock(BusyTrackingLock)
@@ -1154,6 +1265,7 @@ namespace MushDLR223.Utilities
                 {
                     WaitingString = "\n" + s;
                 }
+                if (!String.IsNullOrEmpty(s)) LastOpString = s;
             }
             ManualResetEvent are = new ManualResetEvent(false);
             Enqueue(() =>
@@ -1271,8 +1383,7 @@ namespace MushDLR223.Utilities
             {
                 if (IsDisposing)
                 {
-                    WriteLine("IsDisposing");
-                    return;
+                    WriteLine("IsDisposing NoExceptions? ");
                 }
                 
                 func.Invoke();
@@ -1282,6 +1393,39 @@ namespace MushDLR223.Utilities
             {
                 WriteLine("" + e);
                 return;
+            }
+        }
+
+        private void NonAbortedly(TASK func)
+        {
+            if (IsDisposing)
+            {
+                WriteLine("IsDisposing NonAbortedly?!");
+            }
+            if (TaskThread != Thread.CurrentThread)
+            {
+                func();
+                return;
+            }
+            bool wasAbortable;
+
+            lock (TaskThreadChangeLock)
+            {
+                wasAbortable = abortable;
+                TaskThread = null;
+                abortable = false;
+            }
+            try
+            {
+                func();
+            }
+            finally
+            {
+                lock (TaskThreadChangeLock)
+                {
+                    if (TaskThread == null) TaskThread = Thread.CurrentThread;
+                    abortable = wasAbortable;
+                }
             }
         }
 
