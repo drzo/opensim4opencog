@@ -367,8 +367,8 @@ namespace RTParser.Variables
             bot.RegisterDictionary(prefixName, prefixProvider);
             var dict = FindDictionary(prefixName, () => this);
             IsTraced = false;
-            _fallbacks.Add(pp);
-            _listeners.Add(pp);
+            AddSettingToCollection(null, pp, _fallbacks);
+            AddSettingToCollection(null, pp, _listeners);
         }
 
         #region Methods
@@ -1791,23 +1791,49 @@ namespace RTParser.Variables
 
         public void AddSettingToCollection(ISettingsDictionary dictionary, ParentProvider pp, List<ParentProvider> cols)
         {
+            dictionary = GetDictionary(dictionary, pp);
+            if (CheckAddToCollection(dictionary,pp,cols))
+            {
+                if (pp == null) pp = () => dictionary;
+                cols.Insert(0, pp);
+            }
+        }
+
+        private ISettingsDictionary GetDictionary(ISettingsDictionary dictionary, ParentProvider pp)
+        {
             if (dictionary == null)
             {
                 if (pp == null)
                 {
                     writeToLog("ERROR: should not place NULL inside self");
-                    return;
+                    return null;
                 }
                 dictionary = pp();
                 if (dictionary == null)
                 {
                     writeToLog("WARN: NULL inside pp");
+                    return null;
                 }
+            }
+            return dictionary;
+        }
+
+        public bool CheckAddToCollection(ISettingsDictionary dictionary, ParentProvider pp, List<ParentProvider> cols)
+        {
+            dictionary = GetDictionary(dictionary, pp);
+            if (dictionary == null)
+            {
+                if (pp == null)
+                {
+                    writeToLog("ERROR: NULL Provider and IDictionary");
+                    return false;
+                }
+                writeToLog("WARNING: NULL Dictionary");
             }
             if (dictionary == this)
             {
                 writeToLog("ERROR: should not place inside self");
-                return;
+                return false;
             }
             lock (cols)
             {
@@ -1815,21 +1841,35 @@ namespace RTParser.Variables
                 {
                     if (deep == pp)
                     {
-                        return;
+                        return false;
                     }
                     var inner = deep();
                     if (inner == null)
                     {
                         writeToLog("WARN: NULL Parent IDictionary " + dictionary);
+                        continue;
                     }
                     if (inner == dictionary)
                     {
-                        writeToLog("WARN: alread contains IDictionary " + dictionary);
-                        return;
+                        writeToLog("WARN: alread contains inner " + inner);
+                        return false;
+                    }
+                    if (inner == this)
+                    {
+                        writeToLog("WARN: this was found in inner " + inner);
+                        return false;
+                    }
+                    if (inner is SettingsDictionary)
+                    {
+                        var sd = (SettingsDictionary) inner;
+                        if (!sd.CheckAddToCollection(dictionary, pp, sd._listeners))
+                        {
+                            writeToLog("WARN: this was found in inner fallbacks " + inner);
+                            return false;
+                        }
                     }
                 }
-                if (pp == null) pp = () => dictionary;
-                cols.Insert(0, pp);
+                return true;
             }
         }
 
