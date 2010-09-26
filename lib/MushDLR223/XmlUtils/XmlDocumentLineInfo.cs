@@ -401,7 +401,7 @@ namespace MushDLR223.Utilities
             {
                 if (!string.IsNullOrEmpty(prefix))
                 {
-                    writeToLog("RemoveXmlns: prefix=" + prefix + " in " + nodeName);
+                  //  writeToLog("RemoveXmlns: prefix=" + prefix + " in " + nodeName);
                 }
                 prefix = prefixIsNullable ? null : "";
 
@@ -414,7 +414,7 @@ namespace MushDLR223.Utilities
                 if (localName == "xmlns")
                 {
                     localName = "legacy_xmlns";
-                    writeToLog("RemoveXmlns: localName=xmlns in " + nodeName);
+                    //writeToLog("RemoveXmlns: localName=xmlns in " + nodeName);
                 }
                 if (name == "xmlns")
                 {
