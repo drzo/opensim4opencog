@@ -346,26 +346,27 @@ namespace MushDLR223.Utilities
         /// <returns>The node (or null)</returns>
         public static XmlNode FindNode(string name, XmlNode node, XmlNode ifMissing, int searchDepth)
         {
-            foreach (string n in NamesStrings(name))
+            bool searchChildren = searchDepth > 0;
+            if (!searchChildren) return ifMissing;
+            int nsearchDepth = searchDepth - 1;
+            foreach (XmlNode child in node.ChildNodes)
             {
-                bool searchChildren = searchDepth > 0;
-                if (!searchChildren) return ifMissing;
-                int nsearchDepth = searchDepth - 1;
-                foreach (XmlNode child in node.ChildNodes)
+                foreach (string n in NamesStrings(name))
                 {
                     if (NameMatches(child, n))
                     {
                         return child;
                     }
-                    if (searchDepth > 0)
-                    {
-                        var cnode = FindNode(name, child, null, nsearchDepth);
-                        if (cnode != null) return cnode;
-                    }
+                }
+                if (searchDepth > 0)
+                {
+                    var cnode = FindNode(name, child, null, nsearchDepth);
+                    if (cnode != null) return cnode;
                 }
             }
             return ifMissing;
         }
+
         public static string FindNodeOrAttrib(XmlNode myNode, string names, Func<string> defaultNotFound)
         {
             const string attribNotFOund = "ATTRIB_NOT_FOUND";
