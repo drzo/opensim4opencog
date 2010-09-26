@@ -855,7 +855,7 @@ namespace RTParser.Utils
                 {
                     return RecurseResult;
                 }
-                innerResult.Value = this.ProcessAimlChange();
+                finalResult.Value = this.ProcessAimlChange();
                 return RecurseResult;
             }
             else
