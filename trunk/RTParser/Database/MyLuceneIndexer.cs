@@ -18,6 +18,7 @@ using Lucene.Net.Store;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
+using RTParser.Utils;
 
 namespace RTParser.Database
 {
@@ -29,7 +30,7 @@ namespace RTParser.Database
     /// <returns></returns>
     public delegate string WordExpander(string inputString, bool queryhook);
 
-    public class MyLuceneIndexer : IEnglishFactiodEngine
+    public class MyLuceneIndexer : IEnglishFactiodEngine, IDocSearch
     {
         private const string DOC_ID_FIELD_NAME = "ID_FIELD";
         private const string HYPO_FIELD_NAME = "HYPO_FIELD";
@@ -57,6 +58,47 @@ namespace RTParser.Database
 
         public readonly TripleStoreFromEnglish TripleStoreProxy;
 
+        public virtual object AskTextStringJustHere(string textstr, Request request)
+        {
+            string said;
+            string tolang;
+            if (!TextPatternUtils.SplitOff(textstr, "-", out tolang, out said))
+            {
+                tolang = "";
+                said = textstr;
+            }
+            string res = tolang;
+            var allResults = new List<ISearchResult>();
+            foreach (ISearchResult re in Search(said, null))
+            {
+                res += " " + re.ToString();
+            }
+            if (allResults.Count == 0) return tolang;
+            return res.Trim();
+        }
+
+        public virtual object AskTextStringAll(string textstr, Request request)
+        {
+            string said;
+            string tolang;
+            if (!TextPatternUtils.SplitOff(textstr, "-", out tolang, out said))
+            {
+                tolang = "";
+                said = textstr;
+            }
+            string res = tolang;
+            var allResults = new List<ISearchResult>();
+            foreach (IDocSearch searchSource in SearchSources)
+            {
+                foreach (ISearchResult re in searchSource.Search(said, null))
+                {
+                    res += " " + re.ToString();
+                }
+            }
+            if (allResults.Count == 0) return tolang;
+            return res.Trim();
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -64,11 +106,17 @@ namespace RTParser.Database
         /// <param name="fieldName">usually "TEXT_MATTER"</param>
         public MyLuceneIndexer(string indexDir, string fieldName, RTPBot myBot, WordNetEngine myWNEngine)
         {
+            SearchSources = new List<IDocSearch>() { this };
             _indexDir = indexDir;
             _fieldName = fieldName;
             TheBot = myBot;
             wordNetEngine = myWNEngine;
-
+            IEnglishFactiodEngine assertTo = this;
+            SearchSources.Add(new TrueKnowledgeFactiodEngine(assertTo, TheBot));
+            SearchSources.Add(new AskDotComFactiodEngine(assertTo, TheBot));
+            SearchSources.Add(new WikiAnswersFactoidEngine(assertTo, TheBot));
+            TheBot.AddExcuteHandler("askluc", AskTextStringJustHere);
+            TheBot.AddExcuteHandler("askall", AskTextStringAll);
             //WNUser2Cache();
 
             //_path = new System.IO.FileInfo(indexDir);
@@ -345,7 +393,7 @@ namespace RTParser.Database
         public int DeleteTopScoring(string searchQuery, XmlNode templateNode, bool mustContainExact)
         {
             // If must contain the exact words (the defualt is false)
-           // bool mustContainExact = false;
+            // bool mustContainExact = false;
             bool tf;
             if (StaticXMLUtils.TryParseBool(templateNode, "exact", out tf))
             {
@@ -432,6 +480,32 @@ namespace RTParser.Database
             return deleted;
 
         }
+
+        public ICollection<ISearchResult> Search(string searchTerm, WordExpander expandWithWordNet)
+        {
+            lock (dbLock)
+            {
+                try
+                {
+                    bool expandOnNoHits = expandWithWordNet != null;
+                    Object[] ids;
+                    string[] results;
+                    float[] scores;
+                    int found = Search(searchTerm, out ids, out results, out scores, expandWithWordNet, expandOnNoHits);
+                    var res = new List<ISearchResult>();
+                    for (int i = 0; i < ids.Length; i++)
+                    {
+                        res.Add(new OneSearchResult(ids[i], results[i], scores[i]));
+                    }
+                    return res;
+                }
+                catch (Exception e)
+                {
+                    writeToLog("ERROR Search {0}", e);
+                    return new ISearchResult[0];
+                }
+            }
+        }
         /// <summary>
         /// This method searches for the search term passed by the caller.
         /// </summary>
@@ -440,30 +514,12 @@ namespace RTParser.Database
         /// <param name="ids">An out parameter that is populated by this method for the caller with docments ids.</param>
         /// <param name="results">An out parameter that is populated by this method for the caller with docments text.</param>
         /// <param name="scores">An out parameter that is populated by this method for the caller with docments scores.</param>
-        public int Search(string searchTerm, out ulong[] ids, out string[] results, out float[] scores, WordExpander expandWithWordNet, bool expandOnNoHits)
-        {
-            lock (dbLock)
-            {
-                try
-                {
-                    return Search0(searchTerm, out ids, out results, out scores, expandWithWordNet, expandOnNoHits);
-                }
-                catch (Exception e)
-                {
-                    writeToLog("ERROR Search {0}", e);
-                    ids = new ulong[0];
-                    results = new string[0];
-                    scores = new float[0];
-                    return 0;
-                }
-            }
-        }
-        internal int Search0(string searchTerm, out ulong[] ids, out string[] results, out float[] scores, WordExpander expandWithWordNet, bool expandOnNoHits)
+        internal int Search(string searchTerm, out Object[] ids, out string[] results, out float[] scores, WordExpander expandWithWordNet, bool expandOnNoHits)
         {
             checkDbLock();
             if (!IsDbPresent)
             {
-                ids = new ulong[0];
+                ids = new Document[0];
                 results = new string[0];
                 scores = new float[0];
                 return 0;
@@ -477,16 +533,17 @@ namespace RTParser.Database
                 Hits hits = indexSearcher.Search(query);
                 int numHits = hits.Length();
 
-                ids = new ulong[numHits];
+                ids = new Document[numHits];
                 results = new string[numHits];
                 scores = new float[numHits];
 
                 for (int i = 0; i < numHits; ++i)
                 {
                     float score = hits.Score(i);
-                    string text = hits.Doc(i).Get(_fieldName);
-                    string idAsText = hits.Doc(i).Get(MyLuceneIndexer.DOC_ID_FIELD_NAME);
-                    ids[i] = UInt64.Parse(idAsText);
+                    var hdoc = hits.Doc(i);
+                    string text = hdoc.Get(_fieldName);
+                    //string idAsText = hdoc.Get(MyLuceneIndexer.DOC_ID_FIELD_NAME);
+                    ids[i] = hdoc;
                     results[i] = text;
                     scores[i] = score;
                 }
@@ -503,15 +560,15 @@ namespace RTParser.Database
                     Hits hitsWN = indexSearcher.Search(queryWN);
                     int numHitsWN = hitsWN.Length();
 
-                    ids = new ulong[numHitsWN];
+                    ids = new Document[numHitsWN];
                     results = new string[numHitsWN];
                     scores = new float[numHitsWN];
                     for (int i = 0; i < numHitsWN; ++i)
                     {
                         float score = hitsWN.Score(i);
                         string text = hitsWN.Doc(i).Get(_fieldName);
-                        string idAsText = hitsWN.Doc(i).Get(MyLuceneIndexer.DOC_ID_FIELD_NAME);
-                        ids[i] = UInt64.Parse(idAsText);
+                        //string idAsText = hitsWN.Doc(i).Get(MyLuceneIndexer.DOC_ID_FIELD_NAME);
+                        ids[i] = hitsWN.Doc(i);// UInt64.Parse(idAsText);
                         results[i] = text;
                         scores[i] = score;
                     }
@@ -525,13 +582,13 @@ namespace RTParser.Database
             }
             return ids.Length;
 
-        }
-        internal int Search01(string searchTerm, out ulong[] ids, out string[] results, out float[] scores, WordExpander expandWithWordNet, bool expandOnNoHits)
+        }/*
+        internal int Search01(string searchTerm, out Document[] ids, out string[] results, out float[] scores, WordExpander expandWithWordNet, bool expandOnNoHits)
         {
             checkDbLock();
             if (!IsDbPresent)
             {
-                ids = new ulong[0];
+                ids = new Document[0];
                 results = new string[0];
                 scores = new float[0];
                 return 0;
@@ -557,7 +614,7 @@ namespace RTParser.Database
 
                 if ((numHitsWN == 0) || ((numHits > 0) && (hits.Score(0) > hitsWN.Score(0))))
                 {
-                    ids = new ulong[numHits];
+                    ids = new Document[numHits];
                     results = new string[numHits];
                     scores = new float[numHits];
 
@@ -565,8 +622,8 @@ namespace RTParser.Database
                     {
                         float score = hits.Score(i);
                         string text = hits.Doc(i).Get(_fieldName);
-                        string idAsText = hits.Doc(i).Get(MyLuceneIndexer.DOC_ID_FIELD_NAME);
-                        ids[i] = UInt64.Parse(idAsText);
+                        //string idAsText = hits.Doc(i).Get(MyLuceneIndexer.DOC_ID_FIELD_NAME);
+                        ids[i] = hits.Doc(i);// UInt64.Parse(idAsText);
                         results[i] = text;
                         scores[i] = score;
                     }
@@ -575,15 +632,15 @@ namespace RTParser.Database
                 //if (numHits == 0 && expandOnNoHits)
                 {
 
-                    ids = new ulong[numHitsWN];
+                    ids = new Document[numHitsWN];
                     results = new string[numHitsWN];
                     scores = new float[numHitsWN];
                     for (int i = 0; i < numHitsWN; ++i)
                     {
                         float score = hitsWN.Score(i);
                         string text = hitsWN.Doc(i).Get(_fieldName);
-                        string idAsText = hitsWN.Doc(i).Get(MyLuceneIndexer.DOC_ID_FIELD_NAME);
-                        ids[i] = UInt64.Parse(idAsText);
+                        //string idAsText = hitsWN.Doc(i).Get(MyLuceneIndexer.DOC_ID_FIELD_NAME);
+                        ids[i] = hitsWN.Doc(i);// UInt64.Parse(idAsText);
                         results[i] = text;
                         scores[i] = score;
                     }
@@ -598,10 +655,11 @@ namespace RTParser.Database
             return ids.Length;
 
         }
-
+        */
         private bool _IsDbPresent;
         readonly private object dbLock = new object();
         private bool ExtremeDebug;
+        private readonly ICollection<IDocSearch> SearchSources;
 
         public bool IsDbPresent
         {
@@ -731,23 +789,38 @@ namespace RTParser.Database
 
         public string callDbQuery0(string searchTerm1, OutputDelegate dbgLog, Func<string, Unifiable> OnFalure, XmlNode templateNode, float threshold, bool expandWithWordNet, bool expandOnNoHits, out float reliablity)
         {
-            reliablity = 0.0f;
             checkDbLock();
             WordExpander wordNetExpander = expandWithWordNet ? (WordExpander)WordNetExpand : NoWordNetExpander;
+            string userFilter = "";
+            // Do we only want responses with the current user name in it ?
+            // As in "what is my favorite color?" 
+            string onlyUserStr = RTPBot.GetAttribValue(templateNode, "onlyUser", "false").ToLower();
+            if (onlyUserStr.Equals("true"))
+            {
+                userFilter = TripleStoreProxy.Entify(TheBot.UserID);
+            }
+            string res = callDbQueryStatic(SearchSources, searchTerm1, dbgLog, templateNode, threshold, out reliablity,
+                                           userFilter, wordNetExpander);
+            if (OnFalure != null && string.IsNullOrEmpty(res)) return OnFalure(searchTerm1);
+            return res;
+        }
+
+        public string callDbQueryStatic(ICollection<IDocSearch> searchables, string searchTerm1, OutputDelegate dbgLog,
+            XmlNode templateNode, float threshold,
+            out float reliablity, string userFilter, WordExpander wordNetExpander)
+        {
+            reliablity = 0.0f;
             try
             {
                 // if dbgLog == null then use /dev/null logger
                 dbgLog = dbgLog ?? TextFilter.DEVNULL;
                 // Searching:
-                ulong[] ids;
-                string[] results;
-                float[] scores;
 
                 int numHits;
 
                 string maxReplyStr = RTPBot.GetAttribValue(templateNode, "max", "1").ToLower();
                 int maxReply = Int16.Parse(maxReplyStr);
-                string failPrefix = RTPBot.GetAttribValue(templateNode, "failprefix", "").ToLower();
+                //string failPrefix = RTPBot.GetAttribValue(templateNode, "failprefix", "").ToLower();
                 string thresholdStr = RTPBot.GetAttribValue(templateNode, "threshold", null);
                 if (!string.IsNullOrEmpty(thresholdStr))
                 {
@@ -760,30 +833,28 @@ namespace RTParser.Database
 
                 // Do we only want responses with the current user name in it ?
                 // As in "what is my favorite color?" 
-                string onlyUserStr = RTPBot.GetAttribValue(templateNode, "onlyUser", "false").ToLower();
-                string userFilter = "";
-                if (onlyUserStr.Equals("true"))
+                var results = new List<ISearchResult>();
+                dbgLog("Searching for the term \"{0}\"...", searchTerm1);
+                foreach (var ss in searchables)
                 {
-                    userFilter = TripleStoreProxy.Entify(TheBot.UserID);
+                    results.AddRange(Search(searchTerm1, wordNetExpander));
                 }
 
-                dbgLog("Searching for the term \"{0}\"...", searchTerm1);
-                Search0(searchTerm1, out ids, out results, out scores, wordNetExpander, expandOnNoHits);
-                numHits = ids.Length;
+                numHits = results.Count;
                 dbgLog("Number of hits == {0}.", numHits);
 
                 float topScore = 0;
                 int goodHits = 0;
                 for (int i = 0; i < numHits; ++i)
                 {
-                    dbgLog("{0}) Doc-id: {1}; Content: \"{2}\" with score {3}.", i + 1, ids[i], results[i], scores[i]);
-                    if (results[i].Contains(userFilter))
+                    dbgLog("{0}) Doc-id: {1}; Content: \"{2}\" with score {3}.", i + 1, results[i].ID, results[i].Text, results[i].Score);
+                    if (results[i].Text.Contains(userFilter))
                     {
-                        if (scores[i] >= threshold) { goodHits++; }
-                        if (scores[i] > topScore) { topScore = scores[i]; }
+                        if (results[i].Score >= threshold) { goodHits++; }
+                        if (results[i].Score > topScore) { topScore = results[i].Score; }
                     }
                 }
-                
+
                 //if (numHits > 0) topScore = scores[0];
                 // Console.WriteLine();
 
@@ -798,9 +869,9 @@ namespace RTParser.Database
                     if (goodHits < maxReply) maxReply = goodHits;
                     for (int i = 0; ((i < numHits) && (numReturned < maxReply)); i++)
                     {
-                        if (results[i].Contains(userFilter) && (scores[i] >= topScore))
+                        if (results[i].Text.Contains(userFilter) && (results[i].Score >= topScore))
                         {
-                            reply = reply + " " + results[i];
+                            reply = reply + " " + results[i].Text;
                             numReturned++;
                             reliablity = topScore;
                         }
@@ -811,7 +882,7 @@ namespace RTParser.Database
                 }
                 else
                 {
-                    return OnFalure(failPrefix);
+                    return null;
                 }
 
             }

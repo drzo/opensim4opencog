@@ -92,6 +92,7 @@ namespace RTParser
         AIMLbot.MasterResult CreateResult(Request res);
         bool IsToplevelRequest { get; set; }
 
+        AIMLbot.MasterRequest CreateSubRequest(string cmd);
         AIMLbot.MasterRequest CreateSubRequest(Unifiable templateNodeInnerValue, User user, RTPBot rTPBot, User requestee);
         bool CanUseTemplate(TemplateInfo info, Result request);
         OutputDelegate writeToLog { get; set; }
@@ -796,6 +797,26 @@ namespace RTParser
             }*/
             //TimeOutFromNow = parentReq.TimeOutFromNow;
             return (AIMLbot.MasterResult) this;// CurrentResult;
+        }
+
+        public AIMLbot.MasterRequest CreateSubRequest(string templateNodeInnerValue)
+        {
+            var request = (AIMLbot.MasterRequest)this;
+            var user= this.Requester;
+            var  rTPBot = this.TargetBot;
+            var requestee = this.Responder;
+            var subRequest = new AIMLbot.MasterRequest(templateNodeInnerValue, user ?? Requester,
+                                                       rTPBot ?? this.TargetBot, this, requestee ?? Responder);
+            Result res = request.CurrentResult;
+            //subRequest.CurrentResult = res;
+            subRequest.Graph = request.Graph;
+            depth = subRequest.depth = request.depth + 1;
+            subRequest.ParentRequest = request;
+            subRequest.StartedOn = request.StartedOn;
+            subRequest.TimesOutAt = request.TimesOutAt;
+            subRequest.TargetSettings = request.TargetSettings;
+            //subRequest.Responder = request.Responder;
+            return subRequest;
         }
 
         public AIMLbot.MasterRequest CreateSubRequest(Unifiable templateNodeInnerValue, User user, RTPBot rTPBot, User requestee)
