@@ -52,7 +52,7 @@ namespace RTParser.AIMLTagHandlers
                         QueryHasFailed = true;
                         return Unifiable.Empty;
                     }
-                    AddSideEffect("DBUPDATE " + myText, () => TargetBot.LuceneIndexer.Update(myText, myText, templateNode));                     
+                    AddSideEffect("DBUPDATE " + myText, () => TargetBot.LuceneIndexer.UpdateFactoid(myText, myText, templateNode));                     
                 }
                 catch(Exception e)
                 {

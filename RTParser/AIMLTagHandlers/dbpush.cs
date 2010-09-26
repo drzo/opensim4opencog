@@ -52,7 +52,8 @@ namespace RTParser.AIMLTagHandlers
                         QueryHasFailed = true;
                         return Unifiable.Empty;
                     }
-                    AddSideEffect("DBPUSH " + myText, () => TargetBot.LuceneIndexer.callDbPush(myText, templateNode));
+                    AddSideEffect("DBPUSH " + myText,
+                                  () => TargetBot.LuceneIndexer.InsertFactiod(myText, templateNode, null));
                     return myText;
                 }
                 catch (Exception e)

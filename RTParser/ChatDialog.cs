@@ -215,7 +215,7 @@ namespace RTParser
 
         //public string indexDir = @"C:\dev\Lucene\";
         public string fieldName = "TEXT_MATTER";
-        public MyLuceneIndexer LuceneIndexer;
+        public IEnglishFactiodEngine LuceneIndexer;
 
 
         #region Conversation methods
@@ -1669,7 +1669,8 @@ namespace RTParser
             Console.WriteLine("*** DONE WN-Load ***");
 
             Console.WriteLine("*** Start Lucene ***");
-            LuceneIndexer = new MyLuceneIndexer(PathToLucene, fieldName, this, wordNetEngine);
+            var LuceneIndexer = new MyLuceneIndexer(PathToLucene, fieldName, this, wordNetEngine);
+            this.LuceneIndexer = LuceneIndexer;
             LuceneIndexer.TheBot = this;
             LuceneIndexer.wordNetEngine = wordNetEngine;
             Console.WriteLine("*** DONE Lucene ***");
