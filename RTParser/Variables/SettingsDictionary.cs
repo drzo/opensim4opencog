@@ -19,7 +19,7 @@ using RTParser.Utils;
 namespace RTParser.Variables
 {
     public delegate ISettingsDictionary ParentProvider();
-    public interface ISettingsDictionary : ITraceable
+    public interface ISettingsDictionary : ITraceable, ITreeable
     {
         /// <summary>
         /// Adds a bespoke setting to the Settings class (accessed via the grabSettings(string name)
@@ -54,9 +54,6 @@ namespace RTParser.Variables
         bool containsLocalCalled(string name);
         bool containsSettingCalled(string name);
 
-        string NameSpace { get; }
-
-        IEnumerable<string> SettingNames(int depth);
     }
 
     /// <summary>
@@ -205,7 +202,7 @@ namespace RTParser.Variables
         /// </returns>
         public bool IsReadOnly
         {
-            get { return SuspendUpdates || Unifiable.IsTrue(grabSetting("isReadOnly")); }
+            get { return SuspendUpdates || Unifiable.IsTrue(grabSettingNoDebug("isReadOnly")); }
         }
 
         public string NameSpace
@@ -485,11 +482,14 @@ namespace RTParser.Variables
 
         private void writeToLog(string message, params object[] args)
         {
-            string tol = message.Trim().ToLower();
-            if (tol.StartsWith("error")) message = "-DICTRACE: " + message;
-            if (!tol.Contains("dictlog")) message = "DICTLOG: " + message;
             if (args != null && args.Length > 0) message = String.Format(message, args);
-            if (bot != null) bot.writeToLog(message); else RTPBot.writeDebugLine(message);
+            string tol = message.Trim().ToLower();
+            if (tol.StartsWith("error") || tol.StartsWith("warn")) message = "-DICTLOG: " + message;
+            var nameSpace = this.NameSpace;
+            if (!message.Contains(nameSpace)) message += " in " + nameSpace;
+            if (!tol.Contains("dictlog")) message = "DICTLOG: " + message;
+            if (bot != null) bot.writeToLog(message);
+            else RTPBot.writeDebugLine(message);
         }
 
         /// <summary>

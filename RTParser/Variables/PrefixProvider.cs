@@ -9,6 +9,10 @@ namespace RTParser.Variables
         public Dictionary<string, ParentProvider> _prefixes = new Dictionary<string, ParentProvider>();
         private string theNameSpace;
 
+        public override string ToString()
+        {
+            return "[PrefixProvider: " + NameSpace + "]";
+        }
         public Unifiable this[string name]
         {
             get { return SettingsDictionary.IndexGet(this, name); }
