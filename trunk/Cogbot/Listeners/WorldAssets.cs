@@ -58,6 +58,13 @@ namespace cogbot.Listeners
         public byte[] TextureBytesForUUID(UUID uUID)
         {
             SimAsset assettt = SimAssetStore.FindOrCreateAsset(uUID, AssetType.Texture);
+            var AssetData = assettt.AssetData;
+            if (AssetData != null)
+            {
+                assettt.IsTraced = false;
+                return AssetData;
+            }
+            assettt.IsTraced = true;
             ImageDownload ID = null;
             //lock (uuidTypeObject)
             {
@@ -75,8 +82,7 @@ namespace cogbot.Listeners
                 ID = StartTextureDownload(uUID);
                 if (ID == null)
                 {
-                    int tried = 20;
-                    var giveUpTick = DateTime.Now.AddMinutes(1);// +1 * 60000;
+                    var giveUpTick = DateTime.Now;//.AddMinutes(1);// +1 * 60000;
                     while (ID == null)
                     {
                         ID = StartTextureDownload(uUID);
@@ -90,13 +96,9 @@ namespace cogbot.Listeners
                                 Debug("-- ---- ---GIVEUP SculptMesh " + uUID);
                                 return null;
                             }
-                            if (tried-- < 0)
-                            {
-                                //   Debug("-- ---- ---WAITING SculptMesh " + uUID);
-                                tried = 20;
-                            }
-                            Thread.Sleep(5000);
+                            //Thread.Sleep(5000);
                             DoEvents();
+                            return null;
                         }
                     }
                 }

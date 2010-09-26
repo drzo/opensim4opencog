@@ -26,7 +26,7 @@ namespace cogbot.TheOpenSims
         public abstract bool NeedsRequest { get; set; }
     }
 
-    abstract public class SimAsset : SimAssetV
+    abstract public class SimAsset : SimAssetV, ITraceable
     {
 
         virtual public void WriteLine(string s, params object[] args)
@@ -586,5 +586,9 @@ namespace cogbot.TheOpenSims
                 return false;
             }
         }
+
+        #region ITraceable Members
+        public bool IsTraced { get; set; }
+        #endregion
     }
 }
