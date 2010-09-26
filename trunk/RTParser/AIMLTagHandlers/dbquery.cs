@@ -46,9 +46,19 @@ namespace RTParser.AIMLTagHandlers
                 const bool expandOnNoHits = true; // actually WordNet
                 const float threshold = 0.0f;
                 Unifiable templateNodeInnerValue = Recurse();
-                string searchTerm1 = (string) templateNodeInnerValue;
-                Unifiable converseMemo = TargetBot.LuceneIndexer.callDbQuery(searchTerm1, this.writeToLog, this.OnFalure,
-                                                                        this.templateNode, threshold, expandOnNoHits);
+                string searchTerm1 = (string)templateNodeInnerValue;
+                if (!TargetBot.LuceneIndexer.MayAsk(searchTerm1))
+                {
+                    writeToLogWarn("WARNING: NO DBASK " + searchTerm1);
+                    QueryHasFailed = true;
+                    return Unifiable.Empty;
+                }
+                float reliability;
+                Unifiable converseMemo = TargetBot.LuceneIndexer.AskQuery(searchTerm1, this.writeToLog, this.OnFalure,
+                                                                             this.templateNode, 
+                                                                             threshold, 
+                                                                             true, // use Wordnet
+                                                                             expandOnNoHits, out reliability);
 
                 // if there is a high enough scoring record in Lucene, use up to max number of them?
                 // otherwise there is a conversation memo then pop it??

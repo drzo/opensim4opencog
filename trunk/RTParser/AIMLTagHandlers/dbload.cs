@@ -57,8 +57,8 @@ namespace RTParser.AIMLTagHandlers
                                                             {
                                                                 foreach (string file in files)
                                                                 {
-                                                                    TargetBot.LuceneIndexer.LoadFileByLines(file,
-                                                                                                            templateNode);
+                                                                    TargetBot.LuceneIndexer.LoadDocuments(file,
+                                                                                                          templateNode);
                                                                 }
                                                             });
                     }

@@ -4,8 +4,8 @@ using System.Collections;
 using System.Globalization;
 using System.Text;
 using System.IO;
-using System.Text.RegularExpressions;
 using System.Xml;
+using System.Xml.XPath;
 using LAIR.Collections.Generic;
 using LAIR.ResourceAPIs.WordNet;
 using Lucene.Net.Analysis;
@@ -18,8 +18,6 @@ using Lucene.Net.Store;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
-using RTParser.Utils;
-using RTParser.Variables;
 
 namespace RTParser.Database
 {
@@ -29,22 +27,22 @@ namespace RTParser.Database
     /// <param name="inputString"></param>
     /// <param name="queryhook"></param>
     /// <returns></returns>
-    public delegate string WordNetExpander(string inputString, bool queryhook);
+    public delegate string WordExpander(string inputString, bool queryhook);
 
-    public class MyLuceneIndexer
+    public class MyLuceneIndexer : IEnglishFactiodEngine
     {
         private const string DOC_ID_FIELD_NAME = "ID_FIELD";
         private const string HYPO_FIELD_NAME = "HYPO_FIELD";
 
         private readonly string _fieldName;
         private readonly string _indexDir;
-        private ulong _docid=0;
+        private ulong _docid = 0;
         //private static System.IO.FileInfo _path;
         public WordNetEngine wordNetEngine;
         public RTPBot TheBot;
-        public bool userCached=false;
+        public bool userCached = false;
         public bool userCachedPending = false;
-      
+
         /// <summary>
         ///   Assert Redundancy Checks (for loading multple factiods from files
         /// </summary>
@@ -54,53 +52,17 @@ namespace RTParser.Database
         Lucene.Net.Store.Directory _directory;// = new RAMDirectory();
         readonly Analyzer _analyzer;// = new StandardAnalyzer();
 
-        private readonly HashSet<string> ExcludeRels = new HashSet<string>();
-
-
-        private readonly HashSet<string> ExcludeVals = new HashSet<string>();
-
+        private readonly IEntityFilter EntityFilter;
         private Hashtable WNExpandCache = new Hashtable();
 
-        private void AddDefaultExclusions()
-                                                  {
-            foreach (string str in
-                new[]
-                    {
-                                                      "topic",
-                                                      "he",
-                                                      "she",
-                                                      "name",
-                                                      "id",
-                                                      "username",
-                                                      "userid",
-                                                      "they",
-                        "",
-                                                      "it",
-                        // because  "$user emotion is $value" should be "$bot feels $value emotion towards $user"
-                        "emotion", 
-                        "it",
-                        "they",
-                    })
-                                                           {
-                AddExcludedRelation(str);
-            }
-            foreach (string str in
-                new[]
-                    {
-                                                               "unknown_user",
-                                                               "unknown.*",
-                    })
-            {
-                AddExcludedValue(str);
-            }
-        }
+        public readonly TripleStoreFromEnglish TripleStoreProxy;
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="indexDir"></param>
         /// <param name="fieldName">usually "TEXT_MATTER"</param>
-        public MyLuceneIndexer(string indexDir, string fieldName,RTPBot myBot,WordNetEngine myWNEngine)
+        public MyLuceneIndexer(string indexDir, string fieldName, RTPBot myBot, WordNetEngine myWNEngine)
         {
             _indexDir = indexDir;
             _fieldName = fieldName;
@@ -126,7 +88,8 @@ namespace RTParser.Database
                     _directory = new RAMDirectory();
                 }
             }
-            AddDefaultExclusions();
+            TripleStoreProxy = new TripleStoreFromEnglish(this, TheBot, WordNetExpand);
+            EntityFilter = TripleStoreProxy.EntityFilter;
         }
 
         private void InitDatabase()
@@ -140,7 +103,7 @@ namespace RTParser.Database
                     _docid = (ulong)indexReader.NumDocs() + 1;
                     indexReader.Close();
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     throw e;
                 }
@@ -151,7 +114,6 @@ namespace RTParser.Database
             }
 
 
-            
         }
 
         public ulong IncDocId()
@@ -171,7 +133,7 @@ namespace RTParser.Database
             {
                 try
                 {
-                    return (R) call();
+                    return (R)call();
                 }
                 catch (Exception e)
                 {
@@ -192,14 +154,14 @@ namespace RTParser.Database
         /// <param name="txtIdPairToBeIndexed">A dictionary of key-value pairs that are sent by the caller
         /// to uniquely identify each string that is to be indexed.</param>
         /// <returns>The number of documents indexed.</returns>
-        public int Index(Dictionary<ulong, string> txtIdPairToBeIndexed, WordNetExpander expandWithWordNet)
+        public int Index(Dictionary<ulong, string> txtIdPairToBeIndexed, WordExpander expandWithWordNet)
         {
             return EnsureLockedDatabase(() => Index0(txtIdPairToBeIndexed, expandWithWordNet));
         }
-        internal int Index0(Dictionary<ulong, string> txtIdPairToBeIndexed, WordNetExpander expandWithWordNet)
+        internal int Index0(Dictionary<ulong, string> txtIdPairToBeIndexed, WordExpander expandWithWordNet)
         {
             checkDbLock();
-            bool indexExists = IndexReader.IndexExists(_directory); 
+            bool indexExists = IndexReader.IndexExists(_directory);
             bool createIndex = !indexExists;
             IndexWriter indexWriter = new IndexWriter(_directory, _analyzer, createIndex);
             indexWriter.SetUseCompoundFile(false);
@@ -232,12 +194,11 @@ namespace RTParser.Database
             return numIndexed;
         }
 
-
-        public int Insert(string myText, WordNetExpander expandWithWordNet)
+        public int InsertFactiod(string myText, XmlNode templateNode, WordExpander expandWithWordNet)
         {
             return EnsureLockedDatabase(() => Insert0(myText, expandWithWordNet));
         }
-        private int Insert0(string myText, WordNetExpander expandWithWordNet)
+        private int Insert0(string myText, WordExpander expandWithWordNet)
         {
             checkDbLock();
             if (AssertReducndancyChecks)
@@ -249,7 +210,7 @@ namespace RTParser.Database
                         return 0;
                 }
             }
-            
+
             ulong myDocID = IncDocId();
             Dictionary<ulong, string> contentIdPairs = new Dictionary<ulong, string>();
             contentIdPairs.Add(myDocID, myText);
@@ -261,7 +222,7 @@ namespace RTParser.Database
             if (AssertReducndancyChecks)
             {
                 lock (allContentIdPairs) allContentIdPairs.Add(myText.ToLower(), myDocID);
-        }
+            }
 
             return numIndexed;
         }
@@ -272,11 +233,11 @@ namespace RTParser.Database
         /// index as referenced by this object.</param>
         /// <param name="myText">The new value to replace in the database.</param>
 
-        public int Update(string searchQuery, string myText, XmlNode templateNode)
+        public int UpdateFactoid(string searchQuery, string myText, XmlNode templateNode)
         {
             return EnsureLockedDatabase(() => Update0(searchQuery, myText, WordNetExpand));
         }
-        internal int Update0(string searchQuery, string myText, WordNetExpander expandWithWordNet)
+        internal int Update0(string searchQuery, string myText, WordExpander expandWithWordNet)
         {
             checkDbLock();
             // Searching:
@@ -312,7 +273,7 @@ namespace RTParser.Database
                 if (numHits > 0)
                 {
                     indexSearcher.GetIndexReader().DeleteDocument(0);
-     
+
                 }
 
             }
@@ -324,12 +285,11 @@ namespace RTParser.Database
             return Insert0(myText, expandWithWordNet);
         }
 
-
-        public void LoadFileByLines(string filename, XmlNode templateNode)
+        public long LoadDocuments(string filename, XmlNode templateNode)
         {
-            EnsureLockedDatabase(() => LoadFileByLines0(filename, WordNetExpand));
+            return EnsureLockedDatabase(() => LoadFileByLines0(filename, WordNetExpand));
         }
-        internal long LoadFileByLines0(string filename, WordNetExpander expandWithWordNet)
+        internal long LoadFileByLines0(string filename, WordExpander expandWithWordNet)
         {
             checkDbLock();
             long totals = 0;
@@ -345,14 +305,14 @@ namespace RTParser.Database
                 while ((linecount < 80000) && ((line = tr.ReadLine()) != null))
                 {
                     linecount++;
-                    if (linecount % 1000 == 0) 
+                    if (linecount % 1000 == 0)
                     {
                         // batch a 1000
                         writeToLog("Lucene learn {0}", linecount);
                         int numIndexedb = Index(contentIdPairs, expandWithWordNet);
                         writeToLog("Indexed {0} lines.", numIndexedb);
                         totals += linecount;
-                        
+
                         contentIdPairs = new Dictionary<ulong, string>();
                     }
                     line = line.Trim();
@@ -365,13 +325,13 @@ namespace RTParser.Database
                 // Indexing:
                 int numIndexed = Index(contentIdPairs, expandWithWordNet);
                 writeToLog("Indexed {0} lines.", numIndexed);
-                
+
 
                 writeToLog("Last Line Mlearn {0}", linecount);
             }
             else
             {
-               writeToLog(" LoadFileByLines cannot find file '{0}'", filename);
+                writeToLog(" LoadFileByLines cannot find file '{0}'", filename);
             }
             return totals;
         }
@@ -382,10 +342,10 @@ namespace RTParser.Database
         /// </summary>
         /// <param name="query">The search term as a string that the caller wants to search for within the
         /// index as referenced by this object.</param>         
-        public int DeleteTopScoring(string searchQuery, XmlNode templateNode)
+        public int DeleteTopScoring(string searchQuery, XmlNode templateNode, bool mustContainExact)
         {
             // If must contain the exact words (the defualt is false)
-            bool mustContainExact = false;
+           // bool mustContainExact = false;
             bool tf;
             if (StaticXMLUtils.TryParseBool(templateNode, "exact", out tf))
             {
@@ -395,7 +355,7 @@ namespace RTParser.Database
         }
         public int DeleteTopScoring(string searchQuery, bool mustContainExact)
         {
-            return EnsureLockedDatabase(() => DeleteTopScoring0(searchQuery, mustContainExact)); 
+            return EnsureLockedDatabase(() => DeleteTopScoring0(searchQuery, mustContainExact));
         }
         internal int DeleteTopScoring0(string searchQuery, bool mustContainExact)
         {
@@ -432,7 +392,7 @@ namespace RTParser.Database
                     ids[i] = UInt64.Parse(idAsText);
                     results[i] = text;
                     scores[i] = score;
-                }                
+                }
                 if (numHits > 0)
                 {
                     //IndexReader indexReader = indexSearcher.GetIndexReader();
@@ -454,7 +414,7 @@ namespace RTParser.Database
                             writeToLog("DEBUG9 deleting " + searchQueryToLower);
                             //indexSearcher.GetIndexReader().DeleteDocument(i);
                             //indexReader.DeleteDocuments(new Term( MyLuceneIndexer.DOC_ID_FIELD_NAME, ids[i].ToString () ) );
-                            indexWriter.DeleteDocuments(new Term( MyLuceneIndexer.DOC_ID_FIELD_NAME, ids[i].ToString () ) );
+                            indexWriter.DeleteDocuments(new Term(MyLuceneIndexer.DOC_ID_FIELD_NAME, ids[i].ToString()));
                             deleted++;
                         }
                     }
@@ -471,7 +431,7 @@ namespace RTParser.Database
             }
             return deleted;
 
-       }
+        }
         /// <summary>
         /// This method searches for the search term passed by the caller.
         /// </summary>
@@ -480,7 +440,7 @@ namespace RTParser.Database
         /// <param name="ids">An out parameter that is populated by this method for the caller with docments ids.</param>
         /// <param name="results">An out parameter that is populated by this method for the caller with docments text.</param>
         /// <param name="scores">An out parameter that is populated by this method for the caller with docments scores.</param>
-        public int Search(string searchTerm, out ulong[] ids, out string[] results, out float[] scores, WordNetExpander expandWithWordNet, bool expandOnNoHits)
+        public int Search(string searchTerm, out ulong[] ids, out string[] results, out float[] scores, WordExpander expandWithWordNet, bool expandOnNoHits)
         {
             lock (dbLock)
             {
@@ -498,7 +458,7 @@ namespace RTParser.Database
                 }
             }
         }
-        internal int Search0(string searchTerm, out ulong[] ids, out string[] results, out float[] scores, WordNetExpander expandWithWordNet, bool expandOnNoHits)
+        internal int Search0(string searchTerm, out ulong[] ids, out string[] results, out float[] scores, WordExpander expandWithWordNet, bool expandOnNoHits)
         {
             checkDbLock();
             if (!IsDbPresent)
@@ -520,7 +480,7 @@ namespace RTParser.Database
                 ids = new ulong[numHits];
                 results = new string[numHits];
                 scores = new float[numHits];
-                
+
                 for (int i = 0; i < numHits; ++i)
                 {
                     float score = hits.Score(i);
@@ -566,7 +526,7 @@ namespace RTParser.Database
             return ids.Length;
 
         }
-        internal int Search01(string searchTerm, out ulong[] ids, out string[] results, out float[] scores, WordNetExpander expandWithWordNet, bool expandOnNoHits)
+        internal int Search01(string searchTerm, out ulong[] ids, out string[] results, out float[] scores, WordExpander expandWithWordNet, bool expandOnNoHits)
         {
             checkDbLock();
             if (!IsDbPresent)
@@ -585,17 +545,17 @@ namespace RTParser.Database
                 Hits hits = indexSearcher.Search(query);
                 int numHits = hits.Length();
 
-                    // Try expansion
-                    //QueryParser queryParser = new QueryParser(_fieldName, _analyzer);
-                    MultiFieldQueryParser queryParserWN = new MultiFieldQueryParser(
-                        new string[] { _fieldName, MyLuceneIndexer.HYPO_FIELD_NAME },
-                        _analyzer);
-                    string hypo_expand = expandWithWordNet(searchTerm, false);
-                    Query queryWN = queryParserWN.Parse(hypo_expand);
-                    Hits hitsWN = indexSearcher.Search(queryWN);
-                    int numHitsWN = hitsWN.Length();
+                // Try expansion
+                //QueryParser queryParser = new QueryParser(_fieldName, _analyzer);
+                MultiFieldQueryParser queryParserWN = new MultiFieldQueryParser(
+                    new string[] { _fieldName, MyLuceneIndexer.HYPO_FIELD_NAME },
+                    _analyzer);
+                string hypo_expand = expandWithWordNet(searchTerm, false);
+                Query queryWN = queryParserWN.Parse(hypo_expand);
+                Hits hitsWN = indexSearcher.Search(queryWN);
+                int numHitsWN = hitsWN.Length();
 
-                if ((numHitsWN==0) || ((numHits>0) && (hits.Score(0) > hitsWN.Score(0)) ) )
+                if ((numHitsWN == 0) || ((numHits > 0) && (hits.Score(0) > hitsWN.Score(0))))
                 {
                     ids = new ulong[numHits];
                     results = new string[numHits];
@@ -675,234 +635,40 @@ namespace RTParser.Database
                     userCachedPending = true;
                     string personDef = WordNetExpand("person", true);
                     WNExpandCache.Add(TheBot.UserID, personDef.Trim());
-                    WNExpandCache.Add(Entify(TheBot.UserID), personDef.Trim());
+                    WNExpandCache.Add(TripleStoreProxy.Entify(TheBot.UserID), personDef.Trim());
                     userCached = true;
                     userCachedPending = false;
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
             }
-        }
-        public int assertTriple(string subject, string relation, string value)
-        {
-            string factoidSRV = GenFormatFactoid(subject, relation, value);
-            if (IsExcludedSRV(subject, relation, value, factoidSRV, writeToLog, "assertTriple")) return -1;
-            return Insert(factoidSRV, WordNetExpand);
-        }
-
-        public int retractTriple(string subject, string relation, string value)
-        {
-            if (!IsDbPresent) return 0;
-            string factoidSRV = GenFormatFactoid(subject, relation, value);
-            if (IsExcludedSRV(subject, relation, value, factoidSRV, writeToLog, "retractTriple")) return -1;
-            return DeleteTopScoring(factoidSRV, true);
-        }
-
-        public int retractAllTriple(string subject, string relation)
-        {
-            if (!IsDbPresent) return 0;
-            string factoidSR = GenFormatFactoid(subject, relation, "");
-            if (IsExcludedSRV(subject, relation, "", factoidSR, writeToLog, "retractAllTriple")) return -1;
-            return DeleteTopScoring(factoidSR, true);
-        }
-
-        public int updateTriple(string subject, string relation, string value)
-        {
-            string factoidSRV = GenFormatFactoid(subject, relation, value);
-            string factoidSR = GenFormatFactoid(subject, relation, "");
-            if (IsExcludedSRV(subject, relation, "", factoidSRV,
-                writeToLog, "updateTriple {0} => ", factoidSR)) return -1;
-            return EnsureLockedDatabase(() =>
-                                            {
-                                                int deleted = DeleteTopScoring0(factoidSR, true);
-                                                return deleted + Insert0(factoidSRV, WordNetExpand);
-                                            });
-        }
-
-        public String queryTriple(string subject, string relation, XmlNode templateNode)
-        {
-            string factoidSR = GenFormatFactoid(subject, relation, "");
-            if (IsExcludedSRV(subject, relation, "", factoidSR, writeToLog, "queryTriple")) return String.Empty;
-
-            float threshold = 0.5f;
-            float minTerms = 0.3f;
-            bool expandWithWordNet = true;
-            bool expandOnNoHits = false;
-
-            bool tf;
-            if (StaticXMLUtils.TryParseBool(templateNode, "expand", out tf))
-            {
-                expandOnNoHits = tf;
-            }
-            if (StaticXMLUtils.TryParseBool(templateNode, "wordnet,synonyms", out tf))
-            {
-                expandWithWordNet = tf;
-            }
-            string result = callDbQuery(factoidSR, writeToLog, (any) => null, templateNode, threshold, expandWithWordNet, expandOnNoHits);
-            if (!string.IsNullOrEmpty(result) && result.ToLower().StartsWith(factoidSR.ToLower()))
-            {
-                writeToLog("Success! queryTriple {0}, {1} => {2}", subject, relation, result);
-                return result.Substring(factoidSR.Length).Trim();
-            }
-            writeToLog("queryTriple {0}, {1} => '{2}' (returning String.Empty)", subject, relation, result);
-            return String.Empty;
-        }
-
-        public int assertDictionary(string subject, SettingsDictionary dictionary)
-        {
-            int asserts = 0;
-            foreach (var relation in dictionary.SettingNames(1))
-            {
-                Unifiable value = dictionary.grabSettingNoDebug(relation);
-                asserts += updateTriple(subject, relation, value);
-            }
-            return asserts;
-        }
-
-        public string GenFormatFactoid(string subject, string relation, string value)
-        {
-
-            string subj = Entify(subject);
-            string pred = Entify(relation);
-
-            var dictionary = TheBot.GetDictionary(subj) as SettingsDictionary;
-
-            bool noValue = string.IsNullOrEmpty(value);
-            Unifiable formatter;
-            {
-                if (noValue)
-                {
-                    // query mode
-                    formatter = GetDictValue(dictionary, relation, "format-query");
-                }
-                else
-                {
-                    // assert mode
-                    formatter = GetDictValue(dictionary, relation, "format-assert");
-                }
-            }
-
-            if (Unifiable.IsNullOrEmpty(formatter) || Unifiable.IsTrueOrYes(formatter) || formatter == "default")
-            {
-                formatter = " {0} {1} is {2} ";
-            }
-            string botName = !IsBotRobot(subject) ? Entify(TheBot.UserID) : Entify(TheBot.LastUser.UserID);
-            {
-
-                var whword = GetDictValue(dictionary, relation, "format-whword");
-
-                if (!Unifiable.IsNullOrEmpty(whword) && noValue) value = whword;
-
-                if (Unifiable.IsFalseOrNo(formatter.Trim().ToUpper()))
-                {
-                    return "false";
-                }
-
-                formatter = SafeReplace(formatter, "$subject", "{0}");
-                formatter = SafeReplace(formatter, "$verb", "{1}");
-                formatter = SafeReplace(formatter, "$object", "{2}");
-
-                formatter = SafeReplace(formatter, "$user", "{0}");
-                formatter = SafeReplace(formatter, "$relation", "{1}");
-                formatter = SafeReplace(formatter, "$value", "{2}");
-
-                formatter = SafeReplace(formatter, "$predicate", pred);
-
-                formatter = SafeReplace(formatter, "$set-return",
-                                        TheBot.RelationMetaProps.grabSettingNoDebug(relation + "." + "set-return"));
-                formatter = SafeReplace(formatter, "$default", TheBot.DefaultPredicates.grabSettingNoDebug(relation));
-
-                formatter = SafeReplace(formatter, "$botname", botName);
-                formatter = SafeReplace(formatter, "$bot", botName);
-            }
-
-            string english = " " + String.Format(formatter, subj, pred, Entify(value)).Trim() + " ";
-            english = english.Replace(" I ", subj);
-            english = english.Replace(" you ", botName);
-            english = english.Trim();
-
-            var subjDict = TheBot.GetDictionary(subj) as SettingsDictionary;
-
-            if (subjDict != null)
-            {
-                foreach (var dict in new string[] { "him", "he", "she", "her", "them", "they", "it", "this" })
-                {
-                    var v = subjDict.grabSettingNoDebug(dict);
-                    if (english.Contains(dict))
-                    {
-                        english = english.Replace(" " + dict + " ", " " + v + " ");
-                    }
-                }
-
-            }
-
-            return english;
-        }
-
-        public bool IsBotRobot(string subject)
-        {
-            User user = TheBot.FindUser(subject);
-            if (user == null) return false;
-            if (user == TheBot.BotAsUser) return true;
-            if (!user.IsRoleAcct) return false;
-            return false;
-        }
-
-        static string SafeReplace(string formatter,string find, string replace)
-        {
-            formatter = formatter.Replace(" " + find + "'", " " + replace + "'");
-            formatter = formatter.Replace(" " + find + " ", " " + replace + " ");
-            return formatter;
-        }
-
-        private static string Entify(string subject)
-        {
-            if (string.IsNullOrEmpty(subject)) return "";
-            string subj = subject.Replace("_", " ");
-            subj = subject.Replace(".", " ");
-            return subj.Trim();
-        }
-
-        public Unifiable GetDictValue(SettingsDictionary dict, string relation, string meta)
-        {
-            if (dict != null)
-            {
-                string formatter = dict.GetMeta(relation, meta);
-                if (!TextPatternUtils.IsNullOrEmpty(formatter))
-                    return formatter;
-            }
-            string prop = relation + "." + meta;
-            return TheBot.RelationMetaProps.grabSetting(prop);
-        }
-
-        public int callDbPush(string myText, XmlNode expandWordnet)
-        {
-            // the defualt is true
-
-            if (!MayPush(myText))
-            {
-                return -1;
-            }
-            WordNetExpander expandWithWordNet = WordNetExpand;
-
-            bool tf;
-            if (StaticXMLUtils.TryParseBool(expandWordnet, "wordnet,synonyms", out tf))
-            {
-                expandWithWordNet = tf ? (WordNetExpander) WordNetExpand : NoWordNetExpander;
-            }
-
-            ulong myDocID = IncDocId();
-            Dictionary<ulong, string> contentIdPairs = new Dictionary<ulong, string>();
-            contentIdPairs.Add(myDocID, myText);
-
-            // Indexing:
-            int numIndexed = Index(contentIdPairs, expandWithWordNet);
-            writeToLog("Indexed {0} docs.", numIndexed);
-            return numIndexed;
         }
 
         public bool MayPush(string text)
+        {
+            string[] textToLowerSplit = text.ToLower().Split(' ');
+            if (textToLowerSplit.Length < 3)
+            {
+                writeToLog("ExcludedShort! '{0}' Len='{1}' ", text, textToLowerSplit.Length);
+            }
+            foreach (var words in textToLowerSplit)
+            {
+                if (IsExcludedSubject(words))
+                {
+                    writeToLog("ExcludedSRV '{0}' Subject='{1}' ", text, words);
+                    return false;
+                }
+                if (IsExcludedValue(words))
+                {
+                    writeToLog("ExcludedSRV '{0}' Value='{1}' ", text, words);
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public bool MayAsk(string text)
         {
             string[] textToLowerSplit = text.ToLower().Split(' ');
             if (textToLowerSplit.Length < 2)
@@ -926,7 +692,8 @@ namespace RTParser.Database
         }
 
         /// <summary>
-        ///  Inspects the templateNode for 
+        ///  Inspects the database for 
+        /// searchTerm1
         ///     max  = 1,
         ///     failprefix = "",
         ///     wordnet = true,
@@ -939,8 +706,9 @@ namespace RTParser.Database
         /// <param name="threshold"> &lt;dbquery&gt; uses 0.0f by default</param>
         /// <param name="expandOnNoHits"></param>
         /// <returns></returns>
+
         public string callDbQuery(string searchTerm1, OutputDelegate dbgLog, Func<string, Unifiable> OnFalure,
-            XmlNode templateNode, float threshold, bool expandOnNoHits)
+            XmlNode templateNode, float threshold, bool expandOnNoHits, out float reliablity)
         {
             // if synonyms is overriden?? the defualt is true
             bool expandWithWordNet = true;
@@ -950,17 +718,22 @@ namespace RTParser.Database
             {
                 expandWithWordNet = tf;
             }
-            return callDbQuery(searchTerm1, dbgLog, OnFalure, templateNode, threshold, expandWithWordNet, expandOnNoHits);
+            return AskQuery(searchTerm1, dbgLog, OnFalure, templateNode, threshold, expandWithWordNet, expandOnNoHits, out reliablity);
         }
 
-        public string callDbQuery(string searchTerm1, OutputDelegate dbgLog, Func<string, Unifiable> OnFalure, XmlNode templateNode, float threshold ,bool expandWithWordNet, bool expandOnNoHits)
+        public string AskQuery(string searchTerm1, OutputDelegate dbgLog, Func<string, Unifiable> OnFalure, XmlNode templateNode, float threshold, bool expandWithWordNet, bool expandOnNoHits, out float reliablity)
         {
-            return EnsureLockedDatabase(() => callDbQuery0(searchTerm1, dbgLog, OnFalure, templateNode, threshold , expandWithWordNet, expandOnNoHits)); 
+            lock (dbLock)
+                return callDbQuery0(searchTerm1, dbgLog, OnFalure, templateNode, threshold, expandWithWordNet,
+                                    expandOnNoHits, out reliablity);
+
         }
-        public string callDbQuery0(string searchTerm1, OutputDelegate dbgLog, Func<string, Unifiable> OnFalure, XmlNode templateNode,float threshold, bool expandWithWordNet, bool expandOnNoHits)
-        {           
+
+        public string callDbQuery0(string searchTerm1, OutputDelegate dbgLog, Func<string, Unifiable> OnFalure, XmlNode templateNode, float threshold, bool expandWithWordNet, bool expandOnNoHits, out float reliablity)
+        {
+            reliablity = 0.0f;
             checkDbLock();
-            WordNetExpander wordNetExpander = expandWithWordNet ? (WordNetExpander)WordNetExpand : NoWordNetExpander;
+            WordExpander wordNetExpander = expandWithWordNet ? (WordExpander)WordNetExpand : NoWordNetExpander;
             try
             {
                 // if dbgLog == null then use /dev/null logger
@@ -991,7 +764,7 @@ namespace RTParser.Database
                 string userFilter = "";
                 if (onlyUserStr.Equals("true"))
                 {
-                    userFilter = Entify(TheBot.UserID);
+                    userFilter = TripleStoreProxy.Entify(TheBot.UserID);
                 }
 
                 dbgLog("Searching for the term \"{0}\"...", searchTerm1);
@@ -1004,13 +777,13 @@ namespace RTParser.Database
                 for (int i = 0; i < numHits; ++i)
                 {
                     dbgLog("{0}) Doc-id: {1}; Content: \"{2}\" with score {3}.", i + 1, ids[i], results[i], scores[i]);
-                    if ( results[i].Contains(userFilter ))
+                    if (results[i].Contains(userFilter))
                     {
-                        if (scores[i]>=threshold ) { goodHits ++;}
-                        if (scores[i]>topScore ) { topScore = scores[i];}
+                        if (scores[i] >= threshold) { goodHits++; }
+                        if (scores[i] > topScore) { topScore = scores[i]; }
                     }
                 }
-
+                
                 //if (numHits > 0) topScore = scores[0];
                 // Console.WriteLine();
 
@@ -1023,17 +796,17 @@ namespace RTParser.Database
                     string reply = "";
                     int numReturned = 0;
                     if (goodHits < maxReply) maxReply = goodHits;
-                    for (int i = 0;(( i < numHits) &&( numReturned < maxReply)) ; i++)
+                    for (int i = 0; ((i < numHits) && (numReturned < maxReply)); i++)
                     {
                         if (results[i].Contains(userFilter) && (scores[i] >= topScore))
                         {
                             reply = reply + " " + results[i];
                             numReturned++;
+                            reliablity = topScore;
                         }
                     }
                     Unifiable converseMemo = reply.Trim();
                     dbgLog(" reply = {0}", reply);
-                    
                     return converseMemo;
                 }
                 else
@@ -1065,10 +838,10 @@ namespace RTParser.Database
 
         public string WordNetExpand0(string inputString, bool queryhook)
         {
-            string [] words  = inputString.Split(' ');
-            string returnText = inputString+" ";
+            string[] words = inputString.Split(' ');
+            string returnText = inputString + " ";
 
-            if (userCachedPending==false) WNUser2Cache();
+            if (userCachedPending == false) WNUser2Cache();
             int numWords = words.Length;
             // Ok, lets try WordNet
             //WordNetEngine ourWordNetEngine = this.user.bot.wordNetEngine;
@@ -1096,7 +869,7 @@ namespace RTParser.Database
                 string focusWordResults = "";
                 if (WNExpandCache.Contains(focusWord))
                 {
-                    focusWordResults = (string) WNExpandCache[focusWord];
+                    focusWordResults = (string)WNExpandCache[focusWord];
                 }
                 else
                 {
@@ -1158,7 +931,7 @@ namespace RTParser.Database
                 if (returnText.Contains("person")) { returnText = returnText + " who"; }
                 if (returnText.Contains("imaginary_being")) { returnText = returnText + " who"; }
                 if (returnText.Contains("causal_agent")) { returnText = returnText + " who"; }
-                
+
                 if (returnText.Contains("object")) { returnText = returnText + " what"; }
                 if (returnText.Contains("location")) { returnText = returnText + " where"; }
                 if (returnText.Contains("time_period")) { returnText = returnText + " when"; }
@@ -1167,113 +940,50 @@ namespace RTParser.Database
                 if (returnText.Contains("quantity")) { returnText = returnText + "  how much how many"; }
 
             }
-                // filter out "stop concepts" which have a > 70% occurance and thus low info content
-                returnText = returnText.Replace("entity", "");
-                returnText = returnText.Replace("abstraction", "");
-                returnText = returnText.Replace("abstract", "");
-                returnText = returnText.Replace("unit", "");
-                returnText = returnText.Replace("physical", "");
-                returnText = returnText.Replace("yes", "");
+            // filter out "stop concepts" which have a > 70% occurance and thus low info content
+            returnText = returnText.Replace("entity", "");
+            returnText = returnText.Replace("abstraction", "");
+            returnText = returnText.Replace("abstract", "");
+            returnText = returnText.Replace("unit", "");
+            returnText = returnText.Replace("physical", "");
+            returnText = returnText.Replace("yes", "");
             return returnText.Trim();
         }
 
-
-        private bool IsExcludedSRV(string subject, string relation, string value, string factoidSRV, 
-            OutputDelegate writeToLog, string fmtString, params object[] fmtArgs)
+        public int callDbPush(string myText, XmlNode expandWordnet)
         {
-            bool ExcludedFactPattern = false;
-            bool debug = (writeToLog != null);
-            fmtString = DLRConsole.SafeFormat(fmtString, fmtArgs);
-            if (factoidSRV == "false")
+            // the defualt is true
+
+            if (!MayPush(myText))
             {
-                if (!debug) return true;
-                writeToLog("ExcludedSRV: '{0}' Format '{1}'", fmtString, relation);
-                ExcludedFactPattern = true;
+                return -1;
             }
-            fmtString += " " + factoidSRV;
-            if (IsExcludedRelation(relation))
+            WordExpander expandWithWordNet = WordNetExpand;
+
+            bool tf;
+            if (StaticXMLUtils.TryParseBool(expandWordnet, "wordnet,synonyms", out tf))
             {
-                if (!debug) return true;
-                writeToLog("ExcludedSRV: '{0}' Relation '{1}'", fmtString, relation);
-                if (!ExtremeDebug) return true;
-                ExcludedFactPattern = true;
+                expandWithWordNet = tf ? (WordExpander)WordNetExpand : NoWordNetExpander;
             }
-            if (IsExcludedSubject(subject))
-            {
-                if (!debug) return true;
-                writeToLog("ExcludedSRV: '{0}' Subject '{1}'", fmtString, subject);
-                if (!ExtremeDebug) return true;
-                ExcludedFactPattern = true;
-            }
-            if (IsExcludedValue(value))
-            {
-                if (!debug) return true;
-                writeToLog("ExcludedSRV: '{0}' Value '{1}'", fmtString, value);
-                ExcludedFactPattern = true;
-            }
-            if (debug) writeToLog(factoidSRV + " " + fmtString, fmtArgs);
-            return ExcludedFactPattern;
+
+            ulong myDocID = IncDocId();
+            Dictionary<ulong, string> contentIdPairs = new Dictionary<ulong, string>();
+            contentIdPairs.Add(myDocID, myText);
+
+            // Indexing:
+            int numIndexed = Index(contentIdPairs, expandWithWordNet);
+            writeToLog("Indexed {0} docs.", numIndexed);
+            return numIndexed;
         }
 
-        public bool IsExcludedSubject(string subject)
+        public bool IsExcludedSubject(string words)
         {
-            if (string.IsNullOrEmpty(subject)) return true;
-            return IsExcludedValue(subject);
+            return EntityFilter.IsExcludedSubject(words);
         }
 
-        public bool IsExcludedRelation(string value)
+        public bool IsExcludedValue(string words)
         {
-            if (string.IsNullOrEmpty(value)) return true;
-            if (AIMLTagHandler.ReservedAttributes.Contains(value)) return true;
-            return NullOrMatchInSet(ExcludeRels, value);
-        }
-
-        public void AddExcludedRelation(string value)
-        {
-            AddRegex(ExcludeRels, "^" + value + "$");
-        }
-
-        public void AddExcludedValue(string value)
-        {
-            AddRegex(ExcludeVals, "^" + value + "$");
-        }
-
-        private static void AddRegex(ICollection<string> rels, string value)
-        {
-            lock (rels)
-            {
-                value = value.ToLower();
-                value = value.Replace("_", " ");                
-                value = value.Replace("~", ".*");
-                rels.Add(value);
-            }
-        }
-
-        private static bool NullOrMatchInSet(ICollection<string> rels, string value)
-        {
-            if (string.IsNullOrEmpty(value))
-            {
-                if (rels == null) return true;
-                lock (rels) return rels.Contains("") || rels.Contains("^$");                
-            }
-            if (rels == null) return false;
-            lock (rels)
-            {
-                value = value.Replace("_", " ").ToLower();
-                foreach (var rel in rels)
-                {
-                    if (Regex.IsMatch(value, rel))
-                    {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
-        public bool IsExcludedValue(string value)
-        {
-            return NullOrMatchInSet(ExcludeVals, value);
+            return EntityFilter.IsExcludedValue(words);
         }
 
         private void writeToLog(string s, params object[] p)
@@ -1288,7 +998,4 @@ namespace RTParser.Database
             DLRConsole.DebugWriteLine("LUCENE: " + s);
         }
     }
-
-
-
 }
