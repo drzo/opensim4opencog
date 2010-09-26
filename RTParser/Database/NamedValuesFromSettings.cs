@@ -60,7 +60,7 @@ namespace RTParser.Database
                 {
                     writeToLog("ERROR IsNullOrEmpty id in " + udict.NameSpace);
                 }
-                ITripleStore userbotLuceneIndexer = (ITripleStore)query.Request.TargetBot.LuceneIndexer;
+                ITripleStore userbotLuceneIndexer = (ITripleStore)query.Request.TargetBot.TripleStore;
                 string resultLucene = userbotLuceneIndexer.queryTriple(userName, name, node);
                 if (!string.IsNullOrEmpty(resultLucene))
                 {
@@ -128,7 +128,7 @@ namespace RTParser.Database
             bool shouldSet = ShouldSet(templateNode, dict, realName, value, resultGet);
 
             User user = query.CurrentUser;
-            ITripleStore userbotLuceneIndexer = (ITripleStore)user.bot.LuceneIndexer;
+            ITripleStore userbotLuceneIndexer = (ITripleStore)user.bot.TripleStore;
             string userName = user.UserID;
             if (!shouldSet)
             {

@@ -41,6 +41,14 @@ namespace RTParser
         public int MaxResultsSaved = DefaultMaxResultsSaved;
         public bool IsRoleAcct = false;
 
+        private object ChatWithThisUser(string cmd, Request request)
+        {
+            Request req = request.CreateSubRequest(cmd);
+            req.Responder = this;
+            req.IsToplevelRequest = request.IsToplevelRequest;
+            return bot.LightWeigthBotDirective(cmd, req);
+        }
+
         /// <summary>
         /// The local instance of the GUID that identifies this user to the bot
         /// </summary>
@@ -403,6 +411,7 @@ namespace RTParser
                 SaveTimer = new Timer(SaveOften, this, new TimeSpan(0, 5, 0), new TimeSpan(0, 5, 0));
                 needsSave = true;
                 StampResponseGiven();
+                bot.AddExcuteHandler(userID, ChatWithThisUser);
             }
             else
             {

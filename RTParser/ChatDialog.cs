@@ -21,6 +21,11 @@ using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
 
 namespace RTParser
 {
+    interface IChatterBot
+    {
+        SystemExecHandler ChatWithHandler(string userName);
+    }
+
     public partial class RTPBot
     {
         public bool AlwaysUseImmediateAimlInImput = true;
@@ -216,6 +221,7 @@ namespace RTParser
         //public string indexDir = @"C:\dev\Lucene\";
         public string fieldName = "TEXT_MATTER";
         public IEnglishFactiodEngine LuceneIndexer;
+        public ITripleStore TripleStore;
 
 
         #region Conversation methods
@@ -435,9 +441,9 @@ namespace RTParser
         {
             request.AddSideEffect("Populate the Result object",
                                   () =>
-                                      {
-                                          PopulateUserWithResult(originalRequestor, request, res);
-                                      });
+                                  {
+                                      PopulateUserWithResult(originalRequestor, request, res);
+                                  });
         }
 
         public AIMLbot.MasterResult ChatWithRequest4(Request request, User user, User target, GraphMaster G)
@@ -639,7 +645,7 @@ namespace RTParser
                 {
                     writeToLog("ChatSignalOverBudget: " + exception.Message);
                 }
-            }            
+            }
             return result;
         }
 
@@ -752,7 +758,7 @@ namespace RTParser
         }
 
         public delegate void InputParser(Request request, IEnumerable<Unifiable> rawSentences);
-   
+
         private string swapPerson(string inputString)
         {
             if (Loader == null)
@@ -792,12 +798,12 @@ namespace RTParser
             hasMoreSolutions = false;
             solutions = 0;
             // checks that we have nothing to do
-            if (result==null|| result.SubQueries==null)
+            if (result == null || result.SubQueries == null)
             {
                 if (isTraced)
                 {
                     writeToLog("NO QUERIES FOR " + request);
-                } 
+                }
                 return;
             }
 
@@ -1020,7 +1026,7 @@ namespace RTParser
         {
             if (isFastAIML)
             {
-                
+
             }
 
             string requestName = ToTemplateXML(templateNode);
@@ -1201,7 +1207,7 @@ namespace RTParser
             }
 
             bool protectChild = copyChild || childOriginal;
-            AIMLTagHandler tagHandler;  
+            AIMLTagHandler tagHandler;
             string outputSentence = processNode(templateNode, query,
                                                 request, result, request.Requester, handler,
                                                 protectChild, copyParent, out tagHandler);
@@ -1449,7 +1455,7 @@ namespace RTParser
             return sentenceIn;
         }
 
-        
+
         /// <summary>
         /// Recursively evaluates the template nodes returned from the Proccessor
         /// </summary>
@@ -1584,7 +1590,7 @@ namespace RTParser
                         {
                             // trace the next line to see why
                             AIMLTagHandler handler = tagHandler;
-                            TraceTest("ERROR: Try Again since NULL " + handler, 
+                            TraceTest("ERROR: Try Again since NULL " + handler,
                                 () => { cp = handler.CompleteAimlProcess(); });
                         }
                     }
@@ -1669,10 +1675,11 @@ namespace RTParser
             Console.WriteLine("*** DONE WN-Load ***");
 
             Console.WriteLine("*** Start Lucene ***");
-            var LuceneIndexer = new MyLuceneIndexer(PathToLucene, fieldName, this, wordNetEngine);
-            this.LuceneIndexer = LuceneIndexer;
-            LuceneIndexer.TheBot = this;
-            LuceneIndexer.wordNetEngine = wordNetEngine;
+            var myLuceneIndexer = new MyLuceneIndexer(PathToLucene, fieldName, this, wordNetEngine);
+            this.LuceneIndexer = myLuceneIndexer;
+            myLuceneIndexer.TheBot = this;
+            TripleStore = myLuceneIndexer.TripleStoreProxy;
+            myLuceneIndexer.wordNetEngine = wordNetEngine;
             Console.WriteLine("*** DONE Lucene ***");
         }
 
@@ -1719,6 +1726,14 @@ namespace RTParser
         internal void Enqueue(string named, ThreadStart action)
         {
             HeardSelfSayQueue.Enqueue(HeardSelfSayQueue.NamedTask(named, action));
+        }
+
+        private object ChatWithThisBot(string cmd, Request request)
+        {
+            Request req = request.CreateSubRequest(cmd);
+            req.Responder = BotAsUser;
+            req.IsToplevelRequest = request.IsToplevelRequest;
+            return LightWeigthBotDirective(cmd, req);
         }
     }
 }

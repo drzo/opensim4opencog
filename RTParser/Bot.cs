@@ -26,13 +26,19 @@ using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
 
 namespace RTParser
 {
-    public delegate object SystemExecHandler(string cmd, Request user);
+    /// <summary>
+    /// Return a Response object
+    /// </summary>
+    /// <param name="cmd"></param>
+    /// <param name="requestOrNull"></param>
+    /// <returns></returns>
+    public delegate object SystemExecHandler(string cmd, Request requestOrNull);
 
     /// <summary>
     /// Encapsulates a Proccessor. If no settings.xml file is found or referenced the Proccessor will try to
     /// default to safe settings.
     /// </summary>
-    public partial class RTPBot : StaticAIMLUtils
+    public partial class RTPBot : StaticAIMLUtils, IChatterBot
     {
         private readonly List<XmlNodeEvaluator> XmlNodeEvaluators = new List<XmlNodeEvaluator>();
         private TestCaseRunner testCaseRunner;
@@ -2178,6 +2184,7 @@ The AIMLbot program.
             EnsureDefaultUsers();
             string official = LoadPersonalDirectories(myName);
             thisBotAsUser.SaveDirectory(thisBotAsUser.UserDirectory);
+            AddExcuteHandler(NamePath, ChatWithThisBot);
             return official ?? thisBotAsUser.UserDirectory;
         }
 
@@ -2338,7 +2345,8 @@ The AIMLbot program.
 
         public string BotID
         {
-            get {
+            get
+            {
                 if (BotAsUser != null) return BotAsUser.UserID;
                 return UserID ?? "-BOT-ID-NULL-";
             }
@@ -2567,5 +2575,20 @@ The AIMLbot program.
             }
             return nodes;
         }
+
+        #region IChatterBot Members
+
+        public SystemExecHandler ChatWithHandler(string userName)
+        {
+            User theUser = FindOrCreateUser(userName);
+            return (txt, req) =>
+                       {
+                           req.Requester = theUser;
+                           req.Responder = BotAsUser;
+                           var ret = ChatWithThisBot(txt, req);
+                           return ret;
+                       };
+        }
+        #endregion
     }
 }
