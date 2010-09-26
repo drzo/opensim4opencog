@@ -14,6 +14,12 @@ namespace MushDLR223.Utilities
         bool IsTraced { get; set; }
     }
 
+    public interface ITreeable
+    {
+        string NameSpace { get; }
+        IEnumerable<string> SettingNames(int depth);
+    }
+    
     public class StaticXMLUtils
     {
         public static R WithoutTrace<R>(ITraceable itrac, Func<R> func)
