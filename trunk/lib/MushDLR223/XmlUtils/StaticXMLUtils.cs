@@ -48,8 +48,25 @@ namespace MushDLR223.Utilities
 
         public static bool NameMatches(XmlNode node, string s)
         {
+            if (s.Contains("="))
+            {
+                var nv = s.Split(new char[] {'='});
+                {
+                    if (node.Attributes != null)
+                        foreach (XmlAttribute s1 in node.Attributes)
+                        {
+                            if (SearchStringMatches(nv[0], s1.Name))
+                            {
+                                if (SearchStringMatches(nv[1], s1.Value))
+                                    return true;
+                            }
+                        }
+                }
+                return false;
+            }
             return SearchStringMatches(s, node.Name) || SearchStringMatches(s, node.LocalName);
         }
+
         public static bool SearchStringMatches(string pattern, string name)
         {
             if (name == pattern) return true;
