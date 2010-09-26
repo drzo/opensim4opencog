@@ -156,9 +156,14 @@ namespace cogbot
             }
             DLRConsole.AddOutput(new OutputDelegateWriter(VeryRealWriteLine));
             var col = DLRConsole.TransparentCallers;
-            lock (col) col.Add(typeof(ClientManager));
-            lock (col) col.Add(typeof(Command));
-            lock (col) col.Add(typeof (BotClient));
+            lock (col)
+            {
+                col.Add(typeof (BotClient));
+                col.Add(typeof(Command));
+                col.Add(typeof(ClientManager));
+                col.Add(typeof(cogbot.Listeners.SimEventMulticastPipeline));
+                col.Add(typeof(cogbot.Listeners.SimEventTextSubscriber));
+            }
             config = new Configuration();
             config.loadConfig();
             DefaultAccount.LoadFromConfig(config);
