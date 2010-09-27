@@ -25,7 +25,7 @@ namespace RTParser.Database
 
         public override string GetServiceName()
         {
-            return "tknow";
+            return "asktrue";
         }
     }
 }
