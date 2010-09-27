@@ -71,12 +71,19 @@ namespace RTParser.Database
             var allResults = new List<ISearchResult>();
             foreach (ISearchResult re in Search(said, null))
             {
+                allResults.Add(re);
                 res += " " + re.ToString();
             }
             if (allResults.Count == 0) return tolang;
             return res.Trim();
         }
 
+        /// <summary>
+        /// @askall what is 1 plus 1?
+        /// </summary>
+        /// <param name="textstr"></param>
+        /// <param name="request"></param>
+        /// <returns></returns>
         public virtual object AskTextStringAll(string textstr, Request request)
         {
             string said;
@@ -90,9 +97,18 @@ namespace RTParser.Database
             var allResults = new List<ISearchResult>();
             foreach (IDocSearch searchSource in SearchSources)
             {
-                foreach (ISearchResult re in searchSource.Search(said, null))
+                
+                try
                 {
-                    res += " " + re.ToString();
+                    foreach (ISearchResult re in searchSource.Search(said, null))
+                    {
+                        allResults.Add(re);
+                        res += " " + re.ToString();
+                    }
+                }
+                catch (Exception e)
+                {
+                    writeToLog("ERROR: " + e);
                 }
             }
             if (allResults.Count == 0) return tolang;

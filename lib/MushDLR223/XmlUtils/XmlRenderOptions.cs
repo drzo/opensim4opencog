@@ -16,6 +16,11 @@ namespace MushDLR223.Utilities
             flatten = new List<string>(initial.flatten);
             skip = new List<string>(initial.skip);
         }
+        public RenderOptions(ICollection<string> flattern, ICollection<string> skip)
+        {
+            this.flatten = new List<string>(flattern);
+            this.skip = new List<string>(skip);
+        }
         public bool FlattenChildren(string nodeName)
         {
             return flatten.Contains(nodeName);

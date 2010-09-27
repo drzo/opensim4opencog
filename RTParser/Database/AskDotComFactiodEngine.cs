@@ -10,7 +10,7 @@ namespace RTParser.Database
 
         public override string GetResultTags()
         {
-            return "q_result,query_result,result,q_answer";
+            return "q_result,id=result-table,query_result,result,q_answer";
         }
 
         protected override string MakeSearchString(string searchTerm1)
