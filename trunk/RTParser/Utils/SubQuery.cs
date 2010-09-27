@@ -156,7 +156,7 @@ namespace RTParser.Utils
         /// <param name="name">The name of the setting to remove</param>
         public bool removeSetting(string name)
         {
-            return RequesterPredicates.removeSetting(name);
+            return SettingsDictionary.removeSettingWithUndoCommit(this, RequesterPredicates, name);
         }
 
         /// <summary>
@@ -167,7 +167,7 @@ namespace RTParser.Utils
         /// <param name="value">the new value</param>
         public bool updateSetting(string name, Unifiable value)
         {
-            return RequesterPredicates.updateSetting(name, value);
+            return SettingsDictionary.addSettingWithUndoCommit(this, RequesterPredicates, RequesterPredicates.updateSetting, name, value);
         }
 
         /// <summary>
@@ -225,14 +225,14 @@ namespace RTParser.Utils
         /// <param name="value">The value associated with this setting</param>
         public bool addSetting(string name, Unifiable value)
         {
+            ISettingsDictionary dict = Request.TargetSettings;
             if (!UseLuceneForSet)
             {
-                return Request.addSetting(name, value);
+                return SettingsDictionary.addSettingWithUndoCommit(this, dict, dict.addSetting, name, value);
             }
             else
             {
                 string realName;
-                ISettingsDictionary dict = Request.TargetSettings;
                 bool succeed;
 
                 var prev = NamedValuesFromSettings.UseLuceneForGet;
@@ -402,11 +402,19 @@ namespace RTParser.Utils
             UndoStack.FindUndoAll(this);
         }
 
-        public void AddUndo(ThreadStart undo)
+        public void AddLocalUndo(ThreadStart undo)
         {
             lock (this)
             {
                 UndoStack.GetStackFor(this).AddUndo(undo);
+            }
+        }
+
+        public void AddUndo(Action undo)
+        {
+            lock (this)
+            {
+                Request.AddUndo(undo);
             }
         }
 
@@ -446,13 +454,27 @@ namespace RTParser.Utils
         /// <param name="action"></param>
         public void AddSideEffect(string effectName, ThreadStart action)
         {
-            Request.AddSideEffect(effectName, action);
+            Request.AddSideEffect(effectName, () => DoSideEffect(effectName, action));
         }
+
+        private void DoSideEffect(string effectName, ThreadStart action)
+        {
+            if (this.HasSuceeded > 0)
+            {
+                //if (HasFailed == 0) 
+                action();
+            }
+            else
+            {
+                writeDebugLine("Skipping Sidefffect " + effectName);
+            }
+        }
+
 
         public void LocalSideEffect(string effectName, ThreadStart enter, ThreadStart exit)
         {
             enter();
-            AddUndo(exit);
+            AddLocalUndo(exit);
         }
 
 
