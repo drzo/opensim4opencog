@@ -139,16 +139,18 @@ namespace RTParser.Database
             if (IsNull(value))
             {
                 if (UseLuceneForSet && userbotLuceneIndexer != null) userbotLuceneIndexer.retractAllTriple(userName, name);
-                if (!String.IsNullOrEmpty(gName)) gUser.Predicates.removeSetting(gName);
-                dict.removeSetting(name);
+                SettingsDictionary.removeSettingWithUndoCommit(query, dict, name);
+                SettingsDictionary.removeSettingWithUndoCommit(query, gUser, gName);
             }
             else
             {
                 if (UseLuceneForSet && userbotLuceneIndexer != null) userbotLuceneIndexer.updateTriple(userName, name, value);
-                if (!String.IsNullOrEmpty(gName)) gUser.Predicates.addSetting(gName, value);
+                if (!String.IsNullOrEmpty(gName))
+                {
+                    SettingsDictionary.addSettingWithUndoCommit(query, gUser.Predicates, gUser.addSetting, gName, value);
+                }
                 query.SetDictValue++;
-                dict.addSetting(name, value);
-
+                SettingsDictionary.addSettingWithUndoCommit(query, dict, dict.addSetting, name, value);
             }
             var retVal = ReturnSetSetting(dict, name, setReturn);
             if (!IsNullOrEmpty(retVal)) return retVal;

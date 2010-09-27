@@ -60,7 +60,7 @@ namespace RTParser.Variables
     /// A bespoke Dictionary<,> for loading, adding, checking, removing and extracting
     /// settings.
     /// </summary>
-    public class SettingsDictionary : ISettingsDictionary, IDictionary<string,Unifiable>
+    public class SettingsDictionary : ISettingsDictionary, IDictionary<string, Unifiable>
     {
         #region Attributes
 
@@ -89,7 +89,7 @@ namespace RTParser.Variables
         /// <summary>
         /// The bot this dictionary is associated with (only for writting log)
         /// </summary>
-        protected RTParser.RTPBot bot;
+        protected RTPBot bot;
 
         private string theNameSpace;
         public bool TrimKeys = true;
@@ -164,11 +164,11 @@ namespace RTParser.Variables
         public bool Remove(KeyValuePair<string, Unifiable> item)
         {
             foreach (var hash in SettingNames(1))
-            {               
-                if (IsKeyMatch(item.Key,hash))
+            {
+                if (IsKeyMatch(item.Key, hash))
                 {
                     var v = grabSetting(hash);
-                    if (Unifiable.IsStringMatch(v,item.Value))
+                    if (Unifiable.IsStringMatch(v, item.Value))
                     {
                         return removeSetting(hash);
                     }
@@ -202,7 +202,7 @@ namespace RTParser.Variables
         /// </returns>
         public bool IsReadOnly
         {
-            get { return SuspendUpdates || Unifiable.IsTrue(grabSettingNoDebug("isReadOnly")); }
+            get { return SuspendUpdates || TextPatternUtils.IsTrue(grabSettingNoDebug("isReadOnly")); }
         }
 
         public string NameSpace
@@ -222,7 +222,7 @@ namespace RTParser.Variables
         /// <filterpriority>1</filterpriority>
         public IEnumerator<KeyValuePair<string, Unifiable>> GetEnumerator()
         {
-            return new SettingsDictionaryEnumerator(Keys, this);        
+            return new SettingsDictionaryEnumerator(Keys, this);
         }
 
         public override string ToString()
@@ -325,7 +325,7 @@ namespace RTParser.Variables
                     {
                         XmlNode item = result.CreateNode(XmlNodeType.Element, "item", "");
                         XmlAttribute name = result.CreateAttribute("name");
-                        name.Value = n;;
+                        name.Value = n; ;
                         XmlAttribute value = result.CreateAttribute("value");
                         value.Value = this.settingsHash[TransformKey(n)];
                         item.Attributes.Append(name);
@@ -344,7 +344,7 @@ namespace RTParser.Variables
         /// Ctor
         /// </summary>
         /// <param name="bot">The bot for whom this is a settings dictionary</param>
-        public SettingsDictionary(String name, RTParser.RTPBot bot, ParentProvider parent)
+        public SettingsDictionary(String name, RTPBot bot, ParentProvider parent)
         {
             theNameSpace = name;
             IsSubsts = name.Contains("subst");
@@ -410,7 +410,7 @@ namespace RTParser.Variables
                             writeToLog("ERROR loadSettings '{1}'\n {0} ", e, pathToSettings);
                         }
                         finally
-                        {                            
+                        {
                             IsIdentityReadOnly = prev;
                         }
                     }
@@ -436,9 +436,9 @@ namespace RTParser.Variables
             SettingsDictionary dict = ToSettingsDictionary(dict0);
             OutputDelegate writeToLog = dict.writeToLog;
             // or else
-// ReSharper disable ConstantNullColescingCondition
+            // ReSharper disable ConstantNullColescingCondition
             writeToLog = writeToLog ?? request.writeToLog;
-// ReSharper restore ConstantNullColescingCondition
+            // ReSharper restore ConstantNullColescingCondition
             lock (dict.orderedKeys)
             {
                 if (pathToSettings.Length > 0)
@@ -535,23 +535,23 @@ namespace RTParser.Variables
             updateOrAddOrDefualt = updateOrAddOrDefualt.ToLower().Trim();
 
             overwriteExisting =
-                Boolean.Parse(RTPBot.GetAttribValue(myNode, "overwriteExisting", "" + overwriteExisting));
+                Boolean.Parse(StaticXMLUtils.GetAttribValue(myNode, "overwriteExisting", "" + overwriteExisting));
 
             onlyIfUnknown =
-                Boolean.Parse(RTPBot.GetAttribValue(myNode, "onlyIfKnown", "" + onlyIfUnknown));
+                Boolean.Parse(StaticXMLUtils.GetAttribValue(myNode, "onlyIfKnown", "" + onlyIfUnknown));
 
             string returnNameWhenSet =
-                RTPBot.GetAttribValue(myNode, "return-name-when-set", null);
+                StaticXMLUtils.GetAttribValue(myNode, "return-name-when-set", null);
             if (returnNameWhenSet != null)
             {
                 returnNameWhenSet = returnNameWhenSet.Trim();
                 if (returnNameWhenSet.Length == 0) returnNameWhenSet = "false";
-                else if (Unifiable.IsNullOrEmpty(returnNameWhenSet)) returnNameWhenSet = "value";
-                else if (Unifiable.IsFalseOrNo(returnNameWhenSet)) returnNameWhenSet = "value";
-                else if (Unifiable.IsTrueOrYes(returnNameWhenSet)) returnNameWhenSet = "name";
+                else if (TextPatternUtils.IsNullOrEmpty(returnNameWhenSet)) returnNameWhenSet = "value";
+                else if (StaticXMLUtils.IsFalseOrNo(returnNameWhenSet)) returnNameWhenSet = "value";
+                else if (StaticXMLUtils.IsTrueOrYes(returnNameWhenSet)) returnNameWhenSet = "name";
             }
             returnNameWhenSet =
-                RTPBot.GetAttribValue(myNode, "set-return", returnNameWhenSet);
+                StaticXMLUtils.GetAttribValue(myNode, "set-return", returnNameWhenSet);
             if (returnNameWhenSet != null)
             {
                 ToSettingsDictionary(dict).addMetaValue(name, "set-return", returnNameWhenSet);
@@ -559,7 +559,7 @@ namespace RTParser.Variables
 
             SettingsDictionary dictionary = ToSettingsDictionary(dict);
             string englishFormatter =
-                RTPBot.GetAttribValue(myNode, "formatter,pred-format,genformat,format,printf,lucene,english", null);
+                StaticXMLUtils.GetAttribValue(myNode, "formatter,pred-format,genformat,format,printf,lucene,english", null);
             if (englishFormatter != null)
             {
                 string formatter = englishFormatter;
@@ -567,30 +567,31 @@ namespace RTParser.Variables
                 int formatterQA = formatter.IndexOf(" | ");
                 if (formatterQA != -1)
                 {
-                        // query mode
-                        var formatterQ = formatter.Substring(formatterQA + 2).Trim();
-                        dictionary.addMetaValue(name, "format-assert", formatter);
-                        // assert mode
-                        var formatterA = formatter.Substring(0, formatterQA).Trim();
-                        dictionary.addMetaValue(name, "query-assert", formatter);
-                } else
+                    // query mode
+                    var formatterQ = formatter.Substring(formatterQA + 2).Trim();
+                    dictionary.addMetaValue(name, "format-assert", formatter);
+                    // assert mode
+                    var formatterA = formatter.Substring(0, formatterQA).Trim();
+                    dictionary.addMetaValue(name, "query-assert", formatter);
+                }
+                else
                 {
                     // both query/assert
-                    dictionary.addMetaValue(name , "format-assert", englishFormatter);
+                    dictionary.addMetaValue(name, "format-assert", englishFormatter);
                     dictionary.addMetaValue(name, "format-query", englishFormatter);
                 }
             }
-            englishFormatter = RTPBot.GetAttribValue(myNode, "assert,format-assert", null);
+            englishFormatter = StaticXMLUtils.GetAttribValue(myNode, "assert,format-assert", null);
             if (englishFormatter != null)
             {
-                dictionary.addMetaValue(name , "format-assert", englishFormatter);
+                dictionary.addMetaValue(name, "format-assert", englishFormatter);
             }
-            englishFormatter = RTPBot.GetAttribValue(myNode, "query,format-query", null);
+            englishFormatter = StaticXMLUtils.GetAttribValue(myNode, "query,format-query", null);
             if (englishFormatter != null)
             {
                 dictionary.addMetaValue(name, "format-query", englishFormatter);
             }
-            englishFormatter = RTPBot.GetAttribValue(myNode, "whword", null);
+            englishFormatter = StaticXMLUtils.GetAttribValue(myNode, "whword", null);
             if (englishFormatter != null)
             {
                 dictionary.addMetaValue(name, "format-whword", englishFormatter);
@@ -610,7 +611,7 @@ namespace RTParser.Variables
                 if (onlyIfUnknown && dictcontainsLocalCalled)
                 {
                     var old = dict.grabSetting(name);
-                    if (!Unifiable.IsUnknown(old))
+                    if (!TextPatternUtils.IsUnknown(old))
                     {
                         return;
                     }
@@ -624,14 +625,14 @@ namespace RTParser.Variables
                 var old = dict.grabSetting(name);
                 if (inherited && onlyIfUnknown)
                 {
-                    if (!Unifiable.IsUnknown(old))
+                    if (!TextPatternUtils.IsUnknown(old))
                     {
                         return;
                     }
                 }
                 if (onlyIfUnknown && dictcontainsLocalCalled)
                 {
-                    if (!Unifiable.IsUnknown(old))
+                    if (!TextPatternUtils.IsUnknown(old))
                     {
                         return;
                     }
@@ -642,7 +643,7 @@ namespace RTParser.Variables
 
         static R WithoutTrace<R>(ISettingsDictionary dict, Func<R> func)
         {
-            return StaticXMLUtils.WithoutTrace<R>(dict, func);
+            return StaticXMLUtils.WithoutTrace(dict, func);
         }
 
         static public void loadSettingNode(ISettingsDictionary dict, XmlNode myNode, bool overwriteExisting, bool onlyIfUnknown, Request request)
@@ -653,10 +654,10 @@ namespace RTParser.Variables
                 SettingsDictionary settingsDict = ToSettingsDictionary(dict);
                 WithoutTrace(dict, () =>
                 {
-                                                        loadSettingNode0(settingsDict, myNode, overwriteExisting,
-                                                                         onlyIfUnknown, request);
-                                                        return true;
-                                                    });
+                    loadSettingNode0(settingsDict, myNode, overwriteExisting,
+                                     onlyIfUnknown, request);
+                    return true;
+                });
             }
         }
 
@@ -695,7 +696,7 @@ namespace RTParser.Variables
             {
                 //loadSettingNode(dict, myNode.Attributes, false, true, request);
                 SettingsDictionary substDict = ToSettingsDictionary(dict);
-                string substName = RTPBot.GetAttribValue(myNode, "name,dict,value", "input");
+                string substName = StaticXMLUtils.GetAttribValue(myNode, "name,dict,value", "input");
                 var chdict = request.GetSubstitutions(substName, true);
                 foreach (XmlNode n in myNode.ChildNodes)
                 {
@@ -731,10 +732,10 @@ namespace RTParser.Variables
             }
             if (myNode.NodeType == XmlNodeType.Element)
             {
-                string href = RTPBot.GetAttribValue(myNode, "href", null);
+                string href = StaticXMLUtils.GetAttribValue(myNode, "href", null);
                 if (href != null && href.Length > 0)
                 {
-                    string name = RTPBot.GetAttribValue(myNode, "id", myNode.Name);
+                    string name = StaticXMLUtils.GetAttribValue(myNode, "id", myNode.Name);
                     loadNameValueSetting(dict, name, href, "add", myNode, false, true, request);
                     return;
                 }
@@ -760,13 +761,13 @@ namespace RTParser.Variables
             }
             if ((lower == "include"))
             {
-                string path = RTPBot.GetAttribValue(myNode, "path", myNode.InnerText);
+                string path = StaticXMLUtils.GetAttribValue(myNode, "path", myNode.InnerText);
 
                 overwriteExisting =
-                    Boolean.Parse(RTPBot.GetAttribValue(myNode, "overwriteExisting", "" + overwriteExisting));
+                    Boolean.Parse(StaticXMLUtils.GetAttribValue(myNode, "overwriteExisting", "" + overwriteExisting));
 
                 onlyIfUnknown =
-                    Boolean.Parse(RTPBot.GetAttribValue(myNode, "onlyIfKnown", "" + onlyIfUnknown));
+                    Boolean.Parse(StaticXMLUtils.GetAttribValue(myNode, "onlyIfKnown", "" + onlyIfUnknown));
 
                 loadSettings(ToSettingsDictionary(dict), path, overwriteExisting, onlyIfUnknown, request);
                 return;
@@ -776,8 +777,8 @@ namespace RTParser.Variables
                 || lower == "provider" || lower == "synchon" || lower == "prefixes"
                 || lower == "metaproviders" || lower == "formatter"))
             {
-                string name = RTPBot.GetAttribValue(myNode, "value,dict,name", null);
-                if (!string.IsNullOrEmpty(name))
+                string name = StaticXMLUtils.GetAttribValue(myNode, "value,dict,name", null);
+                if (!String.IsNullOrEmpty(name))
                 {
                     ParentProvider pp = settingsDict.FindDictionary(name, null);
                     if (pp == null /* || pp() == null*/)
@@ -807,10 +808,10 @@ namespace RTParser.Variables
                             settingsDict.InsertMetaProvider(pp);
                             return;
                         case "prefixes":
-                            settingsDict.AddChild(RTPBot.GetAttribValue(myNode, "prefix,name,dict,value", name), pp);
+                            settingsDict.AddChild(StaticXMLUtils.GetAttribValue(myNode, "prefix,name,dict,value", name), pp);
                             return;
                         default:
-                            settingsDict.writeToLog("ERROR cannot make a name/v from " + AIMLLoader.TextAndSourceInfo(myNode));
+                            settingsDict.writeToLog("ERROR cannot make a name/v from " + StaticXMLUtils.TextAndSourceInfo(myNode));
                             return;
                     }
                     return;
@@ -818,7 +819,7 @@ namespace RTParser.Variables
             }
             if ((lower == "maskedvar"))
             {
-                string name = RTPBot.GetAttribValue(myNode, "name", "");
+                string name = StaticXMLUtils.GetAttribValue(myNode, "name", "");
                 if (name == "")
                 {
                 }
@@ -842,21 +843,21 @@ namespace RTParser.Variables
             if (IsNameValueTag(lower))
             {
 
-                string name = RTPBot.GetAttribValue(myNode, "name,var,old,key,find,param", null);
+                string name = StaticXMLUtils.GetAttribValue(myNode, "name,var,old,key,find,param", null);
                 if (name == null)
                 {
-                    XmlNode holder = AIMLLoader.FindNode("name,var,old,key,find", myNode, null);
+                    XmlNode holder = StaticXMLUtils.FindNode("name,var,old,key,find", myNode, null);
                     if (holder == null)
                     {
-                        settingsDict.SettingsLog("ERROR cannot make a name/v from " + AIMLLoader.TextAndSourceInfo(myNode));
+                        settingsDict.SettingsLog("ERROR cannot make a name/v from " + StaticXMLUtils.TextAndSourceInfo(myNode));
                         return;
                     }
                     name = holder.InnerText;
                 }
-                string value = RTPBot.GetAttribValue(myNode, "value,href,default,replace,new,enabled", null);
+                string value = StaticXMLUtils.GetAttribValue(myNode, "value,href,default,replace,new,enabled", null);
                 if (value == null)
                 {
-                    XmlNode holder = AIMLLoader.FindNode("value,default,replace,new", myNode, null);
+                    XmlNode holder = StaticXMLUtils.FindNode("value,default,replace,new", myNode, null);
                     if (holder != null)
                     {
                         value = holder.InnerXml;
@@ -868,9 +869,9 @@ namespace RTParser.Variables
                     if (maybe != null) value = maybe;
                 }
                 if (value == null)
-                    settingsDict.writeToLog("ERROR cannot make a n/value from " + AIMLLoader.TextAndSourceInfo(myNode));
+                    settingsDict.writeToLog("ERROR cannot make a n/value from " + StaticXMLUtils.TextAndSourceInfo(myNode));
 
-                loadNameValueSetting(dict, name, value, RTPBot.GetAttribValue(myNode, "type", "add"), myNode,
+                loadNameValueSetting(dict, name, value, StaticXMLUtils.GetAttribValue(myNode, "type", "add"), myNode,
                             overwriteExisting, onlyIfUnknown, request);
                 return;
             }
@@ -893,7 +894,7 @@ namespace RTParser.Variables
 
             }
             {
-                settingsDict.writeToLog("-DICTRACE: ERROR unknow settings line {0} in {1}", AIMLLoader.TextAndSourceInfo(myNode), dict);
+                settingsDict.writeToLog("-DICTRACE: ERROR unknow settings line {0} in {1}", StaticXMLUtils.TextAndSourceInfo(myNode), dict);
             }
         }
 
@@ -924,13 +925,13 @@ namespace RTParser.Variables
             }
             ParentProvider pp = FindDictionary0(name, fallback);
             if (pp != null) return pp.Invoke;
-            Func<ParentProvider> provider0 = () => FindDictionary0(name, fallback);      
+            Func<ParentProvider> provider0 = () => FindDictionary0(name, fallback);
             return () => new ProvidedSettingsDictionary(name, provider0);
         }
 
         public ParentProvider FindDictionary0(string name, ParentProvider fallback)
         {
-            var rtpbotobjCol = MushDLR223.ScriptEngines.ScriptManager.ResolveToObject(this, name);
+            var rtpbotobjCol = ScriptManager.ResolveToObject(this, name);
             if (rtpbotobjCol == null || rtpbotobjCol.Count == 0)
             {
                 string clipIt;
@@ -942,7 +943,7 @@ namespace RTParser.Variables
                     return prep;
                 }
                 var botGetDictionary = bot.GetDictionary(name);
-                if (botGetDictionary != null) return ToParentProvider(botGetDictionary);               
+                if (botGetDictionary != null) return ToParentProvider(botGetDictionary);
                 //writeToLog("DEBUG9 Cannot ResolveToObject0 settings line {0} in {1}", name, this);
                 //return () => new ProvidedSettingsDictionary(NameSpace + "." + name, () => FindDictionary(name, null).Invoke());
                 return fallback;
@@ -1040,7 +1041,7 @@ namespace RTParser.Variables
             return addSetting0(name, value);
         }
 
-        private IEnumerable<string >GetSettingsAliases(string name)
+        private IEnumerable<string> GetSettingsAliases(string name)
         {
             if (NoSettingsAliaes) return NO_SETTINGS;
             string key = TransformKey(TransformName(name));
@@ -1061,7 +1062,7 @@ namespace RTParser.Variables
                 string normalizedName = TransformKey(name);
                 if (normalizedName == "issubsts")
                 {
-                    IsSubsts = Unifiable.IsTrue(value);
+                    IsSubsts = TextPatternUtils.IsTrue(value);
                 }
                 if (makedvars.Contains(normalizedName))
                 {
@@ -1123,12 +1124,12 @@ namespace RTParser.Variables
         {
             if (value == null)
             {
-             //   writeToLog("ERROR " + value + " NULL");
+                //   writeToLog("ERROR " + value + " NULL");
                 return null;
             }
             if (value == Unifiable.NULL)
             {
-               // writeToLog("ERROR " + value + " NULL");
+                // writeToLog("ERROR " + value + " NULL");
                 return null;
                 //return Unifiable.NULL;
             }
@@ -1140,7 +1141,7 @@ namespace RTParser.Variables
             value = StaticXMLUtils.ValueText(v);
             if (v.Contains("???"))
             {
-                writeToLog("!?????@ERROR BAD INPUT? " + value);                
+                writeToLog("!?????@ERROR BAD INPUT? " + value);
             }
 
             return value;
@@ -1201,13 +1202,13 @@ namespace RTParser.Variables
             name = name.Replace("fav_", "fav");
             name = name.Replace("fav.", "fav");
 
-            if (false) foreach (var k in new [] { "favorite", "fav" })
-            {
-                if (name.StartsWith(k))
+            if (false) foreach (var k in new[] { "favorite", "fav" })
                 {
-                    if (name.Length > k.Length) name = name.Substring(k.Length);
+                    if (name.StartsWith(k))
+                    {
+                        if (name.Length > k.Length) name = name.Substring(k.Length);
+                    }
                 }
-            }
             return name;
             //return MakeCaseInsensitive.TransformInput(name);
         }
@@ -1367,7 +1368,7 @@ namespace RTParser.Variables
                 name = TransformName(name);
                 var setting = grabSetting0(name);
                 setting = TransformValue(setting);
-                if (Unifiable.IsEMPTY(setting))
+                if (TextPatternUtils.IsEMPTY(setting))
                 {
                     return "";
                 }
@@ -1413,7 +1414,7 @@ namespace RTParser.Variables
                 }
                 else if (Fallbacks.Count > 0)
                 {
-                    ISettingsDictionary firstFallBack = null;                   
+                    ISettingsDictionary firstFallBack = null;
                     foreach (ISettingsDictionary list in Fallbacks)
                     {
                         if (!noGo.Add(list)) continue;
@@ -1432,12 +1433,12 @@ namespace RTParser.Variables
                         }
                         SettingsLog("RETURN FALLBACK '" + name + "'=" + str(v));
                         list.IsTraced = prev;
-                        if (!Unifiable.IsFalse(v)) return v;
+                        if (!TextPatternUtils.IsFalse(v)) return v;
                     }
                     if (firstFallBack != null)
                     {
                         string v0 = firstFallBack.grabSetting(name);
-                        if (!Unifiable.IsNull(v0))
+                        if (!TextPatternUtils.IsNull(v0))
                         {
                             SettingsLog("RETURN FALLBACK0 '" + name + "'=" + str(v0));
                             return v0;
@@ -1478,14 +1479,14 @@ namespace RTParser.Variables
                 if (containsLocalCalled0(name))
                 {
                     Unifiable v = localValue(name, normalizedName);
-                    if (Unifiable.IsNull(v))
+                    if (TextPatternUtils.IsNull(v))
                     {
                         foreach (var setname in GetSettingsAliases(name))
                         {
                             if (containsLocalCalled0(name))
                             {
                                 var tsetting = localValue(setname, setname);
-                                if (!Unifiable.IsNull(tsetting))
+                                if (!TextPatternUtils.IsNull(tsetting))
                                     return tsetting;
                             }
                         }
@@ -1501,7 +1502,7 @@ namespace RTParser.Variables
                         if (!noGo.Add(list)) continue;
                         if (list is User)
                         {
-                            User use = (User) list;
+                            User use = (User)list;
                             if (!noGo.Add(use.Predicates)) continue;
                         }
                         firstFallBack = firstFallBack ?? list;
@@ -1517,7 +1518,7 @@ namespace RTParser.Variables
                                 return null;
                             }
                             SettingsLog("RETURN FALLBACK '" + name + "'=" + str(v));
-                            if (v != null && !Unifiable.IsFalse(v))
+                            if (v != null && !TextPatternUtils.IsFalse(v))
                             {
                                 list.IsTraced = prev;
                                 return v;
@@ -1528,7 +1529,7 @@ namespace RTParser.Variables
                     if (firstFallBack != null)
                     {
                         var v0 = firstFallBack.grabSetting(name);
-                        if (!Unifiable.IsNull(v0))
+                        if (!TextPatternUtils.IsNull(v0))
                         {
                             SettingsLog("RETURN FALLBACK0 '" + name + "'=" + str(v0));
                             return v0;
@@ -1569,7 +1570,7 @@ namespace RTParser.Variables
             string fmt = DLRConsole.SafeFormat(message, args);
             if (false && fmt.Contains("???") /*|| fmt.Contains(" 'name'='")*/)
             {
-                writeToLog("ERROR DICTLOG ???????: " + NameSpace + " (" + fmt + ")   " + message, args);                
+                writeToLog("ERROR DICTLOG ???????: " + NameSpace + " (" + fmt + ")   " + message, args);
             }
             if (!IsTraced) return;
             var fc = new StackTrace().FrameCount;
@@ -1632,7 +1633,7 @@ namespace RTParser.Variables
         public bool containsSettingCalled(string name)
         {
             var value = grabSettingNoDebug(name);
-            return !Unifiable.IsNullOrEmpty(value);
+            return !TextPatternUtils.IsNullOrEmpty(value);
         }
 
         /// <summary>
@@ -1646,8 +1647,8 @@ namespace RTParser.Variables
                 lock (orderedKeys)
                 {
                     IEnumerable<string> prefixProviderSettingNames = prefixProvider.SettingNames(depth);
-                    var list = prefixProviderSettingNames as List<String>;
-                    if (list==null)
+                    var list = prefixProviderSettingNames as List<string>;
+                    if (list == null)
                     {
                         list = new List<string>();
                         list.AddRange(prefixProviderSettingNames);
@@ -1729,13 +1730,13 @@ namespace RTParser.Variables
         public bool TryGetValue(string key, out Unifiable value)
         {
             value = grabSetting(key);
-            return !Unifiable.IsNull(value);
+            return !TextPatternUtils.IsNull(value);
         }
 
         public Unifiable this[string name]
         {
-            get { return SettingsDictionary.IndexGet(this, name); }
-            set { SettingsDictionary.IndexSet(this, name, value); }
+            get { return IndexGet(this, name); }
+            set { IndexSet(this, name, value); }
         }
 
         /// <summary>
@@ -1792,7 +1793,7 @@ namespace RTParser.Variables
         public void AddSettingToCollection(ISettingsDictionary dictionary, ParentProvider pp, List<ParentProvider> cols)
         {
             dictionary = GetDictionary(dictionary, pp);
-            if (CheckAddToCollection(dictionary,pp,cols))
+            if (CheckAddToCollection(dictionary, pp, cols))
             {
                 if (pp == null) pp = () => dictionary;
                 cols.Insert(0, pp);
@@ -1861,7 +1862,7 @@ namespace RTParser.Variables
                     }
                     if (inner is SettingsDictionary)
                     {
-                        var sd = (SettingsDictionary) inner;
+                        var sd = (SettingsDictionary)inner;
                         if (!sd.CheckAddToCollection(dictionary, pp, sd._listeners))
                         {
                             writeToLog("WARN: this was found in inner fallbacks " + inner);
@@ -1891,7 +1892,7 @@ namespace RTParser.Variables
                                  (realName0) => DefaultFormatter.Replace("$relation", realName0));
         }
 
-        public static Unifiable WithProviders(ISettingsDictionary dictionary, string name, string props, out string realName, 
+        public static Unifiable WithProviders(ISettingsDictionary dictionary, string name, string props, out string realName,
             IEnumerable<ParentProvider> providers, Func<string, Unifiable> Else)
         {
             //SettingsDictionary dictionary = ToSettingsDictionary(dictionary0);
@@ -1899,14 +1900,14 @@ namespace RTParser.Variables
             foreach (var provider in ProvidersFrom(providers, dictionary))
             {
                 var v = provider.grabSetting(name);
-                if (!Unifiable.IsNull(v)) return v;
+                if (!TextPatternUtils.IsNull(v)) return v;
             }
             if (name.Contains(","))
             {
                 foreach (string name0 in StaticXMLUtils.NamesStrings(name))
                 {
                     var un = WithProviders(dictionary, name0, props, out realName, providers, Else);
-                    if (!Unifiable.IsNull(un))
+                    if (!TextPatternUtils.IsNull(un))
                     {
                         return un;
                     }
@@ -1923,6 +1924,7 @@ namespace RTParser.Variables
         public string Preposition = "";
         public List<ParentProvider> MetaProviders = new List<ParentProvider>();
         public static bool NoSettingsAliaes = true;
+        public static bool UseUndoPush = false;
 
         public Unifiable GetSetReturn(string name, out string realName)
         {
@@ -1931,7 +1933,7 @@ namespace RTParser.Variables
                                  realname =>
                                  {
                                      string prep = Preposition;
-                                     return (string.IsNullOrEmpty(prep) ? "" : prep + " ")
+                                     return (String.IsNullOrEmpty(prep) ? "" : prep + " ")
                                             + realname;
                                  });
         }
@@ -1965,7 +1967,7 @@ namespace RTParser.Variables
             return found;
         }
 
-        private void addMetaValue(string name, string subprops,string value)
+        private void addMetaValue(string name, string subprops, string value)
         {
             AddMetaProviders(name, subprops, value, MetaProviders);
         }
@@ -2089,27 +2091,27 @@ namespace RTParser.Variables
         public static Unifiable grabSettingDefault(ISettingsDictionary dictionary, string name, out string realName, SubQuery query)
         {
             bool succeed;
-            return NamedValuesFromSettings.GetSettingForType(dictionary.NameSpace, query, dictionary, name, 
+            return NamedValuesFromSettings.GetSettingForType(dictionary.NameSpace, query, dictionary, name,
                 out realName, name, null, out succeed, null);
         }
         public static Unifiable grabSettingDefaultDict(ISettingsDictionary dictionary, string name, out string realName)
         {
             realName = name;
             var un = dictionary.grabSetting(name);
-            if (Unifiable.IsNull(un))
+            if (TextPatternUtils.IsNull(un))
             {
                 if (name.Contains(","))
                 {
                     foreach (string name0 in StaticXMLUtils.NamesStrings(name))
                     {
                         un = grabSettingDefaultDict(dictionary, name0, out realName);
-                        if (!Unifiable.IsNull(un))
+                        if (!TextPatternUtils.IsNull(un))
                         {
                             return un;
                         }
                     }
                     return un;
-                }                
+                }
                 int intLen = name.Length;
                 string[] chops = new string[] { "favorite.", "favorite", "fav" };
                 foreach (var chop in chops)
@@ -2121,7 +2123,7 @@ namespace RTParser.Variables
                         string newName = name.Substring(chopLength);
                         string realName0;
                         Unifiable withChop = grabSettingDefaultDict(dictionary, newName, out realName0);
-                        if (withChop!=null)
+                        if (withChop != null)
                         {
                             realName = realName0;
                             return withChop;
@@ -2141,7 +2143,7 @@ namespace RTParser.Variables
                     {
                         un = dictionary.grabSetting(realName0);
                     }
-                    if (!Unifiable.IsNull(un))
+                    if (!TextPatternUtils.IsNull(un))
                     {
                         realName = realName0;
                         return un;
@@ -2157,7 +2159,7 @@ namespace RTParser.Variables
         }
 
         public static bool TryGetValue<T>(IDictionary<string, T> dictionary, string search, out T value)
-        {            
+        {
             lock (dictionary)
             {
                 if (dictionary.TryGetValue(search, out value))
@@ -2165,9 +2167,9 @@ namespace RTParser.Variables
                     return true;
                 }
                 value = default(T);
-                foreach(var kv in dictionary)
+                foreach (var kv in dictionary)
                 {
-                    if (StaticXMLUtils.SearchStringMatches(search,kv.Key))
+                    if (StaticXMLUtils.SearchStringMatches(search, kv.Key))
                     {
                         value = kv.Value;
                         return true;
@@ -2176,8 +2178,91 @@ namespace RTParser.Variables
             }
             return false;
         }
-    }
 
+        public static bool removeSettingWithUndoCommit(SubQuery query, ISettingsDictionary dict, string name)
+        {
+
+            bool locally = dict.containsLocalCalled(name);
+            if (UseUndoPush)
+            {
+                UndoStack.GetStackFor(query).pushValues(dict, name, null);
+            }
+            else
+            {
+                Unifiable prevSetting = dict.grabSetting(name);
+                if (dict.removeSetting(name))
+                {
+                    if (locally) query.AddUndo(() => dict.addSetting(name, prevSetting));
+                    else query.AddUndo(() => dict.updateSetting(name, prevSetting));
+                }
+            }
+            query.AddSideEffect("REMOVE " + dict + " " + name, () => dict.removeSetting(name));
+            return locally;
+        }
+
+        public static bool addSettingWithUndoCommit(SubQuery query, ISettingsDictionary dict, Func<string, Unifiable, bool> SideEffect, string name, Unifiable newValue)
+        {
+            bool locally = dict.containsLocalCalled(name);
+            if (UseUndoPush)
+            {
+                UndoStack.GetStackFor(query).pushValues(dict, name, null);
+            }
+            else
+            {
+                Unifiable prevSetting = dict.grabSetting(name);
+                bool res = SideEffect(name, newValue);
+                query.AddUndo(() =>
+                                  {
+                                      var now = dict.grabSetting(name);
+                                      if (now == newValue && now != prevSetting)
+                                      {
+                                          if (!locally)
+                                          {
+                                              dict.removeSetting(name);
+                                          }
+                                          else
+                                          {
+                                              if (locally) dict.addSetting(name, prevSetting);
+                                          }
+                                          if (!TextPatternUtils.IsNull(prevSetting))
+                                          {
+                                              dict.updateSetting(name, prevSetting);
+                                          }
+                                      }
+                                  });
+            }
+            query.AddSideEffect("ADD SETTING " + dict + " " + name + " " + newValue, () => SideEffect(name, newValue));
+            return !locally;
+        }
+
+        public static T WithUndoCommit<T>(SubQuery query, ISettingsDictionary dict, Func<T> SideEffect, string name, Unifiable newValue)
+        {
+            bool locally = dict.containsLocalCalled(name);
+            Unifiable prevSetting = dict.grabSetting(name);
+            T res = SideEffect();
+            query.AddUndo(() =>
+                              {
+                                  var now = dict.grabSetting(name);
+                                  if (now == newValue && now != prevSetting)
+                                  {
+                                      if (!locally)
+                                      {
+                                          dict.removeSetting(name);
+                                      }
+                                      else
+                                      {
+                                          if (locally) dict.addSetting(name, prevSetting);
+                                      }
+                                      if (!TextPatternUtils.IsNull(prevSetting))
+                                      {
+                                          dict.updateSetting(name, prevSetting);
+                                      }
+                                  }
+                              });
+            query.AddSideEffect("ADD SETTING " + dict + " " + name + " " + newValue, () => SideEffect());
+            return res;
+        }
+    }
     public class SettingsDictionaryEnumerator : IEnumerator<KeyValuePair<string, Unifiable>>
     {
         private readonly ISettingsDictionary Root;
@@ -2234,7 +2319,8 @@ namespace RTParser.Variables
         /// </returns>
         public KeyValuePair<string, Unifiable> Current
         {
-            get {
+            get
+            {
                 string key = keysE.Current;
                 return new KeyValuePair<string, Unifiable>(key, Root.grabSetting(key));
             }
@@ -2254,5 +2340,8 @@ namespace RTParser.Variables
         }
 
         #endregion
+
     }
 }
+
+
