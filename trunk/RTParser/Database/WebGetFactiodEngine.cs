@@ -39,6 +39,7 @@ namespace RTParser.Database
             foreach (ISearchResult re in Search(said, null))
             {
                 res += " " + re.ToString();
+                allResults.Add(re);
             }
             if (allResults.Count == 0) return tolang;// +"\n";
             return res.Trim();
@@ -137,6 +138,7 @@ namespace RTParser.Database
             string res =
                 HttpUtil.GetUrlData(
                     MakeSearchString(System.Web.HttpUtility.UrlEncode(System.Web.HttpUtility.UrlDecode(searchTerm1))));
+            res = HttpUtil.GetWellFormedHTML(res, null);
             try
             {
                 return ParseXmlResult(res,GetResultTags());
@@ -146,6 +148,38 @@ namespace RTParser.Database
                return res;
             }
         }
+
+        private readonly RenderOptions PASS1 =
+            new RenderOptions(
+                new List<string>()
+            //  {"li", "a", "div", "span", "ul", "p", "b", "font", "img"}
+                ,
+                new List<string>() { "script", "#comment", "like" , "style"});
+
+        private readonly RenderOptions PASS2 =
+            new RenderOptions(
+                new List<string>()
+                    {
+                        "li",
+                        "a",
+                        "div",
+                        "span",
+                        "ul",
+                        "p",
+                        "b",
+                        "i",
+                        "node",
+                        "font",
+                        "img",
+                        "tr",
+                        "td",
+                        "table",
+                        "KW",
+                        "notrim"
+                    }
+                ,
+                new List<string>() {"script", "#comment", "like"});
+    
         public virtual string ParseXmlResult(string res, string resFind)
         {
             int idxOf = res.IndexOf("?>");
@@ -159,8 +193,30 @@ namespace RTParser.Database
                 }
             }
             var nodes = StaticXMLUtils.getNode(res);
+            var body = StaticXMLUtils.FindNode("body", nodes, null, 10);
+            if (body != null) nodes = body;
             var text_result = StaticXMLUtils.FindNode(resFind, nodes, null, 10);
-            if (text_result != null) return StaticXMLUtils.InnerXmlText(text_result);
+            if (text_result == null) text_result = body;
+            if (text_result != null)
+            {
+                var res2 = StaticXMLUtils.VisibleRendering(text_result.ChildNodes, PASS1);
+                string s = res2.Split(new string[] {"<div id=\"ga_mainDebug"}, StringSplitOptions.RemoveEmptyEntries)[0];
+                // StaticXMLUtils.InnerXmlText(text_result);
+                //if (s.Contains("<"))
+                {
+                    try
+                    {
+                        var s2 =
+                            StaticXMLUtils.VisibleRendering(
+                                StaticXMLUtils.getNode("<node>" + HttpUtil.GetWellFormedHTML("<node>" + s + "</node>", null) + "</node>").ChildNodes, PASS2);
+                        if (!IsNullOrEmpty(s2)) s = s2;
+                    }
+                    catch
+                    {
+                    }
+                }
+                return s;
+            }
             TheBot.writeToLog(GetServiceName() + ": unused " + res);
             return null;
         }
