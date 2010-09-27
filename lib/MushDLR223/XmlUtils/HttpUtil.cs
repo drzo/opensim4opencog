@@ -6,7 +6,7 @@ using System.Xml;
 using System.Xml.XPath;
 using Sgml;
 
-namespace RTParser.Database
+namespace MushDLR223.Utilities
 {
     public static class HttpUtil
     {

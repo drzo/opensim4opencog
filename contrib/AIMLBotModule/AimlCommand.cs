@@ -128,7 +128,8 @@ namespace AIMLBotModule
                 WorldSystemModule.MyBot.writeToLog("REALWORLD AIMLTRACE! '" + joined + "' " + scored + " '" + useOut +
                                                    "'");
                 if (String.IsNullOrEmpty(useOut)) useOut = "Interesting.";
-                if (!useOut.Contains("mene value=")) useOut = useOut.Replace(" _", " ") + " mene value=" + (int) scored;
+                if (!useOut.Contains("menevalue="))
+                    useOut = string.Format("{0} (menevalue= {1:1} )", useOut.Replace(" _", " "), (int) scored);
                 return Success(useOut);
             }
         }

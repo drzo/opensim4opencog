@@ -911,7 +911,7 @@ namespace RTParser
             }
             else useOut = useOut.Replace("_", " ").Replace("  ", " ").Trim();
 
-            var stringPlit = useOut.Split(new[] { "mene value=" }, StringSplitOptions.RemoveEmptyEntries);
+            var stringPlit = useOut.Split(new[] { "(menevalue= " }, StringSplitOptions.RemoveEmptyEntries);
             string said = useOut;
             if (stringPlit.Length > 0)
             {
@@ -922,7 +922,7 @@ namespace RTParser
                                  : stringPlit[2].Split(new char[] { ' ', '\n' }, StringSplitOptions.RemoveEmptyEntries)[0];
             if (vstring == null || double.TryParse(vstring, out vscored))
             {
-                useOut = said + " mene value=" + res.Score * 1.4;
+                useOut = string.Format("{0} (menevalue= {1:1} )", said, res.Score * 1.4);
             }
             if (useNameInOutput)
             {
