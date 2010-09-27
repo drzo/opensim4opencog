@@ -763,7 +763,12 @@ namespace RTParser.Utils
         public static bool IsSilentTag(XmlNode node)
         {
             // if (true) return false;
-            if (SilentTags.Contains(node.Name.ToLower())) return true;
+            if (SilentTags.Contains(node.Name.ToLower()))
+            {
+                if (node.Attributes != null)
+                    if (node.Attributes.Count == 0)
+                        return true;
+            }
             if (IsEmptyText(node)) return true;
             if (TemplateSideRendering.flatten.Contains(node.Name))
             {

@@ -23,10 +23,12 @@ namespace RTParser.Database
             Score = score;
             Text = text;
         }
+
         public override string ToString()
         {
-            return string.Format("{0} mene value = {1:1}", Text, Score);
+            return string.Format("{0} (menevalue= {1:1} )", Text, Score);
         }
+
         virtual public string Text { get; set; }
         virtual public float Score { get; set; }
         virtual public object ID { get; set; }

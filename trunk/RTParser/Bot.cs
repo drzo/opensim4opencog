@@ -1784,7 +1784,7 @@ The AIMLbot program.
             Unifiable s = "The system tag should be doing '" + cmd + "' lang=" + langu;
             writeToLog(s.AsString());
             SystemExecHandler handler;
-            if (ExecuteHandlers.TryGetValue(langu, out handler))
+            if (SettingsDictionary.TryGetValue(ExecuteHandlers, langu, out handler))
             {
                 try
                 {

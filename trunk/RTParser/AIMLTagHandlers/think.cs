@@ -39,12 +39,9 @@ namespace RTParser.AIMLTagHandlers
         protected override Unifiable Format(Unifiable templateNodeInnerText)
         {
             CheckNode("think");
-            return Unifiable.Empty;
-        }
-        protected override Unifiable ProcessChange()
-        {
-            base.ProcessChange();
-            return Unifiable.Empty;
+            writeToLog("THOUGHT: '" + templateNodeInnerText + "'");
+            if (IsNullOrEmpty(templateNodeInnerText)) return Unifiable.Empty;
+            return GetAttribValue(templateNode, "retval", Unifiable.Empty);
         }
     }
 }

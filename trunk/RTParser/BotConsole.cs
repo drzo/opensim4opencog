@@ -773,9 +773,25 @@ namespace RTParser
             }
 
             bool uc = BotUserDirective(myUser, input, console);
-            if (showHelp || uc) return true;
+            if (uc)
+            {
+                return true;
+            }
+            if (showHelp)
+            {
+                string help = "Exec handlers: ";
+                lock (ExecuteHandlers)
+                {
+                    foreach (KeyValuePair<string, SystemExecHandler> systemExecHandler in ExecuteHandlers)
+                    {
+                        help += " @" + systemExecHandler.Key;
+                    }
+                }
+                console(help);
+                return true;
+            }
             SystemExecHandler handler;
-            if (ExecuteHandlers.TryGetValue(cmd, out handler))
+            if (SettingsDictionary.TryGetValue(ExecuteHandlers, cmd, out handler))
             {
                 console("" + handler(args, request));
                 return true;

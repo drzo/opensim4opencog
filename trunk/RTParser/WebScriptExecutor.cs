@@ -52,6 +52,8 @@ namespace RTParser.Web
             bool r = TheBot.BotDirective(myUser, s, sw.WriteLine);
             sw.Flush();
             string res = sw.ToString();
+            // for now legacy
+            res = res.Replace("menevalue=", "mene value=");
             if (outputDelegate != null) outputDelegate(res);
             WriteLine(res);
             return new CmdResult(res, r);

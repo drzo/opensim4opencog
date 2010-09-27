@@ -2155,6 +2155,27 @@ namespace RTParser.Variables
         {
             prefixProvider.AddChild(prefix, dict);
         }
+
+        public static bool TryGetValue<T>(IDictionary<string, T> dictionary, string search, out T value)
+        {            
+            lock (dictionary)
+            {
+                if (dictionary.TryGetValue(search, out value))
+                {
+                    return true;
+                }
+                value = default(T);
+                foreach(var kv in dictionary)
+                {
+                    if (StaticXMLUtils.SearchStringMatches(search,kv.Key))
+                    {
+                        value = kv.Value;
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
     }
 
     public class SettingsDictionaryEnumerator : IEnumerator<KeyValuePair<string, Unifiable>>

@@ -506,31 +506,21 @@ namespace RTParser.Utils
             bool templateNodeHasChildNodes = templateNode.HasChildNodes;
             // pre textualized ?
             var innerText = this.templateNodeInnerText;
-            if (!innerText.IsEmpty)
+            if (!templateNodeHasChildNodes && IsStarAtomically)
             {
-                if (!templateNodeHasChildNodes)
-                {
-                    writeToLog("!templateNodeHasChildNodes ?!");
-                }
-                // non atomic version of the node
-                return afterEachOrNull(innerText);
-            }
-            else
-            {
-                if (!templateNodeHasChildNodes)
-                {
-                    // atomic version of the node
-                    Unifiable templateResult = GetStarContent();
+                // atomic version of the node
+                Unifiable templateResult = GetStarContent();
 
-                    Unifiable a = afterEachOrNull(templateResult);
-                    if (saveResultsOnChildren)
-                    {
-                        templateNodeInnerText = a;
-                        return a;
-                    }
+                Unifiable a = afterEachOrNull(templateResult);
+                if (saveResultsOnChildren)
+                {
+                    templateNodeInnerText = a;
                     return a;
                 }
-                else
+                return a;
+            }
+
+            {
                 {
                     // needs some recursion
                     StringAppendableUnifiableImpl templateResult = Unifiable.CreateAppendable();

@@ -79,6 +79,13 @@ namespace MushDLR223.Utilities
             pattern = pattern.ToLower();
             name = name.ToLower();
             if (name == pattern) return true;
+            if (pattern.Contains(","))
+            {
+                foreach (var c in NamesStrings(name))
+                {
+                    if (SearchStringMatches(c, name)) return true;
+                }
+            }
             return !Char.IsLetterOrDigit(pattern[patternLength-1]) && Regex.IsMatch(name, "^" + pattern + "$");           
         }
 

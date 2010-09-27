@@ -120,10 +120,10 @@ namespace RTParser.Utils
         /// <returns></returns>
         protected override Unifiable Format(Unifiable text)
         {
-            if (!templateNodeInnerText.IsEmpty)
+            if (!text.IsEmpty)
             {
                 // non atomic version of the node
-                return RTParser.Normalize.ApplySubstitutions.Substitute(GetDictionary(), templateNodeInnerText);
+                return RTParser.Normalize.ApplySubstitutions.Substitute(GetDictionary(), text);
             }
             return Unifiable.Empty;
         }

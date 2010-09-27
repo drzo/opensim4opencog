@@ -54,7 +54,7 @@ namespace RTParser.AIMLTagHandlers
                     }
                     AddSideEffect("DBPUSH " + myText,
                                   () => TargetBot.LuceneIndexer.InsertFactiod(myText, templateNode, null));
-                    return myText;
+                    return "BEGINPUSH " + myText + " ENDPUSH";
                 }
                 catch (Exception e)
                 {
