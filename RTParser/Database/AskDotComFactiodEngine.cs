@@ -20,7 +20,7 @@ namespace RTParser.Database
 
         public override string GetServiceName()
         {
-            return "askdot";
+            return "askask";
         }
     }
 }

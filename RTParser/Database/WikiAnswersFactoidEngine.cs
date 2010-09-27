@@ -17,7 +17,7 @@
         }
         public override string GetServiceName()
         {
-            return "wanswer";
+            return "askanswer";
         }
     }
 }

@@ -131,7 +131,7 @@ namespace RTParser.Database
             SearchSources.Add(new TrueKnowledgeFactiodEngine(assertTo, TheBot));
             SearchSources.Add(new AskDotComFactiodEngine(assertTo, TheBot));
             SearchSources.Add(new WikiAnswersFactoidEngine(assertTo, TheBot));
-            TheBot.AddExcuteHandler("askluc", AskTextStringJustHere);
+            TheBot.AddExcuteHandler("asklucene", AskTextStringJustHere);
             TheBot.AddExcuteHandler("askall", AskTextStringAll);
             //WNUser2Cache();
 
@@ -817,7 +817,8 @@ namespace RTParser.Database
             }
             string res = callDbQueryStatic(SearchSources, searchTerm1, dbgLog, templateNode, threshold, out reliablity,
                                            userFilter, wordNetExpander);
-            if (OnFalure != null && string.IsNullOrEmpty(res)) return OnFalure(searchTerm1);
+            string failPrefix = RTPBot.GetAttribValue(templateNode, "failprefix", "").ToLower();
+            if (OnFalure != null && string.IsNullOrEmpty(res)) return OnFalure(failPrefix);
             return res;
         }
 
@@ -836,7 +837,7 @@ namespace RTParser.Database
 
                 string maxReplyStr = RTPBot.GetAttribValue(templateNode, "max", "1").ToLower();
                 int maxReply = Int16.Parse(maxReplyStr);
-                //string failPrefix = RTPBot.GetAttribValue(templateNode, "failprefix", "").ToLower();
+                
                 string thresholdStr = RTPBot.GetAttribValue(templateNode, "threshold", null);
                 if (!string.IsNullOrEmpty(thresholdStr))
                 {
