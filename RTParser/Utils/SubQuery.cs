@@ -17,8 +17,12 @@ namespace RTParser.Utils
     [Serializable]
     public class SubQuery : StaticAIMLUtils, ISettingsDictionary, IComparable<SubQuery>
     {
-        public static object TagHandlerLock = new object();
-        public static Dictionary<string, AIMLTagHandler> TagHandlers;
+        public
+            //static 
+            object TagHandlerLock = new object();
+        public
+            //static 
+            Dictionary<string, AIMLTagHandler> TagHandlers;
         private RTPBot ov_TargetBot;
         public TemplateInfo CurrentTemplate;
         public AIMLTagHandler LastTagHandler;
@@ -283,11 +287,18 @@ namespace RTParser.Utils
             return s;
         }
 
-        public static void PurgeTagHandlers()
+        public /*static*/ void PurgeTagHandlers()
         {
             lock (TagHandlerLock)
             {
-                if (TagHandlers != null) TagHandlers.Clear();
+                if (TagHandlers != null)
+                {
+                    foreach (KeyValuePair<string, AIMLTagHandler> aimlTagHandler in TagHandlers)
+                    {
+                        aimlTagHandler.Value.Dispose();
+                    }
+                    TagHandlers.Clear();
+                }
             }
         }
 
@@ -443,7 +454,8 @@ namespace RTParser.Utils
 
         public T ReduceStarAttribute<T>(IConvertible value) where T : IConvertible
         {
-            return StaticAIMLUtils.ReduceStar<T>(value, this, this);
+            bool found;
+            return StaticAIMLUtils.ReduceStar<T>(value, this, this, out found);
         }
 
         /// <summary>

@@ -39,7 +39,7 @@ namespace RTParser.AIMLTagHandlers
                     var varMSM = this.botActionMSM;
                     string payload = templateNodeInnerText.ToValue(query);
                     string payload2 = Recurse();
-                    string payload3 = InnerXml(templateNode);
+                    string payload3 = InnerXmlText(templateNode);
                     string machine = GetAttribValue("machine",  varMSM.lastDefMachine);
                     string myState = GetAttribValue("state", varMSM.lastDefState);
                     string myTopic = GetAttribValue("topic", null);

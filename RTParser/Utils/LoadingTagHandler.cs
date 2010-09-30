@@ -34,7 +34,7 @@ namespace RTParser.Utils
                 // recursively check
                 foreach (XmlNode childNode in templateNode.ChildNodes)
                 {
-                    Unifiable processChildNode = ProcessChildNode(childNode, ReadOnly, false);
+                    Unifiable processChildNode = ProcessChildNode(childNode);
                     SaveResultOnChild(childNode, processChildNode);
                     recursiveResult.Append(processChildNode);
                 }

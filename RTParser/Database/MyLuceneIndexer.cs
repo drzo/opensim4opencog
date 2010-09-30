@@ -241,6 +241,7 @@ namespace RTParser.Database
                 Field bodyField = new Field(_fieldName, text, Field.Store.YES, Field.Index.TOKENIZED);
                 document.Add(bodyField);
                 // Undisambiguated Hyponyms of nouns in text
+                expandWithWordNet = expandWithWordNet ?? NoWordNetExpander;
                 string wn_hypo = expandWithWordNet(text, true);
                 Field wnHypoField = new Field(HYPO_FIELD_NAME, wn_hypo, Field.Store.YES, Field.Index.TOKENIZED);
                 document.Add(wnHypoField);

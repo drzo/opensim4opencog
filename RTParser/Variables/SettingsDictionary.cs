@@ -546,7 +546,7 @@ namespace RTParser.Variables
             {
                 returnNameWhenSet = returnNameWhenSet.Trim();
                 if (returnNameWhenSet.Length == 0) returnNameWhenSet = "false";
-                else if (TextPatternUtils.IsNullOrEmpty(returnNameWhenSet)) returnNameWhenSet = "value";
+                else if (IsMissing(returnNameWhenSet)) returnNameWhenSet = "value";
                 else if (StaticXMLUtils.IsFalseOrNo(returnNameWhenSet)) returnNameWhenSet = "value";
                 else if (StaticXMLUtils.IsTrueOrYes(returnNameWhenSet)) returnNameWhenSet = "name";
             }
@@ -1133,6 +1133,12 @@ namespace RTParser.Variables
                 return null;
                 //return Unifiable.NULL;
             }
+            if (Unifiable.IsEMPTY(value))
+            {
+                // writeToLog("ERROR " + value + " NULL");
+                return "";
+                //return Unifiable.NULL;
+            }
             string v = value.AsString();
             if (v.Contains("<") || v.Contains("&"))
             {
@@ -1367,6 +1373,23 @@ namespace RTParser.Variables
             {
                 name = TransformName(name);
                 var setting = grabSetting0(name);
+                if (ReferenceEquals(setting,null))
+                {
+                    //   writeToLog("ERROR " + value + " NULL");
+                    return null;
+                }
+                if (setting == Unifiable.NULL)
+                {
+                    // writeToLog("ERROR " + value + " NULL");
+                    return null;
+                    //return Unifiable.NULL;
+                }
+                if (Unifiable.IsEMPTY(setting))
+                {
+                    // writeToLog("ERROR " + value + " NULL");
+                    return "";
+                    //return Unifiable.NULL;
+                }
                 setting = TransformValue(setting);
                 if (TextPatternUtils.IsEMPTY(setting))
                 {
@@ -1415,30 +1438,13 @@ namespace RTParser.Variables
                 else if (Fallbacks.Count > 0)
                 {
                     ISettingsDictionary firstFallBack = null;
-                    foreach (ISettingsDictionary list in Fallbacks)
-                    {
-                        if (!noGo.Add(list)) continue;
-                        firstFallBack = firstFallBack ?? list;
-                        bool prev = list.IsTraced;
-                        list.IsTraced = false;
-                        string v = grabSettingOrDefault(list, name, null);
-                        ;
-                        if (v == null) continue;
-
-                        if (makedvars.Contains(normalizedName))
-                        {
-                            SettingsLog("MASKED PARENT '" + name + "=NULL instead of" + str(v));
-                            list.IsTraced = prev;
-                            return null;
-                        }
-                        SettingsLog("RETURN FALLBACK '" + name + "'=" + str(v));
-                        list.IsTraced = prev;
-                        if (!TextPatternUtils.IsFalse(v)) return v;
-                    }
+                    bool returnIt;
+                    Unifiable u = CheckFallbacks(noGo, Fallbacks, name, normalizedName, ref firstFallBack, out returnIt);
+                    if (returnIt) return u;
                     if (firstFallBack != null)
                     {
                         string v0 = firstFallBack.grabSetting(name);
-                        if (!TextPatternUtils.IsNull(v0))
+                        if (!IsMissing(v0))
                         {
                             SettingsLog("RETURN FALLBACK0 '" + name + "'=" + str(v0));
                             return v0;
@@ -1451,6 +1457,40 @@ namespace RTParser.Variables
             }
         }
 
+        private Unifiable CheckFallbacks(HashSet<ISettingsDictionary> noGo, IEnumerable<ISettingsDictionary> fallbacks, string name, string normalizedName, ref ISettingsDictionary firstFallBack, out bool returnIt)
+        {
+            foreach (ISettingsDictionary list in fallbacks)
+            {
+                if (!noGo.Add(list)) continue;
+                firstFallBack = firstFallBack ?? list;
+                lock (list)
+                {
+                    bool prev = list.IsTraced;
+                    list.IsTraced = false;
+                    Unifiable v = grabSettingOrDefault(list, name, null);
+                    ;
+                    if (v == null) continue;
+
+                    if (makedvars.Contains(normalizedName))
+                    {
+                        SettingsLog("MASKED PARENT '" + name + "=NULL instead of" + str(v));
+                        list.IsTraced = prev;
+                        returnIt = true;
+                        return null;
+                    }
+                    SettingsLog("RETURN FALLBACK '" + name + "'=" + str(v));
+                    list.IsTraced = prev;
+                    if (!TextPatternUtils.IsFalse(v))
+                    {
+                        returnIt = true;
+                        return v;
+                    }
+                }
+            }
+            returnIt = false;
+            return null;
+        }
+
         private string grabSettingOrDefault(ISettingsDictionary dictionary, string name, string o)
         {
             if (dictionary.containsLocalCalled(name)) return dictionary.grabSetting(name);
@@ -1461,7 +1501,7 @@ namespace RTParser.Variables
 
         public Unifiable grabSetting0(string name)
         {
-            HashSet<ISettingsDictionary> noGo = new HashSet<ISettingsDictionary>() { this };
+            HashSet<ISettingsDictionary> noGo = new HashSet<ISettingsDictionary>() {this};
             foreach (ParentProvider overide in _overides)
             {
                 ISettingsDictionary dict = overide();
@@ -1479,14 +1519,14 @@ namespace RTParser.Variables
                 if (containsLocalCalled0(name))
                 {
                     Unifiable v = localValue(name, normalizedName);
-                    if (TextPatternUtils.IsNull(v))
+                    if (IsMissing(v))
                     {
                         foreach (var setname in GetSettingsAliases(name))
                         {
                             if (containsLocalCalled0(name))
                             {
                                 var tsetting = localValue(setname, setname);
-                                if (!TextPatternUtils.IsNull(tsetting))
+                                if (!IsMissing(tsetting))
                                     return tsetting;
                             }
                         }
@@ -1497,39 +1537,14 @@ namespace RTParser.Variables
                 if (Fallbacks.Count > 0)
                 {
                     ISettingsDictionary firstFallBack = null;
-                    foreach (var list in Fallbacks)
-                    {
-                        if (!noGo.Add(list)) continue;
-                        if (list is User)
-                        {
-                            User use = (User)list;
-                            if (!noGo.Add(use.Predicates)) continue;
-                        }
-                        firstFallBack = firstFallBack ?? list;
-                        bool prev = list.IsTraced;
-                        list.IsTraced = false;
-                        if (list.containsSettingCalled(name))
-                        {
-                            Unifiable v = list.grabSetting(name);
-                            if (makedvars.Contains(normalizedName))
-                            {
-                                SettingsLog("MASKED PARENT '" + name + "=NULL instead of" + str(v));
-                                list.IsTraced = prev;
-                                return null;
-                            }
-                            SettingsLog("RETURN FALLBACK '" + name + "'=" + str(v));
-                            if (v != null && !TextPatternUtils.IsFalse(v))
-                            {
-                                list.IsTraced = prev;
-                                return v;
-                            }
-                        }
-                        list.IsTraced = prev;
-                    }
+
+                    bool returnIt;
+                    Unifiable u = CheckFallbacks(noGo, Fallbacks, name, normalizedName, ref firstFallBack, out returnIt);
+                    if (returnIt) return u;
                     if (firstFallBack != null)
                     {
                         var v0 = firstFallBack.grabSetting(name);
-                        if (!TextPatternUtils.IsNull(v0))
+                        if (!IsMissing(v0))
                         {
                             SettingsLog("RETURN FALLBACK0 '" + name + "'=" + str(v0));
                             return v0;
@@ -1539,6 +1554,11 @@ namespace RTParser.Variables
                 SettingsLog("MISSING '" + name + "'");
                 return Unifiable.NULL;
             }
+        }
+
+        public static bool IsMissing(Unifiable tsetting)
+        {
+            return TextPatternUtils.IsMissing(tsetting);
         }
 
         private Unifiable localValue(string name, string normalizedName)
@@ -1633,7 +1653,7 @@ namespace RTParser.Variables
         public bool containsSettingCalled(string name)
         {
             var value = grabSettingNoDebug(name);
-            return !TextPatternUtils.IsNullOrEmpty(value);
+            return !IsMissing(value);
         }
 
         /// <summary>
@@ -1730,7 +1750,7 @@ namespace RTParser.Variables
         public bool TryGetValue(string key, out Unifiable value)
         {
             value = grabSetting(key);
-            return !TextPatternUtils.IsNull(value);
+            return !IsMissing(value);
         }
 
         public Unifiable this[string name]
@@ -1900,14 +1920,14 @@ namespace RTParser.Variables
             foreach (var provider in ProvidersFrom(providers, dictionary))
             {
                 var v = provider.grabSetting(name);
-                if (!TextPatternUtils.IsNull(v)) return v;
+                if (!IsMissing(v)) return v;
             }
             if (name.Contains(","))
             {
                 foreach (string name0 in StaticXMLUtils.NamesStrings(name))
                 {
                     var un = WithProviders(dictionary, name0, props, out realName, providers, Else);
-                    if (!TextPatternUtils.IsNull(un))
+                    if (!IsMissing(un))
                     {
                         return un;
                     }
@@ -2098,14 +2118,14 @@ namespace RTParser.Variables
         {
             realName = name;
             var un = dictionary.grabSetting(name);
-            if (TextPatternUtils.IsNull(un))
+            if (IsMissing(un))
             {
                 if (name.Contains(","))
                 {
                     foreach (string name0 in StaticXMLUtils.NamesStrings(name))
                     {
                         un = grabSettingDefaultDict(dictionary, name0, out realName);
-                        if (!TextPatternUtils.IsNull(un))
+                        if (!IsMissing(un))
                         {
                             return un;
                         }
@@ -2143,7 +2163,7 @@ namespace RTParser.Variables
                     {
                         un = dictionary.grabSetting(realName0);
                     }
-                    if (!TextPatternUtils.IsNull(un))
+                    if (!IsMissing(un))
                     {
                         realName = realName0;
                         return un;
@@ -2224,7 +2244,7 @@ namespace RTParser.Variables
                                           {
                                               if (locally) dict.addSetting(name, prevSetting);
                                           }
-                                          if (!TextPatternUtils.IsNull(prevSetting))
+                                          if (!IsMissing(prevSetting))
                                           {
                                               dict.updateSetting(name, prevSetting);
                                           }
@@ -2253,7 +2273,7 @@ namespace RTParser.Variables
                                       {
                                           if (locally) dict.addSetting(name, prevSetting);
                                       }
-                                      if (!TextPatternUtils.IsNull(prevSetting))
+                                      if (!IsMissing(prevSetting))
                                       {
                                           dict.updateSetting(name, prevSetting);
                                       }
@@ -2261,6 +2281,26 @@ namespace RTParser.Variables
                               });
             query.AddSideEffect("ADD SETTING " + dict + " " + name + " " + newValue, () => SideEffect());
             return res;
+        }
+
+        public bool DoSettingsCommand(string input, OutputDelegate console)
+        {
+            if(input=="")
+            {
+                console(ToDebugString());
+                return true;
+            }
+            input = input + " ";
+            int firstWhite = input.IndexOf(' ');
+            string var = input.Substring(0, firstWhite).Trim();
+            string value = input.Substring(firstWhite + 1).Trim();
+            if (value == "")
+            {
+                console(var + " = " + grabSettingNoDebug(var));
+                return true;
+            }
+            console("addSetting: " + addSetting(var, value));
+            return true;
         }
     }
     public class SettingsDictionaryEnumerator : IEnumerator<KeyValuePair<string, Unifiable>>

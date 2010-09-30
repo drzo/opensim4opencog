@@ -96,6 +96,9 @@ namespace RTParser.AIMLTagHandlers
                 if (IsNull(retVal))
                 {
                     writeToLogWarn("ERROR null stuff in SET ", retVal);                    
+                } else if (IsMissing(retVal))
+                {
+                    writeToLogWarn("ERROR null stuff in SET ", retVal);
                 }
                 return retVal;
             }

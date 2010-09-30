@@ -32,6 +32,14 @@ namespace RTParser.AIMLTagHandlers
         public override float CanUnify(Unifiable with)
         {
 
+            string re = ComputeInner();
+            var matcher = new Regex(re);
+            if (matcher.IsMatch(with.ToValue(query))) return AND_TRUE;
+            return AND_FALSE;
+        }
+
+        public string ComputeInner()
+        {
             string re = "";
             if (templateNode.NodeType==XmlNodeType.Text)
             {
@@ -47,21 +55,17 @@ namespace RTParser.AIMLTagHandlers
             }
             else
             {
-                templateNodeInnerText = Recurse();
+                re = Recurse();
+                templateNodeInnerText = re;
             }
-            var matcher = new Regex(re);
-            if (matcher.IsMatch(with.ToValue(query))) return AND_TRUE;
-            return AND_FALSE;
+            return re;
         }
 
         protected override Unifiable ProcessChange()
         {
-            return templateNodeInnerText;
-        }
-
-        public override Unifiable CompleteProcess()
-        {
-            return base.CompleteProcess();
+            var v1 = ComputeInner();
+            var v2 = templateNodeInnerText;
+            return v2;
         }
     }
 }

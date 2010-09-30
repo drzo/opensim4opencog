@@ -203,6 +203,11 @@ namespace RTParser
         /// </summary>
         public SettingsDictionary AllUserPreds;
 
+        /// <summary>
+        /// A dictionary of all settings from anyone .. just a fallback
+        /// </summary>
+        public SettingsDictionary EnginePreds;
+
 
         /// <summary>
         /// Holds information about the available custom tag handling classes (if loaded)
@@ -770,6 +775,8 @@ namespace RTParser
                 RegisterDictionary("heard", HeardPredicates);
                 AllUserPreds = new SettingsDictionary("bot.alluserpred", this, null);
                 RegisterDictionary("predicates", AllUserPreds);
+                EnginePreds = AllUserPreds;
+                RegisterDictionary("enginepreds", EnginePreds);
 
                 AllUserPreds.InsertMetaProvider(GetRelationMetaProps);
 
@@ -1727,8 +1734,7 @@ The AIMLbot program.
 
         private object EvalAIMLHandler(string cmd, Request user)
         {
-            string evalTemplate = "<template>" + cmd + "</template>";
-            XmlNode node = getNode(evalTemplate);
+            XmlNode node = StaticAIMLUtils.getTemplateNode(cmd);
             LineInfoElementImpl.unsetReadonly(node);
             if (Loader == null)
             {

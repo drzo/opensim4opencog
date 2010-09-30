@@ -78,22 +78,16 @@ namespace RTParser.AIMLTagHandlers
             return attach;
         }
 
-        private void AppendEvalation(XmlNode attach, XmlNode childNode)
+        void AppendEvalation(XmlNode attach, XmlNode childNode)
         {
             {
                 {
                     {
-                        string ts = "<template>" + InnerXml(childNode) + "</template>";
+                        string ts = "<template>" + ToXmlValue(childNode) + "</template>";
                         var tchiuld = getNode(ts, childNode);
                         string ost = tchiuld.OuterXml;
                         LineInfoElementImpl.unsetReadonly(tchiuld);
-                        bool success;
-                        Unifiable processChildNode = ProcessChildNode(tchiuld, ReadOnly, false, out success);
-                        if (!success)
-                        {
-                            writeToLogWarn("EVALING CHILD " + tchiuld + " " + processChildNode);
-                            processChildNode = ProcessChildNode(tchiuld, ReadOnly, false, out success);
-                        }
+                        Unifiable processChildNode = ProcessChildNode(tchiuld);
                         SaveResultOnChild(childNode, processChildNode);
                         var readNode = getNode("<node>" + Unifiable.InnerXmlText(childNode) + "</node>", childNode);
                         LineInfoElementImpl.unsetReadonly(readNode);
@@ -144,7 +138,7 @@ namespace RTParser.AIMLTagHandlers
                     loaderOptions = request.LoadOptions;
                     request.LoadingFrom = documentInfo;
                     loaderOptions.CtxGraph = request.Graph;
-                    string innerXML = InnerXml(templateNode);
+                    string innerXML = InnerXmlText(templateNode);
 
 
                     if (!string.IsNullOrEmpty(command))

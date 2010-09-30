@@ -16,9 +16,8 @@ namespace RTParser.Utils
 {
     public class StaticAIMLUtils : TextPatternUtils
     {
-        public static readonly Func<Unifiable> EmptyFunct = (() => Unifiable.Empty);
-
         public static readonly Func<string> NullStringFunct = (() => null);
+        public static readonly Func<Unifiable> NullUnifyFunct = (() => null /*Unifiable.NULL*/);
 
         public static readonly ICollection<string> PushableAttributes = new HashSet<string>
                                                                             {
@@ -150,14 +149,21 @@ namespace RTParser.Utils
 
         public static string ToTemplateXML(XmlNode templateNode)
         {
-            string requestName = templateNode.OuterXml;//
+            string requestName = ToXmlValue(templateNode);
             if (templateNode.NodeType != XmlNodeType.Element)
             {
-                string sentence = VisibleRendering(getNode("<template>" + requestName + "</template>").ChildNodes,
+                string sentence = VisibleRendering(StaticAIMLUtils.getTemplateNode(requestName).ChildNodes,
                                                    PatternSideRendering);
                 requestName = "<template>" + sentence + "</template>";
             }
             return requestName;
+        }
+
+        public static XmlNode getTemplateNode(string sentence)
+        {
+            var vv = getNode("<template>" + sentence + "</template>");
+            DLRConsole.DepthCheck();
+            return vv;
         }
 
         public static R FromLoaderOper<R>(Func<R> action, GraphMaster gm)
@@ -213,11 +219,12 @@ namespace RTParser.Utils
 
                 foreach (XmlAttribute node in collection)
                 {
+                    bool found;
                     switch (node.Name.ToLower())
                     {
                         case "graph":
-                            {
-                                string graphName = ReduceStar<string>(node.Value, query, dict);
+                            {                                
+                                string graphName = ReduceStar<string>(node.Value, query, dict, out found);
                                 if (graphName != null)
                                 {
                                     GraphMaster innerGraph = request.TargetBot.GetGraph(graphName, oldGraph);
@@ -245,7 +252,7 @@ namespace RTParser.Utils
                             break;
                         case "topic":
                             {
-                                newTopic = ReduceStar<Unifiable>(node.Value, query, dict);
+                                newTopic = ReduceStar<Unifiable>(node.Value, query, dict, out found);
                                 if (newTopic != null)
                                 {
                                     if (newTopic.IsEmpty) newTopic = "Nothing";
@@ -256,7 +263,7 @@ namespace RTParser.Utils
                             break;
                         case "that":
                             {
-                                newThat = ReduceStar<Unifiable>(node.Value, query, dict);
+                                newThat = ReduceStar<Unifiable>(node.Value, query, dict, out found);
                                 if (newThat != null)
                                 {
                                     if (newThat.IsEmpty) newThat = "Nothing";
@@ -308,7 +315,7 @@ namespace RTParser.Utils
                                     n = n.Substring(5);
                                 }
 
-                                Unifiable v = ReduceStar<Unifiable>(node.Value, query, dict);
+                                Unifiable v = ReduceStar<Unifiable>(node.Value, query, dict, out found);
                                 UndoStack.FindUndoAll(thiz);
                                 savedValues = savedValues ?? UndoStack.GetStackFor(thiz);
                                 //savedValues = savedValues ?? query.GetFreshUndoStack();
@@ -493,121 +500,193 @@ namespace RTParser.Utils
         }
         */
 
-        public static T ReduceStar<T>(IConvertible name, SubQuery query, ISettingsDictionary dict)
+        public static T ReduceStar<T>(IConvertible name, SubQuery query, ISettingsDictionary dict, out bool rfound)
             where T : IConvertible
         {
             var nameSplit = name.ToString().Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries);
             foreach (string nameS in nameSplit)
-            {
-                Unifiable r = AltStar(nameS, query, dict);
-                if (!IsNullOrEmpty(r))
+            {                
+                Unifiable r = AltStar(nameS, query, dict, out rfound);
+                if (!IsNullOrEmpty(r) || rfound)
                 {
                     PASSTHRU<T>(r);
                 }
                 continue;
             }
+            rfound = false;
             return PASSTHRU<T>(name);
         }
 
-        public static Unifiable AltStar(string name, SubQuery query, ISettingsDictionary dict)
+        public static Unifiable AltStar(string name, SubQuery query, ISettingsDictionary dict, out bool rfound)
         {
             try
             {
+                if (name.Contains(","))
+                {
+                    foreach (string subname in NamesStrings(name))
+                    {
+                        var val = AltStar(name, query, dict, out rfound);
+                        if (rfound)
+                        {
+                            rfound = true;
+                            return val;
+                        }
+                    }
+                }
                 if (name.StartsWith("star_"))
                 {
-                    return GetDictData(query.InputStar, name, 5);
+                    return GetDictData(query.InputStar, name, 5, out rfound);
                 }
                 else if (name.StartsWith("inputstar_"))
                 {
-                    return GetDictData(query.InputStar, name, 10);
+                    return GetDictData(query.InputStar, name, 10, out rfound);
                 }
                 else if (name.StartsWith("input_"))
                 {
-                    return GetDictData(query.InputStar, name, 6);
+                    return GetDictData(query.InputStar, name, 6, out rfound);
                 }
                 else if (name.StartsWith("thatstar_"))
                 {
-                    return GetDictData(query.ThatStar, name, 9);
+                    return GetDictData(query.ThatStar, name, 9, out rfound);
                 }
                 else if (name.StartsWith("that_"))
                 {
-                    return GetDictData(query.ThatStar, name, 5);
+                    return GetDictData(query.ThatStar, name, 5, out rfound);
                 }
                 else if (name.StartsWith("topicstar_"))
                 {
-                    return GetDictData(query.TopicStar, name, 10);
+                    return GetDictData(query.TopicStar, name, 10, out rfound);
                 }
                 else if (name.StartsWith("topic_"))
                 {
-                    return GetDictData(query.TopicStar, name, 6);
+                    return GetDictData(query.TopicStar, name, 6, out rfound);
                 }
                 else if (name.StartsWith("guardstar_"))
                 {
-                    return GetDictData(query.GuardStar, name, 10);
+                    return GetDictData(query.GuardStar, name, 10, out rfound);
                 }
                 else if (name.StartsWith("guard_"))
                 {
-                    return GetDictData(query.GuardStar, name, 6);
+                    return GetDictData(query.GuardStar, name, 6, out rfound);
                 }
                 else if (name.StartsWith("@"))
                 {
                     Unifiable value = query.Request.TargetBot.SystemExecute(name, null, query.Request);
+                    rfound = true;
                     if (!IsNullOrEmpty(value)) return value;
+                    return value;
                 }
                 else if (name.StartsWith("%dictvar_"))
                 {
-                    Unifiable value = value = GetValue(query, dict, name.Substring(8));
-                    if (!IsNullOrEmpty(value)) return value;
+                    Unifiable value = value = GetValue(query, dict, name.Substring(8), out rfound);
+                    if (rfound) return value;
+                    return value;
                 }
-                else if (name.StartsWith("%"))
+                else
                 {
-                    Unifiable value = null;
-                    string str = name.Substring(1);
-                    if (str.StartsWith("bot."))
+                    if (name.StartsWith("%") || name.StartsWith("$"))
                     {
-                        SettingsDictionary dict2 = query.Request.TargetBot.GlobalSettings;
-                        str = str.Substring(4);
-                        value = GetValue(query, dict2, str);
-                        if (!IsNullOrEmpty(value)) return value;
+                        string str = name.Substring(1);
+                        var vv = ResolveVariableValue(str, query, dict, out rfound);
+                        if (rfound)
+                        {
+                            return vv;
+                        }
+                        return vv;
                     }
-                    else if (str.StartsWith("user."))
+                    else if (name.Contains("."))
                     {
-                        ISettingsDictionary dict2 = query.Request.Requester;
-                        str = str.Substring(5);
-                        value = GetValue(query, dict2, str);
-                        if (!IsNullOrEmpty(value)) return value;
+                        var vv = ResolveVariableValue(name, query, dict, out rfound);
+                        if (rfound)
+                        {
+                            return vv;
+                        }
+                        return vv;
                     }
-                    if (dict != null)
-                    {
-                        value = GetValue(query, dict, str);
-                        if (!IsNullOrEmpty(value)) return value;
-                    }
+                    rfound = false;
+                    return name;
                 }
             }
             catch (Exception e)
             {
                 RTPBot.writeDebugLine("" + e);
+                rfound = false;
+                return null;
             }
+        }
+
+        private static Unifiable ResolveVariableValue(string str, SubQuery query, ISettingsDictionary dict, out bool found)
+        {
+            Unifiable value = null;
+            bool rfound;
+            if (str.Contains("{"))
+            {
+                str = str.Replace("{", "").Replace("}", "");
+            }
+            if (str.StartsWith("query."))
+            {
+                ISettingsDictionary dict2 = query;
+                str = str.Substring(4);
+                value = GetValue(query, dict2, str, out rfound);
+                if (!IsNullOrEmpty(value))
+                {
+                    found = true;
+                    return value;
+                }
+            }
+            if (str.StartsWith("bot."))
+            {
+                ISettingsDictionary dict2 = query.Request.Responder;
+                str = str.Substring(4);
+                value = GetValue(query, dict2, str, out found);
+                if (!IsNullOrEmpty(value))
+                {
+                    found = true;
+                    return value;
+                }
+            }
+            else if (str.StartsWith("user."))
+            {
+                ISettingsDictionary dict2 = query.Request.Requester;
+                str = str.Substring(5);
+                value = GetValue(query, dict2, str, out found);
+                if (!IsNullOrEmpty(value))
+                {
+                    found = true;
+                    return value;
+                }
+            }
+            if (dict != null)
+            {
+                value = GetValue(query, dict, str, out found);
+                if (!IsNullOrEmpty(value))
+                {
+                    found = true;
+                    return value;
+                }
+            }
+            found = false;
             return null;
         }
 
-        private static Unifiable GetValue(SubQuery query, ISettingsDictionary dict2, string str)
+        private static Unifiable GetValue(SubQuery query, ISettingsDictionary dict2, string str, out bool rfound)
         {
             Unifiable value;
             value = dict2.grabSetting(str);
+            rfound = !IsNull(value);
             return value;
         }
 
-        private static Unifiable GetDictData<T>(IList<T> unifiables, string name, int startChars) where T : IConvertible
+        private static Unifiable GetDictData<T>(IList<T> unifiables, string name, int startChars, out bool found) where T : IConvertible
         {
-            T u = GetDictData0<T>(unifiables, name, startChars);
+            T u = GetDictData0<T>(unifiables, name, startChars, out found);
             string toup = u.ToString(FormatProvider).ToUpper();
             if (string.IsNullOrEmpty(toup)) return PASSTHRU<Unifiable>(u);
             if (char.IsLetterOrDigit(toup[0])) return PASSTHRU<Unifiable>("" + u);
             return PASSTHRU<Unifiable>(u);
         }
 
-        private static T GetDictData0<T>(IList<T> unifiables, string name, int startChars) where T : IConvertible
+        private static T GetDictData0<T>(IList<T> unifiables, string name, int startChars, out bool found) where T : IConvertible
         {
             string s = name.Substring(startChars);
 
@@ -618,6 +697,7 @@ namespace RTParser.Utils
                 {
                     result.Append(u.ToString());
                 }
+                found = true;
                 return PASSTHRU<T>(result);
             }
 
@@ -634,20 +714,27 @@ namespace RTParser.Utils
 
             if (i == 0)
             {
-                if (uc == 0) return PASSTHRU<T>("");
+                if (uc == 0)
+                {
+                    found = true;
+                    return PASSTHRU<T>("");
+                }
             }
             int ii = i - 1;
             if (fromend) ii = uc - i;
             if (uc == 0)
             {
                 RTPBot.writeDebugLine(" !ERROR -star underflow! " + i + " in " + name);
+                found = false;
                 return PASSTHRU<T>(String.Empty);
             }
             if (ii >= uc || ii < 0)
             {
                 RTPBot.writeDebugLine(" !ERROR -star badindexed 0 < " + i + " < " + uc + " in " + name);
+                found = false;
                 return unifiables[ii];
             }
+            found = true;
             return unifiables[ii];
         }
 
@@ -673,7 +760,11 @@ namespace RTParser.Utils
             if (requiredToUpper == "OM" || IsNullOrEmpty(required) || requiredToUpper == "$MISSING")
             {
                 return IsNullOrEmpty(actualValue) || actualValue == "OM";
-            }            
+            }
+            if (IsMissing(required))
+            {
+                return IsMissing(actualValue);
+            }
             if (IsNull(actualValue))
             {
                 return IsNullOrEmpty(required);
@@ -683,7 +774,8 @@ namespace RTParser.Utils
             {
                 return true;
             }
-            string requiredAsStringReplaceReplace = required.AsString().Replace(" ", "\\s").Replace("*", "[\\sA-Z0-9]+");
+            string requiredAsStringReplaceReplace = required.AsString().Replace(" ", "\\s")
+                .Replace("*", "[\\sA-Z0-9]+").Replace("_", "[A-Z0-9]+");
             Regex matcher = new Regex("^" + requiredAsStringReplaceReplace + "$",
                                       RegexOptions.IgnoreCase);
             if (matcher.IsMatch(actualValue))
@@ -808,7 +900,7 @@ namespace RTParser.Utils
 
         internal static string ForOutputTemplate(string sentenceIn)
         {
-            return VisibleRendering(getNode("<template>" + sentenceIn + "</template>").ChildNodes, TemplateSideRendering);
+            return VisibleRendering(StaticAIMLUtils.getTemplateNode(sentenceIn).ChildNodes, TemplateSideRendering);
         }
 
         internal static string ForInputTemplate(string sentenceIn)

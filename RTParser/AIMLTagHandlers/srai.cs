@@ -92,8 +92,25 @@ namespace RTParser.AIMLTagHandlers
                         writeToLog("WARNING Depth pretty deep " + templateNode + " returning empty");
                         if (!request.SuspendSearchLimits) return RecurseResult;
                     }
-                    RecurseResult = UseOriginalProcess ? (Unifiable)OriginalProcessChange() : ProcessChange0();
-                    templateNode.InnerXml = MushDLR223.Utilities.StaticXMLUtils.XmlValueSettable(RecurseResult);
+                    var vv = UseOriginalProcess ? (Unifiable)OriginalProcessChange() : ProcessChange0();
+                    if (!IsNullOrEmpty(vv))
+                    {
+                        RecurseResult = vv;
+                        templateNode.InnerXml = MushDLR223.Utilities.StaticXMLUtils.XmlValueSettable(vv);
+                        return vv;
+                    }
+                    if (!IsNull(vv))
+                    {
+                        if (Unifiable.IsEMPTY(vv))
+                        {
+                            vv = GetTemplateNodeInnerText();
+                            return vv;
+                        }
+                        RecurseResult = vv;
+                        templateNode.InnerXml = MushDLR223.Utilities.StaticXMLUtils.XmlValueSettable(vv);
+                        return vv;
+                    }
+                    return vv;
                 }
                 catch (ChatSignal ex)
                 {
@@ -110,27 +127,36 @@ namespace RTParser.AIMLTagHandlers
             }
             return RecurseResult;
         }
+        
         public override Unifiable CompleteProcess()
         {
+            if (RecurseResultValid) return RecurseResult;
             var sraiResult = ProcessChange();
             if (IsNull(sraiResult))
             {
                 ResetValues(true);
+                sraiResult = base.CompleteProcess();
+                if (RecurseResultValid)
+                {
+                    return RecurseResult;
+                }
                 writeToLogWarn("srai.CompleteProcess() == NULL!");
-                return ProcessChange();
+                return sraiResult;
             }
             return sraiResult;
            // return base.CompleteProcess();
         }
         public override string Transform()
         {
-            return base.Transform();
-        }
+            if (RecurseResultValid) return RecurseResult;
+            var vv = ProcessChange0();
+            return vv;
+        }/*
         public override Unifiable RecurseProcess()
         {
             return ProcessChange();
         }
-
+        */
         protected Unifiable ProcessChange0()
         {
             string s;
@@ -147,6 +173,23 @@ namespace RTParser.AIMLTagHandlers
                         return Unifiable.Empty;
                     }
                     var vv = ProcessChangeSrai(request, query, templateNodeInnerValue, templateNode, initialString, writeToLog);
+                    if (!Unifiable.IsNullOrEmpty(vv))
+                    {
+                        return vv;
+                    }
+                    if (Unifiable.IsNull(vv))
+                    {
+                        writeToLogWarn("NULL SRAI!?!");
+                    }
+                    else
+                    {
+                        return vv; // Empty
+                    }
+                    if (Unifiable.IsNull(vv))
+                    {
+                        vv = GetTemplateNodeInnerText();
+                        return vv;
+                    }
                     return vv;
                 }
                 catch (ChatSignal ex)

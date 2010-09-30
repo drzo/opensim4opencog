@@ -28,11 +28,16 @@ namespace RTParser.Utils
         public string LineNumberTextInfo()
         {
             string s = LineTextInfo() + " " + LineNumberInfo();
-            if (!s.Contains(initialString))
+            string ss = s;
+            if (ss.StartsWith(isValueSetStart))
             {
-                return "-WAS- '" + initialString + "' -NOW- " + s;
+                ss = s + " -FROM- " + templateNode.OuterXml;
             }
-            return s;
+            if (!s.Replace(" /","/").Contains(initialString))
+            {
+                return "-WAS- '" + initialString + "' -NOW- " + ss;
+            }
+            return ss;
         }
 
         public string LineTextInfo()

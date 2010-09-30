@@ -1,8 +1,11 @@
 using System;
+using System.Collections;
 using System.Xml;
 using System.Text;
 using System.Text.RegularExpressions;
+using RTParser.Utils;
 using RTParser.Variables;
+using System.Collections.Generic;
 
 namespace RTParser.AIMLTagHandlers
 {
@@ -113,20 +116,29 @@ namespace RTParser.AIMLTagHandlers
         {
             this.isRecursive = false;
         }
-
-        public override bool QueryHasFailed
+        protected int maxTrueConditions = 1;
+        protected int currentTrueConditions = 0;
+        protected override Unifiable ProcessChange()
         {
-            get
-            {                
-                return false;
-            }
-            set
+            if (RecurseResultValid)
             {
-                writeToLog("QueryHasFailed ?= " + value);
+                return RecurseResult;
             }
+            int maxConditions = GetAttribValue<int>(templateNode, "count", 1);
+            this.maxTrueConditions = maxConditions;
+            var nodes = SelectNodes(templateNode.ChildNodes);
+            currentTrueConditions = 0;
+            var vv = NodesToOutput(nodes, (node) => (currentTrueConditions++ < maxTrueConditions));
+            if (!IsNullOrEmpty(vv))
+            {
+                RecurseResult = vv;
+                return vv;
+            }
+            return vv;
         }
 
-        protected override Unifiable ProcessChange()
+        /*
+        protected override XmlNode SelectNode()
         {
             if (CheckNode("condition"))
             {
@@ -134,17 +146,17 @@ namespace RTParser.AIMLTagHandlers
                 int tncount = AttributesCount(templateNode, "name,value");
                 if (tncount == 2) // block
                 {
-                    Unifiable name = GetAttribValue("name", null);
-                    Unifiable value = GetAttribValue("value", null);
-                    if ((name != null) & (value != null))
+                    Unifiable outerName = GetAttribValue("name", null);
+                    Unifiable outerValue = GetAttribValue("value", null);
+                    if ((outerName != null) & (outerValue != null))
                     {
-                        Unifiable actualValue = this.query.grabSetting(name);
-                        if (IsPredMatch(value, actualValue, query))
+                        Unifiable actualValue = this.query.grabSetting(outerName);
+                        if (IsPredMatch(outerValue, actualValue, query))
                         {
                             Succeed();
-                            return Unifiable.InnerXmlText(templateNode);
+                            //return Unifiable.InnerXmlText(templateNode);
                         }
-                        return Unifiable.Empty;
+                        //  return Unifiable.Empty;
                     }
                     UnknownCondition();
                 }
@@ -173,16 +185,15 @@ namespace RTParser.AIMLTagHandlers
                                         Unifiable value = GetAttribValue<Unifiable>(childLINode, "value", EmptyFunct, ReduceStarAttribute);
                                         if (IsPredMatch(value, actualValue, query))
                                         {
-                                            Succeed();
-                                            return Unifiable.InnerXmlText(childLINode);
+                                            maxTrueConditions++;
+                                            return childLINode;
                                         }
                                         continue;
                                     }
                                 }
                                 else if (cac == 0)
                                 {
-                                    Succeed();
-                                    return Unifiable.InnerXmlText(childLINode);
+                                    return childLINode;
                                 }
                                 UnknownCondition();
                             }
@@ -207,8 +218,7 @@ namespace RTParser.AIMLTagHandlers
                                     Unifiable actualValue = GetActualValue(childLINode, name, childLINode.Name, out succeed, query);
                                     if (IsPredMatch(value, actualValue, query))
                                     {
-                                        Succeed();
-                                        return Unifiable.InnerXmlText(childLINode);
+                                        return childLINode;
                                     }
                                 }
                             }
@@ -217,25 +227,20 @@ namespace RTParser.AIMLTagHandlers
                                 string name = GetAttribValue(childLINode, "name", EmptyFunct, ReduceStarAttribute);
                                 if ((name.Length > 0) && this.query.containsSettingCalled(name))
                                 {
-                                    Succeed();
-                                    return Unifiable.InnerXmlText(childLINode);
+                                    return childLINode;
                                 }
                             }
                             else if (cac == 0)
                             {
-                                Succeed();
-                                return Unifiable.InnerXmlText(childLINode);
+                                return childLINode;
                             }
                         }
                     }
                 }
             }
-            return Unifiable.Empty;
+            return null;
         }
-
-        public void UnknownCondition()
-        {
-            writeToLogWarn("ERROR Unknown conditions " + LineNumberTextInfo());
-        }
+        */
+       
     }
 }

@@ -32,27 +32,38 @@ namespace RTParser.AIMLTagHandlers
             this.isRecursive = false;
         }
 
-        protected override Unifiable ProcessChange()
+
+        protected override Unifiable ProcessChange()     
         {
+            if (RecurseResultValid)
+            {
+                return RecurseResult;
+            }
+            int maxConditions = GetAttribValue<int>(templateNode, "count", 1);
+            var nodes = SelectNodes(templateNode.ChildNodes);
             if (this.templateNode.Name.ToLower() == "random")
             {
                 if (this.templateNode.HasChildNodes)
                 {
                     // only grab <li> nodes
                     List<XmlNode> listNodes = new List<XmlNode>();
-                    foreach (XmlNode childNode in this.templateNode.ChildNodes)
+                    foreach (XmlNode childNode in nodes)
                     {
                         if (childNode.Name == "li")
                         {
                             listNodes.Add(childNode);
                         }
                     }
-                    if (listNodes.Count > 0)
+                    // randomly grab <li> nodes
+                    List<XmlNode> useNodes = new List<XmlNode>();
+                    while (maxConditions-- > 0 && listNodes.Count > 0)
                     {
                         Random r = new Random();
-                        XmlNode chosenNode = (XmlNode)listNodes[r.Next(listNodes.Count)];
-                        return Unifiable.InnerXmlText(chosenNode);
+                        XmlNode chosenNode = listNodes[r.Next(listNodes.Count)];
+                        listNodes.Remove(chosenNode);
+                        useNodes.Add(chosenNode);
                     }
+                    return NodesToOutput(useNodes, (n) => true);
                 }
             }
             return Unifiable.Empty;

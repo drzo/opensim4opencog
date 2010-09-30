@@ -47,7 +47,7 @@ namespace RTParser.AIMLTagHandlers
         {
             if (RecurseResultValid) return RecurseResult;
             Unifiable u = ProcessChange0();
-            if (IsNull(u))
+            if (IsMissing(u))
             {
                 Unifiable defaultVal = GetAttribValue("default", null);
                 if (defaultVal == null) QueryHasFailed = true;
@@ -82,7 +82,11 @@ namespace RTParser.AIMLTagHandlers
                     Proc.TraceTest("NULL from success?!", () => GetActualValue(name, typeof (bot) == GetType() ? "bot" : "get", out succeed));
                     return Unifiable.Empty;
                 }
-                if (succeed) Succeed();
+                if (succeed)
+                {
+                    Succeed();
+                    return v;
+                }
                 return v;
             }
             return Unifiable.Empty;

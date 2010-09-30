@@ -24,17 +24,20 @@ namespace MushDLR223.Utilities
     {
         public static R WithoutTrace<R>(ITraceable itrac, Func<R> func)
         {
-            bool prev = itrac.IsTraced;
-            if (!prev) return func();
-            try
+            lock (itrac)
             {
-                itrac.IsTraced = false;
-                return func();
+                bool prev = itrac.IsTraced;
+                if (!prev) return func();
+                try
+                {
+                    itrac.IsTraced = false;
+                    return func();
 
-            }
-            finally
-            {
-                itrac.IsTraced = prev;
+                }
+                finally
+                {
+                    itrac.IsTraced = prev;
+                }                
             }
         }
 
@@ -241,6 +244,20 @@ namespace MushDLR223.Utilities
             return ValueText(s);
         }
 
+        public static string ToXmlValue(XmlNode xmlNode)
+        {
+            string str = xmlNode.InnerXml;
+            if (str.StartsWith(isValueSetStart))
+            {
+                return ValueText(InnerXmlText(xmlNode));
+            }
+            if (xmlNode.NodeType == XmlNodeType.Text || xmlNode.NodeType == XmlNodeType.CDATA)
+            {
+                return xmlNode.InnerXml;
+            }
+            return xmlNode.OuterXml;
+        }
+
         public static string ValueText(string s)
         {
             if (s.StartsWith(isValueSetStart))
@@ -251,6 +268,12 @@ namespace MushDLR223.Utilities
         }
         public static string XmlValueSettable(string stringValue)
         {
+            if (stringValue == null) return null;
+            if (stringValue.Contains("<") && !stringValue.Contains("<!--"))
+            {
+                writeDebugLine("ERROR: about to write XML into text? " + stringValue);
+                return isValueSetStart + stringValue;
+            }
             return isValueSetStart + stringValue;
         }
 
@@ -271,6 +294,8 @@ namespace MushDLR223.Utilities
                         }
                         //  return ss;
                     }
+                    if (true) return templateNode.InnerXml;
+
                     string innerText = templateNode.InnerText.Trim();
                     if (templateNode.InnerXml.Length >= templateNode.InnerText.Length)
                     {
@@ -280,6 +305,7 @@ namespace MushDLR223.Utilities
                         }
                         return templateNode.InnerXml;
                     }
+
                     return templateNode.InnerXml;
                     break;
                 case XmlNodeType.Attribute:

@@ -64,7 +64,8 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessChange()
         {
-            return Unifiable.Empty;
+            var vv =  base.Recurse();
+            return vv;
         }
     }
 }

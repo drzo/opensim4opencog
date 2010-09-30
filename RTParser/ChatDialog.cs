@@ -531,6 +531,10 @@ namespace RTParser
                 bool myBotBotDirective = BotDirective(request, rawInputString, sw.WriteLine);
                 string swToString = sw.ToString();
                 if (writeToLog != null) writeToLog("ChatWithNonGraphmaster: " + swToString);
+                else
+                {
+                    writeToLog = DEVNULL;
+                }
                 if (myBotBotDirective)
                 {
                     Result requestCurrentResult = result ?? request.CurrentResult;
@@ -540,6 +544,7 @@ namespace RTParser
                     }
                     return result;
                 }
+                writeToLog("ERROR: cannot find command " + request.rawInput);
                 return null;
             }
             ChatLabel label = request.PushScope;
@@ -548,7 +553,7 @@ namespace RTParser
             {
                 try
                 {
-                    result = ImmediateAiml(getNode("<template>" + rawInputString + "</template>"), request, Loader, null);
+                    result = ImmediateAiml(StaticAIMLUtils.getTemplateNode(rawInputString), request, Loader, null);
                     //request.rawInput = result.Output;
                     return result;
                 }
@@ -894,7 +899,7 @@ namespace RTParser
                         // Start each the same
                         var lastHandler = ProcessQueryTemplate(request, s.Query, s, result, request.LastHandler,
                                                                ref solutions,
-                                                               out hasMoreSolutions);
+                                                               out hasMoreSolutions);                      
                     }
                     catch (ChatSignal)
                     {
@@ -908,6 +913,7 @@ namespace RTParser
 
         private AIMLTagHandler ProcessQueryTemplate(Request request, SubQuery query, TemplateInfo s, Result result, AIMLTagHandler lastHandler, ref int solutions, out bool hasMoreSolutions)
         {
+            AIMLTagHandler childHandler = null;
             s.Rating = 1.0;
             hasMoreSolutions = false;
             try
@@ -917,7 +923,7 @@ namespace RTParser
                 bool createdOutput;
                 bool templateSucceeded;
                 XmlNode sOutput = s.ClonedOutput;
-                lastHandler = proccessResponse(query, request, result, sOutput, s.Guard, out createdOutput,
+                childHandler = proccessResponse(query, request, result, sOutput, s.Guard, out createdOutput,
                                                out templateSucceeded, lastHandler, s, false, false);
                 solutions++;
                 request.LastHandler = lastHandler;
@@ -939,7 +945,7 @@ namespace RTParser
                         }
                     }
                 }
-                return lastHandler;
+                return childHandler;
             }
             catch (ChatSignal e)
             {
@@ -956,7 +962,7 @@ namespace RTParser
                            request.rawInput + " with the template: \"" + s + "\"");
                 hasMoreSolutions = false;
             }
-            return lastHandler;
+            return childHandler;
         }
 
         public void writeChatTrace(string message, params object[] args)
@@ -1004,7 +1010,8 @@ namespace RTParser
             try
             {
                 request0.GraphsAcceptingUserInput = true;
-                return ImmediateAIML0(request0, templateNode, handler, fastCall);
+                var mr = ImmediateAIML0(request0, templateNode, handler, fastCall);
+                return mr;
             }
             catch (ChatSignal ex)
             {
@@ -1394,7 +1401,7 @@ namespace RTParser
                 return "";
             }
 
-            string sentence = VisibleRendering(getNode("<template>" + sentenceIn + "</template>").ChildNodes,
+            string sentence = VisibleRendering(StaticAIMLUtils.getTemplateNode(sentenceIn).ChildNodes,
                                                PatternSideRendering);
 
             sentence = ReTrimAndspace(sentence);
@@ -1499,6 +1506,36 @@ namespace RTParser
                                   AIMLTagHandler parent, bool protectChild, bool copyParent,
                                   out AIMLTagHandler tagHandler)
         {
+            string outputSentence = processNodeVV(node, query,
+                                                  request, result, user, parent,
+                                                  protectChild, copyParent, out tagHandler);
+            if (!Unifiable.IsNullOrEmpty(outputSentence)||IsSilentTag(node))
+            {
+                return outputSentence;
+            }
+            if (tagHandler.RecurseResultValid) return tagHandler.RecurseResult;
+            if (Unifiable.IsNull(outputSentence))
+            {
+                outputSentence = tagHandler.GetTemplateNodeInnerText();
+                return outputSentence;
+            }
+            return outputSentence;
+        }
+
+        /// <summary>
+        /// Recursively evaluates the template nodes returned from the Proccessor
+        /// </summary>
+        /// <param name="node">the node to evaluate</param>
+        /// <param name="query">the query that produced this node</param>
+        /// <param name="request">the request from the user</param>
+        /// <param name="result">the result to be sent to the user</param>
+        /// <param name="user">the user who originated the request</param>
+        /// <returns>the output Unifiable</returns>
+        public string processNodeVV(XmlNode node, SubQuery query,
+                                  Request request, Result result, User user,
+                                  AIMLTagHandler parent, bool protectChild, bool copyParent,
+                                  out AIMLTagHandler tagHandler)
+        {
             if (node != null && node.NodeType == XmlNodeType.Text)
             {
                 tagHandler = null;
@@ -1558,22 +1595,26 @@ namespace RTParser
                     }
                     return s;
                 }
+// ReSharper disable ConditionIsAlwaysTrueOrFalse
                 OutputDelegate del = (request != null) ? request.writeToLog : writeToLog;
+// ReSharper restore ConditionIsAlwaysTrueOrFalse
                 if (overBudget)
                 {
-                    tagHandler = null;
                     return Unifiable.Empty;
                 }
                 EvalAiml(node, request, del ?? DEVNULL);
                 return node.InnerXml;
             }
 
-            tagHandler.SetParent(parent);
             if (overBudget)
             {
+                tagHandler.Dispose();
                 tagHandler = null;
                 return Unifiable.Empty;
             }
+            
+            tagHandler.SetParent(parent);
+            if (parent!=null) parent.AddChild(tagHandler);
 
             Unifiable cp = tagHandler.CompleteAimlProcess();
             if (Unifiable.IsNullOrEmpty(cp) && (!tagHandler.QueryHasSuceeded || tagHandler.QueryHasFailed))
@@ -1604,6 +1645,15 @@ namespace RTParser
             if (tagHandler.QueryHasFailed)
             {
                 return Unifiable.Empty;
+            }
+            if (!Unifiable.IsNullOrEmpty(cp) || IsSilentTag(node))
+            {
+                return cp;
+            }
+            if (Unifiable.IsNull(cp))
+            {
+                cp = tagHandler.GetTemplateNodeInnerText();
+                return cp;
             }
             return cp;
         }

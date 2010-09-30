@@ -148,7 +148,7 @@ namespace RTParser.AIMLTagHandlers
             if (sd != null)
             {
                 if (RecurseResultValid) return RecurseResult;
-                if (!Unifiable.IsNull(RecurseResult))
+                if (!Unifiable.IsMissing(RecurseResult))
                 {
                     return RecurseResult;
                 }
@@ -164,7 +164,7 @@ namespace RTParser.AIMLTagHandlers
             if (RTPBot.UnknownTagsAreBotVars)
             {
                 var v = Proc.GlobalSettings.grabSetting(currentNodeName);
-                if (!Unifiable.IsNull(v)) return v;
+                if (!Unifiable.IsMissing(v)) return v;
             }
             var vs = Proc.EvalAiml(templateNode, request, request.writeToLog);
             StringBuilder sb = new StringBuilder();
@@ -174,7 +174,7 @@ namespace RTParser.AIMLTagHandlers
             foreach (var node in vs)
             {
                 total++;
-                string nodeOuterXml = InnerXml(node);
+                string nodeOuterXml = ToXmlValue(node);
                 WriteLine(nodeOuterXml);
                 string p = RTPBot.GetAttribValue(node,"PASSED","FALSE");
                 if (p=="False")
@@ -207,7 +207,14 @@ namespace RTParser.AIMLTagHandlers
         /// <returns>The resulting processed text</returns>
         protected override Unifiable ProcessChange()
         {
-            return Unifiable.STAR;
+            if (RecurseResultValid)
+            {
+                return RecurseResult;
+            }
+            var vv = RecurseProcess();
+            RecurseResult = vv;
+            return vv;
+            // return Unifiable.STAR;
         }
 
         #endregion

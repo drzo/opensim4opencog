@@ -71,11 +71,26 @@ namespace RTParser.Database
             }
 
 
-            if (sresultGet != null && sresultGet.ToUpper() == "UNKNOWN")
+            if (sresultGet != null)
             {
-                succeed = false;
-                realName = null;
-                return sresultGet + " " + name;
+                if (sresultGet.ToUpper() == "UNKNOWN")
+                {
+                    succeed = false;
+                    realName = null;
+                    return sresultGet + " " + name;
+                }
+                else if (Unifiable.IsEMPTY(sresultGet))
+                {
+                    succeed = true;
+                    realName = name;
+                    return sresultGet;
+                }
+                else if (Unifiable.IsUnknown(sresultGet))
+                {
+                    succeed = true;
+                    realName = name;
+                    return sresultGet;
+                }
             }
             if (!String.IsNullOrEmpty(sresultGet))
             {
@@ -136,7 +151,7 @@ namespace RTParser.Database
                 bool shouldSet2 = ShouldSet(templateNode, dict, realName, value, resultGet);
                 return ReturnSetSetting(dict, name, setReturn);
             }
-            if (IsNull(value))
+            if (IsMissing(value))
             {
                 if (UseLuceneForSet && userbotLuceneIndexer != null) userbotLuceneIndexer.retractAllTriple(userName, name);
                 SettingsDictionary.removeSettingWithUndoCommit(query, dict, name);
@@ -154,7 +169,7 @@ namespace RTParser.Database
             }
             var retVal = ReturnSetSetting(dict, name, setReturn);
             if (!IsNullOrEmpty(retVal)) return retVal;
-            if (!IsNull(retVal))
+            if (!IsMissing(retVal))
             {
                 return retVal;                
             }
@@ -182,13 +197,13 @@ namespace RTParser.Database
             bool onlyIfUnknown;
             if (StaticXMLUtils.TryParseBool(templateNode, "ifUnknown", out onlyIfUnknown))
             {
-                if (onlyIfUnknown) return Unifiable.IsUnknown(oldValue);
+                if (onlyIfUnknown) return Unifiable.IsUnknown(oldValue) || IsMissing(oldValue);
             }
 
             bool overwriteExisting;
             if (StaticXMLUtils.TryParseBool(templateNode, "overwriteExisting", out overwriteExisting))
             {
-                if (!overwriteExisting) return Unifiable.IsNullOrEmpty(oldValue);
+                if (!overwriteExisting) return Unifiable.IsNullOrEmpty(oldValue) || IsMissing(oldValue);
                 //if (overwriteExisting)                   
                 return true;
             }
@@ -208,6 +223,15 @@ namespace RTParser.Database
             if (newMatch != null)
             {
                 if (!IsPredMatch(newMatch, newValue, null))
+                {
+                    shouldSet = false;
+                }
+            }
+            string wontvalue = StaticXMLUtils.GetAttribValue(templateNode, "wontvalue", null);
+
+            if (wontvalue != null)
+            {
+                if (IsPredMatch(wontvalue, newValue, null))
                 {
                     shouldSet = false;
                 }

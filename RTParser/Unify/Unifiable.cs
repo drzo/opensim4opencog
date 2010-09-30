@@ -246,7 +246,10 @@ namespace RTParser
             {
                 return false;
             }
-
+            if (IsMissing(t))
+            {
+                return IsMissing(s);
+            }
             if (t.ToUpper() == s.ToUpper()) return true;
             return false;
             if (t.ToValue(null).ToLower() == s.ToValue(null).ToLower())
@@ -816,6 +819,15 @@ namespace RTParser
         public abstract double Strictness();
         public abstract int CompareTo(Unifiable other);
 
+        public static string DescribeUnifiable(Object value)
+        {
+            if (value == null) return "-NULL-UOBJECT-";
+            if (ReferenceEquals(value, Unifiable.NULL)) return "-EQ-NULL-";
+            if (IsNull(value)) return "-EQUAL-NULL-";
+            if (IsMissing(value)) return "-EQUAL-MISSING-" + value + "-";
+            return "" + value;
+
+        }
     }
 }
 
