@@ -308,6 +308,10 @@ namespace RTParser
                     return bot.NOTOPIC;
                 }
                 var t = this.Predicates.grabSetting("topic");
+                if (Unifiable.IsNullOrEmpty(t))
+                {
+                    return bot.NOTOPIC; 
+                }
                 return t;
             }
             set
@@ -856,23 +860,13 @@ namespace RTParser
                 }
             }
             //if (input == "") return false;
-            input = input + " ";
-            int firstWhite = input.IndexOf(' ');
-            string var = input.Substring(0, firstWhite).Trim();
-            string value = input.Substring(firstWhite + 1).Trim();
-            if (var == "")
+            if (input == "")
             {
                 console(Predicates.ToDebugString());
                 RTPBot.WriteUserInfo(console, "", this);
                 return true;
             }
-            if (value == "")
-            {
-                console(var + " = " + Predicates.grabSettingNoDebug(var));
-                return true;
-            }
-            console("addSetting: " + Predicates.addSetting(var, value));
-            return true;
+            return Predicates.DoSettingsCommand(input, console);
         }
 
         internal OutputDelegate userTrace;
@@ -1338,7 +1332,7 @@ namespace RTParser
             depth--;
             if (depth == 0)
             {
-                SubQuery.PurgeTagHandlers();
+                srai.query.PurgeTagHandlers();
             }
         }
     }

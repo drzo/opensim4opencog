@@ -486,7 +486,16 @@ namespace MushDLR223.Utilities
         private void LoadFromReader(XmlReader reader)
         {
             XmlReader reader0 = CheckReader(reader);
-            base.Load(reader0);
+            try
+            {
+
+                base.Load(reader0);
+            }
+            catch (Exception e)
+            {
+                writeToLog("" + e + " in " + ToString());
+                throw;
+            }
             Normalize();
         }
 

@@ -31,7 +31,7 @@ namespace RTParser.AIMLTagHandlers
             {
                 //return templateNodeInnerText.ToValue().ToUpper(this.Proc.Locale);
                 Unifiable names = GetAttribValue("source", null);
-                if (!Unifiable.IsNull(names))
+                if (!Unifiable.IsMissing(names))
                 {
                     // Want something special
 

@@ -49,7 +49,13 @@ namespace RTParser.Utils
         public override Unifiable CompleteProcess()
         {
             if (RecurseResultValid) return RecurseResult;
-            return RecurseResult = ProcessChange();
+            var vv = ProcessChange();
+            RecurseResult = vv;
+            if (!Unifiable.IsNullOrEmpty(vv))
+            {
+                return vv;
+            }
+            return vv;
         }
 
         #endregion

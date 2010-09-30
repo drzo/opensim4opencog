@@ -28,10 +28,10 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        private Unifiable finalResult;
+
         protected override Unifiable ProcessChange()
         {
-            if (finalResult == null)
+            if (!finalResult.IsValid)
             {
                 var v = Recurse();
                 var r  = this.Proc.SystemExecute(v, GetAttribValue("lang", "bot"), request);
@@ -42,12 +42,12 @@ namespace RTParser.AIMLTagHandlers
                 }
                 else if (Unifiable.IsTrue(r))
                 {
-                    finalResult = r;
+                    finalResult.Value = r;
                     //templateNodeInnerText = isValueSetStart + v;
                 }
                 return r;
             }
-            return finalResult;
+            return RecurseResult;
         }
     }
 }

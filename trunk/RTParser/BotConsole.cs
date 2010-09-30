@@ -544,7 +544,13 @@ namespace RTParser
                 return myUser.DoUserCommand(args, console);
                 return true;
             }
-
+            if (showHelp)
+                console(
+                    "@setvar dictname.name [value] -- get/sets a variable using a global namespace context");
+            if (cmd == "setvar")
+            {
+                return GlobalSettings.DoSettingsCommand(input, console);
+            }
             if (showHelp) console("@bot [var [value]] -- lists or changes the bot GlobalPredicates.\n  example: @bot ProcessHeardPreds True or @bot ProcessHeardPreds False");
             if (cmd == "bot")
             {

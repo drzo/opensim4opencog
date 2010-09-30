@@ -101,14 +101,47 @@ namespace MushDLR223.Utilities
             set
             {
                 if (InnerXml == value) return;
-                innerValueReplaced = value;
-                if (protect)
+                if (SetNewValue(value))
                 {
-                    writeToLog("WARNING: InnerXml Should not be changed to \"" + value + "\"");
+                    base.InnerXml = value;
+                    return;
                 }
+                else
+                {
+                    return;
+                }
+                innerValueReplaced = StaticXMLUtils.ValueText(value);
                 base.InnerXml = value;
             }
         }
+
+        private bool SetNewValue(string value)
+        {
+            var ir = StaticXMLUtils.ValueText(value);
+            if (ir.Length == 0)
+            {
+                if (LocalName != "think")
+                {
+                    writeToLog("ERROR: SetNewValue Not using " + value);
+                    return false;
+                }
+                return true;
+            }
+            else
+            {
+                innerValueReplaced = ir;
+                if (protect)
+                {
+                    if (value.Contains("<"))
+                    {
+                        writeToLog("ERROR: InnerXml Should not be changed to \"" + value + "\"");
+                    }
+                    writeToLog("WARNING: InnerXml Should not be changed to \"" + value + "\"");
+                }
+                return true;
+            }
+        }
+
 #if OUTXML_CACHE
         private string outerXMLCache;
 #endif
@@ -116,7 +149,14 @@ namespace MushDLR223.Utilities
         {
             get
             {
-                if (innerValueReplaced != null) return innerValueReplaced;
+                if (innerValueReplaced != null)
+                {
+                    var ir = StaticXMLUtils.ValueText(innerValueReplaced);
+                    if (ir.Length == 0)
+                    {
+                        writeToLog("Not using " + innerValueReplaced);
+                    }
+                }
 #if OUTXML_CACHE
                 if (outerXMLCache != null)
                 {
@@ -156,8 +196,7 @@ namespace MushDLR223.Utilities
                 {
                     writeToLog("WARNING: InnerText Should not be changed to \"" + value + "\"");
                 }
-                innerValueReplaced = value;
-                base.InnerXml = value;
+                InnerXml = value;
             }
         }
 
@@ -165,7 +204,7 @@ namespace MushDLR223.Utilities
         {
             get
             {
-                if (!OwnerDocument.IsReadOnly) return false;
+                if (OwnerDocument != null) if (!OwnerDocument.IsReadOnly) return false;
                 if (!base.IsReadOnly)
                 {
                     if (!protect) return false;

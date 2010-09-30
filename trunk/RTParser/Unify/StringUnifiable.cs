@@ -486,7 +486,9 @@ namespace RTParser
             if (str == null)
             {
                 if (DebugNulls) writeToLog("ToSTring=NULL");
+                // ReSharper disable AssignNullToNotNullAttribute
                 return null;
+                // ReSharper restore AssignNullToNotNullAttribute
             }
             return str;
         }
@@ -1020,7 +1022,7 @@ namespace RTParser
             }
             catch (Exception e)
             {
-                return AIMLTagHandler.getNode("<template>" + str + "</template>");
+                return StaticAIMLUtils.getTemplateNode(str);
             }
         }
 
@@ -1029,8 +1031,7 @@ namespace RTParser
             if (valueCache is XmlNode) return (XmlNode) valueCache;
             try
             {
-                string s = "<template>" + str + "</template>";
-                var node = getNode(s);
+                var node = StaticAIMLUtils.getTemplateNode(str);
                 LineInfoElementImpl.unsetReadonly(node);
                 return node;
 

@@ -179,7 +179,7 @@ namespace RTParser.Utils
             }
             if (!HostSystem.FileOrDirExists(relPath))
             {
-                RTPBot.writeDebugLine("WARNING PATH NOT EXIST ERROR: " + relPath);
+                if (!relPath.Contains("*")) RTPBot.writeDebugLine("WARNING PATH NOT EXIST ERROR: " + relPath);
             }
             return relPath;
         }
@@ -696,6 +696,11 @@ namespace RTParser.Utils
         public int loadAIMLNode0(XmlNode currentNode, LoaderOptions loadOpts, Request request,
                                  List<ConversationCondition> additionalRules)
         {
+            if (currentNode == null)
+            {
+                writeToLog("ERROR: no currentNode in " + loadOpts);
+                return 0;
+            }
             int total = 0;
             RTPBot RProcessor = loadOpts.RProcessor;
             AIMLLoader prev = RProcessor.Loader;
@@ -1290,8 +1295,7 @@ namespace RTParser.Utils
                 patternNode = PatternStar;
             }
             {
-                RenderOptions patternSideRendering = new RenderOptions(PatternSideRendering);
-                patternSideRendering.skip.Add(tagname);
+                RenderOptions patternSideRendering = GetPatternSideRendering(tagname);
                 string patternString =
                     VisibleRendering(patternNode.ChildNodes, patternSideRendering);
                 int f = cateNode.OuterXml.IndexOf("<" + tagname);
@@ -1319,6 +1323,22 @@ namespace RTParser.Utils
                 return that;
             }
             return that;
+        }
+
+        static readonly Dictionary<string,RenderOptions> PatternSideRenderingCache = new Dictionary<string, RenderOptions>();
+        private static RenderOptions GetPatternSideRendering(string tagname)
+        {
+            lock(PatternSideRenderingCache)
+            {
+                RenderOptions patternSideRendering;
+                if (!PatternSideRenderingCache.TryGetValue(tagname, out patternSideRendering))
+                {
+                    patternSideRendering = new RenderOptions(PatternSideRendering);
+                    patternSideRendering.skip.Add(tagname);
+                    PatternSideRenderingCache[tagname] = patternSideRendering;
+                }
+                return patternSideRendering;
+            }
         }
 
         /// <summary>

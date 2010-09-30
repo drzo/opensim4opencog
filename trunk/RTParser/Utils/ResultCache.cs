@@ -1,4 +1,5 @@
-﻿using MushDLR223.Utilities;
+﻿using System;
+using MushDLR223.Utilities;
 
 namespace RTParser.Utils
 {
@@ -32,7 +33,7 @@ namespace RTParser.Utils
         public override string ToString()
         {
             if (IsValid) return _value;
-            return "!Valid " + _value;
+            return "!Valid " + Unifiable.DescribeUnifiable(_value);
         }
 
         public Unifiable Value

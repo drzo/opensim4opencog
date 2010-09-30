@@ -104,22 +104,51 @@ namespace RTParser.Utils
                 return ((String)name).Length == 0;
             }
             if (IsNull(name)) return true;
+            if (IsMissing(name))
+            {
+                writeDebugLine("Special IsMissing " + Unifiable.DescribeUnifiable(name));
+                return true;
+            }
             return (name is Unifiable && ((Unifiable)name).IsEmpty);
         }
 
         public static bool IsNull(Object name)
         {
             if (ReferenceEquals(name, null)) return true;
+            if (ReferenceEquals(name, Unifiable.NULL)) return true;
             return (name is Unifiable && ((Unifiable)name).Raw == null);
+        }
+
+        public static bool IsMissing(Object name)
+        {
+            if (ReferenceEquals(name, null)) return true;
+            if (ReferenceEquals(name, Unifiable.NULL))
+            {
+                return true;
+            }
+            if (IsNull(name))
+            {
+                return true;
+            }
+            if (!(name is Unifiable)) return false;
+            var val = (string) (((Unifiable) name).Raw);
+            if (val == null) return true;
+            val = val.ToUpper();
+            return val == "OM" || val == "$MISSING";
         }
 
         public static bool IsEMPTY(Object name)
         {
             if (name is String)
             {
-                return ((String)name).Trim().Length == 0;
+                return ((String) name).Trim().Length == 0;
             }
-            return (name is Unifiable && ((Unifiable)name).Raw == null);
+            if (name is Unifiable) return IsEMPTY(((Unifiable) name).Raw);
+            if (name==null)
+            {
+                return true;
+            }
+            return false;
         }
 
         public static bool IsUnknown(object unifiable)

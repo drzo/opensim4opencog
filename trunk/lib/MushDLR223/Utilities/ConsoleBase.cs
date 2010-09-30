@@ -1635,5 +1635,13 @@ namespace MushDLR223.Utilities
             }
             return str.ToString();
         }
+
+        public static void DepthCheck()
+        {
+            if (new System.Diagnostics.StackTrace(true).GetFrames().Length > 400)
+            {
+                DebugWriteLine("DepthCheck");
+            }
+        }
     }
 }
