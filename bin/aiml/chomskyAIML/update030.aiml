@@ -6305,6 +6305,12 @@ Tell me about EastEnders.
 </random><think><set name="topic">general</set></think> <think><set name="emotion">happy</set></think></template>
 </category>
 
+<category isTraced="true">
+<pattern>YES</pattern>
+<that>CAN I CALL YOU *</that>
+<template><srai>CALL ME <thatstar/></srai></template>
+</category>
+
  
 
 <category>

@@ -2,7 +2,7 @@
 echo killing lucene database
 del lucenedb\*.*
 echo killing users databases
-rd aiml\users\*.* /s
+rd /s aiml\users\ 
 
 del *.bak /s
 

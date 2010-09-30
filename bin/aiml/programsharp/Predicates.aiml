@@ -62,7 +62,7 @@ Wife: <get name="wife"/>.
 
 <category>
 <pattern>SET PREDICATES</pattern>
-<template><srai>SET PREDICATES <get name="meta"/></srai>
+<template><srai>SET PREDICATES <get name="meta" must="*" /></srai>
 </template>
 </category>
 
