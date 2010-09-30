@@ -2127,7 +2127,7 @@ Yes, I am a curious fellow.</template>
 <category isTraced="true">
 <pattern>* *</pattern>
 <that>WHAT IS YOUR NAME</that>
-<template><think><set name="emotion">OK</set></think>Can I call you <star/>?</template>
+<template><think><set name="emotion">OK</set></think>Can I call you <star/> <star index="2"/>?</template>
 </category>
 
  

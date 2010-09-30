@@ -1545,7 +1545,7 @@ Is <star/> your name?</template>
 <category isTraced="true">
 <pattern>YES</pattern>
 <that>IS * YOUR NAME</that>
-<template><think><set name="name"><thatstar/></set></think> <random>
+<template><think><set name="name" wontvalue="that .*"><thatstar/></set></think> <random>
   <li>Hi, <get var="name"/>. I think we have spoken a while back.</li>
   <li>Hi, <get var="name"/>. How are you?</li>
   <li><get var="name"/>. That's a nice name.</li>
@@ -2175,7 +2175,7 @@ I admire a good loser.</template>
 <category isTraced="true">
 <pattern>YES</pattern>
 <that>IS * YOUR NAME</that>
-<template><think><set name="name"><thatstar/></set></think> <random>
+<template><think><set name="name" wontvalue="that .*"><thatstar/></set></think> <random>
   <li>Hi, <thatstar/>. I think we have spoken a while back.</li>
   <li>Hi, <thatstar/>. How are you?</li>
   <li>That's a nice name.</li>

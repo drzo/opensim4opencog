@@ -1,5 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <root>
+
+   <item name="catchall" value="STDCATCHALL" />
+    
+
   <item name="name" value="un-named personage" />
   <item name="he" value="somebody" />
   <item name="she" value="somebody" />
@@ -36,7 +40,7 @@
   <item name="location" value="unknown" />
   <item name="looklike" value="unknown" />
   <item name="memory" value="unknown" />
-  <item name="meta" value="unknown" />
+  <item name="meta" value="set" />
   <item name="nickname" value="unknown" />
   <item name="middlename" value="unknown" />
   <item name="mother" value="unknown" />
@@ -50,4 +54,32 @@
   <item name="want" value="unknown" />
   <item name="we" value="unknown" />
   <item name="cycself" value="#$Cyc"/>
-</root>
+
+<set name="askage">no</set>
+<set name="askhome">no</set>
+<set name="askname">no</set>
+<set name="askquestion">yes</set>
+<set name="firsttime" ></set>
+<set name="he">he</set>
+<set name="her">her</set>
+<set name="him">him</set>
+<set name="is">a friend</set>
+<set name="it">it</set>
+<set name="job">teacher</set>
+<set name="memory">nothing</set>
+<set name="meta">set</set>
+<set name="name">My Friend</set>
+<set name="nickname">Pal</set>
+<set name="personality">average</set>
+<set name="she">she</set>
+<set name="sister">Sis</set>
+<set name="them">them</set>
+<set name="they">they</set>
+<set name="thought">nothing</set>
+<set name="topic" >Nothing</set>
+<set name="want">to talk to me</set>
+<set name="we">we</set>
+
+
+  </root>
+

@@ -62,6 +62,15 @@
 			</condition>
 		</template>
 	</category>
+
+	<category>
+		<pattern>WHAT DO YOU SEE</pattern>
+		<template score="2.0">
+		   I last saw <get name="lastseen"/>
+		   I last recognized <get name="lastrecognized"/>
+		</template>
+	</category>
+
 	<topic name="LOVES_USER">
 		<category>
 			<pattern>AGREEWARMLY</pattern>
