@@ -519,19 +519,33 @@ namespace RTParser
                 }
                 return true;
             }
-            if (showHelp) console("@say <text> -- fakes that the bot just said it");
+            if (showHelp) console("@say [who -] <text> -- fakes that the 'who' (default bot) just said it");
             if (cmd == "say")
             {
                 console("say> " + args);
-                HeardSelfSayVerbal(targetBotUser, myUser, args, LastResult, control);
+                string who, said;
+                if (!SplitOff(args, "-", out who, out said))
+                {
+                    who = targetBotUser.UserID;
+                    said = args;
+                }
+                User factSpeaker = FindOrCreateUser(who);
+                HeardSelfSayVerbal(factSpeaker, factSpeaker.LastReponder, args, LastResult, control);
                 return true;
             }
 
-            if (showHelp) console("@say1 <sentence> -- fakes that the bot just said it");
+            if (showHelp) console("@say1 [who -] <sentence> -- fakes that 'who' (default bot) just said it");
             if (cmd == "say1")
             {
                 console("say1> " + args);
-                HeardSelfSay1Sentence(targetBotUser, myUser, args, LastResult, control);
+                string who, said;
+                if (!SplitOff(args, "-", out who, out said))
+                {
+                    who = targetBotUser.UserID;
+                    said = args;
+                }
+                User factSpeaker = FindOrCreateUser(who);
+                HeardSelfSay1Sentence(factSpeaker, factSpeaker.LastReponder, said, LastResult, control);
                 return true;
             }
 
