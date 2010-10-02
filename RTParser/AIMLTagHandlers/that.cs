@@ -60,10 +60,10 @@ namespace RTParser.AIMLTagHandlers
             {
                 //else if (this.templateNode.Attributes.Count == 1)
                 {
-                    var at1 = GetAttribValue("index", null);//.Trim();
-                    if (at1 != null)
+                    var at1 = GetAttribValue("index", null); //.Trim();
+                    //if (at1 != null)
                     {
-                        if (at1.Length > 0)
+                        //if (at1.Length > 0)
                         {
                             return GetIndexes(at1, request.Responder, this.user.getThat,
                                               (str, args) => localError(at1, str));
