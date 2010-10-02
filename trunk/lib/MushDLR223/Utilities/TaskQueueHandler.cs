@@ -635,7 +635,7 @@ namespace MushDLR223.Utilities
                                     if (t>TOO_LONG_INTERVAL)
                                     {
                                         WriteLine("ERROR: NOTHING DONE IN time = {0} " + INFO, GetTimeString(t));
-                                        DebugQueue = true;
+                                        if (ExpectedTodo > 1) DebugQueue = true;
                                         AbortCurrentOperation();
                                     }
                                     WriteLine("WARN: NOTHING DONE IN time = {0} " + INFO, GetTimeString(t));

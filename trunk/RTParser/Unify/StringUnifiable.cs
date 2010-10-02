@@ -967,6 +967,7 @@ namespace RTParser
                     return true;
                 }
                 Unifiable outputSentence = tagHandler.CompleteAimlProcess();
+                if (outputSentence == null) return false;
                 string value = outputSentence.AsString();
                 if (ov.ToUpper() == value.ToUpper())
                 {

@@ -63,7 +63,7 @@ namespace RTParser.AIMLTagHandlers
                         listNodes.Remove(chosenNode);
                         useNodes.Add(chosenNode);
                     }
-                    return NodesToOutput(useNodes, (n) => true);
+                    return OutputFromNodes(useNodes, (n) => true);
                 }
             }
             return Unifiable.Empty;

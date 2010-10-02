@@ -50,11 +50,12 @@ namespace RTParser.Utils
         {
             if (RecurseResultValid) return RecurseResult;
             var vv = ProcessChange();
-            RecurseResult = vv;
             if (!Unifiable.IsNullOrEmpty(vv))
             {
+                RecurseResult = vv;
                 return vv;
             }
+            RecurseResult = vv;
             return vv;
         }
 

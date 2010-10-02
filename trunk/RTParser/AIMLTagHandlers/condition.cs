@@ -128,7 +128,7 @@ namespace RTParser.AIMLTagHandlers
             this.maxTrueConditions = maxConditions;
             var nodes = SelectNodes(templateNode.ChildNodes);
             currentTrueConditions = 0;
-            var vv = NodesToOutput(nodes, (node) => (currentTrueConditions++ < maxTrueConditions));
+            var vv = OutputFromNodes(nodes, (node) => (currentTrueConditions++ < maxTrueConditions));
             if (!IsNullOrEmpty(vv))
             {
                 RecurseResult = vv;

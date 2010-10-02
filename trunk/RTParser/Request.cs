@@ -1188,9 +1188,9 @@ namespace RTParser
         public ISettingsDictionary GetDictionary(string named, ISettingsDictionary dictionary)
         {
             ISettingsDictionary dict =  GetDictionary0(named, dictionary);
-            if (dict == TargetBot.GlobalSettings)
-            {
-                writeToLog("BETTER MEAN BOT " + named + " for " + dictionary);
+            if (IsTraced && dict == TargetBot.GlobalSettings)
+            {                
+             //   writeToLog("BETTER MEAN BOT " + named + " for " + dictionary);
             }
             if (dict != null) return dict;
             writeToLog("ERROR MISSING DICTIONARY " + named + " for " + dictionary);

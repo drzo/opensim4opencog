@@ -77,7 +77,7 @@ namespace RTParser.Normalize
             if (tokens == null)
             {
                 List<Unifiable> tidyString = new List<Unifiable>();
-                tokens = new[] { "! ", "? ", ". ", ", ", "<br>", "<p>" };
+                tokens = new[] {"! ", "? ", ". ", ", ", "<br>", "<p>", "<br/>", "<p/>"};
                 foreach (string token in tokens)
                 {
                     inputStringString = inputStringString.Replace(token, token + " <split/> ");

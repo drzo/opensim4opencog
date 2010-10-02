@@ -980,6 +980,7 @@ namespace RTParser
 
         public void TraceTest(String s, Action action)
         {
+            return;
             writeChatTrace(s);  
             action();
         }
