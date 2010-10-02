@@ -395,7 +395,7 @@ namespace MushDLR223.Utilities
                                                               "clear",
                                                               "+*",
                                                           };
-                                         
+
         static private readonly object m_syncRoot = new object();
 
         static private int y = -1;
@@ -466,7 +466,7 @@ namespace MushDLR223.Utilities
         public static TextWriter Out
         {
             get
-            {                
+            {
                 TextWriter ret = SystemConsole.Out ?? ConsoleOut ?? InitialConsoleOut ?? InitialConsoleERR;
                 return ret;
             }
@@ -561,17 +561,17 @@ namespace MushDLR223.Utilities
         override
 #endif
         protected void Append(LoggingEvent le)
-         {
+        {
             if (m_console != null)
                 m_console.LockOutput();
 
             try
             {
 
-      
+
 #if USING_log4net
                 string loggingMessage = RenderLoggingEvent(le);
-#else 
+#else
                 string loggingMessage = le.ToString();
 #endif
                 string regex = @"^(?<Front>.*?)\[(?<Category>[^\]]+)\]:?(?<End>.*)";
@@ -616,12 +616,12 @@ namespace MushDLR223.Utilities
                 if (m_console != null)
                     m_console.UnlockOutput();
             }
-         }
-        
+        }
+
         private static int ColorIndex = 0;
         readonly static Dictionary<string, ConsoleColor> Name2Color = new Dictionary<string, ConsoleColor>();
         public static ConsoleColor DeriveColor(string input)
-         {
+        {
             input = input.ToUpper();
             lock (Name2Color)
             {
@@ -772,60 +772,60 @@ namespace MushDLR223.Utilities
         static public void WriteNewLine(ConsoleColor senderColor, string sender, ConsoleColor color, string format, params object[] args)
         {
             lock (cmdline) lock (m_syncRoot)
-            {
-                if (y != -1)
                 {
-                    y = SetCursorTop(y);
-                    CursorLeft = 0;
-
-                    int count = cmdline.Length;
-
-                    SystemWrite0("  ");
-                    while (count-- > 0)
-                        SystemWrite0(" ");
-
-                    y = SetCursorTop(y);
-                    CursorLeft = 0;
-                }
-                // dont trim off spaces
-                char[] trim = "\n\r".ToCharArray();
-                string safeFormat = SafeFormat(format, args);
-                string[] safeFormatSplit = safeFormat.Split(new[] { "\r\n", "\n", "\r"},StringSplitOptions.None);
-                foreach (var argsFmt in safeFormatSplit)
-                {
-                    safeFormat = argsFmt;
-                    WritePrefixLine(senderColor, sender);
-                    omittedPrefix = sender.ToUpper() + ":";
-                    WriteConsoleLine(color, "{0}", safeFormat.Trim(trim));
-                    omittedPrefix = "";
                     if (y != -1)
-                        y = CursorTop;
+                    {
+                        y = SetCursorTop(y);
+                        CursorLeft = 0;
+
+                        int count = cmdline.Length;
+
+                        SystemWrite0("  ");
+                        while (count-- > 0)
+                            SystemWrite0(" ");
+
+                        y = SetCursorTop(y);
+                        CursorLeft = 0;
+                    }
+                    // dont trim off spaces
+                    char[] trim = "\n\r".ToCharArray();
+                    string safeFormat = SafeFormat(format, args);
+                    string[] safeFormatSplit = safeFormat.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
+                    foreach (var argsFmt in safeFormatSplit)
+                    {
+                        safeFormat = argsFmt;
+                        WritePrefixLine(senderColor, sender);
+                        omittedPrefix = sender.ToUpper() + ":";
+                        WriteConsoleLine(color, "{0}", safeFormat.Trim(trim));
+                        omittedPrefix = "";
+                        if (y != -1)
+                            y = CursorTop;
+                    }
                 }
-            }
         }
 
         static public void WriteNewLine(ConsoleColor color, string format, params object[] args)
         {
             lock (cmdline) lock (m_syncRoot)
-            {
-                if (y != -1)
                 {
-                    y = SetCursorTop(y);
-                    CursorLeft = 0;
+                    if (y != -1)
+                    {
+                        y = SetCursorTop(y);
+                        CursorLeft = 0;
 
-                    int count = cmdline.Length;
+                        int count = cmdline.Length;
 
-                    SystemWrite0("  ");
-                    while (count-- > 0)
-                        SystemWrite0(" ");
+                        SystemWrite0("  ");
+                        while (count-- > 0)
+                            SystemWrite0(" ");
 
-                    y = SetCursorTop(y);
-                    CursorLeft = 0;
+                        y = SetCursorTop(y);
+                        CursorLeft = 0;
+                    }
+                    WriteConsoleLine(color, format, args);
+                    if (y != -1)
+                        y = CursorTop;
                 }
-                WriteConsoleLine(color, format, args);
-                if (y != -1)
-                    y = CursorTop;
-            }
         }
 
         static public void WriteConsoleLine(ConsoleColor color, string format, params object[] args)
@@ -1312,38 +1312,42 @@ namespace MushDLR223.Utilities
         }
         public static string GetCallerFormat(string format, out string prefix)
         {
-// ReSharper disable ConditionIsAlwaysTrueOrFalse
+            // ReSharper disable ConditionIsAlwaysTrueOrFalse
             if (false) return format;
-// ReSharper restore ConditionIsAlwaysTrueOrFalse
+            // ReSharper restore ConditionIsAlwaysTrueOrFalse
             if (!format.StartsWith("["))
             {
                 int fc = format.IndexOf(":");
-                if (fc>1)
+                if (fc > 1)
                 {
                     prefix = format.Substring(0, fc);
                     if (prefix.Contains(" "))
                     {
                         prefix = CurrentCaller;
                         fc = -1;
-                    } else
+                    }
+                    else
                     {
                         prefix = prefix.ToUpper();
                     }
                     format = format.Substring(fc + 1);
                     return format;
-                } else
+                }
+                else
                 {
                     prefix = CurrentCaller;
                     return format;
                 }
-            } else
+            }
+            else
             {
                 int fc = format.IndexOf("]");
                 if (fc == -1)
                 {
                     prefix = CurrentCaller;
                     return format;
-                } else
+                }
+                else
                 {
                     prefix = format.Substring(1, fc - 1);
                     return format.Substring(fc + 1);
@@ -1392,7 +1396,7 @@ namespace MushDLR223.Utilities
                         lock (transparentCallers) if (transparentCallers.Contains(caller)) continue;
                         if (opacheCallers != null)
                             lock (opacheCallers) if (opacheCallers.Contains(caller))
-                                return CallerName(s, useMethodName);
+                                    return CallerName(s, useMethodName);
                     }
                     return CallerName(s, useMethodName);
                 }
@@ -1404,7 +1408,7 @@ namespace MushDLR223.Utilities
         {
             string str = null;
             if (frame == null) return str;
-            var m = frame.GetMethod();            
+            var m = frame.GetMethod();
             string suffix = "";
             if (m != null)
             {
@@ -1472,7 +1476,7 @@ namespace MushDLR223.Utilities
         private static string GetFormat(string format)
         {
             if (string.IsNullOrEmpty(omittedPrefix)) return format;
-            string fupper =  format.ToUpper();
+            string fupper = format.ToUpper();
             if (fupper.StartsWith(omittedPrefix))
             {
                 return format.Substring(omittedPrefix.Length).TrimStart();
@@ -1480,7 +1484,7 @@ namespace MushDLR223.Utilities
             if (fupper.TrimStart().StartsWith(omittedPrefix.TrimStart()))
             {
                 int getFrom = fupper.IndexOf(omittedPrefix);
-                if (getFrom>0)
+                if (getFrom > 0)
                 {
                     getFrom += omittedPrefix.Length;
                 }
@@ -1566,7 +1570,7 @@ namespace MushDLR223.Utilities
         }
 
         public static string ReadLine()
-        {                
+        {
             return SystemConsole.ReadLine();
         }
 
@@ -1586,7 +1590,7 @@ namespace MushDLR223.Utilities
         }
 
         public static string SafeFormat(string fmt, params object[] args)
-        {         
+        {
             if (fmt == null)
             {
                 return ExplainFormatError(fmt, args, SYSTEM_ERR_WRITELINE, new Exception());
@@ -1631,17 +1635,27 @@ namespace MushDLR223.Utilities
 
                     del(arg);
                     str.AppendLine(arg);
-                }                
+                }
             }
             return str.ToString();
         }
 
-        public static void DepthCheck()
+        public static bool TooDeep()
+        {
+            if (IsTooDeep())
+            {
+                DebugWriteLine("DepthCheck");
+                return true;
+            }
+            return false;
+        }
+        public static bool IsTooDeep()
         {
             if (new System.Diagnostics.StackTrace(true).GetFrames().Length > 400)
             {
-                DebugWriteLine("DepthCheck");
+                return true;
             }
+            return false;
         }
     }
 }

@@ -251,9 +251,13 @@ namespace MushDLR223.Utilities
             {
                 return ValueText(InnerXmlText(xmlNode));
             }
-            if (xmlNode.NodeType == XmlNodeType.Text || xmlNode.NodeType == XmlNodeType.CDATA)
+            if (xmlNode.NodeType == XmlNodeType.Text)
             {
-                return xmlNode.InnerXml;
+                return xmlNode.InnerText;
+            }
+            if (xmlNode.NodeType == XmlNodeType.CDATA)
+            {
+                return xmlNode.InnerText;
             }
             return xmlNode.OuterXml;
         }

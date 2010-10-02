@@ -1614,12 +1614,14 @@ namespace RTParser
             }
             
             tagHandler.SetParent(parent);
-            if (parent!=null) parent.AddChild(tagHandler);
+            //if (parent!=null) parent.AddChild(tagHandler);
 
             Unifiable cp = tagHandler.CompleteAimlProcess();
             if (Unifiable.IsNullOrEmpty(cp) && (!tagHandler.QueryHasSuceeded || tagHandler.QueryHasFailed))
             {
-                if (isTraced || request.SuspendSearchLimits || request.IsToplevelRequest)
+                bool needsOneMoreTry = !request.SuspendSearchLimits &&
+                                       (request.IsToplevelRequest /*|| result.ParentRequest.IsToplevelRequest*/);
+                if (isTraced || needsOneMoreTry)
                 {
                     //writeDebugLine("ERROR: Try Again since NULL " + tagHandler);
                     bool wsl = request.SuspendSearchLimits;
@@ -1627,6 +1629,10 @@ namespace RTParser
                     {
                         request.SuspendSearchLimits = true;
                         cp = tagHandler.CompleteAimlProcess();
+                        if (Unifiable.IsNull(cp))
+                        {
+                            return tagHandler.GetTemplateNodeInnerText();
+                        }
                         if (Unifiable.IsNullOrEmpty(cp))
                         {
                             // trace the next line to see why

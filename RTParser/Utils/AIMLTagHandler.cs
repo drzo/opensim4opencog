@@ -250,7 +250,7 @@ namespace RTParser.Utils
 
         protected ResultCache finalResult = new ResultCache();
         protected ResultCache innerResult = new ResultCache();
-        private ICollection<AIMLTagHandler> TagHandlerChilds;
+        private List<AIMLTagHandler> TagHandlerChilds;
         public static bool SaveAIMLChange = true;
         public static bool SaveAIMLComplete = false;
         public static bool EnforceStartedBool = false;
@@ -340,12 +340,12 @@ namespace RTParser.Utils
                 }
                 if (IsNull(value))
                 {
-                    writeToLog("WARN: Null = " + null);
+                    writeToLog("WARN: Null = " + Unifiable.DescribeUnifiable(value));
                     return;
                 }
                 if (IsEMPTY(value))
                 {
-                    writeToLog("WARN: EXPTY" + null);
+                    writeToLog("WARN: EXPTY" + Unifiable.DescribeUnifiable(value));
                 }
             }
         }
@@ -378,6 +378,8 @@ namespace RTParser.Utils
         public void ResetValues(bool childsTo)
         {
             QueryHasFailed = false;
+            QueryHasSuceededN = 0;
+            QueryHasFailedN = 0;
             IsStarted = false;
             finalResult.Reset();
             innerResult.Reset(); // Unifiable.NULL;
@@ -417,46 +419,68 @@ namespace RTParser.Utils
                 if (RecurseResultValid) return RecurseResult;
                 IsStarted = true;
                 var recurseResult = ProcessChange();
-                if (!Unifiable.IsNull(recurseResult))
+                var recurseResult0 = recurseResult;
+                if (CompleteEvaluatution(recurseResult0, this, out recurseResult))
                 {
-                    if (CheckNoZAIMLTodo(recurseResult))
-                    {
-                        recurseResult = ProcessAimlTemplate(recurseResult);
-                    }
-                    RecurseResult = recurseResult;
-                    return  recurseResult;
-                }
-                recurseResult = RecurseProcess();
-                if (!Unifiable.IsNull(recurseResult))
-                {
-                    if (CheckNoZAIMLTodo(recurseResult))
-                    {
-                        recurseResult = ProcessAimlTemplate(recurseResult);
-                    }
                     RecurseResult = recurseResult;
                     return recurseResult;
                 }
-                var recurseResult1 = templateNodeInnerText;
-                if (!Unifiable.IsNull(recurseResult1))
+                var recurseResult1 = RecurseProcess();
+                if (CompleteEvaluatution(recurseResult1, this, out recurseResult))
                 {
-                    if (CheckNoZAIMLTodo(recurseResult1))
-                    {
-                        recurseResult1 = ProcessAimlTemplate(recurseResult1);
-
-                    }
-                    RecurseResult = recurseResult1;
-                    return recurseResult1;
+                    RecurseResult = recurseResult;
+                    return recurseResult;
                 }
-                if (CheckNoZAIMLTodo(recurseResult))
+                var recurseResult2 = templateNodeInnerText;
+                if (CompleteEvaluatution(recurseResult2, this, out recurseResult))
                 {
-                    recurseResult = ProcessAimlTemplate(recurseResult);
+                    RecurseResult = recurseResult;
+                    return recurseResult;
                 }
-                return recurseResult;
+                return recurseResult0;
             }
             finally
             {
                 if (OnExit != null) OnExit();
             }
+        }
+
+        public static bool CompleteEvaluatution(Unifiable vv, AIMLTagHandler handler, out Unifiable output)
+        {
+            output = null;
+            if (DLRConsole.TooDeep()) return false;
+            if (IsNullOrEmpty(vv)) return false;
+            if (IsUnevaluated(vv))
+            {
+                bool success = false;
+                int breakoutIn = 10;
+                while (breakoutIn-- > 0 && IsUnevaluated(vv))
+                {
+                    Unifiable vv2 = handler.ProcessAiml(vv, out success);
+                    if (!IsNullOrEmpty(vv2))
+                    {
+                        if (success)
+                        {
+                            vv = vv2;
+                            continue;
+                        }
+                    }
+                }
+                if (success)
+                {
+                    output = vv;
+                    return true;
+                }
+                return false;
+            }
+            if (IsNull(vv)) return false;
+            output = vv;
+            if (IsEMPTY(vv))
+            {
+                return IsSilentTag(handler.templateNode);
+            }
+            output = vv;
+            return true;
         }
 
         /// <summary>
@@ -484,6 +508,11 @@ namespace RTParser.Utils
                 if (Unifiable.IsNull(test))
                 {
                     test = GetTemplateNodeInnerText();
+                    Unifiable value2;
+                    if (CompleteEvaluatution(test, this, out value2))
+                    {
+                        test = value2;
+                    }
                     return test;
                 }
                 return test;
@@ -506,6 +535,7 @@ namespace RTParser.Utils
             float score1 = t1.Unify(with, query);
             if (score1 == 0) return score1;
             Unifiable t2 = CompleteAimlProcess();
+            if (IsNull(t2)) return 1.0f;
             if (ReferenceEquals(t1, t2)) return score1;
             float score2 = t2.Unify(with, query);
             if (score2 == 0) return score2;
@@ -711,17 +741,21 @@ namespace RTParser.Utils
                     //writeToLogWarn("CheckValue EMPTY = '" + value + "'");
                     return value;
                 }
-                if (!CheckNoZAIMLTodo(value))
+                if (!IsUnevaluated(value))
                 {
                     return value;
                 }
-                var recurseResult = ProcessAimlTemplate(value);
+                if (CompleteEvaluatution(value, this, out value))
+                {
+                    //RecurseResult = vv;
+                    return value;
+                } 
                // writeToLogWarn("CheckValue XML = '" + (string)value + "'");
                 return value;
             }
         }
 
-        protected bool CheckNoZAIMLTodo(Unifiable value)
+        public static bool IsUnevaluated(Unifiable value)
         {
             string v = (string)value;
             if (value == null) return false;
@@ -742,10 +776,27 @@ namespace RTParser.Utils
         protected AIMLTagHandler GetChildTagHandler(XmlNode childNode)
         {
             AIMLTagHandler part = Proc.GetTagHandler(user, query, request, result, childNode, this);
-            AddChild(part);
+            //AddChild(part);
             return part;
         }
 
+        public Unifiable ProcessAiml(Unifiable vv, out bool success)
+        {
+            if (DLRConsole.IsTooDeep())
+            {
+                success = false;
+                return "<!--" + (((string)("" + vv)).Replace("!", "#")) + "-->";
+            }
+            var vv1 = vv;
+            var vv2 = ProcessChildNode00(StaticAIMLUtils.getTemplateNode(vv), false, false, out success);
+            writeToLog("Continue sub-Processing of " + vv + " -> " + vv2);
+            if (success) vv = vv2;
+            if (!IsNullOrEmpty(vv))
+            {
+                return vv;
+            }
+            return vv;
+        }
 
         protected Unifiable ProcessChildNode(XmlNode childNode)
         {
@@ -778,24 +829,20 @@ namespace RTParser.Utils
             {
                 QueryHasFailedN++;
             }
-            if (success && ContainsAiml(vv))
+            if (success && IsUnevaluated(vv))
             {
-                vv = ProcessAimlTemplate(vv);
+                bool success0;
+                var vv2 = ProcessAiml(vv, out success0);
+                if (success0)
+                {
+                    vv = vv2;
+                }
+                else
+                {
+                    success = false;
+                }
             }
             if (!IsNullOrEmpty(vv) || childNode.LocalName=="think")
-            {
-                return vv;
-            }
-            return vv;
-        }
-
-        private Unifiable ProcessAimlTemplate(Unifiable vv)
-        {
-            bool success;
-            var vv2 = ProcessChildNode00(StaticAIMLUtils.getTemplateNode(vv), false, false, out success);
-            writeToLog("Continue sub-Processing of " + vv + " -> " + vv2);
-            if (success) vv = vv2;
-            if (!IsNullOrEmpty(vv))
             {
                 return vv;
             }
@@ -1058,8 +1105,12 @@ namespace RTParser.Utils
         {
             if (RecurseResultValid) return RecurseResult;
             var vv = ProcessChange();
-            RecurseResult = vv;
-            DLRConsole.DepthCheck();
+            if (CompleteEvaluatution(vv, this, out vv))
+            {
+                RecurseResult = vv;
+                return vv;
+            }
+           // RecurseResult = vv;
             if (!Unifiable.IsNullOrEmpty(vv))
             {
                 return vv;
@@ -1108,9 +1159,14 @@ namespace RTParser.Utils
             return true;
         }
 
-        protected Unifiable TestChildTagHandlers(IEnumerable<AIMLTagHandler> aimlTagHandlers)
+        protected Unifiable OutputFromTagHandlers(IEnumerable<AIMLTagHandler> aimlTagHandlers)
         {
             Unifiable appendable = Unifiable.CreateAppendable();
+            lock (aimlTagHandlers)
+            {
+                List<AIMLTagHandler> LoopOver = new List<AIMLTagHandler>(aimlTagHandlers);
+                aimlTagHandlers = LoopOver;
+            }
             foreach (var childTagHandler in aimlTagHandlers)
             {
                 var vv = childTagHandler.ProcessAimlChange();
@@ -1143,6 +1199,7 @@ namespace RTParser.Utils
             return appendable;
         }
 
+        /*
         protected IEnumerable<AIMLTagHandler> CreateChildTagHandlers(IEnumerable<XmlNode> xmlNodes)
         {
             List<AIMLTagHandler> aimlTagHandlers = new List<AIMLTagHandler>();
@@ -1153,7 +1210,7 @@ namespace RTParser.Utils
             }
             return aimlTagHandlers;
         }
-
+        */
 
         public virtual Unifiable RecurseProcess()
         {
@@ -1218,6 +1275,12 @@ namespace RTParser.Utils
 
         public virtual void SaveResultOnChild(XmlNode node, string value)
         {
+            Unifiable value2;
+            if (CompleteEvaluatution(value, this, out value2))
+            {
+                value = value2;
+            } 
+
             value = ValueText(value);
             if (InUnify)
             {
@@ -1283,6 +1346,10 @@ namespace RTParser.Utils
                 Unifiable v = NamedValuesFromSettings.GetSettingForType(
                     dictName, query, dict, name, out realName,
                     gName, defaultVal, out succeed, templateNode);
+                if (succeed)
+                {
+                    return v;
+                }
                 return v;
             }
             finally
@@ -1389,8 +1456,10 @@ namespace RTParser.Utils
                 if (IsDisposing) return;
                 IsDisposing = true;
             }
+            if (Parent != null) Parent.Dispose();
+            return;
             if (TagHandlerChilds != null)
-            {
+            {                
                 foreach (AIMLTagHandler child in TagHandlerChilds)
                 {
                     child.Dispose();
@@ -1398,7 +1467,6 @@ namespace RTParser.Utils
                 TagHandlerChilds.Clear();
                 TagHandlerChilds = null;
             }
-            if (Parent != null) Parent.Dispose();
             return;
         }
 
@@ -1533,20 +1601,48 @@ namespace RTParser.Utils
         {
             writeToLogWarn("ERROR Unknown conditions " + LineNumberTextInfo());
         }
-        protected Unifiable NodesToOutput(ICollection<XmlNode> nodes, Predicate<XmlNode> predicate)
+
+        protected Unifiable OutputFromNodes(ICollection<XmlNode> nodes, Predicate<XmlNode> predicate)
         {
-            List<AIMLTagHandler> aimlTagHandlers = new List<AIMLTagHandler>();
-            foreach (var xmlNode in nodes)
+            List<AIMLTagHandler> aimlTagHandlers = GetAIMLTagHandlers(nodes, predicate);
+
+            Unifiable appendable = OutputFromTagHandlers(aimlTagHandlers);
+            if (CompleteEvaluatution(appendable, this, out appendable))
             {
-                if (predicate(xmlNode))
+                RecurseResult = appendable;
+                return appendable;
+            } 
+            return CheckValue(appendable);
+        }
+
+
+        private List<AIMLTagHandler> GetAIMLTagHandlers(ICollection<XmlNode> nodes, Predicate<XmlNode> predicate)
+        {
+            TagHandlerChilds = TagHandlerChilds ?? new List<AIMLTagHandler>();
+            lock (TagHandlerChilds)
+            {
+                List<AIMLTagHandler> aimlTagHandlers = new List<AIMLTagHandler>();
+                foreach (var xmlNode in nodes)
                 {
-                    var childTagHandler = GetChildTagHandler(xmlNode);
-                    aimlTagHandlers.Add(childTagHandler);
+                    if (predicate(xmlNode))
+                    {
+                        var childTagHandler = GetChildTagHandler(xmlNode);
+                        aimlTagHandlers.Add(childTagHandler);
+                    }
+                }
+                lock (aimlTagHandlers)
+                {
+                    if (aimlTagHandlers.Count == this.TagHandlerChilds.Count)
+                    {
+                        aimlTagHandlers = TagHandlerChilds;
+                    }
+                    else
+                    {
+                        TagHandlerChilds = aimlTagHandlers;
+                    }
+                    return aimlTagHandlers;
                 }
             }
-            Unifiable appendable = TestChildTagHandlers(aimlTagHandlers);
-            RecurseResult = appendable;
-            return CheckValue(appendable);
         }
     }
 }

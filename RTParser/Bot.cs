@@ -1897,10 +1897,11 @@ The AIMLbot program.
                 return current;
             }
 
-            if (graphPath.ToLower().EndsWith(".parent"))
+            string lower = graphPath.ToLower();
+            if (lower.EndsWith(".parent") || lower.EndsWith(".parallel"))
             {
                 int graphPathLength = graphPath.Length - 7;
-                return GetGraph(graphPath.Substring(0, graphPathLength), current).Parent;
+                return GetGraph(graphPath.Substring(0, graphPathLength), current).Parallel;
             }
 
             graphPath = ToScriptableName(graphPath.Trim());
@@ -1929,7 +1930,7 @@ The AIMLbot program.
             {
                 int graphPathLength = graphPath.Length - 7;
                 var G = FindGraph(graphPath.Substring(0, graphPathLength), current);
-                if (G != null) return G.Parent;
+                if (G != null) return G.Parallel;
             }
 
             graphPath = ToScriptableName(graphPath.Trim());
@@ -1951,10 +1952,10 @@ The AIMLbot program.
                     return _h;
                 }
             }
-            if (graphPath == "parent")
+            if (graphPath == "parent" || graphPath == "parallel")
             {
                 if (current == null) return null;
-                return current.Parent;
+                return current.Parallel;
             }
 
             GraphMaster g;
@@ -2212,7 +2213,7 @@ The AIMLbot program.
                 if (StaticInitStarted) return;
                 StaticInitStarted = true;
                 GraphsByName["listener"] = TheUserListernerGraph = new GraphMaster("listener");
-                TheUserListernerGraph.SilentTagsInPutParent = false;
+                TheUserListernerGraph.SilentTagsInPutParallel = false;
                 var defaultGraph = GraphsByName["default"] = new GraphMaster("default");
                 defaultGraph.RemovePreviousTemplatesFromNodes = false;
                 GraphsByName["heardselfsay"] = TheUserListernerGraph;////new GraphMaster("heardselfsay");

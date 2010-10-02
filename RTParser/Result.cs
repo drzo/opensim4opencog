@@ -633,7 +633,7 @@ namespace RTParser
             AddOutputSentences0(ti, unifiable);
         }
 
-        public bool IsTemplateNew(TemplateInfo ti)
+        public bool IsTemplateNew(TemplateInfo ti, Unifiable tempOut)
         {
             if (ti == null) return false;
             if (UsedTemplates1.Contains(ti)) return false;
@@ -680,6 +680,22 @@ namespace RTParser
                 writeToLog("ERROR assing '' output " + ti);
                 return;
             }
+            if (ti != null)
+            {
+                if (ti.TextSaved == unifiable)
+                {
+
+                }
+                else if (ti.TextSaved != null)
+                {
+                    if (IsTraced) writeToLog("switching '" + ti.TextSaved + "' to '" + unifiable + "'");
+                    ti.TextSaved = unifiable;
+                }
+                else
+                {
+                    ti.TextSaved = unifiable;
+                }
+            }
             unifiable = unifiable + " ";
             if (false && unifiable.Length > 2 && (unifiable.Contains("<br/>") || unifiable.Contains("&p;")))
             {
@@ -700,7 +716,7 @@ namespace RTParser
                 return;
             }
             if (AlreadyUsed.Contains(unifiable)) return;
-            if (!IsTemplateNew(ti))
+            if (!IsTemplateNew(ti, unifiable))
             {
                 //return;
             }

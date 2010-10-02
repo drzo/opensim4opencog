@@ -22,10 +22,10 @@ namespace RTParser.Utils
         private static string _STAR_PATH;
 
         /// <summary>
-        /// Should tags that make no output be placed in parent Graphmaster
+        /// Should tags that make no output be placed in parallel Graphmaster
         /// </summary>
         [ApplicationScopedSetting]
-        static public bool DefaultSilentTagsInPutParent { get; set; }
+        static public bool DefaultSilentTagsInPutParallel { get; set; }
 
         /// <summary>
         /// Should template Objects be stored in graphmasters
@@ -56,7 +56,7 @@ namespace RTParser.Utils
 
         private readonly Dictionary<string, DateTime> LoadedFiles = new Dictionary<string, DateTime>();
 
-        private readonly List<GraphMaster> Parents = new List<GraphMaster>();
+        private readonly List<GraphMaster> Parallels = new List<GraphMaster>();
 
         /// <summary>
         /// All the &lt;pattern&gt;s (if any) associated with this database
@@ -79,23 +79,23 @@ namespace RTParser.Utils
         /// </summary>
         internal readonly Dictionary<String, TopicInfo> Topics = new Dictionary<string, TopicInfo>();
 
-        private GraphMaster _parent;
+        private GraphMaster _parallel;
 
         /// <summary>
         /// All the &lt;category&gt;s (if any) associated with this database
         /// </summary>
         private List<CategoryInfo> CategoryInfos;
 
-        public bool DoParents = true;
+        public bool DoParallels = true;
         private bool FullDepth = true;
         public bool IsBusy;
-        public bool CannotHaveParents = false;    
+        public bool CannotHaveParallel = false;    
 
-        private int parent0;
-        private Node PostParentRootNode = new Node(null);
+        private int parallel0;
+        private Node PostParallelRootNode = new Node(null);
         private Node RootNode = new Node(null);
         [UserScopedSetting]
-        public bool SilentTagsInPutParent { get; set; }
+        public bool SilentTagsInPutParallel { get; set; }
         public int Size;
         public String Srai;
         public bool UnTraced;
@@ -117,30 +117,30 @@ namespace RTParser.Utils
         /// </summary>        
         public bool DistinguishSilenetTags = true;
 
-        public bool IsParent = false;
+        public bool IsParallel = false;
 
         static GraphMaster()
         {
-            DefaultSilentTagsInPutParent = false;
+            DefaultSilentTagsInPutParallel = false;
         }
         public GraphMaster(string gn)
             : this(gn, null, false)
         {
         }
-        public GraphMaster(string gn, GraphMaster child, bool isParent)
+        public GraphMaster(string gn, GraphMaster child, bool isParallel)
         //: base(bot)
         {
-            IsParent = isParent;
-            SilentTagsInPutParent = DefaultSilentTagsInPutParent;
-            SilentTagsInPutParent = false;
+            IsParallel = isParallel;
+            SilentTagsInPutParallel = DefaultSilentTagsInPutParallel;
+            SilentTagsInPutParallel = false;
             CategoryInfos = TrackTemplates ? new List<CategoryInfo>() : null;
             Templates = TrackTemplates ? new List<TemplateInfo>() : null;
             graphName = gn;
             //theBot = bot;
-            // most graphs try to recuse on themselves until otehrwise stated (like in make-parent)
+            // most graphs try to recuse on themselves until otehrwise stated (like in make-parallel)
             Srai = gn;
             RootNode.Graph = this;
-            PostParentRootNode.Graph = this;
+            PostParallelRootNode.Graph = this;
             if (!TrackTemplates)
             {
                 UnusedTemplates = null;
@@ -148,55 +148,55 @@ namespace RTParser.Utils
                 CategoryInfos = null;
             }
             //UnusedTemplates = new List<TemplateInfo>();
-            if (isParent)
+            if (isParallel)
             {
-                IsParent = true;
-                // useless for parent to have parents
-                CannotHaveParents = true;
-                // parents are already silent
-                SilentTagsInPutParent = false;
-                // parents are "mutli-templated"
+                IsParallel = true;
+                // useless for parallel to have parallels
+                CannotHaveParallel = true;
+                // parallels are already silent
+                SilentTagsInPutParallel = false;
+                // parallels are "mutli-templated"
                 RemovePreviousTemplatesFromNodes = false;
-                // parents only max out in "timeout"
+                // parallels only max out in "timeout"
                 // = false;
             }
             else
             {
                // CanMaxOutStage1 = false;
-                if (gn.Contains("parent"))
+                if (gn.Contains("parallel") || gn.Contains("parent"))
                 {
-                    throw new Exception("Parent should use other constructor! " + gn);
+                    throw new Exception("Parallel should use other constructor! " + gn);
                 }
             }
         }
 
         // ReSharper restore FieldCanBeMadeReadOnly.Local
 
-        public GraphMaster Parent
+        public GraphMaster Parallel
         {
             get
             {
-                if (ScriptingName.Contains("parent"))
+                if (ScriptingName.Contains("parallel") || ScriptingName.Contains("parent"))
                 {
                     return this;
                 }
-                if (CannotHaveParents)
+                if (CannotHaveParallel)
                 {
-                    writeToLog("CantHaveParents!");
+                    writeToLog("CantHaveParallels!");
                     return this;
                 }
-                if (_parent == null)
+                if (_parallel == null)
                 {
-                    if (Parents.Count > 0)
+                    if (Parallels.Count > 0)
                     {
-                        _parent = Parents[0];
+                        _parallel = Parallels[0];
                     }
                     else
                     {
-                        _parent = makeParent();
+                        _parallel = makeParallel();
                     }
                 }
-                return _parent;
+                return _parallel;
             }
         }
 
@@ -385,18 +385,18 @@ namespace RTParser.Utils
             return CategoryInfo.MakeCategoryInfo(info, node, filename);
         }
 
-        private GraphMaster makeParent()
+        private GraphMaster makeParallel()
         {
-            if (CannotHaveParents)
+            if (CannotHaveParallel)
             {
-                writeToLog("CantHaveParents!");
+                writeToLog("CantHaveParallels!");
                 return this;
             }
-            GraphMaster p = new GraphMaster("" + graphName + ".parent" + (parent0 == 0 ? "" : "" + parent0), this, true);
+            GraphMaster p = new GraphMaster("" + graphName + ".parallel" + (parallel0 == 0 ? "" : "" + parallel0), this, true);
             p.Srai = graphName;
-            parent0++;
+            parallel0++;
             p.UnTraced = true;
-            Parents.Add(p);
+            Parallels.Add(p);
             return p;
         }
 
@@ -417,7 +417,7 @@ namespace RTParser.Utils
             FileStream saveFile = HostSystem.Create(path);
             BinaryFormatter bf = new BinaryFormatter();
             bf.Serialize(saveFile, this.RootNode);
-            bf.Serialize(saveFile, this.PostParentRootNode);
+            bf.Serialize(saveFile, this.PostParallelRootNode);
             saveFile.Close();
         }
 
@@ -430,7 +430,7 @@ namespace RTParser.Utils
             Stream loadFile = HostSystem.OpenRead(path);
             BinaryFormatter bf = new BinaryFormatter();
             this.RootNode = (Node)bf.Deserialize(loadFile);
-            this.PostParentRootNode = (Node)bf.Deserialize(loadFile);
+            this.PostParallelRootNode = (Node)bf.Deserialize(loadFile);
             loadFile.Close();
         }
 
@@ -449,13 +449,13 @@ namespace RTParser.Utils
                                    XmlNode outerNode, XmlNode templateNode, GuardInfo guard, ThatInfo thatInfo,
                                    List<ConversationCondition> additionalRules, out bool wouldBeRemoval)
         {
-            if (SilentTagsInPutParent && !StaticAIMLUtils.IsEmptyTemplate(templateNode) && StaticAIMLUtils.IsSilentTag(templateNode))
+            if (SilentTagsInPutParallel && !StaticAIMLUtils.IsEmptyTemplate(templateNode) && StaticAIMLUtils.IsSilentTag(templateNode))
             {
-                GraphMaster parent1 = makeParent();
-                this.Parents.Add(parent1);
-                parent1.SilentTagsInPutParent = false;
-                writeToLog("Adding to Parent " + category);
-                parent1.addCategoryTag(generatedPath, patternInfo, category, outerNode, templateNode, guard, thatInfo,
+                GraphMaster parallel1 = makeParallel();
+                this.Parallels.Add(parallel1);
+                parallel1.SilentTagsInPutParallel = false;
+                writeToLog("Adding to Parallel " + category);
+                parallel1.addCategoryTag(generatedPath, patternInfo, category, outerNode, templateNode, guard, thatInfo,
                                        additionalRules, out wouldBeRemoval);
                 return;
             }
@@ -463,11 +463,15 @@ namespace RTParser.Utils
             Node rootNode = this.RootNode;
             if (IsStarStarStar(generatedPath))
             {
-                rootNode = this.PostParentRootNode;
+                rootNode = this.PostParallelRootNode;
             }
-            else if (IsAnyStar(generatedPath) > 1)
+            else if (generatedPath.AsString().Contains("TAG-THAT * TAG-TOPIC * TAG-FLAG"))
             {
-                rootNode = this.PostParentRootNode;
+                rootNode = this.PostParallelRootNode;
+            }
+            else if (IsAnyStar(generatedPath) >= 2)
+            {
+                //rootNode = this.PostParallelRootNode;
                 //writeToLog("Putting at end of queue " + generatedPath);
             }
             Node thiz = rootNode.addPathNodeChilds(generatedPath);
@@ -478,7 +482,7 @@ namespace RTParser.Utils
                                                  additionalRules, out wouldBeRemoval);
             if (wouldBeRemoval)
             {
-                Node other = rootNode == this.RootNode ? this.PostParentRootNode : this.RootNode;
+                Node other = rootNode == this.RootNode ? this.PostParallelRootNode : this.RootNode;
                 Node thatz = other.addPathNodeChilds(generatedPath);
                 //writeToLog("Doing other removal: " + generatedPath);
                 info0 = thatz.addTerminal(templateNode, category, guard, thatInfo, this, patternInfo,
@@ -540,8 +544,8 @@ namespace RTParser.Utils
             MatchState state = ql.matchState;
             Unifiable path = ql.InputPath;
             var request = ql.TheRequest;
-            if (DoParents) DoParentEval(Parents, request, request.rawInput);
-            evaluateQL(path, request, state, ql, DoParents);
+            if (DoParallels) DoParallelEval(Parallels, request, request.rawInput);
+            evaluateQL(path, request, state, ql, true);
             if (ql.TemplateCount == 0)
             {
                 bool trace = request.IsTraced && !UnTraced;
@@ -551,7 +555,7 @@ namespace RTParser.Utils
             }
         }
 
-        private void evaluateQL(Unifiable path, Request request, MatchState matchState, GraphQuery ql, bool locallyDoParents)
+        private void evaluateQL(Unifiable path, Request request, MatchState matchState, GraphQuery ql, bool locallyDoFallbacks)
         {
             bool trace = request.IsTraced && !UnTraced;
             while (getQueries(RootNode, path, request, matchState, 0, Unifiable.CreateAppendable(), ql))
@@ -565,26 +569,25 @@ namespace RTParser.Utils
                     break;
                 }
             }
-            if (!ql.IsMaxedOut)
+            if (locallyDoFallbacks && FallBacksGraphs != null && !ql.IsMaxedOut)
             {
-                if (FallBacksGraphs == null) return;
                 foreach (GraphMaster graphMaster in CopyOf(FallBacksGraphs))
                 {
-                    graphMaster.evaluateQL(path, request, matchState, ql, !locallyDoParents);
-                    if (ql.IsMaxedOut)
+                    graphMaster.evaluateQL(path, request, matchState, ql, !IsParallel);
+                    if (ql.IsMaxedOutOrOverBudget)
                     {
                         if (trace)
-                            writeToLog("using parent templates from " + ql);
+                            writeToLog("using parallel templates from " + ql);
                         return;
                     }
                 }
             }
             if (!ql.IsMaxedOut)
             {
-                while (getQueries(PostParentRootNode, path, request, matchState, 0, Unifiable.CreateAppendable(),
+                while (getQueries(PostParallelRootNode, path, request, matchState, 0, Unifiable.CreateAppendable(),
                                   ql))
                 {
-                    if (ql.IsMaxedOut)
+                    if (ql.IsMaxedOutOrOverBudget)
                     {
                         break;
                     }
@@ -617,7 +620,6 @@ namespace RTParser.Utils
             if (bubble.Contains("TAG-TOPIC * TAG")) wideStar++;
             return wideStar;
         }
-
         /// <summary>
         // If we get a result from the branch process the wildcard matches and return 
         // the result
@@ -811,17 +813,17 @@ namespace RTParser.Utils
         {
             lock (LockerObject)
             {
-                var parents = Parents;
+                var parallels = Parallels;
                 if (doall == this)
                 {
                     writeToLog("Trying to PARALLEL reversed to " + this);
                     return;
                 }
-                lock (parents)
+                lock (parallels)
                 {
-                    if (!parents.Contains(doall))
+                    if (!parallels.Contains(doall))
                     {
-                        parents.Add(doall);
+                        parallels.Add(doall);
                         writeToLog("PARALLEL ADDING " + doall + " TO " + this);
                     }
                     doall.RemoveGenlMT(this, writeToLog);
@@ -850,7 +852,7 @@ namespace RTParser.Utils
             return copy;
         }
 
-        private List<Result> DoParentEval(List<GraphMaster> totry, Request request, Unifiable unifiable)
+        private List<Result> DoParallelEval(List<GraphMaster> totry, Request request, Unifiable unifiable)
         {
             var pl = new List<Result>();
             RTPBot proc = request.TargetBot;
@@ -1062,9 +1064,9 @@ namespace RTParser.Utils
             {
                 fs(" <genlMt name=\"{0}\"/>", list.ScriptingName);
             }
-            foreach (GraphMaster list in CopyOf(Parents))
+            foreach (GraphMaster list in CopyOf(Parallels))
             {
-                fs(" <!-- parent name=\"{0}\" -->", list.ScriptingName);
+                fs(" <!-- parallel name=\"{0}\" -->", list.ScriptingName);
             }
             string srai = Srai;
             if (srai != null)
@@ -1073,7 +1075,7 @@ namespace RTParser.Utils
             {
                 fs(" <!-- templates={0} thats={1} patterns={2} topics={3} nodes1={4} nodes2={5}  -->",
                    CountOF(Templates), CountOF(Thats), CountOF(Patterns), CountOF(Topics), RootNode.ChildCount,
-                   PostParentRootNode.ChildCount);
+                   PostParallelRootNode.ChildCount);
             }
         }
 

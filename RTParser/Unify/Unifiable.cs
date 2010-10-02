@@ -32,36 +32,43 @@ namespace RTParser
                 return arg;
             }
             Type rType = arg.GetType();
-            if (solid == typeof(Unifiable) && rType == typeof(string))
+            if (solid == typeof (Unifiable) && rType == typeof (string))
             {
-                string u = (string)arg;
-                return (Unifiable)u;
+                string u = (string) arg;
+                return (Unifiable) u;
             }
-            if (solid == typeof(string) && rType == typeof(Unifiable))
+            if (solid == typeof (string) && rType == typeof (Unifiable))
             {
-                Unifiable u = (Unifiable)arg;
+                Unifiable u = (Unifiable) arg;
                 return u.AsString();
             }
 
-            try {
+            try
+            {
                 string u = arg.ToString(FormatProvider);
 
                 if (solid == typeof (Unifiable))
                 {
                     return (Unifiable) u;
                 }
-                if (solid == typeof(string))
+                if (solid == typeof (string))
                 {
                     return u;
                 }
-                if (solid == typeof(Double))
+                if (solid == typeof (Double))
                 {
                     return Double.Parse(u);
                 }
-            } catch(Exception exception)
+                if (solid == typeof (Int32))
+                {
+                    return Int32.Parse(u);
+                }
+            }
+            catch (Exception exception)
             {
                 writeToLog("ERROR FormatProviderConvertor " + arg + " to " + solid);
             }
+            //if (FormatProvider == null) FormatProvider = ;//.;//new IFormatProvider();
             var format = FormatProvider.GetFormat(solid);
             object oo = arg.ToType(solid, FormatProvider);
             return (IConvertible) oo;

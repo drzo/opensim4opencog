@@ -42,12 +42,6 @@ namespace RTParser.Utils
             return recursiveResult;
         }
 
-        public override void SaveResultOnChild(XmlNode node, string value)
-        {
-
-            base.SaveResultOnChild(node, value);
-        }
-
         public override Unifiable CompleteProcess()
         {
             if (!IsStarted)
@@ -90,7 +84,7 @@ namespace RTParser.Utils
             if (value == null)
             {
                 writeToLogWarn("ChackValue NULL");
-                return Unifiable.Empty;
+                return null;
             }
             else
             {
@@ -99,19 +93,11 @@ namespace RTParser.Utils
                     writeToLogWarn("CheckValue EMPTY = '" + value + "'");
                     return Unifiable.Empty;
                 }
-                string v = value.AsString();
-                value = ValueText(v);
-                if (!value.AsString().Contains("a href"))
+                if (CompleteEvaluatution(value, this, out value))
                 {
-                    if (v.Contains("<"))
-                    {
-                        writeToLog("CheckValue XML = '" + value + "'");
-                    }
-                    else if (v.Contains("&"))
-                    {
-                        writeToLog("CheckValue HTML = '" + value + "'");
-                    }
-                }
+                    //RecurseResult = vv;
+                    return value;
+                } 
                 return value;
             }
         }

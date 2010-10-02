@@ -52,7 +52,10 @@ namespace AIMLbot
         public MasterResult(string rawInput, User user, RTPBot bot, Request parent, User targetUser)
             : base(rawInput, user, bot, parent, targetUser)
         {
-
+            if (ParentRequest==null && !IsToplevelRequest)
+            {
+                writeToLog("orphan?!" + this);
+            }
         }
     }
     

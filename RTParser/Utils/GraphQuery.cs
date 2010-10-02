@@ -129,6 +129,14 @@ namespace RTParser.Utils
                 return false;
             }
         }
+        public bool IsMaxedOutOrOverBudget
+        {
+            get
+            {
+                if (TheRequest.SuspendSearchLimits) return false;
+                return IsMaxedOut || TheRequest.IsTimedOutOrOverBudget;
+            }
+        }
 
         public override string ToString()
         {
@@ -159,8 +167,10 @@ namespace RTParser.Utils
                     if (!PatternsUsed.Contains(node))
                     {
                         PatternsUsed.Add(node);
-                        writeToLog("PatternsCount=" + PatternsUsed.Count);
-                        if (PatternsUsed.Count == 3)
+                        //writeToLog("PatternsCount=" + PatternsUsed.Count);
+                        // ReSharper disable ConditionIsAlwaysTrueOrFalse
+                        if (false && PatternsUsed.Count == 3)
+                            // ReSharper restore ConditionIsAlwaysTrueOrFalse
                         {
                             foreach (Node list in PatternsUsed)
                             {

@@ -168,10 +168,6 @@ namespace RTParser.AIMLTagHandlers
                 try
                 {
                     var templateNodeInnerValue = Recurse();
-                    if (IsSilentTag(templateNode.ChildNodes))
-                    {
-                        return Unifiable.Empty;
-                    }
                     var vv = ProcessChangeSrai(request, query, templateNodeInnerValue, templateNode, initialString, writeToLog);
                     if (!Unifiable.IsNullOrEmpty(vv))
                     {
@@ -183,6 +179,10 @@ namespace RTParser.AIMLTagHandlers
                     }
                     else
                     {
+                        if (IsSilentTag(templateNode.ChildNodes))
+                        {
+                            return Unifiable.Empty;
+                        }
                         return vv; // Empty
                     }
                     if (Unifiable.IsNull(vv))
