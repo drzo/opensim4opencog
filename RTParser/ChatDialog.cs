@@ -51,7 +51,7 @@ namespace RTParser
             {
                 if (BotAsUser != null)
                 {
-                    var LR = BotAsUser.LastReponder;
+                    var LR = BotAsUser.LastResponder;
                     if (LR != null) return LR;
                 }
                 if (IsInteractiveUser(_lastUser)) return _lastUser;
@@ -64,7 +64,7 @@ namespace RTParser
                 if (BotAsUser != null)
                 {
                     if (value == BotAsUser) return;
-                    BotAsUser.LastReponder = value;
+                    BotAsUser.LastResponder = value;
                 }
                 User LU = LastUser;
                 if (!IsInteractiveUser(LU) || IsInteractiveUser(value))

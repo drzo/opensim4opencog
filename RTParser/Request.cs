@@ -122,7 +122,9 @@ namespace RTParser
         void UndoAll();
         void AddSideEffect(string effect, ThreadStart start);
         Dictionary<string, GraphMaster> GetMatchingGraphs(string graphname, GraphMaster master);
-        bool TryGetSraiValue(Unifiable templateNodeInnerValue, out Unifiable prevResults, out Dictionary<Unifiable,Unifiable> dictionary);
+        bool TryGetSalientSRAI(Unifiable templateNodeInnerValue, out Unifiable prevResults, out Dictionary<Unifiable,Unifiable> dictionary);
+
+        bool RemoveSalientSRAI(Unifiable templateNodeInnerValue, string resultOutput);
     }
 
     /// <summary>
@@ -1322,13 +1324,23 @@ namespace RTParser
             return originalSalientRequest;
         }
 
-        public void ExitSailentSRAI(Unifiable templateNodeInnerValue, string resultOutput)
+        public void ExitSalientSRAI(Unifiable templateNodeInnerValue, string resultOutput)
         {
-            if (IsNull(resultOutput)) resultOutput = "FAILURE on: " + templateNodeInnerValue;
-            else resultOutput = "+++" + resultOutput;
-            _SRAIResults[templateNodeInnerValue] = resultOutput;
+            //if (IsNull(resultOutput)) resultOutput = "FAILURE on: " + templateNodeInnerValue;
+            //else resultOutput = "+++" + resultOutput;
+            //_SRAIResults[templateNodeInnerValue] = resultOutput;
+            RemoveSalientSRAI(templateNodeInnerValue, resultOutput);
         }
-        public bool TryGetSraiValue(Unifiable templateNodeInnerValue, out Unifiable prevResults, out Dictionary<Unifiable, Unifiable> dictionary)
+
+        public bool RemoveSalientSRAI(Unifiable templateNodeInnerValue, string resultOutput)
+        {
+            return _SRAIResults.Remove(templateNodeInnerValue) ||
+                   (ParentRequest != null && ParentRequest.RemoveSalientSRAI(templateNodeInnerValue, resultOutput));
+        }
+
+
+
+        public bool TryGetSalientSRAI(Unifiable templateNodeInnerValue, out Unifiable prevResults, out Dictionary<Unifiable, Unifiable> dictionary)
         {
             if (_SRAIResults.TryGetValue(templateNodeInnerValue, out prevResults))
             {
@@ -1336,7 +1348,7 @@ namespace RTParser
                 return true;
             }
             if (ParentRequest != null)
-                if (ParentRequest.TryGetSraiValue(templateNodeInnerValue, out prevResults, out dictionary))
+                if (ParentRequest.TryGetSalientSRAI(templateNodeInnerValue, out prevResults, out dictionary))
                 {
                     return true;
                 }
@@ -1344,13 +1356,13 @@ namespace RTParser
             return false;
         }
 
-        public bool EnterSailentSRAI(Unifiable templateNodeInnerValue, out Unifiable prevResults)
+        public bool EnterSalientSRAI(Unifiable templateNodeInnerValue, out Unifiable prevResults)
         {
             Dictionary<Unifiable, Unifiable> dict = _SRAIResults;
             lock (dict)
             {
                 string errorCycle = "ERROR CYCLE: " + templateNodeInnerValue;
-                if (!TryGetSraiValue(templateNodeInnerValue, out prevResults, out dict))
+                if (!TryGetSalientSRAI(templateNodeInnerValue, out prevResults, out dict))
                 {
                     dict[templateNodeInnerValue] = errorCycle;
                     return true;
@@ -1362,7 +1374,7 @@ namespace RTParser
                 }
                 if (IsNullOrEmpty(prevResults))
                 {
-                    writeToLog("EnterSailentSRAI IsNullOrEmpty on: " + templateNodeInnerValue);
+                    writeToLog("EnterSalientSRAI IsNullOrEmpty on: " + templateNodeInnerValue);
                     return true;
                 }
                 else
@@ -1381,7 +1393,28 @@ namespace RTParser
         public Dictionary<Unifiable, Unifiable> CreateSRAIMark()
         {
             var originalSalientRequest = GetOriginalSalientRequest(this);
-            return new Dictionary<Unifiable, Unifiable>(originalSalientRequest._SRAIResults);
+            var dict =  new Dictionary<Unifiable, Unifiable>(originalSalientRequest._SRAIResults);
+            var pr = ParentRequest;
+            while (pr != null)
+            {
+                var or = GetOriginalSalientRequest(pr);
+                if (or != originalSalientRequest)
+                {
+                    foreach (var unifiable in or._SRAIResults)
+                    {
+                        try
+                        {
+                            dict[unifiable.Key] = unifiable.Value;
+                        }
+                        catch (Exception)
+                        {
+                        }
+                    }
+                    originalSalientRequest = or;
+                }
+                pr = pr.ParentRequest;
+            }
+            return dict;
         }
 
         public void ResetSRAIResults(Dictionary<Unifiable, Unifiable> sraiMark)

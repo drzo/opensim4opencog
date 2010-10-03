@@ -1658,10 +1658,11 @@ namespace RTParser.Utils
             List<AIMLTagHandler> aimlTagHandlers = GetAIMLTagHandlers(nodes, predicate);
 
             Unifiable appendable = OutputFromTagHandlers(aimlTagHandlers);
-            if (CompleteEvaluatution(appendable, this, out appendable))
+            Unifiable appendable1;
+            if (CompleteEvaluatution(appendable, this, out appendable1))
             {
-                RecurseResult = appendable;
-                return appendable;
+                RecurseResult = appendable1;
+                return appendable1;
             } 
             return CheckValue(appendable);
         }

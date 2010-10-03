@@ -701,9 +701,9 @@ namespace RTParser
             get
             {
                 string something;
-                Result r = GetResult(0, true) ?? GetResult(0, false, LastReponder);
+                Result r = GetResult(0, true) ?? GetResult(0, false, LastResponder);
                 if (r != null && IsSomething(r.NormalizedOutput, out something)) return something;
-                if (LastReponder != null && IsSomething(LastReponder.JustSaid, out something)) return something;
+                if (LastResponder != null && IsSomething(LastResponder.JustSaid, out something)) return something;
                 if (User.ThatIsStoredBetweenUsers)
                 {                  
                     return "Nothing";
@@ -726,9 +726,9 @@ namespace RTParser
                 {
                     CurrentRequest.ithat = value;
                 }
-                if (LastReponder != null)
+                if (LastResponder != null)
                 {
-                    LastReponder.JustSaid = value;
+                    LastResponder.JustSaid = value;
                 }
             }
 
@@ -737,9 +737,9 @@ namespace RTParser
         private string getLastBotOutputForThat()
         {
             string something;
-            Result r = GetResult(0, true) ?? GetResult(0, false, LastReponder);
+            Result r = GetResult(0, true) ?? GetResult(0, false, LastResponder);
             if (r != null && IsSomething(r.NormalizedOutput, out something)) return something;
-            if (LastReponder != null && IsSomething(LastReponder.JustSaid, out something)) return something; 
+            if (LastResponder != null && IsSomething(LastResponder.JustSaid, out something)) return something; 
             return "Nothing";
         }
 
@@ -750,9 +750,17 @@ namespace RTParser
             {
                 string something;
                 if (IsSomething(_JustSaid, out something)) return something;
-                if (LastReponder != null)
+                if (LastResponder != null)
                 {
-                    return LastReponder.ResponderJustSaid;
+                    var vv = Predicates.grabSetting("lastsaid,thatstar");
+                    if (IsSomething(vv, out something)) return something;
+                    var llr = LastResponder.LastResponder;
+                    if (llr == this)
+                    {
+                        vv = LastResponder.Predicates.grabSetting("lastheard");
+                        if (IsSomething(vv, out something)) return something;
+                    }
+                    // infinate loop here -> return LastReponder.ResponderJustSaid;
                 }
                 return "Nothing";
             }
@@ -764,14 +772,15 @@ namespace RTParser
                     if (IsNullOrEmpty(value))
                         throw new NullReferenceException("set_That: TAG: " + value + " for " + this);
                 }
+                // the (_JustSaid != value) holds back the infinate looping
                 if (_JustSaid != value)
                 {
+                    _JustSaid = value;
                     Predicates.addSetting("lastsaid", value);
                     Predicates.addSetting("thatstar", value);
-                    _JustSaid = value;
-                    if (LastReponder != null)
+                    if (LastResponder != null)
                     {
-                        LastReponder.ResponderJustSaid = value;
+                        LastResponder.ResponderJustSaid = value;
                     }
                 }
             }
@@ -782,23 +791,25 @@ namespace RTParser
             get
             {
                 {
-                    if (LastReponder != null) return LastReponder.JustSaid;
+                    var vv = Predicates.grabSetting("lastheard");
+                    if (!IsMissing(vv)) return vv;
+                    if (LastResponder != null) return LastResponder.JustSaid;
                     return That;
                 }
             }
             set
             {
                 if (IsNullOrEmpty(value)) throw new NullReferenceException("set_That: " + this);
-                if (LastReponder != null)
+                if (LastResponder != null)
                 {
-                    LastReponder.JustSaid = value;
+                    LastResponder.JustSaid = value;
                 }
                 Predicates["lastheard"] = value;
                 That = value;
             }
         }
 
-        public User LastReponder
+        public User LastResponder
         {
             get
             {

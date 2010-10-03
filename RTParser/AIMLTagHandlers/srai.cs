@@ -233,7 +233,7 @@ namespace RTParser.AIMLTagHandlers
             try
             {
                 Unifiable prevResult;
-                if (!salientRequest.EnterSailentSRAI(templateNodeInnerValue, out prevResult))
+                if (!salientRequest.EnterSalientSRAI(templateNodeInnerValue, out prevResult))
                 {
                     writeToLog("ERROR EnterSailentSRAI: " + prevResult);
                     return null;
@@ -365,7 +365,7 @@ namespace RTParser.AIMLTagHandlers
                                 }
 
 
-                                salientRequest.ExitSailentSRAI(templateNodeInnerValue, subResultOutput);
+                                salientRequest.ExitSalientSRAI(templateNodeInnerValue, subResultOutput);
 
                                 return subResultOutput;
                             }
@@ -409,7 +409,7 @@ namespace RTParser.AIMLTagHandlers
                                                  AIMLLoader.TextAndSourceInfo(templateNode));
                             mybot.writeChatTrace("\"LN:{0}\" -> \"RPY:{1}\" ;\n", depth, subResultOutput);
                         }
-                        salientRequest.ExitSailentSRAI(templateNodeInnerValue, subResultOutput);
+                        salientRequest.ExitSalientSRAI(templateNodeInnerValue, subResultOutput);
                         return subResultOutput;
                     }
                 }
