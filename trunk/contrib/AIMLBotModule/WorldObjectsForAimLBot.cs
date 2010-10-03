@@ -1038,7 +1038,7 @@ namespace AIMLBotModule
                 DLRConsole.DebugWriteLine(GetModuleName() + ": not Bot is instenaced yet!!");
                 return "";
             }
-            Result r = new AIMLbot.MasterRequest(input, myUser, MyBot, null, null);
+            var r = MyBot.GetRequest(input, MyUser);
             r.IsTraced = true;
             Result res = MyBot.Chat(r);
             string useOut = MyBot.CleanupCyc(res.Output);
@@ -1082,7 +1082,7 @@ namespace AIMLBotModule
                 DLRConsole.DebugWriteLine(GetModuleName() + ": not Bot is instenaced yet!!");
                 return "";
             }
-            Result r = new AIMLbot.MasterRequest(input, myUser, MyBot, null, null);
+            var r = MyBot.GetRequest(input, MyUser);
             if (!r.GraphsAcceptingUserInput)
             {
                 return "";

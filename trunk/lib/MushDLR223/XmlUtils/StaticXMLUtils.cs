@@ -246,18 +246,20 @@ namespace MushDLR223.Utilities
 
         public static string ToXmlValue(XmlNode xmlNode)
         {
-            string str = xmlNode.InnerXml;
-            if (str.StartsWith(isValueSetStart))
-            {
-                return ValueText(InnerXmlText(xmlNode));
-            }
+
             if (xmlNode.NodeType == XmlNodeType.Text)
             {
-                return xmlNode.InnerText;
+                return ValueText(xmlNode.InnerText);
             }
             if (xmlNode.NodeType == XmlNodeType.CDATA)
             {
-                return xmlNode.InnerText;
+                return ValueText(xmlNode.InnerXml);
+            }
+            string str = xmlNode.InnerXml;
+            bool oneElementChild = xmlNode.NodeType == XmlNodeType.Element && xmlNode.HasChildNodes && xmlNode.ChildNodes.Count == 1;
+            if (str.StartsWith(isValueSetStart) && oneElementChild)
+            {
+                return ValueText(InnerXmlText(xmlNode));
             }
             return xmlNode.OuterXml;
         }

@@ -308,7 +308,7 @@ namespace RTParser
         }
         public RequestImpl GetRequest(string rawInput, User findOrCreateUser)
         {
-            AIMLbot.MasterRequest r = new AIMLbot.MasterRequest(rawInput, findOrCreateUser, this, null, null);
+            AIMLbot.MasterRequest r = findOrCreateUser.CreateRequest(rawInput, null); 
             findOrCreateUser.CurrentRequest = r;
             r.depth = 0;
             r.IsTraced = findOrCreateUser.IsTraced;
@@ -348,7 +348,7 @@ namespace RTParser
         /// 
         public AIMLbot.MasterResult Chat(Request request)
         {
-            try
+           try
             {
                 return Chat(request, request.Graph ?? GraphMaster);
             }
@@ -1506,9 +1506,12 @@ namespace RTParser
                                   AIMLTagHandler parent, bool protectChild, bool copyParent,
                                   out AIMLTagHandler tagHandler)
         {
+            RequestImpl originalSalientRequest = RequestImpl.GetOriginalSalientRequest(request);
+            var sraiMark = originalSalientRequest.CreateSRAIMark();
             string outputSentence = processNodeVV(node, query,
                                                   request, result, user, parent,
                                                   protectChild, copyParent, out tagHandler);
+            originalSalientRequest.ResetSRAIResults(sraiMark);
             if (!Unifiable.IsNullOrEmpty(outputSentence)||IsSilentTag(node))
             {
                 return outputSentence;

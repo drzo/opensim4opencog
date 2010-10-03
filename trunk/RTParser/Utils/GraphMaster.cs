@@ -130,6 +130,10 @@ namespace RTParser.Utils
         public GraphMaster(string gn, GraphMaster child, bool isParallel)
         //: base(bot)
         {
+            if (gn.Contains("listenerp"))
+            {
+                
+            }
             IsParallel = isParallel;
             SilentTagsInPutParallel = DefaultSilentTagsInPutParallel;
             SilentTagsInPutParallel = false;
@@ -874,8 +878,9 @@ namespace RTParser.Utils
 
                         p.UnTraced = Size > 0;
                         
-                        Request req = new AIMLbot.MasterRequest(request.rawInput, request.Requester, request.TargetBot, null,
+                        var req = new AIMLbot.MasterRequest(request.rawInput, request.Requester, request.TargetBot, null,
                                                           request.Responder);
+                        req.OriginalSalientRequest = request.OriginalSalientRequest;
                         req.Graph = p;
                         req.IsToplevelRequest = false;
                         //req.CurrentResult = null;

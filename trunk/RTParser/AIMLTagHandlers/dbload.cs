@@ -61,6 +61,7 @@ namespace RTParser.AIMLTagHandlers
                                                                                                           templateNode);
                                                                 }
                                                             });
+                        return "@echo DBLOAD " + path;
                     }
                     else
                     {

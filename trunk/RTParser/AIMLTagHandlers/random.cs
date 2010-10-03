@@ -39,10 +39,13 @@ namespace RTParser.AIMLTagHandlers
             {
                 return RecurseResult;
             }
+            ResetValues(true);
             int maxConditions = GetAttribValue<int>(templateNode, "count", 1);
+            int minConditions = GetAttribValue<int>(templateNode, "mincount", 1);
             var nodes = SelectNodes(templateNode.ChildNodes);
-            if (this.templateNode.Name.ToLower() == "random")
+            if (CheckNode("random"))
             {
+                Unifiable appendable = Unifiable.CreateAppendable();
                 if (this.templateNode.HasChildNodes)
                 {
                     // only grab <li> nodes
@@ -54,16 +57,27 @@ namespace RTParser.AIMLTagHandlers
                             listNodes.Add(childNode);
                         }
                     }
-                    // randomly grab <li> nodes
+                    // randomly grab <li> nodes and use them
                     List<XmlNode> useNodes = new List<XmlNode>();
                     while (maxConditions-- > 0 && listNodes.Count > 0)
                     {
                         Random r = new Random();
                         XmlNode chosenNode = listNodes[r.Next(listNodes.Count)];
                         listNodes.Remove(chosenNode);
-                        useNodes.Add(chosenNode);
+                        var childResult = ProcessChildNode(chosenNode);
+                        if (childResult != null)
+                        {
+                            useNodes.Add(chosenNode);
+                            QueryHasSuceededN++;
+                            appendable.Append(childResult);
+                        }
                     }
-                    return OutputFromNodes(useNodes, (n) => true);
+                    if (QueryHasSuceededN < minConditions)
+                    {
+                        QueryHasFailedN++;
+                        return null;
+                    }
+                    return appendable;
                 }
             }
             return Unifiable.Empty;

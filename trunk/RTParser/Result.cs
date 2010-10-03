@@ -243,7 +243,8 @@ namespace RTParser
         //      int UseLuceneForSetMaxDepth { get; set; }
 
         void CollectRequest();
-        string WhyIsResultComplete();
+
+        string WhyResultComplete { get; }
         void AddSubqueries(GraphQuery queries);
         void AddOutputSentences(TemplateInfo ti, string unifiable);
         //bool IsTemplateNew(TemplateInfo ti);
@@ -287,6 +288,7 @@ namespace RTParser
         ISettingsDictionary CheckedValue(string named, ISettingsDictionary d);
         //      void AddSubResult(Result subResult);
         //      void IncreaseLimits(int minsAndMaxes);
+        void ResetAnswers(bool b);
     }
 
     /// <summary>
@@ -294,6 +296,12 @@ namespace RTParser
     /// </summary>
     public abstract class ResultImpl : RequestImpl, Result
     {
+        /// <summary>
+        /// The subQueries processed by the bot's graphmaster that contain the templates that 
+        /// are to be converted into the collection of Sentences
+        /// </summary>
+        public List<SubQuery> SubQueries { get; set; }
+
         public static int MaxPrintResults = 1;
         private string AlreadyUsed = "xtxtxtxtxtxtxtxtxxt";
         private int RotatedTemplate;
@@ -316,34 +324,38 @@ namespace RTParser
             Requester = req.Requester;
             //request = null;
         }
-
+/*
         public override string WhyComplete
         {
             get
             {
                 if (Started)
                 {
-                    return WhyIsResultComplete() ?? base.WhyComplete;                    
+                    return WhyIsResultComplete() ?? WhyRequestComplete;                    
                 }
                 return base.WhyComplete;
             }
             set { base.WhyComplete = value; }
         }
+        */
 
-        public string WhyIsResultComplete()
+        public override string WhyResultComplete
         {
-            lock (this)
+            get
             {
-                string s = null, t = null;
-                var graphQuery = this.TopLevel;
-                if (graphQuery != null)
+                lock (this)
                 {
-                    s = graphQuery.WhyToplevelComplete;
+                    string s = null, t = null;
+                    var graphQuery = this.TopLevel;
+                    if (graphQuery != null)
+                    {
+                        s = graphQuery.WhyToplevelComplete;
+                    }
+                    if (string.IsNullOrEmpty(s)) s = null;
+                    var request1 = this.request;
+                    if (request1 != null && request1 != this) t = request1.WhyRequestComplete;
+                    return s == null ? t : (s + " " + t);
                 }
-                if (string.IsNullOrEmpty(s)) s = null;
-                var request1 = this.request;
-                if (request1 != null && request1 != this) t = request1.WhyComplete;
-                return s == null ? t : (s + " " + t);
             }
         }
 
@@ -407,6 +419,7 @@ namespace RTParser
         public ResultImpl(string rawInput, User user, RTPBot bot, Request parent, User targetUser)
             : base(rawInput, user, bot, parent, targetUser)
         {
+            SubQueries = new List<SubQuery>();
             ///ChatInput = request.ChatInput;
             this.Requester = user;
             this.TargetBot = bot;
@@ -636,10 +649,11 @@ namespace RTParser
         public bool IsTemplateNew(TemplateInfo ti, Unifiable tempOut)
         {
             if (ti == null) return false;
-            if (UsedTemplates1.Contains(ti)) return false;
-            UsedTemplates1.Add(ti);
+            var usedTemplates = UsedTemplates;
+            if (usedTemplates.Contains(ti)) return false;
+            usedTemplates.Add(ti);
             string output = ti.TextSaved;
-            lock (UsedTemplates1)
+            lock (usedTemplates)
             {
                 double ThisRating = ti.Rating;
                 if (TemplateOfRating == null || TemplateRating < ThisRating)
@@ -833,6 +847,22 @@ namespace RTParser
                     }
                 }
             }
+        }
+
+        public void ResetAnswers(bool b)
+        {
+            lock (OutputSentences) OutputSentences.Clear();
+            AlreadyUsed = "xtxtxtxtxtxtxtxtxxt";
+            var temps = UsedTemplates;
+            if (temps != null)
+            {
+                temps.Clear();
+            }
+            if (SubQueries.Count > 0)
+            {
+                SubQueries = new List<SubQuery>();
+            }
+
         }
     }
 }

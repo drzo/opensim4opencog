@@ -50,9 +50,12 @@ namespace RTParser.AIMLTagHandlers
                     {
                         writeToLogWarn("WARNING: NO DBUPDATE " + myText);
                         QueryHasFailed = true;
-                        return Unifiable.Empty;
+                        return null;
                     }
-                    AddSideEffect("DBUPDATE " + myText, () => TargetBot.LuceneIndexer.UpdateFactoid(myText, myText, templateNode));                     
+                    string msg = "BEGINUPDATE " + myText + " ENDUPDATE";
+                    AddSideEffect(msg,
+                                  () => TargetBot.LuceneIndexer.UpdateFactoid(myText, myText, templateNode));
+                    return msg;
                 }
                 catch(Exception e)
                 {
