@@ -810,7 +810,7 @@ namespace RTParser.Utils
             {
                 console("input: \"" + s + "\"");
             }
-            PrintTemplates(result.UsedTemplates, console, printOptions);
+            PrintTemplates(result.ResultTemplates, console, printOptions);
             foreach (SubQuery s in result.SubQueries)
             {
                 console("\n" + s);

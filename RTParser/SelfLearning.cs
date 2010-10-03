@@ -209,6 +209,7 @@ namespace RTParser
                     }                    
                     var r = new AIMLbot.MasterRequest(message, theFactSpeaker, this, resrequest, toWhom);
                     r.OriginalSalientRequest = r;
+                    r.Responder = toWhom;
                     r.IsToplevelRequest = true;
                     r.writeToLog = writeDebugLine;
                     r.IsTraced = false;

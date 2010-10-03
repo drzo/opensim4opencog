@@ -122,13 +122,13 @@ namespace RTParser.AIMLTagHandlers
             {
 
                 ISettingsDictionary dist = query;
-                return IfSucceed(templateNode, dist, query, Succeed);
-        
+                return IfSucceed(templateNode, dist, query, Succeed, () => FAIL);
+
             }
             return Succeed();
         }
 
-        static Unifiable IfSucceed(XmlNode templateNode, ISettingsDictionary dict, SubQuery query0, Func<Unifiable> Succeed)
+        static Unifiable IfSucceed(XmlNode templateNode, ISettingsDictionary dict, SubQuery query0, Func<Unifiable> Succeed, Func<Unifiable> Fail)
         {
             lock (templateNode)
             {
@@ -184,7 +184,7 @@ namespace RTParser.AIMLTagHandlers
                     if (exists == "inherited")
                     {
                         if (!locallyContains && anyContains) return Succeed();
-                        return Unifiable.Empty;
+                        return Fail();
                     }
                     if (exists == "false")
                     {
@@ -202,7 +202,7 @@ namespace RTParser.AIMLTagHandlers
                                 return Succeed();
                             }
                         }
-                        return Unifiable.Empty;
+                        return Fail();
                     }
                     if (exists == "true")
                     {
@@ -220,7 +220,7 @@ namespace RTParser.AIMLTagHandlers
                                 return Succeed();
                             }
                         }
-                        return Unifiable.Empty;
+                        return Fail();
                     }
                     string realName;
                     bool succeed;
@@ -229,6 +229,10 @@ namespace RTParser.AIMLTagHandlers
                     if (IsPredMatch(value, actualValue, query0))
                     {
                         return Succeed();
+                    }
+                    else
+                    {
+                        return Fail();
                     }
                 }
                 return Succeed();

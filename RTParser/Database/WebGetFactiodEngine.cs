@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Xml;
 using MushDLR223.ScriptEngines;
@@ -85,15 +86,16 @@ namespace RTParser.Database
             return assertTo.UpdateFactoid(searchQuery, myText, templateNode);
         }
 
-        public bool MayPush(string text)
+        public string MayPush(string text, XmlNode templateNodeOrNull)
         {
             // readonly engine
-            return false;
+            return null;
         }
 
-        public bool MayAsk(string text)
+        public string MayAsk(string text, XmlNode templateNodeOrNull)
         {
-            return !IsNullOrEmpty(text);
+            if (IsNullOrEmpty(text)) return null;
+            return text;
         }
 
         public int DeleteTopScoring(string myText, XmlNode templateNode, bool mustContainExact)
@@ -108,7 +110,12 @@ namespace RTParser.Database
 
         public bool IsDbPresent
         {
-            get { return MayAsk("What is 1 plus 1?"); }
+            get { return MayAsk("What is 1 plus 1?", null) != null; }
+        }
+
+        public string FixPronouns(string myText, Func<string ,Unifiable> templateNode)
+        {
+            return assertTo.FixPronouns(myText, templateNode);
         }
 
         public virtual ICollection<ISearchResult> Search(string searchTerm1, WordExpander wordNetExpanderOnNoHits)

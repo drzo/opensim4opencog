@@ -51,6 +51,7 @@ namespace RTParser.AIMLTagHandlers
                     s = s.Replace(" ,", ",");
                     return s;
                 }
+                return Unifiable.Empty;
             }
             return Unifiable.Empty;
         }

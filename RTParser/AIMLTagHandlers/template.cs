@@ -36,6 +36,10 @@ namespace RTParser.AIMLTagHandlers
                 QueryHasFailed = false;
             }
             Unifiable templateResult = RecurseReal(templateNode, true);
+            if (QueryHasFailed)
+            {
+                return FAIL;
+            }
             RecurseResult = templateResult;//.ToString();
             return templateResult;
         }

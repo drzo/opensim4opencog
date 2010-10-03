@@ -76,19 +76,19 @@ namespace RTParser
         /// </summary>
         Unifiable Output { get; }
 
-        string EnglishSentences { get; }
+        string EnglishOutput { get; }
 
         /// <summary>
         /// Returns the raw sentences without any logging 
         /// </summary>
-        string RawOutput { get; }
+        Unifiable RawOutput { get; }
 
         bool IsEmpty { get; }
         int OutputSentenceCount { get; }
         ISettingsDictionary Predicates { get; }
         // SubQuery CurrentQuery { get; set; }
         // bool IsComplete { get; set; }
-        bool IsSailent { get; }
+        bool IsSalient { get; }
         //    IList<TemplateInfo> UsedTemplates { get; }
         //   ChatLabel CatchLabel { get; set; }
         Result ParentResult { get; }
@@ -245,6 +245,7 @@ namespace RTParser
         void CollectRequest();
 
         string WhyResultComplete { get; }
+        IList<TemplateInfo> ResultTemplates { get; }
         void AddSubqueries(GraphQuery queries);
         void AddOutputSentences(TemplateInfo ti, string unifiable);
         //bool IsTemplateNew(TemplateInfo ti);
@@ -369,7 +370,7 @@ namespace RTParser
         /// </summary>
         public List<Unifiable> InputSentences
         {
-            get { return ChatInput.InputSentences; }
+            get { return ChatInput.EnglishSentences; }
         }
 
         /// <summary>
@@ -399,7 +400,7 @@ namespace RTParser
 
         public TemplateInfo TemplateOfRating { get; set; }
         public double TemplateRating { get; set; }
-        private readonly List<TemplateInfo> UsedTemplates1 = new List<TemplateInfo>();
+        private readonly List<TemplateInfo> ResultTemplates1 = new List<TemplateInfo>();
 
         /// <summary>
         /// The user for whom this is a result
@@ -425,7 +426,7 @@ namespace RTParser
             this.TargetBot = bot;
             //this.request = request;
             ChatOutput = new ParsedSentences(bot.EnsureEnglish, MaxPrintResults);
-            OutputSentences = ChatOutput.TemplateOutputs;
+            OutputSentences = ChatOutput.SemanticSentences;
             //writeToLog = writeToLog ?? user.WriteLine;
             //writeToLog = writeToLog ?? request.WriteLine;
             // this.request.CurrentResult = this;
@@ -506,7 +507,7 @@ namespace RTParser
                         {
                             writeToLog("ERROR: " + request.WhyComplete + " on " + RawInput +
                                        " from the user with an id: " + Requester.UserID);
-                            return Unifiable.Empty;
+                            return Unifiable.INCOMPLETE;
                             return TargetBot.TimeOutMessage;
                         }
                         else
@@ -521,13 +522,13 @@ namespace RTParser
                                        " with the path(s): " +
                                        Environment.NewLine + paths.ToString() + " from the user with an id: " +
                                        Requester.UserID);
-                            return Unifiable.Empty;
+                            return Unifiable.NULL;
                         }
                     }
             }
         }
 
-        public string EnglishSentences
+        public string EnglishOutput
         {
             get { return ChatOutput.RawText; }
         }
@@ -535,7 +536,7 @@ namespace RTParser
         /// <summary>
         /// Returns the raw sentences without any logging 
         /// </summary>
-        public string RawOutput
+        public Unifiable RawOutput
         {
             get { return ChatOutput.RawText; }
         }
@@ -589,19 +590,19 @@ namespace RTParser
             }
         }
 
-        public bool IsSailent
+        public bool IsSalient
         {
             get
             {
                 if (OutputSentenceCount == 0) return false;
-                if (RawOutput.Trim().Length == 0) return false;
+                if (IsNullOrEmpty(RawOutput)) return false;
                 return true;
             }
         }
 
-        public override IList<TemplateInfo> UsedTemplates
+        public IList<TemplateInfo> ResultTemplates
         {
-            get { return UsedTemplates1; }
+            get { return ResultTemplates1; }
         }
 
         public string _normalizedOutput;
@@ -649,8 +650,11 @@ namespace RTParser
         public bool IsTemplateNew(TemplateInfo ti, Unifiable tempOut)
         {
             if (ti == null) return false;
-            var usedTemplates = UsedTemplates;
-            if (usedTemplates.Contains(ti)) return false;
+            var usedTemplates = ResultTemplates;
+            if (usedTemplates.Contains(ti))
+            {
+                return false;
+            }
             usedTemplates.Add(ti);
             string output = ti.TextSaved;
             lock (usedTemplates)
@@ -836,11 +840,11 @@ namespace RTParser
         public void RotateUsedTemplates()
         {
             {
-                var temps = UsedTemplates;
+                var temps = ResultTemplates;
                 if (temps != null)
                 {
-                    if (RotatedTemplate == UsedTemplates.Count) return;
-                    RotatedTemplate = UsedTemplates.Count;
+                    if (RotatedTemplate == temps.Count) return;
+                    RotatedTemplate = temps.Count;
                     foreach (TemplateInfo info in temps)
                     {
                         info.GraphmasterNode.RotateTemplate(info);
@@ -853,14 +857,14 @@ namespace RTParser
         {
             lock (OutputSentences) OutputSentences.Clear();
             AlreadyUsed = "xtxtxtxtxtxtxtxtxxt";
-            var temps = UsedTemplates;
+            var temps = ResultTemplates1;
             if (temps != null)
             {
-                temps.Clear();
+                if (b) temps.Clear();
             }
             if (SubQueries.Count > 0)
             {
-                SubQueries = new List<SubQuery>();
+                if (b) SubQueries = new List<SubQuery>();
             }
 
         }

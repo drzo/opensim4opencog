@@ -36,16 +36,20 @@ namespace RTParser.Utils
         /// TODO make this done in a  text file
         /// </summary>
         private static HashSet<string> GlobalFilteredWords = new HashSet<string>()
-                                                      {
-                                                          "pandorabots",
-                                                          "com",
-                                                          "dr wallice",
-                                                          "alicebots.com",
-                                                          "alice",
-                                                          "england",
-                                                          "kent",
-                                                          "a spelling",                                                          
-                                                      };
+                                                                 {
+                                                                     "pandorabots",
+                                                                     "com",
+                                                                     "dr wallice",
+                                                                     "alicebots.com",
+                                                                     "alice",
+                                                                     "england",
+                                                                     "kent",
+                                                                     "a spelling",
+                                                                     "webcam",
+                                                                     "george bush",
+                                                                     "iraq",
+                                                                     "terror",
+                                                                 };
 
         public HashSet<string> FilteredWords = new HashSet<string>(GlobalFilteredWords);
 

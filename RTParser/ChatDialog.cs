@@ -453,8 +453,17 @@ namespace RTParser
             ChatLabel label = request.PushScope;
             try
             {
-                if (request.ParentMostRequest.DisallowedGraphs.Contains(G) || request.depth > 4)
-                    return (AIMLbot.MasterResult)request.CurrentResult;
+                if (request.ParentMostRequest.DisallowedGraphs.Contains(G))
+                {
+                    writeToLog("ChatWithRequest4: DisallowedGraphs " + G);
+                    return (AIMLbot.MasterResult) request.CurrentResult;
+                }
+                string why = request.WhyComplete;
+                if (why != null)
+                {
+                    writeToLog("ChatWithRequest4: WhyComplete " + why);
+                    return (AIMLbot.MasterResult) request.CurrentResult;
+                }
                 request.Requester = user;
                 Result result = ChatWithRequest44(request, user, target, G);
                 if (result.OutputSentences.Count != 0)
@@ -486,7 +495,6 @@ namespace RTParser
             //LastUser = user; 
             //AIMLbot.Result result;
             bool isTraced = request.IsTraced || G == null;
-
             OutputDelegate writeToLog = this.writeToLog;
             var result = request.CreateResult(request);
             string rr = request.rawInput;
@@ -507,7 +515,7 @@ namespace RTParser
             User popu = originalRequestor ?? request.Requester ?? result.Requester;
             result.Durration = DateTime.Now - request.StartedOn;
             result.IsComplete = true;
-            popu.addResultTemplates(request);
+            popu.addRequestTemplates(request);
             if (streamDepth > 0) streamDepth--;
             return result;
         }
@@ -1111,12 +1119,14 @@ namespace RTParser
             query = query ?? request.CurrentQuery;
             templateInfo = templateInfo ?? query.CurrentTemplate;
             //request.CurrentQuery = query;
-            if (!request.CanUseTemplate(templateInfo, result))
+            if (!request.CanUseResultTemplate(templateInfo, result))
             {
                 templateSucceeded = false;
                 createdOutput = false;
                 return null;
             }
+            // now cant use it again
+            result.ResultTemplates.Add(templateInfo);
             UndoStack undoStack = UndoStack.GetStackFor(query);
             try
             {
@@ -1653,7 +1663,7 @@ namespace RTParser
             }
             if (tagHandler.QueryHasFailed)
             {
-                return Unifiable.Empty;
+                return tagHandler.FAIL;
             }
             if (!Unifiable.IsNullOrEmpty(cp) || IsSilentTag(node))
             {

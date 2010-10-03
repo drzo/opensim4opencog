@@ -958,7 +958,7 @@ namespace RTParser.Variables
             return pp;
         }
 
-        public static SettingsDictionary ToSettingsDictionary(ISettingsDictionary dictionary)
+        public static SettingsDictionary ToSettingsDictionary(object dictionary)
         {
             if (dictionary == null)
             {

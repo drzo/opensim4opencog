@@ -46,11 +46,13 @@ namespace RTParser.AIMLTagHandlers
                     // Find and Replace
                     Unifiable templateNodeInnerValue = Recurse();
                     string myText = (string)templateNodeInnerValue;
-                    if (!TargetBot.LuceneIndexer.MayPush(myText))
+                    myText = TargetBot.LuceneIndexer.FixPronouns(myText, request.Requester.grabSettingNoDebug);
+                    string targetBotLuceneIndexerMayPush = TargetBot.LuceneIndexer.MayPush(myText, templateNode);
+                    if (targetBotLuceneIndexerMayPush == null)
                     {
                         writeToLogWarn("WARNING: NO DBUPDATE " + myText);
                         QueryHasFailed = true;
-                        return null;
+                        return FAIL;
                     }
                     string msg = "BEGINUPDATE " + myText + " ENDUPDATE";
                     AddSideEffect(msg,

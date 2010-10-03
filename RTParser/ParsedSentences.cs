@@ -13,7 +13,7 @@ namespace RTParser
     public class ParsedSentences
     {
         private readonly Func<string, string> OutputSentencesToEnglish;
-        public Func<string, string> EnglishToNormaizedInput;
+        private Func<string, string> EnglishToNormalized;
         private readonly int maxResults;
 
         public ParsedSentences(Func<string, string> generatePhrase, int maxSentences)
@@ -31,7 +31,7 @@ namespace RTParser
         /// <summary>
         /// The individual sentences that constitute the raw input from the user
         /// </summary>
-        readonly public List<Unifiable> InputSentences = new List<Unifiable>();
+        readonly public List<Unifiable> EnglishSentences = new List<Unifiable>();
 
         /// <summary>
         /// The normalized sentence(s) (paths) fed into the graphmaster
@@ -40,9 +40,9 @@ namespace RTParser
         {
             get
             {
-                lock (TemplateOutputs)
+                lock (SemanticSentences)
                 {
-                    if (TemplateOutputs.Count == 0)
+                    if (SemanticSentences.Count == 0)
                     {
                         if (OnGetParsed != null)
                         {
@@ -50,7 +50,7 @@ namespace RTParser
                             OnGetParsed = null;
                         }
                     }
-                    return TemplateOutputs;
+                    return SemanticSentences;
                 }
             }
         }
@@ -62,13 +62,13 @@ namespace RTParser
             get
             {
                 if (English != null) return English;
-                if (InputSentences.Count == 0)
+                if (EnglishSentences.Count == 0)
                 {
-                    Convert(TemplateOutputs, InputSentences, OutputSentencesToEnglish);
+                    Convert(SemanticSentences, EnglishSentences, OutputSentencesToEnglish);
                 }
                 var result = new StringBuilder();
                 int gather = maxResults;
-                foreach (var list in InputSentences)
+                foreach (var list in EnglishSentences)
                 {
                     if (gather == 0) break;
                     string list0 = list.Trim();
@@ -86,14 +86,14 @@ namespace RTParser
             }
         }
 
-        public readonly List<Unifiable> TemplateOutputs = new List<Unifiable>();
+        public readonly List<Unifiable> SemanticSentences = new List<Unifiable>();
 
         public Action OnGetParsed;
         public string TheMainSentence
         {
             get
             {
-                if (false) foreach (var output in TemplateOutputs)
+                if (false) foreach (var output in SemanticSentences)
                     {
                         String sentenceIn = output;
                         String sentence = OutputSentencesToEnglish(sentenceIn);
@@ -107,9 +107,9 @@ namespace RTParser
             }
         }
 
-        public int Count
+        private int Count
         {
-            get { return InputSentences.Count; }
+            get { return EnglishSentences.Count; }
         }
 
         static public string MainSentence(string sentence)
@@ -293,16 +293,17 @@ namespace RTParser
             // Normalize the input
             var rawSentences = SplitIntoSentences.Split(fromInput);
             var parsedSentences = new ParsedSentences(GenEnglish, -1);
-            var userInputSentences = parsedSentences.InputSentences;
+            var userInputSentences = parsedSentences.EnglishSentences;
             userInputSentences.AddRange(rawSentences);
             Func<string, string> englishToNormaizedInput = arg => EngishToNormalizedInput(request, arg);
+            // parsedSentences.EnglishToNormalized = englishToNormaizedInput;
             parsedSentences.OnGetParsed = () =>
             {
                 if (request.Stage < SideEffectStage.PARSING_INPUT)
                     request.Stage = SideEffectStage.PARSING_INPUT;
                 ParsedSentences.Convert(
-                    parsedSentences.InputSentences,
-                    parsedSentences.TemplateOutputs, englishToNormaizedInput);
+                    parsedSentences.EnglishSentences,
+                    parsedSentences.SemanticSentences, englishToNormaizedInput);
             };
             return parsedSentences;
         }

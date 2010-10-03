@@ -50,7 +50,11 @@ namespace RTParser.AIMLTagHandlers
             if (IsMissing(u))
             {
                 Unifiable defaultVal = GetAttribValue("default", null);
-                if (defaultVal == null) QueryHasFailed = true;
+                if (defaultVal == null)
+                {
+                    QueryHasFailed = true;
+                    return FAIL;
+                }
                 return defaultVal;
             }
             string s = u.ToValue(query);
@@ -113,7 +117,7 @@ namespace RTParser.AIMLTagHandlers
                     if (!succeed)
                     {
                         QueryHasFailed = true;
-                        return null;// Unifiable.Empty;
+                        return FAIL;
                     }
                     // trace the next line to see why
                     Proc.TraceTest("NULL from success?!", () => GetActualValue(name, typeof (bot) == GetType() ? "bot" : "get", out succeed));
@@ -124,7 +128,8 @@ namespace RTParser.AIMLTagHandlers
                     Succeed();
                     return v;
                 }
-                return v;
+                if (request.IsToplevelRequest) return v;
+                return FAIL;
             }
             return Unifiable.Empty;
         }

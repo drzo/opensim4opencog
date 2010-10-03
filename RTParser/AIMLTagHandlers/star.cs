@@ -117,6 +117,10 @@ namespace RTParser.AIMLTagHandlers
             return with.IsEmpty ? STAR_TRUE : STAR_FALSE;
         }
 
+        /// <summary>
+        /// The method that does the actual processing of the text.
+        /// </summary>
+        /// <returns>The resulting processed text</returns>
         protected override Unifiable ProcessChange()
         {
             IList<Unifiable> stars = GetStarDict();

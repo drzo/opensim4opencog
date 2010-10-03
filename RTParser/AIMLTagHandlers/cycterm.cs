@@ -42,23 +42,32 @@ namespace RTParser.AIMLTagHandlers
                 Unifiable pos = base.GetAttribValue("pos", null);
                 int maxWords = int.Parse(base.GetAttribValue("maxwords", "1"));
                 Unifiable r = Recurse();
-                if (Unifiable.IsNullOrEmpty(r)) return Unifiable.Empty;
+                if (Unifiable.IsNullOrEmpty(r))
+                {
+                    QueryHasFailed = true;
+                    return FAIL;
+                }
                 string s = r.ToValue(query);
                 if (s.Split(' ').Length > maxWords)
                 {
-                    return Unifiable.Empty;
+                    QueryHasFailed = true;
+                    return FAIL;
                 }
                 Unifiable term;
                 if (Proc.TheCyc.Lookup(r, filter, out term, query))
                 {
                     s = term.AsString();
-                    if (s.Length<2)
+                    if (s.Length < 2)
                     {
                         writeToLog("CYCTERM: " + r + "=>" + s);
                     }
                     return term;
                 }
-                return Unifiable.Empty;
+                else
+                {
+                    QueryHasFailed = true;
+                    return FAIL;
+                }
             }
             return Unifiable.Empty;
         }
