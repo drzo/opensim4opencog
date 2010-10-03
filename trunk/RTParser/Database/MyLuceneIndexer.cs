@@ -19,6 +19,7 @@ using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
 using RTParser.Utils;
+using RTParser.Variables;
 
 namespace RTParser.Database
 {
@@ -261,8 +262,9 @@ namespace RTParser.Database
 
         public int InsertFactiod(string myText, XmlNode templateNode, WordExpander expandWithWordNet)
         {
-            return EnsureLockedDatabase(() => Insert0(myText, expandWithWordNet));
+            return EnsureLockedDatabase(() => Insert0(FixPronouns(myText, templateNode), expandWithWordNet));
         }
+
         private int Insert0(string myText, WordExpander expandWithWordNet)
         {
             checkDbLock();
@@ -720,7 +722,7 @@ namespace RTParser.Database
             }
         }
 
-        public bool MayPush(string text)
+        public string MayPush(string text, XmlNode templateNode)
         {
             string[] textToLowerSplit = text.ToLower().Split(' ');
             if (textToLowerSplit.Length < 3)
@@ -732,18 +734,18 @@ namespace RTParser.Database
                 if (IsExcludedSubject(words))
                 {
                     writeToLog("ExcludedSRV '{0}' Subject='{1}' ", text, words);
-                    return false;
+                    return null;
                 }
                 if (IsExcludedValue(words))
                 {
                     writeToLog("ExcludedSRV '{0}' Value='{1}' ", text, words);
-                    return false;
+                    return null;
                 }
             }
-            return true;
+            return text;
         }
 
-        public bool MayAsk(string text)
+        public string MayAsk(string text, XmlNode templateNode)
         {
             string[] textToLowerSplit = text.ToLower().Split(' ');
             if (textToLowerSplit.Length < 2)
@@ -755,15 +757,26 @@ namespace RTParser.Database
                 if (IsExcludedSubject(words))
                 {
                     writeToLog("ExcludedSRV '{0}' Subject='{1}' ", text, words);
-                    return false;
+                    return null;
                 }
                 if (IsExcludedValue(words))
                 {
                     writeToLog("ExcludedSRV '{0}' Value='{1}' ", text, words);
-                    return false;
+                    return null;
                 }
             }
-            return true;
+            return text;
+        }
+
+        public string FixPronouns(string myText, XmlNode templateNode)
+        {
+            var dict = TheBot.GetDictionary(templateNode.LocalName);
+            return TripleStoreProxy.FixPronouns(myText, dict.grabSetting);
+        }
+
+        public string FixPronouns(string english, Func<string ,Unifiable> whoAmI)
+        {
+            return TripleStoreProxy.FixPronouns(english, whoAmI);
         }
 
         /// <summary>
@@ -1043,7 +1056,7 @@ namespace RTParser.Database
         {
             // the defualt is true
 
-            if (!MayPush(myText))
+            if (MayPush(myText, expandWordnet) == null)
             {
                 return -1;
             }

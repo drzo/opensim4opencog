@@ -200,7 +200,7 @@ namespace RTParser.AIMLTagHandlers
                     if (Unifiable.IsNull(vv))
                     {
                         vv = GetTemplateNodeInnerText();
-                        return vv;
+                        return FAIL;
                     }
                     return vv;
                 }
@@ -271,7 +271,7 @@ namespace RTParser.AIMLTagHandlers
                         if (!request.SuspendSearchLimits)
                         {
                             throw new ChatSignalOverBudget(sss);
-                            return Unifiable.Empty;
+                            return Unifiable.INCOMPLETE;
                         }
                     }
                     string why = request.WhyComplete;
@@ -282,7 +282,7 @@ namespace RTParser.AIMLTagHandlers
                         if (!request.SuspendSearchLimits)
                         {
                             throw new ChatSignalOverBudget(sss);
-                            return Unifiable.Empty;
+                            return Unifiable.INCOMPLETE;
                         }
                     }
                     //Unifiable templateNodeInnerValue = Recurse();
@@ -295,7 +295,8 @@ namespace RTParser.AIMLTagHandlers
                         subRequest.Graph = request.GetGraph(requestGraphSrai);
 
                         var ti = query.CurrentTemplate;
-                        if (ti != null) subRequest.UsedTemplates.Add(ti);
+                        // make sure we veto later use of this template
+                        if (ti != null) subRequest.RequestTemplates.Add(ti);
 
                         // make sure we don't keep adding time to the request
                         bool showDebug = DebugSRAIs;
@@ -323,7 +324,7 @@ namespace RTParser.AIMLTagHandlers
                         if (depth > 200)
                         {
                             writeToLog(prefix + " FAILING TOOOO DEEEEP '" + subRequestrawInput + "'");
-                            return Unifiable.Empty;
+                            return Unifiable.INCOMPLETE;
                         }
                         AIMLbot.MasterResult subResult;
                         string subQueryRawOutputText;
@@ -436,11 +437,11 @@ namespace RTParser.AIMLTagHandlers
                 user.SuspendAddResultToUser = true;
                 if (request.IsTraced) subRequest.IsTraced = !showDebug;                            
                 subResult = mybot.ChatWithRequest4(subRequest, user, request.Responder, subRequest.Graph);
-                subResultOutput = subResult.Output;
+                subResultOutput = subResult.RawOutput;
                 int resultCount = subResult.OutputSentences.Count;
                 if (resultCount == 0)
                 {
-                    subRequest.ResetValues(true);
+                    subRequest.ResetValues(false);
                     originalSalientRequest.ResetSRAIResults(sraiMark);
                     if (Unifiable.IsNullOrEmpty(subResultOutput))
                     {

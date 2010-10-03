@@ -34,29 +34,6 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        public string ComputeInner()
-        {
-            string re = "";
-            if (templateNode.NodeType == XmlNodeType.Text)
-            {
-                re = templateNodeInnerText.AsString();
-            }
-            else if (templateNode.HasChildNodes)
-            {
-                // recursively check
-                foreach (XmlNode childNode in templateNode.ChildNodes)
-                {
-                    re += childNode.InnerText;
-                }
-            }
-            else
-            {
-                re = Recurse();
-                templateNodeInnerText = re;
-            }
-            return re;
-        }
-
         public override float CanUnify(Unifiable with)
         {
 

@@ -47,11 +47,12 @@ namespace RTParser.AIMLTagHandlers
                 const float threshold = 0.0f;
                 Unifiable templateNodeInnerValue = Recurse();
                 string searchTerm1 = (string)templateNodeInnerValue;
-                if (!TargetBot.LuceneIndexer.MayAsk(searchTerm1))
+                searchTerm1 = TargetBot.LuceneIndexer.FixPronouns(searchTerm1, request.Requester.grabSettingNoDebug);
+                if (TargetBot.LuceneIndexer.MayAsk(searchTerm1, templateNode) == null)
                 {
                     writeToLogWarn("WARNING: NO DBASK " + searchTerm1);
                     QueryHasFailed = true;
-                    return null;
+                    return FAIL;
                 }
                 float reliability;
                 Unifiable converseMemo = TargetBot.LuceneIndexer.AskQuery(searchTerm1, this.writeToLog, this.OnFalure,

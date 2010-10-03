@@ -65,7 +65,7 @@ namespace RTParser
         Unifiable rawInput { get; }
         ParsedSentences ChatInput { get; }
         IList<Result> UsedResults { get; set; }
-        IList<TemplateInfo> UsedTemplates { get; }
+        IList<TemplateInfo> RequestTemplates { get; }
         int MaxInputs { get; set; }
 
         DateTime StartedOn { get; set; }
@@ -95,7 +95,8 @@ namespace RTParser
 
         AIMLbot.MasterRequest CreateSubRequest(string cmd);
         AIMLbot.MasterRequest CreateSubRequest(Unifiable templateNodeInnerValue, User user, RTPBot rTPBot, User requestee);
-        bool CanUseTemplate(TemplateInfo info, Result request);
+        bool CanUseResultTemplate(TemplateInfo info, Result request);
+        bool CanUseRequestTemplate(TemplateInfo sol);
         OutputDelegate writeToLog { get; set; }
         
         Unifiable That { get; set; }
@@ -146,6 +147,7 @@ namespace RTParser
             TimeOut = TheDurration;
             _Durration = TimeSpan.Zero;
             _SRAIResults.Clear();
+            RequestTemplates1.Clear();            
         }
 
         /// <summary>
@@ -746,11 +748,15 @@ namespace RTParser
             return RequesterPredicates.addSetting(name, value);
         }
 
-        virtual public IList<TemplateInfo> UsedTemplates
+        readonly private IList<TemplateInfo> RequestTemplates1 = new List<TemplateInfo>();
+        public IList<TemplateInfo> RequestTemplates
         {
-            get { return CurrentResult.UsedTemplates; }
+            get
+            {                
+                return RequestTemplates1;
+            }
         }
-
+        
         public DateTime TimesOutAt { get; set; }
 
         public void WriteLine(string s, params object[] args)
@@ -798,7 +804,7 @@ namespace RTParser
                 }
                 // return null;
             }
-            if (result1.UsedTemplates.Count >= qs.MaxTemplates)
+            if (result1.ResultTemplates.Count >= qs.MaxTemplates)
             {
                 if (result1.OutputSentenceCount > 0)
                 {
@@ -866,28 +872,57 @@ namespace RTParser
             //subRequest.Responder = request.Responder;
             return subRequest;
         }
-
-        public bool CanUseTemplate(TemplateInfo info, Result result)
+        public bool CanUseRequestTemplate(TemplateInfo info)
+        {
+            if (FoundInParents(info, this))
+            {
+                //user.WriteLine("!CanUseTemplate ", info);
+                return false;
+            }
+            return false;
+        }
+        public bool CanUseResultTemplate(TemplateInfo info, Result result)
         {
             if (info == null) return true;
             if (info.IsDisabled) return false;
             if (!Requester.CanUseTemplate(info, result)) return false;
             //if (!result.CanUseTemplate(info, result)) return false;
-            while (result != null)
+            if (FoundInParents(info, result))
             {
-                var resultUsedTemplates = result.UsedTemplates;
+                //user.WriteLine("!CanUseTemplate ", info);
+                return false;
+            }
+            return true;
+        }
+
+        private bool FoundInParents(TemplateInfo info, Request requestOrResult)
+        {
+            if (requestOrResult == null) return true;
+            while (requestOrResult != null)
+            {
+                var resultUsedTemplates = requestOrResult.RequestTemplates;
+                if (resultUsedTemplates != null)
+                {
+                    lock (resultUsedTemplates)
+                    {
+                        if (resultUsedTemplates.Contains(info))
+                        {                            
+                            return true;
+                        }
+                    }
+                }
+                resultUsedTemplates = ((Result) requestOrResult).ResultTemplates;
                 if (resultUsedTemplates != null)
                 {
                     lock (resultUsedTemplates)
                     {
                         if (resultUsedTemplates.Contains(info))
                         {
-                            //user.WriteLine("!CanUseTemplate ", info);
-                            return false;
+                            return true;
                         }
                     }
                 }
-                result = result.ParentResult;
+                requestOrResult = requestOrResult.ParentRequest;
             }
             return true;
         }

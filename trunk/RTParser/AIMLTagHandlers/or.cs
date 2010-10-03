@@ -31,44 +31,39 @@ namespace RTParser.AIMLTagHandlers
 
         public override float CanUnify(Unifiable with)
         {
-            if (templateNode.NodeType==XmlNodeType.Text)
+            bool wasTrue;
+            string useLess;
+            if (TextWith(templateNode, with, out wasTrue, out useLess))
             {
-                string srch = (" " + with.ToValue(query) + " ").ToUpper();
-                return ((" " + templateNode.InnerText + " ").ToUpper().Contains(srch)) ? OR_TRUE : OR_FALSE;
+                return wasTrue ? OR_TRUE : OR_FALSE;
             }
-            if (templateNode.HasChildNodes)
+            if (!templateNode.HasChildNodes)
             {
-                // recursively check
-                foreach (XmlNode childNode in templateNode.ChildNodes)
-                {
-                    try
-                    {
-                        if (childNode.NodeType == XmlNodeType.Text)
-                        {
-                            string srch = (" " + with.ToValue(query) + " ").ToUpper();
-                            return ((" " + childNode.InnerText + " ").ToUpper().Contains(srch)) ? OR_TRUE : OR_FALSE;
-                        }
-                        AIMLTagHandler part = GetChildTagHandler(childNode);
-                        float rate1 = part.CallCanUnify(with);
-                        if (rate1 == Unifiable.UNIFY_TRUE)
-                        {
-                            return rate1 + OR_TRUE;
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        Proc.writeToLog("{0}", e);
-                        writeToLogWarn("" + e);
-                    }
-                }
                 return OR_FALSE;
             }
-            return OR_FALSE;
-        }
-
-        protected override Unifiable ProcessChange()
-        {
-            return Unifiable.Empty;
+            float bestValue = OR_FALSE;
+            // recursively check
+            foreach (XmlNode childNode in templateNode.ChildNodes)
+            {
+                try
+                {
+                    float partCallCanUnify = ChildUnify(with, childNode);
+                    if (partCallCanUnify < bestValue)
+                    {
+                        bestValue = partCallCanUnify;
+                    }
+                    if (partCallCanUnify <= STAR_TRUE)
+                    {
+                        SetWith(childNode, with);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Proc.writeToLog(e);
+                    writeToLogWarn("" + e);
+                }
+            }
+            return bestValue;
         }
     }
 }

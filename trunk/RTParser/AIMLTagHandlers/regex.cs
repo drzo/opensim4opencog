@@ -34,38 +34,13 @@ namespace RTParser.AIMLTagHandlers
 
             string re = ComputeInner();
             var matcher = new Regex(re);
-            if (matcher.IsMatch(with.ToValue(query))) return AND_TRUE;
+            if (matcher.IsMatch(with.ToValue(query)))
+            {
+                SetWith(templateNode, with);
+                return AND_TRUE;
+            }
             return AND_FALSE;
         }
 
-        public string ComputeInner()
-        {
-            string re = "";
-            if (templateNode.NodeType==XmlNodeType.Text)
-            {
-                re = templateNodeInnerText.AsString();
-            }
-            else if (templateNode.HasChildNodes)
-            {
-                // recursively check
-                foreach (XmlNode childNode in templateNode.ChildNodes)
-                {
-                    re += childNode.InnerText;
-                }
-            }
-            else
-            {
-                re = Recurse();
-                templateNodeInnerText = re;
-            }
-            return re;
-        }
-
-        protected override Unifiable ProcessChange()
-        {
-            var v1 = ComputeInner();
-            var v2 = templateNodeInnerText;
-            return v2;
-        }
     }
 }

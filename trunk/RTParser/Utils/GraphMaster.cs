@@ -707,10 +707,18 @@ namespace RTParser.Utils
                                 {
                                     continue;
                                 }
+                                if (!request.CanUseRequestTemplate(sol))
+                                {
+
+                                }
                                 sol.Query = query;
                                 query.CurrentTemplate = sol;
                                 query.Templates.Add(sol);
                                 toplevel.AddTemplate(sol);
+                            }
+                            if (query.Templates.Count==0)
+                            {
+                                
                             }
                         }
                     }

@@ -505,6 +505,8 @@ namespace RTParser
 
         public static Unifiable FAIL_NIL = new StringUnifiable("NIL");
 
+        public static Unifiable INCOMPLETE = NULL;// new EmptyUnifiable();
+
         public virtual Unifiable ToCaseInsenitive()
         {
             return this;

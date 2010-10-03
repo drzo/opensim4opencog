@@ -46,11 +46,12 @@ namespace RTParser.AIMLTagHandlers
                     // Find and Replace
                     Unifiable templateNodeInnerValue = Recurse();
                     string myText = (string)templateNodeInnerValue;
-                    if (!TargetBot.LuceneIndexer.MayPush(myText))
+                    myText = TargetBot.LuceneIndexer.FixPronouns(myText, request.Requester.grabSettingNoDebug);
+                    if (TargetBot.LuceneIndexer.MayPush(myText, templateNode) == null)
                     {
                         writeToLogWarn("WARNING: NO DBPUSH " + myText);
                         QueryHasFailed = true;
-                        return null;
+                        return FAIL;
                     }
                     string msg = "BEGINDELETE " + myText + " ENDDELETE";
                     AddSideEffect(msg,

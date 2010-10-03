@@ -908,12 +908,12 @@ namespace RTParser
         {
             lock (UsedTemplates)
             {
-                lock (result.UsedTemplates)
-                    UsedTemplates.AddRange(result.UsedTemplates);
+                lock (result.ResultTemplates)
+                    UsedTemplates.AddRange(result.ResultTemplates);
             }
         }
 
-        public void addResultTemplates(Request request)
+        public void addRequestTemplates(Request request)
         {
             lock (UsedTemplates)
             {
@@ -947,7 +947,7 @@ namespace RTParser
                     {
                         if (r.Responder == this) continue;
                         if (mustBeResponder) if (r.Responder != responder) continue;
-                        if (mustBeSalient && !r.IsSailent) continue;
+                        if (mustBeSalient && !r.IsSalient) continue;
                         if (i == 0) return r;
                         i--;
                     }
@@ -977,11 +977,15 @@ namespace RTParser
 
         public bool CanUseTemplate(TemplateInfo info, Result request)
         {
+#if !(EXTREME_DEBUGGING)
+            return true;
+#endif
             lock (UsedTemplates)
             {
                 if (UsedTemplates.Contains(info))
                 {
-                    if (info.CategoryInfo != null && info.CategoryInfo.Pattern != null && info.CategoryInfo.Pattern.FullPath != null)
+                    if (info.CategoryInfo != null && info.CategoryInfo.Pattern != null &&
+                        info.CategoryInfo.Pattern.FullPath != null)
                     {
                         if (info.CategoryInfo.Pattern.FullPath.AsString() == "*")
                         {
@@ -1345,6 +1349,11 @@ namespace RTParser
             {
                 srai.query.PurgeTagHandlers();
             }
+        }
+
+        public Unifiable grabSettingNoDebug(string settingName)
+        {
+            return Predicates.grabSettingNoDebug(settingName);
         }
     }
 }

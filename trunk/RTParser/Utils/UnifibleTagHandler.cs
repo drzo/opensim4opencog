@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Text.RegularExpressions;
 using System.Xml;
 
@@ -142,5 +144,78 @@ namespace RTParser.Utils
         {
             return base.CanUnify(with);
         }
+        protected void SetWith(XmlNode childNode, Unifiable with)
+        {
+            MEMBER = new Unifiable[] { with };
+        }
+
+        protected bool TextWith(XmlNode templateNode, Unifiable with, out bool tf, out string toXMLValueNotOuter)
+        {
+            toXMLValueNotOuter = ToXMLValueNotOuter(templateNode);
+            if (toXMLValueNotOuter != null)
+            {
+                string srch = (" " + with.ToValue(query) + " ").ToUpper();
+                tf = (" " + toXMLValueNotOuter + " ").ToUpper().Contains(srch);
+                SetWith(templateNode, with);
+                return true;
+            }
+            tf = false;
+            return false;
+        }
+
+        protected Unifiable[] MEMBER = null;
+
+        protected override Unifiable ProcessChange()
+        {
+            if (MEMBER != null && MEMBER.Length > 0) return MEMBER[0];
+            var v1 = ComputeInner();
+            var v2 = templateNodeInnerText;
+            return v2;
+        }
+
+        public string ComputeInner()
+        {
+            string re = "";
+            if (templateNode.NodeType == XmlNodeType.Text)
+            {
+                return ValueText(templateNodeInnerText);
+            }
+            if (templateNode.HasChildNodes)
+            {
+                // recursively check
+                foreach (XmlNode childNode in templateNode.ChildNodes)
+                {
+                    re += ToXmlValue(childNode);
+                }
+            }
+            else
+            {
+                re = Recurse();
+                templateNodeInnerText = re;
+            }
+            return re;
+        }
+
+        virtual protected float ChildUnify(Unifiable with, XmlNode childNode)
+        {            
+            bool wasTrue;
+            float partCallCanUnify;
+            string useLess;
+            if (TextWith(childNode, with, out wasTrue, out useLess))
+            {
+                partCallCanUnify = wasTrue ? AND_TRUE : AND_FALSE;
+            }
+            else
+            {
+                if (childNode == templateNode)
+                {
+                    throw new Exception("This is inside iteself!");
+                }
+                AIMLTagHandler part = GetChildTagHandler(childNode);
+                partCallCanUnify = part.CallCanUnify(with);
+            }
+            return partCallCanUnify;
+        }
+
     }
 }

@@ -40,7 +40,10 @@ namespace RTParser.AIMLTagHandlers
         {
             CheckNode("think");
             writeToLog("THOUGHT: '" + templateNodeInnerText + "'");
-            if (IsNullOrEmpty(templateNodeInnerText)) return Unifiable.Empty;
+            if (IsNullOrEmpty(templateNodeInnerText))
+            {
+                return FAIL;
+            }
             return GetAttribValue(templateNode, "retval", Unifiable.Empty);
         }
     }

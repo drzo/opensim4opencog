@@ -31,7 +31,7 @@ namespace RTParser.AIMLTagHandlers
 
         public override float CanUnify(Unifiable with)
         {
-            if (templateNode.NodeType==XmlNodeType.Text)
+            if (templateNode.NodeType == XmlNodeType.Text)
             {
                 return Proc.TheCyc.IsaFilter(with, templateNode.InnerText) ? ISA_TRUE : ISA_FALSE;
             }
@@ -42,11 +42,9 @@ namespace RTParser.AIMLTagHandlers
                 {
                     try
                     {
-                        if (childNode.NodeType == XmlNodeType.Text)
-                        {
-                            return Proc.TheCyc.IsaFilter(with, childNode.InnerText) ? ISA_TRUE : ISA_FALSE;
-                        }
-                        if (!Proc.TheCyc.IsaFilter(with, childNode.InnerText)) return ISA_FALSE;
+                        Unifiable processChildNode = ProcessChildNode(childNode);
+                        if (!Proc.TheCyc.IsaFilter(with, processChildNode)) return ISA_FALSE;
+                        SetWith(childNode, with);
                     }
                     catch (Exception e)
                     {
@@ -58,9 +56,5 @@ namespace RTParser.AIMLTagHandlers
             return ISA_TRUE;
         }
 
-        protected override Unifiable ProcessChange()
-        {
-            return Unifiable.Empty;
-        }
     }
 }

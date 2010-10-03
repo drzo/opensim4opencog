@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Xml;
 using MushDLR223.ScriptEngines;
 
@@ -16,11 +17,12 @@ namespace RTParser.Database
         /// <param name="query">The search term as a string that the caller wants to search for within the
         /// index as referenced by this object.</param>
         /// <param name="myText">The new value to replace in the database.</param>
-        int UpdateFactoid(string searchQuery, string myText, XmlNode templateNode);
-        bool MayPush(string text);
-        bool MayAsk(string text);
+        int UpdateFactoid(string searchQuery, string myText, XmlNode templateNodeOnNull);
+        string MayPush(string text, XmlNode templateNodeOnNull);
+        string MayAsk(string text, XmlNode templateNodeOnNull);
         int DeleteTopScoring(string myText, XmlNode templateNode, bool mustContainExact);
         long LoadDocuments(string file, XmlNode templateNode);
         bool IsDbPresent { get; }
+        string FixPronouns(string myText, Func<string, Unifiable> getOrNullIfMissing);
     }
 }

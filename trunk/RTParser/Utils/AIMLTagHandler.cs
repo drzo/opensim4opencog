@@ -257,6 +257,10 @@ namespace RTParser.Utils
         public static bool SaveAIMLChange = true;
         public static bool SaveAIMLComplete = false;
         public static bool EnforceStartedBool = false;
+        public Unifiable FAIL
+        {
+            get { return null; }
+        }
 
         public bool RecurseResultValid
         {
@@ -511,7 +515,7 @@ namespace RTParser.Utils
                 {
                     if (QueryHasFailed)
                     {
-                        return null;
+                        return FAIL;
                     }
                     writeToLogWarn("NULL " + test);
                 }

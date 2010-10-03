@@ -31,40 +31,40 @@ namespace RTParser.AIMLTagHandlers
 
         public override float CanUnify(Unifiable with)
         {
-            if (templateNode.NodeType==XmlNodeType.Text)
+            bool wasTrue;
+            string useLess;
+            if (TextWith(templateNode, with, out wasTrue, out useLess))
             {
-                string srch = (" " + with.ToValue(query) + " ").ToUpper();
-                return ((" " + templateNode.InnerText + " ").ToUpper().Contains(srch)) ? AND_TRUE : AND_FALSE;
+                return wasTrue ? AND_TRUE : AND_FALSE;
             }
-            if (templateNode.HasChildNodes)
+            if (!templateNode.HasChildNodes)
             {
-                // recursively check
-                foreach (XmlNode childNode in templateNode.ChildNodes)
-                {
-                    try
-                    {
-                        if (childNode.NodeType == XmlNodeType.Text)
-                        {
-                            string srch = (" " + with.ToValue(query) + " ").ToUpper();
-                            return ((" " + childNode.InnerText + " ").ToUpper().Contains(srch)) ? AND_TRUE : AND_FALSE; 
-                        }
-                        AIMLTagHandler part = GetChildTagHandler(childNode);
-                        if (part.CallCanUnify(with) > 0) return AND_FALSE;
-                    }
-                    catch (Exception e)
-                    {
-                        Proc.writeToLog(e);
-                        writeToLogWarn("" + e);
-                    }
-                }
                 return AND_TRUE;
             }
-            return AND_TRUE;
+            float worstValue = AND_TRUE;
+            // recursively check
+            foreach (XmlNode childNode in templateNode.ChildNodes)
+            {
+                try
+                {
+                    float partCallCanUnify = ChildUnify(with, childNode);
+                    if (partCallCanUnify > worstValue)
+                    {
+                        worstValue = partCallCanUnify;
+                    }
+                    if (partCallCanUnify <= STAR_TRUE)
+                    {
+                        SetWith(childNode, with);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Proc.writeToLog(e);
+                    writeToLogWarn("" + e);
+                }
+            }
+            return worstValue;
         }
 
-        protected override Unifiable ProcessChange()
-        {
-            return Unifiable.Empty;
-        }
     }
 }

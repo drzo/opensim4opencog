@@ -871,7 +871,7 @@ namespace RTParser
         {
             User CurrentUser = res.Requester;
             string user = CurrentUser.UserName;
-            string useOut = res.EnglishSentences;
+            string useOut = res.EnglishOutput;
             double vscored;
 
             double scored = res.Score;
