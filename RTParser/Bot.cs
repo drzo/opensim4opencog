@@ -1898,10 +1898,13 @@ The AIMLbot program.
             }
 
             string lower = graphPath.ToLower();
-            if (lower.EndsWith(".parent") || lower.EndsWith(".parallel"))
+            int graphPathLength = graphPath.IndexOf(".");
+            if (graphPathLength>0)
             {
-                int graphPathLength = graphPath.Length - 7;
-                return GetGraph(graphPath.Substring(0, graphPathLength), current).Parallel;
+                string sv = graphPath.Substring(0, graphPathLength);
+                string left = graphPath.Substring(graphPathLength + 1);
+                var vg = GetGraph(sv, current);
+                return GetGraph(left, vg);
             }
 
             graphPath = ToScriptableName(graphPath.Trim());
@@ -1926,11 +1929,14 @@ The AIMLbot program.
                 return current;
             }
 
-            if (graphPath.ToLower().EndsWith(".parent"))
+            string lower = graphPath.ToLower();
+            int graphPathLength = graphPath.IndexOf(".");
+            if (graphPathLength > 0)
             {
-                int graphPathLength = graphPath.Length - 7;
-                var G = FindGraph(graphPath.Substring(0, graphPathLength), current);
-                if (G != null) return G.Parallel;
+                string sv = graphPath.Substring(0, graphPathLength);
+                string left = graphPath.Substring(graphPathLength + 1);
+                var vg = FindGraph(sv, current);
+                return FindGraph(left, vg);
             }
 
             graphPath = ToScriptableName(graphPath.Trim());
@@ -2471,7 +2477,8 @@ The AIMLbot program.
                         dict = AllDictionaries[key] = AllDictionaries[named] = new SettingsDictionary(named, this, null);
                         User user = LastUser ?? ExemplarUser ?? BotAsUser;
                         Request r = user.CurrentRequest ??
-                                    user.CreateRequest(" loadDictionary" + named + " from " + type, BotAsUser);
+                                    user.CreateRequest(
+                                        "@echo <!-- loadDictionary '" + named + "' from '" + type + "' -->", BotAsUser);
                         loadDictionary(dict, named, type, r);
                     }
                 }
@@ -2484,7 +2491,8 @@ The AIMLbot program.
             User user = LastUser ?? ExemplarUser ?? BotAsUser;
             Request r = r0 ??
                         user.CurrentRequest ??
-                        user.CreateRequest(" loadDictionary" + dictionary + " from " + type, BotAsUser);
+                                    user.CreateRequest(
+                                        "@echo <!-- loadDictionary '" + dictionary + "' from '" + type + "' -->", BotAsUser);
             int loaded = 0;
             foreach (string p in GetSearchRoots(r))
             {

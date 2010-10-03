@@ -188,7 +188,7 @@ namespace RTParser
             return (StringUnifiable)u;
         }
 
-        public static Unifiable Empty = new EmptyUnifiable();
+        public static Unifiable Empty = Create("");// new EmptyUnifiable();
 
 
         public static Unifiable STAR

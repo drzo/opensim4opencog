@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using System.Threading;
+using AIMLbot;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using RTParser;
@@ -24,7 +25,7 @@ namespace RTParser
         TimeSpan Durration { get; set; }
         //int DebugLevel { get; set; }
         //bool IsTraced { get; set; }
-        List<SubQuery> SubQueries { get; set; }
+        //List<SubQuery> SubQueries { get; set; }
         /// <summary>
         /// The user that made this request
         /// </summary>
@@ -100,11 +101,14 @@ namespace RTParser
         Unifiable That { get; set; }
         PrintOptions WriterOptions { get; }
         RequestImpl ParentMostRequest { get; }
+        RequestImpl OriginalSalientRequest { get; set; }
         AIMLTagHandler LastHandler { get; set; }
         ChatLabel PushScope { get; }
         ChatLabel CatchLabel { get; set; }
         SideEffectStage Stage { get; set; }
         bool SuspendSearchLimits { get; set; }
+        string WhyRequestComplete { get; }
+        string WhyResultComplete { get; }
         // inherited from base  string GraphName { get; set; }
         ISettingsDictionary GetSubstitutions(string name, bool b);
         GraphMaster GetGraph(string srai);
@@ -118,6 +122,7 @@ namespace RTParser
         void UndoAll();
         void AddSideEffect(string effect, ThreadStart start);
         Dictionary<string, GraphMaster> GetMatchingGraphs(string graphname, GraphMaster master);
+        bool TryGetSraiValue(Unifiable templateNodeInnerValue, out Unifiable prevResults, out Dictionary<Unifiable,Unifiable> dictionary);
     }
 
     /// <summary>
@@ -127,6 +132,19 @@ namespace RTParser
     {
         #region Attributes
 
+        public void ResetValues(bool b)
+        {
+            var TheDurration = Durration;
+            if (TheDurration.TotalMilliseconds <= 1d)
+            {
+                TheDurration = TimeSpan.FromMilliseconds(TargetBot.TimeOut);
+            }
+            CurrentResult.ResetAnswers(b);
+            StartedOn = DateTime.Now;
+            TimeOut = TheDurration;
+            _Durration = TimeSpan.Zero;
+            _SRAIResults.Clear();
+        }
 
         /// <summary>
         /// The amount of time the request took to process
@@ -140,12 +158,6 @@ namespace RTParser
             }
             set { _Durration = value; }
         }
-
-        /// <summary>
-        /// The subQueries processed by the bot's graphmaster that contain the templates that 
-        /// are to be converted into the collection of Sentences
-        /// </summary>
-        public List<SubQuery> SubQueries { get; set; }
 
         public Proof Proof { get; set; }
 
@@ -234,23 +246,26 @@ namespace RTParser
         /// <summary>
         /// Flag to show that the request has timed out
         /// </summary>
-        public virtual string WhyComplete
+        public virtual string WhyRequestComplete
         {
             get
             {
                 if (SuspendSearchLimits) return null;
-                return _WhyComplete;
+                return _WhyRequestComplete;
             }
-            set { if (!SuspendSearchLimits) _WhyComplete = value; }
+            set { if (!SuspendSearchLimits) _WhyRequestComplete = value; }
         }
 
-        public string _WhyComplete;
+        public abstract string WhyResultComplete { get; }
+
+        public string _WhyRequestComplete;
 
         public bool IsTimedOutOrOverBudget
         {
             get
             {
                 if (SuspendSearchLimits) return false;
+                var WhyComplete = WhyRequestComplete;
                 if (WhyComplete != null) return true;                
                 if (SraiDepth.IsOverMax)
                 {
@@ -265,8 +280,18 @@ namespace RTParser
                 {
                     WhyComplete = (WhyComplete ?? "") + whyNoSearch;
                 }
-                return (WhyComplete != null);
+                if (WhyComplete != null)
+                {
+                    _WhyRequestComplete = WhyComplete;
+                }
+                return _WhyRequestComplete != null;
             }
+        }
+
+        public string WhyComplete
+        {
+            get { return WhyRequestComplete ?? CurrentResult.WhyResultComplete; }
+            set { _WhyRequestComplete = value; }
         }
 
 #if LESS_LEAN
@@ -316,11 +341,12 @@ namespace RTParser
                     }
                 }
             }
-            return string.Format("{0}: {1}, \"{2}\"", Requester == null ? "NULL" : (string) Requester.UserID,
+            return String.Format("{0}: {1}, \"{2}\"", Requester == null ? "NULL" : (string) Requester.UserID,
                                  Responder == null ? "Anyone" : (string) Responder.UserID,
                                  unifiableToVMString);
         }
 
+        public RequestImpl OriginalSalientRequest { get; set; }
         /// <summary>
         /// Ctor
         /// </summary>
@@ -330,8 +356,7 @@ namespace RTParser
         public RequestImpl(string rawInput, User user, RTPBot bot, Request parent, User targetUser)
             :  base(bot.GetQuerySettings()) // Get query settings intially from user
         {
-            SraiDepth.Max = 5;
-            SubQueries = new List<SubQuery>();
+            SraiDepth.Max = 19;
             IsToplevelRequest = parent == null;
             this.Stage = SideEffectStage.UNSTARTED;
             qsbase = this;
@@ -342,12 +367,12 @@ namespace RTParser
                 ChatInput = ParsedSentences.GetParsedUserInputSentences(this, rawInput);
                 Requester = parent.Requester;
                 depth = parent.depth + 1;
+                OriginalSalientRequest = parent.OriginalSalientRequest;
             }
             else
             {
                 ChatInput = ParsedSentences.GetParsedUserInputSentences(this, rawInput);
             }
-            Request pmaybe = null;
             DebugLevel = -1;
             if (parent != null) targetUser = parent.Responder;
             Requester = Requester ?? user;            
@@ -366,17 +391,18 @@ namespace RTParser
             Flags = "Nothing";
             QuerySettingsSettable querySettings = GetQuerySettings();
 
-            QuerySettings.ApplySettings(qsbase, querySettings);
+            ApplySettings(qsbase, querySettings);
 
             if (parent != null)
             {
-                QuerySettings.ApplySettings(parent.GetQuerySettings(), querySettings);
+                ApplySettings(parent.GetQuerySettings(), querySettings);
                 Proof = parent.Proof;
                 this.ParentRequest = parent;
                 this.lastOptions = parent.LoadOptions;
                 this.writeToLog = parent.writeToLog;
                 Graph = parent.Graph;
                 MaxInputs = 1;
+                OriginalSalientRequest = parent.OriginalSalientRequest;
                 ReduceMinMaxesForSubRequest(user.GetQuerySettingsSRAI());
             }
             else
@@ -393,6 +419,7 @@ namespace RTParser
             writeToLog = writeToLog ?? bot.writeToLog;
             if (user != null)
             {
+                Request pmaybe = null;
                 pmaybe = user.CurrentRequest;
                 this.Requester = user;
                 if (user.CurrentRequest == null) user.CurrentRequest = this;
@@ -736,7 +763,7 @@ namespace RTParser
             }
         }
 
-        public bool IsComplete(RTParser.Result result1)
+        public bool IsComplete(Result result1)
         {
             if (SuspendSearchLimits) return false;
             string s = WhyNoSearch(result1);
@@ -744,7 +771,7 @@ namespace RTParser
             return true;
         }
 
-        public string WhyNoSearch(RTParser.Result result1)
+        public string WhyNoSearch(Result result1)
         {
             if (result1 == null)
             {
@@ -787,7 +814,7 @@ namespace RTParser
             return qsbase;
         }
 
-        public AIMLbot.MasterResult CreateResult(Request parentReq)
+        public MasterResult CreateResult(Request parentReq)
         {
             /*if (CurrentResult == null)
             {
@@ -796,16 +823,16 @@ namespace RTParser
                 r.request = this;
             }*/
             //TimeOutFromNow = parentReq.TimeOutFromNow;
-            return (AIMLbot.MasterResult) this;// CurrentResult;
+            return (MasterResult) this;// CurrentResult;
         }
 
-        public AIMLbot.MasterRequest CreateSubRequest(string templateNodeInnerValue)
+        public MasterRequest CreateSubRequest(string templateNodeInnerValue)
         {
-            var request = (AIMLbot.MasterRequest)this;
+            var request = (MasterRequest)this;
             var user= this.Requester;
             var  rTPBot = this.TargetBot;
             var requestee = this.Responder;
-            var subRequest = new AIMLbot.MasterRequest(templateNodeInnerValue, user ?? Requester,
+            var subRequest = new MasterRequest(templateNodeInnerValue, user ?? Requester,
                                                        rTPBot ?? this.TargetBot, this, requestee ?? Responder);
             Result res = request.CurrentResult;
             //subRequest.CurrentResult = res;
@@ -819,12 +846,12 @@ namespace RTParser
             return subRequest;
         }
 
-        public AIMLbot.MasterRequest CreateSubRequest(Unifiable templateNodeInnerValue, User user, RTPBot rTPBot, User requestee)
+        public MasterRequest CreateSubRequest(Unifiable templateNodeInnerValue, User user, RTPBot rTPBot, User requestee)
         {
-            var request = (AIMLbot.MasterRequest) this;
+            var request = (MasterRequest) this;
             user = user ?? this.Requester;
             rTPBot = rTPBot ?? this.TargetBot;
-            var subRequest = new AIMLbot.MasterRequest(templateNodeInnerValue, user ?? Requester,
+            var subRequest = new MasterRequest(templateNodeInnerValue, user ?? Requester,
                                                        rTPBot ?? this.TargetBot, this, requestee ?? Responder);
             Result res = request.CurrentResult;
             //subRequest.CurrentResult = res;
@@ -1150,7 +1177,7 @@ namespace RTParser
             Dictionary<string, GraphMaster> graphs = new Dictionary<string, GraphMaster>();
             if (graphname == "*")
             {
-                foreach (KeyValuePair<String, GraphMaster> ggg in GraphMaster.CopyOf(RTPBot.GraphsByName))
+                foreach (KeyValuePair<string, GraphMaster> ggg in GraphMaster.CopyOf(RTPBot.GraphsByName))
                 {
                     var G = ggg.Value;
                     if (G != null && !graphs.ContainsValue(G)) graphs[ggg.Key] = G;
@@ -1229,7 +1256,7 @@ namespace RTParser
                 var v = GetDictionary(path[0]);
                 if (v != null)
                 {
-                    var vp = GetDictionary(string.Join(".", path, 0, path.Length - 1), v);
+                    var vp = GetDictionary(String.Join(".", path, 0, path.Length - 1), v);
                     if (vp != null) return vp;
                 }
             }
@@ -1280,6 +1307,86 @@ namespace RTParser
             {
                 UsedResults.Add(subResult);
             }
+        }
+
+        public Dictionary<Unifiable, Unifiable> _SRAIResults = new Dictionary<Unifiable, Unifiable>();
+
+        internal static RequestImpl GetOriginalSalientRequest(Request request)
+        {
+            RequestImpl originalSalientRequest = request as ResultImpl;// .OriginalSalientRequest;
+            if (originalSalientRequest == null)
+            {
+                originalSalientRequest = request as RequestImpl;
+                request.OriginalSalientRequest = originalSalientRequest;
+            }
+            return originalSalientRequest;
+        }
+
+        public void ExitSailentSRAI(Unifiable templateNodeInnerValue, string resultOutput)
+        {
+            if (IsNull(resultOutput)) resultOutput = "FAILURE on: " + templateNodeInnerValue;
+            else resultOutput = "+++" + resultOutput;
+            _SRAIResults[templateNodeInnerValue] = resultOutput;
+        }
+        public bool TryGetSraiValue(Unifiable templateNodeInnerValue, out Unifiable prevResults, out Dictionary<Unifiable, Unifiable> dictionary)
+        {
+            if (_SRAIResults.TryGetValue(templateNodeInnerValue, out prevResults))
+            {
+                dictionary = _SRAIResults;
+                return true;
+            }
+            if (ParentRequest != null)
+                if (ParentRequest.TryGetSraiValue(templateNodeInnerValue, out prevResults, out dictionary))
+                {
+                    return true;
+                }
+            dictionary = _SRAIResults;
+            return false;
+        }
+
+        public bool EnterSailentSRAI(Unifiable templateNodeInnerValue, out Unifiable prevResults)
+        {
+            Dictionary<Unifiable, Unifiable> dict = _SRAIResults;
+            lock (dict)
+            {
+                string errorCycle = "ERROR CYCLE: " + templateNodeInnerValue;
+                if (!TryGetSraiValue(templateNodeInnerValue, out prevResults, out dict))
+                {
+                    dict[templateNodeInnerValue] = errorCycle;
+                    return true;
+                }
+                if (prevResults == errorCycle)
+                {
+                    writeToLog("LOOPED on " + errorCycle);
+                    return false;
+                }
+                if (IsNullOrEmpty(prevResults))
+                {
+                    writeToLog("EnterSailentSRAI IsNullOrEmpty on: " + templateNodeInnerValue);
+                    return true;
+                }
+                else
+                {
+                    if (!AIMLTagHandler.IsUnevaluated(templateNodeInnerValue))
+                    {
+                        writeToLog("Looped maybe '" + prevResults + "' on: " + templateNodeInnerValue);
+                        return false;
+                    }
+                    writeToLog("Looped '" + prevResults + "' on: " + templateNodeInnerValue);
+                    return true;
+                }
+            }
+        }
+
+        public Dictionary<Unifiable, Unifiable> CreateSRAIMark()
+        {
+            var originalSalientRequest = GetOriginalSalientRequest(this);
+            return new Dictionary<Unifiable, Unifiable>(originalSalientRequest._SRAIResults);
+        }
+
+        public void ResetSRAIResults(Dictionary<Unifiable, Unifiable> sraiMark)
+        {
+            _SRAIResults = sraiMark;
         }
     }
 }

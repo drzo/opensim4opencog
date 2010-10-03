@@ -5,9 +5,9 @@ namespace RTParser
     internal class EmptyUnifiable : StringUnifiable
     {
         public EmptyUnifiable()
-            : base()
+            : base("")
         {
-
+            //str = "";
         }
 
         public override bool IsEmpty

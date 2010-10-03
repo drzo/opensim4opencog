@@ -20,7 +20,21 @@ namespace RTParser
         public T Current { get; set; }
         public bool IsOverMax
         {
-            get { return Current.CompareTo(Max) >= 0; }
+            get
+            {
+                // Max.CompareTo(Min) < 0 means if max is less than min.. it cant timeout
+                return Current.CompareTo(Max) >= 0 && Max.CompareTo(Min) < 0;
+            }
+        }
+        public override string ToString()
+        {
+            return OrNull(Min) + "=<" + OrNull(Current) + "=<" + OrNull(Max);
+        }
+
+        private static string OrNull(T p0)
+        {
+            if (ReferenceEquals(null, p0)) return "-NULL-";
+            return "" + p0;
         }
     }
 
@@ -50,6 +64,8 @@ namespace RTParser
 
     abstract public class QuerySettings : StaticAIMLUtils, QuerySettingsSettable
     {
+        public static int UNLIMITED = 999;
+
         public void IncreaseLimits(int minsAndMaxes)
         {
             IncreaseLimits(this, minsAndMaxes, minsAndMaxes);
@@ -106,7 +122,6 @@ namespace RTParser
             },
         };
 
-        public static int UNLIMITED = 999;
         public static QuerySettings AIMLDefaults = new QuerySettingsImpl(null)
         {
             ProcessMultipleTemplates = true, // needed to find verbal outputs

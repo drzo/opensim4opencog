@@ -180,14 +180,14 @@ namespace RTParser
             }
             if (AllreadyUnderstandingSentences)
             {
-                writeDebugLine("HEARDSELF: TO FAST - " + message);
+                writeDebugLine("HEARDSELF: TOOOO FAST - " + message);
                 return res;
             }
             lock (AllreadyUnderstandingSentencesLock)
             {
                 if (AllreadyUnderstandingSentences)
                 {
-                    writeDebugLine("HEARDSELF: TO FAST - " + message);
+                    writeDebugLine("HEARDSELF: TWOOOO FAST - " + message);
                     return res;
                 }
                 AllreadyUnderstandingSentences = true;
@@ -206,16 +206,17 @@ namespace RTParser
                     {
                         resrequest = res.request;
                         resrequest.ParentMostRequest.DisallowedGraphs.Clear();
-                    }
-                    
-                    Request r = new AIMLbot.MasterRequest(message, theFactSpeaker, this, resrequest, toWhom);
+                    }                    
+                    var r = new AIMLbot.MasterRequest(message, theFactSpeaker, this, resrequest, toWhom);
+                    r.OriginalSalientRequest = r;
+                    r.IsToplevelRequest = true;
                     r.writeToLog = writeDebugLine;
                     r.IsTraced = false;
                     r.TimesOutAt = DateTime.Now + TimeSpan.FromSeconds(5);
                     r.WhyComplete = null;
                     if (control != null) control.AbortRaised += (ctl, abrtedE) =>
                                                                     {
-                                                                        r.WhyComplete = "ABORTED";
+                                                                        r.WhyComplete = "THREADABORTED";
                                                                     };
                     var G = HeardSelfSayGraph ?? GraphMaster;
                     Result res2 = ChatWithUser(r, theFactSpeaker, toWhom, G);

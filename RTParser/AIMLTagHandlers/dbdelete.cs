@@ -38,16 +38,24 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "dbdelete")
+            if (CheckNode("dbdelete"))
             {
-                // Simply push the filled in tag contents onto the stack
+                // delete
                 try
                 {
                     // Find and Replace
                     Unifiable templateNodeInnerValue = Recurse();
                     string myText = (string)templateNodeInnerValue;
-                    TargetBot.LuceneIndexer.DeleteTopScoring(myText, templateNode, false);
-
+                    if (!TargetBot.LuceneIndexer.MayPush(myText))
+                    {
+                        writeToLogWarn("WARNING: NO DBPUSH " + myText);
+                        QueryHasFailed = true;
+                        return null;
+                    }
+                    string msg = "BEGINDELETE " + myText + " ENDDELETE";
+                    AddSideEffect(msg,
+                                  () => TargetBot.LuceneIndexer.DeleteTopScoring(myText, templateNode, false));
+                    return Succeed(msg);
                 }
                 catch (Exception e)
                 {

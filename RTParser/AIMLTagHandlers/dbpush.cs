@@ -50,7 +50,7 @@ namespace RTParser.AIMLTagHandlers
                     {
                         writeToLogWarn("WARNING: NO DBPUSH " + myText);
                         QueryHasFailed = true;
-                        return Unifiable.Empty;
+                        return null;
                     }
                     AddSideEffect("DBPUSH " + myText,
                                   () => TargetBot.LuceneIndexer.InsertFactiod(myText, templateNode, null));

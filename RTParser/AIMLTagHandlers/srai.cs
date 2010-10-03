@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Xml;
 using System.Text;
 using System.IO;
+using AIMLbot;
 using MushDLR223.ScriptEngines;
 using RTParser.Utils;
 
@@ -127,13 +129,17 @@ namespace RTParser.AIMLTagHandlers
             }
             return RecurseResult;
         }
-        
+
+        private const bool ProcessChange12 = true;
         public override Unifiable CompleteProcess()
         {
             if (RecurseResultValid) return RecurseResult;
-            var sraiResult = ProcessChange();
+            // ReSharper disable ConditionIsAlwaysTrueOrFalse
+            var sraiResult = ProcessChange12 ? ProcessChange0() : ProcessChange();
+            // ReSharper restore ConditionIsAlwaysTrueOrFalse
             if (IsNull(sraiResult))
             {
+                return sraiResult;
                 ResetValues(true);
                 sraiResult = base.CompleteProcess();
                 if (RecurseResultValid)
@@ -144,8 +150,9 @@ namespace RTParser.AIMLTagHandlers
                 return sraiResult;
             }
             return sraiResult;
-           // return base.CompleteProcess();
+            // return base.CompleteProcess();
         }
+
         public override string Transform()
         {
             if (RecurseResultValid) return RecurseResult;
@@ -168,6 +175,10 @@ namespace RTParser.AIMLTagHandlers
                 try
                 {
                     var templateNodeInnerValue = Recurse();
+                    if (IsNull(templateNodeInnerValue))
+                    {
+                        templateNodeInnerValue = Recurse();
+                    }
                     var vv = ProcessChangeSrai(request, query, templateNodeInnerValue, templateNode, initialString, writeToLog);
                     if (!Unifiable.IsNullOrEmpty(vv))
                     {
@@ -185,6 +196,7 @@ namespace RTParser.AIMLTagHandlers
                         }
                         return vv; // Empty
                     }
+                    if (ProcessChange12) return null;
                     if (Unifiable.IsNull(vv))
                     {
                         vv = GetTemplateNodeInnerText();
@@ -209,18 +221,33 @@ namespace RTParser.AIMLTagHandlers
             return Unifiable.Empty;
         }
 
-        internal static Unifiable ProcessChangeSrai(Request request, SubQuery query,
+        static internal Unifiable ProcessChangeSrai(Request request, SubQuery query,
             Unifiable templateNodeInnerValue, XmlNode templateNode, string initialString, OutputDelegate writeToLog)
         {
+            if (IsNullOrEmpty(templateNodeInnerValue))
+            {
+                writeToLog("ERROR BAD REQUEST " + request);
+                return templateNodeInnerValue;
+            }
+            var salientRequest = RequestImpl.GetOriginalSalientRequest(request);
             try
             {
+                Unifiable prevResult;
+                if (!salientRequest.EnterSailentSRAI(templateNodeInnerValue, out prevResult))
+                {
+                    writeToLog("ERROR EnterSailentSRAI: " + prevResult);
+                    return null;
+                }
+                Unifiable subResultOutput;
                 writeToLog = writeToLog ?? DEVNULL;
                 RTPBot mybot = request.TargetBot;
                 User user = request.Requester;
                 int depth = user.depth;
                 var thisrequest = request;
                 var thisresult = request.CurrentResult;
-                string prefix = query.prefix;
+                /*
+                writeToLog("WARNING Depth pretty deep " + templateNode + " returning empty");
+                */
                 //string s;
                 //if (ResultReady(out s)) return s;
                 /*
@@ -233,6 +260,10 @@ namespace RTParser.AIMLTagHandlers
                  */
                 //if (CheckNode("srai"))
                 {
+                    string prefix =
+                        query.prefix =
+                        string.Format("ProcessChangeSrai: {0}: \"{1}\"\n", request.Graph, templateNodeInnerValue);
+
                     if (request.SraiDepth.IsOverMax)
                     {
                         string sss = prefix + " request.SraiDepth.IsOverMax '" + request.SraiDepth.Current + "'";
@@ -244,7 +275,7 @@ namespace RTParser.AIMLTagHandlers
                         }
                     }
                     string why = request.WhyComplete;
-                    if (why!=null)
+                    if (why != null)
                     {
                         string sss = prefix + " " + why;
                         writeToLog(sss);
@@ -255,7 +286,7 @@ namespace RTParser.AIMLTagHandlers
                         }
                     }
                     //Unifiable templateNodeInnerValue = Recurse();
-                    if (!templateNodeInnerValue.IsEmpty)
+                    //if (!templateNodeInnerValue.IsEmpty)
                     {
                         var subRequest = request.CreateSubRequest(templateNodeInnerValue, user, mybot, null);
 
@@ -269,7 +300,8 @@ namespace RTParser.AIMLTagHandlers
                         // make sure we don't keep adding time to the request
                         bool showDebug = DebugSRAIs;
                         string subRequestrawInput = subRequest.rawInput;
-                        if (showDebug && subRequestrawInput.Contains("SYSTEMANIM") || subRequestrawInput.Contains("HANSANIM"))
+                        if (showDebug && subRequestrawInput.Contains("SYSTEMANIM") ||
+                            subRequestrawInput.Contains("HANSANIM"))
                         {
                             showDebug = false;
                         }
@@ -294,59 +326,65 @@ namespace RTParser.AIMLTagHandlers
                             return Unifiable.Empty;
                         }
                         AIMLbot.MasterResult subResult;
-                        var prev = subRequest.GraphsAcceptingUserInput;
-                        var prevSO = user.SuspendAddResultToUser;
-                        subResult = subRequest.CreateResult(subRequest);
-                        try
-                        {
-                            subRequest.GraphsAcceptingUserInput = true;
-                            //var newresult = new AIMLbot.Result(request.user, Proc, request);
-                            //subRequest.result = newresult;
-                            user.SuspendAddResultToUser = true;
-                            if (request.IsTraced) subRequest.IsTraced = !showDebug;                            
-                            subResult = mybot.ChatWithRequest4(subRequest, user, request.Responder, subRequest.Graph);
-                        }
-                        finally
-                        {
-                            user.SuspendAddResultToUser = prevSO;
-                            subRequest.GraphsAcceptingUserInput = prev;
-                        }
+                        string subQueryRawOutputText;
+                        subResult = GetSubResult(prefix, request, user, mybot, subRequest, showDebug,
+                                                 out subResultOutput,
+                                                 out subQueryRawOutputText, writeToLog);
 
 
                         string whyComplete = thisrequest.WhyComplete = subRequest.WhyComplete;
-                        var subQueryRawOutput = subResult.RawOutput.Trim();
-                        if (Unifiable.IsNullOrEmpty(subQueryRawOutput))
+
+                        if (Unifiable.IsNull(subResultOutput))
                         {
                             if (showDebug)
                             {
                                 writeToLog(prefix + "MISSING RETURN " + whyComplete);
                             }
-                           subResult = mybot.ChatWithRequest44(subRequest, user, request.Responder, subRequest.Graph);
-                            if (mybot.chatTrace)
+                            subResult = mybot.ChatWithRequest44(subRequest, user, request.Responder, subRequest.Graph);
+                            subResultOutput = subResult.Output;
+                            //subQueryRawOutput = subResult.RawOutput.Trim();
+                            if (!IsNullOrEmpty(subResultOutput))
                             {
-                                mybot.writeChatTrace("\"L{0}\" -> \"S{1}\" ;\n", depth, depth);
-                                mybot.writeChatTrace("\"S{0}\" -> \"SIN:{1}\" ;\n", depth, subRequestrawInput);
-                                //mybot.writeChatTrace("\"SIN:{0}\" -> \"LN:{1}\" ;\n", subRequestrawInput, CatTextInfo());
-                                mybot.writeChatTrace("\"SIN:{0}\" -> \"PATH:{1}\" [label=\"{2}\"] ;\n",
-                                                     subRequestrawInput, depth, subResult.NormalizedPaths);
-                                mybot.writeChatTrace("\"PATH:{0}\" -> \"LN:{1}\" [label=\"{2}\"] ;\n", depth, depth,
-                                                     AIMLLoader.TextAndSourceInfo(templateNode));
-
-                                mybot.writeChatTrace("\"LN:{0}\" -> \"RPY:MISSING({1})\" ;\n", depth, depth);
+                                writeToLog(prefix + "RESCUED RETURN " + subResultOutput);
+                                //  subQueryRawOutput = "" + subResultOutput;
                             }
+                            // This is the failure cases
+                            if (Unifiable.IsNull(subResultOutput))
+                            {
+                                if (mybot.chatTrace)
+                                {
+                                    mybot.writeChatTrace("\"L{0}\" -> \"S{1}\" ;\n", depth, depth);
+                                    mybot.writeChatTrace("\"S{0}\" -> \"SIN:{1}\" ;\n", depth, subRequestrawInput);
+                                    //mybot.writeChatTrace("\"SIN:{0}\" -> \"LN:{1}\" ;\n", subRequestrawInput, CatTextInfo());
+                                    mybot.writeChatTrace("\"SIN:{0}\" -> \"PATH:{1}\" [label=\"{2}\"] ;\n",
+                                                         subRequestrawInput, depth, subResult.NormalizedPaths);
+                                    mybot.writeChatTrace("\"PATH:{0}\" -> \"LN:{1}\" [label=\"{2}\"] ;\n", depth, depth,
+                                                         AIMLLoader.TextAndSourceInfo(templateNode));
 
-                            return Unifiable.Empty;
+                                    mybot.writeChatTrace("\"LN:{0}\" -> \"RPY:MISSING({1})\" ;\n", depth, depth);
+                                }
+
+
+                                salientRequest.ExitSailentSRAI(templateNodeInnerValue, subResultOutput);
+
+                                return subResultOutput;
+                            }
                         }
-                        else
+                        if (Unifiable.IsEMPTY(subResultOutput))
+                        {
+                            why = subRequest.WhyComplete ?? "ERROR";
+                            writeToLog("{0} EMPTY?! RETURN {1}  {2} '{3}'", why + ": " + prefix, subRequestrawInput,
+                                       subResult.Score, subResultOutput);
+                        }
                         {
                             string sss = thisresult.ToString();
                             if (showDebug)
                             {
                                 writeToLog("{0} SUCCESS RETURN {1}  {2} '{3}'", prefix, subRequestrawInput,
-                                           subResult.Score, subQueryRawOutput);
-// ReSharper disable ConditionIsAlwaysTrueOrFalse
+                                           subResult.Score, subResultOutput);
+                                // ReSharper disable ConditionIsAlwaysTrueOrFalse
                                 if (query != null)
-// ReSharper restore ConditionIsAlwaysTrueOrFalse
+                                    // ReSharper restore ConditionIsAlwaysTrueOrFalse
                                 {
                                     if (query.CurrentTemplate != null)
                                     {
@@ -369,17 +407,10 @@ namespace RTParser.AIMLTagHandlers
                                                  depth, subResult.NormalizedPaths);
                             mybot.writeChatTrace("\"PATH:{0}\" -> \"LN:{1}\" [label=\"{2}\"] ;\n", depth, depth,
                                                  AIMLLoader.TextAndSourceInfo(templateNode));
-                            mybot.writeChatTrace("\"LN:{0}\" -> \"RPY:{1}\" ;\n", depth, subQueryRawOutput);
+                            mybot.writeChatTrace("\"LN:{0}\" -> \"RPY:{1}\" ;\n", depth, subResultOutput);
                         }
-                        return subResult.Output;
-                    }
-                    else
-                    {
-                        if (templateNodeInnerValue.IsEmpty)
-                        {
-                            writeToLog("InnerValue.IsEmpty! " + initialString);
-                            return templateNodeInnerValue;
-                        }
+                        salientRequest.ExitSailentSRAI(templateNodeInnerValue, subResultOutput);
+                        return subResultOutput;
                     }
                 }
                 return Unifiable.Empty;
@@ -388,6 +419,48 @@ namespace RTParser.AIMLTagHandlers
             {
                 //depth--;
             }
+        }
+
+        static MasterResult GetSubResult(String prefix, Request request, User user, RTPBot mybot, MasterRequest subRequest, bool showDebug, out Unifiable subResultOutput, out  string subQueryRawOutput1, OutputDelegate writeToLog)
+        {
+            var prev = subRequest.GraphsAcceptingUserInput;
+            var prevSO = user.SuspendAddResultToUser;
+            MasterResult subResult = subRequest.CreateResult(subRequest);
+            try
+            {
+                var originalSalientRequest = RequestImpl.GetOriginalSalientRequest(request);
+                var sraiMark = originalSalientRequest.CreateSRAIMark();
+                subRequest.GraphsAcceptingUserInput = true;
+                //var newresult = new AIMLbot.Result(request.user, Proc, request);
+                //subRequest.result = newresult;
+                user.SuspendAddResultToUser = true;
+                if (request.IsTraced) subRequest.IsTraced = !showDebug;                            
+                subResult = mybot.ChatWithRequest4(subRequest, user, request.Responder, subRequest.Graph);
+                subResultOutput = subResult.Output;
+                int resultCount = subResult.OutputSentences.Count;
+                if (resultCount == 0)
+                {
+                    subRequest.ResetValues(true);
+                    originalSalientRequest.ResetSRAIResults(sraiMark);
+                    if (Unifiable.IsNullOrEmpty(subResultOutput))
+                    {
+                        subResult = mybot.ChatWithRequest44(subRequest, user, request.Responder, subRequest.Graph);
+                        subResultOutput = subResult.Output;
+                        if (!IsNullOrEmpty(subResultOutput))
+                        {
+                            writeToLog(prefix + "RESCUED RETURN " + subResultOutput);
+                          //  subQueryRawOutput = "" + subResultOutput;
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                user.SuspendAddResultToUser = prevSO;
+                subRequest.GraphsAcceptingUserInput = prev;
+            }
+            subQueryRawOutput1 = subResultOutput;//.Trim();
+            return subResult;
         }
     }
 }

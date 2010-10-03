@@ -35,27 +35,20 @@ namespace RTParser.AIMLTagHandlers
             {
                 QueryHasFailed = false;
             }
-            Unifiable templateResult = Unifiable.CreateAppendable();
-            if (templateNode.HasChildNodes)
-            {
-                templateResult = RecurseReal(templateNode, false);
-            }
-            return RecurseResult = templateResult;//.ToString();
+            Unifiable templateResult = RecurseReal(templateNode, true);
+            RecurseResult = templateResult;//.ToString();
+            return templateResult;
         }
 
         public override Unifiable CompleteProcess()
-        {
+        {            
             if (RecurseResultValid) return RecurseResult;
             if (query.CurrentTemplate != null)
             {
                 Succeed();
             }
-            Unifiable templateResult = Unifiable.CreateAppendable();
-            if (templateNode.HasChildNodes)
-            {
-                templateResult = RecurseReal(templateNode, false);
-            }
-            return templateResult;//.ToString();
+            Unifiable templateResult = RecurseReal(templateNode, false);
+            return templateResult;
         }
     }
 }

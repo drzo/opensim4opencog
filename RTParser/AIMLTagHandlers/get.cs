@@ -64,6 +64,43 @@ namespace RTParser.AIMLTagHandlers
             return u;
         }
 
+        /// <summary>
+        /// Helper method that turns the passed Unifiable into an XML node
+        /// </summary>
+        /// <param name="outerXML">the Unifiable to XMLize</param>
+        /// <returns>The XML node</returns>
+        public override float CanUnify(Unifiable with)
+        {
+            if (CheckNode("get,bot"))
+            {
+                string name = GetAttribValue(templateNode, "name,var", () => templateNodeInnerText, ReduceStarAttribute);
+                bool succeed;
+                Unifiable v = GetActualValue(name, typeof (bot) == GetType() ? "bot" : "get", out succeed);
+                if (IsNull(v))
+                {
+                    if (!succeed)
+                    {
+                        QueryHasFailed = true;
+                        return 1.0f;
+                    }
+                    // trace the next line to see why
+                    Proc.TraceTest("NULL from success?!",
+                                   () => GetActualValue(name, typeof (bot) == GetType() ? "bot" : "get", out succeed));
+                    return 1.0f;
+                }
+                if (succeed)
+                {          
+                    if (IsPredMatch(v, with, query))
+                    {
+                        Succeed();
+                        return 0.0f;
+                    }
+                }
+                return 1.0f;
+            }
+            return 1.0f;
+        }
+
         protected Unifiable ProcessChange0()
         {
             if (CheckNode("get,bot"))
@@ -76,7 +113,7 @@ namespace RTParser.AIMLTagHandlers
                     if (!succeed)
                     {
                         QueryHasFailed = true;
-                        return Unifiable.Empty;
+                        return null;// Unifiable.Empty;
                     }
                     // trace the next line to see why
                     Proc.TraceTest("NULL from success?!", () => GetActualValue(name, typeof (bot) == GetType() ? "bot" : "get", out succeed));

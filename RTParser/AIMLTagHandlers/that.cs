@@ -65,8 +65,8 @@ namespace RTParser.AIMLTagHandlers
                     {
                         //if (at1.Length > 0)
                         {
-                            return GetIndexes(at1, request.Responder, this.user.getThat,
-                                              (str, args) => localError(at1, str));
+                            return CheckValue(GetIndexes(at1, request.Responder, this.user.getThat,
+                                              (str, args) => localError(at1, str)));
                         }
                     }
                 }

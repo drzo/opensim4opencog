@@ -1130,7 +1130,7 @@ namespace RTParser
                                 string[] hostSystemGetFiles = HostSystem.GetFiles(userdir, "*.aiml");
                                 if (hostSystemGetFiles != null && hostSystemGetFiles.Length > 0)
                                 {
-                                    var request1 = new AIMLbot.MasterRequest("load user aiml ", this, bot, null,null);
+                                    var request1 = new AIMLbot.MasterRequest("@echo load user aiml ", this, bot, null, null);
                                     request1.TimesOutAt = DateTime.Now + new TimeSpan(0, 15, 0);
                                     request1.Graph = ListeningGraph;
                                     request1.LoadingFrom = userdir;
@@ -1153,7 +1153,7 @@ namespace RTParser
             // process previous todo list
             DoPendingTodoList();
             if (!HostSystem.FileExists(userdir) || !userdir.EndsWith(".aiml")) return;
-            var request = new AIMLbot.MasterRequest("load user aiml ", this, bot, null, null);
+            var request = new AIMLbot.MasterRequest("@echo load user aiml ", this, bot, null, null);
             request.TimesOutAt = DateTime.Now + new TimeSpan(0, 15, 0);
             request.Graph = ListeningGraph;
             request.LoadingFrom = userdir;
@@ -1291,13 +1291,13 @@ namespace RTParser
 
         #endregion
 
-        public Request CreateRequest(string s, User target)
+        public AIMLbot.MasterRequest CreateRequest(string s, User target)
         {
             DoPendingTodoList();
             depth = 0;
-
             var newRequest = new AIMLbot.MasterRequest(s, this, bot, null, target);
             newRequest.IsToplevelRequest = true;
+            newRequest.OriginalSalientRequest = newRequest;
             //newRequest.ParentRequest = CurrentRequest;
             return newRequest;
         }

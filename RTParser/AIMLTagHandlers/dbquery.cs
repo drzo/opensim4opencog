@@ -51,7 +51,7 @@ namespace RTParser.AIMLTagHandlers
                 {
                     writeToLogWarn("WARNING: NO DBASK " + searchTerm1);
                     QueryHasFailed = true;
-                    return Unifiable.Empty;
+                    return null;
                 }
                 float reliability;
                 Unifiable converseMemo = TargetBot.LuceneIndexer.AskQuery(searchTerm1, this.writeToLog, this.OnFalure,
