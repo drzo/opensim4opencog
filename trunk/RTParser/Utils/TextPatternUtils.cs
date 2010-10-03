@@ -283,7 +283,7 @@ namespace RTParser.Utils
         public static bool IsSomething(string s, out string something)
         {
             something = s;
-            if (String.IsNullOrEmpty(s))
+            if (String.IsNullOrEmpty(s) || IsMissing(s))
             {
                 return false;
             }

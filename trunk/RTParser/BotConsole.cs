@@ -432,7 +432,7 @@ namespace RTParser
                 {
                     return true;
                 }
-                myUser.LastReponder = theResponder;
+                myUser.LastResponder = theResponder;
                 theResponder.JustSaid = justsaid;
 // ReSharper disable ConditionIsAlwaysTrueOrFalse
                 if (false && ProcessHeardPreds) 
@@ -530,7 +530,7 @@ namespace RTParser
                     said = args;
                 }
                 User factSpeaker = FindOrCreateUser(who);
-                HeardSelfSayVerbal(factSpeaker, factSpeaker.LastReponder, args, LastResult, control);
+                HeardSelfSayVerbal(factSpeaker, factSpeaker.LastResponder, args, LastResult, control);
                 return true;
             }
 
@@ -545,7 +545,7 @@ namespace RTParser
                     said = args;
                 }
                 User factSpeaker = FindOrCreateUser(who);
-                HeardSelfSay1Sentence(factSpeaker, factSpeaker.LastReponder, said, LastResult, control);
+                HeardSelfSay1Sentence(factSpeaker, factSpeaker.LastResponder, said, LastResult, control);
                 return true;
             }
 
