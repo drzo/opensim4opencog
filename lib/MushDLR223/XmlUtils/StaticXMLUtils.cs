@@ -246,7 +246,12 @@ namespace MushDLR223.Utilities
 
         public static string ToXmlValue(XmlNode xmlNode)
         {
-
+            string found =  ToXMLValueNotOuter(xmlNode);
+            if (found != null) return found;
+            return xmlNode.OuterXml;
+        }
+        public static string ToXMLValueNotOuter(XmlNode xmlNode)
+        {
             if (xmlNode.NodeType == XmlNodeType.Text)
             {
                 return ValueText(xmlNode.InnerText);
@@ -261,7 +266,7 @@ namespace MushDLR223.Utilities
             {
                 return ValueText(InnerXmlText(xmlNode));
             }
-            return xmlNode.OuterXml;
+            return null;
         }
 
         public static string ValueText(string s)
