@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Xml;
+using AIMLbot;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 
@@ -16,7 +17,7 @@ namespace RTParser.Utils
                    request.IsComplete(toplevel.CurrentResult);
         }
 
-        public RequestImpl TheRequest;
+        public AIMLbot.MasterRequest TheRequest;
         private List<TemplateInfo> Templates;
         private List<SubQuery> Bindings;
         public List<Node> PatternsUsed;
@@ -87,7 +88,7 @@ namespace RTParser.Utils
             : base(request)
         {
             InputPath = inputPath;
-            TheRequest = (RequestImpl)request;
+            TheRequest = (MasterRequest)request;
             graphMaster = gMaster;
             matchState = mstate;
         }

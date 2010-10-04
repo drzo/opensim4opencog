@@ -547,7 +547,7 @@ namespace RTParser.Utils
         {
             MatchState state = ql.matchState;
             Unifiable path = ql.InputPath;
-            var request = ql.TheRequest;
+            Request request = ql.TheRequest;
             if (DoParallels) DoParallelEval(Parallels, request, request.rawInput);
             evaluateQL(path, request, state, ql, true);
             if (ql.TemplateCount == 0)
@@ -709,7 +709,7 @@ namespace RTParser.Utils
                                 }
                                 if (!request.CanUseRequestTemplate(sol))
                                 {
-
+                                    continue;
                                 }
                                 sol.Query = query;
                                 query.CurrentTemplate = sol;

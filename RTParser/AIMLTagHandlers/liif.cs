@@ -120,15 +120,26 @@ namespace RTParser.AIMLTagHandlers
         {
             if (CheckNode("li,if"))
             {
-
+                ResetValues(false);
                 ISettingsDictionary dist = query;
-                return IfSucceed(templateNode, dist, query, Succeed, () => FAIL);
-
+                var vv = IfSucceed(templateNode, dist, query, ProcessSucceed, Failure);
+                return vv;
             }
-            return Succeed();
+            return ProcessSucceed();
         }
 
-        static Unifiable IfSucceed(XmlNode templateNode, ISettingsDictionary dict, SubQuery query0, Func<Unifiable> Succeed, Func<Unifiable> Fail)
+        override protected Unifiable ProcessSucceed()
+        {
+            Unifiable before = InnerSource();
+            string s = RecurseReal(templateNode, true);
+            var recurseResult1 = RecurseProcess();
+            if (s == null) return Failure("NULL in FIIF ");
+            Succeed();
+            if (RecurseResultValid) return RecurseResult;
+            return s;
+        }
+
+        static Unifiable IfSucceed(XmlNode templateNode, ISettingsDictionary dict, SubQuery query0, Func<Unifiable> Succeed, Func<string, Unifiable> Failure)
         {
             lock (templateNode)
             {
@@ -184,7 +195,7 @@ namespace RTParser.AIMLTagHandlers
                     if (exists == "inherited")
                     {
                         if (!locallyContains && anyContains) return Succeed();
-                        return Fail();
+                        return Failure("" + name + "=" + anyContains + " !inherited ");
                     }
                     if (exists == "false")
                     {
@@ -202,7 +213,7 @@ namespace RTParser.AIMLTagHandlers
                                 return Succeed();
                             }
                         }
-                        return Fail();
+                        return Failure("" + name + "=" + anyContains + " !false ");
                     }
                     if (exists == "true")
                     {
@@ -220,7 +231,7 @@ namespace RTParser.AIMLTagHandlers
                                 return Succeed();
                             }
                         }
-                        return Fail();
+                        return Failure("" + name + "=" + anyContains + "  " + templateNode.OuterXml);
                     }
                     string realName;
                     bool succeed;
@@ -232,7 +243,7 @@ namespace RTParser.AIMLTagHandlers
                     }
                     else
                     {
-                        return Fail();
+                        return Failure("" + name + "=" + anyContains + "  " + templateNode.OuterXml);
                     }
                 }
                 return Succeed();

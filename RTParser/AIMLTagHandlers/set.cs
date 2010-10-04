@@ -92,6 +92,10 @@ namespace RTParser.AIMLTagHandlers
                     value = templateNodeInnerText;
                 }
                 if (IsNull(value)) value = defaultVal;
+                if (IsNull(value))
+                {
+                    if (QueryHasFailed) return FAIL;
+                }
                 var retVal = NamedValuesFromSettings.SetSettingForType(dictName, query, dict, name, gName, value, setReturn, templateNode);
                 if (IsNull(retVal))
                 {

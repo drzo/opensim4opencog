@@ -29,8 +29,10 @@ namespace AIMLbot
         {
         }
     }
-    public class MasterRequest : MasterResult
-    {/*
+
+    sealed public class MasterRequest : RequestImpl, Request
+    {
+/*
         public Request(String rawInput, RTParser.User user, RTPBot bot)
             : this(rawInput, user, bot, null)
         {
@@ -47,15 +49,11 @@ namespace AIMLbot
         }
     }
 
-    abstract public class MasterResult : RTParser.ResultImpl
+    sealed public class MasterResult : RTParser.ResultImpl, Result
     {
         public MasterResult(string rawInput, User user, RTPBot bot, Request parent, User targetUser)
             : base(rawInput, user, bot, parent, targetUser)
         {
-            if (ParentRequest==null && !IsToplevelRequest)
-            {
-                writeToLog("orphan?!" + this);
-            }
         }
     }
     

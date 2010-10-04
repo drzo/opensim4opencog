@@ -44,7 +44,7 @@ namespace RTParser.AIMLTagHandlers
             {
                 // process each of these child "settings"? nodes
                 request.Loader.loadAIMLNode(templateNode, loaderOptions, request);
-                return Succeed();
+                return ProcessSucceed();
             }
             return Unifiable.Empty;
         }

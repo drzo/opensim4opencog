@@ -62,7 +62,7 @@ namespace RTParser.AIMLTagHandlers
                 {
                     request.TargetSettings = prevDict;
                 }
-                return Succeed();
+                return ProcessSucceed();
             }
             if (currentNodeName == "genlmt")
             {
@@ -123,13 +123,13 @@ namespace RTParser.AIMLTagHandlers
             if (currentNodeName == "item")
             {
                 SettingsDictionary.loadSettingNode(request.TargetSettings, templateNode, true, false, request);
-                return Succeed();
+                return ProcessSucceed();
 
             }
             if (currentNodeName == "bot")
             {
                 SettingsDictionary.loadSettingNode(request.TargetBot.Settings, templateNode, true, false, request);
-                return Succeed();
+                return ProcessSucceed();
             }
             string currentNodeOuterXml = templateNode.OuterXml;
             if (currentNodeOuterXml.Length > 280) currentNodeOuterXml = TextFilter.ClipString(currentNodeOuterXml, 280);
@@ -141,7 +141,7 @@ namespace RTParser.AIMLTagHandlers
                </TestCase>
             */
 
-            if (templateNode.NodeType == XmlNodeType.Comment) return Succeed();
+            if (templateNode.NodeType == XmlNodeType.Comment) return ProcessSucceed();
 
             // pull from late bound sustituion dictionaries
             var sd = request.GetSubstitutions(currentNodeName, false);

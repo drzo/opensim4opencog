@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using AIMLbot;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
@@ -11,7 +10,7 @@ using UPath = RTParser.Unifiable;
 
 namespace RTParser
 {
-    public interface Result : Request
+    public interface Result
     {
         /// <summary>
         /// The bot that is providing the answer
@@ -20,6 +19,7 @@ namespace RTParser
         /// The user that is providing the <that/> answer
         //        User Responder { get; set; }
         //        string WhyComplete { get; set; }
+        bool IsTraced { get; set; }
 
         /// <summary>
         /// The individual sentences that constitute the raw input from the user
@@ -48,13 +48,14 @@ namespace RTParser
         List<SubQuery> SubQueries { get; }
 
         ParsedSentences ChatOutput { get; }
+
         /// <summary>
         /// The user for whom this is a result
         /// </summary>
         ///User Requester { get; set; }
-
         // OutputDelegate writeToLog { get; set; }
         int TemplatesSucceeded { get; set; }
+
         int OutputsCreated { get; set; }
         //   GraphQuery TopLevel { get; set; }
         double Score { get; }
@@ -63,7 +64,6 @@ namespace RTParser
         /// If the query is being traced
         /// </summary>
         //    bool IsTraced { get; set; }
-
         string SetOutput { set; }
 
         /// <summary>
@@ -93,209 +93,34 @@ namespace RTParser
         //   ChatLabel CatchLabel { get; set; }
         Result ParentResult { get; }
         string NormalizedOutput { get; }
-        //      HashSet<SubQuery> AllSubQueries { get; set; }
-        //       Proof Proof { get; set; }
-        //       int MaxInputs { get; set; }
-        //int depth { get; set; }
-
-        /// <summary>
-        /// The raw input from the user
-        /// </summary>
-        //     Unifiable rawInput { get; }
-
-        /// <summary>
-        /// The raw input from the user
-        /// </summary>
-        //      ParsedSentences ChatInput { get; set; }
-
-        //   Request ParentRequest { get; set; }
-
-        /// <summary>
-        /// The time at which this request was created within the system
-        /// </summary>
-        //     DateTime StartedOn { get; set; }
-
-        /// <summary>
-        /// The user who made this request
-        /// </summary>
-        //    User Requester { get; set; }
-
-        /// <summary>
-        /// The user who is the target of this request
-        /// </summary>
-        //   User Responder { get; set; }
-
-        /// <summary>
-        /// The Proccessor to which the request is being made
-        /// </summary>
-        //   RTPBot TargetBot { get; set; }
-
-        /// <summary>
-        /// The final result produced by this request
-        /// </summary>
-        /*       Result CurrentResult { get; set; }
-
-               ISettingsDictionary TargetSettings { get; set; }
-               TimeSpan TimeOut { get; set; }
-               bool IsTimedOutOrOverBudget { get; }
-               ISettingsDictionary ResponderPredicates { get; set; }
-               bool GraphsAcceptingUserInput { get; set; }
-               LoaderOptions LoadOptions { get; set; }
-               AIMLLoader Loader { get; }
-               string Filename { get; set; }
-               string LoadingFrom { get; set; }
-               GraphMaster Graph { get; set; }
-               */
-        /// <summary>
-        /// The Graph to start the query on
-        /// </summary>
-        /*
-        string GraphName { get; set; }
-
-        ICollection<GraphMaster> DisallowedGraphs { get; }
-        Unifiable Flags { get; set; }
-        GraphQuery TopLevel { get; set; }
-        Unifiable Topic { get; set; }
-        IList<Unifiable> Topics { get; }
-        IEnumerable<Unifiable> ResponderOutputs { get; }
-        ISettingsDictionary RequesterPredicates { get; }
-        // IList<TemplateInfo> UsedTemplates { get; }
-        DateTime TimesOutAt { get; set; }
-        OutputDelegate writeToLog { get; set; }
-        int DebugLevel { get; set; }
-        bool IsToplevelRequest { get; set; }
-        Unifiable That { get; set; }
-        PrintOptions WriterOptions { get; set; }
-        RequestImpl ParentMostRequest { get; }
-        AIMLTagHandler LastHandler { get; set; }
-        ChatLabel PushScope { get; }
-        // ChatLabel CatchLabel { get; }
-        SideEffectStage Stage { get; set; }
-        TimeSpan TimeOutFromNow { set; }
-        IList<Result> UsedResults { get; set; }
-        SubQuery CurrentQuery { get; set; }
-        */
-        /// <summary>
-        /// The Graph to start the query on
-        /// </summary>
-        //  public abstract GraphMaster Graph { get; set; }
-        /// <summary>
-        /// If the query is being traced
-        /// </summary>
-        //bool IsTraced { get; set; }
-        /// <summary>
-        /// Some patterns implies multiple templates
-        /// </summary>
-        //  bool ProcessMultipleTemplates { get; set; }
-
-        /// <summary>
-        /// After the first pattern, if the min/maxes are not satisfied.. 
-        /// Try a new pattern
-        /// </summary>
-        //   bool ProcessMultiplePatterns { get; set; }
-
-        /// <summary>
-        /// the number of "successfull" (non-empty) templates after "eval"
-        /// </summary>
-        // int MinOutputs { get; set; }
-
-        //int MaxOutputs { get; set; }
-
-        /// <summary>
-        /// The number of sets before the query is stopped
-        /// </summary>
-        int MinSetVars { get; set; }
-
-        int MaxSetVars { get; set; }
-
-        /// <summary>
-        /// The number of gets before the query is stopped
-        /// </summary>
-        int MinGetVars { get; set; }
-
-        int MaxGetVars { get; set; }
-
         double TemplateRating { get; set; }
         bool Started { get; set; }
         TimeSpan Durration { get; }
-
-        /// <summary>
-        /// The number of templates to harvest in query stage (should be at least one)
-        /// </summary>
-        //  int MinTemplates { get; set; }
-
-        //  int MaxTemplates { get; set; }
-
-        /// <summary>
-        /// The number of patterns to harvest in query stage (should be at least one)
-        /// </summary>
-        //    int MinPatterns { get; set; }
-
-        //    int MaxPatterns { get; set; }
-
-        /// <summary>
-        /// The number srai's one can decend generation stage
-        /// the "Min" is what is starts out with (defualt 0)
-        /// </summary>
-        ///     SettingMinMaxCurrent<int> SraiDepth { get; set; }
-        //
-        //      int UseLuceneForGetMaxDepth { get; set; }
-        //      int UseLuceneForSetMaxDepth { get; set; }
-
         void CollectRequest();
-
         string WhyResultComplete { get; }
         IList<TemplateInfo> ResultTemplates { get; }
+        RTPBot TargetBot { get; }
+        User Requester { get; set; }
+        GraphMaster Graph { get; }
         void AddSubqueries(GraphQuery queries);
         void AddOutputSentences(TemplateInfo ti, string unifiable);
-        //bool IsTemplateNew(TemplateInfo ti);
-        //void AddOutputSentences0(TemplateInfo ti, string unifiable);
         void AddResultFormat(string format, params object[] args);
-
-        /// <summary>
-        /// Returns the raw output from the bot
-        /// </summary>
-        /// <returns>The raw output from the bot</returns>
         string ToString();
         Unifiable GetOutputSentence(int sentence);
         void RotateUsedTemplates();
-        void ReduceMinMaxesForSubRequest(QuerySettingsReadOnly parent);
-        //   GraphMaster GetGraph(string value);
-        //  void ExcludeGraph(string srai);
-        void ExcludeGraph(GraphMaster getGraph);
-        /*
-        void AddOutputSentences(TemplateInfo ti, string nai, Result result);
-            int GetCurrentDepth();
-            Unifiable grabSetting(string name);
-            bool addSetting(string name, Unifiable value);
-            void WriteLine(string s, params object[] args);
-            bool IsComplete(Result result1);*/
-        string WhyNoSearch(Result result1);
-        //   QuerySettingsSettable GetQuerySettings();
-        //  MasterResult CreateResult(Request parentReq);
-        //  MasterRequest CreateSubRequest(Unifiable templateNodeInnerValue, User user, RTPBot rTPBot, User requestee);
-        //     bool CanUseTemplate(TemplateInfo info, Result result);
-        //void writeToLog0(string message, params object[] args);
-        string RequestThat();
-        //     ISettingsDictionary GetSubstitutions(string named, bool createIfMissing);
-        //      ISettingsDictionary GetDictionary(string named);
-        //     void AddUndo(Action undo);
-        //       void UndoAll();
-        //       void Commit();
-        //       void AddSideEffect(string name, ThreadStart action);
-        //       Dictionary<string, GraphMaster> GetMatchingGraphs(string graphname, GraphMaster master);
-        //       ISettingsDictionary GetDictionary(string named, ISettingsDictionary dictionary);
-        //ISettingsDictionary GetDictionary0(string named, ISettingsDictionary dictionary);
-        ISettingsDictionary CheckedValue(string named, ISettingsDictionary d);
-        //      void AddSubResult(Result subResult);
-        //      void IncreaseLimits(int minsAndMaxes);
         void ResetAnswers(bool b);
+        bool CanResultUseTemplate(TemplateInfo info);
+        OutputDelegate writeToLog { get; set; }
+        ChatLabel CatchLabel { get; set; }
+        User Responder { get; }
+        SubQuery CurrentQuery { get; set; }
+        int MaxCanEvalResult { get; set; }
     }
 
     /// <summary>
     /// Encapsulates information about the result of a request to the bot
     /// </summary>
-    public abstract class ResultImpl : RequestImpl, Result
+    public abstract class ResultImpl : QuerySettings, Result
     {
         /// <summary>
         /// The subQueries processed by the bot's graphmaster that contain the templates that 
@@ -309,14 +134,24 @@ namespace RTParser
 
         //public double TemplateRating { get; set; }
 
+        public TimeSpan Durration
+        {
+            get { return request.Durration; }
+        }
+
+
+        public override string GraphName
+        {
+            get { return ParentRequest.GraphName; }
+            set { throw new NotImplementedException(); }
+        }
+
         /// <summary>
         /// The bot that is providing the answer
         /// </summary>
         //   public RTPBot TargetBot { get; set; }
-
         /// The user that is providing the <that/> answer
         //  public User Responder { get; set; }
-
         public void CollectRequest()
         {
             Request req = request;
@@ -325,22 +160,8 @@ namespace RTParser
             Requester = req.Requester;
             //request = null;
         }
-/*
-        public override string WhyComplete
-        {
-            get
-            {
-                if (Started)
-                {
-                    return WhyIsResultComplete() ?? WhyRequestComplete;                    
-                }
-                return base.WhyComplete;
-            }
-            set { base.WhyComplete = value; }
-        }
-        */
 
-        public override string WhyResultComplete
+        public string WhyResultComplete
         {
             get
             {
@@ -364,6 +185,8 @@ namespace RTParser
 
         //  private readonly ParsedSentences ChatInput;
         public ParsedSentences ChatOutput { get; private set; }
+
+        public bool IsTraced { get; set; }
 
         /// <summary>
         /// The individual sentences that constitute the raw input from the user
@@ -391,24 +214,22 @@ namespace RTParser
         /// <summary>
         /// The request from the user
         /// </summary>
-        public Request request
-        {
-            get { return this; }
-        }
+        public Request request { get; set; }
 
         public bool Started { get; set; }
 
         public TemplateInfo TemplateOfRating { get; set; }
+
         public double TemplateRating { get; set; }
         private readonly List<TemplateInfo> ResultTemplates1 = new List<TemplateInfo>();
 
         /// <summary>
         /// The user for whom this is a result
         /// </summary>
-       // public User Requester { get; set; }
-
+        // public User Requester { get; set; }
         //  public OutputDelegate writeToLog { get; set; } // = RTPBot.writeDebugLine;
         public int TemplatesSucceeded { get; set; }
+
         public int OutputsCreated { get; set; }
 
         /// <summary>
@@ -418,18 +239,21 @@ namespace RTParser
         /// <param name="bot">The bot providing the result</param>
         /// <param name="request">The request that originated this result</param>
         public ResultImpl(string rawInput, User user, RTPBot bot, Request parent, User targetUser)
-            : base(rawInput, user, bot, parent, targetUser)
+            : base(parent)
         {
             SubQueries = new List<SubQuery>();
-            ///ChatInput = request.ChatInput;
+            MaxCanEvalResult = 10;
+            request = parent;
+            ChatInput = parent.ChatInput;
             this.Requester = user;
-            this.TargetBot = bot;
-            //this.request = request;
+            request.TargetBot = bot;
+            this.request = parent;
+            this.Responder = targetUser;
             ChatOutput = new ParsedSentences(bot.EnsureEnglish, MaxPrintResults);
             OutputSentences = ChatOutput.SemanticSentences;
-            //writeToLog = writeToLog ?? user.WriteLine;
-            //writeToLog = writeToLog ?? request.WriteLine;
-            // this.request.CurrentResult = this;
+            writeToLog = writeToLog ?? user.WriteLine;
+            writeToLog = writeToLog ?? request.WriteLine;
+            //this.request.TheCurrentResult = this;
         }
 
         /* public GraphMaster Graph
@@ -439,17 +263,17 @@ namespace RTParser
         }
         */
 
-        public override GraphQuery TopLevel
+        public GraphQuery TopLevel
         {
             get
             {
                 Request request1 = request;
                 if (request1 != null && request1 != this) return request1.TopLevel;
-                SubQuery cc = base.CurrentQuery;
+                SubQuery cc = CurrentQuery;
                 if (cc != null) return cc.TopLevel;
-                return base.TopLevel;
+                return TopLevel;
             }
-            set { base.TopLevel = value; }
+            set { TopLevel = value; }
         }
 
 
@@ -461,8 +285,7 @@ namespace RTParser
         /// <summary>
         /// If the query is being traced
         /// </summary>
-       // public override bool IsTraced { get; set; }
-
+        // public override bool IsTraced { get; set; }
         public string SetOutput
         {
             set
@@ -556,7 +379,13 @@ namespace RTParser
             get { return Requester.Predicates; }
         }
 
-        public override SubQuery CurrentQuery
+        public User Responder
+        {
+            get { return request.Responder; }
+            set { request.Responder = value; }
+        }
+
+        public SubQuery CurrentQuery
         {
             get
             {
@@ -576,7 +405,7 @@ namespace RTParser
             set
             {
                 _CurrentQuery = value;
-                base.CurrentQuery = value;
+                request.CurrentQuery = value;
             }
         }
 
@@ -599,18 +428,35 @@ namespace RTParser
                 return true;
             }
         }
+        public int MaxCanEvalResult { get; set; }
 
         public IList<TemplateInfo> ResultTemplates
         {
             get { return ResultTemplates1; }
         }
 
+        public RTPBot TargetBot
+        {
+            get { return request.TargetBot; }
+        }
+
+        public User Requester
+        {
+            get { return request.Requester; }
+            set { request.Requester = value; }
+        }
+
         public string _normalizedOutput;
+        private readonly ParsedSentences ChatInput;
+        private SubQuery _CurrentQuery;
+
         //public ChatLabel CatchLabel { get; set; }
 
-        public Result ParentResult
+        public Result ParentResult { get; set; }
+
+        protected MasterRequest ParentRequest
         {
-            get { return (Result)ParentRequest; }
+            get { return (MasterRequest)request; }
         }
 
         public string NormalizedOutput
@@ -621,6 +467,11 @@ namespace RTParser
                 if (IsSomething(ChatOutput.TheMainSentence, out something)) return something;
                 return "Nothing";
             }
+        }
+
+        public GraphMaster Graph
+        {
+            get { return request.Graph; }
         }
 
         public void AddSubqueries(GraphQuery queries)
@@ -702,7 +553,6 @@ namespace RTParser
             {
                 if (ti.TextSaved == unifiable)
                 {
-
                 }
                 else if (ti.TextSaved != null)
                 {
@@ -717,7 +567,7 @@ namespace RTParser
             unifiable = unifiable + " ";
             if (false && unifiable.Length > 2 && (unifiable.Contains("<br/>") || unifiable.Contains("&p;")))
             {
-                string[] sents = unifiable.Split(new[] { "<br/>", "&p;" }, StringSplitOptions.RemoveEmptyEntries);
+                string[] sents = unifiable.Split(new[] {"<br/>", "&p;"}, StringSplitOptions.RemoveEmptyEntries);
                 foreach (var s in sents)
                 {
                     AddOutputSentences0(ti, s);
@@ -726,7 +576,7 @@ namespace RTParser
             }
             if (false && unifiable.Length > 2 && (unifiable.Contains(". ") || unifiable.Contains("? ")))
             {
-                string[] sents = unifiable.Split(new[] { ". ", "? " }, StringSplitOptions.RemoveEmptyEntries);
+                string[] sents = unifiable.Split(new[] {". ", "? "}, StringSplitOptions.RemoveEmptyEntries);
                 foreach (var s in sents)
                 {
                     AddOutputSentences0(ti, s);
@@ -775,7 +625,7 @@ namespace RTParser
                 OutputSentences.Add(unifiable);
                 return;
                 bool isComplete = OutputSentences.Count >=
-                                  ((QuerySettingsReadOnly)request.GetQuerySettings()).MinOutputs ||
+                                  ((QuerySettingsReadOnly) request.GetQuerySettings()).MinOutputs ||
                                   request.IsComplete(this);
 
                 if (!isComplete) return;
@@ -793,7 +643,7 @@ namespace RTParser
                         rd.request = request;
                         // rd.KeepThrowing = true;
                         rd.TagHandler = ti.Query.LastTagHandler;
-                        rd.result = (MasterResult)this;
+                        rd.result = (MasterResult) this;
                     }
                     throw rd;
                 }
@@ -812,7 +662,23 @@ namespace RTParser
         public override string ToString()
         {
             string whyComplete = WhyComplete;
-            return ToResultString() + " " + ToRequestString() + " " + (whyComplete != null ? " WhyComplete=" + whyComplete : "");
+            return ToResultString() + " " + request.ToRequestString() + " " +
+                   (whyComplete != null ? " WhyComplete=" + whyComplete : "");
+        }
+
+        public string WhyComplete
+        {
+            get
+            {
+                //  Result CurrentResult = TheCurrentResult;
+                return WhyRequestComplete ?? WhyResultComplete;
+            }
+        }
+
+
+        protected string WhyRequestComplete
+        {
+            get { return  request.WhyRequestComplete; }
         }
 
         public string ToResultString()
@@ -866,7 +732,39 @@ namespace RTParser
             {
                 if (b) SubQueries = new List<SubQuery>();
             }
+        }
 
+        public bool CanResultUseTemplate(TemplateInfo info)
+        {
+            return FoundInParents(info, ParentResult);
+        }
+
+        public OutputDelegate writeToLog { get; set; }
+
+        public ChatLabel CatchLabel
+        {
+            get { return request.CatchLabel; }
+            set { request.CatchLabel = value; }
+        }
+
+        private bool FoundInParents(TemplateInfo info, Result requestOrResult)
+        {
+            if (requestOrResult == null) return true;
+            while (requestOrResult != null)
+            {
+                var resultUsedTemplates = requestOrResult.ResultTemplates;
+                if (resultUsedTemplates != null)
+                {
+                    lock (resultUsedTemplates)
+                    {
+                        if (resultUsedTemplates.Contains(info))
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
         }
     }
 }

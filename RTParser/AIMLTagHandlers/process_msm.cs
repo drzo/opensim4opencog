@@ -148,7 +148,7 @@ namespace RTParser.AIMLTagHandlers
             subRequest.TimesOutAt = this.request.TimesOutAt;
             subRequest.ProcessMultipleTemplates = allowMultiplesTemplates;
 
-            MasterRequest subResult = subRequest;
+            Result subResult = null;// subRequest;
             var prev = subRequest.GraphsAcceptingUserInput;
             var prevSO = user.SuspendAddResultToUser;
             try
@@ -157,7 +157,7 @@ namespace RTParser.AIMLTagHandlers
                 var newresult = request.CreateResult(subRequest);
                 //subRequest.CurrentResult = newresult;
                 user.SuspendAddResultToUser = true;
-                subResult = (MasterRequest) this.Proc.Chat(subRequest, subRequest.Graph);
+                subResult = (Result) this.Proc.Chat(subRequest, subRequest.Graph);
                 // subResult = this.Proc.Chat(subRequest, request.Graph);
             }
             finally

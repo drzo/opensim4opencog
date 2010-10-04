@@ -251,7 +251,7 @@ namespace RTParser
             varMSM.clearEvidence();
             varMSM.clearNextStateValues();
             //  myUser.TopicSetting = "collectevidencepatterns";
-            RequestImpl r = GetRequest(input, CurrentUser);
+            var r = GetRequest(input, CurrentUser);
             r.IsTraced = true;
             r.writeToLog = traceConsole;
             r.Responder = targetUser;
@@ -302,11 +302,11 @@ namespace RTParser
             return res;
         }
 
-        public RequestImpl GetRequest(string rawInput, string username)
+        public MasterRequest GetRequest(string rawInput, string username)
         {
             return GetRequest(rawInput, FindOrCreateUser(username));
         }
-        public RequestImpl GetRequest(string rawInput, User findOrCreateUser)
+        public MasterRequest GetRequest(string rawInput, User findOrCreateUser)
         {
             AIMLbot.MasterRequest r = findOrCreateUser.CreateRequest(rawInput, null); 
             findOrCreateUser.CurrentRequest = r;
@@ -323,7 +323,7 @@ namespace RTParser
         /// <returns>the result to be output to the user</returns>        
         public string ChatString(string rawInput, string username)
         {
-            RequestImpl r = GetRequest(rawInput, username);
+            MasterRequest r = GetRequest(rawInput, username);
             r.IsTraced = this.IsTraced;
             return Chat(r).Output;
         }
@@ -419,7 +419,7 @@ namespace RTParser
                 {
                     request.UndoAll();
                     writeToLog("ChatWithUser ChatSignalOverBudget: ( request.UndoAll() )" + request + " " + e);
-                    return (AIMLbot.MasterResult)e.request;
+                    return (AIMLbot.MasterResult)e.result;
                 }
                 catch (ChatSignal e)
                 {
@@ -513,7 +513,7 @@ namespace RTParser
                 request.AddOutputSentences(null, nai, result);
             }
             User popu = originalRequestor ?? request.Requester ?? result.Requester;
-            result.Durration = DateTime.Now - request.StartedOn;
+            result._Durration = DateTime.Now - request.StartedOn;
             result.IsComplete = true;
             popu.addRequestTemplates(request);
             if (streamDepth > 0) streamDepth--;
@@ -911,7 +911,7 @@ namespace RTParser
                     }
                     catch (ChatSignal)
                     {
-                        if (!result.IsToplevelRequest) throw;
+                        if (!request.IsToplevelRequest) throw;
                     }
                 }
             }
@@ -931,7 +931,7 @@ namespace RTParser
                 bool createdOutput;
                 bool templateSucceeded;
                 XmlNode sOutput = s.ClonedOutput;
-                childHandler = proccessResponse(query, request, result, sOutput, s.Guard, out createdOutput,
+                childHandler = TagHandling.proccessResponse(query, request, result, sOutput, s.Guard, out createdOutput,
                                                out templateSucceeded, lastHandler, s, false, false);
                 solutions++;
                 request.LastHandler = lastHandler;
@@ -1101,263 +1101,14 @@ namespace RTParser
                     templateNode = templateInfo.ClonedOutput;
                 copyChild = false;
             }
-            var lastHandler = proccessResponse(query, request, result, templateNode, sGuard, out createdOutput, out templateSucceeded,
+            var lastHandler = TagHandling.proccessResponse(query, request, result, templateNode, sGuard, out createdOutput, out templateSucceeded,
                              handler, templateInfo, copyChild, false); //not sure if should copy parent
             if (doUndos) query.UndoAll();
             request.LastHandler = lastHandler;
             return result;
         }
 
-        public AIMLTagHandler proccessResponse(SubQuery query,
-                                             Request request, Result result,
-                                             XmlNode templateNode, GuardInfo sGuard,
-                                             out bool createdOutput, out bool templateSucceeded,
-                                             AIMLTagHandler handler, TemplateInfo templateInfo,
-                                             bool copyChild, bool copyParent)
-        {
-            //request.CurrentResult = result;
-            query = query ?? request.CurrentQuery;
-            templateInfo = templateInfo ?? query.CurrentTemplate;
-            //request.CurrentQuery = query;
-            if (!request.CanUseResultTemplate(templateInfo, result))
-            {
-                templateSucceeded = false;
-                createdOutput = false;
-                return null;
-            }
-            // now cant use it again
-            result.ResultTemplates.Add(templateInfo);
-            UndoStack undoStack = UndoStack.GetStackFor(query);
-            try
-            {
-                return proccessTemplate(query, request, result, templateNode, sGuard,
-                                           out createdOutput, out templateSucceeded,
-                                           handler, templateInfo, copyChild, copyParent);
-            }
-            finally
-            {
-                undoStack.UndoAll();
-            }
-        }
-
-        private AIMLTagHandler proccessTemplate(SubQuery query, Request request, Result result,
-                                                XmlNode templateNode, GuardInfo sGuard,
-                                                out bool createdOutput, out bool templateSucceeded,
-                                                AIMLTagHandler handler, TemplateInfo templateInfo,
-                                                bool copyChild, bool copyParent)
-        {
-            ChatLabel label = request.PushScope;
-            var prevTraced = request.IsTraced;
-            var untraced = request.Graph.UnTraced;
-            var superTrace = templateInfo != null && templateInfo.IsTraced;
-            try
-            {
-                if (superTrace)
-                {
-                    request.IsTraced = true;
-                    request.Graph.UnTraced = false;
-                }
-
-                var th = proccessResponse000(query, request, result, templateNode, sGuard,
-                                           out createdOutput, out templateSucceeded,
-                                           handler, templateInfo, copyChild, copyParent);
-
-                if (superTrace)
-                {
-                    writeDebugLine("SuperTrace=" + templateSucceeded + ": " + templateInfo);
-                }
-                return th;
-            }
-            catch (ChatSignalOverBudget ex)
-            {
-                throw;
-            }
-            catch (ChatSignal ex)
-            {
-                if (label.IsSignal(ex))
-                {
-                    // if (ex.SubQuery != query) throw;
-                    if (ex.NeedsAdding)
-                    {
-                        request.AddOutputSentences(templateInfo, ex.TemplateOutput, result);
-                    }
-                    templateSucceeded = ex.TemplateSucceeded;
-                    createdOutput = ex.CreatedOutput;
-                    return ex.TagHandler;
-                }
-                throw;
-            }
-            catch (Exception ex)
-            {
-                throw;
-            }
-            finally
-            {
-                request.IsTraced = prevTraced;
-                request.Graph.UnTraced = untraced;
-                label.PopScope();
-            }
-        }
-
-        public AIMLTagHandler proccessResponse000(SubQuery query, Request request, Result result,
-                                                XmlNode sOutput, GuardInfo sGuard,
-                                                out bool createdOutput, out bool templateSucceeded,
-                                                AIMLTagHandler handler, TemplateInfo templateInfo,
-                                                bool copyChild, bool copyParent)
-        {
-            query.LastTagHandler = handler;
-            bool isTraced = request.IsTraced || result.IsTraced || !request.GraphsAcceptingUserInput ||
-                            (templateInfo != null && templateInfo.IsTraced);
-            //XmlNode guardNode = AIMLTagHandler.getNode(s.Guard.InnerXml);
-            bool usedGuard = sGuard != null && sGuard.Output != null;
-            sOutput = sOutput ?? templateInfo.ClonedOutput;
-            string output = sOutput.OuterXml;
-            XmlNode templateNode = sOutput;
-            bool childOriginal = true;
-            result.Started = true;
-            if (usedGuard)
-            {
-                string guardStr = "<template>" + sGuard.Output.InnerXml + " GUARDBOM " + sOutput.OuterXml +
-                                  "</template>";
-                templateNode = getNode(guardStr, sOutput);
-                childOriginal = false;
-            }
-
-            bool protectChild = copyChild || childOriginal;
-            AIMLTagHandler tagHandler;
-            string outputSentence = processNode(templateNode, query,
-                                                request, result, request.Requester, handler,
-                                                protectChild, copyParent, out tagHandler);
-            if (tagHandler == null)
-            {
-                writeToLog("tagHandler = null " + output);
-            }
-            templateSucceeded = !IsFalse(outputSentence);
-
-            int f = outputSentence.IndexOf("GUARDBOM");
-            if (f < 0)
-            {
-                string o = ToEnglish(outputSentence);
-                if (IsOutputSentence(o))
-                {
-                    if (isTraced)
-                    {
-                        string aIMLLoaderParentTextAndSourceInfo = ParentTextAndSourceInfo(templateNode);
-                        if (aIMLLoaderParentTextAndSourceInfo.Length > 300)
-                        {
-                            aIMLLoaderParentTextAndSourceInfo = TextFilter.ClipString(
-                                aIMLLoaderParentTextAndSourceInfo, 300);
-                        }
-                        writeToLog("AIMLTRACE '{0}' IsOutputSentence={1}", o, aIMLLoaderParentTextAndSourceInfo);
-                    }
-                    createdOutput = true;
-                    templateSucceeded = true;
-                    request.AddOutputSentences(templateInfo, o, result);
-                }
-                else
-                {
-                    createdOutput = false;
-                }
-                if (!createdOutput && isTraced && request.GraphsAcceptingUserInput)
-                {
-                    if (templateInfo != null)
-                    {
-                        string fromStr = " from " + templateInfo.Graph;
-                        if (!StaticAIMLUtils.IsSilentTag(templateNode))
-                        {
-                            writeToLog("SILENT '{0}' TEMPLATE={1}", o, ParentTextAndSourceInfo(templateNode) + fromStr);
-                        }
-                        templateInfo.IsDisabled = true;
-                        request.AddUndo(() =>
-                        {
-                            templateInfo.IsDisabled = false;
-                        });
-                    }
-                    else
-                    {
-                        writeToLog("UNUSED '{0}' TEMPLATE={1}", o, ParentTextAndSourceInfo(templateNode));
-                    }
-
-                }
-
-                return tagHandler;
-            }
-            try
-            {
-                string left = outputSentence.Substring(0, f).Trim();
-                templateSucceeded = !IsFalse(left);
-                if (!templateSucceeded)
-                {
-                    createdOutput = false;
-                    return tagHandler;
-                }
-                string lang = GetAttribValue(sGuard.Output, "lang", "cycl").ToLower();
-
-                try
-                {
-                    Unifiable ss = SystemExecute(left, lang, request);
-                    if (IsFalse(ss) || IsNullOrEmpty(ss))
-                    {
-                        if (isTraced)
-                            writeToLog("GUARD FALSE '{0}' TEMPLATE={1}", request,
-                                       ParentTextAndSourceInfo(templateNode));
-                        templateSucceeded = false;
-                        createdOutput = false;
-                        return tagHandler;
-                    }
-                    else
-                    {
-                        templateSucceeded = true;
-                    }
-                }
-                catch (ChatSignal e)
-                {
-                    throw;
-                }
-                catch (Exception e)
-                {
-                    writeToLog(e);
-                    templateSucceeded = false;
-                    createdOutput = false;
-                    return tagHandler;
-                }
-
-                //part the BOM
-                outputSentence = outputSentence.Substring(f + 9);
-                string o = ToEnglish(outputSentence);
-                if (IsOutputSentence(o))
-                {
-                    if (isTraced)
-                        writeToLog(query.Graph + ": GUARD SUCCESS '{0}' TEMPLATE={1}", o,
-                                   ParentTextAndSourceInfo(templateNode));
-                    templateSucceeded = true;
-                    createdOutput = true;
-                    request.AddOutputSentences(templateInfo, o, result);
-                    return tagHandler;
-                }
-                else
-                {
-                    writeToLog("GUARD SKIP '{0}' TEMPLATE={1}", outputSentence,
-                               ParentTextAndSourceInfo(templateNode));
-                }
-                templateSucceeded = false;
-                createdOutput = false;
-                return tagHandler;
-            }
-            catch (ChatSignal e)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                writeToLog(ex);
-                templateSucceeded = false;
-                createdOutput = false;
-                return tagHandler;
-            }
-        }
-
-        private bool IsOutputSentence(string sentence)
+        internal bool IsOutputSentence(string sentence)
         {
             if (sentence == null) return false;
             string o = ToEnglish(sentence);
@@ -1472,210 +1223,6 @@ namespace RTParser
             return sentenceIn;
         }
 
-
-        /// <summary>
-        /// Recursively evaluates the template nodes returned from the Proccessor
-        /// </summary>
-        /// <param name="node">the node to evaluate</param>
-        /// <param name="query">the query that produced this node</param>
-        /// <param name="request">the request from the user</param>
-        /// <param name="result">the result to be sent to the user</param>
-        /// <param name="user">the user who originated the request</param>
-        /// <returns>the output Unifiable</returns>
-        public string processNodeDebug(XmlNode childNode, SubQuery query,
-                                  Request request, Result result, User user,
-                                  AIMLTagHandler parent, bool copyChild, bool copyParent,
-                                  out AIMLTagHandler tagHandlerChild)
-        {
-            var wasSuspendRestrati = result.SuspendSearchLimits;
-            try
-            {
-                result.SuspendSearchLimits = true;
-                return processNode(childNode, query,
-                             request, result, user,
-                             parent, copyChild, copyParent,
-                             out tagHandlerChild);
-            }
-            finally
-            {
-                result.SuspendSearchLimits = wasSuspendRestrati;
-            }
-        }
-
-        /// <summary>
-        /// Recursively evaluates the template nodes returned from the Proccessor
-        /// </summary>
-        /// <param name="node">the node to evaluate</param>
-        /// <param name="query">the query that produced this node</param>
-        /// <param name="request">the request from the user</param>
-        /// <param name="result">the result to be sent to the user</param>
-        /// <param name="user">the user who originated the request</param>
-        /// <returns>the output Unifiable</returns>
-        public string processNode(XmlNode node, SubQuery query,
-                                  Request request, Result result, User user,
-                                  AIMLTagHandler parent, bool protectChild, bool copyParent,
-                                  out AIMLTagHandler tagHandler)
-        {
-            RequestImpl originalSalientRequest = RequestImpl.GetOriginalSalientRequest(request);
-            var sraiMark = originalSalientRequest.CreateSRAIMark();
-            string outputSentence = processNodeVV(node, query,
-                                                  request, result, user, parent,
-                                                  protectChild, copyParent, out tagHandler);
-            originalSalientRequest.ResetSRAIResults(sraiMark);
-            if (!Unifiable.IsNullOrEmpty(outputSentence)||IsSilentTag(node))
-            {
-                return outputSentence;
-            }
-            if (tagHandler.RecurseResultValid) return tagHandler.RecurseResult;
-            if (Unifiable.IsNull(outputSentence))
-            {
-                outputSentence = tagHandler.GetTemplateNodeInnerText();
-                return outputSentence;
-            }
-            return outputSentence;
-        }
-
-        /// <summary>
-        /// Recursively evaluates the template nodes returned from the Proccessor
-        /// </summary>
-        /// <param name="node">the node to evaluate</param>
-        /// <param name="query">the query that produced this node</param>
-        /// <param name="request">the request from the user</param>
-        /// <param name="result">the result to be sent to the user</param>
-        /// <param name="user">the user who originated the request</param>
-        /// <returns>the output Unifiable</returns>
-        public string processNodeVV(XmlNode node, SubQuery query,
-                                  Request request, Result result, User user,
-                                  AIMLTagHandler parent, bool protectChild, bool copyParent,
-                                  out AIMLTagHandler tagHandler)
-        {
-            if (node != null && node.NodeType == XmlNodeType.Text)
-            {
-                tagHandler = null;
-                string s = node.InnerText.Trim();
-                if (!String.IsNullOrEmpty(s))
-                {
-                    return ValueText(s);
-                }
-                //return s;
-            }
-            bool isTraced = request.IsTraced || result.IsTraced || !request.GraphsAcceptingUserInput ||
-                (query != null && query.IsTraced);
-            // check for timeout (to avoid infinite loops)
-            bool overBudget = false;
-            if (request.IsComplete(result))
-            {
-                object gn = request.Graph;
-                if (query != null) gn = query.Graph;
-                string s = string.Format("WARNING! Request " + request.WhyComplete +
-                                         ". User: {0} raw input: {3} \"{1}\" processing {2} templates: \"{4}\"",
-                                         request.Requester.UserID, request.rawInput,
-                                         (query == null ? "-NOQUERY-" : query.Templates.Count.ToString()), gn, node);
-
-                if (isTraced)
-                    request.writeToLog(s);
-                overBudget = true;
-                if (!request.IsToplevelRequest)
-                {
-                    throw new ChatSignalOverBudget(s);
-                }
-            }
-
-            XmlNode oldNode = node;
-            // copy the node!?!
-            if (protectChild)
-            {
-                copyParent = true;
-                LineInfoElementImpl newnode = CopyNode(node, copyParent);
-                newnode.ReadOnly = false;
-                node = newnode;
-            }
-
-            // process the node
-            tagHandler = GetTagHandler(user, query, request, result, node, parent);
-            if (ReferenceEquals(null, tagHandler))
-            {
-                if (node.NodeType == XmlNodeType.Comment)
-                {
-                    return Unifiable.Empty;
-                }
-                if (node.NodeType == XmlNodeType.Text)
-                {
-                    string s = node.InnerText.Trim();
-                    if (String.IsNullOrEmpty(s))
-                    {
-                        return Unifiable.Empty;
-                    }
-                    return s;
-                }
-// ReSharper disable ConditionIsAlwaysTrueOrFalse
-                OutputDelegate del = (request != null) ? request.writeToLog : writeToLog;
-// ReSharper restore ConditionIsAlwaysTrueOrFalse
-                if (overBudget)
-                {
-                    return Unifiable.Empty;
-                }
-                EvalAiml(node, request, del ?? DEVNULL);
-                return node.InnerXml;
-            }
-
-            if (overBudget)
-            {
-                tagHandler.Dispose();
-                tagHandler = null;
-                return Unifiable.Empty;
-            }
-            
-            tagHandler.SetParent(parent);
-            //if (parent!=null) parent.AddChild(tagHandler);
-
-            Unifiable cp = tagHandler.CompleteAimlProcess();
-            if (Unifiable.IsNullOrEmpty(cp) && (!tagHandler.QueryHasSuceeded || tagHandler.QueryHasFailed))
-            {
-                bool needsOneMoreTry = !request.SuspendSearchLimits &&
-                                       (request.IsToplevelRequest /*|| result.ParentRequest.IsToplevelRequest*/);
-                if (isTraced || needsOneMoreTry)
-                {
-                    //writeDebugLine("ERROR: Try Again since NULL " + tagHandler);
-                    bool wsl = request.SuspendSearchLimits;
-                    try
-                    {
-                        request.SuspendSearchLimits = true;
-                        cp = tagHandler.CompleteAimlProcess();
-                        if (Unifiable.IsNull(cp))
-                        {
-                            return tagHandler.GetTemplateNodeInnerText();
-                        }
-                        if (Unifiable.IsNullOrEmpty(cp))
-                        {
-                            // trace the next line to see why
-                            AIMLTagHandler handler = tagHandler;
-                            TraceTest("ERROR: Try Again since NULL " + handler,
-                                () => { cp = handler.CompleteAimlProcess(); });
-                        }
-                    }
-                    finally
-                    {
-                        request.SuspendSearchLimits = wsl;
-
-                    }
-                }
-            }
-            if (tagHandler.QueryHasFailed)
-            {
-                return tagHandler.FAIL;
-            }
-            if (!Unifiable.IsNullOrEmpty(cp) || IsSilentTag(node))
-            {
-                return cp;
-            }
-            if (Unifiable.IsNull(cp))
-            {
-                cp = tagHandler.GetTemplateNodeInnerText();
-                return cp;
-            }
-            return cp;
-        }
         #endregion
 
         private void SetupConveration()

@@ -65,9 +65,15 @@ namespace RTParser.AIMLTagHandlers
                     writeToLogWarn("SHOULD NEVER GET HERE!");
                     // atomic version of the node
                     templateNodeInnerText = GetStarContent();
+                    bool starFailed = IsNull(templateNodeInnerText);
+                    if (starFailed)
+                    {
+                        QueryHasFailed = true;
+                        return UnifiableEmpty;
+                    }
                     if (!templateNodeInnerText.IsEmpty)
                     {
-                        return this.ProcessChange();
+                        return this.ProcessAimlChange();
                     }
                     else
                     {

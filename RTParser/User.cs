@@ -5,6 +5,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
+using AIMLbot;
 using com.hp.hpl.jena.graph;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
@@ -19,7 +20,7 @@ namespace RTParser
     /// <summary>
     /// Encapsulates information and history of a user who has interacted with the bot
     /// </summary>
-    abstract public class User : StaticAIMLUtils, IDisposable, ISettingsDictionary
+    abstract public class User : StaticAIMLUtils, IDisposable, ISettingsDictionary,IUser
     {
         public static bool ThatIsStoredBetweenUsers = true;
         public readonly object QueryLock = new object();
@@ -708,13 +709,13 @@ namespace RTParser
                 {                  
                     return "Nothing";
                 }
-                RequestImpl fr = CurrentRequest;
+                var fr = CurrentRequest;
                 while
                     (fr != null)
                 {
                     var frithat = fr.ithat;
                     if (IsSomething(frithat, out something)) return something;
-                    fr = fr.ParentRequest as RequestImpl;
+                    fr = (MasterRequest) fr.ParentRequest;
                 }
                 if (IsSomething(getLastBotOutputForThat(), out something)) return something;
                 return "Nothing";
@@ -956,7 +957,7 @@ namespace RTParser
             }
         }
 
-        public RequestImpl CurrentRequest;
+        public MasterRequest CurrentRequest;
 
         public Result GetResult(int i)
         {
@@ -1355,5 +1356,15 @@ namespace RTParser
         {
             return Predicates.grabSettingNoDebug(settingName);
         }
+
+        public User Value
+        {
+            get { return this; }
+        }
+    }
+
+    public interface IUser
+    {
+        User Value { get; }
     }
 }

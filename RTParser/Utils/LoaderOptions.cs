@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Xml;
+using AIMLbot;
 
 namespace RTParser.Utils
 {
@@ -7,7 +8,7 @@ namespace RTParser.Utils
     {
         //public LoaderOptions prevoious;
         public static readonly string MISSING_FILE = "loadopts_MISSING_FILE";
-        public readonly RequestImpl TheRequest;
+        public readonly MasterRequest TheRequest;
         private string _curently_loading;
         public string _currently_loadingfrom;
         private GraphMaster _specified_Graph;
@@ -17,9 +18,9 @@ namespace RTParser.Utils
         public bool recurse;
         public RTPBot RProcessor;
 
-        public LoaderOptions(RequestImpl impl, GraphMaster master)
+        public LoaderOptions(Request impl, GraphMaster master)
         {
-            TheRequest = impl;
+            TheRequest = (MasterRequest) impl ;
             _curently_loading = impl.Filename;
             DebugFiles = false;
             recurse = false;
