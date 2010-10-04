@@ -55,7 +55,7 @@ namespace RTParser.AIMLTagHandlers
                     request.TargetSettings = prevDict;
                 }
                 return Unifiable.Empty;
-                return Succeed();
+                return ProcessSucceed();
             }
             return Unifiable.Empty;
         }

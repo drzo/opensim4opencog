@@ -1651,8 +1651,10 @@ namespace MushDLR223.Utilities
         }
         public static bool IsTooDeep()
         {
-            if (new System.Diagnostics.StackTrace(true).GetFrames().Length > 400)
+            int newStackTraceGetFramesLength = new StackTrace(false).GetFrames().Length;
+            if (newStackTraceGetFramesLength > 300)
             {
+                //throw new Exception("Stack overflow comming!");
                 return true;
             }
             return false;

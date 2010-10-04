@@ -117,6 +117,10 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessChange()
         {
+            return InnerSource();
+        }
+        protected override string InnerSource()
+        {
             if (this.templateNode.Name.ToLower() == "condition")
             {
                 // heuristically work out the type of condition being processed

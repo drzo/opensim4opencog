@@ -103,7 +103,7 @@ namespace RTParser.AIMLTagHandlers
                     }
                     if (!IsNull(vv))
                     {
-                        if (Unifiable.IsEMPTY(vv))
+                        if (IsEMPTY(vv))
                         {
                             vv = GetTemplateNodeInnerText();
                             return vv;
@@ -135,7 +135,7 @@ namespace RTParser.AIMLTagHandlers
         {
             if (RecurseResultValid) return RecurseResult;
             // ReSharper disable ConditionIsAlwaysTrueOrFalse
-            var sraiResult = ProcessChange12 ? ProcessChange0() : ProcessChange();
+            var sraiResult = ProcessChange12 ? ProcessChange0() : ProcessAimlChange();
             // ReSharper restore ConditionIsAlwaysTrueOrFalse
             if (IsNull(sraiResult))
             {

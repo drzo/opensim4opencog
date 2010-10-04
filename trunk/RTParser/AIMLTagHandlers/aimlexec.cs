@@ -70,7 +70,7 @@ namespace RTParser.AIMLTagHandlers
                 bool templateSucceeded;
                 bool createdOutput;
                 templateInfo = GetTemplateInfo();
-                request.LastHandler = Proc.proccessResponse(query, request, result, (XmlNode)node, templateInfo.Guard, out createdOutput,
+                request.LastHandler = Proc.TagHandling.proccessResponse(query, request, result, (XmlNode)node, templateInfo.Guard, out createdOutput,
                                       out templateSucceeded, this, templateInfo, ReadOnly, true);
                 return Unifiable.Empty;
             }

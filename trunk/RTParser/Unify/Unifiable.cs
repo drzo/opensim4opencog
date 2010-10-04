@@ -555,6 +555,23 @@ namespace RTParser
             return true;
         }
 
+        public static string ToStringLValue(object unifiable)
+        {
+            if (unifiable is string)
+            {
+                return ((string) unifiable).ToLower();
+            }
+            if (unifiable is Unifiable)
+            {
+                return ToStringLValue(((Unifiable)unifiable).Raw);
+            }
+            if (ReferenceEquals(null, unifiable))
+            {
+                return null;
+            }
+            return ToStringLValue("" + unifiable);
+        }
+
         public static string ToVMString(object unifiable)
         {
             if (unifiable is Unifiable)

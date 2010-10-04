@@ -655,7 +655,7 @@ namespace RTParser
                     return true;
                 }
 
-                RequestImpl ur = GetRequest(args, myUser);
+                MasterRequest ur = GetRequest(args, myUser);
 
                 // Adds findall to request
                 QuerySettings.ApplySettings(QuerySettings.FindAll, ur);
@@ -777,7 +777,7 @@ namespace RTParser
                     source = args;
                     slang = null;
                 }
-                RequestImpl ur = GetRequest(args, myUser);
+                Request ur = GetRequest(args, myUser);
                 if (source != null)
                 {
                     try

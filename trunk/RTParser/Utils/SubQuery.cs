@@ -115,6 +115,11 @@ namespace RTParser.Utils
         public int GetDictValue;
         public int SetDictValue;
 
+        public bool IsSourceRequest(AIMLTagHandler node, out  string src)
+        {
+            src = null;
+            return false;
+        }
 
         /// <summary>
         /// All conditions must be right
@@ -402,7 +407,7 @@ namespace RTParser.Utils
                     user = user ?? result.Requester;
                     bot = request.TargetBot;
                 }
-                handler = bot.GetTagHandler(user, subquery, request, result, node, null);
+                handler = bot.TagHandling.GetTagHandler(user, subquery, request, result, node, null);
                 TagHandlers[str] = handler;
                 return handler;
             }

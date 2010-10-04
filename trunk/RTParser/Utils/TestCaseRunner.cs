@@ -155,7 +155,7 @@ namespace RTParser.Utils
             string resp = "ERROR";
             try
             {
-                RequestImpl r = robot.GetRequest(input, userID);
+                var r = robot.GetRequest(input, userID);
                 r.IsTraced = traceIt;
                 if (traceIt)
                 {

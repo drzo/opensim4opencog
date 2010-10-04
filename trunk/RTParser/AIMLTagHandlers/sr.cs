@@ -38,7 +38,11 @@ namespace RTParser.AIMLTagHandlers
             if (this.templateNode.Name.ToLower() == "sr")
             {
                 Unifiable starContent = GetStarContent();
-
+                bool starFailed = IsNull(starContent);
+                if (starFailed)
+                {
+                    return Failure("<SR>");
+                }
                 return callSRAI(starContent);
             }
             return Unifiable.Empty;

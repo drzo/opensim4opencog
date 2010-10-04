@@ -155,7 +155,7 @@ namespace RTParser.Database
             {
                 if (UseLuceneForSet && userbotLuceneIndexer != null) userbotLuceneIndexer.retractAllTriple(userName, name);
                 SettingsDictionary.removeSettingWithUndoCommit(query, dict, name);
-                SettingsDictionary.removeSettingWithUndoCommit(query, gUser, gName);
+                if (!IsNullOrEmpty(gName)) SettingsDictionary.removeSettingWithUndoCommit(query, gUser, gName);
             }
             else
             {

@@ -143,11 +143,11 @@ namespace RTParser.Utils
             {
                 return ((String) name).Trim().Length == 0;
             }
-            if (name is Unifiable) return IsEMPTY(((Unifiable) name).Raw);
-            if (name==null)
+            if (ReferenceEquals(name, null) || ReferenceEquals(name, Unifiable.NULL))
             {
-                return true;
+                return false;
             }
+            if (name is Unifiable) return IsEMPTY(((Unifiable) name).Raw);
             return false;
         }
 

@@ -241,6 +241,10 @@ namespace MushDLR223.Utilities
         public static string InnerXmlText(XmlNode templateNode)
         {
             string s = InnerXmlText0(templateNode).Trim();
+            if (String.IsNullOrEmpty(s))
+            {
+                return s;
+            }
             return ValueText(s);
         }
 
@@ -280,6 +284,7 @@ namespace MushDLR223.Utilities
         public static string XmlValueSettable(string stringValue)
         {
             if (stringValue == null) return null;
+            stringValue = ValueText(stringValue);
             if (stringValue.Contains("<") && !stringValue.Contains("<!--"))
             {
                 writeDebugLine("ERROR: about to write XML into text? " + stringValue);

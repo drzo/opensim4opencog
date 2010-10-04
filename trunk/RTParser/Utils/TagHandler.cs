@@ -62,6 +62,7 @@ namespace RTParser.Utils
                     }
                     Assembly tagDLL = Assemblies[this.AssemblyName];
                     AIMLTagHandler newCustomTag = (AIMLTagHandler) tagDLL.CreateInstance(ClassName);
+                    if (newCustomTag == null) return null;
                     newCustomTag.user = user;
                     newCustomTag.query = query;
                     newCustomTag.request = request;
