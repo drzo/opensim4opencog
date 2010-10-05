@@ -7,6 +7,12 @@ namespace RTParser
     public class BestUnifiable : Unifiable
 
     {
+
+        public override object SpecialName
+        {
+            get { return Raw; }
+        }
+
         public override bool IsLitteral()
         {
             foreach (var u in List)

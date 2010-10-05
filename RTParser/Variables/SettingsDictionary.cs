@@ -1200,6 +1200,7 @@ namespace RTParser.Variables
         /// <param name="name">The name of the setting to remove</param>
         public bool removeSetting(string name)
         {
+			return removeSettingReal(name);
             return addSetting(name, Unifiable.MISSING);
         }
 

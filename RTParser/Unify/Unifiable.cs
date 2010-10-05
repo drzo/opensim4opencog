@@ -414,6 +414,8 @@ namespace RTParser
             get { return Raw != null && ToUpper().Length == 0; }
         }
 
+        public abstract object SpecialName { get; }
+
         public virtual bool IsFalse()
         {
             return IsNullOrEmpty(this);
@@ -908,15 +910,23 @@ namespace RTParser
 
     public class SpecialStringUnifiable : StringUnifiable
     {
-        private readonly string DebugName;
+        private readonly string DebugName1; 
         public override string ToString()
         {
-            return DebugName + "-" + Unifiable.DescribeUnifiable(this);
+            return DebugName1 + "-" + Unifiable.DescribeUnifiable(this);
         }
         public SpecialStringUnifiable(string value, string debugName)
             : base(value)
         {
-            DebugName = debugName;
+            DebugName1 = debugName;
+        }
+        public override object Raw
+        {
+            get { return str; }
+        }
+        public override object SpecialName
+        {
+            get { return DebugName1; }
         }
     }
 }

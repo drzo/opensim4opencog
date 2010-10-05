@@ -273,7 +273,7 @@ namespace RTParser.Utils
                     }
                     if (moveLast == TemplateInfos.Count - 1)
                     {
-                        writeToLog("WARN: template already last " + templateInfo);
+                        // writeToLog("WARN: template already last " + templateInfo);
                         // already last
                         return;
                     }
