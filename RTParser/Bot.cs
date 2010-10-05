@@ -2079,5 +2079,10 @@ The AIMLbot program.
                        };
         }
         #endregion
+
+        public Request MakeRequestToBot(string input, User MyUser)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

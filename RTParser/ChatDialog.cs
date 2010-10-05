@@ -1356,5 +1356,10 @@ namespace RTParser
             req.IsToplevelRequest = request.IsToplevelRequest;
             return LightWeigthBotDirective(cmd, req);
         }
+
+        public Result ChatWithRequest(object o)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
