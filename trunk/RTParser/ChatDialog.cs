@@ -251,20 +251,21 @@ namespace RTParser
             varMSM.clearEvidence();
             varMSM.clearNextStateValues();
             //  myUser.TopicSetting = "collectevidencepatterns";
-            var r = GetRequest(input, CurrentUser);
-            r.IsTraced = true;
-            r.writeToLog = traceConsole;
-            r.Responder = targetUser;
-            Predicates.IsTraced = false;
-            Result res = r.CreateResult(r);
-            ChatLabel label = r.PushScope;
+            Result res = null;
+            var request = CurrentUser.CreateRequest(input, targetUser);
+            Result requestCurrentResult = request.CurrentResult; 
+            if (requestCurrentResult == null)
+            {
+                requestCurrentResult = request.CreateResult(request);
+            }
+            ChatLabel label = request.PushScope;
             try
             {
-                ChatWithUser(r, r.Requester, targetUser, r.Graph);
+                res = ChatWithRequest(request, requestCurrentResult);
             }
             catch (ChatSignal e)
             {
-                if (label.IsSignal(e)) return (AIMLbot.MasterResult)r.CurrentResult;
+                if (label.IsSignal(e)) return e.result;
                 throw;
             }
             catch (Exception exception)
@@ -275,6 +276,7 @@ namespace RTParser
             {
                 label.PopScope();
             }
+            res = res ?? requestCurrentResult;
             string useOut = null;
             //string useOut = resOutput;
             if (!res.IsEmpty)
@@ -302,13 +304,19 @@ namespace RTParser
             return res;
         }
 
-        public MasterRequest GetRequest(string rawInput, string username)
+        public MasterRequest MakeRequestToBot(string rawInput, string username)
         {
-            return GetRequest(rawInput, FindOrCreateUser(username));
+            return MakeRequestToBot(rawInput, FindOrCreateUser(username));
         }
-        public MasterRequest GetRequest(string rawInput, User findOrCreateUser)
+
+        public MasterRequest MakeRequestToBot(string rawInput, User findOrCreateUser)
         {
-            AIMLbot.MasterRequest r = findOrCreateUser.CreateRequest(rawInput, null); 
+            User rtarget = BotAsUser;
+            AIMLbot.MasterRequest r = findOrCreateUser.CreateRequest(rawInput, rtarget); 
+            if (rtarget==null)
+            {
+                OnBotCreated(() => r.SetFromUserToUser(findOrCreateUser, BotAsUser));
+            }
             findOrCreateUser.CurrentRequest = r;
             r.depth = 0;
             r.IsTraced = findOrCreateUser.IsTraced;
@@ -321,11 +329,9 @@ namespace RTParser
         /// <param name="rawInput">the raw input</param>
         /// <param name="UserGUID">a usersname</param>
         /// <returns>the result to be output to the user</returns>        
-        public string ChatString(string rawInput, string username)
+        public string ChatString(string rawInput, string UserGUID)
         {
-            MasterRequest r = GetRequest(rawInput, username);
-            r.IsTraced = this.IsTraced;
-            return Chat(r).Output;
+            return Chat(rawInput, UserGUID).Output;
         }
 
         /// <summary>
@@ -336,64 +342,49 @@ namespace RTParser
         /// <returns>the result to be output to the user</returns>
         public Result Chat(string rawInput, string UserGUID)
         {
-            Request request = GetRequest(rawInput, UserGUID);
+            Request request = MakeRequestToBot(rawInput, UserGUID);
             request.IsTraced = this.IsTraced;
-            return Chat(request);
+            return ChatWithRequest(request);
         }
         /// <summary>
         /// Given a request containing user input, produces a result from the Proccessor
         /// </summary>
         /// <param name="request">the request from the user</param>
         /// <returns>the result to be output to the user</returns>
-        /// 
-        public AIMLbot.MasterResult Chat(Request request)
+        ///
+        public Result ChatWithRequest(Request request)
         {
-           try
+            Result requestCurrentResult = request.CurrentResult;
+            if (requestCurrentResult == null)
             {
-                return Chat(request, request.Graph ?? GraphMaster);
+                requestCurrentResult = request.CreateResult(request);
             }
-            finally
-            {
-                AddHeardPreds(request.rawInput, HeardPredicates);
-            }
+            return ChatWithRequest(request, requestCurrentResult);
         }
 
-        public AIMLbot.MasterResult Chat(Request request, GraphMaster G)
+        public Result ChatWithRequest(Request request, Result parentResultIn)
         {
-            GraphMaster prev = request.Graph;
-            request.Graph = G;
-            try
-            {
-                AIMLbot.MasterResult v = ChatWithUser(request, request.Requester, request.Responder, G);
-                return v;
-            }
-            finally
-            {
-                request.Graph = prev;
-            }
-        }
+            User target = request.Responder;
+            User user = request.Requester;
+            SettingsDictionary userPredicates = user.Predicates;
+            bool isTraced = request.IsTraced | request.IsToplevelRequest;
 
-        public AIMLbot.MasterResult ChatWithUser(Request request, User user, User target, GraphMaster G)
-        {
-            var originalRequestor = request.Requester;
-            bool isTraced = request.IsTraced || G == null;
-            user = user ?? request.Requester ?? LastUser;
             UndoStack undoStack = UndoStack.GetStackFor(request);
             Unifiable requestrawInput = request.rawInput;
-            undoStack.pushValues(user.Predicates, "i", user.UserName);
-            undoStack.pushValues(user.Predicates, "rawinput", requestrawInput);
-            undoStack.pushValues(user.Predicates, "input", requestrawInput);
+
+            undoStack.pushValues(userPredicates, "i", user.UserName);
+            undoStack.pushValues(userPredicates, "rawinput", requestrawInput);
+            undoStack.pushValues(userPredicates, "input", requestrawInput);
             if (target != null && target.UserName != null)
             {
-                undoStack.pushValues(user.Predicates, "you", target.UserName);
+                undoStack.pushValues(userPredicates, "you", target.UserName);
             }
-            AIMLbot.MasterResult res = request.CreateResult(request);
             //lock (user.QueryLock)
             {
                 ChatLabel label = request.PushScope;
                 try
                 {
-                    res = ChatWithRequest4(request, user, target, G);
+                    Result allResults = ChatWithToplevelResults(request, parentResultIn);
                     /*
                     // ReSharper disable ConditionIsAlwaysTrueOrFalse
                     if (res.OutputSentenceCount == 0 && false)
@@ -406,38 +397,39 @@ namespace RTParser
                      */
                     if (request.IsToplevelRequest)
                     {
-                        AddSideEffectHook(request, originalRequestor, res);
+                        AddSideEffectHook(request, user, parentResultIn);
                         user.JustSaid = requestrawInput;
                         if (target != null)
                         {
                             target.JustSaid = user.ResponderJustSaid; //.Output;
                         }
                     }
-                    return res;
+                    return allResults;
                 }
                 catch (ChatSignalOverBudget e)
                 {
                     request.UndoAll();
                     writeToLog("ChatWithUser ChatSignalOverBudget: ( request.UndoAll() )" + request + " " + e);
-                    return (AIMLbot.MasterResult)e.result;
+                    return (Result) e.result;
                 }
                 catch (ChatSignal e)
                 {
-                    if (label.IsSignal(e)) return (AIMLbot.MasterResult)request.CurrentResult;
+                    if (label.IsSignal(e)) return (Result) request.CurrentResult;
                     throw;
                 }
                 finally
                 {
+                    AddHeardPreds(parentResultIn.RawOutput, HeardPredicates);
                     label.PopScope();
                     undoStack.UndoAll();
                     request.UndoAll();
                     request.Commit();
-                    request.Requester = originalRequestor;
+                    request.Requester = user;
                 }
             }
         }
 
-        private void AddSideEffectHook(Request request, User originalRequestor, AIMLbot.MasterResult res)
+        private void AddSideEffectHook(Request request, User originalRequestor, Result res)
         {
             request.AddSideEffect("Populate the Result object",
                                   () =>
@@ -446,40 +438,41 @@ namespace RTParser
                                   });
         }
 
-        public AIMLbot.MasterResult ChatWithRequest4(Request request, User user, User target, GraphMaster G)
+        public Result ChatWithToplevelResults(Request request, Result parentResult)
         {
             var originalRequestor = request.Requester;
             var originalTargetUser = request.Responder;
             ChatLabel label = request.PushScope;
             try
             {
+                GraphMaster G = request.Graph;
                 if (request.ParentMostRequest.DisallowedGraphs.Contains(G))
                 {
                     writeToLog("ChatWithRequest4: DisallowedGraphs " + G);
-                    return (AIMLbot.MasterResult) request.CurrentResult;
+                    return (Result) request.CurrentResult;
                 }
                 string why = request.WhyComplete;
                 if (why != null)
                 {
                     writeToLog("ChatWithRequest4: WhyComplete " + why);
-                    return (AIMLbot.MasterResult) request.CurrentResult;
+                    return (Result) request.CurrentResult;
                 }
-                request.Requester = user;
-                Result result = ChatWithRequest44(request, user, target, G);
+
+                Result result = ChatFor1Result(request, parentResult);
                 if (result.OutputSentences.Count != 0)
                 {
                     result.RotateUsedTemplates();
                 }
-                return (AIMLbot.MasterResult)result;
+                return (Result)result;
             }
             catch (ChatSignalOverBudget e)
             {
                 writeToLog("ChatWithRequest4 ChatSignalOverBudget: " + request + " " + e);
-                return (AIMLbot.MasterResult)request.CurrentResult;
+                return (Result)request.CurrentResult;
             }
             catch (ChatSignal e)
             {
-                if (label.IsSignal(e)) return (AIMLbot.MasterResult)request.CurrentResult;
+                if (label.IsSignal(e)) return (Result)request.CurrentResult;
                 throw;
             }
             finally
@@ -489,42 +482,43 @@ namespace RTParser
             }
         }
 
-        public AIMLbot.MasterResult ChatWithRequest44(Request request, User user, User target, GraphMaster G)
+        public Result ChatFor1Result(Request request, Result parentResult)
         {
+            //result = request.CreateResult(request);
             User originalRequestor = request.Requester;
             //LastUser = user; 
-            //AIMLbot.Result result;
+            Result childResult;
+            GraphMaster G = request.Graph;
             bool isTraced = request.IsTraced || G == null;
             OutputDelegate writeToLog = this.writeToLog;
-            MasterResult result;
             string rr = request.rawInput;
             if (rr.StartsWith("@") || (rr.IndexOf("<") + 1 < rr.IndexOf(">")))
             {
-                result = ChatWithNonGraphmaster(request, G, isTraced, writeToLog);
+                childResult = ChatWithNonGraphmaster(request, parentResult, G, isTraced, writeToLog);
             }
             else if (request.GraphsAcceptingUserInput)
             {
-                result = ChatUsingGraphMaster(request, G, isTraced, writeToLog);
+                childResult = ChatUsingGraphMaster(request, parentResult, G, isTraced, writeToLog);
             }
             else
             {
+                childResult = request.CreateResult(request);
                 string nai = NotAcceptingUserInputMessage;
                 if (isTraced) this.writeToLog("ERROR {0} getting back {1}", request, nai);
-                result = request.CreateResult(request);
-                request.AddOutputSentences(null, nai, result);
+                request.AddOutputSentences(null, nai, parentResult);
             }
-            User popu = originalRequestor ?? request.Requester ?? result.Requester;
-            result._Durration = RTPBot.Now - request.StartedOn;
-            result.IsComplete = true;
+            User popu = originalRequestor ?? request.Requester ?? parentResult.Requester;
+            parentResult.IsComplete = true;
+            parentResult.SetOutput = childResult.RawOutput;
             popu.addRequestTemplates(request);
             if (streamDepth > 0) streamDepth--;
-            return result;
+            return (Result) childResult;
         }
-        private AIMLbot.MasterResult ChatWithNonGraphmaster(Request request, GraphMaster G, bool isTraced, OutputDelegate writeToLog)
+
+        private Result ChatWithNonGraphmaster(Request request, Result result, GraphMaster G, bool isTraced, OutputDelegate writeToLog)
         {
-            AIMLbot.MasterResult result;
             writeToLog = writeToLog ?? DEVNULL;
-            isTraced = request.IsTraced || G == null;
+            isTraced = request.IsTraced;
             //chatTrace = null;
 
             streamDepth++;
@@ -583,10 +577,9 @@ namespace RTParser
             return null;
         }
 
-        private AIMLbot.MasterResult ChatUsingGraphMaster(Request request, GraphMaster G, bool isTraced, OutputDelegate writeToLog)
+        private Result ChatUsingGraphMaster(Request request, Result result, GraphMaster G, bool isTraced, OutputDelegate writeToLog)
         {
             //writeToLog = writeToLog ?? DEVNULL;
-            AIMLbot.MasterResult result;
             {
                 ParsedSentences parsedSentences = ParsedSentences.GetParsedSentences(request, isTraced, writeToLog);
 
@@ -595,7 +588,7 @@ namespace RTParser
 
                 // grab the templates for the various sentences from the graphmaster
                 request.IsTraced = isTraced;
-                result = request.CreateResult(request);
+                //result = request.CreateResult(request);
 
                 // load the queries
                 List<GraphQuery> AllQueries = new List<GraphQuery>();
@@ -1010,11 +1003,11 @@ namespace RTParser
             }
         }
 
-        public AIMLbot.MasterResult ImmediateAiml(XmlNode templateNode, Request request0,
+        public Result ImmediateAiml(XmlNode templateNode, Request request0,
                                             AIMLLoader loader, AIMLTagHandler handler)
         {
             bool fastCall = handler == null;
-            MasterResult masterResult = request0.CreateResult(request0);
+            Result masterResult = request0.CreateResult(request0);
             bool prev = request0.GraphsAcceptingUserInput;
             try
             {
@@ -1038,7 +1031,7 @@ namespace RTParser
             }
         }
 
-        private AIMLbot.MasterResult ImmediateAIML0(Request parentRequest, XmlNode templateNode, AIMLTagHandler handler, bool isFastAIML)
+        private Result ImmediateAIML0(Request parentRequest, XmlNode templateNode, AIMLTagHandler handler, bool isFastAIML)
         {
             if (isFastAIML)
             {
@@ -1069,7 +1062,7 @@ namespace RTParser
                 //request.depth = parentRequest.depth + 1;
             }
 
-            AIMLbot.MasterResult result = request.CreateResult(request);
+            Result result = request.CreateResult(request);
             //request.CurrentResult = result;
             if (request.CurrentResult != result)
             {
@@ -1355,11 +1348,6 @@ namespace RTParser
             req.Responder = BotAsUser;
             req.IsToplevelRequest = request.IsToplevelRequest;
             return LightWeigthBotDirective(cmd, req);
-        }
-
-        public Result ChatWithRequest(object o)
-        {
-            throw new NotImplementedException();
         }
     }
 }

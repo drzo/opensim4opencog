@@ -1262,7 +1262,7 @@ namespace RTParser.Utils
 
             try
             {
-                this.LoaderRequest00.writeToLog(prefix);
+                this.LoaderRequest00.TargetBot.writeToLog(prefix);
             }
             catch (ChatSignal e)
             {

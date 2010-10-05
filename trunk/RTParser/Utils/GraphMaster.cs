@@ -6,6 +6,7 @@ using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text.RegularExpressions;
 using System.Xml;
+using AIMLbot;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
@@ -893,7 +894,7 @@ namespace RTParser.Utils
                         req.IsToplevelRequest = false;
                         //req.CurrentResult = null;
 
-                        AIMLbot.MasterResult r = proc.ChatWithUser(req, request.Requester, request.Responder, p);
+                        AIMLbot.MasterResult r = (MasterResult) proc.ChatWithRequest(req);
                         
                         if (!r.IsEmpty) pl.Add(r);
                     }

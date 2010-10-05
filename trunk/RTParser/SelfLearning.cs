@@ -206,21 +206,16 @@ namespace RTParser
                     {
                         resrequest = res.request;
                         resrequest.ParentMostRequest.DisallowedGraphs.Clear();
-                    }                    
-                    var r = new AIMLbot.MasterRequest(message, theFactSpeaker, this, resrequest, toWhom);
-                    r.OriginalSalientRequest = r;
-                    r.Responder = toWhom;
-                    r.IsToplevelRequest = true;
-                    r.writeToLog = writeDebugLine;
-                    r.IsTraced = false;
-                    r.TimesOutAt = DateTime.Now + TimeSpan.FromSeconds(5);
-                    r.WhyComplete = null;
+                    }
+                    Request r = theFactSpeaker.CreateRequest(message, toWhom, HeardSelfSayGraph, null);
+
                     if (control != null) control.AbortRaised += (ctl, abrtedE) =>
                                                                     {
                                                                         r.WhyComplete = "THREADABORTED";
                                                                     };
                     var G = HeardSelfSayGraph ?? GraphMaster;
-                    Result res2 = ChatWithUser(r, theFactSpeaker, toWhom, G);
+                    r.Graph = G;
+                    Result res2 = ChatWithRequest(r);
                     return res2;
                 }
                 catch (ChatSignal)

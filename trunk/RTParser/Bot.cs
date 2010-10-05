@@ -114,7 +114,11 @@ namespace RTParser
             r.writeToLog = writeToLog;
             //Result res = new AIMLbot.MasterRequest(s, botAsUser1, this, r, null, null);            
             //r.CurrentQuery = new SubQuery(s, res, r);
-            OnBotCreated(() => { r.Requester = r.Requester = this.BotAsUser; });
+            OnBotCreated(() =>
+                             {
+                                 User BotAsUser1 = this.BotAsUser;
+                                 ((Request)r).SetFromUserToUser(BotAsUser1, BotAsUser1);
+                             });
             r.IsTraced = this.IsTraced;
             r.depth = 0;
             // times out in 15 minutes
@@ -1211,7 +1215,7 @@ The AIMLbot program.
             {
                 Loader = new AIMLLoader(this, GetBotRequest("EvalAIMLHandler " + cmd));
             }
-            AIMLbot.MasterResult res = ImmediateAiml(node, user, Loader, null);
+            var res = ImmediateAiml(node, user, Loader, null);
             return res;
         }
 
@@ -2079,10 +2083,5 @@ The AIMLbot program.
                        };
         }
         #endregion
-
-        public Request MakeRequestToBot(string input, User MyUser)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Net.Mail;
 using System.Reflection;
+using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Web;
@@ -582,7 +583,7 @@ namespace RTParser
             if (cmd == "proof")
             {
                 console("-----------------------------------------------------------------");
-                RequestImpl ur = GetRequest(args, myUser);
+                RequestImpl ur = MakeRequestToBot(args, myUser);
                 int i;
                 Result r = myUser.LastResult;
                 if (args.StartsWith("save"))
@@ -656,14 +657,14 @@ namespace RTParser
                     return true;
                 }
 
-                MasterRequest ur = GetRequest(args, myUser);
+                Request ur = MakeRequestToBot(args, myUser);
 
                 // Adds findall to request
                 QuerySettings.ApplySettings(QuerySettings.FindAll, ur);
 
                 ur.IsTraced = myUser.IsTraced;
                 console("-----------------------------------------------------------------");
-                AIMLbot.MasterResult result = ChatWithUser(ur, myUser, targetBotUser, myUser.ListeningGraph);
+                var result = ChatWithToplevelResults(ur, request.CurrentResult);//, myUser, targetBotUser, myUser.ListeningGraph);
                 console("-----------------------------------------------------------------");
                 PrintResult(result, console, printOptions);
                 console("-----------------------------------------------------------------");
@@ -778,7 +779,7 @@ namespace RTParser
                     source = args;
                     slang = null;
                 }
-                Request ur = GetRequest(args, myUser);
+                Request ur = MakeRequestToBot(args, myUser);
                 if (source != null)
                 {
                     try
@@ -1000,14 +1001,16 @@ namespace RTParser
             action();
         }
 
-        public static void RaiseErrorStatic(InvalidOperationException invalidOperationException)
+        public static Exception RaiseErrorStatic(InvalidOperationException invalidOperationException)
         {
             writeDebugLine(writeException(invalidOperationException));
+            return invalidOperationException;
         }
 
-        public void RaiseError(Exception invalidOperationException)
+        public Exception RaiseError(Exception invalidOperationException)
         {
             writeDebugLine(writeException(invalidOperationException));
+            return invalidOperationException;
         }
     }
 }
