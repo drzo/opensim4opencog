@@ -31,18 +31,18 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "cycquery")
+            if (CheckNode("cycquery"))
             {
                 Unifiable filter = GetAttribValue("filter", null);
                 Unifiable varname = base.GetAttribValue("varname", "?REPLY");
                 String sent = Recurse();
                 string mt = TheCyc.Cyclify(GetAttribValue("mt", /*Proc.GetUserMt(user)*/ "#$EverythingPSC"));
-                if (!templateNodeInnerText.IsEmpty)
+                if (!IsEMPTY(sent))
                 {
                     if (WhenTrue(this.TheCyc.EvalSubL(String.Format("(ask-template '{0} `{1} {2})", varname, sent, mt), filter)))
-                    {                     
-                        if (query.CurrentTemplate != null) query.CurrentTemplate.Rating *= 1.5;
-                        return templateNodeInnerText;
+                    {
+                        Succeed();
+                        return RecurseResult;
                     }
                 }
             }

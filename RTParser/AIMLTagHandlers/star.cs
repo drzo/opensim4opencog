@@ -111,10 +111,10 @@ namespace RTParser.AIMLTagHandlers
                             RTPBot.writeDebugLine("" + e);
                         }
                     }
-                    return rest.IsEmpty ? STAR_TRUE : STAR_FALSE;
+                    return IsNullOrEmpty(rest) ? STAR_TRUE : STAR_FALSE;
                 }
             }
-            return with.IsEmpty ? STAR_TRUE : STAR_FALSE;
+            return IsNullOrEmpty(with) ? STAR_TRUE : STAR_FALSE;
         }
 
         /// <summary>
@@ -124,7 +124,7 @@ namespace RTParser.AIMLTagHandlers
         protected override Unifiable ProcessChange()
         {
             IList<Unifiable> stars = GetStarDict();
-            
+
             int starsCount = stars.Count;
             string value = GetAttribValue("index", "" + DefaultIndex);
 
@@ -142,20 +142,18 @@ namespace RTParser.AIMLTagHandlers
                         }
                         else
                         {
-                            writeToLogWarn(String.Format("{0} out of bounds 0<{1}<{2} reference caused by input: '{3}'",
-                                                         starName, index, starsCount, this.request.rawInput));
+                            writeToLogWarn("{0} out of bounds 0<{1}<{2} reference caused by input: '{3}'", starName,
+                                           value, starsCount, request);
                         }
                     }
                     catch
                     {
-                        writeToLogWarn(String.Format("{0} non-integer '{1}' of {2} reference caused by input: '{3}'",
-                             starName, value, starsCount, this.request.rawInput));
+                        writeToLogWarn("{0} non-integer '{1}' of {2} reference caused by request: '{3}'", starName, value, starsCount, request);
                     }
                 }
                 else
                 {
-                    writeToLogWarn(String.Format("A star tag tried to reference an empty '{0}' collection '{1}' of {2} reference caused by input: '{3}'",
-                         starName, value, starsCount, this.request.rawInput)); 
+                    writeToLogWarn("A star tag tried to reference an empty '{0}' collection '{1}' of {2} reference caused by input: '{3}'", starName, value, starsCount, request);
                 }
             }
             Unifiable ret = GetAttribValue("default", templateNodeInnerText);

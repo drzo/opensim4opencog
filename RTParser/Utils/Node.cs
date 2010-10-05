@@ -840,7 +840,7 @@ namespace RTParser.Utils
             }
 
             Node vv = evaluateFirst(at, splitPath, query, request, matchstate, wildcard);
-            if (wildcard.ToString().Trim().Length > 0)
+            if (Unifiable.ToVMString(wildcard.Frozen(query)).Trim().Length > 0)
             {
                 if (vv == null || vv.disabled || vv.NoEnabledTemplates) return null;
             }
@@ -954,13 +954,13 @@ namespace RTParser.Utils
                             {
                                 case MatchState.UserInput:
                                     if (childNodeWord.StoreWildCard())
-                                        Insert(query.InputStar, newWildcard.ToString());
+                                        Insert(query.InputStar, newWildcard.Frozen(query));
                                     // added due to this match being the end of the line
                                     newWildcard.Length = 0; // Remove(0, newWildcard.Length);
                                     break;
                                 default:
                                     List<Unifiable> stars = query.GetMatchList(matchstate);
-                                    if (childNodeWord.StoreWildCard()) Insert(stars, newWildcard.ToString());
+                                    if (childNodeWord.StoreWildCard()) Insert(stars, newWildcard.Frozen(query));
                                     newWildcard.Length = 0;
                                     break;
                             }
@@ -995,13 +995,13 @@ namespace RTParser.Utils
                         switch (matchstate)
                         {
                             case MatchState.UserInput:
-                                if (childNodeWord.StoreWildCard()) Insert(query.InputStar, newWildcard.ToString());
+                                if (childNodeWord.StoreWildCard()) Insert(query.InputStar, newWildcard.Frozen(query));
                                 // added due to this match being the end of the line
                                 newWildcard.Length = 0; // Remove(0, newWildcard.Length);
                                 break;
                             default:
                                 List<Unifiable> stars = query.GetMatchList(matchstate);
-                                if (childNodeWord.StoreWildCard()) Insert(stars, newWildcard.ToString());
+                                if (childNodeWord.StoreWildCard()) Insert(stars, newWildcard.Frozen(query));
                                 newWildcard.Length = 0;
                                 break;
                         }
@@ -1090,7 +1090,7 @@ namespace RTParser.Utils
                         // capture and push the star content appropriate to the matchstate if it exists
                         // and then clear it for subsequent wildcards
                         List<Unifiable> stars = query.GetMatchList(matchstate);
-                        if (childNodeWord.StoreWildCard()) Insert(stars, newWildcard.ToString());
+                        if (childNodeWord.StoreWildCard()) Insert(stars, newWildcard.Frozen(query));
                         newWildcard.Length = 0;
                     }
                     return result;
@@ -1129,14 +1129,14 @@ namespace RTParser.Utils
                                 case MatchState.UserInput:
                                     if (childNodeWord.StoreWildCard())
                                     {
-                                        Insert(query.InputStar, newWildcard.ToString());
+                                        Insert(query.InputStar, newWildcard.Frozen(query));
                                         // added due to this match being the end of the line
                                         newWildcard.Length = 0; // Remove(0, newWildcard.Length);
                                     }
                                     break;
                                 default:
                                     List<Unifiable> stars = query.GetMatchList(matchstate);
-                                    if (childNodeWord.StoreWildCard()) Insert(stars, newWildcard.ToString());
+                                    if (childNodeWord.StoreWildCard()) Insert(stars, newWildcard.Frozen(query));
                                     break;
                             }
                         }

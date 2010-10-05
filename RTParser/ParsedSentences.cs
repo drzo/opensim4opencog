@@ -212,7 +212,7 @@ namespace RTParser
                                                              requestThat, request.Flags,
                                                              //topicNum + " " +
                                                              request.Requester.TopicSetting, true, normalizerT);
-                        if (path.IsEmpty)
+                        if (TextPatternUtils.IsNullOrEmpty(path))
                         {
                             path = loader.generatePath(sentence,
                                                        //thatNum + " " +
@@ -220,7 +220,7 @@ namespace RTParser
                                                        //topicNum + " " +
                                                        request.Requester.TopicSetting, false, normalizerT);
                         }
-                        if (path.IsEmpty) continue;
+                        if (TextPatternUtils.IsNullOrEmpty(path)) continue;
                         numInputs++;
                         result.Add(path);
                         if (numInputs >= maxInputs) return;

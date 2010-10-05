@@ -47,7 +47,7 @@ namespace RTParser.AIMLTagHandlers
         {
             if (RecurseResultValid) return RecurseResult;
             Unifiable u = ProcessChange0();
-            if (IsMissing(u))
+            if (IsIncomplete(u))
             {
                 Unifiable defaultVal = GetAttribValue("default", null);
                 if (defaultVal == null)
@@ -112,7 +112,7 @@ namespace RTParser.AIMLTagHandlers
                 string name = GetAttribValue(templateNode, "name,var", () => templateNodeInnerText, ReduceStarAttribute);
                 bool succeed;
                 Unifiable v = GetActualValue(name, typeof(bot) == GetType() ? "bot" : "get", out succeed);
-                if (IsNullOrEmpty(v))
+                if (!IsValue(v))
                 {
                     if (!succeed)
                     {

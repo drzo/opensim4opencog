@@ -116,10 +116,10 @@ namespace RTParser
             str = v;
             if (tf)
             {
-                int vLength = v.Length;
 #if ACTUALLY_USING_ClassifyFlagTypes
+                int vLength = v.Length;
                 ClassifyFlagTypes(v, vLength);
-#else  
+#else
                 Flags = FlagsForString(str);
 #endif
             }
@@ -748,7 +748,7 @@ namespace RTParser
             int tokenLen = tokens.Length;
             if (tokenLen == 0)
             {
-                bool WasEmpty = IsEmpty;
+                bool WasEmpty = IsNullOrEmpty(this);
                 fw = "";
                 after = Unifiable.Empty;
                 newAt = at;
@@ -904,7 +904,7 @@ namespace RTParser
             if (su == "*")
             {
                 writeToLog("CALL CALL/WILL UNIFY");
-                return !other.IsEmpty ? UNIFY_TRUE : UNIFY_FALSE;
+                return !IsNullOrEmpty(other) ? UNIFY_TRUE : UNIFY_FALSE;
             }
             else if (su == "_")
             {
@@ -1072,7 +1072,7 @@ namespace RTParser
                 try
                 {
                     Unifiable outputSentence = tagHandler.CompleteAimlProcess();
-                    if (!outputSentence.IsEmpty) return outputSentence.AsString();
+                    if (!IsNullOrEmpty(outputSentence)) return outputSentence.AsString();
                     writeToLog("Failed Eval " + str);
                 }
                 finally

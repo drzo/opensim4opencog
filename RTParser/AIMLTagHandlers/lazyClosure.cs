@@ -148,7 +148,7 @@ namespace RTParser.AIMLTagHandlers
             if (sd != null)
             {
                 if (RecurseResultValid) return RecurseResult;
-                if (!Unifiable.IsMissing(RecurseResult))
+                if (!Unifiable.IsIncomplete(RecurseResult))
                 {
                     return RecurseResult;
                 }
@@ -164,7 +164,7 @@ namespace RTParser.AIMLTagHandlers
             if (RTPBot.UnknownTagsAreBotVars)
             {
                 var v = Proc.GlobalSettings.grabSetting(currentNodeName);
-                if (!Unifiable.IsMissing(v)) return v;
+                if (!Unifiable.IsIncomplete(v)) return v;
             }
             var vs = Proc.EvalAiml(templateNode, request, request.writeToLog);
             StringBuilder sb = new StringBuilder();

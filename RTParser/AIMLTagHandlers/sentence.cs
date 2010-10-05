@@ -45,7 +45,7 @@ namespace RTParser.AIMLTagHandlers
             if (CheckNode("sentence"))
             {
                 string s = templateNodeInnerText;
-                if (!templateNodeInnerText.IsEmpty)
+                if (!IsNullOrEmpty(templateNodeInnerText))
                 {
                     s = s.Substring(0, 1).ToUpper() + s.Substring(1);
                     s = s.Replace(" ,", ",");

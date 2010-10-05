@@ -154,7 +154,7 @@ namespace RTParser
             }
             Result currentResult = CurrentResult;
             if (currentResult != null) currentResult.ResetAnswers(b);
-            StartedOn = DateTime.Now;
+            StartedOn = RTPBot.Now;
             TimeOut = TheDurration;
             _Durration = TimeSpan.Zero;
             _SRAIResults.Clear();
@@ -168,7 +168,7 @@ namespace RTParser
         {
             get
             {
-                if (_Durration == TimeSpan.Zero) return DateTime.Now - StartedOn;
+                if (_Durration == TimeSpan.Zero) return RTPBot.Now - StartedOn;
                 return _Durration;
             }
             set { _Durration = value; }
@@ -301,7 +301,7 @@ namespace RTParser
                 {
                     WhyComplete = (WhyComplete ?? "") + "SraiDepth ";
                 }
-                if (DateTime.Now > TimesOutAt)
+                if (RTPBot.Now > TimesOutAt)
                 {
                     WhyComplete = (WhyComplete ?? "") + "TimesOutAt ";
                 }
@@ -1279,7 +1279,7 @@ namespace RTParser
             set
             {
                 WhyComplete = null;
-                StartedOn = DateTime.Now;
+                StartedOn = RTPBot.Now;
                 if (TimeOut < value)
                 {
                     TimeOut = value;

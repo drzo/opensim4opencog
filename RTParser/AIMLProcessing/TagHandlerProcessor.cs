@@ -773,7 +773,7 @@ namespace RTParser
                 if (query != null) gn = query.Graph;
                 string s = string.Format("WARNING! Request " + request.WhyComplete +
                                          ". User: {0} raw input: {3} \"{1}\" processing {2} templates: \"{4}\"",
-                                         request.Requester.UserID, request.rawInput,
+                                         request.Requester.UserID, Unifiable.DescribeUnifiable(request.rawInput),
                                          (query == null ? "-NOQUERY-" : query.Templates.Count.ToString()), gn, node);
 
                 if (isTraced)

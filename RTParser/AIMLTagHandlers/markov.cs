@@ -31,7 +31,7 @@ namespace RTParser.AIMLTagHandlers
             {
                 //return templateNodeInnerText.ToValue().ToUpper(this.Proc.Locale);
                 Unifiable names = GetAttribValue("source", null);
-                if (!Unifiable.IsMissing(names))
+                if (!Unifiable.IsIncomplete(names))
                 {
                     // Want something special
 
@@ -607,7 +607,7 @@ public class MBrain
       //float target = (float)rand.NextDouble() / 3 + 2 / 3f; // for 0 ...1 space
       float target = ((float)rand.NextDouble() * -10f) + (-0.3f); // for log space
 
-      DateTime starttime = DateTime.Now;
+      DateTime starttime = RTPBot.Now;
       TimeSpan duration;
       long thinkticks = 0;
       do
@@ -671,7 +671,7 @@ public class MBrain
 
           }
           //}
-          duration = DateTime.Now - starttime ;
+          duration = RTPBot.Now - starttime;
       } while ((Math.Abs(duration.TotalMilliseconds) < 7500)||(thinkticks<3000));
       RTPBot.writeDebugLine(" ----\n **** Markov generator thunk {0} turns in {1} milliseconds : {2} --> {3}@df={4} sk={5} tx={6}**** \n", thinkticks, duration.TotalMilliseconds, bestResponse.Keyword, bestResponse.Probability, bestd, bestskew,bestResponse.Text);
       return lastReply = bestResponse.Text;

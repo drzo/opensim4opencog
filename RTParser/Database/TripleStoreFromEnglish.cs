@@ -399,8 +399,7 @@ namespace RTParser.Database
 
         internal string FixPronouns(string english, Func<string, Unifiable> whoAmI)
         {
-            SettingsDictionary subjDict = SettingsDictionary.ToSettingsDictionary(whoAmI);
-            if (subjDict != null)
+            string englishToLower = english.ToLower();
             {
                 foreach (var pronoun in
                     new[]
@@ -409,13 +408,23 @@ namespace RTParser.Database
                             "i", "you", "me", "my", "your", "our","their",
                         })
                 {
-                    Unifiable v = Unifiable.Create(whoAmI(pronoun));
-                    if (Unifiable.IsMissing(v) || Unifiable.IsNullOrEmpty(v))
-                        if (english.ToLower().Contains(pronoun))
+                    if (englishToLower.Contains(pronoun))
+                    {
+                        if (whoAmI == null)
                         {
-                            english = ReplaceWord(english, pronoun, v);
-                            english = ReplaceWord(english, pronoun + "s", v + "s");
+                            writeToLog("FixPronouns: DONT KNOW THE USER TO RESOLVE '" + pronoun + "'");
+                            return english;
                         }
+                        Unifiable v = Unifiable.Create(whoAmI(pronoun));
+                        bool goodReplacement = !Unifiable.IsIncomplete(v) && !Unifiable.IsNullOrEmpty(v) && !Unifiable.IsMissing(v);
+                        if (!goodReplacement)
+                        {
+                            writeToLog("FixPronouns: BAD REPLACEMENT '" + pronoun + "' => '" + v + "'");
+                            continue;
+                        }
+                        english = ReplaceWord(english, pronoun, v);
+                        english = ReplaceWord(english, pronoun + "s", v + "s");
+                    }
                 }
 
             }

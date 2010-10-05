@@ -64,7 +64,7 @@ namespace RTParser.Utils
         /// <returns>The resulting transformed Unifiable</returns>
         public virtual string Transform()
         {
-            if (!this.inputString.IsEmpty)
+            if (!IsNullOrEmpty(this.inputString))
             {
                 return this.ProcessAimlChange();
             }

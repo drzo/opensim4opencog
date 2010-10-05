@@ -255,7 +255,7 @@ namespace RTParser.Utils
                                 newTopic = ReduceStar<Unifiable>(node.Value, query, dict, out found);
                                 if (newTopic != null)
                                 {
-                                    if (newTopic.IsEmpty) newTopic = "Nothing";
+                                    if (IsNullOrEmpty(newTopic)) newTopic = "Nothing";
                                     needsUnwind = true;
                                     request.Topic = newTopic;
                                 }
@@ -266,7 +266,7 @@ namespace RTParser.Utils
                                 newThat = ReduceStar<Unifiable>(node.Value, query, dict, out found);
                                 if (newThat != null)
                                 {
-                                    if (newThat.IsEmpty) newThat = "Nothing";
+                                    if (IsNullOrEmpty(newThat)) newThat = "Nothing";
                                     needsUnwind = true;
                                     request.That = newThat;
                                 }
@@ -761,9 +761,9 @@ namespace RTParser.Utils
             {
                 return IsNullOrEmpty(actualValue) || actualValue == "OM";
             }
-            if (IsMissing(required))
+            if (IsIncomplete(required))
             {
-                return IsMissing(actualValue);
+                return IsIncomplete(actualValue);
             }
             if (IsNull(actualValue))
             {

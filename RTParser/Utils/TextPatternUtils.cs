@@ -99,17 +99,16 @@ namespace RTParser.Utils
 
         public static bool IsNullOrEmpty(Object name)
         {
-            if (name is String)
-            {
-                return ((String)name).Length == 0;
-            }
+            if (name is Unifiable) return IsNullOrEmpty(((Unifiable) name).Raw);
+            if (name == null) return true;
             if (IsNull(name)) return true;
+            name = name.ToString();
             if (IsMissing(name))
             {
-                writeDebugLine("Special IsMissing " + Unifiable.DescribeUnifiable(name));
+                //writeDebugLine("Special IsMissing " + Unifiable.DescribeUnifiable(name));
                 return true;
             }
-            return (name is Unifiable && ((Unifiable)name).IsEmpty);
+            return ((String) name).Length == 0;
         }
 
         public static bool IsNull(Object name)
@@ -118,23 +117,65 @@ namespace RTParser.Utils
             if (ReferenceEquals(name, Unifiable.NULL)) return true;
             return (name is Unifiable && ((Unifiable)name).Raw == null);
         }
+        
+        public static bool IsIncomplete(Object name)
+        {
+            if (ReferenceEquals(name, Unifiable.INCOMPLETE))
+            {
+                return true;
+            }
+            if (ReferenceEquals(name, null))
+            {
+                return true;
+            }
+            if (ReferenceEquals(name, Unifiable.NULL) || IsNull(name))
+            {
+                return true;
+            }
+            if (IsEMPTY(name)) return false;
+            if (name is string)
+            {
+                string sname = ((string) name).ToUpper();
+                if (sname == "$INCOMPLETE" || sname == "$NULL") return true;
+                if (sname == "OM" || sname == "$MISSING") return true;
+            }
+            if (!(name is Unifiable))
+            {
+                return false;
+            }
+            var name2 = ((Unifiable)name).Raw;
+            if (IsNull(name2)) return false;
+            return IsIncomplete(name2);
+        }
+
+
+        public static bool IsValue(Unifiable name)
+        {
+            return (!IsNull(name) && !IsIncomplete(name)) || IsMissing(name);
+        }
 
         public static bool IsMissing(Object name)
         {
-            if (ReferenceEquals(name, null)) return true;
-            if (ReferenceEquals(name, Unifiable.NULL))
+            if (ReferenceEquals(name, Unifiable.MISSING))
             {
                 return true;
             }
-            if (IsNull(name))
+            if (ReferenceEquals(name, Unifiable.NULL) || IsNull(name))
             {
-                return true;
+                return false;
             }
-            if (!(name is Unifiable)) return false;
-            var val = (string) (((Unifiable) name).Raw);
-            if (val == null) return true;
-            val = val.ToUpper();
-            return val == "OM" || val == "$MISSING";
+            if ((name is string))
+            {
+                string sname = ((string) name).ToUpper();
+                return sname == "OM" || sname == "$MISSING";
+            }
+            if (!(name is Unifiable))
+            {
+                return false;
+            }
+            var name2 = ((Unifiable) name).Raw;
+            if (IsNull(name2)) return false;
+            return IsIncomplete(name2);
         }
 
         public static bool IsEMPTY(Object name)
@@ -154,7 +195,11 @@ namespace RTParser.Utils
         public static bool IsUnknown(object unifiable)
         {
             if (IsNullOrEmpty(unifiable)) return true;
-            string ss = MakeMatchable(unifiable.ToString());
+            if (IsIncomplete(unifiable))
+            {
+                return true;
+            }
+            string ss = MakeMatchable(Unifiable.ToStringLValue(unifiable));
             string s = " " + ss.Replace("_", " ").Replace("-", " ") + " ";
             bool b = s.Contains("unknown") || s.Contains("unrec") || s.Contains("unnam")
                      || s.Contains("unseen") || s.Contains("default")
@@ -283,7 +328,7 @@ namespace RTParser.Utils
         public static bool IsSomething(string s, out string something)
         {
             something = s;
-            if (String.IsNullOrEmpty(s) || IsMissing(s))
+            if (String.IsNullOrEmpty(s) || IsIncomplete(s))
             {
                 return false;
             }

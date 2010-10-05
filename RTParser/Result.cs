@@ -343,7 +343,7 @@ namespace RTParser
                             }
                             writeToLog("The bot could not find any response for the input: " + RawInput +
                                        " with the path(s): " +
-                                       Environment.NewLine + paths.ToString() + " from the user with an id: " +
+                                       Environment.NewLine + Unifiable.DescribeUnifiable(paths) + " from the user with an id: " +
                                        Requester.UserID);
                             return Unifiable.NULL;
                         }
@@ -411,10 +411,10 @@ namespace RTParser
 
         public bool IsComplete
         {
-            get { return EndedOn < DateTime.Now; }
+            get { return EndedOn < RTPBot.Now; }
             set
             {
-                EndedOn = value ? DateTime.Now : DateTime.MaxValue;
+                EndedOn = value ? RTPBot.Now : DateTime.MaxValue;
                 _Durration = value ? Durration : TimeSpan.Zero;
             }
         }
@@ -621,7 +621,7 @@ namespace RTParser
                 {
                     writeToLog("ERROR:  AddRssult: " + Requester.UserID + " " + unifiable);
                 }
-                EndedOn = DateTime.Now;
+                EndedOn = RTPBot.Now;
                 OutputSentences.Add(unifiable);
                 return;
                 bool isComplete = OutputSentences.Count >=

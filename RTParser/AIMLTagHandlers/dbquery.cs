@@ -63,7 +63,7 @@ namespace RTParser.AIMLTagHandlers
 
                 // if there is a high enough scoring record in Lucene, use up to max number of them?
                 // otherwise there is a conversation memo then pop it??
-                if (converseMemo.IsEmpty)
+                if (IsNullOrEmpty(converseMemo))
                 {
                     //Unifiable converseMemo = this.user.bot.conversationStack.Pop();
                 }
