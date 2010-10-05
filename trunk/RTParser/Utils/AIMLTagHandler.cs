@@ -165,13 +165,13 @@ namespace RTParser.Utils
         {
             if (RecurseResultValid)
             {
-                return RecurseResult;
+             //   return RecurseResult;
             }
             return null;
             return templateNodeInnerText;
         }
 
-        protected Unifiable templateNodeInnerText
+        protected virtual Unifiable templateNodeInnerText
         {
             get
             {
@@ -1162,7 +1162,7 @@ namespace RTParser.Utils
                 success = true;
                 if (tagHandlerChild.QueryHasFailed) success = false;
                 writeToLogWarn = tagHandlerChild.writeToLogWarn;
-                parent.IsOverBudget = tagHandlerChild.IsOverBudget;
+                if (parent != null) parent.IsOverBudget = tagHandlerChild.IsOverBudget;
             }
             // cant do much bette than the first call
             if (suspendingLimits)

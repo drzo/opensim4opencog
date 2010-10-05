@@ -80,6 +80,11 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessChange()
         {
+            if (RecurseResultValid) return RecurseResult;
+            if (InUnify)
+            {
+                return Unifiable.INCOMPLETE;
+            }
             IsStarted = true;
             if (!RecurseResultValid)
             {
@@ -134,6 +139,10 @@ namespace RTParser.AIMLTagHandlers
         public override Unifiable CompleteProcess()
         {
             if (RecurseResultValid) return RecurseResult;
+            if (InUnify)
+            {
+                return Unifiable.INCOMPLETE;
+            }
             // ReSharper disable ConditionIsAlwaysTrueOrFalse
             var sraiResult = ProcessChange12 ? ProcessChange0() : ProcessAimlChange();
             // ReSharper restore ConditionIsAlwaysTrueOrFalse
