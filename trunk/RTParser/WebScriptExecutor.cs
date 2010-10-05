@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
+using RTParser.Utils;
 
 namespace RTParser.Web
 {
@@ -75,7 +76,7 @@ namespace RTParser.Web
             sslot = sslot.ToLower();
             var u = TheBot.GlobalSettings.grabSetting(sslot);
             if (Unifiable.IsNull(u)) return null;
-            if (u.IsEmpty) return "";
+            if (TextPatternUtils.IsNullOrEmpty(u)) return "";
             return u.ToValue(null);
         }
 

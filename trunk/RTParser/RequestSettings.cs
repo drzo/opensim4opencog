@@ -23,7 +23,7 @@ namespace RTParser
             get
             {
                 // Max.CompareTo(Min) < 0 means if max is less than min.. it cant timeout
-                return Current.CompareTo(Max) >= 0 && Max.CompareTo(Min) < 0;
+                return Current.CompareTo(Max) >= 0 && Max.CompareTo(Min) >- 0;
             }
         }
         public override string ToString()

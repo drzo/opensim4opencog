@@ -518,7 +518,7 @@ namespace RTParser.Utils
 
         public GraphQuery gatherQueriesFromGraph(Unifiable path, Request request, MatchState state)
         {
-            if (path.IsEmpty)
+            if (TextPatternUtils.IsNullOrEmpty(path))
             {
                 string s = "ERROR! path.IsEmpty  returned no results for " + state + " in " + this;
                 writeToLog(s);
@@ -674,7 +674,7 @@ namespace RTParser.Utils
                 toplevelBubble = null;
                 SubQuery query = new SubQuery(upath, request.CurrentResult, request);
                 query.TopLevel = toplevel;
-                Node pattern = rootNode.evaluate(upath.ToString(), query, request, matchstate, wildcard);
+                Node pattern = rootNode.evaluate(Unifiable.ToVMString(upath), query, request, matchstate, wildcard);
                 if (pattern != null && pattern.IsSatisfied(query))
                 {
                     var tmplateInfos = pattern.TemplateInfoCopy;

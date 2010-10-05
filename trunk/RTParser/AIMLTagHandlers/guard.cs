@@ -50,7 +50,7 @@ namespace RTParser.AIMLTagHandlers
             {
                 string language = GetAttribValue("lang", "cycl");
                 templateNodeInnerText = Recurse();
-                if (!templateNodeInnerText.IsEmpty)
+                if (!IsNullOrEmpty(templateNodeInnerText))
                 {
                     Unifiable res = this.Proc.SystemExecute(templateNodeInnerText, language, request);
                     if (!Unifiable.IsNullOrEmpty(res)) return res;

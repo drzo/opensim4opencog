@@ -39,7 +39,7 @@ namespace RTParser.AIMLTagHandlers
         protected override Unifiable Format(Unifiable templateNodeInnerText)
         {
             CheckNode("think");
-            writeToLog("THOUGHT: '" + templateNodeInnerText + "'");
+            writeToLog("THOUGHT: '" + Unifiable.DescribeUnifiable(templateNodeInnerText) + "'");
             if (IsNullOrEmpty(templateNodeInnerText))
             {
                 return FAIL;

@@ -20,6 +20,8 @@ namespace RTParser
             StaticXMLUtils.FormatProviderConvertor = FormatProviderConvertor0;
         }
 
+        public static bool ReturnNullForUnknownNonUnifiables = true;
+        public static bool ReturnNullForUnknownUnifiables = false;
         public static IConvertible FormatProviderConvertor0(IConvertible arg, Type solid)
         {
             IConvertible output = arg;
@@ -46,21 +48,39 @@ namespace RTParser
             try
             {
                 string u = arg.ToString(FormatProvider);
-
-                if (solid == typeof (Unifiable))
+                bool wasIncomplete = IsIncomplete(u);
+                if (solid == typeof(Unifiable))
                 {
+                    if (wasIncomplete)
+                    {
+                        if (ReturnNullForUnknownUnifiables) return Unifiable.INCOMPLETE;
+                    }  
                     return (Unifiable) u;
                 }
                 if (solid == typeof (string))
                 {
+                    if (wasIncomplete)
+                    {
+                        if (ReturnNullForUnknownUnifiables) return Unifiable.INCOMPLETE;
+                    }
                     return u;
                 }
                 if (solid == typeof (Double))
                 {
+                    if (wasIncomplete)
+                    {
+                        u = "0.0";                       
+                        if (ReturnNullForUnknownNonUnifiables) return Unifiable.INCOMPLETE;                       
+                    }                    
                     return Double.Parse(u);
                 }
                 if (solid == typeof (Int32))
                 {
+                    if (wasIncomplete)
+                    {
+                        u = "0";
+                        if (ReturnNullForUnknownNonUnifiables) return Unifiable.INCOMPLETE;
+                    }         
                     return Int32.Parse(u);
                 }
             }
@@ -138,7 +158,8 @@ namespace RTParser
             return value.AsString();
         }
 
-        static Dictionary<string, Unifiable> internedUnifiables = new Dictionary<string, Unifiable>(20000);
+        static Dictionary<string, Unifiable> specialUnifiables = new Dictionary<string, Unifiable>(20);
+        static readonly Dictionary<string, Unifiable> internedUnifiables = new Dictionary<string, Unifiable>(20000);
         public static implicit operator Unifiable(string value)
         {
             return MakeStringUnfiable(value);
@@ -187,8 +208,6 @@ namespace RTParser
             u = new StringUnifiable(value);
             return (StringUnifiable)u;
         }
-
-        public static Unifiable Empty = Create("");// new EmptyUnifiable();
 
 
         public static Unifiable STAR
@@ -243,34 +262,43 @@ namespace RTParser
             return it;
         }
 
-        static public bool operator ==(Unifiable t, Unifiable s)
+        static public bool operator ==(Unifiable t, object s)
+        {
+            return EQ(CreateEQ(s), t);
+        }
+        public static bool operator !=(Unifiable t, object s)
+        {
+            return !(t == s);
+        }      
+
+        private static string CreateEQ(object o)
+        {
+            if (o == null) return null;
+            if (IsNull(o)) return null;
+            if (IsEMPTY(o)) return "";
+            if (IsIncomplete(o)) return "OM";             
+            return Create(o);
+        }
+        static public bool EQ(string t, string u)
         {
             if (IsNull(t))
             {
-                return IsNull(s);
+                return IsNull(u);
             }
-            if (IsNull(s))
+            if (IsEMPTY(t))
+            {
+                return IsEMPTY(u);
+            }
+            if (IsIncomplete(t))
+            {
+                return IsIncomplete(u);
+            }
+            if (IsNull(u) || IsIncomplete(u) || IsEMPTY(u))
             {
                 return false;
             }
-            if (IsMissing(t))
-            {
-                return IsMissing(s);
-            }
-            if (t.ToUpper() == s.ToUpper()) return true;
+            if (t.ToUpper() == u.ToUpper()) return true;
             return false;
-            if (t.ToValue(null).ToLower() == s.ToValue(null).ToLower())
-            {
-                writeToLog("==({0},{1})", t.AsString(), s.AsString());
-                return false;
-            }
-
-            return false;
-        }
-
-        public static bool operator !=(Unifiable t, Unifiable s)
-        {
-            return !(t == s);
         }
 
         public static Unifiable operator +(string u, Unifiable more)
@@ -291,6 +319,30 @@ namespace RTParser
             string moreAsString = more.AsString();
             if (moreAsString.Length == 0) return u;
             return MakeStringUnfiable(u.AsString() + " " + moreAsString);
+        }
+
+        public static Unifiable CreateSpecial(string key)
+        {
+            return CreateSpecial(key, key);
+        }
+        public static Unifiable CreateSpecial(string key, string value)
+        {
+            var dict = specialUnifiables;
+            lock (dict)
+            {
+                Unifiable u;
+                if (!dict.TryGetValue(key, out u))
+                {
+                    u = dict[key] = new SpecialStringUnifiable(value, key);
+                    u.Flags |= UFlags.IS_TAG;
+                    internedUnifiables[key] = u;
+                    if (value != null)
+                    {
+                        internedUnifiables[value] = u;
+                    }
+                }
+                return u;
+            }
         }
 
         public static Unifiable Create(object p)
@@ -328,29 +380,19 @@ namespace RTParser
             //   return new StringBuilder(10);
         }
 
-        public static Unifiable ThatTag = Create("TAG-THAT");
-        public static Unifiable TopicTag = Create("TAG-TOPIC");
-        public static Unifiable FlagTag = Create("TAG-FLAG");
-        public static Unifiable InputTag = Create("TAG-INPUT");
-        public static Unifiable TagStartText = Create("TAG-START");
-        public static Unifiable TagEndText = Create("TAG-END");
+        public static Unifiable ThatTag = CreateSpecial("TAG-THAT");
+        public static Unifiable TopicTag = CreateSpecial("TAG-TOPIC");
+        public static Unifiable FlagTag = CreateSpecial("TAG-FLAG");
+        public static Unifiable InputTag = CreateSpecial("TAG-INPUT");
+        public static Unifiable TagStartText = CreateSpecial("TAG-START");
+        public static Unifiable TagEndText = CreateSpecial("TAG-END");
+        public static Unifiable NULL = CreateSpecial("$NULL", null);
+        public static Unifiable INCOMPLETE = CreateSpecial("$INCOMPLETE",null);
+        public static Unifiable Empty = CreateSpecial("$EMPTY","");
+        public static Unifiable FAIL_NIL = CreateSpecial("$FAIL_NIL","NIL");
+        public static Unifiable MISSING = CreateSpecial("$MISSING","OM");
 
         public abstract object Raw { get; }
-        public virtual bool IsEmpty
-        {
-            get
-            {
-                string s = AsString();
-                if (String.IsNullOrEmpty(s)) return true;
-                s = s.Trim();
-                if (s.Length != 0)
-                {
-                    // writeToLog("was IsEmpty");
-                    return false;
-                }
-                return true;
-            }
-        }
 
         public Unifiable LegacyPath
         {
@@ -374,7 +416,7 @@ namespace RTParser
 
         public virtual bool IsFalse()
         {
-            return IsEmpty;
+            return IsNullOrEmpty(this);
         }
         public abstract bool IsTag(string s);
         public virtual bool IsWildCard()
@@ -407,7 +449,7 @@ namespace RTParser
         public bool WillUnify(Unifiable other, SubQuery query)
         {
             string su = ToUpper();
-            if (su == "*") return !other.IsEmpty;
+            if (su == "*") return !IsNullOrEmpty(other);
             if (su == "_") return other.IsShort();
             return Unify(other, query) == UNIFY_TRUE;
         }
@@ -415,7 +457,7 @@ namespace RTParser
         public bool CanUnify(Unifiable other, SubQuery query)
         {
             string su = ToUpper();
-            if (su == "*") return !other.IsEmpty;
+            if (su == "*") return !IsNullOrEmpty(other);
             if (su == "_") return other.IsShort();
             return Unify(other, query) == UNIFY_TRUE;
         }
@@ -500,13 +542,6 @@ namespace RTParser
             return b;
         }
 
-
-        public static Unifiable NULL = new StringUnifiable(null);
-
-        public static Unifiable FAIL_NIL = new StringUnifiable("NIL");
-
-        public static Unifiable INCOMPLETE = NULL;// new EmptyUnifiable();
-
         public virtual Unifiable ToCaseInsenitive()
         {
             return this;
@@ -576,7 +611,7 @@ namespace RTParser
         {
             if (unifiable is Unifiable)
             {
-                return ((Unifiable)unifiable).AsString();
+                return ToVMString(((Unifiable) unifiable).Raw);
             }
             if (ReferenceEquals(null, unifiable))
             {
@@ -847,12 +882,41 @@ namespace RTParser
 
         public static string DescribeUnifiable(Object value)
         {
-            if (value == null) return "-NULL-UOBJECT-";
-            if (ReferenceEquals(value, Unifiable.NULL)) return "-EQ-NULL-";
-            if (IsNull(value)) return "-EQUAL-NULL-";
-            if (IsMissing(value)) return "-EQUAL-MISSING-" + value + "-";
-            return "" + value;
+            if (value == null) return "-UOBJECT-";
+            string s = value.GetType().Name;
+            if (ReferenceEquals(value, Unifiable.NULL)) s += "-EQ-NULL-";
+            if (IsNull(value)) s += "-IsNull-";
+            if (IsIncomplete(value)) s += "-IsIncomplete-";
+            if (IsMissing(value)) s += "-IsMissing-";
+            if (IsEMPTY(value)) s += "-IsEMPTY-";
+            if (value is Unifiable)
+            {
+                s += string.Format("='{0}'", DescribeUnifiable(((Unifiable)value).Raw));
+            }
+            else if (value is string)
+            {
+                s += string.Format("=\"{0}\"", value);
+            }
+            else
+            {
+                s += string.Format("=[{0}]", value);
+            }
+            return s;
 
+        }
+    }
+
+    public class SpecialStringUnifiable : StringUnifiable
+    {
+        private readonly string DebugName;
+        public override string ToString()
+        {
+            return DebugName + "-" + Unifiable.DescribeUnifiable(this);
+        }
+        public SpecialStringUnifiable(string value, string debugName)
+            : base(value)
+        {
+            DebugName = debugName;
         }
     }
 }

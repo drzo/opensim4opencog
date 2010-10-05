@@ -10,9 +10,12 @@ namespace RTParser
         public override Unifiable Frozen(SubQuery subquery)
         {
             string str0 = ToValue(subquery);
+            return str0;
+            /*
             var u = new StringAppendableUnifiableImpl();
             u.str = str0;           
             return u;
+             */
         }
 
         public StringAppendableUnifiableImpl()
@@ -36,7 +39,7 @@ namespace RTParser
         {
             if (string.IsNullOrEmpty(p)) return;
             base.SpoilCache();
-            if (IsEmpty)
+            if (IsNullOrEmpty(this))
             {
                 str = p;
                 return;

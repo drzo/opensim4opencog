@@ -53,7 +53,7 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable Format(Unifiable text)
         {
-            if (!templateNodeInnerText.IsEmpty)
+            if (!IsNullOrEmpty(templateNodeInnerText))
             {
                 // non atomic version of the node
                 return RTParser.Normalize.ApplySubstitutions.Substitute(GetDictionary(), templateNodeInnerText);
@@ -120,7 +120,7 @@ namespace RTParser.Utils
         /// <returns></returns>
         protected override Unifiable Format(Unifiable text)
         {
-            if (!text.IsEmpty)
+            if (!IsNullOrEmpty(text))
             {
                 // non atomic version of the node
                 return RTParser.Normalize.ApplySubstitutions.Substitute(GetDictionary(), text);

@@ -151,7 +151,7 @@ namespace RTParser.Database
                 bool shouldSet2 = ShouldSet(templateNode, dict, realName, value, resultGet);
                 return ReturnSetSetting(dict, name, setReturn);
             }
-            if (IsMissing(value))
+            if (IsIncomplete(value))
             {
                 if (UseLuceneForSet && userbotLuceneIndexer != null) userbotLuceneIndexer.retractAllTriple(userName, name);
                 SettingsDictionary.removeSettingWithUndoCommit(query, dict, name);
@@ -169,7 +169,7 @@ namespace RTParser.Database
             }
             var retVal = ReturnSetSetting(dict, name, setReturn);
             if (!IsNullOrEmpty(retVal)) return retVal;
-            if (!IsMissing(retVal))
+            if (!IsIncomplete(retVal))
             {
                 return retVal;                
             }
@@ -197,13 +197,13 @@ namespace RTParser.Database
             bool onlyIfUnknown;
             if (StaticXMLUtils.TryParseBool(templateNode, "ifUnknown", out onlyIfUnknown))
             {
-                if (onlyIfUnknown) return Unifiable.IsUnknown(oldValue) || IsMissing(oldValue);
+                if (onlyIfUnknown) return Unifiable.IsUnknown(oldValue) || IsIncomplete(oldValue);
             }
 
             bool overwriteExisting;
             if (StaticXMLUtils.TryParseBool(templateNode, "overwriteExisting", out overwriteExisting))
             {
-                if (!overwriteExisting) return Unifiable.IsNullOrEmpty(oldValue) || IsMissing(oldValue);
+                if (!overwriteExisting) return Unifiable.IsNullOrEmpty(oldValue) || IsIncomplete(oldValue);
                 //if (overwriteExisting)                   
                 return true;
             }

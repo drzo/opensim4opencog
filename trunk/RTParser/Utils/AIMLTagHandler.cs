@@ -307,7 +307,7 @@ namespace RTParser.Utils
                     {
                         writeToLogWarn("IsNull _RecurseResult to String.Empty at least!");
                     }
-                    else if (IsMissing(recurseResult))
+                    else if (IsIncomplete(recurseResult))
                     {
                         writeToLogWarn("IsMissing _RecurseResult to String.Empty at least!");
                     }
@@ -324,7 +324,7 @@ namespace RTParser.Utils
                         writeToLogWarn("IsNull _RecurseResult to String.Empty at least!");
                     }
                     else
-                        if (IsMissing(recurseResult))
+                        if (IsIncomplete(recurseResult))
                         {
                             writeToLogWarn("IsMissing _RecurseResult to String.Empty at least!");
                         }
@@ -380,7 +380,7 @@ namespace RTParser.Utils
         {
             if (handler == this)
             {
-                throw new InvalidOperationException("same");
+                Proc.RaiseError(new InvalidOperationException("SetParent: same: " + this));
             }
             else if (handler == null)
             {
@@ -467,9 +467,11 @@ namespace RTParser.Utils
                 var recurseResult2 = templateNodeInnerText;
                 if (CompleteEvaluatution(recurseResult2, this, out recurseResult))
                 {
+                    writeToLogWarn("ProcessAimlChange -> templateNodeInnerText=" + recurseResult2 + "->" + recurseResult);
                     RecurseResult = recurseResult;
                     return recurseResult;
                 }
+                if (RecurseResultValid) return RecurseResult;
                 return recurseResult0;
             }
             finally
@@ -955,7 +957,7 @@ namespace RTParser.Utils
             var vv = ProcessChildNode(childNode, ReadOnly, false, out success, tagHandlerChild);
             if (!success)
             {
-                Proc.TraceTest(String.Format("RE-EVALING CHILD '{0}' '{1}'", vv, childNode),
+                Proc.TraceTest(String.Format("RE-EVALING CHILD '{0}' '{1}'", Unifiable.DescribeUnifiable(vv), childNode),
                                () => ProcessChildNode(childNode, ReadOnly, false, out success, tagHandlerChild));
                 //return null;
                 QueryHasFailedN++;
@@ -1020,7 +1022,8 @@ namespace RTParser.Utils
 
         static public Unifiable ProcessNonElement(bool saveOnInnerXML, XmlNode childNode, out bool success)
         {
-            if (saveOnInnerXML && throwOnSave) throw new InvalidOperationException("saveOnInnerXML! " + childNode);
+            if (saveOnInnerXML && throwOnSave) RTPBot.RaiseErrorStatic(new InvalidOperationException("saveOnInnerXML! " + childNode)); 
+            
             {
                 string childNodeInnerXml = childNode.InnerXml;
                 if (childNodeInnerXml.StartsWith(isValueSetStart))
@@ -1202,7 +1205,7 @@ namespace RTParser.Utils
                     {
                         if (IsNull(real)) return null;
                     }
-                    if (IsMissing(real)) return null;
+                    if (IsIncomplete(real)) return null;
                     if (IsNull(real)) return null;
                     if (IsEMPTY(real)) return Unifiable.Empty;
                 }
@@ -1244,7 +1247,7 @@ namespace RTParser.Utils
                     bool success;
                     AIMLTagHandler tagHandlerChild = GetChildTagHandler(childNode);
                     Unifiable found = ProcessChildNode(childNode, ReadOnly, false, out success, tagHandlerChild);
-
+                    var found1 = found;
                     if (success)
                     {
                         if (afterEachOrNull != null)
@@ -1254,7 +1257,14 @@ namespace RTParser.Utils
                         }
                         if (saveOnChildren)
                         {
-                            SaveResultOnChild(childNode, found);
+                            if (!IsEMPTY(found) && found1 != null)
+                            {
+                                SaveResultOnChild(childNode, found);
+                            }
+                            else
+                            {
+                                success = false;
+                            }
                         }
                     }
                     else
@@ -1293,7 +1303,7 @@ namespace RTParser.Utils
                     if (goods == 0) QueryHasFailedN++;
                 }
                 //templateNodeInnerText = templateResult;//.ToString();
-                if (!templateResult.IsEmpty)
+                if (!IsNullOrEmpty(templateResult))
                 {
                     templateResult = CheckValue(templateResult);
                     innerResult.Value = templateResult;
@@ -1360,7 +1370,7 @@ namespace RTParser.Utils
         /// <returns>The resulting transformed Unifiable</returns>
         public override string Transform()
         {
-            if (!this.inputString.IsEmpty)
+            if (!IsNullOrEmpty(this.inputString))
             {
                 if (RecurseResultValid)
                 {
@@ -1578,7 +1588,7 @@ namespace RTParser.Utils
                     return recursiveResult;
                 }
                 recursiveResult = RecurseReal(resultNode, false);
-                if (!recursiveResult.IsEmpty)
+                if (!IsNullOrEmpty(recursiveResult))
                 {
                     RecurseResult = recursiveResult;
                     return recursiveResult;
@@ -1593,7 +1603,9 @@ namespace RTParser.Utils
 
         public virtual void SaveResultOnChild(XmlNode node, string value)
         {
-            Unifiable value2;
+            Unifiable value2 = value;
+            bool emptyIsOK = IsSilentTag(node);
+            if (value != null) value = ValueText(value);
             if (IsUnevaluated(value))
             {
                 writeToLogWarn("XML onto child " + value);
@@ -1602,28 +1614,27 @@ namespace RTParser.Utils
                     value = value2;
                 }
             }
-
-            value = ValueText(value);
+            if (value != null) value = ValueText(value);
+            if (value == null || (IsEMPTY(value) && !emptyIsOK))
+            {
+                Unifiable errmsg = "-!SaveResultOnChild AIMLTRACE " + value + " was " + value2 + " -> " + node.OuterXml;
+                writeToLog(errmsg);
+                if (throwOnSave)
+                {
+                    throw new InvalidOperationException("save NULL ResultsOnChildren! " + this + " " + errmsg);
+                }
+            }
             if (InUnify)
             {
                 return;
             }
             //if (value == null) return;
             //if (value == "") return;
-            if (node.LocalName != "think")
+            if (!emptyIsOK)
                 value = CheckValue(value);
-            if (value == null || value.Trim() == "")
-            {
-                writeToLog("-!SaveResultOnChild AIMLTRACE " + value + " -> " + node.OuterXml);
-            }
-            if (value == null )
-            {
-                if (throwOnSave)
-                {
-                    throw new InvalidOperationException("save NULL ResultsOnChildren! " + this);
-                }
-            }
+
             if (node.NodeType == XmlNodeType.Comment) return;
+
             if (node is XmlText)
             {
                 node.InnerText = XmlValueSettable(value);
@@ -1806,8 +1817,8 @@ namespace RTParser.Utils
             Unifiable outerName = GetAttribValue("name,var", null);
             Unifiable outerValue = GetAttribValue("value", null);
 
-            bool outerNamePresent = !IsMissing(outerName);
-            bool outerValuePresent = !IsMissing(outerValue);
+            bool outerNamePresent = !IsIncomplete(outerName);
+            bool outerValuePresent = !IsIncomplete(outerValue);
 
             if (candidates == null || candidates.Count == 0)
             {
@@ -1826,7 +1837,7 @@ namespace RTParser.Utils
                     ReduceStarAttribute<Unifiable>);
 
 
-                bool valuePresent = !IsMissing(value);
+                bool valuePresent = !IsIncomplete(value);
                 if (!valuePresent) value = outerValue;
 
                 //skip comments

@@ -500,7 +500,7 @@ namespace RTParser.Utils
             int total = 0;
             RTPBot RProcessor = loadOpts.RProcessor;
             Request request = loadOpts.TheRequest;
-            DateTime oneMinuteFromNow = DateTime.Now + TimeSpan.FromMinutes(1);
+            DateTime oneMinuteFromNow = RTPBot.Now + TimeSpan.FromMinutes(1);
             if (request.TimesOutAt < oneMinuteFromNow)
             {
                 request.TimesOutAt = oneMinuteFromNow + TimeSpan.FromMinutes(1);
@@ -1102,7 +1102,7 @@ namespace RTParser.Utils
             ThatInfo thatInfo = ThatInfo.GetPattern(loaderOpts, that);
 
             // o.k., add the processed AIML to the GraphMaster structure
-            if (!categoryPath.IsEmpty)
+            if (!IsNullOrEmpty(categoryPath))
             {
                 GraphMaster pathCtxGraph = loaderOpts.CtxGraph;
                 lock (pathCtxGraph.LockerObject)
@@ -1434,7 +1434,7 @@ namespace RTParser.Utils
             // check sizes
             if (normalizedPattern.Length > 0)
             {
-                if (normalizedThat.IsEmpty)
+                if (IsNullOrEmpty(normalizedThat))
                 {
                     normalizedThat = Unifiable.STAR;
                 }
@@ -1445,7 +1445,7 @@ namespace RTParser.Utils
                         // normalizedThat = "* " + normalizedThat;
                     }
                 }
-                if (normalizedTopic.IsEmpty)
+                if (IsNullOrEmpty(normalizedTopic))
                 {
                     normalizedTopic = Unifiable.STAR;
                 }

@@ -1077,7 +1077,7 @@ namespace RTParser.Variables
                         return true;
                     }
                     SettingsLog("ADD LOCAL '" + name + "'=" + str(value) + " ");
-                    found = this.removeSetting(name);
+                    found = this.removeSettingReal(name);
                     if (value != null)
                     {
                         this.orderedKeys.Add(name);
@@ -1122,10 +1122,31 @@ namespace RTParser.Variables
 
         public Unifiable TransformValue(Unifiable value)
         {
-            if (value == null)
+            string s = TransformValue0(value);
+            if (s == null) return Unifiable.NULL;
+            if (s == "") return Unifiable.Empty;
+            if (s == "OM") return Unifiable.MISSING;
+            return s;
+        }
+
+        public string TransformValue0(Unifiable value)
+        {
+            if (IsMissing(value))
             {
                 //   writeToLog("ERROR " + value + " NULL");
+                return "OM";
+            }
+            if (Unifiable.IsEMPTY(value))
+            {
+                // writeToLog("ERROR " + value + " NULL");
+                return "";
+                //return Unifiable.NULL;
+            }
+            if (Unifiable.IsNull(value))
+            {
+                // writeToLog("ERROR " + value + " NULL");
                 return null;
+                //return Unifiable.NULL;
             }
             if (value == Unifiable.NULL)
             {
@@ -1139,18 +1160,16 @@ namespace RTParser.Variables
                 return "";
                 //return Unifiable.NULL;
             }
-            string v = value.AsString();
+            var v = StaticXMLUtils.ValueText(value);
             if (v.Contains("<") || v.Contains("&"))
             {
                 writeToLog("!@ERROR BAD INPUT? " + value);
-            }
-            value = StaticXMLUtils.ValueText(v);
+            }            
             if (v.Contains("???"))
             {
                 writeToLog("!?????@ERROR BAD INPUT? " + value);
             }
-
-            return value;
+            return v;
         }
 
         public bool addListSetting(string name, Unifiable value)
@@ -1181,6 +1200,11 @@ namespace RTParser.Variables
         /// <param name="name">The name of the setting to remove</param>
         public bool removeSetting(string name)
         {
+            return addSetting(name, Unifiable.MISSING);
+        }
+
+        public bool removeSettingReal(string name)
+        {
             lock (orderedKeys)
             {
                 if (SuspendUpdates) return true;
@@ -1198,6 +1222,7 @@ namespace RTParser.Variables
                 return ret;
             }
         }
+
 
         public string TransformKey(string name)
         {
@@ -1314,7 +1339,7 @@ namespace RTParser.Variables
         public string str(Unifiable value)
         {
             value = TransformValue(value);
-            return "'" + Unifiable.ToVMString(value) + "'";
+            return "'" + Unifiable.DescribeUnifiable(value) + "'";
         }
 
         /// <summary>
@@ -1373,28 +1398,7 @@ namespace RTParser.Variables
             {
                 name = TransformName(name);
                 var setting = grabSetting0(name);
-                if (ReferenceEquals(setting,null))
-                {
-                    //   writeToLog("ERROR " + value + " NULL");
-                    return null;
-                }
-                if (setting == Unifiable.NULL)
-                {
-                    // writeToLog("ERROR " + value + " NULL");
-                    return null;
-                    //return Unifiable.NULL;
-                }
-                if (Unifiable.IsEMPTY(setting))
-                {
-                    // writeToLog("ERROR " + value + " NULL");
-                    return "";
-                    //return Unifiable.NULL;
-                }
                 setting = TransformValue(setting);
-                if (TextPatternUtils.IsEMPTY(setting))
-                {
-                    return "";
-                }
                 return setting;
             }
             catch (Exception e)
@@ -1552,13 +1556,13 @@ namespace RTParser.Variables
                     }
                 }
                 SettingsLog("MISSING '" + name + "'");
-                return Unifiable.NULL;
+                return Unifiable.MISSING;
             }
         }
 
         public static bool IsMissing(Unifiable tsetting)
         {
-            return TextPatternUtils.IsMissing(tsetting);
+            return TextPatternUtils.IsIncomplete(tsetting);
         }
 
         private Unifiable localValue(string name, string normalizedName)

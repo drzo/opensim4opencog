@@ -37,7 +37,7 @@ namespace RTParser.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "cycretract")
             {                
-                if (!templateNodeInnerText.IsEmpty)
+                if (!IsNullOrEmpty(templateNodeInnerText))
                 {
                     return this.Proc.TheCyc.EvalSubL(String.Format("(cyc-unassert `{0})", Recurse()), null);
                 }

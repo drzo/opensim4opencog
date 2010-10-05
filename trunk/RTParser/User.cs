@@ -767,12 +767,17 @@ namespace RTParser
             }
             set
             {
-                if (IsNullOrEmpty(value)) throw new NullReferenceException("set_That: " + this);
+                if (IsNullOrEmpty(value))
+                {
+                    bot.RaiseError(new InvalidOperationException("set_That: " + this));
+                    return;
+                }
                 if (value.Contains("TAG-"))
                 {
-                    if (IsNullOrEmpty(value))
-                        throw new NullReferenceException("set_That: TAG: " + value + " for " + this);
+                    bot.RaiseError(new InvalidOperationException("set_That: TAG: " + value + " for " + this));
+                    return;
                 }
+                    
                 // the (_JustSaid != value) holds back the infinate looping
                 if (_JustSaid != value)
                 {
@@ -793,14 +798,24 @@ namespace RTParser
             {
                 {
                     var vv = Predicates.grabSetting("lastheard");
-                    if (!IsMissing(vv)) return vv;
+                    if (!IsIncomplete(vv)) return vv;
                     if (LastResponder != null) return LastResponder.JustSaid;
                     return That;
                 }
             }
             set
             {
-                if (IsNullOrEmpty(value)) throw new NullReferenceException("set_That: " + this);
+                if (IsNullOrEmpty(value))
+                {
+                    bot.RaiseError(new InvalidOperationException("set_ResponderJustSaid: " + this));
+                    return;
+                }
+                if (value.Contains("TAG-"))
+                {
+                    bot.RaiseError(new InvalidOperationException("set_ResponderJustSaid: TAG: " + value + " for " + this));
+                    return;
+                }
+
                 if (LastResponder != null)
                 {
                     LastResponder.JustSaid = value;

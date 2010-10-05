@@ -70,7 +70,8 @@ namespace RTParser
         {
             writeDebugLine(writeException(e));
         }
-        public String writeException(Exception e)
+
+        static public String writeException(Exception e)
         {
             if (e == null) return "-write no exception-";
             string s = "ERROR: " + e.Message + " " + e.StackTrace;
@@ -997,6 +998,16 @@ namespace RTParser
             return;
             writeChatTrace(s);  
             action();
+        }
+
+        public static void RaiseErrorStatic(InvalidOperationException invalidOperationException)
+        {
+            writeDebugLine(writeException(invalidOperationException));
+        }
+
+        public void RaiseError(Exception invalidOperationException)
+        {
+            writeDebugLine(writeException(invalidOperationException));
         }
     }
 }

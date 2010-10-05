@@ -1184,7 +1184,7 @@ The AIMLbot program.
             {
                 paths.Append(path.LegacyPath + Environment.NewLine);
             }
-            message = message.Replace("*PATHS*", paths.ToString());
+            message = message.Replace("*PATHS*", Unifiable.ToVMString(paths));
             msg.Body = message;
             msg.IsBodyHtml = false;
             try
@@ -1280,7 +1280,7 @@ The AIMLbot program.
                 {
                     object self = user;
                     ScriptInterpreter si = ScriptManager.LoadScriptInterpreter(langu, self);
-                    object o = ScriptManager.EvalScriptInterpreter(cmd.ToString(), langu, self, writeToLog);
+                    object o = ScriptManager.EvalScriptInterpreter(cmd.ToValue(user.CurrentQuery), langu, self, writeToLog);
                     string siStr = si.Str(o);
                     return Unifiable.Create(siStr);
                 }

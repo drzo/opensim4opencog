@@ -31,13 +31,14 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "cycassert")
-            {                
-                if (!templateNodeInnerText.IsEmpty)
+            if (CheckNode("cycassert"))
+            {
+                string sent = templateNodeInnerText = Recurse();
+                if (IsValue(sent))
                 {
-                    String sent = Recurse();
                     string mt = TheCyc.Cyclify(GetAttribValue("mt", Proc.GetUserMt(user, query)));
-                    return this.TheCyc.EvalSubL(String.Format("(eval (subseq `(cyc-assert '{0} {1} ) 0 3) )", sent, mt), null);
+                    return this.TheCyc.EvalSubL(
+                        String.Format("(eval (subseq `(cyc-assert '{0} {1} ) 0 3) )", sent, mt), null);
                 }
             }
             return Unifiable.Empty;

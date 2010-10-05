@@ -187,7 +187,7 @@ namespace RTParser.AIMLTagHandlers
                             {
                                 string name = GetAttribValue(childLINode, "name", NullStringFunct, ReduceStarAttribute<string>);
                                 Unifiable value = GetAttribValue(childLINode, "value", NullUnifyFunct, ReduceStarAttribute);
-                                if ((name.Length > 0) & (!value.IsEmpty))
+                                if ((name.Length > 0) & (!IsNullOrEmpty(value)))
                                 {
                                     bool succeed;
                                     Unifiable actualValue = base.GetActualValue(name, childLINode.Name, out succeed);

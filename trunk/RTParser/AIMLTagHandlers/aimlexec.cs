@@ -63,7 +63,7 @@ namespace RTParser.AIMLTagHandlers
                 {
 
                 }
-                string s = f.ToString();
+                string s = Unifiable.ToVMString(f);
                 XmlNode node =
                     new XmlDocumentLineInfo(s, false).ReadNode(
                         XmlDocumentLineInfo.CreateXmlTextReader(new System.IO.StringReader(s)));
@@ -87,7 +87,7 @@ namespace RTParser.AIMLTagHandlers
             {
                 Unifiable result = Unifiable.CreateAppendable();
                 Unifiable rest = templateNodeInnerText;
-                while (!rest.IsEmpty)
+                while (!IsNullOrEmpty(rest))
                 {
                     // Unifiable[] words = templateNodeInnerText.AsString().Split(new char[]{''});
                     Unifiable word = templateNodeInnerText.First();
@@ -97,7 +97,7 @@ namespace RTParser.AIMLTagHandlers
                         result.Append(newWord + " ");
                     }
                 }
-                return result.ToString().Trim();
+                return Unifiable.ToVMString(result).Trim();
             }
             return templateNodeInnerText;
         }

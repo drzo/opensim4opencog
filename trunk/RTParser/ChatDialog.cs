@@ -496,7 +496,7 @@ namespace RTParser
             //AIMLbot.Result result;
             bool isTraced = request.IsTraced || G == null;
             OutputDelegate writeToLog = this.writeToLog;
-            var result = request.CreateResult(request);
+            MasterResult result;
             string rr = request.rawInput;
             if (rr.StartsWith("@") || (rr.IndexOf("<") + 1 < rr.IndexOf(">")))
             {
@@ -510,10 +510,11 @@ namespace RTParser
             {
                 string nai = NotAcceptingUserInputMessage;
                 if (isTraced) this.writeToLog("ERROR {0} getting back {1}", request, nai);
+                result = request.CreateResult(request);
                 request.AddOutputSentences(null, nai, result);
             }
             User popu = originalRequestor ?? request.Requester ?? result.Requester;
-            result._Durration = DateTime.Now - request.StartedOn;
+            result._Durration = RTPBot.Now - request.StartedOn;
             result.IsComplete = true;
             popu.addRequestTemplates(request);
             if (streamDepth > 0) streamDepth--;
@@ -1300,37 +1301,41 @@ namespace RTParser
         }
 
         private int napNum = 0;
+        public static DateTime Now
+        {
+            get { return DateTime.Now; }
+        }
 
         private void Sleep16Seconds(int secs)
         {
             napNum++;
-            DateTime start = DateTime.Now;
+            DateTime start = RTPBot.Now;
             var errOutput = DLRConsole.SYSTEM_ERR_WRITELINE;
             string thisTime = " #" + napNum;
             try
             {
-                errOutput("START Sleep" + secs + "Seconds " + thisTime + " \ntime=" + DateTime.Now.Subtract(start).TotalMilliseconds);
+                errOutput("START Sleep" + secs + "Seconds " + thisTime + " \ntime=" + RTPBot.Now.Subtract(start).TotalMilliseconds);
                 Thread.Sleep(TimeSpan.FromSeconds(secs));
-                errOutput("COMPLETE Sleep" + secs + "Seconds " + thisTime + " \ntime=" + DateTime.Now.Subtract(start).TotalSeconds);
+                errOutput("COMPLETE Sleep" + secs + "Seconds " + thisTime + " \ntime=" + RTPBot.Now.Subtract(start).TotalSeconds);
                 Enqueue("ENQUE Sleep" + secs + "Seconds #" + thisTime, () => Sleep16Seconds(secs));
 
             }
             catch (ThreadAbortException e)
             {
-                errOutput("ThreadAbortException Sleep" + secs + "Seconds " + e + " " + thisTime + " \ntime=" + DateTime.Now.Subtract(start).TotalSeconds);
+                errOutput("ThreadAbortException Sleep" + secs + "Seconds " + e + " " + thisTime + " \ntime=" + RTPBot.Now.Subtract(start).TotalSeconds);
             }
             catch (ThreadInterruptedException e)
             {
-                errOutput("ThreadInterruptedException Sleep" + secs + "Seconds " + e + " " + thisTime + " \ntime=" + DateTime.Now.Subtract(start).TotalSeconds);
+                errOutput("ThreadInterruptedException Sleep" + secs + "Seconds " + e + " " + thisTime + " \ntime=" + RTPBot.Now.Subtract(start).TotalSeconds);
             }
             catch (Exception e)
             {
-                errOutput("Exception Sleep" + secs + "Seconds " + e + " " + thisTime + " \ntime=" + DateTime.Now.Subtract(start).TotalSeconds);
+                errOutput("Exception Sleep" + secs + "Seconds " + e + " " + thisTime + " \ntime=" + RTPBot.Now.Subtract(start).TotalSeconds);
                 throw;
             }
             finally
             {
-                errOutput("Finanaly Sleep" + secs + "Seconds #" + thisTime + " \ntime=" + DateTime.Now.Subtract(start).TotalSeconds);
+                errOutput("Finanaly Sleep" + secs + "Seconds #" + thisTime + " \ntime=" + RTPBot.Now.Subtract(start).TotalSeconds);
             }
         }
 

@@ -55,7 +55,7 @@ namespace RTParser.AIMLTagHandlers
         {
             if (CheckNode("person2"))
             {
-                if (!templateNodeInnerText.IsEmpty)
+                if (!IsNullOrEmpty(templateNodeInnerText))
                 {
                     // non atomic version of the node
                     return RTParser.Normalize.ApplySubstitutions.Substitute( this.Proc.Person2Substitutions, templateNodeInnerText);
@@ -71,7 +71,7 @@ namespace RTParser.AIMLTagHandlers
                         QueryHasFailed = true;
                         return UnifiableEmpty;
                     }
-                    if (!templateNodeInnerText.IsEmpty)
+                    if (!IsNullOrEmpty(templateNodeInnerText))
                     {
                         return this.ProcessAimlChange();
                     }

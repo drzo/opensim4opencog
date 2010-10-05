@@ -262,7 +262,7 @@ namespace RTParser.AIMLTagHandlers
                 {
                     string prefix =
                         query.prefix =
-                        string.Format("ProcessChangeSrai: {0}: \"{1}\"\n", request.Graph, templateNodeInnerValue);
+                        string.Format("ProcessChangeSrai: {0}: \"{1}\"\n", request.Graph, Unifiable.DescribeUnifiable(templateNodeInnerValue));
 
                     if (request.SraiDepth.IsOverMax)
                     {
@@ -371,18 +371,19 @@ namespace RTParser.AIMLTagHandlers
                                 return subResultOutput;
                             }
                         }
+                        string subResultOutputTrace = Unifiable.DescribeUnifiable(subResultOutput);
                         if (Unifiable.IsEMPTY(subResultOutput))
                         {
                             why = subRequest.WhyComplete ?? "ERROR";
                             writeToLog("{0} EMPTY?! RETURN {1}  {2} '{3}'", why + ": " + prefix, subRequestrawInput,
-                                       subResult.Score, subResultOutput);
+                                       subResult.Score, subResultOutputTrace);
                         }
                         {
                             string sss = thisresult.ToString();
                             if (showDebug)
                             {
                                 writeToLog("{0} SUCCESS RETURN {1}  {2} '{3}'", prefix, subRequestrawInput,
-                                           subResult.Score, subResultOutput);
+                                           subResult.Score, subResultOutputTrace);
                                 // ReSharper disable ConditionIsAlwaysTrueOrFalse
                                 if (query != null)
                                     // ReSharper restore ConditionIsAlwaysTrueOrFalse
@@ -408,7 +409,7 @@ namespace RTParser.AIMLTagHandlers
                                                  depth, subResult.NormalizedPaths);
                             mybot.writeChatTrace("\"PATH:{0}\" -> \"LN:{1}\" [label=\"{2}\"] ;\n", depth, depth,
                                                  AIMLLoader.TextAndSourceInfo(templateNode));
-                            mybot.writeChatTrace("\"LN:{0}\" -> \"RPY:{1}\" ;\n", depth, subResultOutput);
+                            mybot.writeChatTrace("\"LN:{0}\" -> \"RPY:{1}\" ;\n", depth, subResultOutputTrace);
                         }
                         salientRequest.ExitSalientSRAI(templateNodeInnerValue, subResultOutput);
                         return subResultOutput;
