@@ -1095,7 +1095,7 @@ namespace MushDLR223.Utilities
             return outer.Replace(remove, "");
         }
 
-        public static char[] isValueSetChars = "+ ".ToCharArray();
+        public static char[] isValueSetChars = " ".ToCharArray();
         public static string isValueSetStart = "+++";
         public static int isValueSetSkip = isValueSetStart.Length;
     }

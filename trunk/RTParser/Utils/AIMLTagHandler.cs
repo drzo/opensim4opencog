@@ -746,6 +746,10 @@ namespace RTParser.Utils
             {
                 return RecurseResult;
             }
+            if (InUnify)
+            {
+                return null;
+            }
             XmlNode sraiNode = getNode(String.Format("<srai>{0}</srai>", starContent), templateNode);
             LineInfoElement.unsetReadonly(sraiNode);
             srai sraiHandler = new srai(this.Proc, this.user, this.query, this.request, this.result, sraiNode);
@@ -788,7 +792,7 @@ namespace RTParser.Utils
                 {
                     if (saveResultsOnChildren && throwOnSave)
                     {
-                        throw new InvalidOperationException("save NULLL ResultsOnChildren! " + this);
+                        Proc.RaiseError(new InvalidOperationException("save NULLL ResultsOnChildren! " + this));
                     }
                     QueryHasFailedN++;
                     templateResult = UnifiableEmpty;
@@ -1075,7 +1079,11 @@ namespace RTParser.Utils
             OutputDelegate writeToLog = tagHandlerChild.writeToLog;
 
             AIMLTagHandler parent =  tagHandlerChild.Parent;
-            if (saveOnInnerXML && throwOnSave) throw new InvalidOperationException("saveOnInnerXML! " + tagHandlerChild);
+
+            if (saveOnInnerXML && throwOnSave)
+            {
+                throw tagHandlerChild.Proc.RaiseError(new InvalidOperationException("saveOnInnerXML! " + tagHandlerChild));
+            }
             try
             {
                 bool wasNonElement;
@@ -1118,6 +1126,14 @@ namespace RTParser.Utils
                     }
                     if (IsEMPTY(value))
                     {
+                        if (IsSilentTag(childNode) && success)
+                        {
+                            if (saveOnInnerXML)
+                            {
+                                if (parent != null) parent.SaveResultOnChild(childNode, "+++ ");
+                            }
+                            return value;
+                        }
                         value = tagHandlerChild.TryProcessingNodeAgain(parent, childNode, tagHandlerChild, Proc, copyChild, copyParent, ref suspendingLimits, ref value, writeToLogWarn, ref success);
                     }
                     if (vv2 != value)
@@ -1134,7 +1150,7 @@ namespace RTParser.Utils
                     if (saveOnInnerXML)
                     {
                         if (!success) return null;
-                        parent.SaveResultOnChild(childNode, value);
+                        if (parent != null) parent.SaveResultOnChild(childNode, value);
                     }
                     return value;
                 }
@@ -1164,13 +1180,22 @@ namespace RTParser.Utils
                 writeToLogWarn = tagHandlerChild.writeToLogWarn;
                 if (parent != null) parent.IsOverBudget = tagHandlerChild.IsOverBudget;
             }
+            if (tagHandlerChild.QueryHasFailed && success)
+            {
+                writeToLogWarn("ERROR QueryHasFailed + success?! AIMLTRACE " + value + " -> " + childNode.OuterXml + "!");
+            }
             // cant do much bette than the first call
             if (suspendingLimits)
             {
-                writeToLogWarn("ERROR NULL AIMLTRACE " + value + " -> " + childNode.OuterXml + "!");
+                writeToLogWarn("ERROR GIVINGUP ON AIMLTRACE " + value + " -> " + childNode.OuterXml + "!");
                 return value;
             }
             suspendingLimits = true;
+            var oldValue = value;
+            if (this != tagHandlerChild)
+            {
+                writeToLog("AIMLTRACE: TAG HANDLERCHILD NOT THIS " + childNode.OuterXml + "!");
+            }
             value = Proc.processNode(childNode, query,
                                      request, result, user,
                                      parent, copyChild, copyParent,
@@ -1621,7 +1646,7 @@ namespace RTParser.Utils
                 writeToLog(errmsg);
                 if (throwOnSave)
                 {
-                    throw new InvalidOperationException("save NULL ResultsOnChildren! " + this + " " + errmsg);
+                    throw Proc.RaiseError(new InvalidOperationException("save NULL ResultsOnChildren! " + this + " " + errmsg));
                 }
             }
             if (InUnify)

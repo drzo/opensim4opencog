@@ -634,8 +634,9 @@ namespace RTParser
 
         public override Unifiable Rest()
         {
-
+            if (String.IsNullOrEmpty(str)) return Unifiable.Empty;
             splittedCache = ToArray();
+            if (splittedCache.Length == 0) return "";
             if (restCache == null) 
              return Join(" ", splittedCache, 1, splittedCache.Length - 1);
             return restCache;
@@ -875,6 +876,11 @@ namespace RTParser
         protected int LengthMin
         {
             get { return ToArray().Length; }
+        }
+
+        public override object SpecialName
+        {
+            get { return AsString(); }
         }
 
         public override float Unify(Unifiable other, SubQuery query)
