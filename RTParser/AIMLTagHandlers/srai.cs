@@ -70,7 +70,7 @@ namespace RTParser.AIMLTagHandlers
                     Request subRequest = new AIMLbot.MasterRequest(this.templateNode.InnerText, this.user,
                                                                    (AIMLbot.Bot) this.Proc, null, null);
                     subRequest.StartedOn = this.request.StartedOn; // make sure we don't keep adding time to the request
-                    Result subQuery = this.Proc.Chat(subRequest);
+                    Result subQuery = this.Proc.ChatWithRequest(subRequest);
                     this.request.WhyComplete = subRequest.WhyComplete;
                     return subQuery.Output;
                 }
@@ -350,7 +350,7 @@ namespace RTParser.AIMLTagHandlers
                             {
                                 writeToLog(prefix + "MISSING RETURN " + whyComplete);
                             }
-                            subResult = mybot.ChatWithRequest44(subRequest, user, request.Responder, subRequest.Graph);
+                            subResult = (MasterResult) mybot.ChatFor1Result(subRequest, subResult);
                             subResultOutput = subResult.Output;
                             //subQueryRawOutput = subResult.RawOutput.Trim();
                             if (!IsNullOrEmpty(subResultOutput))
@@ -445,8 +445,8 @@ namespace RTParser.AIMLTagHandlers
                 //var newresult = new AIMLbot.Result(request.user, Proc, request);
                 //subRequest.result = newresult;
                 user.SuspendAddResultToUser = true;
-                if (request.IsTraced) subRequest.IsTraced = !showDebug;                            
-                subResult = mybot.ChatWithRequest4(subRequest, user, request.Responder, subRequest.Graph);
+                if (request.IsTraced) subRequest.IsTraced = !showDebug;
+                subResult = (MasterResult) mybot.ChatWithToplevelResults(subRequest,subResult);
                 subResultOutput = subResult.RawOutput;
                 int resultCount = subResult.OutputSentences.Count;
                 if (resultCount == 0)
@@ -455,7 +455,7 @@ namespace RTParser.AIMLTagHandlers
                     originalSalientRequest.ResetSRAIResults(sraiMark);
                     if (Unifiable.IsNullOrEmpty(subResultOutput))
                     {
-                        subResult = mybot.ChatWithRequest44(subRequest, user, request.Responder, subRequest.Graph);
+                        subResult = (MasterResult)mybot.ChatFor1Result(subRequest, subResult); 
                         subResultOutput = subResult.Output;
                         if (!IsNullOrEmpty(subResultOutput))
                         {

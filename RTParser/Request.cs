@@ -120,6 +120,8 @@ namespace RTParser
 
         bool RemoveSalientSRAI(Unifiable templateNodeInnerValue, string resultOutput);
         string ToRequestString();
+
+        void SetFromUserToUser(User BotAsUser1, User BotAsUser1_2);
     }
 
     /// <summary>
@@ -480,6 +482,51 @@ namespace RTParser
             if (parent != null)
             {
                 TargetSettings = parent.TargetSettings;
+            }
+        }
+
+
+        public void SetFromUserToUser(User user, User targetUser)
+        {
+            SetUser(user);
+            SetTargetUser(targetUser);
+        }
+
+        private void SetTargetUser(User targetUser)
+        {
+            Request parent = this.ParentRequest;
+            if (targetUser == null && parent != null) targetUser = parent.Responder;
+            if (targetUser == null)
+            {
+                if (Requester != null)
+                {
+                    if (Requester == TargetBot.BotAsUser) targetUser = TargetBot.LastUser;
+                    else targetUser = TargetBot.BotAsUser;
+                }
+            }
+            if (targetUser != null) Responder = targetUser;
+            _responderUser = targetUser;
+        }
+
+        private void SetUser(User user)
+        {
+            if (user != null)
+            {
+                Requester = user;
+                ApplySettings(user.GetQuerySettings(), this);
+                if (IsToplevelRequest)
+                {
+                    user.CurrentRequest = thisRequest;
+                }
+                else
+                {
+                    ReduceMinMaxesForSubRequest(user.GetQuerySettingsSRAI());
+                }
+                IsTraced = user.IsTraced;
+                writeToLog = user.WriteLine;
+                MaxInputs = user.MaxInputs;
+                TargetSettings = user.Predicates;
+                if (user.CurrentRequest == null) user.CurrentRequest = thisRequest;
             }
         }
 

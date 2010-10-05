@@ -155,14 +155,14 @@ namespace RTParser.Utils
             string resp = "ERROR";
             try
             {
-                var r = robot.GetRequest(input, userID);
+                var r = robot.MakeRequestToBot(input, userID);
                 r.IsTraced = traceIt;
                 if (traceIt)
                 {
                     RTPBot.Breakpoint("testing...");
                     r.DebugLevel = 9;
                 }
-                resp = Fudge(robot.Chat(r).Output);
+                resp = Fudge(robot.ChatWithRequest(r).Output);
                 outputdelegate("{0}: {1} ", robot, resp);
                 m = true;
                 int good = 0;

@@ -20,7 +20,7 @@ namespace RTParser
     /// <summary>
     /// Encapsulates information and history of a user who has interacted with the bot
     /// </summary>
-    abstract public class User : StaticAIMLUtils, IDisposable, ISettingsDictionary,IUser
+    abstract public class User : StaticAIMLUtils, IDisposable, ISettingsDictionary, IUser
     {
         public static bool ThatIsStoredBetweenUsers = true;
         public readonly object QueryLock = new object();
@@ -142,7 +142,7 @@ namespace RTParser
             get
             {
                 string qsbaseGraphName = qsbase.GraphName;
-                if (qsbaseGraphName!=null)
+                if (qsbaseGraphName != null)
                 {
                     return qsbaseGraphName;
                 }
@@ -311,7 +311,7 @@ namespace RTParser
                 var t = this.Predicates.grabSetting("topic");
                 if (Unifiable.IsNullOrEmpty(t))
                 {
-                    return bot.NOTOPIC; 
+                    return bot.NOTOPIC;
                 }
                 return t;
             }
@@ -391,7 +391,7 @@ namespace RTParser
         /// <param name="userID">The GUID of the user</param>
         /// <param name="bot">the bot the user is connected to</param>
         protected User(string userID, RTParser.RTPBot bot, ParentProvider provider)
-           // : base(bot)
+        // : base(bot)
         {
             WriteLine = WriteLine0;
             qsbase = new QuerySettingsImpl(bot.GetQuerySettings());
@@ -410,7 +410,7 @@ namespace RTParser
                 //this.Predicates.AddGetSetProperty("topic", new CollectionProperty(_topics, () => bot.NOTOPIC));
                 this.Predicates.addSetting("topic", bot.NOTOPIC);
                 //this.Predicates.InsertFallback(() => bot.DefaultPredicates);
-                UserID = userID; 
+                UserID = userID;
                 UserName = userID;
                 //this.Predicates.addSetting("topic", "NOTOPIC");
                 SaveTimer = new Timer(SaveOften, this, new TimeSpan(0, 5, 0), new TimeSpan(0, 5, 0));
@@ -438,7 +438,7 @@ namespace RTParser
         {
             //if (CurrentRequest != null)
             //{
-             //   return CurrentRequest;
+            //   return CurrentRequest;
             //}
             return qsbase;
         }
@@ -521,7 +521,7 @@ namespace RTParser
         /// <returns>the first sentence of the output "n" steps ago from the bot</returns>
         public Unifiable getThat(int n, User responder)
         {
-            return this.getThat(n, 0, responder);           
+            return this.getThat(n, 0, responder);
         }
 
         /// <summary>
@@ -538,7 +538,7 @@ namespace RTParser
                 if (historicResult == null) return "";
                 if ((sentence >= 0) & (sentence < historicResult.OutputSentenceCount))
                 {
-                    return (Unifiable) historicResult.GetOutputSentence(sentence);
+                    return (Unifiable)historicResult.GetOutputSentence(sentence);
                 }
             }
             return Unifiable.Empty;
@@ -582,7 +582,7 @@ namespace RTParser
                 Result historicInput = GetResult(n, false, responder);
                 if ((sentence >= 0) & (sentence < historicInput.InputSentences.Count))
                 {
-                    return (Unifiable) historicInput.InputSentences[sentence];
+                    return (Unifiable)historicInput.InputSentences[sentence];
                 }
             }
             return Unifiable.Empty;
@@ -644,7 +644,7 @@ namespace RTParser
                 Result historicResult = GetResult(n, false, responder);
                 if ((sentence >= 0) & (sentence < historicResult.InputSentences.Count))
                 {
-                    return (Unifiable) historicResult.InputSentences[sentence];
+                    return (Unifiable)historicResult.InputSentences[sentence];
                 }
             }
             return Unifiable.Empty;
@@ -706,7 +706,7 @@ namespace RTParser
                 if (r != null && IsSomething(r.NormalizedOutput, out something)) return something;
                 if (LastResponder != null && IsSomething(LastResponder.JustSaid, out something)) return something;
                 if (User.ThatIsStoredBetweenUsers)
-                {                  
+                {
                     return "Nothing";
                 }
                 var fr = CurrentRequest;
@@ -715,7 +715,7 @@ namespace RTParser
                 {
                     var frithat = fr.ithat;
                     if (IsSomething(frithat, out something)) return something;
-                    fr = (MasterRequest) fr.ParentRequest;
+                    fr = (MasterRequest)fr.ParentRequest;
                 }
                 if (IsSomething(getLastBotOutputForThat(), out something)) return something;
                 return "Nothing";
@@ -740,7 +740,7 @@ namespace RTParser
             string something;
             Result r = GetResult(0, true) ?? GetResult(0, false, LastResponder);
             if (r != null && IsSomething(r.NormalizedOutput, out something)) return something;
-            if (LastResponder != null && IsSomething(LastResponder.JustSaid, out something)) return something; 
+            if (LastResponder != null && IsSomething(LastResponder.JustSaid, out something)) return something;
             return "Nothing";
         }
 
@@ -777,7 +777,7 @@ namespace RTParser
                     bot.RaiseError(new InvalidOperationException("set_That: TAG: " + value + " for " + this));
                     return;
                 }
-                    
+
                 // the (_JustSaid != value) holds back the infinate looping
                 if (_JustSaid != value)
                 {
@@ -836,7 +836,7 @@ namespace RTParser
                         WithoutTrace(Predicates,
                                      () =>
                                      {
-                    string realName;
+                                         string realName;
                                          return SettingsDictionary.grabSettingDefaultDict(Predicates, name1,
                                                                              out realName);
                                      });
@@ -944,7 +944,7 @@ namespace RTParser
         }
 
         public Result GetResult(int i, bool mustBeSalient)
-        {            
+        {
             return GetResult(i, mustBeSalient, null);
         }
 
@@ -1322,16 +1322,51 @@ namespace RTParser
 
         #endregion
 
-        public AIMLbot.MasterRequest CreateRequest(string s, User target)
+        public GraphMaster GetResponseGraph(User target)
         {
-            DoPendingTodoList();
-            depth = 0;
-            var newRequest = new AIMLbot.MasterRequest(s, this, bot, null, target);
-            newRequest.IsToplevelRequest = true;
-            newRequest.OriginalSalientRequest = newRequest;
-            //newRequest.ParentRequest = CurrentRequest;
-            return newRequest;
+            if (target != null) return target.ListeningGraph;
+            return ListeningGraph;
         }
+        public AIMLbot.MasterRequest CreateRequest(string message, User target)
+        {
+            return CreateRequest(message, target, null, null);
+        }
+
+        public AIMLbot.MasterRequest CreateRequest(string message, User target, GraphMaster G, Request parentRequest)
+        {
+            if (G == null) G = GetResponseGraph(target);
+            bool asIsToplevelRequest = true;
+            depth = 0;
+            var request = new AIMLbot.MasterRequest(message, this, bot, parentRequest, target);
+            if (parentRequest != null)
+            {
+                asIsToplevelRequest = false;
+                request.OriginalSalientRequest = parentRequest.OriginalSalientRequest;
+                request.Graph = G ?? parentRequest.Graph;
+                request.ParentRequest = parentRequest;
+                request.IsTraced = false;
+            }
+            else
+            {
+                asIsToplevelRequest = true;
+                request.OriginalSalientRequest = request;
+            }
+           
+            if (asIsToplevelRequest)
+            {
+                request.depth = 0;
+                request.IsToplevelRequest = true;
+                if (CurrentRequest != null) CurrentRequest = request;
+                request.Responder = target;
+                request.TargetBot = this.bot;
+                request.writeToLog = writeDebugLine;
+                //request.TimesOutAt = DateTime.Now + TimeSpan.FromSeconds(10);
+                request.ResetValues(true);
+            }
+            DoPendingTodoList();
+            return request;
+        }
+
 
         public void StampResponseGiven()
         {

@@ -115,6 +115,7 @@ namespace RTParser
         User Responder { get; }
         SubQuery CurrentQuery { get; set; }
         int MaxCanEvalResult { get; set; }
+        bool IsComplete { get; set; }
     }
 
     /// <summary>
