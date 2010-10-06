@@ -2,9 +2,8 @@ using System.Xml;
 
 namespace RTParser.Utils
 {
-    public class MatchInfo : GraphLinkInfo
+    public abstract class MatchInfo : GraphLinkInfo
     {
-        public Unifiable FullPath;
 
         public MatchInfo(XmlNode pattern, Unifiable unifiable)
             : base(pattern)

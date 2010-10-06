@@ -314,7 +314,8 @@ namespace RTParser.Utils
                 {
                     writeToLog("TheTemplateOverwrite0: onlyNonSilent=" + onlyNonSilent + " " + LocationInfo(cateNode));
                     wouldBeRemoval = true;
-                    return DeleteTemplates(onlyNonSilent);
+                    DeleteTemplates(onlyNonSilent);
+                    return null;
                 }
                 // this is a removall specfier!
                 if (templateNode.ChildNodes.Count == 0)
@@ -328,7 +329,8 @@ namespace RTParser.Utils
                         //  writeToLog("TheTemplateOverwrite2: onlyNonSilent=" + onlyNonSilent + " " + templateNode.OuterXml);
                     }
                     wouldBeRemoval = true;
-                    return DeleteTemplates(onlyNonSilent);
+                    DeleteTemplates(onlyNonSilent);
+                    return null;
                 }
 
                 // does the metaprops special normal aiml way of "replace"
@@ -358,7 +360,7 @@ namespace RTParser.Utils
                 if (removeAllFirst)
                 {
                     wouldBeRemoval = true;
-                    DeleteTemplates(onlyNonSilent);
+                    DeleteTemplates(onlyNonSilent);                    
                 }
 
                 var t = addTerminal_0_Lock(templateNode, category, guard, thatInfo, master, patternInfo, additionalRules);
@@ -520,15 +522,16 @@ namespace RTParser.Utils
             return newTemplateInfo;
         }
 
-        private TemplateInfo DeleteTemplates(bool onlyNonSilent)
+        private void DeleteTemplates(bool onlyNonSilent)
         {
-            //lock (SyncObject)
+            if (TemplateInfos != null)
             {
-                if (TemplateInfos != null)
+                lock (SyncObject)
                 {
+                    List<TemplateInfo> newUList = new UList(TemplateInfos);
                     if (TemplateInfos.Count > 0)
                     {
-                        foreach (TemplateInfo list in new UList(TemplateInfos))
+                        foreach (TemplateInfo list in newUList)
                         {
                             if (onlyNonSilent && list.IsSilent) continue;
                             DisableTemplate(list);
@@ -537,13 +540,13 @@ namespace RTParser.Utils
                     TemplateInfos.Clear();
                     TemplateInfos = null;
                 }
-                return null;
             }
         }
 
+
         private void DisableTemplate(TemplateInfo info)
         {
-            // lock (SyncObject)
+            lock (SyncObject)
             {
                 if (TemplateInfos != null) TemplateInfos.Remove(info);
                 if (TemplateInfosDisabled == null) TemplateInfosDisabled = new UList();

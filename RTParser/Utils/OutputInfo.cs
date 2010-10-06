@@ -4,7 +4,7 @@ using System.Xml;
 namespace RTParser.Utils
 {
     [Serializable]
-    public class OutputInfo : GraphLinkInfo
+    public abstract class OutputInfo : GraphLinkInfo
     {
         public OutputInfo(XmlNode template) : base(template)
         {

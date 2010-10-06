@@ -121,7 +121,7 @@ namespace RTParser.Utils
                             request.LoadOptions = loadOpts;
                             request.Filename = f;
                             loadOpts = request.LoadOptions;
-                            total += loadAIMLFile0(f, loadOpts, false);
+                            total += loadAIMLFile(f, loadOpts, false);
                         }
                         finally
                         {
@@ -248,7 +248,12 @@ namespace RTParser.Utils
         public int loadAIMLURI(string path, LoaderOptions loadOpts)
         {
             int total = LoaderOper(() => loadAIMLURI0(path, loadOpts), loadOpts.CtxGraph);
+            TotalCheck(path, total, loadOpts);
             return total;
+        }
+
+        private void TotalCheck(string path, int total, LoaderOptions loadOpts)
+        {
         }
 
         public int loadAIMLURI0(string path0, LoaderOptions loadOpts)
@@ -276,6 +281,7 @@ namespace RTParser.Utils
                         //loadOpts = request.LoadOptions;
                         //RTPBot.loadConfigs(RProcessor, path, request);
                         total += loadAIMLDir0(path, loadOpts);
+                        TotalCheck(path, total, loadOpts);
                     }
                     finally
                     {
@@ -296,7 +302,7 @@ namespace RTParser.Utils
                         pop = RProcessor.PushSearchPath(hostSystemGetBaseDir);
                         request.LoadOptions = loadOpts;
                         //total += loadAIMLFile0(path, loadOpts, true);
-                        total += loadAIMLFile0(currentPath, loadOpts, true);
+                        total += loadAIMLFile(currentPath, loadOpts, true);
                     }
                     finally
                     {
@@ -312,6 +318,7 @@ namespace RTParser.Utils
                     if (uri.IsFile)
                     {
                         total += loadAIMLURI0(uri.AbsolutePath, loadOpts);
+                        TotalCheck(uri.AbsolutePath, total, loadOpts);
                         return total;
                     }
                     WebRequest req = WebRequest.Create(uri);
@@ -324,6 +331,7 @@ namespace RTParser.Utils
                         loadOpts.Loading0 = uri.ToString();
                         total += loadAIMLStream(stream, loadOpts);
                         writeToLog("Completed AIML URI: " + path);
+                        TotalCheck(uri.AbsolutePath, total, loadOpts);
                         return total;
                     }
                     finally
@@ -348,7 +356,7 @@ namespace RTParser.Utils
                                 try
                                 {
                                     request.LoadOptions = loadOpts;
-                                    total += loadAIMLFile0(pathname, loadOpts, false);
+                                    total += loadAIMLFile(pathname, loadOpts, false);
                                 }
                                 finally
                                 {
@@ -386,6 +394,12 @@ namespace RTParser.Utils
         /// graphmaster
         /// </summary>
         /// <param name="path">The name of the file to process</param>
+        public int loadAIMLFile(string path, LoaderOptions loadOpts, bool forceReload)
+        {
+            int total = loadAIMLFile0(path, loadOpts, forceReload);
+            TotalCheck(path, total, loadOpts);
+            return total;
+        }
         public int loadAIMLFile0(string path, LoaderOptions loadOpts, bool forceReload)
         {
             int total = 0;
@@ -402,6 +416,7 @@ namespace RTParser.Utils
                 if (loadOpts.recurse)
                 {
                     total += loadAIMLURI0(path, loadOpts);
+                    TotalCheck(path, total, loadOpts);
                 }
                 return total;
             }
@@ -430,6 +445,7 @@ namespace RTParser.Utils
                         request.Filename = path;
                         loadOpts = request.LoadOptions;
                         total += this.loadAIMLStream(tr, loadOpts);
+                        TotalCheck(pfile, total, loadOpts);
                     }
                     finally
                     {
@@ -661,7 +677,9 @@ namespace RTParser.Utils
                 ThreadStart ts = EnterTag(request, currentNode, query);
                 try
                 {
-                    total += doit();
+                    int done = doit();
+                    total += done;
+                    TotalCheck(currentNode.OuterXml, total, null);
                 }
                 finally
                 {
@@ -682,9 +700,11 @@ namespace RTParser.Utils
             int total = 0;
             if (nodes != null)
             {
-                foreach (object node in nodes)
+                foreach (object o in nodes)
                 {
-                    total += loadAIMLNode((XmlNode) node, loadOpts, request);
+                    XmlNode node = o as XmlNode;
+                    total += loadAIMLNode((XmlNode)node, loadOpts, request);
+                    TotalCheck(TextAndSourceInfo(node), total, loadOpts);
                 }
             }
             return total;
@@ -693,8 +713,10 @@ namespace RTParser.Utils
         public int loadAIMLNode(XmlNode currentNode, LoaderOptions loadOpts, Request request)
         {
             var additionalRules = loadOpts.AdditionalPreconditions;
-            return LoaderOper(() => loadAIMLNode0(currentNode, loadOpts, request, additionalRules),
+            int total = LoaderOper(() => loadAIMLNode0(currentNode, loadOpts, request, additionalRules),
                               loadOpts.CtxGraph);
+            TotalCheck(TextAndSourceInfo(currentNode), total, loadOpts);
+            return total;
         }
 
         public int loadAIMLNode0(XmlNode currentNode, LoaderOptions loadOpts, Request request,
@@ -1100,6 +1122,7 @@ namespace RTParser.Utils
             PatternInfo patternInfo = PatternInfo.GetPattern(loaderOpts, patternNode, categoryPath);
             TopicInfo topicInfo = TopicInfo.FindTopic(loaderOpts, topicName);
             ThatInfo thatInfo = ThatInfo.GetPattern(loaderOpts, that);
+            //ResponseInfo outputInfo = ResponseInfo.GetResponse(loaderOpts, patternNode, categoryPath);
 
             // o.k., add the processed AIML to the GraphMaster structure
             if (!IsNullOrEmpty(categoryPath))

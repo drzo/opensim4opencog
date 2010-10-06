@@ -4,10 +4,11 @@ using MushDLR223.Utilities;
 
 namespace RTParser.Utils
 {
-    public class GraphLinkInfo
+    public abstract class GraphLinkInfo
     {
         public static bool NoInfo;
         internal XmlNode srcNode;
+        public Unifiable FullPath { get; set; }
 
         protected GraphLinkInfo(XmlNode template)
         {

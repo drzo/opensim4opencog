@@ -67,8 +67,7 @@ namespace RTParser.Utils
         /// <summary>
         /// All the &lt;templates&gt;s (if any) associated with this database
         /// </summary>
-        internal List<TemplateInfo> Templates;
-
+        internal readonly Dictionary<string, ResponseInfo> Templates_NOMORE = new Dictionary<string, ResponseInfo>();
 
         /// <summary>
         /// All the &lt;that&gt;s (if any) associated with this database
@@ -139,7 +138,7 @@ namespace RTParser.Utils
             SilentTagsInPutParallel = DefaultSilentTagsInPutParallel;
             SilentTagsInPutParallel = false;
             CategoryInfos = TrackTemplates ? new List<CategoryInfo>() : null;
-            Templates = TrackTemplates ? new List<TemplateInfo>() : null;
+            //Templates = TrackTemplates ? new List<TemplateInfo>() : null;
             graphName = gn;
             //theBot = bot;
             // most graphs try to recuse on themselves until otehrwise stated (like in make-parallel)
@@ -149,7 +148,7 @@ namespace RTParser.Utils
             if (!TrackTemplates)
             {
                 UnusedTemplates = null;
-                Templates = null;
+                //Templates = null;
                 CategoryInfos = null;
             }
             //UnusedTemplates = new List<TemplateInfo>();
@@ -288,6 +287,41 @@ namespace RTParser.Utils
             return pi;
         }
 
+        public ResponseInfo FindResponse(XmlNode pattern, Unifiable unifiable)
+        {
+            if (NoIndexing) return null;
+            string pats = MakeMatchKey(unifiable);
+            int skip = pats.IndexOf("TAG-THAT");
+            if (skip > 0) pats = pats.Substring(0, skip - 1);
+            else
+            {
+                skip = pats.IndexOf("TAG-FLAG");
+                if (skip > 0) pats = pats.Substring(0, skip - 1);
+            }
+            ResponseInfo pi;
+            if (Templates_NOMORE == null)
+            {
+                pi = new ResponseInfo(StaticXMLUtils.ToLineInfoElement(pattern), pats);
+                return pi;
+            }
+            lock (LockerObject)
+            {
+                lock (Templates_NOMORE)
+                {
+                    if (!Templates_NOMORE.TryGetValue(pats, out pi))
+                    {
+                        Templates_NOMORE[pats] = pi = new ResponseInfo(StaticXMLUtils.ToLineInfoElement(pattern), pats);
+                    }
+                    else
+                    {
+                        CheckMismatch(pi, pats);
+                        return pi;
+                    }
+                }
+            }
+            return pi;
+        }
+
         public ThatInfo FindThat(Unifiable topicName)
         {
             if (NoIndexing) return null;
@@ -321,7 +355,7 @@ namespace RTParser.Utils
             return v;
         }
 
-        private void CheckMismatch(MatchInfo info, string pats)
+        private void CheckMismatch(GraphLinkInfo info, string pats)
         {
             if (info.FullPath.AsNodeXML().ToString().ToUpper() != pats.ToUpper())
             {
@@ -915,8 +949,7 @@ namespace RTParser.Utils
         {
             lock (LockerObject)
             {
-                if (Templates != null) lock (Templates)
-                        Templates.Add(templateInfo);
+                //if (Templates != null) lock (Templates) Templates.Add(templateInfo);
                 if (CategoryInfos != null) lock (CategoryInfos)
                         CategoryInfos.Add(templateInfo.CategoryInfo);
                 if (UnusedTemplates != null) UnusedTemplates.Remove(templateInfo);
@@ -942,8 +975,7 @@ namespace RTParser.Utils
             {
                 templateInfo.IsTraced = true;
                 templateInfo.CategoryInfo.IsDisabled = true;
-                if (Templates != null) lock (Templates)
-                        Templates.Remove(templateInfo);
+                //if (Templates != null) lock (Templates) Templates.Remove(templateInfo);
                 if (CategoryInfos != null) lock (CategoryInfos)
                         CategoryInfos.Remove(templateInfo.CategoryInfo);
                 if (UnusedTemplates != null) UnusedTemplates.Add(templateInfo);
@@ -957,7 +989,7 @@ namespace RTParser.Utils
             {
                 templateInfo.IsTraced = true;
                 templateInfo.CategoryInfo.IsDisabled = true;
-                if (Templates != null) lock (Templates) Templates.Remove(templateInfo);
+                //if (Templates != null) lock (Templates) Templates.Remove(templateInfo);
                 if (CategoryInfos != null) lock (CategoryInfos)
                         CategoryInfos.Remove(templateInfo.CategoryInfo);
                 if (UnusedTemplates != null) UnusedTemplates.Add(templateInfo);
@@ -1087,8 +1119,8 @@ namespace RTParser.Utils
                 fs(" <sraiGraph name=\"{0}\" />", srai);
             if (printOptions.WriteStatistics)
             {
-                fs(" <!-- templates={0} thats={1} patterns={2} topics={3} nodes1={4} nodes2={5}  -->",
-                   CountOF(Templates), CountOF(Thats), CountOF(Patterns), CountOF(Topics), RootNode.ChildCount,
+                fs(" <!-- categories={0} disabled={1} thats={2} patterns={3} topics={4} preparent={5} postparent={6}  -->",
+                   CountOF(CategoryInfos), CountOF(UnusedTemplates), CountOF(Thats), CountOF(Patterns), CountOF(Topics), RootNode.ChildCount,
                    PostParallelRootNode.ChildCount);
             }
         }
@@ -1104,7 +1136,7 @@ namespace RTParser.Utils
             lock (LockerObject)
             {
                 if (UnusedTemplates == null) return;
-                lock (Templates)
+                lock (UnusedTemplates)
                 {
                     //  Templates.Remove(redundant);
                     UnusedTemplates.Add(info);
