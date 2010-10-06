@@ -12,6 +12,7 @@ namespace RTParser.Utils
         public CategoryInfo CategoryInfo;
         public Node GraphmasterNode;
         public GuardInfo Guard;
+        public ResponseInfo Response;
         public SubQuery Query;
         public double Rating = 1.0;
         public Unifiable TextSaved;
