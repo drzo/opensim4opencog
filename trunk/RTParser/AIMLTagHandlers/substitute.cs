@@ -99,6 +99,7 @@ namespace RTParser.Utils
 {
     abstract public class AIMLDictSubstFormatingTagHandler : AIMLFormatingTagHandler
     {
+        protected override bool ExpandingSearchWillYieldNoExtras { get { return true; } }
         protected ParentProvider Provider;
         public AIMLDictSubstFormatingTagHandler(RTParser.RTPBot bot,
                                                 RTParser.User user,

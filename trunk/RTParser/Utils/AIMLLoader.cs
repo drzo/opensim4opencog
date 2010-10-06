@@ -13,6 +13,7 @@ using RTParser.AIMLTagHandlers;
 using RTParser.Normalize;
 using UPath = RTParser.Unifiable;
 using LineInfoElement = MushDLR223.Utilities.LineInfoElementImpl;
+//using CategoryInfo = RTParser.Utils.TemplateInfo;
 
 namespace RTParser.Utils
 {
@@ -40,6 +41,8 @@ namespace RTParser.Utils
                                                                      "pandorabots",
                                                                      "com",
                                                                      "dr wallice",
+                                                                     "wallice",
+                                                                     "aiml",
                                                                      "alicebots.com",
                                                                      "alice",
                                                                      "england",
@@ -1066,26 +1069,11 @@ namespace RTParser.Utils
             }
             else
             {
-                string tempStringS = templateNode.OuterXml.ToLower()
-                    .Replace("<", " ").Replace(">", " ").Replace(".", " ").
-                    Replace("\"", " ").Replace("'", " ").Replace(",", " ");
-                lock (FilteredWords)
-                {
-                    foreach (string word in FilteredWords)
-                    {
-                        if (tempStringS.Contains(" " + word + " "))
-                        {
-                            var skip = templateNode.ParentNode ?? templateNode;
-                            string skiping = "skipping: " + skip.OuterXml;
-                            //writeDebugLine("DEBUG9: PROPRIETARY " + skiping);
-                            return null;
-                        }
-                    }
-                }
+                if (UnusableCategory(templateNode)) return null;
             }
             if (ReferenceEquals(null, patternNode))
             {
-                errors += " Missing pattern tag ";
+                errors += " Missing pattern tag2 ";
             }
 
             XmlNode newPattern;
@@ -1122,7 +1110,7 @@ namespace RTParser.Utils
             PatternInfo patternInfo = PatternInfo.GetPattern(loaderOpts, patternNode, categoryPath);
             TopicInfo topicInfo = TopicInfo.FindTopic(loaderOpts, topicName);
             ThatInfo thatInfo = ThatInfo.GetPattern(loaderOpts, that);
-            //ResponseInfo outputInfo = ResponseInfo.GetResponse(loaderOpts, patternNode, categoryPath);
+            ResponseInfo responseInfo = ResponseInfo.GetResponse(loaderOpts, templateNode, templateNode.OuterXml);
 
             // o.k., add the processed AIML to the GraphMaster structure
             if (!IsNullOrEmpty(categoryPath))
@@ -1132,7 +1120,8 @@ namespace RTParser.Utils
                 {
                     try
                     {
-                        CategoryInfo categoryInfo = CategoryInfo.GetCategoryInfo(patternInfo, cateNode, loaderOpts);
+                        CategoryInfo categoryInfo = TemplateInfo.GetCategoryInfo(patternInfo, cateNode, loaderOpts,
+                                                                                 responseInfo, guard, null, null);
                         categoryInfo.SetCategoryTag(categoryPath, patternInfo, categoryInfo,
                                                     outerNode, templateNode, guard, thatInfo);
 
@@ -1166,6 +1155,28 @@ namespace RTParser.Utils
                     " produced by a category in the file: " + loaderOpts, cateNode);
                 return null;
             }
+        }
+
+        private bool UnusableCategory(XmlNode templateNode)
+        {
+            string tempStringS = templateNode.OuterXml.ToLower()
+                .Replace("l>", " ")
+                .Replace("<", " ").Replace(">", " ").Replace(".", " ").
+                Replace("\"", " ").Replace("'", " ").Replace(",", " ");
+            lock (FilteredWords)
+            {
+                foreach (string word in FilteredWords)
+                {
+                    if (tempStringS.Contains(" " + word + " "))
+                    {
+                        var skip = templateNode.ParentNode ?? templateNode;
+                        string skiping = "skipping: " + skip.OuterXml;
+                        //writeDebugLine("DEBUG9: PROPRIETARY " + skiping);
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
         private XmlNode GetPatternNode(String tagName, XmlNode cateNode, XmlNode patternNode, ref XmlNode foundNode)
@@ -1384,10 +1395,11 @@ namespace RTParser.Utils
             {
                 
             }
+
             Unifiable res = Unifiable.MakePath(generateCPath(pattern, that, flag, topicName, isUserInput, innerFormater));
+            string ress = (string)res;
             if (isUserInput)
             {
-                string ress = (string) res;
                 if (ress.Contains("*"))
                 {
                     string problem = "generatePath failed: " + ress;
@@ -1398,6 +1410,47 @@ namespace RTParser.Utils
             return res;
         }
 
+        private string LastRepair(string normalizedPattern, bool isUserInput, bool UseRawUserInput)
+        {
+            bool hasStars = normalizedPattern.Contains("*") || normalizedPattern.Contains("_");
+            if (!hasStars) return normalizedPattern;
+            bool hasBrackets = normalizedPattern.Contains("<") || normalizedPattern.Contains(">");
+            if (hasBrackets)
+            {
+                normalizedPattern = normalizedPattern.Replace("> ", ">");
+                normalizedPattern = normalizedPattern.Replace(" <", "<");
+            }
+            normalizedPattern = normalizedPattern.Replace("  ", " ");
+            normalizedPattern = normalizedPattern.Trim();
+            var normalizedPattern1 = normalizedPattern;
+            normalizedPattern = normalizedPattern.Replace("**", " * * ");
+            normalizedPattern = normalizedPattern.Replace("*_", " * _ ");
+            normalizedPattern = normalizedPattern.Replace("_*", " _ * ");
+            if (!UseRawUserInput || hasBrackets)
+            {
+                normalizedPattern = normalizedPattern.Replace("*", " * ");
+                normalizedPattern = normalizedPattern.Replace("_", " _ ");
+                {
+                    normalizedPattern = normalizedPattern.Replace("> ", ">");
+                    normalizedPattern = normalizedPattern.Replace(" <", "<");
+                }
+            }
+            normalizedPattern = normalizedPattern.Replace("  ", " ");
+            normalizedPattern = normalizedPattern.Trim();
+            if (isUserInput)
+            {
+                if (normalizedPattern.Contains("*") || normalizedPattern.Contains("_"))
+                {
+                    return normalizedPattern;
+                }
+            }
+            if (normalizedPattern != normalizedPattern1)
+            {
+                writeDebugLine("LastRepair '{0}' -> '{1}' ", normalizedPattern1, normalizedPattern);
+                return normalizedPattern;
+            }
+            return normalizedPattern;
+        }
         /// <summary>
         /// Generates a path from the passed arguments
         /// </summary>
@@ -1519,6 +1572,10 @@ namespace RTParser.Utils
                         normalizedThat = CleanPunct(that);
                     }
                 }
+
+                normalizedPattern = LastRepair(normalizedPattern, isUserInput, UseRawUserInput);
+                normalizedThat = LastRepair(normalizedThat, isUserInput, UseRawUserInput);
+                normalizedTopic = LastRepair(normalizedTopic, isUserInput, UseRawUserInput);
 
                 // o.k. build the path
                 normalizedPath.Append(Unifiable.InputTag);

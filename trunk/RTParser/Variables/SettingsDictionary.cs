@@ -1033,7 +1033,7 @@ namespace RTParser.Variables
         /// <param name="value">The value associated with this setting</param>
         public bool addSetting(string name, Unifiable value)
         {
-            value = TransformValue(value);
+            value = TransformValueIn(value);
             foreach (var setname in GetSettingsAliases(name))
             {
                 addSetting0(setname, value);
@@ -1119,18 +1119,45 @@ namespace RTParser.Variables
                     l.updateSetting(name, value);
             }
         }
-
-        public Unifiable TransformValue(Unifiable value)
+        public Unifiable TransformValueIn(Unifiable value)
         {
             string s = TransformValue0(value);
             if (s == null) return Unifiable.NULL;
             if (s == "") return Unifiable.Empty;
-            if (s == "OM") return Unifiable.MISSING;
+            if (s == "OM")
+            {
+                return Unifiable.MISSING;
+            }
+            return s;
+        }
+        public Unifiable TransformValueOut(Unifiable value)
+        {
+            string s = TransformValue0(value);
+            if (s == null) return Unifiable.NULL;
+            if (s == "OM")
+            {
+                return Unifiable.MISSING;
+            }
+            if (s == "")
+            {
+                return "";// Unifiable.Empty;
+            }
+            if (s == Unifiable.Empty)
+            {
+                return "";// 
+            }
+
             return s;
         }
 
         public string TransformValue0(Unifiable value)
         {
+            if (Unifiable.IsNull(value))
+            {
+                // writeToLog("ERROR " + value + " NULL");
+                return null;
+                //return Unifiable.NULL;
+            }
             if (IsMissing(value))
             {
                 //   writeToLog("ERROR " + value + " NULL");
@@ -1142,30 +1169,12 @@ namespace RTParser.Variables
                 return "";
                 //return Unifiable.NULL;
             }
-            if (Unifiable.IsNull(value))
-            {
-                // writeToLog("ERROR " + value + " NULL");
-                return null;
-                //return Unifiable.NULL;
-            }
-            if (value == Unifiable.NULL)
-            {
-                // writeToLog("ERROR " + value + " NULL");
-                return null;
-                //return Unifiable.NULL;
-            }
-            if (Unifiable.IsEMPTY(value))
-            {
-                // writeToLog("ERROR " + value + " NULL");
-                return "";
-                //return Unifiable.NULL;
-            }
             var v = StaticXMLUtils.ValueText(value);
-            if (v.Contains("<") || v.Contains("&"))
+            if (false)if (v.Contains("<") || v.Contains("&"))
             {
                 writeToLog("!@ERROR BAD INPUT? " + value);
-            }            
-            if (v.Contains("???"))
+            }
+            if (false) if (v.Contains("???"))
             {
                 writeToLog("!?????@ERROR BAD INPUT? " + value);
             }
@@ -1177,7 +1186,7 @@ namespace RTParser.Variables
             lock (orderedKeys)
             {
                 name = TransformName(name);
-                value = TransformValue(value);
+                value = TransformValueIn(value);
                 string normalizedName = TransformKey(name);
                 if (normalizedName.Length > 0)
                 {
@@ -1268,7 +1277,7 @@ namespace RTParser.Variables
         public bool updateSetting(string name, Unifiable value)
         {
             if (SuspendUpdates) return true;
-            value = TransformValue(value);
+            value = TransformValueIn(value);
             foreach (var setname in GetSettingsAliases(name))
             {
                 updateSetting0(setname, value);
@@ -1339,7 +1348,7 @@ namespace RTParser.Variables
 
         public string str(Unifiable value)
         {
-            value = TransformValue(value);
+            value = TransformValueOut(value);
             return "'" + Unifiable.DescribeUnifiable(value) + "'";
         }
 
@@ -1399,7 +1408,7 @@ namespace RTParser.Variables
             {
                 name = TransformName(name);
                 var setting = grabSetting0(name);
-                setting = TransformValue(setting);
+                setting = TransformValueOut(setting);
                 return setting;
             }
             catch (Exception e)
@@ -1571,7 +1580,7 @@ namespace RTParser.Variables
             if (this.settingsHash.ContainsKey(normalizedName))
             {
                 Unifiable v = this.settingsHash[normalizedName];
-                v = TransformValue(v);
+                v = TransformValueOut(v);
                 if (makedvars.Contains(normalizedName))
                 {
                     SettingsLog("MASKED RETURNLOCAL '" + name + "=NULL instead of" + str(v));

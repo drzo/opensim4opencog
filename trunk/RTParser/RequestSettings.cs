@@ -36,6 +36,12 @@ namespace RTParser
             if (ReferenceEquals(null, p0)) return "-NULL-";
             return "" + p0;
         }
+
+        public void SetConstraintsFrom(SettingMinMaxCurrent<T> sraiDepth)
+        {
+            Max = sraiDepth.Max;
+            Min = sraiDepth.Min;
+        }
     }
 
     sealed public class QuerySettingsImpl : QuerySettings
@@ -114,7 +120,7 @@ namespace RTParser
             UseLuceneForGetMaxDepth = false,
             UseLuceneForGetMaxDepth = false,
             ****/
-            SraiDepth = new SettingMinMaxCurrent<int>()
+            _sraiDepth = new SettingMinMaxCurrent<int>()
             {
                 Current = 0,
                 Min = 0,
@@ -140,7 +146,7 @@ namespace RTParser
             UseLuceneForSetMaxDepth = 2,
             GraphName = "default",
             IsTraced = false,
-            SraiDepth = new SettingMinMaxCurrent<int>()
+            _sraiDepth = new SettingMinMaxCurrent<int>()
             {
                 Current = 0,
                 Min = 0,
@@ -158,11 +164,11 @@ namespace RTParser
             MaxPatterns = 12,
             MinTemplates = 8,
             MaxTemplates = UNLIMITED,
-            SraiDepth = new SettingMinMaxCurrent<int>()
+            _sraiDepth = new SettingMinMaxCurrent<int>()
                             {
-                                Current = 0,
+
                                 Min = 0,
-                                Max = UNLIMITED,
+                                Max = RTPBot.SraiDepthMax
                             },
 
         };
@@ -178,6 +184,8 @@ namespace RTParser
             MinOutputs = UNLIMITED,
             MinPatterns = UNLIMITED,
         };
+
+        private SettingMinMaxCurrent<int> _sraiDepth = new SettingMinMaxCurrent<int>();
 
         protected QuerySettings(QuerySettingsReadOnly defaults):base()
         {
@@ -197,7 +205,7 @@ namespace RTParser
             w.MinOutputs = r.MinOutputs;
             w.ProcessMultipleTemplates = r.ProcessMultipleTemplates;
             w.ProcessMultiplePatterns = r.ProcessMultiplePatterns;
-            w.SraiDepth = r.SraiDepth;
+            w.SraiDepth.SetConstraintsFrom(r.SraiDepth);
             var rs = r as QuerySettingsImpl;
             if (rs != null)
             {
@@ -275,7 +283,10 @@ namespace RTParser
         /// The number srai's one can decend generation stage
         /// the "Min" is what is starts out with (defualt 0)
         /// </summary>
-        public virtual SettingMinMaxCurrent<int> SraiDepth { get; set; }
+        public SettingMinMaxCurrent<int> SraiDepth
+        {
+            get { return _sraiDepth; }
+        }
 
         //public virtual SettingMinMaxCurrent<bool> CanSrai { get; set; }
 
@@ -326,7 +337,7 @@ namespace RTParser
         int MinPatterns { get; }
         int MaxPatterns { get; }
 
-        SettingMinMaxCurrent<int> SraiDepth { get; set; }
+        SettingMinMaxCurrent<int> SraiDepth { get; }
 
         int DebugLevel { get; }
 

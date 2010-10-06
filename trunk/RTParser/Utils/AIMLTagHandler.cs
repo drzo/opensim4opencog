@@ -39,9 +39,9 @@ namespace RTParser.Utils
         public bool IsDisposing;
         internal static bool throwOnSave = true;
         public bool SuspendLimits;
-
+        protected virtual bool ExpandingSearchWillYieldNoExtras { get { return false; } }
+        public bool IsDeterministic = true;
         public AIMLTagHandler Parent;
-
         /// <summary>
         /// The query that produced this node containing the wildcard matches
         /// </summary>
@@ -183,8 +183,9 @@ namespace RTParser.Utils
                 if (innerResult.IsValid)
                 {
                     s2 = innerResult.Value;
+                    return s2;
                 }
-                else if (finalResult.IsValid) return finalResult.Value;
+                //else if (finalResult.IsValid) return finalResult.Value;
                 // either the fully evaluated innerXML non-failing result or else the failing innerXML
                 string innerXML = s2 ?? InnerXmlText(templateNode);
                 innerXML = ValueText(innerXML);
@@ -205,6 +206,8 @@ namespace RTParser.Utils
                 string valueAsString = value.AsString();
 
                 bool isOuter = valueAsString.StartsWith(isValueSetStart);
+                var stringVal = ValueText(value);
+                innerResult.Value = stringVal;
                 if (isOuter)
                 {
                     RecurseResult = ValueText(valueAsString);
@@ -213,7 +216,6 @@ namespace RTParser.Utils
                 }
                 else
                 {
-                    innerResult.Value = value;
                     return;
                 }
 
@@ -278,7 +280,7 @@ namespace RTParser.Utils
         {
             get
             {
-                QueryHasFailed = true;
+                //QueryHasFailed = true;
                 return null;
             }
         }
@@ -457,9 +459,6 @@ namespace RTParser.Utils
             ThreadStart OnExit = EnterTag(request, templateNode, query);
             try
             {
-                if (DLRConsole.IsTooDeep())
-                {
-                }
                 if (RecurseResultValid) return RecurseResult;
                 IsStarted = true;
                 string recurseResult = ProcessChange();
@@ -469,6 +468,9 @@ namespace RTParser.Utils
                     RecurseResult = recurseResult;
                     return recurseResult;
                 }
+                
+                if (!RTPBot.BE_COMPLETE_NOT_FAST) return recurseResult0;
+
                 var recurseResult1 = RecurseProcess();
                 if (CompleteEvaluatution(recurseResult1, this, out recurseResult))
                 {
@@ -577,6 +579,7 @@ namespace RTParser.Utils
         {
             if (finalResult.IsValid) return finalResult.Value;
             if (RecurseResultValid) return RecurseResult;
+
             ThreadStart OnExit = EnterTag(request, templateNode, query);
             try
             {
@@ -740,6 +743,8 @@ namespace RTParser.Utils
 
         public Unifiable GetStarContent()
         {
+            // becasue we are gettign "star" content we must not be deterministic
+            // ?? IsDeterministic = false;
             XmlNode starNode = getNode("<star />", templateNode);
             LineInfoElement.unsetReadonly(starNode);
             star recursiveStar = new star(this.Proc, this.user, this.query, this.request, this.result, starNode);
@@ -761,9 +766,11 @@ namespace RTParser.Utils
             {
                 return null;
             }
+            if (!request.CanProcess(starContent)) return null;
             XmlNode sraiNode = getNode(String.Format("<srai>{0}</srai>", starContent), templateNode);
             LineInfoElement.unsetReadonly(sraiNode);
             srai sraiHandler = new srai(this.Proc, this.user, this.query, this.request, this.result, sraiNode);
+            sraiHandler.KnowsCanProcess = true;
             var vv = sraiHandler.CompleteAimlProcess();// Transform();
             if (Unifiable.IsNull(vv))
             {
@@ -994,6 +1001,10 @@ namespace RTParser.Utils
             {
                 vv = ProcessTagHandlerNode(childNode, protectChildren, saveOnInnerXML, out success,
                                         tagHandlerChild);
+                if (!tagHandlerChild.IsDeterministic && IsDeterministic)
+                {
+                    IsDeterministic = false;
+                }
             }
             finally
             {
@@ -1127,8 +1138,14 @@ namespace RTParser.Utils
                                                     parent, copyChild, copyParent,
                                                     tagHandlerChild, suspendingLimits);
                     var vv2 = value;
+                    success = !IsIncomplete(value);
                     if (tagHandlerChild.QueryHasFailed) success = false;
                     if (tagHandlerChild.QueryHasSuceeded) success = true;
+
+                    if (!RTPBot.BE_COMPLETE_NOT_FAST)
+                    {
+                        return value;
+                    }
 
                     success = true;                   
                     if (IsNull(value))
@@ -1196,7 +1213,7 @@ namespace RTParser.Utils
                 writeToLogWarn("ERROR QueryHasFailed + success?! AIMLTRACE " + value + " -> " + childNode.OuterXml + "!");
             }
             // cant do much bette than the first call
-            if (suspendingLimits)
+            if (suspendingLimits || tagHandlerChild.ExpandingSearchWillYieldNoExtras || InUnify || !IsDeterministic)
             {
                 writeToLog("ERROR GIVINGUP ON AIMLTRACE " + value + " -> " + childNode.OuterXml + "!");
                 return value;
@@ -1216,6 +1233,11 @@ namespace RTParser.Utils
             {
                 writeToLog("AIMLTRACE: TAG HANDLERCHILD NOT THIS " + childNode.OuterXml + "!");
             }
+            if (sraiDepth > 3)
+            {
+                success = false;
+                return value;
+            }
             value = Proc.processNode(childNode, query,
                                      request, result, user,
                                      parent, copyChild, copyParent,
@@ -1227,6 +1249,7 @@ namespace RTParser.Utils
                 if (tagHandlerChild.QueryHasFailed) success = false;
                 if (tagHandlerChild.QueryHasSuceeded) success = true;
                 writeToLogWarn("RECOVERED AIMLTRACE " + value + " -> " + childNode.OuterXml + "!");
+                return value;
             }
             return value;
         }
@@ -1314,6 +1337,10 @@ namespace RTParser.Utils
                     }
                     else
                     {
+                        if (!tagHandlerChild.IsDeterministic && IsDeterministic)
+                        {
+                            IsDeterministic = false;
+                        }
                         if (saveOnChildren) writeToLogWarn("!success and writeToChild!");
                         QueryHasFailedN++;
                         return null;

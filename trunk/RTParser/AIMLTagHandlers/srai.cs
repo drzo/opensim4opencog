@@ -40,6 +40,7 @@ namespace RTParser.AIMLTagHandlers
             : base(bot, user, query, request, result, templateNode)
         {
             mybot = bot;
+            IsDeterministic = false;
         }
 
         public override void writeToLog(string unifiable, params object[] objs)
@@ -59,6 +60,7 @@ namespace RTParser.AIMLTagHandlers
         }
 
         public static bool UseOriginalProcess = false;
+        public bool KnowsCanProcess;
 
         // unsuesd/... just code refernce
         protected string OriginalProcessChange()
@@ -184,7 +186,14 @@ namespace RTParser.AIMLTagHandlers
                 try
                 {
                     var templateNodeInnerValue = Recurse();
-                    if (IsNull(templateNodeInnerValue))
+                    if (!KnowsCanProcess)
+                    {
+                        KnowsCanProcess = true;
+                        string toUpper = MakeMatchable(templateNodeInnerValue);
+                        var rp = request.ParentRequest;
+                        if (rp != null && !rp.CanProcess(toUpper)) return null;
+                    }
+                    if (false &&  IsNull(templateNodeInnerValue))
                     {
                         templateNodeInnerValue = Recurse();
                     }
@@ -449,7 +458,7 @@ namespace RTParser.AIMLTagHandlers
                 subResult = (MasterResult) mybot.ChatWithToplevelResults(subRequest,subResult);
                 subResultOutput = subResult.RawOutput;
                 int resultCount = subResult.OutputSentences.Count;
-                if (resultCount == 0)
+                if (RTPBot.BE_COMPLETE_NOT_FAST && resultCount == 0)
                 {
                     subRequest.ResetValues(false);
                     originalSalientRequest.ResetSRAIResults(sraiMark);

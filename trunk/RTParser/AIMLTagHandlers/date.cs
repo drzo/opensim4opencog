@@ -30,7 +30,7 @@ namespace RTParser.AIMLTagHandlers
             : base(bot, user, query, request, result, templateNode)
         {
         }
-
+        protected override bool ExpandingSearchWillYieldNoExtras { get { return true; } }
         protected override Unifiable ProcessChange()
         {
             if (this.templateNode.Name.ToLower() == "date")

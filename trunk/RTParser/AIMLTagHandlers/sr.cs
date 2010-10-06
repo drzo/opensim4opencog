@@ -31,6 +31,7 @@ namespace RTParser.AIMLTagHandlers
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
+            IsDeterministic = false;
         }
 
         protected override Unifiable ProcessChange()

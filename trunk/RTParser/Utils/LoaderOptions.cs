@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Xml;
 using AIMLbot;
+//using CategoryInfo = RTParser.Utils.TemplateInfo;
 
 namespace RTParser.Utils
 {

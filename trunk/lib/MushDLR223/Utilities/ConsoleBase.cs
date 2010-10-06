@@ -1651,6 +1651,7 @@ namespace MushDLR223.Utilities
         }
         public static bool IsTooDeep()
         {
+            return false;
             int newStackTraceGetFramesLength = new StackTrace(false).GetFrames().Length;
             if (newStackTraceGetFramesLength > 300)
             {

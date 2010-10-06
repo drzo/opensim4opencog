@@ -4,44 +4,122 @@ using System.Xml;
 using MushDLR223.Utilities;
 using RTParser.AIMLTagHandlers;
 
+
 namespace RTParser.Utils
 {
     [Serializable]
-    public class TemplateInfo : OutputInfo, IAIMLInfo, IComparable<TemplateInfo>
+    public sealed class TemplateInfo : CategoryInfoImpl1, CategoryInfo
     {
-        public CategoryInfo CategoryInfo;
-        public Node GraphmasterNode;
+        public CategoryInfo ParentCategoryInfo;
+        public CategoryInfo CategoryInfo { get { return this; } }
+        //public Node GraphmasterNode;
         public GuardInfo Guard;
         public ResponseInfo Response;
         public SubQuery Query;
         public double Rating = 1.0;
         public Unifiable TextSaved;
+        public bool NeckCut = true;
+
+        public event Func<SubQuery, Request, bool> OutputsCreateOnSuccees;
+        public event Func<SubQuery, Request, bool> TemplateSucceededCallback;
+        public event Func<SubQuery, Request, bool> TemplateFailedCallback;
+
+        public void OnOutputsCreated(SubQuery query, Request request)
+        {
+            if (OutputsCreateOnSuccees != null) OutputsCreateOnSuccees(query, request);
+        }
+
+        public void OnTemplatesSucceeded(SubQuery query, Request request)
+        {
+            if (TemplateSucceededCallback != null) TemplateSucceededCallback(query, request);
+        }
+        public void OnTemplatesFailed(SubQuery query, Request request)
+        {
+            if (TemplateFailedCallback != null) TemplateFailedCallback(query, request);
+        }
+
+        public bool DefaultOnSuccess(SubQuery query, Request request)
+        {
+            if (NeckCut)
+            {
+                //query.Result.WhyResultComplete = "cut from " + ToString();
+            }
+            return true;
+        }
+
+        public bool DefaultOnFailed(SubQuery query, Request request)
+        {
+            if (NeckCut)
+            {
+                //query.Result.WhyResultComplete = "cut from " + ToString();
+            }
+            return true;
+        }
+
+        public bool DefaultOnOutputCreated(SubQuery query, Request request)
+        {
+            if (NeckCut)
+            {                
+                query.Result.WhyResultComplete = "cut from " + ToString();
+                if (request.SuspendSearchLimits)
+                {
+                    request.SuspendSearchLimits = false;
+                }
+            }
+            return true;
+        }
+
         string _templateKey;
 
-        public int CompareTo(TemplateInfo other)
+        public override int CompareTo(TemplateInfo other)
         {
             return CompareTemplates(this, other);
         }
         public static int CompareTemplates(TemplateInfo thiz, TemplateInfo other)
         {
-            return StaticAIMLUtils.CollectionCompare<XmlNode>(thiz.Output.ChildNodes, other.Output.ChildNodes, StaticAIMLUtils.CompareXmlNodes);
+            return StaticAIMLUtils.CollectionCompare<XmlNode>(thiz.TemplateXml.ChildNodes, other.TemplateXml.ChildNodes, StaticAIMLUtils.CompareXmlNodes);
+        }
+
+        public override XmlNode TemplateXml
+        {
+            get
+            {
+                if (Response != null && Response.srcNode != null) return Response.srcNode;
+                return base.TemplateXml;
+            }
+            set { Response.srcNode = value; }
         }
 
 
-        public TemplateInfo(XmlNode template, GuardInfo guard, Node patternNode, CategoryInfo categoryInfo)
-            : base(template)
+        public TemplateInfo(PatternInfo pattern, XmlNode cateNode, LoaderOptions options, ResponseInfo template,
+            GuardInfo guard, Node patternNode, CategoryInfo categoryInfo)
+            : base(pattern, cateNode, options)
         {
+            TemplateSucceededCallback += DefaultOnSuccess;
+            TemplateFailedCallback += DefaultOnFailed;
+            OutputsCreateOnSuccees += DefaultOnOutputCreated;
             if (template.Name != "template")
             {
                 throw new UnauthorizedAccessException();
             }
             Guard = guard;
             //That = that;
+            Response = template;
             GraphmasterNode = patternNode;
-            CategoryInfo = categoryInfo;
+            ParentCategoryInfo = categoryInfo;
             try
             {
-                Rating = double.Parse(StaticXMLUtils.GetAttribValue(template, "score", "1.0"));
+                if (Category.Attributes != null)
+                {
+                    bool doCut;
+                    if (StaticXMLUtils.TryParseBool(Category, "cut", out doCut) || StaticXMLUtils.TryParseBool(TemplateXml, "cut", out doCut))
+                    {
+                        NeckCut = doCut;
+                    }
+                }
+                string scoreString = StaticXMLUtils.GetAttribValue(template.srcNode, "score", null);
+                scoreString = scoreString ?? StaticXMLUtils.GetAttribValue(cateNode, "score", null);
+                Rating = double.Parse(scoreString ?? "1.0");
             }
             catch
             {
@@ -52,10 +130,13 @@ namespace RTParser.Utils
             }
         }
 
+        /*
         public ThatInfo That
         {
             get { return CategoryInfo.That; }
+            set { throw new NotImplementedException(); }
         }
+        
 
         public List<ConversationCondition> Preconds
         {
@@ -67,20 +148,20 @@ namespace RTParser.Utils
         {
             get { return CategoryInfo.IsTraced; }
             set { CategoryInfo.IsTraced = value; }
-        }
+        }*/
 
         public bool IsDisabled
         {
-            get { return CategoryInfo.IsDisabled; }
+            get { return base.IsDisabled; }
             set
             {
-                if (value != CategoryInfo.IsDisabled)
+                if (value != base.IsDisabled)
                 {
-                    CategoryInfo.IsDisabled = value;
+                    base.IsDisabled = value;
                     Node node = GraphmasterNode;
                     if (value)
                     {
-                        node.TemplateInfos.Remove(this);
+                        if (node.TemplateInfos != null) node.TemplateInfos.Remove(this);
                         node.TemplateInfosDisabled = node.TemplateInfosDisabled ?? new List<TemplateInfo>();
                         node.TemplateInfosDisabled.Add(this);
                     }
@@ -111,7 +192,7 @@ namespace RTParser.Utils
 
         public XmlNode ClonedOutput
         {
-            get { return StaticXMLUtils.CopyNode(Output, true); }
+            get { return StaticXMLUtils.CopyNode(TemplateXml, true); }
         }
 
         #region IAIMLInfo Members
@@ -123,7 +204,7 @@ namespace RTParser.Utils
 
         public string ToFileString(PrintOptions printOptions)
         {
-            if (CategoryInfo != null) return CategoryInfo.ToFileString(printOptions);
+            if (CategoryInfo != null) return base.ToFileString(printOptions);
             return ToString();
         }
 
@@ -131,12 +212,12 @@ namespace RTParser.Utils
         {
             return StaticXMLUtils.LocationInfo(srcNode);
         }
-
-        public TemplateInfo Template
+        /*
+        public TemplateInfo Response
         {
             get { return this; }
         }
-
+        */
         #endregion
 
         // override object.GetHashCode
@@ -147,7 +228,7 @@ namespace RTParser.Utils
 
         public override string ToString()
         {
-            XmlNode tryit = base.Output.ParentNode;
+            XmlNode tryit = TemplateXml.ParentNode;
             if (tryit != null)
             {
                 string rules = GetRuleStrings();
@@ -172,14 +253,21 @@ namespace RTParser.Utils
         }
 
         public static TemplateInfo GetTemplateInfo(XmlNode template, GuardInfo guard, ThatInfo thatInfo, Node node,
-                                                   CategoryInfo category)
+                                                   CategoryInfo category, GraphMaster graphMaster)
         {
             bool prev = NoInfo;
             try
             {
                 NoInfo = false;
-                return new TemplateInfo(template, guard, node, category);
+                //return new TemplateInfo(template, guard, node, category);
+                ResponseInfo responseInfo = graphMaster.FindResponse(template, template.OuterXml);
+                category.GraphmasterNode = node;
+                //category.Graph = node;
                 if (thatInfo != null) category.That = thatInfo;
+                TemplateInfo info = category as TemplateInfo;
+                info.Guard = guard;
+                info.Response = responseInfo;
+                return info;
             }
             finally
             {
@@ -199,7 +287,7 @@ namespace RTParser.Utils
 
         private static bool IsStarLikeNode(XmlNode thatInfo)
         {
-            if (thatInfo == null ||  thatInfo.ChildNodes.Count == 0) return true;
+            if (thatInfo == null || thatInfo.ChildNodes.Count == 0) return true;
             XmlNode staticAIMLUtilsXmlStar = StaticAIMLUtils.XmlStar;
             if (thatInfo == staticAIMLUtilsXmlStar) return true;
             XmlNode thatInfoLastChild = thatInfo.LastChild;
@@ -223,9 +311,9 @@ namespace RTParser.Utils
 
         public bool AimlSameKey(string newStr, string newGuard, string newThat)
         {
-            if (_templateKey!=null) return _templateKey == MakeKey(newStr, newGuard, newThat);
-            if(!StaticAIMLUtils.AimlSame(makeStar(Guard.Output), AsStar(newGuard))) return false;
-            if(!StaticAIMLUtils.AimlSame(makeStar(Output), AsStar(newStr))) return false;
+            if (_templateKey != null) return _templateKey == MakeKey(newStr, newGuard, newThat);
+            if (!StaticAIMLUtils.AimlSame(makeStar(Guard.Output), AsStar(newGuard))) return false;
+            if (!StaticAIMLUtils.AimlSame(makeStar(TemplateXml), AsStar(newStr))) return false;
             return true;
             /*
 
@@ -248,8 +336,8 @@ namespace RTParser.Utils
             {
                 if (_templateKey == null)
                 {
-                    return MakeKey(Output, Guard != null ? Guard.Output : null, That.PatternNode);
-                  //  _templateKey = MakeKey(Output, Guard != null ? Guard.Output : null, That.PatternNode);
+                    return MakeKey(TemplateXml, Guard != null ? Guard.Output : null, That.PatternNode);
+                    //  _templateKey = MakeKey(Output, Guard != null ? Guard.Output : null, That.PatternNode);
                 }
                 return _templateKey;
             }
@@ -266,7 +354,7 @@ namespace RTParser.Utils
 
         public void AddRules(List<ConversationCondition> rules)
         {
-            foreach (var r in rules) CategoryInfo.AddPrecondition(r);
+            foreach (var r in rules) base.AddPrecondition(r);
         }
 
 
@@ -286,7 +374,7 @@ namespace RTParser.Utils
             return true;
         }
 
-        internal string GetRuleStrings()
+        protected override string GetRuleStrings()
         {
             string s = "";
             var templateInfo = this.Template;

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Xml;
+//using CategoryInfo = RTParser.Utils.TemplateInfo;
 
 namespace RTParser.Utils
 {
@@ -9,11 +10,16 @@ namespace RTParser.Utils
     {
         public List<CategoryInfo> CategoryInfos = new List<CategoryInfo>();
         public Node GraphmasterNode;
-        public Unifiable Response;
+        //public Unifiable Response;
 
         public ResponseInfo(XmlNode pattern, Unifiable unifiable) : base(pattern)
         {
-            Response = unifiable;
+            FullPath = unifiable;
+        }
+
+        public string Name
+        {
+            get { return srcNode.LocalName;  }
         }
 
         public void AddCategory(CategoryInfo template)
@@ -29,7 +35,7 @@ namespace RTParser.Utils
 
         internal bool LoopsFrom(string innerXml)
         {
-            string p = StaticAIMLUtils.MakeAimlMatchable(Response.AsString().Replace("_", "*"));
+            string p = StaticAIMLUtils.MakeAimlMatchable(FullPath.AsString().Replace("_", "*"));
             p = "<srai>" + p + "</srai>";
 
             string t = StaticAIMLUtils.MakeAimlMatchable(innerXml);
@@ -49,7 +55,7 @@ namespace RTParser.Utils
                 to = "";
                 return false;
             }
-            string p = StaticAIMLUtils.MakeAimlMatchable(Response.AsString().Replace("_", "*"));
+            string p = StaticAIMLUtils.MakeAimlMatchable(FullPath.AsString().Replace("_", "*"));
             p = "<srai>" + p + "</srai>";
             string t = StaticAIMLUtils.MakeAimlMatchable(newTemplateInfo.InnerXml);
 
