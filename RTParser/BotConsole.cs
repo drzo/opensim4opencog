@@ -599,7 +599,9 @@ namespace RTParser
                     "@setvar dictname.name [value] -- get/sets a variable using a global namespace context");
             if (cmd == "setvar")
             {
-                return GlobalSettings.DoSettingsCommand(input, console);
+                myUser.DoUserCommand(args, console);
+                GlobalSettings.DoSettingsCommand(input, console);;                
+                return targetBotUser.DoUserCommand(args, console);
             }
             if (showHelp) console("@bot [var [value]] -- lists or changes the bot GlobalPredicates.\n  example: @bot ProcessHeardPreds True or @bot ProcessHeardPreds False");
             if (cmd == "bot")

@@ -1124,8 +1124,9 @@ namespace RTParser.Variables
             string s = TransformValue0(value);
             if (s == null) return Unifiable.NULL;
             if (s == "") return Unifiable.Empty;
-            if (s == "OM")
+            if (Unifiable.IsMissing(value)) 
             {
+                if (NoSettingsAliaes) return null;
                 return Unifiable.MISSING;
             }
             return s;
@@ -1136,6 +1137,7 @@ namespace RTParser.Variables
             if (s == null) return Unifiable.NULL;
             if (s == "OM")
             {
+                if (NoSettingsAliaes) return null;
                 return Unifiable.MISSING;
             }
             if (s == "")
@@ -1158,16 +1160,23 @@ namespace RTParser.Variables
                 return null;
                 //return Unifiable.NULL;
             }
-            if (IsMissing(value))
-            {
-                //   writeToLog("ERROR " + value + " NULL");
-                return "OM";
-            }
             if (Unifiable.IsEMPTY(value))
             {
                 // writeToLog("ERROR " + value + " NULL");
                 return "";
                 //return Unifiable.NULL;
+            }
+            if (Unifiable.IsMissing(value))
+            {
+                //   writeToLog("ERROR " + value + " NULL");
+                if (NoSettingsAliaes) return null;
+                return "OM";
+            }
+            if (Unifiable.IsIncomplete(value))
+            {
+                //   writeToLog("ERROR " + value + " NULL");
+                if (NoSettingsAliaes) return null;
+                return Unifiable.INCOMPLETE.AsString();
             }
             var v = StaticXMLUtils.ValueText(value);
             if (false)if (v.Contains("<") || v.Contains("&"))

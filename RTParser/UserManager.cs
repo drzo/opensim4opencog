@@ -924,6 +924,8 @@ namespace RTParser
             {
                 useOut = string.Format("{0} (menevalue= {1:1} )", said, res.Score * 1.4);
             }
+            user = user.Replace("_", " ").Replace("  ", " ");
+            useOut = useOut.Replace("_", " ").Replace("  ", " ");
             if (useNameInOutput)
             {
                 if (!useOut.ToLower().Contains(user.ToLower()))
