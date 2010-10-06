@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -136,6 +137,17 @@ namespace MushDLR223.Utilities
                                    {Name = str + " pinger", Priority = ThreadPriority.Lowest};
             }
             if (autoStart) Start();
+        }
+
+        static TaskQueueHandler()
+        {
+            // If we don't have a high resolution timer then Stopwatch will fall back
+            // to DateTime, which is much less reliable
+            if (Stopwatch.IsHighResolution)
+                DLRConsole.DebugWriteLine("We have a high resolution timer available");
+
+            long frequency = Stopwatch.Frequency;
+            DLRConsole.DebugWriteLine(" Timer frequency in ticks per second = {0}", frequency);
         }
 
         static TimeSpan TimeSpanBetween(TimeSpan orig, TimeSpan low, TimeSpan high)
@@ -1449,6 +1461,41 @@ namespace MushDLR223.Utilities
 
         public void RemoveThread(Thread thread)
         {
+        }
+
+
+        public static TimeSpan TimeProcess(string named, Action action)
+        {
+            //long frequency = Stopwatch.Frequency;
+            //Console.WriteLine(" Timer frequency in ticks per second = {0}", frequency);
+
+            Stopwatch sw = Stopwatch.StartNew();
+            TimeSpan used;
+            try
+            {
+                try
+                {
+                    action();
+                }
+                catch (Exception ex)
+                {
+                    DLRConsole.DebugWriteLine("" + named + " threw " + ex);
+                    throw;
+                }
+            }
+            finally
+            {
+                sw.Stop();
+                used = sw.Elapsed;
+                if (named != null)
+                {
+                    named += " TIME: " + GetTimeString(used);
+                    if (Stopwatch.IsHighResolution)
+                        named += " (high resolution timer)";
+                    DLRConsole.DebugWriteLine(named);
+                }
+            }
+            return used;
         }
     }
 

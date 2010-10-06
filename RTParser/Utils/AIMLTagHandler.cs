@@ -236,6 +236,7 @@ namespace RTParser.Utils
                     writeToLog("InUnify QueryHasFailed=" + value);
                     return;
                 }
+                if (QueryHasFailed == value) return;
                 query.HasFailed += (value ? 1 : 0);
             }
         }
@@ -271,9 +272,15 @@ namespace RTParser.Utils
         public static bool SaveAIMLChange = true;
         public static bool SaveAIMLComplete = false;
         public static bool EnforceStartedBool = false;
+        private bool IsNeedingInnerXMLSet = true;
+
         public Unifiable FAIL
         {
-            get { return null; }
+            get
+            {
+                QueryHasFailed = true;
+                return null;
+            }
         }
 
         public bool RecurseResultValid
@@ -355,8 +362,12 @@ namespace RTParser.Utils
             {
                 if (!IsNullOrEmpty(value))
                 {
-                    string xmlValueSettable = XmlValueSettable(value); ;
-                    templateNode.InnerXml = xmlValueSettable;
+                    if (IsNeedingInnerXMLSet)
+                    {
+                        IsNeedingInnerXMLSet = false;
+                        string xmlValueSettable = XmlValueSettable(value);
+                        templateNode.InnerXml = xmlValueSettable;
+                    }
                     var vv = CheckValue(value);
                     finalResult.Value = vv;
                     if (InUnify)
@@ -1187,10 +1198,19 @@ namespace RTParser.Utils
             // cant do much bette than the first call
             if (suspendingLimits)
             {
-                writeToLogWarn("ERROR GIVINGUP ON AIMLTRACE " + value + " -> " + childNode.OuterXml + "!");
+                writeToLog("ERROR GIVINGUP ON AIMLTRACE " + value + " -> " + childNode.OuterXml + "!");
                 return value;
             }
+            string whyComplete = request.WhyComplete;
+            bool isTopLevel = request.IsToplevelRequest;
+            if (!isTopLevel && request.SraiDepth.IsOverMax)
+            {
+                writeToLogWarn("ERROR GIVINGUP ON AIMLTRACE " + whyComplete + " -> " + childNode.OuterXml + "!");
+                return value;
+            }
+            int sraiDepth = request.SraiDepth.Current;
             suspendingLimits = true;
+        
             var oldValue = value;
             if (this != tagHandlerChild)
             {
