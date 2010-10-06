@@ -344,5 +344,12 @@ namespace RTParser.Database
             var brillPOS = NatLangDb.POSTag(tokenize);
             return false;
         }
+
+        internal static Unifiable MakePossesive(string p)
+        {
+            if (p.Contains("'")) return p;
+            if (p.EndsWith("s")) return p + "'";
+            return p + "'s";
+        }
     }
 }
