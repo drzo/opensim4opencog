@@ -3,21 +3,25 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Xml;
 using MushDLR223.Utilities;
+//using CategoryInfo = RTParser.Utils.TemplateInfo;
 
 namespace RTParser.Utils
 {
     [Serializable]
-    public class CategoryInfo : GraphLinkInfo, IAIMLInfo
+    abstract public class CategoryInfoImpl1 : GraphLinkInfo, IAIMLInfo, IComparable<TemplateInfo>
     {
-        public string Filename;
-        public PatternInfo Pattern;
+        public string Filename { get; set; }
+        public PatternInfo Pattern { get; set; }
         public List<ConversationCondition> Preconds;
-        public TemplateInfo Template { get; set;}
-        public ThatInfo That;
+        public TemplateInfo Template { get { return (TemplateInfo)this; } }
+        public ThatInfo That { get; set; }
         public TopicInfo Topic;
+        
+        private TemplateInfo ParentCategory;
+
         public bool IsTraced { get; set; }
 
-        public CategoryInfo(PatternInfo pattern, XmlNode cateNode, LoaderOptions options)
+        protected CategoryInfoImpl1(PatternInfo pattern, XmlNode cateNode, LoaderOptions options)
             : base(cateNode)
         {
             Pattern = pattern;
@@ -31,9 +35,10 @@ namespace RTParser.Utils
             get { return srcNode; }
         }
 
-        public XmlNode TemplateXml
+        public virtual XmlNode TemplateXml
         {
             get { return StaticXMLUtils.FindNode("template", Category, null); }
+            set { throw new NotImplementedException(); }
         }
 
         public XmlNode TopicXml
@@ -57,6 +62,9 @@ namespace RTParser.Utils
         {
             get { return Pattern.GraphmasterNode.Graph; }
         }
+
+        //protected abstract XmlNode TemplateXml { get; set; }
+        public virtual Node GraphmasterNode { get; set; }
 
         public string ToFileString(PrintOptions printOptions)
         {
@@ -110,11 +118,15 @@ namespace RTParser.Utils
             {
                 s += "<!-- IsDisabled  " + s.Replace("<!--", "<#--").Replace("-->", "--#>") + " -->";
             }
-            s += Template.GetRuleStrings();
+            s += GetRuleStrings();
             return s;
         }
 
+        protected abstract string GetRuleStrings();
+
         #endregion
+
+        public abstract int CompareTo(TemplateInfo other);
 
         public override string ToString()
         {
@@ -128,20 +140,20 @@ namespace RTParser.Utils
 
         public void AddTemplate(TemplateInfo templateInfo)
         {
-            if (Template != null && Template != templateInfo) throw new InvalidCastException("non null " + Template);
-            Template = templateInfo;
+            //if (Template != null && Template != templateInfo) throw new InvalidCastException("non null " + Template);
+            //Template = templateInfo;
             //  TemplateInfos.Add(templateInfo);
         }
 
-        public static CategoryInfo GetCategoryInfo(PatternInfo info, XmlNode node, LoaderOptions filename)
+        public static CategoryInfo GetCategoryInfo(PatternInfo info, XmlNode node, LoaderOptions filename, ResponseInfo template, GuardInfo guard, Node patternNode, CategoryInfo categoryInfo)
         {
-            return filename.CtxGraph.FindCategoryInfo(info, node, filename);
+            return filename.CtxGraph.FindCategoryInfo(info, node, filename, template, guard, patternNode, categoryInfo);
         }
 
-        public static CategoryInfo MakeCategoryInfo(PatternInfo info, XmlNode node, LoaderOptions filename)
+        public static CategoryInfo MakeCategoryInfo(PatternInfo info, XmlNode node, LoaderOptions filename, ResponseInfo template, GuardInfo guard, Node patternNode, CategoryInfo categoryInfo)
         {
             if (NoInfo) return null;
-            return new CategoryInfo(info, node, filename);
+            return new TemplateInfo(info, node, filename, template, guard, patternNode, categoryInfo);
         }
 
         internal void Check()
@@ -188,5 +200,23 @@ namespace RTParser.Utils
 #endif
             // keep count of the number of categories that have been processed
         }
+    }
+
+    public interface CategoryInfo
+    {
+        ThatInfo That { get; set; }
+        bool IsDisabled { get; set; }
+        PatternInfo Pattern { get; }
+        TemplateInfo Template { get; }
+        bool IsTraced { get; set; }
+        XmlNode Category { get; }
+        Node GraphmasterNode { get; set; }
+        string Filename { get; }
+        
+        void SetCategoryTag(Unifiable categoryPath, PatternInfo patternInfo, CategoryInfo categoryInfo, XmlNode outerNode, XmlNode templateNode, GuardInfo guard, ThatInfo thatInfo);
+        bool Matches(string match);
+        void AddPrecondition(ThatInfo node);
+        void AddPrecondition(ConversationCondition node);
+        void AddTemplate(TemplateInfo newTemplateInfo);
     }
 }

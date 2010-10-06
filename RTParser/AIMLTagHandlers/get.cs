@@ -43,6 +43,19 @@ namespace RTParser.AIMLTagHandlers
             : base(bot, user, query, request, result, templateNode)
         {
         }
+        protected override bool ExpandingSearchWillYieldNoExtras { get { return true; } }
+
+        public override Unifiable CompleteProcess()
+        {
+            Unifiable pc = ProcessChange();
+            string s = (string) pc;
+            if (pc != null && pc == "name")
+            {
+                return pc;
+            }
+            return pc;
+        }
+
         protected override Unifiable ProcessChange()
         {
             if (RecurseResultValid) return RecurseResult;

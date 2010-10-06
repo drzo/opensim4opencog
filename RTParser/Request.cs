@@ -124,6 +124,8 @@ namespace RTParser
         string ToRequestString();
 
         void SetFromUserToUser(User BotAsUser1, User BotAsUser1_2);
+
+        bool CanProcess(string starContent);
     }
 
     /// <summary>
@@ -450,9 +452,9 @@ namespace RTParser
         protected RequestImpl(string rawInput, User user, RTPBot bot, Request parent, User targetUser)
             :  this(bot.GetQuerySettings()) // Get query settings intially from user
         {
-            SraiDepth.Max = 19;
             IsToplevelRequest = parent == null;
             this.Stage = SideEffectStage.UNSTARTED;
+            matchable = matchable ?? MakeMatchable(rawInput);
             qsbase = this;
             SuspendSearchLimits = true;
             if (parent != null)
@@ -990,7 +992,7 @@ namespace RTParser
             var user= this.Requester;
             var  rTPBot = this.TargetBot;
             var requestee = this.Responder;
-            Request thisRequest = (Request)this;
+            //Request thisRequest = (Request)this;
             var subRequest = new MasterRequest(templateNodeInnerValue, user ?? Requester,
                                                        rTPBot ?? this.TargetBot, thisRequest, requestee ?? Responder);
             Result res = request.CurrentResult;
@@ -1010,7 +1012,7 @@ namespace RTParser
             var request = (MasterRequest) this;
             user = user ?? this.Requester;
             rTPBot = rTPBot ?? this.TargetBot;
-            Request thisRequest = (Request)this;
+            //Request thisRequest = (Request)this;
             var subRequest = new MasterRequest(templateNodeInnerValue, user ?? Requester,
                                                        rTPBot ?? this.TargetBot, thisRequest, requestee ?? Responder);
             //Result res = request.TheCurrentResult;
@@ -1487,6 +1489,18 @@ namespace RTParser
         }
 
         public Dictionary<Unifiable, Unifiable> _SRAIResults = new Dictionary<Unifiable, Unifiable>();
+        private string matchable;
+
+        public bool CanProcess(string starContent)
+        {
+            matchable = matchable ?? MakeMatchable(rawInput);
+            if (matchable == starContent)
+            {
+                return false;
+            }
+            if (ParentRequest != null) return ParentRequest.CanProcess(starContent);
+            return true;
+        }
 
         internal static RequestImpl GetOriginalSalientRequest(Request request)
         {
@@ -1533,6 +1547,8 @@ namespace RTParser
 
         public bool EnterSalientSRAI(Unifiable templateNodeInnerValue, out Unifiable prevResults)
         {
+            //prevResults = null;
+            //return true;
             Dictionary<Unifiable, Unifiable> dict = _SRAIResults;
             lock (dict)
             {

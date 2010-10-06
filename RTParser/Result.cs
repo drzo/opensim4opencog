@@ -97,7 +97,7 @@ namespace RTParser
         bool Started { get; set; }
         TimeSpan Durration { get; }
         void CollectRequest();
-        string WhyResultComplete { get; }
+        string WhyResultComplete { get; set; }
         IList<TemplateInfo> ResultTemplates { get; }
         RTPBot TargetBot { get; }
         User Requester { get; set; }
@@ -164,6 +164,7 @@ namespace RTParser
             //request = null;
         }
 
+        private string userSetResultComplete;
         public string WhyResultComplete
         {
             get
@@ -179,9 +180,12 @@ namespace RTParser
                     if (string.IsNullOrEmpty(s)) s = null;
                     var request1 = this.request;
                     if (request1 != null && request1 != this) t = request1.WhyRequestComplete;
-                    return s == null ? t : (s + " " + t);
+                    t = (s == null) ? t : (s + " " + t);
+                    t = (userSetResultComplete == null) ? t : (s + " " + userSetResultComplete);
+                    return t;
                 }
-            }
+            } 
+            set { userSetResultComplete = value; }
         }
 
         public DateTime EndedOn = DateTime.MaxValue;
@@ -244,6 +248,7 @@ namespace RTParser
         public ResultImpl(string rawInput, User user, RTPBot bot, Request parent, User targetUser)
             : base(parent)
         {
+            matchable = matchable ?? MakeMatchable(rawInput);
             SubQueries = new List<SubQuery>();
             MaxCanEvalResult = 10;
             request = parent;
@@ -414,7 +419,17 @@ namespace RTParser
 
         public bool IsComplete
         {
-            get { return EndedOn < RTPBot.Now; }
+            get
+            {
+                if (EndedOn < RTPBot.Now)
+                    return true;
+                if (request.IsTimedOutOrOverBudget)
+                {
+                    IsComplete = true;
+                    return true;
+                }
+                return false;
+            }
             set
             {
                 EndedOn = value ? RTPBot.Now : DateTime.MaxValue;
@@ -501,6 +516,7 @@ namespace RTParser
         public string _normalizedOutput;
         private readonly ParsedSentences ChatInput;
         private SubQuery _CurrentQuery;
+        private string matchable;
 
         //public ChatLabel CatchLabel { get; set; }
 

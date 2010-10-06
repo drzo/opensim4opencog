@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -7,7 +8,7 @@ using RTParser.Database;
 using UPath = RTParser.Unifiable;
 using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
 using StringAppendableUnifiable = RTParser.StringAppendableUnifiableImpl;
-
+//using CategoryInfo = RTParser.Utils.TemplateInfo;
 //using StringAppendableUnifiable = System.Text.StringBuilder;
 
 namespace RTParser.Utils
@@ -473,9 +474,9 @@ namespace RTParser.Utils
             }
 
             // last in first out addition
-            TemplateInfo newTemplateInfo = TemplateInfo.GetTemplateInfo(templateNode, guard, thatInfo, this, category);
+            TemplateInfo newTemplateInfo = TemplateInfo.GetTemplateInfo(templateNode, guard, thatInfo, this, category, Graph);
             newTemplateInfo.TemplateKey = templateKey;
-            // this.That = thatInfo;
+            newTemplateInfo.That = thatInfo;
             PatternInfo pat = patternInfo;
             if (category != null)
             {
@@ -561,12 +562,12 @@ namespace RTParser.Utils
         /// <param name="path">the path for the category</param>
         /// <param name="outTemplate">the outTemplate to find at the end of the path</param>
         /// <param name="filename">the file that was the source of this category</param>
-        public Node addPathNodeChilds(Unifiable path)
+        public Node addPathNodeChilds(Unifiable path, CategoryInfo categoryInfo)
         {
-            return addPathNodeChilds(0, path.ToArray());
+            return addPathNodeChilds(0, path.ToArray(), categoryInfo);
         }
 
-        private Node addPathNodeChilds(int from, Unifiable[] path)
+        private Node addPathNodeChilds(int from, Unifiable[] path, CategoryInfo categoryInfo)
         {
             Node initial = null;
 
@@ -611,9 +612,9 @@ namespace RTParser.Utils
             Node childNode;
             lock (SyncObject)
             {
-                if (children != null && children.TryGetValue(fs, out childNode))
+                if (children != null && TryGetValueChild(fs, out childNode))
                 {
-                    initial = childNode.addPathNodeChilds(from + 1, path);
+                    initial = childNode.addPathNodeChilds(from + 1, path, categoryInfo);
                     found = true;
                 }
 
@@ -628,7 +629,7 @@ namespace RTParser.Utils
                             if (ks == fs)
                             {
                                 childNode = c.Value;
-                                initial = childNode.addPathNodeChilds(from + 1, path);
+                                initial = childNode.addPathNodeChilds(from + 1, path, categoryInfo);
                                 found = true;
                                 break;
                             }
@@ -638,7 +639,7 @@ namespace RTParser.Utils
                                 if (kks == fs || ks != kks)
                                 {
                                     childNode = c.Value;
-                                    initial = childNode.addPathNodeChilds(from + 1, path);
+                                    initial = childNode.addPathNodeChilds(from + 1, path, categoryInfo);
                                     found = true;
                                     break;
                                 }
@@ -650,13 +651,45 @@ namespace RTParser.Utils
                 {
                     childNode = new Node(this);
                     childNode.word = firstWord;
-                    initial = childNode.addPathNodeChilds(from + 1, path);
-                    children = children ?? new Dictionary<string, Node>();
-                    children.Add(fs, childNode);
+                    initial = childNode.addPathNodeChilds(from + 1, path, categoryInfo);
+                    AddChildNode(fs, childNode, categoryInfo);
                 }
             }
-            if (initial == null) throw new NullReferenceException("no child node: " + this);
+            if (initial == null)
+                throw new NullReferenceException("no child node: " + this + "CategoryInfo: " + categoryInfo);
             return initial;
+        }
+
+        private void AddChildNode(string fs, Node childNode, CategoryInfo categoryInfo)
+        {
+            if (IsNonSimple(fs, categoryInfo))
+            {
+                this.IsSpecial = true;
+                if (!fs.Contains("<BOT"))
+                {
+                    writeDebugLine("IsSpecial: '{0}' {1}", fs, categoryInfo);
+                }
+            }
+            children = children ?? new Dictionary<string, Node>();
+            children.Add(fs, childNode);
+        }
+
+        private bool IsNonSimple(string fs, CategoryInfo categoryInfo)
+        {
+            if (fs == "*" || fs == "_" || fs.StartsWith("TAG-")) return false;
+            foreach (var fs1 in fs)
+            {
+                if (fs1 == '<') return true;
+                if (fs1 == '{') return true;
+                if (fs1 == '#') return true;
+                if (char.IsLetterOrDigit(fs1)) continue; // return true;
+            }
+            return false;
+        }
+
+        private bool TryGetValueChild(string fs, out Node childNode)
+        {
+            return children.TryGetValue(fs, out childNode);
         }
 
         private static string ToKey(string fs0)
@@ -800,6 +833,7 @@ namespace RTParser.Utils
         }
 
         private static char[] OtherwiseSplitInputInto = " \r\n\t".ToCharArray();
+        private bool IsSpecial = false;
 
         /// <summary>
         /// Navigates this node (and recusively into child nodes) for a match to the path passed as an argument
@@ -975,7 +1009,7 @@ namespace RTParser.Utils
             // second first option is to see if this node has a child denoted by the "_" 
             // wildcard. "_" comes first in precedence in the AIML alphabet
             //lock (SyncObject)
-            foreach (var childNodeKV in children)
+            foreach (var childNodeKV in AnySingleUnit("_", children , true))
             {
                 Node childNode = childNodeKV.Value;
                 Unifiable childNodeWord = childNode.word;
@@ -1107,7 +1141,7 @@ namespace RTParser.Utils
             bool wisTag = firstWord.StartsWith("TAG-");
             if (!wisTag)
                 //   lock (SyncObject)
-                foreach (var childNodeKV in children)
+                foreach (var childNodeKV in AnySingleUnit("*", children, !IsSpecial))
                 {
                     Node childNode = childNodeKV.Value;
                     Unifiable childNodeWord = childNode.word; //.Key;
@@ -1168,6 +1202,17 @@ namespace RTParser.Utils
             return null; /// string.Empty;
         }
 
+        private IEnumerable<KeyValuePair<string, Node>> AnySingleUnit(string match, Dictionary<string, Node> dictionary, bool canDoSingle)
+        {
+            if (!canDoSingle) return dictionary;
+            Node v;
+            if (dictionary.TryGetValue(match, out v))
+            {
+                return new OneKV(match, v);
+            }
+            return OneKV.EMPTY;
+        }
+
         private bool NoEnabledTemplates
         {
             get
@@ -1194,7 +1239,7 @@ namespace RTParser.Utils
             Node childNode;
             firstWord = splitPath[at];
             string fs = ToKey(firstWord);
-            if (children.TryGetValue(fs, out childNode))
+            if (TryGetValueChild(fs, out childNode))
             {
                 if (query.CanUseNode(childNode))
                 {
@@ -1209,7 +1254,7 @@ namespace RTParser.Utils
                     return childNode;
                 }
             }
-            foreach (var childNodeKV in children)
+            foreach (var childNodeKV in AnySingleUnit(fs, children, !IsSpecial))
             {
                 Unifiable childNodeWord = childNodeKV.Value.word;
                 if (childNodeWord.IsAnySingleUnit()) continue;
@@ -1268,6 +1313,58 @@ namespace RTParser.Utils
         public bool IsSatisfied(SubQuery query)
         {
             return true;
+        }
+    }
+
+    internal class OneKV :IEnumerable<KeyValuePair<string, Node>>, IEnumerator<KeyValuePair<string, Node>>
+    {
+        readonly public static Dictionary<string, Node> EMPTY = new Dictionary<string, Node>();
+        readonly KeyValuePair<string, Node> ValuePair;
+
+        public OneKV(string k, Node v)
+        {
+            ValuePair = new KeyValuePair<string, Node>(k, v);
+        }
+
+        public IEnumerator<KeyValuePair<string, Node>> GetEnumerator()
+        {
+            return this;
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public void Dispose()
+        {
+        }
+
+        private bool IsStarted = false;
+        public bool MoveNext()
+        {
+            if (IsStarted) return false;
+            IsStarted = true;
+            return true;
+        }
+
+        public void Reset()
+        {
+            IsStarted = false;
+        }
+
+        public KeyValuePair<string, Node> Current
+        {
+            get
+            {
+                if (IsStarted) return ValuePair;
+                return default(KeyValuePair<string, Node>);
+            }
+        }
+
+        object IEnumerator.Current
+        {
+            get { return Current; }
         }
     }
 }

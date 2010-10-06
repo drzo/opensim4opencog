@@ -31,6 +31,8 @@ namespace RTParser.Utils
         public Request Request;
         public Result Result;
         public GraphQuery TopLevel;
+        public AIMLTagHandler CurrentTagHandler;
+        public XmlNode CurrentNode;
 
         public override bool Equals(object obj)
         {
@@ -115,7 +117,7 @@ namespace RTParser.Utils
             get { return Result; }
         }
         internal bool useParentSF = false;
-        private int _hasFailed = -1;
+        private int _hasFailed = 0;
         public int HasFailed
         {
             get { return _hasFailed + (useParentSF ? ParentRequest.HasFailed : 0); }
@@ -139,7 +141,7 @@ namespace RTParser.Utils
             }
         }
 
-        private int _hasSuceeded = -1;
+        private int _hasSuceeded = 0;
         public int HasSuceeded
         {
             get { return _hasSuceeded + (useParentSF ? ParentRequest.HasSuceeded : 0); }

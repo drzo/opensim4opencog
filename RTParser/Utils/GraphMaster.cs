@@ -13,6 +13,7 @@ using MushDLR223.Virtualization;
 using RTParser.AIMLTagHandlers;
 using UPath = RTParser.Unifiable;
 using StringAppendableUnifiable = RTParser.StringAppendableUnifiableImpl;
+//using CategoryInfo = RTParser.Utils.TemplateInfo;
 
 //using StringAppendableUnifiable = System.Text.StringBuilder;
 
@@ -291,13 +292,6 @@ namespace RTParser.Utils
         {
             if (NoIndexing) return null;
             string pats = MakeMatchKey(unifiable);
-            int skip = pats.IndexOf("TAG-THAT");
-            if (skip > 0) pats = pats.Substring(0, skip - 1);
-            else
-            {
-                skip = pats.IndexOf("TAG-FLAG");
-                if (skip > 0) pats = pats.Substring(0, skip - 1);
-            }
             ResponseInfo pi;
             if (Templates_NOMORE == null)
             {
@@ -419,9 +413,9 @@ namespace RTParser.Utils
             return pi;
         }
 
-        public CategoryInfo FindCategoryInfo(PatternInfo info, XmlNode node, LoaderOptions filename)
+        public CategoryInfo FindCategoryInfo(PatternInfo info, XmlNode node, LoaderOptions filename, ResponseInfo template, GuardInfo guard, Node patternNode, CategoryInfo categoryInfo)
         {
-            return CategoryInfo.MakeCategoryInfo(info, node, filename);
+            return TemplateInfo.MakeCategoryInfo(info, node, filename, template, guard, patternNode, categoryInfo);
         }
 
         private GraphMaster makeParallel()
@@ -513,7 +507,7 @@ namespace RTParser.Utils
                 //rootNode = this.PostParallelRootNode;
                 //writeToLog("Putting at end of queue " + generatedPath);
             }
-            Node thiz = rootNode.addPathNodeChilds(generatedPath);
+            Node thiz = rootNode.addPathNodeChilds(generatedPath, category);
 
             int countBefore = thiz.TemplateInfoCount;
 
@@ -522,10 +516,14 @@ namespace RTParser.Utils
             if (wouldBeRemoval)
             {
                 Node other = rootNode == this.RootNode ? this.PostParallelRootNode : this.RootNode;
-                Node thatz = other.addPathNodeChilds(generatedPath);
+                Node thatz = other.addPathNodeChilds(generatedPath, category);
                 //writeToLog("Doing other removal: " + generatedPath);
                 info0 = thatz.addTerminal(templateNode, category, guard, thatInfo, this, patternInfo,
                                           additionalRules, out wouldBeRemoval);
+            }
+            if (info0 != null)
+            {
+                info0.GraphmasterNode = rootNode;
             }
             int countAfter = thiz.TemplateInfoCount;
             /*

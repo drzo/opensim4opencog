@@ -31,6 +31,7 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
+        protected override bool ExpandingSearchWillYieldNoExtras { get { return true; } }
         protected override Unifiable ProcessChange()
         {
             return " ";

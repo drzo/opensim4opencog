@@ -28,6 +28,8 @@ namespace RTParser
 
     public partial class RTPBot
     {
+        public static bool BE_COMPLETE_NOT_FAST = false;
+        public static int SraiDepthMax = 10;
         public bool AlwaysUseImmediateAimlInImput = true;
         public static bool RotateUsedTemplate = true;
         public bool DontUseSplitters = true;
@@ -814,10 +816,19 @@ namespace RTParser
                 return;
             }
 
+            List<SubQuery> AllQueries = GetQueriesFromResults(request, result, isTraced);
+            if (AllQueries == null || AllQueries.Count == 0) return;
+            List<SubQuery> sortMe = SortCandidateSolutions(AllQueries, isTraced);
+            if (sortMe == null || sortMe.Count == 0) return;
+            solutions = GetSolutions(request, result, sortMe, solutions, out hasMoreSolutions);
+        }
 
+        private List<SubQuery> GetQueriesFromResults(Request request, Result result, bool isTraced)
+        {
+            List<SubQuery> AllQueries = new List<SubQuery>();
+            //int solutions;
             List<SubQuery> resultSubQueries = result.SubQueries;
 
-            List<SubQuery> AllQueries = new List<SubQuery>();
             List<TemplateInfo> AllTemplates = new UList();
             bool found1 = false;
             lock (resultSubQueries)
@@ -835,20 +846,24 @@ namespace RTParser
 
             if (!found1)
             {
-                solutions = 0;
-                hasMoreSolutions = false;
+                //solutions = 0;
+                //hasMoreSolutions = false;
                 result.TemplatesSucceeded = 0;
                 result.OutputsCreated = 0;
                 if (isTraced)
                 {
                     writeToLog("NO TEMPLATES FOR " + request);
                 }
-                return;
+                //return;
             }
+            return AllQueries;
+        }
 
-            hasMoreSolutions = true;
+        private List<SubQuery> SortCandidateSolutions( List<SubQuery> AllQueries, bool isTraced)
+        {
+            if (!BE_COMPLETE_NOT_FAST) return AllQueries;
             List<SubQuery> sortMe = new List<SubQuery>(AllQueries);
-
+            
             sortMe.Sort();
 
             bool countChanged = sortMe.Count != AllQueries.Count;
@@ -889,19 +904,34 @@ namespace RTParser
                 }
                 writeToLog("--------------------------------------------");
             }
+            return sortMe;
+        }
 
+        private int GetSolutions(Request request, Result result, List<SubQuery> sortMe, int solutions, out bool hasMoreSolutions)
+        {
             foreach (SubQuery query in sortMe)
             {
+                if (result.IsComplete)
+                {
+                    hasMoreSolutions = false;
+                    return solutions;
+                }
+                result.CurrentQuery = query;
                 foreach (TemplateInfo s in query.Templates)
                 {
                     hasMoreSolutions = true;
                     try
                     {
-                        result.CurrentQuery = query;
+                        s.Query = query;
                         // Start each the same
                         var lastHandler = ProcessQueryTemplate(request, s.Query, s, result, request.LastHandler,
                                                                ref solutions,
-                                                               out hasMoreSolutions);                      
+                                                               out hasMoreSolutions);
+                        if (result.IsComplete)
+                        {
+                            hasMoreSolutions = false;
+                            return solutions;
+                        }
                     }
                     catch (ChatSignal)
                     {
@@ -911,6 +941,7 @@ namespace RTParser
             }
             hasMoreSolutions = false;
             result.CurrentQuery = null;
+            return solutions;
         }
 
         private AIMLTagHandler ProcessQueryTemplate(Request request, SubQuery query, TemplateInfo s, Result result, AIMLTagHandler lastHandler, ref int solutions, out bool hasMoreSolutions)
@@ -920,6 +951,7 @@ namespace RTParser
             hasMoreSolutions = false;
             try
             {
+                request.CurrentQuery = query;
                 s.Query = query;
                 query.CurrentTemplate = s;
                 bool createdOutput;
@@ -928,14 +960,21 @@ namespace RTParser
                 childHandler = TagHandling.proccessResponse(query, request, result, sOutput, s.Guard, out createdOutput,
                                                out templateSucceeded, lastHandler, s, false, false);
                 solutions++;
+                query.CurrentTagHandler = childHandler;
                 request.LastHandler = lastHandler;
                 if (templateSucceeded)
                 {
                     result.TemplatesSucceeded++;
+                    s.OnTemplatesSucceeded(query, request);
+                }
+                else
+                {
+                    s.OnTemplatesFailed(query, request);
                 }
                 if (createdOutput)
                 {
                     result.OutputsCreated++;
+                    s.OnOutputsCreated(query, request);
                     hasMoreSolutions = true;
                     //break; // KHC: single vs. Multiple
                     if (((QuerySettingsReadOnly)request).ProcessMultipleTemplates == false)
@@ -1075,7 +1114,7 @@ namespace RTParser
             TemplateInfo templateInfo = null; //
             if (false)
             {
-                templateInfo = new TemplateInfo(templateNode, null, null, null);
+              //  templateInfo = new TemplateInfo(templateNode, null, null, null);
             }
             bool templateSucceeded;
             bool createdOutput;
@@ -1294,6 +1333,7 @@ namespace RTParser
         }
 
         private int napNum = 0;
+
         public static DateTime Now
         {
             get { return DateTime.Now; }

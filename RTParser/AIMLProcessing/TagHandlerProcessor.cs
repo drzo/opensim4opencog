@@ -19,6 +19,8 @@ namespace RTParser
                                               AIMLTagHandler handler)
         {
             AIMLTagHandler tag = GetTagHandler00(user, query, request, result, node, true);
+            if (query != null) query.CurrentTagHandler = tag;
+            if (query != null) query.CurrentNode = node;
             if (tag == null)
             {
                 writeToLog("NULL TAG " + node.OuterXml);

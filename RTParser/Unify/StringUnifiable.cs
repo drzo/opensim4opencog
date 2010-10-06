@@ -691,7 +691,11 @@ namespace RTParser
             if (char.IsLetterOrDigit(str[0])) return false;
             if (str.StartsWith("<regex")) return false;
             if (str.StartsWith("<lexis")) return false;
-            return IsFlag(UFlags.LONG_WILDCARD);
+            if( IsFlag(UFlags.LONG_WILDCARD))
+            {
+                return true;
+            }
+            return false;
             if (str == ("*")) return true;
             if (str == ("^")) return true;
             if (this.IsMarkerTag()) return false;
@@ -741,7 +745,11 @@ namespace RTParser
 
         public override bool IsAnySingleUnit()
         {
-            return str == "_";
+            if (str == "_")
+            {
+                return true;
+            }
+            return false;
         }
 
         public override bool ConsumePath(int at, string[] tokens, out string fw, out Unifiable after, out int newAt, SubQuery query)
@@ -973,6 +981,10 @@ namespace RTParser
                     return true;
                 }
                 Unifiable outputSentence = tagHandler.CompleteAimlProcess();
+                if (ov.CanUnify(outputSentence, query))
+                {
+                    return true;
+                }
                 if (outputSentence == null) return false;
                 string value = outputSentence.AsString();
                 if (ov.ToUpper() == value.ToUpper())

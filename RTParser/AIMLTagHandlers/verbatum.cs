@@ -34,6 +34,7 @@ namespace RTParser.AIMLTagHandlers
             isRecursive = false;
         }
 
+        protected override bool ExpandingSearchWillYieldNoExtras { get { return true; } }
         readonly Unifiable data;
         protected override Unifiable ProcessChange()
         {

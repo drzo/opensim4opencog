@@ -46,6 +46,7 @@ namespace RTParser.AIMLTagHandlers
 
     public class StarTagHandler : RTParser.Utils.UnifibleTagHandler
     {
+        protected override bool ExpandingSearchWillYieldNoExtras { get { return true; } }
         protected virtual IList<Unifiable> GetStarDict()
         {
             return StarDict();
