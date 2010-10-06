@@ -241,23 +241,44 @@ namespace RTParser
                 {
                     return;
                 }
-                if (bot.IsLastKnownUser(value))
+                if (false && bot.IsLastKnownUser(value))
                 {
                     return;
                 }
-                string saved = value.Replace("_", " ").Trim();
-                if (saved.Length == 0) return;
-                if (Predicates == null) return;
-                var prev = Predicates.IsIdentityReadOnly;
-                try
+                SetMeMyselfAndI(value);
+            }
+        }
+
+        public void SetMeMyselfAndI(string value)
+        {
+            string saved = value.Replace("_", " ").Trim(" ,".ToCharArray());
+            if (saved.Length == 0) return;
+            if (Predicates == null) return;
+            var prev = Predicates.IsIdentityReadOnly;
+            try
+            {
+                string[] split = value.Split(new[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+                Predicates.IsIdentityReadOnly = false;
+                Predicates["name"] = value;                
+                Predicates["me"] = value;
+                Predicates["myself"] = value;
+                Predicates["i"] = value;
+                Predicates["my"] = RTParser.Database.NatLangDb.MakePossesive(value);
+                Predicates["firstname"] = split[0];
+                if (split.Length > 1)
                 {
-                    Predicates.IsIdentityReadOnly = false;
-                    Predicates.addSetting("name", value);
+                    Predicates["fullnane"] = value;
+                    if (split.Length == 2) Predicates["lastname"] = split[1];
+                    if (split.Length == 3)
+                    {
+                        Predicates["middlename"] = split[1];
+                        Predicates["lastname"] = split[2];
+                    }
                 }
-                finally
-                {
-                    Predicates.IsIdentityReadOnly = prev;
-                }
+            }
+            finally
+            {
+                Predicates.IsIdentityReadOnly = prev;
             }
         }
 
@@ -865,6 +886,8 @@ namespace RTParser
                 Predicates["lastuserid"] = value.UserID;
                 Predicates["lastusername"] = value.UserName;
                 Predicates["you"] = value.UserName;
+                Predicates["yourself"] = value.UserName;
+                Predicates["your"] = RTParser.Database.NatLangDb.MakePossesive(value.UserName);
             }
         }
 

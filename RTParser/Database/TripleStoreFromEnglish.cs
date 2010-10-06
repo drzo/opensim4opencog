@@ -405,7 +405,7 @@ namespace RTParser.Database
                     new[]
                         {
                             "him", "he", "she", "her", "them", "they", "it", "this", 
-                            "i", "you", "me", "my", "your", "our","their",
+                            "i ", "you", "me", "my", "your", "our","their",
                         })
                 {
                     if (englishToLower.Contains(pronoun))
@@ -423,7 +423,7 @@ namespace RTParser.Database
                             continue;
                         }
                         english = ReplaceWord(english, pronoun, v);
-                        english = ReplaceWord(english, pronoun + "s", v + "s");
+                        if (pronoun != pronoun.Trim()) english = ReplaceWord(english, pronoun + "s", v + "s");
                     }
                 }
 
