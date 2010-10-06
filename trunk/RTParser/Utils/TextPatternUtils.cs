@@ -156,7 +156,7 @@ namespace RTParser.Utils
 
         public static bool IsMissing(Object name)
         {
-            if (ReferenceEquals(name, Unifiable.MISSING))
+            if (ReferenceEquals(name, Unifiable.MISSING) || name == null)
             {
                 return true;
             }

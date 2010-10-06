@@ -390,7 +390,7 @@ namespace RTParser
         public static Unifiable INCOMPLETE = CreateSpecial("$INCOMPLETE",null);
         public static Unifiable Empty = CreateSpecial("$EMPTY","");
         public static Unifiable FAIL_NIL = CreateSpecial("$FAIL_NIL","NIL");
-        public static Unifiable MISSING = CreateSpecial("$MISSING","OM");
+        public static Unifiable MISSING = CreateSpecial("$MISSING",/*"OM"*/null);
 
         public abstract object Raw { get; }
 

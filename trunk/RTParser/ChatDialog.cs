@@ -511,6 +511,7 @@ namespace RTParser
             }
             User popu = originalRequestor ?? request.Requester ?? parentResult.Requester;
             parentResult.IsComplete = true;
+            childResult = childResult ?? parentResult;
             parentResult.SetOutput = childResult.RawOutput;
             popu.addRequestTemplates(request);
             if (streamDepth > 0) streamDepth--;
