@@ -103,6 +103,8 @@ namespace RTParser
         string WhyRequestComplete { get; }
         string WhyResultComplete { get; }
         int MaxCanEvalResult { get; set; }
+        int HasFailed { get; set; }
+        int HasSuceeded { get; set; }
         // inherited from base  string GraphName { get; set; }
         ISettingsDictionary GetSubstitutions(string name, bool b);
         GraphMaster GetGraph(string srai);
@@ -161,6 +163,55 @@ namespace RTParser
             _Durration = TimeSpan.Zero;
             _SRAIResults.Clear();
             RequestTemplates1.Clear();
+        }
+
+        internal bool useParentSF = false;
+        private int _hasFailed = -1;
+        public int HasFailed
+        {            
+            get { return _hasFailed + (useParentSF ? ParentRequest.HasFailed : 0); }
+            set
+            {
+                if (_hasFailed < 1)
+                {
+                    if (useParentSF)
+                    {
+                        if (value == 0)
+                        {
+                            ParentRequest.HasFailed -= 1;
+                        }
+                        else
+                        {
+                            ParentRequest.HasFailed += 1;
+                        }
+                    }
+                }
+                _hasFailed = value;
+            }
+        }
+
+        private int _hasSuceeded = -1;
+        public int HasSuceeded
+        {
+            get { return _hasSuceeded + (useParentSF ? ParentRequest.HasSuceeded : 0); }
+            set
+            {
+                if (_hasSuceeded < 1)
+                {
+                    if (useParentSF)
+                    {
+                        if (value == 0)
+                        {
+                            ParentRequest.HasSuceeded -= 1;
+                        }
+                        else
+                        {
+                            ParentRequest.HasSuceeded += 1;
+                        }
+                    }
+                }
+                _hasSuceeded = value;
+            }
         }
 
         /// <summary>
@@ -297,24 +348,24 @@ namespace RTParser
             get
             {
                 if (SuspendSearchLimits) return false;
-                var WhyComplete = WhyRequestComplete;
-                if (WhyComplete != null) return true;                
+                var retWhyComplete = WhyRequestComplete;
+                if (retWhyComplete != null) return true;                
                 if (SraiDepth.IsOverMax)
                 {
-                    WhyComplete = (WhyComplete ?? "") + "SraiDepth ";
+                    retWhyComplete = (WhyComplete ?? "") + "SraiDepth=" + SraiDepth + " ";
                 }
                 if (RTPBot.Now > TimesOutAt)
                 {
-                    WhyComplete = (WhyComplete ?? "") + "TimesOutAt ";
+                    retWhyComplete = string.Format("{0}TimesOutAt={1:0} ", (retWhyComplete ?? ""), Durration.Seconds);
                 }
                 string whyNoSearch = WhyNoSearch(CurrentResult);
                 if (whyNoSearch!=null)
                 {
-                    WhyComplete = (WhyComplete ?? "") + whyNoSearch;
+                    retWhyComplete = (retWhyComplete ?? "") + whyNoSearch + " ";
                 }
-                if (WhyComplete != null)
+                if (retWhyComplete != null)
                 {
-                    _WhyRequestComplete = WhyComplete;
+                    _WhyRequestComplete = retWhyComplete;
                 }
                 return _WhyRequestComplete != null;
             }

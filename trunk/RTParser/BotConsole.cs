@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Net.Mail;
@@ -33,7 +34,7 @@ namespace RTParser
     public partial class RTPBot
     {
         private readonly Dictionary<string, SystemExecHandler> ConsoleCommands = new Dictionary<string, SystemExecHandler>();
-
+        private static Bot ConsoleRobot;
         public static string AIMLDEBUGSETTINGS =
             "clear -spam +user +bina +error +aimltrace +cyc -dictlog -tscore +loaded";
 
@@ -116,6 +117,7 @@ namespace RTParser
         }
 
         public Object LoggingLock = new object();
+
         public void writeToFileLog(string message)
         {
             LastLogMessage = message;
@@ -164,7 +166,31 @@ namespace RTParser
 
         public static void Main(string[] args)
         {
+            Run(args);
+        }
+        public static void Run(string[] args)
+        {
+            RTPBot myBot = null;
+            TaskQueueHandler.TimeProcess("ROBOTCONSOLE: STARTUP", () => { myBot = Startup(args); });
+            TaskQueueHandler.TimeProcess("ROBOTCONSOLE: RUN", () => Run(args, myBot, MainConsoleWriteLn));}
+
+        private static RTPBot Startup(string[] args)
+        {
+            RTPBot myBot;
+            lock (typeof(Bot))
+            {
+                TaskQueueHandler.TimeProcess("ROBOTCONSOLE: PREPARE", () => Prepare(args));
+                myBot = ConsoleRobot;
+            }
+            TaskQueueHandler.TimeProcess("ROBOTCONSOLE: LOAD", () => Load(args, myBot, MainConsoleWriteLn));
+            TaskQueueHandler.TimeProcess("ROBOTCONSOLE: NOP", () => { });
+            return myBot;
+        }
+
+        public static void Prepare(string[] args)
+        {
             RTPBot myBot = new Bot();
+            ConsoleRobot = myBot as Bot;
             OutputDelegate writeLine = MainConsoleWriteLn;
             bool usedHttpd = false;
             foreach (string s in args)
@@ -181,11 +207,10 @@ namespace RTParser
             {
                 ScriptExecutorGetter geter = new WebScriptExecutor(myBot);
                 new ClientManagerHttpServer(geter, 5580);
-            }
-            Main(args, myBot, writeLine);
+            }            
         }
 
-        public static void Main(string[] args, RTPBot myBot, OutputDelegate writeLine)
+        public static void Load(string[] args, RTPBot myBot, OutputDelegate writeLine)
         {
             myBot.outputDelegate = null; /// ?? Console.Out.WriteLine;
 
@@ -240,7 +265,9 @@ namespace RTParser
             writeLine("-----------------------------------------------------------------");
             myBot.SetName(myName);
             myBot.isAcceptingUserInput = true;
-
+        }
+        public static void Run(string[] args, RTPBot myBot, OutputDelegate writeLine)
+        {
             string evidenceCode = "<topic name=\"collectevidencepatterns\"> " +
                                   "<category><pattern>HOW ARE YOU</pattern><template>" +
                                   "<think><setevidence evidence=\"common-greeting\" prob=1.0 /></think>" +
@@ -263,6 +290,7 @@ namespace RTParser
             {
                 User BotAsAUser = myBot.BotAsUser;
                 myUser = myBot.LastUser;
+                string myName = myUser.UserName;
                 writeLine("-----------------------------------------------------------------");
                 string input = TextFilter.ReadLineFromInput(DLRConsole.SystemWrite, myUser.UserName + "> ");
                 if (input == null)
@@ -303,7 +331,13 @@ namespace RTParser
                   //      string userJustSaid = input;
                         input = "@locally " + myUser.UserName + " - " + input;
                     }
-                    myBotBotDirective = myBot.BotDirective(myUser, input, writeLine);
+                    User user = myUser;
+                    TaskQueueHandler.TimeProcess(
+                        "ROBOTCONSOLE: " + input,
+                        () =>
+                            {
+                                myBotBotDirective = myBot.BotDirective(user, input, writeLine);
+                            });
                     if (!myBotBotDirective) continue;
                     writeLine("-----------------------------------------------------------------");
                     writeLine("{0}: {1}", myUser.UserName, myUser.JustSaid);

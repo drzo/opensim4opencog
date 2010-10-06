@@ -132,11 +132,14 @@ namespace MushDLR223.Utilities
                 innerValueReplaced = ir;
                 if (protect)
                 {
-                    if (value.Contains("<"))
+                    if (value.Contains("<") || value.Contains("+-"))
                     {
                         writeToLog("ERROR: InnerXml Should not be changed to \"" + value + "\"");
                     }
-                    writeToLog("WARNING: InnerXml Should not be changed to \"" + value + "\"");
+                    else
+                    {
+                        writeToLog("WARNING: InnerXml Should not be changed to \"" + value + "\"");
+                    }
                 }
                 return true;
             }

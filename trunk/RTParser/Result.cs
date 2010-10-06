@@ -116,6 +116,8 @@ namespace RTParser
         SubQuery CurrentQuery { get; set; }
         int MaxCanEvalResult { get; set; }
         bool IsComplete { get; set; }
+        int HasFailed { get; set; }
+        int HasSuceeded { get; set; }
     }
 
     /// <summary>
@@ -436,6 +438,55 @@ namespace RTParser
             get { return ResultTemplates1; }
         }
 
+        internal bool useParentSF = false;
+        private int _hasFailed = -1;
+        public int HasFailed
+        {
+            get { return _hasFailed + (useParentSF ? ParentRequest.HasFailed : 0); }
+            set
+            {
+                if (_hasFailed < 1)
+                {
+                    if (useParentSF)
+                    {
+                        if (value == 0)
+                        {
+                            ParentRequest.HasFailed -= 1;
+                        }
+                        else
+                        {
+                            ParentRequest.HasFailed += 1;
+                        }
+                    }
+                }
+                _hasFailed = value;
+            }
+        }
+
+        private int _hasSuceeded = -1;
+        public int HasSuceeded
+        {
+            get { return _hasSuceeded + (useParentSF ? ParentRequest.HasSuceeded : 0); }
+            set
+            {
+                if (_hasSuceeded < 1)
+                {
+                    if (useParentSF)
+                    {
+                        if (value == 0)
+                        {
+                            ParentRequest.HasSuceeded -= 1;
+                        }
+                        else
+                        {
+                            ParentRequest.HasSuceeded += 1;
+                        }
+                    }
+                }
+                _hasSuceeded = value;
+            }
+        }
+
         public RTPBot TargetBot
         {
             get { return request.TargetBot; }
@@ -663,7 +714,7 @@ namespace RTParser
         public override string ToString()
         {
             string whyComplete = WhyComplete;
-            return ToResultString() + " " + request.ToRequestString() + " " +
+            return request.ToRequestString() + " -> " + ToResultString() + " " +
                    (whyComplete != null ? " WhyComplete=" + whyComplete : "");
         }
 
@@ -671,8 +722,9 @@ namespace RTParser
         {
             get
             {
-                //  Result CurrentResult = TheCurrentResult;
-                return WhyRequestComplete ?? WhyResultComplete;
+                string s = WhyResultComplete;
+                if (!String.IsNullOrEmpty(s)) return s + " " + WhyRequestComplete;
+                return WhyRequestComplete;
             }
         }
 
@@ -708,8 +760,10 @@ namespace RTParser
         {
             {
                 var temps = ResultTemplates;
-                if (temps != null)
+                if (temps == null) return;
+                lock (temps)
                 {
+                    temps = new List<TemplateInfo>(temps);
                     if (RotatedTemplate == temps.Count) return;
                     RotatedTemplate = temps.Count;
                     foreach (TemplateInfo info in temps)
@@ -725,13 +779,10 @@ namespace RTParser
             lock (OutputSentences) OutputSentences.Clear();
             AlreadyUsed = "xtxtxtxtxtxtxtxtxxt";
             var temps = ResultTemplates1;
-            if (temps != null)
+            if (b)
             {
-                if (b) temps.Clear();
-            }
-            if (SubQueries.Count > 0)
-            {
-                if (b) SubQueries = new List<SubQuery>();
+                lock (SubQueries) if (SubQueries.Count > 0) SubQueries = new List<SubQuery>();
+                if (temps != null) lock (temps) temps.Clear();
             }
         }
 

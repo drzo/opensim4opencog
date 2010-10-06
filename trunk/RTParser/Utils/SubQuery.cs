@@ -110,8 +110,59 @@ namespace RTParser.Utils
         /// </summary>
         public List<Unifiable> TopicStar = new List<Unifiable>();
 
-        public int HasFailed = 0;
-        public int HasSuceeded = 0;
+        protected Result ParentRequest
+        {
+            get { return Result; }
+        }
+        internal bool useParentSF = false;
+        private int _hasFailed = -1;
+        public int HasFailed
+        {
+            get { return _hasFailed + (useParentSF ? ParentRequest.HasFailed : 0); }
+            set
+            {
+                if (_hasFailed < 1)
+                {
+                    if (useParentSF)
+                    {
+                        if (value == 0)
+                        {
+                            ParentRequest.HasFailed -= 1;
+                        }
+                        else
+                        {
+                            ParentRequest.HasFailed += 1;
+                        }
+                    }
+                }
+                _hasFailed = value;
+            }
+        }
+
+        private int _hasSuceeded = -1;
+        public int HasSuceeded
+        {
+            get { return _hasSuceeded + (useParentSF ? ParentRequest.HasSuceeded : 0); }
+            set
+            {
+                if (_hasSuceeded < 1)
+                {
+                    if (useParentSF)
+                    {
+                        if (value == 0)
+                        {
+                            ParentRequest.HasSuceeded -= 1;
+                        }
+                        else
+                        {
+                            ParentRequest.HasSuceeded += 1;
+                        }
+                    }
+                }
+                _hasSuceeded = value;
+            }
+        }
+
         public int GetDictValue;
         public int SetDictValue;
 
