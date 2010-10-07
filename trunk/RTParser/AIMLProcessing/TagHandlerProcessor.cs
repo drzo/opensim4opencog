@@ -348,7 +348,7 @@ namespace RTParser
                     case "br":
                         return new verbatum("\n", targetBot, user, query, request, result, node);
                     case "pre":
-                        return new verbatum(node.InnerXml, targetBot, user, query, request, result, node);
+                        return new verbatum(StaticXMLUtils.InnerXmlText(node), targetBot, user, query, request, result, node);
                     case "p":
                         return new verbatum("\n\n", targetBot, user, query, request, result, node);
                     case "meta":
