@@ -68,7 +68,7 @@ namespace RTParser
         {
             get
             {
-                //return true;
+                return true;
                 if (GlobalSettings != null)
                 {
                     Unifiable lts = GlobalSettings.grabSettingNoDebug("ProcessHeardPreds");
@@ -1518,7 +1518,8 @@ The AIMLbot program.
 
         public string LoadPersonalDirectory(string myName)
         {
-            return UserOper(() => LoadPersonalDirectory0(myName), QuietLogger);
+            return LoadPersonalDirectory0(myName);
+            //return UserOper(() => LoadPersonalDirectory0(myName), QuietLogger);
         }
 
         private string LoadPersonalDirectory0(string myName)
@@ -1611,7 +1612,11 @@ The AIMLbot program.
 
         public string SetName(string myName)
         {
-            lock (OnBotCreatedHooks) return UserOper(() => SetName0(myName), writeDebugLine);
+            lock (OnBotCreatedHooks)
+            {
+                return SetName0(myName);
+                //return UserOper(() => SetName0(myName), writeDebugLine);
+            }
         }
 
         private string SetName0(string myName)

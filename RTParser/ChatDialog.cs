@@ -228,7 +228,13 @@ namespace RTParser
 
         #region Conversation methods
 
-        private Result GlobalChatWithUser(string input, string user, string otherName, OutputDelegate traceConsole, bool saveResults)
+        public Result SaidUser(string input, string user, string[] otherName, OutputDelegate traceConsole, bool saveResults, bool saveResultsOnJustHeard)
+        {
+            return GlobalChatWithUser(input, user, otherName == null ? null : otherName[0], traceConsole, saveResults,
+                                      saveResultsOnJustHeard);
+        }
+
+        private Result GlobalChatWithUser(string input, string user, string otherName, OutputDelegate traceConsole, bool saveResults, bool saveResultsOnJustHeard)
         {
             User targetUser = BotAsUser;
             string youser = input;
@@ -255,6 +261,9 @@ namespace RTParser
             //  myUser.TopicSetting = "collectevidencepatterns";
             Result res = null;
             var request = CurrentUser.CreateRequest(input, targetUser);
+            request.IsTraced = true;
+            request.OriginalSalientRequest = request;
+            request.SaveResultsOnJustHeard = saveResultsOnJustHeard;
             Result requestCurrentResult = request.CurrentResult; 
             if (requestCurrentResult == null)
             {
@@ -818,9 +827,23 @@ namespace RTParser
             }
 
             List<SubQuery> AllQueries = GetQueriesFromResults(request, result, isTraced);
-            if (AllQueries == null || AllQueries.Count == 0) return;
+            if (AllQueries == null || AllQueries.Count == 0)
+            {
+                if (isTraced)
+                {
+                    writeToLog("NO QUERIES FOR RESULTS " + request);
+                }
+                return;
+            }
             List<SubQuery> sortMe = SortCandidateSolutions(AllQueries, isTraced);
-            if (sortMe == null || sortMe.Count == 0) return;
+            if (sortMe == null || sortMe.Count == 0)
+            {
+                //if (isTraced)
+                {
+                    writeToLog("NO SORTED QUERIES " + request);
+                }
+                return;
+            }
             solutions = GetSolutions(request, result, sortMe, solutions, out hasMoreSolutions);
         }
 
@@ -862,7 +885,14 @@ namespace RTParser
 
         private List<SubQuery> SortCandidateSolutions( List<SubQuery> AllQueries, bool isTraced)
         {
-            if (!BE_COMPLETE_NOT_FAST) return AllQueries;
+            if (!BE_COMPLETE_NOT_FAST)
+            {
+                if (isTraced)
+                {
+                    PrintQueryList("-- ", AllQueries);
+                } 
+                return AllQueries;
+            }
             List<SubQuery> sortMe = new List<SubQuery>(AllQueries);
             
             sortMe.Sort();
@@ -887,25 +917,25 @@ namespace RTParser
 
                     int sqNum = 0;
                     writeToLog("AllQueries.Count = " + sortMe.Count + " was " + AllQueries);
-                    if (false)
-                        foreach (SubQuery query in AllQueries)
-                        {
-                            writeToLog("---BEFORE QUERY " + sqNum + ": " + query.Pattern + " " + query.Pattern.Graph);
-                            sqNum++;
-                        }
+                    if (false) PrintQueryList("---BEFORE QUERY ", AllQueries);
                 }
                 if (isTraced)
                 {
-                    int sqNum = 0;
-                    foreach (SubQuery query in sortMe)
-                    {
-                        writeToLog("--- " + cc + sqNum + ": " + query.Pattern + " " + query.Pattern.Graph);
-                        sqNum++;
-                    }
+                    PrintQueryList("--- " + cc + " ", AllQueries);
                 }
                 writeToLog("--------------------------------------------");
             }
             return sortMe;
+        }
+
+        private void PrintQueryList(string cc, List<SubQuery> AllQueries)
+        {
+            int sqNum = 0;
+            foreach (SubQuery query in AllQueries)
+            {
+                writeToLog(cc + sqNum + ": " + query.Pattern + " " + query.Pattern.Graph);
+                sqNum++;
+            }
         }
 
         private int GetSolutions(Request request, Result result, List<SubQuery> sortMe, int solutions, out bool hasMoreSolutions)

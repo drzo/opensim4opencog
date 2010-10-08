@@ -74,6 +74,7 @@ namespace RTParser.AIMLTagHandlers
                     subRequest.StartedOn = this.request.StartedOn; // make sure we don't keep adding time to the request
                     Result subQuery = this.Proc.ChatWithRequest(subRequest);
                     this.request.WhyComplete = subRequest.WhyComplete;
+                    subRequest.IsToplevelRequest = false;
                     return subQuery.Output;
                 }
             }

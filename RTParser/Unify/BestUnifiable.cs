@@ -34,6 +34,32 @@ namespace RTParser
 
         private Unifiable best;
         public List<Unifiable> List = new List<Unifiable>();
+        private bool insideSearch = false;
+
+        public override int RunLowMemHooks()
+        {
+            int total = 0;
+            lock (this)
+            {
+                if (insideSearch) return 0;
+                try
+                {
+                    insideSearch = true;
+                    foreach (var u in List)
+                    {
+                        if (u != null && ReferenceEquals(u, this))
+                        {
+                            total += u.RunLowMemHooks();
+                        }
+                    }
+                    return total;
+                }
+                finally
+                {
+                    insideSearch = false;
+                }
+            }
+        }
 
         public override object Raw
         {

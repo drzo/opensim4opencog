@@ -93,17 +93,36 @@ namespace RTParser.Utils
         /// <summary>
         /// Loads the AIML from files found in the path
         /// </summary>
-        /// <param name="path"></param>
-        public int loadAIMLDir0(string path, LoaderOptions loadOpts)
+        /// <param name="path"></param>                
+        public long loadAIMLDir(string path, LoaderOptions loadOpts)
         {
-            int total = 0;
+            long total = 0;
+
+            int before = loadOpts.CtxGraph.Size;
+            long saved0 = Unifiable.LowMemExpireUnifiableCaches();
+            writeToLog("Starting to process AIML files found in the directory (" + path + ")");
+            try
+            {
+                total = loadAIMLDir0(path, loadOpts);
+            }
+            finally
+            {
+                long saved1 = Unifiable.LowMemExpireUnifiableCaches();
+                long saved2 = Unifiable.LowMemExpireUnifiableCaches();
+                writeToLog("Finished processing the AIML files. " + Convert.ToString(before - loadOpts.CtxGraph.Size) +
+                           " categories processed. saved0-2 {0}-{1}-{2} ", saved0, saved1, saved2);
+            }
+
+            return total;
+        }
+        public long loadAIMLDir0(string path, LoaderOptions loadOpts)
+        {
+            long total = 0;
             RTPBot RProcessor = loadOpts.RProcessor;
             path = ResolveToURI(path, loadOpts);
 
             Request request = loadOpts.TheRequest;
             loadOpts = EnsureOptions(loadOpts, request, path);
-
-            writeToLog("Starting to process AIML files found in the directory (" + path+")");
 
             var fileEntries = HostSystem.GetFiles(path, "*.aiml");
             if (fileEntries.Length > 0)
@@ -141,8 +160,6 @@ namespace RTParser.Utils
                         writeToLog("Error in loadAIMLFile " + ee);
                     }
                 }
-                writeToLog("Finished processing the AIML files. " + Convert.ToString(loadOpts.CtxGraph.Size) +
-                           " categories processed.");
             }
             else
             {
@@ -154,7 +171,7 @@ namespace RTParser.Utils
             {
                 foreach (string f in HostSystem.GetDirectories(path))
                 {
-                    total += loadAIMLDir0(path + Path.DirectorySeparatorChar + f, loadOpts);
+                    total += loadAIMLDir(path + Path.DirectorySeparatorChar + f, loadOpts);
                 }
             }
             return total;
@@ -205,7 +222,7 @@ namespace RTParser.Utils
             return bd;
         }
 
-        private R LoaderOper<R>(Func<R> action, GraphMaster gm)
+        private R LoaderOper<R>(Func<R> action, GraphMaster gm, LoaderOptions loadOpts)
         {
             OutputDelegate prev = userTraceRedir;
             try
@@ -213,6 +230,7 @@ namespace RTParser.Utils
                 userTraceRedir = gm.writeToLog;
                 try
                 {
+                    if (!loadOpts.NeedsLoaderLock) return action();
                     lock (ErrorList)
                     {
                         lock (gm.LockerObject)
@@ -248,28 +266,27 @@ namespace RTParser.Utils
             }
         }
 
-        public int loadAIMLURI(string path, LoaderOptions loadOpts)
+        public long loadAIMLURI(string path, LoaderOptions loadOpts)
         {
-            int total = LoaderOper(() => loadAIMLURI0(path, loadOpts), loadOpts.CtxGraph);
+            long total = LoaderOper(() => loadAIMLURI0(path, loadOpts), loadOpts.CtxGraph, loadOpts);
             TotalCheck(path, total, loadOpts);
             return total;
         }
 
-        private void TotalCheck(string path, int total, LoaderOptions loadOpts)
+        private void TotalCheck(string path, long total, LoaderOptions loadOpts)
         {
         }
 
-        public int loadAIMLURI0(string path0, LoaderOptions loadOpts)
+        public long loadAIMLURI0(string path0, LoaderOptions loadOpts)
         {
             RTPBot RProcessor = loadOpts.RProcessor;
             string path = path0;
             loadOpts.Loading0 = path;
             string pathIn = path;
-            RProcessor.ReloadHooks.Add(() => loadAIMLURI0(pathIn, loadOpts));
             path = ResolveToURI(pathIn, loadOpts);
             string fullPath = HostSystem.GetAbsolutePath(pathIn);
             if (!HostSystem.FileOrDirExists(path)) path = fullPath;
-            int total = 0;
+            long total = 0;
             try
             {
                 if (HostSystem.DirExists(path))
@@ -283,7 +300,7 @@ namespace RTParser.Utils
                        // request.Filename = path;
                         //loadOpts = request.LoadOptions;
                         //RTPBot.loadConfigs(RProcessor, path, request);
-                        total += loadAIMLDir0(path, loadOpts);
+                        total += loadAIMLDir(path, loadOpts);
                         TotalCheck(path, total, loadOpts);
                     }
                     finally
@@ -366,6 +383,7 @@ namespace RTParser.Utils
                                     request.LoadOptions = savedOpt;
                                 }
                             }
+                        long saved0 = Unifiable.LowMemExpireUnifiableCaches();
                         return total;
                     }
                     finally
@@ -397,15 +415,15 @@ namespace RTParser.Utils
         /// graphmaster
         /// </summary>
         /// <param name="path">The name of the file to process</param>
-        public int loadAIMLFile(string path, LoaderOptions loadOpts, bool forceReload)
+        public long loadAIMLFile(string path, LoaderOptions loadOpts, bool forceReload)
         {
-            int total = loadAIMLFile0(path, loadOpts, forceReload);
+            long total = loadAIMLFile0(path, loadOpts, forceReload);
             TotalCheck(path, total, loadOpts);
             return total;
         }
-        public int loadAIMLFile0(string path, LoaderOptions loadOpts, bool forceReload)
+        public long loadAIMLFile0(string path, LoaderOptions loadOpts, bool forceReload)
         {
-            int total = 0;
+            long total = 0;
             path = ResolveToURI(path, loadOpts);
             RTPBot RProcessor = loadOpts.RProcessor;
             //RProcessor.ReloadHooks.Add(() => loadAIMLFile0(path, loadOpts, forceReload));
@@ -514,9 +532,9 @@ namespace RTParser.Utils
         /// </summary>
         /// <param name="doc">The XML document containing the AIML</param>
         /// <param name="loadOpts">Where the XML document originated</param>
-        public int loadAIMLStream(Stream input0, LoaderOptions loadOpts)
+        public long loadAIMLStream(Stream input0, LoaderOptions loadOpts)
         {
-            int total = 0;
+            long total = 0;
             RTPBot RProcessor = loadOpts.RProcessor;
             Request request = loadOpts.TheRequest;
             DateTime oneMinuteFromNow = RTPBot.Now + TimeSpan.FromMinutes(1);
@@ -662,31 +680,35 @@ namespace RTParser.Utils
             return loadOpts;
         }
 
-        public int InsideLoaderContext(XmlNode currentNode, Request request, SubQuery query, Func<int> doit)
+        public long InsideLoaderContext(XmlNode currentNode, Request request, SubQuery query,
+            LoaderOptions loadOpts, Func<long> doit)
         {
-            int total = 0;
+            long total = 0;
             query = query ?? request.CurrentQuery;
             //Result result = query.Result;
             RTPBot RProcessor = request.TargetBot;
             AIMLLoader prev = RProcessor.Loader;
+            GraphMaster loadOptsPrevGraph = loadOpts.CtxGraph;
             try
             {
                 RProcessor.Loader = this;
                 // Get a list of the nodes that are children of the <aiml> tag
                 // these nodes should only be either <topic> or <category>
                 // the <topic> nodes will contain more <category> nodes
-                string currentNodeName = currentNode.Name.ToLower();
+                //string currentNodeName = currentNode.Name.ToLower();
 
-                ThreadStart ts = EnterTag(request, currentNode, query);
+                ThreadStart ts = EnterTag(request, currentNode, query);                 
                 try
                 {
-                    int done = doit();
+                    loadOpts.CtxGraph = request.Graph;
+                    long done = doit();
                     total += done;
-                    TotalCheck(currentNode.OuterXml, total, null);
+                   // TotalCheck(currentNode.OuterXml, total, null);
                 }
                 finally
                 {
                     ts();
+                    loadOpts.CtxGraph = loadOptsPrevGraph;
                 }
             }
             finally
@@ -697,32 +719,33 @@ namespace RTParser.Utils
         }
 
 
-        private int loadAIMLNodes(IEnumerable nodes, LoaderOptions loadOpts, Request request,
+        private long loadAIMLNodes(IEnumerable nodes, LoaderOptions loadOpts, Request request,
                                   List<ConversationCondition> additionalRules)
         {
-            int total = 0;
+            long total = 0;
             if (nodes != null)
             {
+                loadOpts.AdditionalPreconditions = additionalRules;
                 foreach (object o in nodes)
                 {
                     XmlNode node = o as XmlNode;
-                    total += loadAIMLNode((XmlNode)node, loadOpts, request);
-                    TotalCheck(TextAndSourceInfo(node), total, loadOpts);
+                    total += loadAIMLNode((XmlNode) node, loadOpts, request);
+                    //TotalCheck(TextAndSourceInfo(node), total, loadOpts);
                 }
             }
             return total;
         }
 
-        public int loadAIMLNode(XmlNode currentNode, LoaderOptions loadOpts, Request request)
+        public long loadAIMLNode(XmlNode currentNode, LoaderOptions loadOpts, Request request)
         {
             var additionalRules = loadOpts.AdditionalPreconditions;
-            int total = LoaderOper(() => loadAIMLNode0(currentNode, loadOpts, request, additionalRules),
-                              loadOpts.CtxGraph);
+            long total = LoaderOper(() => loadAIMLNode0(currentNode, loadOpts, request, additionalRules),
+                                    loadOpts.CtxGraph, loadOpts);
             TotalCheck(TextAndSourceInfo(currentNode), total, loadOpts);
             return total;
         }
 
-        public int loadAIMLNode0(XmlNode currentNode, LoaderOptions loadOpts, Request request,
+        public long loadAIMLNode0(XmlNode currentNode, LoaderOptions loadOpts, Request request,
                                  List<ConversationCondition> additionalRules)
         {
             if (currentNode == null)
@@ -730,7 +753,7 @@ namespace RTParser.Utils
                 writeToLog("ERROR: no currentNode in " + loadOpts);
                 return 0;
             }
-            int total = 0;
+            long total = 0;
             RTPBot RProcessor = loadOpts.RProcessor;
             AIMLLoader prev = RProcessor.Loader;
             try
@@ -742,7 +765,7 @@ namespace RTParser.Utils
                 string currentNodeName = currentNode.Name.ToLower();
                 if (currentNodeName == "aiml")
                 {
-                    total += InsideLoaderContext(currentNode, request, request.CurrentQuery,
+                    total += InsideLoaderContext(currentNode, request, request.CurrentQuery, loadOpts,
                                                  () =>
                                                  loadAIMLNodes(currentNode.ChildNodes, loadOpts, request,
                                                                additionalRules));
@@ -772,7 +795,7 @@ namespace RTParser.Utils
                     ConversationCondition thatRule = new ConversationCondition("that", valueThat, currentNode);
                     additionalRules.Add(thatRule);
                     total +=
-                        InsideLoaderContext(currentNode, request, request.CurrentQuery,
+                        InsideLoaderContext(currentNode, request, request.CurrentQuery, loadOpts,
                                             () =>
                                             loadAIMLNodes(
                                                 currentNode.ChildNodes,
@@ -919,8 +942,8 @@ namespace RTParser.Utils
             var patterns = FindNodes("pattern", cateNode);
             var templates = FindNodes("template", cateNode);
             var rulesNodes = FindNodes("rule", cateNode);
-            var thatNodes = new List<XmlNode>();
-            FindNodes("that", cateNode, thatNodes, 2);
+           // var thatNodes = new List<XmlNode>();
+            //FindNodes("that", cateNode, thatNodes, 2);
             string errors = "";
             if (templates.Count == 0)
             {
@@ -1039,7 +1062,7 @@ namespace RTParser.Utils
             }
         }
 
-        private CategoryInfo addCatNode(XmlNode cateNode, XmlNode patternNode, XmlNode thatNode, LoaderOptions loaderOpts,
+        private CategoryInfo addCatNode(XmlNode cateNode, XmlNode patternNode, XmlNode thatNodeOrNull, LoaderOptions loaderOpts,
                                         XmlNode templateNode,
                                         Unifiable topicName, XmlNode outerNode, List<ConversationCondition> additionalRules)
         {
@@ -1076,18 +1099,20 @@ namespace RTParser.Utils
                 errors += " Missing pattern tag2 ";
             }
 
-            XmlNode newPattern;
-            Unifiable patternText;
-            Func<XmlNode, string> Render = nodeI => VisibleRendering(nodeI, PatternSideRendering);
+            XmlNode newPattern0;
 
-            patternNode = GetPatternNode("that", cateNode, patternNode, ref thatNode);
-            string that = GeneratePatternNodeRules(additionalRules, thatNode);
+            patternNode = GetPatternNode("that", cateNode, patternNode, ref thatNodeOrNull);
 
-            Unifiable cond = Render(extractPrecondNode(patternNode, "flag", cateNode, out patternText, out newPattern));
-            patternNode = newPattern;
-            XmlNode topicTagText = extractPrecondNode(patternNode, "topic", cateNode, out patternText, out newPattern);
-            patternNode = newPattern;
+            string that = GeneratePatternNodeRules(additionalRules, thatNodeOrNull);
 
+            XmlNode flagXML = null;
+            patternNode = GetPatternNode("flag", cateNode, patternNode, ref flagXML);
+            Unifiable cond = VisibleChildsRenderingOrStar(flagXML);
+
+            XmlNode topicTagText = null;
+            patternNode = GetPatternNode("topic", cateNode, patternNode, ref topicTagText);
+
+            var patternText = VisibleChildsRenderingOrStar(patternNode);
             if (!string.IsNullOrEmpty(errors))
             {
                 AddErrorCategory(errors, cateNode);
@@ -1116,7 +1141,7 @@ namespace RTParser.Utils
             if (!IsNullOrEmpty(categoryPath))
             {
                 GraphMaster pathCtxGraph = loaderOpts.CtxGraph;
-                lock (pathCtxGraph.LockerObject)
+                //lock (pathCtxGraph.LockerObject)
                 {
                     try
                     {
@@ -1157,6 +1182,12 @@ namespace RTParser.Utils
             }
         }
 
+        private string VisibleChildsRenderingOrStar(XmlNode nodeI)
+        {
+            if (nodeI == null) return "*";
+            return VisibleRendering(nodeI.ChildNodes, PatternSideRendering);
+        }
+
         private bool UnusableCategory(XmlNode templateNode)
         {
             string tempStringS = templateNode.OuterXml.ToLower()
@@ -1182,10 +1213,12 @@ namespace RTParser.Utils
         private XmlNode GetPatternNode(String tagName, XmlNode cateNode, XmlNode patternNode, ref XmlNode foundNode)
         {
             XmlNode newPattern = null;
-            if (foundNode == null)
+
+            Unifiable patternText0;
+            var foundNode0 = extractPrecondNode(patternNode, tagName, cateNode, out patternText0, out newPattern);
+            if (foundNode0 != null) foundNode = foundNode0;
+            if (newPattern != null)
             {
-                Unifiable patternText;
-                foundNode = extractPrecondNode(patternNode, tagName, cateNode, out patternText, out newPattern);
                 var newPatternOuterXml = newPattern.OuterXml;
                 patternNode = newPattern;
                 if (newPatternOuterXml.Contains("<" + tagName))
@@ -1321,16 +1354,28 @@ namespace RTParser.Utils
         {
             string thatString = null;
             // get the nodes that we need
-            XmlNode that = FindNodeOrHigher(tagname, patternNode, null) ?? FindNode(tagname, cateNode, null, 2);
-            if (that != null)
+            List<XmlNode> foundInPattern = FindNodes(tagname, patternNode);
+
+            XmlNode foundHigherThanPattern = FindHigher(tagname, patternNode, null);
+            XmlNode foundAnywhere = foundHigherThanPattern ?? FindNode(tagname, cateNode, null, 2);
+            if (foundAnywhere != null)
             {
-                thatString = that.OuterXml;
+                thatString = foundAnywhere.OuterXml;
             }
             //Unifiable thatText = Unifiable.STAR;
 
-            if (Equals(null, patternNode))
+            if (ReferenceEquals(null, patternNode))
             {
-                patternNode = PatternStar;
+                patternNode = null;
+                patternText = null;
+                newPattern = patternNode;
+                return foundAnywhere;
+            }
+            if (foundInPattern.Count == 0)
+            {
+                patternText = null;// patternNode.InnerXml;
+                newPattern = null;// patternNode;
+                return foundAnywhere;
             }
             {
                 RenderOptions patternSideRendering = GetPatternSideRendering(tagname);
@@ -1354,13 +1399,8 @@ namespace RTParser.Utils
                 patternNode = newLineInfoPattern;
                 patternText = Unifiable.Create(Unifiable.InnerXmlText(patternNode));
             }
-
             newPattern = patternNode;
-            if (!Equals(null, that))
-            {
-                return that;
-            }
-            return that;
+            return foundAnywhere;
         }
 
         static readonly Dictionary<string,RenderOptions> PatternSideRenderingCache = new Dictionary<string, RenderOptions>();

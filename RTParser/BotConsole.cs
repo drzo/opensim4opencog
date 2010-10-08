@@ -117,6 +117,7 @@ namespace RTParser
         }
 
         public Object LoggingLock = new object();
+        private static ClientManagerHttpServer HttpTextServer;
 
         public void writeToFileLog(string message)
         {
@@ -206,7 +207,7 @@ namespace RTParser
             if (usedHttpd)
             {
                 ScriptExecutorGetter geter = new WebScriptExecutor(myBot);
-                new ClientManagerHttpServer(geter, 5580);
+                HttpTextServer = new ClientManagerHttpServer(geter, 5580);
             }            
         }
 
@@ -435,10 +436,10 @@ namespace RTParser
                     user = myUser.UserName;
                     said = args;
                 }
-                Result res = GlobalChatWithUser(said, user, null, writeDebugLine, true);
+                Result res = GlobalChatWithUser(said, user, null, writeDebugLine, true, false);
                 // detect a user "rename"
                 DetectUserChange(myUser, user);
-                OutputResult(res, console, false);
+                OutputResult(res, console, false);                
                 return true;
             }
 
@@ -454,9 +455,16 @@ namespace RTParser
                     user = myUser.UserName;
                     said = args;
                 }
-                Result res = GlobalChatWithUser(said, user, null, writeDebugLine, true);
+                Result res = GlobalChatWithUser(said, user, null, writeDebugLine, true, true);
+                request = res.request;
+                request.ResponderSelfListens = true;
                 // detect a user "rename"
                 bool userChanged = DetectUserChange(myUser, user);
+                if (userChanged)
+                {
+                    myUser = FindUser(user);
+                    request.Requester = myUser;                    
+                }
                 var justsaid = OutputResult(res, console, false);
                 User theResponder = res.Responder ?? res.request.Responder;
                 if (theResponder == null)
@@ -470,11 +478,11 @@ namespace RTParser
                 }
                 myUser.LastResponder = theResponder;
                 theResponder.JustSaid = justsaid;
-// ReSharper disable ConditionIsAlwaysTrueOrFalse
-                if (false && ProcessHeardPreds) 
-// ReSharper restore ConditionIsAlwaysTrueOrFalse
+                // ReSharper disable ConditionIsAlwaysTrueOrFalse
+                if (ProcessHeardPreds && request.ResponderSelfListens)
+                    // ReSharper restore ConditionIsAlwaysTrueOrFalse
                     HeardSelfSayResponse(theResponder, myUser, justsaid, res, control);
-                
+
                 return true;
             }
             if (showHelp)

@@ -61,7 +61,16 @@ namespace RTParser.Utils
                     "id",
                 };
 
-        public static readonly List<String> SilentTags = new List<string>()
+        public static readonly List<String> LoaderTags = new List<string>()
+                                                             {
+                                                                 "aiml",
+                                                                 "topic",
+                                                                 "category",
+                                                                 "genlMt",
+                                                             };
+
+
+        public static readonly List<String> SilentTags = new List<string>(LoaderTags)
                                           {
                                 "#comment",
                                 "silence",
@@ -89,7 +98,7 @@ namespace RTParser.Utils
                                                                        "that",
                                                                        "br",
                                                                        "p",
-                                                                       "that",
+                                                                       "flags",
                                                                    };
 
 
@@ -166,7 +175,7 @@ namespace RTParser.Utils
             return vv;
         }
 
-        public static R FromLoaderOper<R>(Func<R> action, GraphMaster gm)
+        public static R FromLoaderOper<R>(Func<R> action, GraphMaster gm, LoaderOptions loadOpts)
         {
             OutputDelegate prev = userTraceRedir;
             try
@@ -174,6 +183,7 @@ namespace RTParser.Utils
                 userTraceRedir = gm.writeToLog;
                 try
                 {
+                    if (!loadOpts.NeedsLoaderLock) return action();
                     lock (ErrorList)
                     {
                         lock (gm.LockerObject)

@@ -19,7 +19,21 @@ namespace RTParser
         {
             StaticXMLUtils.FormatProviderConvertor = FormatProviderConvertor0;
         }
+        public static long LowMemExpireUnifiableCaches()
+        {
+            long total = 0;
+            foreach (KeyValuePair<string, Unifiable> internedUnifiable in internedUnifiables)
+            {
+                var u = internedUnifiable.Value;
+                if (u != null)
+                {
+                   total += u.RunLowMemHooks();
+                }
+            }
+            return total;
+        }
 
+        public abstract int RunLowMemHooks();
         public static bool ReturnNullForUnknownNonUnifiables = true;
         public static bool ReturnNullForUnknownUnifiables = false;
         public static IConvertible FormatProviderConvertor0(IConvertible arg, Type solid)
@@ -910,7 +924,7 @@ namespace RTParser
 
     public class SpecialStringUnifiable : StringUnifiable
     {
-        private readonly string DebugName1; 
+        private readonly string DebugName1;
         public override string ToString()
         {
             return DebugName1 + "-" + Unifiable.DescribeUnifiable(this);

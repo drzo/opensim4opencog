@@ -1861,16 +1861,14 @@ namespace RTParser.Utils
             TagHandlerChilds = TagHandlerChilds ?? new List<AIMLTagHandler>();
             TagHandlerChilds.Add(part);
         }
-        public void Dispose()
+        public virtual void Dispose()
         {
-            return;
             lock (this)
             {
                 if (IsDisposing) return;
                 IsDisposing = true;
             }
             if (Parent != null) Parent.Dispose();
-            return;
             if (TagHandlerChilds != null)
             {
                 foreach (AIMLTagHandler child in TagHandlerChilds)

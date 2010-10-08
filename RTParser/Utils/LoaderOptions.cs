@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Xml;
 using AIMLbot;
@@ -18,6 +19,7 @@ namespace RTParser.Utils
         public bool DebugFiles;
         public bool recurse;
         public RTPBot RProcessor;
+        public bool NeedsLoaderLock;
 
         public LoaderOptions(Request impl, GraphMaster master)
         {
@@ -85,6 +87,11 @@ namespace RTParser.Utils
         public LoaderOptions Value
         {
             get { return this; }
+        }
+
+        public ICollection<CrossAppDomainDelegate> ReloadHooks
+        {
+            get { return RProcessor.ReloadHooks; }
         }
 
 
