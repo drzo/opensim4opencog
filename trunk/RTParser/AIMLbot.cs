@@ -59,37 +59,37 @@ namespace AIMLbot
         #region InteractionResult Members
 
 
-        public Result result
+        public override Result result
         {
             get { return this;  }
         }
 
-        public RTParser.Variables.ISettingsDictionary RequesterChanges
+        public override RTParser.Variables.ISettingsDictionary RequesterChanges
         {
             get { throw new NotImplementedException(); }
         }
 
-        public RTParser.Variables.ISettingsDictionary ResponderChanges
+        public override RTParser.Variables.ISettingsDictionary ResponderChanges
         {
             get { throw new NotImplementedException(); }
         }
 
-        public InteractionResult PreviousInteraction
+        public override InteractionResult PreviousInteraction
         {
             get { throw new NotImplementedException(); }
         }
 
-        public InteractionResult NextInteraction
+        public override InteractionResult NextInteraction
         {
             get { throw new NotImplementedException(); }
         }
 
-        public Unifiable GetInputSentence(int sentence)
+        public override Unifiable GetInputSentence(int sentence)
         {
             throw new NotImplementedException();
         }
 
-        public void CollectResult()
+        public override void CollectResult()
         {
             throw new NotImplementedException();
         }
