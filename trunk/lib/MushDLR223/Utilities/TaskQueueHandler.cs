@@ -1490,8 +1490,8 @@ namespace MushDLR223.Utilities
                 if (named != null)
                 {
                     named += " TIME: " + GetTimeString(used);
-                    if (Stopwatch.IsHighResolution)
-                        named += " (high resolution timer)";
+                    if (!Stopwatch.IsHighResolution)
+                        named += " (non high resolution timer)";
                     DLRConsole.DebugWriteLine(named);
                 }
             }
