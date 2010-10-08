@@ -16,13 +16,70 @@ namespace RTParser
     public class StringUnifiable : Unifiable
     {
 
-        protected void SpoilCache()
+        public virtual int SpoilCache()
         {
+            int total = 0;
+            if (splittedCache != null) total++;
             splittedCache = null;
+            if (valueCache != null) total++;
             valueCache = null;
+            if (valueCache is IDisposable)
+            {
+                IDisposable idispose = (IDisposable)valueCache;
+                try
+                {
+                    idispose.Dispose();
+                }
+                catch (Exception e)
+                {
+                    writeToLog("ERROR: DISPOSE caused " + e);
+                    throw;
+                }
+            }
+            if (restCache != null) total++;
             restCache = null;
+            if (upperCache != null) total++;
             upperCache = null;
             _strictness = -11;
+            return total;
+        }
+
+        public override int RunLowMemHooks()
+        {
+            int total = 0;
+            if (splittedCache != null)
+            {
+                lock (this)
+                {
+                    Unifiable[] prev = splittedCache;
+                    splittedCache = null;
+                    try
+                    {
+                        total += 1;
+                        foreach (var u in prev)
+                        {
+                            if (u != null && ReferenceEquals(u, this))
+                            {
+                                total += u.RunLowMemHooks();
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        splittedCache = prev;
+                    }
+                }
+            }
+            if (restCache != null)
+            {
+                var restCache0 = restCache;
+                restCache = null;
+                total += restCache0.RunLowMemHooks();
+            }
+            var localStrictnes = _strictness;
+            total += SpoilCache();
+            _strictness = localStrictnes;
+            return total;
         }
 
         protected string str;
@@ -636,7 +693,7 @@ namespace RTParser
         {
             if (String.IsNullOrEmpty(str)) return Unifiable.Empty;
             splittedCache = ToArray();
-            if (splittedCache.Length == 0) return "";
+            if (splittedCache.Length == 0) return Unifiable.Empty;
             if (restCache == null) 
              return Join(" ", splittedCache, 1, splittedCache.Length - 1);
             return restCache;

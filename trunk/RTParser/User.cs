@@ -433,6 +433,7 @@ namespace RTParser
                 //this.Predicates.InsertFallback(() => bot.DefaultPredicates);
                 UserID = userID;
                 UserName = userID;
+                SetMeMyselfAndI(UserName);
                 //this.Predicates.addSetting("topic", "NOTOPIC");
                 SaveTimer = new Timer(SaveOften, this, new TimeSpan(0, 5, 0), new TimeSpan(0, 5, 0));
                 needsSave = true;

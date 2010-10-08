@@ -26,7 +26,7 @@ namespace RTParser
         public override void Clear()
         {
             str = "";
-            base.SpoilCache();
+            SpoilCache();
         }
 
         public override string AsString()

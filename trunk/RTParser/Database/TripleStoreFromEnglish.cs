@@ -408,7 +408,7 @@ namespace RTParser.Database
                             "i ", "you", "me", "my", "your", "our","their",
                         })
                 {
-                    if (englishToLower.Contains(pronoun))
+                    if (englishToLower.Contains(" " + pronoun + " "))
                     {
                         if (whoAmI == null)
                         {

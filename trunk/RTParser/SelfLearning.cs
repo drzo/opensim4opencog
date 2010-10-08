@@ -164,7 +164,7 @@ namespace RTParser
 
         private Result UnderstandSentence(User theFactSpeaker, User toWhom, string desc, string message, Result res, ThreadControl control)
         {
-            string whatListenerLastSaid = toWhom.JustSaid;
+            string whatListenerLastSaid = toWhom == null ? null : toWhom.JustSaid;
             theFactSpeaker.JustSaid = message;
             Result LR = res;
             if (LR != null && toWhom != null)
@@ -208,14 +208,22 @@ namespace RTParser
                         resrequest.ParentMostRequest.DisallowedGraphs.Clear();
                     }
                     Request r = theFactSpeaker.CreateRequest(message, toWhom, HeardSelfSayGraph, null);
-
+                    // irregardless we only mentally played what the responder responded with
+                    r.ResponderSelfListens = false;
+                    // because the  listener cant hear this inner dialog
+                    r.SaveResultsOnJustHeard = false;
                     if (control != null) control.AbortRaised += (ctl, abrtedE) =>
                                                                     {
                                                                         r.WhyComplete = "THREADABORTED";
                                                                     };
                     var G = HeardSelfSayGraph ?? GraphMaster;
                     r.Graph = G;
+                    r.IsTraced = true;
+                    r.IsToplevelRequest = true;
                     Result res2 = ChatWithRequest(r);
+                    writeDebugLine("-----------------------------------------------------------------");
+                    writeDebugLine("COMPLETED HEARDSELF: " + message + " res = " + res2);
+                    writeDebugLine("-----------------------------------------------------------------");
                     return res2;
                 }
                 catch (ChatSignal)
@@ -233,7 +241,7 @@ namespace RTParser
             {
                 AllreadyUnderstandingSentences = false;
                 // FYI: this "JustSaid" sets "lastsaid" in dictioanry
-                toWhom.JustSaid = whatListenerLastSaid;
+                if (toWhom != null) toWhom.JustSaid = whatListenerLastSaid;
                 theFactSpeaker.JustSaid = message;
             }
         }

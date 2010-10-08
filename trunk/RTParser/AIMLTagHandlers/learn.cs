@@ -159,7 +159,7 @@ namespace RTParser.AIMLTagHandlers
                             {
                                 try
                                 {
-                                    int successes = request.Loader.loadAIMLNode(templateNode, loaderOptions, request);
+                                    long successes = request.Loader.loadAIMLNode(templateNode, loaderOptions, request);
                                     return "" + successes;
                                 }
                                 finally
@@ -175,7 +175,7 @@ namespace RTParser.AIMLTagHandlers
                             {
                                 path = path ?? innerXML;
                                 loaderOptions.Loading0 = path;
-                                int forms = request.Loader.loadAIMLURI(path, loaderOptions);
+                                long forms = request.Loader.loadAIMLURI(path, loaderOptions);
                                 QueryHasSuceededN++;
                                 return "" + forms; // Succeed();
                             }

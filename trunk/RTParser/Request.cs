@@ -126,6 +126,8 @@ namespace RTParser
         void SetFromUserToUser(User BotAsUser1, User BotAsUser1_2);
 
         bool CanProcess(string starContent);
+        bool ResponderSelfListens { get; set; }
+        bool SaveResultsOnJustHeard { get; set; }
     }
 
     /// <summary>
@@ -230,6 +232,9 @@ namespace RTParser
         }
 
         public Proof Proof { get; set; }
+        
+        public bool ResponderSelfListens { get; set; }
+        public bool SaveResultsOnJustHeard { get; set; }
 
         // How many subqueries are going to be submitted with combos ot "that"/"topic" tags 
         public int MaxInputs { get; set; }
@@ -607,7 +612,7 @@ namespace RTParser
             {
                 // when we change to s struct, lastOptions will never be null
 // ReSharper disable ConditionIsAlwaysTrueOrFalse
-                if (lastOptions == null || lastOptions.TheRequest == null)
+                if (lastOptions == null || lastOptions.TheRequest != null)
 // ReSharper restore ConditionIsAlwaysTrueOrFalse
                 {
                     lastOptions = new LoaderOptions(thisRequest, Graph);
