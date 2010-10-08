@@ -298,6 +298,12 @@ namespace RTParser
         /// </summary>
         private readonly List<Result> Results = new List<Result>();
 
+        /// <summary>
+        /// A collection of all the Interaction objects returned to the user in this session
+        /// (in reverse order of time)
+        /// </summary>
+        private readonly List<InteractionResult> Interactions = new List<InteractionResult>();
+
 
         List<Unifiable> _topics = new List<Unifiable>();
         public IList<Unifiable> Topics

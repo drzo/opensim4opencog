@@ -462,7 +462,7 @@ namespace RTParser
                 bool userChanged = DetectUserChange(myUser, user);
                 if (userChanged)
                 {
-                    myUser = FindUser(user);
+                    //myUser = FindUser(user);
                     request.Requester = myUser;                    
                 }
                 var justsaid = OutputResult(res, console, false);

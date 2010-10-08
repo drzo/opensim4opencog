@@ -170,8 +170,8 @@ namespace RTParser.Utils
 
         public static XmlNode getTemplateNode(string sentence)
         {
-            var vv = getNode("<template>" + sentence + "</template>");
-            DLRConsole.TooDeep();
+            string makeTemplate = "<template>" + sentence + "</template>";
+            var vv = getNode(makeTemplate);
             return vv;
         }
 

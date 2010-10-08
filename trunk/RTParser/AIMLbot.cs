@@ -49,12 +49,52 @@ namespace AIMLbot
         }
     }
 
-    sealed public class MasterResult : RTParser.ResultImpl, Result
+    sealed public class MasterResult : RTParser.ResultImpl, Result ,InteractionResult 
     {
         public MasterResult(string rawInput, User user, RTPBot bot, Request parent, User targetUser)
             : base(rawInput, user, bot, parent, targetUser)
         {
         }
+
+        #region InteractionResult Members
+
+
+        public Result result
+        {
+            get { return this;  }
+        }
+
+        public RTParser.Variables.ISettingsDictionary RequesterChanges
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public RTParser.Variables.ISettingsDictionary ResponderChanges
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public InteractionResult PreviousInteraction
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public InteractionResult NextInteraction
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public Unifiable GetInputSentence(int sentence)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void CollectResult()
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
     }
     
     namespace Utils

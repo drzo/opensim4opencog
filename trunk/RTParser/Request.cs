@@ -51,7 +51,7 @@ namespace RTParser
         Unifiable Flags { get; }
         IList<Unifiable> Topics { get; }
         Proof Proof { get; set; }
-        GraphQuery TopLevel { get; set; }
+        GraphQuery TopLevelQuery { get; set; }
         SubQuery CurrentQuery { get; set; }
         RTPBot TargetBot { get; set; }
         Unifiable rawInput { get; }
@@ -801,7 +801,7 @@ namespace RTParser
         private Unifiable _topic;
 
         public Unifiable Flags { get; set; }
-        virtual public GraphQuery TopLevel { get; set; }
+        virtual public GraphQuery TopLevelQuery { get; set; }
 
         public Unifiable Topic
         {
