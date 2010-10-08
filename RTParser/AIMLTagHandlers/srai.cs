@@ -289,7 +289,7 @@ namespace RTParser.AIMLTagHandlers
                         writeToLog(sss);
                         if (!request.SuspendSearchLimits)
                         {
-                            throw new ChatSignalOverBudget(sss);
+                            throw new ChatSignalOverBudget(request, sss);
                             return Unifiable.INCOMPLETE;
                         }
                     }
@@ -300,7 +300,7 @@ namespace RTParser.AIMLTagHandlers
                         writeToLog(sss);
                         if (!request.SuspendSearchLimits)
                         {
-                            throw new ChatSignalOverBudget(sss);
+                            throw new ChatSignalOverBudget(request, sss);
                             return Unifiable.INCOMPLETE;
                         }
                     }

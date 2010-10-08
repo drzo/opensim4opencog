@@ -635,14 +635,14 @@ namespace RTParser
                     }
                     foreach (var ql in AllQueries)
                     {
-                        request.TopLevel = ql;
+                        request.TopLevelQuery = ql;
                         if (chatTrace) result.IsTraced = isTraced;
                         if (ql.PatternCount > 0)
                         {
-                            request.TopLevel = ql;
+                            request.TopLevelQuery = ql;
                             // if (ql.TemplateCount > 0)
                             {
-                                request.TopLevel = ql;
+                                request.TopLevelQuery = ql;
                                 result.AddSubqueries(ql);
                             }
                             var kept = ql.PreprocessSubQueries(request, result.SubQueries, isTraced, ref printedSQs,

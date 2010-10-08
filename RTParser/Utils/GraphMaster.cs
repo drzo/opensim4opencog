@@ -567,7 +567,7 @@ namespace RTParser.Utils
             GraphQuery ql = new GraphQuery(path, request, this, state);
             ql.matchState = state;
             QuerySettings.ApplySettings(request, ql);
-            request.TopLevel = ql;
+            request.TopLevelQuery = ql;
             lock (LockerObject)
                 lock (request.Requester.AllQueries)
                 {
@@ -904,7 +904,7 @@ namespace RTParser.Utils
             foreach (GraphMaster p in CopyOf(totry))
             {
                 if (request.IsTimedOutOrOverBudget) return pl;
-                if (request.TopLevel.DisallowedGraphs.Contains(p)) continue;
+                if (request.TopLevelQuery.DisallowedGraphs.Contains(p)) continue;
                 if (p != null)
                 {
                     GraphMaster g = request.Graph;

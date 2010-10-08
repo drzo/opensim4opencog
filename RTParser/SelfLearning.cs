@@ -199,35 +199,38 @@ namespace RTParser
             try
             {
                 if (message == null || message.Length < 4) return null;
+                Request resrequest = null;
+                if (res != null)
+                {
+                    resrequest = res.request;
+                    resrequest.ParentMostRequest.DisallowedGraphs.Clear();
+                }
+                Request r = theFactSpeaker.CreateRequest(message, toWhom, HeardSelfSayGraph, null);
+                // irregardless we only mentally played what the responder responded with
+                r.ResponderSelfListens = false;
+                // because the  listener cant hear this inner dialog
+                r.SaveResultsOnJustHeard = false;
+                if (control != null) control.AbortRaised += (ctl, abrtedE) =>
+                {
+                    r.WhyComplete = "THREADABORTED";
+                };
+                var G = HeardSelfSayGraph ?? GraphMaster;
+                r.Graph = G;
+                r.IsTraced = true;
+                r.IsToplevelRequest = true;
                 try
                 {
-                    Request resrequest = null;
-                    if (res != null)
-                    {
-                        resrequest = res.request;
-                        resrequest.ParentMostRequest.DisallowedGraphs.Clear();
-                    }
-                    Request r = theFactSpeaker.CreateRequest(message, toWhom, HeardSelfSayGraph, null);
-                    // irregardless we only mentally played what the responder responded with
-                    r.ResponderSelfListens = false;
-                    // because the  listener cant hear this inner dialog
-                    r.SaveResultsOnJustHeard = false;
-                    if (control != null) control.AbortRaised += (ctl, abrtedE) =>
-                                                                    {
-                                                                        r.WhyComplete = "THREADABORTED";
-                                                                    };
-                    var G = HeardSelfSayGraph ?? GraphMaster;
-                    r.Graph = G;
-                    r.IsTraced = true;
-                    r.IsToplevelRequest = true;
                     Result res2 = ChatWithRequest(r);
                     writeDebugLine("-----------------------------------------------------------------");
                     writeDebugLine("COMPLETED HEARDSELF: " + message + " res = " + res2);
                     writeDebugLine("-----------------------------------------------------------------");
                     return res2;
                 }
-                catch (ChatSignal)
+                catch (ChatSignal e)                
                 {
+                    writeDebugLine("-----------------------------------------------------------------");
+                    writeDebugLine("INCOMPLETE HEARDSELF: " + message + " req = " + r + " " + e);
+                    writeDebugLine("-----------------------------------------------------------------");
                     throw;
                 }
                 catch (Exception e)

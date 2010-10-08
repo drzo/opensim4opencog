@@ -45,8 +45,9 @@ namespace RTParser.AIMLTagHandlers
                 {
                     // what to remember
                     Unifiable templateNodeInnerValue = Recurse();
-                    string myText = (string) templateNodeInnerValue;
-                    myText = TargetBot.LuceneIndexer.FixPronouns(myText, request.Requester.grabSettingNoDebug);
+                    string myText0 = (string) templateNodeInnerValue;
+                    var myText = TargetBot.LuceneIndexer.FixPronouns(myText0, request.Requester.grabSettingNoDebug);
+                    writeToLog("FIXPRONOUNS: " + myText0 + " ->" + myText);
                     if (TargetBot.LuceneIndexer.MayPush(myText, templateNode) == null)
                     {
                         writeToLogWarn("WARNING: NO DBPUSH " + myText);

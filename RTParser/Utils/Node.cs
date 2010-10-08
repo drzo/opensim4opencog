@@ -895,7 +895,7 @@ namespace RTParser.Utils
                                                    request.Requester.UserID + " raw input: \"" +
                                                    request.rawInput + "\" in " + this;
                 request.writeToLog(mesg);
-                throw new ChatSignalOverBudget(mesg) {request = request};
+                throw new ChatSignalOverBudget(request, mesg) {request = request};
             }
 
             int pathLength = splitPath.Length - at;

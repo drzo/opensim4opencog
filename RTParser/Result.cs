@@ -10,7 +10,7 @@ using UPath = RTParser.Unifiable;
 
 namespace RTParser
 {
-    public interface Result
+    public interface Result: InteractionResult
     {
         /// <summary>
         /// The bot that is providing the answer
@@ -276,7 +276,7 @@ namespace RTParser
             get
             {
                 Request request1 = request;
-                if (request1 != null && request1 != this) return request1.TopLevel;
+                if (request1 != null && request1 != this) return request1.TopLevelQuery;
                 SubQuery cc = CurrentQuery;
                 if (cc != null) return cc.TopLevel;
                 return TopLevel;

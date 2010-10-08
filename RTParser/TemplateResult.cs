@@ -9,10 +9,10 @@ namespace RTParser
     }
     internal class ChatSignalOverBudget : ChatSignal
     {
-        public ChatSignalOverBudget(string mesg)
+        public ChatSignalOverBudget(Request req, string mesg)
             : base(mesg, null)
         {
-          
+            request = req;
         }
     }
 
@@ -43,8 +43,7 @@ namespace RTParser
 
         public override string ToString()
         {
-            return GetType().Name + ":" + id + @"
-" + base.ToString();
+            return GetType().Name + ":" + id + "\n" + base.ToString() + "\n for " + " " + request;
         }
 
     }

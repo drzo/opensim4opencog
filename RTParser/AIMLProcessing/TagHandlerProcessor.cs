@@ -783,7 +783,7 @@ namespace RTParser
                 overBudget = true;
                 if (!request.IsToplevelRequest)
                 {
-                    throw new ChatSignalOverBudget(s);
+                    throw new ChatSignalOverBudget(request, s);
                 }
             }
 
