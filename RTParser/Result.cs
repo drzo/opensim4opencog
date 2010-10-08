@@ -164,6 +164,8 @@ namespace RTParser
             //request = null;
         }
 
+        public abstract void CollectResult();
+
         private string userSetResultComplete;
         public string WhyResultComplete
         {
@@ -191,6 +193,7 @@ namespace RTParser
         public DateTime EndedOn = DateTime.MaxValue;
 
         //  private readonly ParsedSentences ChatInput;
+        public abstract Result result { get; }
         public ParsedSentences ChatOutput { get; private set; }
 
         public bool IsTraced { get; set; }
@@ -377,6 +380,9 @@ namespace RTParser
             get { return OutputSentenceCount == 0; }
         }
 
+        public abstract ISettingsDictionary RequesterChanges { get; }
+        public abstract ISettingsDictionary ResponderChanges { get; }
+
         public int OutputSentenceCount
         {
             get { lock (OutputSentences) return OutputSentences.Count; }
@@ -446,6 +452,9 @@ namespace RTParser
                 return true;
             }
         }
+
+        public abstract InteractionResult PreviousInteraction { get; }
+        public abstract InteractionResult NextInteraction { get; }
         public int MaxCanEvalResult { get; set; }
 
         public IList<TemplateInfo> ResultTemplates
@@ -733,6 +742,8 @@ namespace RTParser
             return request.ToRequestString() + " -> " + ToResultString() + " " +
                    (whyComplete != null ? " WhyComplete=" + whyComplete : "");
         }
+
+        public abstract Unifiable GetInputSentence(int sentence);
 
         public string WhyComplete
         {
