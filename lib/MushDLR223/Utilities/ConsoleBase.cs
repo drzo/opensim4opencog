@@ -1487,8 +1487,8 @@ namespace MushDLR223.Utilities
                 if (getFrom > 0)
                 {
                     getFrom += omittedPrefix.Length;
+                    return format.Substring(getFrom).TrimStart();
                 }
-                return format.Substring(getFrom).TrimStart();
             }
             return format;
         }

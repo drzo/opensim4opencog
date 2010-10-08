@@ -97,10 +97,26 @@ namespace MushDLR223.Utilities
 
         public override string InnerXml
         {
-            get { return base.InnerXml; }
+            get
+            {
+                try
+                {
+                    return base.InnerXml;
+                }
+                catch (StackOverflowException exception)
+                {
+                    string s = exception.ToString();
+                    return "<!-- FAILURE " + s + " ==>";
+                }
+                catch (Exception exception)
+                {
+                    string s = exception.ToString();
+                    return "<!-- FAILURE " + s + " ==>";
+                }
+            }
             set
             {
-                if (InnerXml == value) return;
+                //if (base.InnerXml == value) return;
                 if (SetNewValue(value))
                 {
                     base.InnerXml = value;
@@ -152,6 +168,7 @@ namespace MushDLR223.Utilities
         {
             get
             {
+                if (true) return base.OuterXml;
                 if (innerValueReplaced != null)
                 {
                     var ir = StaticXMLUtils.ValueText(innerValueReplaced);

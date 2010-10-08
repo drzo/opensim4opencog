@@ -78,7 +78,7 @@ namespace MushDLR223.Utilities
             }
         }
 
-        private void WriteLine(string s)
+        public void WriteLine(string s)
         {
             clientManager.WriteLine(s);
         }
@@ -96,33 +96,62 @@ namespace MushDLR223.Utilities
             }
         }
 
-        readonly public static object HttpLock = new object ();
+        readonly public static object HttpLock = new object();
+        public readonly List<HttpJob> HttpJobs = new List<HttpJob>(100);
+        public TimeSpan waitForEachTime = TimeSpan.FromSeconds(5);
+
         private void _listener_404(IHttpClientContext context, IHttpRequest request, IHttpResponse response)
         {
-            // 10 second wait
-            if (Monitor.TryEnter(HttpLock, 10000))
+            HttpJob httpJob = new HttpJob(this, context, request, response);
+
+            lock (HttpJobs)
             {
-                _listener_4040(context, request, response);
+                HttpJobs.Add(httpJob);
+            }
+            // 5 second wait
+            if (Monitor.TryEnter(HttpLock, waitForEachTime))
+            {
+                DoJob(httpJob);
                 Monitor.Exit(HttpLock);
             }
             else
             {
-                _listener_4040(context, request, response);
+                LogInfo("ERROR Waiting for prevoius request more than " +
+                        TaskQueueHandler.GetTimeString(waitForEachTime));
+                httpJob.OutOfLock = true;
+                DoJob(httpJob);
             } 
         }
-        private void _listener_4040(IHttpClientContext context, IHttpRequest request, IHttpResponse response)
+        private void DoJob(HttpJob httpJob)
         {
             try
             {
-                _listener_4040_errable(context, request, response);
+                httpJob.DoWork();
             }
             catch (Exception exception)
             {
+                httpJob.Error = exception;
                 LogInfo("Listener exception: " + exception);
-            }            
+            }
+            finally
+            {
+                httpJob.EndTimeOrDateTimeMax = DateTime.Now;
+                lock (HttpJobs)
+                {
+                    HttpJobs.Remove(httpJob);
+                }
+            }
         }
 
-        private void _listener_4040_errable(IHttpClientContext context, IHttpRequest request, IHttpResponse response)
+        public void JobFinished(HttpJob httpJob)
+        {
+            lock (HttpJobs)
+            {
+                HttpJobs.Remove(httpJob);
+            }
+        }
+
+        public void BlockingHandler(IHttpClientContext context, IHttpRequest request, IHttpResponse response)
         {
           //  UUID capsID;
             bool success;
@@ -315,6 +344,101 @@ namespace MushDLR223.Utilities
         }
 
         #endregion
+    }
+
+    public class HttpJob
+    {
+        private static long serialNum = 0;
+        public long Serial = ++serialNum;
+        public ClientManagerHttpServer Server;
+        private string Name;
+        public IHttpClientContext Context;
+        public IHttpRequest Request;
+        public IHttpResponse Response;
+        public Thread Thread;
+        public DateTime StarTime =  DateTime.Now;
+        public DateTime EndTimeOrDateTimeMax = DateTime.MaxValue;
+        public bool OutOfLock;
+        public bool ActuallyStarted = false;
+        public Exception Error;
+        public static bool DoWorkInThread = false;
+        public Thread WorkerThread;
+
+        public TimeSpan Runtime
+        {
+            get { return EndTimeOrDateTimeMax - StarTime; }
+        }
+
+        public void KillIt()
+        {
+            Thread w = WorkerThread;
+            if (w != null && w.IsAlive)
+            {
+                w.Abort();
+            }
+        }
+
+        public void DoWork()
+        {
+            WorkerThread = new Thread(DoWorkNow, 0)
+                               {
+                                   Name = "Worker for " + GetName(),
+                               };
+            WorkerThread.Start();
+            if (!DoWorkInThread) WorkerThread.Join();
+        }
+
+        public string GetName()
+        {
+            return Name;
+        }
+
+        public void DoWorkNow()
+        {
+            try
+            {
+                ActuallyStarted = true;
+                Server.BlockingHandler(Context, Request, Response);
+            }
+            catch (ThreadAbortException e)
+            {
+                WriteLine("ABORT: " + e);
+                if (WorkerThread == Thread.CurrentThread)
+                {
+                    Thread.ResetAbort();
+                }
+                else
+                {
+                    WriteLine("WRONG THREAD: " + WorkerThread);
+                    throw;
+                }
+            }
+            catch (Exception e)
+            {
+                WriteLine("ERROR: " + e);
+                Error = e;
+            }
+            finally
+            {
+                EndTimeOrDateTimeMax = DateTime.Now;
+                Server.JobFinished(this);
+            }
+        }
+
+        public void WriteLine(string e)
+        {
+            Server.WriteLine("JOB-" + e + " named " + Name);
+        }
+
+        public HttpJob(ClientManagerHttpServer server, IHttpClientContext context, IHttpRequest request, IHttpResponse response)
+        {
+            this.Server = server;
+            this.Context = context;
+            this.Request = request;
+            this.Response = response;
+            Thread = Thread.CurrentThread;
+            Name = request.UriPath;
+        }
     }
 
     public interface ScriptExecutorGetter
