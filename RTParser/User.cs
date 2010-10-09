@@ -710,7 +710,7 @@ namespace RTParser
             {
                 if (Results.Contains(latestResult))
                 {
-                    writeDebugLine("DEBUG9 Trying to resave results ! " + latestResult);
+                    //writeDebugLine("DEBUG9 Trying to resave results ! " + latestResult);
                     return;
                 }
                 this.Results.Insert(0, latestResult);

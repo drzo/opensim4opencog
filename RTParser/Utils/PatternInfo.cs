@@ -1,31 +1,20 @@
 using System;
 using System.Collections.Generic;
 using System.Xml;
-//using CategoryInfo = RTParser.Utils.TemplateInfo;
 
 namespace RTParser.Utils
 {
     [Serializable]
-    public class PatternInfo : MatchInfo
+    public class PatternInfo : GraphLinkInfo
     {
-        public List<CategoryInfo> CategoryInfos = new List<CategoryInfo>();
-        public Node GraphmasterNode;
 
-        public PatternInfo(XmlNode pattern, Unifiable unifiable) : base(pattern, unifiable)
-        {
-            FullPath = unifiable;
-        }
+        public List<CategoryInfo> CategoryInfos = null;
 
         public void AddCategory(CategoryInfo template)
         {
+            CategoryInfos = CategoryInfos ?? new List<CategoryInfo>();
             CategoryInfos.Add(template);
-        }
-
-        public static PatternInfo GetPattern(LoaderOptions loaderOptions, XmlNode pattern, Unifiable unifiable)
-        {
-            if (NoInfo) return null;
-            return loaderOptions.CtxGraph.FindPattern(pattern, unifiable);
-        }
+        }       
 
         internal bool LoopsFrom(string innerXml)
         {
@@ -82,6 +71,33 @@ namespace RTParser.Utils
                 return i - 1;
             }
             return i - 1;
+        }
+
+        public PatternInfo(XmlNode pattern, Unifiable unifiable)
+            : base(pattern)
+        {
+            FullPath = unifiable;
+        }
+
+        public bool IsCatchAll
+        {
+            get { return FullPath.IsWildCard(); }
+        }
+
+        public XmlNode PatternNode
+        {
+            get { return srcNode; }
+        }
+
+        public string GetKey()
+        {
+            return FullPath.AsString();
+        }
+
+        public override string ToString()
+        {
+            if (FullPath != null) return FullPath.AsString();
+            return PatternNode.OuterXml;
         }
     }
 }

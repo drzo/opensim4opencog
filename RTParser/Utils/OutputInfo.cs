@@ -7,7 +7,7 @@ namespace RTParser.Utils
     public abstract class OutputInfo : GraphLinkInfo
     {
         public OutputInfo(XmlNode template) : base(template)
-        {
+        {   
         }
 #if false
         /// <summary>

@@ -264,11 +264,7 @@ namespace RTParser
             request.IsTraced = true;
             request.OriginalSalientRequest = request;
             request.SaveResultsOnJustHeard = saveResultsOnJustHeard;
-            Result requestCurrentResult = request.CurrentResult; 
-            if (requestCurrentResult == null)
-            {
-                requestCurrentResult = request.CreateResult(request);
-            }
+            Result requestCurrentResult = request.FindOrCreateCurrentResult();
             ChatLabel label = request.PushScope;
             try
             {
@@ -365,11 +361,7 @@ namespace RTParser
         ///
         public Result ChatWithRequest(Request request)
         {
-            Result requestCurrentResult = request.CurrentResult;
-            if (requestCurrentResult == null)
-            {
-                requestCurrentResult = request.CreateResult(request);
-            }
+            Result requestCurrentResult = request.FindOrCreateCurrentResult();
             return ChatWithRequest(request, requestCurrentResult);
         }
 
@@ -431,10 +423,11 @@ namespace RTParser
                 finally
                 {
                     AddHeardPreds(parentResultIn.RawOutput, HeardPredicates);
+                    request.Commit(false);
                     label.PopScope();
                     undoStack.UndoAll();
                     request.UndoAll();
-                    request.Commit();
+                    request.Commit(true);
                     request.Requester = user;
                 }
             }

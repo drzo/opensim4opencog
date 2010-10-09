@@ -1571,7 +1571,8 @@ The AIMLbot program.
 
         public void UsePersonalDir(string file)
         {
-            lock (BotUsers) lock (OnBotCreatedHooks) UsePersonalDir0(file);
+            //lock (BotUsers) lock (OnBotCreatedHooks) 
+            UsePersonalDir0(file);
         }
 
         private void UsePersonalDir0(string file)

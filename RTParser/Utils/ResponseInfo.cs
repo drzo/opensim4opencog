@@ -9,7 +9,7 @@ namespace RTParser.Utils
     public class ResponseInfo : OutputInfo
     {
         public List<CategoryInfo> CategoryInfos = new List<CategoryInfo>();
-        public Node GraphmasterNode;
+        //public Node GraphmasterNode;
         //public Unifiable Response;
 
         public ResponseInfo(XmlNode pattern, Unifiable unifiable) : base(pattern)

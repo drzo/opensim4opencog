@@ -20,6 +20,15 @@ namespace RTParser.Utils
         public bool recurse;
         public RTPBot RProcessor;
         public bool NeedsLoaderLock;
+        public bool RemovePreviousTemplatesFromNodes
+        {
+            get { return CtxGraph.RemovePreviousTemplatesFromNodes; }
+        }
+        public bool DistinguishSilenetTags
+        {
+            get { return CtxGraph.DistinguishSilenetTags; }
+        }
+
 
         public LoaderOptions(Request impl, GraphMaster master)
         {

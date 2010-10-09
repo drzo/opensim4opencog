@@ -14,6 +14,7 @@ using RTParser.Normalize;
 using UPath = RTParser.Unifiable;
 using LineInfoElement = MushDLR223.Utilities.LineInfoElementImpl;
 //using CategoryInfo = RTParser.Utils.TemplateInfo;
+using ThatInfo = System.Xml.XmlNode;
 
 namespace RTParser.Utils
 {
@@ -452,6 +453,7 @@ namespace RTParser.Utils
                         return total;
                     }
                     writeToLog("Already loaded! (but loading again) " + path + " from " + master);
+                    master.RemoveFileLoaded(path);
                     //return;
                 }
                 else
@@ -902,7 +904,7 @@ namespace RTParser.Utils
             // find the name of the topic or set to default "*"
             Unifiable thatPattten = GetAttribValue(thatNode, "pattern,value,name", Unifiable.STAR);
             // process all the category nodes
-            ThatInfo newThatInfo = new ThatInfo(thatNode, thatPattten);
+            ThatInfo newThatInfo = path.CtxGraph.FindThat(thatNode, thatPattten);
             foreach (XmlNode cateNode in thatNode.ChildNodes)
             {
                 // getting stacked up inside
@@ -998,16 +1000,16 @@ namespace RTParser.Utils
                 {
                     try
                     {
-                        CategoryInfo v = addCatNode(cateNode, pattern, that0, loadOpts, template, topicName,
+                        var v = addCatNode(cateNode, pattern, that0, loadOpts, template, topicName,
                                                     outerNode,
                                                     additionalRules);
-                        if (v == null && errors != null && errors.Length > 0)
+                        if (v == null && !string.IsNullOrEmpty(errors))
                         {
                             AddErrorCategory(errors, cateNode);
                             writeToLog("WARN: MISSING CATE: " + cateNode + " " + LocationInfo(cateNode));
                             continue;
                         }
-                        CIs.Add(v);
+                        if (v != null) CIs.AddRange(v);
                     }
                     catch (ChatSignal e)
                     {
@@ -1062,7 +1064,7 @@ namespace RTParser.Utils
             }
         }
 
-        private CategoryInfo addCatNode(XmlNode cateNode, XmlNode patternNode, XmlNode thatNodeOrNull, LoaderOptions loaderOpts,
+        private List<CategoryInfo> addCatNode(XmlNode cateNode, XmlNode patternNode, XmlNode thatNodeOrNull, LoaderOptions loaderOpts,
                                         XmlNode templateNode,
                                         Unifiable topicName, XmlNode outerNode, List<ConversationCondition> additionalRules)
         {
@@ -1132,10 +1134,24 @@ namespace RTParser.Utils
 
             Func<Unifiable, bool, Unifiable> normalizerT = (inputText, isUserInput) => Normalize(inputText, isUserInput).Trim();
             Unifiable categoryPath = generatePath(patternText, that, cond, topicName, false, normalizerT );
-            PatternInfo patternInfo = PatternInfo.GetPattern(loaderOpts, patternNode, categoryPath);
-            TopicInfo topicInfo = TopicInfo.FindTopic(loaderOpts, topicName);
-            ThatInfo thatInfo = ThatInfo.GetPattern(loaderOpts, that);
-            ResponseInfo responseInfo = ResponseInfo.GetResponse(loaderOpts, templateNode, templateNode.OuterXml);
+            PatternInfo patternInfo = loaderOpts.CtxGraph.FindPattern(patternNode, categoryPath);//PatternInfo.GetPattern(loaderOpts, patternNode, categoryPath);
+            TopicInfo topicInfo = loaderOpts.CtxGraph.FindTopic(topicName);
+            ThatInfo thatInfo = loaderOpts.CtxGraph.FindThat(thatNodeOrNull, that);
+            var templateNodeFindable = StaticAIMLUtils.TheTemplateOverwrite;
+            string tni = "";
+            if (templateNode != null)
+            {
+                if (templateNode.HasChildNodes)
+                {
+                    if (templateNode.ChildNodes[0].NodeType != XmlNodeType.Comment &&
+                        templateNode.InnerXml.Trim().Length > 0)
+                    {
+                        templateNodeFindable = templateNode;
+                        tni = templateNodeFindable.InnerXml;
+                    }
+                }
+            }
+            templateNode = templateNodeFindable;
 
             // o.k., add the processed AIML to the GraphMaster structure
             if (!IsNullOrEmpty(categoryPath))
@@ -1145,19 +1161,19 @@ namespace RTParser.Utils
                 {
                     try
                     {
-                        CategoryInfo categoryInfo = TemplateInfo.GetCategoryInfo(patternInfo, cateNode, loaderOpts,
-                                                                                 responseInfo, guard, null, null);
-                        categoryInfo.SetCategoryTag(categoryPath, patternInfo, categoryInfo,
-                                                    outerNode, templateNode, guard, thatInfo);
+                        ResponseInfo responseInfo = null;
 
-                        bool wouldBeRemoval;
-                        pathCtxGraph.addCategoryTag(categoryPath, patternInfo, categoryInfo,
-                                                    outerNode, templateNode, guard, thatInfo, additionalRules, out wouldBeRemoval);
-                        foreach (var node in additionalRules)
+                        if (tni != "")
                         {
-                            categoryInfo.AddPrecondition(node);
+                            responseInfo = loaderOpts.CtxGraph.FindResponse(templateNode, templateNode.InnerXml);
                         }
-                        return categoryInfo;
+                        bool wouldBeRemoval;
+
+                        return pathCtxGraph.addCategoryTag(categoryPath, patternInfo,
+                                                           outerNode, templateNode, guard, thatInfo, additionalRules,
+                                                           out wouldBeRemoval, loaderOpts);
+
+
                     }
                     catch (ChatSignal e)
                     {
@@ -1165,9 +1181,9 @@ namespace RTParser.Utils
                     }
                     catch (Exception e)
                     {
-                        AddErrorCategory("ERROR! Failed to load a new category into the graphmaster where the path = " +
-                                         categoryPath + " and templateNode = " + templateNode.OuterXml +
-                                         " produced by a category in the file: " + loaderOpts, cateNode);
+                        AddErrorCategory("ERROR! " + e + " Failed to load a new category into the graphmaster where the path = " +
+                            categoryPath + " and templateNode = " + templateNode.OuterXml +
+                            " produced by a category in the file: " + loaderOpts, cateNode);
                         return null;
                     }
                 }
@@ -1461,7 +1477,7 @@ namespace RTParser.Utils
                 normalizedPattern = normalizedPattern.Replace(" <", "<");
             }
             normalizedPattern = normalizedPattern.Replace("  ", " ");
-            normalizedPattern = normalizedPattern.Trim();
+            normalizedPattern = normalizedPattern.Trim();            
             var normalizedPattern1 = normalizedPattern;
             normalizedPattern = normalizedPattern.Replace("**", " * * ");
             normalizedPattern = normalizedPattern.Replace("*_", " * _ ");

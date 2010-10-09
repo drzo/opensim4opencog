@@ -397,16 +397,17 @@ namespace RTParser.Database
             DLRConsole.DebugWriteLine("TRIPLESTORE: " + s);
         }
 
-        internal string FixPronouns(string english, Func<string, Unifiable> whoAmI)
+        internal string FixPronouns(string englishIn, Func<string, Unifiable> whoAmI)
         {
+            var pns = new[]
+                          {
+                              "him", "he", "she", "her", "them", "they", "it", "this",
+                              "i ", "you", "me", "my", "your", "our", "their",
+                          };
+            string english = englishIn;
             string englishToLower = english.ToLower();
             {
-                foreach (var pronoun in
-                    new[]
-                        {
-                            "him", "he", "she", "her", "them", "they", "it", "this", 
-                            "i ", "you", "me", "my", "your", "our","their",
-                        })
+                foreach (var pronoun in pns)
                 {
                     if (englishToLower.Contains(" " + pronoun + " "))
                     {
@@ -416,7 +417,8 @@ namespace RTParser.Database
                             return english;
                         }
                         Unifiable v = Unifiable.Create(whoAmI(pronoun));
-                        bool goodReplacement = !Unifiable.IsIncomplete(v) && !Unifiable.IsNullOrEmpty(v) && !Unifiable.IsMissing(v);
+                        bool goodReplacement = !Unifiable.IsIncomplete(v) && !Unifiable.IsNullOrEmpty(v) &&
+                                               !Unifiable.IsMissing(v);
                         if (!goodReplacement)
                         {
                             writeToLog("FixPronouns: BAD REPLACEMENT '" + pronoun + "' => '" + v + "'");
@@ -426,9 +428,18 @@ namespace RTParser.Database
                         if (pronoun != pronoun.Trim()) english = ReplaceWord(english, pronoun + "s", v + "s");
                     }
                 }
-
+                englishToLower = english.ToLower();
+                foreach (var pronoun in pns)
+                {
+                    if (englishToLower.Contains(" " + pronoun + " "))
+                    {
+                        Unifiable v = Unifiable.Create(whoAmI(pronoun));
+                        writeToLog("FixPronouns: BAD REPLACEMENT '" + pronoun + "' => '" + v + "'");
+                    }
+                    continue;
+                }
+                return english;
             }
-            return english;
         }
     }
 }

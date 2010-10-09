@@ -16,8 +16,8 @@ namespace RTParser.Utils
         public TemplateInfo Template { get { return (TemplateInfo)this; } }
         public ThatInfo That { get; set; }
         public TopicInfo Topic;
-        
-        private TemplateInfo ParentCategory;
+
+        //private TemplateInfo ParentCategory;
 
         public bool IsTraced { get; set; }
 
@@ -30,37 +30,36 @@ namespace RTParser.Utils
 
         public bool IsDisabled { get; set; }
 
-        public XmlNode Category
+        public XmlNode CategoryXml
         {
             get { return srcNode; }
         }
 
         public virtual XmlNode TemplateXml
         {
-            get { return StaticXMLUtils.FindNode("template", Category, null); }
-            set { throw new NotImplementedException(); }
+            get { return StaticXMLUtils.FindNode("template", CategoryXml, null); }
         }
 
         public XmlNode TopicXml
         {
-            get { return StaticXMLUtils.FindNodeOrHigher("topic", Category, null); }
+            get { return StaticXMLUtils.FindNodeOrHigher("topic", CategoryXml, null); }
         }
 
         public XmlNode ThatXml
         {
-            get { return StaticXMLUtils.FindNodeOrHigher("that", Category, null); }
+            get { return StaticXMLUtils.FindNodeOrHigher("that", CategoryXml, null); }
         }
 
         #region IAIMLInfo Members
 
         string IAIMLInfo.SourceInfo()
         {
-            return StaticXMLUtils.LocationInfo(Category);
+            return StaticXMLUtils.LocationInfo(CategoryXml);
         }
 
         public GraphMaster Graph
         {
-            get { return Pattern.GraphmasterNode.Graph; }
+            get { return Template.GraphmasterNode.Graph; }
         }
 
         //protected abstract XmlNode TemplateXml { get; set; }
@@ -130,12 +129,12 @@ namespace RTParser.Utils
 
         public override string ToString()
         {
-            return Category.OuterXml + " " + StaticXMLUtils.LocationEscapedInfo(Category);
+            return CategoryXml.OuterXml + " " + StaticXMLUtils.LocationEscapedInfo(CategoryXml);
         }
 
         public string XMLInfo()
         {
-            return Category.OuterXml;
+            return CategoryXml.OuterXml;
         }
 
         public void AddTemplate(TemplateInfo templateInfo)
@@ -145,15 +144,17 @@ namespace RTParser.Utils
             //  TemplateInfos.Add(templateInfo);
         }
 
-        public static CategoryInfo GetCategoryInfo(PatternInfo info, XmlNode node, LoaderOptions filename, ResponseInfo template, GuardInfo guard, Node patternNode, CategoryInfo categoryInfo)
+        public static CategoryInfo GetCategoryInfo(PatternInfo info, XmlNode node, LoaderOptions filename, 
+            ResponseInfo template, GuardInfo guard, Node patternNode, object categoryInfo)
         {
             return filename.CtxGraph.FindCategoryInfo(info, node, filename, template, guard, patternNode, categoryInfo);
         }
 
-        public static CategoryInfo MakeCategoryInfo(PatternInfo info, XmlNode node, LoaderOptions filename, ResponseInfo template, GuardInfo guard, Node patternNode, CategoryInfo categoryInfo)
+        public static CategoryInfo MakeCategoryInfo(PatternInfo info, XmlNode cateNode, LoaderOptions filename, 
+            ResponseInfo template, GuardInfo guard, Node patternNode, object categoryInfo)
         {
             if (NoInfo) return null;
-            return new TemplateInfo(info, node, filename, template, guard, patternNode, categoryInfo);
+            return new TemplateInfo(info, cateNode, filename, template, guard, patternNode, null);
         }
 
         internal void Check()
@@ -209,7 +210,7 @@ namespace RTParser.Utils
         PatternInfo Pattern { get; }
         TemplateInfo Template { get; }
         bool IsTraced { get; set; }
-        XmlNode Category { get; }
+        XmlNode CategoryXml { get; }
         Node GraphmasterNode { get; set; }
         string Filename { get; }
         
