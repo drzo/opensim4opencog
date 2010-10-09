@@ -280,7 +280,7 @@ namespace RTParser.Utils
         {
             get
             {
-                //QueryHasFailed = true;
+                if (!QueryHasFailed) QueryHasFailed = true;
                 return null;
             }
         }
@@ -456,6 +456,7 @@ namespace RTParser.Utils
         public override Unifiable ProcessAimlChange()
         {
             if (finalResult.IsValid) return finalResult.Value;
+            if (QueryHasFailed) return null;
             ThreadStart OnExit = EnterTag(request, templateNode, query);
             try
             {

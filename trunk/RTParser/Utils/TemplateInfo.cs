@@ -10,7 +10,7 @@ namespace RTParser.Utils
     [Serializable]
     public sealed class TemplateInfo : CategoryInfoImpl1, CategoryInfo
     {
-        public CategoryInfo ParentCategoryInfo;
+        //public CategoryInfo ParentCategoryInfo;
         public CategoryInfo CategoryInfo { get { return this; } }
         //public Node GraphmasterNode;
         public GuardInfo Guard;
@@ -35,38 +35,15 @@ namespace RTParser.Utils
         }
         public void OnTemplatesFailed(SubQuery query, Request request)
         {
-            if (TemplateFailedCallback != null) TemplateFailedCallback(query, request);
-        }
-
-        public bool DefaultOnSuccess(SubQuery query, Request request)
-        {
             if (NeckCut)
             {
-                //query.Result.WhyResultComplete = "cut from " + ToString();
-            }
-            return true;
-        }
-
-        public bool DefaultOnFailed(SubQuery query, Request request)
-        {
-            if (NeckCut)
-            {
-                //query.Result.WhyResultComplete = "cut from " + ToString();
-            }
-            return true;
-        }
-
-        public bool DefaultOnOutputCreated(SubQuery query, Request request)
-        {
-            if (NeckCut)
-            {                
                 query.Result.WhyResultComplete = "cut from " + ToString();
                 if (request.SuspendSearchLimits)
                 {
                     request.SuspendSearchLimits = false;
                 }
             }
-            return true;
+            if (TemplateFailedCallback != null) TemplateFailedCallback(query, request);
         }
 
         string _templateKey;
@@ -87,32 +64,29 @@ namespace RTParser.Utils
                 if (Response != null && Response.srcNode != null) return Response.srcNode;
                 return base.TemplateXml;
             }
-            set { Response.srcNode = value; }
+           // set { Response.srcNode = value; }
         }
 
 
         public TemplateInfo(PatternInfo pattern, XmlNode cateNode, LoaderOptions options, ResponseInfo template,
-            GuardInfo guard, Node patternNode, CategoryInfo categoryInfo)
+            GuardInfo guard, Node patternNode, ThatInfo thatInfo)
             : base(pattern, cateNode, options)
         {
-            TemplateSucceededCallback += DefaultOnSuccess;
-            TemplateFailedCallback += DefaultOnFailed;
-            OutputsCreateOnSuccees += DefaultOnOutputCreated;
-            if (template.Name != "template")
+            if (template != null && template.Name != "template")
             {
                 throw new UnauthorizedAccessException();
             }
             Guard = guard;
-            //That = that;
+            That = thatInfo;
             Response = template;
             GraphmasterNode = patternNode;
-            ParentCategoryInfo = categoryInfo;
+            //ParentCategoryInfo = categoryInfo;
             try
             {
-                if (Category.Attributes != null)
+                if (CategoryXml.Attributes != null)
                 {
                     bool doCut;
-                    if (StaticXMLUtils.TryParseBool(Category, "cut", out doCut) || StaticXMLUtils.TryParseBool(TemplateXml, "cut", out doCut))
+                    if (StaticXMLUtils.TryParseBool(CategoryXml, "cut", out doCut) || StaticXMLUtils.TryParseBool(TemplateXml, "cut", out doCut))
                     {
                         NeckCut = doCut;
                     }
@@ -126,7 +100,7 @@ namespace RTParser.Utils
             }
             if (Rating != 1.0)
             {
-                RTPBot.writeDebugLine("!! SCORE =" + Rating + " for " + OuterXml + " in " + categoryInfo);
+                RTPBot.writeDebugLine("!! SCORE =" + Rating + " for " + OuterXml + " in " + CategoryInfo);
             }
         }
 
@@ -347,7 +321,7 @@ namespace RTParser.Utils
             }
         }
 
-        public void AppendTemplate(XmlNode node, CategoryInfo category, List<ConversationCondition> nodes)
+        public void AppendTemplate(XmlNode node, XmlNode  category, List<ConversationCondition> nodes)
         {
             throw new NotImplementedException();
         }

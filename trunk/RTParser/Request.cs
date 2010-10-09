@@ -114,7 +114,7 @@ namespace RTParser
         ISettingsDictionary GetDictionary(string named, ISettingsDictionary dictionary);
 
         void AddUndo(Action action);
-        void Commit();
+        void Commit(bool clearAfter);
         void UndoAll();
         void AddSideEffect(string effect, ThreadStart start);
         Dictionary<string, GraphMaster> GetMatchingGraphs(string graphname, GraphMaster master);
@@ -128,12 +128,14 @@ namespace RTParser
         bool CanProcess(string starContent);
         bool ResponderSelfListens { get; set; }
         bool SaveResultsOnJustHeard { get; set; }
+        bool IsSynchronis { get; set; }
+        MasterResult FindOrCreateCurrentResult();
     }
 
     /// <summary>
     /// Encapsulates all sorts of information about a request to the Proccessor for processing
     /// </summary>
-    abstract public class RequestImpl : QuerySettings
+    public class RequestImpl : QuerySettings, Request
     {
         #region Attributes
 
@@ -235,6 +237,7 @@ namespace RTParser
         
         public bool ResponderSelfListens { get; set; }
         public bool SaveResultsOnJustHeard { get; set; }
+        public bool IsSynchronis { get; set; }
 
         // How many subqueries are going to be submitted with combos ot "that"/"topic" tags 
         public int MaxInputs { get; set; }
@@ -1273,7 +1276,7 @@ namespace RTParser
             }
         }
         private readonly List<KeyValuePair<string, ThreadStart>> commitHooks = new List<KeyValuePair<string, ThreadStart>>();
-        public static void DoAll(List<KeyValuePair<string, ThreadStart>> todo)
+        public static List<KeyValuePair<string, ThreadStart>> DoAll(List<KeyValuePair<string, ThreadStart>> todo)
         {
             List<KeyValuePair<string, ThreadStart>> newList = new List<KeyValuePair<string, ThreadStart>>();
             lock (todo)
@@ -1286,6 +1289,7 @@ namespace RTParser
                 DoTask(start);
             }
             todo.Clear();
+            return newList;
         }
 
         private static void DoTask(KeyValuePair<string, ThreadStart> start)
@@ -1301,17 +1305,18 @@ namespace RTParser
         }
 
         readonly object RequestSideEffect = new object();
-        public void Commit()
+        public void Commit(bool clearAfter)
         {
             lock (RequestSideEffect)
             {
-                if (commitHooks == null || commitHooks.Count == 0)
-                {
-                    return;
-                }
                 bool prevCommitNow = CommitNow;
                 try
                 {
+                    if (commitHooks == null || commitHooks.Count == 0)
+                    {
+                        return;
+                    }
+
                     while (true)
                     {
                         lock (commitHooks)
@@ -1322,10 +1327,18 @@ namespace RTParser
                             }
                         }
                         CommitNow = false;
-                        DoAll(commitHooks);
+                        List<KeyValuePair<string, ThreadStart>> prev = DoAll(commitHooks);
+                        if (!clearAfter)
+                        {
+                            lock (commitHooks)
+                            {
+                                commitHooks.AddRange(prev);
+                                CommitNow = true;
+                                return;
+                            }
+                        }
                         CommitNow = true;
                     }
-
                 }
                 finally
                 {
@@ -1346,7 +1359,10 @@ namespace RTParser
             {
                 if (CommitNow)
                 {
-                    DoTask(newKeyValuePair);
+                    if (!IgnoreTasks)
+                    {
+                        DoTask(newKeyValuePair);
+                    }
                 }
                 else
                 {
@@ -1495,6 +1511,7 @@ namespace RTParser
 
         public Dictionary<Unifiable, Unifiable> _SRAIResults = new Dictionary<Unifiable, Unifiable>();
         private string matchable;
+        private bool IgnoreTasks;
 
         public bool CanProcess(string starContent)
         {
@@ -1617,5 +1634,15 @@ namespace RTParser
         {
             _SRAIResults = sraiMark;
         }
+
+        #region Request Members
+
+
+        public MasterResult FindOrCreateCurrentResult()
+        {
+            return (CurrentResult as MasterResult) ?? CreateResult(this);
+        }
+
+        #endregion
     }
 }

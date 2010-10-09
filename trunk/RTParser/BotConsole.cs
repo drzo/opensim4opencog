@@ -373,7 +373,8 @@ namespace RTParser
         {
             try
             {
-                Request request = (user ?? LastUser ?? BotAsUser).CreateRequest(input, BotAsUser);
+                User requester = (user ?? LastUser ?? BotAsUser);
+                Request request = requester.CreateRequest(input, null);
                 return BotDirective(request, input, console);
             }
             catch (Exception e)
