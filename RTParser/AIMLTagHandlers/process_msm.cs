@@ -100,7 +100,7 @@ namespace RTParser.AIMLTagHandlers
                         foreach (string responseTopic in topicHt.Keys)
                         {
                             //prob = topicHt[responseTopic] = prob;
-                            string responseTopicUp = responseTopic.ToUpper();
+                            string responseTopicUp = ToUpper(responseTopic);
                             //string topicSet = "<set name='topic'>"+responseTopic+"</set>";
                             //this.user.Predicates.updateSetting("topic", responseTopic);
                             this.user.TopicSetting = responseTopicUp;

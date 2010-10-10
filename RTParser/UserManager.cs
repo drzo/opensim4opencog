@@ -53,7 +53,7 @@ namespace RTParser
 
         public void QuietLogger(string s, params object[] objects)
         {
-            s = string.Format("USERTRACE: " + s, objects);
+            s = SafeFormat("USERTRACE: " + s, objects);
             if (s.ToUpper().Contains("ERROR"))
             {
                 writeToLog(s, objects);
@@ -64,7 +64,7 @@ namespace RTParser
         {
             try
             {
-                s = string.Format("USERTRACE: " + s, objects);
+                s = SafeFormat("USERTRACE: " + s, objects);
                 if (s.ToUpper().Contains("ERROR"))
                 {
                     writeToLog(s, objects);
@@ -803,7 +803,6 @@ namespace RTParser
                     fromname = UNKNOWN_PARTNER;
                 }
             }
-            fromname = fromname.Trim();
             return ToScriptableName(fromname);
         }
 
@@ -826,7 +825,7 @@ namespace RTParser
         public bool IsLastKnownUser(string fromname)
         {
             //if (LastUser != null && LastUser.IsKnownAs(fromname)) return false;
-            return (string.IsNullOrEmpty(fromname) || fromname.Trim() == "null");
+            return (string.IsNullOrEmpty(fromname) || Trim(fromname) == "null");
         }
 
         public static bool IsOkForNameChar(char s)

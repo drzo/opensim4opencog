@@ -33,6 +33,9 @@ namespace RTParser
             return total;
         }
 
+        public static Unifiable[] DontStore = new Unifiable[0];
+        public static string[] DontStoreString = new string[0];
+
         public abstract int RunLowMemHooks();
         public static bool ReturnNullForUnknownNonUnifiables = true;
         public static bool ReturnNullForUnknownUnifiables = false;
@@ -149,19 +152,13 @@ namespace RTParser
         /// </summary>
         /// <param name="obj"></param>
         /// <returns></returns>
-        public override bool Equals(object obj)
-        {
-            throw new NotImplementedException();
-        }
+        public abstract override bool Equals(object obj);
 
         /// <summary>
         /// This should be overridden!
         /// </summary>
         /// <returns></returns>
-        public override int GetHashCode()
-        {
-            throw new NotImplementedException();
-        }
+        public abstract override int GetHashCode();
 
         public static implicit operator string(Unifiable value)
         {
@@ -172,32 +169,44 @@ namespace RTParser
             return value.AsString();
         }
 
-        static Dictionary<string, Unifiable> specialUnifiables = new Dictionary<string, Unifiable>(20);
+        static readonly Dictionary<string, Unifiable> specialUnifiables = new Dictionary<string, Unifiable>(20);
         static readonly Dictionary<string, Unifiable> internedUnifiables = new Dictionary<string, Unifiable>(20000);
         public static implicit operator Unifiable(string value)
         {
-            return MakeStringUnfiable(value);
+            if (value == null) return null;
+            Unifiable unif = MakeStringUnifiable(value, false);
+            if (value.Contains(" "))
+            {
+                return unif;
+            }
+            return unif;
         }
 
-        private static StringUnifiable MakeStringUnfiable(string value)
+        private static StringUnifiable MakeStringUnifiable(string value)
         {
+            StringUnifiable su = MakeStringUnifiable(value, true);
+            return su;
+        }
+
+        public static StringUnifiable MakeStringUnifiable(string value, bool useTrimmingRules)
+        {
+
             if (value == null) return null;
+            if (value == "") return Empty;
             Unifiable u;
-            if (false)
-            {
-                u = new StringUnifiable(value);
-                return (StringUnifiable)u;
-            }
             if (true)
                 lock (internedUnifiables)
                 {
                     if (internedUnifiables.TryGetValue(value, out u))
                     {
-                        return (StringUnifiable)u;
+                        return (StringUnifiable) u;
                     }
                 }
-
-            string key = Intern(CleanWhitepaces(value));
+            if (useTrimmingRules)
+            {
+                value = CleanWhitepaces(value);
+            }
+            string key = Intern(value);
             //if (value != key)
             {
                 //   writeToLog("Triming? '" + value + "'");
@@ -211,16 +220,16 @@ namespace RTParser
                     {
                         u = internedUnifiables[key] = new StringUnifiable(value, true);
                         // ReSharper disable ConditionIsAlwaysTrueOrFalse
-                        if (false && (internedUnifiables.Count % 10000) == 0)
-                        // ReSharper restore ConditionIsAlwaysTrueOrFalse
+                        if (false && (internedUnifiables.Count%10000) == 0)
+                            // ReSharper restore ConditionIsAlwaysTrueOrFalse
                         {
                             writeToLog("DEBUG9 internedUnifiables.Count=" + internedUnifiables.Count);
                         }
                     }
-                    return (StringUnifiable)u;
+                    return (StringUnifiable) u;
                 }
             u = new StringUnifiable(value);
-            return (StringUnifiable)u;
+            return (StringUnifiable) u;
         }
 
         public static string Intern(string cleanWhitepaces)
@@ -233,7 +242,7 @@ namespace RTParser
         {
             get
             {
-                return MakeStringUnfiable("*");
+                return MakeStringUnifiable("*");
             }
         }
 
@@ -243,8 +252,12 @@ namespace RTParser
             return ToUpper();
         }
 
-        public static Unifiable Join(string sep, Unifiable[] values, int startIndex, int count)
+        public static string Join(string sep, Unifiable[] values, int startIndex, int count)
         {
+            if (count == 0 || values.Length == 0)
+            {
+                return string.Empty;
+            }
             if (count == 1)
             {
                 return values[startIndex];
@@ -254,6 +267,10 @@ namespace RTParser
 
         public static Unifiable Join(string sep, string[] values, int startIndex, int count)
         {
+            if (count == 0 || values.Length == 0)
+            {
+                return Unifiable.Empty;
+            }
             if (count == 1)
             {
                 return values[startIndex];
@@ -263,6 +280,7 @@ namespace RTParser
 
         public static Unifiable[] arrayOf(string[] strs)
         {
+            if (strs.Length == 0) return DontStore;
             Unifiable[] it = new Unifiable[strs.Length];
             for (int i = 0; i < it.Length; i++)
             {
@@ -274,15 +292,38 @@ namespace RTParser
         public static string[] FromArrayOf(Unifiable[] tokens)
         {
             string[] it = new string[tokens.Length];
+            if (tokens == DontStore) return DontStoreString;
             for (int i = 0; i < it.Length; i++)
             {
-                it[i] = tokens[i].AsString().Trim();
+                it[i] = tokens[i].AsString();
             }
             return it;
         }
 
+        static public bool operator ==(Unifiable t, string s)
+        {
+            return EQ(s, t);
+        }
+
+        public static bool operator !=(Unifiable t, string s)
+        {
+            return !(t == s);
+        }
+
         static public bool operator ==(Unifiable t, object s)
         {
+            if (ReferenceEquals(t, s)) return true;
+            if (s is string)
+            {
+                string ss = (string)s;
+                if (t == ss)
+                {
+                    return true;
+                }
+                return false;
+            }
+            if (t == null) return IsNull(s);
+            if (s == null) return IsNull(t);
             return EQ(CreateEQ(s), t);
         }
         public static bool operator !=(Unifiable t, object s)
@@ -300,11 +341,11 @@ namespace RTParser
         }
         static public bool EQ(string t, string u)
         {
-            if (IsNull(t))
+            if (t == null || t == "$NULL")
             {
                 return IsNull(u);
             }
-            if (IsEMPTY(t))
+            if (t == "")
             {
                 return IsEMPTY(u);
             }
@@ -312,47 +353,55 @@ namespace RTParser
             {
                 return IsIncomplete(u);
             }
+            if (IsMissing(t))
+            {
+                return IsMissing(u);
+            }
             if (IsNull(u) || IsIncomplete(u) || IsEMPTY(u))
             {
                 return false;
             }
-            if (t.ToUpper() == u.ToUpper()) return true;
+            if (ToUpper(t) == u.ToUpper()) return true;
             return false;
         }
 
         public static Unifiable operator +(string u, Unifiable more)
         {
             if (u.Length == 0) return more;
-            if (more == null) return u + " -NULL-";
+            if (more == null)
+            {
+                writeToLog("ERROR: appending NULL");
+                return u + " -NULL-";
+            }
             string moreAsString = more.AsString();
             if (moreAsString.Length == 0) return u;
-            return MakeStringUnfiable(u + more.AsString());
+            return MakeStringUnifiable(u + more.AsString());
         }
         public static Unifiable operator +(Unifiable u, string more)
         {
-            return MakeStringUnfiable("" + u.AsString() + more);
+            return MakeStringUnifiable("" + u.AsString() + more);
         }
         public static Unifiable operator +(Unifiable u, Unifiable more)
         {
             if (IsNullOrEmpty(more)) return u;
             string moreAsString = more.AsString();
             if (moreAsString.Length == 0) return u;
-            return MakeStringUnfiable(u.AsString() + " " + moreAsString);
+            return MakeStringUnifiable(u.AsString() + " " + moreAsString);
         }
 
-        public static Unifiable CreateSpecial(string key)
+        public static SpecialStringUnifiable CreateSpecial(string key)
         {
             return CreateSpecial(key, key);
         }
-        public static Unifiable CreateSpecial(string key, string value)
+        public static SpecialStringUnifiable CreateSpecial(string key, string value)
         {
             var dict = specialUnifiables;
             lock (dict)
             {
-                key = Intern(key);
                 Unifiable u;
                 if (!dict.TryGetValue(key, out u))
                 {
+                    key = Intern(key);
                     u = dict[key] = new SpecialStringUnifiable(value, key);
                     u.Flags |= UFlags.IS_TAG;
                     internedUnifiables[key] = u;
@@ -361,7 +410,7 @@ namespace RTParser
                         internedUnifiables[value] = u;
                     }
                 }
-                return u;
+                return (SpecialStringUnifiable) u;
             }
         }
 
@@ -369,7 +418,7 @@ namespace RTParser
         {
             if (p is string)
             {
-                return MakeStringUnfiable((string)p);
+                return MakeStringUnifiable((string)p);
             }
             if (p is Unifiable) return (Unifiable)p;
             if (p is XmlNode)
@@ -377,7 +426,7 @@ namespace RTParser
                 var n = (XmlNode)p;
                 string inner = InnerXmlText(n);
                 writeToLog("MAking XML Node " + n.OuterXml + " -> " + inner);
-                StringUnifiable unifiable = MakeStringUnfiable(inner);
+                StringUnifiable unifiable = MakeStringUnifiable(inner);
                 //unifiable.node = (XmlNode)p;
             }
             // TODO
@@ -385,7 +434,7 @@ namespace RTParser
             {
                 return null;
             }
-            return MakeStringUnfiable(p.ToString());
+            return MakeStringUnifiable(p.ToString());
         }
 
         public override string ToString()
@@ -408,7 +457,8 @@ namespace RTParser
         public static Unifiable TagEndText = CreateSpecial("TAG-END");
         public static Unifiable NULL = CreateSpecial("$NULL", null);
         public static Unifiable INCOMPLETE = CreateSpecial("$INCOMPLETE",null);
-        public static Unifiable Empty = CreateSpecial("$EMPTY","");
+        public static SpecialStringUnifiable Empty = CreateSpecial("$EMPTY", "");
+        public static SpecialStringUnifiable SPACE = CreateSpecial("$SPACE", " ");
         public static Unifiable FAIL_NIL = CreateSpecial("$FAIL_NIL","NIL");
         public static Unifiable MISSING = CreateSpecial("$MISSING",/*"OM"*/null);
 

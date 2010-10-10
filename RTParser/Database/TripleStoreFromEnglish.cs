@@ -292,7 +292,7 @@ namespace RTParser.Database
         {
             bool ExcludedFactPattern = false;
             bool debug = (writeToLog != null);
-            fmtString = DLRConsole.SafeFormat(fmtString, fmtArgs);
+            fmtString = TextPatternUtils.SafeFormat(fmtString, fmtArgs);
             if (factoidSRV == "false")
             {
                 if (!debug) return true;
@@ -391,7 +391,7 @@ namespace RTParser.Database
             //TheBot.IsLogging = true;
             //TheBot.writeToLog("LUCENE: " + s, p);
             //TheBot.IsLogging = tempB;
-            s = DLRConsole.SafeFormat(s, p);
+            s = TextPatternUtils.SafeFormat(s, p);
 
             if (s.ToUpper().Contains("EXCLUDE")) return;
             DLRConsole.DebugWriteLine("TRIPLESTORE: " + s);

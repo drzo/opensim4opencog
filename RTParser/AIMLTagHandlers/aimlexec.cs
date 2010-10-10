@@ -97,7 +97,7 @@ namespace RTParser.AIMLTagHandlers
                         result.Append(newWord + " ");
                     }
                 }
-                return Unifiable.ToVMString(result).Trim();
+                return Trim(Unifiable.ToVMString(result));
             }
             return templateNodeInnerText;
         }

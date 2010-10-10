@@ -46,7 +46,7 @@ namespace RTParser.AIMLTagHandlers
                 // gossip is merely logged by the Proc and written to log files
                 if (!IsNullOrEmpty(templateNodeInnerText))
                 {
-                    writeToLog(string.Format("GOSSIP from user: {0}, '{1}'", this.user.UserID, Unifiable.DescribeUnifiable(templateNodeInnerText)));
+                    writeToLog(SafeFormat("GOSSIP from user: {0}, '{1}'", this.user.UserID, Unifiable.DescribeUnifiable(templateNodeInnerText)));
                 }
             }
             return Unifiable.Empty;

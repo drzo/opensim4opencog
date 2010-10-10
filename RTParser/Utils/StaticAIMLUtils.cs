@@ -690,7 +690,7 @@ namespace RTParser.Utils
         private static Unifiable GetDictData<T>(IList<T> unifiables, string name, int startChars, out bool found) where T : IConvertible
         {
             T u = GetDictData0<T>(unifiables, name, startChars, out found);
-            string toup = u.ToString(FormatProvider).ToUpper();
+            string toup = ToUpper(u.ToString(FormatProvider));
             if (string.IsNullOrEmpty(toup)) return PASSTHRU<Unifiable>(u);
             if (char.IsLetterOrDigit(toup[0])) return PASSTHRU<Unifiable>("" + u);
             return PASSTHRU<Unifiable>(u);
@@ -802,7 +802,7 @@ namespace RTParser.Utils
 
         public static string PadStars(string pattern)
         {
-            pattern = pattern.Trim();
+            pattern = Trim(pattern);
             int pl = pattern.Length;
             if (pl == 0) return "~*";
             if (pl == 1) return pattern;
@@ -854,7 +854,7 @@ namespace RTParser.Utils
         {
             if (node.NodeType == XmlNodeType.Comment || IsEmptyText(node)) return true;
             string patternSide = VisibleRendering(node.ChildNodes, PatternSideRendering);
-            return patternSide.Trim().Length == 0;
+            return Trim(patternSide).Length == 0;
         }
         public static bool IsEmptyTemplate(XmlNode node)
         {
@@ -899,7 +899,7 @@ namespace RTParser.Utils
             if (node.NodeType == XmlNodeType.Text)
             {
                 string innerText = node.InnerText;
-                if (innerText.Trim().Length == 0)
+                if (Trim(innerText).Length == 0)
                 {
                     return true;
                 }

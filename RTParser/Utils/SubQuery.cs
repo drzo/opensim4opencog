@@ -317,7 +317,7 @@ namespace RTParser.Utils
         public override string ToString()
         {
             string nodePattern =((object)Pattern ?? "-no-pattern-").ToString().Trim();
-            string s = string.Format("\nINPUT='{6}'\nPATTERN='{0}' InThToGu={1}:{2}:{3}:{4} Tc={5} Graph={7}\n",
+            string s = SafeFormat("\nINPUT='{6}'\nPATTERN='{0}' InThToGu={1}:{2}:{3}:{4} Tc={5} Graph={7}\n",
                          nodePattern,
                                      InputStar.Count, ThatStar.Count, TopicStar.Count,
                                      GuardStar.Count, Templates == null ? 0 : Templates.Count,

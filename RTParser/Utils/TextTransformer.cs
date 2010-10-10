@@ -54,7 +54,7 @@ namespace RTParser.Utils
         /// <returns>The resulting output</returns>
         public string Transform(string input)
         {
-            this.inputString = new StringUnifiable(input);
+            this.inputString = Unifiable.MakeStringUnifiable(input, false);
             return this.Transform();
         }
 

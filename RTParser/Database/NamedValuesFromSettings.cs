@@ -180,7 +180,7 @@ namespace RTParser.Database
         {
             try
             {
-                message = DLRConsole.SafeFormat("NAMEVALUES: " + message, args);
+                message = SafeFormat("NAMEVALUES: " + message, args);
                 DLRConsole.DebugWriteLine(message);
             }
                 // ReSharper disable EmptyGeneralCatchClause

@@ -1,4 +1,5 @@
 using System;
+using System.Xml;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 
@@ -16,8 +17,8 @@ namespace RTParser.Utils
                 right = "";
                 return false;
             }
-            left = args.Substring(0, lastIndex).Trim();
-            right = args.Substring(lastIndex + split.Length).Trim();
+            left = Trim(args.Substring(0, lastIndex));
+            right = Trim(args.Substring(lastIndex + split.Length));
             return true;
         }
 
@@ -26,11 +27,10 @@ namespace RTParser.Utils
             return sentence.ToLower() != sentenceIn.ToLower();
         }
 
-        internal static string ReTrimAndspace(string substitute)
+        public static string ReTrimAndspace(string substitute)
         {
             if (substitute == null) return null;
-            //var csubstitute = substitute.ToCharArray();
-            return substitute.Replace("  ", " ").Replace("  ", " ").Replace("  ", " ").Trim();
+            return OlderReference(substitute, Trim(substitute.Replace("  ", " ")));
         }
 
         /// Checks that the provided sentence ends with a sentence splitter
@@ -39,7 +39,7 @@ namespace RTParser.Utils
         /// <returns>True if ends with an appropriate sentence splitter</returns>
         static public bool checkEndsAsSentence(string sentence)
         {
-            sentence = sentence.Trim();
+            sentence = Trim(sentence);
 
             if ("!?.".Contains(sentence.Substring(sentence.Length - 1))) return true;
             foreach (Unifiable splitter in RTPBot.Splitters)
@@ -115,37 +115,68 @@ namespace RTParser.Utils
         {
             if (ReferenceEquals(name, null)) return true;
             if (ReferenceEquals(name, Unifiable.NULL)) return true;
-            return (name is Unifiable && ((Unifiable)name).Raw == null);
-        }
-        
-        public static bool IsIncomplete(Object name)
-        {
-            if (ReferenceEquals(name, Unifiable.INCOMPLETE))
+            object s = name;
+            if (name is Unifiable)
+            {
+                s = ((Unifiable) name).SpecialName;
+            }
+            if (s is string)
+            {
+                if ((string) s == "$NULL")
+                {
+                    return true;
+                }
+                return false;
+            }
+            if (s == null)
             {
                 return true;
             }
+            return false;
+        }
+
+        public static bool IsIncomplete(Object name)
+        {
             if (ReferenceEquals(name, null))
             {
                 return true;
             }
-            if (ReferenceEquals(name, Unifiable.NULL) || IsNull(name))
+            if (name is Unifiable)
             {
-                return true;
+                if (ReferenceEquals(name, Unifiable.INCOMPLETE))
+                {
+                    return true;
+                } if (ReferenceEquals(name, Unifiable.MISSING))
+                {
+                    return true;
+                }
+                if (ReferenceEquals(name, Unifiable.Empty))
+                {
+                    return false;
+                }
+                if (ReferenceEquals(name, Unifiable.NULL) || IsNull(name))
+                {
+                    return true;
+                }
+                var name2 = ((Unifiable)name).SpecialName;
+                if (IsNull(name2))
+                {
+                    writeDebugLine("WARN: this case isNull '" + name2 + "' was never supposed to happen");
+                    return false;
+                }
+                if (IsEMPTY(name2)) return false;
+                name = name2;
             }
-            if (IsEMPTY(name)) return false;
             if (name is string)
             {
-                string sname = ((string) name).ToUpper();
+                string sname = ToUpper(((string)name));
                 if (sname == "$INCOMPLETE" || sname == "$NULL") return true;
-                if (sname == "OM" || sname == "$MISSING") return true;
-            }
-            if (!(name is Unifiable))
-            {
-                return false;
-            }
-            var name2 = ((Unifiable)name).Raw;
-            if (IsNull(name2)) return false;
-            return IsIncomplete(name2);
+                if (sname == "OM" || sname == "$MISSING")
+                {
+                    return true;
+                }
+            }            
+            return false;
         }
 
 
@@ -166,29 +197,53 @@ namespace RTParser.Utils
             }
             if ((name is string))
             {
-                string sname = ((string) name).ToUpper();
+                string sname = ToUpper(((string) name));
                 return sname == "OM" || sname == "$MISSING";
             }
             if (!(name is Unifiable))
             {
                 return false;
             }
-            var name2 = ((Unifiable) name).Raw;
+            var name2 = ((Unifiable)name).SpecialName;
             if (IsNull(name2)) return false;
             return IsIncomplete(name2);
         }
 
         public static bool IsEMPTY(Object name)
         {
+            if (ReferenceEquals(name, Unifiable.Empty))
+            {
+                return true;
+            }
             if (name is String)
             {
-                return ((String) name).Trim().Length == 0;
+                string stringValue = ((String)name);
+                if (stringValue.Length == 0) return true;
+                string stringValueTrim = Trim(stringValue);
+                if (stringValueTrim.Length == 0)
+                {
+
+                    writeDebugLine("WARN: this case isNull '" + Unifiable.DescribeUnifiable(name) + "' was never supposed to happen");
+                    return true;
+                }
+                if (stringValueTrim == "$EMPTY")
+                {
+                    return true;
+                }
+                return false;
             }
             if (ReferenceEquals(name, null) || ReferenceEquals(name, Unifiable.NULL))
             {
                 return false;
             }
-            if (name is Unifiable) return IsEMPTY(((Unifiable) name).Raw);
+            if (name is Unifiable)
+            {
+                if (IsEMPTY(((Unifiable)name).SpecialName))
+                {
+                    return true;
+                }
+                return false;
+            }
             return false;
         }
 
@@ -291,12 +346,13 @@ namespace RTParser.Utils
 
         protected static string NoWilds(string pattern)
         {
-            pattern = pattern.Trim();
+            pattern = Trim(pattern);
             int pl = pattern.Length;
             if (pl < 4) return pattern;
             while (pattern.Contains("*"))
             {
-                pattern = pattern.Replace("*", " ").Trim();
+                pattern = pattern.Replace("*", " ");
+                pattern = Trim(pattern);
             }
             return pattern;
         }
@@ -333,6 +389,42 @@ namespace RTParser.Utils
                 return false;
             }
             return (s.ToLower() != "nothing");
+        }
+
+        public static string ToUpper(string param1)
+        {
+            var outp = param1.ToUpper();
+            return OlderReference(param1, outp);
+        }
+
+        public static string ToLower(string param1)
+        {
+            var outp = param1.ToLower();
+            return OlderReference(param1, outp);
+        }
+        public static string Trim(string param1)
+        {
+            var outp = param1.Trim();
+            return OlderReference(param1, outp);
+        }
+        public static string Trim(Unifiable param1)
+        {
+            var outp = param1.Trim();
+            return outp;
+        }
+
+        public static string OlderReference(string param1, string outp)
+        {
+            if (outp == param1)
+            {
+                return param1;
+            }
+            return outp;
+        }
+
+        public static string SafeFormat(string fmt, params object[] args)
+        {
+            return DLRConsole.SafeFormat(fmt, args);
         }
     }
 }

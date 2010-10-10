@@ -264,8 +264,8 @@ namespace RTParser.Utils
 
         public void QuietLogger(string s, params object[] objects)
         {
-            s = string.Format("USERTRACE: " + s, objects);
-            if (s.ToUpper().Contains("ERROR"))
+            s = SafeFormat("USERTRACE: " + s, objects);
+            if (ToUpper(s).Contains("ERROR"))
             {
                 writeToLog(s, objects);
             }
@@ -560,6 +560,7 @@ namespace RTParser.Utils
                 //  IXmlLineInfo text = (IXmlLineInfo)xtr;
                 try
                 {
+                    doc.SetNodesReadOnly = true;
                     doc.Load(xtr);
                     if (doc.DocumentElement == null)
                     {
@@ -795,7 +796,6 @@ namespace RTParser.Utils
                 }
                 else if (currentNodeName == "that")
                 {
-
                     additionalRules = PushAddtionalRuleContext(additionalRules);
                     string valueThat = GetAttribValue(currentNode, "value,that", currentNode.InnerXml);
                     ConversationCondition thatRule = new ConversationCondition("that", valueThat, currentNode);
@@ -944,10 +944,13 @@ namespace RTParser.Utils
                                                             LoaderOptions loadOpts, List<ConversationCondition> additionalRules)
         {
             var CIs = loadOpts.CategoryInfos;
+            LineInfoElementImpl.SetReadOnly(cateNode);
             // reference and check the required nodes
             var patterns = FindNodes("pattern", cateNode);
             var templates = FindNodes("template", cateNode);
             var rulesNodes = FindNodes("rule", cateNode);
+            var topicNodesInCate = FindNodes("topic", cateNode);
+            var thatsInCate = FindNodes("that", cateNode);
            // var thatNodes = new List<XmlNode>();
             //FindNodes("that", cateNode, thatNodes, 2);
             string errors = "";
@@ -1137,7 +1140,7 @@ namespace RTParser.Utils
             }
 
             Func<Unifiable, bool, Unifiable> normalizerT = (inputText, isUserInput) => Normalize(inputText, isUserInput).Trim();
-            Unifiable categoryPath = generatePath(patternText, that, cond, topicName, false, normalizerT );
+            Unifiable categoryPath = generatePath(patternText, that, cond, topicName, false, normalizerT ).ToUpper();
             PatternInfo patternInfo = loaderOpts.CtxGraph.FindPattern(patternNode, categoryPath);//PatternInfo.GetPattern(loaderOpts, patternNode, categoryPath);
             TopicInfo topicInfo = loaderOpts.CtxGraph.FindTopic(topicName);
             ThatInfo thatInfo = loaderOpts.CtxGraph.FindThat(thatNodeOrNull, that);
@@ -1148,7 +1151,7 @@ namespace RTParser.Utils
                 if (templateNode.HasChildNodes)
                 {
                     if (templateNode.ChildNodes[0].NodeType != XmlNodeType.Comment &&
-                        templateNode.InnerXml.Trim().Length > 0)
+                        Trim(templateNode.InnerXml).Length > 0)
                     {
                         templateNodeFindable = templateNode;
                         tni = templateNodeFindable.InnerXml;
@@ -1275,7 +1278,7 @@ namespace RTParser.Utils
 
             if (isPatternSide || pattern != "*")
             {
-                if (pattern == null || pattern.Trim().Length == 0)
+                if (pattern == null || Trim(pattern).Length == 0)
                 {
                     pattern = TryGetPrecondionThat(tagName, xmlNode, out isPatternSide, out indexValue, out indexPosition1);
                 }
@@ -1345,7 +1348,7 @@ namespace RTParser.Utils
         public void writeToLog(string message, params object[] args)
         {
             string prefix = ToString();
-            prefix = DLRConsole.SafeFormat("LOADERTRACE: " + message + " while " + prefix, args);
+            prefix = SafeFormat("LOADERTRACE: " + message + " while " + prefix, args);
 
             try
             {
@@ -1457,9 +1460,9 @@ namespace RTParser.Utils
             }
 
             Unifiable res = Unifiable.MakePath(generateCPath(pattern, that, flag, topicName, isUserInput, innerFormater));
-            string ress = (string)res;
             if (isUserInput)
             {
+                var ress = (string)res;
                 if (ress.Contains("*"))
                 {
                     string problem = "generatePath failed: " + ress;
@@ -1470,7 +1473,7 @@ namespace RTParser.Utils
             return res;
         }
 
-        private string LastRepair(string normalizedPattern, bool isUserInput, bool UseRawUserInput)
+        private static string LastRepair(string normalizedPattern, bool isUserInput, bool UseRawUserInput)
         {
             bool hasStars = normalizedPattern.Contains("*") || normalizedPattern.Contains("_");
             if (!hasStars) return normalizedPattern;
@@ -1481,7 +1484,7 @@ namespace RTParser.Utils
                 normalizedPattern = normalizedPattern.Replace(" <", "<");
             }
             normalizedPattern = normalizedPattern.Replace("  ", " ");
-            normalizedPattern = normalizedPattern.Trim();            
+            normalizedPattern = Trim(normalizedPattern);         
             var normalizedPattern1 = normalizedPattern;
             normalizedPattern = normalizedPattern.Replace("**", " * * ");
             normalizedPattern = normalizedPattern.Replace("*_", " * _ ");
@@ -1496,7 +1499,7 @@ namespace RTParser.Utils
                 }
             }
             normalizedPattern = normalizedPattern.Replace("  ", " ");
-            normalizedPattern = normalizedPattern.Trim();
+            normalizedPattern = Trim(normalizedPattern);
             if (isUserInput)
             {
                 if (normalizedPattern.Contains("*") || normalizedPattern.Contains("_"))
@@ -1685,14 +1688,15 @@ namespace RTParser.Utils
                 return Unifiable.Empty;
             }
             Unifiable result = Unifiable.CreateAppendable();
-            input = input.Replace("*", " * ").Replace("  ", " ").Trim();
+            input = input.Replace("*", " * ").Replace("  ", " ");
+            input = Trim(input);
             // objects for normalization of the input
             RTPBot RProcessor = LoaderRequest00.TargetBot;
             ApplySubstitutions substitutor = new ApplySubstitutions(RProcessor);
             StripIllegalCharacters stripper = new StripIllegalCharacters(RProcessor);
 
-            Unifiable substitutedInput = substitutor.Transform(" " + input + " ").Trim();
-            bool cand = input.ToUpper().Contains(" AND ");
+            Unifiable substitutedInput = Trim(substitutor.Transform(" " + input + " "));
+            bool cand = ToUpper(input).Contains(" AND ");
             bool cand2 = substitutedInput.ToUpper().Contains(" AND ");
             int nonAlpha = NonAlphaCount(input);
             int nonAlpha2 = NonAlphaCount(substitutedInput);

@@ -1094,7 +1094,7 @@ namespace RTParser.Database
             //TheBot.IsLogging = true;
             //TheBot.writeToLog("LUCENE: " + s, p);
             //TheBot.IsLogging = tempB;
-            s = DLRConsole.SafeFormat(s, p);
+            s = TextPatternUtils.SafeFormat(s, p);
 
             if (s.ToUpper().Contains("EXCLUDE")) return;
             DLRConsole.DebugWriteLine("LUCENE: " + s);

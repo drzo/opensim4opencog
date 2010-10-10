@@ -107,7 +107,7 @@ namespace RTParser
         public Request GetBotRequest(string s)
         {
             var botAsUser1 = BotAsUser;
-            s = s.Trim();
+            s = Trim(s);
             if (!s.StartsWith("<")) s = "<!-- " + s.Replace("<!--", "<#").Replace("-->", "#>") + " -->";
             var r = new AIMLbot.MasterRequest(s, botAsUser1, this, null, botAsUser1);
             //r.ChatOutput.RawText = s;
@@ -544,7 +544,7 @@ namespace RTParser
         public string PopSearchPath(string directory)
         {
             if (directory == null) return null;
-            directory = directory.Trim();
+            directory = Trim(directory);
             if (directory.Length == 0)
             {
                 directory = ".";
@@ -566,7 +566,7 @@ namespace RTParser
         public string PushSearchPath(string directory)
         {
             if (directory == null) return null;
-            directory = directory.Trim();
+            directory = Trim(directory);
             if (directory.Length == 0)
             {
                 directory = ".";
@@ -1260,7 +1260,7 @@ The AIMLbot program.
             }
             else
             {
-                langu = langu.AsString().ToLower().Trim();
+                langu = ToLower(Trim(langu));
             }
             Unifiable s = "The system tag should be doing '" + cmd + "' lang=" + langu;
             writeToLog(s.AsString());
@@ -1303,7 +1303,7 @@ The AIMLbot program.
 
         public void AddExcuteHandler(string lang, SystemExecHandler handler)
         {
-            lang = lang.ToLower().Trim();
+            lang = ToLower(Trim(lang));
             ExecuteHandlers[lang] = handler;
         }
 
@@ -1344,7 +1344,7 @@ The AIMLbot program.
 
         public GraphMaster GetUserGraph(string graphPath)
         {
-            graphPath = graphPath.ToLower().Trim();
+            graphPath = ToLower(Trim(graphPath));
             GraphMaster g;
             lock (GraphsByName)
             {
@@ -1382,7 +1382,7 @@ The AIMLbot program.
                 return GetGraph(left, vg);
             }
 
-            graphPath = ToScriptableName(graphPath.Trim());
+            graphPath = ToScriptableName(graphPath);
             lock (GraphsByName)
             {
                 if (LocalGraphsByName.TryGetValue(graphPath, out g))
@@ -1414,7 +1414,7 @@ The AIMLbot program.
                 return FindGraph(left, vg);
             }
 
-            graphPath = ToScriptableName(graphPath.Trim());
+            graphPath = ToScriptableName(graphPath);
 
             if (graphPath == "current" || graphPath == "")
             {
@@ -1462,8 +1462,14 @@ The AIMLbot program.
                 if (IsOkForNameChar(s))
                     sk += s;
             }
-            path = sk;
-            return path.ToLower().Trim().Replace(" ", "_").Replace(".", "_").Replace("-", "_").Replace("__", "_");
+            path = OlderReference(path, sk);
+            path = ToLower(Trim(path));
+            return OlderReference(
+                path,
+                path
+                    .Replace(" ", "_").Replace(".", "_")
+                    .Replace("-", "_").Replace("__", "_"));
+
         }
 
         public static int DivideString(string args, string sep, out string left, out string right)
@@ -1488,8 +1494,9 @@ The AIMLbot program.
                 right = null;
                 return 1;
             }
-            left = args.Substring(0, lastIndex).Trim();
-            right = args.Substring(lastIndex + 1).Trim();
+            int seplen = sep.Length;
+            left = Trim(args.Substring(0, lastIndex));
+            right = Trim(args.Substring(lastIndex + seplen));
             if (right.Length == 0) return 1;
             return 2;
         }
@@ -1730,7 +1737,7 @@ The AIMLbot program.
             string loaded = LoadPersonalDirectory(myName);
             if (string.IsNullOrEmpty(loaded))
             {
-                myName = ToScriptableName(myName.Trim());
+                myName = ToScriptableName(myName);
                 loaded = LoadPersonalDirectory(myName);
             }
             if (string.IsNullOrEmpty(loaded))
@@ -1753,7 +1760,7 @@ The AIMLbot program.
                 try
                 {
                     bool wasStopped = true;
-                    string real = DLRConsole.SafeFormat(message, args);
+                    string real = SafeFormat(message, args);
                     message = real.ToUpper();
                     if (message.Contains("ERROR") && !message.Contains("TIMEOUTMESSAGE"))
                     {
@@ -1805,8 +1812,8 @@ The AIMLbot program.
         {
             old = old ?? "";
             next = next ?? "";
-            old = old.ToLower().Trim();
-            next = next.ToLower().Trim();
+            old = Trim(ToLower(old));
+            next = Trim(ToLower(next));
             return FindUser(old) == FindUser(next);
         }
 

@@ -261,9 +261,7 @@ namespace RTParser.Utils
         public PatternInfo FindPattern(XmlNode pattern, Unifiable unifiable)
         {
             if (NoIndexing) return null;
-            LineInfoElementImpl lineInfoE = StaticXMLUtils.ToLineInfoElement(pattern);
-            if (lineInfoE == null) lineInfoE = null;
-            string pats = MakeMatchKey(unifiable);
+            string pats = unifiable;
             int skip = pats.IndexOf("TAG-THAT");
             if (skip > 0) pats = pats.Substring(0, skip - 1);
             else
@@ -272,6 +270,7 @@ namespace RTParser.Utils
                 if (skip > 0) pats = pats.Substring(0, skip - 1);                
             }
             if (pats.StartsWith("TAG-INPUT ")) pats = pats.Substring(10);
+            pats = MakeMatchKey(pats);
             return pats;
 #if false
             PatternInfo pi;
@@ -353,9 +352,9 @@ namespace RTParser.Utils
 #endif
         }
 
-        private string MakeMatchKey(Unifiable pattern)
+        private string MakeMatchKey(string pattern)
         {
-            string v = TextPatternUtils.MatchKeyClean(pattern.AsString()).ToUpper();
+            string v = TextPatternUtils.ToUpper(TextPatternUtils.MatchKeyClean(pattern).ToUpper());
             if (v.Length < 1)
             {
                 return "*";
@@ -372,13 +371,14 @@ namespace RTParser.Utils
                 throw new Exception(s);
             }
         }
-        public XmlNode GetMatchableXMLNode(string nodeName, Unifiable topicName)
+
+        private XmlNode GetMatchableXMLNode(string nodeName, Unifiable topicName)
         {
             var node = GetMatchableXMLNode0(nodeName, topicName);
             if (node != null) return node;
             return GetMatchableXMLNode0(nodeName, topicName);
         }
-        public XmlNode GetMatchableXMLNode0(string nodeName, string topicName)
+        private XmlNode GetMatchableXMLNode0(string nodeName, string topicName)
         {
             if (NoIndexing) return null;
             if (string.IsNullOrEmpty(topicName))
@@ -529,7 +529,7 @@ namespace RTParser.Utils
 
             int countBefore = thiz.TemplateInfoCount;
 
-            XmlNode cateNode = StaticXMLUtils.FindNode("category", outerNode, null);
+            XmlNode cateNode = StaticXMLUtils.FindNodeOrHigher("category", templateNode, null);
             var info0 = thiz.addTerminal(templateNode, cateNode, guard, thatInfo, loaderOptions, patternInfo,
                                                  additionalRules, out wouldBeRemoval);
             if (wouldBeRemoval)
@@ -666,7 +666,7 @@ namespace RTParser.Utils
             if (bubble == null) return false;
             string s = bubble;
 
-            bool b = s.Trim().StartsWith(STAR_PATH);
+            bool b = TextPatternUtils.Trim(s).StartsWith(STAR_PATH);
             if (!b) return false;
             return b;
         }

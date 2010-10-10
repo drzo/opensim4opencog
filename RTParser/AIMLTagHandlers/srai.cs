@@ -53,7 +53,7 @@ namespace RTParser.AIMLTagHandlers
             {
                 base.writeToLog(unifiable, objs);
             }
-            if (false && string.Format(unifiable,objs).Contains("&"))
+            if (false && SafeFormat(unifiable,objs).Contains("&"))
             {
                 base.writeToLog("!ERRROR");
             }
@@ -281,7 +281,7 @@ namespace RTParser.AIMLTagHandlers
                 {
                     string prefix =
                         query.prefix =
-                        string.Format("ProcessChangeSrai: {0}: \"{1}\"\n", request.Graph, Unifiable.DescribeUnifiable(templateNodeInnerValue));
+                        SafeFormat("ProcessChangeSrai: {0}: \"{1}\"\n", request.Graph, Unifiable.DescribeUnifiable(templateNodeInnerValue));
 
                     if (request.SraiDepth.IsOverMax)
                     {

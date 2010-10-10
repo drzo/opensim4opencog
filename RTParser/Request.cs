@@ -1082,7 +1082,7 @@ namespace RTParser
         {
             if (!message.Contains(":")) message = "REQUEST: " + message;
             string prefix = ToString();
-            prefix = DLRConsole.SafeFormat(message + " while " + prefix, args);
+            prefix = SafeFormat(message + " while " + prefix, args);
 
             message = prefix.ToUpper();
             if (message.Contains("ERROR") || message.Contains("WARN"))

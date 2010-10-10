@@ -482,7 +482,7 @@ namespace RTParser.Variables
 
         private void writeToLog(string message, params object[] args)
         {
-            if (args != null && args.Length > 0) message = String.Format(message, args);
+            message = TextPatternUtils.SafeFormat(message, args);
             string tol = message.Trim().ToLower();
             if (tol.StartsWith("error") || tol.StartsWith("warn")) message = "-DICTLOG: " + message;
             var nameSpace = this.NameSpace;
@@ -616,7 +616,7 @@ namespace RTParser.Variables
                         return;
                     }
                 }
-                WithoutTrace(dict, () => dict.addSetting(name, new StringUnifiable(value)));
+                WithoutTrace(dict, () => dict.addSetting(name, Unifiable.MakeStringUnifiable(value, false)));
             }
             else
             {
@@ -637,7 +637,7 @@ namespace RTParser.Variables
                         return;
                     }
                 }
-                WithoutTrace(dict, () => dict.updateSetting(name, new StringUnifiable(value)));
+                WithoutTrace(dict, () => dict.updateSetting(name, Unifiable.MakeStringUnifiable(value, false)));
             }
         }
 
@@ -1610,7 +1610,7 @@ namespace RTParser.Variables
                 writeToLog("DICTLOG: " + NameSpace + "  " + message, args);
                 return;
             }
-            string fmt = DLRConsole.SafeFormat(message, args);
+            string fmt = TextPatternUtils.SafeFormat(message, args);
             if (false && fmt.Contains("???") /*|| fmt.Contains(" 'name'='")*/)
             {
                 writeToLog("ERROR DICTLOG ???????: " + NameSpace + " (" + fmt + ")   " + message, args);

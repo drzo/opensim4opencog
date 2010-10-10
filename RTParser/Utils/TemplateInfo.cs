@@ -63,12 +63,15 @@ namespace RTParser.Utils
             return StaticAIMLUtils.CollectionCompare<XmlNode>(thiz.TemplateXml.ChildNodes, other.TemplateXml.ChildNodes, StaticAIMLUtils.CompareXmlNodes);
         }
 
-        public XmlNode TemplateXml
+        public override XmlNode TemplateXml
         {
             get
             {
-                if (Response != null && Response.PatternNode != null) return Response.PatternNode;
-                return base.TemplateXmlNode;
+                var tn = StaticXMLUtils.FindNode("template", CategoryXml, null);
+                if (tn != null) return tn;
+                var response = Response;
+                if (response != null && response.PatternNode != null) return response.PatternNode;
+                return TemplateXmlNode;
             }
            // set { Response.srcNode = value; }
         }
@@ -210,7 +213,8 @@ namespace RTParser.Utils
 
         public override string ToString()
         {
-            XmlNode tryit = TemplateXml.ParentNode;
+            var tryit = TemplateXml;
+            tryit = tryit != null ? TemplateXml.ParentNode : CategoryXml;
             if (tryit != null)
             {
                 string rules = GetRuleStrings();
@@ -289,7 +293,7 @@ namespace RTParser.Utils
         internal static string AsStar(string that)
         {
             if (that == null) return "*";
-            string thatTrim = that.Trim();
+            string thatTrim = TextPatternUtils.Trim(that);
             return thatTrim.Length == 0 ? "*" : thatTrim;
         }
 
