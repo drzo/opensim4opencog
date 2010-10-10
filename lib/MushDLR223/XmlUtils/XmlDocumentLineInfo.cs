@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Xml;
 using System.Xml.Schema;
@@ -57,6 +58,18 @@ namespace MushDLR223.Utilities
         public bool NeedCleanAttribs = true;
         private string preXml = "";
         public bool SuspendLineInfo;
+        private object Loading;
+        public bool IsReusableDoc = false; 
+        public bool IsFakingEmpty = false;
+        public List<XmlNode> FakeFirstElements = null;
+        public XmlNode CurrentFake = null;
+        readonly XmlNodeList EmptyChildNodes;
+        public bool WasUsed { get; set; }
+        readonly XmlAttributeCollection EmptyAttributeCollection;
+        protected bool InLoad
+        {
+            get { return Loading != null; }
+        }
 
         static XmlDocumentLineInfo()
         {
@@ -77,6 +90,8 @@ namespace MushDLR223.Utilities
 
         public XmlDocumentLineInfo(string toString, bool presrveWhite)
         {
+            EmptyChildNodes = base.ChildNodes ?? new LineInfoElementImpl(null, "empty", null, null).ChildNodes;
+            EmptyAttributeCollection = base.Attributes;
             InfoString = toString;
             PreserveWhitespace = presrveWhite;
             base.Prefix = "";
@@ -177,7 +192,8 @@ namespace MushDLR223.Utilities
                         }
                         foreach (XmlAttribute s in list)
                         {
-                            DocumentElement.RemoveAttributeNode(s.LocalName, s.NamespaceURI);
+                            var vvs = DocumentElement.RemoveAttributeNode(s.LocalName, s.NamespaceURI);
+                            writeToLog("removed attribute " + vvs);
                         }
                     }
                 }
@@ -204,7 +220,7 @@ namespace MushDLR223.Utilities
         public override void Load(string filename)
         {
             var s = XmlReader.Create(filename, DefaultSettings);
-            Load(s);
+            LoadFromReader(s);
         }
         public override void Load(Stream reader)
         {
@@ -219,10 +235,10 @@ namespace MushDLR223.Utilities
                     }
                     else
                     {
-                        Load(CreateXmlTextReader(reader));
+                        LoadFromReader(CreateXmlTextReader(reader));
                         return;
                     }
-                    base.Load(reader);
+                    baseLoad(() => base.Load(reader), reader);
                     Normalize();
                 }
                 catch (SystemException e)
@@ -258,6 +274,10 @@ namespace MushDLR223.Utilities
         // ReSharper disable RedundantOverridenMember
         public override XmlNode CreateNode(XmlNodeType type, string prefix, string localName, string namespaceURI)
         {
+            prefix = Intern(prefix);
+            localName = Intern(localName);
+            namespaceURI = Intern(namespaceURI);
+
             if (type == XmlNodeType.Element) return CreateElement(prefix, localName, namespaceURI);
             string nodeTypeString = type.ToString();
             string name = null;
@@ -276,6 +296,9 @@ namespace MushDLR223.Utilities
 
         public override XmlNode CreateNode(string nodeTypeString, string name, string namespaceURI)
         {
+            nodeTypeString = Intern(nodeTypeString);
+            name = Intern(name);
+            namespaceURI = Intern(namespaceURI);
             string prefix = null;
             string localName = null;
             TransformElement(ref nodeTypeString, ref prefix, ref localName, ref name, ref namespaceURI);
@@ -286,6 +309,8 @@ namespace MushDLR223.Utilities
 
         public override XmlNode CreateNode(XmlNodeType type, string name, string namespaceURI)
         {
+            namespaceURI = Intern(namespaceURI);
+            name = Intern(name);
             string prefix = null;
             string nodeTypeString = type.ToString();
             string localName = null;
@@ -297,6 +322,9 @@ namespace MushDLR223.Utilities
 
         protected override XmlAttribute CreateDefaultAttribute(string prefix, string localName, string namespaceURI)
         {
+            prefix = Intern(prefix);
+            localName = Intern(localName);
+            namespaceURI = Intern(namespaceURI);
             string nodeTypeString = null;
             string name = null;
             TransformElement(ref nodeTypeString, ref prefix, ref localName, ref name, ref namespaceURI);
@@ -353,6 +381,43 @@ namespace MushDLR223.Utilities
             return prefix;
         }
 
+
+        public override XmlEntityReference CreateEntityReference(string name)
+        {
+            CheckTracingCaller(2);
+            return base.CreateEntityReference(name);
+        }
+
+        public override System.Xml.XPath.XPathNavigator CreateNavigator()
+        {
+            CheckTracingCaller(1);
+            return base.CreateNavigator();
+        }
+
+        public override XmlProcessingInstruction CreateProcessingInstruction(string target, string data)
+        {
+            CheckTracingCaller(1);
+            return base.CreateProcessingInstruction(target, data);
+        }
+
+        public override XmlComment CreateComment(string data)
+        {
+            CheckTracingCaller(1);
+            data = Intern(data);
+            return base.CreateComment(data);
+        }
+
+        protected override System.Xml.XPath.XPathNavigator CreateNavigator(XmlNode node)
+        {
+            CheckTracingCaller(1);
+            return base.CreateNavigator(node);
+        }
+
+        public override XmlSignificantWhitespace CreateSignificantWhitespace(string text)
+        {
+            CheckTracingCaller(1);
+            return base.CreateSignificantWhitespace(Intern(text));
+        }
 
         private static void StepTrace()
         {
@@ -488,8 +553,14 @@ namespace MushDLR223.Utilities
             XmlReader reader0 = CheckReader(reader);
             try
             {
-
-                base.Load(reader0);
+                if (!IsReusableDoc)
+                {
+                    base.Load(reader);
+                }
+                else
+                {
+                    baseLoad(() => base.Load(reader), reader);
+                }
             }
             catch (Exception e)
             {
@@ -497,6 +568,206 @@ namespace MushDLR223.Utilities
                 throw;
             }
             Normalize();
+        }
+
+        private void baseLoad(Action action, object reader0)
+        {
+            object wasInLoad = Loading;
+            try
+            {
+                if (InLoad)
+                {
+                    writeToLog("WARN: Recusive Load " + wasInLoad + " " + reader0 + " ");
+                }
+                Loading = reader0;
+                action();
+            }
+            catch (Exception e)
+            {
+                writeToLog("ERROR" + reader0 + " " + e);
+                throw;
+            } finally
+            {
+                Loading = wasInLoad;
+            }
+        }
+
+        public void CheckTracingCaller(int n)
+        {
+            if (!InLoad) return;
+            try
+            {
+                if (IsInthisFrame(n + 2) && IsInthisFrame(n + 3)) return;
+            }
+            catch (Exception e)
+            {
+                DLRConsole.DebugWriteLine("ERROR: " + e);
+            }
+            if (InLoad)
+            {
+            }
+        }
+
+        private bool IsInthisFrame(int n)
+        {
+            var sf = new StackTrace();
+            var sff = sf.GetFrames();
+            if (sff != null)
+            {
+                if (n >= sff.Length) return false;
+                var sffn = sff[n];
+                System.Reflection.MethodBase method = sffn.GetMethod();
+                var c = method.DeclaringType.Namespace;
+                var t = GetType().Namespace;
+                if (c == t) return true;
+            }
+            return false;
+        }
+
+        public override XmlNode RemoveChild(XmlNode oldChild)
+        {
+            var oldParent = oldChild.ParentNode;
+            var oldDoc = oldChild.OwnerDocument;
+            bool wasOldDoc = oldDoc == this;
+            bool wasOldParent = oldParent == DocumentElement;
+            try
+            {
+                return base.RemoveChild(oldChild);
+            }
+            catch (Exception e)
+            {
+                string newVariable = "ERROR: " + e;
+                writeToLog(newVariable);
+                throw;
+            }
+        }
+        public override XmlAttributeCollection Attributes
+        {
+            get
+            {
+                CheckTracingCaller(1);
+                if (IsFakingEmpty) return EmptyAttributeCollection;
+                return base.Attributes;
+            }
+        }
+
+        public override XmlNode FirstChild
+        {
+            get
+            {
+                CheckTracingCaller(1);
+                if (IsFakingEmpty) return null;
+                return base.FirstChild;
+            }
+        }
+
+        public override XmlNode NextSibling
+        {
+            get
+            {
+                CheckTracingCaller(1);
+                return base.NextSibling;
+            }
+        }
+        public override XmlNode LastChild
+        {
+            get
+            {
+                CheckTracingCaller(1);
+                if (IsFakingEmpty) return null;
+                return base.LastChild;
+            }
+        }
+        public override XmlNode InsertAfter(XmlNode newChild, XmlNode refChild)
+        {
+            CheckTracingCaller(1);
+            return base.InsertAfter(newChild, refChild);
+        }
+        public override XmlNode InsertBefore(XmlNode newChild, XmlNode refChild)
+        {
+            CheckTracingCaller(1);
+            return base.InsertBefore(newChild, refChild);
+        }
+        public override XmlNode ImportNode(XmlNode node, bool deep)
+        {
+            CheckTracingCaller(1);
+            return base.ImportNode(node, deep);
+        }
+        public override XmlNodeList ChildNodes
+        {
+            get
+            {
+                CheckTracingCaller(1);
+                if (IsFakingEmpty) return EmptyChildNodes;
+                return base.ChildNodes;
+            }
+        }
+
+        public override XmlNode AppendChild(XmlNode newChild)
+        {
+            CheckTracingCaller(1);
+            return base.AppendChild(newChild);
+        }
+        public override void RemoveAll()
+        {
+            var virstChild = this.FirstChild;
+            var birstChild = base.FirstChild;
+            try
+            {
+                if (!IsReusableDoc)
+                {
+                    base.RemoveAll();
+                    if (birstChild == null && virstChild == null) return;
+                    return;
+                }
+                if (birstChild == null && virstChild == null)
+                {
+                    if (!IsFakingEmpty)
+                    {
+                        IsFakingEmpty = false;
+                        DebugWriteLine("No need to fake");
+                    }
+                    return;
+                }
+                if (IsFakingEmpty)
+                {
+                    if (birstChild == null)
+                    {
+                        CurrentFake = null;
+                        DebugWriteLine("Faking empty doc already");
+                    }
+                    else
+                    {
+                        IsFakingEmpty = false;
+                        DebugWriteLine("No need to fake (empty doc already)");
+                    }
+                    return;
+                }
+                if (virstChild != null)
+                {
+                    FakeFirstElements = FakeFirstElements ?? new List<XmlNode>();
+                    FakeFirstElements.Add(virstChild);
+                    CurrentFake = null;
+                    IsFakingEmpty = true;
+                }
+                base.RemoveAll();
+            }
+            catch (Exception e)
+            {
+                if (IsReusableDoc)
+                {
+
+                    if (birstChild == null)
+                    {
+                        IsFakingEmpty = false;
+                        DebugWriteLine("No need to fake even though" + e);
+                        return;
+                    }
+                }
+                string newVariable = "ERROR: " + e;
+                writeToLog(newVariable);
+                throw;
+            }
         }
 
         private XmlReader CheckReader(XmlReader reader)
@@ -536,7 +807,14 @@ namespace MushDLR223.Utilities
                 {
                     LineTracker = (IXmlLineInfo) reader;
                 }
-                base.Load(reader);
+                if (!IsReusableDoc)
+                {
+                    base.Load(reader);
+                }
+                else
+                {
+                    baseLoad(() => base.Load(reader), reader);
+                }
                 Normalize();
             }
             finally
@@ -582,6 +860,7 @@ namespace MushDLR223.Utilities
             }
             finally
             {
+                DiscardReaders();
                 LineTracker = prev;
             }
         }
@@ -589,7 +868,10 @@ namespace MushDLR223.Utilities
         public override void LoadXml(string xml)
         {
             //base.Load(new XmlTextReader(new StringReader(xml)));
-            base.Load(CreateXmlTextReader(new StringReader(xml)));
+            var sr = new StringReader(xml);
+            XmlReader createXmlTextReader = CreateXmlTextReader(sr);
+            LoadFromReader(createXmlTextReader);
+            DiscardReaders();
             //Load(CreateXmlTextReader(new StringReader(xml)));
             Normalize();
         }
@@ -620,6 +902,7 @@ namespace MushDLR223.Utilities
 
         public void setLineInfo(XmlNode node)
         {
+            WasUsed = true;
             CheckNode(node);
             if (LineTracker != null)
             {
@@ -676,11 +959,21 @@ namespace MushDLR223.Utilities
             {
                 writeToLog("WHITE='" + text + "'");
             }
-            return base.CreateWhitespace(" ");
+            return base.CreateWhitespace(Intern(" "));
+        }
+
+        public static string Intern(string s)
+        {
+            if (s == null) return s;
+            return string.Intern(s);
         }
 
         public override XmlElement CreateElement(string prefix, string localName, string namespaceURI)
         {
+            prefix = Intern(prefix);
+            localName = Intern(localName);
+            namespaceURI = Intern(namespaceURI);
+
             LineInfoElementImpl elem;
             string nodeTypeString = "Element";
             string name = null;
@@ -696,6 +989,7 @@ namespace MushDLR223.Utilities
                 // prevNodeType = currentNodeType;
                 currentNodeType = localName;
                 elem = new LineInfoElementImpl(prefix, localName, namespaceURI, this);
+                IsFakingEmpty = false;
             }
             finally
             {
@@ -707,13 +1001,14 @@ namespace MushDLR223.Utilities
 
         public static XmlReader CreateXmlTextReader(XmlNodeReader nodeReader)
         {
-            XmlDocumentLineInfo doc = new XmlDocumentLineInfo("CreateXmlTextReader for NODE", false);
-            doc.Load("books.xml");
-
+            throw new NotImplementedException();
             // Set the validation settings.
             XmlReaderSettings settings = DefaultSettings; //new XmlReaderSettings();
             if (false)
             {
+                XmlDocumentLineInfo doc = new XmlDocumentLineInfo("CreateXmlTextReader for NODE", false);
+                doc.Load("books.xml");
+
                 settings.ValidationType = ValidationType.Auto;
                 settings.Schemas.Add("urn:bookstore-schema", "books.xsd");
                 settings.ValidationEventHandler += ValidationCallBack;
@@ -786,6 +1081,32 @@ namespace MushDLR223.Utilities
         public static XmlTextReader CreateXmlTextFileReader(string xcmd)
         {
             return new XmlTextReader(xcmd); //XmlReader.Create(, DefaultSettings);
+        }
+
+        public void DiscardReaders()
+        {
+            if (LineTracker != null)
+            {
+                LineTracker = null;
+            }
+            InfoString = Intern(InfoString);
+        }
+
+        public void SetText(string outerXml)
+        {
+            InfoString =  outerXml;
+        }
+
+        public XmlDocumentLineInfo GetReusableDoc()
+        {
+            var doc = this;
+            if (!doc.IsReusableDoc && doc.WasUsed)
+            {
+                var ndoc = new XmlDocumentLineInfo();
+                ndoc.InfoString = doc.InfoString;
+                doc = ndoc;
+            }
+            return doc;
         }
     }
 }

@@ -1642,19 +1642,21 @@ namespace MushDLR223.Utilities
 
         public static bool TooDeep()
         {
-            if (IsTooDeep())
-            {
-                DebugWriteLine("DepthCheck");
-                return true;
-            }
-            return false;
+            return IsTooDeep();
         }
         public static bool IsTooDeep()
         {
-            return false;
-            int newStackTraceGetFramesLength = new StackTrace(false).GetFrames().Length;
+            // return false;
+            StackFrame[] st = new StackTrace(false).GetFrames();
+            int newStackTraceGetFramesLength = st == null ? 501 : st.Length;
             if (newStackTraceGetFramesLength > 300)
             {
+                if (newStackTraceGetFramesLength > 500)
+                {
+                    DebugWriteLine("Stack overflow comming! " + st);
+                    return true;
+                }
+                DebugWriteLine("DepthCheck");
                 //throw new Exception("Stack overflow comming!");
                 return true;
             }

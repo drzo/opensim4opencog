@@ -11,7 +11,7 @@ namespace MushDLR223.Utilities
         public LineInfoElementImpl lParent;
 
         public XmlAttributeLineInfo(string prefix, string name, string uri, XmlDocumentLineInfo doc)
-            : base(prefix, name, uri, doc)
+            : base(XmlDocumentLineInfo.Intern(prefix), XmlDocumentLineInfo.Intern(name), XmlDocumentLineInfo.Intern(uri), doc)
         {
             docLineInfo = doc;
         }

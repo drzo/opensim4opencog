@@ -826,7 +826,7 @@ namespace MushDLR223.Utilities
         /// </summary>
         /// <param name="outerXML">the Unifiable to XMLize</param>
         /// <returns>The XML node</returns>
-        public static XmlNode ParseNode(XmlDocument doc, TextReader sr, string outerXML)
+        public static XmlNode ParseNode(XmlDocumentLineInfo doc, TextReader sr, string outerXML)
         {
             try
             {
@@ -839,7 +839,7 @@ namespace MushDLR223.Utilities
                 int childCount = doc.ChildNodes.Count;
                 if (childCount == 0)
                 {
-                    writeDebugLine("ERROR NULL_CHILDS outerXML='{1}'", outerXML);
+                    writeDebugLine("ERROR NULL_CHILDS outerXML='{0}'", outerXML);
                     return null;
                 }
                 if (childCount != 1)
@@ -862,6 +862,9 @@ namespace MushDLR223.Utilities
             {
                 writeDebugLine("outerXML=" + outerXML);
                 throw;
+            } finally
+            {
+                doc.DiscardReaders();
             }
         }
 
@@ -872,20 +875,48 @@ namespace MushDLR223.Utilities
         /// <returns>The XML node</returns>
         public static XmlNode getNode(string outerXML)
         {
-            XmlDocumentLineInfo doc = new XmlDocumentLineInfo("getNode(\"" + outerXML + "\")", false);
+            XmlDocumentLineInfo stringOnlyDoc1 = StringOnlyDoc;
+            stringOnlyDoc1.SetText(outerXML);
+            return getNode0(outerXML, stringOnlyDoc1);
+        }
+
+        public static bool UseOneStringOnlyDoc = false;
+        protected static XmlDocumentLineInfo StringOnlyDoc
+        {
+            get
+            {
+                if (UseOneStringOnlyDoc)
+                {
+                    var doc = new XmlDocumentLineInfo();
+                    doc.InfoString = "new StringOnlyDoc";
+                    return doc;
+                }
+                return stringOnlyDoc;
+            }
+        }
+
+        public static XmlNode getNode0(string outerXML, XmlDocumentLineInfo doc)
+        {
             try
             {
-                return ParseNode(doc, new StringReader(outerXML), outerXML);
+                doc = doc.GetReusableDoc();
+                var node = ParseNode(doc, new StringReader(outerXML), outerXML);
+                var prevSib = node.PreviousSibling;
+                return node;
                 //return (LineInfoElement)temp; //.FirstChild;}
             }
             catch (XmlException exception)
             {
+                doc = doc.GetReusableDoc();
                 writeDebugLine("ERROR NODE-IFYING " + outerXML);
                 var node = ParseNode(doc, new StringReader("<node>" + outerXML + "</node>"), outerXML);
-                if (node.ChildNodes.Count==1)
+                if (node.ChildNodes.Count == 1)
                 {
-                    return node.FirstChild;
+                    var prevSib0 = node.PreviousSibling;
+                    node = node.FirstChild;
+                    return node;
                 }
+                var prevSib = node.PreviousSibling;
                 return node;
             }
             catch (Exception exception)
@@ -900,7 +931,7 @@ namespace MushDLR223.Utilities
         {
             try
             {
-                XmlNode temp = getNode(outerXML);
+                XmlNode temp = getNode0(outerXML, StringOnlyDoc ?? templateNode.OwnerDocument as XmlDocumentLineInfo);
                 if (temp is LineInfoElementImpl)
                 {
                     LineInfoElementImpl li = (LineInfoElementImpl) temp;
@@ -992,8 +1023,10 @@ namespace MushDLR223.Utilities
             bool inwhite = true;
             bool pendingWhitespace = false;
             char lastChar = '\0';
+            int charIndex = -1;
             foreach (char c0 in xml2)
             {
+                charIndex++;
                 if (c0 <= 32)
                 {
                     if (inwhite)
@@ -1012,11 +1045,23 @@ namespace MushDLR223.Utilities
                         {
                             xmlFound = true;
                         }
-                        inwhite = true;
-                        if (pendingWhitespace)
+                        int nxtIndex = charIndex + 1;
+                        if (nxtIndex < inlen && xml2[nxtIndex] == '>')
                         {
-                            chgd = true;
-                            pendingWhitespace = false;
+                            if (!pendingWhitespace)
+                            {
+                                chgd = true;
+                                pendingWhitespace = true;
+                            }
+                        }
+                        else
+                        {
+                            inwhite = true;
+                            if (pendingWhitespace)
+                            {
+                                chgd = true;
+                                pendingWhitespace = false;
+                            }
                         }
                         break;
                     case '>':
@@ -1059,7 +1104,7 @@ namespace MushDLR223.Utilities
             int len = s.Length;
             if (xmlFound)
             {
-                s = s.Replace("<sr/>", "<srai><star/></srai>");
+                s = s.Replace("<sr />", "<srai><star /></srai>");
                 //s = s.Replace("star/>", "star index=\"1\"/>");
                 if (len != s.Length)
                 {
@@ -1098,5 +1143,6 @@ namespace MushDLR223.Utilities
         public static char[] isValueSetChars = " ".ToCharArray();
         public static string isValueSetStart = "+++";
         public static int isValueSetSkip = isValueSetStart.Length;
+        private static readonly XmlDocumentLineInfo stringOnlyDoc = new XmlDocumentLineInfo("getNode(ANYTHING)", false);
     }
 }
