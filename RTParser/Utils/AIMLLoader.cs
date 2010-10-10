@@ -14,7 +14,11 @@ using RTParser.Normalize;
 using UPath = RTParser.Unifiable;
 using LineInfoElement = MushDLR223.Utilities.LineInfoElementImpl;
 //using CategoryInfo = RTParser.Utils.TemplateInfo;
-using ThatInfo = System.Xml.XmlNode;
+using PatternInfo = RTParser.Unifiable;
+using ThatInfo = RTParser.Unifiable;
+using TopicInfo = RTParser.Unifiable;
+using GuardInfo = RTParser.Unifiable;
+using ResponseInfo = RTParser.Unifiable;
 
 namespace RTParser.Utils
 {
@@ -1077,7 +1081,7 @@ namespace RTParser.Utils
             {
                 guardnode = FindNode("guard", outerNode, null);
             }
-            GuardInfo guard = guardnode == null ? null : GuardInfo.GetGuardInfo(guardnode);
+            GuardInfo guard = guardnode == null ? null : loaderOpts.CtxGraph.GetGuardInfo(guardnode);
             string errors = "";
             XmlNode TemplateOverwrite = StaticAIMLUtils.TheTemplateOverwrite;
             if (ReferenceEquals(null, templateNode))

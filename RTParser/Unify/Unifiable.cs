@@ -197,8 +197,8 @@ namespace RTParser
                     }
                 }
 
-            string key = AIMLLoader.CleanWhitepaces(value);
-            if (value != key)
+            string key = Intern(CleanWhitepaces(value));
+            //if (value != key)
             {
                 //   writeToLog("Triming? '" + value + "'");
                 value = key;
@@ -221,6 +221,11 @@ namespace RTParser
                 }
             u = new StringUnifiable(value);
             return (StringUnifiable)u;
+        }
+
+        public static string Intern(string cleanWhitepaces)
+        {
+            return string.Intern(cleanWhitepaces);
         }
 
 
@@ -344,6 +349,7 @@ namespace RTParser
             var dict = specialUnifiables;
             lock (dict)
             {
+                key = Intern(key);
                 Unifiable u;
                 if (!dict.TryGetValue(key, out u))
                 {
@@ -919,6 +925,88 @@ namespace RTParser
             }
             return s;
 
+        }
+
+
+        public virtual void AddCategory(CategoryInfo template)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual void RemoveCategory(CategoryInfo template)
+        {
+            throw new NotImplementedException();
+        }
+
+        public XmlNode PatternNode
+        {
+            get { return AsNodeXML() as XmlNode; }
+        }
+
+        public virtual Unifiable FullPath
+        {
+            get { return this; }
+        }
+
+        public bool IsCatchAll
+        {
+            get { return IsWildCard(); }
+        }
+
+        internal bool LoopsFrom(string innerXml)
+        {
+            string p = StaticAIMLUtils.MakeAimlMatchable(FullPath.AsString().Replace("_", "*"));
+            p = "<srai>" + p + "</srai>";
+
+            string t = StaticAIMLUtils.MakeAimlMatchable(innerXml);
+
+            if (t.Contains(p))
+            {
+                return true;
+            }
+            return false;
+        }
+
+        internal bool DivergesFrom(TemplateInfo newTemplateInfo, out Unifiable from, out Unifiable to)
+        {
+            if (true)
+            {
+                from = "";
+                to = "";
+                return false;
+            }
+            string p = StaticAIMLUtils.MakeAimlMatchable(FullPath.AsString().Replace("_", "*"));
+            p = "<srai>" + p + "</srai>";
+            string t = StaticAIMLUtils.MakeAimlMatchable(newTemplateInfo.InnerXml);
+
+            int firstTP = FirstMismatch(t, p);
+            int lastTP = LastMismatch(t, p);
+            int firstPT = FirstMismatch(p, t);
+            int lastPT = LastMismatch(p, t);
+            from = "";
+            to = "";
+            return false;
+        }
+        private static int FirstMismatch(string s1, string s2)
+        {
+            int i = 0;
+            for (; i < s1.Length; i++)
+            {
+                if (s1[i] == s2[i]) continue;
+                return i - 1;
+            }
+            return i - 1;
+        }
+
+        private static int LastMismatch(string s1, string s2)
+        {
+            int i = s1.Length - 1;
+            for (; i >= 0; i--)
+            {
+                if (s1[i] == s2[i]) continue;
+                return i - 1;
+            }
+            return i - 1;
         }
     }
 

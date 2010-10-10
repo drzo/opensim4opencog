@@ -7,6 +7,25 @@ namespace RTParser
 {
     public class StringAppendableUnifiableImpl : StringUnifiable, UnifiableList
     {
+        public override void AddCategory(CategoryInfo template)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void RemoveCategory(CategoryInfo template)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override Unifiable FullPath
+        {
+            get
+            {
+                throw new NotImplementedException(); 
+                return Create(str);
+            }
+        }
+
         public override Unifiable Frozen(SubQuery subquery)
         {
             string str0 = ToValue(subquery);
