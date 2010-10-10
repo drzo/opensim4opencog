@@ -4,6 +4,7 @@ using System.Xml;
 
 namespace RTParser.Utils
 {
+#if false
     [Serializable]
     public class PatternInfo : GraphLinkInfo
     {
@@ -100,4 +101,5 @@ namespace RTParser.Utils
             return PatternNode.OuterXml;
         }
     }
+#endif
 }
