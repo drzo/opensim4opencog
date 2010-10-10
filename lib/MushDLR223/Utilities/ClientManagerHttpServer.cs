@@ -29,7 +29,7 @@ namespace MushDLR223.Utilities
             try
             {
 
-                string s = string.Format(str, args);
+                string s = DLRConsole.SafeFormat(str, args);
                 if (response != null)
                 {
                     response.AddToBody(s + Environment.NewLine);

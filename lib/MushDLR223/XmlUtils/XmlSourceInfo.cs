@@ -1,5 +1,6 @@
 ﻿#undef OUTXML_CACHE
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Xml;
 using System.Xml.XPath;
@@ -21,13 +22,25 @@ namespace MushDLR223.Utilities
     public class LineInfoElementImpl : XmlElement, XmlSourceLineInfo
     {
         private static bool _whenReadOnly = true;
-        private XmlDocumentLineInfo _docLineInfo;
-        public long charPos;
-        public int lineNumber;
-        public string innerValueReplaced = null;
-        public int linePosition;
+        private XmlDocumentLineInfo _docLineInfo
+        {
+            get { return null; }
+            // ReSharper disable ValueParameterNotUsed
+            set { }
+            // ReSharper restore ValueParameterNotUsed
+        }
+        public string outValueReplaced = null;
         public XmlSourceLineInfo lParent;
         public bool protect = true;
+        public IXmlLineInfo LineNumData
+        {
+            get
+            {
+                if (lineNumData != null) return lineNumData;
+                return lParent;
+            }
+        }
+        private IXmlLineInfo lineNumData;
 
         internal LineInfoElementImpl(string prefix, string localname, string nsURI, XmlDocument doc)
             : base(XmlDocumentLineInfo.Intern(prefix), XmlDocumentLineInfo.Intern(localname), XmlDocumentLineInfo.Intern(nsURI), doc)
@@ -101,7 +114,18 @@ namespace MushDLR223.Utilities
             {
                 try
                 {
-                    return base.InnerXml;
+                    if (outValueReplaced != null)
+                    {
+                        var vv = StaticXMLUtils.XmlValueSettable(outValueReplaced);
+                        return vv;
+                    }                    
+                    var ixml = base.InnerXml;
+                    if (StaticXMLUtils.IsValueSetter(ixml))
+                    {
+                        writeToLog("IsValueSetter?! " + ixml);
+                        ixml =  StaticXMLUtils.ValueText(ixml);
+                    }
+                    return ixml;
                 }
                 catch (StackOverflowException exception)
                 {
@@ -119,21 +143,27 @@ namespace MushDLR223.Utilities
                 //if (base.InnerXml == value) return;
                 if (SetNewValue(value))
                 {
-                    base.InnerXml = value;
+                    // base.InnerXml = value;
                     return;
                 }
                 else
                 {
                     return;
                 }
-                innerValueReplaced = StaticXMLUtils.ValueText(value);
+                outValueReplaced = StaticXMLUtils.ValueText(value);
                 base.InnerXml = value;
             }
         }
 
         private bool SetNewValue(string value)
         {
-            var ir = StaticXMLUtils.ValueText(value);
+            var ir = value;
+            bool wasSetter = false;
+            if (StaticXMLUtils.IsValueSetter(value))
+            {
+                ir = StaticXMLUtils.ValueText(value);
+                wasSetter = true;
+            }
             if (ir.Length == 0)
             {
                 if (LocalName != "think")
@@ -141,11 +171,11 @@ namespace MushDLR223.Utilities
                     writeToLog("ERROR: SetNewValue Not using " + value);
                     return false;
                 }
+                outValueReplaced = "";
                 return true;
             }
             else
             {
-                innerValueReplaced = ir;
                 if (protect)
                 {
                     if (value.Contains("<") || value.Contains("+-"))
@@ -156,6 +186,10 @@ namespace MushDLR223.Utilities
                     {
                         writeToLog("WARNING: InnerXml Should not be changed to \"" + value + "\"");
                     }
+                }
+                if (wasSetter)
+                {
+                    outValueReplaced = ir;                   
                 }
                 return true;
             }
@@ -168,15 +202,6 @@ namespace MushDLR223.Utilities
         {
             get
             {
-                if (true) return base.OuterXml;
-                if (innerValueReplaced != null)
-                {
-                    var ir = StaticXMLUtils.ValueText(innerValueReplaced);
-                    if (ir.Length == 0)
-                    {
-                        writeToLog("Not using " + innerValueReplaced);
-                    }
-                }
 #if OUTXML_CACHE
                 if (outerXMLCache != null)
                 {
@@ -186,6 +211,20 @@ namespace MushDLR223.Utilities
 #else
                 var outerXMLCache = base.OuterXml;
 #endif
+                if (outValueReplaced != null)
+                {
+                    var ir = StaticXMLUtils.ValueText(outValueReplaced);
+                    if (ir.Length == 0)
+                    {
+                        writeToLog("Not using " + outValueReplaced);
+                    }
+                    else
+                    {
+                        writeToLog("Not using " + outValueReplaced);
+                        //return ir;
+                    }
+                }
+                if (true) return outerXMLCache;
                 bool RemoveXmlns = true;
                 if (docLineInfo != null)
                 {
@@ -241,51 +280,91 @@ namespace MushDLR223.Utilities
 
         public override string LocalName
         {
-            get { return base.LocalName; }
+            get
+            {
+                CheckOutVlaueReplaced();
+                return base.LocalName;
+            }
         }
 
         public override string Name
         {
-            get { return base.Name; }
+            get
+            {
+                CheckOutVlaueReplaced();
+                return base.Name;
+            }
         }
 
         public override XmlNodeType NodeType
         {
-            get { return base.NodeType; }
+            get
+            {
+                CheckOutVlaueReplaced();
+                return base.NodeType;
+            }
+        }
+
+        private void CheckOutVlaueReplaced()
+        {
+            if (outValueReplaced==null) return;
         }
 
         #region XmlSourceLineInfo Members
 
         public void SetLineInfo(int linenum, int linepos)
         {
-            if (linenum < lineNumber)
+            if (linenum < LineNumber)
             {
                 writeToLog("Line number too small");
                 return;
             }
-
-            lineNumber = linenum;
-            linePosition = linepos;
+            if (linenum != 0 || linepos != 0)
+            {
+                if (lineNumData == null)
+                {
+                    lineNumData = new LineInfoData(linenum, linepos);
+                } else
+                {
+                    if (lineNumData is LineInfoData)
+                    {
+                        var lid = lineNumData as LineInfoData;
+                        lid.LineNumber = linenum;
+                        lid.LinePosition = linepos;                        
+                    } else
+                    {
+                        lineNumData = new LineInfoData(linenum, linepos);
+                    }
+                }
+            }
         }
 
         public int LineNumber
         {
-            get { return lineNumber; }
+            get
+            {
+                if (lineNumData == null) return 0;
+                return lineNumData.LineNumber;
+            }
         }
 
         public int LinePosition
         {
-            get { return linePosition; }
+            get
+            {
+                if (lineNumData == null) return 0;
+                return lineNumData.LinePosition;
+            }
         }
 
         public bool HasLineInfo()
         {
-            return true;
+            return lineNumData is LineInfoData;
         }
 
         public void SetPos(long position)
         {
-            charPos = position;
+           
         }
 
         public bool ReadOnly
@@ -365,8 +444,9 @@ namespace MushDLR223.Utilities
                 xmlNode = (XmlNode) lParent;
             }
             if (xmlNode is LineInfoElementImpl)
-            {
-                LineInfoElementImpl lie = (LineInfoElementImpl) xmlNode;
+            {                
+                LineInfoElementImpl lie = (LineInfoElementImpl)xmlNode;
+                lineNumData = lie;
                 XmlDocumentLineInfo.SuggestLineNo(lie, this);
             }
         }
@@ -387,8 +467,28 @@ namespace MushDLR223.Utilities
 
         public override string ToString()
         {
-            string s = innerValueReplaced ?? StaticXMLUtils.TextInfo(this);
-            return s + " " + StaticXMLUtils.LocationEscapedInfo(this);
+            try
+            {
+                return DebugString;
+            }
+            catch (Exception e)
+            {
+                DLRConsole.SYSTEM_ERR_WRITELINE("XML TOSTRING PROBLEM " + e);
+                throw;
+            }
+        }
+
+        public string DebugString
+        {
+            get
+            {
+                string was = base.OuterXml;
+                if (outValueReplaced != null)
+                {
+                    was = outValueReplaced + " <!-- WAS = " + was + "-->";
+                }
+                return was + " " + StaticXMLUtils.LocationEscapedInfo(this);
+            }
         }
 
 
@@ -555,12 +655,28 @@ namespace MushDLR223.Utilities
         {
             get
             {
-                return base.NextSibling;
+                try
+                {
+                    return base.NextSibling;
+                }
+                catch (Exception e)
+                {
+                    writeToLog("ERROR: newnode.NextSibling " + e);
+                    throw;
+                }
             }
         }
         public override XmlNode PrependChild(XmlNode newChild)
         {
-            return base.PrependChild(newChild);
+            try
+            {
+                return base.PrependChild(newChild);
+            }
+            catch (Exception e)
+            {
+                writeToLog("ERROR: newnode.PrependChild " + e +  " " + newChild);
+                throw;
+            }
         }
 
         public static IXmlLineInfo ToLineInfoElement(XmlNode pattern)
@@ -642,6 +758,25 @@ namespace MushDLR223.Utilities
         {
             base.WriteTo(w);
         }
+    }
+
+    public class LineInfoData : IXmlLineInfo
+    {
+        public override string ToString()
+        {
+            return LineNumber + ":" + LinePosition;
+        }
+        public LineInfoData(int linenum, int linepos)
+        {
+            LineNumber = linenum;
+            LinePosition = linepos;
+        }
+        public bool HasLineInfo()
+        {
+            return true;
+        }
+        public int LineNumber { get; set; }
+        public int LinePosition { get; set; }
     }
 
     // End LineInfoElement class.

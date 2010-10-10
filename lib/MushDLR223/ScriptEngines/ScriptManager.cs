@@ -684,7 +684,7 @@ namespace MushDLR223.ScriptEngines
         {
             try
             {
-                string f = string.Format(msg, args);
+                string f = DLRConsole.SafeFormat(msg, args);
                 DLRConsole.DebugWriteLine("{0}", f);
             }
             catch (Exception e)
