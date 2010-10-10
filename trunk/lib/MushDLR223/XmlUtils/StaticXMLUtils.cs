@@ -266,11 +266,16 @@ namespace MushDLR223.Utilities
             }
             string str = xmlNode.InnerXml;
             bool oneElementChild = xmlNode.NodeType == XmlNodeType.Element && xmlNode.HasChildNodes && xmlNode.ChildNodes.Count == 1;
-            if (str.StartsWith(isValueSetStart) && oneElementChild)
+            if (IsValueSetter(str) && oneElementChild)
             {
                 return ValueText(InnerXmlText(xmlNode));
             }
             return null;
+        }
+
+        public static bool IsValueSetter(string s)
+        {
+            return s != null && s.StartsWith(isValueSetStart);
         }
 
         public static string ValueText(string s)
@@ -396,6 +401,13 @@ namespace MushDLR223.Utilities
         public static XmlNode FindNode(string name, XmlNode node, XmlNode ifMissing, int searchDepth)
         {
             bool searchChildren = searchDepth > 0;
+            foreach (string n in NamesStrings(name))
+            {
+                if (NameMatches(node, n))
+                {
+                    return node;
+                }
+            }
             if (!searchChildren) return ifMissing;
             int nsearchDepth = searchDepth - 1;
             foreach (XmlNode child in node.ChildNodes)
@@ -529,6 +541,42 @@ namespace MushDLR223.Utilities
         public static string LocationEscapedInfo(XmlNode templateNode)
         {
             return "<!-- " + LocationInfo(templateNode) + " -->";
+        }
+
+        static IXmlLineInfo NoLineNumberInfoZeroZero = new LineNumberInfoZeroZero();
+        public static IXmlLineInfo ToLineInfo(XmlNode templateNode)
+        {
+            var li = ToLineInfo(templateNode, true);
+            if (li != null) if (li.HasLineInfo()) return li;
+            li = ToLineInfo(templateNode, false);
+            if (li != null) if (li.HasLineInfo()) return li;
+            return NoLineNumberInfoZeroZero;
+        }
+        public static IXmlLineInfo ToLineInfo(XmlNode templateNode, bool noParents)
+        {
+            if (templateNode == null) return NoLineNumberInfoZeroZero;
+            IXmlLineInfo li = templateNode as IXmlLineInfo;
+            if (li != null)
+            {
+                if (li.HasLineInfo())
+                {
+                    if (li.LineNumber > 0 || li.LinePosition > 0)
+                    {
+                        return li;
+                    }
+
+                }
+            }
+            if (noParents)
+            {
+                foreach (var v in templateNode.ChildNodes)
+                {
+                    li = ToLineInfo(v as XmlNode, true);
+                    if (li != null) if (li.HasLineInfo()) return li;
+                }
+                return NoLineNumberInfoZeroZero;
+            }
+            return ToLineInfo(templateNode.ParentNode, false);
         }
 
         public static string LocationInfo(XmlNode templateNode)
@@ -1003,7 +1051,7 @@ namespace MushDLR223.Utilities
             if (xml2 == null) return xml2;
             const long maxCleanSize = 2 << 14;
             int inlen = xml2.Length;
-            if (inlen > maxCleanSize)
+            if (inlen > maxCleanSize || inlen < 2)
             {
                 return xml2;
             }
@@ -1144,5 +1192,29 @@ namespace MushDLR223.Utilities
         public static string isValueSetStart = "+++";
         public static int isValueSetSkip = isValueSetStart.Length;
         private static readonly XmlDocumentLineInfo stringOnlyDoc = new XmlDocumentLineInfo("getNode(ANYTHING)", false);
+    }
+
+    internal class LineNumberInfoZeroZero : IXmlLineInfo
+    {
+        /// <summary>
+        /// Gets a value indicating whether the class can return line information.
+        /// </summary>
+        /// <returns>
+        /// true if <see cref="P:System.Xml.IXmlLineInfo.LineNumber"/> and <see cref="P:System.Xml.IXmlLineInfo.LinePosition"/> can be provided; otherwise, false.
+        /// </returns>
+        public bool HasLineInfo()
+        {
+            return false;
+        }
+
+        public int LineNumber
+        {
+            get { return 0; }
+        }
+
+        public int LinePosition
+        {
+            get { return 0; }
+        }
     }
 }

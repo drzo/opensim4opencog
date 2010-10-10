@@ -7,11 +7,6 @@ namespace MushDLR223.Utilities
     public class XmlTextLineInfo : XmlText, XmlSourceLineInfo
     {
         private XmlDocumentLineInfo _docLineInfo;
-
-        public long charPos;
-
-        public int lineNumber;
-        public int linePosition;
         public LineInfoElementImpl lParent;
 
         public XmlTextLineInfo(string text, XmlDocumentLineInfo info)
@@ -72,28 +67,33 @@ namespace MushDLR223.Utilities
 
         public void SetLineInfo(int linenum, int linepos)
         {
-            lineNumber = linenum;
-            linePosition = linepos;
+            if (lParent != null)
+            {
+                lParent.SetLineInfo(linenum, linepos);
+            }
         }
 
         public int LineNumber
         {
-            get { return lineNumber; }
+            get { return StaticXMLUtils.ToLineInfo(this).LineNumber; }
         }
 
         public int LinePosition
         {
-            get { return linePosition; }
+            get { return StaticXMLUtils.ToLineInfo(this).LinePosition; }
         }
 
         public bool HasLineInfo()
         {
-            return true;
+            return false;
         }
 
         public void SetPos(long position)
         {
-            charPos = position;
+            if (lParent != null)
+            {
+                lParent.SetPos(position);
+            }
         }
 
         public void SetParentFromNode(XmlNode xmlNode)
@@ -101,18 +101,15 @@ namespace MushDLR223.Utilities
             XmlNode pn = xmlNode.ParentNode;
             if (pn is LineInfoElementImpl)
             {
-                lParent = (LineInfoElementImpl) pn;
+                lParent = (LineInfoElementImpl)pn;
             }
             if (!(xmlNode is LineInfoElementImpl))
             {
-                xmlNode = lParent;
+                xmlNode = lParent as XmlNode;
             }
             if (xmlNode is LineInfoElementImpl)
             {
-                LineInfoElementImpl lie = (LineInfoElementImpl) xmlNode;
-                lineNumber = lie.LineNumber;
-                linePosition = lie.LinePosition;
-                charPos = lie.charPos;
+                LineInfoElementImpl lie = (LineInfoElementImpl)xmlNode;
             }
         }
 

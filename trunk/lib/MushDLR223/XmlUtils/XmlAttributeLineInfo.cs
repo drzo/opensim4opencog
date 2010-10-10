@@ -1,3 +1,4 @@
+using System;
 using System.Xml;
 
 namespace MushDLR223.Utilities
@@ -5,10 +6,11 @@ namespace MushDLR223.Utilities
     public class XmlAttributeLineInfo : XmlAttribute, XmlSourceLineInfo
     {
         private XmlDocumentLineInfo _docLineInfo;
-        public long charPos;
-        public int lineNumber;
-        public int linePosition;
-        public LineInfoElementImpl lParent;
+        public XmlSourceLineInfo lParent
+        {
+            get { return base.ParentNode as XmlSourceLineInfo; }
+            set { throw new NotImplementedException(); }
+        }
 
         public XmlAttributeLineInfo(string prefix, string name, string uri, XmlDocumentLineInfo doc)
             : base(XmlDocumentLineInfo.Intern(prefix), XmlDocumentLineInfo.Intern(name), XmlDocumentLineInfo.Intern(uri), doc)
@@ -76,8 +78,12 @@ namespace MushDLR223.Utilities
         {
             get
             {
-                if (lParent == null) return base.ParentNode;
-                return lParent;
+                if (lParent == null)
+                {
+                    XmlNode pn = lParent as XmlNode;
+                    if (pn != null) return pn;
+                }
+                return base.ParentNode;
             }
         }
 
@@ -87,28 +93,33 @@ namespace MushDLR223.Utilities
 
         public void SetLineInfo(int linenum, int linepos)
         {
-            lineNumber = linenum;
-            linePosition = linepos;
+            if (lParent != null)
+            {
+                lParent.SetLineInfo(linenum, linepos);
+            }
         }
 
         public int LineNumber
         {
-            get { return lineNumber; }
+            get { return StaticXMLUtils.ToLineInfo(this).LineNumber; }
         }
 
         public int LinePosition
         {
-            get { return linePosition; }
+            get { return StaticXMLUtils.ToLineInfo(this).LinePosition; }
         }
 
         public bool HasLineInfo()
         {
-            return true;
+            return false;
         }
 
         public void SetPos(long position)
         {
-            charPos = position;
+            if (lParent != null)
+            {
+                lParent.SetPos(position);
+            }
         }
 
         public void SetParentFromNode(XmlNode xmlNode)
@@ -120,14 +131,11 @@ namespace MushDLR223.Utilities
             }
             if (!(xmlNode is LineInfoElementImpl))
             {
-                xmlNode = lParent;
+                xmlNode = lParent as XmlNode;
             }
             if (xmlNode is LineInfoElementImpl)
             {
                 LineInfoElementImpl lie = (LineInfoElementImpl) xmlNode;
-                lineNumber = lie.LineNumber;
-                linePosition = lie.linePosition;
-                charPos = lie.charPos;
             }
         }
 

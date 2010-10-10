@@ -325,7 +325,7 @@ namespace MushDLR223.Utilities
 
             if (IsDisposing) WaitingS += " IsDisposing";
             if (!IsRunning) WaitingS += " NOT RUNNING";
-            string tdm = String.Format(
+            string tdm = DLRConsole.SafeFormat(
                 "{0} {1} {2} {3} {4}",
                 Busy ? "Busy" : "Idle",
                 extraMesage,
@@ -355,11 +355,11 @@ namespace MushDLR223.Utilities
                     //  at System.Threading.Thread.IsBackgroundNative()
                     if (!t.IsAlive)
                     {
-                        status.Add(string.Format("{0}: {1} IsAlive={2} {3}", num, t.Name, t.IsAlive,t.ThreadState));
+                        status.Add(DLRConsole.SafeFormat("{0}: {1} IsAlive={2} {3}", num, t.Name, t.IsAlive, t.ThreadState));
                     }
                     else
                     {
-                        stringBuilder.AppendLine(string.Format("{0}: {1} IsAlive={2} {3}", num, t.Name, t.IsAlive, t.ThreadState));
+                        stringBuilder.AppendLine(DLRConsole.SafeFormat("{0}: {1} IsAlive={2} {3}", num, t.Name, t.IsAlive, t.ThreadState));
                     }
                 }
             }

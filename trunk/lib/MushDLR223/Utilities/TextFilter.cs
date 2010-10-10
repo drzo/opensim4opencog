@@ -39,7 +39,7 @@ namespace MushDLR223.Utilities
                 {
                     try
                     {
-                        message = String.Format(message, args);
+                        message = DLRConsole.SafeFormat(message, args);
                     }
                     catch (Exception exception)
                     {

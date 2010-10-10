@@ -66,6 +66,8 @@ namespace MushDLR223.Utilities
         readonly XmlNodeList EmptyChildNodes;
         public bool WasUsed { get; set; }
         readonly XmlAttributeCollection EmptyAttributeCollection;
+        public bool SetNodesReadOnly = false;
+
         protected bool InLoad
         {
             get { return Loading != null; }
@@ -220,6 +222,7 @@ namespace MushDLR223.Utilities
         public override void Load(string filename)
         {
             var s = XmlReader.Create(filename, DefaultSettings);
+            //TODO maybe??? SetNodesReadOnly = true;
             LoadFromReader(s);
         }
         public override void Load(Stream reader)
@@ -256,6 +259,18 @@ namespace MushDLR223.Utilities
 
         public void CheckNode(XmlNode node)
         {
+            if (SetNodesReadOnly)
+            {
+
+                XmlSourceInfo xmlSourceInfo = node as XmlSourceInfo;
+                if (xmlSourceInfo != null)
+                {
+                    if (!node.IsReadOnly || !xmlSourceInfo.ReadOnly)
+                    {
+                        xmlSourceInfo.ReadOnly = true;
+                    }
+                }
+            }
             return;
             if (node.NodeType == XmlNodeType.Text) return;
             if (node.NodeType == XmlNodeType.Comment) return;
@@ -1089,7 +1104,7 @@ namespace MushDLR223.Utilities
             {
                 LineTracker = null;
             }
-            InfoString = Intern(InfoString);
+            InfoString = Intern(InfoString);           
         }
 
         public void SetText(string outerXml)
