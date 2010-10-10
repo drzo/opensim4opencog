@@ -30,7 +30,7 @@ namespace MushDLR223.Utilities
         public bool protect = true;
 
         internal LineInfoElementImpl(string prefix, string localname, string nsURI, XmlDocument doc)
-            : base(prefix, localname, nsURI, doc)
+            : base(XmlDocumentLineInfo.Intern(prefix), XmlDocumentLineInfo.Intern(localname), XmlDocumentLineInfo.Intern(nsURI), doc)
         {
             var lvar = doc as XmlDocumentLineInfo;
             if (lvar != null)
@@ -537,6 +537,30 @@ namespace MushDLR223.Utilities
                 writeToLog("ERROR: newnode.AppendChild " + e);
                 return null;
             }
+        }
+
+        public override void RemoveAll()
+        {
+            try
+            {
+                base.RemoveAll();
+            }
+            catch (Exception e)
+            {
+                writeToLog("ERROR: newnode.RemoveAll " + e);
+                return;
+            } 
+        }
+        public override XmlNode NextSibling
+        {
+            get
+            {
+                return base.NextSibling;
+            }
+        }
+        public override XmlNode PrependChild(XmlNode newChild)
+        {
+            return base.PrependChild(newChild);
         }
 
         public static IXmlLineInfo ToLineInfoElement(XmlNode pattern)

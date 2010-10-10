@@ -15,7 +15,7 @@ namespace MushDLR223.Utilities
         public LineInfoElementImpl lParent;
 
         public XmlTextLineInfo(string text, XmlDocumentLineInfo info)
-            : base(text, info)
+            : base(XmlDocumentLineInfo.Intern(text), info)
         {
             _docLineInfo = info;
         }
