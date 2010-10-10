@@ -253,7 +253,7 @@ namespace RTParser
         {
             if (message == null) return;
             writeDebugLine("-----------------------------------------------------------------");
-            foreach (string s in message.Trim().Split(new[] { '!', '?', '.' }, StringSplitOptions.RemoveEmptyEntries))
+            foreach (string s in Trim(message).Split(new[] { '!', '?', '.' }, StringSplitOptions.RemoveEmptyEntries))
             {
                 AddHeardPreds0(s, dictionary);
             }

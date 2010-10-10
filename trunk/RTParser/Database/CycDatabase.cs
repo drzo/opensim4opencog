@@ -343,7 +343,7 @@ namespace RTParser.Database
             
             try
             {
-                term = EvalSubL(String.Format("(first (ask-template '?CYCOBJECT '(#$and {0} (#$isa ?CYCOBJECT {1})) #$EverythingPSC))", template, Unifiable.ToVMString(filter)), null);
+                term = EvalSubL(TextPatternUtils.SafeFormat("(first (ask-template '?CYCOBJECT '(#$and {0} (#$isa ?CYCOBJECT {1})) #$EverythingPSC))", template, Unifiable.ToVMString(filter)), null);
             }
             catch (System.Exception ex)
             {
@@ -470,7 +470,7 @@ namespace RTParser.Database
             if (!Unifiable.IsNullOrEmpty(filter))
             {
                 if (Unifiable.IsFalse(filter)) return true;
-                if (this.EvalSubL(String.Format("(ask-template 'T `(#$isa {0} {1}) #$EverythingPSC)", Cyclify(term), Cyclify(filter)), null) == "NIL")
+                if (this.EvalSubL(TextPatternUtils.SafeFormat("(ask-template 'T `(#$isa {0} {1}) #$EverythingPSC)", Cyclify(term), Cyclify(filter)), null) == "NIL")
                     return false;
             }
             return true;

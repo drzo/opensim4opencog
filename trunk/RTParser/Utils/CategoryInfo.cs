@@ -21,6 +21,12 @@ namespace RTParser.Utils
         public ThatInfo That { get; set; }
         public TopicInfo Topic;
 
+        static XmlNode CheckXml(XmlNode xmlNode)
+        {
+            if (xmlNode != null) return xmlNode;
+            return xmlNode;
+        }
+
         //private TemplateInfo ParentCategory;
 
         public bool IsTraced { get; set; }
@@ -34,24 +40,21 @@ namespace RTParser.Utils
 
         public bool IsDisabled { get; set; }
 
-        public XmlNode CategoryXml
-        {
-            get { return srcNode; }
-        }
+        public XmlNode CategoryXml { get { return CheckXml(StaticXMLUtils.FindNode("category", CheckXml(srcNode), null)); } }
 
         public XmlNode TemplateXmlNode
         {
-            get { return StaticXMLUtils.FindNode("template", CategoryXml, null); }
+            get { return CheckXml(StaticXMLUtils.FindNode("template", CategoryXml, null)); }
         }
 
         public XmlNode TopicXml
         {
-            get { return StaticXMLUtils.FindNodeOrHigher("topic", CategoryXml, null); }
+            get { return CheckXml(StaticXMLUtils.FindNode("topic", CategoryXml, null)); }
         }
 
         public XmlNode ThatXml
         {
-            get { return StaticXMLUtils.FindNodeOrHigher("that", CategoryXml, null); }
+            get { return CheckXml(StaticXMLUtils.FindNode("that", CategoryXml, null)); }
         }
 
         #region IAIMLInfo Members
@@ -68,6 +71,7 @@ namespace RTParser.Utils
 
         //protected abstract XmlNode TemplateXml { get; set; }
         public virtual Node GraphmasterNode { get; set; }
+        public abstract XmlNode TemplateXml { get; }
 
         public string ToFileString(PrintOptions printOptions)
         {

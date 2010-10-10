@@ -620,7 +620,7 @@ namespace RTParser
                 if (ti == null) return;
                 return;
             }
-            unifiable = unifiable.Trim();
+            unifiable = Trim(unifiable);
             if (unifiable == "")
             {
                 writeToLog("ERROR assing '' output " + ti);
@@ -729,7 +729,7 @@ namespace RTParser
 
         public void AddResultFormat(string format, params object[] args)
         {
-            lock (OutputSentences) OutputSentences.Add(string.Format(format, args));
+            lock (OutputSentences) OutputSentences.Add(SafeFormat(format, args));
         }
 
         /// <summary>

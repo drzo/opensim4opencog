@@ -53,6 +53,14 @@ namespace RTParser
             return str;
         }
 
+        public override string ToUpper()
+        {
+            if (upperCache == null)
+            {
+                upperCache = ToUpper(str);
+            }
+            return upperCache;
+        }
 
         public override void Append(string p)
         {
@@ -71,7 +79,8 @@ namespace RTParser
             {
                 p = str + p;
             }
-            p = p.Replace("  ", " ").Trim();
+            p = p.Replace("  ", " ");
+            p = Trim(p);
             str = p;
         }
 

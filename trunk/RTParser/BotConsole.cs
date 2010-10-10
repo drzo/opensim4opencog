@@ -92,7 +92,7 @@ namespace RTParser
         //public OutputDelegate writeToLog;
         public void writeToLog(string message, params object[] args)
         {
-            message = DLRConsole.SafeFormat(message, args);
+            message = SafeFormat(message, args);
             if (String.IsNullOrEmpty(message)) return;
             bool writeToConsole = true; // outputDelegate == null;
 
@@ -112,7 +112,7 @@ namespace RTParser
             {
                 if (writeToConsole) writeDebugLine(message);
             }
-            message = string.Format("[{0}]: {1}", DateTime.Now, message.Trim());
+            message = string.Format("[{0}]: {1}", DateTime.Now, Trim(message));
             writeToFileLog(message);
         }
 
@@ -298,7 +298,7 @@ namespace RTParser
                 {
                     Environment.Exit(0);
                 }
-                input = input.Trim();
+                input = Trim(input);
                 if (input.ToLower() == "@quit")
                 {
                     return;
@@ -404,7 +404,7 @@ namespace RTParser
                 writeChatTrace("CurrentResult: " + request.CurrentResult);
             }
             if (input == null) return false;
-            input = input.Trim();
+            input = Trim(input);
             if (input == "") return false;
             if (input.StartsWith("@"))
             {
@@ -413,8 +413,8 @@ namespace RTParser
             User myUser = request.Requester ?? LastUser ?? FindOrCreateUser(UNKNOWN_PARTNER);
             int firstWhite = input.IndexOf(' ');
             if (firstWhite == -1) firstWhite = input.Length - 1;
-            string cmd = input.Substring(0, firstWhite + 1).Trim().ToLower();
-            string args = input.Substring(firstWhite + 1).Trim();
+            string cmd = Trim(ToLower(input.Substring(0, firstWhite + 1)));
+            string args = Trim(input.Substring(firstWhite + 1));
             bool showHelp = false;
             if (cmd == "help")
             {
@@ -458,7 +458,7 @@ namespace RTParser
                 }
                 Result res = GlobalChatWithUser(said, user, null, writeDebugLine, true, true);
                 request = res.request;
-                request.ResponderSelfListens = true;
+                request.ResponderSelfListens = false;
                 // detect a user "rename"
                 bool userChanged = DetectUserChange(myUser, user);
                 if (userChanged)
@@ -500,7 +500,7 @@ namespace RTParser
                 }
                 string gn = args.Substring(0, indexof);
                 GraphMaster g = GetGraph(gn, myUser.ListeningGraph);
-                String aiml = args.Substring(indexof).Trim();
+                String aiml = Trim(args.Substring(indexof));
                 AddAiml(g, aiml, request);
                 console("Done with " + args);
                 return true;
@@ -633,7 +633,7 @@ namespace RTParser
                 Result r = myUser.LastResult;
                 if (args.StartsWith("save"))
                 {
-                    args = args.Substring(4).Trim();
+                    args = Trim(args.Substring(4));
                     string hide = GetTemplateSource(myUser.UsedTemplates, printOptions);
                     console(hide);
                     if (args.Length > 0) HostSystem.AppendAllText(args, hide + "\n");
@@ -810,8 +810,8 @@ namespace RTParser
                     int lastIndex = args.IndexOf(" ");
                     if (lastIndex > 0)
                     {
-                        source = args.Substring(lastIndex + 1).Trim();
-                        slang = args.Substring(0, lastIndex);
+                        source = Trim(args.Substring(lastIndex + 1));
+                        slang = Trim(args.Substring(0, lastIndex));
                     }
                     else
                     {

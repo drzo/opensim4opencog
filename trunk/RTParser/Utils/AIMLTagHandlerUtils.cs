@@ -42,7 +42,7 @@ namespace RTParser.Utils
 
         public string LineTextInfo()
         {
-            string s = templateNode.OuterXml.Trim();
+            string s = Trim(templateNode.OuterXml);
             if (String.IsNullOrEmpty(s))
             {
                 XmlNode li = templateNode;

@@ -794,7 +794,7 @@ namespace RTParser
             {
                 return "";
             }
-            text = text.Trim();
+            text = Trim(text);
             if (text == "")
             {
                 writeToLog(" had white string ");
@@ -804,7 +804,7 @@ namespace RTParser
             {
                 text = TheCyc.CleanupCyc(text);
             }
-            return text.Replace("#$", " ").Replace("  ", " ").Trim();
+            return Trim(text.Replace("#$", " ").Replace("  ", " "));
         }
 
 
@@ -1053,7 +1053,7 @@ namespace RTParser
                     {
                         chatTraceW.Write("  ");
                     }
-                    if (args != null && args.Length != 0) message = String.Format(message, args);
+                    message = SafeFormat(message, args);
                     chatTraceW.WriteLine(message);
                     //writeDebugLine(message);
                     if (streamDepth <= 0 && chatTraceW != null)
@@ -1148,7 +1148,7 @@ namespace RTParser
             bool createdOutput;
             SubQuery query = request.CurrentQuery;
             bool doUndos = false;
-            bool copyChild = false;
+            bool copyChild = templateNode.IsReadOnly;
             if (query == null)
             {
                 query = new SubQuery(requestName, result, request);
@@ -1180,12 +1180,12 @@ namespace RTParser
         public string ToHeard(string message)
         {
             if (message == null) return null;
-            if (message.Trim().Length == 0) return "";
+            if (Trim(message).Length == 0) return "";
             if (message.StartsWith("  "))
             {
                 return message;
             }
-            message = message.Trim();
+            message = Trim(message);
             if (message == "") return "";
             if (false && message.Contains("<"))
             {

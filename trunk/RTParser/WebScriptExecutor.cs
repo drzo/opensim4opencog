@@ -24,7 +24,7 @@ namespace RTParser.Web
 
         public void WriteLine(string s, params object[] args)
         {
-            s = DLRConsole.SafeFormat(s, args);
+            s = TextPatternUtils.SafeFormat(s, args);
             if (s.StartsWith("Trace")) return;
             if (s.StartsWith("Debug")) return;
             TheBot.writeToLog("HTTPD: " + s);

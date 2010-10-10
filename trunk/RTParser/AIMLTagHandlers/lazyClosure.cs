@@ -41,7 +41,7 @@ namespace RTParser.AIMLTagHandlers
             if (templateNode.NodeType == XmlNodeType.Comment) return Unifiable.Empty;
             if (templateNode.NodeType == XmlNodeType.Text)
             {
-                string s = templateNode.InnerText.Trim();
+                string s = Trim(templateNode.InnerText);
                 if (String.IsNullOrEmpty(s))
                 {
                     return Unifiable.Empty;
@@ -72,7 +72,7 @@ namespace RTParser.AIMLTagHandlers
                 bool deleteLink = false;
                 if (name == null)
                 {
-                    name = templateNode.InnerText.Trim();
+                    name = Trim(templateNode.InnerText);
                 }
                 if (removeTo != null)
                 {
@@ -100,7 +100,7 @@ namespace RTParser.AIMLTagHandlers
                 string from = RTPBot.GetAttribValue(templateNode, "graph,from", null);
                 if (name == null)
                 {
-                    name = templateNode.InnerText.Trim();
+                    name = Trim(templateNode.InnerText);
                 }
                 GraphMaster FROM = request.TargetBot.GetGraph(from, request.Graph);
                 GraphMaster TO = request.TargetBot.GetGraph(name, request.Graph);

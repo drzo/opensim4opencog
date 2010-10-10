@@ -429,6 +429,14 @@ namespace RTParser
         {
             //request.CurrentResult = result;
             query = query ?? request.CurrentQuery;
+            if (request.CurrentQuery==null)
+            {
+                request.CurrentQuery = query;
+            }
+            if (templateInfo == null)
+            {
+              //  writeToLog("templateInfo is null " + templateNode);
+            }
             templateInfo = templateInfo ?? query.CurrentTemplate;
             //request.CurrentQuery = query;
             if (!request.CanUseResultTemplate(templateInfo, result))
@@ -762,7 +770,7 @@ namespace RTParser
             if (node != null && node.NodeType == XmlNodeType.Text)
             {
                 tagHandler = null;
-                string s = node.InnerText.Trim();
+                string s = Trim(node.InnerText);
                 if (!String.IsNullOrEmpty(s))
                 {
                     return ValueText(s);
@@ -778,7 +786,7 @@ namespace RTParser
             {
                 object gn = request.Graph;
                 if (query != null) gn = query.Graph;
-                string s = string.Format("WARNING! Request " + request.WhyComplete +
+                string s = SafeFormat("WARNING! Request " + request.WhyComplete +
                                          ". User: {0} raw input: {3} \"{1}\" processing {2} templates: \"{4}\"",
                                          request.Requester.UserID, Unifiable.DescribeUnifiable(request.rawInput),
                                          (query == null ? "-NOQUERY-" : query.Templates.Count.ToString()), gn, node);
@@ -811,7 +819,7 @@ namespace RTParser
                 }
                 if (node.NodeType == XmlNodeType.Text)
                 {
-                    string s = node.InnerText.Trim();
+                    string s = Trim(node.InnerText);
                     if (String.IsNullOrEmpty(s))
                     {
                         return Unifiable.Empty;

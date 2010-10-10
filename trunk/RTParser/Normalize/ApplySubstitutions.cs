@@ -82,19 +82,19 @@ namespace RTParser.Normalize
                     fromValue = swapValue;
                 }
 
-                if (string.IsNullOrEmpty(fromValue.Trim())) continue;
+                if (string.IsNullOrEmpty(Trim(fromValue))) continue;
 
                 toValue = GetToValue(toValue);
 
                 string replacement;
-                if (toValue.Trim().Length == 0)
+                if (Trim(toValue).Length == 0)
                 {
                     replacement = " ";
                 }
                 else
                 {
-                    toValue = toValue.Trim();
-                    if (toValue.ToLower().Replace("\\b", " ").Trim() == fromValue.ToLower().Replace("\\b", " ").Trim())
+                    toValue = Trim(toValue);
+                    if (Trim(toValue.ToLower().Replace("\\b", " ")) == Trim(fromValue.ToLower().Replace("\\b", " ")))
                     {
                         continue;
                     }
@@ -145,7 +145,7 @@ namespace RTParser.Normalize
         {
             // good regex
             if (fromValue.Contains("\\b")) return fromValue;
-            string fromValueTrim = fromValue.Trim();
+            string fromValueTrim = Trim(fromValue);
             // probably good regex
             if (fromValueTrim.Contains("\\") && fromValueTrim.Length > 1) return fromValue;
             //Unifiable match = "\\b"+@p2.Trim().Replace(" ","\\s*")+"\\b";
@@ -161,7 +161,7 @@ namespace RTParser.Normalize
                 prev = result;
                 result = Substitute(dictionary, target);
             }
-            return  new StringUnifiable(result);
+            return Unifiable.MakeStringUnifiable(result, false);
         }
 
         /// <summary>

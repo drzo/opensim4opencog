@@ -932,7 +932,7 @@ namespace RTParser
         {
             try
             {
-                s = string.Format("{0} {1}", UserName ?? UserID, string.Format(s, objects));
+                s = SafeFormat("{0} {1}", UserName ?? UserID, SafeFormat(s, objects));
                 if (s.ToUpper().Contains("ERROR"))
                 {
                     bot.writeToLog(s, objects);

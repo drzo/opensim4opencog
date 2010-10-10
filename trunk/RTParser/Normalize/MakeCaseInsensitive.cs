@@ -31,7 +31,7 @@ namespace RTParser.Normalize
         }
         public static string TransformInput(string input)
         {
-            input = input.ToUpper();
+            input = ToUpper(input);
             return input;
         }
     }

@@ -61,6 +61,20 @@ namespace RTParser
             }
         }
 
+        public override bool Equals(object obj)
+        {
+            foreach (Unifiable unif in List)
+            {
+                if (!unif.Equals(obj)) return false;
+            }
+            return true;
+        }
+
+        public override int GetHashCode()
+        {
+            return -1;
+        }
+
         public override object Raw
         {
             get
@@ -250,13 +264,13 @@ namespace RTParser
             if (best != null)
             {
                 string res = best.ToValue(subquery);
-                if (res != null && res.Trim().Length > 0) return res;
+                if (res != null && Trim(res).Length > 0) return res;
             }
             foreach (var u in List)
             {
                 if (object.ReferenceEquals(best,u)) continue;
                 string res = u.ToValue(subquery);
-                if (res != null && res.Trim().Length > 0)
+                if (res != null && Trim(res).Length > 0)
                 {
                     best = u;
                     return res;

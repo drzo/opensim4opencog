@@ -205,7 +205,7 @@ namespace RTParser.Utils
                 }
                 string valueAsString = value.AsString();
 
-                bool isOuter = valueAsString.StartsWith(isValueSetStart);
+                bool isOuter = IsValueSetter(valueAsString);
                 var stringVal = ValueText(value);
                 innerResult.Value = stringVal;
                 if (isOuter)
@@ -697,9 +697,16 @@ namespace RTParser.Utils
                 double defualtReward = query.GetSucceedReward(type);
                 double score = GetAttribValue<double>(templateNode, "score", () => defualtReward,
                                                       ReduceStarAttribute<double>);
-                writeToLog("TSCORE {3} {0}*{1}->{2} ",
-                           score, query.CurrentTemplate.Rating,
-                           query.CurrentTemplate.Rating *= score, score);
+                double beforerating = query.CurrentTemplate.Rating;
+                double newrating = beforerating*score;
+                query.CurrentTemplate.Rating = newrating;
+                if (false)
+                {
+                    string str = SafeFormat("TSCORE {3} {0}*{1}->{2} ",
+                                                       score, query.CurrentTemplate.Rating,
+                                                       query.CurrentTemplate.Rating *= score, score);
+                    writeToLog(str);
+                }
             }
             this.QueryHasSuceededN++;
         }
@@ -981,7 +988,7 @@ namespace RTParser.Utils
             var vv = ProcessChildNode(childNode, ReadOnly, false, out success, tagHandlerChild);
             if (!success)
             {
-                Proc.TraceTest(String.Format("RE-EVALING CHILD '{0}' '{1}'", Unifiable.DescribeUnifiable(vv), childNode),
+                Proc.TraceTest(TextPatternUtils.SafeFormat("RE-EVALING CHILD '{0}' '{1}'", Unifiable.DescribeUnifiable(vv), childNode),
                                () => ProcessChildNode(childNode, ReadOnly, false, out success, tagHandlerChild));
                 //return null;
                 QueryHasFailedN++;
@@ -1054,7 +1061,7 @@ namespace RTParser.Utils
             
             {
                 string childNodeInnerXml = childNode.InnerXml;
-                if (childNodeInnerXml.StartsWith(isValueSetStart))
+                if (IsValueSetter(childNodeInnerXml))
                 {
                     string s = ValueText(childNodeInnerXml);
                     success = true;
@@ -1062,9 +1069,9 @@ namespace RTParser.Utils
                 }
                 if (childNode.NodeType == XmlNodeType.Text)
                 {
-                    string value = childNode.InnerText.Trim();
+                    string value = Trim(childNode.InnerText);
 
-                    if (value.StartsWith(isValueSetStart))
+                    if (IsValueSetter(value))
                     {
                         success = true;
                         return ValueText(value);

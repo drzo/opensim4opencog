@@ -662,7 +662,7 @@ namespace RTParser.Utils
                     if (!found)
                         foreach (var c in children)
                         {
-                            string ks = c.Key.ToUpper();
+                            string ks = ToUpper(c.Key);
                             if (ks == fs)
                             {
                                 childNode = c.Value;
@@ -733,7 +733,7 @@ namespace RTParser.Utils
         {
             const bool doEs = true;
             const bool doSEs = true;
-            fs0 = fs0.ToUpper().Trim();
+            fs0 = Unifiable.Intern(ToUpper(Trim(fs0)));
             if (false && NatLangDb.BeAUX.Contains(" " + fs0 + " ")) return "BeAux";
 
             if (fs0.StartsWith("FAV")) return "FAV";
@@ -969,7 +969,7 @@ namespace RTParser.Utils
             // get the first word of the sentence
             string firstWord = splitPath[at];
             //Unifiable firstWordU = splitPath[at];
-            string firstWordU = firstWord.ToUpper();
+            string firstWordU = ToUpper(firstWord);
             // and concatenate the rest of the input into a new path for child nodes
             //string newPath = path.Substring(firstWord.Length, path.Length - firstWord.Length);
 

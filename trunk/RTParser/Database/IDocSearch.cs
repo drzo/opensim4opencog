@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using RTParser.Utils;
 
 namespace RTParser.Database
 {
@@ -26,7 +27,7 @@ namespace RTParser.Database
 
         public override string ToString()
         {
-            return string.Format("{0} (menevalue= {1:1} )", Text, Score);
+            return TextPatternUtils.SafeFormat("{0} (menevalue= {1:1} )", Text, Score);
         }
 
         virtual public string Text { get; set; }

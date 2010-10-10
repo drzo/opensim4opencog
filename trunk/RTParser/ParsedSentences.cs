@@ -61,7 +61,10 @@ namespace RTParser
         {
             get
             {
-                if (English != null) return English;
+                if (English != null)
+                {
+                    return English;
+                }
                 if (EnglishSentences.Count == 0)
                 {
                     Convert(SemanticSentences, EnglishSentences, OutputSentencesToEnglish);
@@ -78,7 +81,8 @@ namespace RTParser
                         gather--;
                     }
                 }
-                return result.ToString();
+                string resultS = result.ToString();
+                return resultS.TrimEnd();
             }
             set
             {
@@ -118,7 +122,7 @@ namespace RTParser
             while (sentence != prev)
             {
                 prev = sentence;
-                sentence = sentence.Trim();
+                sentence = TextPatternUtils.Trim(sentence);
                 int sl = sentence.Length - 1;
 
                 if (sl < 0) return sentence;
@@ -142,7 +146,7 @@ namespace RTParser
             sf = sentence.LastIndexOfAny(new[] { '.', '!' });
             if (sf > 0)
             {
-                String newClip = sentence.Substring(sf).Trim();
+                String newClip = TextPatternUtils.Trim(sentence.Substring(sf));
                 while (Char.IsPunctuation(newClip[0]))
                 {
                     newClip = newClip.Substring(1).TrimStart();

@@ -175,11 +175,12 @@ namespace RTParser
             }
            // get { return str; }
         }
+
         public override string ToUpper()
         {
             if (upperCache == null)
             {
-                upperCache = AsString().ToUpper().Trim();
+                upperCache = Intern(ToUpper(str));
             }
             return upperCache;
         }
@@ -341,7 +342,7 @@ namespace RTParser
                 {
                     UFlags Flags = UFlags.NO_FLAGS;
                     char c;
-                    str = str.Trim();
+                    str = Trim(str);
                     if (str == "") return UFlags.IS_EMPTY;
                     c = str[0];
                     if (len == 1)
@@ -519,7 +520,7 @@ namespace RTParser
             }
             string str2 = AIMLLoader.CleanWhitepaces(str);
             if (str2 == str) return this;
-            return str.Trim();
+            return Trim(str);
         }
 
         public override string AsString()
@@ -635,7 +636,7 @@ namespace RTParser
 
         public static Unifiable[] Splitter(string str)
         {
-            string strTrim = str.Trim().Replace("  ", " ").Replace("  ", " ");
+            string strTrim = Trim(str.Replace("  ", " ").Replace("  ", " "));
             if (!strTrim.Contains("<"))
                 return arrayOf(strTrim.Split(BRKCHARS, StringSplitOptions.RemoveEmptyEntries));
 
@@ -657,17 +658,17 @@ namespace RTParser
                     if (node.NodeType == XmlNodeType.Whitespace) continue;
                     if (node.NodeType == XmlNodeType.Text)
                     {
-                        string splitMe = node.Value.Trim();
+                        string splitMe = Trim(node.Value);
                         u.AddRange(Splitter(splitMe));
                     }
                     else if (node.NodeType == XmlNodeType.Element)
                     {
-                        string splitMe = node.OuterXml.Trim();
+                        string splitMe = Trim(node.OuterXml);
                         u.Add(splitMe);
                     }
                     else
                     {
-                        string splitMe = node.OuterXml.Trim();
+                        string splitMe = Trim(node.OuterXml);
                         u.Add(splitMe);
                     }
                 }
@@ -718,7 +719,10 @@ namespace RTParser
         {
             if (String.IsNullOrEmpty(str)) return Unifiable.Empty;
             splittedCache = ToArray();
-            if (splittedCache.Length == 0) return Unifiable.Empty;
+            if (splittedCache.Length == 0)
+            {
+                return Unifiable.Empty;
+            }
             if (restCache == null) 
              return Join(" ", splittedCache, 1, splittedCache.Length - 1);
             return restCache;
