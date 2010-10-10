@@ -17,7 +17,11 @@ using RTParser.Utils;
 using RTParser.Variables;
 using UPath = RTParser.Unifiable;
 using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
-
+using PatternInfo = RTParser.Unifiable;
+using ThatInfo = RTParser.Unifiable;
+using TopicInfo = RTParser.Unifiable;
+using GuardInfo = RTParser.Unifiable;
+using ResponseInfo = RTParser.Unifiable;
 
 namespace RTParser
 {

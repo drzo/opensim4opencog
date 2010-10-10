@@ -134,6 +134,31 @@ namespace RTParser
             return strictness.CompareTo(otherStrictness);
         }
 
+        private List<CategoryInfo> categoryInfos = null;
+        public static bool NOCateIndex = true;
+        public override void AddCategory(CategoryInfo template)
+        {
+            if (NOCateIndex) return;
+            categoryInfos = categoryInfos ?? new List<CategoryInfo>();
+        }
+        public override void RemoveCategory(CategoryInfo template)
+        {
+            if (template != null && categoryInfos != null)
+            {
+                categoryInfos.Remove(template);
+                if (categoryInfos.Count == 0) categoryInfos = null;
+            }
+        }
+
+        public override Unifiable FullPath
+        {
+            get
+            {
+                return this;
+                throw new NotImplementedException();
+            }
+        }
+
         private string _str
         {
             set

@@ -3,6 +3,12 @@ using System.Collections.Generic;
 using System.Xml;
 using MushDLR223.Utilities;
 using RTParser.AIMLTagHandlers;
+using PatternInfo = RTParser.Unifiable;
+using ThatInfo = RTParser.Unifiable;
+using TopicInfo = RTParser.Unifiable;
+using GuardInfo = RTParser.Unifiable;
+using ResponseInfo = RTParser.Unifiable;
+
 
 
 namespace RTParser.Utils
@@ -57,12 +63,12 @@ namespace RTParser.Utils
             return StaticAIMLUtils.CollectionCompare<XmlNode>(thiz.TemplateXml.ChildNodes, other.TemplateXml.ChildNodes, StaticAIMLUtils.CompareXmlNodes);
         }
 
-        public override XmlNode TemplateXml
+        public XmlNode TemplateXml
         {
             get
             {
-                if (Response != null && Response.srcNode != null) return Response.srcNode;
-                return base.TemplateXml;
+                if (Response != null && Response.PatternNode != null) return Response.PatternNode;
+                return base.TemplateXmlNode;
             }
            // set { Response.srcNode = value; }
         }
@@ -72,7 +78,7 @@ namespace RTParser.Utils
             GuardInfo guard, Node patternNode, ThatInfo thatInfo)
             : base(pattern, cateNode, options)
         {
-            if (template != null && template.Name != "template")
+            if (template != null && template.FullPath == Unifiable.Empty)
             {
                 throw new UnauthorizedAccessException();
             }
@@ -91,7 +97,7 @@ namespace RTParser.Utils
                         NeckCut = doCut;
                     }
                 }
-                string scoreString = StaticXMLUtils.GetAttribValue(template.srcNode, "score", null);
+                string scoreString = StaticXMLUtils.GetAttribValue(template.PatternNode, "score", null);
                 scoreString = scoreString ?? StaticXMLUtils.GetAttribValue(cateNode, "score", null);
                 Rating = double.Parse(scoreString ?? "1.0");
             }
@@ -155,7 +161,7 @@ namespace RTParser.Utils
         {
             get
             {
-                string s = InnerXml;
+                string s = TemplateXml.InnerXml;
                 if (s.StartsWith("<think") && s.EndsWith("k>"))
                 {
                     return true;
@@ -200,6 +206,8 @@ namespace RTParser.Utils
             return TemplateKey.GetHashCode();
         }
 
+        internal override XmlNode srcNode { get; set; }
+
         public override string ToString()
         {
             XmlNode tryit = TemplateXml.ParentNode;
@@ -225,6 +233,8 @@ namespace RTParser.Utils
             return "TemplateInfoKey:" + TemplateKey;
             //            return s;
         }
+
+        public override Unifiable FullPath{ get; set; }
 
         public static TemplateInfo GetTemplateInfo(XmlNode template, GuardInfo guard, ThatInfo thatInfo, Node node,
                                                    CategoryInfo category, GraphMaster graphMaster)
@@ -286,7 +296,7 @@ namespace RTParser.Utils
         public bool AimlSameKey(string newStr, string newGuard, string newThat)
         {
             if (_templateKey != null) return _templateKey == MakeKey(newStr, newGuard, newThat);
-            if (!StaticAIMLUtils.AimlSame(makeStar(Guard.Output), AsStar(newGuard))) return false;
+            if (!StaticAIMLUtils.AimlSame(makeStar(Guard.PatternNode), AsStar(newGuard))) return false;
             if (!StaticAIMLUtils.AimlSame(makeStar(TemplateXml), AsStar(newStr))) return false;
             return true;
             /*
@@ -310,7 +320,7 @@ namespace RTParser.Utils
             {
                 if (_templateKey == null)
                 {
-                    return MakeKey(TemplateXml, Guard != null ? Guard.Output : null, That.PatternNode);
+                    return MakeKey(Pattern.PatternNode, Guard != null ? Guard.PatternNode : null, That.PatternNode);
                     //  _templateKey = MakeKey(Output, Guard != null ? Guard.Output : null, That.PatternNode);
                 }
                 return _templateKey;

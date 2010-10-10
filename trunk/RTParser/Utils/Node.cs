@@ -11,6 +11,11 @@ using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
 using StringAppendableUnifiable = RTParser.StringAppendableUnifiableImpl;
 //using CategoryInfo = RTParser.Utils.TemplateInfo;
 //using StringAppendableUnifiable = System.Text.StringBuilder;
+using PatternInfo = RTParser.Unifiable;
+using ThatInfo = RTParser.Unifiable;
+using TopicInfo = RTParser.Unifiable;
+using GuardInfo = RTParser.Unifiable;
+using ResponseInfo = RTParser.Unifiable;
 
 namespace RTParser.Utils
 {
@@ -377,7 +382,7 @@ namespace RTParser.Utils
                 }
 
 
-                ResponseInfo responseInfo = new ResponseInfo(templateNode, templateNode.InnerXml);
+                ResponseInfo responseInfo = templateNode.InnerXml;// new ResponseInfo(templateNode, templateNode.InnerXml);
 
                 var t = addTerminal_0_Lock(templateNode, responseInfo, guard, thatInfo, cateNode, master, patternInfo,
                                            additionalRules);
@@ -420,7 +425,7 @@ namespace RTParser.Utils
                                                 LoaderOptions loaderOptions, PatternInfo patternInfo,
                                                 List<ConversationCondition> additionalRules)
         {
-            string templateKey = TemplateInfo.MakeKey(templateNode, (guard != null ? guard.Output : null),
+            string templateKey = TemplateInfo.MakeKey(templateNode, (guard != null ? guard.PatternNode : null),
                                                       thatInfo != null ? thatInfo.PatternNode : XmlStar);
 
             GraphMaster master = loaderOptions.CtxGraph;
@@ -520,7 +525,7 @@ namespace RTParser.Utils
             {
                 if (thatInfo != null && thatInfo.FullPath.AsString() == "*")
                 {
-                    if (patternInfo.LoopsFrom(newTemplateInfo.InnerXml))
+                    if (patternInfo.LoopsFrom(responseInfo))
                     {
                         writeToLog("ERROR because LoopsFrom so SKIPPING! " + pat + "==" + newTemplateInfo + "");
                         if (TemplateInfos.Count == 0)

@@ -13,11 +13,13 @@ using MushDLR223.Virtualization;
 using RTParser.AIMLTagHandlers;
 using UPath = RTParser.Unifiable;
 using StringAppendableUnifiable = RTParser.StringAppendableUnifiableImpl;
-//using CategoryInfo = RTParser.Utils.TemplateInfo;
+using PatternInfo = RTParser.Unifiable;
+using ThatInfo = RTParser.Unifiable;
+using TopicInfo = RTParser.Unifiable;
+using GuardInfo = RTParser.Unifiable;
+using ResponseInfo = RTParser.Unifiable;
 
 //using StringAppendableUnifiable = System.Text.StringBuilder;
-using ThatInfo = System.Xml.XmlNode;
-using ResponseInfo = System.Xml.XmlNode;
 
 namespace RTParser.Utils
 {
@@ -267,8 +269,11 @@ namespace RTParser.Utils
             else
             {
                 skip = pats.IndexOf("TAG-FLAG");
-                if (skip > 0) pats = pats.Substring(0, skip - 1);
+                if (skip > 0) pats = pats.Substring(0, skip - 1);                
             }
+            if (pats.StartsWith("TAG-INPUT ")) pats = pats.Substring(10);
+            return pats;
+#if false
             PatternInfo pi;
             if (Patterns == null)
             {
@@ -291,12 +296,14 @@ namespace RTParser.Utils
                 }
             }
             return pi;
+#endif
         }
 
         public ResponseInfo FindResponse(XmlNode responseNode, Unifiable responseText)
-        {            
+        {
+#if false
             if (NoIndexing) return null;
-           // var responseNode = GetMatchableXMLNode("template", responseText);
+            // var responseNode = GetMatchableXMLNode("template", responseText);
             if (ResponseInfos == null) return new ResponseInfo(responseNode, responseText);
             string pats = MakeMatchKey(responseText);
             ResponseInfo pi;
@@ -315,11 +322,15 @@ namespace RTParser.Utils
                     }
                 }
             return pi;
+#endif
+            return responseText;
         }
 
         public ThatInfo FindThat(XmlNode thatNode,  Unifiable topicName)
         {
             if (NoIndexing) return null;
+            return topicName;
+#if false
             thatNode = thatNode ?? GetMatchableXMLNode("that", topicName);
             if (Thats == null) return new ThatInfo(thatNode, topicName);
             string pats = MakeMatchKey(topicName);
@@ -339,6 +350,7 @@ namespace RTParser.Utils
                     }
                 }
             return pi;
+#endif
         }
 
         private string MakeMatchKey(Unifiable pattern)
@@ -393,11 +405,13 @@ namespace RTParser.Utils
         public TopicInfo FindTopic(Unifiable topicName)
         {
             if (NoIndexing) return null;
+            return topicName;
+#if false
             string pats = MakeMatchKey(topicName);
             TopicInfo pi;
             if (Topics == null)
             {
-                return new TopicInfo(GetMatchableXMLNode("pattern", topicName), topicName);
+                return new TopicInfo(null, topicName);
             }
             lock (LockerObject)
                 lock (Topics)
@@ -413,6 +427,7 @@ namespace RTParser.Utils
                     }
                 }
             return pi;
+#endif
         }
 
         public CategoryInfo FindCategoryInfo(PatternInfo info, XmlNode node, LoaderOptions filename, 
@@ -1139,7 +1154,7 @@ namespace RTParser.Utils
         {
             foreach (GraphMaster list in CopyOf(FallBacksGraphs))
             {
-                fs(" <genlMt name=\"{0}\"/>", list.ScriptingName);
+                fs(" <genlMt name=\"{0}\" />", list.ScriptingName);
             }
             foreach (GraphMaster list in CopyOf(Parallels))
             {
@@ -1150,9 +1165,14 @@ namespace RTParser.Utils
                 fs(" <sraiGraph name=\"{0}\" />", srai);
             if (printOptions.WriteStatistics)
             {
-                fs(" <!-- categories={0} disabled={1} thats={2} patterns={3} topics={4} preparent={5} postparent={6}  -->",
+                /*fs(" <!-- categories={0} disabled={1} thats={2} patterns={3} topics={4} preparent={5} postparent={6}  -->",
                    CountOF(CategoryInfos), CountOF(UnusedTemplates), CountOF(Thats), CountOF(Patterns), CountOF(Topics), RootNode.ChildCount,
-                   PostParallelRootNode.ChildCount);
+                   PostParallelRootNode.ChildCount);*/
+                fs(" <!-- categories={0} disabled={1} -->",
+                   CountOF(CategoryInfos), CountOF(UnusedTemplates)
+                    // CountOF(Thats), CountOF(Patterns), CountOF(Topics), RootNode.ChildCount,
+                    //PostParallelRootNode.ChildCount
+                    );
             }
         }
 
@@ -1431,5 +1451,9 @@ namespace RTParser.Utils
             return false;
         }
 
+        public GuardInfo GetGuardInfo(XmlNode guardnode)
+        {
+            return guardnode.InnerXml;
+        }
     }
 }

@@ -49,7 +49,7 @@ namespace AIMLbot
         }
     }
 
-    sealed public class MasterResult : RTParser.ResultImpl, Result ,InteractionResult 
+    sealed public class MasterResult : RTParser.ResultImpl, Result , InteractionResult 
     {
         public MasterResult(string rawInput, User user, RTPBot bot, Request parent, User targetUser)
             : base(rawInput, user, bot, parent, targetUser)

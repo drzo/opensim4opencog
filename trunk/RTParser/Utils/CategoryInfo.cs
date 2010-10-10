@@ -3,7 +3,11 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Xml;
 using MushDLR223.Utilities;
-//using CategoryInfo = RTParser.Utils.TemplateInfo;
+using PatternInfo = RTParser.Unifiable;
+using ThatInfo = RTParser.Unifiable;
+using TopicInfo = RTParser.Unifiable;
+using GuardInfo = RTParser.Unifiable;
+using ResponseInfo = RTParser.Unifiable;
 
 namespace RTParser.Utils
 {
@@ -35,7 +39,7 @@ namespace RTParser.Utils
             get { return srcNode; }
         }
 
-        public virtual XmlNode TemplateXml
+        public XmlNode TemplateXmlNode
         {
             get { return StaticXMLUtils.FindNode("template", CategoryXml, null); }
         }

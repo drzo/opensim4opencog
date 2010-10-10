@@ -1,25 +1,16 @@
+using System;
 using System.Xml;
+#if false
 
 namespace RTParser.Utils
 {
-    public class GuardInfo : OutputInfo
+    [Serializable]
+    public class GuardInfo : PatternInfo
     {
-        public GuardInfo(XmlNode template) : base(template)
+        public GuardInfo(XmlNode pattern, Unifiable unifiable)
+            : base(pattern, unifiable)
         {
-        }
-
-        public static GuardInfo GetGuardInfo(XmlNode guardnode)
-        {
-            bool prev = NoInfo;
-            try
-            {
-                NoInfo = false;
-                return new GuardInfo(guardnode);
-            }
-            finally
-            {
-                NoInfo = prev;
-            }
         }
     }
 }
+#endif

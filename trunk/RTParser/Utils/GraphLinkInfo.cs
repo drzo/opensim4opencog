@@ -7,8 +7,6 @@ namespace RTParser.Utils
     public abstract class GraphLinkInfo
     {
         public static bool NoInfo;
-        internal XmlNode srcNode;
-        public Unifiable FullPath { get; set; }
 
         protected GraphLinkInfo(XmlNode template)
         {
@@ -43,11 +41,10 @@ namespace RTParser.Utils
             }
         }
 
-        public override string ToString()
-        {
-            if (!XmlDocumentLineInfo.SkipXmlns && this.srcNode.Attributes != null)
-                this.srcNode.Attributes.RemoveNamedItem("xmlns");
-            return srcNode.OuterXml + " " + StaticXMLUtils.LocationEscapedInfo(srcNode);
-        }
+
+        internal abstract XmlNode srcNode { get; set; }
+        abstract public override string ToString();
+        abstract public Unifiable FullPath { get; set; }
+
     }
 }

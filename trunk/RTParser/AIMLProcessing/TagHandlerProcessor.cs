@@ -6,6 +6,11 @@ using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using RTParser.AIMLTagHandlers;
 using RTParser.Utils;
+using PatternInfo = RTParser.Unifiable;
+using ThatInfo = RTParser.Unifiable;
+using TopicInfo = RTParser.Unifiable;
+using GuardInfo = RTParser.Unifiable;
+using ResponseInfo = RTParser.Unifiable;
 
 namespace RTParser
 {
@@ -518,7 +523,7 @@ namespace RTParser
             bool isTraced = request.IsTraced || result.IsTraced || !request.GraphsAcceptingUserInput ||
                             (templateInfo != null && templateInfo.IsTraced);
             //XmlNode guardNode = AIMLTagHandler.getNode(s.Guard.InnerXml);
-            bool usedGuard = sGuard != null && sGuard.Output != null;
+            bool usedGuard = sGuard != null && sGuard.PatternNode != null;
             sOutput = sOutput ?? templateInfo.ClonedOutput;
             string output = sOutput.OuterXml;
             XmlNode templateNode = sOutput;
@@ -526,7 +531,7 @@ namespace RTParser
             result.Started = true;
             if (usedGuard)
             {
-                output = "<template>" + sGuard.Output.OuterXml + " GUARDBOM " + output +
+                output = "<template>" + sGuard.PatternNode.OuterXml + " GUARDBOM " + output +
                                   "</template>";
                 templateNode = getNode(output, sOutput);
                 childOriginal = false;
@@ -572,7 +577,7 @@ namespace RTParser
                 left = null;
                 outputSentence = outputSentenceOut;
             }
-            if (sGuard == null || sGuard.Output != null)
+            if (sGuard == null || sGuard.PatternNode != null)
             {
                 string o = Proc.ToEnglish(outputSentence);
                 if (Proc.IsOutputSentence(o))
@@ -627,7 +632,7 @@ namespace RTParser
                     createdOutput = false;
                     return tagHandler;
                 }
-                string lang = GetAttribValue(sGuard.Output, "lang", "cycl").ToLower();
+                string lang = GetAttribValue(sGuard.PatternNode, "lang", "cycl").ToLower();
 
                 try
                 {
