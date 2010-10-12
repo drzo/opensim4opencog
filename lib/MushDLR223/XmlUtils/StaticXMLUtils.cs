@@ -74,13 +74,13 @@ namespace MushDLR223.Utilities
         {
             if (name == pattern) return true;
             if (pattern == null || name == null) return false;
-            name = name.Trim();
-            pattern = pattern.Trim();
+            name = Trim(name);
+            pattern = Trim(pattern);
             int patternLength = pattern.Length;
             if (patternLength == 0) return name.Length == 0;
             //            char pc = pattern[0];
-            pattern = pattern.ToLower();
-            name = name.ToLower();
+            pattern = ToLower(pattern);
+            name = ToLower(name);
             if (name == pattern) return true;
             if (pattern.Contains(","))
             {
@@ -183,7 +183,7 @@ namespace MushDLR223.Utilities
                 }
                 return options.CleanText(visibleRendering);
             }
-            if (nodeO.NodeType == XmlNodeType.Text) return options.CleanText(nodeO.InnerText);
+            if (nodeO.NodeType == XmlNodeType.Text) return options.CleanText(TextNodeValue(nodeO));
             return nodeO.OuterXml;
         }
 
@@ -257,7 +257,8 @@ namespace MushDLR223.Utilities
         {
             if (xmlNode.NodeType == XmlNodeType.Text)
             {
-                return ValueText(xmlNode.InnerText);
+                var v = ValueText(TextNodeValue(xmlNode, false));
+                return v;
             }
             if (xmlNode.NodeType == XmlNodeType.CDATA)
             {
@@ -333,7 +334,7 @@ namespace MushDLR223.Utilities
                 case XmlNodeType.Text:
                     if (templateNode.InnerXml.Length > 0)
                     {
-                        return templateNode.InnerText + templateNode.InnerXml;
+                        return templateNode.InnerText + TextNodeValue(templateNode);
                     }
                     return templateNode.InnerText;
 
@@ -375,6 +376,21 @@ namespace MushDLR223.Utilities
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
+            }
+            string s = String.Format("Unsurported Node Type {0} in {1}", templateNode.NodeType, templateNode.OuterXml);
+            writeDebugLine(s);
+            throw new ArgumentOutOfRangeException(s);
+        }
+
+        public static string TextNodeValue(XmlNode templateNode)
+        {
+            return TextNodeValue(templateNode, false);
+        }
+        public static string TextNodeValue(XmlNode templateNode, bool asSource)
+        {
+            if (templateNode.NodeType == XmlNodeType.Text)
+            {
+                return templateNode.OuterXml;
             }
             string s = String.Format("Unsurported Node Type {0} in {1}", templateNode.NodeType, templateNode.OuterXml);
             writeDebugLine(s);
@@ -669,7 +685,7 @@ namespace MushDLR223.Utilities
             LineInfoElementImpl xmlNode = (LineInfoElementImpl) (oc as IXmlLineInfo);
             if (xmlNode == null)
             {
-                xmlNode = (LineInfoElementImpl) getNode(node.OuterXml, false, node);
+                xmlNode = (LineInfoElementImpl) getNodeAndSetSibling(node.OuterXml, false, false, node);
                 LineInfoElementImpl.unsetReadonly(xmlNode);
             }
             else
@@ -950,17 +966,17 @@ namespace MushDLR223.Utilities
         {
             XmlDocumentLineInfo stringOnlyDoc1 = StringOnlyDoc;
             stringOnlyDoc1.SetText(outerXML);
-            return getDocNode(outerXML, false, stringOnlyDoc1);
+            return getDocNode(outerXML, wasWrapped, stringOnlyDoc1);
         }
 
         public static XmlNode getNode(string outerXML)
         {
-            return getNode(outerXML, false);
+            return getDocNode(outerXML, false, false, StringOnlyDoc);
         }
 
-        public static XmlNode getNode(string outerXML, XmlNode sibling)
+        public static XmlNode getNodeAndSetSiblingNode(string outerXML, XmlNode sibling)
         {
-            return getNode(outerXML, false, sibling);
+            return getNodeAndSetSibling(outerXML, false, true, sibling);
         }
 
 
@@ -978,15 +994,20 @@ namespace MushDLR223.Utilities
                 return stringOnlyDoc;
             }
         }
-
-        public static XmlNode getDocNode(string outerXML, bool wasWrapped, XmlNode doc0)
+        public static XmlNode getDocNode(string outerXML, bool wasWrapped, XmlDocument doc0)
         {
+            return getDocNode(outerXML, wasWrapped, !wasWrapped, doc0);
+        }
+
+        public static XmlNode getDocNode(string outerXML, bool wasWrapped, bool mayTryToWrap, XmlDocument doc0Hint)
+        {
+            var doc0 = doc0Hint ?? StringOnlyDoc;
             XmlDocumentLineInfo doc = doc0 as XmlDocumentLineInfo;
-            if (doc == null) doc = doc0.OwnerDocument as XmlDocumentLineInfo;
-            outerXML = Trim(outerXML);            
+            if (doc == null && doc0 != null) doc = doc0.OwnerDocument as XmlDocumentLineInfo;
+            outerXML = ReTrimAndspace(outerXML);            
             try
             {
-                if (!wasWrapped && outerXML.Length > 0)
+                if (!wasWrapped && outerXML.Length > 0 && mayTryToWrap)
                 {
                     var ch = outerXML[0];
                     if (ch != '<' && ch != '&')
@@ -1002,7 +1023,7 @@ namespace MushDLR223.Utilities
             catch (XmlException exception)
             {
                 writeDebugLine("ERROR NODE-IFYING " + outerXML);
-                if (!wasWrapped)
+                if (!wasWrapped && mayTryToWrap)
                 {
                     outerXML = XXXX(outerXML);
                     var node = ParseNode(doc, new StringReader(outerXML), outerXML);
@@ -1021,9 +1042,72 @@ namespace MushDLR223.Utilities
             }
         }
 
-        public static string Trim(string outerXml)
+
+        public static string Replace(string strTrim, string[][] pairs)
+        {
+            foreach (string[] pair in pairs)
+            {
+                strTrim = Replace(strTrim, pair[0], pair[1]);
+            }
+            return strTrim;
+        }
+
+        protected static string Replace(string source, string b, string a)
+        {
+            return OlderReference(source, source.Replace(b, a));
+        }
+
+        public static string ReTrimAndspace(string substitute)
+        {
+            if (substitute == null) return null;
+            var s = OlderReference(substitute, substitute.Replace("  ", " "));
+            if (s.Length == 1)
+            {
+                if (s != " ") return s;
+                return s;
+            }
+            return Trim(substitute);
+        }
+
+        public static string Trim00(string outerXml)
         {
             return CleanWhitepaces(outerXml);
+        }
+
+        public static string ToUpper(string param1)
+        {
+            var outp = param1.ToUpper();
+            return OlderReference(param1, outp);
+        }
+
+        public static string ToLower(string param1)
+        {
+            var outp = param1.ToLower();
+            return OlderReference(param1, outp);
+        }
+        public static string Trim(string param1)
+        {
+            var outp = param1.Trim();
+            return OlderReference(param1, outp);
+        }
+        public static string ConsolidSpaces(string param1)
+        {
+            var outp = param1.Replace("  ", " ");
+            return OlderReference(param1, outp);
+        }
+
+        public static string OlderReference(string param1, string outp)
+        {
+            if (outp == param1)
+            {
+                return param1;
+            }
+            return outp;
+        }
+
+        public static string SafeFormat(string fmt, params object[] args)
+        {
+            return DLRConsole.SafeFormat(fmt, args);
         }
 
         public static XmlNode ResultNode(XmlNode node, bool wasWrapped)
@@ -1039,14 +1123,18 @@ namespace MushDLR223.Utilities
         }
 
 
-        public static XmlNode getNode(string outerXML, bool wasWrapped, XmlNode templateNode)
+        public static XmlNode getNodeAndSetSibling(string outerXML, bool wasWrapped, bool mayTryToWrap, XmlNode nodeHint)
         {
+            var templateNode = nodeHint as XmlLinkedNode;
+            var ownerDoc = nodeHint as XmlDocumentLineInfo;
+            if (ownerDoc != null) templateNode = null;
             try
             {
+                ownerDoc = ownerDoc ?? nodeHint.OwnerDocument as XmlDocumentLineInfo;
                 XmlNode temp =
                     getDocNode(outerXML,
-                             wasWrapped,
-                             StringOnlyDoc ?? templateNode.OwnerDocument as XmlDocumentLineInfo);
+                               wasWrapped, mayTryToWrap,
+                               ownerDoc ?? StringOnlyDoc);
                 if (temp is LineInfoElementImpl)
                 {
                     LineInfoElementImpl li = (LineInfoElementImpl) temp;
@@ -1262,9 +1350,6 @@ namespace MushDLR223.Utilities
         public static bool DontFragment = true;
         public static string XXXX(string res)
         {
-            if (res.Contains("&gt;") || res.Contains("fuzzy"))
-            {
-            }
             if (!res.EndsWith("</xxxx>"))
             {
                 return "<xxxx>" + res + "</xxxx>";
