@@ -92,11 +92,10 @@ namespace MushDLR223.Utilities
             return !Char.IsLetterOrDigit(pattern[patternLength-1]) && Regex.IsMatch(name, "^" + pattern + "$");           
         }
 
-        public static bool ContainsXml(string unifiable)
+        public static bool ContainsXml(string s)
         {
-            String s = unifiable;
             if (s.Contains(">") && s.Contains("<")) return true;
-            if (s.Contains("&"))
+            if (s.Contains("&") && s.Contains(";"))
             {
                 return true;
             }
@@ -670,7 +669,7 @@ namespace MushDLR223.Utilities
             LineInfoElementImpl xmlNode = (LineInfoElementImpl) (oc as IXmlLineInfo);
             if (xmlNode == null)
             {
-                xmlNode = (LineInfoElementImpl) getNode(node.OuterXml, node);
+                xmlNode = (LineInfoElementImpl) getNode(node.OuterXml, false, node);
                 LineInfoElementImpl.unsetReadonly(xmlNode);
             }
             else
@@ -878,6 +877,31 @@ namespace MushDLR223.Utilities
         {
             try
             {
+                if (DontFragment)
+                {
+                    doc = doc.GetReusableDoc();
+                    doc.SetNodesReadOnly = false;
+                    doc.IsFile = false;
+                }
+                else
+                {
+                    if (!doc.WasUsed)
+                    {
+                        doc.LoadXml("<items/>");
+                    }
+                    var parentNode = doc.DocumentElement;
+                    var frag = doc.CreateDocumentFragment();
+                    frag.InnerXml = outerXML ?? sr.ReadToEnd();
+                    if (frag.ChildNodes.Count != 1)
+                    {
+                        return frag;
+                    }
+                    XmlElement newNode = frag.LastChild as XmlElement;
+                    if (newNode != null) return newNode;
+                    parentNode.AppendChild(frag);
+                    var ret = parentNode.LastChild ?? frag;
+                    return ret;
+                }
                 if (outerXML == null)
                 {
                     outerXML = sr.ReadToEnd();
@@ -910,7 +934,8 @@ namespace MushDLR223.Utilities
             {
                 writeDebugLine("outerXML=" + outerXML);
                 throw;
-            } finally
+            }
+            finally
             {
                 doc.DiscardReaders();
             }
@@ -921,12 +946,23 @@ namespace MushDLR223.Utilities
         /// </summary>
         /// <param name="outerXML">the Unifiable to XMLize</param>
         /// <returns>The XML node</returns>
-        public static XmlNode getNode(string outerXML)
+        public static XmlNode getNode(string outerXML, bool wasWrapped)
         {
             XmlDocumentLineInfo stringOnlyDoc1 = StringOnlyDoc;
             stringOnlyDoc1.SetText(outerXML);
-            return getNode0(outerXML, stringOnlyDoc1);
+            return getDocNode(outerXML, false, stringOnlyDoc1);
         }
+
+        public static XmlNode getNode(string outerXML)
+        {
+            return getNode(outerXML, false);
+        }
+
+        public static XmlNode getNode(string outerXML, XmlNode sibling)
+        {
+            return getNode(outerXML, false, sibling);
+        }
+
 
         public static bool UseOneStringOnlyDoc = false;
         protected static XmlDocumentLineInfo StringOnlyDoc
@@ -943,43 +979,74 @@ namespace MushDLR223.Utilities
             }
         }
 
-        public static XmlNode getNode0(string outerXML, XmlDocumentLineInfo doc)
+        public static XmlNode getDocNode(string outerXML, bool wasWrapped, XmlNode doc0)
         {
+            XmlDocumentLineInfo doc = doc0 as XmlDocumentLineInfo;
+            if (doc == null) doc = doc0.OwnerDocument as XmlDocumentLineInfo;
+            outerXML = Trim(outerXML);            
             try
             {
-                doc = doc.GetReusableDoc();
+                if (!wasWrapped && outerXML.Length > 0)
+                {
+                    var ch = outerXML[0];
+                    if (ch != '<' && ch != '&')
+                    {
+                        outerXML = XXXX(outerXML);
+                        wasWrapped = true;
+                    }
+                }
                 var node = ParseNode(doc, new StringReader(outerXML), outerXML);
-                var prevSib = node.PreviousSibling;
-                return node;
-                //return (LineInfoElement)temp; //.FirstChild;}
+                return ResultNode(node, wasWrapped);
+
             }
             catch (XmlException exception)
             {
-                doc = doc.GetReusableDoc();
                 writeDebugLine("ERROR NODE-IFYING " + outerXML);
-                var node = ParseNode(doc, new StringReader("<node>" + outerXML + "</node>"), outerXML);
-                if (node.ChildNodes.Count == 1)
+                if (!wasWrapped)
                 {
-                    var prevSib0 = node.PreviousSibling;
-                    node = node.FirstChild;
-                    return node;
+                    outerXML = XXXX(outerXML);
+                    var node = ParseNode(doc, new StringReader(outerXML), outerXML);
+                    return ResultNode(node, true);
                 }
-                var prevSib = node.PreviousSibling;
-                return node;
+                throw;
             }
             catch (Exception exception)
             {
                 writeDebugLine("ERROR outerXML='" + outerXML + "'\n" + exception + "\n");
                 throw;
             }
+            finally
+            {
+                doc.DiscardReaders();
+            }
+        }
+
+        public static string Trim(string outerXml)
+        {
+            return CleanWhitepaces(outerXml);
+        }
+
+        public static XmlNode ResultNode(XmlNode node, bool wasWrapped)
+        {
+            if (wasWrapped && node.ChildNodes.Count == 1)
+            {
+                var prevSib0 = node.PreviousSibling;
+                node = node.FirstChild;
+                return node;
+            }
+            var prevSib = node.PreviousSibling;
+            return node;
         }
 
 
-        public static XmlNode getNode(string outerXML, XmlNode templateNode)
+        public static XmlNode getNode(string outerXML, bool wasWrapped, XmlNode templateNode)
         {
             try
             {
-                XmlNode temp = getNode0(outerXML, StringOnlyDoc ?? templateNode.OwnerDocument as XmlDocumentLineInfo);
+                XmlNode temp =
+                    getDocNode(outerXML,
+                             wasWrapped,
+                             StringOnlyDoc ?? templateNode.OwnerDocument as XmlDocumentLineInfo);
                 if (temp is LineInfoElementImpl)
                 {
                     LineInfoElementImpl li = (LineInfoElementImpl) temp;
@@ -1191,7 +1258,23 @@ namespace MushDLR223.Utilities
         public static char[] isValueSetChars = " ".ToCharArray();
         public static string isValueSetStart = "+++";
         public static int isValueSetSkip = isValueSetStart.Length;
-        private static readonly XmlDocumentLineInfo stringOnlyDoc = new XmlDocumentLineInfo("getNode(ANYTHING)", false);
+        public static readonly XmlDocumentLineInfo stringOnlyDoc = new XmlDocumentLineInfo("getNode(ANYTHING)", false);
+        public static bool DontFragment = true;
+        public static string XXXX(string res)
+        {
+            if (res.Contains("&gt;") || res.Contains("fuzzy"))
+            {
+            }
+            if (!res.EndsWith("</xxxx>"))
+            {
+                return "<xxxx>" + res + "</xxxx>";
+            }
+            else
+            {
+               // return "<xxxx>" + res + "</xxxx>";
+                return res;
+            }
+        }
     }
 
     internal class LineNumberInfoZeroZero : IXmlLineInfo
