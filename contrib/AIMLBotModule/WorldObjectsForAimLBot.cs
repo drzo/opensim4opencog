@@ -846,7 +846,7 @@ namespace AIMLBotModule
             {
                 writeLock.Enqueue(() => {
                     if (logAimlToClient && client != null) client.DebugWriteLine(s, args);
-                    Logger.DebugLog(string.Format(string.Format("[AIMLBOT] {0} {1}", GetName(), s), args));
+                    Logger.DebugLog(DLRConsole.SafeFormat(DLRConsole.SafeFormat("[AIMLBOT] {0} {1}", GetName(), s), args));
                 });
                 Monitor.Exit(writeLock);
             }
