@@ -19,7 +19,7 @@ namespace MushDLR223.Utilities
         string NameSpace { get; }
         IEnumerable<string> SettingNames(int depth);
     }
-    
+
     public class StaticXMLUtils
     {
         public static R WithoutTrace<R>(ITraceable itrac, Func<R> func)
@@ -37,7 +37,7 @@ namespace MushDLR223.Utilities
                 finally
                 {
                     itrac.IsTraced = prev;
-                }                
+                }
             }
         }
 
@@ -53,7 +53,7 @@ namespace MushDLR223.Utilities
         {
             if (s.Contains("="))
             {
-                var nv = s.Split(new char[] {'='});
+                var nv = s.Split(new char[] { '=' });
                 {
                     if (node.Attributes != null)
                         foreach (XmlAttribute s1 in node.Attributes)
@@ -89,7 +89,7 @@ namespace MushDLR223.Utilities
                     if (SearchStringMatches(c, name)) return true;
                 }
             }
-            return !Char.IsLetterOrDigit(pattern[patternLength-1]) && Regex.IsMatch(name, "^" + pattern + "$");           
+            return !Char.IsLetterOrDigit(pattern[patternLength - 1]) && Regex.IsMatch(name, "^" + pattern + "$");
         }
 
         public static bool ContainsXml(string s)
@@ -175,7 +175,7 @@ namespace MushDLR223.Utilities
             {
                 XmlNodeList nodeOChildNodes = nodeO.ChildNodes;
                 if (nodeOChildNodes.Count == 0) return nodeO.OuterXml;
-                string bs = nodeStartXML((XmlElement) nodeO);
+                string bs = nodeStartXML((XmlElement)nodeO);
                 string visibleRendering = VisibleRendering(nodeOChildNodes, options);
                 if (!String.IsNullOrEmpty(bs))
                 {
@@ -249,7 +249,7 @@ namespace MushDLR223.Utilities
 
         public static string ToXmlValue(XmlNode xmlNode)
         {
-            string found =  ToXMLValueNotOuter(xmlNode);
+            string found = ToXMLValueNotOuter(xmlNode);
             if (found != null) return found;
             return xmlNode.OuterXml;
         }
@@ -495,7 +495,7 @@ namespace MushDLR223.Utilities
             FindNodes(name, node, nodes, 1);
             return nodes;
         }
-        public static bool FindNodes(string name, XmlNode node,List<XmlNode> nodes, int searchDepth)
+        public static bool FindNodes(string name, XmlNode node, List<XmlNode> nodes, int searchDepth)
         {
             foreach (string n in NamesStrings(name))
             {
@@ -609,14 +609,14 @@ namespace MushDLR223.Utilities
             string doc = NodeInfo(templateNode,
                                   (
                                       (strng, node) =>
-                                          {
-                                              if (node == null) return null;
-                                              XmlDocument od = node.OwnerDocument;
-                                              if (od == null) return null;
-                                              string st = od.ToString().Trim();
-                                              if (st.Length == 0) return null;
-                                              return st;
-                                          }));
+                                      {
+                                          if (node == null) return null;
+                                          XmlDocument od = node.OwnerDocument;
+                                          if (od == null) return null;
+                                          string st = od.ToString().Trim();
+                                          if (st.Length == 0) return null;
+                                          return st;
+                                      }));
             if (doc == null)
             {
                 doc = "nodoc";
@@ -639,7 +639,7 @@ namespace MushDLR223.Utilities
                 {
                     s = LineNoInfo(where + ".prnt", Parent);
                 }
-                if (s==null)
+                if (s == null)
                 {
                     if (li.LineNumber != 0 || li.LinePosition != 0)
                     {
@@ -689,7 +689,7 @@ namespace MushDLR223.Utilities
                             //parentCopy.ReadOnly = xmlNode0.ReadOnly;
                             XmlNode obj = parentCopy.ChildNodes[idx];
                             LineInfoElementImpl.unsetReadonly(obj);
-                            return (LineInfoElementImpl) obj;
+                            return (LineInfoElementImpl)obj;
                         }
                     }
                     writeDebugLine("cannot copy nodes parent " + node);
@@ -698,10 +698,10 @@ namespace MushDLR223.Utilities
 
             XmlNode oc = node.CloneNode(true);
 
-            LineInfoElementImpl xmlNode = (LineInfoElementImpl) (oc as IXmlLineInfo);
+            LineInfoElementImpl xmlNode = (LineInfoElementImpl)(oc as IXmlLineInfo);
             if (xmlNode == null)
             {
-                xmlNode = (LineInfoElementImpl) getNodeAndSetSibling(node.OuterXml, false, false, node);
+                xmlNode = (LineInfoElementImpl)getNodeAndSetSibling(node.OuterXml, false, false, node);
                 LineInfoElementImpl.unsetReadonly(xmlNode);
             }
             else
@@ -717,7 +717,7 @@ namespace MushDLR223.Utilities
         {
             XmlDocument od = node.OwnerDocument;
             LineInfoElementImpl newnode =
-                (LineInfoElementImpl) node.OwnerDocument.CreateNode(node.NodeType, newName, node.NamespaceURI);
+                (LineInfoElementImpl)node.OwnerDocument.CreateNode(node.NodeType, newName, node.NamespaceURI);
             newnode.ReadOnly = false;
             newnode.SetParentFromNode(node);
             newnode.lParent = ToLineInfoElement(node.ParentNode);
@@ -734,7 +734,7 @@ namespace MushDLR223.Utilities
                 newnode.AppendChild(a.CloneNode(true));
             }
             newnode.ReadOnly = node.IsReadOnly;
-            return (LineInfoElementImpl) newnode;
+            return (LineInfoElementImpl)newnode;
         }
 
         public static LineInfoElementImpl ToLineInfoElement(XmlNode pattern)
@@ -742,7 +742,7 @@ namespace MushDLR223.Utilities
             if (pattern == null) return null;
             if (pattern is LineInfoElementImpl)
             {
-                return (LineInfoElementImpl) pattern;
+                return (LineInfoElementImpl)pattern;
             }
             return CopyNode(pattern, true);
         }
@@ -812,7 +812,7 @@ namespace MushDLR223.Utilities
             {
                 return default(T);
             }
-            return (T) FormatProviderConvertor(arg, solid);
+            return (T)FormatProviderConvertor(arg, solid);
         }
 
         public static T GetAttribValueDouble<T>(XmlNode node, string attribName, T defaultIfEmpty,
@@ -826,7 +826,7 @@ namespace MushDLR223.Utilities
                     T rs = reduceStar(attrib.Value);
                     try
                     {
-                        return (T) rs.ToType(typeof (T), null);
+                        return (T)rs.ToType(typeof(T), null);
                     }
                     catch (Exception exception)
                     {
@@ -854,7 +854,7 @@ namespace MushDLR223.Utilities
         /// <param name="tf"></param>
         /// <returns></returns>
         public static bool TryParseBool(ICollection<XmlNode> templateNodes, string attribName, out bool tf)
-        {          
+        {
             foreach (XmlNode templateNode in templateNodes)
             {
                 //if (TryParseBool(GetAttribValue<string>(templateNode, attribName, null), out tf))
@@ -874,7 +874,7 @@ namespace MushDLR223.Utilities
                 tf = default(Boolean);
                 return false;
             }
-            parse = parse.ToUpper();
+            parse = ToUpper(parse);
             if (IsFalseOrNo(parse))
             {
                 tf = false;
@@ -891,12 +891,14 @@ namespace MushDLR223.Utilities
 
         public static bool IsFalseOrNo(string tst)
         {
-            return (tst == "NO" || tst == "N" || tst == "FALSE" || tst == "F" || tst == "NIL");
+            return (tst == "NO" || tst == "N" || tst == "FALSE" || tst == "F" ||
+                    tst == "NIL" || tst == "()" || (tst.StartsWith("<!--") && tst.Contains("FAIL")));
         }
 
         public static bool IsTrueOrYes(string tst)
         {
-            return (tst == "YES" || tst == "Y" || tst == "TRUE" || tst == "T");
+            return (tst == "YES" || tst == "Y" || tst == "TRUE" || tst == "T" ||
+                    (tst.StartsWith("<!--") && tst.Contains("SUCCESS")));
         }
 
 
@@ -1020,7 +1022,7 @@ namespace MushDLR223.Utilities
             var doc0 = doc0Hint ?? StringOnlyDoc;
             XmlDocumentLineInfo doc = doc0 as XmlDocumentLineInfo;
             if (doc == null && doc0 != null) doc = doc0.OwnerDocument as XmlDocumentLineInfo;
-            outerXML = ReTrimAndspace(outerXML);            
+            outerXML = ReTrimAndspace(outerXML);
             try
             {
                 if (!wasWrapped && outerXML.Length > 0 && mayTryToWrap)
@@ -1034,7 +1036,7 @@ namespace MushDLR223.Utilities
                 }
                 if (outerXML.Contains("<BOT "))
                 {
-                    
+
                 }
                 var node = ParseNode(doc, new StringReader(outerXML), outerXML);
                 return ResultNode(node, wasWrapped);
@@ -1068,6 +1070,14 @@ namespace MushDLR223.Utilities
             foreach (string[] pair in pairs)
             {
                 strTrim = Replace(strTrim, pair[0], pair[1]);
+            }
+            return strTrim;
+        }
+        public static string Replace(string strTrim, params string[] pairs)
+        {
+            for (int index = 0; index < pairs.Length; index++)
+            {
+                strTrim = Replace(strTrim, pairs[index++], pairs[index]);
             }
             return strTrim;
         }
@@ -1162,13 +1172,13 @@ namespace MushDLR223.Utilities
                                ownerDoc ?? StringOnlyDoc);
                 if (temp is LineInfoElementImpl)
                 {
-                    LineInfoElementImpl li = (LineInfoElementImpl) temp;
+                    LineInfoElementImpl li = (LineInfoElementImpl)temp;
                     li.SetParentFromNode(templateNode);
                     return temp; //.FirstChild;}
                 }
                 if (temp is XmlSourceLineInfo)
                 {
-                    XmlSourceLineInfo li = (XmlSourceLineInfo) temp;
+                    XmlSourceLineInfo li = (XmlSourceLineInfo)temp;
                     li.SetParentFromNode(templateNode);
                     return temp; //.FirstChild;}
                 }
@@ -1193,7 +1203,7 @@ namespace MushDLR223.Utilities
             XmlDocumentLineInfo doc = null; // templateNode.OwnerDocument as XmlDocumentLineInfo;
             // ReSharper disable ConditionIsAlwaysTrueOrFalse
             if (doc == null)
-                // ReSharper restore ConditionIsAlwaysTrueOrFalse
+            // ReSharper restore ConditionIsAlwaysTrueOrFalse
             {
                 doc = new XmlDocumentLineInfo(named, true);
             }
@@ -1238,7 +1248,7 @@ namespace MushDLR223.Utilities
 
             if (padchars != null)
             {
-                if (xml2.IndexOfAny(padchars.ToCharArray(), 0) == -1 || (xml2.IndexOfAny(new[] {'\\', ':', '/'}, 0) > 0))
+                if (xml2.IndexOfAny(padchars.ToCharArray(), 0) == -1 || (xml2.IndexOfAny(new[] { '\\', ':', '/' }, 0) > 0))
                 {
                     padchars = null;
                 }
@@ -1381,9 +1391,14 @@ namespace MushDLR223.Utilities
             }
             else
             {
-               // return "<xxxx>" + res + "</xxxx>";
+                // return "<xxxx>" + res + "</xxxx>";
                 return res;
             }
+        }
+
+        public static string MakeXmlCommentSafe(string unescapedStuff)
+        {
+            return Replace(unescapedStuff, "<!--", "<#--", "-->", "--#>");
         }
     }
 
