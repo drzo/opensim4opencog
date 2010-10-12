@@ -118,6 +118,7 @@ namespace RTParser
         bool IsComplete { get; set; }
         int HasFailed { get; set; }
         int HasSuceeded { get; set; }
+        void Exit();
     }
 
     /// <summary>
@@ -251,6 +252,7 @@ namespace RTParser
         public ResultImpl(string rawInput, User user, RTPBot bot, Request parent, User targetUser)
             : base(parent)
         {
+            ExitQueue = new CommitQueue();
             matchable = matchable ?? MakeMatchable(rawInput);
             SubQueries = new List<SubQuery>();
             MaxCanEvalResult = 10;
@@ -509,6 +511,20 @@ namespace RTParser
                 }
                 _hasSuceeded = value;
             }
+        }
+
+        public CommitQueue ExitQueue { get; set; }
+        bool HasExited;
+        public void Exit()
+        {
+            lock (ExitQueue)
+            {
+                if (HasExited) return;
+                this.HasExited = true;
+            }
+            if (request != null) request.Exit();
+            //if (CatchLabel != null) CatchLabel.PopScope();
+            ExitQueue.Commit(true);
         }
 
         public RTPBot TargetBot

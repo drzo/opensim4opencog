@@ -205,33 +205,48 @@ namespace RTParser.Utils
 
         public static bool IsEMPTY(Object name)
         {
-            if (ReferenceEquals(name, Unifiable.Empty))
-            {
-                return true;
-            }
             if (name is String)
             {
                 string stringValue = ((String)name);
                 if (stringValue.Length == 0) return true;
+                if (stringValue == " ")
+                {
+                    return true;
+                }
                 string stringValueTrim = Trim(stringValue);
                 if (stringValueTrim.Length == 0)
                 {
-
-                    writeDebugLine("WARN: this case isNull '" + Unifiable.DescribeUnifiable(name) + "' was never supposed to happen");
+                    writeDebugLine("WARN: Trim(self).Length == 0  '" + name + "' was never supposed to happen");
                     return true;
                 }
                 if (stringValueTrim == "$EMPTY")
                 {
                     return true;
                 }
+                if (stringValueTrim == "$SPACE")
+                {
+                    return true;
+                }
                 return false;
             }
-            if (ReferenceEquals(name, null) || ReferenceEquals(name, Unifiable.NULL))
+            if (ReferenceEquals(name, null))
             {
                 return false;
             }
             if (name is Unifiable)
             {
+                if (ReferenceEquals(name, Unifiable.NULL))
+                {
+                    return false;
+                }
+                if (ReferenceEquals(name, Unifiable.Empty))
+                {
+                    return true;
+                }
+                if (ReferenceEquals(name, Unifiable.SPACE))
+                {
+                    return true;
+                }
                 if (IsEMPTY(((Unifiable)name).SpecialName))
                 {
                     return true;

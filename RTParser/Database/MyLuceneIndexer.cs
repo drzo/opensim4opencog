@@ -712,7 +712,7 @@ namespace RTParser.Database
                     userCachedPending = true;
                     string personDef = WordNetExpand("person", true);
                     WNExpandCache.Add(TheBot.UserID, personDef.Trim());
-                    WNExpandCache.Add(TripleStoreProxy.Entify(TheBot.UserID), personDef.Trim());
+                    WNExpandCache[TripleStoreProxy.Entify(TheBot.UserID)] = personDef.Trim();
                     userCached = true;
                     userCachedPending = false;
                 }

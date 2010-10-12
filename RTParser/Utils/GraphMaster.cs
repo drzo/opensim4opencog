@@ -717,8 +717,7 @@ namespace RTParser.Utils
                 writeToLog("AIMLTRACE DOIT: " + tried + " pc=" + patternCountChanged + ": " + false + "  " + request);
                 //   return false;
             }
-            Proof Prf = new Proof();
-            request.Proof = Prf;
+            var Prf = request.Proof = request.Proof ?? new Proof();
 
             Node toplevelBubble;
             while (!toplevel.NoMoreResults)
@@ -1126,7 +1125,7 @@ namespace RTParser.Utils
                     // ss = cws;
                 }
                 fs.Write(ss);
-                if (printOptions.IncludeLineno || printOptions.IncludeGraphName)
+                if (printOptions.IncludeLineInfoExternal || printOptions.IncludeGraphName)
                 {
                     if (!printOptions.CategoryPerLine) if (ss.Length > 50) fs.WriteLine();
                     fs.Write("   <!-- ");
@@ -1134,7 +1133,7 @@ namespace RTParser.Utils
                     {
                         fs.Write(graphName);
                     }
-                    if (printOptions.IncludeLineno)
+                    if (printOptions.IncludeLineInfoExternal)
                     {
                         c = ci.SourceInfo();
                         if (!c.Contains("(0,0)"))

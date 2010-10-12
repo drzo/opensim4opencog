@@ -94,13 +94,13 @@ namespace RTParser
                     }         
                     return Int32.Parse(u);
                 }
-                if (typeof(Unifiable).IsSubclassOf(solid))
+                if (solid.IsSubclassOf(typeof(Unifiable)) || typeof(Unifiable).IsSubclassOf(solid))
                 {
                     if (wasIncomplete)
                     {
                         if (ReturnNullForUnknownUnifiables) return Unifiable.INCOMPLETE;
                     }
-                    return (Unifiable) u;
+                    return Unifiable.Create(u);
                 }
             }
             catch (Exception exception)

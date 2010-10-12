@@ -21,7 +21,7 @@ namespace RTParser
         Unifiable Topic { get; set; }
         Request ParentRequest { get; set; }
         GraphMaster Graph { get; set; }
-        bool IsTraced { get; set; }
+        //bool IsTraced { get; set; }
         TimeSpan Durration { get; set; }
         //int DebugLevel { get; set; }
         //List<SubQuery> SubQueries { get; set; }
@@ -114,7 +114,7 @@ namespace RTParser
         ISettingsDictionary GetDictionary(string named, ISettingsDictionary dictionary);
 
         void AddUndo(Action action);
-        void Commit(bool clearAfter);
+        void CommitSideEffects(bool clearAfter);
         void UndoAll();
         void AddSideEffect(string effect, ThreadStart start);
         Dictionary<string, GraphMaster> GetMatchingGraphs(string graphname, GraphMaster master);
@@ -130,6 +130,11 @@ namespace RTParser
         bool SaveResultsOnJustHeard { get; set; }
         bool IsSynchronis { get; set; }
         MasterResult FindOrCreateCurrentResult();
+
+        void DisableTemplateUntilFinished(TemplateInfo templateInfo);
+        void MarkTemplate(TemplateInfo queryTemplate);
+        CommitQueue ExitQueue { get; }
+        void Exit();
     }
 
     /// <summary>
@@ -461,6 +466,8 @@ namespace RTParser
         protected RequestImpl(string rawInput, User user, RTPBot bot, Request parent, User targetUser)
             :  this(bot.GetQuerySettings()) // Get query settings intially from user
         {
+            ExitQueue = new CommitQueue();
+            SideEffects = new CommitQueue();
             IsToplevelRequest = parent == null;
             this.Stage = SideEffectStage.UNSTARTED;
             matchable = matchable ?? MakeMatchable(rawInput);
@@ -787,8 +794,8 @@ namespace RTParser
                 if (disallowedGraphs.Contains(getGraph)) return;
                 disallowedGraphs.Add(getGraph);
             }
-            AddSideEffect("restore graph access " + getGraph,
-                          () => { lock (disallowedGraphs) disallowedGraphs.Remove(getGraph); });
+            SideEffects.Add("restore graph access " + getGraph,
+                            () => { lock (disallowedGraphs) disallowedGraphs.Remove(getGraph); });
         }
 
         public ICollection<GraphMaster> DisallowedGraphs
@@ -983,6 +990,7 @@ namespace RTParser
             {
                 var r = new AIMLbot.MasterResult(rawInput, Requester, TargetBot, parentReq, parentReq.Responder);
                 parentReq.CurrentResult = r;
+                ExitQueue.Add("exit subResult", r.Exit);
                 r.request = thisRequest;
                 currentResult = r;
             }
@@ -997,12 +1005,12 @@ namespace RTParser
 
         public MasterRequest CreateSubRequest(string templateNodeInnerValue)
         {
-            var request = (MasterRequest)this;
+            Request request = (MasterRequest)this;
             var user= this.Requester;
             var  rTPBot = this.TargetBot;
             var requestee = this.Responder;
             //Request thisRequest = (Request)this;
-            var subRequest = new MasterRequest(templateNodeInnerValue, user ?? Requester,
+            Request subRequest = new MasterRequest(templateNodeInnerValue, user ?? Requester,
                                                        rTPBot ?? this.TargetBot, thisRequest, requestee ?? Responder);
             Result res = request.CurrentResult;
             subRequest.CurrentResult = res;
@@ -1012,8 +1020,8 @@ namespace RTParser
             subRequest.StartedOn = request.StartedOn;
             subRequest.TimesOutAt = request.TimesOutAt;
             subRequest.TargetSettings = request.TargetSettings;
-            //subRequest.Responder = request.Responder;
-            return subRequest;
+            request.ExitQueue.Add("exit subRequest: " + templateNodeInnerValue, subRequest.Exit);
+            return (MasterRequest)subRequest;
         }
 
         public MasterRequest CreateSubRequest(Unifiable templateNodeInnerValue, User user, RTPBot rTPBot, User requestee)
@@ -1033,6 +1041,7 @@ namespace RTParser
             subRequest.TimesOutAt = request.TimesOutAt;
             subRequest.TargetSettings = request.TargetSettings;
             //subRequest.Responder = request.Responder;
+            request.ExitQueue.Add("exit subRequest", subRequest.Exit);
             return subRequest;
         }
         public bool CanUseRequestTemplate(TemplateInfo info)
@@ -1045,6 +1054,11 @@ namespace RTParser
             return true;
         }
         public bool CanUseResultTemplate(TemplateInfo info, Result result)
+        {
+            if (CanUseResultTemplate0(info, result)) return true;
+            return false;
+        }
+        public bool CanUseResultTemplate0(TemplateInfo info, Result result)
         {
             if (info == null) return true;
             if (info.IsDisabled) return false;
@@ -1269,6 +1283,12 @@ namespace RTParser
                 UndoStack.GetStackFor(this).AddUndo(() => undo());
             }
         }
+
+        public void CommitSideEffects(bool clearAfter)
+        {
+            SideEffects.Commit(clearAfter);
+        }
+
         public void UndoAll()
         {
             lock (this)
@@ -1276,101 +1296,16 @@ namespace RTParser
                 UndoStack.GetStackFor(this).UndoAll();
             }
         }
-        private readonly List<KeyValuePair<string, ThreadStart>> commitHooks = new List<KeyValuePair<string, ThreadStart>>();
-        public static List<KeyValuePair<string, ThreadStart>> DoAll(List<KeyValuePair<string, ThreadStart>> todo)
+
+        public void AddSideEffect(string effect, ThreadStart start)
         {
-            List<KeyValuePair<string, ThreadStart>> newList = new List<KeyValuePair<string, ThreadStart>>();
-            lock (todo)
-            {
-                newList.AddRange(todo);
-                todo.Clear();
-            }
-            foreach (KeyValuePair<string, ThreadStart> start in newList)
-            {
-                DoTask(start);
-            }
-            todo.Clear();
-            return newList;
+            SideEffects.Add(effect, start);
         }
 
-        private static void DoTask(KeyValuePair<string, ThreadStart> start)
-        {
-            try
-            {
-                start.Value();
-            }
-            catch (Exception exception)
-            {
-                RTPBot.writeDebugLine("ERROR in " + start.Key + " " + exception);
-            }
-        }
-
-        readonly object RequestSideEffect = new object();
-        public void Commit(bool clearAfter)
-        {
-            lock (RequestSideEffect)
-            {
-                bool prevCommitNow = CommitNow;
-                try
-                {
-                    if (commitHooks == null || commitHooks.Count == 0)
-                    {
-                        return;
-                    }
-
-                    while (true)
-                    {
-                        lock (commitHooks)
-                        {
-                            if (commitHooks.Count == 0)
-                            {
-                                return;
-                            }
-                        }
-                        CommitNow = false;
-                        List<KeyValuePair<string, ThreadStart>> prev = DoAll(commitHooks);
-                        if (!clearAfter)
-                        {
-                            lock (commitHooks)
-                            {
-                                commitHooks.AddRange(prev);
-                                CommitNow = true;
-                                return;
-                            }
-                        }
-                        CommitNow = true;
-                    }
-                }
-                finally
-                {
-                    CommitNow = prevCommitNow;
-                }
-            }
-        }
-
-        public bool CommitNow = false;
+        public readonly CommitQueue SideEffects;
         private readonly QuerySettings qsbase;
         public bool SuspendSearchLimits { get; set; }
         protected Result _CurrentResult;
-
-        public void AddSideEffect(string name, ThreadStart action)
-        {
-            KeyValuePair<string, ThreadStart> newKeyValuePair = new KeyValuePair<string, ThreadStart>(name, action);
-            lock (RequestSideEffect)
-            {
-                if (CommitNow)
-                {
-                    if (!IgnoreTasks)
-                    {
-                        DoTask(newKeyValuePair);
-                    }
-                }
-                else
-                {
-                    commitHooks.Add(newKeyValuePair);
-                }
-            }
-        }
 
         public Dictionary<string, GraphMaster> GetMatchingGraphs(string graphname, GraphMaster master)
         {
@@ -1508,12 +1443,12 @@ namespace RTParser
             lock (UsedResults)
             {
                 UsedResults.Add(subResult);
+                ExitQueue.Add("subResultExit: ", subResult.Exit);
             }
         }
 
         public Dictionary<Unifiable, Unifiable> _SRAIResults = new Dictionary<Unifiable, Unifiable>();
         private string matchable;
-        private bool IgnoreTasks;
 
         public bool CanProcess(string starContent)
         {
@@ -1528,7 +1463,7 @@ namespace RTParser
 
         internal static RequestImpl GetOriginalSalientRequest(Request request)
         {
-            RequestImpl originalSalientRequest = request as RequestImpl;// .OriginalSalientRequest;
+            RequestImpl originalSalientRequest = request.OriginalSalientRequest;//?? request as RequestImpl;// .OriginalSalientRequest;
             if (originalSalientRequest == null)
             {
                 originalSalientRequest = request as RequestImpl;
@@ -1600,7 +1535,7 @@ namespace RTParser
                         return false;
                     }
                     writeToLog("Looped '" + prevResults + "' on: " + templateNodeInnerValue);
-                    return true;
+                    return false;
                 }
             }
         }
@@ -1645,6 +1580,164 @@ namespace RTParser
             return (CurrentResult as MasterResult) ?? CreateResult(this);
         }
 
+        public void DisableTemplateUntilFinished(TemplateInfo templateInfo)
+        {
+            if (templateInfo == null) return;
+            Request request = this;
+            templateInfo.IsDisabledOutput = true;
+            Request rr1 = request.OriginalSalientRequest;
+            Request rr2 = request.ParentMostRequest;
+            var rr = rr1 ?? rr2 ?? this;
+            if (rr != this)
+            {
+                // writeToLog("Diableding temporily " + templateInfo);
+            }
+            rr.AddUndo(() =>
+            {
+                templateInfo.IsDisabledOutput = false;
+            });
+            rr.ExitQueue.Add(
+                "un-disable " + templateInfo,
+                () =>
+                    {
+                        templateInfo.IsDisabledOutput = false;
+                    });
+        }
+
+        public void MarkTemplate(TemplateInfo queryTemplate)
+        {
+            var orr = OriginalSalientRequest;
+            if (orr == null || orr == ParentMostRequest)
+            {
+                OriginalSalientRequest = this;
+            }
+        }
+
+        public CommitQueue ExitQueue { get; set; }
+        private bool HasExited;
+        public void Exit()
+        {
+            lock (ExitQueue)
+            {
+                if (HasExited) return;
+                this.HasExited = true;                
+            }
+            CommitSideEffects(false);
+            UndoAll();
+            if (CurrentResult != null) CurrentResult.Exit();
+            //if (CatchLabel != null) CatchLabel.PopScope();
+            CommitSideEffects(true);
+            ExitQueue.Commit(true);
+        }
         #endregion
+
+    }
+
+    public class CommitQueue
+    {
+
+        private bool IgnoreTasks;
+        private readonly List<KeyValuePair<string, ThreadStart>> commitHooks = new List<KeyValuePair<string, ThreadStart>>();
+        public static List<KeyValuePair<string, ThreadStart>> DoAll(List<KeyValuePair<string, ThreadStart>> todo)
+        {
+            var newList = new List<KeyValuePair<string, ThreadStart>>();
+            lock (todo)
+            {
+                newList.AddRange(todo);
+                todo.Clear();
+            }
+            foreach (KeyValuePair<string, ThreadStart> start in newList)
+            {
+                DoTask(start);
+            }
+            todo.Clear();
+            return newList;
+        }
+
+        private static void DoTask(KeyValuePair<string, ThreadStart> start)
+        {
+            try
+            {
+                start.Value();
+            }
+            catch (Exception exception)
+            {
+                RTPBot.writeDebugLine("ERROR in " + start.Key + " " + exception);
+            }
+        }
+
+        readonly object SyncLock = new object();
+        public void Commit(bool clearAfter)
+        {
+            lock (SyncLock)
+            {
+                bool prevCommitNow = Immediate;
+                try
+                {
+                    if (commitHooks == null || commitHooks.Count == 0)
+                    {
+                        return;
+                    }
+
+                    while (true)
+                    {
+                        lock (commitHooks)
+                        {
+                            if (commitHooks.Count == 0)
+                            {
+                                return;
+                            }
+                        }
+                        Immediate = false;
+                        List<KeyValuePair<string, ThreadStart>> prev = DoAll(commitHooks);
+                        if (!clearAfter)
+                        {
+                            lock (commitHooks)
+                            {
+                                commitHooks.AddRange(prev);
+                                Immediate = true;
+                                return;
+                            }
+                        }
+                        Immediate = true;
+                    }
+                }
+                finally
+                {
+                    Immediate = prevCommitNow;
+                }
+            }
+        }
+
+        public bool Immediate = false;
+        public void Add(string name, ThreadStart action)
+        {
+            var newKeyValuePair = new KeyValuePair<string, ThreadStart>(name, action);
+            lock (SyncLock)
+            {
+                if (Immediate)
+                {
+                    if (!IgnoreTasks)
+                    {
+                        DoTask(newKeyValuePair);
+                    }
+                }
+                else
+                {
+                    commitHooks.Add(newKeyValuePair);
+                }
+            }
+        }
+
+        public List<KeyValuePair<string, ThreadStart>> Items
+        {
+            get { return commitHooks; }
+        }
+
+        public int Count
+        {
+            get { return commitHooks.Count; }
+        }
+
     }
 }

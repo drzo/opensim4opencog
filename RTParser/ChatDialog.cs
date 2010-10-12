@@ -427,11 +427,12 @@ namespace RTParser
                 finally
                 {
                     AddHeardPreds(parentResultIn.RawOutput, HeardPredicates);
-                    request.Commit(false);
+                    request.CommitSideEffects(false);
                     label.PopScope();
                     undoStack.UndoAll();
                     request.UndoAll();
-                    request.Commit(true);
+                    request.CommitSideEffects(true);
+                    request.Exit();
                     request.Requester = user;
                 }
             }

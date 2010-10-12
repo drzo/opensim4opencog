@@ -618,11 +618,7 @@ namespace RTParser
                         {
                             writeToLog("SILENT '{0}' TEMPLATE={1}", o, ParentTextAndSourceInfo(templateNode) + fromStr);
                         }
-                        templateInfo.IsDisabled = true;
-                        request.AddUndo(() =>
-                        {
-                            templateInfo.IsDisabled = false;
-                        });
+                        request.DisableTemplateUntilFinished(templateInfo);
                     }
                     else
                     {

@@ -3,13 +3,14 @@ using System.Xml;
 
 namespace RTParser.Utils
 {
+#if false
     [Serializable]
     public abstract class OutputInfo : GraphLinkInfo
     {
         public OutputInfo(XmlNode template) : base(template)
         {   
         }
-#if false
+
         /// <summary>
         /// Determines whether the specified <see cref="T:System.Object"/> is equal to the current <see cref="T:System.Object"/>.
         /// </summary>
@@ -37,7 +38,7 @@ namespace RTParser.Utils
             //throw new NotImplementedException();
             return base.Equals(obj);
         }
-#endif
+
         /// <summary>
         /// Determines whether the specified <see cref="T:System.Object"/> is equal to the current <see cref="T:System.Object"/>.
         /// </summary>
@@ -76,4 +77,5 @@ namespace RTParser.Utils
             get { return srcNode; }
         }
     }
+#endif
 }
