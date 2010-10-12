@@ -154,6 +154,7 @@ namespace RTParser
                 CurrentResult.MaxCanEvalResult = value;
             }
         }
+        public TimeSpan _Durration = TimeSpan.Zero;
 
         public void ResetValues(bool b)
         {
