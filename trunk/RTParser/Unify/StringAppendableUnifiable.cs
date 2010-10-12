@@ -50,9 +50,18 @@ namespace RTParser
 
         public override string AsString()
         {
-            return str;
+            return base.AsString();
         }
 
+        public override string ToUpper()
+        {
+            return base.ToUpper();
+        }
+
+        public override int RunLowMemHooks()
+        {
+            return base.RunLowMemHooks();
+        }
         public override void Append(string p)
         {
             if (string.IsNullOrEmpty(p)) return;

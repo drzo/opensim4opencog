@@ -555,19 +555,23 @@ namespace RTParser.Utils
             XmlReader xtr = XmlDocumentLineInfo.CreateXmlTextReader(input0);
             string namefile = "" + path;
             XmlDocumentLineInfo doc = new XmlDocumentLineInfo("" + namefile, false);
-            while (!xtr.EOF)
+            while (!xtr.EOF && xtr.ReadState != ReadState.Closed)
             {
                 //  IXmlLineInfo text = (IXmlLineInfo)xtr;
                 try
                 {
                     doc.SetNodesReadOnly = true;
+                    doc.IsFile = true;
                     doc.Load(xtr);
                     if (doc.DocumentElement == null)
                     {
                         RProcessor.writeToLog("ERROR: No Document at " + namefile);
                         //        continue;
                     }
-                    total += this.loadAIMLNode(doc.DocumentElement, loadOpts, request);
+                    else
+                    {
+                        total += this.loadAIMLNode(doc.DocumentElement, loadOpts, request);
+                    }
                 }
                 catch (ChatSignal e)
                 {
@@ -1139,14 +1143,13 @@ namespace RTParser.Utils
                 }
             }
 
-            Func<Unifiable, bool, Unifiable> normalizerT = (inputText, isUserInput) => Normalize(inputText, isUserInput).Trim();
-            Unifiable categoryPath = generatePath(patternText, that, cond, topicName, false, normalizerT);
-            categoryPath = categoryPath.ToUpper();
-            PatternInfo patternInfo = loaderOpts.CtxGraph.FindPattern(patternNode, categoryPath);//PatternInfo.GetPattern(loaderOpts, patternNode, categoryPath);
+            Func<Unifiable, bool, Unifiable> normalizerT = (inputText, isUserInput) => Trim(Normalize(inputText, isUserInput));
+            Unifiable categoryPath = ToUpper(generatePath(patternText, that, cond, topicName, false, normalizerT));
+            PatternInfo patternInfo = loaderOpts.CtxGraph.FindPattern(patternNode, patternText);//PatternInfo.GetPattern(loaderOpts, patternNode, categoryPath);
             TopicInfo topicInfo = loaderOpts.CtxGraph.FindTopic(topicName);
             ThatInfo thatInfo = loaderOpts.CtxGraph.FindThat(thatNodeOrNull, that);
             var templateNodeFindable = StaticAIMLUtils.TheTemplateOverwrite;
-            string tni = "";
+            //string tni = "";
             if (templateNode != null)
             {
                 if (templateNode.HasChildNodes)
@@ -1155,7 +1158,7 @@ namespace RTParser.Utils
                         Trim(templateNode.InnerXml).Length > 0)
                     {
                         templateNodeFindable = templateNode;
-                        tni = templateNodeFindable.InnerXml;
+                       // tni = templateNodeFindable.InnerXml;
                     }
                 }
             }
@@ -1169,12 +1172,12 @@ namespace RTParser.Utils
                 {
                     try
                     {
-                        ResponseInfo responseInfo = null;
+                       /* ResponseInfo responseInfo = null;
 
                         if (tni != "")
                         {
                             responseInfo = loaderOpts.CtxGraph.FindResponse(templateNode, templateNode.InnerXml);
-                        }
+                        }*/
                         bool wouldBeRemoval;
 
                         return pathCtxGraph.addCategoryTag(categoryPath, patternInfo,
@@ -1416,7 +1419,8 @@ namespace RTParser.Utils
                 {
                     patternString = MatchKeyClean(patternString.Replace(thatString, ""));
                 }
-                XmlNode newLineInfoPattern = getNode("<pattern>" + patternString + "</pattern>", patternNode);
+                XmlNode newLineInfoPattern = getNodeAndSetSibling("<pattern>" + patternString + "</pattern>", false,
+                                                                 false, patternNode);
                 //TODO BEFORE COMMIT DMILES
                 LineInfoElementImpl.SetParentFromNode(newLineInfoPattern, patternNode);
                 LineInfoElementImpl.SetReadOnly(newLineInfoPattern);
@@ -1483,6 +1487,8 @@ namespace RTParser.Utils
             {
                 normalizedPattern = normalizedPattern.Replace("> ", ">");
                 normalizedPattern = normalizedPattern.Replace(" <", "<");
+                normalizedPattern = normalizedPattern.Replace(" >", ">");
+                normalizedPattern = normalizedPattern.Replace("< ", "<");
             }
             normalizedPattern = normalizedPattern.Replace("  ", " ");
             normalizedPattern = Trim(normalizedPattern);         
@@ -1550,7 +1556,7 @@ namespace RTParser.Utils
             bool thatContainedAnd = that.ToUpper().Contains(" AND ");
             if ((RProcessor.TrustAIML) & (!isUserInput || UseRawUserInput))
             {
-                normalizedPattern = pattern.Trim();
+                normalizedPattern = Trim(pattern);
                 // clip only one off
                 if (isUserInput) normalizedPattern = CleanPunct(normalizedPattern);
                 if (false)

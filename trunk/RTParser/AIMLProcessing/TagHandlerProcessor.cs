@@ -58,7 +58,7 @@ namespace RTParser
         internal AIMLTagHandler GetTagHandler00(User user, SubQuery query, Request request, Result result, XmlNode node, bool liText)
         {
             AIMLTagHandler tagHandler = getBespokeTags(user, query, request, result, node);
-            string nodeNameLower = node.LocalName.ToLower();
+            string nodeNameLower = ToLower(node.LocalName);
             RTPBot targetBot = query.TargetBot;
             if (Equals(null, tagHandler))
             {
@@ -541,7 +541,8 @@ namespace RTParser
             {
                 output = "<template>" + sGuard.PatternNode.OuterXml + " GUARDBOM " + output +
                                   "</template>";
-                templateNode = getNode(output, sOutput);
+                templateNode = getNodeAndSetSibling(output, false, false, sOutput);
+                
                 childOriginal = false;
             }
 
@@ -767,15 +768,29 @@ namespace RTParser
                                   AIMLTagHandler tagHandler)
         {
             RTPBot TargetBot = request.TargetBot;
-            if (node != null && node.NodeType == XmlNodeType.Text)
+            if (node == null)
             {
-                tagHandler = null;
-                string s = Trim(node.InnerText);
+                string whyError = "ERROR null NODE " + tagHandler;
+                writeToLog(whyError);
+                throw new ChatSignalOverBudget(request, whyError);
+            }
+            if (node.NodeType == XmlNodeType.Text)
+            {
+                if (tagHandler != null)
+                {
+                    tagHandler.QueryHasSuceeded = true;
+                }
+                string s = Trim(TextNodeValue(node));
                 if (!String.IsNullOrEmpty(s))
                 {
                     return ValueText(s);
                 }
                 //return s;
+            }
+            if (tagHandler == null)
+            {
+                string whyError = "ERROR null THND " + node;
+                writeToLog(whyError);
             }
             bool isTraced = request.IsTraced || result.IsTraced || !request.GraphsAcceptingUserInput ||
                  (query != null && query.IsTraced);
@@ -800,15 +815,6 @@ namespace RTParser
                 }
             }
 
-            XmlNode oldNode = node;
-            // copy the node!?!
-            if (protectChild)
-            {
-                copyParent = true;
-                LineInfoElementImpl newnode = CopyNode(node, copyParent);
-                newnode.ReadOnly = false;
-                node = newnode;
-            }
 
             // process the node
             if (ReferenceEquals(null, tagHandler))
@@ -819,7 +825,7 @@ namespace RTParser
                 }
                 if (node.NodeType == XmlNodeType.Text)
                 {
-                    string s = Trim(node.InnerText);
+                    string s = Trim(TextNodeValue(node));
                     if (String.IsNullOrEmpty(s))
                     {
                         return Unifiable.Empty;
@@ -835,6 +841,17 @@ namespace RTParser
                 }
                 TargetBot.EvalAiml(node, request, del ?? DEVNULL);
                 return node.InnerXml;
+            }
+
+            XmlNode oldNode = node;
+            bool wasReadonlyNode = oldNode.IsReadOnly;
+            // copy the node!?!
+            if (protectChild)
+            {
+                copyParent = true;
+                LineInfoElementImpl newnode = CopyNode(node, copyParent);
+                newnode.ReadOnly = false;
+                node = newnode;
             }
 
             if (overBudget)

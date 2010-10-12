@@ -754,7 +754,7 @@ namespace RTParser.Utils
         {
             // becasue we are gettign "star" content we must not be deterministic
             // ?? IsDeterministic = false;
-            XmlNode starNode = getNode("<star />", templateNode);
+            XmlNode starNode = getNodeAndSetSiblingNode("<star />", templateNode);
             LineInfoElement.unsetReadonly(starNode);
             star recursiveStar = new star(this.Proc, this.user, this.query, this.request, this.result, starNode);
 //          recursiveStar.SetParent(this);
@@ -776,7 +776,7 @@ namespace RTParser.Utils
                 return null;
             }
             if (!request.CanProcess(starContent)) return null;
-            XmlNode sraiNode = getNode(String.Format("<srai>{0}</srai>", starContent), templateNode);
+            XmlNode sraiNode = getNodeAndSetSiblingNode(String.Format("<srai>{0}</srai>", starContent), templateNode);
             LineInfoElement.unsetReadonly(sraiNode);
             srai sraiHandler = new srai(this.Proc, this.user, this.query, this.request, this.result, sraiNode);
             sraiHandler.KnowsCanProcess = true;
@@ -789,7 +789,7 @@ namespace RTParser.Utils
             if (Unifiable.IsEMPTY(vv))
             {
                 writeToLogWarn("CALLSRAI EMPTY: <- " + starContent);
-                sraiNode = getNode(String.Format("<srai>{0}</srai>", starContent), templateNode);
+                sraiNode = getNodeAndSetSiblingNode(String.Format("<srai>{0}</srai>", starContent), templateNode);
                 LineInfoElement.unsetReadonly(sraiNode);
                 sraiHandler = new srai(this.Proc, this.user, this.query, this.request, this.result, sraiNode);                
                 vv = sraiHandler.CompleteAimlProcess();// Transform();
@@ -1069,7 +1069,7 @@ namespace RTParser.Utils
                 }
                 if (childNode.NodeType == XmlNodeType.Text)
                 {
-                    string value = Trim(childNode.InnerText);
+                    string value = Trim(TextNodeValue(childNode));
 
                     if (IsValueSetter(value))
                     {
@@ -1658,7 +1658,7 @@ namespace RTParser.Utils
             Unifiable recursiveResult = RecurseReal(templateNode, false);
             if (!IsNull(recursiveResult)) return recursiveResult;
             string resultNodeInnerXML = templateNode.OuterXml;//.ProcessChange();
-            XmlNode resultNode = getNode("<template>" + resultNodeInnerXML + "</template>", templateNode);
+            XmlNode resultNode = getNodeAndSetSiblingNode("<template>" + resultNodeInnerXML + "</template>", templateNode);
             LineInfoElementImpl.unsetReadonly(resultNode);
             if (resultNode.HasChildNodes)
             {

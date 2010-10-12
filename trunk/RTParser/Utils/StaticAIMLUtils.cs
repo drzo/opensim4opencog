@@ -170,7 +170,7 @@ namespace RTParser.Utils
         public static XmlNode getTemplateNode(string sentence)
         {
             string makeTemplate = "<template>" + sentence + "</template>";
-            var vv = getNode(makeTemplate);
+            var vv = getDocNode(makeTemplate, false, false, StringOnlyDoc);
             return vv;
         }
 
@@ -430,8 +430,14 @@ namespace RTParser.Utils
         {
             if (xml1 == null) return xml1;
             xml1 = MakeMatchable(xml1);
-            xml1= xml1.Replace(" index=\"1\"", " ").Replace(" index=\"1,1\"", " ").Replace(" var=", " name=");
-            xml1 = CleanWhitepaces(xml1);
+            xml1 = Replace(xml1, new[]
+                                     {
+                                         new string[] {" index=\"1\"", " "},
+                                         new string[] {" index=\"1,1\"", " "},
+                                         new string[] {" var=", " name="},
+                                     });
+            //    ).Replace().Replace();
+            //xml1 = CleanWhitepaces(xml1);
             // t = t.Replace("<star index=\"1\"/>", " * ");
             // t = t.Replace("<star/>", " * ");
             //t = t.Replace("<sr/>", " * ");
@@ -891,7 +897,7 @@ namespace RTParser.Utils
             if (node.NodeType == XmlNodeType.Comment) return true;
             if (node.NodeType == XmlNodeType.Text)
             {
-                string innerText = node.InnerText;
+                string innerText = TextNodeValue(node);
                 if (Trim(innerText).Length == 0)
                 {
                     return true;
@@ -1032,5 +1038,12 @@ namespace RTParser.Utils
         {
             return left.Count == right.Count && right.TrueForAll(left.Contains);
         }
+
+        public static bool UnifyWithTextNode(XmlNode xmlNode, string srch)
+        {
+            string toUpper = ToUpper(" " + TextNodeValue(xmlNode, false) + " ");
+            return toUpper.Contains(ToUpper(" " + srch + " "));
+        }
+
     }
 }

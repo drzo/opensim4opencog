@@ -478,7 +478,7 @@ namespace RTParser.Database
 
         public Unifiable CleanupCyc(string text)
         {
-            text = text.Replace("  ", " ").Trim();
+            text = TextPatternUtils.ReTrimAndspace(text);
             string s = CleanupCyc0(text);
             if (s=="NIL")
             {
@@ -489,7 +489,7 @@ namespace RTParser.Database
         }
         private Unifiable CleanupCyc0(string text)
         {
-            text = text.Replace("  ", " ").Trim();
+            text = TextPatternUtils.ReTrimAndspace(text);
             int l_1 = text.Length - 1;
             if (l_1 < 2) return text;
             char c = text[l_1];
@@ -506,9 +506,9 @@ namespace RTParser.Database
             }
             if (text.StartsWith("#$") || text.StartsWith("(#$"))
             {
-                return Paraphrase0(text).AsString().Replace("#$", " ").Replace("  ", " ").Trim();
+                return TextPatternUtils.ReTrimAndspace(Paraphrase0(text).AsString().Replace("#$", " "));
             }
-            return text.Replace("#$", " ").Replace("  ", " ").Trim();
+            return TextPatternUtils.ReTrimAndspace(text.Replace("#$", " "));
         }
         public Unifiable Paraphrase(string text)
         {
@@ -525,7 +525,7 @@ namespace RTParser.Database
         }
         internal Unifiable Paraphrase0(string text)
         {
-            if (!CycEnabled) return text.Replace("#$", " ").Replace("  ", " ");
+            if (!CycEnabled) return TextPatternUtils.ReTrimAndspace(text.Replace("#$", " "));
             if (text.StartsWith("("))
             {   //todo is a list then?
                 text = String.Format("'{0}", text);

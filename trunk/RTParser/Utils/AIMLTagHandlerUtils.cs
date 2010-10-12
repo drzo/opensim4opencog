@@ -169,7 +169,7 @@ namespace RTParser.Utils
 
         internal static string GetNameOfDict(SubQuery query, string dictName, XmlNode templateNode, out ISettingsDictionary dict)
         {
-            string type = dictName;
+            string type = ToLower(dictName);
             //ISettingsDictionary udict = query.GetDictionary(type, templateNode, dict);
             while (templateNode != null)
             {

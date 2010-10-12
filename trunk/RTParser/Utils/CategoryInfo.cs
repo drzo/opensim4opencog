@@ -152,17 +152,19 @@ namespace RTParser.Utils
             //  TemplateInfos.Add(templateInfo);
         }
 
-        public static CategoryInfo GetCategoryInfo(PatternInfo info, XmlNode node, LoaderOptions filename, 
-            ResponseInfo template, GuardInfo guard, Node patternNode, object categoryInfo)
+        public static CategoryInfo GetCategoryInfo(PatternInfo info, XmlNode node, LoaderOptions filename,
+            ResponseInfo template, GuardInfo guard, Node patternNode, ThatInfo thatInfo, IEnumerable<ConversationCondition> conds)
         {
-            return filename.CtxGraph.FindCategoryInfo(info, node, filename, template, guard, patternNode, categoryInfo);
+            return filename.CtxGraph.FindCategoryInfo(info, node, filename, template, guard, patternNode, thatInfo, conds);
         }
 
-        public static CategoryInfo MakeCategoryInfo(PatternInfo info, XmlNode cateNode, LoaderOptions filename, 
-            ResponseInfo template, GuardInfo guard, Node patternNode, object categoryInfo)
+        public static CategoryInfo MakeCategoryInfo(PatternInfo info, XmlNode cateNode, LoaderOptions filename,
+            ResponseInfo template, GuardInfo guard, Node patternNode, ThatInfo thatInfo, IEnumerable<ConversationCondition> conds)
         {
             if (NoInfo) return null;
-            return new TemplateInfo(info, cateNode, filename, template, guard, patternNode, null);
+            var vv = new TemplateInfo(info, cateNode, filename, template, guard, patternNode, thatInfo);
+            vv.AddRules(conds);
+            return vv;
         }
 
         internal void Check()

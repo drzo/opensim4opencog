@@ -27,33 +27,6 @@ namespace RTParser.Utils
             return sentence.ToLower() != sentenceIn.ToLower();
         }
 
-
-        public static string Replace(string strTrim, string[][] pairs)
-        {
-            foreach (string[] pair in pairs)
-            {
-                strTrim = Replace(strTrim, pair[0], pair[1]);
-            }
-            return strTrim;
-        }
-
-        protected static string Replace(string source, string b, string a)
-        {
-            return OlderReference(source, source.Replace(b, a));
-        }
-
-        public static string ReTrimAndspace(string substitute)
-        {
-            if (substitute == null) return null;
-            var s = OlderReference(substitute, substitute.Replace("  ", " "));
-            if (s.Length == 1)
-            {
-                if (s != " ") return s;
-                return s;
-            }
-            return Trim(substitute);
-        }
-
         /// Checks that the provided sentence ends with a sentence splitter
         /// </summary>
         /// <param name="sentence">the sentence to check</param>
@@ -313,9 +286,16 @@ namespace RTParser.Utils
             if (xml2 == null) return xml2;
             if (!ContainsXml(xml2))
             {
-                xml2 = OlderReference(xml2, xml2.Replace(".", " ").Replace("?", " ").Replace("!", " "));
+                xml2 = Replace(xml2, new[]
+                                     {
+                                         new string[] {".", " "},
+                                         new string[] {",", " "},
+                                         new string[] {"?", " "},
+                                         new string[] {"!", " "},
+                                     });
+                return ReTrimAndspace(xml2);
             }
-            Unifiable xml22 = CleanWhitepaces(xml2);
+            string xml22 = CleanWhitepaces(xml2);
             return OlderReference(xml2, xml22.ToUpper());
         }
 
@@ -417,51 +397,10 @@ namespace RTParser.Utils
             }
             return (s.ToLower() != "nothing");
         }
-
-        public static string ToUpper(string param1)
-        {
-            var outp = param1.ToUpper();
-            return OlderReference(param1, outp);
-        }
-
-        public static Unifiable ToUpper(Unifiable param1)
+      /*  public static string ToUpper(Unifiable param1)
         {
             return param1.ToUpper();
-        }
+        }*/
 
-        public static string ToLower(string param1)
-        {
-            var outp = param1.ToLower();
-            return OlderReference(param1, outp);
-        }
-        public static string Trim(string param1)
-        {
-            var outp = param1.Trim();
-            return OlderReference(param1, outp);
-        }
-        public static string ConsolidSpaces(string param1)
-        {
-            var outp = param1.Replace("  ", " ");
-            return OlderReference(param1, outp);
-        }
-        public static string Trim(Unifiable param1)
-        {
-            var outp = param1.Trim();
-            return outp;
-        }
-
-        public static string OlderReference(string param1, string outp)
-        {
-            if (outp == param1)
-            {
-                return param1;
-            }
-            return outp;
-        }
-
-        public static string SafeFormat(string fmt, params object[] args)
-        {
-            return DLRConsole.SafeFormat(fmt, args);
-        }
     }
 }

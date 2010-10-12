@@ -1427,6 +1427,7 @@ namespace RTParser
 
         public ISettingsDictionary GetDictionary0(string named, ISettingsDictionary dictionary)
         {
+            named = ToLower(named);
             if (named == null)
             {
                 if (dictionary != null) return dictionary;

@@ -100,7 +100,7 @@ namespace RTParser.Utils
                         NeckCut = doCut;
                     }
                 }
-                string scoreString = StaticXMLUtils.GetAttribValue(template.PatternNode, "score", null);
+                string scoreString = StaticXMLUtils.GetAttribValue(TemplateXml, "score", null);
                 scoreString = scoreString ?? StaticXMLUtils.GetAttribValue(cateNode, "score", null);
                 Rating = double.Parse(scoreString ?? "1.0");
             }
@@ -324,7 +324,7 @@ namespace RTParser.Utils
             {
                 if (_templateKey == null)
                 {
-                    return MakeKey(Pattern.PatternNode, Guard != null ? Guard.PatternNode : null, That.PatternNode);
+                    return MakeKey(Pattern, FullPath != null ? Guard.FullPath : null, That.FullPath);
                     //  _templateKey = MakeKey(Output, Guard != null ? Guard.Output : null, That.PatternNode);
                 }
                 return _templateKey;
@@ -340,7 +340,7 @@ namespace RTParser.Utils
             throw new NotImplementedException();
         }
 
-        public void AddRules(List<ConversationCondition> rules)
+        public void AddRules(IEnumerable<ConversationCondition> rules)
         {
             foreach (var r in rules) base.AddPrecondition(r);
         }

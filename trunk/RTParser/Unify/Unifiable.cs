@@ -68,14 +68,6 @@ namespace RTParser
             {
                 string u = arg.ToString(FormatProvider);
                 bool wasIncomplete = IsIncomplete(u);
-                if (solid == typeof(Unifiable))
-                {
-                    if (wasIncomplete)
-                    {
-                        if (ReturnNullForUnknownUnifiables) return Unifiable.INCOMPLETE;
-                    }  
-                    return (Unifiable) u;
-                }
                 if (solid == typeof (string))
                 {
                     if (wasIncomplete)
@@ -101,6 +93,14 @@ namespace RTParser
                         if (ReturnNullForUnknownNonUnifiables) return Unifiable.INCOMPLETE;
                     }         
                     return Int32.Parse(u);
+                }
+                if (typeof(Unifiable).IsSubclassOf(solid))
+                {
+                    if (wasIncomplete)
+                    {
+                        if (ReturnNullForUnknownUnifiables) return Unifiable.INCOMPLETE;
+                    }
+                    return (Unifiable) u;
                 }
             }
             catch (Exception exception)
@@ -184,6 +184,32 @@ namespace RTParser
             return unif;
         }
 
+        public static implicit operator Unifiable(XmlNode value)
+        {
+            if (value == null) return null;
+            Unifiable unif = CreateFromXml(value);
+            return unif;
+        }
+        /*
+        public static implicit operator Unifiable(XmlNodeList childNodes)
+        {
+            StringAppendableUnifiableImpl stringAppendable = CreateAppendable();
+            try
+            {
+                List<Unifiable> u = new List<Unifiable>();
+                CreateUnifableForList(childNodes, stringAppendable, u);
+                StringUnifiable unifiable = new StringUnifiable("");
+                unifiable.str = stringAppendable;
+                unifiable.splittedCache = u.ToArray();
+                return unifiable;
+            }
+            catch (Exception e)
+            {
+                RTPBot.writeDebugLine("" + e.Message + ": " + " " + e.StackTrace + "\n" + stringAppendable);
+                throw;
+            }
+        }
+        */
         private static StringUnifiable MakeStringUnifiable(string value)
         {
             StringUnifiable su = MakeStringUnifiable(value, true);
@@ -291,6 +317,18 @@ namespace RTParser
                 i++;
             }
             return it;
+        }
+
+        public static Unifiable[] arrayOf(IEnumerable strs)
+        {
+            var it = new List<Unifiable>();
+            int i = 0;
+            foreach (var str in strs)
+            {
+               it.Add(Create(str));
+            }
+            if (it.Count == 0) return DontStore;
+            return it.ToArray();
         }
 
         public static string[] FromArrayOf(Unifiable[] tokens)
@@ -428,10 +466,7 @@ namespace RTParser
             if (p is XmlNode)
             {
                 var n = (XmlNode)p;
-                string inner = InnerXmlText(n);
-                writeToLog("MAking XML Node " + n.OuterXml + " -> " + inner);
-                StringUnifiable unifiable = MakeStringUnifiable(inner);
-                //unifiable.node = (XmlNode)p;
+                return CreateFromXml(n);
             }
             // TODO
             if (p == null)
@@ -439,6 +474,14 @@ namespace RTParser
                 return null;
             }
             return MakeStringUnifiable(p.ToString());
+        }
+
+        public static StringUnifiable CreateFromXml(XmlNode n)
+        {
+            string inner = ToXmlValue(n);
+            StringUnifiable stringUnifiable = MakeStringUnifiable(inner);
+            stringUnifiable.OfferNode(n, inner);
+            return stringUnifiable;
         }
 
         public override string ToString()
@@ -997,9 +1040,10 @@ namespace RTParser
             throw new NotImplementedException();
         }
 
-        public XmlNode PatternNode
+        public virtual XmlNode PatternNode
         {
             get { return AsNodeXML() as XmlNode; }
+            set { throw new NotImplementedException(); }
         }
 
         public virtual Unifiable FullPath

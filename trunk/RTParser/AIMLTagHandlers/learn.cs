@@ -84,12 +84,12 @@ namespace RTParser.AIMLTagHandlers
                 {
                     {
                         string ts = "<template>" + ToXmlValue(childNode) + "</template>";
-                        var tchiuld = getNode(ts, childNode);
+                        var tchiuld = getNodeAndSetSiblingNode(ts, childNode);
                         string ost = tchiuld.OuterXml;
                         LineInfoElementImpl.unsetReadonly(tchiuld);
                         Unifiable processChildNode = ProcessChildNode(tchiuld);
                         SaveResultOnChild(childNode, processChildNode);
-                        var readNode = getNode("<node>" + Unifiable.InnerXmlText(childNode) + "</node>", childNode);
+                        var readNode = getNodeAndSetSiblingNode("<node>" + Unifiable.InnerXmlText(childNode) + "</node>", childNode);
                         LineInfoElementImpl.unsetReadonly(readNode);
                         if (readNode.ChildNodes.Count == 1)
                         {
