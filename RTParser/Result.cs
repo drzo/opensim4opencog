@@ -439,7 +439,7 @@ namespace RTParser
             set
             {
                 EndedOn = value ? RTPBot.Now : DateTime.MaxValue;
-                _Durration = value ? Durration : TimeSpan.Zero;
+                var _Durration = value ? Durration : TimeSpan.Zero;
             }
         }
 

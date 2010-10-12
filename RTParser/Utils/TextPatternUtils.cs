@@ -27,10 +27,31 @@ namespace RTParser.Utils
             return sentence.ToLower() != sentenceIn.ToLower();
         }
 
+
+        public static string Replace(string strTrim, string[][] pairs)
+        {
+            foreach (string[] pair in pairs)
+            {
+                strTrim = Replace(strTrim, pair[0], pair[1]);
+            }
+            return strTrim;
+        }
+
+        protected static string Replace(string source, string b, string a)
+        {
+            return OlderReference(source, source.Replace(b, a));
+        }
+
         public static string ReTrimAndspace(string substitute)
         {
             if (substitute == null) return null;
-            return OlderReference(substitute, Trim(substitute.Replace("  ", " ")));
+            var s = OlderReference(substitute, substitute.Replace("  ", " "));
+            if (s.Length == 1)
+            {
+                if (s != " ") return s;
+                return s;
+            }
+            return Trim(substitute);
         }
 
         /// Checks that the provided sentence ends with a sentence splitter
@@ -254,7 +275,7 @@ namespace RTParser.Utils
             {
                 return true;
             }
-            string ss = MakeMatchable(Unifiable.ToStringLValue(unifiable));
+            string ss = Unifiable.ToStringLValue(unifiable);
             string s = " " + ss.Replace("_", " ").Replace("-", " ") + " ";
             bool b = s.Contains("unknown") || s.Contains("unrec") || s.Contains("unnam")
                      || s.Contains("unseen") || s.Contains("default")
@@ -290,15 +311,21 @@ namespace RTParser.Utils
         public static string MakeMatchable(string xml2)
         {
             if (xml2 == null) return xml2;
-            return CleanWhitepaces(xml2.ToLower().Replace(".", " ").Replace("?", " ").Replace("!", " "));
+            if (!ContainsXml(xml2))
+            {
+                xml2 = OlderReference(xml2, xml2.Replace(".", " ").Replace("?", " ").Replace("!", " "));
+            }
+            Unifiable xml22 = CleanWhitepaces(xml2);
+            return OlderReference(xml2, xml22.ToUpper());
         }
 
-        public static string MatchKeyClean(Unifiable unifiable)
+        public static Unifiable MatchKeyClean(Unifiable unifiable)
         {
-            return MatchKeyClean(unifiable.AsString());
+            throw new NotImplementedException();
+            return ToUpper(MatchKeyClean(unifiable.AsString()));
         }
 
-        public static string MatchKeyClean(string s)
+        public static Unifiable MatchKeyClean(string s)
         {
             s = CleanWhitepaces(s);
             if (s == "")
@@ -397,6 +424,11 @@ namespace RTParser.Utils
             return OlderReference(param1, outp);
         }
 
+        public static Unifiable ToUpper(Unifiable param1)
+        {
+            return param1.ToUpper();
+        }
+
         public static string ToLower(string param1)
         {
             var outp = param1.ToLower();
@@ -405,6 +437,11 @@ namespace RTParser.Utils
         public static string Trim(string param1)
         {
             var outp = param1.Trim();
+            return OlderReference(param1, outp);
+        }
+        public static string ConsolidSpaces(string param1)
+        {
+            var outp = param1.Replace("  ", " ");
             return OlderReference(param1, outp);
         }
         public static string Trim(Unifiable param1)

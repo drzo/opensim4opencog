@@ -149,7 +149,6 @@ namespace RTParser.Utils
         public static bool useInexactMatching;
         public static OutputDelegate userTraceRedir;
         public static bool TrackTemplates = true; // to save mememory
-        public TimeSpan _Durration = TimeSpan.Zero;
 
         public static int CompareXmlNodes(XmlNode node1, XmlNode node2)
         {
@@ -408,12 +407,7 @@ namespace RTParser.Utils
         public static bool ContainsAiml(Unifiable unifiable)
         {
             String s = unifiable.AsString();
-            if (s.Contains(">") && s.Contains("<")) return true;
-            if (s.Contains("&"))
-            {
-                return true;
-            }
-            return false;
+            return StaticXMLUtils.ContainsXml(s);
         }
 
         internal static bool AimlSame(XmlNode info, XmlNode Output)
@@ -435,15 +429,14 @@ namespace RTParser.Utils
         public static string MakeAimlMatchable(string xml1)
         {
             if (xml1 == null) return xml1;
-            string t =
-                CleanWhitepaces(
-                    MakeMatchable(xml1).Replace(" index=\"1\"", " ").Replace(" index=\"1,1\"", " ").Replace(" var=",
-                                                                                                            " name="));
+            xml1 = MakeMatchable(xml1);
+            xml1= xml1.Replace(" index=\"1\"", " ").Replace(" index=\"1,1\"", " ").Replace(" var=", " name=");
+            xml1 = CleanWhitepaces(xml1);
             // t = t.Replace("<star index=\"1\"/>", " * ");
             // t = t.Replace("<star/>", " * ");
             //t = t.Replace("<sr/>", " * ");
             // t = t.Replace("  ", " ").Trim();
-            return t;
+            return xml1;
         }
 
         public static int FromInsideLoaderContext(XmlNode currentNode, Request request, SubQuery query, Func<int> doit)
