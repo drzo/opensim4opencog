@@ -92,7 +92,7 @@ namespace MushDLR223.Utilities
         public XmlDocumentLineInfo()
             : this(null, true)
         {
-            InfoString = "DocNum " + docNum;
+            InfoString = InfoString ?? ("DocNum_" + docNum);
         }
 
         public XmlDocumentLineInfo(string toString, bool presrveWhite)
@@ -861,7 +861,7 @@ namespace MushDLR223.Utilities
 
         public override string ToString()
         {
-            return (InfoString ?? base.ToString()) + "docnum " + docNum;
+            return (InfoString ?? base.ToString()) + " (DocNum_" + docNum + ")";
         }
 
         public void Dispose()

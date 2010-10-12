@@ -558,7 +558,7 @@ namespace MushDLR223.Utilities
             return "<!-- " + LocationInfo(templateNode) + " -->";
         }
 
-        static IXmlLineInfo NoLineNumberInfoZeroZero = new LineNumberInfoZeroZero();
+        public static readonly IXmlLineInfo NoLineNumberInfoZeroZero = new LineNumberInfoZeroZero();
         public static IXmlLineInfo ToLineInfo(XmlNode templateNode)
         {
             var li = ToLineInfo(templateNode, true);
@@ -596,7 +596,16 @@ namespace MushDLR223.Utilities
 
         public static string LocationInfo(XmlNode templateNode)
         {
-            string lines = NodeInfo<string>(templateNode, LineNoInfo) ?? "(-1,-1)";
+            return FileNameOfXmlNode(templateNode) + ":" + GetLineNumberOfXmlNode(templateNode);
+        }
+
+        public static string GetLineNumberOfXmlNode(XmlNode templateNode)
+        {
+            return NodeInfo<string>(templateNode, LineNoInfo) ?? "(-1,-1)";
+        }
+
+        public static string FileNameOfXmlNode(XmlNode templateNode)
+        {
             string doc = NodeInfo(templateNode,
                                   (
                                       (strng, node) =>
@@ -612,10 +621,10 @@ namespace MushDLR223.Utilities
             {
                 doc = "nodoc";
             }
-            return doc + ":" + lines;
+            return doc;
         }
 
-        private static string LineNoInfo(string where, XmlNode templateNode)
+        public static string LineNoInfo(string where, XmlNode templateNode)
         {
             string s = null;
             LineInfoElementImpl li = templateNode as LineInfoElementImpl;
@@ -629,6 +638,13 @@ namespace MushDLR223.Utilities
                 if (Parent != null && Parent != li)
                 {
                     s = LineNoInfo(where + ".prnt", Parent);
+                }
+                if (s==null)
+                {
+                    if (li.LineNumber != 0 || li.LinePosition != 0)
+                    {
+                        return "(" + li.LineNumber + "," + li.LinePosition + ") ";
+                    }
                 }
             }
             return s;
@@ -1016,6 +1032,10 @@ namespace MushDLR223.Utilities
                         wasWrapped = true;
                     }
                 }
+                if (outerXML.Contains("<BOT "))
+                {
+                    
+                }
                 var node = ParseNode(doc, new StringReader(outerXML), outerXML);
                 return ResultNode(node, wasWrapped);
 
@@ -1112,10 +1132,15 @@ namespace MushDLR223.Utilities
 
         public static XmlNode ResultNode(XmlNode node, bool wasWrapped)
         {
-            if (wasWrapped && node.ChildNodes.Count == 1)
+            if (wasWrapped)
             {
-                var prevSib0 = node.PreviousSibling;
-                node = node.FirstChild;
+                if (node.ChildNodes.Count == 1)
+                {
+                    var prevSib0 = node.PreviousSibling;
+                    node = node.FirstChild;
+                    return node;
+                }
+                node = node.FirstChild.ParentNode;
                 return node;
             }
             var prevSib = node.PreviousSibling;
