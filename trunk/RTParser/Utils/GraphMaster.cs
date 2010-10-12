@@ -263,11 +263,11 @@ namespace RTParser.Utils
             if (NoIndexing) return null;
             string pats = unifiable;
             int skip = pats.IndexOf("TAG-THAT");
-            if (skip > 0) pats = pats.Substring(0, skip - 1);
+            if (skip > 0) pats = pats.Substring(0, skip);
             else
             {
                 skip = pats.IndexOf("TAG-FLAG");
-                if (skip > 0) pats = pats.Substring(0, skip - 1);                
+                if (skip > 0) pats = pats.Substring(0, skip);                
             }
             if (pats.StartsWith("TAG-INPUT ")) pats = pats.Substring(10);
             pats = MakeMatchKey(pats);

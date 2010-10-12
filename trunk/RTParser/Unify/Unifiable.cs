@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
@@ -33,6 +34,7 @@ namespace RTParser
             return total;
         }
 
+        public readonly static char[] BRKCHARS = " \r\n\t".ToCharArray();
         public static Unifiable[] DontStore = new Unifiable[0];
         public static string[] DontStoreString = new string[0];
 
@@ -278,13 +280,15 @@ namespace RTParser
             return String.Join(sep, values, startIndex, count);
         }
 
-        public static Unifiable[] arrayOf(string[] strs)
+        public static Unifiable[] arrayOf(ICollection strs)
         {
-            if (strs.Length == 0) return DontStore;
-            Unifiable[] it = new Unifiable[strs.Length];
-            for (int i = 0; i < it.Length; i++)
+            if (strs.Count == 0) return DontStore;
+            Unifiable[] it = new Unifiable[strs.Count];
+            int i = 0;
+            foreach (var str in strs)
             {
-                it[i] = Unifiable.Create(strs[i].Trim());
+                it[i] = Unifiable.Create(str);
+                i++;
             }
             return it;
         }
@@ -371,7 +375,7 @@ namespace RTParser
             if (more == null)
             {
                 writeToLog("ERROR: appending NULL");
-                return u + " -NULL-";
+                return u +" -NULL-";
             }
             string moreAsString = more.AsString();
             if (moreAsString.Length == 0) return u;
@@ -633,6 +637,11 @@ namespace RTParser
             return this;
         }
 
+        public virtual string ToLower()
+        {
+            return ToLower(AsString());
+        }
+
         //public abstract Unifiable[] Split(Unifiable[] unifiables, StringSplitOptions options);
         //public abstract Unifiable[] Split();
 
@@ -664,17 +673,17 @@ namespace RTParser
 
         public static string ToStringLValue(object unifiable)
         {
+            if (ReferenceEquals(null, unifiable))
+            {
+                return null;
+            }
             if (unifiable is string)
             {
-                return ((string) unifiable).ToLower();
+                return ToLower(((string)unifiable));
             }
             if (unifiable is Unifiable)
             {
                 return ToStringLValue(((Unifiable)unifiable).Raw);
-            }
-            if (ReferenceEquals(null, unifiable))
-            {
-                return null;
             }
             return ToStringLValue("" + unifiable);
         }
@@ -1063,6 +1072,20 @@ namespace RTParser
     public class SpecialStringUnifiable : StringUnifiable
     {
         private readonly string DebugName1;
+
+        public override string ToUpper()
+        {
+            return AsString();
+        }
+
+        public override int RunLowMemHooks()
+        {
+            return 0;
+        }
+        public override string AsString()
+        {
+            return str;
+        }
         public override string ToString()
         {
             return DebugName1 + "-" + Unifiable.DescribeUnifiable(this);
@@ -1071,6 +1094,11 @@ namespace RTParser
             : base(value)
         {
             DebugName1 = debugName;
+            upperCache = value;
+        }
+        public override int SpoilCache()
+        {
+            return 0;
         }
         public override object Raw
         {
@@ -1079,6 +1107,10 @@ namespace RTParser
         public override object SpecialName
         {
             get { return DebugName1; }
+        }
+        public override void Append(Unifiable p)
+        {
+            throw new InvalidCastException("Empty Unifiable");
         }
     }
 }

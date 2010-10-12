@@ -53,15 +53,6 @@ namespace RTParser
             return str;
         }
 
-        public override string ToUpper()
-        {
-            if (upperCache == null)
-            {
-                upperCache = ToUpper(str);
-            }
-            return upperCache;
-        }
-
         public override void Append(string p)
         {
             if (string.IsNullOrEmpty(p)) return;
@@ -92,12 +83,14 @@ namespace RTParser
         private bool NoSpaceAfter(string str)
         {
             if (str.EndsWith("\"")) return true;
+            if (str.EndsWith(">")) return true;
             if (str.EndsWith("\'")) return true;
             return false;
         }
         private bool NoSpaceBefore(string str)
         {
             if (str.StartsWith("\"")) return true;
+            if (str.StartsWith("<")) return true;
             if (str.StartsWith("\'")) return true;
             return false;
         }
