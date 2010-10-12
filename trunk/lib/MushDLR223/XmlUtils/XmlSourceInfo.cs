@@ -624,6 +624,7 @@ namespace MushDLR223.Utilities
                 if (ReadOnly)   
                 {
                     writeToLog("ERROR RemoveChild on ReadOnly ");
+                    ReadOnly = false;
                 }
                 XmlDocumentLineInfo._whenReadOnly = false;
                 return base.RemoveChild(newChild);
@@ -755,7 +756,24 @@ namespace MushDLR223.Utilities
         public static void chopParent(XmlNode chilz)
         {
             XmlNode p = chilz.ParentNode;
-            p.RemoveChild(chilz);
+            if (p == null) return;
+            LineInfoElementImpl lie = p as LineInfoElementImpl;
+            if (!p.IsReadOnly || lie == null)
+            {
+                p.RemoveChild(chilz);
+                return;
+            }
+            bool liewas = lie.ReadOnly;
+            try
+            {
+                lie.ReadOnly = false;
+                lie.RemoveChild(chilz);
+            }
+            finally
+            {
+                lie.ReadOnly = liewas;
+            }
+            
         }
 
         public static XmlNode SetReadOnly(XmlNode node)
