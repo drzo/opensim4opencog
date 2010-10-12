@@ -5,7 +5,22 @@ namespace MushDLR223.Utilities
 {
     public class XmlAttributeLineInfo : XmlAttribute, XmlSourceLineInfo
     {
-        private XmlDocumentLineInfo _docLineInfo;
+        public void SetOwnerDocument(XmlDocumentLineInfo newDoc)
+        {
+            var prev = OwnerDocument as XmlDocumentLineInfo;
+            if (prev != newDoc)
+            {
+                _docLineInfo = newDoc;
+            }
+        }
+
+        private XmlDocumentLineInfo _docLineInfo
+        {
+            get { return null; }
+            // ReSharper disable ValueParameterNotUsed
+            set { }
+            // ReSharper restore ValueParameterNotUsed
+        }
         public XmlSourceLineInfo lParent
         {
             get { return base.ParentNode as XmlSourceLineInfo; }
@@ -13,7 +28,7 @@ namespace MushDLR223.Utilities
         }
 
         public XmlAttributeLineInfo(string prefix, string name, string uri, XmlDocumentLineInfo doc)
-            : base(XmlDocumentLineInfo.Intern(prefix), XmlDocumentLineInfo.Intern(name), XmlDocumentLineInfo.Intern(uri), doc)
+            : base(XmlDocumentLineInfo.Intern(prefix), XmlDocumentLineInfo.Intern(name), XmlDocumentLineInfo.Intern(uri), doc.FileDoc)
         {
             docLineInfo = doc;
         }
@@ -26,7 +41,7 @@ namespace MushDLR223.Utilities
 
         public override XmlDocument OwnerDocument
         {
-            get { return _docLineInfo ?? base.OwnerDocument; }
+            get { return XmlDocumentLineInfo.DefaultDoc ?? _docLineInfo ?? base.OwnerDocument; }
         }
 
         public override bool IsReadOnly

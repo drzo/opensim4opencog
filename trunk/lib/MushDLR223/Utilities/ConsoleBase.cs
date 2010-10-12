@@ -438,7 +438,7 @@ namespace MushDLR223.Utilities
         public static ConsoleColor ForegroundColor
         {
             get { return SystemConsole.ForegroundColor; }
-            set { SystemConsole.ForegroundColor = value; }
+            set { try { SystemConsole.ForegroundColor = value; } catch { } }
         }
 
         public static int BufferHeight

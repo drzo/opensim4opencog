@@ -17,21 +17,40 @@ namespace MushDLR223.Utilities
     public interface XmlSourceInfo
     {
         bool ReadOnly { get; set; }
+        void SetOwnerDocument(XmlDocumentLineInfo elseway);
+        string ToString();
+        int GetHashCode();
     }
 
     public class LineInfoElementImpl : XmlElement, XmlSourceLineInfo
     {
-        private static bool _whenReadOnly = true;
-        private XmlDocumentLineInfo _docLineInfo
+        public override int GetHashCode()
         {
+            return base.GetHashCode();
+        }
+        public void SetOwnerDocument(XmlDocumentLineInfo newDoc)
+        {
+            var prev = OwnerDocument as XmlDocumentLineInfo;
+            if (prev != newDoc)
+            {
+                _docLineInfo = newDoc;
+            }
+            foreach (var v in ChildNodes)
+            {
+                XmlDocumentLineInfo.DropDocument(v as XmlSourceLineInfo, newDoc);
+            }
+        }
+
+        private XmlDocumentLineInfo _docLineInfo;
+      /*  {
             get { return null; }
             // ReSharper disable ValueParameterNotUsed
             set { }
             // ReSharper restore ValueParameterNotUsed
-        }
+        }*/
         public string outValueReplaced = null;
         public XmlSourceLineInfo lParent;
-        public bool protect = true;
+        public bool protect = false;
         public IXmlLineInfo LineNumData
         {
             get
@@ -42,8 +61,8 @@ namespace MushDLR223.Utilities
         }
         private IXmlLineInfo lineNumData;
 
-        internal LineInfoElementImpl(string prefix, string localname, string nsURI, XmlDocument doc)
-            : base(XmlDocumentLineInfo.Intern(prefix), XmlDocumentLineInfo.Intern(localname), XmlDocumentLineInfo.Intern(nsURI), doc)
+        internal LineInfoElementImpl(string prefix, string localname, string nsURI, XmlDocumentLineInfo doc)
+            : base(XmlDocumentLineInfo.Intern(prefix), XmlDocumentLineInfo.Intern(localname), XmlDocumentLineInfo.Intern(nsURI), doc.FileDoc)
         {
             var lvar = doc as XmlDocumentLineInfo;
             if (lvar != null)
@@ -62,7 +81,10 @@ namespace MushDLR223.Utilities
 
         public override XmlDocument OwnerDocument
         {
-            get { return _docLineInfo ?? base.OwnerDocument; }
+            get
+            {
+                return XmlDocumentLineInfo.DefaultDoc ?? _docLineInfo ?? base.OwnerDocument;
+            }
         }
 
         public int IndexInParent
@@ -263,18 +285,18 @@ namespace MushDLR223.Utilities
         {
             get
             {
-                if (OwnerDocument != null) if (!OwnerDocument.IsReadOnly) return false;
                 if (!base.IsReadOnly)
                 {
                     if (!protect) return false;
 
                     if (CloneOf == null)
                     {
-                        return _whenReadOnly;
+                        return protect || XmlDocumentLineInfo._whenReadOnly;
                     }
-                    return false;
+                    if (OwnerDocument != null) if (OwnerDocument.IsReadOnly) return XmlDocumentLineInfo._whenReadOnly;
+                    return protect;
                 }
-                return _whenReadOnly;
+                return XmlDocumentLineInfo._whenReadOnly;
             }
         }
 
@@ -514,10 +536,11 @@ namespace MushDLR223.Utilities
 
         public override XmlNode CloneNode(bool deep)
         {
-            XmlDocument od = OwnerDocument;
+            XmlNode highestClone = CloneOf ?? this;;
+            var od = highestClone.OwnerDocument as XmlDocumentLineInfo;
             //od.Normalize();
             LineInfoElementImpl newnode = new LineInfoElementImpl(Prefix, LocalName, NamespaceURI, od);
-            newnode.CloneOf = CloneOf ?? this;
+            newnode.CloneOf = highestClone;
 #if OUTXML_CACHE      
             newnode.outerXMLCache = outerXMLCache;
 #endif
@@ -592,7 +615,7 @@ namespace MushDLR223.Utilities
 
         public override XmlNode RemoveChild(XmlNode newChild)
         {
-            bool before = _whenReadOnly;
+            bool before = XmlDocumentLineInfo._whenReadOnly;
             try
             {
 #if OUTXML_CACHE
@@ -602,7 +625,7 @@ namespace MushDLR223.Utilities
                 {
                     writeToLog("ERROR RemoveChild on ReadOnly ");
                 }
-                _whenReadOnly = false;
+                XmlDocumentLineInfo._whenReadOnly = false;
                 return base.RemoveChild(newChild);
             }
             catch (Exception e)
@@ -612,7 +635,7 @@ namespace MushDLR223.Utilities
             }
             finally
             {
-                _whenReadOnly = before;
+                XmlDocumentLineInfo._whenReadOnly = before;
             }
         }
 
@@ -735,13 +758,14 @@ namespace MushDLR223.Utilities
             p.RemoveChild(chilz);
         }
 
-        public static void SetReadOnly(XmlNode node)
+        public static XmlNode SetReadOnly(XmlNode node)
         {
             XmlSourceLineInfo lie = node as XmlSourceLineInfo;
             if (node.IsReadOnly)
             {
                 lie.ReadOnly = true;
             }
+            return node;
         }
 
         public static void SetParentFromNode(XmlNode newLineInfoPattern, XmlNode patternNode)

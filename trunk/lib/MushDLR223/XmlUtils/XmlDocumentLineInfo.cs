@@ -2,13 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Xml;
 using System.Xml.Schema;
+using System.Xml.XPath;
 using MushDLR223.ScriptEngines;
 
 namespace MushDLR223.Utilities
 {
-    public class XmlDocumentLineInfo : XmlDocument
+    public class XmlDocumentLineInfo : XmlDocument, XmlSourceInfo, IDisposable
     {
         private static readonly ICollection<string> MustFormat = new HashSet<string>();
         private static readonly ICollection<string> MustNotFormat = new HashSet<string>();
@@ -23,12 +25,12 @@ namespace MushDLR223.Utilities
                 new[] {"js", "JavaScript"}
             };
 
-        private static readonly List<String> RemoveNamepaceURIs = new List<string>()
+        private static readonly List<string> RemoveNamepaceURIs = new List<string>()
                                                              {
                                                                  "http://alicebot.org/2001/AIML-1.0.1",
                                                              };
 
-        private static readonly List<String> RemovePrefixes = new List<string>()
+        private static readonly List<string> RemovePrefixes = new List<string>()
                                                                   {
                                                                       "html",
                                                                       "aiml",
@@ -67,6 +69,8 @@ namespace MushDLR223.Utilities
         public bool WasUsed { get; set; }
         readonly XmlAttributeCollection EmptyAttributeCollection;
         public bool SetNodesReadOnly = false;
+        public bool IsFile = false;
+        public int docNum = -1;
 
         protected bool InLoad
         {
@@ -88,6 +92,7 @@ namespace MushDLR223.Utilities
         public XmlDocumentLineInfo()
             : this(null, true)
         {
+            InfoString = "DocNum " + docNum;
         }
 
         public XmlDocumentLineInfo(string toString, bool presrveWhite)
@@ -100,6 +105,11 @@ namespace MushDLR223.Utilities
             Schemas = new XmlSchemaSet();
             Manager = new XmlNamespaceManager(NameTable);
             SetupNamespaces(Manager, Schemas);
+            docNum = numDocs++;
+            if ((docNum % 10000) == 0)
+            {
+                writeToLog("DocNum " + docNum);
+            }
             //SetupDoc();
         }
 
@@ -169,7 +179,7 @@ namespace MushDLR223.Utilities
         {
             Schemas.Add(prefix, url);
             Manager.AddNamespace(prefix, url);
-            string str = string.Format("xmlns:{0}=\"{1}\" s", prefix, url);
+            string str = String.Format("xmlns:{0}=\"{1}\" s", prefix, url);
             preXml += str;
             return str;
         }
@@ -403,7 +413,7 @@ namespace MushDLR223.Utilities
             return base.CreateEntityReference(name);
         }
 
-        public override System.Xml.XPath.XPathNavigator CreateNavigator()
+        public override XPathNavigator CreateNavigator()
         {
             CheckTracingCaller(1);
             return base.CreateNavigator();
@@ -422,7 +432,7 @@ namespace MushDLR223.Utilities
             return base.CreateComment(data);
         }
 
-        protected override System.Xml.XPath.XPathNavigator CreateNavigator(XmlNode node)
+        protected override XPathNavigator CreateNavigator(XmlNode node)
         {
             CheckTracingCaller(1);
             return base.CreateNavigator(node);
@@ -479,13 +489,13 @@ namespace MushDLR223.Utilities
 
             if (RemoveXmlns)
             {
-                if (!string.IsNullOrEmpty(prefix))
+                if (!String.IsNullOrEmpty(prefix))
                 {
                   //  writeToLog("RemoveXmlns: prefix=" + prefix + " in " + nodeName);
                 }
                 prefix = prefixIsNullable ? null : "";
 
-                if (!string.IsNullOrEmpty(namespaceURI))
+                if (!String.IsNullOrEmpty(namespaceURI))
                 {
                    // writeToLog("RemoveXmlns: namespaceURI=" + namespaceURI + " in " + nodeName);
                 }
@@ -543,8 +553,8 @@ namespace MushDLR223.Utilities
             }
             finally
             {
-                CurrentReader = prereader;
-                LineTracker = prev;
+                if (prereader != null) CurrentReader = prereader;
+                if (prev != null) LineTracker = prev;
             }
         }
 
@@ -631,7 +641,7 @@ namespace MushDLR223.Utilities
             {
                 if (n >= sff.Length) return false;
                 var sffn = sff[n];
-                System.Reflection.MethodBase method = sffn.GetMethod();
+                MethodBase method = sffn.GetMethod();
                 var c = method.DeclaringType.Namespace;
                 var t = GetType().Namespace;
                 if (c == t) return true;
@@ -838,9 +848,25 @@ namespace MushDLR223.Utilities
             }
         }
 
+        public bool ReadOnly
+        {
+            get { return SetNodesReadOnly; }
+            set { SetNodesReadOnly = value; }
+        }
+
+        public void SetOwnerDocument(XmlDocumentLineInfo elseway)
+        {
+            throw new NotImplementedException();
+        }
+
         public override string ToString()
         {
-            return InfoString ?? base.ToString();
+            return (InfoString ?? base.ToString()) + "docnum " + docNum;
+        }
+
+        public void Dispose()
+        {
+            DiscardReaders();
         }
 
         /// <summary>
@@ -980,7 +1006,7 @@ namespace MushDLR223.Utilities
         public static string Intern(string s)
         {
             if (s == null) return s;
-            return string.Intern(s);
+            return String.Intern(s);
         }
 
         public override XmlElement CreateElement(string prefix, string localName, string namespaceURI)
@@ -1098,18 +1124,76 @@ namespace MushDLR223.Utilities
             return new XmlTextReader(xcmd); //XmlReader.Create(, DefaultSettings);
         }
 
+        public static void DropDocument(XmlSourceInfo firstChild, XmlDocumentLineInfo replaceMent)
+        {
+            if (firstChild == null) return;
+            firstChild.SetOwnerDocument(replaceMent);
+        }
+
         public void DiscardReaders()
         {
-            if (LineTracker != null)
+            Dispose(CurrentReader);
+            Dispose(LineTracker);
+            LineTracker = null;
+            CurrentReader = null;
+
+            if (!IsFile)
             {
-                LineTracker = null;
+                var replaceMent = NonFileDoc;
+
+                DropDocument(FirstChild as XmlSourceInfo, replaceMent);
+                DropDocument(LastChild as XmlSourceInfo, replaceMent);
+                foreach (var v in ChildNodes)
+                {
+                    DropDocument(v as XmlSourceInfo, replaceMent);
+                }
             }
-            InfoString = Intern(InfoString);           
+            else
+            {
+                InfoString = Intern(InfoString);
+            }
+        }
+
+        private void Dispose(object currentReader)
+        {
+            try
+            {
+                bool didIt
+                    = (
+                          ifTypeThenCall<XmlReader>(currentReader, (r) => r.Close(), true) ||
+                          ifTypeThenCall<StreamReader>(currentReader, (r) => r.Close(), true) ||
+                          ifTypeThenCall<TextReader>(currentReader, (r) => r.Close(), true) ||
+                          ifTypeThenCall<Stream>(currentReader, (r) => r.Close(), true));
+                ifTypeThenCall<IDisposable>(currentReader, (r) => r.Dispose(), true);
+            }
+            catch (Exception exception)
+            {
+                writeToLog("Disposing " + exception);
+            }
+        }
+
+        public bool ifTypeThenCall<T>(object with, Action<T> act, bool ignoreError)
+        {
+            try
+            {
+                if (with is T)
+                {
+                    var obj = (T)with;
+                    act(obj);
+                    return false;
+                }
+                return true;
+            }
+            catch (Exception)
+            {
+                if (!ignoreError) throw;
+                return true;
+            }
         }
 
         public void SetText(string outerXml)
         {
-            InfoString =  outerXml;
+            if (!IsFile) InfoString =  outerXml;
         }
 
         public XmlDocumentLineInfo GetReusableDoc()
@@ -1119,9 +1203,42 @@ namespace MushDLR223.Utilities
             {
                 var ndoc = new XmlDocumentLineInfo();
                 ndoc.InfoString = doc.InfoString;
+                ndoc.IsFile = doc.IsFile;
+                ndoc.SetNodesReadOnly = doc.SetNodesReadOnly;
+                ndoc.IsReusableDoc = false;
+                ndoc.WasUsed = false;               
                 doc = ndoc;
+                DiscardReaders();
             }
             return doc;
+        }
+
+        public static bool _whenReadOnly = true;
+        public static XmlDocumentLineInfo NonFileDoc1 = new XmlDocumentLineInfo("nonfiledoc", true);
+        public static XmlDocumentLineInfo DefaultDoc = null;
+        private static int numDocs = 0;
+
+        public XmlDocumentLineInfo FileDoc
+        {
+            get
+            {
+                if (!IsFile)
+                {
+                    return this;
+                }
+                return this;
+            }
+        }
+        public XmlDocumentLineInfo NonFileDoc
+        {
+            get
+            {
+                if (!IsFile)
+                {
+                    return NonFileDoc1;
+                }
+                return this;
+            }
         }
     }
 }
