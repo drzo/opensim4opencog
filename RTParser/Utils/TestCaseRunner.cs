@@ -119,8 +119,9 @@ namespace RTParser.Utils
             {
                 outputdelegate("ERROR cannot find 'Input' in '" + src.OuterXml + "'");
                 m = false;
-                return getNode(
-                    "<template type=\"error\">ERROR cannot find 'Input' in '" + src.OuterXml + "'</template>", src);
+                return getNodeAndSetSibling(
+                    "<template type=\"error\">ERROR cannot find 'Input' in '" + src.OuterXml + "'</template>", true,
+                    false, src);
             }
             string userID = FindNodeOrAttrib(src, "UserId,UserName", () => user.UserID);
 
@@ -206,7 +207,7 @@ namespace RTParser.Utils
         {
             attrs = attrs.Replace("\"", "#").Replace("'", "\"");
             msg = msg.Replace("\"", "#").Replace("'", "\"");
-            return getNode("<template " + attrs + " >" + attrs + " " + msg + "</template>", src);
+            return getNodeAndSetSiblingNode("<template " + attrs + " >" + attrs + " " + msg + "</template>", src);
         }
 
         private bool Matches(string resp, string answer, string s)

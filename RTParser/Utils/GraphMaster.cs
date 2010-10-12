@@ -23,7 +23,7 @@ using ResponseInfo = RTParser.Unifiable;
 
 namespace RTParser.Utils
 {
-    public class GraphMaster // : QuerySettings
+    public class GraphMaster: ParentChild
     {
         private static string _STAR_PATH;
 
@@ -102,8 +102,8 @@ namespace RTParser.Utils
         public bool CannotHaveParallel = false;    
 
         private int parallel0;
-        private Node PostParallelRootNode = new Node(null);
-        private Node RootNode = new Node(null);
+        private Node PostParallelRootNode;
+        private Node RootNode;
         [UserScopedSetting]
         public bool SilentTagsInPutParallel { get; set; }
         public int Size;
@@ -149,8 +149,8 @@ namespace RTParser.Utils
 
             // most graphs try to recuse on themselves until otehrwise stated (like in make-parallel)
             Srai = gn;
-            RootNode.Graph = this;
-            PostParallelRootNode.Graph = this;
+            RootNode = new Node(this);
+            PostParallelRootNode = new Node(this);
             if (!TrackTemplates)
             {
                 UnusedTemplates = null;
@@ -396,7 +396,9 @@ namespace RTParser.Utils
                 if (!PatternNodes.TryGetValue(pats, out pi))
                 {
                 if (pi != null) return pi;
-                pi = PatternNodes[pats] = StaticXMLUtils.getNode(String.Format("<{0}>{1}</{0}>", nodeName, topicName));
+                    pi =
+                        PatternNodes[pats] =
+                        StaticXMLUtils.getNode(String.Format("<{0}>{1}</{0}>", nodeName, topicName));
                 }
                 return pi;
             }
@@ -430,10 +432,10 @@ namespace RTParser.Utils
 #endif
         }
 
-        public CategoryInfo FindCategoryInfo(PatternInfo info, XmlNode node, LoaderOptions filename, 
-            ResponseInfo template, GuardInfo guard, Node patternNode, object categoryInfo)
+        public CategoryInfo FindCategoryInfo(PatternInfo info, XmlNode node, LoaderOptions filename,
+            ResponseInfo template, GuardInfo guard, Node patternNode, ThatInfo thatInfo, IEnumerable<ConversationCondition> conds)
         {
-            return TemplateInfo.MakeCategoryInfo(info, node, filename, template, guard, patternNode, categoryInfo);
+            return TemplateInfo.MakeCategoryInfo(info, node, filename, template, guard, patternNode, thatInfo, conds);
         }
 
         private GraphMaster makeParallel()
@@ -733,7 +735,6 @@ namespace RTParser.Utils
                 Node pattern = rootNode.evaluate(Unifiable.ToVMString(upath), query, request, matchstate, wildcard);
                 if (pattern != null && pattern.IsSatisfied(query))
                 {
-                    var tmplateInfos = pattern.TemplateInfoCopy;
                     if (toplevel.ContainsPattern(pattern))
                     {
                         toplevelBubble = pattern;
@@ -750,6 +751,7 @@ namespace RTParser.Utils
                             //pattern.disabled = true;
                             break;
                         }
+                        var tmplateInfos = pattern.TemplateInfoCopy;
                         toplevelBubble = pattern;
                         pattern.disabled = true;
                         if (tmplateInfos != null && tmplateInfos.Count != 0)
@@ -1455,5 +1457,7 @@ namespace RTParser.Utils
         {
             return guardnode.InnerXml;
         }
+
+        public ParentChild ParentObject { get; set; }
     }
 }

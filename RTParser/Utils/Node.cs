@@ -23,7 +23,7 @@ namespace RTParser.Utils
     /// Encapsulates a node in the graphmaster tree structure
     /// </summary>
     [Serializable]
-    public class Node : StaticAIMLUtils, IComparable<Node>
+    public class Node : StaticAIMLUtils, IComparable<Node>, ParentChild
     {
         const bool needsKeySanityCheck = false;
         public static bool UseZeroArgs;
@@ -46,7 +46,7 @@ namespace RTParser.Utils
         /// </summary>
         internal UList TemplateInfosDisabled; //Unifiable.Empty;
 
-        private readonly Node Parent;
+        private readonly ParentChild _parentObject;
         public bool disabled;
 
         /// <summary>
@@ -54,25 +54,25 @@ namespace RTParser.Utils
         /// </summary>
         private Unifiable word = Unifiable.Empty;
 
-        private GraphMaster _graph;
+        //private GraphMaster _graph;
 
         public GraphMaster Graph
         {
             get
             {
-                if (_graph != null) return _graph;
-                return Parent.Graph;
+                var Parent0 = _parentObject;
+                while (Parent0 != null)
+                {
+                    if (Parent0 is GraphMaster) return (GraphMaster) Parent0;
+                    Parent0 = Parent0.ParentObject;
+                }
+                return null;
             }
-            set { _graph = value; }
         }
 
-        public Node(Node P)
-        {
-            if (P != null)
+        public Node(ParentChild P)
             {
-                Parent = P;
-                _graph = P.Graph;
-            }
+            _parentObject = P;
             //SyncObject = this;// P ?? this;
         }
 
@@ -157,15 +157,17 @@ namespace RTParser.Utils
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             if (!Equals(other.word, word)) return false;
-            if (!Equals(other._graph, _graph)) return false;
-            return Equals(other.Parent, Parent);
+            if (!Equals(other.Graph, Graph)) return false;
+            if (!Equals(other.ParentObject, ParentObject)) return false;
+            writeToLog("ERROR optimally this should be imposible");
+            return true;
         }
 
         public override int GetHashCode()
         {
             unchecked
             {
-                return ((Parent != null ? Parent.GetHashCode() : 0) * 397) ^ (word != null ? word.GetHashCode() : 0);
+                return ((ParentObject != null ? ParentObject.GetHashCode() : 0) * 397) ^ (word != null ? word.GetHashCode() : 0);
             }
         }
         public override bool Equals(object obj)
@@ -193,8 +195,13 @@ namespace RTParser.Utils
 
         static int ComparePaths(Node thiz, Node that, IList<Unifiable> thispath, IList<Unifiable> thatpath)
         {
+#if USE_COMPARE_CACHE
             double a1 = thiz._variance;
             double b1 = that._variance;
+#else
+            double a1 = 0;
+            double b1 = 0;
+#endif       
             int diff0 = a1.CompareTo(b1);
             if (diff0 != 0)
             {
@@ -229,13 +236,21 @@ namespace RTParser.Utils
 
         #endregion
 
+#if USE_COMPARE_CACHE
         public IList<Unifiable> _ToPath;
         public double _variance;
+#endif
         public IList<Unifiable> ToPath()
         {
+#if USE_COMPARE_CACHE
+#else
+            IList<Unifiable> _ToPath = null;
+            double _variance = double.NaN;
+#endif           
             _ToPath = null;
             if (_ToPath != null) return _ToPath;
             _variance = word.Strictness();
+            
             var p = Parent;
             if (p == null)
             {
@@ -262,6 +277,10 @@ namespace RTParser.Utils
             get { return this; }
         }
 
+        public Node Parent
+        {
+            get { return _parentObject as Node; }
+        }
         #endregion
 
         #region Methods
@@ -382,10 +401,7 @@ namespace RTParser.Utils
                 }
 
 
-                ResponseInfo responseInfo = templateNode.InnerXml;// new ResponseInfo(templateNode, templateNode.InnerXml);
-
-                var t = addTerminal_0_Lock(templateNode, responseInfo, guard, thatInfo, cateNode, master, patternInfo,
-                                           additionalRules);
+                var t = addTerminal_0_Lock(templateNode, cateNode, guard, thatInfo, master, patternInfo, additionalRules);
                 if (t == null)
                 {
                     return null;
@@ -419,9 +435,14 @@ namespace RTParser.Utils
                 return null;
             }
         }
+        /*
+         
+         XmlNode templateNode, XmlNode cateNode, GuardInfo guard, ThatInfo thatInfo,
+                                        LoaderOptions master, PatternInfo patternInfo, List<ConversationCondition> additionalRules,
 
-        private TemplateInfo addTerminal_0_Lock(XmlNode templateNode, ResponseInfo responseInfo, GuardInfo guard,
-                                                ThatInfo thatInfo,XmlNode cateNode,
+         */
+        private TemplateInfo addTerminal_0_Lock(XmlNode templateNode, XmlNode cateNode, GuardInfo guard,
+                                                ThatInfo thatInfo,
                                                 LoaderOptions loaderOptions, PatternInfo patternInfo,
                                                 List<ConversationCondition> additionalRules)
         {
@@ -496,9 +517,10 @@ namespace RTParser.Utils
             }
 
             // last in first out addition
+            ResponseInfo responseInfo = templateNode;
             TemplateInfo newTemplateInfo = (TemplateInfo) TemplateInfo.GetCategoryInfo(patternInfo, cateNode, loaderOptions,
-                                                                                       responseInfo, guard, this, null);
-
+                                                                                       responseInfo, guard, this, thatInfo, additionalRules);
+            /*
             Unifiable categoryPath = GetPath();
             //categoryInfo.SetCategoryTag(categoryPath, patternInfo, categoryInfo,
             //                          outerNode, templateNode, guard, thatInfo);
@@ -508,6 +530,7 @@ namespace RTParser.Utils
             {
                 newTemplateInfo.AddPrecondition(node);
             }
+             **/
             // return categoryInfo;
 
 
@@ -850,6 +873,7 @@ namespace RTParser.Utils
 
         private Node GetNextNode()
         {
+            var Parent = _parentObject as Node;
             if (Parent == null) return null;
             bool useNext = false;
             lock (SyncObject)
@@ -1355,11 +1379,15 @@ namespace RTParser.Utils
             return true;
         }
 
+        public ParentChild ParentObject
+        {
+            get { return _parentObject; }
+        }
    }
 
     public interface ParentChild
     {
-        ParentChild Parent { get; }
+        ParentChild ParentObject { get; }
     }
 
     public class NodeAdder

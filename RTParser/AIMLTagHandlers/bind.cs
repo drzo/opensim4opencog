@@ -31,10 +31,11 @@ namespace RTParser.AIMLTagHandlers
 
         public override float CanUnify(Unifiable with)
         {
-            if (templateNode.NodeType==XmlNodeType.Text)
+            string srch = with.ToValue(query);
+            if (templateNode.NodeType == XmlNodeType.Text)
             {
-                string srch = ToUpper(" " + with.ToValue(query) + " ");
-                return (ToUpper(" " + templateNode.InnerText + " ").Contains(srch)) ? AND_TRUE : AND_FALSE;
+                bool unifyWithTextNode = UnifyWithTextNode(templateNode, srch);
+                return unifyWithTextNode ? AND_TRUE : AND_FALSE;
             }
             if (templateNode.HasChildNodes)
             {
@@ -45,8 +46,7 @@ namespace RTParser.AIMLTagHandlers
                     {
                         if (childNode.NodeType == XmlNodeType.Text)
                         {
-                            string srch = ToUpper(" " + with.ToValue(query) + " ");
-                            return (ToUpper(" " + templateNode.InnerText + " ").Contains(srch)) ? AND_TRUE : AND_FALSE;
+                            return UnifyWithTextNode(childNode, srch) ? AND_TRUE : AND_FALSE;
                         }
                         AIMLTagHandler part = GetChildTagHandler(childNode);
                         if (part.CallCanUnify(with) > 0) return AND_FALSE;

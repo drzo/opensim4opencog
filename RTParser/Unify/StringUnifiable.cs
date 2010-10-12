@@ -47,6 +47,7 @@ namespace RTParser
 
         public override int RunLowMemHooks()
         {
+            if (nodeOuter != null) return 0;
             int total = 0;
             if (splittedCache != null)
             {
@@ -88,7 +89,8 @@ namespace RTParser
         public Unifiable[] splittedCache = null;
         protected Unifiable restCache = null;
         protected string upperCache;
-        private object valueCache;
+        public object valueCache;
+        public XmlNode nodeOuter;
         private double _strictness = -11;
 
         public override double Strictness()
@@ -586,10 +588,13 @@ namespace RTParser
 
         public override object AsNodeXML()
         {
-            return str.Replace(" /", "/").Replace("/ ", "/").
+            return GetNode();
+            /*
+            if (upperCache != null) return upperCache;
+            return ToLower(str.
+                               Replace("/ ", "/").
                 Replace(" >", ">").Replace("> ", ">").
-                Replace(" <", "<").Replace("< ", "<").
-                ToLower();
+                               Replace(" <", "<").Replace("< ", "<"));*/
         }
 
         public override string ToString()
@@ -661,17 +666,17 @@ namespace RTParser
             return splittedCache;
         }
 
-        public static Unifiable[] Splitter(string str)
+        public Unifiable[] Splitter(string str0)
         {
-            str = TextPatternUtils.Trim(str);
+            str0 = TextPatternUtils.Trim(str0);
             StringUnifiable stringAppendable = null;// MakeStringUnifiable(str, true);
-            string strTrim = str;// stringAppendable.Trim();
-            if (!ContainsXml(strTrim))
+            string strTrim = str0;// stringAppendable.Trim();
+            if (!strTrim.Contains(">") || !strTrim.Contains("<"))
                 return arrayOf(strTrim.Split(BRKCHARS, StringSplitOptions.RemoveEmptyEntries));
 
             try
             {
-                strTrim = TextPatternUtils.Replace(strTrim,
+                if (false)strTrim = TextPatternUtils.Replace(strTrim,
                                                    new[]
                                                        {
                                                            new[] {"&gt;", "<gt />"},
@@ -679,7 +684,7 @@ namespace RTParser
                                                            new[] {"&qt;", "<qt />"},
                                                            new[] {"&amp;", "<amp />"},
                                                        });
-                var firstChild = getDocNode("<li>" + strTrim + "</li>", true, StringOnlyDoc);
+                var firstChild = getDocNode("<li>" + strTrim + "</li>", false, false, StringOnlyDoc);
             List<Unifiable> u = new List<Unifiable>();
                 CreateUnifableForList(firstChild.ChildNodes, null, u);
                 if (u.Count == 0) return DontStore;
@@ -687,8 +692,8 @@ namespace RTParser
             }
             catch (Exception e)
             {
-                RTPBot.writeDebugLine("" + e.Message + ": " + " '" + str + "'");
-                StringUnifiable su = MakeStringUnifiable(str, false);
+                RTPBot.writeDebugLine("" + e.Message + ": " + " '" + str0 + "'");
+                StringUnifiable su = MakeStringUnifiable(str0, false);
                 var suu = new Unifiable[] { su };
                 su.splittedCache = suu;
                 return suu;
@@ -696,7 +701,7 @@ namespace RTParser
             }
         }
 
-        public static void CreateUnifableForList(IEnumerable childNodes, StringAppendableUnifiableImpl stringAppendable, List<Unifiable> u)
+        public void CreateUnifableForList(IEnumerable childNodes, StringAppendableUnifiableImpl stringAppendable, List<Unifiable> u)
         {
             try
             {
@@ -715,12 +720,18 @@ namespace RTParser
                 {
                     XmlNode node = onode as XmlNode;
                     if (node == null)
-                {
+                    {
                         u.Add(Create(onode));
                     }
                     else if (node.NodeType == XmlNodeType.Text)
                     {
-                        string splitMe = Trim(node.Value);
+                        string splitMe = Trim(TextNodeValue(node, true));
+                        if (splitMe==str)
+                        {
+                            writeToLog("ERROR: this inside of itself '" + str + "'");
+                            u.Add(this);
+                            continue;
+                        }
                         u.AddRange(Splitter(splitMe));
                     }
                     else if (node.NodeType == XmlNodeType.Element)
@@ -738,7 +749,7 @@ namespace RTParser
                         if (node.NodeType == XmlNodeType.Comment) continue;
                         if (node.NodeType == XmlNodeType.Whitespace) continue;
                     }
-                    }
+                }
                 if (stringAppendable != null) foreach (var unifiable in u)
                 {
                     stringAppendable.Append(unifiable);
@@ -750,14 +761,6 @@ namespace RTParser
                 throw;
             }
             }
-
-        private static StringUnifiable CreateFromXml(XmlNode node)
-        {
-            var s = node.OuterXml;
-            var ss = MakeStringUnifiable(s, true);
-            ss.upperCache = s;
-            return ss;
-        }
 
         public override bool IsTag(string that)
         {
@@ -1190,6 +1193,7 @@ namespace RTParser
         }
         public virtual XmlNode GetNode()
         {
+            if (nodeOuter != null) return nodeOuter;
             if (valueCache is XmlNode) return (XmlNode)valueCache;
             try
             {
@@ -1197,10 +1201,22 @@ namespace RTParser
                 {
                     return GetNode2();
                 }
-                var node = AIMLTagHandler.getNode(str);
-                LineInfoElementImpl.unsetReadonly(node);
-                return node;
-
+                nodeOuter = AIMLTagHandler.getDocNode("<li>" + str + "</li>", false, false, null);
+                if (nodeOuter.ChildNodes.Count == 1)
+                {
+                    nodeOuter = nodeOuter.FirstChild;
+                    LineInfoElementImpl.chopParent(nodeOuter);
+                    splittedCache = new Unifiable[] {this};
+                    return nodeOuter;
+                }
+                splittedCache = arrayOf(nodeOuter.ChildNodes);
+                var OwnerDocument = nodeOuter.OwnerDocument;
+                //LineInfoElementImpl.unsetReadonly(nodeOuter);
+                if (OwnerDocument != null)
+                {
+                    nodeOuter = OwnerDocument.CreateTextNode(str);
+                }
+                return nodeOuter;
             }
             catch (Exception e)
             {
@@ -1210,7 +1226,8 @@ namespace RTParser
 
         private XmlNode GetNode2()
         {
-            if (valueCache is XmlNode) return (XmlNode) valueCache;
+            if (nodeOuter != null) return nodeOuter;
+            if (valueCache is XmlNode) return (XmlNode)valueCache;
             try
             {
                 var node = StaticAIMLUtils.getTemplateNode(str);
@@ -1287,6 +1304,20 @@ namespace RTParser
                 return true;
             }
             return false;
+        }
+
+        public void OfferNode(XmlNode xmlNode, string inner)
+        {
+            if (nodeOuter == null || splittedCache == null)
+            {
+                List<Unifiable> u = new List<Unifiable>();
+                str = inner ?? this.str;
+                nodeOuter = nodeOuter ?? xmlNode;
+                StringAppendableUnifiableImpl stringAppendable = null; // CreateAppendable();
+                CreateUnifableForList(xmlNode.ChildNodes, stringAppendable, u);
+                splittedCache = splittedCache ?? u.ToArray();
+                //valueCache = stringAppendable.AsString();
+            }
         }
     }
 }

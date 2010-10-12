@@ -104,7 +104,7 @@ namespace RTParser.Utils
                 XmlNode node = (XmlNode) e;
                 if (node.NodeType == XmlNodeType.Text)
                 {
-                    left += " " + RegExFrom(node.InnerText, matchVars);
+                    left += " " + RegExFrom(TextNodeValue(node), matchVars);
                 }
                 else
                 {
