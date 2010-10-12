@@ -401,6 +401,10 @@ namespace RTParser.AIMLTagHandlers
                             string sss = thisresult.ToString();
                             if (showDebug)
                             {
+                                if (subRequestrawInput.Contains("STDCATCHALL STDCATCHALL"))
+                                {
+                                    
+                                }
                                 writeToLog("{0} SUCCESS RETURN {1}  {2} '{3}'", prefix, subRequestrawInput,
                                            subResult.Score, subResultOutputTrace);
                                 // ReSharper disable ConditionIsAlwaysTrueOrFalse

@@ -23,7 +23,7 @@ using ResponseInfo = RTParser.Unifiable;
 
 namespace RTParser.Utils
 {
-    public class GraphMaster: ParentChild
+    public class GraphMaster : ParentChild
     {
         private static string _STAR_PATH;
 
@@ -99,7 +99,7 @@ namespace RTParser.Utils
         public bool DoParallels = true;
         private bool FullDepth = true;
         public bool IsBusy;
-        public bool CannotHaveParallel = false;    
+        public bool CannotHaveParallel = false;
 
         private int parallel0;
         private Node PostParallelRootNode;
@@ -117,11 +117,11 @@ namespace RTParser.Utils
         /// Search and try to elimentate duplicate Templates
         /// slows it down but maybe important to do
         /// </summary>
-        public bool RemoveDupicateTemplatesFromNodes = true; 
+        public bool RemoveDupicateTemplatesFromNodes = true;
         /// <summary>
         /// This is nomal AIML default (false = we we might rotate templates fopr a more interesting robot (false = cogbot normally))
         /// </summary>
-        public bool RemovePreviousTemplatesFromNodes = false;  
+        public bool RemovePreviousTemplatesFromNodes = false;
         /// <summary>
         /// True = Normal Cogbot defualt (false would mean AIML templates vetted to make the robot respond)
         /// </summary>        
@@ -172,7 +172,7 @@ namespace RTParser.Utils
             }
             else
             {
-               // CanMaxOutStage1 = false;
+                // CanMaxOutStage1 = false;
                 if (gn.Contains("parallel") || gn.Contains("parent"))
                 {
                     throw new Exception("Parallel should use other constructor! " + gn);
@@ -267,7 +267,7 @@ namespace RTParser.Utils
             else
             {
                 skip = pats.IndexOf("TAG-FLAG");
-                if (skip > 0) pats = pats.Substring(0, skip);                
+                if (skip > 0) pats = pats.Substring(0, skip);
             }
             if (pats.StartsWith("TAG-INPUT ")) pats = pats.Substring(10);
             pats = MakeMatchKey(pats);
@@ -325,7 +325,7 @@ namespace RTParser.Utils
             return responseText;
         }
 
-        public ThatInfo FindThat(XmlNode thatNode,  Unifiable topicName)
+        public ThatInfo FindThat(XmlNode thatNode, Unifiable topicName)
         {
             if (NoIndexing) return null;
             return topicName;
@@ -395,7 +395,7 @@ namespace RTParser.Utils
                 XmlNode pi;
                 if (!PatternNodes.TryGetValue(pats, out pi))
                 {
-                if (pi != null) return pi;
+                    if (pi != null) return pi;
                     pi =
                         PatternNodes[pats] =
                         StaticXMLUtils.getNode(String.Format("<{0}>{1}</{0}>", nodeName, topicName));
@@ -432,10 +432,11 @@ namespace RTParser.Utils
 #endif
         }
 
-        public CategoryInfo FindCategoryInfo(PatternInfo info, XmlNode node, LoaderOptions filename,
-            ResponseInfo template, GuardInfo guard, Node patternNode, ThatInfo thatInfo, IEnumerable<ConversationCondition> conds)
+        public CategoryInfo FindCategoryInfo(PatternInfo info, XmlNode node, LoaderOptions filename, XmlNode templateNode,
+            ResponseInfo template, GuardInfo guard, TopicInfo topicInfo, Node patternNode, ThatInfo thatInfo, IEnumerable<ConversationCondition> conds)
         {
-            return TemplateInfo.MakeCategoryInfo(info, node, filename, template, guard, patternNode, thatInfo, conds);
+            return TemplateInfo.MakeCategoryInfo(info, node, filename, templateNode, template, guard, topicInfo, patternNode,
+                                                 thatInfo, conds);
         }
 
         private GraphMaster makeParallel()
@@ -488,18 +489,18 @@ namespace RTParser.Utils
         }
 
         public List<CategoryInfo> addCategoryTag(Unifiable generatedPath, PatternInfo patternInfo, // out CategoryInfo category,
-                                   XmlNode outerNode, XmlNode templateNode, GuardInfo guard, ThatInfo thatInfo,
+                                   XmlNode categoryNode, XmlNode templateNode, GuardInfo guard, TopicInfo topicInfo, ThatInfo thatInfo,
                                    List<ConversationCondition> additionalRules, out bool wouldBeRemoval, LoaderOptions loaderOptions)
         {
             lock (LockerObject)
             {
-               return addCategoryTag0(generatedPath, patternInfo, /*category,*/ outerNode, templateNode, guard, thatInfo,
-                                additionalRules, out wouldBeRemoval, loaderOptions);
+                return addCategoryTag0(generatedPath, patternInfo, /*category,*/ categoryNode, templateNode, guard, topicInfo, thatInfo,
+                                 additionalRules, out wouldBeRemoval, loaderOptions);
             }
         }
 
         private List<CategoryInfo> addCategoryTag0(Unifiable generatedPath, PatternInfo patternInfo,// CategoryInfo category,
-                                   XmlNode outerNode, XmlNode templateNode, GuardInfo guard, ThatInfo thatInfo,
+                                   XmlNode categoryNode, XmlNode templateNode, GuardInfo guard, TopicInfo topicInfo, ThatInfo thatInfo,
                                    List<ConversationCondition> additionalRules, out bool wouldBeRemoval, LoaderOptions loaderOptions)
         {
             if (SilentTagsInPutParallel && !StaticAIMLUtils.IsEmptyTemplate(templateNode) && StaticAIMLUtils.IsSilentTag(templateNode))
@@ -508,8 +509,9 @@ namespace RTParser.Utils
                 this.Parallels.Add(parallel1);
                 parallel1.SilentTagsInPutParallel = false;
                 //writeToLog("Adding to Parallel " + category);
-                return parallel1.addCategoryTag(generatedPath, patternInfo, /*category,*/ outerNode, templateNode, guard, thatInfo,
-                                       additionalRules, out wouldBeRemoval, loaderOptions);
+                return parallel1.addCategoryTag(generatedPath, patternInfo, /*category,*/ categoryNode, templateNode, guard,
+                                                topicInfo, thatInfo,
+                                                additionalRules, out wouldBeRemoval, loaderOptions);
             }
 
             Node rootNode = this.RootNode;
@@ -531,23 +533,16 @@ namespace RTParser.Utils
 
             int countBefore = thiz.TemplateInfoCount;
 
-            XmlNode cateNode = StaticXMLUtils.FindNodeOrHigher("category", templateNode, null);
-            var info0 = thiz.addTerminal(templateNode, cateNode, guard, thatInfo, loaderOptions, patternInfo,
+            XmlNode cateNode = categoryNode ?? StaticXMLUtils.FindNodeOrHigher("category", templateNode, null);
+            var info0 = thiz.addTerminal(templateNode, cateNode, guard, topicInfo, thatInfo, loaderOptions, patternInfo,
                                                  additionalRules, out wouldBeRemoval);
             if (wouldBeRemoval)
             {
                 Node other = rootNode == this.RootNode ? this.PostParallelRootNode : this.RootNode;
                 Node thatz = other.addPathNodeChilds(generatedPath, nodeAdder);
                 //writeToLog("Doing other removal: " + generatedPath);
-                info0 = thatz.addTerminal(templateNode, cateNode, guard, thatInfo, loaderOptions, patternInfo,
+                info0 = thatz.addTerminal(templateNode, cateNode, guard, topicInfo, thatInfo, loaderOptions, patternInfo,
                                           additionalRules, out wouldBeRemoval);
-            }
-            if (info0 != null)
-            {
-                foreach (var VARIABLE in info0)
-                {
-                    VARIABLE.GraphmasterNode = rootNode;
-                }
             }
             int countAfter = thiz.TemplateInfoCount;
             /*
@@ -774,9 +769,9 @@ namespace RTParser.Utils
                                 query.Templates.Add(sol);
                                 toplevel.AddTemplate(sol);
                             }
-                            if (query.Templates.Count==0)
+                            if (query.Templates.Count == 0)
                             {
-                                
+
                             }
                         }
                     }
@@ -943,7 +938,7 @@ namespace RTParser.Utils
                         if (wasTopLevel) request.IsToplevelRequest = false;
 
                         p.UnTraced = Size > 0;
-                        
+
                         var req = new AIMLbot.MasterRequest(request.rawInput, request.Requester, request.TargetBot, null,
                                                           request.Responder);
                         req.OriginalSalientRequest = request.OriginalSalientRequest;
@@ -951,8 +946,8 @@ namespace RTParser.Utils
                         req.IsToplevelRequest = false;
                         //req.CurrentResult = null;
 
-                        AIMLbot.MasterResult r = (MasterResult) proc.ChatWithRequest(req);
-                        
+                        AIMLbot.MasterResult r = (MasterResult)proc.ChatWithRequest(req);
+
                         if (!r.IsEmpty) pl.Add(r);
                     }
                     finally
@@ -1250,20 +1245,20 @@ namespace RTParser.Utils
         {
             FileInfo fi = new FileInfo(filename);
             string fullName = fi.FullName;
-            if (FileCategories!=null)
+            if (FileCategories != null)
             {
                 lock (FileCategories)
                 {
                     List<CategoryInfo> categoryInfos;
                     if (FileCategories.TryGetValue(fullName, out categoryInfos))
                     {
-                        if (categoryInfos!=null)
+                        if (categoryInfos != null)
                         {
                             lock (categoryInfos)
                             {
                                 foreach (CategoryInfo categoryInfo in categoryInfos)
                                 {
-                                    RemoveTemplate(categoryInfo.Template);                                    
+                                    RemoveTemplate(categoryInfo.Template);
                                 }
                             }
                         }

@@ -954,7 +954,7 @@ namespace RTParser.Utils
             var templates = FindNodes("template", cateNode);
             var rulesNodes = FindNodes("rule", cateNode);
             var topicNodesInCate = FindNodes("topic", cateNode);
-            var thatsInCate = FindNodes("that", cateNode);
+            var thatNodes = FindNodes("that", cateNode);
            // var thatNodes = new List<XmlNode>();
             //FindNodes("that", cateNode, thatNodes, 2);
             string errors = "";
@@ -981,12 +981,12 @@ namespace RTParser.Utils
                 return CIs;
             }
             XmlNode that0 = null;
-            /*
+
             if (thatNodes.Count > 0)
             {
                 foreach (var that in new List<XmlNode>(thatNodes))
                 {
-                    string getAttribValue = GetAttribValue(that,"index",null);
+                    string getAttribValue = GetAttribValue(that, "index", null);
                     if (getAttribValue == null || getAttribValue == "1" || getAttribValue == "1,1")
                     {
                         if (that0 != null) AddErrorCategory("more than one <that>", cateNode);
@@ -998,8 +998,8 @@ namespace RTParser.Utils
             foreach (var xmlNode in thatNodes)
             {
                 additionalRules = additionalRules ?? PushAddtionalRuleContext(additionalRules);
-                additionalRules.Add(new PatternMatchRule(xmlNode));
-            } */
+                additionalRules.Add(new ConversationCondition(xmlNode));
+            }
             foreach (var xmlNode in rulesNodes)
             {
                 additionalRules = additionalRules ?? PushAddtionalRuleContext(additionalRules);
@@ -1144,21 +1144,19 @@ namespace RTParser.Utils
             }
 
             Func<Unifiable, bool, Unifiable> normalizerT = (inputText, isUserInput) => Trim(Normalize(inputText, isUserInput));
-            Unifiable categoryPath = ToUpper(generatePath(patternText, that, cond, topicName, false, normalizerT));
+            Unifiable categoryPath = generatePath(patternText, that, cond, topicName, false, normalizerT).ToUpper();
             PatternInfo patternInfo = loaderOpts.CtxGraph.FindPattern(patternNode, patternText);//PatternInfo.GetPattern(loaderOpts, patternNode, categoryPath);
             TopicInfo topicInfo = loaderOpts.CtxGraph.FindTopic(topicName);
             ThatInfo thatInfo = loaderOpts.CtxGraph.FindThat(thatNodeOrNull, that);
             var templateNodeFindable = StaticAIMLUtils.TheTemplateOverwrite;
-            //string tni = "";
+
             if (templateNode != null)
             {
                 if (templateNode.HasChildNodes)
                 {
-                    if (templateNode.ChildNodes[0].NodeType != XmlNodeType.Comment &&
-                        Trim(templateNode.InnerXml).Length > 0)
+                    if (templateNode.ChildNodes[0].NodeType != XmlNodeType.Comment || templateNode.ChildNodes.Count > 1)
                     {
                         templateNodeFindable = templateNode;
-                       // tni = templateNodeFindable.InnerXml;
                     }
                 }
             }
@@ -1181,7 +1179,8 @@ namespace RTParser.Utils
                         bool wouldBeRemoval;
 
                         return pathCtxGraph.addCategoryTag(categoryPath, patternInfo,
-                                                           outerNode, templateNode, guard, thatInfo, additionalRules,
+                                                           cateNode, templateNode, guard, topicInfo, thatInfo,
+                                                           additionalRules,
                                                            out wouldBeRemoval, loaderOpts);
 
 
@@ -1241,7 +1240,7 @@ namespace RTParser.Utils
         {
             XmlNode newPattern = null;
 
-            Unifiable patternText0;
+            string patternText0;
             var foundNode0 = extractPrecondNode(patternNode, tagName, cateNode, out patternText0, out newPattern);
             if (foundNode0 != null) foundNode = foundNode0;
             if (newPattern != null)
@@ -1377,7 +1376,7 @@ namespace RTParser.Utils
         /// normalize out the * and _ wildcards used by AIML</param>
         /// <returns>The appropriately processed path</returns>
         private static XmlNode extractPrecondNode(XmlNode patternNode, String tagname, XmlNode cateNode,
-                                           out Unifiable patternText, out XmlNode newPattern)
+                                           out string patternText, out XmlNode newPattern)
         {
             string thatString = null;
             // get the nodes that we need

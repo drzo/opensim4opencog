@@ -63,7 +63,7 @@ namespace RTParser.Utils
                 var Parent0 = _parentObject;
                 while (Parent0 != null)
                 {
-                    if (Parent0 is GraphMaster) return (GraphMaster) Parent0;
+                    if (Parent0 is GraphMaster) return (GraphMaster)Parent0;
                     Parent0 = Parent0.ParentObject;
                 }
                 return null;
@@ -71,7 +71,7 @@ namespace RTParser.Utils
         }
 
         public Node(ParentChild P)
-            {
+        {
             _parentObject = P;
             //SyncObject = this;// P ?? this;
         }
@@ -136,8 +136,8 @@ namespace RTParser.Utils
             var p = Parent;
             if (p == null)
             {
-            return word;
-        }
+                return word;
+            }
             StringBuilder sb = new StringBuilder(Unifiable.ToVMString(word));
             sb.Insert(0, " ");
             sb.Insert(0, Unifiable.ToVMString(p.word));
@@ -174,8 +174,8 @@ namespace RTParser.Utils
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != typeof (Node)) return false;
-            return Equals((Node) obj);
+            if (obj.GetType() != typeof(Node)) return false;
+            return Equals((Node)obj);
         }
         #region IComparable<Node> Members
 
@@ -201,7 +201,7 @@ namespace RTParser.Utils
 #else
             double a1 = 0;
             double b1 = 0;
-#endif       
+#endif
             int diff0 = a1.CompareTo(b1);
             if (diff0 != 0)
             {
@@ -214,8 +214,8 @@ namespace RTParser.Utils
             if (cmpthis < cmpthat) cmpthis = cmpthat;
             //if (cmpthis == cmpthat)
             //{
-           // double strictnessThis = 0;
-          //  double detailThat = 0;
+            // double strictnessThis = 0;
+            //  double detailThat = 0;
             for (int i = 0; i < cmpthis; i++)
             {
                 Unifiable thatpath1 = thatpath[i];
@@ -246,17 +246,17 @@ namespace RTParser.Utils
 #else
             IList<Unifiable> _ToPath = null;
             double _variance = double.NaN;
-#endif           
+#endif
             _ToPath = null;
             if (_ToPath != null) return _ToPath;
             _variance = word.Strictness();
-            
+
             var p = Parent;
             if (p == null)
             {
-                return (_ToPath = new[] {word});
+                return (_ToPath = new[] { word });
             }
-            var sb = new List<Unifiable> {word};
+            var sb = new List<Unifiable> { word };
             var pword = p.word;
             sb.Add(pword);
             _variance += pword.Strictness();
@@ -299,7 +299,16 @@ namespace RTParser.Utils
                     int moveLast = TemplateInfos.IndexOf(templateInfo);
                     if (moveLast < 0)
                     {
-                        writeToLog("WARN: Cant find template " + templateInfo);
+                        if (TemplateInfosDisabled != null)
+                        {
+                            moveLast = TemplateInfosDisabled.IndexOf(templateInfo);
+                            if (moveLast < 0)
+                            {
+                                writeToLog("WARN: Not rotatating disabled template: " + templateInfo);
+                                return;
+                            }
+                        }
+                        writeToLog("WARN: Cant find template: " + templateInfo);
                         return;
                     }
                     if (moveLast == TemplateInfos.Count - 1)
@@ -323,7 +332,7 @@ namespace RTParser.Utils
         /// <param name="path">the path for the category</param>
         /// <param name="template">the template to find at the end of the path</param>
         /// <param name="filename">the file that was the source of this category</param>
-        public List<CategoryInfo> addTerminal(XmlNode templateNode, XmlNode cateNode, GuardInfo guard, ThatInfo thatInfo,
+        public List<CategoryInfo> addTerminal(XmlNode templateNode, XmlNode cateNode, GuardInfo guard, TopicInfo topicInfo, ThatInfo thatInfo,
                                         LoaderOptions master, PatternInfo patternInfo, List<ConversationCondition> additionalRules, out bool wouldBeRemoval)
         {
             List<CategoryInfo> categoryInfos = null;
@@ -332,7 +341,7 @@ namespace RTParser.Utils
             lock (SyncObject)
             {
                 // first look in template node.. then afterwards the category node
-                var nodes = new[] {templateNode, cateNode};
+                var nodes = new[] { templateNode, cateNode };
 
                 // does the metaprops only operate on verbal tags
                 bool sentientTags;
@@ -379,7 +388,7 @@ namespace RTParser.Utils
                     TemplateInfo first = FirstTemplate(onlyNonSilent);
                     if (first != null)
                     {
-                        categoryInfos = new List<CategoryInfo> {first};
+                        categoryInfos = new List<CategoryInfo> { first };
                         return categoryInfos;
                     }
                 }
@@ -389,7 +398,7 @@ namespace RTParser.Utils
                     if (first != null)
                     {
                         first.AppendTemplate(templateNode, cateNode, additionalRules);
-                        categoryInfos = new List<CategoryInfo> {first};
+                        categoryInfos = new List<CategoryInfo> { first };
                         return categoryInfos;
                     }
                 }
@@ -401,7 +410,7 @@ namespace RTParser.Utils
                 }
 
 
-                var t = addTerminal_0_Lock(templateNode, cateNode, guard, thatInfo, master, patternInfo, additionalRules);
+                var t = addTerminal_0_Lock(templateNode, cateNode, guard, topicInfo, thatInfo, master, patternInfo, additionalRules);
                 if (t == null)
                 {
                     return null;
@@ -413,7 +422,7 @@ namespace RTParser.Utils
                     t.IsTraced = isTraced;
                 }
                 if (t != null) t.AddRules(additionalRules);
-                return new List<CategoryInfo> {t};
+                return new List<CategoryInfo> { t };
             }
         }
 
@@ -442,6 +451,7 @@ namespace RTParser.Utils
 
          */
         private TemplateInfo addTerminal_0_Lock(XmlNode templateNode, XmlNode cateNode, GuardInfo guard,
+            TopicInfo topicInfo,
                                                 ThatInfo thatInfo,
                                                 LoaderOptions loaderOptions, PatternInfo patternInfo,
                                                 List<ConversationCondition> additionalRules)
@@ -469,7 +479,7 @@ namespace RTParser.Utils
                             if (nodeNum == 0)
                             {
                                 //TemplateInfo redundant = TemplateInfo.GetTemplateInfo(templateNode, guard, thatInfo, this, category);
-                                master.AddRedundantCate((CategoryInfo) temp, temp);
+                                master.AddRedundantCate((CategoryInfo)temp, temp);
                                 return temp;
                             }
                             nodeNum++;
@@ -517,9 +527,11 @@ namespace RTParser.Utils
             }
 
             // last in first out addition
-            ResponseInfo responseInfo = templateNode;
-            TemplateInfo newTemplateInfo = (TemplateInfo) TemplateInfo.GetCategoryInfo(patternInfo, cateNode, loaderOptions,
-                                                                                       responseInfo, guard, this, thatInfo, additionalRules);
+            ResponseInfo responseInfo = templateNode.InnerXml;
+            TemplateInfo newTemplateInfo =
+                (TemplateInfo) TemplateInfo.GetCategoryInfo(patternInfo, cateNode, loaderOptions, templateNode,
+                                                            responseInfo, guard, topicInfo, this, thatInfo,
+                                                            additionalRules);
             /*
             Unifiable categoryPath = GetPath();
             //categoryInfo.SetCategoryTag(categoryPath, patternInfo, categoryInfo,
@@ -627,7 +639,7 @@ namespace RTParser.Utils
             return addPathNodeChilds(0, path.ToArray(), categoryInfo);
         }
 
-        private Node addPathNodeChilds(int from, Unifiable[] path , NodeAdder categoryInfo)
+        private Node addPathNodeChilds(int from, Unifiable[] path, NodeAdder categoryInfo)
         {
             Node initial = null;
 
@@ -679,9 +691,9 @@ namespace RTParser.Utils
                 }
 
 
-// ReSharper disable ConditionIsAlwaysTrueOrFalse
+                // ReSharper disable ConditionIsAlwaysTrueOrFalse
                 if (needsKeySanityCheck) // see if we need ot check new indexing system!
-// ReSharper restore ConditionIsAlwaysTrueOrFalse
+                    // ReSharper restore ConditionIsAlwaysTrueOrFalse
                     if (!found)
                         foreach (var c in children)
                         {
@@ -712,7 +724,7 @@ namespace RTParser.Utils
                     childNode = new Node(this);
                     childNode.word = firstWord;
                     initial = childNode.addPathNodeChilds(from + 1, path, categoryInfo);
-                    AddChildNode(fs, childNode, (CategoryInfo) categoryInfo);
+                    AddChildNode(fs, childNode, (CategoryInfo)categoryInfo);
                 }
             }
             if (initial == null)
@@ -956,7 +968,7 @@ namespace RTParser.Utils
                                                    request.Requester.UserID + " raw input: \"" +
                                                    request.rawInput + "\" in " + this;
                 request.writeToLog(mesg);
-                throw new ChatSignalOverBudget(request, mesg) {request = request};
+                throw new ChatSignalOverBudget(request, mesg) { request = request };
             }
 
             int pathLength = splitPath.Length - at;
@@ -1070,7 +1082,7 @@ namespace RTParser.Utils
             // second first option is to see if this node has a child denoted by the "_" 
             // wildcard. "_" comes first in precedence in the AIML alphabet
             //lock (SyncObject)
-            foreach (var childNodeKV in AnySingleUnit("_", children , true))
+            foreach (var childNodeKV in AnySingleUnit("_", children, true))
             {
                 Node childNode = childNodeKV.Value;
                 Unifiable childNodeWord = childNode.word;
@@ -1309,9 +1321,9 @@ namespace RTParser.Utils
                 {
                     //newPath = string.Join(" ", splitPath, rw, splitPath.Length - rw);
                     newAt = at + 1;
-// ReSharper disable ConditionIsAlwaysTrueOrFalse
+                    // ReSharper disable ConditionIsAlwaysTrueOrFalse
                     if (needsKeySanityCheck && !childNode.word.CanUnify(firstWord, query))
-// ReSharper restore ConditionIsAlwaysTrueOrFalse
+                    // ReSharper restore ConditionIsAlwaysTrueOrFalse
                     {
                         throw new Exception("failed sanity check trying to unify " + firstWord + " " + childNode.word);
                     }
@@ -1383,7 +1395,7 @@ namespace RTParser.Utils
         {
             get { return _parentObject; }
         }
-   }
+    }
 
     public interface ParentChild
     {
@@ -1394,7 +1406,7 @@ namespace RTParser.Utils
     {
     }
 
-    internal class OneKV :IEnumerable<KeyValuePair<string, Node>>, IEnumerator<KeyValuePair<string, Node>>
+    internal class OneKV : IEnumerable<KeyValuePair<string, Node>>, IEnumerator<KeyValuePair<string, Node>>
     {
         readonly public static Dictionary<string, Node> EMPTY = new Dictionary<string, Node>();
         readonly KeyValuePair<string, Node> ValuePair;
