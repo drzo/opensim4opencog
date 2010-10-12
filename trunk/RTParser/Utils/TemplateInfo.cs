@@ -77,17 +77,18 @@ namespace RTParser.Utils
         }
 
 
-        public TemplateInfo(PatternInfo pattern, XmlNode cateNode, LoaderOptions options, ResponseInfo template,
-            GuardInfo guard, Node patternNode, ThatInfo thatInfo)
+        public TemplateInfo(PatternInfo pattern, XmlNode cateNode, XmlNode templateNode,
+            LoaderOptions options, ResponseInfo responseInfo,
+            GuardInfo guard, TopicInfo topicInfo, Node patternNode, ThatInfo thatInfo)
             : base(pattern, cateNode, options)
         {
-            if (template != null && template.FullPath == Unifiable.Empty)
+            if (templateNode == null || responseInfo.FullPath == Unifiable.Empty)
             {
                 throw new UnauthorizedAccessException();
             }
             Guard = guard;
             That = thatInfo;
-            Response = template;
+            Response = responseInfo;
             GraphmasterNode = patternNode;
             //ParentCategoryInfo = categoryInfo;
             try
