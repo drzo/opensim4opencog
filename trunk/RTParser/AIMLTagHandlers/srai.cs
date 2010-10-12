@@ -198,6 +198,17 @@ namespace RTParser.AIMLTagHandlers
                     {
                         templateNodeInnerValue = Recurse();
                     }
+                    TemplateInfo queryTemplate = query.CurrentTemplate;
+                    if (!result.CanResultUseTemplate(queryTemplate))
+                    {
+                        writeToLogWarn("CurrentTemplate.IsDisabled " + queryTemplate);
+                        return Unifiable.INCOMPLETE;
+                    }
+                    if (!request.CanUseRequestTemplate(queryTemplate))
+                    {
+                        writeToLogWarn("CurrentTemplate.IsDisabled " + queryTemplate);
+                        return Unifiable.INCOMPLETE;
+                    }
                     var vv = ProcessChangeSrai(request, query, templateNodeInnerValue, templateNode, initialString, writeToLog);
                     if (!Unifiable.IsNullOrEmpty(vv))
                     {
@@ -257,7 +268,8 @@ namespace RTParser.AIMLTagHandlers
                     writeToLog("ERROR EnterSailentSRAI: " + prevResult);
                     return null;
                 }
-                Unifiable subResultOutput;
+                var CurrentTemplate = query.CurrentTemplate;
+                Unifiable subResultOutput = null;
                 writeToLog = writeToLog ?? DEVNULL;
                 RTPBot mybot = request.TargetBot;
                 User user = request.Requester;
@@ -305,7 +317,7 @@ namespace RTParser.AIMLTagHandlers
                         }
                     }
                     //Unifiable templateNodeInnerValue = Recurse();
-                    //if (!templateNodeInnerValue.IsEmpty)
+                    try
                     {
                         var subRequest = request.CreateSubRequest(templateNodeInnerValue, user, mybot, null);
 
@@ -345,6 +357,7 @@ namespace RTParser.AIMLTagHandlers
                             writeToLog(prefix + " FAILING TOOOO DEEEEP '" + subRequestrawInput + "'");
                             return Unifiable.INCOMPLETE;
                         }
+
                         AIMLbot.MasterResult subResult;
                         string subQueryRawOutputText;
                         subResult = GetSubResult(prefix, request, user, mybot, subRequest, showDebug,
@@ -360,7 +373,7 @@ namespace RTParser.AIMLTagHandlers
                             {
                                 writeToLog(prefix + "MISSING RETURN " + whyComplete);
                             }
-                            subResult = (MasterResult) mybot.ChatFor1Result(subRequest, subResult);
+                            subResult = (MasterResult)mybot.ChatFor1Result(subRequest, subResult);
                             subResultOutput = subResult.Output;
                             //subQueryRawOutput = subResult.RawOutput.Trim();
                             if (!IsNullOrEmpty(subResultOutput))
@@ -383,10 +396,6 @@ namespace RTParser.AIMLTagHandlers
 
                                     mybot.writeChatTrace("\"LN:{0}\" -> \"RPY:MISSING({1})\" ;\n", depth, depth);
                                 }
-
-
-                                salientRequest.ExitSalientSRAI(templateNodeInnerValue, subResultOutput);
-
                                 return subResultOutput;
                             }
                         }
@@ -403,13 +412,13 @@ namespace RTParser.AIMLTagHandlers
                             {
                                 if (subRequestrawInput.Contains("STDCATCHALL STDCATCHALL"))
                                 {
-                                    
+
                                 }
                                 writeToLog("{0} SUCCESS RETURN {1}  {2} '{3}'", prefix, subRequestrawInput,
                                            subResult.Score, subResultOutputTrace);
                                 // ReSharper disable ConditionIsAlwaysTrueOrFalse
                                 if (query != null)
-                                    // ReSharper restore ConditionIsAlwaysTrueOrFalse
+                                // ReSharper restore ConditionIsAlwaysTrueOrFalse
                                 {
                                     if (query.CurrentTemplate != null)
                                     {
@@ -434,8 +443,16 @@ namespace RTParser.AIMLTagHandlers
                                                  AIMLLoader.TextAndSourceInfo(templateNode));
                             mybot.writeChatTrace("\"LN:{0}\" -> \"RPY:{1}\" ;\n", depth, subResultOutputTrace);
                         }
-                        salientRequest.ExitSalientSRAI(templateNodeInnerValue, subResultOutput);
+                        //salientRequest.ExitSalientSRAI(templateNodeInnerValue, subResultOutput);
                         return subResultOutput;
+                    }
+                    finally
+                    {
+                        if (subResultOutput != null)
+                        {
+                            salientRequest.ExitSalientSRAI(templateNodeInnerValue, subResultOutput);
+                        }
+                        request.DisableTemplateUntilFinished(CurrentTemplate);
                     }
                 }
                 return Unifiable.Empty;

@@ -167,12 +167,13 @@ namespace RTParser.Database
                 }
             }
 
-            if (Unifiable.IsNullOrEmpty(formatter) || Unifiable.IsTrueOrYes(formatter) || formatter == "default")
+            var formatterUpper = Unifiable.ToUpper(formatter);
+            if (Unifiable.IsNullOrEmpty(formatter) || Unifiable.IsTrueOrYes(formatterUpper) || formatter == "default")
             {
                 formatter = " {0} {1} is {2} ";
             }
 
-            if (Unifiable.IsFalseOrNo(formatter))
+            if (Unifiable.IsFalseOrNo(formatterUpper))
             {
                 return "false";
             }
@@ -190,8 +191,8 @@ namespace RTParser.Database
                 var whword = GetDictValue(dictionary, relation, "format-whword");
 
                 if (!Unifiable.IsNullOrEmpty(whword) && isQuery) value = whword;
-
-                if (Unifiable.IsFalseOrNo(formatter))
+                var formatterUpper = Unifiable.ToUpper(formatter);
+                if (Unifiable.IsFalseOrNo(formatterUpper))
                 {
                     return "false";
                 }

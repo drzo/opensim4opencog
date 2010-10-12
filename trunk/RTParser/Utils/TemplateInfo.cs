@@ -73,7 +73,7 @@ namespace RTParser.Utils
                 if (response != null && response.PatternNode != null) return response.PatternNode;
                 return TemplateXmlNode;
             }
-           // set { Response.srcNode = value; }
+            // set { Response.srcNode = value; }
         }
 
 
@@ -134,30 +134,35 @@ namespace RTParser.Utils
             set { CategoryInfo.IsTraced = value; }
         }*/
 
-        public bool IsDisabled
+        public override bool IsDisabled
         {
-            get { return base.IsDisabled; }
+            get { return base.IsDisabledOutput || base.IsDisabled; }
             set
             {
                 if (value != base.IsDisabled)
                 {
                     base.IsDisabled = value;
-                    Node node = GraphmasterNode;
-                    if (value)
-                    {
-                        if (node.TemplateInfos != null) node.TemplateInfos.Remove(this);
-                        node.TemplateInfosDisabled = node.TemplateInfosDisabled ?? new List<TemplateInfo>();
-                        node.TemplateInfosDisabled.Add(this);
-                    }
-                    else
-                    {
-                        //node.TemplateInfosDisabled = node.TemplateInfosDisabled ?? new List<TemplateInfo>();                        
-                        node.TemplateInfosDisabled.Remove(this);
-
-                        node.TemplateInfos = node.TemplateInfos ?? new List<TemplateInfo>();
-                        node.TemplateInfos.Add(this);
-                    }
+                    SetDisabledInNode(value);
                 }
+            }
+        }
+
+        public void SetDisabledInNode(bool value)
+        {
+            Node node = GraphmasterNode;
+            if (value)
+            {
+                if (node.TemplateInfos != null) node.TemplateInfos.Remove(this);
+                node.TemplateInfosDisabled = node.TemplateInfosDisabled ?? new List<TemplateInfo>();
+                node.TemplateInfosDisabled.Add(this);
+            }
+            else
+            {
+                //node.TemplateInfosDisabled = node.TemplateInfosDisabled ?? new List<TemplateInfo>();                        
+                node.TemplateInfosDisabled.Remove(this);
+
+                node.TemplateInfos = node.TemplateInfos ?? new List<TemplateInfo>();
+                node.TemplateInfos.Add(this);
             }
         }
 
@@ -218,12 +223,13 @@ namespace RTParser.Utils
             tryit = tryit != null ? TemplateXml.ParentNode : CategoryXml;
             if (tryit != null)
             {
-                string rules = GetRuleStrings();
+                string rules = GetRuleStrings;
                 if (rules != "")
                 {
                     rules = "\n" + rules;
                 }
-                return "" + TextPatternUtils.CleanWhitepaces(tryit.OuterXml) +
+                string disables = WhyDisabled ?? "";
+                return "" + TextPatternUtils.CleanWhitepaces(tryit.OuterXml) + " " + disables +
                        StaticXMLUtils.LocationEscapedInfo(tryit) + rules;
             }
             //string s = base.ToString();
@@ -239,7 +245,7 @@ namespace RTParser.Utils
             //            return s;
         }
 
-        public override Unifiable FullPath{ get; set; }
+        public override Unifiable FullPath { get; set; }
 
         public static TemplateInfo GetTemplateInfo(XmlNode template, GuardInfo guard, ThatInfo thatInfo, Node node,
                                                    CategoryInfo category, GraphMaster graphMaster)
@@ -325,7 +331,7 @@ namespace RTParser.Utils
             {
                 if (_templateKey == null)
                 {
-                    return MakeKey(Pattern, FullPath != null ? Guard.FullPath : null, That.FullPath);
+                    return MakeKey(Pattern, Guard != null ? Guard.FullPath : null, That.FullPath);
                     //  _templateKey = MakeKey(Output, Guard != null ? Guard.Output : null, That.PatternNode);
                 }
                 return _templateKey;
@@ -336,7 +342,7 @@ namespace RTParser.Utils
             }
         }
 
-        public void AppendTemplate(XmlNode node, XmlNode  category, List<ConversationCondition> nodes)
+        public void AppendTemplate(XmlNode node, XmlNode category, List<ConversationCondition> nodes)
         {
             throw new NotImplementedException();
         }
@@ -363,22 +369,24 @@ namespace RTParser.Utils
             return true;
         }
 
-        protected override string GetRuleStrings()
+        public override string GetRuleStrings
         {
-            string s = "";
-            var templateInfo = this.Template;
-            var addRules = templateInfo.Preconds;
-            if (addRules != null)
+            get
             {
-                int c = 1;
-                foreach (ConversationCondition rule in addRules)
+                string s = "";
+                var templateInfo = this.Template;
+                var addRules = templateInfo.Preconds;
+                if (addRules != null)
                 {
-                    s += "<!-- Rule:  " + c + " " + rule.ToString().
-                                                        Replace("<!--", "<#--").Replace("-->", "--#>") + " -->\n";
-                    c++;
+                    int c = 1;
+                    foreach (ConversationCondition rule in addRules)
+                    {
+                        s += string.Format("<!-- Rule {0}: {1} -->\n", c, StaticXMLUtils.MakeXmlCommentSafe(rule.ToString()));
+                        c++;
+                    }
                 }
+                return s;
             }
-            return s;
         }
     }
 
@@ -388,5 +396,6 @@ namespace RTParser.Utils
         string ToFileString(PrintOptions printOptions);
         string SourceInfo();
         TemplateInfo Template { get; }
+        bool IsDisabled { get; set; }
     }
 }

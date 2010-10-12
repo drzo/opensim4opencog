@@ -544,11 +544,11 @@ namespace RTParser.Variables
                 StaticXMLUtils.GetAttribValue(myNode, "return-name-when-set", null);
             if (returnNameWhenSet != null)
             {
-                returnNameWhenSet = returnNameWhenSet.Trim();
-                if (returnNameWhenSet.Length == 0) returnNameWhenSet = "false";
+                var returnNameWhenSetUPPER = StaticXMLUtils.Trim(StaticXMLUtils.ToUpper(returnNameWhenSet));
+                if (returnNameWhenSetUPPER.Length == 0) { returnNameWhenSet = "false"; }
                 else if (IsMissing(returnNameWhenSet)) returnNameWhenSet = "value";
-                else if (StaticXMLUtils.IsFalseOrNo(returnNameWhenSet)) returnNameWhenSet = "value";
-                else if (StaticXMLUtils.IsTrueOrYes(returnNameWhenSet)) returnNameWhenSet = "name";
+                else if (StaticXMLUtils.IsFalseOrNo(returnNameWhenSetUPPER)) returnNameWhenSet = "value";
+                else if (StaticXMLUtils.IsTrueOrYes(returnNameWhenSetUPPER)) returnNameWhenSet = "name";
             }
             returnNameWhenSet =
                 StaticXMLUtils.GetAttribValue(myNode, "set-return", returnNameWhenSet);

@@ -4,7 +4,7 @@ using MushDLR223.Utilities;
 
 namespace RTParser.Utils
 {
-    public abstract class GraphLinkInfo
+    public abstract class GraphLinkInfo: StaticAIMLUtils
     {
         public static bool NoInfo;
 

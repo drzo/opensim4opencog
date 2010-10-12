@@ -19,7 +19,7 @@ namespace RTParser.Utils
         public List<ConversationCondition> Preconds;
         public TemplateInfo Template { get { return (TemplateInfo)this; } }
         public ThatInfo That { get; set; }
-        public TopicInfo Topic;
+        public TopicInfo Topic { get; set; }
 
         static XmlNode CheckXml(XmlNode xmlNode)
         {
@@ -38,7 +38,23 @@ namespace RTParser.Utils
             Filename = options.CurrentFilename;
         }
 
-        public bool IsDisabled { get; set; }
+        public bool IsDisabledOutput { get; set; }
+        public virtual bool IsDisabled { get; set; }
+        public string WhyDisabled
+        {
+            get
+            {
+                if (Template.IsDisabledOutput)
+                {
+                    return "IsDisabledOutput";
+                }
+                else if (IsDisabled)
+                {
+                    return "IsDisabled";
+                }
+                return null;
+            }
+        }
 
         public XmlNode CategoryXml { get { return CheckXml(StaticXMLUtils.FindNode("category", CheckXml(srcNode), null)); } }
 
@@ -100,36 +116,82 @@ namespace RTParser.Utils
                     }
                 }
             }
+
+            s += GetSourceWithTopic(printOptions);
+
+            string escapedStuff = "";
+
+            if (!printOptions.IncludeLineInfoExternal)
+            {
+                if (!printOptions.GroupFileElements)
+                {
+                    if (printOptions.IncludeFileNamePerNode)
+                    {
+                        string cfile = Filename ?? StaticXMLUtils.FileNameOfXmlNode(srcNode);
+                        if (cfile != printOptions.InsideFilename)
+                        {
+                            escapedStuff += cfile;
+                            printOptions.InsideFilename = cfile;
+                        }
+                    }
+                }
+                if (printOptions.IncludeLinenoPerNode)
+                {
+                    escapedStuff += ":" + LineNumberInfo;
+                }
+            }
+
+            escapedStuff = StaticXMLUtils.MakeXmlCommentSafe(escapedStuff);
+            if (IsDisabled)
+            {
+                s = DLRConsole.SafeFormat("<!-- {0} {1} {2} -->", MakeXmlCommentSafe(WhyDisabled), MakeXmlCommentSafe(s), escapedStuff);
+            } else
+            {
+                s = DLRConsole.SafeFormat("{0} <!-- {1}  -->", s, escapedStuff);
+            }
+            return s;
+        }
+
+        public string GetSourceWithTopic(PrintOptions printOptions)
+        {
+            string s = "";
             XmlNode topic1 = this.TopicXml;
-            bool hasTopic = topic1 != null;
+            string insideTopic = printOptions.InsideTopic;
+            string thisTopic = Topic ?? insideTopic;
+            thisTopic = StaticXMLUtils.GetAttribValue(topic1, "name,topic", () => thisTopic, null);
+            bool hasTopic = (thisTopic != insideTopic);
             if (hasTopic)
             {
-                s += "<topic name=\"";
-                Unifiable n = StaticXMLUtils.GetAttribValue(topic1, "name", () => (string) null, null);
-                s += n;
+                s += "<topic name=\"";                                    
+                s += thisTopic;
                 s += "\">";
             }
             else if (Topic != null && !Topic.IsCatchAll)
             {
                 hasTopic = true;
                 s += "<topic name=\"";
-                string n = (string) Topic.FullPath;
+                string n = (string)Topic.FullPath;
                 s += n;
                 s += "\">";
             }
-            XmlWriterSettings settings = printOptions.XMLWriterSettings;
+
             s += printOptions.FormatXML(srcNode);
+            s += GetRuleStrings;
 
             if (hasTopic) s += "</topic>";
-            if (IsDisabled)
-            {
-                s += "<!-- IsDisabled  " + s.Replace("<!--", "<#--").Replace("-->", "--#>") + " -->";
-            }
-            s += GetRuleStrings();
+            printOptions.InsideTopic = insideTopic;
             return s;
         }
 
-        protected abstract string GetRuleStrings();
+        public string LineNumberInfo
+        {
+            get
+            {
+                return StaticXMLUtils.GetLineNumberOfXmlNode(srcNode);
+            }
+        }
+
+        public abstract string GetRuleStrings { get; }
 
         #endregion
 
@@ -174,7 +236,7 @@ namespace RTParser.Utils
             throw new NotImplementedException();
         }
 
-        public bool Matches(string pattern)
+        public virtual bool Matches(string pattern)
         {
             if (pattern == null || pattern == "*" || pattern == "") return true;
             string s = ToFileString(PrintOptions.VERBOSE_FOR_MATCHING);
@@ -185,6 +247,7 @@ namespace RTParser.Utils
         public void AddPrecondition(ConversationCondition info)
         {
             if (Preconds == null) Preconds = new List<ConversationCondition>();
+            if (Preconds.Contains(info)) return;
             Preconds.Add(info);
         }
 

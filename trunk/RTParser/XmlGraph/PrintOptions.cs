@@ -31,14 +31,19 @@ namespace RTParser.Utils
             return currentWriter;
         }
 
+        public bool IncludeLinenoPerNode = true;
+        public bool IncludeFileNamePerNode = true;
+
         public bool RemoveDuplicates = true;       
         public bool CleanWhitepaces = true;
-        public bool IncludeLineno = true;
+        public bool IncludeLineInfoExternal = true;
+        public bool GroupFileElements = false;
         public bool CategoryPerLine = false;
         public bool IncludeGraphName = true;
         public List<object> dontPrint = new List<object>(); 
         public string InsideThat = null;
         public string InsideTopic = null;
+        public string InsideFilename = null;
         public Request RequestImplicits;
         readonly public StringBuilder sw = new StringBuilder();
         //readonly public StringWriter tw;
@@ -56,7 +61,7 @@ namespace RTParser.Utils
         public bool WriteDisabledItems = true;
         public bool WriteStatistics = true;
 
-        internal string FormatXML(XmlNode srcNode)
+        public string FormatXML(XmlNode srcNode)
         {
             lock (sw)
             {
@@ -109,6 +114,8 @@ namespace RTParser.Utils
             InsideAiml = false;
             InsideTopic = null;
             InsideThat = null;
+            InsideFilename = null;
+            CurrentGraphName = null;
             dontPrint.Clear();
             sw.Length = 0;
             sw.Capacity = 100000;
