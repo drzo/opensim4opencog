@@ -702,7 +702,7 @@ namespace RTParser.Utils
             if (IsNonSimple(fs, categoryInfo))
             {
                 this.IsSpecial = true;
-                if (!fs.Contains("<BOT"))
+                if (!fs.ToUpper().Contains("<BOT"))
                 {
                     writeDebugLine("IsSpecial: '{0}' {1}", fs, categoryInfo);
                 }
@@ -711,7 +711,7 @@ namespace RTParser.Utils
             children.Add(fs, childNode);
         }
 
-        private bool IsNonSimple(string fs, CategoryInfo categoryInfo)
+        static private bool IsNonSimple(string fs, CategoryInfo categoryInfo)
         {
             if (fs == "*" || fs == "_" || fs.StartsWith("TAG-")) return false;
             foreach (var fs1 in fs)
@@ -1241,7 +1241,10 @@ namespace RTParser.Utils
 
         private IEnumerable<KeyValuePair<string, Node>> AnySingleUnit(string match, Dictionary<string, Node> dictionary, bool canDoSingle)
         {
-            if (!canDoSingle) return dictionary;
+            if (!canDoSingle)
+            {
+                return dictionary;
+            }
             Node v;
             if (dictionary.TryGetValue(match, out v))
             {
@@ -1351,6 +1354,12 @@ namespace RTParser.Utils
         {
             return true;
         }
+
+   }
+
+    public interface ParentChild
+    {
+        ParentChild Parent { get; }
     }
 
     public class NodeAdder

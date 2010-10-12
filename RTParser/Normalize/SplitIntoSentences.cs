@@ -86,7 +86,8 @@ namespace RTParser.Normalize
                                                        System.StringSplitOptions.RemoveEmptyEntries);
                 foreach (string rawSentence in sss)
                 {
-                    string tidySentence = rawSentence.Replace("<br>", " ").Replace("<p>", " ").Trim().Replace("  ", " ").Replace("  ", " ");
+                    string tidySentence =
+                        TextPatternUtils.ReTrimAndspace(rawSentence.Replace("<p />", " ").Replace("<br />", " ").Replace("<br>", " ").Replace("<p>", " "));
 
                     tidySentence = StaticAIMLUtils.ForInputTemplate(tidySentence);
                     if (tidySentence.Length > 0)

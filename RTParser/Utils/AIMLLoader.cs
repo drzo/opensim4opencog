@@ -1140,7 +1140,8 @@ namespace RTParser.Utils
             }
 
             Func<Unifiable, bool, Unifiable> normalizerT = (inputText, isUserInput) => Normalize(inputText, isUserInput).Trim();
-            Unifiable categoryPath = generatePath(patternText, that, cond, topicName, false, normalizerT ).ToUpper();
+            Unifiable categoryPath = generatePath(patternText, that, cond, topicName, false, normalizerT);
+            categoryPath = categoryPath.ToUpper();
             PatternInfo patternInfo = loaderOpts.CtxGraph.FindPattern(patternNode, categoryPath);//PatternInfo.GetPattern(loaderOpts, patternNode, categoryPath);
             TopicInfo topicInfo = loaderOpts.CtxGraph.FindTopic(topicName);
             ThatInfo thatInfo = loaderOpts.CtxGraph.FindThat(thatNodeOrNull, that);
